@@ -42,8 +42,6 @@ func TestAccACMCertificate_emailValidation(t *testing.T) {
 					resource.TestMatchResourceAttr(resourceName, "validation_emails.0", regexp.MustCompile(`^[^@]+@.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "validation_method", acm.ValidationMethodEmail),
 					resource.TestCheckResourceAttr(resourceName, "validation_option.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "not_before", "0"),
-					resource.TestCheckResourceAttr(resourceName, "not_after", "0"),
 				),
 			},
 			{
@@ -629,8 +627,6 @@ func TestAccACMCertificate_Imported_domainName(t *testing.T) {
 					testAccCheckCertificateExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "domain_name", commonName),
-					resource.TestCheckResourceAttrSet(resourceName, "not_before"),
-					resource.TestCheckResourceAttrSet(resourceName, "not_after"),
 				),
 			},
 			{
@@ -647,6 +643,41 @@ func TestAccACMCertificate_Imported_domainName(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "status", acm.CertificateStatusIssued),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "domain_name", withoutChainDomain),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				// These are not returned by the API
+				ImportStateVerifyIgnore: []string{"private_key", "certificate_body", "certificate_chain"},
+			},
+		},
+	})
+}
+
+func TestAccACMCertificate_Imported_validityDates(t *testing.T) {
+	resourceName := "aws_acm_certificate.test"
+	commonName := "example.com"
+	caKey := acctest.TLSRSAPrivateKeyPEM(2048)
+	caCertificate := acctest.TLSRSAX509SelfSignedCACertificatePEM(caKey)
+	key := acctest.TLSRSAPrivateKeyPEM(2048)
+	certificate := acctest.TLSRSAX509LocallySignedCertificatePEM(caKey, caCertificate, key, commonName)
+
+	var v acm.CertificateDetail
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, acm.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCertificateDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCertificateConfig_privateKey(certificate, key, caCertificate),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCertificateExists(resourceName, &v),
+					acctest.CheckResourceAttrRFC3339(resourceName, "not_before"),
+					acctest.CheckResourceAttrRFC3339(resourceName, "not_after"),
 				),
 			},
 			{
