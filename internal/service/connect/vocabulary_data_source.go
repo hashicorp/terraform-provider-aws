@@ -81,11 +81,11 @@ func dataSourceVocabularyRead(ctx context.Context, d *schema.ResourceData, meta 
 		vocabularySummary, err := dataSourceGetVocabularySummaryByName(ctx, conn, instanceID, name)
 
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("error finding Connect Vocabulary Summary by name (%s): %w", name, err))
+			return diag.Errorf("finding Connect Vocabulary Summary by name (%s): %s", name, err)
 		}
 
 		if vocabularySummary == nil {
-			return diag.FromErr(fmt.Errorf("error finding Connect Vocabulary Summary by name (%s): not found", name))
+			return diag.Errorf("finding Connect Vocabulary Summary by name (%s): not found", name)
 		}
 
 		input.VocabularyId = vocabularySummary.Id
@@ -94,11 +94,11 @@ func dataSourceVocabularyRead(ctx context.Context, d *schema.ResourceData, meta 
 	resp, err := conn.DescribeVocabularyWithContext(ctx, input)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error getting Connect Vocabulary: %w", err))
+		return diag.Errorf("getting Connect Vocabulary: %s", err)
 	}
 
 	if resp == nil || resp.Vocabulary == nil {
-		return diag.FromErr(fmt.Errorf("error getting Connect Vocabulary: empty response"))
+		return diag.Errorf("getting Connect Vocabulary: empty response")
 	}
 
 	vocabulary := resp.Vocabulary
@@ -114,7 +114,7 @@ func dataSourceVocabularyRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("vocabulary_id", vocabulary.Id)
 
 	if err := d.Set("tags", KeyValueTags(vocabulary.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting tags: %s", err))
+		return diag.Errorf("setting tags: %s", err)
 	}
 
 	d.SetId(fmt.Sprintf("%s:%s", instanceID, aws.StringValue(vocabulary.Id)))
