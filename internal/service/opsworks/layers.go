@@ -662,30 +662,27 @@ func (lt *opsworksLayerType) Update(d *schema.ResourceData, meta interface{}) er
 func (lt *opsworksLayerType) Delete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).OpsWorksConn
 
-	req := &opsworks.DeleteLayerInput{
+	log.Printf("[DEBUG] Deleting OpsWorks Layer: %s", d.Id())
+	_, err := conn.DeleteLayer(&opsworks.DeleteLayerInput{
 		LayerId: aws.String(d.Id()),
-	}
-
-	log.Printf("[DEBUG] Deleting OpsWorks layer: %s", d.Id())
-
-	_, err := conn.DeleteLayer(req)
+	})
 
 	if tfawserr.ErrCodeEquals(err, opsworks.ErrCodeResourceNotFoundException) {
-		log.Printf("[DEBUG] OpsWorks Layer (%s) not found to delete; removed from state", d.Id())
+		return nil
 	}
 
-	if err != nil && !tfawserr.ErrCodeEquals(err, opsworks.ErrCodeResourceNotFoundException) {
-		return fmt.Errorf("error Deleting Opsworks Layer (%s): %w", d.Id(), err)
+	if err != nil {
+		return fmt.Errorf("deleting OpsWorks Layer (%s): %w", d.Id(), err)
 	}
 
 	if v, ok := d.GetOk("ecs_cluster_arn"); ok {
-		ecsClusterArn := v.(string)
-		log.Printf("[DEBUG] Detaching ECS Cluster: %s", ecsClusterArn)
+		arn := v.(string)
 		_, err := conn.DeregisterEcsCluster(&opsworks.DeregisterEcsClusterInput{
-			EcsClusterArn: aws.String(ecsClusterArn),
+			EcsClusterArn: aws.String(arn),
 		})
+
 		if err != nil {
-			return fmt.Errorf("error Deregistering Opsworks Layer ECS Cluster (%s): %w", d.Id(), err)
+			return fmt.Errorf("deregistering OpsWorks Layer (%s) ECS Cluster (%s): %w", d.Id(), arn, err)
 		}
 	}
 
