@@ -158,6 +158,8 @@ func TestAccOpsWorksStack_tagsAlternateRegion(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t)
 			testAccPreCheckStacks(t)
+			// This test requires a very particular AWS Region configuration
+			// in order to exercise the OpsWorks classic endpoint functionality.
 			acctest.PreCheckMultipleRegion(t, 2)
 			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
 			acctest.PreCheckAlternateRegionIs(t, endpoints.UsWest1RegionID)
@@ -375,42 +377,6 @@ func TestAccOpsWorksStack_CustomCookbooks_setPrivateProperties(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "custom_cookbooks_source.0.password", "password"),
 					resource.TestCheckResourceAttr(resourceName, "custom_cookbooks_source.0.ssh_key", sshKey),
 				),
-			},
-		},
-	})
-}
-
-// Tests the addition of regional endpoints and supporting the classic link used
-// to create Stack's prior to v0.9.0.
-// See https://github.com/hashicorp/terraform/issues/12842
-func TestAccOpsWorksStack_classicEndpoints(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_opsworks_stack.test"
-	var v opsworks.Stack
-
-	// This test cannot be parallel with other tests, because it changes the provider region in a non-standard way
-	// https://github.com/hashicorp/terraform-provider-aws/issues/21887
-	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckRegion(t, endpoints.UsWest2RegionID) },
-		ErrorCheck:               acctest.ErrorCheck(t, opsworks.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckStackDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccStackConfig_classicEndpoint(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStackExists(resourceName, &v),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			// Ensure that changing region results in no plan
-			{
-				Config:   testAccStackConfig_regionalEndpoint(rName),
-				PlanOnly: true,
 			},
 		},
 	})
@@ -635,6 +601,7 @@ func testAccStackConfig_baseTagsAlternateRegion(rName string) string {
 		acctest.ConfigMultipleRegionProvider(2),
 		testAccStackConfig_base(rName),
 		fmt.Sprintf(`
+# The VPC (and subnets) must be in the target (alternate) AWS Region.
 data "aws_availability_zones" "available" {
   provider = "awsalternate"
 
@@ -707,180 +674,6 @@ resource "aws_opsworks_stack" "test" {
   }
 }
 `, rName, acctest.AlternateRegion(), tagKey1, tagValue1, tagKey2, tagValue2))
-}
-
-func testAccStackConfig_classicEndpoint(rName string) string {
-	return fmt.Sprintf(`
-provider "aws" {
-  region = "us-east-1"
-}
-
-resource "aws_opsworks_stack" "test" {
-  name                          = %[1]q
-  region                        = "us-west-2"
-  service_role_arn              = aws_iam_role.opsworks_service.arn
-  default_instance_profile_arn  = aws_iam_instance_profile.opsworks_instance.arn
-  configuration_manager_version = "12"
-  default_availability_zone     = "us-west-2b"
-}
-
-resource "aws_iam_role" "opsworks_service" {
-  name = %[1]q
-
-  assume_role_policy = <<EOT
-{
-  "Version": "2008-10-17",
-  "Statement": [
-    {
-      "Sid": "",
-      "Effect": "Allow",
-      "Principal": {
-        "Service": "opsworks.amazonaws.com"
-      },
-      "Action": "sts:AssumeRole"
-    }
-  ]
-}
-EOT
-}
-
-resource "aws_iam_role_policy" "opsworks_service" {
-  name = %[1]q
-  role = aws_iam_role.opsworks_service.id
-
-  policy = <<EOT
-{
-  "Statement": [
-    {
-      "Action": [
-        "ec2:*",
-        "iam:PassRole",
-        "cloudwatch:GetMetricStatistics",
-        "elasticloadbalancing:*",
-        "rds:*"
-      ],
-      "Effect": "Allow",
-      "Resource": [
-        "*"
-      ]
-    }
-  ]
-}
-EOT
-}
-
-resource "aws_iam_role" "opsworks_instance" {
-  name = "%[1]s-instance"
-
-  assume_role_policy = <<EOT
-{
-  "Version": "2008-10-17",
-  "Statement": [
-    {
-      "Sid": "",
-      "Effect": "Allow",
-      "Principal": {
-        "Service": "ec2.amazonaws.com"
-      },
-      "Action": "sts:AssumeRole"
-    }
-  ]
-}
-EOT
-}
-
-resource "aws_iam_instance_profile" "opsworks_instance" {
-  name = %[1]q
-  role = aws_iam_role.opsworks_instance.name
-}
-`, rName) //lintignore:AWSAT003,AT004
-}
-
-func testAccStackConfig_regionalEndpoint(rName string) string {
-	return fmt.Sprintf(`
-provider "aws" {
-  region = "us-west-2"
-}
-
-resource "aws_opsworks_stack" "test" {
-  name                          = %[1]q
-  region                        = "us-west-2"
-  service_role_arn              = aws_iam_role.opsworks_service.arn
-  default_instance_profile_arn  = aws_iam_instance_profile.opsworks_instance.arn
-  configuration_manager_version = "12"
-  default_availability_zone     = "us-west-2b"
-}
-
-resource "aws_iam_role" "opsworks_service" {
-  name = %[1]q
-
-  assume_role_policy = <<EOT
-{
-  "Version": "2008-10-17",
-  "Statement": [
-    {
-      "Sid": "",
-      "Effect": "Allow",
-      "Principal": {
-        "Service": "opsworks.amazonaws.com"
-      },
-      "Action": "sts:AssumeRole"
-    }
-  ]
-}
-EOT
-}
-
-resource "aws_iam_role_policy" "opsworks_service" {
-  name = %[1]q
-  role = aws_iam_role.opsworks_service.id
-
-  policy = <<EOT
-{
-  "Statement": [
-    {
-      "Action": [
-        "ec2:*",
-        "iam:PassRole",
-        "cloudwatch:GetMetricStatistics",
-        "elasticloadbalancing:*",
-        "rds:*"
-      ],
-      "Effect": "Allow",
-      "Resource": [
-        "*"
-      ]
-    }
-  ]
-}
-EOT
-}
-
-resource "aws_iam_role" "opsworks_instance" {
-  name = "%[1]s-instance"
-
-  assume_role_policy = <<EOT
-{
-  "Version": "2008-10-17",
-  "Statement": [
-    {
-      "Sid": "",
-      "Effect": "Allow",
-      "Principal": {
-        "Service": "ec2.amazonaws.com"
-      },
-      "Action": "sts:AssumeRole"
-    }
-  ]
-}
-EOT
-}
-
-resource "aws_iam_instance_profile" "opsworks_instance" {
-  name = %[1]q
-  role = aws_iam_role.opsworks_instance.name
-}
-`, rName) //lintignore:AWSAT003,AT004
 }
 
 func testAccStackConfig_noVPCCreate(rName string) string {
