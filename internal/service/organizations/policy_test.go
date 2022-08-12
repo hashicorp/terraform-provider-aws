@@ -16,7 +16,7 @@ import (
 	tforganizations "github.com/hashicorp/terraform-provider-aws/internal/service/organizations"
 )
 
-func testAccPolicy_basic(t *testing.T) {
+func TestAccPolicy_basic(t *testing.T) {
 	var policy organizations.Policy
 	content1 := `{"Version": "2012-10-17", "Statement": { "Effect": "Allow", "Action": "*", "Resource": "*"}}`
 	content2 := `{"Version": "2012-10-17", "Statement": { "Effect": "Allow", "Action": "s3:*", "Resource": "*"}}`
@@ -57,7 +57,7 @@ func testAccPolicy_basic(t *testing.T) {
 }
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/5073
-func testAccPolicy_concurrent(t *testing.T) {
+func TestAccPolicy_concurrent(t *testing.T) {
 	var policy1, policy2, policy3, policy4, policy5 organizations.Policy
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName1 := "aws_organizations_policy.test1"
@@ -86,7 +86,7 @@ func testAccPolicy_concurrent(t *testing.T) {
 	})
 }
 
-func testAccPolicy_description(t *testing.T) {
+func TestAccPolicy_description(t *testing.T) {
 	var policy organizations.Policy
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_organizations_policy.test"
@@ -120,7 +120,7 @@ func testAccPolicy_description(t *testing.T) {
 	})
 }
 
-func testAccPolicy_tags(t *testing.T) {
+func TestAccPolicy_tags(t *testing.T) {
 	var p1, p2, p3, p4 organizations.Policy
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_organizations_policy.test"
@@ -173,7 +173,7 @@ func testAccPolicy_tags(t *testing.T) {
 	})
 }
 
-func testAccPolicy_disappears(t *testing.T) {
+func TestAccPolicy_disappears(t *testing.T) {
 	var p organizations.Policy
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_organizations_policy.test"
@@ -196,7 +196,7 @@ func testAccPolicy_disappears(t *testing.T) {
 	})
 }
 
-func testAccPolicy_type_AI_OPT_OUT(t *testing.T) {
+func TestAccPolicy_type_AI_OPT_OUT(t *testing.T) {
 	var policy organizations.Policy
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_organizations_policy.test"
@@ -214,6 +214,7 @@ func testAccPolicy_type_AI_OPT_OUT(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(resourceName, &policy),
 					resource.TestCheckResourceAttr(resourceName, "type", organizations.PolicyTypeAiservicesOptOutPolicy),
+					resource.TestCheckResourceAttr(resourceName, "content", AiOptOutPolicyContent),
 				),
 			},
 			{
@@ -225,7 +226,7 @@ func testAccPolicy_type_AI_OPT_OUT(t *testing.T) {
 	})
 }
 
-func testAccPolicy_type_Backup(t *testing.T) {
+func TestAccPolicy_type_Backup(t *testing.T) {
 	var policy organizations.Policy
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_organizations_policy.test"
@@ -311,6 +312,7 @@ func testAccPolicy_type_Backup(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(resourceName, &policy),
 					resource.TestCheckResourceAttr(resourceName, "type", organizations.PolicyTypeBackupPolicy),
+					resource.TestCheckResourceAttr(resourceName, "content", backupPolicyContent),
 				),
 			},
 			{
@@ -322,7 +324,7 @@ func testAccPolicy_type_Backup(t *testing.T) {
 	})
 }
 
-func testAccPolicy_type_SCP(t *testing.T) {
+func TestAccPolicy_type_SCP(t *testing.T) {
 	var policy organizations.Policy
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_organizations_policy.test"
@@ -339,6 +341,7 @@ func testAccPolicy_type_SCP(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(resourceName, &policy),
 					resource.TestCheckResourceAttr(resourceName, "type", organizations.PolicyTypeServiceControlPolicy),
+					resource.TestCheckResourceAttr(resourceName, "content", serviceControlPolicyContent),
 				),
 			},
 			{
@@ -346,6 +349,7 @@ func testAccPolicy_type_SCP(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(resourceName, &policy),
 					resource.TestCheckResourceAttr(resourceName, "type", organizations.PolicyTypeServiceControlPolicy),
+					resource.TestCheckResourceAttr(resourceName, "content", serviceControlPolicyContent),
 				),
 			},
 			{
@@ -357,7 +361,7 @@ func testAccPolicy_type_SCP(t *testing.T) {
 	})
 }
 
-func testAccPolicy_type_Tag(t *testing.T) {
+func TestAccPolicy_type_Tag(t *testing.T) {
 	var policy organizations.Policy
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_organizations_policy.test"
@@ -374,6 +378,7 @@ func testAccPolicy_type_Tag(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(resourceName, &policy),
 					resource.TestCheckResourceAttr(resourceName, "type", organizations.PolicyTypeTagPolicy),
+					resource.TestCheckResourceAttr(resourceName, "content", tagPolicyContent),
 				),
 			},
 			{
@@ -385,7 +390,7 @@ func testAccPolicy_type_Tag(t *testing.T) {
 	})
 }
 
-func testAccPolicy_importManagedPolicy(t *testing.T) {
+func TestAccPolicy_importManagedPolicy(t *testing.T) {
 	resourceName := "aws_organizations_policy.test"
 
 	resourceID := "p-FullAWSAccess"
