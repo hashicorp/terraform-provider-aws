@@ -42,6 +42,8 @@ func TestAccACMCertificate_emailValidation(t *testing.T) {
 					resource.TestMatchResourceAttr(resourceName, "validation_emails.0", regexp.MustCompile(`^[^@]+@.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "validation_method", acm.ValidationMethodEmail),
 					resource.TestCheckResourceAttr(resourceName, "validation_option.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "not_before", "0"),
+					resource.TestCheckResourceAttr(resourceName, "not_after", "0"),
 				),
 			},
 			{
@@ -197,6 +199,8 @@ func TestAccACMCertificate_privateCert(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "validation_method", "NONE"),
 					resource.TestCheckResourceAttr(resourceName, "validation_option.#", "0"),
 					resource.TestCheckResourceAttrPair(resourceName, "certificate_authority_arn", certificateAuthorityResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "not_before", ""),
+					resource.TestCheckResourceAttr(resourceName, "not_after", ""),
 				),
 			},
 			{
@@ -625,6 +629,8 @@ func TestAccACMCertificate_Imported_domainName(t *testing.T) {
 					testAccCheckCertificateExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "domain_name", commonName),
+					resource.TestCheckResourceAttrSet(resourceName, "not_before"),
+					resource.TestCheckResourceAttrSet(resourceName, "not_after"),
 				),
 			},
 			{
