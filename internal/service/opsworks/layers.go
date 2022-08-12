@@ -575,7 +575,7 @@ func (lt *opsworksLayerType) Read(d *schema.ResourceData, meta interface{}) erro
 func (lt *opsworksLayerType) Update(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).OpsWorksConn
 
-	if d.HasChangesExcept("ecs_cluster_arn", "elastic_load_balancer", "tags", "tags_all") {
+	if d.HasChangesExcept("elastic_load_balancer", "tags", "tags_all") {
 		attributes, err := lt.AttributeMap(d)
 		if err != nil {
 			return err
@@ -619,30 +619,27 @@ func (lt *opsworksLayerType) Update(d *schema.ResourceData, meta interface{}) er
 	}
 
 	if d.HasChange("elastic_load_balancer") {
-		lbo, lbn := d.GetChange("elastic_load_balancer")
+		o, n := d.GetChange("elastic_load_balancer")
 
-		loadBalancerOld := aws.String(lbo.(string))
-		loadBalancerNew := aws.String(lbn.(string))
-
-		if aws.StringValue(loadBalancerOld) != "" {
-			log.Printf("[DEBUG] Dettaching load balancer: %s", *loadBalancerOld)
+		if v := o.(string); v != "" {
 			_, err := conn.DetachElasticLoadBalancer(&opsworks.DetachElasticLoadBalancerInput{
-				ElasticLoadBalancerName: loadBalancerOld,
+				ElasticLoadBalancerName: aws.String(v),
 				LayerId:                 aws.String(d.Id()),
 			})
+
 			if err != nil {
-				return fmt.Errorf("error Dettaching Opsworks Layer (%s) load balancer: %w", d.Id(), err)
+				return fmt.Errorf("detaching OpsWorks Layer (%s) load balancer (%s): %w", d.Id(), v, err)
 			}
 		}
 
-		if aws.StringValue(loadBalancerNew) != "" {
-			log.Printf("[DEBUG] Attaching load balancer: %s", *loadBalancerNew)
+		if v := n.(string); v != "" {
 			_, err := conn.AttachElasticLoadBalancer(&opsworks.AttachElasticLoadBalancerInput{
-				ElasticLoadBalancerName: loadBalancerNew,
+				ElasticLoadBalancerName: aws.String(v),
 				LayerId:                 aws.String(d.Id()),
 			})
+
 			if err != nil {
-				return fmt.Errorf("error Attaching Opsworks Layer (%s) load balancer: %w", d.Id(), err)
+				return fmt.Errorf("attaching OpsWorks Layer (%s) load balancer (%s): %w", d.Id(), v, err)
 			}
 		}
 	}
@@ -652,7 +649,7 @@ func (lt *opsworksLayerType) Update(d *schema.ResourceData, meta interface{}) er
 
 		arn := d.Get("arn").(string)
 		if err := UpdateTags(conn, arn, o, n); err != nil {
-			return fmt.Errorf("error updating Opsworks Layer (%s) tags: %w", arn, err)
+			return fmt.Errorf("updating OpsWorks Layer (%s) tags: %w", arn, err)
 		}
 	}
 
