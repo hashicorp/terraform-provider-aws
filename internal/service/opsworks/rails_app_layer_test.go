@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfopsworks "github.com/hashicorp/terraform-provider-aws/internal/service/opsworks"
 )
 
 func TestAccOpsWorksRailsAppLayer_basic(t *testing.T) {
@@ -62,6 +63,29 @@ func TestAccOpsWorksRailsAppLayer_basic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccOpsWorksRailsAppLayer_disappears(t *testing.T) {
+	var v opsworks.Layer
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_opsworks_rails_app_layer.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, opsworks.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRailsAppLayerDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRailsAppLayerConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckLayerExists(resourceName, &v),
+					acctest.CheckResourceDisappears(acctest.Provider, tfopsworks.ResourceRailsAppLayer(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
