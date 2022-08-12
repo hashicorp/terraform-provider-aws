@@ -17,7 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccTransitGatewayPolicyTable_basic(t *testing.T) {
+func testAccTransitGatewayPolicyTable_basic(t *testing.T) {
 	var transitGatewayPolicyTable1 ec2.TransitGatewayPolicyTable
 	resourceName := "aws_ec2_transit_gateway_policy_table.test"
 	transitGatewayResourceName := "aws_ec2_transit_gateway.test"
@@ -48,7 +48,7 @@ func TestAccTransitGatewayPolicyTable_basic(t *testing.T) {
 	})
 }
 
-func TestAccTransitGatewayPolicyTable_disappears(t *testing.T) {
+func testAccTransitGatewayPolicyTable_disappears(t *testing.T) {
 	var transitGatewayPolicyTable1 ec2.TransitGatewayPolicyTable
 	resourceName := "aws_ec2_transit_gateway_policy_table.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -71,7 +71,7 @@ func TestAccTransitGatewayPolicyTable_disappears(t *testing.T) {
 	})
 }
 
-func TestAccTransitGatewayPolicyTable_disappears_TransitGateway(t *testing.T) {
+func testAccTransitGatewayPolicyTable_disappears_TransitGateway(t *testing.T) {
 	var transitGateway1 ec2.TransitGateway
 	var transitGatewayPolicyTable1 ec2.TransitGatewayPolicyTable
 	resourceName := "aws_ec2_transit_gateway_policy_table.test"
@@ -97,7 +97,7 @@ func TestAccTransitGatewayPolicyTable_disappears_TransitGateway(t *testing.T) {
 	})
 }
 
-func TestAccTransitGatewayPolicyTable_Tags(t *testing.T) {
+func testAccTransitGatewayPolicyTable_Tags(t *testing.T) {
 	var transitGatewayPolicyTable1, transitGatewayPolicyTable2, transitGatewayPolicyTable3 ec2.TransitGatewayPolicyTable
 	resourceName := "aws_ec2_transit_gateway_policy_table.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

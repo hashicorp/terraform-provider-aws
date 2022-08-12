@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccTransitGatewayPolicyTableAssociation_basic(t *testing.T) {
+func testAccTransitGatewayPolicyTableAssociation_basic(t *testing.T) {
 	var v ec2.TransitGatewayPolicyTableAssociation
 	resourceName := "aws_ec2_transit_gateway_policy_table_association.test"
 	transitGatewayPolicyTableResourceName := "aws_ec2_transit_gateway_policy_table.test"
@@ -46,7 +46,7 @@ func TestAccTransitGatewayPolicyTableAssociation_basic(t *testing.T) {
 	})
 }
 
-func TestAccTransitGatewayPolicyTableAssociation_disappears(t *testing.T) {
+func testAccTransitGatewayPolicyTableAssociation_disappears(t *testing.T) {
 	var v ec2.TransitGatewayPolicyTableAssociation
 	resourceName := "aws_ec2_transit_gateway_policy_table_association.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
