@@ -389,6 +389,50 @@ func TestAccOpsWorksStack_allAttributes(t *testing.T) {
 	})
 }
 
+func TestAccOpsWorksStack_windows(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_opsworks_stack.test"
+	var v opsworks.Stack
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t)
+			testAccPreCheckStacks(t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, opsworks.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckStackDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccStackConfig_windows(rName, "Microsoft Windows Server 2012 R2 Base"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckStackExists(resourceName, &v),
+					resource.TestCheckResourceAttrSet(resourceName, "agent_version"),
+					resource.TestCheckResourceAttr(resourceName, "configuration_manager_name", "Chef"),
+					resource.TestCheckResourceAttr(resourceName, "configuration_manager_version", "12.2"),
+					resource.TestCheckResourceAttr(resourceName, "default_os", "Microsoft Windows Server 2012 R2 Base"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccStackConfig_windows(rName, "Microsoft Windows Server 2012 R2 with SQL Server Standard"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckStackExists(resourceName, &v),
+					resource.TestCheckResourceAttrSet(resourceName, "agent_version"),
+					resource.TestCheckResourceAttr(resourceName, "configuration_manager_name", "Chef"),
+					resource.TestCheckResourceAttr(resourceName, "configuration_manager_version", "12.2"),
+					resource.TestCheckResourceAttr(resourceName, "default_os", "Microsoft Windows Server 2012 R2 with SQL Server Standard"),
+				),
+			},
+		},
+	})
+}
+
 ///////////////////////////////
 //// Tests for the No-VPC case
 ///////////////////////////////
@@ -660,10 +704,6 @@ func testAccCheckStackDestroyWithProvider(s *terraform.State, providerF func() *
 	return nil
 }
 
-//////////////////////////////////////////////////
-//// Helper configs for the necessary IAM objects
-//////////////////////////////////////////////////
-
 func testAccStackConfig_base(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "opsworks_service" {
@@ -912,6 +952,23 @@ resource "aws_opsworks_stack" "test" {
   }
 }
 `, rName, acctest.Region(), agentVersion, color, customCookbookRevision, customJSON, defaultSSHKeyName, hostnameTheme))
+}
+
+func testAccStackConfig_windows(rName, defaultOS string) string {
+	return acctest.ConfigCompose(testAccStackConfig_baseVPC(rName), fmt.Sprintf(`
+resource "aws_opsworks_stack" "test" {
+  name                          = %[1]q
+  region                        = %[2]q
+  service_role_arn              = aws_iam_role.opsworks_service.arn
+  default_instance_profile_arn  = aws_iam_instance_profile.opsworks_instance.arn
+  default_subnet_id             = aws_subnet.test[0].id
+  vpc_id                        = aws_vpc.test.id
+  use_opsworks_security_groups  = false
+
+  default_os                    = %[3]q
+  configuration_manager_version = "12.2"
+}
+`, rName, acctest.Region(), defaultOS))
 }
 
 func testAccStackConfig_noVPCCreate(rName string) string {
