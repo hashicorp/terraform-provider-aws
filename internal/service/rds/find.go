@@ -219,7 +219,7 @@ func FindDBProxyByName(conn *rds.RDS, name string) (*rds.DBProxy, error) {
 
 func FindDBSnapshotByID(conn *rds.RDS, id string) (*rds.DBSnapshot, error) {
 	input := &rds.DescribeDBSnapshotsInput{
-		DBInstanceIdentifier: aws.String(id),
+		DBSnapshotIdentifier: aws.String(id),
 	}
 
 	output, err := conn.DescribeDBSnapshots(input)
