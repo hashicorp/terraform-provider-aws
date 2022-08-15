@@ -656,6 +656,7 @@ func TestAccACMCertificate_Imported_domainName(t *testing.T) {
 	})
 }
 
+// lintignore:AT002
 func TestAccACMCertificate_Imported_validityDates(t *testing.T) {
 	resourceName := "aws_acm_certificate.test"
 	commonName := "example.com"
