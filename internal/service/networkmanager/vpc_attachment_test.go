@@ -14,7 +14,7 @@ import (
 	tfnetworkmanager "github.com/hashicorp/terraform-provider-aws/internal/service/networkmanager"
 )
 
-func TestAccNetworkManagerVpcAttachment_basic(t *testing.T) {
+func TestAccNetworkManagerVPCAttachment_basic(t *testing.T) {
 	resourceName := "aws_networkmanager_vpc_attachment.test"
 	testExternalProviders := map[string]resource.ExternalProvider{
 		"awscc": {
@@ -45,7 +45,7 @@ func TestAccNetworkManagerVpcAttachment_basic(t *testing.T) {
 	})
 }
 
-func TestAccNetworkManagerVpcAttachment_updates(t *testing.T) {
+func TestAccNetworkManagerVPCAttachment_updates(t *testing.T) {
 	resourceName := "aws_networkmanager_vpc_attachment.test"
 	testExternalProviders := map[string]resource.ExternalProvider{
 		"awscc": {
@@ -99,7 +99,7 @@ func TestAccNetworkManagerVpcAttachment_updates(t *testing.T) {
 	})
 }
 
-func TestAccNetworkManagerVpcAttachment_tags(t *testing.T) {
+func TestAccNetworkManagerVPCAttachment_tags(t *testing.T) {
 	resourceName := "aws_networkmanager_vpc_attachment.test"
 	testExternalProviders := map[string]resource.ExternalProvider{
 		"awscc": {
@@ -250,7 +250,7 @@ data "aws_networkmanager_core_network_policy_document" "test" {
 `
 
 func testAccCoreNetworkConfig_basic() string {
-	return TestAccVPCConfig_multipleSubnets +
+	return acctest.ConfigCompose(TestAccVPCConfig_multipleSubnets +
 		TestAccCoreNetworkConfig + `
 resource "aws_networkmanager_vpc_attachment" "test" {
   subnet_arns     = aws_subnet.test.*.arn
@@ -262,11 +262,11 @@ resource "aws_networkmanager_attachment_accepter" "test" {
   attachment_id   = aws_networkmanager_vpc_attachment.test.id
   attachment_type = aws_networkmanager_vpc_attachment.test.attachment_type
 }
-`
+`)
 }
 
 func testAccCoreNetworkConfig_updates(azs string, ipv6Support bool) string {
-	return TestAccVPCConfig_multipleSubnets +
+	return acctest.ConfigCompose(TestAccVPCConfig_multipleSubnets +
 		TestAccCoreNetworkConfig + fmt.Sprintf(`
 resource "aws_networkmanager_vpc_attachment" "test" {
   subnet_arns     = flatten([aws_subnet.test.%[1]s.arn])
@@ -282,20 +282,16 @@ resource "aws_networkmanager_attachment_accepter" "test" {
   attachment_id   = aws_networkmanager_vpc_attachment.test.id
   attachment_type = aws_networkmanager_vpc_attachment.test.attachment_type
 }
-`, azs, ipv6Support)
+`, azs, ipv6Support))
 }
 
 func testAccCoreNetworkConfig_oneTag(tagKey1, tagValue1 string) string {
-	return TestAccVPCConfig_multipleSubnets +
+	return acctest.ConfigCompose(TestAccVPCConfig_multipleSubnets +
 		TestAccCoreNetworkConfig + fmt.Sprintf(`
 resource "aws_networkmanager_vpc_attachment" "test" {
   subnet_arns     = [aws_subnet.test[0].arn]
   core_network_id = awscc_networkmanager_core_network.test.id
   vpc_arn         = aws_vpc.test.arn
-
-  options {
-    ipv6_support = false
-  }
 
   tags = {
     %[1]q = %[2]q
@@ -306,20 +302,16 @@ resource "aws_networkmanager_attachment_accepter" "test" {
   attachment_id   = aws_networkmanager_vpc_attachment.test.id
   attachment_type = aws_networkmanager_vpc_attachment.test.attachment_type
 }
-`, tagKey1, tagValue1)
+`, tagKey1, tagValue1))
 }
 
 func testAccCoreNetworkConfig_twoTag(tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return TestAccVPCConfig_multipleSubnets +
+	return acctest.ConfigCompose(TestAccVPCConfig_multipleSubnets +
 		TestAccCoreNetworkConfig + fmt.Sprintf(`
 resource "aws_networkmanager_vpc_attachment" "test" {
   subnet_arns     = [aws_subnet.test[0].arn]
   core_network_id = awscc_networkmanager_core_network.test.id
   vpc_arn         = aws_vpc.test.arn
-
-  options {
-    ipv6_support = false
-  }
 
   tags = {
     %[1]q = %[2]q
@@ -331,5 +323,5 @@ resource "aws_networkmanager_attachment_accepter" "test" {
   attachment_id   = aws_networkmanager_vpc_attachment.test.id
   attachment_type = aws_networkmanager_vpc_attachment.test.attachment_type
 }
-`, tagKey1, tagValue1, tagKey2, tagValue2)
+`, tagKey1, tagValue1, tagKey2, tagValue2))
 }
