@@ -217,6 +217,36 @@ func FindDBProxyByName(conn *rds.RDS, name string) (*rds.DBProxy, error) {
 	return dbProxy, nil
 }
 
+func FindDBSnapshotByID(conn *rds.RDS, id string) (*rds.DBSnapshot, error) {
+	input := &rds.DescribeDBSnapshotsInput{
+		DBSnapshotIdentifier: aws.String(id),
+	}
+
+	output, err := conn.DescribeDBSnapshots(input)
+
+	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBSnapshotNotFoundFault) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if output == nil || len(output.DBSnapshots) == 0 || output.DBSnapshots[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	dbSnapshot := output.DBSnapshots[0]
+
+	// Eventual consistency check.
+	if aws.StringValue(dbSnapshot.DBSnapshotIdentifier) != id {
+		return nil, &resource.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return dbSnapshot, nil
+}
+
 func FindEventSubscriptionByID(conn *rds.RDS, id string) (*rds.EventSubscription, error) {
 	input := &rds.DescribeEventSubscriptionsInput{
 		SubscriptionName: aws.String(id),
