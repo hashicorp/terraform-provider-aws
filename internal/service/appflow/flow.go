@@ -2483,7 +2483,7 @@ func expandScheduledTriggerProperties(tfMap map[string]interface{}) *appflow.Sch
 	if v, ok := tfMap["schedule_start_time"].(string); ok && v != "" {
 		v, _ := time.Parse(time.RFC3339, v)
 
-		a.ScheduleEndTime = aws.Time(v)
+		a.ScheduleStartTime = aws.Time(v)
 	}
 
 	if v, ok := tfMap["timezone"].(string); ok && v != "" {
