@@ -13,8 +13,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-// AttachmentAccepter is not specific to AttachmentType. However, querying attachments for status updates is
-// To facilitate querying and waiters on specific attachment types, attachment_type required
+// AttachmentAccepter does not require AttachmentType. However, querying attachments for status updates requires knowing tyupe
+// To facilitate querying and waiters on specific attachment types, attachment_type set to required
 
 func ResourceAttachmentAccepter() *schema.Resource {
 	return &schema.Resource{
@@ -41,10 +41,12 @@ func ResourceAttachmentAccepter() *schema.Resource {
 			// querying attachments requires knowing the type ahead of time
 			// therefore type is required in provider, though not on the API
 			"attachment_type": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice([]string{networkmanager.AttachmentTypeVpc}, false),
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+				ValidateFunc: validation.StringInSlice([]string{
+					networkmanager.AttachmentTypeVpc,
+				}, false),
 				// Implement Values() function for validation as more types are onboarded to provider
 				// networkmanager.AttachmentType_Values(), false),
 			},
@@ -100,7 +102,7 @@ func ResourceAttachmentAccepterCreate(ctx context.Context, d *schema.ResourceDat
 		output, err := FindVPCAttachmentByID(ctx, conn, attachmentId)
 
 		if err != nil {
-			return diag.Errorf("error finding Network Manager VPC Attachment: %s", err)
+			return diag.Errorf("Finding Network Manager VPC Attachment: %s", err)
 		}
 
 		state = aws.StringValue(output.Attachment.State)
@@ -121,7 +123,7 @@ func ResourceAttachmentAccepterCreate(ctx context.Context, d *schema.ResourceDat
 		a, err := conn.AcceptAttachmentWithContext(ctx, input)
 
 		if err != nil {
-			return diag.Errorf("error accepting Network Manager Attachment: %s", err)
+			return diag.Errorf("Accepting Network Manager Attachment: %s", err)
 		}
 
 		attachment = a.Attachment
@@ -132,7 +134,7 @@ func ResourceAttachmentAccepterCreate(ctx context.Context, d *schema.ResourceDat
 	if attachmentType == networkmanager.AttachmentTypeVpc {
 		if _, err := WaitVPCAttachmentCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 			d.SetId("")
-			return diag.Errorf("error waiting for Network Manager VPC Attachment (%s) create: %s", d.Id(), err)
+			return diag.Errorf("Waiting for Network Manager VPC Attachment (%s) create: %s", d.Id(), err)
 		}
 	}
 

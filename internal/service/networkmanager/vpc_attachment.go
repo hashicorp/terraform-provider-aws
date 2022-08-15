@@ -147,13 +147,13 @@ func resourceVPCAttachmentCreate(ctx context.Context, d *schema.ResourceData, me
 	output, err := conn.CreateVpcAttachmentWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("error creating Network Manager VPC Attachment: %s", err)
+		return diag.Errorf("Creating Network Manager VPC Attachment: %s", err)
 	}
 
 	d.SetId(aws.StringValue(output.VpcAttachment.Attachment.AttachmentId))
 
 	if _, err := WaitVPCAttachmentCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return diag.Errorf("error waiting for Network Manager VPC Attachment (%s) create: %s", d.Id(), err)
+		return diag.Errorf("Waiting for Network Manager VPC Attachment (%s) create: %s", d.Id(), err)
 	}
 
 	return resourceVPCAttachmentRead(ctx, d, meta)
@@ -175,7 +175,7 @@ func resourceVPCAttachmentRead(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if err != nil {
-		return diag.Errorf("error reading Network Manager VPC Attachment (%s): %s", d.Id(), err)
+		return diag.Errorf("Reading Network Manager VPC Attachment (%s): %s", d.Id(), err)
 	}
 
 	a := vpcAttachment.VpcAttachment.Attachment
@@ -207,11 +207,11 @@ func resourceVPCAttachmentRead(ctx context.Context, d *schema.ResourceData, meta
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.Errorf("error setting tags: %s", err)
+		return diag.Errorf("Setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return diag.Errorf("error setting tags_all: %s", err)
+		return diag.Errorf("Setting tags_all: %s", err)
 	}
 
 	return nil
@@ -227,7 +227,7 @@ func resourceVPCAttachmentUpdate(ctx context.Context, d *schema.ResourceData, me
 		arn := fmt.Sprintf("arn:%s:networkmanager::%s:attachment/%s", part, acnt, d.Id())
 
 		if err := UpdateTags(conn, arn, o, n); err != nil {
-			return diag.Errorf("error updating VPC Attachment (%s) tags: %s", d.Id(), err)
+			return diag.Errorf("Updating VPC Attachment (%s) tags: %s", d.Id(), err)
 		}
 	}
 
@@ -265,11 +265,11 @@ func resourceVPCAttachmentUpdate(ctx context.Context, d *schema.ResourceData, me
 		_, err := conn.UpdateVpcAttachmentWithContext(ctx, input)
 
 		if err != nil {
-			return diag.Errorf("error updating vpc attachment (%s): %s", d.Id(), err)
+			return diag.Errorf("Updating vpc attachment (%s): %s", d.Id(), err)
 		}
 
 		if _, err := waitVPCAttachmentUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return diag.Errorf("error waiting for Network Manager VPC Attachment (%s) update: %s", d.Id(), err)
+			return diag.Errorf("Waiting for Network Manager VPC Attachment (%s) update: %s", d.Id(), err)
 		}
 	}
 
@@ -298,7 +298,7 @@ func resourceVPCAttachmentDelete(ctx context.Context, d *schema.ResourceData, me
 	state := d.Get("state").(string)
 
 	if state == networkmanager.AttachmentStatePendingAttachmentAcceptance || state == networkmanager.AttachmentStatePendingTagAcceptance {
-		return diag.Errorf("error deleting Network Manager VPC Attachment (%s): Cannot delete attachment that is pending acceptance.", d.Id())
+		return diag.Errorf("Deleting Network Manager VPC Attachment (%s): Cannot delete attachment that is pending acceptance.", d.Id())
 	}
 
 	_, err := conn.DeleteAttachmentWithContext(ctx, &networkmanager.DeleteAttachmentInput{
@@ -310,14 +310,14 @@ func resourceVPCAttachmentDelete(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	if err != nil {
-		return diag.Errorf("error deleting Network Manager VPC Attachment (%s): %s", d.Id(), err)
+		return diag.Errorf("Deleting Network Manager VPC Attachment (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitVPCAttachmentDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		if tfawserr.ErrCodeEquals(err, networkmanager.ErrCodeResourceNotFoundException) {
 			return nil
 		}
-		return diag.Errorf("error waiting for Network Manager VPC Attachment (%s) delete: %s", d.Id(), err)
+		return diag.Errorf("Waiting for Network Manager VPC Attachment (%s) delete: %s", d.Id(), err)
 	}
 
 	return nil
