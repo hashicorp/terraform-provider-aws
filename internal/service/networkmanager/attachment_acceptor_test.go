@@ -30,11 +30,8 @@ func TestAccNetworkManagerAttachmentAccepter_vpcAttachmentBasic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "attachment_type", "VPC"),
 				),
 			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
+
+			// does not support import
 		},
 	})
 }
