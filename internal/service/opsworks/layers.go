@@ -40,17 +40,14 @@ type opsworksLayerTypeAttribute struct {
 	WriteOnly    bool
 }
 
+type opsworksLayerTypeAttributeMap map[string]*opsworksLayerTypeAttribute
+
 type opsworksLayerType struct {
 	TypeName         string
 	DefaultLayerName string
-	Attributes       map[string]*opsworksLayerTypeAttribute
+	Attributes       opsworksLayerTypeAttributeMap
 	CustomShortName  bool
 }
-
-var (
-	trueString  = "true"
-	falseString = "false"
-)
 
 func (lt *opsworksLayerType) SchemaResource() *schema.Resource {
 	resourceSchema := map[string]*schema.Schema{
@@ -361,10 +358,12 @@ func (lt *opsworksLayerType) Create(d *schema.ResourceData, meta interface{}) er
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
-	attributes, err := lt.AttributeMap(d)
+	attributes, err := lt.Attributes.resourceDataToAPIAttributes(d)
+
 	if err != nil {
 		return err
 	}
+
 	req := &opsworks.CreateLayerInput{
 		AutoAssignElasticIps:        aws.Bool(d.Get("auto_assign_elastic_ips").(bool)),
 		AutoAssignPublicIps:         aws.Bool(d.Get("auto_assign_public_ips").(bool)),
@@ -379,7 +378,7 @@ func (lt *opsworksLayerType) Create(d *schema.ResourceData, meta interface{}) er
 		Type:                        aws.String(lt.TypeName),
 		StackId:                     aws.String(d.Get("stack_id").(string)),
 		UseEbsOptimizedInstances:    aws.Bool(d.Get("use_ebs_optimized_instances").(bool)),
-		Attributes:                  attributes,
+		Attributes:                  aws.StringMap(attributes),
 		VolumeConfigurations:        lt.VolumeConfigurations(d),
 	}
 
@@ -530,31 +529,8 @@ func (lt *opsworksLayerType) Read(d *schema.ResourceData, meta interface{}) erro
 	d.Set("stack_id", layer.StackId)
 	d.Set("use_ebs_optimized_instances", layer.UseEbsOptimizedInstances)
 
-	for k, attr := range lt.Attributes {
-		// Ignore write-only attributes; we'll just keep what we already have stored.
-		// (The AWS API returns garbage placeholder values for these.)
-		if attr.WriteOnly {
-			continue
-		}
-
-		if v, ok := layer.Attributes[attr.AttrName]; ok && v != nil {
-			v := aws.StringValue(v)
-
-			switch typ := attr.Type; typ {
-			case schema.TypeString:
-				d.Set(k, v)
-			case schema.TypeInt:
-				if v, err := strconv.Atoi(v); err != nil {
-					d.Set(k, v)
-				} else {
-					d.Set(k, nil)
-				}
-			case schema.TypeBool:
-				d.Set(k, v != "false")
-			default:
-				return fmt.Errorf("unsupported OpsWorks Layer (%s) attribute (%s) type: %s", d.Id(), k, typ)
-			}
-		}
+	if err := lt.Attributes.apiAttributesToResourceData(aws.StringValueMap(layer.Attributes), d); err != nil {
+		return err
 	}
 
 	loadBalancer, err := findElasticLoadBalancerByLayerID(conn, d.Id())
@@ -591,7 +567,8 @@ func (lt *opsworksLayerType) Update(d *schema.ResourceData, meta interface{}) er
 	conn := meta.(*conns.AWSClient).OpsWorksConn
 
 	if d.HasChangesExcept("elastic_load_balancer", "tags", "tags_all") {
-		attributes, err := lt.AttributeMap(d)
+		attributes, err := lt.Attributes.resourceDataToAPIAttributes(d)
+
 		if err != nil {
 			return err
 		}
@@ -609,7 +586,7 @@ func (lt *opsworksLayerType) Update(d *schema.ResourceData, meta interface{}) er
 			Name:                        aws.String(d.Get("name").(string)),
 			Packages:                    flex.ExpandStringSet(d.Get("system_packages").(*schema.Set)),
 			UseEbsOptimizedInstances:    aws.Bool(d.Get("use_ebs_optimized_instances").(bool)),
-			Attributes:                  attributes,
+			Attributes:                  aws.StringMap(attributes),
 			VolumeConfigurations:        lt.VolumeConfigurations(d),
 		}
 
@@ -752,33 +729,54 @@ func findElasticLoadBalancerByLayerID(conn *opsworks.OpsWorks, id string) (*opsw
 	return output.ElasticLoadBalancers[0], nil
 }
 
-func (lt *opsworksLayerType) AttributeMap(d *schema.ResourceData) (map[string]*string, error) {
-	attrs := map[string]*string{}
+func (m opsworksLayerTypeAttributeMap) apiAttributesToResourceData(apiAttributes map[string]string, d *schema.ResourceData) error {
+	for k, attr := range m {
+		// Ignore write-only attributes; we'll just keep what we already have stored.
+		// (The AWS API returns garbage placeholder values for these.)
+		if attr.WriteOnly {
+			continue
+		}
 
-	for key, def := range lt.Attributes {
-		value := d.Get(key)
-		switch def.Type {
-		case schema.TypeString:
-			strValue := value.(string)
-			attrs[def.AttrName] = &strValue
-		case schema.TypeInt:
-			intValue := value.(int)
-			strValue := strconv.Itoa(intValue)
-			attrs[def.AttrName] = &strValue
-		case schema.TypeBool:
-			boolValue := value.(bool)
-			if boolValue {
-				attrs[def.AttrName] = &trueString
-			} else {
-				attrs[def.AttrName] = &falseString
+		if v, ok := apiAttributes[attr.AttrName]; ok {
+			switch typ := attr.Type; typ {
+			case schema.TypeString:
+				d.Set(k, v)
+			case schema.TypeInt:
+				if v, err := strconv.Atoi(v); err != nil {
+					d.Set(k, v)
+				} else {
+					d.Set(k, nil)
+				}
+			case schema.TypeBool:
+				d.Set(k, v != "false")
+			default:
+				return fmt.Errorf("unsupported OpsWorks Layer (%s) attribute (%s) type: %s", d.Id(), k, typ)
 			}
-		default:
-			// should never happen
-			return nil, fmt.Errorf("Unsupported OpsWorks layer attribute type: %s", def.Type)
 		}
 	}
 
-	return attrs, nil
+	return nil
+}
+
+func (m opsworksLayerTypeAttributeMap) resourceDataToAPIAttributes(d *schema.ResourceData) (map[string]string, error) {
+	apiAttributes := map[string]string{}
+
+	for k, attr := range m {
+		v := d.Get(k)
+
+		switch typ := attr.Type; typ {
+		case schema.TypeString:
+			apiAttributes[attr.AttrName] = v.(string)
+		case schema.TypeInt:
+			apiAttributes[attr.AttrName] = strconv.Itoa(v.(int))
+		case schema.TypeBool:
+			apiAttributes[attr.AttrName] = strconv.FormatBool(v.(bool))
+		default:
+			return nil, fmt.Errorf("unsupported OpsWorks Layer (%s) attribute (%s) type: %s", d.Id(), k, typ)
+		}
+	}
+
+	return apiAttributes, nil
 }
 
 func (lt *opsworksLayerType) LifecycleEventConfiguration(d *schema.ResourceData) *opsworks.LifecycleEventConfiguration {
