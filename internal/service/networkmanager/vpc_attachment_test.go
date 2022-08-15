@@ -250,8 +250,8 @@ data "aws_networkmanager_core_network_policy_document" "test" {
 `
 
 func testAccCoreNetworkConfig_basic() string {
-	return acctest.ConfigCompose(TestAccVPCConfig_multipleSubnets +
-		TestAccCoreNetworkConfig + `
+	return acctest.ConfigCompose(TestAccVPCConfig_multipleSubnets,
+		TestAccCoreNetworkConfig, `
 resource "aws_networkmanager_vpc_attachment" "test" {
   subnet_arns     = aws_subnet.test.*.arn
   core_network_id = awscc_networkmanager_core_network.test.id
@@ -266,8 +266,8 @@ resource "aws_networkmanager_attachment_accepter" "test" {
 }
 
 func testAccCoreNetworkConfig_updates(azs string, ipv6Support bool) string {
-	return acctest.ConfigCompose(TestAccVPCConfig_multipleSubnets +
-		TestAccCoreNetworkConfig + fmt.Sprintf(`
+	return acctest.ConfigCompose(TestAccVPCConfig_multipleSubnets,
+		TestAccCoreNetworkConfig, fmt.Sprintf(`
 resource "aws_networkmanager_vpc_attachment" "test" {
   subnet_arns     = flatten([aws_subnet.test.%[1]s.arn])
   core_network_id = awscc_networkmanager_core_network.test.id
@@ -286,8 +286,8 @@ resource "aws_networkmanager_attachment_accepter" "test" {
 }
 
 func testAccCoreNetworkConfig_oneTag(tagKey1, tagValue1 string) string {
-	return acctest.ConfigCompose(TestAccVPCConfig_multipleSubnets +
-		TestAccCoreNetworkConfig + fmt.Sprintf(`
+	return acctest.ConfigCompose(TestAccVPCConfig_multipleSubnets,
+		TestAccCoreNetworkConfig, fmt.Sprintf(`
 resource "aws_networkmanager_vpc_attachment" "test" {
   subnet_arns     = [aws_subnet.test[0].arn]
   core_network_id = awscc_networkmanager_core_network.test.id
@@ -306,8 +306,8 @@ resource "aws_networkmanager_attachment_accepter" "test" {
 }
 
 func testAccCoreNetworkConfig_twoTag(tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return acctest.ConfigCompose(TestAccVPCConfig_multipleSubnets +
-		TestAccCoreNetworkConfig + fmt.Sprintf(`
+	return acctest.ConfigCompose(TestAccVPCConfig_multipleSubnets,
+		TestAccCoreNetworkConfig, fmt.Sprintf(`
 resource "aws_networkmanager_vpc_attachment" "test" {
   subnet_arns     = [aws_subnet.test[0].arn]
   core_network_id = awscc_networkmanager_core_network.test.id

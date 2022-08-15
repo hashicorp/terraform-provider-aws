@@ -77,6 +77,7 @@ func ResourceVPCAttachment() *schema.Resource {
 						},
 					},
 				},
+				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 			},
 
 			"owner_account_id": {
