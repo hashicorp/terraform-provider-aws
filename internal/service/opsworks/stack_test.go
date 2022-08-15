@@ -269,7 +269,7 @@ func TestAccOpsWorksStack_allAttributes(t *testing.T) {
 		CheckDestroy:             testAccCheckStackDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccStackConfig_allAttributes(rName, "4039-20200430042739", "rgb(186, 65, 50)", "main", testAccStackCustomJSON1, "test1", "Baked_Goods"),
+				Config: testAccStackConfig_allAttributes(rName, "4039-20200430042739", "rgb(186, 65, 50)", "main", testAccCustomJSON1, "test1", "Baked_Goods"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckStackExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "agent_version", "4039-20200430042739"),
@@ -285,7 +285,7 @@ func TestAccOpsWorksStack_allAttributes(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "custom_cookbooks_source.0.type", "git"),
 					resource.TestCheckResourceAttr(resourceName, "custom_cookbooks_source.0.url", "https://github.com/aws/opsworks-example-cookbooks.git"),
 					resource.TestCheckResourceAttr(resourceName, "custom_cookbooks_source.0.username", "tfacctest"),
-					resource.TestCheckResourceAttr(resourceName, "custom_json", testAccStackCustomJSON1),
+					resource.TestCheckResourceAttr(resourceName, "custom_json", testAccCustomJSON1),
 					resource.TestCheckResourceAttrPair(resourceName, "default_availability_zone", "data.aws_availability_zones.available", "names.0"),
 					resource.TestCheckResourceAttrSet(resourceName, "default_instance_profile_arn"),
 					resource.TestCheckResourceAttr(resourceName, "default_os", "Amazon Linux 2"),
@@ -313,7 +313,7 @@ func TestAccOpsWorksStack_allAttributes(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccStackConfig_allAttributes(rName, "4038-20200305044341", "rgb(186, 65, 50)", "main", testAccStackCustomJSON1, "test2", "Scottish_Islands"),
+				Config: testAccStackConfig_allAttributes(rName, "4038-20200305044341", "rgb(186, 65, 50)", "main", testAccCustomJSON1, "test2", "Scottish_Islands"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckStackExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "agent_version", "4038-20200305044341"),
@@ -329,7 +329,7 @@ func TestAccOpsWorksStack_allAttributes(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "custom_cookbooks_source.0.type", "git"),
 					resource.TestCheckResourceAttr(resourceName, "custom_cookbooks_source.0.url", "https://github.com/aws/opsworks-example-cookbooks.git"),
 					resource.TestCheckResourceAttr(resourceName, "custom_cookbooks_source.0.username", "tfacctest"),
-					resource.TestCheckResourceAttr(resourceName, "custom_json", testAccStackCustomJSON1),
+					resource.TestCheckResourceAttr(resourceName, "custom_json", testAccCustomJSON1),
 					resource.TestCheckResourceAttrPair(resourceName, "default_availability_zone", "data.aws_availability_zones.available", "names.0"),
 					resource.TestCheckResourceAttrSet(resourceName, "default_instance_profile_arn"),
 					resource.TestCheckResourceAttr(resourceName, "default_os", "Amazon Linux 2"),
@@ -349,7 +349,7 @@ func TestAccOpsWorksStack_allAttributes(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccStackConfig_allAttributes(rName, "4038-20200305044341", "rgb(209, 105, 41)", "dev", testAccStackCustomJSON2, "test2", "Scottish_Islands"),
+				Config: testAccStackConfig_allAttributes(rName, "4038-20200305044341", "rgb(209, 105, 41)", "dev", testAccCustomJSON2, "test2", "Scottish_Islands"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckStackExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "agent_version", "4038-20200305044341"),
@@ -365,7 +365,7 @@ func TestAccOpsWorksStack_allAttributes(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "custom_cookbooks_source.0.type", "git"),
 					resource.TestCheckResourceAttr(resourceName, "custom_cookbooks_source.0.url", "https://github.com/aws/opsworks-example-cookbooks.git"),
 					resource.TestCheckResourceAttr(resourceName, "custom_cookbooks_source.0.username", "tfacctest"),
-					resource.TestCheckResourceAttr(resourceName, "custom_json", testAccStackCustomJSON2),
+					resource.TestCheckResourceAttr(resourceName, "custom_json", testAccCustomJSON2),
 					resource.TestCheckResourceAttrPair(resourceName, "default_availability_zone", "data.aws_availability_zones.available", "names.0"),
 					resource.TestCheckResourceAttrSet(resourceName, "default_instance_profile_arn"),
 					resource.TestCheckResourceAttr(resourceName, "default_os", "Amazon Linux 2"),
@@ -781,6 +781,33 @@ resource "aws_opsworks_stack" "test" {
 }
 
 // custom_layer
+// TODO: Remove these.
+func testAccCustomLayerSecurityGroups(name string) string {
+	return fmt.Sprintf(`
+resource "aws_security_group" "tf-ops-acc-layer1" {
+  name = "%[1]s-layer1"
+
+  ingress {
+    from_port   = 8
+    to_port     = -1
+    protocol    = "icmp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+resource "aws_security_group" "tf-ops-acc-layer2" {
+  name = "%[1]s-layer2"
+
+  ingress {
+    from_port   = 8
+    to_port     = -1
+    protocol    = "icmp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+`, name)
+}
+
 func testAccStackConfig_noVPCCreate(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptIn(),
@@ -1001,6 +1028,6 @@ resource "aws_iam_instance_profile" "opsworks_instance" {
 }
 
 const (
-	testAccStackCustomJSON1 = `{"key1": "value1"}`
-	testAccStackCustomJSON2 = `{"key2": "value2"}`
+	testAccCustomJSON1 = `{"key1":"value1"}`
+	testAccCustomJSON2 = `{"key2":"value2"}`
 )

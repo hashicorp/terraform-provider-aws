@@ -1092,7 +1092,7 @@ func expandVolumeConfiguration(tfMap map[string]interface{}) *opsworks.VolumeCon
 	}
 
 	if v, ok := tfMap["raid_level"].(string); ok && v != "" {
-		if v, err := strconv.Atoi(v); err != nil {
+		if v, err := strconv.Atoi(v); err == nil {
 			apiObject.RaidLevel = aws.Int64(int64(v))
 		}
 	}
@@ -1158,7 +1158,7 @@ func flattenVolumeConfiguration(apiObject *opsworks.VolumeConfiguration) map[str
 	}
 
 	if v := apiObject.RaidLevel; v != nil {
-		tfMap["raid_level"] = aws.Int64Value(v)
+		tfMap["raid_level"] = strconv.Itoa(int(aws.Int64Value(v)))
 	}
 
 	if v := apiObject.Size; v != nil {
