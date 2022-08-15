@@ -5,6 +5,8 @@ import (
 	"log"
 	"strconv"
 
+	"golang.org/x/exp/maps"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/opsworks"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -366,21 +368,33 @@ func (lt *opsworksLayerType) Create(d *schema.ResourceData, meta interface{}) er
 
 	name := d.Get("name").(string)
 	input := &opsworks.CreateLayerInput{
-		Attributes:                  aws.StringMap(attributes),
-		AutoAssignElasticIps:        aws.Bool(d.Get("auto_assign_elastic_ips").(bool)),
-		AutoAssignPublicIps:         aws.Bool(d.Get("auto_assign_public_ips").(bool)),
-		CustomRecipes:               expandRecipes(d),
-		EnableAutoHealing:           aws.Bool(d.Get("auto_healing").(bool)),
-		InstallUpdatesOnBoot:        aws.Bool(d.Get("install_updates_on_boot").(bool)),
-		LifecycleEventConfiguration: expandLifecycleEventConfiguration(d),
-		Name:                        aws.String(name),
-		Type:                        aws.String(lt.TypeName),
-		StackId:                     aws.String(d.Get("stack_id").(string)),
-		UseEbsOptimizedInstances:    aws.Bool(d.Get("use_ebs_optimized_instances").(bool)),
+		Attributes:           aws.StringMap(attributes),
+		AutoAssignElasticIps: aws.Bool(d.Get("auto_assign_elastic_ips").(bool)),
+		AutoAssignPublicIps:  aws.Bool(d.Get("auto_assign_public_ips").(bool)),
+		CustomRecipes:        &opsworks.Recipes{},
+		EnableAutoHealing:    aws.Bool(d.Get("auto_healing").(bool)),
+		InstallUpdatesOnBoot: aws.Bool(d.Get("install_updates_on_boot").(bool)),
+		LifecycleEventConfiguration: &opsworks.LifecycleEventConfiguration{
+			Shutdown: &opsworks.ShutdownEventConfiguration{
+				DelayUntilElbConnectionsDrained: aws.Bool(d.Get("drain_elb_on_shutdown").(bool)),
+			},
+		},
+		Name:                     aws.String(name),
+		Type:                     aws.String(lt.TypeName),
+		StackId:                  aws.String(d.Get("stack_id").(string)),
+		UseEbsOptimizedInstances: aws.Bool(d.Get("use_ebs_optimized_instances").(bool)),
 	}
 
 	if v, ok := d.GetOk("cloudwatch_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.CloudWatchLogsConfiguration = expandCloudWatchLogsConfiguration(v.([]interface{})[0].(map[string]interface{}))
+	}
+
+	if v, ok := d.GetOk("custom_configure_recipes"); ok && len(v.([]interface{})) > 0 {
+		input.CustomRecipes.Configure = flex.ExpandStringList(v.([]interface{}))
+	}
+
+	if v, ok := d.GetOk("custom_deploy_recipes"); ok && len(v.([]interface{})) > 0 {
+		input.CustomRecipes.Deploy = flex.ExpandStringList(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("custom_instance_profile_arn"); ok {
@@ -395,8 +409,24 @@ func (lt *opsworksLayerType) Create(d *schema.ResourceData, meta interface{}) er
 		input.CustomSecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
+	if v, ok := d.GetOk("custom_setup_recipes"); ok && len(v.([]interface{})) > 0 {
+		input.CustomRecipes.Setup = flex.ExpandStringList(v.([]interface{}))
+	}
+
+	if v, ok := d.GetOk("custom_shutdown_recipes"); ok && len(v.([]interface{})) > 0 {
+		input.CustomRecipes.Shutdown = flex.ExpandStringList(v.([]interface{}))
+	}
+
+	if v, ok := d.GetOk("custom_undeploy_recipes"); ok && len(v.([]interface{})) > 0 {
+		input.CustomRecipes.Undeploy = flex.ExpandStringList(v.([]interface{}))
+	}
+
 	if v, ok := d.GetOk("ebs_volume"); ok && v.(*schema.Set).Len() > 0 {
 		input.VolumeConfigurations = expandVolumeConfigurations(v.(*schema.Set).List())
+	}
+
+	if v, ok := d.GetOk("instance_shutdown_timeout"); ok {
+		input.LifecycleEventConfiguration.Shutdown.ExecutionTimeout = aws.Int64(int64(v.(int)))
 	}
 
 	if lt.CustomShortName {
@@ -568,49 +598,116 @@ func (lt *opsworksLayerType) Update(d *schema.ResourceData, meta interface{}) er
 	conn := meta.(*conns.AWSClient).OpsWorksConn
 
 	if d.HasChangesExcept("elastic_load_balancer", "tags", "tags_all") {
-		attributes, err := lt.Attributes.resourceDataToAPIAttributes(d)
+		input := &opsworks.UpdateLayerInput{
+			LayerId: aws.String(d.Id()),
+		}
+
+		if d.HasChanges(maps.Keys(lt.Attributes)...) {
+			attributes, err := lt.Attributes.resourceDataToAPIAttributes(d)
+
+			if err != nil {
+				return err
+			}
+
+			input.Attributes = aws.StringMap(attributes)
+		}
+
+		if d.HasChanges("auto_assign_elastic_ips") {
+			input.AutoAssignElasticIps = aws.Bool(d.Get("auto_assign_elastic_ips").(bool))
+		}
+
+		if d.HasChanges("auto_assign_public_ips") {
+			input.AutoAssignPublicIps = aws.Bool(d.Get("auto_assign_public_ips").(bool))
+		}
+
+		if d.HasChanges("auto_healing") {
+			input.EnableAutoHealing = aws.Bool(d.Get("auto_assign_public_ips").(bool))
+		}
+
+		if d.HasChanges("cloudwatch_configuration") {
+			if v, ok := d.GetOk("cloudwatch_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+				input.CloudWatchLogsConfiguration = expandCloudWatchLogsConfiguration(v.([]interface{})[0].(map[string]interface{}))
+			}
+		}
+
+		if d.HasChanges("custom_configure_recipes", "custom_deploy_recipes", "custom_setup_recipes", "custom_shutdown_recipes", "custom_undeploy_recipes") {
+			apiObject := &opsworks.Recipes{}
+
+			if d.HasChanges("custom_configure_recipes") {
+				apiObject.Configure = flex.ExpandStringList(d.Get("custom_configure_recipes").([]interface{}))
+			}
+
+			if d.HasChanges("custom_deploy_recipes") {
+				apiObject.Deploy = flex.ExpandStringList(d.Get("custom_deploy_recipes").([]interface{}))
+			}
+
+			if d.HasChanges("custom_setup_recipes") {
+				apiObject.Setup = flex.ExpandStringList(d.Get("custom_setup_recipes").([]interface{}))
+			}
+
+			if d.HasChanges("custom_shutdown_recipes") {
+				apiObject.Shutdown = flex.ExpandStringList(d.Get("custom_shutdown_recipes").([]interface{}))
+			}
+
+			if d.HasChanges("custom_undeploy_recipes") {
+				apiObject.Undeploy = flex.ExpandStringList(d.Get("custom_undeploy_recipes").([]interface{}))
+			}
+
+			input.CustomRecipes = apiObject
+		}
+
+		if d.HasChanges("custom_instance_profile_arn") {
+			input.CustomInstanceProfileArn = aws.String(d.Get("custom_instance_profile_arn").(string))
+		}
+
+		if d.HasChange("custom_json") {
+			input.CustomJson = aws.String(d.Get("custom_json").(string))
+		}
+
+		if d.HasChanges("custom_security_group_ids") {
+			input.CustomSecurityGroupIds = flex.ExpandStringSet(d.Get("custom_security_group_ids").(*schema.Set))
+		}
+
+		if d.HasChanges("drain_elb_on_shutdown", "instance_shutdown_timeout") {
+			input.LifecycleEventConfiguration = &opsworks.LifecycleEventConfiguration{
+				Shutdown: &opsworks.ShutdownEventConfiguration{
+					DelayUntilElbConnectionsDrained: aws.Bool(d.Get("drain_elb_on_shutdown").(bool)),
+					ExecutionTimeout:                aws.Int64(int64(d.Get("instance_shutdown_timeout").(int))),
+				},
+			}
+		}
+
+		if d.HasChanges("ebs_volume") {
+			if v, ok := d.GetOk("ebs_volume"); ok && v.(*schema.Set).Len() > 0 {
+				input.VolumeConfigurations = expandVolumeConfigurations(v.(*schema.Set).List())
+			}
+		}
+
+		if d.HasChanges("install_updates_on_boot") {
+			input.InstallUpdatesOnBoot = aws.Bool(d.Get("install_updates_on_boot").(bool))
+		}
+
+		if d.HasChange("name") {
+			input.Name = aws.String(d.Get("name").(string))
+		}
+
+		if d.HasChange("short_name") {
+			input.Shortname = aws.String(d.Get("short_name").(string))
+		}
+
+		if d.HasChanges("system_packages") {
+			input.Packages = flex.ExpandStringSet(d.Get("system_packages").(*schema.Set))
+		}
+
+		if d.HasChanges("use_ebs_optimized_instances") {
+			input.UseEbsOptimizedInstances = aws.Bool(d.Get("install_updates_on_boot").(bool))
+		}
+
+		log.Printf("[DEBUG] Updating OpsWorks Layer: %s", input)
+		_, err := conn.UpdateLayer(input)
 
 		if err != nil {
-			return err
-		}
-
-		req := &opsworks.UpdateLayerInput{
-			Attributes:                  aws.StringMap(attributes),
-			AutoAssignElasticIps:        aws.Bool(d.Get("auto_assign_elastic_ips").(bool)),
-			AutoAssignPublicIps:         aws.Bool(d.Get("auto_assign_public_ips").(bool)),
-			LayerId:                     aws.String(d.Id()),
-			CustomInstanceProfileArn:    aws.String(d.Get("custom_instance_profile_arn").(string)),
-			CustomRecipes:               expandRecipes(d),
-			CustomSecurityGroupIds:      flex.ExpandStringSet(d.Get("custom_security_group_ids").(*schema.Set)),
-			EnableAutoHealing:           aws.Bool(d.Get("auto_healing").(bool)),
-			InstallUpdatesOnBoot:        aws.Bool(d.Get("install_updates_on_boot").(bool)),
-			LifecycleEventConfiguration: expandLifecycleEventConfiguration(d),
-			Name:                        aws.String(d.Get("name").(string)),
-			Packages:                    flex.ExpandStringSet(d.Get("system_packages").(*schema.Set)),
-			UseEbsOptimizedInstances:    aws.Bool(d.Get("use_ebs_optimized_instances").(bool)),
-		}
-
-		if v, ok := d.GetOk("cloudwatch_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			req.CloudWatchLogsConfiguration = expandCloudWatchLogsConfiguration(v.([]interface{})[0].(map[string]interface{}))
-		}
-
-		if v, ok := d.GetOk("ebs_volume"); ok && v.(*schema.Set).Len() > 0 {
-			req.VolumeConfigurations = expandVolumeConfigurations(v.(*schema.Set).List())
-		}
-
-		if lt.CustomShortName {
-			req.Shortname = aws.String(d.Get("short_name").(string))
-		} else {
-			req.Shortname = aws.String(lt.TypeName)
-		}
-
-		req.CustomJson = aws.String(d.Get("custom_json").(string))
-
-		log.Printf("[DEBUG] Updating OpsWorks layer: %s", d.Id())
-
-		_, err = conn.UpdateLayer(req)
-		if err != nil {
-			return fmt.Errorf("error updating Opsworks Layer (%s): %w", d.Id(), err)
+			return fmt.Errorf("updating OpsWorks Layer (%s): %w", d.Id(), err)
 		}
 	}
 
@@ -969,46 +1066,6 @@ func flattenCloudWatchLogsLogStreams(apiObjects []*opsworks.CloudWatchLogsLogStr
 	}
 
 	return tfList
-}
-
-func expandLifecycleEventConfiguration(d *schema.ResourceData) *opsworks.LifecycleEventConfiguration {
-	apiObject := &opsworks.LifecycleEventConfiguration{
-		Shutdown: &opsworks.ShutdownEventConfiguration{
-			DelayUntilElbConnectionsDrained: aws.Bool(d.Get("drain_elb_on_shutdown").(bool)),
-		},
-	}
-
-	if v, ok := d.GetOk("instance_shutdown_timeout"); ok {
-		apiObject.Shutdown.ExecutionTimeout = aws.Int64(int64(v.(int)))
-	}
-
-	return apiObject
-}
-
-func expandRecipes(d *schema.ResourceData) *opsworks.Recipes {
-	apiObject := &opsworks.Recipes{}
-
-	if v, ok := d.GetOk("custom_configure_recipes"); ok && len(v.([]interface{})) > 0 {
-		apiObject.Configure = flex.ExpandStringList(v.([]interface{}))
-	}
-
-	if v, ok := d.GetOk("custom_deploy_recipes"); ok && len(v.([]interface{})) > 0 {
-		apiObject.Deploy = flex.ExpandStringList(v.([]interface{}))
-	}
-
-	if v, ok := d.GetOk("custom_setup_recipes"); ok && len(v.([]interface{})) > 0 {
-		apiObject.Setup = flex.ExpandStringList(v.([]interface{}))
-	}
-
-	if v, ok := d.GetOk("custom_shutdown_recipes"); ok && len(v.([]interface{})) > 0 {
-		apiObject.Shutdown = flex.ExpandStringList(v.([]interface{}))
-	}
-
-	if v, ok := d.GetOk("custom_undeploy_recipes"); ok && len(v.([]interface{})) > 0 {
-		apiObject.Undeploy = flex.ExpandStringList(v.([]interface{}))
-	}
-
-	return apiObject
 }
 
 func expandVolumeConfiguration(tfMap map[string]interface{}) *opsworks.VolumeConfiguration {
