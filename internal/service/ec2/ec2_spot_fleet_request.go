@@ -777,6 +777,12 @@ func ResourceSpotFleetRequest() *schema.Resource {
 				Type:     schema.TypeInt,
 				Required: true,
 			},
+			"target_capacity_unit_type": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice(ec2.TargetCapacityUnitType_Values(), false),
+			},
 			"target_group_arns": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -934,6 +940,10 @@ func resourceSpotFleetRequestCreate(d *schema.ResourceData, meta interface{}) er
 		}
 	}
 
+	if v, ok := d.GetOk("target_capacity_unit_type"); ok {
+		spotFleetConfig.SetTargetCapacityUnitType(v.(string))
+	}
+
 	// http://docs.aws.amazon.com/sdk-for-go/api/service/ec2.html#type-RequestSpotFleetInput
 	input := &ec2.RequestSpotFleetInput{
 		SpotFleetRequestConfig: spotFleetConfig,
@@ -1016,6 +1026,10 @@ func resourceSpotFleetRequestRead(d *schema.ResourceData, meta interface{}) erro
 
 	if config.TargetCapacity != nil {
 		d.Set("target_capacity", config.TargetCapacity)
+	}
+
+	if config.TargetCapacityUnitType != nil {
+		d.Set("target_capacity_unit_type", config.TargetCapacityUnitType)
 	}
 
 	if config.TerminateInstancesWithExpiration != nil {

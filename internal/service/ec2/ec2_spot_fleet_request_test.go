@@ -56,6 +56,45 @@ func TestAccEC2SpotFleetRequest_basic(t *testing.T) {
 	})
 }
 
+func TestAccEC2SpotFleetRequest_targetCapacityUnitType(t *testing.T) {
+	var sfr ec2.SpotFleetRequestConfig
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
+	resourceName := "aws_spot_fleet_request.test"
+	targetCapacityUnitType := "vcpu"
+
+	publicKey, _, err := sdkacctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
+	if err != nil {
+		t.Fatalf("error generating random SSH key: %s", err)
+	}
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSpotFleetRequest(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSpotFleetRequestDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSpotFleetRequestConfig_targetCapacityUnitType(rName, publicKey, validUntil, targetCapacityUnitType),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckSpotFleetRequestExists(resourceName, &sfr),
+					resource.TestCheckResourceAttr(resourceName, "spot_request_state", "active"),
+					resource.TestCheckResourceAttr(resourceName, "excess_capacity_termination_policy", "Default"),
+					resource.TestCheckResourceAttr(resourceName, "valid_until", validUntil),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "target_capacity_unit_type", targetCapacityUnitType),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"wait_for_fulfillment"},
+			},
+		},
+	})
+}
+
 func TestAccEC2SpotFleetRequest_disappears(t *testing.T) {
 	var sfr ec2.SpotFleetRequestConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -3384,4 +3423,61 @@ resource "aws_spot_fleet_request" "test" {
   depends_on = [aws_iam_policy_attachment.test]
 }
 `, rName, validUntil))
+}
+
+func testAccSpotFleetRequestConfig_targetCapacityUnitType(rName, publicKey, validUntil, targetCapacityUnitType string) string {
+	return acctest.ConfigCompose(testAccSpotFleetRequestBaseConfig(rName, publicKey), fmt.Sprintf(`
+resource "aws_launch_template" "test" {
+  name          = %[1]q
+  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type = data.aws_ec2_instance_type_offering.available.instance_type
+  key_name      = aws_key_pair.test.key_name
+
+  tag_specifications {
+    resource_type = "instance"
+
+    tags = {
+      Name = %[1]q
+    }
+  }
+}
+
+resource "aws_spot_fleet_request" "test" {
+  iam_fleet_role                      = aws_iam_role.test.arn
+  spot_price                          = "0.05"
+  target_capacity                     = 2
+  valid_until                         = %[2]q
+  target_capacity_unit_type           = %[3]q
+  terminate_instances_with_expiration = true
+  instance_interruption_behaviour     = "stop"
+  wait_for_fulfillment                = true
+
+  launch_template_config {
+    launch_template_specification {
+      name    = aws_launch_template.test.name
+      version = aws_launch_template.test.latest_version
+    }
+
+    overrides {
+      availability_zone = data.aws_availability_zones.available.names[2]
+
+      instance_requirements {
+        vcpu_count {
+          min = 1
+          max = 8
+        }
+
+        memory_mib {
+          min = 500
+          max = 50000
+        }
+
+        instance_generations = ["current"]
+      }
+    }
+  }
+
+  depends_on = [aws_iam_policy_attachment.test]
+}
+`, rName, validUntil, targetCapacityUnitType))
 }
