@@ -52,7 +52,7 @@ func TestAccAppFlowFlow_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "trigger_config.0.trigger_properties.0.scheduled.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "trigger_config.0.trigger_properties.0.scheduled.0.data_pull_mode", "Incremental"),
 					resource.TestCheckResourceAttr(resourceName, "trigger_config.0.trigger_properties.0.scheduled.0.schedule_expression", "rate(3hours)"),
-					resource.TestCheckResourceAttrSet(resourceName, "trigger_config.0.trigger_properties.0.scheduled.0.schedule_start_time"),
+					resource.TestCheckResourceAttr(resourceName, "trigger_config.0.trigger_properties.0.scheduled.0.schedule_start_time", scheduleStartTime),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "0"),
 				),
@@ -92,6 +92,12 @@ func TestAccAppFlowFlow_update(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFlowExists(resourceName, &flowOutput),
 					resource.TestCheckResourceAttr(resourceName, "description", description),
+					resource.TestCheckResourceAttr(resourceName, "trigger_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "trigger_config.0.trigger_type", "Scheduled"),
+					resource.TestCheckResourceAttr(resourceName, "trigger_config.0.trigger_properties.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "trigger_config.0.trigger_properties.0.scheduled.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "trigger_config.0.trigger_properties.0.scheduled.0.data_pull_mode", "Complete"),
+					resource.TestCheckResourceAttr(resourceName, "trigger_config.0.trigger_properties.0.scheduled.0.schedule_expression", "rate(6hours)"),
 				),
 			},
 		},
@@ -376,7 +382,14 @@ resource "aws_appflow_flow" "test" {
   }
 
   trigger_config {
-    trigger_type = "OnDemand"
+    trigger_type = "Scheduled"
+
+    trigger_properties {
+      scheduled {
+        data_pull_mode      = "Complete"
+        schedule_expression = "rate(6hours)"
+      }
+    }
   }
 }
 `, rFlowName, description),
