@@ -5,7 +5,6 @@ import (
 	"log"
 	"os"
 	"regexp"
-	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -644,7 +643,7 @@ func TestAccRDSInstance_finalSnapshotIdentifier(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		// testAccCheckInstanceSnapshot verifies a database snapshot is
 		// created, and subsequently deletes it
-		CheckDestroy: testAccCheckInstanceSnapshot,
+		CheckDestroy: testAccCheckInstanceDestroyWithFinalSnapshot,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_finalSnapshotID(rName1, rName1),
@@ -4325,78 +4324,55 @@ func testAccCheckInstanceReplicaAttributes(source, replica *rds.DBInstance) reso
 	}
 }
 
-func testAccCheckInstanceSnapshot(s *terraform.State) error {
+// testAccCheckInstanceDestroyWithFinalSnapshot verifies that:
+// - The DBInstance has been destroyed
+// - A DBSnapshot has been produced
+// - Tags have been copied to the snapshot
+// The snapshot is deleted.
+func testAccCheckInstanceDestroyWithFinalSnapshot(s *terraform.State) error {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
+
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_db_instance" {
 			continue
 		}
 
-		awsClient := acctest.Provider.Meta().(*conns.AWSClient)
-		conn := awsClient.RDSConn
+		finalSnapshotID := rs.Primary.Attributes["final_snapshot_identifier"]
+		output, err := tfrds.FindDBSnapshotByID(conn, finalSnapshotID)
 
-		log.Printf("[INFO] Trying to locate the DBInstance Final Snapshot")
-		snapOutput, err := conn.DescribeDBSnapshots(
-			&rds.DescribeDBSnapshotsInput{
-				DBSnapshotIdentifier: aws.String(rs.Primary.Attributes["final_snapshot_identifier"]),
-			})
+		if err != nil {
+			return fmt.Errorf("reading DBSnapshot (%s): %w", finalSnapshotID, err)
+		}
+
+		tags, err := tfrds.ListTags(conn, aws.StringValue(output.DBSnapshotArn))
 
 		if err != nil {
 			return err
 		}
 
-		if snapOutput == nil || len(snapOutput.DBSnapshots) == 0 {
-			return fmt.Errorf("Snapshot %s not found", rs.Primary.Attributes["final_snapshot_identifier"])
+		if _, ok := tags["Name"]; !ok {
+			return fmt.Errorf("Name tag not found")
 		}
 
-		// verify we have the tags copied to the snapshot
-		tagsARN := aws.StringValue(snapOutput.DBSnapshots[0].DBSnapshotArn)
-		listTagsOutput, err := conn.ListTagsForResource(&rds.ListTagsForResourceInput{
-			ResourceName: aws.String(tagsARN),
+		_, err = conn.DeleteDBSnapshot(&rds.DeleteDBSnapshotInput{
+			DBSnapshotIdentifier: aws.String(finalSnapshotID),
 		})
-		if err != nil {
-			return fmt.Errorf("Error retrieving tags for ARN (%s): %s", tagsARN, err)
-		}
 
-		if listTagsOutput.TagList == nil || len(listTagsOutput.TagList) == 0 {
-			return fmt.Errorf("Tag list is nil or zero: %s", listTagsOutput.TagList)
-		}
-
-		var found bool
-		for _, t := range listTagsOutput.TagList {
-			if aws.StringValue(t.Key) == "Name" && strings.HasPrefix(aws.StringValue(t.Value), acctest.ResourcePrefix) {
-				found = true
-			}
-		}
-		if !found {
-			return fmt.Errorf("Expected to find tag Name with prefix \"%s\", but wasn't found. Tags: %s", acctest.ResourcePrefix, listTagsOutput.TagList)
-		}
-		// end tag search
-
-		log.Printf("[INFO] Deleting the Snapshot %s", rs.Primary.Attributes["final_snapshot_identifier"])
-		_, err = conn.DeleteDBSnapshot(
-			&rds.DeleteDBSnapshotInput{
-				DBSnapshotIdentifier: aws.String(rs.Primary.Attributes["final_snapshot_identifier"]),
-			})
 		if err != nil {
 			return err
 		}
 
-		resp, err := conn.DescribeDBInstances(
-			&rds.DescribeDBInstancesInput{
-				DBInstanceIdentifier: aws.String(rs.Primary.ID),
-			})
+		_, err = tfrds.FindDBInstanceByID(conn, rs.Primary.ID)
+
+		if tfresource.NotFound(err) {
+			continue
+		}
 
 		if err != nil {
-			if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBInstanceNotFoundFault) {
-				continue
-			}
 			return err
-
 		}
 
-		if len(resp.DBInstances) != 0 && aws.StringValue(resp.DBInstances[0].DBInstanceIdentifier) == rs.Primary.ID {
-			return fmt.Errorf("DB Instance still exists")
-		}
+		return fmt.Errorf("DB Instance %s still exists", rs.Primary.ID)
 	}
 
 	return nil
