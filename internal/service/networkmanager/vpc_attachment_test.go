@@ -253,7 +253,7 @@ func testAccCoreNetworkConfig_basic() string {
 	return TestAccVPCConfig_multipleSubnets +
 		TestAccCoreNetworkConfig + `
 resource "aws_networkmanager_vpc_attachment" "test" {
-  subnet_arns     = [aws_subnet.test.*.arn]
+  subnet_arns     = aws_subnet.test.*.arn
   core_network_id = awscc_networkmanager_core_network.test.id
   vpc_arn         = aws_vpc.test.arn
 }
