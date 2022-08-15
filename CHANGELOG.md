@@ -1,4 +1,9 @@
 ## 4.27.0 (Unreleased)
+
+ENHANCEMENTS:
+
+* resource/aws_chime_voice_connector_logging: Add `enable_media_metric_logs` argument ([#26283](https://github.com/hashicorp/terraform-provider-aws/issues/26283))
+
 ## 4.26.0 (August 12, 2022)
 
 FEATURES:
