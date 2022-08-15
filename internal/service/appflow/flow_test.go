@@ -48,8 +48,9 @@ func TestAccAppFlowFlow_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "trigger_config.0.trigger_type", "Scheduled"),
 					resource.TestCheckResourceAttr(resourceName, "trigger_config.0.trigger_properties.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "trigger_config.0.trigger_properties.0.scheduled.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "trigger_config.0.trigger_properties.0.scheduled.0.data_pull_mode", "Complete"),
-					resource.TestCheckResourceAttr(resourceName, "trigger_config.0.trigger_properties.0.scheduled.0.schedule_expression", "rate(5minutes)"),
+					resource.TestCheckResourceAttr(resourceName, "trigger_config.0.trigger_properties.0.scheduled.0.data_pull_mode", "Incremental"),
+					resource.TestCheckResourceAttr(resourceName, "trigger_config.0.trigger_properties.0.scheduled.0.schedule_expression", "rate(3hours)"),
+					resource.TestCheckResourceAttrSet(resourceName, "trigger_config.0.trigger_properties.0.scheduled.0.schedule_start_time"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "0"),
 				),
@@ -316,8 +317,9 @@ resource "aws_appflow_flow" "test" {
 
     trigger_properties {
       scheduled {
-        data_pull_mode      = "Complete"
-        schedule_expression = "rate(5minutes)"
+        data_pull_mode      = "Incremental"
+        schedule_expression = "rate(3hours)"
+        schedule_start_time = "${formatdate("YYYY-MM-DD", timeadd(timestamp(), "24h"))}T00:00:00Z"
       }
     }
   }
