@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"regexp"
 	"testing"
+	"time"
 
 	"github.com/aws/aws-sdk-go/service/appflow"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
@@ -22,6 +23,7 @@ func TestAccAppFlowFlow_basic(t *testing.T) {
 	rDestinationName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rFlowName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appflow_flow.test"
+	scheduleStartTime := time.Now().UTC().AddDate(0, 0, 1).Format(time.RFC3339)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
@@ -30,7 +32,7 @@ func TestAccAppFlowFlow_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckFlowDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFlowConfig_basic(rSourceName, rDestinationName, rFlowName),
+				Config: testAccFlowConfig_basic(rSourceName, rDestinationName, rFlowName, scheduleStartTime),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckFlowExists(resourceName, &flowOutput),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "appflow", regexp.MustCompile(`flow/.+`)),
@@ -71,6 +73,7 @@ func TestAccAppFlowFlow_update(t *testing.T) {
 	rFlowName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appflow_flow.test"
 	description := "test description"
+	scheduleStartTime := time.Now().UTC().AddDate(0, 0, 1).Format(time.RFC3339)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
@@ -79,7 +82,7 @@ func TestAccAppFlowFlow_update(t *testing.T) {
 		CheckDestroy:             testAccCheckFlowDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFlowConfig_basic(rSourceName, rDestinationName, rFlowName),
+				Config: testAccFlowConfig_basic(rSourceName, rDestinationName, rFlowName, scheduleStartTime),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFlowExists(resourceName, &flowOutput),
 				),
@@ -174,6 +177,7 @@ func TestAccAppFlowFlow_disappears(t *testing.T) {
 	rDestinationName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rFlowName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appflow_flow.test"
+	scheduleStartTime := time.Now().UTC().AddDate(0, 0, 1).Format(time.RFC3339)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
@@ -182,7 +186,7 @@ func TestAccAppFlowFlow_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckFlowDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFlowConfig_basic(rSourceName, rDestinationName, rFlowName),
+				Config: testAccFlowConfig_basic(rSourceName, rDestinationName, rFlowName, scheduleStartTime),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFlowExists(resourceName, &flowOutput),
 					acctest.CheckResourceDisappears(acctest.Provider, tfappflow.ResourceFlow(), resourceName),
@@ -193,7 +197,7 @@ func TestAccAppFlowFlow_disappears(t *testing.T) {
 	})
 }
 
-func testAccFlowConfig_base(rSourceName string, rDestinationName string) string {
+func testAccFlowConfig_base(rSourceName, rDestinationName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -270,12 +274,12 @@ EOF
 `, rSourceName, rDestinationName)
 }
 
-func testAccFlowConfig_basic(rSourceName string, rDestinationName string, rFlowName string) string {
+func testAccFlowConfig_basic(rSourceName, rDestinationName, rFlowName, scheduleStartTime string) string {
 	return acctest.ConfigCompose(
 		testAccFlowConfig_base(rSourceName, rDestinationName),
 		fmt.Sprintf(`
 resource "aws_appflow_flow" "test" {
-  name = %[3]q
+  name = %[1]q
 
   source_flow_config {
     connector_type = "S3"
@@ -319,12 +323,12 @@ resource "aws_appflow_flow" "test" {
       scheduled {
         data_pull_mode      = "Incremental"
         schedule_expression = "rate(3hours)"
-        schedule_start_time = "${formatdate("YYYY-MM-DD", timeadd(timestamp(), "24h"))}T00:00:00Z"
+        schedule_start_time = %[2]q
       }
     }
   }
 }
-`, rSourceName, rDestinationName, rFlowName),
+`, rFlowName, scheduleStartTime),
 	)
 }
 
@@ -333,8 +337,8 @@ func testAccFlowConfig_update(rSourceName string, rDestinationName string, rFlow
 		testAccFlowConfig_base(rSourceName, rDestinationName),
 		fmt.Sprintf(`
 resource "aws_appflow_flow" "test" {
-  name        = %[3]q
-  description = %[4]q
+  name        = %[1]q
+  description = %[2]q
 
   source_flow_config {
     connector_type = "S3"
@@ -375,7 +379,7 @@ resource "aws_appflow_flow" "test" {
     trigger_type = "OnDemand"
   }
 }
-`, rSourceName, rDestinationName, rFlowName, description),
+`, rFlowName, description),
 	)
 }
 
@@ -384,7 +388,7 @@ func testAccFlowConfig_taskProperties(rSourceName string, rDestinationName strin
 		testAccFlowConfig_base(rSourceName, rDestinationName),
 		fmt.Sprintf(`
 resource "aws_appflow_flow" "test" {
-  name = %[3]q
+  name = %[1]q
 
   source_flow_config {
     connector_type = "S3"
@@ -430,7 +434,7 @@ resource "aws_appflow_flow" "test" {
     trigger_type = "OnDemand"
   }
 }
-`, rSourceName, rDestinationName, rFlowName),
+`, rFlowName),
 	)
 }
 
@@ -439,7 +443,7 @@ func testAccFlowConfig_tags1(rSourceName string, rDestinationName string, rFlowN
 		testAccFlowConfig_base(rSourceName, rDestinationName),
 		fmt.Sprintf(`
 resource "aws_appflow_flow" "test" {
-  name = %[3]q
+  name = %[1]q
 
   source_flow_config {
     connector_type = "S3"
@@ -481,10 +485,10 @@ resource "aws_appflow_flow" "test" {
   }
 
   tags = {
-    %[4]q = %[5]q
+    %[2]q = %[3]q
   }
 }
-`, rSourceName, rDestinationName, rFlowName, tagKey1, tagValue1),
+`, rFlowName, tagKey1, tagValue1),
 	)
 }
 
@@ -493,7 +497,7 @@ func testAccFlowConfig_tags2(rSourceName string, rDestinationName string, rFlowN
 		testAccFlowConfig_base(rSourceName, rDestinationName),
 		fmt.Sprintf(`
 resource "aws_appflow_flow" "test" {
-  name = %[3]q
+  name = %[1]q
 
   source_flow_config {
     connector_type = "S3"
@@ -535,11 +539,11 @@ resource "aws_appflow_flow" "test" {
   }
 
   tags = {
+    %[2]q = %[3]q
     %[4]q = %[5]q
-    %[6]q = %[7]q
   }
 }
-`, rSourceName, rDestinationName, rFlowName, tagKey1, tagValue1, tagKey2, tagValue2),
+`, rFlowName, tagKey1, tagValue1, tagKey2, tagValue2),
 	)
 }
 
