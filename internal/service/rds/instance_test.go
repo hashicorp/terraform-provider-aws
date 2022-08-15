@@ -4341,7 +4341,7 @@ func testAccCheckInstanceDestroyWithFinalSnapshot(s *terraform.State) error {
 		output, err := tfrds.FindDBSnapshotByID(conn, finalSnapshotID)
 
 		if err != nil {
-			return nil
+			return err
 		}
 
 		tags, err := tfrds.ListTags(conn, aws.StringValue(output.DBSnapshotArn))
