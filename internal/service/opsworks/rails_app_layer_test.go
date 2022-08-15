@@ -180,44 +180,54 @@ func TestAccOpsWorksRailsAppLayer_tagsAlternateRegion(t *testing.T) {
 	})
 }
 
+func TestAccOpsWorksRailsAppLayer_update(t *testing.T) {
+	var v opsworks.Layer
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_opsworks_rails_app_layer.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, opsworks.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRailsAppLayerDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRailsAppLayerConfig_allAttributes(rName, "nginx_unicorn", "1.12.5", false, "4.0.60", "2.6", "2.5.1"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckLayerExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "app_server", "nginx_unicorn"),
+					resource.TestCheckResourceAttr(resourceName, "bundler_version", "1.12.5"),
+					resource.TestCheckResourceAttr(resourceName, "manage_bundler", "false"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "passenger_version", "4.0.60"),
+					resource.TestCheckResourceAttr(resourceName, "ruby_version", "2.6"),
+					resource.TestCheckResourceAttr(resourceName, "rubygems_version", "2.5.1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccRailsAppLayerConfig_allAttributes(rName, "apache_passenger", "1.15.4", true, "5.1.3", "2.3", "2.7.9"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckLayerExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "app_server", "apache_passenger"),
+					resource.TestCheckResourceAttr(resourceName, "bundler_version", "1.15.4"),
+					resource.TestCheckResourceAttr(resourceName, "manage_bundler", "true"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "passenger_version", "5.1.3"),
+					resource.TestCheckResourceAttr(resourceName, "ruby_version", "2.3"),
+					resource.TestCheckResourceAttr(resourceName, "rubygems_version", "2.7.9"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckRailsAppLayerDestroy(s *terraform.State) error {
 	return testAccCheckLayerDestroy("aws_opsworks_rails_app_layer", s)
-}
-
-func testAccRailsAppLayerConfig_vpcCreate(rName string) string {
-	return acctest.ConfigCompose(
-		testAccStackConfig_vpcCreate(rName),
-		testAccCustomLayerSecurityGroups(rName),
-		fmt.Sprintf(`
-resource "aws_opsworks_rails_app_layer" "test" {
-  stack_id = aws_opsworks_stack.test.id
-  name     = %[1]q
-
-  custom_security_group_ids = [
-    aws_security_group.tf-ops-acc-layer1.id,
-    aws_security_group.tf-ops-acc-layer2.id,
-  ]
-}
-`, rName))
-}
-
-func testAccRailsAppLayerConfig_noManageBundlerVPCCreate(rName string) string {
-	return acctest.ConfigCompose(
-		testAccStackConfig_vpcCreate(rName),
-		testAccCustomLayerSecurityGroups(rName),
-		fmt.Sprintf(`
-resource "aws_opsworks_rails_app_layer" "test" {
-  stack_id = aws_opsworks_stack.test.id
-  name     = %[1]q
-
-  custom_security_group_ids = [
-    aws_security_group.tf-ops-acc-layer1.id,
-    aws_security_group.tf-ops-acc-layer2.id,
-  ]
-
-  manage_bundler = false
-}
-`, rName))
 }
 
 func testAccRailsAppLayerConfig_basic(rName string) string {
@@ -290,4 +300,22 @@ resource "aws_opsworks_rails_app_layer" "test" {
   }
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2))
+}
+
+func testAccRailsAppLayerConfig_allAttributes(rName, appServer, bundlerVersion string, manageBundler bool, passengerVersion, rubyVersion, rubyGemsVersion string) string {
+	return acctest.ConfigCompose(testAccLayerConfig_base(rName), fmt.Sprintf(`
+resource "aws_opsworks_rails_app_layer" "test" {
+  name     = %[1]q
+  stack_id = aws_opsworks_stack.test.id
+
+  custom_security_group_ids = aws_security_group.test[*].id
+
+  app_server        = %[2]q
+  bundler_version   = %[3]q
+  manage_bundler    = %[4]t
+  passenger_version = %[5]q
+  ruby_version      = %[6]q
+  rubygems_version  = %[7]q
+}
+`, rName, appServer, bundlerVersion, manageBundler, passengerVersion, rubyVersion, rubyGemsVersion))
 }
