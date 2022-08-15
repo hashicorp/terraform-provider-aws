@@ -519,13 +519,13 @@ func ResourceInstance() *schema.Resource {
 							Type:     schema.TypeBool,
 							Optional: true,
 							Computed: true,
-							ForceNew: true,
+							ForceNew: false,
 						},
 						"enable_resource_name_dns_a_record": {
 							Type:     schema.TypeBool,
 							Optional: true,
 							Computed: true,
-							ForceNew: true,
+							ForceNew: false,
 						},
 						"hostname_type": {
 							Type:         schema.TypeString,
