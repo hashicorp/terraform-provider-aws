@@ -268,13 +268,13 @@ func flattenDataSourceCapacityUsageSummary(state *networkfirewall.CapacityUsageS
 	}
 
 	m := map[string]interface{}{
-		"cidrs": flattenDataSourceCidrs(state.CIDRs),
+		"cidrs": flattenDataSourceCIDRSummary(state.CIDRs),
 	}
 
 	return []interface{}{m}
 }
 
-func flattenDataSourceCidrs(state *networkfirewall.CIDRSummary) []interface{} {
+func flattenDataSourceCIDRSummary(state *networkfirewall.CIDRSummary) []interface{} {
 	if state == nil {
 		return nil
 	}
