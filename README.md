@@ -12,8 +12,8 @@
 
 The AWS Provider allows [Terraform](https://terraform.io) to manage [AWS](https://aws.amazon.com) resources.
 
-- [Using the AWS Provider][https://registry.terraform.io/providers/hashicorp/aws/latest/docs]
-- [AWS Provider contributing guide][https://hashicorp.github.io/terraform-provider-aws/]
+- [Using the AWS Provider](https://registry.terraform.io/providers/hashicorp/aws/latest/docs)
+- [AWS Provider contributing guide](https://hashicorp.github.io/terraform-provider-aws/)
 - [Quarterly development roadmap](ROADMAP.md)
 - [FAQ](https://hashicorp.github.io/terraform-provider-aws/faq/)
 - [Tutorials](https://learn.hashicorp.com/collections/terraform/aws-get-started)
