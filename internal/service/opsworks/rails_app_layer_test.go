@@ -226,6 +226,40 @@ func TestAccOpsWorksRailsAppLayer_update(t *testing.T) {
 	})
 }
 
+func TestAccOpsWorksRailsAppLayer_elb(t *testing.T) {
+	var v opsworks.Layer
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_opsworks_rails_app_layer.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, opsworks.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRailsAppLayerDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRailsAppLayerConfig_elb(rName, 0),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckLayerExists(resourceName, &v),
+					resource.TestCheckResourceAttrPair(resourceName, "elastic_load_balancer", "aws_elb.test.0", "name"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccRailsAppLayerConfig_elb(rName, 1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckLayerExists(resourceName, &v),
+					resource.TestCheckResourceAttrPair(resourceName, "elastic_load_balancer", "aws_elb.test.1", "name"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckRailsAppLayerDestroy(s *terraform.State) error {
 	return testAccCheckLayerDestroy("aws_opsworks_rails_app_layer", s)
 }
@@ -318,4 +352,40 @@ resource "aws_opsworks_rails_app_layer" "test" {
   rubygems_version  = %[7]q
 }
 `, rName, appServer, bundlerVersion, manageBundler, passengerVersion, rubyVersion, rubyGemsVersion))
+}
+
+func testAccRailsAppLayerConfig_elb(rName string, idx int) string {
+	return acctest.ConfigCompose(testAccLayerConfig_base(rName), fmt.Sprintf(`
+resource "aws_internet_gateway" "test" {
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_elb" "test" {
+  count = 2
+
+  subnets = aws_subnet.test[*].id
+
+  listener {
+    instance_port     = 8000
+    instance_protocol = "http"
+    lb_port           = 80
+    lb_protocol       = "http"
+  }
+
+  depends_on = [aws_internet_gateway.test]
+}
+
+resource "aws_opsworks_rails_app_layer" "test" {
+  stack_id = aws_opsworks_stack.test.id
+  name     = %[1]q
+
+  custom_security_group_ids = aws_security_group.test[*].id
+
+  elastic_load_balancer = aws_elb.test[%[2]d].name
+}
+`, rName, idx))
 }
