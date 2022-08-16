@@ -269,14 +269,11 @@ func resourceVPCAttachmentUpdate(ctx context.Context, d *schema.ResourceData, me
 func resourceVPCAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).NetworkManagerConn
 
-	log.Printf("[DEBUG] Deleting Network Manager VPC Attachment: %s", d.Id())
-
-	state := d.Get("state").(string)
-
-	if state == networkmanager.AttachmentStatePendingAttachmentAcceptance || state == networkmanager.AttachmentStatePendingTagAcceptance {
-		return diag.Errorf("Deleting Network Manager VPC Attachment (%s): Cannot delete attachment that is pending acceptance.", d.Id())
+	if state := d.Get("state").(string); state == networkmanager.AttachmentStatePendingAttachmentAcceptance || state == networkmanager.AttachmentStatePendingTagAcceptance {
+		return diag.Errorf("cannot delete Network Manager VPC Attachment (%s) in %s state", d.Id(), state)
 	}
 
+	log.Printf("[DEBUG] Deleting Network Manager VPC Attachment: %s", d.Id())
 	_, err := conn.DeleteAttachmentWithContext(ctx, &networkmanager.DeleteAttachmentInput{
 		AttachmentId: aws.String(d.Id()),
 	})
@@ -286,21 +283,14 @@ func resourceVPCAttachmentDelete(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	if err != nil {
-		return diag.Errorf("Deleting Network Manager VPC Attachment (%s): %s", d.Id(), err)
+		return diag.Errorf("deleting Network Manager VPC Attachment (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitVPCAttachmentDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		if tfawserr.ErrCodeEquals(err, networkmanager.ErrCodeResourceNotFoundException) {
-			return nil
-		}
-		return diag.Errorf("Waiting for Network Manager VPC Attachment (%s) delete: %s", d.Id(), err)
+		return diag.Errorf("waiting for Network Manager VPC Attachment (%s) delete: %s", d.Id(), err)
 	}
 
 	return nil
-}
-
-func VPCAttachmentIDNotFoundError(err error) bool {
-	return validationExceptionMessageContains(err, networkmanager.ValidationExceptionReasonFieldValidationFailed, "VPC Attachment not found")
 }
 
 func FindVPCAttachmentByID(ctx context.Context, conn *networkmanager.NetworkManager, id string) (*networkmanager.VpcAttachment, error) {
