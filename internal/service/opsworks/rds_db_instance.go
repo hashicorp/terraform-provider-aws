@@ -114,27 +114,23 @@ func resourceRDSDBInstanceRead(d *schema.ResourceData, meta interface{}) error {
 func resourceRDSDBInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*conns.AWSClient).OpsWorksConn
 
-	req := &opsworks.UpdateRdsDbInstanceInput{
+	input := &opsworks.UpdateRdsDbInstanceInput{
 		RdsDbInstanceArn: aws.String(d.Get("rds_db_instance_arn").(string)),
 	}
 
-	requestUpdate := false
-	if d.HasChange("db_user") {
-		req.DbUser = aws.String(d.Get("db_user").(string))
-		requestUpdate = true
-	}
 	if d.HasChange("db_password") {
-		req.DbPassword = aws.String(d.Get("db_password").(string))
-		requestUpdate = true
+		input.DbPassword = aws.String(d.Get("db_password").(string))
 	}
 
-	if requestUpdate {
-		log.Printf("[DEBUG] Opsworks RDS DB Instance Modification request: %s", req)
+	if d.HasChange("db_user") {
+		input.DbUser = aws.String(d.Get("db_user").(string))
+	}
 
-		_, err := client.UpdateRdsDbInstance(req)
-		if err != nil {
-			return fmt.Errorf("Error updating Opsworks RDS DB instance: %s", err)
-		}
+	log.Printf("[DEBUG] Updating OpsWorks RDS DB Instance: %s", input)
+	_, err := client.UpdateRdsDbInstance(input)
+
+	if err != nil {
+		return fmt.Errorf("updating OpsWorks RDS DB Instance (%s): %w", d.Id(), err)
 	}
 
 	return resourceRDSDBInstanceRead(d, meta)
