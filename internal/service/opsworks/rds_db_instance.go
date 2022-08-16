@@ -13,9 +13,9 @@ import (
 
 func ResourceRDSDBInstance() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceRDSDBInstanceRegister,
+		Create: resourceRDSDBInstanceCreate,
 		Update: resourceRDSDBInstanceUpdate,
-		Delete: resourceRDSDBInstanceDeregister,
+		Delete: resourceRDSDBInstanceDelete,
 		Read:   resourceRDSDBInstanceRead,
 
 		Schema: map[string]*schema.Schema{
@@ -42,56 +42,23 @@ func ResourceRDSDBInstance() *schema.Resource {
 	}
 }
 
-func resourceRDSDBInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceRDSDBInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*conns.AWSClient).OpsWorksConn
 
-	req := &opsworks.UpdateRdsDbInstanceInput{
+	req := &opsworks.RegisterRdsDbInstanceInput{
+		StackId:          aws.String(d.Get("stack_id").(string)),
 		RdsDbInstanceArn: aws.String(d.Get("rds_db_instance_arn").(string)),
+		DbUser:           aws.String(d.Get("db_user").(string)),
+		DbPassword:       aws.String(d.Get("db_password").(string)),
 	}
 
-	requestUpdate := false
-	if d.HasChange("db_user") {
-		req.DbUser = aws.String(d.Get("db_user").(string))
-		requestUpdate = true
-	}
-	if d.HasChange("db_password") {
-		req.DbPassword = aws.String(d.Get("db_password").(string))
-		requestUpdate = true
-	}
+	_, err := client.RegisterRdsDbInstance(req)
 
-	if requestUpdate {
-		log.Printf("[DEBUG] Opsworks RDS DB Instance Modification request: %s", req)
-
-		_, err := client.UpdateRdsDbInstance(req)
-		if err != nil {
-			return fmt.Errorf("Error updating Opsworks RDS DB instance: %s", err)
-		}
+	if err != nil {
+		return fmt.Errorf("Error registering Opsworks RDS DB instance: %s", err)
 	}
 
 	return resourceRDSDBInstanceRead(d, meta)
-}
-
-func resourceRDSDBInstanceDeregister(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*conns.AWSClient).OpsWorksConn
-
-	req := &opsworks.DeregisterRdsDbInstanceInput{
-		RdsDbInstanceArn: aws.String(d.Get("rds_db_instance_arn").(string)),
-	}
-
-	log.Printf("[DEBUG] Unregistering rds db instance '%s' from stack: %s", d.Get("rds_db_instance_arn"), d.Get("stack_id"))
-
-	_, err := client.DeregisterRdsDbInstance(req)
-
-	if tfawserr.ErrCodeEquals(err, opsworks.ErrCodeResourceNotFoundException) {
-		log.Printf("[DEBUG] OpsWorks RDS DB instance (%s) not found to delete; removed from state", d.Id())
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("deregistering Opsworks RDS DB instance: %s", err)
-	}
-
-	return nil
 }
 
 func resourceRDSDBInstanceRead(d *schema.ResourceData, meta interface{}) error {
@@ -138,21 +105,54 @@ func resourceRDSDBInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceRDSDBInstanceRegister(d *schema.ResourceData, meta interface{}) error {
+func resourceRDSDBInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*conns.AWSClient).OpsWorksConn
 
-	req := &opsworks.RegisterRdsDbInstanceInput{
-		StackId:          aws.String(d.Get("stack_id").(string)),
+	req := &opsworks.UpdateRdsDbInstanceInput{
 		RdsDbInstanceArn: aws.String(d.Get("rds_db_instance_arn").(string)),
-		DbUser:           aws.String(d.Get("db_user").(string)),
-		DbPassword:       aws.String(d.Get("db_password").(string)),
 	}
 
-	_, err := client.RegisterRdsDbInstance(req)
+	requestUpdate := false
+	if d.HasChange("db_user") {
+		req.DbUser = aws.String(d.Get("db_user").(string))
+		requestUpdate = true
+	}
+	if d.HasChange("db_password") {
+		req.DbPassword = aws.String(d.Get("db_password").(string))
+		requestUpdate = true
+	}
 
-	if err != nil {
-		return fmt.Errorf("Error registering Opsworks RDS DB instance: %s", err)
+	if requestUpdate {
+		log.Printf("[DEBUG] Opsworks RDS DB Instance Modification request: %s", req)
+
+		_, err := client.UpdateRdsDbInstance(req)
+		if err != nil {
+			return fmt.Errorf("Error updating Opsworks RDS DB instance: %s", err)
+		}
 	}
 
 	return resourceRDSDBInstanceRead(d, meta)
+}
+
+func resourceRDSDBInstanceDelete(d *schema.ResourceData, meta interface{}) error {
+	client := meta.(*conns.AWSClient).OpsWorksConn
+
+	req := &opsworks.DeregisterRdsDbInstanceInput{
+		RdsDbInstanceArn: aws.String(d.Get("rds_db_instance_arn").(string)),
+	}
+
+	log.Printf("[DEBUG] Unregistering rds db instance '%s' from stack: %s", d.Get("rds_db_instance_arn"), d.Get("stack_id"))
+
+	_, err := client.DeregisterRdsDbInstance(req)
+
+	if tfawserr.ErrCodeEquals(err, opsworks.ErrCodeResourceNotFoundException) {
+		log.Printf("[DEBUG] OpsWorks RDS DB instance (%s) not found to delete; removed from state", d.Id())
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("deregistering Opsworks RDS DB instance: %s", err)
+	}
+
+	return nil
 }
