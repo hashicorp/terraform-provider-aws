@@ -109,6 +109,14 @@ func ResourceCertificate() *schema.Resource {
 				},
 				Set: domainValidationOptionsHash,
 			},
+			"not_after": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"not_before": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"options": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -361,6 +369,16 @@ func resourceCertificateRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("domain_name", certificate.DomainName)
 	if err := d.Set("domain_validation_options", domainValidationOptions); err != nil {
 		return fmt.Errorf("error setting domain_validation_options: %w", err)
+	}
+	if certificate.NotBefore != nil {
+		d.Set("not_before", aws.TimeValue(certificate.NotBefore).Format(time.RFC3339))
+	} else {
+		d.Set("not_before", nil)
+	}
+	if certificate.NotAfter != nil {
+		d.Set("not_after", aws.TimeValue(certificate.NotAfter).Format(time.RFC3339))
+	} else {
+		d.Set("not_after", nil)
 	}
 	if certificate.Options != nil {
 		if err := d.Set("options", []interface{}{flattenCertificateOptions(certificate.Options)}); err != nil {
