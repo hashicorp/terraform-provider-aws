@@ -41,7 +41,7 @@ func ResourceVPCAttachment() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
-				Type:     schema.TypeInt,
+				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"attachment_policy_rule_number": {
