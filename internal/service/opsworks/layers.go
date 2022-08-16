@@ -854,6 +854,8 @@ func (m opsworksLayerTypeAttributeMap) apiAttributesToResourceData(apiAttributes
 			default:
 				return fmt.Errorf("unsupported OpsWorks Layer (%s) attribute (%s) type: %s", d.Id(), k, typ)
 			}
+		} else {
+			d.Set(k, nil)
 		}
 	}
 
