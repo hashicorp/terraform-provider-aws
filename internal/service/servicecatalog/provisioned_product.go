@@ -499,10 +499,13 @@ func resourceProvisionedProductUpdate(d *schema.ResourceData, meta interface{}) 
 		input.ProductName = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("provisioning_artifact_id"); ok {
+	// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/26271
+	if d.HasChange("provisioning_artifact_name") {
+		if v, ok := d.GetOk("provisioning_artifact_name"); ok {
+			input.ProvisioningArtifactName = aws.String(v.(string))
+		}
+	} else if v, ok := d.GetOk("provisioning_artifact_id"); ok {
 		input.ProvisioningArtifactId = aws.String(v.(string))
-	} else if v, ok := d.GetOk("provisioning_artifact_name"); ok {
-		input.ProvisioningArtifactName = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("provisioning_parameters"); ok && len(v.([]interface{})) > 0 {

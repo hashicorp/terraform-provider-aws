@@ -227,6 +227,45 @@ func TestAccServiceCatalogProvisionedProduct_tainted(t *testing.T) {
 	})
 }
 
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/26271
+func TestAccServiceCatalogProvisionedProduct_ProvisioningArtifactNameChanged(t *testing.T) {
+	resourceName := "aws_servicecatalog_provisioned_product.test"
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	artifactName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	domain := fmt.Sprintf("http://%s", acctest.RandomDomainName())
+
+	// needed for comparing the initial provisioning_artifact_id  with the should-have-changed one
+	var oldId, newId string
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, servicecatalog.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProvisionedProductDestroy,
+		Steps: []resource.TestStep{
+			{
+
+				Config: acctest.ConfigCompose(testAccProvisionedProductConfig_basic(rName, domain, acctest.DefaultEmailAddress, "10.1.0.0/16"),
+					testAccProvisionedProductConfig_createAnotherProductArtifact(artifactName)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProvisionedProductExists(resourceName),
+					storeId(rName, rName, &oldId),
+				),
+			},
+			{
+				Config: testAccProvisionedProductConfig_updateProvisionedProductArtifactName(rName, domain, acctest.DefaultEmailAddress, artifactName, "10.1.0.0/16"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProvisionedProductExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "provisioning_artifact_name", artifactName),
+					storeId(rName, artifactName, &newId),
+					compareArtifactIds(rName, &newId),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckProvisionedProductDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn
 
@@ -265,6 +304,74 @@ func testAccCheckProvisionedProductExists(resourceName string) resource.TestChec
 			return fmt.Errorf("error describing Service Catalog Provisioned Product (%s): %w", rs.Primary.ID, err)
 		}
 
+		return nil
+	}
+}
+
+func testAccProvisionedProductConfig_updateProvisionedProductArtifactName(rName string, domain string, email string, version string, vpcCidr string) string {
+	return acctest.ConfigCompose(testAccProvisionedProductTemplateURLBaseConfig(rName, domain, email),
+		fmt.Sprintf(`
+resource "aws_servicecatalog_provisioned_product" "test" {
+  name                       = %[1]q
+  product_id                 = aws_servicecatalog_product.test.id
+  provisioning_artifact_name = %[2]q
+  path_id                    = data.aws_servicecatalog_launch_paths.test.summaries[0].path_id
+
+  provisioning_parameters {
+    key   = "VPCPrimaryCIDR"
+    value = %[3]q
+  }
+
+  provisioning_parameters {
+    key   = "LeaveMeEmpty"
+    value = ""
+  }
+}
+`, rName, version, vpcCidr),
+		testAccProvisionedProductConfig_createAnotherProductArtifact(version))
+}
+
+func testAccProvisionedProductConfig_createAnotherProductArtifact(version string) string {
+	return fmt.Sprintf(`
+resource "aws_servicecatalog_provisioning_artifact" "test" {
+  product_id   = aws_servicecatalog_product.test.id
+  template_url = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/${aws_s3_object.test.key}"
+  name         = %[1]q
+  type         = "CLOUD_FORMATION_TEMPLATE"
+}
+`, version)
+}
+
+// Determines if the provisioning_artifact_id has changed
+func compareArtifactIds(name string, newId *string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn
+
+		output, err := conn.DescribeProvisionedProduct(&servicecatalog.DescribeProvisionedProductInput{Name: &name})
+
+		if err != nil {
+			return err
+		}
+
+		currentArtifactId := output.ProvisionedProductDetail.ProvisioningArtifactId
+		if *currentArtifactId != *newId {
+			return fmt.Errorf("Wanted %s but got %s", *newId, *currentArtifactId)
+		}
+		return nil
+	}
+}
+
+func storeId(productName string, artifactName string, id *string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn
+
+		output, err := conn.DescribeProvisioningArtifact(&servicecatalog.DescribeProvisioningArtifactInput{ProductName: &productName, ProvisioningArtifactName: &artifactName})
+
+		if err != nil {
+			return err
+		}
+
+		*id = *output.ProvisioningArtifactDetail.Id
 		return nil
 	}
 }
