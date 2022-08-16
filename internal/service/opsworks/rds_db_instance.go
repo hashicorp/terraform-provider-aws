@@ -137,8 +137,7 @@ func resourceRDSDBInstanceDelete(d *schema.ResourceData, meta interface{}) error
 
 func FindRDSDBInstanceByTwoPartKey(conn *opsworks.OpsWorks, dbInstanceARN, stackID string) (*opsworks.RdsDbInstance, error) {
 	input := &opsworks.DescribeRdsDbInstancesInput{
-		RdsDbInstanceArns: aws.StringSlice([]string{dbInstanceARN}),
-		StackId:           aws.String(stackID),
+		StackId: aws.String(stackID),
 	}
 
 	output, err := conn.DescribeRdsDbInstances(input)
@@ -154,13 +153,15 @@ func FindRDSDBInstanceByTwoPartKey(conn *opsworks.OpsWorks, dbInstanceARN, stack
 		return nil, err
 	}
 
-	if output == nil || len(output.RdsDbInstances) == 0 || output.RdsDbInstances[0] == nil {
+	if output == nil || len(output.RdsDbInstances) == 0 {
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	if count := len(output.RdsDbInstances); count > 1 {
-		return nil, tfresource.NewTooManyResultsError(count, input)
+	for _, v := range output.RdsDbInstances {
+		if aws.StringValue(v.RdsDbInstanceArn) == dbInstanceARN {
+			return v, nil
+		}
 	}
 
-	return output.RdsDbInstances[0], nil
+	return nil, &resource.NotFoundError{}
 }
