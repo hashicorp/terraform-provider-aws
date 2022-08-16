@@ -143,21 +143,17 @@ func resourceRDSDBInstanceUpdate(d *schema.ResourceData, meta interface{}) error
 func resourceRDSDBInstanceDelete(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*conns.AWSClient).OpsWorksConn
 
-	req := &opsworks.DeregisterRdsDbInstanceInput{
+	log.Printf("[DEBUG] Deregistering OpsWorks RDS DB Instance: %s", d.Id())
+	_, err := client.DeregisterRdsDbInstance(&opsworks.DeregisterRdsDbInstanceInput{
 		RdsDbInstanceArn: aws.String(d.Get("rds_db_instance_arn").(string)),
-	}
-
-	log.Printf("[DEBUG] Unregistering rds db instance '%s' from stack: %s", d.Get("rds_db_instance_arn"), d.Get("stack_id"))
-
-	_, err := client.DeregisterRdsDbInstance(req)
+	})
 
 	if tfawserr.ErrCodeEquals(err, opsworks.ErrCodeResourceNotFoundException) {
-		log.Printf("[DEBUG] OpsWorks RDS DB instance (%s) not found to delete; removed from state", d.Id())
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("deregistering Opsworks RDS DB instance: %s", err)
+		return fmt.Errorf("deregistering OpsWorks RDS DB Instance (%s): %w", d.Id(), err)
 	}
 
 	return nil
