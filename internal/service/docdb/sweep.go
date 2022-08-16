@@ -69,3 +69,48 @@ func sweepGlobalClusters(region string) error {
 
 	return nil
 }
+
+func sweepDBClusters(region string) error {
+	client, err := sweep.SharedRegionalSweepClient(region)
+
+	if err != nil {
+		return fmt.Errorf("error getting client: %w", err)
+	}
+
+	conn := client.(*conns.AWSClient).DocDBConn
+	input := &docdb.DescribeDBClustersInput{}
+
+	err = conn.DescribeDBClustersPages(input, func(out *docdb.DescribeDBClustersOutput, lastPage bool) bool {
+		for _, dBCluster := range out.DBClusters {
+			id := aws.StringValue(DBCluster.DBClusterIdentifier)
+			input := &docdb.DeleteDBClusterInput{
+				DBClusterIdentifier: dBCluster.DBClusterIdentifier,
+			}
+
+			log.Printf("[INFO] Deleting DocDB Cluster: %s", id)
+
+			_, err := conn.DeleteDBCluster(input)
+
+			if err != nil {
+				log.Printf("[ERROR] Failed to delete DocDB Cluster (%s): %s", id, err)
+				continue
+			}
+
+			if err := WaitForDBClusterDeletion(context.TODO(), conn, id, DBClusterDeleteTimeout); err != nil {
+				log.Printf("[ERROR] Failure while waiting for DocDB Cluster (%s) to be deleted: %s", id, err)
+			}
+		}
+		return !lastPage
+	})
+
+	if sweep.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping DocDB Cluster sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error retrieving DocDB Clusters: %w", err)
+	}
+
+	return nil
+}
