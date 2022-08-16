@@ -544,7 +544,8 @@ resource "aws_iam_role_policy" "opsworks_service" {
       "iam:PassRole",
       "cloudwatch:GetMetricStatistics",
       "elasticloadbalancing:*",
-      "rds:*"
+      "rds:*",
+      "ecs:*"
     ],
     "Effect": "Allow",
     "Resource": ["*"]
@@ -778,133 +779,6 @@ resource "aws_opsworks_stack" "test" {
   configuration_manager_version = "12.2"
 }
 `, rName, acctest.Region(), defaultOS))
-}
-
-// custom_layer
-// TODO: Remove these.
-func testAccCustomLayerSecurityGroups(name string) string {
-	return fmt.Sprintf(`
-resource "aws_security_group" "tf-ops-acc-layer1" {
-  name = "%[1]s-layer1"
-
-  ingress {
-    from_port   = 8
-    to_port     = -1
-    protocol    = "icmp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-}
-
-resource "aws_security_group" "tf-ops-acc-layer2" {
-  name = "%[1]s-layer2"
-
-  ingress {
-    from_port   = 8
-    to_port     = -1
-    protocol    = "icmp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-}
-`, name)
-}
-
-func testAccStackConfig_noVPCCreate(rName string) string {
-	return acctest.ConfigCompose(
-		acctest.ConfigAvailableAZsNoOptIn(),
-		fmt.Sprintf(`
-data "aws_partition" "current" {}
-
-data "aws_region" "current" {}
-
-resource "aws_opsworks_stack" "test" {
-  name                         = %[1]q
-  region                       = data.aws_region.current.name
-  service_role_arn             = aws_iam_role.opsworks_service.arn
-  default_instance_profile_arn = aws_iam_instance_profile.opsworks_instance.arn
-  default_availability_zone    = data.aws_availability_zones.available.names[0]
-  default_os                   = "Amazon Linux 2016.09"
-  default_root_device_type     = "ebs"
-
-  custom_json = <<EOF
-{
-  "key": "value"
-}
-EOF
-
-  configuration_manager_version = "11.10"
-  use_opsworks_security_groups  = false
-}
-
-resource "aws_iam_role" "opsworks_service" {
-  name = %[1]q
-
-  assume_role_policy = <<EOT
-{
-  "Version": "2008-10-17",
-  "Statement": [
-    {
-      "Sid": "",
-      "Effect": "Allow",
-      "Principal": {
-        "Service": "opsworks.${data.aws_partition.current.dns_suffix}"
-      },
-      "Action": "sts:AssumeRole"
-    }
-  ]
-}
-EOT
-}
-
-resource "aws_iam_role_policy" "opsworks_service" {
-  name = %[1]q
-  role = aws_iam_role.opsworks_service.id
-
-  policy = <<EOT
-{
-  "Statement": [
-    {
-      "Action": [
-        "ec2:*",
-        "iam:PassRole",
-        "cloudwatch:GetMetricStatistics",
-        "elasticloadbalancing:*",
-        "rds:*"
-      ],
-      "Effect": "Allow",
-      "Resource": [
-        "*"
-      ]
-    }
-  ]
-}
-EOT
-}
-
-resource "aws_iam_role" "opsworks_instance" {
-  name = "%[1]s-instance"
-
-  assume_role_policy = <<EOT
-{
-  "Version": "2008-10-17",
-  "Statement": [
-    {
-      "Sid": "",
-      "Effect": "Allow",
-      "Principal": {
-        "Service": "ec2.${data.aws_partition.current.dns_suffix}"
-      },
-      "Action": "sts:AssumeRole"
-    }
-  ]
-}
-EOT
-}
-
-resource "aws_iam_instance_profile" "opsworks_instance" {
-  name = %[1]q
-  role = aws_iam_role.opsworks_instance.name
-}
-`, rName))
 }
 
 // Layers
