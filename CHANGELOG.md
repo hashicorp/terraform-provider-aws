@@ -2,7 +2,11 @@
 
 ENHANCEMENTS:
 
+* data-source/aws_networkfirewall_firewall: Add `capacity_usage_summary`, `configuration_sync_state_summary`, and `status` attributes to the `firewall_status` block ([#26284](https://github.com/hashicorp/terraform-provider-aws/issues/26284))
+* resource/aws_acm_certificate: Add `not_after` argument ([#26281](https://github.com/hashicorp/terraform-provider-aws/issues/26281))
+* resource/aws_acm_certificate: Add `not_before` argument ([#26281](https://github.com/hashicorp/terraform-provider-aws/issues/26281))
 * resource/aws_chime_voice_connector_logging: Add `enable_media_metric_logs` argument ([#26283](https://github.com/hashicorp/terraform-provider-aws/issues/26283))
+* resource/aws_cloudfront_distribution: Support `http3` and `http2and3` as valid values for the `http_version` argument ([#26313](https://github.com/hashicorp/terraform-provider-aws/issues/26313))
 
 BUG FIXES:
 
