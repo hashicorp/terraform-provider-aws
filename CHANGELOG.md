@@ -12,11 +12,24 @@ ENHANCEMENTS:
 * resource/aws_acm_certificate: Add `not_before` argument ([#26281](https://github.com/hashicorp/terraform-provider-aws/issues/26281))
 * resource/aws_chime_voice_connector_logging: Add `enable_media_metric_logs` argument ([#26283](https://github.com/hashicorp/terraform-provider-aws/issues/26283))
 * resource/aws_cloudfront_distribution: Support `http3` and `http2and3` as valid values for the `http_version` argument ([#26313](https://github.com/hashicorp/terraform-provider-aws/issues/26313))
+* resource/aws_opsworks_stack: Add plan-time validation for `custom_cookbooks_source.type` ([#26278](https://github.com/hashicorp/terraform-provider-aws/issues/26278))
 
 BUG FIXES:
 
 * resource/aws_appflow_flow: Correctly specify `trigger_config.trigger_properties.scheduled.schedule_start_time` during create and update ([#26289](https://github.com/hashicorp/terraform-provider-aws/issues/26289))
 * resource/aws_db_instance: Prevent `InvalidParameterCombination: No modifications were requested` errors when only `delete_automated_backups`, `final_snapshot_identifier` and/or `skip_final_snapshot` change ([#26286](https://github.com/hashicorp/terraform-provider-aws/issues/26286))
+* resource/aws_opsworks_custom_layer: Correctly apply `tags` during create if the stack's `region` is not equal to the configured AWS Region ([#26278](https://github.com/hashicorp/terraform-provider-aws/issues/26278))
+* resource/aws_opsworks_ecs_cluster_layer: Correctly apply `tags` during create if the stack's `region` is not equal to the configured AWS Region ([#26278](https://github.com/hashicorp/terraform-provider-aws/issues/26278))
+* resource/aws_opsworks_ganglia_layer: Correctly apply `tags` during create if the stack's `region` is not equal to the configured AWS Region ([#26278](https://github.com/hashicorp/terraform-provider-aws/issues/26278))
+* resource/aws_opsworks_haproxy_layer: Correctly apply `tags` during create if the stack's `region` is not equal to the configured AWS Region ([#26278](https://github.com/hashicorp/terraform-provider-aws/issues/26278))
+* resource/aws_opsworks_java_app_layer: Correctly apply `tags` during create if the stack's `region` is not equal to the configured AWS Region ([#26278](https://github.com/hashicorp/terraform-provider-aws/issues/26278))
+* resource/aws_opsworks_memcached_layer: Correctly apply `tags` during create if the stack's `region` is not equal to the configured AWS Region ([#26278](https://github.com/hashicorp/terraform-provider-aws/issues/26278))
+* resource/aws_opsworks_mysql_layer: Correctly apply `tags` during create if the stack's `region` is not equal to the configured AWS Region ([#26278](https://github.com/hashicorp/terraform-provider-aws/issues/26278))
+* resource/aws_opsworks_nodejs_app_layer: Correctly apply `tags` during create if the stack's `region` is not equal to the configured AWS Region ([#26278](https://github.com/hashicorp/terraform-provider-aws/issues/26278))
+* resource/aws_opsworks_php_app_layer: Correctly apply `tags` during create if the stack's `region` is not equal to the configured AWS Region ([#26278](https://github.com/hashicorp/terraform-provider-aws/issues/26278))
+* resource/aws_opsworks_rails_app_layer: Correctly apply `tags` during create if the stack's `region` is not equal to the configured AWS Region ([#26278](https://github.com/hashicorp/terraform-provider-aws/issues/26278))
+* resource/aws_opsworks_stack: Correctly apply `tags` during create if `region` is not equal to the configured AWS Region ([#26278](https://github.com/hashicorp/terraform-provider-aws/issues/26278))
+* resource/aws_opsworks_static_web_layer: Correctly apply `tags` during create if the stack's `region` is not equal to the configured AWS Region ([#26278](https://github.com/hashicorp/terraform-provider-aws/issues/26278))
 
 ## 4.26.0 (August 12, 2022)
 
