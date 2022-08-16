@@ -10,9 +10,8 @@
 [discuss-badge]: https://img.shields.io/badge/discuss-terraform--aws-623CE4.svg?style=flat
 [discuss]: https://discuss.hashicorp.com/c/terraform-providers/tf-aws/
 
-The AWS Provider allows [Terraform](https://terraform.io) to manage [AWS](https://aws.amazon.com) resources.
+The [AWS Provider](https://registry.terraform.io/providers/hashicorp/aws/latest/docs) allows [Terraform](https://terraform.io) to manage [AWS](https://aws.amazon.com) resources.
 
-- [Using the provider](https://registry.terraform.io/providers/hashicorp/aws/latest/docs)
 - [Contributing guide](https://hashicorp.github.io/terraform-provider-aws/)
 - [Quarterly development roadmap](ROADMAP.md)
 - [FAQ](https://hashicorp.github.io/terraform-provider-aws/faq/)
