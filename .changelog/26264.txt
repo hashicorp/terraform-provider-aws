@@ -5,3 +5,7 @@ aws_ec2_transit_gateway_policy_table
 ```release-note:new-resource
 aws_ec2_transit_gateway_policy_table_association
 ```
+
+```release-note:new-resource
+aws_networkmanager_transit_gateway_peering
+```
