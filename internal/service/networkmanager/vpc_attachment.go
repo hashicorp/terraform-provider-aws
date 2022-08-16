@@ -386,7 +386,7 @@ func waitVPCAttachmentUpdated(ctx context.Context, conn *networkmanager.NetworkM
 	return nil, err
 }
 
-func expandVpcOptions(tfMap map[string]interface{}) *networkmanager.VpcOptions {
+func expandVpcOptions(tfMap map[string]interface{}) *networkmanager.VpcOptions { // nosemgrep:ci.caps5-in-func-name
 	if tfMap == nil {
 		return nil
 	}
@@ -400,7 +400,7 @@ func expandVpcOptions(tfMap map[string]interface{}) *networkmanager.VpcOptions {
 	return apiObject
 }
 
-func flattenVpcOptions(apiObject *networkmanager.VpcOptions) map[string]interface{} {
+func flattenVpcOptions(apiObject *networkmanager.VpcOptions) map[string]interface{} { // nosemgrep:ci.caps5-in-func-name
 	if apiObject == nil {
 		return nil
 	}
