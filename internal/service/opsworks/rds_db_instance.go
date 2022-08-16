@@ -19,16 +19,6 @@ func ResourceRDSDBInstance() *schema.Resource {
 		Read:   resourceRDSDBInstanceRead,
 
 		Schema: map[string]*schema.Schema{
-			"stack_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"rds_db_instance_arn": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
 			"db_password": {
 				Type:      schema.TypeString,
 				Required:  true,
@@ -37,6 +27,16 @@ func ResourceRDSDBInstance() *schema.Resource {
 			"db_user": {
 				Type:     schema.TypeString,
 				Required: true,
+			},
+			"rds_db_instance_arn": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
+			"stack_id": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
 			},
 		},
 	}
