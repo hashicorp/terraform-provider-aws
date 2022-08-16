@@ -844,7 +844,7 @@ func (m opsworksLayerTypeAttributeMap) apiAttributesToResourceData(apiAttributes
 			case schema.TypeString:
 				d.Set(k, v)
 			case schema.TypeInt:
-				if v, err := strconv.Atoi(v); err != nil {
+				if v, err := strconv.Atoi(v); err == nil {
 					d.Set(k, v)
 				} else {
 					d.Set(k, nil)
