@@ -43,28 +43,23 @@ func ResourceVPCAttachment() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-
 			"attachment_type": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"core_network_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"core_network_id": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-
 			"edge_location": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"options": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -79,27 +74,22 @@ func ResourceVPCAttachment() *schema.Resource {
 				},
 				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 			},
-
 			"owner_account_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"resource_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"segment_name": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"state": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"subnet_arns": {
 				Type:     schema.TypeSet,
 				Required: true,
@@ -108,10 +98,8 @@ func ResourceVPCAttachment() *schema.Resource {
 					ValidateFunc: verify.ValidARN,
 				},
 			},
-
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
-
 			"vpc_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -127,17 +115,16 @@ func resourceVPCAttachmentCreate(ctx context.Context, d *schema.ResourceData, me
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
+	coreNetworkID := d.Get("core_network_id").(string)
+	vpcARN := d.Get("vpc_arn").(string)
 	input := &networkmanager.CreateVpcAttachmentInput{
-		CoreNetworkId: aws.String(d.Get("core_network_id").(string)),
-		VpcArn:        aws.String(d.Get("vpc_arn").(string)),
+		CoreNetworkId: aws.String(coreNetworkID),
 		SubnetArns:    flex.ExpandStringSet(d.Get("subnet_arns").(*schema.Set)),
+		VpcArn:        aws.String(vpcARN),
 	}
 
-	if v, ok := d.GetOk("options"); ok {
-		optsMap := v.([]interface{})[0].(map[string]interface{})
-		input.Options = &networkmanager.VpcOptions{
-			Ipv6Support: aws.Bool(optsMap["ipv6_support"].(bool)),
-		}
+	if v, ok := d.GetOk("options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.Options = expandVpcOptions(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	if len(tags) > 0 {
@@ -148,13 +135,13 @@ func resourceVPCAttachmentCreate(ctx context.Context, d *schema.ResourceData, me
 	output, err := conn.CreateVpcAttachmentWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("Creating Network Manager VPC Attachment: %s", err)
+		return diag.Errorf("creating Network Manager VPC (%s) Attachment (%s): %s", vpcARN, coreNetworkID, err)
 	}
 
 	d.SetId(aws.StringValue(output.VpcAttachment.Attachment.AttachmentId))
 
-	if _, err := WaitVPCAttachmentCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return diag.Errorf("Waiting for Network Manager VPC Attachment (%s) create: %s", d.Id(), err)
+	if _, err := waitVPCAttachmentCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return diag.Errorf("waiting for Network Manager VPC Attachment (%s) create: %s", d.Id(), err)
 	}
 
 	return resourceVPCAttachmentRead(ctx, d, meta)
@@ -329,10 +316,11 @@ func VPCAttachmentIDNotFoundError(err error) bool {
 }
 
 func FindVPCAttachmentByID(ctx context.Context, conn *networkmanager.NetworkManager, id string) (*networkmanager.VpcAttachment, error) {
-
-	output, err := conn.GetVpcAttachment(&networkmanager.GetVpcAttachmentInput{
+	input := &networkmanager.GetVpcAttachmentInput{
 		AttachmentId: aws.String(id),
-	})
+	}
+
+	output, err := conn.GetVpcAttachmentWithContext(ctx, input)
 
 	if err != nil {
 		return nil, err
@@ -357,7 +345,7 @@ func StatusVPCAttachmentState(ctx context.Context, conn *networkmanager.NetworkM
 	}
 }
 
-func WaitVPCAttachmentCreated(ctx context.Context, conn *networkmanager.NetworkManager, id string, timeout time.Duration) (*networkmanager.VpcAttachment, error) {
+func waitVPCAttachmentCreated(ctx context.Context, conn *networkmanager.NetworkManager, id string, timeout time.Duration) (*networkmanager.VpcAttachment, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{networkmanager.AttachmentStateCreating, networkmanager.AttachmentStatePendingNetworkUpdate},
 		Target:  []string{networkmanager.AttachmentStateAvailable, networkmanager.AttachmentStatePendingAttachmentAcceptance},
@@ -407,4 +395,18 @@ func waitVPCAttachmentUpdated(ctx context.Context, conn *networkmanager.NetworkM
 	}
 
 	return nil, err
+}
+
+func expandVpcOptions(tfMap map[string]interface{}) *networkmanager.VpcOptions {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &networkmanager.VpcOptions{}
+
+	if v, ok := tfMap["ipv6_support"].(bool); ok {
+		apiObject.Ipv6Support = aws.Bool(v)
+	}
+
+	return apiObject
 }

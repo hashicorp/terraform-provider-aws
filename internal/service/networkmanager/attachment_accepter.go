@@ -132,7 +132,7 @@ func ResourceAttachmentAccepterCreate(ctx context.Context, d *schema.ResourceDat
 	d.SetId(attachmentId)
 
 	if attachmentType == networkmanager.AttachmentTypeVpc {
-		if _, err := WaitVPCAttachmentCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		if _, err := waitVPCAttachmentCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 			d.SetId("")
 			return diag.Errorf("Waiting for Network Manager VPC Attachment (%s) create: %s", d.Id(), err)
 		}
