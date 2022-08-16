@@ -17,8 +17,8 @@ The AWS Provider allows [Terraform](https://terraform.io) to manage [AWS](https:
 - [Quarterly development roadmap](ROADMAP.md)
 - [FAQ](https://hashicorp.github.io/terraform-provider-aws/faq/)
 - [Tutorials](https://learn.hashicorp.com/collections/terraform/aws-get-started)
-- [discuss.hashicorp.com forum](https://discuss.hashicorp.com/c/terraform-providers/tf-aws/)
-- [gitter chat](https://gitter.im/hashicorp-terraform/Lobby)
-- [Google Groups mailing list](http://groups.google.com/group/terraform-tool)
+- [discuss.hashicorp.com](https://discuss.hashicorp.com/c/terraform-providers/tf-aws/)
+- [gitter](https://gitter.im/hashicorp-terraform/Lobby)
+- [Google Groups](http://groups.google.com/group/terraform-tool)
 
 Please note: We take Terraform's security and our users' trust very seriously. If you believe you have found a security issue in the Terraform AWS Provider, please responsibly disclose by contacting us at security@hashicorp.com.
