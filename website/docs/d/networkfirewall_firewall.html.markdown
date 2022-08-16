@@ -68,7 +68,7 @@ In addition to all arguments above, the following attributes are exported:
             * `ip_set_references` - The list of IP set references used by a firewall.
                 * `resolved_cidr_count` - Total number of CIDR blocks used by the IP set references in a firewall.
             * `utilized_cidr_count` - Number of CIDR blocks used by the IP set references in a firewall.
-    * `configuration_sync_state_summary` - Summary of sync states for all availability zones in which the firewall is configured. 
+    * `configuration_sync_state_summary` - Summary of sync states for all availability zones in which the firewall is configured.
 * `id` - The Amazon Resource Name (ARN) that identifies the firewall.
 * `name` - The descriptive name of the firewall.
 * `subnet_change_protection` - A boolean flag indicating whether it is possible to change the associated subnet(s).
