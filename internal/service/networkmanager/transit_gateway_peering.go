@@ -156,6 +156,14 @@ func resourceTransitGatewayPeeringRead(ctx context.Context, d *schema.ResourceDa
 func resourceTransitGatewayPeeringUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).NetworkManagerConn
 
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
+
+		if err := UpdateTagsWithContext(ctx, conn, d.Get("arn").(string), o, n); err != nil {
+			return diag.Errorf("updating VPC Attachment (%s) tags: %s", d.Id(), err)
+		}
+	}
+
 	return resourceTransitGatewayPeeringRead(ctx, d, meta)
 }
 
