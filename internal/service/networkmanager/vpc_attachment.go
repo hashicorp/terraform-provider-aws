@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/networkmanager"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -39,6 +40,10 @@ func ResourceVPCAttachment() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"arn": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
 			"attachment_policy_rule_number": {
 				Type:     schema.TypeInt,
 				Computed: true,
@@ -165,9 +170,16 @@ func resourceVPCAttachmentRead(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	a := vpcAttachment.Attachment
-	d.Set("core_network_arn", a.CoreNetworkArn)
+	arn := arn.ARN{
+		Partition: meta.(*conns.AWSClient).Partition,
+		Service:   "networkmanager",
+		AccountID: meta.(*conns.AWSClient).AccountID,
+		Resource:  fmt.Sprintf("attachment/%s", d.Id()),
+	}.String()
+	d.Set("arn", arn)
 	d.Set("attachment_policy_rule_number", a.AttachmentPolicyRuleNumber)
 	d.Set("attachment_type", a.AttachmentType)
+	d.Set("core_network_arn", a.CoreNetworkArn)
 	d.Set("core_network_id", a.CoreNetworkId)
 	d.Set("edge_location", a.EdgeLocation)
 	if vpcAttachment.Options != nil {
@@ -201,24 +213,15 @@ func resourceVPCAttachmentRead(ctx context.Context, d *schema.ResourceData, meta
 func resourceVPCAttachmentUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).NetworkManagerConn
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-		acnt := meta.(*conns.AWSClient).AccountID
-		part := meta.(*conns.AWSClient).Partition
-		arn := fmt.Sprintf("arn:%s:networkmanager::%s:attachment/%s", part, acnt, d.Id())
-
-		if err := UpdateTags(conn, arn, o, n); err != nil {
-			return diag.Errorf("Updating VPC Attachment (%s) tags: %s", d.Id(), err)
-		}
-	}
-
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &networkmanager.UpdateVpcAttachmentInput{
 			AttachmentId: aws.String(d.Id()),
 		}
 
 		if d.HasChange("options") {
-			input.Options = expandVPCAttachmentOptions(d.Get("options").([]interface{}))
+			if v, ok := d.GetOk("options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+				input.Options = expandVpcOptions(v.([]interface{})[0].(map[string]interface{}))
+			}
 		}
 
 		if d.HasChange("subnet_arns") {
@@ -229,46 +232,38 @@ func resourceVPCAttachmentUpdate(ctx context.Context, d *schema.ResourceData, me
 			if n == nil {
 				n = new(schema.Set)
 			}
-
 			os := o.(*schema.Set)
 			ns := n.(*schema.Set)
-			subnetArnsUpdateAdd := ns.Difference(os)
-			subnetArnsUpdateRemove := os.Difference(ns)
 
-			if len(subnetArnsUpdateAdd.List()) > 0 {
-				input.AddSubnetArns = flex.ExpandStringSet(subnetArnsUpdateAdd)
+			if add := ns.Difference(os); len(add.List()) > 0 {
+				input.AddSubnetArns = flex.ExpandStringSet(add)
 			}
 
-			if len(subnetArnsUpdateRemove.List()) > 0 {
-				input.RemoveSubnetArns = flex.ExpandStringSet(subnetArnsUpdateRemove)
+			if del := os.Difference(ns); len(del.List()) > 0 {
+				input.RemoveSubnetArns = flex.ExpandStringSet(del)
 			}
 		}
+
 		_, err := conn.UpdateVpcAttachmentWithContext(ctx, input)
 
 		if err != nil {
-			return diag.Errorf("Updating vpc attachment (%s): %s", d.Id(), err)
+			return diag.Errorf("updating Network Manager VPC Attachment (%s): %s", d.Id(), err)
 		}
 
 		if _, err := waitVPCAttachmentUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return diag.Errorf("Waiting for Network Manager VPC Attachment (%s) update: %s", d.Id(), err)
+			return diag.Errorf("waiting for Network Manager VPC Attachment (%s) update: %s", d.Id(), err)
+		}
+	}
+
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
+
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+			return diag.Errorf("updating VPC Attachment (%s) tags: %s", d.Id(), err)
 		}
 	}
 
 	return resourceVPCAttachmentRead(ctx, d, meta)
-}
-
-func expandVPCAttachmentOptions(l []interface{}) *networkmanager.VpcOptions {
-	if len(l) == 0 || l[0] == nil {
-		return nil
-	}
-
-	m := l[0].(map[string]interface{})
-
-	opts := &networkmanager.VpcOptions{
-		Ipv6Support: aws.Bool(m["ipv6_support"].(bool)),
-	}
-
-	return opts
 }
 
 func resourceVPCAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {

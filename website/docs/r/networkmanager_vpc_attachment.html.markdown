@@ -43,6 +43,7 @@ The following arguments are optional:
 
 In addition to all arguments above, the following attributes are exported:
 
+* `arn` - The ARN of the attachment.
 * `attachment_id` - The ID of the attachment.
 * `attachment_policy_rule_number` - The policy rule number associated with the attachment.
 * `attachment_type` - The type of attachment.
