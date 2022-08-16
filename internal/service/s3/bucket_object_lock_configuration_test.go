@@ -197,7 +197,7 @@ func testAccCheckBucketObjectLockConfigurationDestroy(s *terraform.State) error 
 
 		output, err := conn.GetObjectLockConfiguration(input)
 
-		if tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket, tfs3.ErrCodeObjectLockConfigurationNotFound) {
+		if tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket) || tfawserr.ErrCodeContains(err, tfs3.ErrCodeObjectLockConfigurationNotFound) {
 			continue
 		}
 

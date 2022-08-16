@@ -17,7 +17,7 @@ const (
 	ErrCodeNoSuchPublicAccessBlockConfiguration      = "NoSuchPublicAccessBlockConfiguration"
 	ErrCodeNoSuchWebsiteConfiguration                = "NoSuchWebsiteConfiguration"
 	ErrCodeNotImplemented                            = "NotImplemented"
-	ErrCodeObjectLockConfigurationNotFound           = "ObjectLockConfigurationNotFoundError"
+	ErrCodeObjectLockConfigurationNotFound           = "ObjectLockConfigurationNotFound"
 	ErrCodeOperationAborted                          = "OperationAborted"
 	ErrCodeReplicationConfigurationNotFound          = "ReplicationConfigurationNotFoundError"
 	ErrCodeServerSideEncryptionConfigurationNotFound = "ServerSideEncryptionConfigurationNotFoundError"

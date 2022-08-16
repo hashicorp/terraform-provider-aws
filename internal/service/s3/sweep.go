@@ -224,7 +224,7 @@ func objectLockEnabled(conn *s3.S3, bucket string) (bool, error) {
 
 	output, err := conn.GetObjectLockConfiguration(input)
 
-	if tfawserr.ErrCodeEquals(err, "ObjectLockConfigurationNotFoundError") {
+	if tfawserr.ErrCodeContains(err, ErrCodeObjectLockConfigurationNotFound) {
 		return false, nil
 	}
 
