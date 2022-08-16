@@ -45,18 +45,24 @@ func ResourceRDSDBInstance() *schema.Resource {
 func resourceRDSDBInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*conns.AWSClient).OpsWorksConn
 
-	req := &opsworks.RegisterRdsDbInstanceInput{
-		StackId:          aws.String(d.Get("stack_id").(string)),
-		RdsDbInstanceArn: aws.String(d.Get("rds_db_instance_arn").(string)),
-		DbUser:           aws.String(d.Get("db_user").(string)),
+	dbInstanceARN := d.Get("rds_db_instance_arn").(string)
+	stackID := d.Get("stack_id").(string)
+	id := dbInstanceARN + stackID
+	input := &opsworks.RegisterRdsDbInstanceInput{
 		DbPassword:       aws.String(d.Get("db_password").(string)),
+		DbUser:           aws.String(d.Get("db_user").(string)),
+		RdsDbInstanceArn: aws.String(dbInstanceARN),
+		StackId:          aws.String(stackID),
 	}
 
-	_, err := client.RegisterRdsDbInstance(req)
+	log.Printf("[DEBUG] Registering OpsWorks RDS DB Instance: %s", input)
+	_, err := client.RegisterRdsDbInstance(input)
 
 	if err != nil {
-		return fmt.Errorf("Error registering Opsworks RDS DB instance: %s", err)
+		return fmt.Errorf("registering OpsWorks RDS DB Instance (%s): %w", id, err)
 	}
+
+	d.SetId(id)
 
 	return resourceRDSDBInstanceRead(d, meta)
 }
