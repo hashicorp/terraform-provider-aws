@@ -5,12 +5,10 @@ import (
 	"log"
 	"os"
 	"regexp"
-	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -633,8 +631,10 @@ func TestAccRDSInstance_finalSnapshotIdentifier(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var snap rds.DBInstance
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	var v rds.DBInstance
+	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
@@ -642,12 +642,20 @@ func TestAccRDSInstance_finalSnapshotIdentifier(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		// testAccCheckInstanceSnapshot verifies a database snapshot is
 		// created, and subsequently deletes it
-		CheckDestroy: testAccCheckInstanceSnapshot,
+		CheckDestroy: testAccCheckInstanceDestroyWithFinalSnapshot,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig_finalSnapshotID(rName),
+				Config: testAccInstanceConfig_finalSnapshotID(rName1, rName1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists("aws_db_instance.snapshot", &snap),
+					testAccCheckInstanceExists(resourceName, &v),
+				),
+			},
+			// Test updating just final_snapshot_identifier.
+			// https://github.com/hashicorp/terraform-provider-aws/issues/26280
+			{
+				Config: testAccInstanceConfig_finalSnapshotID(rName1, rName2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &v),
 				),
 			},
 		},
@@ -659,19 +667,20 @@ func TestAccRDSInstance_FinalSnapshotIdentifier_skipFinalSnapshot(t *testing.T) 
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var snap rds.DBInstance
+	var v rds.DBInstance
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstanceNoSnapshot,
+		CheckDestroy:             testAccCheckInstanceDestroyWithoutFinalSnapshot,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_FinalSnapshotID_skipFinalSnapshot(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists("aws_db_instance.snapshot", &snap),
+					testAccCheckInstanceExists(resourceName, &v),
 				),
 			},
 		},
@@ -4315,84 +4324,12 @@ func testAccCheckInstanceReplicaAttributes(source, replica *rds.DBInstance) reso
 	}
 }
 
-func testAccCheckInstanceSnapshot(s *terraform.State) error {
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_db_instance" {
-			continue
-		}
-
-		awsClient := acctest.Provider.Meta().(*conns.AWSClient)
-		conn := awsClient.RDSConn
-
-		log.Printf("[INFO] Trying to locate the DBInstance Final Snapshot")
-		snapOutput, err := conn.DescribeDBSnapshots(
-			&rds.DescribeDBSnapshotsInput{
-				DBSnapshotIdentifier: aws.String(rs.Primary.Attributes["final_snapshot_identifier"]),
-			})
-
-		if err != nil {
-			return err
-		}
-
-		if snapOutput == nil || len(snapOutput.DBSnapshots) == 0 {
-			return fmt.Errorf("Snapshot %s not found", rs.Primary.Attributes["final_snapshot_identifier"])
-		}
-
-		// verify we have the tags copied to the snapshot
-		tagsARN := aws.StringValue(snapOutput.DBSnapshots[0].DBSnapshotArn)
-		listTagsOutput, err := conn.ListTagsForResource(&rds.ListTagsForResourceInput{
-			ResourceName: aws.String(tagsARN),
-		})
-		if err != nil {
-			return fmt.Errorf("Error retrieving tags for ARN (%s): %s", tagsARN, err)
-		}
-
-		if listTagsOutput.TagList == nil || len(listTagsOutput.TagList) == 0 {
-			return fmt.Errorf("Tag list is nil or zero: %s", listTagsOutput.TagList)
-		}
-
-		var found bool
-		for _, t := range listTagsOutput.TagList {
-			if aws.StringValue(t.Key) == "Name" && strings.HasPrefix(aws.StringValue(t.Value), acctest.ResourcePrefix) {
-				found = true
-			}
-		}
-		if !found {
-			return fmt.Errorf("Expected to find tag Name with prefix \"%s\", but wasn't found. Tags: %s", acctest.ResourcePrefix, listTagsOutput.TagList)
-		}
-		// end tag search
-
-		log.Printf("[INFO] Deleting the Snapshot %s", rs.Primary.Attributes["final_snapshot_identifier"])
-		_, err = conn.DeleteDBSnapshot(
-			&rds.DeleteDBSnapshotInput{
-				DBSnapshotIdentifier: aws.String(rs.Primary.Attributes["final_snapshot_identifier"]),
-			})
-		if err != nil {
-			return err
-		}
-
-		resp, err := conn.DescribeDBInstances(
-			&rds.DescribeDBInstancesInput{
-				DBInstanceIdentifier: aws.String(rs.Primary.ID),
-			})
-
-		if err != nil {
-			if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBInstanceNotFoundFault) {
-				continue
-			}
-			return err
-
-		}
-
-		if len(resp.DBInstances) != 0 && aws.StringValue(resp.DBInstances[0].DBInstanceIdentifier) == rs.Primary.ID {
-			return fmt.Errorf("DB Instance still exists")
-		}
-	}
-
-	return nil
-}
-
-func testAccCheckInstanceNoSnapshot(s *terraform.State) error {
+// testAccCheckInstanceDestroyWithFinalSnapshot verifies that:
+// - The DBInstance has been destroyed
+// - A DBSnapshot has been produced
+// - Tags have been copied to the snapshot
+// The snapshot is deleted.
+func testAccCheckInstanceDestroyWithFinalSnapshot(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -4400,27 +4337,80 @@ func testAccCheckInstanceNoSnapshot(s *terraform.State) error {
 			continue
 		}
 
-		resp, err := conn.DescribeDBInstances(
-			&rds.DescribeDBInstancesInput{
-				DBInstanceIdentifier: aws.String(rs.Primary.ID),
-			})
+		finalSnapshotID := rs.Primary.Attributes["final_snapshot_identifier"]
+		output, err := tfrds.FindDBSnapshotByID(conn, finalSnapshotID)
 
-		if err != nil && !tfawserr.ErrCodeEquals(err, rds.ErrCodeDBInstanceNotFoundFault) {
+		if err != nil {
 			return err
 		}
 
-		if len(resp.DBInstances) != 0 && aws.StringValue(resp.DBInstances[0].DBInstanceIdentifier) == rs.Primary.ID {
-			return fmt.Errorf("DB Instance still exists")
-		}
+		tags, err := tfrds.ListTags(conn, aws.StringValue(output.DBSnapshotArn))
 
-		_, err = conn.DescribeDBSnapshots(
-			&rds.DescribeDBSnapshotsInput{
-				DBSnapshotIdentifier: aws.String(rs.Primary.Attributes["final_snapshot_identifier"]),
-			})
-
-		if err != nil && !tfawserr.ErrCodeEquals(err, rds.ErrCodeDBSnapshotNotFoundFault) {
+		if err != nil {
 			return err
 		}
+
+		if _, ok := tags["Name"]; !ok {
+			return fmt.Errorf("Name tag not found")
+		}
+
+		_, err = conn.DeleteDBSnapshot(&rds.DeleteDBSnapshotInput{
+			DBSnapshotIdentifier: aws.String(finalSnapshotID),
+		})
+
+		if err != nil {
+			return err
+		}
+
+		_, err = tfrds.FindDBInstanceByID(conn, rs.Primary.ID)
+
+		if tfresource.NotFound(err) {
+			continue
+		}
+
+		if err != nil {
+			return err
+		}
+
+		return fmt.Errorf("DB Instance %s still exists", rs.Primary.ID)
+	}
+
+	return nil
+}
+
+// testAccCheckInstanceDestroyWithoutFinalSnapshot verifies that:
+// - The DBInstance has been destroyed
+// - No DBSnapshot has been produced
+func testAccCheckInstanceDestroyWithoutFinalSnapshot(s *terraform.State) error {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
+
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != "aws_db_instance" {
+			continue
+		}
+
+		finalSnapshotID := rs.Primary.Attributes["final_snapshot_identifier"]
+		_, err := tfrds.FindDBSnapshotByID(conn, finalSnapshotID)
+
+		if err != nil {
+			if !tfresource.NotFound(err) {
+				return err
+			}
+		} else {
+			return fmt.Errorf("DB Snapshot %s exists", finalSnapshotID)
+		}
+
+		_, err = tfrds.FindDBInstanceByID(conn, rs.Primary.ID)
+
+		if tfresource.NotFound(err) {
+			continue
+		}
+
+		if err != nil {
+			return err
+		}
+
+		return fmt.Errorf("DB Instance %s still exists", rs.Primary.ID)
 	}
 
 	return nil
@@ -4939,7 +4929,7 @@ resource "aws_db_instance" "test" {
 
 func testAccInstanceConfig_FinalSnapshotID_skipFinalSnapshot(rName string) string {
 	return acctest.ConfigCompose(testAccInstanceConfig_orderableClassMySQL(), fmt.Sprintf(`
-resource "aws_db_instance" "snapshot" {
+resource "aws_db_instance" "test" {
   identifier = %[1]q
 
   allocated_storage       = 5
@@ -5081,31 +5071,31 @@ resource "aws_db_instance" "test" {
 `, rName))
 }
 
-func testAccInstanceConfig_finalSnapshotID(rName string) string {
+func testAccInstanceConfig_finalSnapshotID(rName1, rName2 string) string {
 	return acctest.ConfigCompose(testAccInstanceConfig_orderableClassMySQL(), fmt.Sprintf(`
-resource "aws_db_instance" "snapshot" {
+resource "aws_db_instance" "test" {
   identifier = %[1]q
 
   allocated_storage       = 5
   engine                  = data.aws_rds_orderable_db_instance.test.engine
   engine_version          = data.aws_rds_orderable_db_instance.test.engine_version
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
-  db_name                 = "baz"
-  password                = "barbarbarbar"
+  db_name                 = "test"
   publicly_accessible     = true
-  username                = "foo"
+  password                = "avoid-plaintext-passwords"
+  username                = "tfacctest"
   backup_retention_period = 1
 
   parameter_group_name = "default.${data.aws_rds_engine_version.default.parameter_group_family}"
 
   copy_tags_to_snapshot     = true
-  final_snapshot_identifier = %[1]q
+  final_snapshot_identifier = %[2]q
 
   tags = {
     Name = %[1]q
   }
 }
-`, rName))
+`, rName1, rName2))
 }
 
 func testAccInstanceConfig_monitoringInterval(rName string, monitoringInterval int) string {

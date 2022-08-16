@@ -4,15 +4,15 @@ go 1.18
 
 require (
 	github.com/ProtonMail/go-crypto v0.0.0-20210428141323-04723f9f07d7
-	github.com/aws/aws-sdk-go v1.44.71
-	github.com/aws/aws-sdk-go-v2 v1.16.10
-	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.12.10
-	github.com/aws/aws-sdk-go-v2/service/comprehend v1.18.6
-	github.com/aws/aws-sdk-go-v2/service/fis v1.12.10
-	github.com/aws/aws-sdk-go-v2/service/kendra v1.31.2
-	github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.0.2
-	github.com/aws/aws-sdk-go-v2/service/route53domains v1.12.9
-	github.com/aws/aws-sdk-go-v2/service/transcribe v1.21.2
+	github.com/aws/aws-sdk-go v1.44.77
+	github.com/aws/aws-sdk-go-v2 v1.16.11
+	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.12.12
+	github.com/aws/aws-sdk-go-v2/service/comprehend v1.18.7
+	github.com/aws/aws-sdk-go-v2/service/fis v1.12.12
+	github.com/aws/aws-sdk-go-v2/service/kendra v1.31.4
+	github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.0.4
+	github.com/aws/aws-sdk-go-v2/service/route53domains v1.12.12
+	github.com/aws/aws-sdk-go-v2/service/transcribe v1.21.4
 	github.com/beevik/etree v1.1.0
 	github.com/google/go-cmp v0.5.8
 	github.com/hashicorp/aws-cloudformation-resource-schema-sdk-go v0.18.0
@@ -25,10 +25,10 @@ require (
 	github.com/hashicorp/go-version v1.6.0
 	github.com/hashicorp/hcl/v2 v2.13.0
 	github.com/hashicorp/terraform-plugin-framework v0.10.0
-	github.com/hashicorp/terraform-plugin-go v0.13.0
+	github.com/hashicorp/terraform-plugin-go v0.14.0
 	github.com/hashicorp/terraform-plugin-log v0.7.0
 	github.com/hashicorp/terraform-plugin-mux v0.7.0
-	github.com/hashicorp/terraform-plugin-sdk/v2 v2.20.0
+	github.com/hashicorp/terraform-plugin-sdk/v2 v2.21.0
 	github.com/mattbaird/jsonpatch v0.0.0-20200820163806-098863c1fc24
 	github.com/mitchellh/copystructure v1.2.0
 	github.com/mitchellh/go-homedir v1.1.0
@@ -46,8 +46,8 @@ require (
 	github.com/apparentlymart/go-textseg/v13 v13.0.0 // indirect
 	github.com/aws/aws-sdk-go-v2/config v1.15.4 // indirect
 	github.com/aws/aws-sdk-go-v2/credentials v1.12.0 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/configsources v1.1.17 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.4.11 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/configsources v1.1.18 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.4.12 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/ini v1.3.11 // indirect
 	github.com/aws/aws-sdk-go-v2/service/iam v1.18.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.9.4 // indirect
@@ -93,6 +93,6 @@ require (
 	google.golang.org/appengine v1.6.6 // indirect
 	google.golang.org/genproto v0.0.0-20200711021454-869866162049 // indirect
 	google.golang.org/grpc v1.48.0 // indirect
-	google.golang.org/protobuf v1.28.0 // indirect
+	google.golang.org/protobuf v1.28.1 // indirect
 	syreclabs.com/go/faker v1.2.3
 )
