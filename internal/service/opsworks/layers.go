@@ -219,6 +219,7 @@ func (lt *opsworksLayerType) SchemaResource() *schema.Resource {
 		"ebs_volume": {
 			Type:     schema.TypeSet,
 			Optional: true,
+			Computed: true,
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
 					"encrypted": {
