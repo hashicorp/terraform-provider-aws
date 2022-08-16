@@ -5,8 +5,6 @@ import (
 	"log"
 	"strconv"
 
-	"golang.org/x/exp/maps"
-
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/opsworks"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -20,6 +18,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"golang.org/x/exp/maps"
 )
 
 // OpsWorks has a single concept of "layer" which represents several different
