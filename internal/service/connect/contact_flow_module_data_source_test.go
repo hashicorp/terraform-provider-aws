@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccConnectContactFlowModuleDataSource_contactFlowModuleID(t *testing.T) {
+func testAccContactFlowModuleDataSource_contactFlowModuleID(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	resourceName := "aws_connect_contact_flow_module.test"
 	datasourceName := "data.aws_connect_contact_flow_module.test"
@@ -39,7 +39,7 @@ func TestAccConnectContactFlowModuleDataSource_contactFlowModuleID(t *testing.T)
 	})
 }
 
-func TestAccConnectContactFlowModuleDataSource_name(t *testing.T) {
+func testAccContactFlowModuleDataSource_name(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	resourceName := "aws_connect_contact_flow_module.test"

@@ -54,7 +54,7 @@ Some flags control generation a certain section of code, such as whether the gen
 
 ## Legacy Documentation
 
-(This needs to be updated...)
+(TODO: This needs to be updated...)
 
 The `keyvaluetags` package is designed to provide a consistent interface for handling AWS resource key-value tags. Many of the AWS Go SDK services, implement their own Go struct with `Key` and `Value` fields (e.g. `athena.Tag`) while others simply use a map (e.g. `map[string]string`). These inconsistent implementations and numerous Go types makes the process of correctly working with each of the services a tedius, previously copy-paste-modify process.
 
@@ -89,6 +89,7 @@ aws/internal/keyvaluetags
 └── <service name>_tags.go (any service-specific functions that cannot be generated)
 ```
 
+<!-- markdownlint-disable -->
 # listtags
 
 This package contains a code generator to consistently handle the various AWS Go SDK service implementations for listing resource tags. Not all AWS Go SDK services that support tagging are generated in this manner.
