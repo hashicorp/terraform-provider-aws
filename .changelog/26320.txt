@@ -1,0 +1,4 @@
+```release-note:enhancement
+resource/aws_lb_target_group: Add `ip_address_type` argument
+```
+
