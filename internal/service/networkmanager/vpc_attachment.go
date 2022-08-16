@@ -152,44 +152,37 @@ func resourceVPCAttachmentRead(ctx context.Context, d *schema.ResourceData, meta
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	vpcAttachment, err := conn.GetVpcAttachment(&networkmanager.GetVpcAttachmentInput{
-		AttachmentId: aws.String(d.Id()),
-	})
+	vpcAttachment, err := FindVPCAttachmentByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, networkmanager.ErrCodeResourceNotFoundException) {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Network Manager VPC Attachment %s not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return diag.Errorf("Reading Network Manager VPC Attachment (%s): %s", d.Id(), err)
+		return diag.Errorf("reading Network Manager VPC Attachment (%s): %s", d.Id(), err)
 	}
 
-	a := vpcAttachment.VpcAttachment.Attachment
-	subnetArns := vpcAttachment.VpcAttachment.SubnetArns
-	opts := vpcAttachment.VpcAttachment.Options
-
-	d.Set("core_network_id", a.CoreNetworkId)
-	d.Set("state", a.State)
+	a := vpcAttachment.Attachment
 	d.Set("core_network_arn", a.CoreNetworkArn)
 	d.Set("attachment_policy_rule_number", a.AttachmentPolicyRuleNumber)
 	d.Set("attachment_type", a.AttachmentType)
+	d.Set("core_network_id", a.CoreNetworkId)
 	d.Set("edge_location", a.EdgeLocation)
+	if vpcAttachment.Options != nil {
+		if err := d.Set("options", []interface{}{flattenVpcOptions(vpcAttachment.Options)}); err != nil {
+			return diag.Errorf("setting options: %s", err)
+		}
+	} else {
+		d.Set("options", nil)
+	}
 	d.Set("owner_account_id", a.OwnerAccountId)
 	d.Set("resource_arn", a.ResourceArn)
 	d.Set("segment_name", a.SegmentName)
-
-	// VPC arn is not outputted, therefore use resource arn
+	d.Set("state", a.State)
+	d.Set("subnet_arns", aws.StringValueSlice(vpcAttachment.SubnetArns))
 	d.Set("vpc_arn", a.ResourceArn)
-
-	// options
-	d.Set("options", []interface{}{map[string]interface{}{
-		"ipv6_support": aws.BoolValue(opts.Ipv6Support),
-	}})
-
-	// subnetArns
-	d.Set("subnet_arns", subnetArns)
 
 	tags := KeyValueTags(a.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
@@ -199,7 +192,7 @@ func resourceVPCAttachmentRead(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return diag.Errorf("Setting tags_all: %s", err)
+		return diag.Errorf("setting tags_all: %s", err)
 	}
 
 	return nil
@@ -322,8 +315,19 @@ func FindVPCAttachmentByID(ctx context.Context, conn *networkmanager.NetworkMana
 
 	output, err := conn.GetVpcAttachmentWithContext(ctx, input)
 
+	if tfawserr.ErrCodeEquals(err, networkmanager.ErrCodeResourceNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return nil, err
+	}
+
+	if output == nil || output.VpcAttachment == nil {
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
 	return output.VpcAttachment, nil
@@ -409,4 +413,18 @@ func expandVpcOptions(tfMap map[string]interface{}) *networkmanager.VpcOptions {
 	}
 
 	return apiObject
+}
+
+func flattenVpcOptions(apiObject *networkmanager.VpcOptions) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.Ipv6Support; v != nil {
+		tfMap["ipv6_support"] = aws.BoolValue(v)
+	}
+
+	return tfMap
 }
