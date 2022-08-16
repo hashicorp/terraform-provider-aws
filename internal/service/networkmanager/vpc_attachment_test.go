@@ -284,7 +284,7 @@ resource "aws_subnet" "test" {
 
 resource "aws_networkmanager_global_network" "test" {
   tags = {
-   Name = %[1]q
+    Name = %[1]q
   }
 }
 
