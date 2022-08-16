@@ -688,6 +688,38 @@ func TestAccCloudFrontDistribution_http11(t *testing.T) {
 	})
 }
 
+func TestAccCloudFrontDistribution_http3(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var distribution cloudfront.Distribution
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudfront.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDistributionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDistributionConfig_http3(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDistributionExists("aws_cloudfront_distribution.http_3", &distribution),
+				),
+			},
+			{
+				ResourceName:      "aws_cloudfront_distribution.http_3",
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"retain_on_delete",
+					"wait_for_deployment",
+				},
+			},
+		},
+	})
+}
+
 func TestAccCloudFrontDistribution_isIPV6Enabled(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -2499,6 +2531,62 @@ resource "aws_cloudfront_distribution" "http_1_1" {
   }
 
   http_version = "http1.1"
+
+  restrictions {
+    geo_restriction {
+      restriction_type = "whitelist"
+      locations        = ["US", "CA", "GB", "DE"]
+    }
+  }
+
+  viewer_certificate {
+    cloudfront_default_certificate = true
+  }
+
+  %[1]s
+}
+`, testAccDistributionRetainConfig())
+}
+
+func testAccDistributionConfig_http3() string {
+	return fmt.Sprintf(`
+resource "aws_cloudfront_distribution" "http_3" {
+  origin {
+    domain_name = "www.example.com"
+    origin_id   = "myCustomOrigin"
+
+    custom_origin_config {
+      http_port              = 80
+      https_port             = 443
+      origin_protocol_policy = "http-only"
+      origin_ssl_protocols   = ["SSLv3", "TLSv1"]
+    }
+  }
+
+  enabled = true
+  comment = "Some comment"
+
+  default_cache_behavior {
+    allowed_methods  = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
+    cached_methods   = ["GET", "HEAD"]
+    target_origin_id = "myCustomOrigin"
+    smooth_streaming = false
+
+    forwarded_values {
+      query_string = false
+
+      cookies {
+        forward = "all"
+      }
+    }
+
+    viewer_protocol_policy = "allow-all"
+    min_ttl                = 0
+    default_ttl            = 3600
+    max_ttl                = 86400
+  }
+
+  http_version = "http3"
 
   restrictions {
     geo_restriction {
