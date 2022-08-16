@@ -34,7 +34,7 @@ func TestAccNetworkManagerVPCAttachment_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckVPCAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCoreNetworkConfig_basic(rName),
+				Config: testAccVPCAttachmentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCAttachmentExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "subnet_arns.#", "2"),
@@ -49,7 +49,8 @@ func TestAccNetworkManagerVPCAttachment_basic(t *testing.T) {
 	})
 }
 
-func TestAccNetworkManagerVPCAttachment_updates(t *testing.T) {
+func TestAccNetworkManagerVPCAttachment_disappears(t *testing.T) {
+	var v networkmanager.VpcAttachment
 	resourceName := "aws_networkmanager_vpc_attachment.test"
 	testExternalProviders := map[string]resource.ExternalProvider{
 		"awscc": {
@@ -57,6 +58,7 @@ func TestAccNetworkManagerVPCAttachment_updates(t *testing.T) {
 			VersionConstraint: "0.29.0",
 		},
 	}
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
@@ -66,38 +68,12 @@ func TestAccNetworkManagerVPCAttachment_updates(t *testing.T) {
 		CheckDestroy:             testAccCheckVPCAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCoreNetworkConfig_updates("*", false),
+				Config: testAccVPCAttachmentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "subnet_arns.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "options.0.ipv6_support", "false"),
+					testAccCheckVPCAttachmentExists(resourceName, &v),
+					acctest.CheckResourceDisappears(acctest.Provider, tfnetworkmanager.ResourceVPCAttachment(), resourceName),
 				),
-			},
-			{
-				Config: testAccCoreNetworkConfig_updates("0", true),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "subnet_arns.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "options.0.ipv6_support", "true"),
-				),
-			},
-			{
-				Config: testAccCoreNetworkConfig_updates("*", false),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "subnet_arns.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "options.0.ipv6_support", "false"),
-				),
-			},
-			// Cannot currently update ipv6 on its own, must also update subnet_arn
-			// {
-			// 	Config: testAccCoreNetworkConfig_basic("*", true),
-			// 	Check: resource.ComposeTestCheckFunc(
-			// 		resource.TestCheckResourceAttr(resourceName, "subnet_arns.#", "2"),
-			// 		resource.TestCheckResourceAttr(resourceName, "options.0.ipv6_support", "true"),
-			// 	),
-			// },
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -120,14 +96,14 @@ func TestAccNetworkManagerVPCAttachment_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckVPCAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCoreNetworkConfig_oneTag("segment", "shared"),
+				Config: testAccVPCAttachmentConfig_tags1("segment", "shared"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.segment", "shared"),
 				),
 			},
 			{
-				Config: testAccCoreNetworkConfig_twoTag("segment", "shared", "Name", "test"),
+				Config: testAccVPCAttachmentConfig_tags2("segment", "shared", "Name", "test"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.segment", "shared"),
@@ -135,12 +111,66 @@ func TestAccNetworkManagerVPCAttachment_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccCoreNetworkConfig_oneTag("segment", "shared"),
+				Config: testAccVPCAttachmentConfig_tags1("segment", "shared"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.segment", "shared"),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccNetworkManagerVPCAttachment_update(t *testing.T) {
+	resourceName := "aws_networkmanager_vpc_attachment.test"
+	testExternalProviders := map[string]resource.ExternalProvider{
+		"awscc": {
+			Source:            "hashicorp/awscc",
+			VersionConstraint: "0.29.0",
+		},
+	}
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, networkmanager.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		ExternalProviders:        testExternalProviders,
+		CheckDestroy:             testAccCheckVPCAttachmentDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCAttachmentConfig_updates("*", false),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "subnet_arns.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "options.0.ipv6_support", "false"),
+				),
+			},
+			{
+				Config: testAccVPCAttachmentConfig_updates("0", true),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "subnet_arns.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "options.0.ipv6_support", "true"),
+				),
+			},
+			{
+				Config: testAccVPCAttachmentConfig_updates("*", false),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "subnet_arns.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "options.0.ipv6_support", "false"),
+				),
+			},
+			// Cannot currently update ipv6 on its own, must also update subnet_arn
+			// {
+			// 	Config: testAccCoreNetworkConfig_basic("*", true),
+			// 	Check: resource.ComposeTestCheckFunc(
+			// 		resource.TestCheckResourceAttr(resourceName, "subnet_arns.#", "2"),
+			// 		resource.TestCheckResourceAttr(resourceName, "options.0.ipv6_support", "true"),
+			// 	),
+			// },
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -199,7 +229,7 @@ func testAccCheckVPCAttachmentDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCoreNetworkConfig_base(rName string) string {
+func testAccVPCAttachmentConfig_base(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 data "aws_region" "current" {}
 
@@ -361,8 +391,8 @@ data "aws_networkmanager_core_network_policy_document" "test" {
 }
 `
 
-func testAccCoreNetworkConfig_basic(rName string) string {
-	return acctest.ConfigCompose(testAccCoreNetworkConfig_base(rName), `
+func testAccVPCAttachmentConfig_basic(rName string) string {
+	return acctest.ConfigCompose(testAccVPCAttachmentConfig_base(rName), `
 resource "aws_networkmanager_vpc_attachment" "test" {
   subnet_arns     = aws_subnet.test[*].arn
   core_network_id = awscc_networkmanager_core_network.test.id
@@ -376,7 +406,7 @@ resource "aws_networkmanager_attachment_accepter" "test" {
 `)
 }
 
-func testAccCoreNetworkConfig_updates(azs string, ipv6Support bool) string {
+func testAccVPCAttachmentConfig_updates(azs string, ipv6Support bool) string {
 	return acctest.ConfigCompose(TestAccVPCConfig_multipleSubnets,
 		TestAccCoreNetworkConfig, fmt.Sprintf(`
 resource "aws_networkmanager_vpc_attachment" "test" {
@@ -396,7 +426,7 @@ resource "aws_networkmanager_attachment_accepter" "test" {
 `, azs, ipv6Support))
 }
 
-func testAccCoreNetworkConfig_oneTag(tagKey1, tagValue1 string) string {
+func testAccVPCAttachmentConfig_tags1(tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(TestAccVPCConfig_multipleSubnets,
 		TestAccCoreNetworkConfig, fmt.Sprintf(`
 resource "aws_networkmanager_vpc_attachment" "test" {
@@ -416,7 +446,7 @@ resource "aws_networkmanager_attachment_accepter" "test" {
 `, tagKey1, tagValue1))
 }
 
-func testAccCoreNetworkConfig_twoTag(tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccVPCAttachmentConfig_tags2(tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return acctest.ConfigCompose(TestAccVPCConfig_multipleSubnets,
 		TestAccCoreNetworkConfig, fmt.Sprintf(`
 resource "aws_networkmanager_vpc_attachment" "test" {
