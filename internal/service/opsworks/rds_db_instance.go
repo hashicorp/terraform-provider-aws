@@ -7,8 +7,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/opsworks"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func ResourceRDSDBInstance() *schema.Resource {
@@ -68,45 +70,23 @@ func resourceRDSDBInstanceCreate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceRDSDBInstanceRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*conns.AWSClient).OpsWorksConn
+	conn := meta.(*conns.AWSClient).OpsWorksConn
 
-	req := &opsworks.DescribeRdsDbInstancesInput{
-		StackId: aws.String(d.Get("stack_id").(string)),
-	}
+	dbInstance, err := FindRDSDBInstanceByTwoPartKey(conn, d.Get("rds_db_instance_arn").(string), d.Get("stack_id").(string))
 
-	log.Printf("[DEBUG] Reading OpsWorks registered rds db instances for stack: %s", d.Get("stack_id"))
-
-	resp, err := client.DescribeRdsDbInstances(req)
-
-	if tfawserr.ErrCodeEquals(err, opsworks.ErrCodeResourceNotFoundException) {
-		log.Printf("[WARN] OpsWorks RDS DB Instance (%s) not found, removing from state", d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] OpsWorks RDS DB Instance %s not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("while describing OpsWorks RDS DB Instance (%s): %w", d.Get("stack_id"), err)
+		return fmt.Errorf("reading OpsWorks RDS DB Instance (%s): %w", d.Id(), err)
 	}
 
-	found := false
-	id := ""
-	for _, instance := range resp.RdsDbInstances {
-		id = fmt.Sprintf("%s%s", *instance.RdsDbInstanceArn, *instance.StackId)
-
-		if fmt.Sprintf("%s%s", d.Get("rds_db_instance_arn").(string), d.Get("stack_id").(string)) == id {
-			found = true
-			d.SetId(id)
-			d.Set("stack_id", instance.StackId)
-			d.Set("rds_db_instance_arn", instance.RdsDbInstanceArn)
-			d.Set("db_user", instance.DbUser)
-		}
-
-	}
-
-	if !found {
-		d.SetId("")
-		log.Printf("[INFO] The RDS instance '%s' could not be found for stack: '%s'", d.Get("rds_db_instance_arn"), d.Get("stack_id"))
-	}
+	d.Set("db_user", dbInstance.DbUser)
+	d.Set("rds_db_instance_arn", dbInstance.RdsDbInstanceArn)
+	d.Set("stack_id", dbInstance.StackId)
 
 	return nil
 }
@@ -153,4 +133,34 @@ func resourceRDSDBInstanceDelete(d *schema.ResourceData, meta interface{}) error
 	}
 
 	return nil
+}
+
+func FindRDSDBInstanceByTwoPartKey(conn *opsworks.OpsWorks, dbInstanceARN, stackID string) (*opsworks.RdsDbInstance, error) {
+	input := &opsworks.DescribeRdsDbInstancesInput{
+		RdsDbInstanceArns: aws.StringSlice([]string{dbInstanceARN}),
+		StackId:           aws.String(stackID),
+	}
+
+	output, err := conn.DescribeRdsDbInstances(input)
+
+	if tfawserr.ErrCodeEquals(err, opsworks.ErrCodeResourceNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || len(output.RdsDbInstances) == 0 || output.RdsDbInstances[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output.RdsDbInstances); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return output.RdsDbInstances[0], nil
 }
