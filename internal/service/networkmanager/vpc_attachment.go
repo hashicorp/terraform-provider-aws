@@ -311,7 +311,7 @@ func FindVPCAttachmentByID(ctx context.Context, conn *networkmanager.NetworkMana
 		return nil, err
 	}
 
-	if output == nil || output.VpcAttachment == nil {
+	if output == nil || output.VpcAttachment == nil || output.VpcAttachment.Attachment == nil {
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 

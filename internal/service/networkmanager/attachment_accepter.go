@@ -2,7 +2,6 @@ package networkmanager
 
 import (
 	"context"
-	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -18,9 +17,9 @@ import (
 
 func ResourceAttachmentAccepter() *schema.Resource {
 	return &schema.Resource{
-		CreateWithoutTimeout: ResourceAttachmentAccepterCreate,
-		ReadWithoutTimeout:   schema.NoopContext,
-		DeleteWithoutTimeout: ResourceAttachmentAccepterDelete,
+		CreateWithoutTimeout: resourceAttachmentAccepterCreate,
+		ReadWithoutTimeout:   resourceAttachmentAccepterRead,
+		DeleteWithoutTimeout: schema.NoopContext,
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(10 * time.Minute),
@@ -32,12 +31,10 @@ func ResourceAttachmentAccepter() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-
 			"attachment_policy_rule_number": {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-
 			// querying attachments requires knowing the type ahead of time
 			// therefore type is required in provider, though not on the API
 			"attachment_type": {
@@ -50,37 +47,30 @@ func ResourceAttachmentAccepter() *schema.Resource {
 				// Implement Values() function for validation as more types are onboarded to provider
 				// networkmanager.AttachmentType_Values(), false),
 			},
-
 			"core_network_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"core_network_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"edge_location": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"owner_account_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"resource_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"segment_name": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"state": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -89,69 +79,59 @@ func ResourceAttachmentAccepter() *schema.Resource {
 	}
 }
 
-func ResourceAttachmentAccepterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAttachmentAccepterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).NetworkManagerConn
 
-	attachmentId := d.Get("attachment_id").(string)
-	attachmentType := d.Get("attachment_type").(string)
-	attachment := &networkmanager.Attachment{}
-	accepted := false
-	var state string
-
-	if attachmentType == networkmanager.AttachmentTypeVpc {
-		output, err := FindVPCAttachmentByID(ctx, conn, attachmentId)
-
-		if err != nil {
-			return diag.Errorf("Finding Network Manager VPC Attachment: %s", err)
-		}
-
-		state = aws.StringValue(output.Attachment.State)
-		attachment = output.Attachment
+	if attachmentType := d.Get("attachment_type").(string); attachmentType != networkmanager.AttachmentTypeVpc {
+		return diag.Errorf("unsupported Network Manager Attachment type: %s", attachmentType)
 	}
 
-	if state == networkmanager.AttachmentStateAvailable {
-		accepted = true
-		log.Printf("[WARN] Attachment (%s) already accepted, importing attributes into state without accepting.", attachmentId)
+	attachmentID := d.Get("attachment_id").(string)
+	vpcAttachment, err := FindVPCAttachmentByID(ctx, conn, attachmentID)
+
+	if err != nil {
+		return diag.Errorf("reading Network Manager VPC Attachment (%s): %s", attachmentID, err)
 	}
 
-	if !accepted {
+	if state := aws.StringValue(vpcAttachment.Attachment.State); state == networkmanager.AttachmentStatePendingAttachmentAcceptance || state == networkmanager.AttachmentStatePendingTagAcceptance {
 		input := &networkmanager.AcceptAttachmentInput{
-			AttachmentId: aws.String(attachmentId),
+			AttachmentId: aws.String(attachmentID),
 		}
 
-		log.Printf("[DEBUG] Accepting Network Manager Attachment: %s", input)
-		a, err := conn.AcceptAttachmentWithContext(ctx, input)
+		_, err := conn.AcceptAttachmentWithContext(ctx, input)
 
 		if err != nil {
-			return diag.Errorf("Accepting Network Manager Attachment: %s", err)
+			return diag.Errorf("accepting Network Manager Attachment (%s): %s", attachmentID, err)
 		}
 
-		attachment = a.Attachment
-	}
-
-	d.SetId(attachmentId)
-
-	if attachmentType == networkmanager.AttachmentTypeVpc {
-		if _, err := waitVPCAttachmentCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-			d.SetId("")
-			return diag.Errorf("Waiting for Network Manager VPC Attachment (%s) create: %s", d.Id(), err)
+		if _, err := waitVPCAttachmentCreated(ctx, conn, attachmentID, d.Timeout(schema.TimeoutCreate)); err != nil {
+			return diag.Errorf("waiting for Network Manager VPC Attachment (%s) create: %s", attachmentID, err)
 		}
 	}
 
-	d.Set("core_network_id", attachment.CoreNetworkId)
-	d.Set("state", attachment.State)
-	d.Set("core_network_arn", attachment.CoreNetworkArn)
-	d.Set("attachment_policy_rule_number", attachment.AttachmentPolicyRuleNumber)
-	d.Set("edge_location", attachment.EdgeLocation)
-	d.Set("owner_account_id", attachment.OwnerAccountId)
-	d.Set("resource_arn", attachment.ResourceArn)
-	d.Set("segment_name", attachment.SegmentName)
+	d.SetId(attachmentID)
 
-	return nil
+	return resourceAttachmentAccepterRead(ctx, d, meta)
 }
 
-func ResourceAttachmentAccepterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	log.Printf("[WARN] Attachment (%s) not deleted, removing from state.", d.Id())
+func resourceAttachmentAccepterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).NetworkManagerConn
+
+	vpcAttachment, err := FindVPCAttachmentByID(ctx, conn, d.Id())
+
+	if err != nil {
+		return diag.Errorf("reading Network Manager VPC Attachment (%s): %s", d.Id(), err)
+	}
+
+	a := vpcAttachment.Attachment
+	d.Set("attachment_policy_rule_number", a.AttachmentPolicyRuleNumber)
+	d.Set("core_network_arn", a.CoreNetworkArn)
+	d.Set("core_network_id", a.CoreNetworkId)
+	d.Set("edge_location", a.EdgeLocation)
+	d.Set("owner_account_id", a.OwnerAccountId)
+	d.Set("resource_arn", a.ResourceArn)
+	d.Set("segment_name", a.SegmentName)
+	d.Set("state", a.State)
 
 	return nil
 }
