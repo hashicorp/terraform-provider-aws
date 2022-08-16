@@ -222,7 +222,7 @@ of several sub-resources - these resources are laid out below.
 * `is_ipv6_enabled` (Optional) - Whether the IPv6 is enabled for the distribution.
 
 * `http_version` (Optional) - The maximum HTTP version to support on the
-    distribution. Allowed values are `http1.1` and `http2`. The default is
+    distribution. Allowed values are `http1.1`, `http2`, `http2and3` and `http3`. The default is
     `http2`.
 
 * `logging_config` (Optional) - The [logging
