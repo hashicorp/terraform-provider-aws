@@ -2385,10 +2385,10 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_lb_target_group" "test" {
-  name            = %[1]q
-  port            = 443
-  protocol        = "TLS"
-  vpc_id          = aws_vpc.test.id
+  name     = %[1]q
+  port     = 443
+  protocol = "TLS"
+  vpc_id   = aws_vpc.test.id
 
   target_type     = "ip"
   ip_address_type = "ipv6"
