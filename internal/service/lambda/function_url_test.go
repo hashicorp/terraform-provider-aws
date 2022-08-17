@@ -224,7 +224,7 @@ func testAccCheckFunctionURLExists(n string, v *lambda.GetFunctionUrlConfigOutpu
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn
 
-		output, err := tflambda.FindFunctionURLByNameAndQualifier(context.TODO(), conn, name, qualifier)
+		output, err := tflambda.FindFunctionURLByNameAndQualifier(context.Background(), conn, name, qualifier)
 
 		if err != nil {
 			return err
@@ -250,7 +250,7 @@ func testAccCheckFunctionURLDestroy(s *terraform.State) error {
 			return err
 		}
 
-		_, err = tflambda.FindFunctionURLByNameAndQualifier(context.TODO(), conn, name, qualifier)
+		_, err = tflambda.FindFunctionURLByNameAndQualifier(context.Background(), conn, name, qualifier)
 
 		if tfresource.NotFound(err) {
 			continue

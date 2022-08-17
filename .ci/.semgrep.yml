@@ -62,18 +62,18 @@ rules:
         - "internal/service/**/*_test.go"
     patterns:
       - pattern-either:
-        - pattern: '$LHS == *$RHS'
-        - pattern: '$LHS != *$RHS'
-        - pattern: '$LHS > *$RHS'
-        - pattern: '$LHS < *$RHS'
-        - pattern: '$LHS >= *$RHS'
-        - pattern: '$LHS <= *$RHS'
-        - pattern: '*$LHS == $RHS'
-        - pattern: '*$LHS != $RHS'
-        - pattern: '*$LHS > $RHS'
-        - pattern: '*$LHS < $RHS'
-        - pattern: '*$LHS >= $RHS'
-        - pattern: '*$LHS <= $RHS'
+          - pattern: '$LHS == *$RHS'
+          - pattern: '$LHS != *$RHS'
+          - pattern: '$LHS > *$RHS'
+          - pattern: '$LHS < *$RHS'
+          - pattern: '$LHS >= *$RHS'
+          - pattern: '$LHS <= *$RHS'
+          - pattern: '*$LHS == $RHS'
+          - pattern: '*$LHS != $RHS'
+          - pattern: '*$LHS > $RHS'
+          - pattern: '*$LHS < $RHS'
+          - pattern: '*$LHS >= $RHS'
+          - pattern: '*$LHS <= $RHS'
     severity: WARNING
 
   - id: aws-go-sdk-pointer-conversion-ResourceData-SetId
@@ -95,11 +95,11 @@ rules:
         - internal/
     patterns:
       - pattern-either:
-        - pattern: '*aws.Bool($VALUE)'
-        - pattern: '*aws.Float64($VALUE)'
-        - pattern: '*aws.Int64($VALUE)'
-        - pattern: '*aws.String($VALUE)'
-        - pattern: '*aws.Time($VALUE)'
+          - pattern: '*aws.Bool($VALUE)'
+          - pattern: '*aws.Float64($VALUE)'
+          - pattern: '*aws.Int64($VALUE)'
+          - pattern: '*aws.String($VALUE)'
+          - pattern: '*aws.Time($VALUE)'
     severity: WARNING
 
   - id: data-source-with-resource-read
@@ -128,8 +128,8 @@ rules:
         - internal/
     patterns:
       - pattern-either:
-        - pattern: const $CONST = fmt.Sprintf(..., <... acctest.RandInt() ...>, ...)
-        - pattern: var $VAR = fmt.Sprintf(..., <... acctest.RandInt() ...>, ...)
+          - pattern: const $CONST = fmt.Sprintf(..., <... acctest.RandInt() ...>, ...)
+          - pattern: var $VAR = fmt.Sprintf(..., <... acctest.RandInt() ...>, ...)
     severity: WARNING
 
   - id: helper-acctest-RandString-compiled
@@ -140,8 +140,8 @@ rules:
         - internal/
     patterns:
       - pattern-either:
-        - pattern: const $CONST = fmt.Sprintf(..., <... acctest.RandString(...) ...>, ...)
-        - pattern: var $VAR = fmt.Sprintf(..., <... acctest.RandString(...) ...>, ...)
+          - pattern: const $CONST = fmt.Sprintf(..., <... acctest.RandString(...) ...>, ...)
+          - pattern: var $VAR = fmt.Sprintf(..., <... acctest.RandString(...) ...>, ...)
     severity: WARNING
 
   - id: helper-acctest-RandomWithPrefix-compiled
@@ -152,32 +152,39 @@ rules:
         - internal/
     patterns:
       - pattern-either:
-        - pattern: const $CONST = fmt.Sprintf(..., <... acctest.RandomWithPrefix(...) ...>, ...)
-        - pattern: var $VAR = fmt.Sprintf(..., <... acctest.RandomWithPrefix(...) ...>, ...)
+          - pattern: const $CONST = fmt.Sprintf(..., <... acctest.RandomWithPrefix(...) ...>, ...)
+          - pattern: var $VAR = fmt.Sprintf(..., <... acctest.RandomWithPrefix(...) ...>, ...)
     severity: WARNING
 
   - id: helper-schema-Set-extraneous-NewSet-with-flattenStringList
     languages: [go]
-    message: Prefer `flex.FlattenStringSet()` function for casting a list of string pointers to a set
+    message: Prefer `flex.FlattenStringSet()` or `flex.FlattenStringValueSet()`
     paths:
       include:
         - internal/
-    pattern: schema.NewSet(schema.HashString, flex.FlattenStringList($APIOBJECT))
+    patterns:
+      - pattern: schema.NewSet(schema.HashString, flex.FlattenStringList($APIOBJECT))
+      - pattern: schema.NewSet(schema.HashString, flex.FlattenStringValueList($APIOBJECT))
     severity: WARNING
 
   - id: helper-schema-Set-extraneous-expandStringList-with-List
     languages: [go]
-    message: Prefer `flex.ExpandStringSet()` function for casting a set to a list of string pointers
+    message: Prefer `flex.ExpandStringSet()` or `flex.ExpandStringValueSet()`
     paths:
       include:
         - internal/
     patterns:
       - pattern-either:
-        - pattern: flex.ExpandStringList($SET.List())
-        - pattern: |
-            $LIST := $SET.List()
-            ...
-            flex.ExpandStringList($LIST)
+          - pattern: flex.ExpandStringList($SET.List())
+          - pattern: |
+              $LIST := $SET.List()
+              ...
+              flex.ExpandStringList($LIST)
+          - pattern: flex.ExpandStringValueList($SET.List())
+          - pattern: |
+              $LIST := $SET.List()
+              ...
+              flex.ExpandStringValueList($LIST)
     severity: WARNING
 
   - id: helper-schema-ResourceData-GetOk-with-extraneous-conditional
@@ -188,11 +195,11 @@ rules:
         - internal/
     patterns:
       - pattern-either:
-        - pattern: if $VALUE, $OK := d.GetOk($KEY); $OK && $VALUE.(bool) { $BODY }
-        - pattern: if $VALUE, $OK := d.GetOk($KEY); $OK && $VALUE.(int) != 0 { $BODY }
-        - pattern: if $VALUE, $OK := d.GetOk($KEY); $OK && $VALUE.(int) > 0 { $BODY }
-        - pattern: if $VALUE, $OK := d.GetOk($KEY); $OK && $VALUE.(string) != "" { $BODY }
-        - pattern: if $VALUE, $OK := d.GetOk($KEY); $OK && len($VALUE.(string)) > 0 { $BODY }
+          - pattern: if $VALUE, $OK := d.GetOk($KEY); $OK && $VALUE.(bool) { $BODY }
+          - pattern: if $VALUE, $OK := d.GetOk($KEY); $OK && $VALUE.(int) != 0 { $BODY }
+          - pattern: if $VALUE, $OK := d.GetOk($KEY); $OK && $VALUE.(int) > 0 { $BODY }
+          - pattern: if $VALUE, $OK := d.GetOk($KEY); $OK && $VALUE.(string) != "" { $BODY }
+          - pattern: if $VALUE, $OK := d.GetOk($KEY); $OK && len($VALUE.(string)) > 0 { $BODY }
     severity: WARNING
 
   - id: helper-schema-ResourceData-Set-extraneous-value-pointer-conversion
@@ -328,10 +335,10 @@ rules:
         - internal/service/xray
     patterns:
       - pattern-either:
-        - pattern: |
-            d.SetId("")
-            ...
-            return nil
+          - pattern: |
+              d.SetId("")
+              ...
+              return nil
       - pattern-not-inside: |
           if ... {
             if <... d.IsNewResource() ...> { ... }
@@ -355,74 +362,74 @@ rules:
         - internal/
     patterns:
       - pattern-either:
-        - patterns:
-          - pattern-either:
-            - pattern: |
-                $ERR := resource.Retry(...)
-                ...
-                return ...
-            - pattern: |
-                $ERR = resource.Retry(...)
-                ...
-                return ...
-          - pattern-not: |
-              $ERR := resource.Retry(...)
-              ...
-              if isResourceTimeoutError($ERR) { ... }
-              ...
-              return ...
-          - pattern-not: |
-              $ERR = resource.Retry(...)
-              ...
-              if isResourceTimeoutError($ERR) { ... }
-              ...
-              return ...
-          - pattern-not: |
-              $ERR := resource.Retry(...)
-              ...
-              if tfresource.TimedOut($ERR) { ... }
-              ...
-              return ...
-          - pattern-not: |
-              $ERR = resource.Retry(...)
-              ...
-              if tfresource.TimedOut($ERR) { ... }
-              ...
-              return ...
-        - patterns:
-          - pattern-either:
-            - pattern: |
-                $ERR := resource.RetryContext(...)
-                ...
-                return ...
-            - pattern: |
-                $ERR = resource.RetryContext(...)
-                ...
-                return ...
-          - pattern-not: |
-              $ERR := resource.RetryContext(...)
-              ...
-              if isResourceTimeoutError($ERR) { ... }
-              ...
-              return ...
-          - pattern-not: |
-              $ERR = resource.RetryContext(...)
-              ...
-              if isResourceTimeoutError($ERR) { ... }
-              ...
-              return ...
-          - pattern-not: |
-              $ERR := resource.RetryContext(...)
-              ...
-              if tfresource.TimedOut($ERR) { ... }
-              ...
-              return ...
-          - pattern-not: |
-              $ERR = resource.RetryContext(...)
-              ...
-              if tfresource.TimedOut($ERR) { ... }
-              ...
-              return ...
+          - patterns:
+              - pattern-either:
+                  - pattern: |
+                      $ERR := resource.Retry(...)
+                      ...
+                      return ...
+                  - pattern: |
+                      $ERR = resource.Retry(...)
+                      ...
+                      return ...
+              - pattern-not: |
+                  $ERR := resource.Retry(...)
+                  ...
+                  if isResourceTimeoutError($ERR) { ... }
+                  ...
+                  return ...
+              - pattern-not: |
+                  $ERR = resource.Retry(...)
+                  ...
+                  if isResourceTimeoutError($ERR) { ... }
+                  ...
+                  return ...
+              - pattern-not: |
+                  $ERR := resource.Retry(...)
+                  ...
+                  if tfresource.TimedOut($ERR) { ... }
+                  ...
+                  return ...
+              - pattern-not: |
+                  $ERR = resource.Retry(...)
+                  ...
+                  if tfresource.TimedOut($ERR) { ... }
+                  ...
+                  return ...
+          - patterns:
+              - pattern-either:
+                  - pattern: |
+                      $ERR := resource.RetryContext(...)
+                      ...
+                      return ...
+                  - pattern: |
+                      $ERR = resource.RetryContext(...)
+                      ...
+                      return ...
+              - pattern-not: |
+                  $ERR := resource.RetryContext(...)
+                  ...
+                  if isResourceTimeoutError($ERR) { ... }
+                  ...
+                  return ...
+              - pattern-not: |
+                  $ERR = resource.RetryContext(...)
+                  ...
+                  if isResourceTimeoutError($ERR) { ... }
+                  ...
+                  return ...
+              - pattern-not: |
+                  $ERR := resource.RetryContext(...)
+                  ...
+                  if tfresource.TimedOut($ERR) { ... }
+                  ...
+                  return ...
+              - pattern-not: |
+                  $ERR = resource.RetryContext(...)
+                  ...
+                  if tfresource.TimedOut($ERR) { ... }
+                  ...
+                  return ...
     severity: WARNING
 
   - id: helper-schema-TimeoutError-check-doesnt-return-output
@@ -435,64 +442,64 @@ rules:
         - internal/
     patterns:
       - pattern-either:
-        - patterns:
-          - pattern: |
-              if isResourceTimeoutError($ERR) {
-                _, $ERR = $CONN.$FUNC(...)
-              }
-          - pattern-not-inside: |
-              $ERR = resource.Retry(..., func() *resource.RetryError {
-                ...
-                _, $ERR2 = $CONN.$FUNC(...)
-                ...
-              })
-              ...
-              if isResourceTimeoutError($ERR) { ... }
-          - pattern-not-inside: |
-              $ERR = resource.RetryContext(..., func() *resource.RetryError {
-                ...
-                _, $ERR2 = $CONN.$FUNC(...)
-                ...
-              })
-              ...
-              if isResourceTimeoutError($ERR) { ... }
-          - pattern-not-inside: |
-              $ERR = tfresource.RetryConfigContext(..., func() *resource.RetryError {
-                ...
-                _, $ERR2 = $CONN.$FUNC(...)
-                ...
-              })
-              ...
-              if tfresource.TimedOut($ERR) { ... }
-        - patterns:
-          - pattern: |
-              if tfresource.TimedOut($ERR) {
-                _, $ERR = $CONN.$FUNC(...)
-              }
-          - pattern-not-inside: |
-              $ERR = resource.Retry(..., func() *resource.RetryError {
-                ...
-                _, $ERR2 = $CONN.$FUNC(...)
-                ...
-              })
-              ...
-              if tfresource.TimedOut($ERR) { ... }
-          - pattern-not-inside: |
-              $ERR = resource.RetryContext(..., func() *resource.RetryError {
-                ...
-                _, $ERR2 = $CONN.$FUNC(...)
-                ...
-              })
-              ...
-              if tfresource.TimedOut($ERR) { ... }
-          - pattern-not-inside: |
-              $ERR = tfresource.RetryConfigContext(..., func() *resource.RetryError {
-                ...
-                _, $ERR2 = $CONN.$FUNC(...)
-                ...
-              })
-              ...
-              if tfresource.TimedOut($ERR) { ... }
+          - patterns:
+              - pattern: |
+                  if isResourceTimeoutError($ERR) {
+                    _, $ERR = $CONN.$FUNC(...)
+                  }
+              - pattern-not-inside: |
+                  $ERR = resource.Retry(..., func() *resource.RetryError {
+                    ...
+                    _, $ERR2 = $CONN.$FUNC(...)
+                    ...
+                  })
+                  ...
+                  if isResourceTimeoutError($ERR) { ... }
+              - pattern-not-inside: |
+                  $ERR = resource.RetryContext(..., func() *resource.RetryError {
+                    ...
+                    _, $ERR2 = $CONN.$FUNC(...)
+                    ...
+                  })
+                  ...
+                  if isResourceTimeoutError($ERR) { ... }
+              - pattern-not-inside: |
+                  $ERR = tfresource.RetryConfigContext(..., func() *resource.RetryError {
+                    ...
+                    _, $ERR2 = $CONN.$FUNC(...)
+                    ...
+                  })
+                  ...
+                  if tfresource.TimedOut($ERR) { ... }
+          - patterns:
+              - pattern: |
+                  if tfresource.TimedOut($ERR) {
+                    _, $ERR = $CONN.$FUNC(...)
+                  }
+              - pattern-not-inside: |
+                  $ERR = resource.Retry(..., func() *resource.RetryError {
+                    ...
+                    _, $ERR2 = $CONN.$FUNC(...)
+                    ...
+                  })
+                  ...
+                  if tfresource.TimedOut($ERR) { ... }
+              - pattern-not-inside: |
+                  $ERR = resource.RetryContext(..., func() *resource.RetryError {
+                    ...
+                    _, $ERR2 = $CONN.$FUNC(...)
+                    ...
+                  })
+                  ...
+                  if tfresource.TimedOut($ERR) { ... }
+              - pattern-not-inside: |
+                  $ERR = tfresource.RetryConfigContext(..., func() *resource.RetryError {
+                    ...
+                    _, $ERR2 = $CONN.$FUNC(...)
+                    ...
+                  })
+                  ...
+                  if tfresource.TimedOut($ERR) { ... }
     severity: WARNING
 
   - id: is-not-found-error
@@ -503,20 +510,20 @@ rules:
         - internal/
     patterns:
       - pattern-either:
-        - patterns:
-          - pattern: |
-              var $CAST *resource.NotFoundError
-              ...
-              errors.As($ERR, &$CAST)
-          - pattern-not-inside: |
-              var $CAST *resource.NotFoundError
-              ...
-              errors.As($ERR, &$CAST)
-              ...
-              $CAST.$FIELD
-        - patterns:
-          - pattern: |
-              $X, $Y := $ERR.(*resource.NotFoundError)
+          - patterns:
+              - pattern: |
+                  var $CAST *resource.NotFoundError
+                  ...
+                  errors.As($ERR, &$CAST)
+              - pattern-not-inside: |
+                  var $CAST *resource.NotFoundError
+                  ...
+                  errors.As($ERR, &$CAST)
+                  ...
+                  $CAST.$FIELD
+          - patterns:
+              - pattern: |
+                  $X, $Y := $ERR.(*resource.NotFoundError)
     severity: WARNING
 
   - id: time-equality
@@ -527,22 +534,22 @@ rules:
         - internal/
     patterns:
       - pattern-either:
-        - pattern: |
-            aws.TimeValue($X) == $Y
-        - pattern: |
-            aws.TimeValue($X) != $Y
-        - pattern: |
-            ($X : time.Time) == $Y
-        - pattern: |
-            ($X : time.Time) != $Y
-        - pattern: |
-            $X == aws.TimeValue($Y)
-        - pattern: |
-            $X != aws.TimeValue($Y)
-        - pattern: |
-            $X == ($Y : time.Time)
-        - pattern: |
-            $X != ($Y : time.Time)
+          - pattern: |
+              aws.TimeValue($X) == $Y
+          - pattern: |
+              aws.TimeValue($X) != $Y
+          - pattern: |
+              ($X : time.Time) == $Y
+          - pattern: |
+              ($X : time.Time) != $Y
+          - pattern: |
+              $X == aws.TimeValue($Y)
+          - pattern: |
+              $X != aws.TimeValue($Y)
+          - pattern: |
+              $X == ($Y : time.Time)
+          - pattern: |
+              $X != ($Y : time.Time)
     severity: WARNING
 
   - id: prefer-pagination-bool-var-last-page
@@ -580,12 +587,12 @@ rules:
         - internal/generate/
     patterns:
       - pattern-either:
-        - pattern: |
-            fmt.Print(...)
-        - pattern: |
-            fmt.Printf(...)
-        - pattern: |
-            fmt.Println(...)
+          - pattern: |
+              fmt.Print(...)
+          - pattern: |
+              fmt.Printf(...)
+          - pattern: |
+              fmt.Println(...)
     severity: WARNING
 
   - id: domain-names
@@ -611,7 +618,7 @@ rules:
         - "internal/service/**/*_test.go"
     patterns:
       - patterns:
-        - pattern-regex: '(([-a-zA-Z0-9]{2,}\.)|(%[sdftq]))+(com|net|org)\b'
+          - pattern-regex: '(([-a-zA-Z0-9]{2,}\.)|(%[sdftq]))+(com|net|org)\b'
       - pattern-inside: '($X : string)'
       - pattern-not-regex: 'amazonaws\.com'
       - pattern-not-regex: 'awsapps\.com'
@@ -799,11 +806,11 @@ rules:
         - internal/
     patterns:
       - pattern-either:
-        - pattern: if $AWSERR, $OK := $ORIGINALERR.(awserr.Error); $OK && $AWSERR.Code() == $CODE { $BODY }
-        - pattern: |
-            if $AWSERR, $OK := $ORIGINALERR.(awserr.Error); $OK {
-              if $AWSERR.Code() == $CODE { $BODY }
-            }
+          - pattern: if $AWSERR, $OK := $ORIGINALERR.(awserr.Error); $OK && $AWSERR.Code() == $CODE { $BODY }
+          - pattern: |
+              if $AWSERR, $OK := $ORIGINALERR.(awserr.Error); $OK {
+                if $AWSERR.Code() == $CODE { $BODY }
+              }
     severity: WARNING
 
   - id: fmt-Errorf-awserr-Error-Code
@@ -814,8 +821,8 @@ rules:
         - internal/
     patterns:
       - pattern-either:
-        - pattern: fmt.Errorf(..., $ERR.Code(), ...)
-        - pattern: fmt.Errorf(..., $ERR.Message(), ...)
+          - pattern: fmt.Errorf(..., $ERR.Code(), ...)
+          - pattern: fmt.Errorf(..., $ERR.Message(), ...)
     severity: WARNING
 
   - id: typed-enum-conversion
@@ -827,3 +834,13 @@ rules:
     patterns:
       - pattern: "[]string{..., string($X), ...}"
     severity: WARNING
+
+  - id: avoid-context-TODO-in-tests
+    languages: [go]
+    message: Prefer using context.Background() instead of context.TODO()
+    paths:
+      include:
+        - "internal/**/*_test.go"
+    patterns:
+      - pattern: context.TODO
+    severity: ERROR

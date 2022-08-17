@@ -34,6 +34,7 @@ func TestAccDSDirectoryDataSource_simpleAD(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "edition", dataSourceName, "edition"),
 					resource.TestCheckResourceAttrPair(resourceName, "enable_sso", dataSourceName, "enable_sso"),
 					resource.TestCheckResourceAttrPair(resourceName, "name", dataSourceName, "name"),
+					resource.TestCheckResourceAttr(dataSourceName, "radius_settings.#", "0"),
 					resource.TestCheckResourceAttrPair(resourceName, "security_group_id", dataSourceName, "security_group_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "short_name", dataSourceName, "short_name"),
 					resource.TestCheckResourceAttrPair(resourceName, "size", dataSourceName, "size"),
@@ -73,6 +74,7 @@ func TestAccDSDirectoryDataSource_microsoftAD(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "edition", dataSourceName, "edition"),
 					resource.TestCheckResourceAttrPair(resourceName, "enable_sso", dataSourceName, "enable_sso"),
 					resource.TestCheckResourceAttrPair(resourceName, "name", dataSourceName, "name"),
+					resource.TestCheckResourceAttr(dataSourceName, "radius_settings.#", "0"),
 					resource.TestCheckResourceAttrPair(resourceName, "security_group_id", dataSourceName, "security_group_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "short_name", dataSourceName, "short_name"),
 					resource.TestCheckResourceAttrPair(resourceName, "size", dataSourceName, "size"),
@@ -121,12 +123,39 @@ func TestAccDSDirectoryDataSource_connector(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "edition", dataSourceName, "edition"),
 					resource.TestCheckResourceAttrPair(resourceName, "enable_sso", dataSourceName, "enable_sso"),
 					resource.TestCheckResourceAttrPair(resourceName, "name", dataSourceName, "name"),
+					resource.TestCheckResourceAttr(dataSourceName, "radius_settings.#", "0"),
 					resource.TestCheckResourceAttrPair(resourceName, "security_group_id", dataSourceName, "security_group_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "short_name", dataSourceName, "short_name"),
 					resource.TestCheckResourceAttrPair(resourceName, "size", dataSourceName, "size"),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.%", dataSourceName, "tags.%"),
 					resource.TestCheckResourceAttrPair(resourceName, "type", dataSourceName, "type"),
 					resource.TestCheckResourceAttrPair(resourceName, "vpc_settings.#", dataSourceName, "vpc_settings.#"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccDSDirectoryDataSource_sharedMicrosoftAD(t *testing.T) {
+	resourceName := "aws_directory_service_directory.test"
+	dataSourceName := "data.aws_directory_service_directory.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	domainName := acctest.RandomDomainName()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckDirectoryService(t)
+			acctest.PreCheckAlternateAccount(t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, directoryservice.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDirectoryDataSourceConfig_sharedMicrosoftAD(rName, domainName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(resourceName, "dns_ip_addresses.#", dataSourceName, "dns_ip_addresses.#"),
+					resource.TestCheckResourceAttr(dataSourceName, "type", "SharedMicrosoftAD"),
 				),
 			},
 		},
@@ -214,4 +243,20 @@ resource "aws_directory_service_directory" "base" {
   }
 }
 `, domain))
+}
+
+func testAccDirectoryDataSourceConfig_sharedMicrosoftAD(rName, domain string) string {
+	return acctest.ConfigCompose(testAccSharedDirectoryConfig_basic(rName, domain), `
+resource "aws_directory_service_shared_directory_accepter" "test" {
+  provider = "awsalternate"
+
+  shared_directory_id = aws_directory_service_shared_directory.test.shared_directory_id
+}
+
+data "aws_directory_service_directory" "test" {
+  provider = "awsalternate"
+
+  directory_id = aws_directory_service_shared_directory_accepter.test.shared_directory_id
+}
+`)
 }

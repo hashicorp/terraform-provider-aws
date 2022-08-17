@@ -97,7 +97,7 @@ func waitTableDeleted(conn *dynamodb.DynamoDB, tableName string, timeout time.Du
 	return nil, err
 }
 
-func waitReplicaActive(conn *dynamodb.DynamoDB, tableName, region string, timeout time.Duration) (*dynamodb.DescribeTableOutput, error) {
+func waitReplicaActive(conn *dynamodb.DynamoDB, tableName, region string, timeout time.Duration) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
 			dynamodb.ReplicaStatusCreating,
@@ -111,16 +111,12 @@ func waitReplicaActive(conn *dynamodb.DynamoDB, tableName, region string, timeou
 		Refresh: statusReplicaUpdate(conn, tableName, region),
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	_, err := stateConf.WaitForState()
 
-	if output, ok := outputRaw.(*dynamodb.DescribeTableOutput); ok {
-		return output, err
-	}
-
-	return nil, err
+	return err
 }
 
-func waitReplicaDeleted(conn *dynamodb.DynamoDB, tableName, region string, timeout time.Duration) (*dynamodb.DescribeTableOutput, error) {
+func waitReplicaDeleted(conn *dynamodb.DynamoDB, tableName, region string, timeout time.Duration) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
 			dynamodb.ReplicaStatusCreating,
@@ -133,13 +129,9 @@ func waitReplicaDeleted(conn *dynamodb.DynamoDB, tableName, region string, timeo
 		Refresh: statusReplicaDelete(conn, tableName, region),
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	_, err := stateConf.WaitForState()
 
-	if output, ok := outputRaw.(*dynamodb.DescribeTableOutput); ok {
-		return output, err
-	}
-
-	return nil, err
+	return err
 }
 
 func waitGSIActive(conn *dynamodb.DynamoDB, tableName, indexName string, timeout time.Duration) (*dynamodb.GlobalSecondaryIndexDescription, error) { //nolint:unparam

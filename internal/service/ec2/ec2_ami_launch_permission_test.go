@@ -219,7 +219,7 @@ func testAccCheckAMILaunchPermissionExists(n string) resource.TestCheckFunc {
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
-		_, err = tfec2.FindImageLaunchPermission(context.TODO(), conn, imageID, accountID, group, organizationARN, organizationalUnitARN)
+		_, err = tfec2.FindImageLaunchPermission(context.Background(), conn, imageID, accountID, group, organizationARN, organizationalUnitARN)
 
 		if err != nil {
 			return err
@@ -243,7 +243,7 @@ func testAccCheckAMILaunchPermissionDestroy(s *terraform.State) error {
 			return err
 		}
 
-		_, err = tfec2.FindImageLaunchPermission(context.TODO(), conn, imageID, accountID, group, organizationARN, organizationalUnitARN)
+		_, err = tfec2.FindImageLaunchPermission(context.Background(), conn, imageID, accountID, group, organizationARN, organizationalUnitARN)
 
 		if tfresource.NotFound(err) {
 			continue

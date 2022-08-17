@@ -23,6 +23,10 @@ service "cloudhsmv2" {
   vpc_lock = true
 }
 
+service "comprehend" {
+  parallelism = 10
+}
+
 service "datasync" {
   vpc_lock = true
 }

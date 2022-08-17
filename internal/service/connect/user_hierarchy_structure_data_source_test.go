@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccConnectUserHierarchyStructureDataSource_instanceID(t *testing.T) {
+func testAccUserHierarchyStructureDataSource_instanceID(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	resourceName := "aws_connect_user_hierarchy_structure.test"
 	datasourceName := "data.aws_connect_user_hierarchy_structure.test"

@@ -25,7 +25,7 @@ func testAccPreCheck(t *testing.T) {
 
 	input := &kendra.ListIndicesInput{}
 
-	_, err := conn.ListIndices(context.TODO(), input)
+	_, err := conn.ListIndices(context.Background(), input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
@@ -426,7 +426,7 @@ func testAccCheckIndexDestroy(s *terraform.State) error {
 			Id: aws.String(rs.Primary.ID),
 		}
 
-		resp, err := conn.DescribeIndex(context.TODO(), input)
+		resp, err := conn.DescribeIndex(context.Background(), input)
 
 		if err == nil {
 			if aws.ToString(resp.Id) == rs.Primary.ID {
@@ -450,7 +450,7 @@ func testAccCheckIndexExists(name string, index *kendra.DescribeIndexOutput) res
 		input := &kendra.DescribeIndexInput{
 			Id: aws.String(rs.Primary.ID),
 		}
-		resp, err := conn.DescribeIndex(context.TODO(), input)
+		resp, err := conn.DescribeIndex(context.Background(), input)
 
 		if err != nil {
 			return err

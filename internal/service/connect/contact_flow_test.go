@@ -15,22 +15,6 @@ import (
 	tfconnect "github.com/hashicorp/terraform-provider-aws/internal/service/connect"
 )
 
-//Serialized acceptance tests due to Connect account limits (max 2 parallel tests)
-func TestAccConnectContactFlow_serial(t *testing.T) {
-	testCases := map[string]func(t *testing.T){
-		"basic":      testAccContactFlow_basic,
-		"filename":   testAccContactFlow_filename,
-		"disappears": testAccContactFlow_disappears,
-	}
-
-	for name, tc := range testCases {
-		tc := tc
-		t.Run(name, func(t *testing.T) {
-			tc(t)
-		})
-	}
-}
-
 func testAccContactFlow_basic(t *testing.T) {
 	var v connect.DescribeContactFlowOutput
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
@@ -247,7 +231,7 @@ resource "aws_connect_contact_flow" "test" {
     {
 		"Version": "2019-10-30",
 		"StartAction": "12345678-1234-1234-1234-123456789012",
-		"Actions": [ 
+		"Actions": [
 			{
 				"Identifier": "12345678-1234-1234-1234-123456789012",
 				"Type": "MessageParticipant",

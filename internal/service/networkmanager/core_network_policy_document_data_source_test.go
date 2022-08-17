@@ -29,7 +29,7 @@ func TestAccNetworkManagerCoreNetworkPolicyDocumentDataSource_basic(t *testing.T
 	})
 }
 
-//lintignore:AWSAT003
+// lintignore:AWSAT003
 var testAccCoreNetworkPolicyDocumentDataSourceConfig_basic = `
 data "aws_networkmanager_core_network_policy_document" "test" {
   core_network_configuration {
@@ -271,7 +271,7 @@ data "aws_networkmanager_core_network_policy_document" "test" {
 }
 `
 
-//lintignore:AWSAT003
+// lintignore:AWSAT003
 func testAccPolicyDocumentExpectedJSON() string {
 	return `{
   "version": "2021.12",
