@@ -10,6 +10,8 @@ description: |-
 
 Manages an Amazon MSK Serverless cluster.
 
+-> **Note:** To manage a _provisioned_ Amazon MSK cluster, use the [`aws_msk_cluster`](/docs/providers/aws/r/msk_cluster.html) resource.
+
 ## Example Usage
 
 ```terraform
