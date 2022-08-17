@@ -5,7 +5,9 @@ package meta
 import (
 	"context"
 
+	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -19,7 +21,7 @@ func init() {
 }
 
 // newDataSourceARNType instantiates a new DataSourceType for the aws_arn data source.
-func newDataSourceARNType(ctx context.Context) (tfsdk.DataSourceType, error) {
+func newDataSourceARNType(ctx context.Context) (provider.DataSourceType, error) {
 	return &dataSourceARNType{}, nil
 }
 
@@ -65,15 +67,15 @@ func (t *dataSourceARNType) GetSchema(context.Context) (tfsdk.Schema, diag.Diagn
 }
 
 // NewDataSource instantiates a new DataSource of this DataSourceType.
-func (t *dataSourceARNType) NewDataSource(ctx context.Context, provider tfsdk.Provider) (tfsdk.DataSource, diag.Diagnostics) {
+func (t *dataSourceARNType) NewDataSource(ctx context.Context, provider provider.Provider) (datasource.DataSource, diag.Diagnostics) {
 	return &dataSourceARN{}, nil
 }
 
 type dataSourceARN struct{}
 
 // Read is called when the provider must read data source values in order to update state.
-// Config values should be read from the ReadDataSourceRequest and new state values set on the ReadDataSourceResponse.
-func (d *dataSourceARN) Read(ctx context.Context, request tfsdk.ReadDataSourceRequest, response *tfsdk.ReadDataSourceResponse) {
+// Config values should be read from the ReadRequest and new state values set on the ReadResponse.
+func (d *dataSourceARN) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
 	tflog.Trace(ctx, "dataSourceARN.Read enter")
 
 	var config dataSourceARNData
