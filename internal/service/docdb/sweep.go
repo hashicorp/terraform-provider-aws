@@ -20,6 +20,31 @@ func init() {
 			// "aws_docdb_cluster",
 		},
 	})
+	resource.AddTestSweepers("aws_docdb_subnet_group", &resource.Sweeper{
+		Name:         "aws_docdb_subnet_group",
+		F:            sweepDBSubnetGroups,
+		Dependencies: []string{},
+	})
+	resource.AddTestSweepers("aws_docdb_event_subscription", &resource.Sweeper{
+		Name:         "aws_docdb_event_subscription",
+		F:            sweepEventSubscriptions,
+		Dependencies: []string{},
+	})
+	resource.AddTestSweepers("aws_docdb_cluster", &resource.Sweeper{
+		Name:         "aws_docdb_cluster",
+		F:            sweepDBClusters,
+		Dependencies: []string{},
+	})
+	resource.AddTestSweepers("aws_docdb_cluster_snapshot", &resource.Sweeper{
+		Name:         "aws_docdb_cluster_snapshot",
+		F:            sweepDBClusterSnapshots,
+		Dependencies: []string{},
+	})
+	resource.AddTestSweepers("aws_docdb_cluster_instance", &resource.Sweeper{
+		Name:         "aws_docdb_cluster_instance",
+		F:            sweepDBInstances,
+		Dependencies: []string{},
+	})
 }
 
 func sweepDBClusters(region string) error {
