@@ -27,7 +27,7 @@ func ResourceTransitGatewayPeering() *schema.Resource {
 		DeleteWithoutTimeout: resourceTransitGatewayPeeringDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -64,10 +64,6 @@ func ResourceTransitGatewayPeering() *schema.Resource {
 				Computed: true,
 			},
 			"resource_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"state": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -146,7 +142,6 @@ func resourceTransitGatewayPeeringRead(ctx context.Context, d *schema.ResourceDa
 	d.Set("owner_account_id", p.OwnerAccountId)
 	d.Set("peering_type", p.PeeringType)
 	d.Set("resource_arn", p.ResourceArn)
-	d.Set("state", p.State)
 	d.Set("transit_gateway_arn", transitGatewayPeering.TransitGatewayArn)
 
 	tags := KeyValueTags(p.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
