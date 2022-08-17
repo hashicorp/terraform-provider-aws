@@ -725,9 +725,15 @@ func expandDocumentClassifierInputDataConfig(tfMap map[string]any) *types.Docume
 	a := &types.DocumentClassifierInputDataConfig{
 		AugmentedManifests: expandAugmentedManifests(tfMap["augmented_manifests"].(*schema.Set)),
 		DataFormat:         types.DocumentClassifierDataFormat(tfMap["data_format"].(string)),
-		// LabelDelimiter:     aws.String(tfMap["label_delimiter"].(string)),
-		S3Uri: aws.String(tfMap["s3_uri"].(string)),
-		// TestS3Uri: aws.String(tfMap["test_s3_uri"].(string)),
+		S3Uri:              aws.String(tfMap["s3_uri"].(string)),
+	}
+
+	// if v, ok := tfMap["label_delimiter"].(string); ok && v != "" {
+	// 	a.LabelDelimiter = aws.String(v)
+	// }
+
+	if v, ok := tfMap["test_s3_uri"].(string); ok && v != "" {
+		a.TestS3Uri = aws.String(v)
 	}
 
 	return a

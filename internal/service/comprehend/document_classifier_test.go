@@ -49,7 +49,7 @@ func TestAccComprehendDocumentClassifier_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "input_data_config.0.augmented_manifests.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "input_data_config.0.data_format", string(types.DocumentClassifierDataFormatComprehendCsv)),
 					resource.TestCheckResourceAttrSet(resourceName, "input_data_config.0.s3_uri"),
-					resource.TestCheckNoResourceAttr(resourceName, "input_data_config.0.documents.0.test_s3_uri"),
+					resource.TestCheckResourceAttr(resourceName, "input_data_config.0.test_s3_uri", ""),
 					resource.TestCheckResourceAttr(resourceName, "language_code", "en"),
 					resource.TestCheckResourceAttr(resourceName, "model_kms_key_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -276,53 +276,54 @@ func TestAccComprehendDocumentClassifier_versionNamePrefix(t *testing.T) {
 	})
 }
 
-// func TestAccComprehendDocumentClassifier_documents_testDocuments(t *testing.T) {
-// 	if testing.Short() {
-// 		t.Skip("skipping long-running test in short mode")
-// 	}
+func TestAccComprehendDocumentClassifier_testDocuments(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
 
-// 	var documentclassifier types.DocumentClassifierProperties
-// 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-// 	resourceName := "aws_comprehend_document_classifier.test"
+	var documentclassifier types.DocumentClassifierProperties
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_comprehend_document_classifier.test"
 
-// 	resource.ParallelTest(t, resource.TestCase{
-// 		PreCheck: func() {
-// 			acctest.PreCheck(t)
-// 			acctest.PreCheckPartitionHasService(names.ComprehendEndpointID, t)
-// 			testAccPreCheck(t)
-// 		},
-// 		ErrorCheck:               acctest.ErrorCheck(t, names.ComprehendEndpointID),
-// 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-// 		CheckDestroy:             testAccCheckDocumentClassifierDestroy,
-// 		Steps: []resource.TestStep{
-// 			{
-// 				Config: testAccDocumentClassifierConfig_testDocuments(rName),
-// 				Check: resource.ComposeAggregateTestCheckFunc(
-// 					testAccCheckDocumentClassifierExists(resourceName, &documentclassifier),
-// 					testAccCheckDocumentClassifierPublishedVersions(resourceName, 1),
-// 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-// 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "comprehend", regexp.MustCompile(fmt.Sprintf(`document-classifier/%s/version/%s$`, rName, uniqueIDPattern()))),
-// 					resource.TestCheckResourceAttr(resourceName, "input_data_config.#", "1"),
-// 					resource.TestCheckResourceAttr(resourceName, "input_data_config.0.augmented_manifests.#", "0"),
-// 					resource.TestCheckResourceAttr(resourceName, "input_data_config.0.data_format", string(types.DocumentClassifierDataFormatComprehendCsv)),
-// 					resource.TestCheckResourceAttr(resourceName, "language_code", "en"),
-// 					resource.TestCheckResourceAttr(resourceName, "model_kms_key_id", ""),
-// 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-// 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "0"),
-// 					acctest.CheckResourceAttrNameGenerated(resourceName, "version_name"),
-// 					resource.TestCheckResourceAttr(resourceName, "version_name_prefix", resource.UniqueIdPrefix),
-// 					resource.TestCheckResourceAttr(resourceName, "volume_kms_key_id", ""),
-// 					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "0"),
-// 				),
-// 			},
-// 			{
-// 				ResourceName:      resourceName,
-// 				ImportState:       true,
-// 				ImportStateVerify: true,
-// 			},
-// 		},
-// 	})
-// }
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(names.ComprehendEndpointID, t)
+			testAccPreCheck(t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ComprehendEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDocumentClassifierDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDocumentClassifierConfig_testDocuments(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDocumentClassifierExists(resourceName, &documentclassifier),
+					testAccCheckDocumentClassifierPublishedVersions(resourceName, 1),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "comprehend", regexp.MustCompile(fmt.Sprintf(`document-classifier/%s/version/%s$`, rName, uniqueIDPattern()))),
+					resource.TestCheckResourceAttr(resourceName, "input_data_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "input_data_config.0.augmented_manifests.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "input_data_config.0.data_format", string(types.DocumentClassifierDataFormatComprehendCsv)),
+					resource.TestCheckResourceAttrSet(resourceName, "input_data_config.0.test_s3_uri"),
+					resource.TestCheckResourceAttr(resourceName, "language_code", "en"),
+					resource.TestCheckResourceAttr(resourceName, "model_kms_key_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "0"),
+					acctest.CheckResourceAttrNameGenerated(resourceName, "version_name"),
+					resource.TestCheckResourceAttr(resourceName, "version_name_prefix", resource.UniqueIdPrefix),
+					resource.TestCheckResourceAttr(resourceName, "volume_kms_key_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
 
 // func TestAccComprehendDocumentClassifier_annotations_basic(t *testing.T) {
 // 	if testing.Short() {
@@ -1148,7 +1149,8 @@ resource "aws_comprehend_document_classifier" "test" {
 
   language_code = "en"
   input_data_config {
-    s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+    s3_uri      = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+    test_s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
   }
 
   depends_on = [
