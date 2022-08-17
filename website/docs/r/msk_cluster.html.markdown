@@ -8,7 +8,7 @@ description: |-
 
 # Resource: aws_msk_cluster
 
-Manages an Amazon MSK Serverless cluster.
+Manages an Amazon MSK cluster.
 
 -> **Note:** This resource manages _provisioned_ clusters. To manage a _serverless_ Amazon MSK cluster, use the [`aws_msk_serverless_cluster`](/docs/providers/aws/r/msk_serverless_cluster.html) resource.
 
