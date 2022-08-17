@@ -1620,6 +1620,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_msk_cluster":                  kafka.ResourceCluster(),
 			"aws_msk_configuration":            kafka.ResourceConfiguration(),
 			"aws_msk_scram_secret_association": kafka.ResourceScramSecretAssociation(),
+			"aws_msk_serverless_cluster":       kafka.ResourceServerlessCluster(),
 
 			"aws_mskconnect_connector":            kafkaconnect.ResourceConnector(),
 			"aws_mskconnect_custom_plugin":        kafkaconnect.ResourceCustomPlugin(),
