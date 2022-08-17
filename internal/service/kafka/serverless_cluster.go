@@ -232,7 +232,7 @@ func expandServerlessSasl(tfMap map[string]interface{}) *kafka.ServerlessSasl { 
 	return apiObject
 }
 
-func expandIam(tfMap map[string]interface{}) *kafka.Iam { // nosemgrep:ci.caps2-in-func-name
+func expandIam(tfMap map[string]interface{}) *kafka.Iam { // nosemgrep:ci.caps4-in-func-name
 	if tfMap == nil {
 		return nil
 	}
@@ -274,7 +274,7 @@ func flattenServerlessSasl(apiObject *kafka.ServerlessSasl) map[string]interface
 	return tfMap
 }
 
-func flattenIam(apiObject *kafka.Iam) map[string]interface{} { // nosemgrep:ci.caps2-in-func-name
+func flattenIam(apiObject *kafka.Iam) map[string]interface{} { // nosemgrep:ci.caps4-in-func-name
 	if apiObject == nil {
 		return nil
 	}
