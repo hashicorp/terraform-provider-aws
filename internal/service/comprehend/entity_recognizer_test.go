@@ -980,14 +980,6 @@ func entityRecognizerIdentity(before, after *types.EntityRecognizerProperties) b
 	return aws.ToTime(before.SubmitTime).Equal(aws.ToTime(after.SubmitTime))
 }
 
-func uniqueIDPattern() string {
-	return prefixedUniqueIDPattern(resource.UniqueIdPrefix)
-}
-
-func prefixedUniqueIDPattern(prefix string) string {
-	return fmt.Sprintf("%s[[:xdigit:]]{%d}", prefix, resource.UniqueIDSuffixLength)
-}
-
 func testAccCheckEntityRecognizerPublishedVersions(name string, expected int) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
