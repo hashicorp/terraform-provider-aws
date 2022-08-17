@@ -1,6 +1,3 @@
-//go:build sweep
-// +build sweep
-
 package docdb
 
 import (
@@ -46,6 +43,11 @@ func init() {
 	resource.AddTestSweepers("aws_docdb_cluster_instance", &resource.Sweeper{
 		Name:         "aws_docdb_cluster_instance",
 		F:            sweepDBInstances,
+		Dependencies: []string{},
+	})
+	resource.AddTestSweepers("aws_docdb_cluster_parameter_group", &resource.Sweeper{
+		Name:         "aws_docdb_cluster_parameter_group",
+		F:            sweepDBClusterParameterGroups,
 		Dependencies: []string{},
 	})
 }
@@ -135,6 +137,47 @@ func sweepDBClusterSnapshots(region string) error {
 
 	if err != nil {
 		return fmt.Errorf("error retrieving DocDB Cluster Snapshots: %w", err)
+	}
+
+	return nil
+}
+
+func sweepDBClusterParameterGroups(region string) error {
+	client, err := sweep.SharedRegionalSweepClient(region)
+
+	if err != nil {
+		return fmt.Errorf("error getting client: %w", err)
+	}
+
+	conn := client.(*conns.AWSClient).DocDBConn
+	input := &docdb.DescribeDBClusterParameterGroupsInput{}
+
+	err = conn.DescribeDBClusterParameterGroupsPages(input, func(out *docdb.DescribeDBClusterParameterGroupsOutput, lastPage bool) bool {
+		for _, dBClusterParameterGroup := range out.DBClusterParameterGroups {
+			name := aws.StringValue(dBClusterParameterGroup.DBClusterParameterGroupName)
+			input := &docdb.DeleteDBClusterParameterGroupInput{
+				DBClusterParameterGroupName: dBClusterParameterGroup.DBClusterParameterGroupName,
+			}
+
+			log.Printf("[INFO] Deleting DocDB Cluster Parameter Group: %s", name)
+
+			_, err := conn.DeleteDBClusterParameterGroup(input)
+
+			if err != nil {
+				log.Printf("[ERROR] Failed to delete DocDB Parameter Group (%s): %s", name, err)
+				continue
+			}
+		}
+		return !lastPage
+	})
+
+	if sweep.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping DocDB Cluster Parameter Group sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error retrieving DocDB Cluster Parameter Groups: %w", err)
 	}
 
 	return nil
