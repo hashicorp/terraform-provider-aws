@@ -173,7 +173,7 @@ func resourceServerlessClusterRead(ctx context.Context, d *schema.ResourceData, 
 	}
 	d.Set("cluster_name", cluster.ClusterName)
 	if err := d.Set("vpc_config", flattenVpcConfigs(cluster.Serverless.VpcConfigs)); err != nil {
-		return diag.Errorf("setting vpc_config: %w", err)
+		return diag.Errorf("setting vpc_config: %s", err)
 	}
 
 	tags := KeyValueTags(cluster.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
