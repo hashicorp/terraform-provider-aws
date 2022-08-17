@@ -59,6 +59,22 @@ func statusDBClusterSnapshotRefreshFunc(ctx context.Context, conn *docdb.DocDB, 
 	}
 }
 
+func statusDBInstanceRefreshFunc(ctx context.Context, conn *docdb.DocDB, dBInstanceID string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		dBInstance, err := FindDBInstanceById(ctx, conn, dBInstanceID)
+
+		if tfawserr.ErrCodeEquals(err, docdb.ErrCodeDBInstanceNotFoundFault) || dBInstance == nil {
+			return nil, DBInstanceStatusDeleted, nil
+		}
+
+		if err != nil {
+			return nil, "", fmt.Errorf("error reading DocDB Instance (%s): %w", dBInstanceID, err)
+		}
+
+		return dBInstance, aws.StringValue(dBInstance.DBInstanceStatus), nil
+	}
+}
+
 func statusDBSubnetGroupRefreshFunc(ctx context.Context, conn *docdb.DocDB, dBSubnetGroupName string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		dBSubnetGroup, err := FindDBSubnetGroupByName(ctx, conn, dBSubnetGroupName)
