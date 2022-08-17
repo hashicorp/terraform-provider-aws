@@ -20,8 +20,14 @@ func init() {
 		Name: "aws_networkmanager_global_network",
 		F:    sweepGlobalNetworks,
 		Dependencies: []string{
+			"aws_networkmanager_core_network",
 			"aws_networkmanager_site",
 		},
+	})
+
+	resource.AddTestSweepers("aws_networkmanager_core_network", &resource.Sweeper{
+		Name: "aws_networkmanager_core_network",
+		F:    sweepCoreNetworks,
 	})
 
 	resource.AddTestSweepers("aws_networkmanager_site", &resource.Sweeper{
@@ -101,6 +107,49 @@ func sweepGlobalNetworks(region string) error {
 
 	if err != nil {
 		return fmt.Errorf("error sweeping Network Manager Global Networks (%s): %w", region, err)
+	}
+
+	return nil
+}
+
+func sweepCoreNetworks(region string) error {
+	client, err := sweep.SharedRegionalSweepClient(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*conns.AWSClient).NetworkManagerConn
+	input := &networkmanager.ListCoreNetworksInput{}
+	sweepResources := make([]*sweep.SweepResource, 0)
+
+	err = conn.ListCoreNetworksPages(input, func(page *networkmanager.ListCoreNetworksOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.CoreNetworks {
+			r := ResourceCoreNetwork()
+			d := r.Data(nil)
+			d.SetId(aws.StringValue(v.CoreNetworkId))
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+
+		return !lastPage
+	})
+
+	if sweep.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping Network Manager Core Network sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error listing Network Manager Core Networks (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestrator(sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping Network Manager Core Networks (%s): %w", region, err)
 	}
 
 	return nil

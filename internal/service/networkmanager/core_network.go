@@ -110,7 +110,6 @@ func resourceCoreNetworkDelete(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).NetworkManagerConn
 
 	log.Printf("[DEBUG] Deleting Network Manager Core Network: %s", d.Id())
-
 	_, err := conn.DeleteCoreNetworkWithContext(ctx, &networkmanager.DeleteCoreNetworkInput{
 		CoreNetworkId: aws.String(d.Id()),
 	})
