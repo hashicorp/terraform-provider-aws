@@ -10,6 +10,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// FindStatementByID will only find full statement info for statements
+// created recently. For statements that AWS thinks are expired, FindStatementByID
+// will just return a bare bones DescribeStatementOutput w/ only the Id present.
 func FindStatementByID(conn *redshiftdataapiservice.RedshiftDataAPIService, id string) (*redshiftdataapiservice.DescribeStatementOutput, error) {
 	input := &redshiftdataapiservice.DescribeStatementInput{
 		Id: aws.String(id),
@@ -29,9 +32,8 @@ func FindStatementByID(conn *redshiftdataapiservice.RedshiftDataAPIService, id s
 			return &redshiftdataapiservice.DescribeStatementOutput{
 				Id: aws.String(id),
 			}, nil
-		} else {
-			return nil, err
 		}
+		return nil, err
 	}
 
 	if output == nil {
