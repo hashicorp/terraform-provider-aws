@@ -305,7 +305,7 @@ func testAccCheckGlobalClusterExists(resourceName string, globalCluster *neptune
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneConn
-		cluster, err := tfneptune.FindGlobalClusterById(context.TODO(), conn, rs.Primary.ID)
+		cluster, err := tfneptune.FindGlobalClusterById(context.Background(), conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -333,7 +333,7 @@ func testAccCheckGlobalClusterDestroy(s *terraform.State) error {
 			continue
 		}
 
-		globalCluster, err := tfneptune.FindGlobalClusterById(context.TODO(), conn, rs.Primary.ID)
+		globalCluster, err := tfneptune.FindGlobalClusterById(context.Background(), conn, rs.Primary.ID)
 
 		if tfawserr.ErrCodeEquals(err, neptune.ErrCodeGlobalClusterNotFoundFault) {
 			continue
@@ -367,7 +367,7 @@ func testAccCheckGlobalClusterDisappears(globalCluster *neptune.GlobalCluster) r
 			return err
 		}
 
-		return tfneptune.WaitForGlobalClusterDeletion(context.TODO(), conn, aws.StringValue(globalCluster.GlobalClusterIdentifier), tfneptune.GlobalClusterDeleteTimeout)
+		return tfneptune.WaitForGlobalClusterDeletion(context.Background(), conn, aws.StringValue(globalCluster.GlobalClusterIdentifier), tfneptune.GlobalClusterDeleteTimeout)
 	}
 }
 
