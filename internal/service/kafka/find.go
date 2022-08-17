@@ -35,7 +35,7 @@ func FindClusterByARN(ctx context.Context, conn *kafka.Kafka, arn string) (*kafk
 	return output.ClusterInfo, nil
 }
 
-func FindClusterV2ByARN(ctx context.Context, conn *kafka.Kafka, arn string) (*kafka.Cluster, error) {
+func findClusterV2ByARN(ctx context.Context, conn *kafka.Kafka, arn string) (*kafka.Cluster, error) {
 	input := &kafka.DescribeClusterV2Input{
 		ClusterArn: aws.String(arn),
 	}
@@ -129,7 +129,7 @@ func FindScramSecrets(conn *kafka.Kafka, clusterArn string) ([]*string, error) {
 }
 
 func FindServerlessClusterByARN(ctx context.Context, conn *kafka.Kafka, arn string) (*kafka.Cluster, error) {
-	output, err := FindClusterV2ByARN(ctx, conn, arn)
+	output, err := findClusterV2ByARN(ctx, conn, arn)
 
 	if err != nil {
 		return nil, err
