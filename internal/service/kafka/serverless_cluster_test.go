@@ -315,7 +315,7 @@ resource "aws_msk_serverless_cluster" "test" {
   }
 
   vpc_config {
-	security_group_ids = [aws_security_group.test.id]
+    security_group_ids = [aws_security_group.test.id]
     subnet_ids         = aws_subnet.test[*].id
   }
 }
