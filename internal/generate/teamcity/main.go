@@ -78,7 +78,7 @@ func main() {
 			p = l[names.ColProviderPackageActual]
 		}
 
-		if _, err := os.Stat(fmt.Sprintf("../../service/%s", p)); err != nil || os.IsNotExist(err) {
+		if _, err := os.Stat(fmt.Sprintf("../../service/%s", p)); err != nil || errors.Is(err, fs.ErrNotExist) {
 			continue
 		}
 
@@ -104,7 +104,7 @@ func main() {
 
 func writeTemplate(filename, body, templateName string, td TemplateData) {
 	// If the file doesn't exist, create it, otherwise truncate the file
-	f, err := os.OpenFile(filename, os.O_TRUNC|os.O_CREATE|os.O_WRONLY, 0644)
+	f, err := os.OpenFile(filename, os.O_TRUNC|os.O_CREATE|os.O_WRONLY, 0600)
 	if err != nil {
 		log.Fatalf("error opening file (%s): %s", filename, err)
 	}
@@ -178,10 +178,5 @@ func decodeHclFile(filename string, target interface{}) error {
 		return err
 	}
 
-	err = hclsimple.Decode(filename, b, nil, target)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return hclsimple.Decode(filename, b, nil, target)
 }
