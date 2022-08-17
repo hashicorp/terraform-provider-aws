@@ -1,3 +1,6 @@
+//go:build sweep
+// +build sweep
+
 package docdb
 
 import (
