@@ -1,6 +1,8 @@
 package redshiftdata
 
 import (
+	"strings"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/redshiftdataapiservice"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -23,7 +25,13 @@ func FindStatementByID(conn *redshiftdataapiservice.RedshiftDataAPIService, id s
 	}
 
 	if err != nil {
-		return nil, err
+		if tfawserr.ErrCodeEquals(err, redshiftdataapiservice.ErrCodeValidationException) && strings.Contains(err.Error(), "expired") {
+			return &redshiftdataapiservice.DescribeStatementOutput{
+				Id: aws.String(id),
+			}, nil
+		} else {
+			return nil, err
+		}
 	}
 
 	if output == nil {
