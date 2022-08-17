@@ -62,6 +62,13 @@ In addition to all arguments above, the following attributes are exported:
             * `endpoint_id` - The identifier of the firewall endpoint that AWS Network Firewall has instantiated in the subnet. You use this to identify the firewall endpoint in the VPC route tables, when you redirect the VPC traffic through the endpoint.
             * `subnet_id` - The unique identifier of the subnet that you've specified to be used for a firewall endpoint.
         * `availability_zone` - The Availability Zone where the subnet is configured.
+    * `capacity_usage_summary` - Aggregated count of all resources used by reference sets in a firewall.
+        * `cidrs` - Capacity usage of CIDR blocks used by IP set references in a firewall.
+            * `available_cidr_count` - Available number of CIDR blocks available for use by the IP set references in a firewall.
+            * `ip_set_references` - The list of IP set references used by a firewall.
+                * `resolved_cidr_count` - Total number of CIDR blocks used by the IP set references in a firewall.
+            * `utilized_cidr_count` - Number of CIDR blocks used by the IP set references in a firewall.
+    * `configuration_sync_state_summary` - Summary of sync states for all availability zones in which the firewall is configured.
 * `id` - The Amazon Resource Name (ARN) that identifies the firewall.
 * `name` - The descriptive name of the firewall.
 * `subnet_change_protection` - A boolean flag indicating whether it is possible to change the associated subnet(s).

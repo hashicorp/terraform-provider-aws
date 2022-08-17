@@ -1525,7 +1525,13 @@ func resourceInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	// Having allowing_major_version_upgrade by itself should not trigger ModifyDBInstance
 	// as it results in "InvalidParameterCombination: No modifications were requested".
-	if d.HasChangesExcept("allow_major_version_upgrade", "replicate_source_db", "tags", "tags_all") {
+	if d.HasChangesExcept(
+		"allow_major_version_upgrade",
+		"delete_automated_backups",
+		"final_snapshot_identifier",
+		"replicate_source_db",
+		"skip_final_snapshot",
+		"tags", "tags_all") {
 		input := &rds.ModifyDBInstanceInput{
 			ApplyImmediately:     aws.Bool(d.Get("apply_immediately").(bool)),
 			DBInstanceIdentifier: aws.String(d.Id()),

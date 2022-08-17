@@ -65,7 +65,7 @@ func TestAccServiceThing_nameGenerated(t *testing.T) {
         Config: testAccThingConfig_nameGenerated(),
         Check: resource.ComposeTestCheckFunc(
           testAccCheckThingExists(resourceName, &thing),
-          create.TestCheckResourceAttrNameGenerated(resourceName, "name"),
+          acctest.CheckResourceAttrNameGenerated(resourceName, "name"),
           resource.TestCheckResourceAttr(resourceName, "name_prefix", resource.UniqueIdPrefix),
         ),
       },
@@ -93,7 +93,7 @@ func TestAccServiceThing_namePrefix(t *testing.T) {
         Config: testAccThingConfig_namePrefix("tf-acc-test-prefix-"),
         Check: resource.ComposeTestCheckFunc(
           testAccCheckThingExists(resourceName, &thing),
-          create.TestCheckResourceAttrNameFromPrefix(resourceName, "name", "tf-acc-test-prefix-"),
+          acctest.CheckResourceAttrNameFromPrefix(resourceName, "name", "tf-acc-test-prefix-"),
           resource.TestCheckResourceAttr(resourceName, "name_prefix", "tf-acc-test-prefix-"),
         ),
       },
@@ -156,4 +156,4 @@ d.Set("name", resp.Name)
 d.Set("name_prefix", create.NamePrefixFromNameWithSuffix(aws.StringValue(resp.Name), ".fifo"))
 ```
 
-There are also functions `create.TestCheckResourceAttrNameWithSuffixGenerated` and `create.TestCheckResourceAttrNameWithSuffixFromPrefix` for use in tests.
+There are also functions `acctest.CheckResourceAttrNameWithSuffixGenerated` and `acctest.CheckResourceAttrNameWithSuffixFromPrefix` for use in tests.

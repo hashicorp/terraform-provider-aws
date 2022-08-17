@@ -42,6 +42,7 @@ val services = mapOf(
     "codestarnotifications" to ServiceSpec("CodeStar Notifications"),
     "cognitoidentity" to ServiceSpec("Cognito Identity"),
     "cognitoidp" to ServiceSpec("Cognito IDP (Identity Provider)"),
+    "comprehend" to ServiceSpec("Comprehend", parallelismOverride = 10),
     "configservice" to ServiceSpec("Config"),
     "connect" to ServiceSpec("Connect"),
     "cur" to ServiceSpec("Cost and Usage Report"),

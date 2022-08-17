@@ -14,8 +14,8 @@ import (
 	"sync"
 
 	"github.com/hashicorp/go-cty/cty"
-	multierror "github.com/hashicorp/go-multierror"
-	uuid "github.com/hashicorp/go-uuid"
+	"github.com/hashicorp/go-multierror"
+	"github.com/hashicorp/go-uuid"
 	"github.com/mitchellh/copystructure"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/internal/addrs"
@@ -1145,7 +1145,6 @@ func parseResourceStateKey(k string) (*ResourceStateKey, error) {
 //
 // Extra is just extra data that a provider can return that we store
 // for later, but is not exposed in any way to the user.
-//
 type ResourceState struct {
 	// This is filled in and managed by Terraform, and is the resource
 	// type itself such as "mycloud_instance". If a resource provider sets
@@ -1224,26 +1223,6 @@ func (s *ResourceState) Equal(other *ResourceState) bool {
 
 	// States must be equal
 	return s.Primary.Equal(other.Primary)
-}
-
-// Taint marks a resource as tainted.
-func (s *ResourceState) Taint() {
-	s.Lock()
-	defer s.Unlock()
-
-	if s.Primary != nil {
-		s.Primary.Tainted = true
-	}
-}
-
-// Untaint unmarks a resource as tainted.
-func (s *ResourceState) Untaint() {
-	s.Lock()
-	defer s.Unlock()
-
-	if s.Primary != nil {
-		s.Primary.Tainted = false
-	}
 }
 
 func (s *ResourceState) init() {

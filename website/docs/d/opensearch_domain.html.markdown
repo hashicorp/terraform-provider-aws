@@ -68,6 +68,7 @@ The following attributes are exported:
 * `domain_id` – Unique identifier for the domain.
 * `ebs_options` - EBS Options for the instances in the domain.
     * `ebs_enabled` - Whether EBS volumes are attached to data nodes in the domain.
+    * `throughput` - The throughput (in MiB/s) of the EBS volumes attached to data nodes.
     * `volume_type` - Type of EBS volumes attached to data nodes.
     * `volume_size` - Size of EBS volumes attached to data nodes (in GB).
     * `iops` - Baseline input/output (I/O) performance of EBS volumes attached to data nodes.

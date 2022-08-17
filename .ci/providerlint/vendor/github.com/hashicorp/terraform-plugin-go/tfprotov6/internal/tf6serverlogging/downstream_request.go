@@ -21,10 +21,9 @@ func DownstreamRequest(ctx context.Context) context.Context {
 
 // DownstreamResponse generates the following logging:
 //
-//    - TRACE "Received downstream response" log with request duration and
-//      diagnostic severity counts
-//    - Per-diagnostic logs
-//
+//   - TRACE "Received downstream response" log with request duration and
+//     diagnostic severity counts
+//   - Per-diagnostic logs
 func DownstreamResponse(ctx context.Context, diagnostics diag.Diagnostics) {
 	responseFields := map[string]interface{}{
 		logging.KeyDiagnosticErrorCount:   diagnostics.ErrorCount(),

@@ -11,6 +11,7 @@ updates:
       - dependency-name: "google.golang.org/grpc"
     schedule:
       interval: "daily"
+    open-pull-requests-limit: 20
   - package-ecosystem: "gomod"
     directory: "/.ci/providerlint"
     ignore:

@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/feature/ec2/imds"
+	"github.com/aws/aws-sdk-go-v2/service/comprehend"
 	"github.com/aws/aws-sdk-go-v2/service/fis"
 	"github.com/aws/aws-sdk-go-v2/service/kendra"
 	"github.com/aws/aws-sdk-go-v2/service/rolesanywhere"
@@ -193,6 +194,12 @@ func (c *Config) Client(ctx context.Context) (interface{}, diag.Diagnostics) {
 	client.ReverseDNSPrefix = ReverseDNS(DNSSuffix)
 	client.Session = sess
 	client.TerraformVersion = c.TerraformVersion
+
+	client.ComprehendConn = comprehend.NewFromConfig(cfg, func(o *comprehend.Options) {
+		if endpoint := c.Endpoints[names.Comprehend]; endpoint != "" {
+			o.EndpointResolver = comprehend.EndpointResolverFromURL(endpoint)
+		}
+	})
 
 	client.FISConn = fis.NewFromConfig(cfg, func(o *fis.Options) {
 		if endpoint := c.Endpoints[names.FIS]; endpoint != "" {

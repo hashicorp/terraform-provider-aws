@@ -4,6 +4,7 @@ package conns
 import (
 	"fmt"
 
+	"github.com/aws/aws-sdk-go-v2/service/comprehend"
 	"github.com/aws/aws-sdk-go-v2/service/fis"
 	"github.com/aws/aws-sdk-go-v2/service/kendra"
 	"github.com/aws/aws-sdk-go-v2/service/rolesanywhere"
@@ -75,7 +76,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/cognitoidentity"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/aws/aws-sdk-go/service/cognitosync"
-	"github.com/aws/aws-sdk-go/service/comprehend"
 	"github.com/aws/aws-sdk-go/service/comprehendmedical"
 	"github.com/aws/aws-sdk-go/service/computeoptimizer"
 	"github.com/aws/aws-sdk-go/service/configservice"
@@ -385,7 +385,7 @@ type AWSClient struct {
 	CognitoIDPConn                   *cognitoidentityprovider.CognitoIdentityProvider
 	CognitoIdentityConn              *cognitoidentity.CognitoIdentity
 	CognitoSyncConn                  *cognitosync.CognitoSync
-	ComprehendConn                   *comprehend.Comprehend
+	ComprehendConn                   *comprehend.Client
 	ComprehendMedicalConn            *comprehendmedical.ComprehendMedical
 	ComputeOptimizerConn             *computeoptimizer.ComputeOptimizer
 	ConfigServiceConn                *configservice.ConfigService
