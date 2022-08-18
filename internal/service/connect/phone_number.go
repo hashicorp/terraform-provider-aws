@@ -3,10 +3,12 @@ package connect
 import (
 	"context"
 	"log"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/connect"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -17,9 +19,13 @@ import (
 
 func ResourcePhoneNumber() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: resourcePhoneNumberRead,
+		CreateContext: resourcePhoneNumberCreate,
+		ReadContext:   resourcePhoneNumberRead,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
+		},
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(2 * time.Minute),
 		},
 		CustomizeDiff: verify.SetTagsDiff,
 		Schema: map[string]*schema.Schema{
@@ -80,6 +86,78 @@ func ResourcePhoneNumber() *schema.Resource {
 			"tags_all": tftags.TagsSchemaComputed(),
 		},
 	}
+}
+
+func resourcePhoneNumberCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).ConnectConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+
+	targetArn := d.Get("target_arn").(string)
+	phoneNumberType := d.Get("type").(string)
+
+	input := &connect.SearchAvailablePhoneNumbersInput{
+		MaxResults:             aws.Int64(1),
+		PhoneNumberCountryCode: aws.String(d.Get("country_code").(string)),
+		PhoneNumberType:        aws.String(phoneNumberType),
+		TargetArn:              aws.String(targetArn),
+	}
+
+	if v, ok := d.GetOk("prefix"); ok {
+		input.PhoneNumberPrefix = aws.String(v.(string))
+	}
+
+	log.Printf("[DEBUG] Searching for Connect Available Phone Numbers %s", input)
+	output, err := conn.SearchAvailablePhoneNumbersWithContext(ctx, input)
+
+	if err != nil {
+		return diag.Errorf("searching Connect Phone Number for Connect Instance (%s,%s): %s", targetArn, phoneNumberType, err)
+	}
+
+	if output == nil || output.AvailableNumbersList == nil || len(output.AvailableNumbersList) == 0 {
+		return diag.Errorf("searching Connect Phone Number for Connect Instance (%s,%s): empty output", targetArn, phoneNumberType)
+	}
+
+	phoneNumber := output.AvailableNumbersList[0].PhoneNumber
+
+	uuid, err := uuid.GenerateUUID()
+	if err != nil {
+		return diag.Errorf("generating uuid for ClientToken for Connect Instance (%s,%s): %s", targetArn, aws.StringValue(phoneNumber), err)
+	}
+
+	input2 := &connect.ClaimPhoneNumberInput{
+		ClientToken: aws.String(uuid), // can't use aws.String(resource.UniqueId()), because not a valid uuid
+		PhoneNumber: phoneNumber,
+		TargetArn:   aws.String(targetArn),
+	}
+
+	if v, ok := d.GetOk("description"); ok {
+		input2.PhoneNumberDescription = aws.String(v.(string))
+	}
+
+	if len(tags) > 0 {
+		input2.Tags = Tags(tags.IgnoreAWS())
+	}
+
+	log.Printf("[DEBUG] Claiming Connect Phone Number %s", input2)
+	output2, err2 := conn.ClaimPhoneNumberWithContext(ctx, input2)
+
+	if err2 != nil {
+		return diag.Errorf("creating Connect Phone Number for Connect Instance (%s,%s): %s", targetArn, aws.StringValue(phoneNumber), err2)
+	}
+
+	if output2 == nil || output2.PhoneNumberId == nil {
+		return diag.Errorf("creating Connect Phone Number for Connect Instance (%s,%s): empty output", targetArn, aws.StringValue(phoneNumber))
+	}
+
+	phoneNumberId := output2.PhoneNumberId
+	d.SetId(aws.StringValue(phoneNumberId))
+
+	if _, err := waitPhoneNumberCreated(ctx, conn, d.Timeout(schema.TimeoutCreate), d.Id()); err != nil {
+		return diag.Errorf("waiting for Phone Number (%s) creation: %s", d.Id(), err)
+	}
+
+	return resourcePhoneNumberRead(ctx, d, meta)
 }
 
 func resourcePhoneNumberRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
