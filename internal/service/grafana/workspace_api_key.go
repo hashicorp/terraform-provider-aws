@@ -25,19 +25,23 @@ func ResourceWorkspaceApiKey() *schema.Resource {
 			"key_name": {
 				Type:     schema.TypeString,
 				Required: true,
+				ForceNew: true,
 			},
 			"key_role": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringInSlice(managedgrafana.Role_Values(), false),
+				ForceNew:     true,
 			},
 			"seconds_to_live": {
 				Type:     schema.TypeInt,
 				Required: true,
+				ForceNew: true,
 			},
 			"workspace_id": {
 				Type:     schema.TypeString,
 				Required: true,
+				ForceNew: true,
 			},
 		},
 	}
