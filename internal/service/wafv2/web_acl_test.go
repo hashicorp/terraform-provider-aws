@@ -3220,55 +3220,56 @@ func testAccWebACLImportStateIdFunc(resourceName string) resource.ImportStateIdF
 func testAccWebACLConfig_byteMatch(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_web_acl" "test" {
-	name        = %[1]q
-	description = %[1]q
-	scope       = "REGIONAL"
+  name        = %[1]q
+  description = %[1]q
+  scope       = "REGIONAL"
 
-	default_action {
-		allow {}
-	}
+  default_action {
+    allow {}
+  }
 
-	rule {
-		name     = "%[1]s-1"
-		priority = 10
+  rule {
+    name     = "%[1]s-1"
+    priority = 10
 
-		action {
-		count {}
-		}
+    action {
+      count {}
+    }
 
-		statement {
+    statement {
 
-			byte_match_statement {
-				positional_constraint = "EXACTLY"
-				search_string         = "foo*"
+      byte_match_statement {
+        positional_constraint = "EXACTLY"
+        search_string         = "foo*"
 
-				field_to_match {
+        field_to_match {
 
-					single_header {
-						name = "bar*"
-					}
-				}
+          single_header {
+            name = "bar*"
+          }
+        }
 
-				text_transformation {
-					priority = 0
-					type     = "NONE"
-				}
-			}
-		}
+        text_transformation {
+          priority = 0
+          type     = "NONE"
+        }
+      }
+    }
 
-		visibility_config {
-			cloudwatch_metrics_enabled = false
-			metric_name                = "%[1]s-metric-name-1"
-			sampled_requests_enabled   = false
-		}
-	}
+    visibility_config {
+      cloudwatch_metrics_enabled = false
+      metric_name                = "%[1]s-metric-name-1"
+      sampled_requests_enabled   = false
+    }
+  }
 
-	visibility_config {
-		cloudwatch_metrics_enabled = false
-		metric_name                = "friendly-metric-name"
-		sampled_requests_enabled   = false
-	}
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
+  }
 }
+
 
 `, name)
 }
