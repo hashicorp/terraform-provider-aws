@@ -210,7 +210,7 @@ semall:
 		--config .ci/.semgrep-service-name1.yml \
 		--config .ci/.semgrep-service-name2.yml \
 		--config .ci/.semgrep-service-name3.yml \
-        --config 'r/dgryski.semgrep-go.errnilcheck' \
+		--config 'r/dgryski.semgrep-go.errnilcheck' \
 		--config 'r/dgryski.semgrep-go.nilerr'
 
 skaff:
