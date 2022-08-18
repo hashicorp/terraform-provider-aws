@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfconnect "github.com/hashicorp/terraform-provider-aws/internal/service/connect"
 )
 
 func testAccPhoneNumber_basic(t *testing.T) {
@@ -42,6 +43,29 @@ func testAccPhoneNumber_basic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccPhoneNumber_disappears(t *testing.T) {
+	var v connect.DescribePhoneNumberOutput
+	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	resourceName := "aws_connect_phone_number.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPhoneNumberDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPhoneNumberConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPhoneNumberExists(resourceName, &v),
+					acctest.CheckResourceDisappears(acctest.Provider, tfconnect.ResourcePhoneNumber(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
