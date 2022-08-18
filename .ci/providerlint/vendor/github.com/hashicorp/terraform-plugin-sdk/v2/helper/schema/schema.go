@@ -311,32 +311,33 @@ type Schema struct {
 	// "parent_block_name.0.child_attribute_name".
 	RequiredWith []string
 
-	// Deprecated defines warning diagnostic details to display to
-	// practitioners configuring this attribute or block. The warning
+	// Deprecated defines warning diagnostic details to display when
+	// practitioner configurations use this attribute or block. The warning
 	// diagnostic summary is automatically set to "Argument is deprecated"
 	// along with configuration source file and line information.
 	//
-	// This warning diagnostic is only displayed during Terraform's validation
-	// phase when this field is a non-empty string, when the attribute is
-	// Required or Optional, and if the practitioner configuration attempts to
-	// set the attribute value to a known value. It cannot detect practitioner
-	// configuration values that are unknown ("known after apply").
-	//
-	// This field has no effect when the attribute is Computed-only (read-only;
-	// not Required or Optional) and a practitioner attempts to reference
-	// this attribute value in their configuration. There is a Terraform
-	// feature request to support this type of functionality:
-	//
-	//     https://github.com/hashicorp/terraform/issues/7569
-	//
 	// Set this field to a practitioner actionable message such as:
 	//
-	//     - "Configure other_attribute instead. This attribute will be removed
-	//       in the next major version of the provider."
-	//     - "Remove this attribute's configuration as it no longer is used and
-	//       the attribute will be removed in the next major version of the
-	//       provider."
+	//  - "Configure other_attribute instead. This attribute will be removed
+	//    in the next major version of the provider."
+	//  - "Remove this attribute's configuration as it no longer is used and
+	//    the attribute will be removed in the next major version of the
+	//    provider."
 	//
+	// In Terraform 1.2.7 and later, this warning diagnostic is displayed any
+	// time a practitioner attempts to configure a known value for this
+	// attribute and certain scenarios where this attribute is referenced.
+	//
+	// In Terraform 1.2.6 and earlier, this warning diagnostic is only
+	// displayed when the attribute is Required or Optional, and if the
+	// practitioner configuration attempts to set the attribute value to a
+	// known value. It cannot detect practitioner configuration values that
+	// are unknown ("known after apply").
+	//
+	// Additional information about deprecation enhancements for read-only
+	// attributes can be found in:
+	//
+	//  - https://github.com/hashicorp/terraform/issues/7569
 	Deprecated string
 
 	// ValidateFunc allows individual fields to define arbitrary validation
@@ -721,6 +722,9 @@ func (m schemaMap) Diff(
 
 			// Preserve the DestroyTainted flag
 			result2.DestroyTainted = result.DestroyTainted
+			result2.RawConfig = result.RawConfig
+			result2.RawPlan = result.RawPlan
+			result2.RawState = result.RawState
 
 			// Reset the data to not contain state. We have to call init()
 			// again in order to reset the FieldReaders.

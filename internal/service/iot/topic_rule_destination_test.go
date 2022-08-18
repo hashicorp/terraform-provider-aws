@@ -157,11 +157,7 @@ func testAccCheckTopicRuleDestinationExists(n string) resource.TestCheckFunc {
 
 		_, err := tfiot.FindTopicRuleDestinationByARN(context.Background(), conn, rs.Primary.ID)
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 

@@ -1095,11 +1095,8 @@ func deleteReplicationGroup(replicationGroupID string, conn *elasticache.ElastiC
 	}
 
 	_, err = WaitReplicationGroupDeleted(conn, replicationGroupID, timeout)
-	if err != nil {
-		return err
-	}
 
-	return nil
+	return err
 }
 
 func flattenNodeGroupsToClusterMode(nodeGroups []*elasticache.NodeGroup) []map[string]interface{} {

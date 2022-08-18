@@ -326,11 +326,7 @@ func testAccCheckSOAdminPermissionSetExists(resourceName string) resource.TestCh
 			PermissionSetArn: aws.String(arn),
 		})
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 

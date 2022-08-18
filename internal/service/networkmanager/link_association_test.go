@@ -113,11 +113,7 @@ func testAccCheckLinkAssociationExists(n string) resource.TestCheckFunc {
 
 		_, err = tfnetworkmanager.FindLinkAssociationByThreePartKey(context.Background(), conn, globalNetworkID, linkID, deviceID)
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 

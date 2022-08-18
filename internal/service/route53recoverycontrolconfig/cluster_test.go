@@ -110,9 +110,6 @@ func testAccCheckClusterExists(name string) resource.TestCheckFunc {
 
 		_, err := conn.DescribeCluster(input)
 
-		if err != nil {
-			return err
-		}
-		return nil
+		return err
 	}
 }

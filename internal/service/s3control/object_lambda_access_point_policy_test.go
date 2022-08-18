@@ -178,11 +178,7 @@ func testAccCheckObjectLambdaAccessPointPolicyExists(n string) resource.TestChec
 
 		_, _, err = tfs3control.FindObjectLambdaAccessPointPolicyAndStatusByAccountIDAndName(conn, accountID, name)
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 

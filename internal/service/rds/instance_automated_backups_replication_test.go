@@ -224,11 +224,7 @@ func testAccCheckInstanceAutomatedBackupsReplicationExist(n string) resource.Tes
 
 		_, err := tfrds.FindDBInstanceAutomatedBackupByARN(conn, rs.Primary.ID)
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 

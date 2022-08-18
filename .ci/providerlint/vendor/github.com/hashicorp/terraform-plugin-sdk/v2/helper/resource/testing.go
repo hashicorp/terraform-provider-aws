@@ -100,10 +100,10 @@ func AddTestSweepers(name string, s *Sweeper) {
 //
 // Sweeper flags added to the "go test" command:
 //
-//     -sweep: Comma-separated list of locations/regions to run available sweepers.
-//     -sweep-allow-failues: Enable to allow other sweepers to run after failures.
-//     -sweep-run: Comma-separated list of resource type sweepers to run. Defaults
-//             to all sweepers.
+//	-sweep: Comma-separated list of locations/regions to run available sweepers.
+//	-sweep-allow-failues: Enable to allow other sweepers to run after failures.
+//	-sweep-run: Comma-separated list of resource type sweepers to run. Defaults
+//	        to all sweepers.
 //
 // Refer to the Env prefixed constants for environment variables that further
 // control testing functionality.
@@ -665,16 +665,16 @@ func ParallelTest(t testing.T, c TestCase) {
 // This function will automatically find or install Terraform CLI into a
 // temporary directory, based on the following behavior:
 //
-//     - If the TF_ACC_TERRAFORM_PATH environment variable is set, that
-//        Terraform CLI binary is used if found and executable. If not found or
-//        executable, an error will be returned unless the
-//        TF_ACC_TERRAFORM_VERSION environment variable is also set.
-//     - If the TF_ACC_TERRAFORM_VERSION environment variable is set, install
-//        and use that Terraform CLI version.
-//     - If both the TF_ACC_TERRAFORM_PATH and TF_ACC_TERRAFORM_VERSION
-//        environment variables are unset, perform a lookup for the Terraform
-//        CLI binary based on the operating system PATH. If not found, the
-//        latest available Terraform CLI binary is installed.
+//   - If the TF_ACC_TERRAFORM_PATH environment variable is set, that
+//     Terraform CLI binary is used if found and executable. If not found or
+//     executable, an error will be returned unless the
+//     TF_ACC_TERRAFORM_VERSION environment variable is also set.
+//   - If the TF_ACC_TERRAFORM_VERSION environment variable is set, install
+//     and use that Terraform CLI version.
+//   - If both the TF_ACC_TERRAFORM_PATH and TF_ACC_TERRAFORM_VERSION
+//     environment variables are unset, perform a lookup for the Terraform
+//     CLI binary based on the operating system PATH. If not found, the
+//     latest available Terraform CLI binary is installed.
 //
 // Refer to the Env prefixed constants for additional details about these
 // environment variables, and others, that control testing functionality.
@@ -821,35 +821,35 @@ func ComposeAggregateTestCheckFunc(fs ...TestCheckFunc) TestCheckFunc {
 // Use this as a last resort when a more specific TestCheckFunc cannot be
 // implemented, such as:
 //
-//     - TestCheckResourceAttr: Equality checking of non-TypeSet state value.
-//     - TestCheckResourceAttrPair: Equality checking of non-TypeSet state
-//        value, based on another state value.
-//     - TestCheckTypeSet*: Equality checking of TypeSet state values.
-//     - TestMatchResourceAttr: Regular expression checking of non-TypeSet
-//        state value.
-//     - TestMatchTypeSet*: Regular expression checking on TypeSet state values.
+//   - TestCheckResourceAttr: Equality checking of non-TypeSet state value.
+//   - TestCheckResourceAttrPair: Equality checking of non-TypeSet state
+//     value, based on another state value.
+//   - TestCheckTypeSet*: Equality checking of TypeSet state values.
+//   - TestMatchResourceAttr: Regular expression checking of non-TypeSet
+//     state value.
+//   - TestMatchTypeSet*: Regular expression checking on TypeSet state values.
 //
 // For managed resources, the name parameter is combination of the resource
 // type, a period (.), and the name label. The name for the below example
 // configuration would be "myprovider_thing.example".
 //
-//     resource "myprovider_thing" "example" { ... }
+//	resource "myprovider_thing" "example" { ... }
 //
 // For data sources, the name parameter is a combination of the keyword "data",
 // a period (.), the data source type, a period (.), and the name label. The
 // name for the below example configuration would be
 // "data.myprovider_thing.example".
 //
-//     data "myprovider_thing" "example" { ... }
+//	data "myprovider_thing" "example" { ... }
 //
 // The key parameter is an attribute path in Terraform CLI 0.11 and earlier
 // "flatmap" syntax. Keys start with the attribute name of a top-level
 // attribute. Use the following special key syntax to inspect underlying
 // values of a list or map attribute:
 //
-//     - .{NUMBER}: List value at index, e.g. .0 to inspect the first element
-//     - .{KEY}: Map value at key, e.g. .example to inspect the example key
-//        value
+//   - .{NUMBER}: List value at index, e.g. .0 to inspect the first element
+//   - .{KEY}: Map value at key, e.g. .example to inspect the example key
+//     value
 //
 // While it is possible to check nested attributes under list and map
 // attributes using the special key syntax, checking a list, map, or set
@@ -918,34 +918,34 @@ func testCheckResourceAttrSet(is *terraform.InstanceState, name string, key stri
 // type, a period (.), and the name label. The name for the below example
 // configuration would be "myprovider_thing.example".
 //
-//     resource "myprovider_thing" "example" { ... }
+//	resource "myprovider_thing" "example" { ... }
 //
 // For data sources, the name parameter is a combination of the keyword "data",
 // a period (.), the data source type, a period (.), and the name label. The
 // name for the below example configuration would be
 // "data.myprovider_thing.example".
 //
-//     data "myprovider_thing" "example" { ... }
+//	data "myprovider_thing" "example" { ... }
 //
 // The key parameter is an attribute path in Terraform CLI 0.11 and earlier
 // "flatmap" syntax. Keys start with the attribute name of a top-level
 // attribute. Use the following special key syntax to inspect list, map, and
 // set attributes:
 //
-//     - .{NUMBER}: List value at index, e.g. .0 to inspect the first element.
-//        Use the TestCheckTypeSet* and TestMatchTypeSet* functions instead
-//        for sets.
-//     - .{KEY}: Map value at key, e.g. .example to inspect the example key
-//        value.
-//     - .#: Number of elements in list or set.
-//     - .%: Number of elements in map.
+//   - .{NUMBER}: List value at index, e.g. .0 to inspect the first element.
+//     Use the TestCheckTypeSet* and TestMatchTypeSet* functions instead
+//     for sets.
+//   - .{KEY}: Map value at key, e.g. .example to inspect the example key
+//     value.
+//   - .#: Number of elements in list or set.
+//   - .%: Number of elements in map.
 //
 // The value parameter is the stringified data to check at the given key. Use
 // the following attribute type rules to set the value:
 //
-//     - Boolean: "false" or "true".
-//     - Float/Integer: Stringified number, such as "1.2" or "123".
-//     - String: No conversion necessary.
+//   - Boolean: "false" or "true".
+//   - Float/Integer: Stringified number, such as "1.2" or "123".
+//   - String: No conversion necessary.
 func TestCheckResourceAttr(name, key, value string) TestCheckFunc {
 	return checkIfIndexesIntoTypeSet(key, func(s *terraform.State) error {
 		is, err := primaryInstanceState(s, name)
@@ -1032,27 +1032,27 @@ type CheckResourceAttrWithFunc func(value string) error
 // type, a period (.), and the name label. The name for the below example
 // configuration would be "myprovider_thing.example".
 //
-//     resource "myprovider_thing" "example" { ... }
+//	resource "myprovider_thing" "example" { ... }
 //
 // For data sources, the name parameter is a combination of the keyword "data",
 // a period (.), the data source type, a period (.), and the name label. The
 // name for the below example configuration would be
 // "data.myprovider_thing.example".
 //
-//     data "myprovider_thing" "example" { ... }
+//	data "myprovider_thing" "example" { ... }
 //
 // The key parameter is an attribute path in Terraform CLI 0.11 and earlier
 // "flatmap" syntax. Keys start with the attribute name of a top-level
 // attribute. Use the following special key syntax to inspect list, map, and
 // set attributes:
 //
-//     - .{NUMBER}: List value at index, e.g. .0 to inspect the first element.
-//        Use the TestCheckTypeSet* and TestMatchTypeSet* functions instead
-//        for sets.
-//     - .{KEY}: Map value at key, e.g. .example to inspect the example key
-//        value.
-//     - .#: Number of elements in list or set.
-//     - .%: Number of elements in map.
+//   - .{NUMBER}: List value at index, e.g. .0 to inspect the first element.
+//     Use the TestCheckTypeSet* and TestMatchTypeSet* functions instead
+//     for sets.
+//   - .{KEY}: Map value at key, e.g. .example to inspect the example key
+//     value.
+//   - .#: Number of elements in list or set.
+//   - .%: Number of elements in map.
 //
 // The checkValueFunc parameter is a CheckResourceAttrWithFunc,
 // and it's provided with the attribute value to apply a custom checking logic,
@@ -1088,23 +1088,23 @@ func TestCheckResourceAttrWith(name, key string, checkValueFunc CheckResourceAtt
 // type, a period (.), and the name label. The name for the below example
 // configuration would be "myprovider_thing.example".
 //
-//     resource "myprovider_thing" "example" { ... }
+//	resource "myprovider_thing" "example" { ... }
 //
 // For data sources, the name parameter is a combination of the keyword "data",
 // a period (.), the data source type, a period (.), and the name label. The
 // name for the below example configuration would be
 // "data.myprovider_thing.example".
 //
-//     data "myprovider_thing" "example" { ... }
+//	data "myprovider_thing" "example" { ... }
 //
 // The key parameter is an attribute path in Terraform CLI 0.11 and earlier
 // "flatmap" syntax. Keys start with the attribute name of a top-level
 // attribute. Use the following special key syntax to inspect underlying
 // values of a list or map attribute:
 //
-//     - .{NUMBER}: List value at index, e.g. .0 to inspect the first element.
-//     - .{KEY}: Map value at key, e.g. .example to inspect the example key
-//        value.
+//   - .{NUMBER}: List value at index, e.g. .0 to inspect the first element.
+//   - .{KEY}: Map value at key, e.g. .example to inspect the example key
+//     value.
 //
 // While it is possible to check nested attributes under list and map
 // attributes using the special key syntax, checking a list, map, or set
@@ -1180,27 +1180,27 @@ func testCheckNoResourceAttr(is *terraform.InstanceState, name string, key strin
 // type, a period (.), and the name label. The name for the below example
 // configuration would be "myprovider_thing.example".
 //
-//     resource "myprovider_thing" "example" { ... }
+//	resource "myprovider_thing" "example" { ... }
 //
 // For data sources, the name parameter is a combination of the keyword "data",
 // a period (.), the data source type, a period (.), and the name label. The
 // name for the below example configuration would be
 // "data.myprovider_thing.example".
 //
-//     data "myprovider_thing" "example" { ... }
+//	data "myprovider_thing" "example" { ... }
 //
 // The key parameter is an attribute path in Terraform CLI 0.11 and earlier
 // "flatmap" syntax. Keys start with the attribute name of a top-level
 // attribute. Use the following special key syntax to inspect list, map, and
 // set attributes:
 //
-//     - .{NUMBER}: List value at index, e.g. .0 to inspect the first element.
-//        Use the TestCheckTypeSet* and TestMatchTypeSet* functions instead
-//        for sets.
-//     - .{KEY}: Map value at key, e.g. .example to inspect the example key
-//        value.
-//     - .#: Number of elements in list or set.
-//     - .%: Number of elements in map.
+//   - .{NUMBER}: List value at index, e.g. .0 to inspect the first element.
+//     Use the TestCheckTypeSet* and TestMatchTypeSet* functions instead
+//     for sets.
+//   - .{KEY}: Map value at key, e.g. .example to inspect the example key
+//     value.
+//   - .#: Number of elements in list or set.
+//   - .%: Number of elements in map.
 //
 // The value parameter is a compiled regular expression. A typical pattern is
 // using the regexp.MustCompile() function, which will automatically ensure the
@@ -1273,14 +1273,14 @@ func TestCheckModuleResourceAttrPtr(mp []string, name string, key string, value 
 // type, a period (.), and the name label. The name for the below example
 // configuration would be "myprovider_thing.example".
 //
-//     resource "myprovider_thing" "example" { ... }
+//	resource "myprovider_thing" "example" { ... }
 //
 // For data sources, the name parameter is a combination of the keyword "data",
 // a period (.), the data source type, a period (.), and the name label. The
 // name for the below example configuration would be
 // "data.myprovider_thing.example".
 //
-//     data "myprovider_thing" "example" { ... }
+//	data "myprovider_thing" "example" { ... }
 //
 // The first and second names may use any combination of managed resources
 // and/or data sources.
@@ -1290,13 +1290,13 @@ func TestCheckModuleResourceAttrPtr(mp []string, name string, key string, value 
 // attribute. Use the following special key syntax to inspect list, map, and
 // set attributes:
 //
-//     - .{NUMBER}: List value at index, e.g. .0 to inspect the first element.
-//        Use the TestCheckTypeSet* and TestMatchTypeSet* functions instead
-//        for sets.
-//     - .{KEY}: Map value at key, e.g. .example to inspect the example key
-//        value.
-//     - .#: Number of elements in list or set.
-//     - .%: Number of elements in map.
+//   - .{NUMBER}: List value at index, e.g. .0 to inspect the first element.
+//     Use the TestCheckTypeSet* and TestMatchTypeSet* functions instead
+//     for sets.
+//   - .{KEY}: Map value at key, e.g. .example to inspect the example key
+//     value.
+//   - .#: Number of elements in list or set.
+//   - .%: Number of elements in map.
 func TestCheckResourceAttrPair(nameFirst, keyFirst, nameSecond, keySecond string) TestCheckFunc {
 	return checkIfIndexesIntoTypeSetPair(keyFirst, keySecond, func(s *terraform.State) error {
 		isFirst, err := primaryInstanceState(s, nameFirst)
