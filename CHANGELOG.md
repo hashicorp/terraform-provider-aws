@@ -13,6 +13,7 @@ ENHANCEMENTS:
 * resource/aws_acm_certificate: Add `not_before` argument ([#26281](https://github.com/hashicorp/terraform-provider-aws/issues/26281))
 * resource/aws_chime_voice_connector_logging: Add `enable_media_metric_logs` argument ([#26283](https://github.com/hashicorp/terraform-provider-aws/issues/26283))
 * resource/aws_cloudfront_distribution: Support `http3` and `http2and3` as valid values for the `http_version` argument ([#26313](https://github.com/hashicorp/terraform-provider-aws/issues/26313))
+* resource/aws_inspector_assessment_template: Add `event_subscription` configuration block ([#26334](https://github.com/hashicorp/terraform-provider-aws/issues/26334))
 * resource/aws_lb_target_group: Add `ip_address_type` argument ([#26320](https://github.com/hashicorp/terraform-provider-aws/issues/26320))
 * resource/aws_opsworks_stack: Add plan-time validation for `custom_cookbooks_source.type` ([#26278](https://github.com/hashicorp/terraform-provider-aws/issues/26278))
 
