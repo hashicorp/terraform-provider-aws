@@ -48,6 +48,34 @@ func testAccPhoneNumber_basic(t *testing.T) {
 	})
 }
 
+func testAccPhoneNumber_description(t *testing.T) {
+	var v connect.DescribePhoneNumberOutput
+	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	description := "example description"
+	resourceName := "aws_connect_phone_number.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPhoneNumberDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPhoneNumberConfig_description(rName, description),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPhoneNumberExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "description", description),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccPhoneNumber_disappears(t *testing.T) {
 	var v connect.DescribePhoneNumberOutput
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
@@ -146,4 +174,17 @@ resource "aws_connect_phone_number" "test" {
   type         = "DID"
 }
 `)
+}
+
+func testAccPhoneNumberConfig_description(rName, description string) string {
+	return acctest.ConfigCompose(
+		testAccPhoneNumberConfig_base(rName),
+		fmt.Sprintf(`
+resource "aws_connect_phone_number" "test" {
+  target_arn   = aws_connect_instance.test.arn
+  country_code = "US"
+  type         = "DID"
+  description  = %[1]q
+}
+`, description))
 }
