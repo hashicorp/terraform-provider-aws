@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"context"
 	_ "embed"
 	"flag"
 	"fmt"
@@ -54,7 +55,12 @@ func main() {
 		Ui:          ui,
 	}
 
-	p := provider.Provider()
+	p, err := provider.New(context.Background())
+
+	if err != nil {
+		ui.Error(err.Error())
+		os.Exit(1)
+	}
 
 	if v := *dataSourceType; v != "" {
 		resource, ok := p.DataSourcesMap[v]
