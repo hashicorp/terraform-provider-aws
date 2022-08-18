@@ -22,12 +22,14 @@ func ResourcePhoneNumber() *schema.Resource {
 		CreateContext: resourcePhoneNumberCreate,
 		ReadContext:   resourcePhoneNumberRead,
 		UpdateContext: resourcePhoneNumberUpdate,
+		DeleteContext: resourcePhoneNumberDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(2 * time.Minute),
 			Update: schema.DefaultTimeout(2 * time.Minute),
+			Delete: schema.DefaultTimeout(2 * time.Minute),
 		},
 		CustomizeDiff: verify.SetTagsDiff,
 		Schema: map[string]*schema.Schema{
@@ -249,6 +251,32 @@ func resourcePhoneNumberUpdate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	return resourcePhoneNumberRead(ctx, d, meta)
+}
+
+func resourcePhoneNumberDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).ConnectConn
+
+	phoneNumberId := d.Id()
+
+	uuid, err := uuid.GenerateUUID()
+	if err != nil {
+		return diag.Errorf("generating uuid for ClientToken for Phone Number %s: %s", phoneNumberId, err)
+	}
+
+	_, err = conn.ReleasePhoneNumberWithContext(ctx, &connect.ReleasePhoneNumberInput{
+		ClientToken:   aws.String(uuid),
+		PhoneNumberId: aws.String(phoneNumberId),
+	})
+
+	if err != nil {
+		return diag.Errorf("deleting PhoneNumber (%s): %s", d.Id(), err)
+	}
+
+	if _, err := waitPhoneNumberDeleted(ctx, conn, d.Timeout(schema.TimeoutCreate), phoneNumberId); err != nil {
+		return diag.Errorf("waiting for Phone Number (%s) deletion: %s", phoneNumberId, err)
+	}
+
+	return nil
 }
 
 func flattenPhoneNumberStatus(apiObject *connect.PhoneNumberStatus) []interface{} {

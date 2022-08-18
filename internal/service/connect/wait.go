@@ -101,6 +101,23 @@ func waitPhoneNumberUpdated(ctx context.Context, conn *connect.Connect, timeout 
 	return nil, err
 }
 
+func waitPhoneNumberDeleted(ctx context.Context, conn *connect.Connect, timeout time.Duration, phoneNumberId string) (*connect.DescribePhoneNumberOutput, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{connect.PhoneNumberWorkflowStatusInProgress},
+		Target:  []string{connect.ErrCodeResourceNotFoundException},
+		Refresh: statusPhoneNumber(ctx, conn, phoneNumberId),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if v, ok := outputRaw.(*connect.DescribePhoneNumberOutput); ok {
+		return v, err
+	}
+
+	return nil, err
+}
+
 func waitVocabularyCreated(ctx context.Context, conn *connect.Connect, timeout time.Duration, instanceId, vocabularyId string) (*connect.DescribeVocabularyOutput, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{connect.VocabularyStateCreationInProgress},
