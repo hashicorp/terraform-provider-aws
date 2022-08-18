@@ -81,6 +81,26 @@ func waitPhoneNumberCreated(ctx context.Context, conn *connect.Connect, timeout 
 	return nil, err
 }
 
+func waitPhoneNumberUpdated(ctx context.Context, conn *connect.Connect, timeout time.Duration, phoneNumberId string) (*connect.DescribePhoneNumberOutput, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{connect.PhoneNumberWorkflowStatusInProgress},
+		Target:  []string{connect.PhoneNumberWorkflowStatusClaimed},
+		Refresh: statusPhoneNumber(ctx, conn, phoneNumberId),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*connect.DescribePhoneNumberOutput); ok {
+		if aws.StringValue(output.ClaimedPhoneNumberSummary.PhoneNumberStatus.Status) == connect.PhoneNumberWorkflowStatusFailed {
+			tfresource.SetLastError(err, errors.New(aws.StringValue(output.ClaimedPhoneNumberSummary.PhoneNumberStatus.Message)))
+		}
+		return output, err
+	}
+
+	return nil, err
+}
+
 func waitVocabularyCreated(ctx context.Context, conn *connect.Connect, timeout time.Duration, instanceId, vocabularyId string) (*connect.DescribeVocabularyOutput, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{connect.VocabularyStateCreationInProgress},

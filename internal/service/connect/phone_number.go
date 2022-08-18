@@ -21,11 +21,13 @@ func ResourcePhoneNumber() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: resourcePhoneNumberCreate,
 		ReadContext:   resourcePhoneNumberRead,
+		UpdateContext: resourcePhoneNumberUpdate,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(2 * time.Minute),
+			Update: schema.DefaultTimeout(2 * time.Minute),
 		},
 		CustomizeDiff: verify.SetTagsDiff,
 		Schema: map[string]*schema.Schema{
@@ -210,6 +212,43 @@ func resourcePhoneNumberRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	return nil
+}
+
+func resourcePhoneNumberUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).ConnectConn
+
+	phoneNumberId := d.Id()
+
+	uuid, err := uuid.GenerateUUID()
+	if err != nil {
+		return diag.Errorf("generating uuid for ClientToken for Phone Number %s: %s", phoneNumberId, err)
+	}
+
+	if d.HasChange("target_arn") {
+		_, err := conn.UpdatePhoneNumberWithContext(ctx, &connect.UpdatePhoneNumberInput{
+			ClientToken:   aws.String(uuid),
+			PhoneNumberId: aws.String(phoneNumberId),
+			TargetArn:     aws.String(d.Get("target_arn").(string)),
+		})
+
+		if err != nil {
+			return diag.Errorf("updating Phone Number (%s): %s", d.Id(), err)
+		}
+
+	}
+
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+			return diag.Errorf("updating tags: %s", err)
+		}
+	}
+
+	if _, err := waitPhoneNumberUpdated(ctx, conn, d.Timeout(schema.TimeoutCreate), d.Id()); err != nil {
+		return diag.Errorf("waiting for Phone Number (%s) update: %s", d.Id(), err)
+	}
+
+	return resourcePhoneNumberRead(ctx, d, meta)
 }
 
 func flattenPhoneNumberStatus(apiObject *connect.PhoneNumberStatus) []interface{} {
