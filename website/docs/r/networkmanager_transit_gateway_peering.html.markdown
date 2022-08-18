@@ -39,7 +39,6 @@ In addition to all arguments above, the following attributes are exported:
 * `peering_type` - The type of peering. This will be `TRANSIT_GATEWAY`.
 * `resource_arn` - The resource ARN of the peer.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
-* `transit_gateway_peering_attachment_id` - The ID of the transit gateway peering attachment.
 
 ## Import
 
