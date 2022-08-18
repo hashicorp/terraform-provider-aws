@@ -2,6 +2,7 @@ package connect_test
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -71,6 +72,37 @@ func testAccPhoneNumber_description(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccPhoneNumber_prefix(t *testing.T) {
+	var v connect.DescribePhoneNumberOutput
+	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	prefix := "+1"
+	resourceName := "aws_connect_phone_number.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPhoneNumberDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPhoneNumberConfig_prefix(rName, prefix),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPhoneNumberExists(resourceName, &v),
+					resource.TestCheckResourceAttrSet(resourceName, "phone_number"),
+					resource.TestMatchResourceAttr(resourceName, "phone_number", regexp.MustCompile(fmt.Sprintf("\\%s[0-9]{0,10}", prefix))),
+					resource.TestCheckResourceAttr(resourceName, "prefix", prefix),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"prefix"},
 			},
 		},
 	})
@@ -187,4 +219,17 @@ resource "aws_connect_phone_number" "test" {
   description  = %[1]q
 }
 `, description))
+}
+
+func testAccPhoneNumberConfig_prefix(rName, prefix string) string {
+	return acctest.ConfigCompose(
+		testAccPhoneNumberConfig_base(rName),
+		fmt.Sprintf(`
+resource "aws_connect_phone_number" "test" {
+  target_arn   = aws_connect_instance.test.arn
+  country_code = "US"
+  type         = "DID"
+  prefix       = %[1]q
+}
+`, prefix))
 }

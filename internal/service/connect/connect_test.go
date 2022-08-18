@@ -59,6 +59,7 @@ func TestAccConnect_serial(t *testing.T) {
 			"basic":       testAccPhoneNumber_basic,
 			"disappears":  testAccPhoneNumber_disappears,
 			"description": testAccPhoneNumber_description,
+			"prefix":      testAccPhoneNumber_prefix,
 		},
 		"Prompt": {
 			"dataSource_name": testAccPromptDataSource_name,
