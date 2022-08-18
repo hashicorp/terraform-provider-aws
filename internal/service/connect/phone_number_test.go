@@ -108,6 +108,41 @@ func testAccPhoneNumber_prefix(t *testing.T) {
 	})
 }
 
+func testAccPhoneNumber_targetARN(t *testing.T) {
+	var v connect.DescribePhoneNumberOutput
+	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	resourceName := "aws_connect_phone_number.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPhoneNumberDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPhoneNumberConfig_targetARN(rName, rName2, "first"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPhoneNumberExists(resourceName, &v),
+					resource.TestCheckResourceAttrPair(resourceName, "target_arn", "aws_connect_instance.test", "arn"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccPhoneNumberConfig_targetARN(rName, rName2, "second"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPhoneNumberExists(resourceName, &v),
+					resource.TestCheckResourceAttrPair(resourceName, "target_arn", "aws_connect_instance.test2", "arn"),
+				),
+			},
+		},
+	})
+}
+
 func testAccPhoneNumber_disappears(t *testing.T) {
 	var v connect.DescribePhoneNumberOutput
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
@@ -232,4 +267,27 @@ resource "aws_connect_phone_number" "test" {
   prefix       = %[1]q
 }
 `, prefix))
+}
+
+func testAccPhoneNumberConfig_targetARN(rName, rName2, selectTargetArn string) string {
+	return acctest.ConfigCompose(
+		testAccPhoneNumberConfig_base(rName),
+		fmt.Sprintf(`
+locals {
+  select_target_arn = %[2]q
+}
+
+resource "aws_connect_instance" "test2" {
+  identity_management_type = "CONNECT_MANAGED"
+  inbound_calls_enabled    = true
+  instance_alias           = %[1]q
+  outbound_calls_enabled   = true
+}
+
+resource "aws_connect_phone_number" "test" {
+  target_arn   = local.select_target_arn == "first" ? aws_connect_instance.test.arn : aws_connect_instance.test2.arn
+  country_code = "US"
+  type         = "DID"
+}
+`, rName2, selectTargetArn))
 }
