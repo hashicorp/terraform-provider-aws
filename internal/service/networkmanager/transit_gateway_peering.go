@@ -75,6 +75,10 @@ func ResourceTransitGatewayPeering() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
+			"transit_gateway_peering_attachment_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
