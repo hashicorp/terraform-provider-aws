@@ -143,7 +143,7 @@ func testAccPhoneNumber_targetARN(t *testing.T) {
 	})
 }
 
-func TestAccPhoneNumber_tags(t *testing.T) {
+func testAccPhoneNumber_tags(t *testing.T) {
 	var v connect.DescribePhoneNumberOutput
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	resourceName := "aws_connect_phone_number.test"
