@@ -15,7 +15,7 @@ Provides an Amazon Managed Grafana Workspace Api Key resource.
 ### Basic configuration
 
 ```terraform
-resource "aws_grafana_workspace_api_Key" "example" {
+resource "aws_grafana_workspace_api_key" "example" {
   workspace_id    = aws_grafana_workspace.example.id
   key_name        = "example-editor-key"
   key_role        = "EDITOR"
