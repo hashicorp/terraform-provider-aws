@@ -18,6 +18,10 @@ const (
 
 	botAssociationCreateTimeout = 5 * time.Minute
 
+	phoneNumberCreatedTimeout = 2 * time.Minute
+	phoneNumberUpdatedTimeout = 2 * time.Minute
+	phoneNumberDeletedTimeout = 2 * time.Minute
+
 	vocabularyCreatedTimeout = 5 * time.Minute
 	// It takes about 90 minutes for Amazon Connect to delete a vocabulary.
 	// https://docs.aws.amazon.com/connect/latest/adminguide/add-custom-vocabulary.html

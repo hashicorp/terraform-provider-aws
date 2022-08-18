@@ -3,7 +3,6 @@ package connect
 import (
 	"context"
 	"log"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/connect"
@@ -27,9 +26,9 @@ func ResourcePhoneNumber() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(2 * time.Minute),
-			Update: schema.DefaultTimeout(2 * time.Minute),
-			Delete: schema.DefaultTimeout(2 * time.Minute),
+			Create: schema.DefaultTimeout(phoneNumberCreatedTimeout),
+			Update: schema.DefaultTimeout(phoneNumberUpdatedTimeout),
+			Delete: schema.DefaultTimeout(phoneNumberDeletedTimeout),
 		},
 		CustomizeDiff: verify.SetTagsDiff,
 		Schema: map[string]*schema.Schema{
