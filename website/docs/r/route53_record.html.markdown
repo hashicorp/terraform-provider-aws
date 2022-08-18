@@ -147,13 +147,13 @@ Alias records support the following:
 * `zone_id` - (Required) Hosted zone ID for a CloudFront distribution, S3 bucket, ELB, or Route 53 hosted zone. See [`resource_elb.zone_id`](/docs/providers/aws/r/elb.html#zone_id) for example.
 * `evaluate_target_health` - (Required) Set to `true` if you want Route 53 to determine whether to respond to DNS queries using this resource record set by checking the health of the resource record set. Some resources have special requirements, see [related part of documentation](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/resource-record-sets-values.html#rrsets-values-alias-evaluate-target-health).
 
-### Failover routing policies
+### Failover Routing Policy
 
 Failover routing policiessupport the following:
 
 * `type` - (Required) `PRIMARY` or `SECONDARY`. A `PRIMARY` record will be served if its healthcheck is passing, otherwise the `SECONDARY` will be served. See http://docs.aws.amazon.com/Route53/latest/DeveloperGuide/dns-failover-configuring-options.html#dns-failover-failover-rrsets
 
-### Geolocation routing policies
+### Geolocation Routing Policy
 
 Geolocation routing policies support the following:
 
@@ -161,13 +161,13 @@ Geolocation routing policies support the following:
 * `country` - A two-character country code or `*` to indicate a default resource record set.
 * `subdivision` - (Optional) A subdivision code for a country.
 
-### Latency routing policies
+### Latency Routing Policy
 
 Latency routing policies support the following:
 
 * `region` - (Required) An AWS region from which to measure latency. See http://docs.aws.amazon.com/Route53/latest/DeveloperGuide/routing-policy.html#routing-policy-latency
 
-### Weighted routing policies
+### Weighted Routing Policy
 
 Weighted routing policies support the following:
 
