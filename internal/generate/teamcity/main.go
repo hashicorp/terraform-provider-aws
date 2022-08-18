@@ -6,8 +6,10 @@ package main
 import (
 	"bytes"
 	"encoding/csv"
+	"errors"
 	"fmt"
 	"io"
+	"io/fs"
 	"log"
 	"os"
 	"sort"
@@ -76,6 +78,12 @@ func main() {
 
 		if l[names.ColProviderPackageActual] != "" {
 			p = l[names.ColProviderPackageActual]
+		}
+
+		// TODO: Remove this when we have a method for scheduling specific services
+		if p == "kendra" || p == "kinesisanalytics" || p == "kinesisanalyticsv2" {
+			log.Printf("Skipping service %q...", p)
+			continue
 		}
 
 		if _, err := os.Stat(fmt.Sprintf("../../service/%s", p)); err != nil || errors.Is(err, fs.ErrNotExist) {
