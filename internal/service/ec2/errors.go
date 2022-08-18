@@ -75,7 +75,7 @@ const (
 	errCodeInvalidSubnetIdNotFound                        = "InvalidSubnetId.NotFound"
 	errCodeInvalidTransitGatewayAttachmentIDNotFound      = "InvalidTransitGatewayAttachmentID.NotFound"
 	errCodeInvalidTransitGatewayConnectPeerIDNotFound     = "InvalidTransitGatewayConnectPeerID.NotFound"
-	errCodeInvalidTransitGatewayPolicyTableIDNotFound     = "InvalidTransitGatewayPolicyTableId.NotFound"
+	errCodeInvalidTransitGatewayPolicyTableIdNotFound     = "InvalidTransitGatewayPolicyTableId.NotFound"
 	errCodeInvalidTransitGatewayIDNotFound                = "InvalidTransitGatewayID.NotFound"
 	errCodeInvalidTransitGatewayMulticastDomainIdNotFound = "InvalidTransitGatewayMulticastDomainId.NotFound"
 	errCodeInvalidVolumeNotFound                          = "InvalidVolume.NotFound"

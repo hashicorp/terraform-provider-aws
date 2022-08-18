@@ -3972,7 +3972,7 @@ func FindTransitGatewayPolicyTables(conn *ec2.EC2, input *ec2.DescribeTransitGat
 		return !lastPage
 	})
 
-	if tfawserr.ErrCodeEquals(err, errCodeInvalidTransitGatewayPolicyTableIDNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidTransitGatewayPolicyTableIdNotFound) {
 		return nil, &resource.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -4026,6 +4026,13 @@ func FindTransitGatewayPolicyTableByID(conn *ec2.EC2, id string) (*ec2.TransitGa
 
 	if err != nil {
 		return nil, err
+	}
+
+	// Eventual consistency check.
+	if aws.StringValue(output.TransitGatewayPolicyTableId) != id {
+		return nil, &resource.NotFoundError{
+			LastRequest: input,
+		}
 	}
 
 	return output, nil
@@ -4156,7 +4163,7 @@ func FindTransitGatewayPolicyTableAssociations(conn *ec2.EC2, input *ec2.GetTran
 		return !lastPage
 	})
 
-	if tfawserr.ErrCodeEquals(err, errCodeInvalidTransitGatewayPolicyTableIDNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidTransitGatewayPolicyTableIdNotFound) {
 		return nil, &resource.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
