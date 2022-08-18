@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccWorkspaceApiKey_basic(t *testing.T) {
+func testAccWorkspaceApiKey_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_grafana_workspace_api_key.test"
 	workspaceResourceName := "aws_grafana_workspace.test"
