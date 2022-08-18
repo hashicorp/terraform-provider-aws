@@ -550,6 +550,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_ec2_serial_console_access":                  ec2.DataSourceSerialConsoleAccess(),
 			"aws_ec2_spot_price":                             ec2.DataSourceSpotPrice(),
 			"aws_ec2_transit_gateway":                        ec2.DataSourceTransitGateway(),
+			"aws_ec2_transit_gateway_attachment":             ec2.DataSourceTransitGatewayAttachment(),
 			"aws_ec2_transit_gateway_connect":                ec2.DataSourceTransitGatewayConnect(),
 			"aws_ec2_transit_gateway_connect_peer":           ec2.DataSourceTransitGatewayConnectPeer(),
 			"aws_ec2_transit_gateway_dx_gateway_attachment":  ec2.DataSourceTransitGatewayDxGatewayAttachment(),
