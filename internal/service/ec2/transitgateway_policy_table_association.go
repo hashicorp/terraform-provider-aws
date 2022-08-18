@@ -16,9 +16,9 @@ import (
 
 func ResourceTransitGatewayPolicyTableAssociation() *schema.Resource {
 	return &schema.Resource{
-		Create: ResourceTransitGatewayPolicyTableAssociationCreate,
-		Read:   ResourceTransitGatewayPolicyTableAssociationRead,
-		Delete: ResourceTransitGatewayPolicyTableAssociationDelete,
+		Create: resourceTransitGatewayPolicyTableAssociationCreate,
+		Read:   resourceTransitGatewayPolicyTableAssociationRead,
+		Delete: resourceTransitGatewayPolicyTableAssociationDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -53,7 +53,7 @@ func ResourceTransitGatewayPolicyTableAssociation() *schema.Resource {
 	}
 }
 
-func ResourceTransitGatewayPolicyTableAssociationCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceTransitGatewayPolicyTableAssociationCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	transitGatewayAttachmentID := d.Get("transit_gateway_attachment_id").(string)
@@ -76,10 +76,10 @@ func ResourceTransitGatewayPolicyTableAssociationCreate(d *schema.ResourceData, 
 		return fmt.Errorf("waiting for EC2 Transit Gateway Policy Table Association (%s) create: %w", d.Id(), err)
 	}
 
-	return ResourceTransitGatewayPolicyTableAssociationRead(d, meta)
+	return resourceTransitGatewayPolicyTableAssociationRead(d, meta)
 }
 
-func ResourceTransitGatewayPolicyTableAssociationRead(d *schema.ResourceData, meta interface{}) error {
+func resourceTransitGatewayPolicyTableAssociationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	transitGatewayPolicyTableID, transitGatewayAttachmentID, err := TransitGatewayPolicyTableAssociationParseResourceID(d.Id())
@@ -102,14 +102,14 @@ func ResourceTransitGatewayPolicyTableAssociationRead(d *schema.ResourceData, me
 
 	d.Set("resource_id", transitGatewayPolicyTableAssociation.ResourceId)
 	d.Set("resource_type", transitGatewayPolicyTableAssociation.ResourceType)
-	d.Set("transit_gateway_attachment_id", transitGatewayPolicyTableAssociation.TransitGatewayAttachmentId)
 	d.Set("state", transitGatewayPolicyTableAssociation.State)
+	d.Set("transit_gateway_attachment_id", transitGatewayPolicyTableAssociation.TransitGatewayAttachmentId)
 	d.Set("transit_gateway_policy_table_id", transitGatewayPolicyTableAssociation)
 
 	return nil
 }
 
-func ResourceTransitGatewayPolicyTableAssociationDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceTransitGatewayPolicyTableAssociationDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	transitGatewayPolicyTableID, transitGatewayAttachmentID, err := TransitGatewayPolicyTableAssociationParseResourceID(d.Id())
@@ -134,58 +134,6 @@ func ResourceTransitGatewayPolicyTableAssociationDelete(d *schema.ResourceData, 
 
 	if _, err := WaitTransitGatewayPolicyTableAssociationDeleted(conn, transitGatewayPolicyTableID, transitGatewayAttachmentID); err != nil {
 		return fmt.Errorf("waiting for EC2 Transit Gateway Policy Table Association (%s) delete: %w", d.Id(), err)
-	}
-
-	return nil
-}
-
-func transitGatewayPolicyTableAssociationUpdate(conn *ec2.EC2, transitGatewayPolicyTableID, transitGatewayAttachmentID string, associate bool) error {
-	id := TransitGatewayPolicyTableAssociationCreateResourceID(transitGatewayPolicyTableID, transitGatewayAttachmentID)
-	_, err := FindTransitGatewayPolicyTableAssociationByTwoPartKey(conn, transitGatewayPolicyTableID, transitGatewayAttachmentID)
-
-	if tfresource.NotFound(err) {
-		if associate {
-			input := &ec2.AssociateTransitGatewayPolicyTableInput{
-				TransitGatewayAttachmentId:  aws.String(transitGatewayAttachmentID),
-				TransitGatewayPolicyTableId: aws.String(transitGatewayPolicyTableID),
-			}
-
-			_, err := conn.AssociateTransitGatewayPolicyTable(input)
-
-			if err != nil {
-				return fmt.Errorf("creating EC2 Transit Gateway Policy Table Association (%s): %w", id, err)
-			}
-
-			if _, err := WaitTransitGatewayPolicyTableAssociationCreated(conn, transitGatewayPolicyTableID, transitGatewayAttachmentID); err != nil {
-				return fmt.Errorf("waiting for EC2 Transit Gateway Policy Table Association (%s) create: %w", id, err)
-			}
-		}
-
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("reading EC2 Transit Gateway Policy Table Association (%s): %w", id, err)
-	}
-
-	if !associate {
-		// Disassociation must be done only on already associated state.
-		if _, err := WaitTransitGatewayPolicyTableAssociationCreated(conn, transitGatewayPolicyTableID, transitGatewayAttachmentID); err != nil {
-			return fmt.Errorf("waiting for EC2 Transit Gateway Policy Table Association (%s) create: %w", id, err)
-		}
-
-		input := &ec2.DisassociateTransitGatewayPolicyTableInput{
-			TransitGatewayAttachmentId:  aws.String(transitGatewayAttachmentID),
-			TransitGatewayPolicyTableId: aws.String(transitGatewayPolicyTableID),
-		}
-
-		if _, err := conn.DisassociateTransitGatewayPolicyTable(input); err != nil {
-			return fmt.Errorf("deleting EC2 Transit Gateway Policy Table Association (%s): %w", id, err)
-		}
-
-		if _, err := WaitTransitGatewayPolicyTableAssociationDeleted(conn, transitGatewayPolicyTableID, transitGatewayAttachmentID); err != nil {
-			return fmt.Errorf("waiting for EC2 Transit Gateway Policy Table Association (%s) delete: %w", id, err)
-		}
 	}
 
 	return nil

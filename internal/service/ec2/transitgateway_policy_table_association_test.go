@@ -131,24 +131,7 @@ func testAccCheckTransitGatewayPolicyTableAssociationDestroy(s *terraform.State)
 }
 
 func testAccTransitGatewayPolicyTableAssociationConfig_basic(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test" {
-  cidr_block = "10.0.0.0/24"
-  vpc_id     = aws_vpc.test.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 1), fmt.Sprintf(`
 resource "aws_ec2_transit_gateway" "test" {
   tags = {
     Name = %[1]q
@@ -156,7 +139,7 @@ resource "aws_ec2_transit_gateway" "test" {
 }
 
 resource "aws_ec2_transit_gateway_vpc_attachment" "test" {
-  subnet_ids                                      = [aws_subnet.test.id]
+  subnet_ids                                      = aws_subnet.test[*].id
   transit_gateway_id                              = aws_ec2_transit_gateway.test.id
   vpc_id                                          = aws_vpc.test.id
 
@@ -177,5 +160,5 @@ resource "aws_ec2_transit_gateway_policy_table_association" "test" {
   transit_gateway_attachment_id   = aws_ec2_transit_gateway_vpc_attachment.test.id
   transit_gateway_policy_table_id = aws_ec2_transit_gateway_policy_table.test.id
 }
-`, rName)
+`, rName))
 }

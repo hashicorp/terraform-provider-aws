@@ -84,6 +84,16 @@ func TestAccTransitGateway_serial(t *testing.T) {
 			"DifferentAccount": testAccTransitGatewayPeeringAttachmentAccepter_differentAccount,
 			"Tags":             testAccTransitGatewayPeeringAttachmentAccepter_Tags,
 		},
+		"PolicyTable": {
+			"basic":                    testAccTransitGatewayPolicyTable_basic,
+			"disappears":               testAccTransitGatewayPolicyTable_disappears,
+			"disappearsTransitGateway": testAccTransitGatewayPolicyTable_disappears_TransitGateway,
+			"Tags":                     testAccTransitGatewayPolicyTable_Tags,
+		},
+		"PolicyTableAssociation": {
+			"basic":      testAccTransitGatewayPolicyTableAssociation_basic,
+			"disappears": testAccTransitGatewayPolicyTableAssociation_disappears,
+		},
 		"PrefixListReference": {
 			"basic":                      testAccTransitGatewayPrefixListReference_basic,
 			"disappears":                 testAccTransitGatewayPrefixListReference_disappears,
@@ -96,16 +106,6 @@ func TestAccTransitGateway_serial(t *testing.T) {
 			"blackhole":                          testAccTransitGatewayRoute_blackhole,
 			"disappears":                         testAccTransitGatewayRoute_disappears,
 			"disappearsTransitGatewayAttachment": testAccTransitGatewayRoute_disappears_TransitGatewayAttachment,
-		},
-		"PolicyTable": {
-			"basic":                    testAccTransitGatewayPolicyTable_basic,
-			"disappears":               testAccTransitGatewayPolicyTable_disappears,
-			"disappearsTransitGateway": testAccTransitGatewayPolicyTable_disappears_TransitGateway,
-			"Tags":                     testAccTransitGatewayPolicyTable_Tags,
-		},
-		"PolicyTableAssociation": {
-			"basic":      testAccTransitGatewayPolicyTableAssociation_basic,
-			"disappears": testAccTransitGatewayPolicyTableAssociation_disappears,
 		},
 		"RouteTable": {
 			"basic":                    testAccTransitGatewayRouteTable_basic,
