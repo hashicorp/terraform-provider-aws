@@ -172,10 +172,8 @@ func testAccCheckScramSecretAssociationExists(resourceName string) resource.Test
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaConn
 		_, err := tfkafka.FindScramSecrets(conn, rs.Primary.ID)
-		if err != nil {
-			return err
-		}
-		return nil
+
+		return err
 	}
 }
 

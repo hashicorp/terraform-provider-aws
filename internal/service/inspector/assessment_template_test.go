@@ -216,11 +216,8 @@ func testAccCheckTemplateDisappears(v *inspector.AssessmentTemplate) resource.Te
 		_, err := conn.DeleteAssessmentTemplate(&inspector.DeleteAssessmentTemplateInput{
 			AssessmentTemplateArn: v.Arn,
 		})
-		if err != nil {
-			return err
-		}
 
-		return nil
+		return err
 	}
 }
 

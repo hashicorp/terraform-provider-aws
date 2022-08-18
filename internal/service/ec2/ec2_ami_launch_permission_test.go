@@ -221,11 +221,7 @@ func testAccCheckAMILaunchPermissionExists(n string) resource.TestCheckFunc {
 
 		_, err = tfec2.FindImageLaunchPermission(context.Background(), conn, imageID, accountID, group, organizationARN, organizationalUnitARN)
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 

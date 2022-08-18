@@ -130,11 +130,7 @@ func testAccCheckPullThroughCacheRuleExists(n string) resource.TestCheckFunc {
 
 		_, err := tfecr.FindPullThroughCacheRuleByRepositoryPrefix(context.Background(), conn, rs.Primary.ID)
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 

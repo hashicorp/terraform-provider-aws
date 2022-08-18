@@ -594,11 +594,7 @@ func testAccCheckFunctionEventInvokeExistsConfig(resourceName string) resource.T
 
 		_, err = conn.GetFunctionEventInvokeConfig(input)
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 

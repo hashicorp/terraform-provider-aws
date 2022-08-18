@@ -186,11 +186,7 @@ func testAccCheckTrustAnchorExists(n string) resource.TestCheckFunc {
 
 		_, err := tfrolesanywhere.FindTrustAnchorByID(context.Background(), conn, rs.Primary.ID)
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 

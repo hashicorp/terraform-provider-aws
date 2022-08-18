@@ -88,11 +88,7 @@ func testAccDomainServiceAccessPolicyExists(n string) resource.TestCheckFunc {
 
 		_, err := tfcloudsearch.FindAccessPolicyByName(conn, rs.Primary.ID)
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 

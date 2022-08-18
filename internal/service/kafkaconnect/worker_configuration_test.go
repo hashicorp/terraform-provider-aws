@@ -84,11 +84,7 @@ func testAccCheckWorkerConfigurationExists(n string) resource.TestCheckFunc {
 
 		_, err := tfkafkaconnect.FindWorkerConfigurationByARN(context.Background(), conn, rs.Primary.ID)
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 

@@ -165,11 +165,7 @@ func testAccCheckLFTagExists(name string) resource.TestCheckFunc {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).LakeFormationConn
 		_, err = conn.GetLFTag(input)
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 

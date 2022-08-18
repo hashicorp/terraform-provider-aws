@@ -164,11 +164,7 @@ func testAccCheckApprovalRuleTemplateExists(name string) resource.TestCheckFunc 
 			ApprovalRuleTemplateName: aws.String(rs.Primary.ID),
 		})
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 

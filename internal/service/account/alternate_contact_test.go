@@ -192,11 +192,7 @@ func testAccCheckAlternateContactExists(n string) resource.TestCheckFunc {
 
 		_, err = tfaccount.FindAlternateContactByAccountIDAndContactType(ctx, conn, accountID, contactType)
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 

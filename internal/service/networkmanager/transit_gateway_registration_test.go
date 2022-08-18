@@ -178,11 +178,7 @@ func testAccCheckTransitGatewayRegistrationExists(n string) resource.TestCheckFu
 
 		_, err = tfnetworkmanager.FindTransitGatewayRegistrationByTwoPartKey(context.Background(), conn, globalNetworkID, transitGatewayARN)
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 func testAccTransitGatewayRegistrationConfig_basic(rName string) string {

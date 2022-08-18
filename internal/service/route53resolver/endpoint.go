@@ -307,14 +307,9 @@ func resourceEndpointDelete(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error deleting Route53 Resolver endpoint (%s): %s", d.Id(), err)
 	}
 
-	err = EndpointWaitUntilTargetState(conn, d.Id(), d.Timeout(schema.TimeoutDelete),
+	return EndpointWaitUntilTargetState(conn, d.Id(), d.Timeout(schema.TimeoutDelete),
 		[]string{route53resolver.ResolverEndpointStatusDeleting},
 		[]string{EndpointStatusDeleted})
-	if err != nil {
-		return err
-	}
-
-	return nil
 }
 
 func endpointRefresh(conn *route53resolver.Route53Resolver, epId string) resource.StateRefreshFunc {

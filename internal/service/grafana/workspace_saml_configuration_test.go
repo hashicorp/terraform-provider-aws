@@ -160,10 +160,6 @@ func testAccCheckWorkspaceSAMLConfigurationExists(name string) resource.TestChec
 
 		_, err := tfgrafana.FindSamlConfigurationByID(conn, rs.Primary.ID)
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }

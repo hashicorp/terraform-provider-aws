@@ -153,11 +153,7 @@ func testAccCheckTypeExists(resourceName string) resource.TestCheckFunc {
 
 		_, err := tfcloudformation.FindTypeByARN(context.Background(), conn, rs.Primary.ID)
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 
