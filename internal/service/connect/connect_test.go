@@ -58,6 +58,7 @@ func TestAccConnect_serial(t *testing.T) {
 		"PhoneNumber": {
 			"basic":       testAccPhoneNumber_basic,
 			"disappears":  testAccPhoneNumber_disappears,
+			"tags":        TestAccPhoneNumber_tags,
 			"description": testAccPhoneNumber_description,
 			"prefix":      testAccPhoneNumber_prefix,
 			"targetARN":   testAccPhoneNumber_targetARN,

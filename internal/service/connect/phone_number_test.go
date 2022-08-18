@@ -143,6 +143,51 @@ func testAccPhoneNumber_targetARN(t *testing.T) {
 	})
 }
 
+func TestAccPhoneNumber_tags(t *testing.T) {
+	var v connect.DescribePhoneNumberOutput
+	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	resourceName := "aws_connect_phone_number.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPhoneNumberDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPhoneNumberConfig_tags1(rName, "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPhoneNumberExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccPhoneNumberConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPhoneNumberExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccPhoneNumberConfig_tags1(rName, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPhoneNumberExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+		},
+	})
+}
+
 func testAccPhoneNumber_disappears(t *testing.T) {
 	var v connect.DescribePhoneNumberOutput
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
@@ -290,4 +335,37 @@ resource "aws_connect_phone_number" "test" {
   type         = "DID"
 }
 `, rName2, selectTargetArn))
+}
+
+func testAccPhoneNumberConfig_tags1(rName, tag, value string) string {
+	return acctest.ConfigCompose(
+		testAccPhoneNumberConfig_base(rName),
+		fmt.Sprintf(`
+resource "aws_connect_phone_number" "test" {
+  target_arn   = aws_connect_instance.test.arn
+  country_code = "US"
+  type         = "DID"
+
+  tags = {
+    %[1]q = %[2]q
+  }
+}
+`, tag, value))
+}
+
+func testAccPhoneNumberConfig_tags2(rName, tag1, value1, tag2, value2 string) string {
+	return acctest.ConfigCompose(
+		testAccPhoneNumberConfig_base(rName),
+		fmt.Sprintf(`
+resource "aws_connect_phone_number" "test" {
+  target_arn   = aws_connect_instance.test.arn
+  country_code = "US"
+  type         = "DID"
+
+  tags = {
+    %[1]q = %[2]q
+    %[3]q = %[4]q
+  }
+}
+`, tag1, value1, tag2, value2))
 }
