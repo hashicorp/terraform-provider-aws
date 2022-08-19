@@ -138,11 +138,7 @@ func testAccCheckNetworkInterfaceSGAttachmentExists(resourceName string) resourc
 
 		_, err := tfec2.FindNetworkInterfaceSecurityGroup(conn, rs.Primary.Attributes["network_interface_id"], rs.Primary.Attributes["security_group_id"])
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 

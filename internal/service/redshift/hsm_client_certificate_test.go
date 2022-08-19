@@ -148,11 +148,7 @@ func testAccCheckHSMClientCertificateExists(name string) resource.TestCheckFunc 
 
 		_, err := tfredshift.FindHSMClientCertificateByID(conn, rs.Primary.ID)
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 

@@ -122,6 +122,63 @@ func TestAccInspectorAssessmentTemplate_tags(t *testing.T) {
 	})
 }
 
+func TestAccInspectorAssessmentTemplate_eventSubscription(t *testing.T) {
+	var v inspector.AssessmentTemplate
+	resourceName := "aws_inspector_assessment_template.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	event1 := "ASSESSMENT_RUN_STARTED"
+	event1Updated := "ASSESSMENT_RUN_COMPLETED"
+	event2 := "ASSESSMENT_RUN_STATE_CHANGED"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, inspector.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTemplateDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAssessmentTemplateConfig_eventSubscription(rName, event1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTemplateExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "event_subscription.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "event_subscription.0.event", event1),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAssessmentTemplateConfig_eventSubscription(rName, event1Updated),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTemplateExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "event_subscription.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "event_subscription.0.event", event1Updated),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAssessmentTemplateConfig_eventSubscriptionMultiple(rName, event1, event2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTemplateExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "event_subscription.#", "2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckTemplateDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).InspectorConn
 
@@ -159,11 +216,8 @@ func testAccCheckTemplateDisappears(v *inspector.AssessmentTemplate) resource.Te
 		_, err := conn.DeleteAssessmentTemplate(&inspector.DeleteAssessmentTemplateInput{
 			AssessmentTemplateArn: v.Arn,
 		})
-		if err != nil {
-			return err
-		}
 
-		return nil
+		return err
 	}
 }
 
@@ -257,4 +311,82 @@ resource "aws_inspector_assessment_template" "test" {
   }
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+}
+
+func testAccAssessmentTemplateBase_eventSubscription(rName string) string {
+	return acctest.ConfigCompose(
+		testAccTemplateAssessmentBase(rName),
+		fmt.Sprintf(`
+resource "aws_sns_topic" "test" {
+  name = %[1]q
+}
+
+data "aws_iam_policy_document" "test" {
+  statement {
+    effect = "Allow"
+
+    principals {
+      type        = "AWS"
+      identifiers = ["*"]
+    }
+
+    actions = [
+      "SNS:Publish"
+    ]
+
+    resources = [aws_sns_topic.test.arn]
+  }
+}
+
+resource "aws_sns_topic_policy" "test" {
+  arn    = aws_sns_topic.test.arn
+  policy = data.aws_iam_policy_document.test.json
+}
+		`, rName),
+	)
+}
+
+func testAccAssessmentTemplateConfig_eventSubscription(rName, event string) string {
+	return acctest.ConfigCompose(
+		testAccAssessmentTemplateBase_eventSubscription(rName),
+		fmt.Sprintf(`
+resource "aws_inspector_assessment_template" "test" {
+  name       = %[1]q
+  target_arn = aws_inspector_assessment_target.test.arn
+  duration   = 3600
+
+  rules_package_arns = data.aws_inspector_rules_packages.available.arns
+
+  event_subscription {
+    event     = %[2]q
+    topic_arn = aws_sns_topic.test.arn
+  }
+}
+		`, rName, event),
+	)
+}
+
+func testAccAssessmentTemplateConfig_eventSubscriptionMultiple(rName, event1, event2 string) string {
+	return acctest.ConfigCompose(
+		testAccAssessmentTemplateBase_eventSubscription(rName),
+		fmt.Sprintf(`
+resource "aws_inspector_assessment_template" "test" {
+  name       = %[1]q
+  target_arn = aws_inspector_assessment_target.test.arn
+  duration   = 3600
+
+  rules_package_arns = data.aws_inspector_rules_packages.available.arns
+
+  event_subscription {
+    event     = %[2]q
+    topic_arn = aws_sns_topic.test.arn
+  }
+
+  event_subscription {
+    event     = %[3]q
+    topic_arn = aws_sns_topic.test.arn
+  }
+}
+		`, rName, event1, event2),
+	)
 }

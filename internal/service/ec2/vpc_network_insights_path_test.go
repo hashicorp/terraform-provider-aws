@@ -228,11 +228,7 @@ func testAccCheckNetworkInsightsPathExists(n string) resource.TestCheckFunc {
 
 		_, err := tfec2.FindNetworkInsightsPathByID(conn, rs.Primary.ID)
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 

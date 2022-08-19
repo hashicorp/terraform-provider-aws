@@ -127,11 +127,7 @@ func testAccCheckSnapshotScheduleAssociationExists(n string) resource.TestCheckF
 
 		_, _, err := tfredshift.FindScheduleAssociationById(conn, rs.Primary.ID)
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 

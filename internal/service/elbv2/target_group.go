@@ -256,6 +256,13 @@ func ResourceTargetGroup() *schema.Resource {
 					},
 				},
 			},
+			"ip_address_type": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice(elbv2.TargetGroupIpAddressTypeEnum_Values(), false),
+			},
 			"target_type": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -318,6 +325,12 @@ func resourceTargetGroupCreate(d *schema.ResourceData, meta interface{}) error {
 			params.ProtocolVersion = aws.String(d.Get("protocol_version").(string))
 		}
 		params.VpcId = aws.String(d.Get("vpc_id").(string))
+
+		if d.Get("target_type").(string) == elbv2.TargetTypeEnumIp {
+			if _, ok := d.GetOk("ip_address_type"); ok {
+				params.IpAddressType = aws.String(d.Get("ip_address_type").(string))
+			}
+		}
 	}
 
 	if healthChecks := d.Get("health_check").([]interface{}); len(healthChecks) == 1 {

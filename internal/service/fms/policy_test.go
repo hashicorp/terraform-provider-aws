@@ -256,11 +256,7 @@ func testAccCheckPolicyExists(n string) resource.TestCheckFunc {
 
 		_, err := tffms.FindPolicyByID(conn, rs.Primary.ID)
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 

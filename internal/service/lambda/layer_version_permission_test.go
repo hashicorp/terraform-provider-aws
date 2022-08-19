@@ -250,11 +250,7 @@ func testAccCheckLayerVersionPermissionExists(n string) resource.TestCheckFunc {
 			VersionNumber: aws.Int64(versionNumber),
 		})
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 
