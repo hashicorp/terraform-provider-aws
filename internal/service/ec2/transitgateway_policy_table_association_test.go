@@ -182,7 +182,7 @@ resource "aws_networkmanager_transit_gateway_peering" "test" {
     Name = %[1]q
   }
 
-  depends_on =[aws_ec2_transit_gateway_policy_table.test]
+  depends_on = [aws_ec2_transit_gateway_policy_table.test]
 }
 
 resource "aws_ec2_transit_gateway_policy_table_association" "test" {
