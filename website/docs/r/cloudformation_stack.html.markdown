@@ -76,6 +76,13 @@ In addition to all arguments above, the following attributes are exported:
 * `outputs` - A map of outputs from the stack.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
+## Timeouts
+
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+
+- `create` - (Default `30m`)
+- `update` - (Default `30m`)
+- `delete` - (Default `30m`)
 
 ## Import
 
@@ -84,12 +91,3 @@ Cloudformation Stacks can be imported using the `name`, e.g.,
 ```
 $ terraform import aws_cloudformation_stack.stack networking-stack
 ```
-
-## Timeouts
-
-`aws_cloudformation_stack` provides the following
-[Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
-
-- `create` - (Default `30 minutes`) Used for Creating Stacks
-- `update` - (Default `30 minutes`) Used for Stack modifications
-- `delete` - (Default `30 minutes`) Used for destroying stacks.

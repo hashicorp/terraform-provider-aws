@@ -174,11 +174,7 @@ func testAccCheckReplicationTaskExists(n string) resource.TestCheckFunc {
 
 		_, err := tfdms.FindReplicationTaskByID(conn, rs.Primary.ID)
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 

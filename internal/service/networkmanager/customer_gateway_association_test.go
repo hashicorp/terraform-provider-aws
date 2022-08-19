@@ -117,7 +117,7 @@ func testAccCheckCustomerGatewayAssociationDestroy(s *terraform.State) error {
 			return err
 		}
 
-		_, err = tfnetworkmanager.FindCustomerGatewayAssociationByTwoPartKey(context.TODO(), conn, globalNetworkID, customerGatewayARN)
+		_, err = tfnetworkmanager.FindCustomerGatewayAssociationByTwoPartKey(context.Background(), conn, globalNetworkID, customerGatewayARN)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -152,13 +152,9 @@ func testAccCheckCustomerGatewayAssociationExists(n string) resource.TestCheckFu
 			return err
 		}
 
-		_, err = tfnetworkmanager.FindCustomerGatewayAssociationByTwoPartKey(context.TODO(), conn, globalNetworkID, customerGatewayARN)
+		_, err = tfnetworkmanager.FindCustomerGatewayAssociationByTwoPartKey(context.Background(), conn, globalNetworkID, customerGatewayARN)
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 

@@ -116,13 +116,12 @@ valid results. Wait for an `AVAILABLE` status before performing operations.
 
 ## Timeouts
 
-`aws_servicecatalog_provisioned_product` provides the following
-[Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
 
-- `create` - (Default `30 minutes`)
-- `read` - (Default `10 minutes`)
-- `update` - (Default `30 minutes`)
-- `delete` - (Default `30 minutes`)
+- `create` - (Default `30m`)
+- `read` - (Default `10m`)
+- `update` - (Default `30m`)
+- `delete` - (Default `30m`)
 
 ## Import
 

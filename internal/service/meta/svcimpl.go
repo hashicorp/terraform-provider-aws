@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
+	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-provider-aws/internal/intf"
 )
 
@@ -12,10 +12,10 @@ import (
 
 var sd = &serviceData{}
 
-func registerDataSourceTypeFactory(name string, factory func(context.Context) (tfsdk.DataSourceType, error)) {
+func registerDataSourceTypeFactory(name string, factory func(context.Context) (provider.DataSourceType, error)) {
 	sd.dataSourceTypeFactories = append(sd.dataSourceTypeFactories, struct {
 		name    string
-		factory func(context.Context) (tfsdk.DataSourceType, error)
+		factory func(context.Context) (provider.DataSourceType, error)
 	}{
 		name:    name,
 		factory: factory,
@@ -27,12 +27,12 @@ var ServiceData intf.ServiceData = sd
 type serviceData struct {
 	dataSourceTypeFactories []struct {
 		name    string
-		factory func(context.Context) (tfsdk.DataSourceType, error)
+		factory func(context.Context) (provider.DataSourceType, error)
 	}
 }
 
-func (d *serviceData) DataSourceTypes(ctx context.Context) (map[string]tfsdk.DataSourceType, error) {
-	dataSourceTypes := make(map[string]tfsdk.DataSourceType)
+func (d *serviceData) DataSourceTypes(ctx context.Context) (map[string]provider.DataSourceType, error) {
+	dataSourceTypes := make(map[string]provider.DataSourceType)
 
 	for _, dataSourceTypeFactory := range d.dataSourceTypeFactories {
 		name := dataSourceTypeFactory.name

@@ -80,7 +80,7 @@ codestar-notifications,codestarnotifications,codestarnotifications,codestarnotif
 cognito-identity,cognitoidentity,cognitoidentity,cognitoidentity,,cognitoidentity,,,CognitoIdentity,CognitoIdentity,,1,aws_cognito_identity_(?!provider),aws_cognitoidentity_,,cognito_identity_pool,Cognito Identity,Amazon,,,,,
 cognito-idp,cognitoidp,cognitoidentityprovider,cognitoidentityprovider,,cognitoidp,,cognitoidentityprovider,CognitoIDP,CognitoIdentityProvider,,1,aws_cognito_(identity_provider|resource|user|risk),aws_cognitoidp_,,cognito_identity_provider;cognito_resource_;cognito_user;cognito_risk,Cognito IDP (Identity Provider),Amazon,,,,,
 cognito-sync,cognitosync,cognitosync,cognitosync,,cognitosync,,,CognitoSync,CognitoSync,,1,,aws_cognitosync_,,cognitosync_,Cognito Sync,Amazon,,,,,
-comprehend,comprehend,comprehend,comprehend,,comprehend,,,Comprehend,Comprehend,,1,,aws_comprehend_,,comprehend_,Comprehend,Amazon,,,,,
+comprehend,comprehend,comprehend,comprehend,,comprehend,,,Comprehend,Comprehend,x,2,,aws_comprehend_,,comprehend_,Comprehend,Amazon,,,,,
 comprehendmedical,comprehendmedical,comprehendmedical,comprehendmedical,,comprehendmedical,,,ComprehendMedical,ComprehendMedical,,1,,aws_comprehendmedical_,,comprehendmedical_,Comprehend Medical,Amazon,,,,,
 compute-optimizer,computeoptimizer,computeoptimizer,computeoptimizer,,computeoptimizer,,,ComputeOptimizer,ComputeOptimizer,,1,,aws_computeoptimizer_,,computeoptimizer_,Compute Optimizer,AWS,,,,,
 configservice,configservice,configservice,configservice,,configservice,,config,ConfigService,ConfigService,,1,aws_config_,aws_configservice_,,config_,Config,AWS,,,,,

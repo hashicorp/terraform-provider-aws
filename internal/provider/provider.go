@@ -58,6 +58,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/codestarnotifications"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cognitoidentity"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cognitoidp"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/comprehend"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/configservice"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/connect"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cur"
@@ -645,6 +646,8 @@ func New(_ context.Context) (*schema.Provider, error) {
 
 			"aws_kinesis_firehose_delivery_stream": firehose.DataSourceDeliveryStream(),
 
+			"aws_fsx_openzfs_snapshot": fsx.DataSourceOpenzfsSnapshot(),
+
 			"aws_globalaccelerator_accelerator": globalaccelerator.DataSourceAccelerator(),
 
 			"aws_glue_connection":                       glue.DataSourceConnection(),
@@ -761,6 +764,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_neptune_engine_version":        neptune.DataSourceEngineVersion(),
 			"aws_neptune_orderable_db_instance": neptune.DataSourceOrderableDBInstance(),
 
+			"aws_networkfirewall_firewall":        networkfirewall.DataSourceFirewall(),
 			"aws_networkfirewall_firewall_policy": networkfirewall.DataSourceFirewallPolicy(),
 
 			"aws_networkmanager_connection":                   networkmanager.DataSourceConnection(),
@@ -793,6 +797,8 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_outposts_sites":                  outposts.DataSourceSites(),
 
 			"aws_pricing_product": pricing.DataSourceProduct(),
+
+			"aws_prometheus_workspace": amp.DataSourceWorkspace(),
 
 			"aws_qldb_ledger": qldb.DataSourceLedger(),
 
@@ -888,15 +894,17 @@ func New(_ context.Context) (*schema.Provider, error) {
 
 			"aws_transfer_server": transfer.DataSourceServer(),
 
-			"aws_waf_ipset":           waf.DataSourceIPSet(),
-			"aws_waf_rule":            waf.DataSourceRule(),
-			"aws_waf_rate_based_rule": waf.DataSourceRateBasedRule(),
-			"aws_waf_web_acl":         waf.DataSourceWebACL(),
+			"aws_waf_ipset":                 waf.DataSourceIPSet(),
+			"aws_waf_rule":                  waf.DataSourceRule(),
+			"aws_waf_rate_based_rule":       waf.DataSourceRateBasedRule(),
+			"aws_waf_subscribed_rule_group": waf.DataSourceSubscribedRuleGroup(),
+			"aws_waf_web_acl":               waf.DataSourceWebACL(),
 
-			"aws_wafregional_ipset":           wafregional.DataSourceIPSet(),
-			"aws_wafregional_rule":            wafregional.DataSourceRule(),
-			"aws_wafregional_rate_based_rule": wafregional.DataSourceRateBasedRule(),
-			"aws_wafregional_web_acl":         wafregional.DataSourceWebACL(),
+			"aws_wafregional_ipset":                 wafregional.DataSourceIPSet(),
+			"aws_wafregional_rule":                  wafregional.DataSourceRule(),
+			"aws_wafregional_rate_based_rule":       wafregional.DataSourceRateBasedRule(),
+			"aws_wafregional_subscribed_rule_group": wafregional.DataSourceSubscribedRuleGroup(),
+			"aws_wafregional_web_acl":               wafregional.DataSourceWebACL(),
 
 			"aws_wafv2_ip_set":            wafv2.DataSourceIPSet(),
 			"aws_wafv2_regex_pattern_set": wafv2.DataSourceRegexPatternSet(),
@@ -1170,6 +1178,8 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_cognito_user_pool_domain":           cognitoidp.ResourceUserPoolDomain(),
 			"aws_cognito_user_pool_ui_customization": cognitoidp.ResourceUserPoolUICustomization(),
 
+			"aws_comprehend_entity_recognizer": comprehend.ResourceEntityRecognizer(),
+
 			"aws_config_aggregate_authorization":       configservice.ResourceAggregateAuthorization(),
 			"aws_config_config_rule":                   configservice.ResourceConfigRule(),
 			"aws_config_configuration_aggregator":      configservice.ResourceConfigurationAggregator(),
@@ -1186,6 +1196,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_connect_contact_flow":                connect.ResourceContactFlow(),
 			"aws_connect_contact_flow_module":         connect.ResourceContactFlowModule(),
 			"aws_connect_instance":                    connect.ResourceInstance(),
+			"aws_connect_instance_storage_config":     connect.ResourceInstanceStorageConfig(),
 			"aws_connect_hours_of_operation":          connect.ResourceHoursOfOperation(),
 			"aws_connect_lambda_function_association": connect.ResourceLambdaFunctionAssociation(),
 			"aws_connect_queue":                       connect.ResourceQueue(),
@@ -1270,6 +1281,8 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_directory_service_conditional_forwarder":     ds.ResourceConditionalForwarder(),
 			"aws_directory_service_directory":                 ds.ResourceDirectory(),
 			"aws_directory_service_log_subscription":          ds.ResourceLogSubscription(),
+			"aws_directory_service_region":                    ds.ResourceRegion(),
+			"aws_directory_service_radius_settings":           ds.ResourceRadiusSettings(),
 			"aws_directory_service_shared_directory_accepter": ds.ResourceSharedDirectoryAccepter(),
 			"aws_directory_service_shared_directory":          ds.ResourceSharedDirectory(),
 
@@ -1278,6 +1291,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_dynamodb_kinesis_streaming_destination": dynamodb.ResourceKinesisStreamingDestination(),
 			"aws_dynamodb_table":                         dynamodb.ResourceTable(),
 			"aws_dynamodb_table_item":                    dynamodb.ResourceTableItem(),
+			"aws_dynamodb_table_replica":                 dynamodb.ResourceTableReplica(),
 			"aws_dynamodb_tag":                           dynamodb.ResourceTag(),
 
 			"aws_ami":                                              ec2.ResourceAMI(),
@@ -1607,6 +1621,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_msk_cluster":                  kafka.ResourceCluster(),
 			"aws_msk_configuration":            kafka.ResourceConfiguration(),
 			"aws_msk_scram_secret_association": kafka.ResourceScramSecretAssociation(),
+			"aws_msk_serverless_cluster":       kafka.ResourceServerlessCluster(),
 
 			"aws_mskconnect_connector":            kafkaconnect.ResourceConnector(),
 			"aws_mskconnect_custom_plugin":        kafkaconnect.ResourceCustomPlugin(),
@@ -1680,17 +1695,19 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_location_place_index":         location.ResourcePlaceIndex(),
 			"aws_location_route_calculator":    location.ResourceRouteCalculator(),
 			"aws_location_tracker":             location.ResourceTracker(),
+			"aws_location_tracker_association": location.ResourceTrackerAssociation(),
 
 			"aws_macie_member_account_association": macie.ResourceMemberAccountAssociation(),
 			"aws_macie_s3_bucket_association":      macie.ResourceS3BucketAssociation(),
 
-			"aws_macie2_account":                    macie2.ResourceAccount(),
-			"aws_macie2_classification_job":         macie2.ResourceClassificationJob(),
-			"aws_macie2_custom_data_identifier":     macie2.ResourceCustomDataIdentifier(),
-			"aws_macie2_findings_filter":            macie2.ResourceFindingsFilter(),
-			"aws_macie2_invitation_accepter":        macie2.ResourceInvitationAccepter(),
-			"aws_macie2_member":                     macie2.ResourceMember(),
-			"aws_macie2_organization_admin_account": macie2.ResourceOrganizationAdminAccount(),
+			"aws_macie2_account":                             macie2.ResourceAccount(),
+			"aws_macie2_classification_job":                  macie2.ResourceClassificationJob(),
+			"aws_macie2_custom_data_identifier":              macie2.ResourceCustomDataIdentifier(),
+			"aws_macie2_findings_filter":                     macie2.ResourceFindingsFilter(),
+			"aws_macie2_invitation_accepter":                 macie2.ResourceInvitationAccepter(),
+			"aws_macie2_member":                              macie2.ResourceMember(),
+			"aws_macie2_organization_admin_account":          macie2.ResourceOrganizationAdminAccount(),
+			"aws_macie2_classification_export_configuration": macie2.ResourceClassificationExportConfiguration(),
 
 			"aws_media_convert_queue": mediaconvert.ResourceQueue(),
 
@@ -1726,6 +1743,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_networkfirewall_resource_policy":       networkfirewall.ResourceResourcePolicy(),
 			"aws_networkfirewall_rule_group":            networkfirewall.ResourceRuleGroup(),
 
+			"aws_networkmanager_attachment_accepter":                      networkmanager.ResourceAttachmentAccepter(),
 			"aws_networkmanager_connection":                               networkmanager.ResourceConnection(),
 			"aws_networkmanager_customer_gateway_association":             networkmanager.ResourceCustomerGatewayAssociation(),
 			"aws_networkmanager_device":                                   networkmanager.ResourceDevice(),
@@ -1735,6 +1753,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_networkmanager_site":                                     networkmanager.ResourceSite(),
 			"aws_networkmanager_transit_gateway_connect_peer_association": networkmanager.ResourceTransitGatewayConnectPeerAssociation(),
 			"aws_networkmanager_transit_gateway_registration":             networkmanager.ResourceTransitGatewayRegistration(),
+			"aws_networkmanager_vpc_attachment":                           networkmanager.ResourceVPCAttachment(),
 
 			"aws_opensearch_domain":              opensearch.ResourceDomain(),
 			"aws_opensearch_domain_policy":       opensearch.ResourceDomainPolicy(),
@@ -2052,6 +2071,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_timestreamwrite_database": timestreamwrite.ResourceDatabase(),
 			"aws_timestreamwrite_table":    timestreamwrite.ResourceTable(),
 
+			"aws_transcribe_language_model":     transcribe.ResourceLanguageModel(),
 			"aws_transcribe_medical_vocabulary": transcribe.ResourceMedicalVocabulary(),
 			"aws_transcribe_vocabulary":         transcribe.ResourceVocabulary(),
 			"aws_transcribe_vocabulary_filter":  transcribe.ResourceVocabularyFilter(),

@@ -8,9 +8,11 @@ description: |-
 
 # Resource: aws_dynamodb_table
 
-Provides a DynamoDB table resource
+Provides a DynamoDB table resource.
 
 ~> **Note:** We recommend using `lifecycle` [`ignore_changes`](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html#ignore_changes) for `read_capacity` and/or `write_capacity` if there's [autoscaling policy](/docs/providers/aws/r/appautoscaling_policy.html) attached to the table.
+
+~> **Note:** When using [aws_dynamodb_table_replica](/docs/providers/aws/r/dynamodb_table_replica.html) with this resource, use `lifecycle` [`ignore_changes`](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html#ignore_changes) for `replica`, _e.g._, `lifecycle { ignore_changes = [replica] }`.
 
 ## DynamoDB Table attributes
 
@@ -76,6 +78,8 @@ resource "aws_dynamodb_table" "basic-dynamodb-table" {
 ### Global Tables
 
 This resource implements support for [DynamoDB Global Tables V2 (version 2019.11.21)](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/globaltables.V2.html) via `replica` configuration blocks. For working with [DynamoDB Global Tables V1 (version 2017.11.29)](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/globaltables.V1.html), see the [`aws_dynamodb_global_table` resource](/docs/providers/aws/r/dynamodb_global_table.html).
+
+~> **Note:** [aws_dynamodb_table_replica](/docs/providers/aws/r/dynamodb_table_replica.html) is an alternate way of configuring Global Tables. Do not use `replica` configuration blocks of `aws_dynamodb_table` together with [aws_dynamodb_table_replica](/docs/providers/aws/r/dynamodb_table_replica.html).
 
 ```terraform
 resource "aws_dynamodb_table" "example" {
@@ -219,7 +223,7 @@ Optional arguments:
 
 * `kms_key_arn` - (Optional) ARN of the CMK that should be used for the AWS KMS encryption.
 * `point_in_time_recovery` - (Optional) Whether to enable Point In Time Recovery for the replica. Default is `false`.
-* `propagate_tags` - (Optional) Whether to propagate the main table's tags to a replica. Default is `false`. Changes to tags only move in one direction: from main to replica. In other words, tag drift on a replica will not trigger an update. Tag changes on the main table, whether from drift or configuration changes, are propagated to replicas.
+* `propagate_tags` - (Optional) Whether to propagate the global table's tags to a replica. Default is `false`. Changes to tags only move in one direction: from global (source) to replica. In other words, tag drift on a replica will not trigger an update. Tag or replica changes on the global table, whether from drift or configuration changes, are propagated to replicas. Changing from `true` to `false` on a subsequent `apply` means replica tags are left as they were, unmanaged, not deleted.
 * `region_name` - (Required) Region name of the replica.
 
 ### `server_side_encryption`
@@ -246,11 +250,11 @@ In addition to all arguments above, the following attributes are exported:
 
 ~> **Note:** There are a variety of default timeouts set internally. If you set a shorter custom timeout than one of the defaults, the custom timeout will not be respected as the longer of the custom or internal default will be used.
 
-The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) for certain actions:
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
 
-* `create` - (Defaults to 30 mins) Used when creating the table
-* `update` - (Defaults to 60 mins) Used when updating the table configuration and reset for each individual Global Secondary Index and Replica update
-* `delete` - (Defaults to 10 mins) Used when deleting the table
+* `create` - (Default `30m`)
+* `update` - (Default `60m`)
+* `delete` - (Default `10m`)
 
 ## Import
 

@@ -165,9 +165,9 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-`aws_storagegateway_gateway` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
 
-* `create` - (Default `10m`) How long to wait for gateway activation and connection to Storage Gateway.
+* `create` - (Default `10m`)
 
 ## Import
 

@@ -607,7 +607,6 @@ func testAccPreCheckSupported(t *testing.T, regions ...string) {
 		conf := &conns.Config{
 			Region: region,
 		}
-
 		client, diags := conf.ConfigureProvider(context.Background(), &conns.AWSClient{})
 
 		if diags.HasError() {

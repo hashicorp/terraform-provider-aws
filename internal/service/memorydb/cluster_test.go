@@ -12,7 +12,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfmemorydb "github.com/hashicorp/terraform-provider-aws/internal/service/memorydb"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -161,7 +160,7 @@ func TestAccMemoryDBCluster_nameGenerated(t *testing.T) {
 				Config: testAccClusterConfig_noName(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName),
-					create.TestCheckResourceAttrNameGenerated(resourceName, "name"),
+					acctest.CheckResourceAttrNameGenerated(resourceName, "name"),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
 				),
 			},
@@ -183,7 +182,7 @@ func TestAccMemoryDBCluster_namePrefix(t *testing.T) {
 				Config: testAccClusterConfig_namePrefix(rName, "tftest-"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName),
-					create.TestCheckResourceAttrNameFromPrefix(resourceName, "name", "tftest-"),
+					acctest.CheckResourceAttrNameFromPrefix(resourceName, "name", "tftest-"),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", "tftest-"),
 				),
 			},
@@ -1043,11 +1042,7 @@ func testAccCheckClusterExists(n string) resource.TestCheckFunc {
 
 		_, err := tfmemorydb.FindClusterByName(context.Background(), conn, rs.Primary.Attributes["name"])
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 
@@ -1061,11 +1056,7 @@ func testAccCheckSnapshotExistsByName(snapshotName string) resource.TestCheckFun
 			return fmt.Errorf("MemoryDB Snapshot %s not found", snapshotName)
 		}
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 

@@ -307,6 +307,36 @@ func CheckResourceAttrRegionalHostnameService(resourceName, attributeName, servi
 	}
 }
 
+// CheckResourceAttrNameFromPrefix verifies that the state attribute value matches name generated from given prefix
+func CheckResourceAttrNameFromPrefix(resourceName string, attributeName string, prefix string) resource.TestCheckFunc {
+	return CheckResourceAttrNameWithSuffixFromPrefix(resourceName, attributeName, prefix, "")
+}
+
+// Regexp for "<start-of-string>terraform-<26 lowercase hex digits><additional suffix><end-of-string>".
+func resourceUniqueIDPrefixPlusAdditionalSuffixRegexp(prefix, suffix string) *regexp.Regexp {
+	return regexp.MustCompile(fmt.Sprintf("^%s[[:xdigit:]]{%d}%s$", prefix, resource.UniqueIDSuffixLength, suffix))
+}
+
+// CheckResourceAttrNameWithSuffixFromPrefix verifies that the state attribute value matches name with suffix generated from given prefix
+func CheckResourceAttrNameWithSuffixFromPrefix(resourceName string, attributeName string, prefix string, suffix string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		attributeMatch := resourceUniqueIDPrefixPlusAdditionalSuffixRegexp(prefix, suffix)
+		return resource.TestMatchResourceAttr(resourceName, attributeName, attributeMatch)(s)
+	}
+}
+
+// CheckResourceAttrNameGenerated verifies that the state attribute value matches name automatically generated without prefix
+func CheckResourceAttrNameGenerated(resourceName string, attributeName string) resource.TestCheckFunc {
+	return CheckResourceAttrNameWithSuffixGenerated(resourceName, attributeName, "")
+}
+
+// CheckResourceAttrNameWithSuffixGenerated verifies that the state attribute value matches name with suffix automatically generated without prefix
+func CheckResourceAttrNameWithSuffixGenerated(resourceName string, attributeName string, suffix string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		return resource.TestMatchResourceAttr(resourceName, attributeName, resourceUniqueIDPrefixPlusAdditionalSuffixRegexp(resource.UniqueIdPrefix, suffix))(s)
+	}
+}
+
 // MatchResourceAttrAccountID ensures the Terraform state regexp matches an account ID
 func MatchResourceAttrAccountID(resourceName, attributeName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
@@ -673,6 +703,13 @@ func PreCheckRegionNot(t *testing.T, regions ...string) {
 		if curr := Region(); curr == region {
 			t.Skipf("skipping tests; %s (%s) not supported", conns.EnvVarDefaultRegion, curr)
 		}
+	}
+}
+
+// PreCheckAlternateRegionIs checks that the alternate test region is the specified region.
+func PreCheckAlternateRegionIs(t *testing.T, region string) {
+	if curr := AlternateRegion(); curr != region {
+		t.Skipf("skipping tests; %s (%s) does not equal %s", conns.EnvVarDefaultRegion, curr, region)
 	}
 }
 
@@ -1619,9 +1656,10 @@ data "aws_availability_zones" "available" {
 // AvailableEC2InstanceTypeForAvailabilityZone returns the configuration for a data source that describes
 // the first available EC2 instance type offering in the specified availability zone from a list of preferred instance types.
 // The first argument is either an Availability Zone name or Terraform configuration reference to one, e.g.
-//   * data.aws_availability_zones.available.names[0]
-//   * aws_subnet.test.availability_zone
-//   * us-west-2a
+//   - data.aws_availability_zones.available.names[0]
+//   - aws_subnet.test.availability_zone
+//   - us-west-2a
+//
 // The data source is named 'available'.
 func AvailableEC2InstanceTypeForAvailabilityZone(availabilityZoneName string, preferredInstanceTypes ...string) string {
 	if !strings.Contains(availabilityZoneName, ".") {

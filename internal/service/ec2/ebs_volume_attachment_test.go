@@ -237,11 +237,7 @@ func testAccCheckVolumeAttachmentExists(n string) resource.TestCheckFunc {
 
 		_, err := tfec2.FindEBSVolumeAttachment(conn, rs.Primary.Attributes["volume_id"], rs.Primary.Attributes["instance_id"], rs.Primary.Attributes["device_name"])
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 

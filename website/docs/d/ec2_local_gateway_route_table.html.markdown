@@ -50,3 +50,9 @@ which take the following arguments:
 
 * `values` - (Required) Set of values that are accepted for the given field.
   A local gateway route table will be selected if any one of the given values matches.
+
+## Timeouts
+
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+
+- `read` - (Default `20m`)

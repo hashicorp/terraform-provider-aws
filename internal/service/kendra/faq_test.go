@@ -261,7 +261,7 @@ func testAccCheckFaqDestroy(s *terraform.State) error {
 		if err != nil {
 			return err
 		}
-		_, err = tfkendra.FindFaqByID(context.TODO(), conn, id, indexId)
+		_, err = tfkendra.FindFaqByID(context.Background(), conn, id, indexId)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -294,7 +294,7 @@ func testAccCheckFaqExists(name string) resource.TestCheckFunc {
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).KendraConn
 
-		_, err = tfkendra.FindFaqByID(context.TODO(), conn, id, indexId)
+		_, err = tfkendra.FindFaqByID(context.Background(), conn, id, indexId)
 
 		if err != nil {
 			return fmt.Errorf("Error describing Kendra Faq: %s", err.Error())

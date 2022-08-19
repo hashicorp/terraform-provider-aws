@@ -41,12 +41,11 @@ No additional attributes are exported.
 
 ## Timeouts
 
-`aws_account_alternate_contact` provides the following
-[Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
 
-- `create` - (Default `5 minutes`)
-- `update` - (Default `5 minutes`)
-- `delete` - (Default `5 minutes`)
+- `create` - (Default `5m`)
+- `update` - (Default `5m`)
+- `delete` - (Default `5m`)
 
 ## Import
 

@@ -116,9 +116,9 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-`aws_datasync_task` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
 
-* `create` - (Default `5m`) How long to wait for DataSync Task availability.
+* `create` - (Default `5m`)
 
 ## Import
 

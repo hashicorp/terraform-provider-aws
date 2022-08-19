@@ -3,6 +3,7 @@ package ec2
 import (
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -14,6 +15,10 @@ import (
 func DataSourceEIP() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourceEIPRead,
+
+		Timeouts: &schema.ResourceTimeout{
+			Read: schema.DefaultTimeout(20 * time.Minute),
+		},
 
 		Schema: map[string]*schema.Schema{
 			"association_id": {

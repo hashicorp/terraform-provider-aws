@@ -15,27 +15,6 @@ import (
 	tfconnect "github.com/hashicorp/terraform-provider-aws/internal/service/connect"
 )
 
-// Serialized acceptance tests due to Connect account limits (max 2 parallel tests)
-func TestAccConnectQueue_serial(t *testing.T) {
-	testCases := map[string]func(t *testing.T){
-		"basic":                      testAccQueue_basic,
-		"disappears":                 testAccQueue_disappears,
-		"updateHoursOfOperationID":   testAccQueue_updateHoursOfOperationId,
-		"updateMaxContacts":          testAccQueue_updateMaxContacts,
-		"updateOutboundCallerConfig": testAccQueue_updateOutboundCallerConfig,
-		"updateStatus":               testAccQueue_updateStatus,
-		"updateQuickConnectIDs":      testAccQueue_updateQuickConnectIds,
-		"updateTags":                 testAccQueue_updateTags,
-	}
-
-	for name, tc := range testCases {
-		tc := tc
-		t.Run(name, func(t *testing.T) {
-			tc(t)
-		})
-	}
-}
-
 func testAccQueue_basic(t *testing.T) {
 	var v connect.DescribeQueueOutput
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")

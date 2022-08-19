@@ -237,13 +237,12 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-`aws_eks_cluster` provides the following
-[Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
 
-* `create` - (Default `30 minutes`) How long to wait for the EKS Cluster to be created.
-* `update` - (Default `60 minutes`) How long to wait for the EKS Cluster to be updated.
+* `create` - (Default `30m`)
+* `update` - (Default `60m`)
 Note that the `update` timeout is used separately for both `version` and `vpc_config` update timeouts.
-* `delete` - (Default `15 minutes`) How long to wait for the EKS Cluster to be deleted.
+* `delete` - (Default `15m`)
 
 ## Import
 

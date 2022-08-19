@@ -72,12 +72,12 @@ In addition to all arguments above, the following attributes are exported:
 * `service_role` - The service role of the instance.
 * `status` - The state of the instance.
 
-### Timeouts
+## Timeouts
 
-`aws_connect_instance` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
 
-* `create` - (Defaults to 5 mins) Used when creating the instance.
-* `delete` - (Defaults to 5 mins) Used when deleting the instance.
+* `create` - (Default `5m`)
+* `delete` - (Default `5m`)
 
 ## Import
 

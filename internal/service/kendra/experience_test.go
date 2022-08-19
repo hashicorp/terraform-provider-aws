@@ -571,7 +571,7 @@ func testAccCheckExperienceDestroy(s *terraform.State) error {
 			return err
 		}
 
-		_, err = tfkendra.FindExperienceByID(context.TODO(), conn, id, indexId)
+		_, err = tfkendra.FindExperienceByID(context.Background(), conn, id, indexId)
 		if tfresource.NotFound(err) {
 			continue
 		}
@@ -602,12 +602,9 @@ func testAccCheckExperienceExists(name string) resource.TestCheckFunc {
 			return err
 		}
 
-		_, err = tfkendra.FindExperienceByID(context.TODO(), conn, id, indexId)
-		if err != nil {
-			return err
-		}
+		_, err = tfkendra.FindExperienceByID(context.Background(), conn, id, indexId)
 
-		return nil
+		return err
 	}
 }
 

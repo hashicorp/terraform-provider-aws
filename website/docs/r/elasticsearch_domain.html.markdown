@@ -293,7 +293,8 @@ AWS documentation: [Amazon Cognito Authentication for Kibana](https://docs.aws.a
 ### ebs_options
 
 * `ebs_enabled` - (Required) Whether EBS volumes are attached to data nodes in the domain.
-* `iops` - (Optional) Baseline input/output (I/O) performance of EBS volumes attached to data nodes. Applicable only for the Provisioned IOPS EBS volume type.
+* `iops` - (Optional) Baseline input/output (I/O) performance of EBS volumes attached to data nodes. Applicable only for the GP3 and Provisioned IOPS EBS volume types.
+* `throughput` - (Required if `volume_type` is set to `gp3`) Specifies the throughput (in MiB/s) of the EBS volumes attached to data nodes. Applicable only for the gp3 volume type. Valid values are between `125` and `1000`.
 * `volume_size` - (Required if `ebs_enabled` is set to `true`.) Size of EBS volumes attached to data nodes (in GiB).
 * `volume_type` - (Optional) Type of EBS volumes attached to data nodes.
 
@@ -346,11 +347,11 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-`aws_elasticsearch_domain` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
 
-* `create` - (Optional, Default: `60m`) How long to wait for creation.
-* `update` - (Optional, Default: `60m`) How long to wait for updates.
-* `delete` - (Optional, Default: `90m`) How long to wait for deletion.
+* `create` - (Default `60m`)
+* `update` - (Default `60m`)
+* `delete` - (Default `90m`)
 
 ## Import
 

@@ -77,7 +77,7 @@ EOF
 The following arguments are supported:
 
 * `api_id` - (Required) The ID of the associated AppSync API.
-* `data_source` - (Required) The Function DataSource name.
+* `data_source` - (Required) The Function data source name.
 * `max_batch_size` - (Optional) The maximum batching size for a resolver. Valid values are between `0` and `2000`.
 * `name` - (Required) The Function name. The function name does not have to be unique.
 * `request_mapping_template` - (Required) The Function request mapping template. Functions support only the 2018-05-29 version of the request mapping template.

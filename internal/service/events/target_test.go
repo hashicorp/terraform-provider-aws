@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfevents "github.com/hashicorp/terraform-provider-aws/internal/service/events"
 )
 
@@ -192,7 +191,7 @@ func TestAccEventsTarget_generatedTargetID(t *testing.T) {
 					testAccCheckTargetExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "rule", ruleName),
 					resource.TestCheckResourceAttrPair(resourceName, "arn", snsTopicResourceName, "arn"),
-					create.TestCheckResourceAttrNameGenerated(resourceName, "target_id"),
+					acctest.CheckResourceAttrNameGenerated(resourceName, "target_id"),
 				),
 			},
 			{
@@ -368,7 +367,7 @@ func TestAccEventsTarget_http(t *testing.T) {
 	})
 }
 
-//https://github.com/hashicorp/terraform-provider-aws/issues/23805
+// https://github.com/hashicorp/terraform-provider-aws/issues/23805
 func TestAccEventsTarget_http_params(t *testing.T) {
 	resourceName := "aws_cloudwatch_event_target.test"
 

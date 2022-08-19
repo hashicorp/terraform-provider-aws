@@ -154,7 +154,7 @@ func testAccCheckTrustAnchorDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := tfrolesanywhere.FindTrustAnchorByID(context.TODO(), conn, rs.Primary.ID)
+		_, err := tfrolesanywhere.FindTrustAnchorByID(context.Background(), conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -184,13 +184,9 @@ func testAccCheckTrustAnchorExists(n string) resource.TestCheckFunc {
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).RolesAnywhereConn
 
-		_, err := tfrolesanywhere.FindTrustAnchorByID(context.TODO(), conn, rs.Primary.ID)
+		_, err := tfrolesanywhere.FindTrustAnchorByID(context.Background(), conn, rs.Primary.ID)
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 
@@ -313,7 +309,7 @@ func testAccPreCheck(t *testing.T) {
 
 	input := &rolesanywhere.ListTrustAnchorsInput{}
 
-	_, err := conn.ListTrustAnchors(context.TODO(), input)
+	_, err := conn.ListTrustAnchors(context.Background(), input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)

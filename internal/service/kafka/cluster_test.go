@@ -110,6 +110,77 @@ func TestAccKafkaCluster_basic(t *testing.T) {
 	})
 }
 
+func TestAccKafkaCluster_disappears(t *testing.T) {
+	var cluster kafka.ClusterInfo
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_msk_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, kafka.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(resourceName, &cluster),
+					acctest.CheckResourceDisappears(acctest.Provider, tfkafka.ResourceCluster(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccKafkaCluster_tags(t *testing.T) {
+	var cluster kafka.ClusterInfo
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_msk_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, kafka.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_tags1(rName, "key1", "value1"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(resourceName, &cluster),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"current_version",
+				},
+			},
+			{
+				Config: testAccClusterConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(resourceName, &cluster),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccClusterConfig_tags1(rName, "key2", "value2"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(resourceName, &cluster),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccKafkaCluster_BrokerNodeGroupInfo_ebsVolumeSize(t *testing.T) {
 	var cluster1, cluster2 kafka.ClusterInfo
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1090,54 +1161,6 @@ func TestAccKafkaCluster_kafkaVersionUpgradeWithInfo(t *testing.T) {
 	})
 }
 
-func TestAccKafkaCluster_tags(t *testing.T) {
-	var cluster kafka.ClusterInfo
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_msk_cluster.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, kafka.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccClusterConfig_tags1(rName, "key1", "value1"),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &cluster),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"current_version",
-				},
-			},
-			{
-				Config: testAccClusterConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &cluster),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
-				),
-			},
-			{
-				Config: testAccClusterConfig_tags1(rName, "key2", "value2"),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &cluster),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
-				),
-			},
-		},
-	})
-}
-
 func testAccCheckResourceAttrIsSortedCSV(resourceName, attributeName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		is, err := acctest.PrimaryInstanceState(s, resourceName)
@@ -1167,7 +1190,7 @@ func testAccCheckClusterDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := tfkafka.FindClusterByARN(context.TODO(), conn, rs.Primary.ID)
+		_, err := tfkafka.FindClusterByARN(context.Background(), conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -1196,7 +1219,7 @@ func testAccCheckClusterExists(n string, v *kafka.ClusterInfo) resource.TestChec
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaConn
 
-		output, err := tfkafka.FindClusterByARN(context.TODO(), conn, rs.Primary.ID)
+		output, err := tfkafka.FindClusterByARN(context.Background(), conn, rs.Primary.ID)
 
 		if err != nil {
 			return err

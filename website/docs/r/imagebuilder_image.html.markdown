@@ -62,9 +62,9 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-`aws_imagebuilder_image` provides the following [Timeouts](/docs/configuration/resources.html#timeouts) configuration options:
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
 
-* `create` - (Default `60m`) How long to wait for the image to be built, tested, and distributed.
+* `create` - (Default `60m`)
 
 ## Import
 

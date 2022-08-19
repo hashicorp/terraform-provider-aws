@@ -11,7 +11,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfmemorydb "github.com/hashicorp/terraform-provider-aws/internal/service/memorydb"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -84,7 +83,7 @@ func TestAccMemoryDBACL_nameGenerated(t *testing.T) {
 				Config: testAccACLConfig_noName(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckACLExists(resourceName),
-					create.TestCheckResourceAttrNameGenerated(resourceName, "name"),
+					acctest.CheckResourceAttrNameGenerated(resourceName, "name"),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
 				),
 			},
@@ -105,7 +104,7 @@ func TestAccMemoryDBACL_namePrefix(t *testing.T) {
 				Config: testAccACLConfig_namePrefix("tftest-"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckACLExists(resourceName),
-					create.TestCheckResourceAttrNameFromPrefix(resourceName, "name", "tftest-"),
+					acctest.CheckResourceAttrNameFromPrefix(resourceName, "name", "tftest-"),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", "tftest-"),
 				),
 			},
@@ -326,11 +325,7 @@ func testAccCheckACLExists(n string) resource.TestCheckFunc {
 
 		_, err := tfmemorydb.FindACLByName(context.Background(), conn, rs.Primary.Attributes["name"])
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 

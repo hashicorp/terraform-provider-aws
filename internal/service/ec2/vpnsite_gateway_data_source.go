@@ -3,6 +3,7 @@ package ec2
 import (
 	"fmt"
 	"strconv"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
@@ -16,6 +17,10 @@ import (
 func DataSourceVPNGateway() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourceVPNGatewayRead,
+
+		Timeouts: &schema.ResourceTimeout{
+			Read: schema.DefaultTimeout(20 * time.Minute),
+		},
 
 		Schema: map[string]*schema.Schema{
 			"amazon_side_asn": {

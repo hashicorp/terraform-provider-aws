@@ -94,10 +94,9 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-`aws_db_option_group` provides the following
-[Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
 
-- `delete` - (Default `15 minutes`)
+- `delete` - (Default `15m`)
 
 ## Import
 

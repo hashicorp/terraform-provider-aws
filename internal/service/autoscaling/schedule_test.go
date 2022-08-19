@@ -172,7 +172,7 @@ func testAccScheduleTime(t *testing.T, duration string) string {
 	n := time.Now().UTC()
 	d, err := time.ParseDuration(duration)
 	if err != nil {
-		t.Fatalf("err parsing time duration: %s", err)
+		t.Fatal(err)
 	}
 	return n.Add(d).Format(tfautoscaling.ScheduleTimeLayout)
 }
@@ -236,17 +236,8 @@ func testAccCheckScalingScheduleHasNoDesiredCapacity(v *autoscaling.ScheduledUpd
 	}
 }
 
-func testAccScheduleConfig_basic(rName1, rName2, startTime, endTime string) string {
-	return acctest.ConfigCompose(
-		acctest.ConfigAvailableAZsNoOptIn(),
-		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
-		fmt.Sprintf(`
-resource "aws_launch_configuration" "test" {
-  name          = %[1]q
-  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
-  instance_type = "t1.micro"
-}
-
+func testAccScheduleConfig_base(rName string) string {
+	return acctest.ConfigCompose(testAccGroupConfig_launchConfigurationBase(rName, "t2.micro"), fmt.Sprintf(`
 resource "aws_autoscaling_group" "test" {
   availability_zones        = [data.aws_availability_zones.available.names[1]]
   name                      = %[1]q
@@ -257,43 +248,32 @@ resource "aws_autoscaling_group" "test" {
   force_delete              = true
   termination_policies      = ["OldestInstance"]
   launch_configuration      = aws_launch_configuration.test.name
+
+  tag {
+    key                 = "Name"
+    value               = %[1]q
+    propagate_at_launch = true
+  }
+}
+`, rName))
 }
 
+func testAccScheduleConfig_basic(rName1, rName2, startTime, endTime string) string {
+	return acctest.ConfigCompose(testAccScheduleConfig_base(rName1), fmt.Sprintf(`
 resource "aws_autoscaling_schedule" "test" {
-  scheduled_action_name  = %[2]q
+  scheduled_action_name  = %[1]q
   min_size               = 0
   max_size               = 1
   desired_capacity       = 0
-  start_time             = %[3]q
-  end_time               = %[4]q
+  start_time             = %[2]q
+  end_time               = %[3]q
   autoscaling_group_name = aws_autoscaling_group.test.name
 }
-`, rName1, rName2, startTime, endTime))
+`, rName2, startTime, endTime))
 }
 
 func testAccScheduleConfig_recurrence(rName string) string {
-	return acctest.ConfigCompose(
-		acctest.ConfigAvailableAZsNoOptIn(),
-		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
-		fmt.Sprintf(`
-resource "aws_launch_configuration" "test" {
-  name          = %[1]q
-  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
-  instance_type = "t1.micro"
-}
-
-resource "aws_autoscaling_group" "test" {
-  availability_zones        = [data.aws_availability_zones.available.names[1]]
-  name                      = %[1]q
-  max_size                  = 1
-  min_size                  = 1
-  health_check_grace_period = 300
-  health_check_type         = "ELB"
-  force_delete              = true
-  termination_policies      = ["OldestInstance"]
-  launch_configuration      = aws_launch_configuration.test.name
-}
-
+	return acctest.ConfigCompose(testAccScheduleConfig_base(rName), fmt.Sprintf(`
 resource "aws_autoscaling_schedule" "test" {
   scheduled_action_name  = %[1]q
   min_size               = 0
@@ -307,28 +287,7 @@ resource "aws_autoscaling_schedule" "test" {
 }
 
 func testAccScheduleConfig_zeroValues(rName, startTime, endTime string) string {
-	return acctest.ConfigCompose(
-		acctest.ConfigAvailableAZsNoOptIn(),
-		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
-		fmt.Sprintf(`
-resource "aws_launch_configuration" "test" {
-  name          = %[1]q
-  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
-  instance_type = "t1.micro"
-}
-
-resource "aws_autoscaling_group" "test" {
-  availability_zones        = [data.aws_availability_zones.available.names[1]]
-  name                      = %[1]q
-  max_size                  = 1
-  min_size                  = 1
-  health_check_grace_period = 300
-  health_check_type         = "ELB"
-  force_delete              = true
-  termination_policies      = ["OldestInstance"]
-  launch_configuration      = aws_launch_configuration.test.name
-}
-
+	return acctest.ConfigCompose(testAccScheduleConfig_base(rName), fmt.Sprintf(`
 resource "aws_autoscaling_schedule" "test" {
   scheduled_action_name  = %[1]q
   max_size               = 0
@@ -342,28 +301,7 @@ resource "aws_autoscaling_schedule" "test" {
 }
 
 func testAccScheduleConfig_negativeOne(rName, startTime, endTime string) string {
-	return acctest.ConfigCompose(
-		acctest.ConfigAvailableAZsNoOptIn(),
-		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
-		fmt.Sprintf(`
-resource "aws_launch_configuration" "test" {
-  name          = %[1]q
-  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
-  instance_type = "t1.micro"
-}
-
-resource "aws_autoscaling_group" "test" {
-  availability_zones        = [data.aws_availability_zones.available.names[1]]
-  name                      = %[1]q
-  max_size                  = 1
-  min_size                  = 1
-  health_check_grace_period = 300
-  health_check_type         = "ELB"
-  force_delete              = true
-  termination_policies      = ["OldestInstance"]
-  launch_configuration      = aws_launch_configuration.test.name
-}
-
+	return acctest.ConfigCompose(testAccScheduleConfig_base(rName), fmt.Sprintf(`
 resource "aws_autoscaling_schedule" "test" {
   scheduled_action_name  = %[1]q
   max_size               = 3

@@ -143,8 +143,8 @@ func validSubnetGroupNamePrefix(v interface{}, k string) (ws []string, errors []
 	return
 }
 
-func validEngine() schema.SchemaValidateFunc {
-	return validation.StringInSlice(Engine_Values(), false)
+func validClusterEngine() schema.SchemaValidateFunc {
+	return validation.StringInSlice(ClusterEngine_Values(), false)
 }
 
 func validIdentifier(v interface{}, k string) (ws []string, errors []error) {

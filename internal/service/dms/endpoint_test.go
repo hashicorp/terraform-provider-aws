@@ -1459,11 +1459,7 @@ func testAccCheckEndpointExists(n string) resource.TestCheckFunc {
 
 		_, err := tfdms.FindEndpointByID(conn, rs.Primary.ID)
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 

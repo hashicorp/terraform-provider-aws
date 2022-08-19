@@ -2,6 +2,7 @@ package ec2
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"log"
 	"regexp"
@@ -363,8 +364,8 @@ func resourceSecurityGroupUpdate(d *schema.ResourceData, meta interface{}) error
 func resourceSecurityGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	if err := deleteLingeringLambdaENIs(conn, "group-id", d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return fmt.Errorf("deleting Lambda ENIs using Security Group (%s): %w", d.Id(), err)
+	if err := deleteLingeringENIs(context.TODO(), conn, "group-id", d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return fmt.Errorf("deleting ENIs using Security Group (%s): %w", d.Id(), err)
 	}
 
 	// conditionally revoke rules first before attempting to delete the group
@@ -702,7 +703,6 @@ func updateSecurityGroupRules(conn *ec2.EC2, d *schema.ResourceData, ruleType st
 // of rules. We iterate through the local set of rules trying to find a matching
 // remote rule, which may be structured differently because of how AWS
 // aggregates the rules under the to, from, and type.
-//
 //
 // Matching rules are written to state, with their elements removed from the
 // remote set
@@ -1103,31 +1103,31 @@ func SecurityGroupCollapseRules(ruleset string, rules []interface{}) []interface
 //
 // For example, in terraform syntax, the following block:
 //
-// ingress {
-//   from_port = 80
-//   to_port = 80
-//   protocol = "tcp"
-//   cidr_blocks = [
-//     "192.168.0.1/32",
-//     "192.168.0.2/32",
-//   ]
-// }
+//	ingress {
+//	  from_port = 80
+//	  to_port = 80
+//	  protocol = "tcp"
+//	  cidr_blocks = [
+//	    "192.168.0.1/32",
+//	    "192.168.0.2/32",
+//	  ]
+//	}
 //
 // will be converted to the two blocks below:
 //
-// ingress {
-//   from_port = 80
-//   to_port = 80
-//   protocol = "tcp"
-//   cidr_blocks = [ "192.168.0.1/32" ]
-// }
+//	ingress {
+//	  from_port = 80
+//	  to_port = 80
+//	  protocol = "tcp"
+//	  cidr_blocks = [ "192.168.0.1/32" ]
+//	}
 //
-// ingress {
-//   from_port = 80
-//   to_port = 80
-//   protocol = "tcp"
-//   cidr_blocks = [ "192.168.0.2/32" ]
-// }
+//	ingress {
+//	  from_port = 80
+//	  to_port = 80
+//	  protocol = "tcp"
+//	  cidr_blocks = [ "192.168.0.2/32" ]
+//	}
 //
 // Then the Difference operation is executed on the new set
 // to find which rules got modified, and the resulting set
@@ -1135,7 +1135,6 @@ func SecurityGroupCollapseRules(ruleset string, rules []interface{}) []interface
 // to convert the "diff" back to a more compact form for
 // execution. Such compact form helps reduce the number of
 // API calls.
-//
 func SecurityGroupExpandRules(rules *schema.Set) *schema.Set {
 	var keys_to_expand = []string{"cidr_blocks", "ipv6_cidr_blocks", "prefix_list_ids", "security_groups"}
 
@@ -1263,56 +1262,6 @@ var securityGroupProtocolIntegers = map[string]int{
 	"tcp":    6,
 	"icmp":   1,
 	"all":    -1,
-}
-
-// The AWS Lambda service creates ENIs behind the scenes and keeps these around for a while
-// which would prevent SGs attached to such ENIs from being destroyed
-func deleteLingeringLambdaENIs(conn *ec2.EC2, filterName, resourceID string, timeout time.Duration) error {
-	// AWS Lambda service team confirms P99 deletion time of ~35 minutes. Buffer for safety.
-	if minimumTimeout := 45 * time.Minute; timeout < minimumTimeout {
-		timeout = minimumTimeout
-	}
-
-	networkInterfaces, err := FindNetworkInterfaces(conn, &ec2.DescribeNetworkInterfacesInput{
-		Filters: BuildAttributeFilterList(map[string]string{
-			filterName:    resourceID,
-			"description": "AWS Lambda VPC ENI*",
-		}),
-	})
-
-	if err != nil {
-		return fmt.Errorf("listing EC2 Network Interfaces: %w", err)
-	}
-
-	for _, v := range networkInterfaces {
-		networkInterfaceID := aws.StringValue(v.NetworkInterfaceId)
-
-		if v.Attachment != nil && aws.StringValue(v.Attachment.InstanceOwnerId) == "amazon-aws" {
-			networkInterface, err := WaitNetworkInterfaceAvailableAfterUse(conn, networkInterfaceID, timeout)
-
-			if tfresource.NotFound(err) {
-				continue
-			}
-
-			if err != nil {
-				return fmt.Errorf("waiting for Lambda ENI (%s) to become available after use: %w", networkInterfaceID, err)
-			}
-
-			v = networkInterface
-		}
-
-		if v.Attachment != nil {
-			if err := DetachNetworkInterface(conn, networkInterfaceID, aws.StringValue(v.Attachment.AttachmentId), timeout); err != nil {
-				return err
-			}
-		}
-
-		if err := DeleteNetworkInterface(conn, networkInterfaceID); err != nil {
-			return err
-		}
-	}
-
-	return nil
 }
 
 func initSecurityGroupRule(ruleMap map[string]map[string]interface{}, perm *ec2.IpPermission, desc string) map[string]interface{} {

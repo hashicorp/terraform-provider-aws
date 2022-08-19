@@ -2,6 +2,7 @@ package ec2
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -14,6 +15,10 @@ import (
 func DataSourceTransitGateway() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourceTransitGatewayRead,
+
+		Timeouts: &schema.ResourceTimeout{
+			Read: schema.DefaultTimeout(20 * time.Minute),
+		},
 
 		Schema: map[string]*schema.Schema{
 			"amazon_side_asn": {
