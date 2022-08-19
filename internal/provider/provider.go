@@ -1756,6 +1756,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_networkmanager_transit_gateway_connect_peer_association": networkmanager.ResourceTransitGatewayConnectPeerAssociation(),
 			"aws_networkmanager_transit_gateway_peering":                  networkmanager.ResourceTransitGatewayPeering(),
 			"aws_networkmanager_transit_gateway_registration":             networkmanager.ResourceTransitGatewayRegistration(),
+			"aws_networkmanager_transit_gateway_route_table_attachment":   networkmanager.ResourceTransitGatewayRouteTableAttachment(),
 			"aws_networkmanager_vpc_attachment":                           networkmanager.ResourceVPCAttachment(),
 
 			"aws_opensearch_domain":              opensearch.ResourceDomain(),
