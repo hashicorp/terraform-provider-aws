@@ -64,6 +64,10 @@ fmt:
 	@echo "==> Fixing source code with gofmt..."
 	gofmt -s -w ./$(PKG_NAME) ./names $(filter-out ./.ci/providerlint/go% ./.ci/providerlint/README.md ./.ci/providerlint/vendor, $(wildcard ./.ci/providerlint/*))
 
+fumpt:
+	@echo "==> Fixing source code with gofumot..."
+	gofumpt -w ./$(PKG_NAME) ./names $(filter-out ./.ci/providerlint/go% ./.ci/providerlint/README.md ./.ci/providerlint/vendor, $(wildcard ./.ci/providerlint/*))
+
 # Currently required by tf-deploy compile
 fmtcheck:
 	@sh -c "'$(CURDIR)/.ci/scripts/gofmtcheck.sh'"
@@ -159,6 +163,7 @@ tools:
 	cd .ci/tools && go install github.com/pavius/impi/cmd/impi
 	cd .ci/tools && go install github.com/hashicorp/go-changelog/cmd/changelog-build
 	cd .ci/tools && go install github.com/rhysd/actionlint/cmd/actionlint
+	cd .ci/tools && go install mvdan.cc/gofumpt
 
 test-compile:
 	@if [ "$(TEST)" = "./..." ]; then \
@@ -222,4 +227,27 @@ tfsdk2fw:
 yamllint:
 	@yamllint .
 
-.PHONY: providerlint build gen generate-changelog gh-workflows-lint golangci-lint sweep test testacc fmt fmtcheck lint tools test-compile website-link-check website-lint website-lint-fix depscheck docscheck semgrep skaff tfsdk2fw
+.PHONY: \
+	providerlint \
+	build \
+	gen \
+	generate-changelog \
+	gh-workflows-lint \
+	golangci-lint \
+	sweep \
+	test \
+	testacc \
+	fmt \
+	fmtcheck \
+	lint \
+	tools \
+	test-compile \
+	website-link-check \
+	website-lint \
+	website-lint-fix \
+	depscheck \
+	docscheck \
+	semgrep \
+	skaff \
+	tfsdk2fw \
+	fumpt
