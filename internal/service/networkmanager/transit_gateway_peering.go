@@ -75,6 +75,10 @@ func ResourceTransitGatewayPeering() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
+			"transit_gateway_peering_attachment_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -143,6 +147,7 @@ func resourceTransitGatewayPeeringRead(ctx context.Context, d *schema.ResourceDa
 	d.Set("peering_type", p.PeeringType)
 	d.Set("resource_arn", p.ResourceArn)
 	d.Set("transit_gateway_arn", transitGatewayPeering.TransitGatewayArn)
+	d.Set("transit_gateway_peering_attachment_id", transitGatewayPeering.TransitGatewayPeeringAttachmentId)
 
 	tags := KeyValueTags(p.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
