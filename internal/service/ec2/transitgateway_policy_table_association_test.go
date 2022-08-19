@@ -131,18 +131,10 @@ func testAccCheckTransitGatewayPolicyTableAssociationDestroy(s *terraform.State)
 }
 
 func testAccTransitGatewayPolicyTableAssociationConfig_basic(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 1), fmt.Sprintf(`
+	return fmt.Sprintf(`
+data "aws_region" "current" {}
+
 resource "aws_ec2_transit_gateway" "test" {
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_ec2_transit_gateway_vpc_attachment" "test" {
-  subnet_ids                                      = aws_subnet.test[*].id
-  transit_gateway_id                              = aws_ec2_transit_gateway.test.id
-  vpc_id                                          = aws_vpc.test.id
-
   tags = {
     Name = %[1]q
   }
@@ -156,9 +148,46 @@ resource "aws_ec2_transit_gateway_policy_table" "test" {
   }
 }
 
+resource "aws_networkmanager_global_network" "test" {
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "awscc_networkmanager_core_network" "test" {
+  global_network_id = aws_networkmanager_global_network.test.id
+  policy_document   = jsonencode(jsondecode(data.aws_networkmanager_core_network_policy_document.test.json))
+}
+
+data "aws_networkmanager_core_network_policy_document" "test" {
+  core_network_configuration {
+    # Don't overlap with default TGW ASN: 64512.
+    asn_ranges = ["65022-65534"]
+
+    edge_locations {
+      location = data.aws_region.current.name
+    }
+  }
+
+  segments {
+    name = "test"
+  }
+}
+
+resource "aws_networkmanager_transit_gateway_peering" "test" {
+  core_network_id     = awscc_networkmanager_core_network.test.id
+  transit_gateway_arn = aws_ec2_transit_gateway.test.arn
+
+  tags = {
+    Name = %[1]q
+  }
+
+  depends_on =[aws_ec2_transit_gateway_policy_table.test]
+}
+
 resource "aws_ec2_transit_gateway_policy_table_association" "test" {
-  transit_gateway_attachment_id   = aws_ec2_transit_gateway_vpc_attachment.test.id
+  transit_gateway_attachment_id   = aws_networkmanager_transit_gateway_peering.test.transit_gateway_peering_attachment_id
   transit_gateway_policy_table_id = aws_ec2_transit_gateway_policy_table.test.id
 }
-`, rName))
+`, rName)
 }
