@@ -111,7 +111,7 @@ func resourceTransitGatewayRouteTableAttachmentCreate(ctx context.Context, d *sc
 		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
-	log.Printf("[DEBUG] Network Manager Transit Gateway Route Table Attachment: %s", input)
+	log.Printf("[DEBUG] Creating Network Manager Transit Gateway Route Table Attachment: %s", input)
 	output, err := conn.CreateTransitGatewayRouteTableAttachmentWithContext(ctx, input)
 
 	if err != nil {
