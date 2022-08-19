@@ -22,7 +22,7 @@ func testAccWorkspaceApiKey_basic(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWorkspaceApiKey_providerBasic(rName),
+				Config: testAccWorkspaceApiKeyConfig_providerBasic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "workspace_id", workspaceResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "key_name", rName),
