@@ -34,7 +34,7 @@ The following arguments are required:
 
 ## Attributes Reference
 
-All the above arguments are also exported as attributes.
+No additional attributes are exported.
 
 ## Import
 
