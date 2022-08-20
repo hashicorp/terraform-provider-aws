@@ -46,7 +46,6 @@ func dataSourceTrackerAssociationRead(ctx context.Context, d *schema.ResourceDat
 	id := fmt.Sprintf("%s|%s", trackerName, consumerArn)
 
 	err := FindTrackerAssociationByTrackerNameAndConsumerARN(ctx, conn, trackerName, consumerArn)
-
 	if err != nil {
 		return create.DiagError(names.Location, create.ErrActionReading, DSNameTrackerAssociation, id, err)
 	}

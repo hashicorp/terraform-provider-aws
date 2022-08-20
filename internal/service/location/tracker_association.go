@@ -144,7 +144,6 @@ func FindTrackerAssociationByTrackerNameAndConsumerARN(ctx context.Context, conn
 	found := false
 
 	err := conn.ListTrackerConsumersPagesWithContext(ctx, in, func(page *locationservice.ListTrackerConsumersOutput, lastPage bool) bool {
-
 		if page == nil {
 			return !lastPage
 		}
