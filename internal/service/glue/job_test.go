@@ -687,6 +687,16 @@ func TestAccGlueJob_pythonShell(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "command.0.name", "pythonshell"),
 				),
 			},
+			{
+				Config: testAccJobConfig_pythonShellVersion(rName, "3.9"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckJobExists(resourceName, &job),
+					resource.TestCheckResourceAttr(resourceName, "command.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "command.0.script_location", "testscriptlocation"),
+					resource.TestCheckResourceAttr(resourceName, "command.0.python_version", "3.9"),
+					resource.TestCheckResourceAttr(resourceName, "command.0.name", "pythonshell"),
+				),
+			},
 		},
 	})
 }
