@@ -740,6 +740,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_location_place_index":         location.DataSourcePlaceIndex(),
 			"aws_location_route_calculator":    location.DataSourceRouteCalculator(),
 			"aws_location_tracker":             location.DataSourceTracker(),
+			"aws_location_tracker_association": location.DataSourceTrackerAssociation(),
 
 			// "aws_arn":                     meta.DataSourceARN(), // Now implemented using Terraform Plugin Framework.
 			"aws_billing_service_account": meta.DataSourceBillingServiceAccount(),
