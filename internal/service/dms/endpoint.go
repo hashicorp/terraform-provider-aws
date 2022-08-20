@@ -333,6 +333,41 @@ func ResourceEndpoint() *schema.Resource {
 				Optional:      true,
 				ConflictsWith: []string{"secrets_manager_access_role_arn", "secrets_manager_arn"},
 			},
+			"redis_settings": {
+				Type:             schema.TypeList,
+				Optional:         true,
+				MaxItems:         1,
+				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"auth_password": {
+							Type:      schema.TypeString,
+							Optional:  true,
+							Sensitive: true,
+						},
+						"auth_type": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      dms.RedisAuthTypeValueAuthRole,
+							ValidateFunc: validation.StringInSlice(dms.RedisAuthTypeValue_Values(), false),
+						},
+						"auth_user_name": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"ssl_ca_certificate_arn": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"ssl_security_protocol": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      dms.SslSecurityProtocolValueSslEncryption,
+							ValidateFunc: validation.StringInSlice(dms.SslSecurityProtocolValue_Values(), false),
+						},
+					},
+				},
+			},
 			"redshift_settings": {
 				Type:             schema.TypeList,
 				Optional:         true,
@@ -757,6 +792,37 @@ func resourceEndpointCreate(d *schema.ResourceData, meta interface{}) error {
 			// Set connection info in top-level namespace as well
 			expandTopLevelConnectionInfo(d, input)
 		}
+	case engineNameRedis:
+		settings := &dms.RedisSettings{
+			Port:       aws.Int64(int64(d.Get("port").(int))),
+			ServerName: aws.String(d.Get("server_name").(string)),
+		}
+
+		if v, ok := d.GetOk("redis_settings"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			tfMap := v.([]interface{})[0].(map[string]interface{})
+
+			if v, ok := tfMap["auth_password"].(string); ok && v != "" {
+				settings.AuthPassword = aws.String(v)
+			}
+
+			if v, ok := tfMap["auth_type"].(string); ok && v != "" {
+				settings.AuthType = aws.String(v)
+			}
+
+			if v, ok := tfMap["auth_user_name"].(string); ok && v != "" {
+				settings.AuthUserName = aws.String(v)
+			}
+
+			if v, ok := tfMap["ssl_ca_certificate_arn"].(string); ok && v != "" {
+				settings.SslCaCertificateArn = aws.String(v)
+			}
+
+			if v, ok := tfMap["ssl_security_protocol"].(string); ok && v != "" {
+				settings.SslSecurityProtocol = aws.String(v)
+			}
+		}
+
+		input.RedisSettings = settings
 	case engineNameRedshift:
 		var settings = &dms.RedshiftSettings{
 			DatabaseName: aws.String(d.Get("database_name").(string)),
@@ -1062,6 +1128,39 @@ func resourceEndpointUpdate(d *schema.ResourceData, meta interface{}) error {
 					expandTopLevelConnectionInfoModify(d, input)
 				}
 			}
+		case engineNameRedis:
+			if d.HasChanges("server_name", "port", "redis_settings") {
+				settings := &dms.RedisSettings{
+					Port:       aws.Int64(int64(d.Get("port").(int))),
+					ServerName: aws.String(d.Get("server_name").(string)),
+				}
+
+				if v, ok := d.GetOk("redis_settings"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+					tfMap := v.([]interface{})[0].(map[string]interface{})
+
+					if v, ok := tfMap["auth_password"].(string); ok && v != "" {
+						settings.AuthPassword = aws.String(v)
+					}
+
+					if v, ok := tfMap["auth_type"].(string); ok && v != "" {
+						settings.AuthType = aws.String(v)
+					}
+
+					if v, ok := tfMap["auth_user_name"].(string); ok && v != "" {
+						settings.AuthUserName = aws.String(v)
+					}
+
+					if v, ok := tfMap["ssl_ca_certificate_arn"].(string); ok && v != "" {
+						settings.SslCaCertificateArn = aws.String(v)
+					}
+
+					if v, ok := tfMap["ssl_security_protocol"].(string); ok && v != "" {
+						settings.SslSecurityProtocol = aws.String(v)
+					}
+				}
+
+				input.RedisSettings = settings
+			}
 		case engineNameRedshift:
 			if d.HasChanges(
 				"username", "password", "server_name", "port", "database_name",
@@ -1314,6 +1413,20 @@ func resourceEndpointSetState(d *schema.ResourceData, endpoint *dms.Endpoint) er
 			d.Set("database_name", endpoint.OracleSettings.DatabaseName)
 			d.Set("secrets_manager_access_role_arn", endpoint.OracleSettings.SecretsManagerAccessRoleArn)
 			d.Set("secrets_manager_arn", endpoint.OracleSettings.SecretsManagerSecretId)
+		} else {
+			flattenTopLevelConnectionInfo(d, endpoint)
+		}
+	case engineNameRedis:
+		if endpoint.RedisSettings != nil {
+			d.Set("server_name", endpoint.RedisSettings.ServerName)
+			d.Set("port", endpoint.RedisSettings.Port)
+
+			tfMap := flattenRedisSettings(endpoint.RedisSettings)
+			tfMap["auth_password"] = d.Get("redis_settings.0.auth_password").(string)
+
+			if err := d.Set("redis_settings", []interface{}{tfMap}); err != nil {
+				return fmt.Errorf("setting redis_settings for DMS: %s", err)
+			}
 		} else {
 			flattenTopLevelConnectionInfo(d, endpoint)
 		}
@@ -1781,6 +1894,32 @@ func expandS3Settings(tfMap map[string]interface{}) *dms.S3Settings {
 	}
 
 	return apiObject
+}
+
+func flattenRedisSettings(apiObject *dms.RedisSettings) map[string]interface{} {
+	if apiObject == nil {
+		return map[string]interface{}{}
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.AuthType; v != nil {
+		tfMap["auth_type"] = v
+	}
+
+	if v := apiObject.AuthUserName; v != nil {
+		tfMap["auth_user_name"] = v
+	}
+
+	if v := apiObject.SslCaCertificateArn; v != nil {
+		tfMap["ssl_ca_certificate_arn"] = v
+	}
+
+	if v := apiObject.SslSecurityProtocol; v != nil {
+		tfMap["ssl_security_protocol"] = v
+	}
+
+	return tfMap
 }
 
 func flattenS3Settings(apiObject *dms.S3Settings) []map[string]interface{} {
