@@ -70,6 +70,7 @@ func sweepDBClusters(region string) error {
 			id := aws.StringValue(dBCluster.DBClusterIdentifier)
 			input := &docdb.DeleteDBClusterInput{
 				DBClusterIdentifier: dBCluster.DBClusterIdentifier,
+				SkipFinalSnapshot: true,
 			}
 
 			log.Printf("[INFO] Deleting DocDB Cluster: %s", id)
