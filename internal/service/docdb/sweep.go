@@ -53,7 +53,9 @@ func init() {
 	resource.AddTestSweepers("aws_docdb_cluster_parameter_group", &resource.Sweeper{
 		Name:         "aws_docdb_cluster_parameter_group",
 		F:            sweepDBClusterParameterGroups,
-		Dependencies: []string{},
+		Dependencies: []string{
+			"aws_docdb_cluster_instance",
+		},
 	})
 }
 
