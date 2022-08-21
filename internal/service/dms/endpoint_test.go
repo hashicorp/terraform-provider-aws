@@ -1310,6 +1310,81 @@ func TestAccDMSEndpoint_db2(t *testing.T) {
 	})
 }
 
+func TestAccDMSEndpoint_Redis_basic(t *testing.T) {
+	resourceName := "aws_dms_endpoint.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEndpointConfig_redis(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEndpointExists(resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, "endpoint_arn"),
+					resource.TestCheckResourceAttr(resourceName, "redis_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "redis_settings.0.auth_type", "auth-role"),
+					resource.TestCheckResourceAttr(resourceName, "redis_settings.0.auth_user_name", "user"),
+					resource.TestCheckResourceAttr(resourceName, "redis_settings.0.port", "6379"),
+					resource.TestCheckResourceAttr(resourceName, "redis_settings.0.server_name", "redis_dns"),
+					resource.TestCheckResourceAttr(resourceName, "redis_settings.0.ssl_ca_certificate_arn", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "redis_settings.0.ssl_security_protocol", "ssl-encryption"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"redis_settings.0.auth_password"},
+			},
+		},
+	})
+}
+
+func TestAccDMSEndpoint_Redis_update(t *testing.T) {
+	resourceName := "aws_dms_endpoint.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEndpointConfig_redisUpdate(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEndpointExists(resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, "endpoint_arn"),
+					resource.TestCheckResourceAttr(resourceName, "redis_settings.#", "1"),
+				),
+			},
+			{
+				Config: testAccEndpointConfig_redisUpdate(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEndpointExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "redis_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "redis_settings.0.auth_type", "auth-role"),
+					resource.TestCheckResourceAttr(resourceName, "redis_settings.0.auth_user_name", "user"),
+					resource.TestCheckResourceAttr(resourceName, "redis_settings.0.port", "6379"),
+					resource.TestCheckResourceAttr(resourceName, "redis_settings.0.server_name", "redis_dns"),
+					resource.TestCheckResourceAttr(resourceName, "redis_settings.0.ssl_ca_certificate_arn", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "redis_settings.0.ssl_security_protocol", "ssl-encryption"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"redis_settings.0.auth_password"},
+			},
+		},
+	})
+}
+
 func TestAccDMSEndpoint_Redshift_basic(t *testing.T) {
 	resourceName := "aws_dms_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -2913,6 +2988,54 @@ resource "aws_dms_endpoint" "test" {
 
   tags = {
     Name = %[1]q
+  }
+}
+`, rName)
+}
+
+func testAccEndpointConfig_redis(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_dms_endpoint" "test" {
+  endpoint_id                 = %[1]q
+  endpoint_type               = "target"
+  engine_name                 = "redis"
+  redis_settings {
+    auth_password          = "password"
+    auth_type              = "auth-role"
+    auth_user_name         = "user"
+    port                   = 6379
+    server_name            = "redis_dns"
+    ssl_ca_certificate_arn = "arn"
+    ssl_security_protocol  = "ssl-encryption"
+  }
+  tags = {
+    Name   = %[1]q
+    Update = "to-update"
+    Remove = "to-remove"
+  }
+}
+`, rName)
+}
+
+func testAccEndpointConfig_redisUpdate(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_dms_endpoint" "test" {
+  endpoint_id                 = %[1]q
+  endpoint_type               = "target"
+  engine_name                 = "redis"
+  redis_settings {
+    auth_password          = "password"
+    auth_type              = "auth-role"
+    auth_user_name         = "user"
+    port                   = 6379
+    server_name            = "redis_dns"
+    ssl_ca_certificate_arn = "arn"
+    ssl_security_protocol  = "ssl-encryption"
+  }
+  tags = {
+    Name   = %[1]q
+    Update = "to-update"
+    Remove = "to-remove"
   }
 }
 `, rName)
