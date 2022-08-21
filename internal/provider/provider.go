@@ -1550,7 +1550,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_grafana_license_association":          grafana.ResourceLicenseAssociation(),
 			"aws_grafana_role_association":             grafana.ResourceRoleAssociation(),
 			"aws_grafana_workspace":                    grafana.ResourceWorkspace(),
-			"aws_grafana_workspace_api_key":            grafana.ResourceWorkspaceApiKey(),
+			"aws_grafana_workspace_api_key":            grafana.ResourceWorkspaceAPIKey(),
 			"aws_grafana_workspace_saml_configuration": grafana.ResourceWorkspaceSAMLConfiguration(),
 
 			"aws_guardduty_detector":                   guardduty.ResourceDetector(),
