@@ -26,7 +26,9 @@ func init() {
 	resource.AddTestSweepers("aws_docdb_subnet_group", &resource.Sweeper{
 		Name:         "aws_docdb_subnet_group",
 		F:            sweepDBSubnetGroups,
-		Dependencies: []string{},
+		Dependencies: []string{
+			"aws_docdb_cluster_instance",
+		},
 	})
 	resource.AddTestSweepers("aws_docdb_event_subscription", &resource.Sweeper{
 		Name:         "aws_docdb_event_subscription",
