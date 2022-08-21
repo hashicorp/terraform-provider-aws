@@ -340,14 +340,14 @@ func ResourceEndpoint() *schema.Resource {
 				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"auth_password": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
 						"auth_type": {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringInSlice(dms.RedisAuthTypeValue_Values(), false),
-						},
-						"auth_password": {
-							Type:     schema.TypeString,
-							Optional: true,
 						},
 						"auth_user_name": {
 							Type:     schema.TypeString,
