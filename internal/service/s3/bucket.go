@@ -1490,8 +1490,8 @@ func resourceBucketDelete(ctx context.Context, d *schema.ResourceData, meta inte
 func BucketRegionalDomainName(bucket string, region string) (string, error) {
 	// Return a default AWS Commercial domain name if no region is provided
 	// Otherwise EndpointFor() will return BUCKET.s3..amazonaws.com
-	if region == "" {
-		return fmt.Sprintf("%s.s3.amazonaws.com", bucket), nil //lintignore:AWSR001
+	if region == "" || region == endpoints.UsEast1RegionID {
+		return fmt.Sprintf("%s.s3.%s.amazonaws.com", bucket, endpoints.UsEast1RegionID), nil //lintignore:AWSR001
 	}
 	endpoint, err := endpoints.DefaultResolver().EndpointFor(endpoints.S3ServiceID, region)
 	if err != nil {
