@@ -340,20 +340,18 @@ func ResourceEndpoint() *schema.Resource {
 				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"auth_password": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							RequiredWith: []string{"auth_type"},
-						},
 						"auth_type": {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringInSlice(dms.RedisAuthTypeValue_Values(), false),
 						},
+						"auth_password": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
 						"auth_user_name": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							RequiredWith: []string{"auth_type"},
+							Type:     schema.TypeString,
+							Optional: true,
 						},
 						"port": {
 							Type:         schema.TypeInt,
@@ -365,14 +363,12 @@ func ResourceEndpoint() *schema.Resource {
 							Required: true,
 						},
 						"ssl_ca_certificate_arn": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							RequiredWith: []string{"ssl_security_protocol"},
+							Type:     schema.TypeString,
+							Optional: true,
 						},
 						"ssl_security_protocol": {
 							Type:         schema.TypeString,
 							Required:     true,
-							Default:      dms.SslSecurityProtocolValueSslEncryption,
 							ValidateFunc: validation.StringInSlice(dms.SslSecurityProtocolValue_Values(), false),
 						},
 					},
