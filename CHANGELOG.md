@@ -3,6 +3,7 @@
 FEATURES:
 
 * **New Data Source:** `aws_location_tracker_association` ([#26404](https://github.com/hashicorp/terraform-provider-aws/issues/26404))
+* **New Resource:** `aws_grafana_workspace_api_key` ([#25286](https://github.com/hashicorp/terraform-provider-aws/issues/25286))
 
 ENHANCEMENTS:
 
