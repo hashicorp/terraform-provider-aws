@@ -1,3 +1,3 @@
 ```release-note:note
-resource/aws_db_security_group: With the retirement of EC2-Classic the`aws_db_security_group` reßsource has been deprecated and will be removed in a future version
+resource/aws_db_security_group: With the retirement of EC2-Classic the`aws_db_security_group` resource has been deprecated and will be removed in a future version
 ```
