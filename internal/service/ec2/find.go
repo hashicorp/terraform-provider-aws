@@ -1530,8 +1530,8 @@ func FindNetworkInsightsAnalysisByID(conn *ec2.EC2, id string) (*ec2.NetworkInsi
 	return output, nil
 }
 
-func FindNetworkInsightsPath(conn *ec2.EC2, input *ec2.DescribeNetworkInsightsPathsInput) (*ec2.NetworkInsightsPath, error) {
-	output, err := FindNetworkInsightsPaths(conn, input)
+func FindNetworkInsightsPath(ctx context.Context, conn *ec2.EC2, input *ec2.DescribeNetworkInsightsPathsInput) (*ec2.NetworkInsightsPath, error) {
+	output, err := FindNetworkInsightsPaths(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
@@ -1548,10 +1548,10 @@ func FindNetworkInsightsPath(conn *ec2.EC2, input *ec2.DescribeNetworkInsightsPa
 	return output[0], nil
 }
 
-func FindNetworkInsightsPaths(conn *ec2.EC2, input *ec2.DescribeNetworkInsightsPathsInput) ([]*ec2.NetworkInsightsPath, error) {
+func FindNetworkInsightsPaths(ctx context.Context, conn *ec2.EC2, input *ec2.DescribeNetworkInsightsPathsInput) ([]*ec2.NetworkInsightsPath, error) {
 	var output []*ec2.NetworkInsightsPath
 
-	err := conn.DescribeNetworkInsightsPathsPages(input, func(page *ec2.DescribeNetworkInsightsPathsOutput, lastPage bool) bool {
+	err := conn.DescribeNetworkInsightsPathsPagesWithContext(ctx, input, func(page *ec2.DescribeNetworkInsightsPathsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -1579,12 +1579,12 @@ func FindNetworkInsightsPaths(conn *ec2.EC2, input *ec2.DescribeNetworkInsightsP
 	return output, nil
 }
 
-func FindNetworkInsightsPathByID(conn *ec2.EC2, id string) (*ec2.NetworkInsightsPath, error) {
+func FindNetworkInsightsPathByID(ctx context.Context, conn *ec2.EC2, id string) (*ec2.NetworkInsightsPath, error) {
 	input := &ec2.DescribeNetworkInsightsPathsInput{
 		NetworkInsightsPathIds: aws.StringSlice([]string{id}),
 	}
 
-	output, err := FindNetworkInsightsPath(conn, input)
+	output, err := FindNetworkInsightsPath(ctx, conn, input)
 
 	if err != nil {
 		return nil, err

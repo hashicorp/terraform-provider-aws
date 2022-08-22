@@ -1,6 +1,7 @@
 package ec2_test
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"testing"
@@ -226,7 +227,7 @@ func testAccCheckNetworkInsightsPathExists(n string) resource.TestCheckFunc {
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
-		_, err := tfec2.FindNetworkInsightsPathByID(conn, rs.Primary.ID)
+		_, err := tfec2.FindNetworkInsightsPathByID(context.Background(), conn, rs.Primary.ID)
 
 		return err
 	}
@@ -240,7 +241,7 @@ func testAccCheckNetworkInsightsPathDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := tfec2.FindNetworkInsightsPathByID(conn, rs.Primary.ID)
+		_, err := tfec2.FindNetworkInsightsPathByID(context.Background(), conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -257,26 +258,9 @@ func testAccCheckNetworkInsightsPathDestroy(s *terraform.State) error {
 }
 
 func testAccVPCNetworkInsightsPathConfig_basic(rName, protocol string) string {
-	return fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test" {
-  vpc_id     = aws_vpc.test.id
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 1), fmt.Sprintf(`
 resource "aws_network_interface" "test_source" {
-  subnet_id = aws_subnet.test.id
+  subnet_id = aws_subnet.test[0].id
 
   tags = {
     Name = %[1]q
@@ -284,7 +268,7 @@ resource "aws_network_interface" "test_source" {
 }
 
 resource "aws_network_interface" "test_destination" {
-  subnet_id = aws_subnet.test.id
+  subnet_id = aws_subnet.test[0].id
 
   tags = {
     Name = %[1]q
@@ -296,30 +280,13 @@ resource "aws_ec2_network_insights_path" "test" {
   destination = aws_network_interface.test_destination.id
   protocol    = %[2]q
 }
-`, rName, protocol)
+`, rName, protocol))
 }
 
 func testAccVPCNetworkInsightsPathConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test" {
-  vpc_id     = aws_vpc.test.id
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 1), fmt.Sprintf(`
 resource "aws_network_interface" "test_source" {
-  subnet_id = aws_subnet.test.id
+  subnet_id = aws_subnet.test[0].id
 
   tags = {
     Name = %[1]q
@@ -327,7 +294,7 @@ resource "aws_network_interface" "test_source" {
 }
 
 resource "aws_network_interface" "test_destination" {
-  subnet_id = aws_subnet.test.id
+  subnet_id = aws_subnet.test[0].id
 
   tags = {
     Name = %[1]q
@@ -343,30 +310,13 @@ resource "aws_ec2_network_insights_path" "test" {
     %[2]q = %[3]q
   }
 }
-`, rName, tagKey1, tagValue1)
+`, rName, tagKey1, tagValue1))
 }
 
 func testAccVPCNetworkInsightsPathConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test" {
-  vpc_id     = aws_vpc.test.id
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 1), fmt.Sprintf(`
 resource "aws_network_interface" "test_source" {
-  subnet_id = aws_subnet.test.id
+  subnet_id = aws_subnet.test[0].id
 
   tags = {
     Name = %[1]q
@@ -374,7 +324,7 @@ resource "aws_network_interface" "test_source" {
 }
 
 resource "aws_network_interface" "test_destination" {
-  subnet_id = aws_subnet.test.id
+  subnet_id = aws_subnet.test[0].id
 
   tags = {
     Name = %[1]q
@@ -391,19 +341,11 @@ resource "aws_ec2_network_insights_path" "test" {
     %[4]q = %[5]q
   }
 }
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }
 
 func testAccVPCNetworkInsightsPathConfig_sourceIP(rName, sourceIP string) string {
-	return fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 1), fmt.Sprintf(`
 resource "aws_internet_gateway" "test" {
   vpc_id = aws_vpc.test.id
 
@@ -412,17 +354,8 @@ resource "aws_internet_gateway" "test" {
   }
 }
 
-resource "aws_subnet" "test" {
-  vpc_id     = aws_vpc.test.id
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
 resource "aws_network_interface" "test" {
-  subnet_id = aws_subnet.test.id
+  subnet_id = aws_subnet.test[0].id
 
   tags = {
     Name = %[1]q
@@ -439,19 +372,11 @@ resource "aws_ec2_network_insights_path" "test" {
     Name = %[1]q
   }
 }
-`, rName, sourceIP)
+`, rName, sourceIP))
 }
 
 func testAccVPCNetworkInsightsPathConfig_destinationIP(rName, destinationIP string) string {
-	return fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 1), fmt.Sprintf(`
 resource "aws_internet_gateway" "test" {
   vpc_id = aws_vpc.test.id
 
@@ -460,17 +385,8 @@ resource "aws_internet_gateway" "test" {
   }
 }
 
-resource "aws_subnet" "test" {
-  vpc_id     = aws_vpc.test.id
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
 resource "aws_network_interface" "test" {
-  subnet_id = aws_subnet.test.id
+  subnet_id = aws_subnet.test[0].id
 
   tags = {
     Name = %[1]q
@@ -487,30 +403,13 @@ resource "aws_ec2_network_insights_path" "test" {
     Name = %[1]q
   }
 }
-`, rName, destinationIP)
+`, rName, destinationIP))
 }
 
 func testAccVPCNetworkInsightsPathConfig_destinationPort(rName string, destinationPort int) string {
-	return fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test" {
-  vpc_id     = aws_vpc.test.id
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 1), fmt.Sprintf(`
 resource "aws_network_interface" "test_source" {
-  subnet_id = aws_subnet.test.id
+	subnet_id = aws_subnet.test[0].id
 
   tags = {
     Name = %[1]q
@@ -518,7 +417,7 @@ resource "aws_network_interface" "test_source" {
 }
 
 resource "aws_network_interface" "test_destination" {
-  subnet_id = aws_subnet.test.id
+  subnet_id = aws_subnet.test[0].id
 
   tags = {
     Name = %[1]q
@@ -535,5 +434,5 @@ resource "aws_ec2_network_insights_path" "test" {
     Name = %[1]q
   }
 }
-`, rName, destinationPort)
+`, rName, destinationPort))
 }
