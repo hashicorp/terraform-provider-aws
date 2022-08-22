@@ -409,7 +409,7 @@ resource "aws_ec2_network_insights_path" "test" {
 func testAccVPCNetworkInsightsPathConfig_destinationPort(rName string, destinationPort int) string {
 	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 1), fmt.Sprintf(`
 resource "aws_network_interface" "test_source" {
-	subnet_id = aws_subnet.test[0].id
+  subnet_id = aws_subnet.test[0].id
 
   tags = {
     Name = %[1]q
