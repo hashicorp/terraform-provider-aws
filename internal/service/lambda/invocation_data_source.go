@@ -24,7 +24,6 @@ func DataSourceInvocation() *schema.Resource {
 			"qualifier": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  FunctionVersionLatest,
 			},
 
 			"input": {
