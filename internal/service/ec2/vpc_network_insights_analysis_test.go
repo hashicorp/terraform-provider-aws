@@ -16,7 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccNetworkInsightsAnalysis_basic(t *testing.T) {
+func TestAccVPCNetworkInsightsAnalysis_basic(t *testing.T) {
 	resourceName := "aws_ec2_network_insights_analysis.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -27,7 +27,7 @@ func TestAccNetworkInsightsAnalysis_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckNetworkInsightsAnalysisDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEC2NetworkInsightsAnalysisConfig(rName),
+				Config: testAccVPCNetworkInsightsAnalysisConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNetworkInsightsAnalysisExists(resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`network-insights-analysis/.+$`)),
@@ -50,7 +50,7 @@ func TestAccNetworkInsightsAnalysis_basic(t *testing.T) {
 	})
 }
 
-func TestAccNetworkInsightsAnalysis_disappears(t *testing.T) {
+func TestAccVPCNetworkInsightsAnalysis_disappears(t *testing.T) {
 	resourceName := "aws_ec2_network_insights_analysis.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -61,7 +61,7 @@ func TestAccNetworkInsightsAnalysis_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckNetworkInsightsAnalysisDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEC2NetworkInsightsAnalysisConfig(rName),
+				Config: testAccVPCNetworkInsightsAnalysisConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNetworkInsightsAnalysisExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceNetworkInsightsAnalysis(), resourceName),
@@ -72,7 +72,7 @@ func TestAccNetworkInsightsAnalysis_disappears(t *testing.T) {
 	})
 }
 
-func TestAccNetworkInsightsAnalysis_tags(t *testing.T) {
+func TestAccVPCNetworkInsightsAnalysis_tags(t *testing.T) {
 	resourceName := "aws_ec2_network_insights_analysis.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -83,7 +83,7 @@ func TestAccNetworkInsightsAnalysis_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckNetworkInsightsAnalysisDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEC2NetworkInsightsAnalysisConfigTags1(rName, "key1", "value1"),
+				Config: testAccVPCNetworkInsightsAnalysisConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNetworkInsightsAnalysisExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -97,7 +97,7 @@ func TestAccNetworkInsightsAnalysis_tags(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"wait_for_completion"},
 			},
 			{
-				Config: testAccEC2NetworkInsightsAnalysisConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccVPCNetworkInsightsAnalysisConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNetworkInsightsAnalysisExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -106,7 +106,7 @@ func TestAccNetworkInsightsAnalysis_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccEC2NetworkInsightsAnalysisConfigTags1(rName, "key2", "value2"),
+				Config: testAccVPCNetworkInsightsAnalysisConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNetworkInsightsAnalysisExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -117,7 +117,7 @@ func TestAccNetworkInsightsAnalysis_tags(t *testing.T) {
 	})
 }
 
-func TestAccNetworkInsightsAnalysis_filterInARNs(t *testing.T) {
+func TestAccVPCNetworkInsightsAnalysis_filterInARNs(t *testing.T) {
 	resourceName := "aws_ec2_network_insights_analysis.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -128,7 +128,7 @@ func TestAccNetworkInsightsAnalysis_filterInARNs(t *testing.T) {
 		CheckDestroy:             testAccCheckNetworkInsightsAnalysisDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEC2NetworkInsightsAnalysisFilterInARNsConfig(rName, "vpc-peering-connection/pcx-fakearn1"),
+				Config: testAccVPCNetworkInsightsAnalysisConfig_filterInARNs(rName, "vpc-peering-connection/pcx-fakearn1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNetworkInsightsAnalysisExists(resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "filter_in_arns.0", "ec2", regexp.MustCompile(`vpc-peering-connection/pcx-fakearn1$`)),
@@ -141,7 +141,7 @@ func TestAccNetworkInsightsAnalysis_filterInARNs(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"wait_for_completion"},
 			},
 			{
-				Config: testAccEC2NetworkInsightsAnalysisFilterInARNsConfig(rName, "vpc-peering-connection/pcx-fakearn2"),
+				Config: testAccVPCNetworkInsightsAnalysisConfig_filterInARNs(rName, "vpc-peering-connection/pcx-fakearn2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNetworkInsightsAnalysisExists(resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "filter_in_arns.0", "ec2", regexp.MustCompile(`vpc-peering-connection/pcx-fakearn2$`)),
@@ -151,7 +151,7 @@ func TestAccNetworkInsightsAnalysis_filterInARNs(t *testing.T) {
 	})
 }
 
-func TestAccNetworkInsightsAnalysis_waitForCompletion(t *testing.T) {
+func TestAccVPCNetworkInsightsAnalysis_waitForCompletion(t *testing.T) {
 	resourceName := "aws_ec2_network_insights_analysis.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -162,7 +162,7 @@ func TestAccNetworkInsightsAnalysis_waitForCompletion(t *testing.T) {
 		CheckDestroy:             testAccCheckNetworkInsightsAnalysisDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEC2NetworkInsightsAnalysisWaitForCompletionConfig(rName, false),
+				Config: testAccVPCNetworkInsightsAnalysisConfig_waitForCompletion(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNetworkInsightsAnalysisExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "wait_for_completion", "false"),
@@ -176,7 +176,7 @@ func TestAccNetworkInsightsAnalysis_waitForCompletion(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"wait_for_completion"},
 			},
 			{
-				Config: testAccEC2NetworkInsightsAnalysisWaitForCompletionConfig(rName, true),
+				Config: testAccVPCNetworkInsightsAnalysisConfig_waitForCompletion(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNetworkInsightsAnalysisExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "wait_for_completion", "true"),
@@ -233,27 +233,10 @@ func testAccCheckNetworkInsightsAnalysisDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccEC2NetworkInsightsAnalysisConfig(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test" {
-  vpc_id     = aws_vpc.test.id
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
+func testAccVPCNetworkInsightsAnalysisConfig_base(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 1), fmt.Sprintf(`
 resource "aws_network_interface" "test_source" {
-  subnet_id = aws_subnet.test.id
+  subnet_id = aws_subnet.test[0].id
 
   tags = {
     Name = %[1]q
@@ -261,7 +244,7 @@ resource "aws_network_interface" "test_source" {
 }
 
 resource "aws_network_interface" "test_destination" {
-  subnet_id = aws_subnet.test.id
+  subnet_id = aws_subnet.test[0].id
 
   tags = {
     Name = %[1]q
@@ -277,229 +260,68 @@ resource "aws_ec2_network_insights_path" "test" {
     Name = %[1]q
   }
 }
+`, rName))
+}
 
+func testAccVPCNetworkInsightsAnalysisConfig_basic(rName string) string {
+	return acctest.ConfigCompose(testAccVPCNetworkInsightsAnalysisConfig_base(rName), `
 resource "aws_ec2_network_insights_analysis" "test" {
   network_insights_path_id = aws_ec2_network_insights_path.test.id
 }
-`, rName)
+`)
 }
 
-func testAccEC2NetworkInsightsAnalysisFilterInARNsConfig(rName, arnSuffix string) string {
-	return fmt.Sprintf(`
+func testAccVPCNetworkInsightsAnalysisConfig_tags1(rName, tagKey1, tagValue1 string) string {
+	return acctest.ConfigCompose(testAccVPCNetworkInsightsAnalysisConfig_base(rName), fmt.Sprintf(`
+resource "aws_ec2_network_insights_analysis" "test" {
+  network_insights_path_id = aws_ec2_network_insights_path.test.id
+
+  tags = {
+    %[1]q = %[2]q
+  }
+}
+`, tagKey1, tagValue1))
+}
+
+func testAccVPCNetworkInsightsAnalysisConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return acctest.ConfigCompose(testAccVPCNetworkInsightsAnalysisConfig_base(rName), fmt.Sprintf(`
+resource "aws_ec2_network_insights_analysis" "test" {
+  network_insights_path_id = aws_ec2_network_insights_path.test.id
+
+  tags = {
+    %[1]q = %[2]q
+    %[3]q = %[4]q
+  }
+}
+`, tagKey1, tagValue1, tagKey2, tagValue2))
+}
+
+func testAccVPCNetworkInsightsAnalysisConfig_filterInARNs(rName, arnSuffix string) string {
+	return acctest.ConfigCompose(testAccVPCNetworkInsightsAnalysisConfig_base(rName), fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 data "aws_region" "current" {}
 data "aws_partition" "current" {}
 
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test" {
-  vpc_id     = aws_vpc.test.id
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_network_interface" "test_source" {
-  subnet_id = aws_subnet.test.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_network_interface" "test_destination" {
-  subnet_id = aws_subnet.test.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_ec2_network_insights_path" "test" {
-  source      = aws_network_interface.test_source.id
-  destination = aws_network_interface.test_destination.id
-  protocol    = "tcp"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
 resource "aws_ec2_network_insights_analysis" "test" {
   network_insights_path_id = aws_ec2_network_insights_path.test.id
-  filter_in_arns           = ["arn:${data.aws_partition.current.partition}:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.id}:%v"]
-}
-
-`, rName, arnSuffix)
-}
-
-func testAccEC2NetworkInsightsAnalysisConfigTags1(rName, tagKey1, tagValue1 string) string {
-	return fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
+  filter_in_arns           = ["arn:${data.aws_partition.current.partition}:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.id}:%[2]s"]
 
   tags = {
     Name = %[1]q
   }
 }
-
-resource "aws_subnet" "test" {
-  vpc_id     = aws_vpc.test.id
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
+`, rName, arnSuffix))
 }
 
-resource "aws_network_interface" "test_source" {
-  subnet_id = aws_subnet.test.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_network_interface" "test_destination" {
-  subnet_id = aws_subnet.test.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_ec2_network_insights_path" "test" {
-  source      = aws_network_interface.test_source.id
-  destination = aws_network_interface.test_destination.id
-  protocol    = "tcp"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
+func testAccVPCNetworkInsightsAnalysisConfig_waitForCompletion(rName string, waitForCompletion bool) string {
+	return acctest.ConfigCompose(testAccVPCNetworkInsightsAnalysisConfig_base(rName), fmt.Sprintf(`
 resource "aws_ec2_network_insights_analysis" "test" {
   network_insights_path_id = aws_ec2_network_insights_path.test.id
-
-  tags = {
-    %[2]q = %[3]q
-  }
-}
-`, rName, tagKey1, tagValue1)
-}
-
-func testAccEC2NetworkInsightsAnalysisConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
+  wait_for_completion      = %[2]t
 
   tags = {
     Name = %[1]q
   }
 }
-
-resource "aws_subnet" "test" {
-  vpc_id     = aws_vpc.test.id
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_network_interface" "test_source" {
-  subnet_id = aws_subnet.test.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_network_interface" "test_destination" {
-  subnet_id = aws_subnet.test.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_ec2_network_insights_path" "test" {
-  source      = aws_network_interface.test_source.id
-  destination = aws_network_interface.test_destination.id
-  protocol    = "tcp"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_ec2_network_insights_analysis" "test" {
-  network_insights_path_id = aws_ec2_network_insights_path.test.id
-
-  tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
-  }
-}
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
-}
-
-func testAccEC2NetworkInsightsAnalysisWaitForCompletionConfig(rName string, waitForCompletion bool) string {
-	return fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test" {
-  vpc_id     = aws_vpc.test.id
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_network_interface" "test_source" {
-  subnet_id = aws_subnet.test.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_network_interface" "test_destination" {
-  subnet_id = aws_subnet.test.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_ec2_network_insights_path" "test" {
-  source      = aws_network_interface.test_source.id
-  destination = aws_network_interface.test_destination.id
-  protocol    = "tcp"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_ec2_network_insights_analysis" "test" {
-  network_insights_path_id = aws_ec2_network_insights_path.test.id
-  wait_for_completion      = %t
-}
-`, rName, waitForCompletion)
+`, rName, waitForCompletion))
 }
