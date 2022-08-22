@@ -20,10 +20,10 @@ func TestAccNetworkInsightsAnalysis_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckNetworkInsightsAnalysisDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckNetworkInsightsAnalysisDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEC2NetworkInsightsAnalysisConfig(rName),
@@ -54,10 +54,10 @@ func TestAccNetworkInsightsAnalysis_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckNetworkInsightsAnalysisDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckNetworkInsightsAnalysisDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEC2NetworkInsightsAnalysisConfig(rName),
@@ -76,10 +76,10 @@ func TestAccNetworkInsightsAnalysis_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckNetworkInsightsAnalysisDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckNetworkInsightsAnalysisDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEC2NetworkInsightsAnalysisConfigTags1(rName, "key1", "value1"),
@@ -121,10 +121,10 @@ func TestAccNetworkInsightsAnalysis_filterInARNs(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckNetworkInsightsAnalysisDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckNetworkInsightsAnalysisDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEC2NetworkInsightsAnalysisFilterInARNsConfig(rName, "vpc-peering-connection/pcx-fakearn1"),
@@ -155,10 +155,10 @@ func TestAccNetworkInsightsAnalysis_waitForCompletion(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckNetworkInsightsAnalysisDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckNetworkInsightsAnalysisDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEC2NetworkInsightsAnalysisWaitForCompletionConfig(rName, false),
