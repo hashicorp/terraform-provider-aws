@@ -10,6 +10,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
@@ -153,7 +154,14 @@ func dataSourceObjectRead(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] Reading S3 Object: %s", input)
 	out, err := conn.HeadObject(&input)
 	if err != nil {
-		return fmt.Errorf("failed getting S3 Bucket (%s) Object (%s): %w", bucket, key, err)
+		// if we can't find object, set nothing and return
+		// this way when running `terraform destroy`, it wont error if object is deleted already
+		if tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchKey) {
+			log.Printf("[INFO] No object with key found in bucket")
+			return nil
+		} else {
+			return fmt.Errorf("failed getting S3 Bucket (%s) Object (%s): %w", bucket, key, err)
+		}
 	}
 	if aws.BoolValue(out.DeleteMarker) {
 		return fmt.Errorf("Requested S3 object %q%s has been deleted", bucket+key, versionText)
