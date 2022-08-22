@@ -1,7 +1,6 @@
 package grafana_test
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/managedgrafana"
@@ -35,11 +34,11 @@ func TestAccWorkspaceApiKey_basic(t *testing.T) {
 }
 
 func testAccWorkspaceApiKey_providerBasic(rName string) string {
-	return acctest.ConfigCompose(testAccWorkspaceSAMLConfigurationConfig_providerBasic(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccWorkspaceSAMLConfigurationConfig_providerBasic(rName), `
 resource "aws_grafana_workspace_api_key" "test" {
-  workspace_id    = aws_grafana_workspace.test.id
-  key_name        = %[1]q
-  key_role        = "EDITOR"
-  seconds_to_live = 3600
-}`, rName))
+	workspace_id    = aws_grafana_workspace.test.id
+	key_name        = "example-key"
+	key_role        = "EDITOR"
+	seconds_to_live = 3600
+}`)
 }
