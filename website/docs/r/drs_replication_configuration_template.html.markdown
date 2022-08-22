@@ -20,7 +20,7 @@ resource "aws_drs_replication_configuration_template" "example" {
   bandwidth_throttling                    = 123
   create_public_ip                        = True or False
   data_plane_routing                      = "PRIVATE_IP" or "PUBLIC_IP"
-  default_large_staging_disk_type         = "GP2"or "GP3 or "ST1 or "AUTO
+  default_large_staging_disk_type         = "GP2" or "GP3" or "ST1" or "AUTO"
   ebs_ecryption                           = "DEFAULT" or "CUSTOM"
   ebs_encryption_key_arn                  = "string"
   pit_policy                              = [{"enabled": True or False, "interval":123}]
