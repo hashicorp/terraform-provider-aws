@@ -9,10 +9,9 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -74,15 +73,12 @@ func ResourceNetworkInsightsAnalysis() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: customdiff.Sequence(
-			verify.SetTagsDiff,
-		),
+		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
 func resourceNetworkInsightsAnalysisCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).EC2Conn
-
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -91,41 +87,22 @@ func resourceNetworkInsightsAnalysisCreate(ctx context.Context, d *schema.Resour
 		TagSpecifications:     tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeNetworkInsightsAnalysis),
 	}
 
-	if v := d.Get("filter_in_arns").(*schema.Set); v.Len() > 0 {
-		for _, v := range v.List() {
-			input.FilterInArns = append(input.FilterInArns, aws.String(v.(string)))
-		}
+	if v, ok := d.GetOk("filter_in_arns"); ok && v.(*schema.Set).Len() > 0 {
+		input.FilterInArns = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
 	log.Printf("[DEBUG] Creating EC2 Network Insights Analysis: %s", input)
 	response, err := conn.StartNetworkInsightsAnalysisWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("error creating Network Insights Analysis: %s", err)
+		return diag.Errorf("error creating EC2 Network Insights Analysis: %s", err)
 	}
 
 	d.SetId(aws.StringValue(response.NetworkInsightsAnalysis.NetworkInsightsAnalysisId))
 
 	if d.Get("wait_for_completion").(bool) {
-		log.Printf("[DEBUG] Waiting until Network Insights Analysis (%s) is complete", d.Id())
-		stateConf := &resource.StateChangeConf{
-			Pending: []string{"running"},
-			Target:  []string{"succeeded", "failed"},
-			Refresh: func() (result interface{}, state string, err error) {
-				nia, err := FindNetworkInsightsAnalysisByID(ctx, conn, d.Id())
-				if err != nil {
-					return nil, "", err
-				}
-				return nia, *nia.Status, nil
-			},
-			Timeout:    d.Timeout(schema.TimeoutCreate),
-			Delay:      10 * time.Second,
-			MinTimeout: 5 * time.Second,
-		}
-
-		_, err := stateConf.WaitForStateContext(ctx)
-		if err != nil {
-			return diag.Errorf("error waiting until Network Insights Analysis (%s) is complete: %s", d.Id(), err)
+		if _, err := WaitNetworkInsightsAnalysisCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+			return diag.Errorf("error waiting for EC2 Network Insights Analysis (%s) create: %s", d.Id(), err)
 		}
 	}
 
@@ -141,17 +118,17 @@ func resourceNetworkInsightsAnalysisRead(ctx context.Context, d *schema.Resource
 	nia, err := FindNetworkInsightsAnalysisByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] Network Insights Analysis (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] EC2 Network Insights Analysis (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return diag.Errorf("error reading EC2 Network Insights Analysis (%s): %s", d.Id(), err)
+		return diag.Errorf("reading EC2 Network Insights Analysis (%s): %s", d.Id(), err)
 	}
 
 	d.Set("arn", nia.NetworkInsightsAnalysisArn)
-	d.Set("filter_in_arns", nia.FilterInArns)
+	d.Set("filter_in_arns", aws.StringValueSlice(nia.FilterInArns))
 	d.Set("network_insights_path_id", nia.NetworkInsightsPathId)
 	d.Set("path_found", nia.NetworkPathFound)
 	d.Set("start_date", nia.StartDate.Format(time.RFC3339))
@@ -163,11 +140,11 @@ func resourceNetworkInsightsAnalysisRead(ctx context.Context, d *schema.Resource
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.Errorf("error setting tags: %s", err)
+		return diag.Errorf("setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return diag.Errorf("error setting tags_all: %s", err)
+		return diag.Errorf("setting tags_all: %s", err)
 	}
 
 	return nil
@@ -175,13 +152,15 @@ func resourceNetworkInsightsAnalysisRead(ctx context.Context, d *schema.Resource
 
 func resourceNetworkInsightsAnalysisUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).EC2Conn
+
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTagsWithContext(ctx, conn, d.Id(), o, n); err != nil {
-			return diag.Errorf("error updating Network Insights Analysis (%s) tags: %s", d.Id(), err)
+			return diag.Errorf("updating EC2 Network Insights Analysis (%s) tags: %s", d.Id(), err)
 		}
 	}
+
 	return resourceNetworkInsightsAnalysisRead(ctx, d, meta)
 }
 
@@ -198,7 +177,7 @@ func resourceNetworkInsightsAnalysisDelete(ctx context.Context, d *schema.Resour
 	}
 
 	if err != nil {
-		return diag.Errorf("error deleting Network Insights Analysis (%s): %s", d.Id(), err)
+		return diag.Errorf("deleting EC2 Network Insights Analysis (%s): %s", d.Id(), err)
 	}
 
 	return nil
