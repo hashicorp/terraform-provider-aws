@@ -34,7 +34,7 @@ func testAccWorkspaceApiKey_basic(t *testing.T) {
 	})
 }
 
-func testAccWorkspaceApiKeyConfig_providerBasic(rName string) string {
+func testAccWorkspaceApiKey_providerBasic(rName string) string {
 	return acctest.ConfigCompose(testAccWorkspaceSAMLConfigurationConfig_providerBasic(rName), fmt.Sprintf(`
 resource "aws_grafana_workspace_api_key" "test" {
   workspace_id    = aws_grafana_workspace.test.id
