@@ -9,7 +9,7 @@ In Terraform AWS Provider code, we have two guiding principles for capitalizatio
 For _principle 1_, the [golang/go Go Code Review Comments](https://github.com/golang/go/wiki/CodeReviewComments#initialisms) are instructive:
 
 > Words in names that are initialisms or acronyms (e.g. "URL" or "NATO") have a consistent case. For example, "URL" should appear as "URL" or "url" (as in "urlPony", or "URLPony"), never as "Url". As an example: ServeHTTP not ServeHttp. For identifiers with multiple initialized "words", use for example "xmlHTTPRequest" or "XMLHTTPRequest".
-
+>
 > This rule also applies to "ID" when it is short for "identifier" (which is pretty much all cases when it's not the "id" as in "ego", "superego"), so write "appID" instead of "appId".
 
 For _principle 2_, take a look at the AWS website for a service to see the capitalization that AWS prefers. For example, [GameLift](https://aws.amazon.com/gamelift/) rather than "Gamelift".

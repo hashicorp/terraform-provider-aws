@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/meta"
@@ -12,18 +13,18 @@ import (
 
 // New returns a new, initialized Terraform Plugin Framework-style provider instance.
 // The provider instance is fully configured once the `Configure` method has been called.
-func New(primary interface{ Meta() interface{} }) tfsdk.Provider {
-	return &provider{
+func New(primary interface{ Meta() interface{} }) provider.Provider {
+	return &fwprovider{
 		Primary: primary,
 	}
 }
 
-type provider struct {
+type fwprovider struct {
 	Primary interface{ Meta() interface{} }
 }
 
 // GetSchema returns the schema for this provider's configuration.
-func (p *provider) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnostics) {
+func (p *fwprovider) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	// This schema must match exactly the Terraform Protocol v5 (Terraform Plugin SDK v2) provider's schema.
@@ -291,24 +292,24 @@ func (p *provider) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnostic
 // Configure is called at the beginning of the provider lifecycle, when
 // Terraform sends to the provider the values the user specified in the
 // provider configuration block.
-func (p *provider) Configure(ctx context.Context, request tfsdk.ConfigureProviderRequest, response *tfsdk.ConfigureProviderResponse) {
+func (p *fwprovider) Configure(ctx context.Context, request provider.ConfigureRequest, response *provider.ConfigureResponse) {
 	// Provider's parsed configuration (its instance state) is available through the primary provider's Meta() method.
 }
 
 // GetResources returns a mapping of resource names to type
 // implementations.
-func (p *provider) GetResources(ctx context.Context) (map[string]tfsdk.ResourceType, diag.Diagnostics) {
+func (p *fwprovider) GetResources(ctx context.Context) (map[string]provider.ResourceType, diag.Diagnostics) {
 	var diags diag.Diagnostics
-	resources := make(map[string]tfsdk.ResourceType)
+	resources := make(map[string]provider.ResourceType)
 
 	return resources, diags
 }
 
 // GetDataSources returns a mapping of data source name to types
 // implementations.
-func (p *provider) GetDataSources(ctx context.Context) (map[string]tfsdk.DataSourceType, diag.Diagnostics) {
+func (p *fwprovider) GetDataSources(ctx context.Context) (map[string]provider.DataSourceType, diag.Diagnostics) {
 	var diags diag.Diagnostics
-	dataSources := make(map[string]tfsdk.DataSourceType)
+	dataSources := make(map[string]provider.DataSourceType)
 
 	// TODO: This should be done via service-level self-registration and initializatin in the primary provider.
 	t, err := meta.NewDataSourceARNType(ctx)

@@ -43,17 +43,16 @@ func (s TestStep) hasProviders(_ context.Context) bool {
 
 // validate ensures the TestStep is valid based on the following criteria:
 //
-//     - Config or ImportState is set.
-//     - Providers are not specified (ExternalProviders,
-//       ProtoV5ProviderFactories, ProtoV6ProviderFactories, ProviderFactories)
-//       if specified at the TestCase level.
-//     - Providers are specified (ExternalProviders, ProtoV5ProviderFactories,
-//       ProtoV6ProviderFactories, ProviderFactories) if not specified at the
-//       TestCase level.
-//     - No overlapping ExternalProviders and ProviderFactories entries
-//     - ResourceName is not empty when ImportState is true, ImportStateIdFunc
-//       is not set, and ImportStateId is not set.
-//
+//   - Config or ImportState is set.
+//   - Providers are not specified (ExternalProviders,
+//     ProtoV5ProviderFactories, ProtoV6ProviderFactories, ProviderFactories)
+//     if specified at the TestCase level.
+//   - Providers are specified (ExternalProviders, ProtoV5ProviderFactories,
+//     ProtoV6ProviderFactories, ProviderFactories) if not specified at the
+//     TestCase level.
+//   - No overlapping ExternalProviders and ProviderFactories entries
+//   - ResourceName is not empty when ImportState is true, ImportStateIdFunc
+//     is not set, and ImportStateId is not set.
 func (s TestStep) validate(ctx context.Context, req testStepValidateRequest) error {
 	ctx = logging.TestStepNumberContext(ctx, req.StepNumber)
 

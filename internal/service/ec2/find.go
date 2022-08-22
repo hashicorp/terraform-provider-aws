@@ -1333,8 +1333,8 @@ func FindNetworkACLEntryByThreePartKey(conn *ec2.EC2, naclID string, egress bool
 	return nil, &resource.NotFoundError{}
 }
 
-func FindNetworkInterface(conn *ec2.EC2, input *ec2.DescribeNetworkInterfacesInput) (*ec2.NetworkInterface, error) {
-	output, err := FindNetworkInterfaces(conn, input)
+func FindNetworkInterfaceWithContext(ctx context.Context, conn *ec2.EC2, input *ec2.DescribeNetworkInterfacesInput) (*ec2.NetworkInterface, error) {
+	output, err := FindNetworkInterfacesWithContext(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
@@ -1351,10 +1351,10 @@ func FindNetworkInterface(conn *ec2.EC2, input *ec2.DescribeNetworkInterfacesInp
 	return output[0], nil
 }
 
-func FindNetworkInterfaces(conn *ec2.EC2, input *ec2.DescribeNetworkInterfacesInput) ([]*ec2.NetworkInterface, error) {
+func FindNetworkInterfacesWithContext(ctx context.Context, conn *ec2.EC2, input *ec2.DescribeNetworkInterfacesInput) ([]*ec2.NetworkInterface, error) {
 	var output []*ec2.NetworkInterface
 
-	err := conn.DescribeNetworkInterfacesPages(input, func(page *ec2.DescribeNetworkInterfacesOutput, lastPage bool) bool {
+	err := conn.DescribeNetworkInterfacesPagesWithContext(ctx, input, func(page *ec2.DescribeNetworkInterfacesOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -1383,11 +1383,15 @@ func FindNetworkInterfaces(conn *ec2.EC2, input *ec2.DescribeNetworkInterfacesIn
 }
 
 func FindNetworkInterfaceByID(conn *ec2.EC2, id string) (*ec2.NetworkInterface, error) {
+	return FindNetworkInterfaceByIDWithContext(context.Background(), conn, id)
+}
+
+func FindNetworkInterfaceByIDWithContext(ctx context.Context, conn *ec2.EC2, id string) (*ec2.NetworkInterface, error) {
 	input := &ec2.DescribeNetworkInterfacesInput{
 		NetworkInterfaceIds: aws.StringSlice([]string{id}),
 	}
 
-	output, err := FindNetworkInterface(conn, input)
+	output, err := FindNetworkInterfaceWithContext(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
@@ -1404,6 +1408,10 @@ func FindNetworkInterfaceByID(conn *ec2.EC2, id string) (*ec2.NetworkInterface, 
 }
 
 func FindNetworkInterfacesByAttachmentInstanceOwnerIDAndDescription(conn *ec2.EC2, attachmentInstanceOwnerID, description string) ([]*ec2.NetworkInterface, error) {
+	return FindNetworkInterfacesByAttachmentInstanceOwnerIDAndDescriptionWithContext(context.Background(), conn, attachmentInstanceOwnerID, description)
+}
+
+func FindNetworkInterfacesByAttachmentInstanceOwnerIDAndDescriptionWithContext(ctx context.Context, conn *ec2.EC2, attachmentInstanceOwnerID, description string) ([]*ec2.NetworkInterface, error) {
 	input := &ec2.DescribeNetworkInterfacesInput{
 		Filters: BuildAttributeFilterList(map[string]string{
 			"attachment.instance-owner-id": attachmentInstanceOwnerID,
@@ -1411,17 +1419,17 @@ func FindNetworkInterfacesByAttachmentInstanceOwnerIDAndDescription(conn *ec2.EC
 		}),
 	}
 
-	return FindNetworkInterfaces(conn, input)
+	return FindNetworkInterfacesWithContext(ctx, conn, input)
 }
 
-func FindNetworkInterfaceAttachmentByID(conn *ec2.EC2, id string) (*ec2.NetworkInterfaceAttachment, error) {
+func FindNetworkInterfaceAttachmentByID(ctx context.Context, conn *ec2.EC2, id string) (*ec2.NetworkInterfaceAttachment, error) {
 	input := &ec2.DescribeNetworkInterfacesInput{
 		Filters: BuildAttributeFilterList(map[string]string{
 			"attachment.attachment-id": id,
 		}),
 	}
 
-	networkInterface, err := FindNetworkInterface(conn, input)
+	networkInterface, err := FindNetworkInterfaceWithContext(ctx, conn, input)
 
 	if err != nil {
 		return nil, err

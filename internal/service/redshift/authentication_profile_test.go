@@ -109,11 +109,7 @@ func testAccCheckAuthenticationProfileExists(name string) resource.TestCheckFunc
 
 		_, err := tfredshift.FindAuthenticationProfileByID(conn, rs.Primary.ID)
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 

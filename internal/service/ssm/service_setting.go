@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ssm"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -56,13 +57,13 @@ func resourceServiceSettingUpdate(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	if _, err := conn.UpdateServiceSetting(updateServiceSettingInput); err != nil {
-		return names.Error(names.SSM, names.ErrActionUpdating, ResNameServiceSetting, d.Get("setting_id").(string), err)
+		return create.Error(names.SSM, create.ErrActionUpdating, ResNameServiceSetting, d.Get("setting_id").(string), err)
 	}
 
 	d.SetId(d.Get("setting_id").(string))
 
 	if _, err := waitServiceSettingUpdated(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-		return names.Error(names.SSM, names.ErrActionWaitingForUpdate, ResNameServiceSetting, d.Id(), err)
+		return create.Error(names.SSM, create.ErrActionWaitingForUpdate, ResNameServiceSetting, d.Id(), err)
 	}
 
 	return resourceServiceSettingRead(d, meta)
@@ -75,7 +76,7 @@ func resourceServiceSettingRead(d *schema.ResourceData, meta interface{}) error 
 
 	output, err := FindServiceSettingByARN(conn, d.Id())
 	if err != nil {
-		return names.Error(names.SSM, names.ErrActionReading, ResNameServiceSetting, d.Id(), err)
+		return create.Error(names.SSM, create.ErrActionReading, ResNameServiceSetting, d.Id(), err)
 	}
 
 	// AWS SSM service setting API requires the entire ARN as input,
@@ -99,11 +100,11 @@ func resourceServiceSettingReset(d *schema.ResourceData, meta interface{}) error
 
 	_, err := conn.ResetServiceSetting(resetServiceSettingInput)
 	if err != nil {
-		return names.Error(names.SSM, names.ErrActionDeleting, ResNameServiceSetting, d.Id(), err)
+		return create.Error(names.SSM, create.ErrActionDeleting, ResNameServiceSetting, d.Id(), err)
 	}
 
 	if err := waitServiceSettingReset(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return names.Error(names.SSM, names.ErrActionWaitingForDeletion, ResNameServiceSetting, d.Id(), err)
+		return create.Error(names.SSM, create.ErrActionWaitingForDeletion, ResNameServiceSetting, d.Id(), err)
 	}
 
 	return nil

@@ -607,7 +607,7 @@ func testAccPreCheckSupported(t *testing.T, regions ...string) {
 		conf := &conns.Config{
 			Region: region,
 		}
-		client, diags := conf.Client(context.TODO())
+		client, diags := conf.Client(context.Background())
 		if diags.HasError() {
 			t.Fatalf("error getting AWS client for region %s", region)
 		}

@@ -6,9 +6,9 @@ import "fmt"
 // as the most common use case in Go will be handling a single error
 // returned from a function.
 //
-//   if err != nil {
-//     return diag.FromErr(err)
-//   }
+//	if err != nil {
+//	  return diag.FromErr(err)
+//	}
 func FromErr(err error) Diagnostics {
 	if err == nil {
 		return nil
@@ -26,9 +26,9 @@ func FromErr(err error) Diagnostics {
 // values. This returns a single error in a Diagnostics as errors typically
 // do not occur in multiples as warnings may.
 //
-//   if unexpectedCondition {
-//     return diag.Errorf("unexpected: %s", someValue)
-//   }
+//	if unexpectedCondition {
+//	  return diag.Errorf("unexpected: %s", someValue)
+//	}
 func Errorf(format string, a ...interface{}) Diagnostics {
 	return Diagnostics{
 		Diagnostic{

@@ -781,11 +781,7 @@ func waitForNLBNetworkInterfacesToDetach(conn *ec2.EC2, lbArn string) error {
 		},
 	)
 
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }
 
 func getLBNameFromARN(arn string) (string, error) {

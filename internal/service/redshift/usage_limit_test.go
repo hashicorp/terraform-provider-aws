@@ -162,11 +162,7 @@ func testAccCheckUsageLimitExists(name string) resource.TestCheckFunc {
 
 		_, err := tfredshift.FindUsageLimitByID(conn, rs.Primary.ID)
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 

@@ -15,23 +15,6 @@ import (
 	tfconnect "github.com/hashicorp/terraform-provider-aws/internal/service/connect"
 )
 
-//Serialized acceptance tests due to Connect account limits (max 2 parallel tests)
-func TestAccConnectUserHierarchyGroup_serial(t *testing.T) {
-	testCases := map[string]func(t *testing.T){
-		"basic":            testAccUserHierarchyGroup_basic,
-		"disappears":       testAccUserHierarchyGroup_disappears,
-		"setParentGroupID": testAccUserHierarchyGroup_parentGroupId,
-		"updateTags":       testAccUserHierarchyGroup_updateTags,
-	}
-
-	for name, tc := range testCases {
-		tc := tc
-		t.Run(name, func(t *testing.T) {
-			tc(t)
-		})
-	}
-}
-
 func testAccUserHierarchyGroup_basic(t *testing.T) {
 	var v connect.DescribeUserHierarchyGroupOutput
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")

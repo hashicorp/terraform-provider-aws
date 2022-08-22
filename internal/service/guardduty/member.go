@@ -263,16 +263,13 @@ func inviteMemberWaiter(accountID, detectorID string, timeout time.Duration, con
 		out, err = conn.GetMembers(&input)
 
 		if err != nil {
-			return fmt.Errorf("Error reading GuardDuty member: %s", err)
+			return fmt.Errorf("Error reading GuardDuty member: %w", err)
 		}
 		_, err = memberInvited(out, accountID)
-		if err != nil {
-			return err // Doesn't need fmt because that happens in the function
-		}
-		return nil
+		return err
 	}
 	if err != nil {
-		return fmt.Errorf("Error waiting for GuardDuty email verification: %s", err)
+		return fmt.Errorf("Error waiting for GuardDuty email verification: %w", err)
 	}
 	return nil
 }

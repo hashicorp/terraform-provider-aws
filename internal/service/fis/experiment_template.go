@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -248,13 +249,13 @@ func resourceExperimentTemplateCreate(ctx context.Context, d *schema.ResourceDat
 
 	targets, err := expandExperimentTemplateTargets(d.Get("target").(*schema.Set))
 	if err != nil {
-		return names.DiagError(names.FIS, names.ErrActionCreating, ResNameExperimentTemplate, d.Get("description").(string), err)
+		return create.DiagError(names.FIS, create.ErrActionCreating, ResNameExperimentTemplate, d.Get("description").(string), err)
 	}
 	input.Targets = targets
 
 	output, err := conn.CreateExperimentTemplate(ctx, input)
 	if err != nil {
-		return names.DiagError(names.FIS, names.ErrActionCreating, ResNameExperimentTemplate, d.Get("description").(string), err)
+		return create.DiagError(names.FIS, create.ErrActionCreating, ResNameExperimentTemplate, d.Get("description").(string), err)
 	}
 
 	d.SetId(aws.ToString(output.ExperimentTemplate.Id))
@@ -272,24 +273,24 @@ func resourceExperimentTemplateRead(ctx context.Context, d *schema.ResourceData,
 
 	var nf *types.ResourceNotFoundException
 	if !d.IsNewResource() && errors.As(err, &nf) {
-		names.LogNotFoundRemoveState(names.FIS, names.ErrActionReading, ResNameExperimentTemplate, d.Id())
+		create.LogNotFoundRemoveState(names.FIS, create.ErrActionReading, ResNameExperimentTemplate, d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if !d.IsNewResource() && tfawserr.ErrStatusCodeEquals(err, ErrCodeNotFound) {
-		names.LogNotFoundRemoveState(names.FIS, names.ErrActionReading, ResNameExperimentTemplate, d.Id())
+		create.LogNotFoundRemoveState(names.FIS, create.ErrActionReading, ResNameExperimentTemplate, d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return names.DiagError(names.FIS, names.ErrActionReading, ResNameExperimentTemplate, d.Id(), err)
+		return create.DiagError(names.FIS, create.ErrActionReading, ResNameExperimentTemplate, d.Id(), err)
 	}
 
 	experimentTemplate := out.ExperimentTemplate
 	if experimentTemplate == nil {
-		return names.DiagError(names.FIS, names.ErrActionReading, ResNameExperimentTemplate, d.Id(), errors.New("empty result"))
+		return create.DiagError(names.FIS, create.ErrActionReading, ResNameExperimentTemplate, d.Id(), errors.New("empty result"))
 	}
 
 	d.SetId(aws.ToString(experimentTemplate.Id))
@@ -297,26 +298,26 @@ func resourceExperimentTemplateRead(ctx context.Context, d *schema.ResourceData,
 	d.Set("description", experimentTemplate.Description)
 
 	if err := d.Set("action", flattenExperimentTemplateActions(experimentTemplate.Actions)); err != nil {
-		return names.DiagErrorSetting(names.FIS, ResNameExperimentTemplate, d.Id(), "action", err)
+		return create.DiagSettingError(names.FIS, ResNameExperimentTemplate, d.Id(), "action", err)
 	}
 
 	if err := d.Set("stop_condition", flattenExperimentTemplateStopConditions(experimentTemplate.StopConditions)); err != nil {
-		return names.DiagErrorSetting(names.FIS, ResNameExperimentTemplate, d.Id(), "stop_condition", err)
+		return create.DiagSettingError(names.FIS, ResNameExperimentTemplate, d.Id(), "stop_condition", err)
 	}
 
 	if err := d.Set("target", flattenExperimentTemplateTargets(experimentTemplate.Targets)); err != nil {
-		return names.DiagErrorSetting(names.FIS, ResNameExperimentTemplate, d.Id(), "target", err)
+		return create.DiagSettingError(names.FIS, ResNameExperimentTemplate, d.Id(), "target", err)
 	}
 
 	tags := KeyValueTags(experimentTemplate.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return names.DiagErrorSetting(names.FIS, ResNameExperimentTemplate, d.Id(), "tags", err)
+		return create.DiagSettingError(names.FIS, ResNameExperimentTemplate, d.Id(), "tags", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return names.DiagErrorSetting(names.FIS, ResNameExperimentTemplate, d.Id(), "tags_all", err)
+		return create.DiagSettingError(names.FIS, ResNameExperimentTemplate, d.Id(), "tags_all", err)
 	}
 
 	return nil
@@ -348,14 +349,14 @@ func resourceExperimentTemplateUpdate(ctx context.Context, d *schema.ResourceDat
 	if d.HasChange("target") {
 		targets, err := expandExperimentTemplateTargetsForUpdate(d.Get("target").(*schema.Set))
 		if err != nil {
-			return names.DiagError(names.FIS, names.ErrActionUpdating, ResNameExperimentTemplate, d.Id(), err)
+			return create.DiagError(names.FIS, create.ErrActionUpdating, ResNameExperimentTemplate, d.Id(), err)
 		}
 		input.Targets = targets
 	}
 
 	_, err := conn.UpdateExperimentTemplate(ctx, input)
 	if err != nil {
-		return names.DiagError(names.FIS, names.ErrActionUpdating, ResNameExperimentTemplate, d.Id(), err)
+		return create.DiagError(names.FIS, create.ErrActionUpdating, ResNameExperimentTemplate, d.Id(), err)
 	}
 
 	return resourceExperimentTemplateRead(ctx, d, meta)
@@ -377,7 +378,7 @@ func resourceExperimentTemplateDelete(ctx context.Context, d *schema.ResourceDat
 	}
 
 	if err != nil {
-		return names.DiagError(names.FIS, names.ErrActionDeleting, ResNameExperimentTemplate, d.Id(), err)
+		return create.DiagError(names.FIS, create.ErrActionDeleting, ResNameExperimentTemplate, d.Id(), err)
 	}
 
 	return nil

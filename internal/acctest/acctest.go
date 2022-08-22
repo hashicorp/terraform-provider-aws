@@ -706,6 +706,13 @@ func PreCheckRegionNot(t *testing.T, regions ...string) {
 	}
 }
 
+// PreCheckAlternateRegionIs checks that the alternate test region is the specified region.
+func PreCheckAlternateRegionIs(t *testing.T, region string) {
+	if curr := AlternateRegion(); curr != region {
+		t.Skipf("skipping tests; %s (%s) does not equal %s", conns.EnvVarDefaultRegion, curr, region)
+	}
+}
+
 // PreCheckPartition checks that the test partition is the specified partition.
 func PreCheckPartition(t *testing.T, partition string) {
 	if curr := Partition(); curr != partition {
@@ -1649,9 +1656,10 @@ data "aws_availability_zones" "available" {
 // AvailableEC2InstanceTypeForAvailabilityZone returns the configuration for a data source that describes
 // the first available EC2 instance type offering in the specified availability zone from a list of preferred instance types.
 // The first argument is either an Availability Zone name or Terraform configuration reference to one, e.g.
-//   * data.aws_availability_zones.available.names[0]
-//   * aws_subnet.test.availability_zone
-//   * us-west-2a
+//   - data.aws_availability_zones.available.names[0]
+//   - aws_subnet.test.availability_zone
+//   - us-west-2a
+//
 // The data source is named 'available'.
 func AvailableEC2InstanceTypeForAvailabilityZone(availabilityZoneName string, preferredInstanceTypes ...string) string {
 	if !strings.Contains(availabilityZoneName, ".") {

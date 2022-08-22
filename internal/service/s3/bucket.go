@@ -25,6 +25,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -733,7 +734,7 @@ func resourceBucketCreate(d *schema.ResourceData, meta interface{}) error {
 			Bucket: aws.String(bucket),
 		})
 		if err == nil {
-			return names.Error(names.S3, names.ErrActionCreating, resNameBucket, bucket, errors.New(ErrMessageBucketAlreadyExists))
+			return create.Error(names.S3, create.ErrActionCreating, resNameBucket, bucket, errors.New(ErrMessageBucketAlreadyExists))
 		}
 	}
 
@@ -798,7 +799,7 @@ func resourceBucketCreate(d *schema.ResourceData, meta interface{}) error {
 		_, err = conn.CreateBucket(req)
 	}
 	if err != nil {
-		return names.Error(names.S3, names.ErrActionCreating, resNameBucket, bucket, err)
+		return create.Error(names.S3, create.ErrActionCreating, resNameBucket, bucket, err)
 	}
 
 	// Assign the bucket name as the resource ID
@@ -960,7 +961,7 @@ func resourceBucketRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return names.Error(names.S3, names.ErrActionReading, resNameBucket, d.Id(), err)
+		return create.Error(names.S3, create.ErrActionReading, resNameBucket, d.Id(), err)
 	}
 
 	d.Set("bucket", d.Id())

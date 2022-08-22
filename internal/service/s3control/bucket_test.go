@@ -177,11 +177,7 @@ func testAccCheckBucketExists(resourceName string) resource.TestCheckFunc {
 
 		_, err = conn.GetBucket(input)
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 

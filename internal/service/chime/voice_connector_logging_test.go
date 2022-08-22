@@ -29,6 +29,7 @@ func TestAccChimeVoiceConnectorLogging_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVoiceConnectorLoggingExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "enable_sip_logs", "true"),
+					resource.TestCheckResourceAttr(resourceName, "enable_media_metric_logs", "true"),
 				),
 			},
 			{
@@ -83,6 +84,7 @@ func TestAccChimeVoiceConnectorLogging_update(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVoiceConnectorLoggingExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "enable_sip_logs", "false"),
+					resource.TestCheckResourceAttr(resourceName, "enable_media_metric_logs", "false"),
 				),
 			},
 			{
@@ -102,8 +104,9 @@ resource "aws_chime_voice_connector" "chime" {
 }
 
 resource "aws_chime_voice_connector_logging" "test" {
-  voice_connector_id = aws_chime_voice_connector.chime.id
-  enable_sip_logs    = true
+  voice_connector_id       = aws_chime_voice_connector.chime.id
+  enable_sip_logs          = true
+  enable_media_metric_logs = true
 }
 `, name)
 }
@@ -116,8 +119,9 @@ resource "aws_chime_voice_connector" "chime" {
 }
 
 resource "aws_chime_voice_connector_logging" "test" {
-  voice_connector_id = aws_chime_voice_connector.chime.id
-  enable_sip_logs    = false
+  voice_connector_id       = aws_chime_voice_connector.chime.id
+  enable_sip_logs          = false
+  enable_media_metric_logs = false
 }
 `, name)
 }

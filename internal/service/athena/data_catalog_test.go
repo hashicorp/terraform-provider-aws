@@ -262,11 +262,7 @@ func testAccCheckDataCatalogExists(n string) resource.TestCheckFunc {
 
 		_, err := conn.GetDataCatalog(input)
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 

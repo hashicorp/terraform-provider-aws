@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -136,13 +137,13 @@ func resourceLanguageModelCreate(ctx context.Context, d *schema.ResourceData, me
 	)
 
 	if err != nil {
-		return names.DiagError(names.Transcribe, names.ErrActionCreating, ResNameLanguageModel, d.Get("model_name").(string), err)
+		return create.DiagError(names.Transcribe, create.ErrActionCreating, ResNameLanguageModel, d.Get("model_name").(string), err)
 	}
 
 	d.SetId(aws.ToString(outputRaw.(*transcribe.CreateLanguageModelOutput).ModelName))
 
 	if _, err := waitLanguageModelCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return names.DiagError(names.Transcribe, names.ErrActionWaitingForCreation, ResNameLanguageModel, d.Get("model_name").(string), err)
+		return create.DiagError(names.Transcribe, create.ErrActionWaitingForCreation, ResNameLanguageModel, d.Get("model_name").(string), err)
 	}
 
 	return resourceLanguageModelRead(ctx, d, meta)
@@ -160,7 +161,7 @@ func resourceLanguageModelRead(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if err != nil {
-		return names.DiagError(names.Transcribe, names.ErrActionReading, ResNameLanguageModel, d.Id(), err)
+		return create.DiagError(names.Transcribe, create.ErrActionReading, ResNameLanguageModel, d.Id(), err)
 	}
 
 	arn := arn.ARN{
@@ -177,12 +178,12 @@ func resourceLanguageModelRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set("model_name", out.ModelName)
 
 	if err := d.Set("input_data_config", flattenInputDataConfig(out.InputDataConfig)); err != nil {
-		return names.DiagError(names.Transcribe, names.ErrActionSetting, ResNameLanguageModel, d.Id(), err)
+		return create.DiagError(names.Transcribe, create.ErrActionSetting, ResNameLanguageModel, d.Id(), err)
 	}
 
 	tags, err := ListTags(ctx, conn, arn)
 	if err != nil {
-		return names.DiagError(names.Transcribe, names.ErrActionReading, ResNameLanguageModel, d.Id(), err)
+		return create.DiagError(names.Transcribe, create.ErrActionReading, ResNameLanguageModel, d.Id(), err)
 	}
 
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
@@ -191,11 +192,11 @@ func resourceLanguageModelRead(ctx context.Context, d *schema.ResourceData, meta
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return names.DiagError(names.Transcribe, names.ErrActionSetting, ResNameLanguageModel, d.Id(), err)
+		return create.DiagError(names.Transcribe, create.ErrActionSetting, ResNameLanguageModel, d.Id(), err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return names.DiagError(names.Transcribe, names.ErrActionSetting, ResNameLanguageModel, d.Id(), err)
+		return create.DiagError(names.Transcribe, create.ErrActionSetting, ResNameLanguageModel, d.Id(), err)
 	}
 
 	return nil
@@ -208,7 +209,7 @@ func resourceLanguageModelUpdate(ctx context.Context, d *schema.ResourceData, me
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return names.DiagError(names.Transcribe, names.ErrActionUpdating, ResNameLanguageModel, d.Id(), err)
+			return create.DiagError(names.Transcribe, create.ErrActionUpdating, ResNameLanguageModel, d.Id(), err)
 		}
 	}
 
@@ -230,7 +231,7 @@ func resourceLanguageModelDelete(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	if err != nil {
-		return names.DiagError(names.Transcribe, names.ErrActionDeleting, ResNameLanguageModel, d.Id(), err)
+		return create.DiagError(names.Transcribe, create.ErrActionDeleting, ResNameLanguageModel, d.Id(), err)
 	}
 
 	return nil

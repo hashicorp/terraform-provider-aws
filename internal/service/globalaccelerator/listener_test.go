@@ -118,11 +118,7 @@ func testAccCheckListenerExists(name string) resource.TestCheckFunc {
 
 		_, err := tfglobalaccelerator.FindListenerByARN(conn, rs.Primary.ID)
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 
