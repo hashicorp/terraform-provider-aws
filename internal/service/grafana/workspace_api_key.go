@@ -11,11 +11,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func ResourceWorkspaceAPIKey() *schema.Resource {
+func ResourceWorkspaceApiKey() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceWorkspaceAPIKeyCreate,
-		Read:   resourceWorkspaceAPIKeyRead,
-		Delete: resourceWorkspaceAPIKeyDelete,
+		Create: resourceWorkspaceApiKeyCreate,
+		Read:   resourceWorkspaceApiKeyRead,
+		Delete: resourceWorkspaceApiKeyDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -47,7 +47,7 @@ func ResourceWorkspaceAPIKey() *schema.Resource {
 	}
 }
 
-func resourceWorkspaceAPIKeyCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceWorkspaceApiKeyCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GrafanaConn
 
 	input := &managedgrafana.CreateWorkspaceApiKeyInput{
@@ -66,10 +66,10 @@ func resourceWorkspaceAPIKeyCreate(d *schema.ResourceData, meta interface{}) err
 
 	d.SetId(aws.StringValue(output.KeyName))
 
-	return resourceWorkspaceAPIKeyRead(d, meta)
+	return resourceWorkspaceApiKeyRead(d, meta)
 }
 
-func resourceWorkspaceAPIKeyRead(d *schema.ResourceData, meta interface{}) error {
+func resourceWorkspaceApiKeyRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("key_name", d.Get("key_name").(string))
 	d.Set("key_role", d.Get("key_role").(string))
 	d.Set("seconds_to_live", d.Get("seconds_to_live").(int))
@@ -78,7 +78,7 @@ func resourceWorkspaceAPIKeyRead(d *schema.ResourceData, meta interface{}) error
 	return nil
 }
 
-func resourceWorkspaceAPIKeyDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceWorkspaceApiKeyDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GrafanaConn
 
 	log.Printf("[DEBUG] Deleting Grafana Workspace Api Key: %s", d.Id())
