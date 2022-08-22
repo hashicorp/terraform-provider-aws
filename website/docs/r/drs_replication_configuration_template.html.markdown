@@ -1,5 +1,5 @@
 ---
-subcategory: "Elastic Disaster Recovery"
+subcategory: "DRS (Elastic Disaster Recovery)"
 layout: "aws"
 page_title: "AWS: drs_replication_configuration_template"
 description: |-
