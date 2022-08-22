@@ -6,6 +6,8 @@ description: |-
   Provides an RDS security group resource.
 ---
 
+!> **WARNING:** With the retirement of EC2-Classic the `aws_db_security_group` resource has been deprecated and will be removed in a future version. Any existing resources can be removed from [Terraform state](https://www.terraform.io/language/state) using the [`terraform state rm`](https://www.terraform.io/cli/commands/state/rm#command-state-rm) command.
+
 # Resource: aws_db_security_group
 
 Provides an RDS security group resource. This is only for DB instances in the
