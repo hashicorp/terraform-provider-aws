@@ -45,24 +45,6 @@ The following arguments are required:
 * `ebs_encryption` (Required)(string) The type of EBS encryption to be used during replication.
 * `ebs_encryption_key_arn` (Required)(string) The ARN of the EBS encryption key to be used during replication.
 * `pit_policy`(Required)(list) The Point in time (PIT) policy to manage snapshots taken during replication.
-    (dict) --
-        A rule in the Point in Time (PIT) policy representing when to take snapshots and how long to retain them for.
-
-        enabled (boolean) --
-
-        Whether this rule is enabled or not.
-        interval (integer) -- [REQUIRED]
-
-        How often, in the chosen units, a snapshot should be taken.
-        retentionDuration (integer) -- [REQUIRED]
-
-        The duration to retain a snapshot for, in the chosen units.
-        ruleID (integer) --
-
-        The ID of the rule.
-        units (string) -- [REQUIRED]
-
-        The units used to measure the interval and retentionDuration.
 * `replication_server_instance_type` (Required)(string) The instance type to be used for the replication server.
 * `replication_servers_security_groups_ids` (Required)(list) The security group IDs that will be used by the replication server.
 * `staging_area_subnet_id` (Required)(string) The subnet to be used by the replication staging area.
