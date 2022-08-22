@@ -16,20 +16,20 @@ Provides an Elastic Disaster Recovery replication configuration template resourc
 
 ```terraform
 resource "aws_drs_replication_configuration_template" "example" {
-  associate_default_security_group        = True|False
+  associate_default_security_group        = True or False
   bandwidth_throttling                    = 123
-  create_public_ip                        = True|False
-  data_plane_routing                      = 'PRIVATE_IP'|'PUBLIC_IP'
-  default_large_staging_disk_type         = 'GP2'|'GP3|'ST1|'AUTO
-  ebs_ecryption                           = 'DEFAULT'|'CUSTOM'
+  create_public_ip                        = True or False
+  data_plane_routing                      = 'PRIVATE_IP' or 'PUBLIC_IP'
+  default_large_staging_disk_type         = 'GP2'or 'GP3 or 'ST1 or 'AUTO
+  ebs_ecryption                           = 'DEFAULT' or 'CUSTOM'
   ebs_encryption_key_arn                  = 'string'
-  pit_policy                              = [{'enabled': True|False, 'interval':123}]
+  pit_policy                              = [{'enabled': True or False, 'interval':123}]
   replication_server_instance_type        = 'string'
   replication_servers_security_groups_ids = ['string']
   staging_area_subnet_id                  = 'string
   staging_area_tags                       = {'string': 'string'}
   tags                                    = {'string': 'string'}
-  use_dedicated_replication_server        = True|False
+  use_dedicated_replication_server        = True or False
 }
 ```
 
