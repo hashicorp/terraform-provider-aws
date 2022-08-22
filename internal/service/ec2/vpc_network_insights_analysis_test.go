@@ -201,11 +201,7 @@ func testAccCheckNetworkInsightsAnalysisExists(n string) resource.TestCheckFunc 
 
 		_, err := tfec2.FindNetworkInsightsAnalysisByID(context.Background(), conn, rs.Primary.ID)
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 
