@@ -2996,9 +2996,9 @@ resource "aws_dms_endpoint" "test" {
 func testAccEndpointConfig_redis(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_dms_endpoint" "test" {
-  endpoint_id                 = %[1]q
-  endpoint_type               = "target"
-  engine_name                 = "redis"
+  endpoint_id              = %[1]q
+  endpoint_type            = "target"
+  engine_name              = "redis"
   redis_settings {
     auth_password          = "password"
     auth_type              = "auth-role"
@@ -3020,9 +3020,9 @@ resource "aws_dms_endpoint" "test" {
 func testAccEndpointConfig_redisUpdate(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_dms_endpoint" "test" {
-  endpoint_id                 = %[1]q
-  endpoint_type               = "target"
-  engine_name                 = "redis"
+  endpoint_id              = %[1]q
+  endpoint_type            = "target"
+  engine_name              = "redis"
   redis_settings {
     auth_password          = "password"
     auth_type              = "auth-role"
