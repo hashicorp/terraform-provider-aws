@@ -26,7 +26,7 @@ resource "aws_drs_replication_configuration_template" "example" {
   pit_policy                              = [{"enabled": True or False, "interval":123}]
   replication_server_instance_type        = "string"
   replication_servers_security_groups_ids = ["string"]
-  staging_area_subnet_id                  = "string
+  staging_area_subnet_id                  = "string"
   staging_area_tags                       = {"string": "string"}
   tags                                    = {"string": "string"}
   use_dedicated_replication_server        = True or False
