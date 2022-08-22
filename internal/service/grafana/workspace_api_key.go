@@ -57,11 +57,11 @@ func resourceWorkspaceApiKeyCreate(d *schema.ResourceData, meta interface{}) err
 		WorkspaceId:   aws.String(d.Get("workspace_id").(string)),
 	}
 
-	log.Printf("[DEBUG] Creating Grafana Workspace Api Key: %s", input)
+	log.Printf("[DEBUG] Creating Grafana Workspace API Key: %s", input)
 	output, err := conn.CreateWorkspaceApiKey(input)
 
 	if err != nil {
-		return fmt.Errorf("error creating Grafana Workspace Api Key: %w", err)
+		return fmt.Errorf("error creating Grafana Workspace API Key: %w", err)
 	}
 
 	d.SetId(aws.StringValue(output.KeyName))
@@ -81,14 +81,14 @@ func resourceWorkspaceApiKeyRead(d *schema.ResourceData, meta interface{}) error
 func resourceWorkspaceApiKeyDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GrafanaConn
 
-	log.Printf("[DEBUG] Deleting Grafana Workspace Api Key: %s", d.Id())
+	log.Printf("[DEBUG] Deleting Grafana Workspace API Key: %s", d.Id())
 	_, err := conn.DeleteWorkspaceApiKey(&managedgrafana.DeleteWorkspaceApiKeyInput{
 		KeyName:     aws.String(d.Get("key_name").(string)),
 		WorkspaceId: aws.String(d.Get("workspace_id").(string)),
 	})
 
 	if err != nil {
-		return fmt.Errorf("error deleting Grafana Workspace Api Key (%s): %w", d.Id(), err)
+		return fmt.Errorf("error deleting Grafana Workspace API Key (%s): %w", d.Id(), err)
 	}
 
 	return nil
