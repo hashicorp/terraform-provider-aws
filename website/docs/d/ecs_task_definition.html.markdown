@@ -1,5 +1,5 @@
 ---
-subcategory: "ECS"
+subcategory: "ECS (Elastic Container)"
 layout: "aws"
 page_title: "AWS: aws_ecs_task_definition"
 description: |-
@@ -65,6 +65,7 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
+* `id` - The ARN of the task definition
 * `arn` - The ARN of the task definition
 * `family` - The family of this task definition
 * `network_mode` - The Docker networking mode to use for the containers in this task.

@@ -10,6 +10,7 @@ import (
 
 // See http://docs.aws.amazon.com/general/latest/gr/rande.html#elb_region
 // See https://docs.amazonaws.cn/en_us/general/latest/gr/rande.html#elb_region
+
 var HostedZoneIdPerRegionMap = map[string]string{
 	endpoints.AfSouth1RegionID:     "Z268VQBMOI5EKX",
 	endpoints.ApEast1RegionID:      "Z3DQVH9N71FHZ0",

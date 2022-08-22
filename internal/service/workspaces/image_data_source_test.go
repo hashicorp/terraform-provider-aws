@@ -21,29 +21,29 @@ func testAccImageDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			testAccWorkspacesImagePreCheck(t)
+			testAccImagePreCheck(t)
 		},
-		ErrorCheck: acctest.ErrorCheck(t, workspaces.EndpointsID),
-		Providers:  acctest.Providers,
+		ErrorCheck:               acctest.ErrorCheck(t, workspaces.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccImageDataSourceConfig(imageID),
+				Config: testAccImageDataSourceConfig_basic(imageID),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWorkspacesImageExists(dataSourceName, &image),
-					testAccCheckWorkspacesImageAttributes(dataSourceName, &image),
+					testAccCheckImageExists(dataSourceName, &image),
+					testAccCheckImageAttributes(dataSourceName, &image),
 				),
 			},
 		},
 	})
 }
 
-func testAccWorkspacesImagePreCheck(t *testing.T) {
+func testAccImagePreCheck(t *testing.T) {
 	if os.Getenv("AWS_WORKSPACES_IMAGE_ID") == "" {
 		t.Skip("AWS_WORKSPACES_IMAGE_ID env var must be set for AWS WorkSpaces image acceptance tests. This is required until AWS provides ubiquitous (Windows, Linux) import image API.")
 	}
 }
 
-func testAccImageDataSourceConfig(imageID string) string {
+func testAccImageDataSourceConfig_basic(imageID string) string {
 	return fmt.Sprintf(`
 # TODO: Create aws_workspaces_image resource when API will be provided
 
@@ -53,7 +53,7 @@ data aws_workspaces_image test {
 `, imageID)
 }
 
-func testAccCheckWorkspacesImageExists(n string, image *workspaces.WorkspaceImage) resource.TestCheckFunc {
+func testAccCheckImageExists(n string, image *workspaces.WorkspaceImage) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -80,7 +80,7 @@ func testAccCheckWorkspacesImageExists(n string, image *workspaces.WorkspaceImag
 	}
 }
 
-func testAccCheckWorkspacesImageAttributes(n string, image *workspaces.WorkspaceImage) resource.TestCheckFunc {
+func testAccCheckImageAttributes(n string, image *workspaces.WorkspaceImage) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		_, ok := s.RootModule().Resources[n]
 		if !ok {

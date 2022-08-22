@@ -104,7 +104,7 @@ func resourceTopicPolicyRead(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	d.Set("arn", attributes[TopicAttributeNameTopicArn])
+	d.Set("arn", attributes[TopicAttributeNameTopicARN])
 	d.Set("owner", attributes[TopicAttributeNameOwner])
 	d.Set("policy", policyToSet)
 
@@ -117,16 +117,10 @@ func resourceTopicPolicyDelete(d *schema.ResourceData, meta interface{}) error {
 	// It is impossible to delete a policy or set to empty
 	// (confirmed by AWS Support representative)
 	// so we instead set it back to the default one.
-	err := putTopicPolicy(conn, d.Id(), defaultSNSTopicPolicy(d.Id(), d.Get("owner").(string)))
-
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return putTopicPolicy(conn, d.Id(), defaultTopicPolicy(d.Id(), d.Get("owner").(string)))
 }
 
-func defaultSNSTopicPolicy(topicArn, accountId string) string {
+func defaultTopicPolicy(topicArn, accountId string) string {
 	return fmt.Sprintf(`{
   "Version": "2008-10-17",
   "Id": "__default_policy_ID",

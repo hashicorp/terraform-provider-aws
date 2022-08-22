@@ -1,5 +1,5 @@
 ---
-subcategory: "VPC"
+subcategory: "VPC (Virtual Private Cloud)"
 layout: "aws"
 page_title: "AWS: aws_vpc_peering_connections"
 description: |-
@@ -56,3 +56,9 @@ All of the argument attributes except `filter` are also exported as result attri
 
 * `id` - AWS Region.
 * `ids` - The IDs of the VPC Peering Connections.
+
+## Timeouts
+
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+
+- `read` - (Default `20m`)

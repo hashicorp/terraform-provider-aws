@@ -5,7 +5,6 @@ import (
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -95,14 +94,12 @@ func resourcePolicyAttachmentRead(d *schema.ResourceData, meta interface{}) erro
 	})
 
 	if err != nil {
-		if awsErr, ok := err.(awserr.Error); ok {
-			if awsErr.Code() == "NoSuchEntity" {
-				log.Printf("[WARN] No such entity found for Policy Attachment (%s)", d.Id())
-				d.SetId("")
-				return nil
-			}
+		if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
+			log.Printf("[WARN] IAM Policy Attachment (%s) not found, removing from state", d.Id())
+			d.SetId("")
+			return nil
 		}
-		return err
+		return fmt.Errorf("error reading IAM Policy Attachment (%s): %w", d.Id(), err)
 	}
 
 	ul := make([]string, 0)

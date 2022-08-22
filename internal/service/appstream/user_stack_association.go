@@ -109,7 +109,14 @@ func resourceUserStackAssociationRead(ctx context.Context, d *schema.ResourceDat
 		return nil
 	}
 
-	if len(resp.UserStackAssociations) == 0 && !d.IsNewResource() {
+	if err != nil {
+		return diag.FromErr(fmt.Errorf("error reading AppStream User Stack Association (%s): %w", d.Id(), err))
+	}
+
+	if resp == nil || len(resp.UserStackAssociations) == 0 || resp.UserStackAssociations[0] == nil {
+		if d.IsNewResource() {
+			return diag.Errorf("error reading AppStream User Stack Association (%s): empty output after creation", d.Id())
+		}
 		log.Printf("[WARN] AppStream User Stack Association (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil

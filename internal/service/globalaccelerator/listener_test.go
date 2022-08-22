@@ -19,15 +19,15 @@ func TestAccGlobalAcceleratorListener_basic(t *testing.T) {
 	rInt := sdkacctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckGlobalAccelerator(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, globalaccelerator.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckGlobalAcceleratorListenerDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, globalaccelerator.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckListenerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGlobalAcceleratorListener_basic(rInt),
+				Config: testAccListenerConfig_basic(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGlobalAcceleratorListenerExists(resourceName),
+					testAccCheckListenerExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "client_affinity", "NONE"),
 					resource.TestCheckResourceAttr(resourceName, "protocol", "TCP"),
 					resource.TestCheckResourceAttr(resourceName, "port_range.#", "1"),
@@ -51,15 +51,15 @@ func TestAccGlobalAcceleratorListener_disappears(t *testing.T) {
 	rInt := sdkacctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckGlobalAccelerator(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, globalaccelerator.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckGlobalAcceleratorListenerDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, globalaccelerator.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckListenerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGlobalAcceleratorListener_basic(rInt),
+				Config: testAccListenerConfig_basic(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGlobalAcceleratorListenerExists(resourceName),
+					testAccCheckListenerExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfglobalaccelerator.ResourceListener(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -73,18 +73,18 @@ func TestAccGlobalAcceleratorListener_update(t *testing.T) {
 	rInt := sdkacctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckGlobalAccelerator(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, globalaccelerator.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckGlobalAcceleratorListenerDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, globalaccelerator.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckListenerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGlobalAcceleratorListener_basic(rInt),
+				Config: testAccListenerConfig_basic(rInt),
 			},
 			{
-				Config: testAccGlobalAcceleratorListener_update(rInt),
+				Config: testAccListenerConfig_update(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGlobalAcceleratorListenerExists(resourceName),
+					testAccCheckListenerExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "client_affinity", "SOURCE_IP"),
 					resource.TestCheckResourceAttr(resourceName, "protocol", "UDP"),
 					resource.TestCheckResourceAttr(resourceName, "port_range.#", "1"),
@@ -103,7 +103,7 @@ func TestAccGlobalAcceleratorListener_update(t *testing.T) {
 	})
 }
 
-func testAccCheckGlobalAcceleratorListenerExists(name string) resource.TestCheckFunc {
+func testAccCheckListenerExists(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).GlobalAcceleratorConn
 
@@ -118,15 +118,11 @@ func testAccCheckGlobalAcceleratorListenerExists(name string) resource.TestCheck
 
 		_, err := tfglobalaccelerator.FindListenerByARN(conn, rs.Primary.ID)
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 
-func testAccCheckGlobalAcceleratorListenerDestroy(s *terraform.State) error {
+func testAccCheckListenerDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).GlobalAcceleratorConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -149,7 +145,7 @@ func testAccCheckGlobalAcceleratorListenerDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccGlobalAcceleratorListener_basic(rInt int) string {
+func testAccListenerConfig_basic(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_globalaccelerator_accelerator" "example" {
   name            = "tf-%d"
@@ -169,7 +165,7 @@ resource "aws_globalaccelerator_listener" "example" {
 `, rInt)
 }
 
-func testAccGlobalAcceleratorListener_update(rInt int) string {
+func testAccListenerConfig_update(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_globalaccelerator_accelerator" "example" {
   name            = "tf-%d"

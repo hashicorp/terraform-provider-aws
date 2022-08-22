@@ -1,5 +1,5 @@
 ---
-subcategory: "XRay"
+subcategory: "X-Ray"
 layout: "aws"
 page_title: "AWS: aws_xray_group"
 description: |-
@@ -16,6 +16,11 @@ Creates and manages an AWS XRay Group.
 resource "aws_xray_group" "example" {
   group_name        = "example"
   filter_expression = "responsetime > 5"
+
+  insights_configuration {
+    insights_enabled      = true
+    notifications_enabled = true
+  }
 }
 ```
 
@@ -23,7 +28,15 @@ resource "aws_xray_group" "example" {
 
 * `group_name` - (Required) The name of the group.
 * `filter_expression` - (Required) The filter expression defining criteria by which to group traces. more info can be found in official [docs](https://docs.aws.amazon.com/xray/latest/devguide/xray-console-filters.html).
-* `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `insights_configuration` - (Optional) Configuration options for enabling insights.
+* `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+
+### Nested fields
+
+#### `insights_configuration`
+
+* `insights_enabled` - (Required) Specifies whether insights are enabled.
+* `notifications_enabled` - (Optional) Specifies whether insight notifications are enabled.
 
 ## Attributes Reference
 
@@ -31,7 +44,7 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ARN of the Group.
 * `arn` - The ARN of the Group.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 

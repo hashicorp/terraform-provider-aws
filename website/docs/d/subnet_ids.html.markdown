@@ -1,5 +1,5 @@
 ---
-subcategory: "VPC"
+subcategory: "VPC (Virtual Private Cloud)"
 layout: "aws"
 page_title: "AWS: aws_subnet_ids"
 description: |-
@@ -85,3 +85,9 @@ data "aws_subnet_ids" "selected" {
 ## Attributes Reference
 
 * `ids` - A set of all the subnet ids found. This data source will fail if none are found.
+
+## Timeouts
+
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+
+- `read` - (Default `20m`)

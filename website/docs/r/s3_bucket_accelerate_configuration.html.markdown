@@ -1,7 +1,7 @@
 ---
-subcategory: "S3"
+subcategory: "S3 (Simple Storage)"
 layout: "aws"
-page_title: "AWS: aws_s3_bucket_accelerate configuration"
+page_title: "AWS: aws_s3_bucket_accelerate_configuration"
 description: |-
   Provides an S3 bucket accelerate configuration resource.
 ---

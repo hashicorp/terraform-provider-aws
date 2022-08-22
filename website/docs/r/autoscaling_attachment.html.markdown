@@ -1,5 +1,5 @@
 ---
-subcategory: "Autoscaling"
+subcategory: "Auto Scaling"
 layout: "aws"
 page_title: "AWS: aws_autoscaling_attachment"
 description: |-
@@ -33,7 +33,7 @@ resource "aws_autoscaling_attachment" "asg_attachment_bar" {
 # Create a new ALB Target Group attachment
 resource "aws_autoscaling_attachment" "asg_attachment_bar" {
   autoscaling_group_name = aws_autoscaling_group.asg.id
-  alb_target_group_arn   = aws_lb_target_group.test.arn
+  lb_target_group_arn    = aws_lb_target_group.test.arn
 }
 ```
 

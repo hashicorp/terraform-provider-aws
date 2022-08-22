@@ -20,15 +20,15 @@ func TestAccEFSFileSystemPolicy_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, efs.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEfsFileSystemPolicyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, efs.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFileSystemPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFileSystemPolicyConfig(rName),
+				Config: testAccFileSystemPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEfsFileSystemPolicyExists(resourceName, &desc),
+					testAccCheckFileSystemPolicyExists(resourceName, &desc),
 					resource.TestCheckResourceAttrSet(resourceName, "policy"),
 				),
 			},
@@ -39,9 +39,9 @@ func TestAccEFSFileSystemPolicy_basic(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"bypass_policy_lockout_safety_check"},
 			},
 			{
-				Config: testAccFileSystemPolicyUpdatedConfig(rName),
+				Config: testAccFileSystemPolicyConfig_updated(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEfsFileSystemPolicyExists(resourceName, &desc),
+					testAccCheckFileSystemPolicyExists(resourceName, &desc),
 					resource.TestCheckResourceAttrSet(resourceName, "policy"),
 				),
 			},
@@ -55,15 +55,15 @@ func TestAccEFSFileSystemPolicy_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, efs.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEfsFileSystemPolicyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, efs.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFileSystemPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFileSystemPolicyConfig(rName),
+				Config: testAccFileSystemPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEfsFileSystemPolicyExists(resourceName, &desc),
+					testAccCheckFileSystemPolicyExists(resourceName, &desc),
 					acctest.CheckResourceDisappears(acctest.Provider, tfefs.ResourceFileSystemPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -78,15 +78,15 @@ func TestAccEFSFileSystemPolicy_policyBypass(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, efs.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEfsFileSystemPolicyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, efs.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFileSystemPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFileSystemPolicyConfig(rName),
+				Config: testAccFileSystemPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEfsFileSystemPolicyExists(resourceName, &desc),
+					testAccCheckFileSystemPolicyExists(resourceName, &desc),
 					resource.TestCheckResourceAttr(resourceName, "bypass_policy_lockout_safety_check", "false"),
 				),
 			},
@@ -97,9 +97,9 @@ func TestAccEFSFileSystemPolicy_policyBypass(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"bypass_policy_lockout_safety_check"},
 			},
 			{
-				Config: testAccFileSystemPolicyBypassConfig(rName, true),
+				Config: testAccFileSystemPolicyConfig_bypass(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEfsFileSystemPolicyExists(resourceName, &desc),
+					testAccCheckFileSystemPolicyExists(resourceName, &desc),
 					resource.TestCheckResourceAttr(resourceName, "bypass_policy_lockout_safety_check", "true"),
 				),
 			},
@@ -114,20 +114,20 @@ func TestAccEFSFileSystemPolicy_equivalentPolicies(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, efs.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEfsFileSystemPolicyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, efs.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFileSystemPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFileSystemPolicyFirstEquivalentConfig(rName),
+				Config: testAccFileSystemPolicyConfig_firstEquivalent(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEfsFileSystemPolicyExists(resourceName, &desc),
+					testAccCheckFileSystemPolicyExists(resourceName, &desc),
 					resource.TestCheckResourceAttrSet(resourceName, "policy"),
 				),
 			},
 			{
-				Config:   testAccFileSystemPolicySecondEquivalentConfig(rName),
+				Config:   testAccFileSystemPolicyConfig_secondEquivalent(rName),
 				PlanOnly: true,
 			},
 		},
@@ -141,27 +141,27 @@ func TestAccEFSFileSystemPolicy_equivalentPoliciesIAMPolicyDoc(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, efs.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEfsFileSystemPolicyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, efs.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFileSystemPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFileSystemPolicyEquivalentIAMPolicyDocConfig(rName),
+				Config: testAccFileSystemPolicyConfig_equivalentIAMDoc(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEfsFileSystemPolicyExists(resourceName, &desc),
+					testAccCheckFileSystemPolicyExists(resourceName, &desc),
 					resource.TestCheckResourceAttrSet(resourceName, "policy"),
 				),
 			},
 			{
-				Config:   testAccFileSystemPolicyEquivalentIAMPolicyDocConfig(rName),
+				Config:   testAccFileSystemPolicyConfig_equivalentIAMDoc(rName),
 				PlanOnly: true,
 			},
 		},
 	})
 }
 
-func testAccCheckEfsFileSystemPolicyDestroy(s *terraform.State) error {
+func testAccCheckFileSystemPolicyDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EFSConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -185,7 +185,7 @@ func testAccCheckEfsFileSystemPolicyDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckEfsFileSystemPolicyExists(n string, v *efs.DescribeFileSystemPolicyOutput) resource.TestCheckFunc {
+func testAccCheckFileSystemPolicyExists(n string, v *efs.DescribeFileSystemPolicyOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -210,7 +210,7 @@ func testAccCheckEfsFileSystemPolicyExists(n string, v *efs.DescribeFileSystemPo
 	}
 }
 
-func testAccFileSystemPolicyConfig(rName string) string {
+func testAccFileSystemPolicyConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_efs_file_system" "test" {
   creation_token = %[1]q
@@ -248,7 +248,7 @@ POLICY
 `, rName)
 }
 
-func testAccFileSystemPolicyUpdatedConfig(rName string) string {
+func testAccFileSystemPolicyConfig_updated(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_efs_file_system" "test" {
   creation_token = %[1]q
@@ -283,7 +283,7 @@ POLICY
 `, rName)
 }
 
-func testAccFileSystemPolicyBypassConfig(rName string, bypass bool) string {
+func testAccFileSystemPolicyConfig_bypass(rName string, bypass bool) string {
 	return fmt.Sprintf(`
 resource "aws_efs_file_system" "test" {
   creation_token = %[1]q
@@ -323,7 +323,7 @@ POLICY
 `, rName, bypass)
 }
 
-func testAccFileSystemPolicyFirstEquivalentConfig(rName string) string {
+func testAccFileSystemPolicyConfig_firstEquivalent(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_efs_file_system" "test" {
   creation_token = %[1]q
@@ -357,7 +357,7 @@ resource "aws_efs_file_system_policy" "test" {
 `, rName)
 }
 
-func testAccFileSystemPolicySecondEquivalentConfig(rName string) string {
+func testAccFileSystemPolicyConfig_secondEquivalent(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_efs_file_system" "test" {
   creation_token = %[1]q
@@ -391,7 +391,7 @@ resource "aws_efs_file_system_policy" "test" {
 `, rName)
 }
 
-func testAccFileSystemPolicyEquivalentIAMPolicyDocConfig(rName string) string {
+func testAccFileSystemPolicyConfig_equivalentIAMDoc(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_efs_file_system" "test" {
   creation_token = %[1]q

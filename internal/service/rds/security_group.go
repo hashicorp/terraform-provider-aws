@@ -172,13 +172,13 @@ func resourceSecurityGroupRead(d *schema.ResourceData, meta interface{}) error {
 	for _, g := range sg.EC2SecurityGroups {
 		rule := map[string]interface{}{}
 		if g.EC2SecurityGroupId != nil {
-			rule["security_group_id"] = *g.EC2SecurityGroupId
+			rule["security_group_id"] = aws.StringValue(g.EC2SecurityGroupId)
 		}
 		if g.EC2SecurityGroupName != nil {
-			rule["security_group_name"] = *g.EC2SecurityGroupName
+			rule["security_group_name"] = aws.StringValue(g.EC2SecurityGroupName)
 		}
 		if g.EC2SecurityGroupOwnerId != nil {
-			rule["security_group_owner_id"] = *g.EC2SecurityGroupOwnerId
+			rule["security_group_owner_id"] = aws.StringValue(g.EC2SecurityGroupOwnerId)
 		}
 		rules.Add(rule)
 	}
@@ -296,7 +296,7 @@ func resourceSecurityGroupRetrieve(d *schema.ResourceData, meta interface{}) (*r
 	}
 
 	if len(resp.DBSecurityGroups) != 1 ||
-		*resp.DBSecurityGroups[0].DBSecurityGroupName != d.Id() {
+		aws.StringValue(resp.DBSecurityGroups[0].DBSecurityGroupName) != d.Id() {
 		return nil, fmt.Errorf("Unable to find DB Security Group: %#v", resp.DBSecurityGroups)
 	}
 

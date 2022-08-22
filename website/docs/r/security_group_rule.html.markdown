@@ -1,5 +1,5 @@
 ---
-subcategory: "VPC"
+subcategory: "VPC (Virtual Private Cloud)"
 layout: "aws"
 page_title: "AWS: aws_security_group_rule"
 description: |-
@@ -113,6 +113,12 @@ The following arguments are optional:
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - ID of the security group rule.
+
+## Timeouts
+
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+
+- `create` - (Default `5m`)
 
 ## Import
 

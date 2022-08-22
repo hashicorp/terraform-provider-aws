@@ -9,7 +9,6 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ecs"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -142,79 +141,55 @@ func sweepServices(region string) error {
 	}
 	conn := client.(*conns.AWSClient).ECSConn
 
+	var sweeperErrs *multierror.Error
+	sweepResources := make([]*sweep.SweepResource, 0)
+
 	err = conn.ListClustersPages(&ecs.ListClustersInput{}, func(page *ecs.ListClustersOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
 
-		for _, clusterARNPtr := range page.ClusterArns {
+		for _, clusterARN := range page.ClusterArns {
 			input := &ecs.ListServicesInput{
-				Cluster: clusterARNPtr,
+				Cluster: clusterARN,
 			}
-
-			err = conn.ListServicesPages(input, func(page *ecs.ListServicesOutput, lastPage bool) bool {
+			err := conn.ListServicesPages(input, func(page *ecs.ListServicesOutput, lastPage bool) bool {
 				if page == nil {
 					return !lastPage
 				}
 
-				for _, serviceARNPtr := range page.ServiceArns {
-					describeServicesInput := &ecs.DescribeServicesInput{
-						Cluster:  clusterARNPtr,
-						Services: []*string{serviceARNPtr},
-					}
-					serviceARN := aws.StringValue(serviceARNPtr)
+				for _, serviceARN := range page.ServiceArns {
+					r := ResourceService()
+					d := r.Data(nil)
+					d.SetId(aws.StringValue(serviceARN))
+					d.Set("cluster", clusterARN)
 
-					log.Printf("[DEBUG] Describing ECS Service: %s", serviceARN)
-					describeServicesOutput, err := conn.DescribeServices(describeServicesInput)
-
-					if tfawserr.ErrCodeEquals(err, ecs.ErrCodeServiceNotFoundException) {
-						continue
-					}
-
-					if err != nil {
-						log.Printf("[ERROR] Error describing ECS Service (%s): %s", serviceARN, err)
-						continue
-					}
-
-					if describeServicesOutput == nil || len(describeServicesOutput.Services) == 0 {
-						continue
-					}
-
-					service := describeServicesOutput.Services[0]
-
-					if aws.StringValue(service.Status) == "INACTIVE" {
-						continue
-					}
-
-					deleteServiceInput := &ecs.DeleteServiceInput{
-						Cluster: service.ClusterArn,
-						Force:   aws.Bool(true),
-						Service: service.ServiceArn,
-					}
-
-					log.Printf("[INFO] Deleting ECS Service: %s", serviceARN)
-					_, err = conn.DeleteService(deleteServiceInput)
-
-					if err != nil {
-						log.Printf("[ERROR] Error deleting ECS Service (%s): %s", serviceARN, err)
-					}
+					sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 				}
 
 				return !lastPage
 			})
+			if err != nil {
+				sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("listing ECS Services for Cluster (%s): %w", aws.StringValue(clusterARN), err))
+			}
 		}
 
 		return !lastPage
 	})
+
+	if sweep.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping ECS Service sweep for %s: %s", region, err)
+		return sweeperErrs.ErrorOrNil()
+	}
 	if err != nil {
-		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping ECS Service sweep for %s: %s", region, err)
-			return nil
-		}
-		return fmt.Errorf("error retrieving ECS Services: %s", err)
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("retrieving ECS Services: %w", err))
 	}
 
-	return nil
+	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping ECS Services for %s: %w", region, err))
+	}
+
+	return sweeperErrs.ErrorOrNil()
 }
 
 func sweepTaskDefinitions(region string) error {

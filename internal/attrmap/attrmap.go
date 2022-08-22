@@ -45,8 +45,8 @@ func New(attrMap map[string]string, schemaMap map[string]*schema.Schema) Attribu
 	return attributeMap
 }
 
-// ApiAttributesToResourceData sets Terraform ResourceData from a map of AWS API attributes.
-func (m AttributeMap) ApiAttributesToResourceData(apiAttributes map[string]string, d *schema.ResourceData) error {
+// APIAttributesToResourceData sets Terraform ResourceData from a map of AWS API attributes.
+func (m AttributeMap) APIAttributesToResourceData(apiAttributes map[string]string, d *schema.ResourceData) error {
 	for tfAttributeName, attributeInfo := range m {
 		if v, ok := apiAttributes[attributeInfo.apiAttributeName]; ok {
 			var err error
@@ -92,9 +92,9 @@ func (m AttributeMap) ApiAttributesToResourceData(apiAttributes map[string]strin
 	return nil
 }
 
-// ResourceDataToApiAttributesCreate returns a map of AWS API attributes from Terraform ResourceData.
+// ResourceDataToAPIAttributesCreate returns a map of AWS API attributes from Terraform ResourceData.
 // The API attributes map is suitable for resource create.
-func (m AttributeMap) ResourceDataToApiAttributesCreate(d *schema.ResourceData) (map[string]string, error) {
+func (m AttributeMap) ResourceDataToAPIAttributesCreate(d *schema.ResourceData) (map[string]string, error) {
 	apiAttributes := map[string]string{}
 
 	for tfAttributeName, attributeInfo := range m {
@@ -140,9 +140,9 @@ func (m AttributeMap) ResourceDataToApiAttributesCreate(d *schema.ResourceData) 
 	return apiAttributes, nil
 }
 
-// ResourceDataToApiAttributesUpdate returns a map of AWS API attributes from Terraform ResourceData.
+// ResourceDataToAPIAttributesUpdate returns a map of AWS API attributes from Terraform ResourceData.
 // The API attributes map is suitable for resource update.
-func (m AttributeMap) ResourceDataToApiAttributesUpdate(d *schema.ResourceData) (map[string]string, error) {
+func (m AttributeMap) ResourceDataToAPIAttributesUpdate(d *schema.ResourceData) (map[string]string, error) {
 	apiAttributes := map[string]string{}
 
 	for tfAttributeName, attributeInfo := range m {
@@ -184,8 +184,8 @@ func (m AttributeMap) ResourceDataToApiAttributesUpdate(d *schema.ResourceData) 
 	return apiAttributes, nil
 }
 
-// ApiAttributeNames returns the AWS API attribute names.
-func (m AttributeMap) ApiAttributeNames() []string {
+// APIAttributeNames returns the AWS API attribute names.
+func (m AttributeMap) APIAttributeNames() []string {
 	apiAttributeNames := []string{}
 
 	for _, attributeInfo := range m {

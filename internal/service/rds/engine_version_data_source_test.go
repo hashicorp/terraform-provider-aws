@@ -19,13 +19,13 @@ func TestAccRDSEngineVersionDataSource_basic(t *testing.T) {
 	paramGroup := "oracle-ee-19"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccEngineVersionPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: nil,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccEngineVersionPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEngineVersionBasicDataSourceConfig(engine, version, paramGroup),
+				Config: testAccEngineVersionDataSourceConfig_basic(engine, version, paramGroup),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "engine", engine),
 					resource.TestCheckResourceAttr(dataSourceName, "version", version),
@@ -54,13 +54,13 @@ func TestAccRDSEngineVersionDataSource_upgradeTargets(t *testing.T) {
 	dataSourceName := "data.aws_rds_engine_version.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccEngineVersionPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: nil,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccEngineVersionPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEngineVersionUpgradeTargetsDataSourceConfig(),
+				Config: testAccEngineVersionDataSourceConfig_upgradeTargets(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestMatchResourceAttr(dataSourceName, "valid_upgrade_targets.#", regexp.MustCompile(`^[1-9][0-9]*`)),
 				),
@@ -73,15 +73,15 @@ func TestAccRDSEngineVersionDataSource_preferred(t *testing.T) {
 	dataSourceName := "data.aws_rds_engine_version.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccEngineVersionPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: nil,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccEngineVersionPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEngineVersionPreferredDataSourceConfig(),
+				Config: testAccEngineVersionDataSourceConfig_preferred(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "version", "5.7.19"),
+					resource.TestCheckResourceAttr(dataSourceName, "version", "8.0.27"),
 				),
 			},
 		},
@@ -92,13 +92,13 @@ func TestAccRDSEngineVersionDataSource_defaultOnly(t *testing.T) {
 	dataSourceName := "data.aws_rds_engine_version.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccEngineVersionPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, rds.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: nil,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccEngineVersionPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEngineVersionDefaultOnlyDataSourceConfig(),
+				Config: testAccEngineVersionDataSourceConfig_defaultOnly(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(dataSourceName, "version"),
 				),
@@ -126,35 +126,35 @@ func testAccEngineVersionPreCheck(t *testing.T) {
 	}
 }
 
-func testAccEngineVersionBasicDataSourceConfig(engine, version, paramGroup string) string {
+func testAccEngineVersionDataSourceConfig_basic(engine, version, paramGroup string) string {
 	return fmt.Sprintf(`
 data "aws_rds_engine_version" "test" {
-  engine                 = %q
-  version                = %q
-  parameter_group_family = %q
+  engine                 = %[1]q
+  version                = %[2]q
+  parameter_group_family = %[3]q
 }
 `, engine, version, paramGroup)
 }
 
-func testAccEngineVersionUpgradeTargetsDataSourceConfig() string {
+func testAccEngineVersionDataSourceConfig_upgradeTargets() string {
 	return `
 data "aws_rds_engine_version" "test" {
   engine  = "mysql"
-  version = "5.7.17"
+  version = "8.0.27"
 }
 `
 }
 
-func testAccEngineVersionPreferredDataSourceConfig() string {
+func testAccEngineVersionDataSourceConfig_preferred() string {
 	return `
 data "aws_rds_engine_version" "test" {
   engine             = "mysql"
-  preferred_versions = ["85.9.12", "5.7.19", "5.7.17"]
+  preferred_versions = ["85.9.12", "8.0.27", "8.0.26"]
 }
 `
 }
 
-func testAccEngineVersionDefaultOnlyDataSourceConfig() string {
+func testAccEngineVersionDataSourceConfig_defaultOnly() string {
 	return `
 data "aws_rds_engine_version" "test" {
   engine = "mysql"

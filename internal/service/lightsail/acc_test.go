@@ -26,22 +26,17 @@ var testAccLightsailDomainRegion string
 // This Provider can be used in testing code for API calls without requiring
 // the use of saving and referencing specific ProviderFactories instances.
 //
-// testAccPreCheckLightsailDomain(t) must be called before using this provider instance.
+// testAccPreCheckDomain(t) must be called before using this provider instance.
 var testAccProviderLightsailDomain *schema.Provider
 
 // testAccProviderLightsailDomainConfigure ensures the provider is only configured once
 var testAccProviderLightsailDomainConfigure sync.Once
 
-// Prevent panic with acctest.CheckResourceDisappears
-func init() {
-	testAccProviderLightsailDomain = provider.Provider()
-}
-
-// testAccPreCheckLightsailDomain verifies AWS credentials and that Lightsail Domains is supported
-func testAccPreCheckLightsailDomain(t *testing.T) {
+// testAccPreCheckDomain verifies AWS credentials and that Lightsail Domains is supported
+func testAccPreCheckDomain(t *testing.T) {
 	acctest.PreCheckPartitionHasService(lightsail.EndpointsID, t)
 
-	region := testAccGetLightsailDomainRegion()
+	region := testAccGetDomainRegion()
 
 	if region == "" {
 		t.Skip("Lightsail Domains not available in this AWS Partition")
@@ -50,11 +45,19 @@ func testAccPreCheckLightsailDomain(t *testing.T) {
 	// Since we are outside the scope of the Terraform configuration we must
 	// call Configure() to properly initialize the provider configuration.
 	testAccProviderLightsailDomainConfigure.Do(func() {
+		ctx := context.Background()
+		var err error
+		testAccProviderLightsailDomain, err = provider.New(ctx)
+
+		if err != nil {
+			t.Fatal(err)
+		}
+
 		config := map[string]interface{}{
 			"region": region,
 		}
 
-		diags := testAccProviderLightsailDomain.Configure(context.Background(), terraform.NewResourceConfigRaw(config))
+		diags := testAccProviderLightsailDomain.Configure(ctx, terraform.NewResourceConfigRaw(config))
 
 		if diags != nil && diags.HasError() {
 			for _, d := range diags {
@@ -66,16 +69,16 @@ func testAccPreCheckLightsailDomain(t *testing.T) {
 	})
 }
 
-// testAccLightsailDomainRegionProviderConfig is the Terraform provider configuration for Lightsail Domains region testing
+// testAccDomainRegionProviderConfig is the Terraform provider configuration for Lightsail Domains region testing
 //
 // Testing Lightsail Domains assumes no other provider configurations
 // are necessary and overwrites the "aws" provider configuration.
-func testAccLightsailDomainRegionProviderConfig() string {
-	return acctest.ConfigRegionalProvider(testAccGetLightsailDomainRegion())
+func testAccDomainRegionProviderConfig() string {
+	return acctest.ConfigRegionalProvider(testAccGetDomainRegion())
 }
 
-// testAccGetLightsailDomainRegion returns the Lightsail Domains region for testing
-func testAccGetLightsailDomainRegion() string {
+// testAccGetDomainRegion returns the Lightsail Domains region for testing
+func testAccGetDomainRegion() string {
 	if testAccLightsailDomainRegion != "" {
 		return testAccLightsailDomainRegion
 	}

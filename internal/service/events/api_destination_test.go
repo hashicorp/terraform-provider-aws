@@ -30,13 +30,13 @@ func TestAccEventsAPIDestination_basic(t *testing.T) {
 	resourceName := "aws_cloudwatch_event_api_destination.basic"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, eventbridge.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAPIDestinationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, eventbridge.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAPIDestinationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAPIDestinationConfig(
+				Config: testAccAPIDestinationConfig_basic(
 					name,
 					invocationEndpoint,
 					httpMethod,
@@ -55,7 +55,7 @@ func TestAccEventsAPIDestination_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAPIDestinationConfig(
+				Config: testAccAPIDestinationConfig_basic(
 					nameModified,
 					invocationEndpointModified,
 					httpMethodModified,
@@ -70,7 +70,7 @@ func TestAccEventsAPIDestination_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAPIDestinationConfig(
+				Config: testAccAPIDestinationConfig_basic(
 					nameModified,
 					invocationEndpointModified,
 					httpMethodModified,
@@ -103,10 +103,10 @@ func TestAccEventsAPIDestination_optional(t *testing.T) {
 	resourceName := "aws_cloudwatch_event_api_destination.optional"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, eventbridge.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAPIDestinationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, eventbridge.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAPIDestinationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAPIDestinationConfig_optional(
@@ -179,13 +179,13 @@ func TestAccEventsAPIDestination_disappears(t *testing.T) {
 	resourceName := "aws_cloudwatch_event_api_destination.basic"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, eventbridge.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAPIDestinationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, eventbridge.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAPIDestinationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAPIDestinationConfig(
+				Config: testAccAPIDestinationConfig_basic(
 					name,
 					invocationEndpoint,
 					httpMethod,
@@ -265,7 +265,7 @@ func testAccCheckAPIDestinationNotRecreated(i, j *eventbridge.DescribeApiDestina
 	}
 }
 
-func testAccAPIDestinationConfig(name, invocationEndpoint, httpMethod string) string {
+func testAccAPIDestinationConfig_basic(name, invocationEndpoint, httpMethod string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_event_api_destination" "basic" {
   name                = %[1]q

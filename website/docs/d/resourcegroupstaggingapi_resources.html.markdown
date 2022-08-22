@@ -1,5 +1,5 @@
 ---
-subcategory: "Resource Groups Tagging API"
+subcategory: "Resource Groups Tagging"
 layout: "aws"
 page_title: "AWS: aws_resourcegroupstaggingapi_resources"
 description: |-

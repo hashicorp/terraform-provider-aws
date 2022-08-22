@@ -1,14 +1,18 @@
 ---
-subcategory: "S3"
+subcategory: "S3 (Simple Storage)"
 layout: "aws"
 page_title: "AWS: aws_s3_bucket_logging"
 description: |-
-  Provides a S3 bucket logging resource.
+  Provides an S3 bucket (server access) logging resource.
 ---
 
 # Resource: aws_s3_bucket_logging
 
-Provides a S3 bucket logging resource.
+Provides an S3 bucket (server access) logging resource. For more information, see [Logging requests using server access logging](https://docs.aws.amazon.com/AmazonS3/latest/userguide/ServerLogs.html)
+in the AWS S3 User Guide.
+
+~> **Note:** Amazon S3 supports server access logging, AWS CloudTrail, or a combination of both. Refer to the [Logging options for Amazon S3](https://docs.aws.amazon.com/AmazonS3/latest/userguide/logging-with-S3.html)
+to decide which method meets your requirements.
 
 ## Example Usage
 
@@ -45,7 +49,7 @@ The following arguments are supported:
 
 * `bucket` - (Required, Forces new resource) The name of the bucket.
 * `expected_bucket_owner` - (Optional, Forces new resource) The account ID of the expected bucket owner.
-* `target_bucket` - (Required) The bucket where you want Amazon S3 to store server access logs.
+* `target_bucket` - (Required) The name of the bucket where you want Amazon S3 to store server access logs.
 * `target_prefix` - (Required) A prefix for all log object keys.
 * `target_grant` - (Optional) Set of configuration blocks with information for granting permissions [documented below](#target_grant).
 

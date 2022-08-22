@@ -1,5 +1,5 @@
 ---
-subcategory: "SQS"
+subcategory: "SQS (Simple Queue)"
 layout: "aws"
 page_title: "AWS: aws_sqs_queue"
 description: |-
@@ -20,10 +20,6 @@ resource "aws_sqs_queue" "terraform_queue" {
   redrive_policy = jsonencode({
     deadLetterTargetArn = aws_sqs_queue.terraform_queue_deadletter.arn
     maxReceiveCount     = 4
-  })
-  redrive_allow_policy = jsonencode({
-    redrivePermission = "byQueue",
-    sourceQueueArns   = ["${aws_sqs_queue.terraform_queue_deadletter.arn}"]
   })
 
   tags = {
@@ -50,6 +46,18 @@ resource "aws_sqs_queue" "terraform_queue" {
   fifo_queue            = true
   deduplication_scope   = "messageGroup"
   fifo_throughput_limit = "perMessageGroupId"
+}
+```
+
+## Dead-letter queue
+
+```terraform
+resource "aws_sqs_queue" "terraform_queue_deadletter" {
+  name = "terraform-example-deadletter-queue"
+  redrive_allow_policy = jsonencode({
+    redrivePermission = "byQueue",
+    sourceQueueArns   = [aws_sqs_queue.terraform_queue.arn]
+  })
 }
 ```
 
@@ -95,7 +103,7 @@ The following arguments are supported:
 * `kms_data_key_reuse_period_seconds` - (Optional) The length of time, in seconds, for which Amazon SQS can reuse a data key to encrypt or decrypt messages before calling AWS KMS again. An integer representing seconds, between 60 seconds (1 minute) and 86,400 seconds (24 hours). The default is 300 (5 minutes).
 * `deduplication_scope` - (Optional) Specifies whether message deduplication occurs at the message group or queue level. Valid values are `messageGroup` and `queue` (default).
 * `fifo_throughput_limit` - (Optional) Specifies whether the FIFO queue throughput quota applies to the entire queue or per message group. Valid values are `perQueue` (default) and `perMessageGroupId`.
-* `tags` - (Optional) A map of tags to assign to the queue. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the queue. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attributes Reference
 
@@ -103,7 +111,7 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - The URL for the created Amazon SQS queue.
 * `arn` - The ARN of the SQS queue
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `url` - Same as `id`: The URL for the created Amazon SQS queue.
 
 ## Import

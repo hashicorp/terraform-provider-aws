@@ -222,7 +222,12 @@ func resourceSubnetGroupDelete(d *schema.ResourceData, meta interface{}) error {
 		MinTimeout: 1 * time.Second,
 	}
 	_, err := stateConf.WaitForState()
-	return err
+
+	if err != nil {
+		return fmt.Errorf("deleting RDS Subnet Group (%s): %w", d.Id(), err)
+	}
+
+	return nil
 }
 
 func resourceSubnetGroupDeleteRefreshFunc(

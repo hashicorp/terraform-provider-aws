@@ -1,5 +1,5 @@
 ---
-subcategory: "Synthetics"
+subcategory: "CloudWatch Synthetics"
 layout: "aws"
 page_title: "AWS: aws_synthetics_canary"
 description: |-
@@ -42,6 +42,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `delete_lambda` - (Optional)  Specifies whether to also delete the Lambda functions and layers used by this canary. The default is `false`.
 * `vpc_config` - (Optional) Configuration block. Detailed below.
 * `failure_retention_period` - (Optional) Number of days to retain data about failed runs of this canary. If you omit this field, the default of 31 days is used. The valid range is 1 to 455 days.
 * `run_config` - (Optional) Configuration block for individual canary runs. Detailed below.
@@ -50,7 +51,7 @@ The following arguments are optional:
 * `s3_version` - (Optional) S3 version ID of your script. **Conflicts with `zip_file`.**
 * `start_canary` - (Optional) Whether to run or stop the canary.
 * `success_retention_period` - (Optional) Number of days to retain data about successful runs of this canary. If you omit this field, the default of 31 days is used. The valid range is 1 to 455 days.
-* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `artifact_config` - (Optional) configuration for canary artifacts, including the encryption-at-rest settings for artifacts that the canary uploads to Amazon S3. See [Artifact Config](#artifact_config).
 * `zip_file` - (Optional) ZIP file that contains the script, if you input your canary script directly into the canary instead of referring to an S3 location. It can be up to 5 MB. **Conflicts with `s3_bucket`, `s3_key`, and `s3_version`.**
 
@@ -60,8 +61,8 @@ The following arguments are optional:
 
 ### s3_encryption
 
-* `encryption_mode` - (Optional) The encryption method to use for artifacts created by this canary. Valid values are: `SSE-S3` and `SSE-KMS`.
-* `kms_key_arn` - (Optional) The ARN of the customer-managed KMS key to use, if you specify `SSE-KMS` for `encryption_mode`.
+* `encryption_mode` - (Optional) The encryption method to use for artifacts created by this canary. Valid values are: `SSE_S3` and `SSE_KMS`.
+* `kms_key_arn` - (Optional) The ARN of the customer-managed KMS key to use, if you specify `SSE_KMS` for `encryption_mode`.
 
 ### schedule
 
@@ -73,6 +74,7 @@ The following arguments are optional:
 * `timeout_in_seconds` - (Optional) Number of seconds the canary is allowed to run before it must stop. If you omit this field, the frequency of the canary is used, up to a maximum of 840 (14 minutes).
 * `memory_in_mb` - (Optional) Maximum amount of memory available to the canary while it is running, in MB. The value you specify must be a multiple of 64.
 * `active_tracing` - (Optional) Whether this canary is to use active AWS X-Ray tracing when it runs. You can enable active tracing only for canaries that use version syn-nodejs-2.0 or later for their canary runtime.
+* `environment_variables` - (Optional) Map of environment variables that are accessible from the canary during execution. Please see [AWS Docs](https://docs.aws.amazon.com/lambda/latest/dg/configuration-envvars.html#configuration-envvars-runtime) for variables reserved for Lambda.
 
 ### vpc_config
 
@@ -90,7 +92,7 @@ In addition to all arguments above, the following attributes are exported:
 * `id` - Name for this canary.
 * `source_location_arn` - ARN of the Lambda layer where Synthetics stores the canary script code.
 * `status` - Canary status.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `timeline` - Structure that contains information about when the canary was created, modified, and most recently run. see [Timeline](#timeline).
 
 ### vpc_config

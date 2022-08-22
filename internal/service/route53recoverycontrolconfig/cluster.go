@@ -76,7 +76,7 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 	result := output.Cluster
 	d.SetId(aws.StringValue(result.ClusterArn))
 
-	if _, err := waitRoute53RecoveryControlConfigClusterCreated(conn, d.Id()); err != nil {
+	if _, err := waitClusterCreated(conn, d.Id()); err != nil {
 		return fmt.Errorf("Error waiting for Route53 Recovery Control Config Cluster (%s) to be Deployed: %w", d.Id(), err)
 	}
 
@@ -111,7 +111,7 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("name", result.Name)
 	d.Set("status", result.Status)
 
-	if err := d.Set("cluster_endpoints", flattenRoute53RecoveryControlConfigClusterEndpoints(result.ClusterEndpoints)); err != nil {
+	if err := d.Set("cluster_endpoints", flattenClusterEndpoints(result.ClusterEndpoints)); err != nil {
 		return fmt.Errorf("Error setting cluster_endpoints: %w", err)
 	}
 
@@ -134,7 +134,7 @@ func resourceClusterDelete(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error deleting Route53 Recovery Control Config Cluster: %w", err)
 	}
 
-	_, err = waitRoute53RecoveryControlConfigClusterDeleted(conn, d.Id())
+	_, err = waitClusterDeleted(conn, d.Id())
 
 	if tfawserr.ErrCodeEquals(err, r53rcc.ErrCodeResourceNotFoundException) {
 		return nil
@@ -147,7 +147,7 @@ func resourceClusterDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func flattenRoute53RecoveryControlConfigClusterEndpoints(endpoints []*r53rcc.ClusterEndpoint) []interface{} {
+func flattenClusterEndpoints(endpoints []*r53rcc.ClusterEndpoint) []interface{} {
 	if len(endpoints) == 0 {
 		return nil
 	}
@@ -159,13 +159,13 @@ func flattenRoute53RecoveryControlConfigClusterEndpoints(endpoints []*r53rcc.Clu
 			continue
 		}
 
-		tfList = append(tfList, flattenRoute53RecoveryControlConfigClusterEndpoint(endpoint))
+		tfList = append(tfList, flattenClusterEndpoint(endpoint))
 	}
 
 	return tfList
 }
 
-func flattenRoute53RecoveryControlConfigClusterEndpoint(ce *r53rcc.ClusterEndpoint) map[string]interface{} {
+func flattenClusterEndpoint(ce *r53rcc.ClusterEndpoint) map[string]interface{} {
 	if ce == nil {
 		return nil
 	}

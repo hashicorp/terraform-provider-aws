@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
-var accountIDRegexp = regexp.MustCompile(`^(aws|\d{12})$`)
+var accountIDRegexp = regexp.MustCompile(`^(aws|aws-managed|\d{12})$`)
 var partitionRegexp = regexp.MustCompile(`^aws(-[a-z]+)*$`)
 var regionRegexp = regexp.MustCompile(`^[a-z]{2}(-[a-z]+)+-\d$`)
 
@@ -349,3 +349,34 @@ var ValidStringDateOrPositiveInt = validation.Any(
 	validation.IsRFC3339Time,
 	validation.StringMatch(regexp.MustCompile(`^\d+$`), "must be a positive integer value"),
 )
+
+func ValidDuration(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	duration, err := time.ParseDuration(value)
+	if err != nil {
+		errors = append(errors, fmt.Errorf("%q cannot be parsed as a duration: %s", k, err))
+	}
+	if duration < 0 {
+		errors = append(errors, fmt.Errorf("%q must be greater than zero", k))
+	}
+	return
+}
+
+// FloatGreaterThan returns a SchemaValidateFunc which tests if the provided value
+// is of type float and is greater than threshold.
+func FloatGreaterThan(threshold float64) schema.SchemaValidateFunc {
+	return func(i interface{}, k string) (s []string, es []error) {
+		v, ok := i.(float64)
+		if !ok {
+			es = append(es, fmt.Errorf("expected type of %s to be float", k))
+			return
+		}
+
+		if v <= threshold {
+			es = append(es, fmt.Errorf("expected %s to be greater than (%f), got %f", k, threshold, v))
+			return
+		}
+
+		return
+	}
+}

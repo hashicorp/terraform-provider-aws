@@ -41,7 +41,7 @@ func dataSourcePromptRead(ctx context.Context, d *schema.ResourceData, meta inte
 	instanceID := d.Get("instance_id").(string)
 	name := d.Get("name").(string)
 
-	promptSummary, err := dataSourceGetConnectPromptSummaryByName(ctx, conn, instanceID, name)
+	promptSummary, err := dataSourceGetPromptSummaryByName(ctx, conn, instanceID, name)
 
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("error finding Connect Prompt Summary by name (%s): %w", name, err))
@@ -61,7 +61,7 @@ func dataSourcePromptRead(ctx context.Context, d *schema.ResourceData, meta inte
 	return nil
 }
 
-func dataSourceGetConnectPromptSummaryByName(ctx context.Context, conn *connect.Connect, instanceID, name string) (*connect.PromptSummary, error) {
+func dataSourceGetPromptSummaryByName(ctx context.Context, conn *connect.Connect, instanceID, name string) (*connect.PromptSummary, error) {
 	var result *connect.PromptSummary
 
 	input := &connect.ListPromptsInput{

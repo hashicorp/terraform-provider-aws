@@ -157,7 +157,7 @@ func resourceEndpointGroupCreate(d *schema.ResourceData, meta interface{}) error
 	}
 
 	if v, ok := d.GetOk("endpoint_configuration"); ok {
-		opts.EndpointConfigurations = expandGlobalAcceleratorEndpointConfigurations(v.(*schema.Set).List())
+		opts.EndpointConfigurations = expandEndpointConfigurations(v.(*schema.Set).List())
 	}
 
 	if v, ok := d.GetOk("endpoint_group_region"); ok {
@@ -181,7 +181,7 @@ func resourceEndpointGroupCreate(d *schema.ResourceData, meta interface{}) error
 	}
 
 	if v, ok := d.GetOk("port_override"); ok {
-		opts.PortOverrides = expandGlobalAcceleratorPortOverrides(v.(*schema.Set).List())
+		opts.PortOverrides = expandPortOverrides(v.(*schema.Set).List())
 	}
 
 	if v, ok := d.GetOk("threshold_count"); ok {
@@ -236,7 +236,7 @@ func resourceEndpointGroupRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.Set("arn", endpointGroup.EndpointGroupArn)
-	if err := d.Set("endpoint_configuration", flattenGlobalAcceleratorEndpointDescriptions(endpointGroup.EndpointDescriptions)); err != nil {
+	if err := d.Set("endpoint_configuration", flattenEndpointDescriptions(endpointGroup.EndpointDescriptions)); err != nil {
 		return fmt.Errorf("error setting endpoint_configuration: %w", err)
 	}
 	d.Set("endpoint_group_region", endpointGroup.EndpointGroupRegion)
@@ -245,7 +245,7 @@ func resourceEndpointGroupRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("health_check_port", endpointGroup.HealthCheckPort)
 	d.Set("health_check_protocol", endpointGroup.HealthCheckProtocol)
 	d.Set("listener_arn", listenerARN)
-	if err := d.Set("port_override", flattenGlobalAcceleratorPortOverrides(endpointGroup.PortOverrides)); err != nil {
+	if err := d.Set("port_override", flattenPortOverrides(endpointGroup.PortOverrides)); err != nil {
 		return fmt.Errorf("error setting port_override: %w", err)
 	}
 	d.Set("threshold_count", endpointGroup.ThresholdCount)
@@ -262,7 +262,7 @@ func resourceEndpointGroupUpdate(d *schema.ResourceData, meta interface{}) error
 	}
 
 	if v, ok := d.GetOk("endpoint_configuration"); ok {
-		opts.EndpointConfigurations = expandGlobalAcceleratorEndpointConfigurations(v.(*schema.Set).List())
+		opts.EndpointConfigurations = expandEndpointConfigurations(v.(*schema.Set).List())
 	} else {
 		opts.EndpointConfigurations = []*globalaccelerator.EndpointConfiguration{}
 	}
@@ -284,7 +284,7 @@ func resourceEndpointGroupUpdate(d *schema.ResourceData, meta interface{}) error
 	}
 
 	if v, ok := d.GetOk("port_override"); ok {
-		opts.PortOverrides = expandGlobalAcceleratorPortOverrides(v.(*schema.Set).List())
+		opts.PortOverrides = expandPortOverrides(v.(*schema.Set).List())
 	} else {
 		opts.PortOverrides = []*globalaccelerator.PortOverride{}
 	}
@@ -349,7 +349,7 @@ func resourceEndpointGroupDelete(d *schema.ResourceData, meta interface{}) error
 	return nil
 }
 
-func expandGlobalAcceleratorEndpointConfigurations(configurations []interface{}) []*globalaccelerator.EndpointConfiguration {
+func expandEndpointConfigurations(configurations []interface{}) []*globalaccelerator.EndpointConfiguration {
 	out := make([]*globalaccelerator.EndpointConfiguration, len(configurations))
 
 	for i, raw := range configurations {
@@ -366,7 +366,7 @@ func expandGlobalAcceleratorEndpointConfigurations(configurations []interface{})
 	return out
 }
 
-func expandGlobalAcceleratorPortOverrides(vPortOverrides []interface{}) []*globalaccelerator.PortOverride {
+func expandPortOverrides(vPortOverrides []interface{}) []*globalaccelerator.PortOverride {
 	portOverrides := []*globalaccelerator.PortOverride{}
 
 	for _, vPortOverride := range vPortOverrides {
@@ -387,7 +387,7 @@ func expandGlobalAcceleratorPortOverrides(vPortOverrides []interface{}) []*globa
 	return portOverrides
 }
 
-func flattenGlobalAcceleratorEndpointDescriptions(configurations []*globalaccelerator.EndpointDescription) []interface{} {
+func flattenEndpointDescriptions(configurations []*globalaccelerator.EndpointDescription) []interface{} {
 	out := make([]interface{}, len(configurations))
 
 	for i, configuration := range configurations {
@@ -403,7 +403,7 @@ func flattenGlobalAcceleratorEndpointDescriptions(configurations []*globalaccele
 	return out
 }
 
-func flattenGlobalAcceleratorPortOverrides(portOverrides []*globalaccelerator.PortOverride) []interface{} {
+func flattenPortOverrides(portOverrides []*globalaccelerator.PortOverride) []interface{} {
 	if len(portOverrides) == 0 || portOverrides[0] == nil {
 		return []interface{}{}
 	}

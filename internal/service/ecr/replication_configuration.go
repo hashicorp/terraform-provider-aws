@@ -91,7 +91,7 @@ func resourceReplicationConfigurationPut(d *schema.ResourceData, meta interface{
 	conn := meta.(*conns.AWSClient).ECRConn
 
 	input := ecr.PutReplicationConfigurationInput{
-		ReplicationConfiguration: expandEcrReplicationConfigurationReplicationConfiguration(d.Get("replication_configuration").([]interface{})),
+		ReplicationConfiguration: expandReplicationConfigurationReplicationConfiguration(d.Get("replication_configuration").([]interface{})),
 	}
 
 	_, err := conn.PutReplicationConfiguration(&input)
@@ -115,7 +115,7 @@ func resourceReplicationConfigurationRead(d *schema.ResourceData, meta interface
 
 	d.Set("registry_id", out.RegistryId)
 
-	if err := d.Set("replication_configuration", flattenEcrReplicationConfigurationReplicationConfiguration(out.ReplicationConfiguration)); err != nil {
+	if err := d.Set("replication_configuration", flattenReplicationConfigurationReplicationConfiguration(out.ReplicationConfiguration)); err != nil {
 		return fmt.Errorf("error setting replication_configuration for ECR Replication Configuration: %w", err)
 	}
 
@@ -139,25 +139,25 @@ func resourceReplicationConfigurationDelete(d *schema.ResourceData, meta interfa
 	return nil
 }
 
-func expandEcrReplicationConfigurationReplicationConfiguration(data []interface{}) *ecr.ReplicationConfiguration {
+func expandReplicationConfigurationReplicationConfiguration(data []interface{}) *ecr.ReplicationConfiguration {
 	if len(data) == 0 || data[0] == nil {
 		return nil
 	}
 
 	ec := data[0].(map[string]interface{})
 	config := &ecr.ReplicationConfiguration{
-		Rules: expandEcrReplicationConfigurationReplicationConfigurationRules(ec["rule"].([]interface{})),
+		Rules: expandReplicationConfigurationReplicationConfigurationRules(ec["rule"].([]interface{})),
 	}
 	return config
 }
 
-func flattenEcrReplicationConfigurationReplicationConfiguration(ec *ecr.ReplicationConfiguration) []map[string]interface{} {
+func flattenReplicationConfigurationReplicationConfiguration(ec *ecr.ReplicationConfiguration) []map[string]interface{} {
 	if ec == nil {
 		return nil
 	}
 
 	config := map[string]interface{}{
-		"rule": flattenEcrReplicationConfigurationReplicationConfigurationRules(ec.Rules),
+		"rule": flattenReplicationConfigurationReplicationConfigurationRules(ec.Rules),
 	}
 
 	return []map[string]interface{}{
@@ -165,7 +165,7 @@ func flattenEcrReplicationConfigurationReplicationConfiguration(ec *ecr.Replicat
 	}
 }
 
-func expandEcrReplicationConfigurationReplicationConfigurationRules(data []interface{}) []*ecr.ReplicationRule {
+func expandReplicationConfigurationReplicationConfigurationRules(data []interface{}) []*ecr.ReplicationRule {
 	if len(data) == 0 || data[0] == nil {
 		return nil
 	}
@@ -175,8 +175,8 @@ func expandEcrReplicationConfigurationReplicationConfigurationRules(data []inter
 	for _, rule := range data {
 		ec := rule.(map[string]interface{})
 		config := &ecr.ReplicationRule{
-			Destinations:      expandEcrReplicationConfigurationReplicationConfigurationRulesDestinations(ec["destination"].([]interface{})),
-			RepositoryFilters: expandEcrReplicationConfigurationReplicationConfigurationRulesRepositoryFilters(ec["repository_filter"].([]interface{})),
+			Destinations:      expandReplicationConfigurationReplicationConfigurationRulesDestinations(ec["destination"].([]interface{})),
+			RepositoryFilters: expandReplicationConfigurationReplicationConfigurationRulesRepositoryFilters(ec["repository_filter"].([]interface{})),
 		}
 
 		rules = append(rules, config)
@@ -185,7 +185,7 @@ func expandEcrReplicationConfigurationReplicationConfigurationRules(data []inter
 	return rules
 }
 
-func flattenEcrReplicationConfigurationReplicationConfigurationRules(ec []*ecr.ReplicationRule) []interface{} {
+func flattenReplicationConfigurationReplicationConfigurationRules(ec []*ecr.ReplicationRule) []interface{} {
 	if len(ec) == 0 {
 		return nil
 	}
@@ -194,8 +194,8 @@ func flattenEcrReplicationConfigurationReplicationConfigurationRules(ec []*ecr.R
 
 	for _, apiObject := range ec {
 		tfMap := map[string]interface{}{
-			"destination":       flattenEcrReplicationConfigurationReplicationConfigurationRulesDestinations(apiObject.Destinations),
-			"repository_filter": flattenEcrReplicationConfigurationReplicationConfigurationRulesRepositoryFilters(apiObject.RepositoryFilters),
+			"destination":       flattenReplicationConfigurationReplicationConfigurationRulesDestinations(apiObject.Destinations),
+			"repository_filter": flattenReplicationConfigurationReplicationConfigurationRulesRepositoryFilters(apiObject.RepositoryFilters),
 		}
 
 		tfList = append(tfList, tfMap)
@@ -204,7 +204,7 @@ func flattenEcrReplicationConfigurationReplicationConfigurationRules(ec []*ecr.R
 	return tfList
 }
 
-func expandEcrReplicationConfigurationReplicationConfigurationRulesDestinations(data []interface{}) []*ecr.ReplicationDestination {
+func expandReplicationConfigurationReplicationConfigurationRulesDestinations(data []interface{}) []*ecr.ReplicationDestination {
 	if len(data) == 0 || data[0] == nil {
 		return nil
 	}
@@ -223,7 +223,7 @@ func expandEcrReplicationConfigurationReplicationConfigurationRulesDestinations(
 	return dests
 }
 
-func flattenEcrReplicationConfigurationReplicationConfigurationRulesDestinations(ec []*ecr.ReplicationDestination) []interface{} {
+func flattenReplicationConfigurationReplicationConfigurationRulesDestinations(ec []*ecr.ReplicationDestination) []interface{} {
 	if len(ec) == 0 {
 		return nil
 	}
@@ -242,7 +242,7 @@ func flattenEcrReplicationConfigurationReplicationConfigurationRulesDestinations
 	return tfList
 }
 
-func expandEcrReplicationConfigurationReplicationConfigurationRulesRepositoryFilters(data []interface{}) []*ecr.RepositoryFilter {
+func expandReplicationConfigurationReplicationConfigurationRulesRepositoryFilters(data []interface{}) []*ecr.RepositoryFilter {
 	if len(data) == 0 || data[0] == nil {
 		return nil
 	}
@@ -261,7 +261,7 @@ func expandEcrReplicationConfigurationReplicationConfigurationRulesRepositoryFil
 	return filters
 }
 
-func flattenEcrReplicationConfigurationReplicationConfigurationRulesRepositoryFilters(ec []*ecr.RepositoryFilter) []interface{} {
+func flattenReplicationConfigurationReplicationConfigurationRulesRepositoryFilters(ec []*ecr.RepositoryFilter) []interface{} {
 	if len(ec) == 0 {
 		return nil
 	}

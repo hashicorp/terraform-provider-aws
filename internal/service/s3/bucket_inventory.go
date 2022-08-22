@@ -203,7 +203,7 @@ func resourceBucketInventoryPut(d *schema.ResourceData, meta interface{}) error 
 	if v, ok := d.GetOk("filter"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		filterList := v.([]interface{})
 		filterMap := filterList[0].(map[string]interface{})
-		inventoryConfiguration.Filter = expandS3InventoryFilter(filterMap)
+		inventoryConfiguration.Filter = expandInventoryFilter(filterMap)
 	}
 
 	if v, ok := d.GetOk("destination"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -213,7 +213,7 @@ func resourceBucketInventoryPut(d *schema.ResourceData, meta interface{}) error 
 		bucketMap := bucketList[0].(map[string]interface{})
 
 		inventoryConfiguration.Destination = &s3.InventoryDestination{
-			S3BucketDestination: expandS3InventoryS3BucketDestination(bucketMap),
+			S3BucketDestination: expandInventoryBucketDestination(bucketMap),
 		}
 	}
 
@@ -350,17 +350,17 @@ func resourceBucketInventoryRead(d *schema.ResourceData, meta interface{}) error
 		return fmt.Errorf("error setting optional_fields: %s", err)
 	}
 
-	if err := d.Set("filter", flattenS3InventoryFilter(output.InventoryConfiguration.Filter)); err != nil {
+	if err := d.Set("filter", flattenInventoryFilter(output.InventoryConfiguration.Filter)); err != nil {
 		return fmt.Errorf("error setting filter: %s", err)
 	}
 
-	if err := d.Set("schedule", flattenS3InventorySchedule(output.InventoryConfiguration.Schedule)); err != nil {
+	if err := d.Set("schedule", flattenInventorySchedule(output.InventoryConfiguration.Schedule)); err != nil {
 		return fmt.Errorf("error setting schedule: %s", err)
 	}
 
 	if output.InventoryConfiguration.Destination != nil {
 		destination := map[string]interface{}{
-			"bucket": flattenS3InventoryS3BucketDestination(output.InventoryConfiguration.Destination.S3BucketDestination),
+			"bucket": flattenInventoryBucketDestination(output.InventoryConfiguration.Destination.S3BucketDestination),
 		}
 
 		if err := d.Set("destination", []map[string]interface{}{destination}); err != nil {
@@ -371,7 +371,7 @@ func resourceBucketInventoryRead(d *schema.ResourceData, meta interface{}) error
 	return nil
 }
 
-func expandS3InventoryFilter(m map[string]interface{}) *s3.InventoryFilter {
+func expandInventoryFilter(m map[string]interface{}) *s3.InventoryFilter {
 	v, ok := m["prefix"]
 	if !ok {
 		return nil
@@ -381,7 +381,7 @@ func expandS3InventoryFilter(m map[string]interface{}) *s3.InventoryFilter {
 	}
 }
 
-func flattenS3InventoryFilter(filter *s3.InventoryFilter) []map[string]interface{} {
+func flattenInventoryFilter(filter *s3.InventoryFilter) []map[string]interface{} {
 	if filter == nil {
 		return nil
 	}
@@ -398,7 +398,7 @@ func flattenS3InventoryFilter(filter *s3.InventoryFilter) []map[string]interface
 	return result
 }
 
-func flattenS3InventorySchedule(schedule *s3.InventorySchedule) []map[string]interface{} {
+func flattenInventorySchedule(schedule *s3.InventorySchedule) []map[string]interface{} {
 	result := make([]map[string]interface{}, 0, 1)
 
 	m := make(map[string]interface{}, 1)
@@ -409,7 +409,7 @@ func flattenS3InventorySchedule(schedule *s3.InventorySchedule) []map[string]int
 	return result
 }
 
-func expandS3InventoryS3BucketDestination(m map[string]interface{}) *s3.InventoryS3BucketDestination {
+func expandInventoryBucketDestination(m map[string]interface{}) *s3.InventoryS3BucketDestination {
 	destination := &s3.InventoryS3BucketDestination{
 		Format: aws.String(m["format"].(string)),
 		Bucket: aws.String(m["bucket_arn"].(string)),
@@ -452,7 +452,7 @@ func expandS3InventoryS3BucketDestination(m map[string]interface{}) *s3.Inventor
 	return destination
 }
 
-func flattenS3InventoryS3BucketDestination(destination *s3.InventoryS3BucketDestination) []map[string]interface{} {
+func flattenInventoryBucketDestination(destination *s3.InventoryS3BucketDestination) []map[string]interface{} {
 	result := make([]map[string]interface{}, 0, 1)
 
 	m := map[string]interface{}{

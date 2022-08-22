@@ -135,11 +135,17 @@ func ResourceConnection() *schema.Resource {
 									"key": {
 										Type:     schema.TypeString,
 										Required: true,
+										ValidateFunc: validation.All(
+											validation.StringLenBetween(1, 512),
+										),
 									},
 									"value": {
 										Type:      schema.TypeString,
 										Required:  true,
 										Sensitive: true,
+										ValidateFunc: validation.All(
+											validation.StringLenBetween(1, 512),
+										),
 									},
 								},
 							},
@@ -158,11 +164,17 @@ func ResourceConnection() *schema.Resource {
 									"username": {
 										Type:     schema.TypeString,
 										Required: true,
+										ValidateFunc: validation.All(
+											validation.StringLenBetween(1, 512),
+										),
 									},
 									"password": {
 										Type:      schema.TypeString,
 										Required:  true,
 										Sensitive: true,
+										ValidateFunc: validation.All(
+											validation.StringLenBetween(1, 512),
+										),
 									},
 								},
 							},
@@ -181,6 +193,9 @@ func ResourceConnection() *schema.Resource {
 									"authorization_endpoint": {
 										Type:     schema.TypeString,
 										Required: true,
+										ValidateFunc: validation.All(
+											validation.StringLenBetween(1, 2048),
+										),
 									},
 									"http_method": {
 										Type:         schema.TypeString,
@@ -202,11 +217,17 @@ func ResourceConnection() *schema.Resource {
 												"client_id": {
 													Type:     schema.TypeString,
 													Required: true,
+													ValidateFunc: validation.All(
+														validation.StringLenBetween(1, 512),
+													),
 												},
 												"client_secret": {
 													Type:      schema.TypeString,
 													Required:  true,
 													Sensitive: true,
+													ValidateFunc: validation.All(
+														validation.StringLenBetween(1, 512),
+													),
 												},
 											},
 										},

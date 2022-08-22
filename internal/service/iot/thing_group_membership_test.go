@@ -20,13 +20,13 @@ func TestAccIoTThingGroupMembership_basic(t *testing.T) {
 	resourceName := "aws_iot_thing_group_membership.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, iot.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckThingGroupMembershipDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iot.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckThingGroupMembershipDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccThingGroupMembershipConfig(rName1, rName2),
+				Config: testAccThingGroupMembershipConfig_basic(rName1, rName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckThingGroupMembershipExists(resourceName),
 					resource.TestCheckNoResourceAttr(resourceName, "override_dynamic_group"),
@@ -49,13 +49,13 @@ func TestAccIoTThingGroupMembership_disappears(t *testing.T) {
 	resourceName := "aws_iot_thing_group_membership.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, iot.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckThingGroupMembershipDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iot.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckThingGroupMembershipDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccThingGroupMembershipConfig(rName1, rName2),
+				Config: testAccThingGroupMembershipConfig_basic(rName1, rName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckThingGroupMembershipExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfiot.ResourceThingGroupMembership(), resourceName),
@@ -73,13 +73,13 @@ func TestAccIoTThingGroupMembership_disappears_Thing(t *testing.T) {
 	thingResourceName := "aws_iot_thing.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, iot.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckThingGroupMembershipDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iot.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckThingGroupMembershipDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccThingGroupMembershipConfig(rName1, rName2),
+				Config: testAccThingGroupMembershipConfig_basic(rName1, rName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckThingGroupMembershipExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfiot.ResourceThing(), thingResourceName),
@@ -97,13 +97,13 @@ func TestAccIoTThingGroupMembership_disappears_ThingGroup(t *testing.T) {
 	thingGroupResourceName := "aws_iot_thing_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, iot.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckThingGroupMembershipDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iot.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckThingGroupMembershipDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccThingGroupMembershipConfig(rName1, rName2),
+				Config: testAccThingGroupMembershipConfig_basic(rName1, rName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckThingGroupMembershipExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfiot.ResourceThingGroup(), thingGroupResourceName),
@@ -120,13 +120,13 @@ func TestAccIoTThingGroupMembership_overrideDynamicGroup(t *testing.T) {
 	resourceName := "aws_iot_thing_group_membership.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, iot.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckThingGroupMembershipDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iot.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckThingGroupMembershipDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccThingGroupMembershipConfigOverrideDynamicGroup(rName1, rName2),
+				Config: testAccThingGroupMembershipConfig_overrideDynamic(rName1, rName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckThingGroupMembershipExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "override_dynamic_group", "true"),
@@ -163,13 +163,7 @@ func testAccCheckThingGroupMembershipExists(n string) resource.TestCheckFunc {
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn
 
-		err = tfiot.FindThingGroupMembership(conn, thingGroupName, thingName)
-
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return tfiot.FindThingGroupMembership(conn, thingGroupName, thingName)
 	}
 }
 
@@ -203,7 +197,7 @@ func testAccCheckThingGroupMembershipDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccThingGroupMembershipConfig(rName1, rName2 string) string {
+func testAccThingGroupMembershipConfig_basic(rName1, rName2 string) string {
 	return fmt.Sprintf(`
 resource "aws_iot_thing_group" "test" {
   name = %[1]q
@@ -220,7 +214,7 @@ resource "aws_iot_thing_group_membership" "test" {
 `, rName1, rName2)
 }
 
-func testAccThingGroupMembershipConfigOverrideDynamicGroup(rName1, rName2 string) string {
+func testAccThingGroupMembershipConfig_overrideDynamic(rName1, rName2 string) string {
 	return fmt.Sprintf(`
 resource "aws_iot_thing_group" "test" {
   name = %[1]q

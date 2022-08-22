@@ -66,10 +66,6 @@ func testAccCheckTagExists(resourceName string) resource.TestCheckFunc {
 
 		_, err = tfdynamodb.GetTag(conn, identifier, key)
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }

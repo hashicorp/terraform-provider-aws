@@ -121,7 +121,7 @@ func resourceLagCreate(d *schema.ResourceData, meta interface{}) error {
 
 	// Delete unmanaged connection.
 	if !connectionIDSpecified {
-		err = deleteDirectConnectConnection(conn, aws.StringValue(output.Connections[0].ConnectionId), waitConnectionDeleted)
+		err = deleteConnection(conn, aws.StringValue(output.Connections[0].ConnectionId), waitConnectionDeleted)
 
 		if err != nil {
 			return err
@@ -224,14 +224,14 @@ func resourceLagDelete(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		for _, connection := range lag.Connections {
-			err = deleteDirectConnectConnection(conn, aws.StringValue(connection.ConnectionId), waitConnectionDeleted)
+			err = deleteConnection(conn, aws.StringValue(connection.ConnectionId), waitConnectionDeleted)
 
 			if err != nil {
 				return err
 			}
 		}
 	} else if v, ok := d.GetOk("connection_id"); ok {
-		if err := deleteDirectConnectConnectionLAGAssociation(conn, v.(string), d.Id()); err != nil {
+		if err := deleteConnectionLAGAssociation(conn, v.(string), d.Id()); err != nil {
 			return err
 		}
 	}

@@ -68,6 +68,31 @@ func FindFleetByID(conn *gamelift.GameLift, id string) (*gamelift.FleetAttribute
 	return fleet, nil
 }
 
+func FindGameServerGroupByName(conn *gamelift.GameLift, name string) (*gamelift.GameServerGroup, error) {
+	input := &gamelift.DescribeGameServerGroupInput{
+		GameServerGroupName: aws.String(name),
+	}
+
+	output, err := conn.DescribeGameServerGroup(input)
+
+	if tfawserr.ErrCodeEquals(err, gamelift.ErrCodeNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.GameServerGroup == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.GameServerGroup, nil
+}
+
 func FindScriptByID(conn *gamelift.GameLift, id string) (*gamelift.Script, error) {
 	input := &gamelift.DescribeScriptInput{
 		ScriptId: aws.String(id),

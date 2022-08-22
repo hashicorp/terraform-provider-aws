@@ -1,5 +1,5 @@
 ---
-subcategory: "Cognito"
+subcategory: "Cognito Identity"
 layout: "aws"
 page_title: "AWS: aws_cognito_identity_pool_provider_principal_tag"
 description: |-
@@ -50,9 +50,9 @@ resource "aws_cognito_identity_pool_provider_principal_tag" "example" {
 
 The following arguments are supported:
 
-* `identity_pool_id` (Required) - An identity pool ID in the format REGION:GUID.
-* `identity_provider_name` (Required) - The name of the identity provider
-* `principal_tags`: (Optional: []) - String to string map of variables
+* `identity_pool_id` (Required) - An identity pool ID.
+* `identity_provider_name` (Required) - The name of the identity provider.
+* `principal_tags`: (Optional: []) - String to string map of variables.
 * `use_defaults`: (Optional: true) use default (username and clientID) attribute mappings.
 
 ## Attributes Reference
@@ -61,8 +61,8 @@ No additional attributes are exported.
 
 ## Import
 
-Cognito Identity Pool Roles Attachment can be imported using the Identity Pool id, e.g.,
+Cognito Identity Pool Roles Attachment can be imported using the Identity Pool ID and provider name, e.g.,
 
 ```
-$ terraform import aws_cognito_identity_pool_provider_principal_tag.example <identity-pool-id>:<identity_provider_name>
+$ terraform import aws_cognito_identity_pool_provider_principal_tag.example us-west-2_abc123:CorpAD
 ```

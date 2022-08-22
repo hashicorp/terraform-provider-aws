@@ -1,12 +1,13 @@
 package kafkaconnect
 
 import (
+	"context"
 	"encoding/base64"
-	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kafkaconnect"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -15,9 +16,9 @@ import (
 
 func ResourceWorkerConfiguration() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceWorkerConfigurationCreate,
-		Read:   resourceWorkerConfigurationRead,
-		Delete: schema.Noop,
+		CreateWithoutTimeout: resourceWorkerConfigurationCreate,
+		ReadWithoutTimeout:   resourceWorkerConfigurationRead,
+		DeleteWithoutTimeout: schema.NoopContext,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -44,8 +45,8 @@ func ResourceWorkerConfiguration() *schema.Resource {
 			},
 			"properties_file_content": {
 				Type:     schema.TypeString,
-				ForceNew: true,
 				Required: true,
+				ForceNew: true,
 				StateFunc: func(v interface{}) string {
 					switch v := v.(type) {
 					case string:
@@ -59,36 +60,35 @@ func ResourceWorkerConfiguration() *schema.Resource {
 	}
 }
 
-func resourceWorkerConfigurationCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceWorkerConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).KafkaConnectConn
 
 	name := d.Get("name").(string)
-	properties := d.Get("properties_file_content").(string)
-
 	input := &kafkaconnect.CreateWorkerConfigurationInput{
 		Name:                  aws.String(name),
-		PropertiesFileContent: aws.String(verify.Base64Encode([]byte(properties))),
+		PropertiesFileContent: aws.String(verify.Base64Encode([]byte(d.Get("properties_file_content").(string)))),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
 		input.Description = aws.String(v.(string))
 	}
 
-	log.Print("[DEBUG] Creating MSK Connect Worker Configuration")
-	output, err := conn.CreateWorkerConfiguration(input)
+	log.Printf("[DEBUG] Creating MSK Connect Worker Configuration: %s", input)
+	output, err := conn.CreateWorkerConfigurationWithContext(ctx, input)
+
 	if err != nil {
-		return fmt.Errorf("error creating MSK Connect Worker Configuration (%s): %w", name, err)
+		return diag.Errorf("error creating MSK Connect Worker Configuration (%s): %s", name, err)
 	}
 
 	d.SetId(aws.StringValue(output.WorkerConfigurationArn))
 
-	return resourceWorkerConfigurationRead(d, meta)
+	return resourceWorkerConfigurationRead(ctx, d, meta)
 }
 
-func resourceWorkerConfigurationRead(d *schema.ResourceData, meta interface{}) error {
+func resourceWorkerConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).KafkaConnectConn
 
-	config, err := FindWorkerConfigurationByARN(conn, d.Id())
+	config, err := FindWorkerConfigurationByARN(ctx, conn, d.Id())
 
 	if tfresource.NotFound(err) && !d.IsNewResource() {
 		log.Printf("[WARN] MSK Connect Worker Configuration (%s) not found, removing from state", d.Id())
@@ -97,12 +97,12 @@ func resourceWorkerConfigurationRead(d *schema.ResourceData, meta interface{}) e
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading MSK Connect Worker Configuration (%s): %w", d.Id(), err)
+		return diag.Errorf("error reading MSK Connect Worker Configuration (%s): %s", d.Id(), err)
 	}
 
 	d.Set("arn", config.WorkerConfigurationArn)
-	d.Set("name", config.Name)
 	d.Set("description", config.Description)
+	d.Set("name", config.Name)
 
 	if config.LatestRevision != nil {
 		d.Set("latest_revision", config.LatestRevision.Revision)
@@ -117,6 +117,7 @@ func resourceWorkerConfigurationRead(d *schema.ResourceData, meta interface{}) e
 
 func decodePropertiesFileContent(content string) string {
 	result, err := base64.StdEncoding.DecodeString(content)
+
 	if err != nil {
 		return content
 	}

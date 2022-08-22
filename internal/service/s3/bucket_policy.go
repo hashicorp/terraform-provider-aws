@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -93,6 +92,12 @@ func resourceBucketPolicyRead(d *schema.ResourceData, meta interface{}) error {
 		Bucket: aws.String(d.Id()),
 	})
 
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, ErrCodeNoSuchBucketPolicy, s3.ErrCodeNoSuchBucket) {
+		log.Printf("[WARN] S3 Bucket Policy (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+
 	v := ""
 	if err == nil && pol.Policy != nil {
 		v = aws.StringValue(pol.Policy)
@@ -131,10 +136,11 @@ func resourceBucketPolicyDelete(d *schema.ResourceData, meta interface{}) error 
 		Bucket: aws.String(bucket),
 	})
 
+	if tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket) {
+		return nil
+	}
+
 	if err != nil {
-		if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == "NoSuchBucket" {
-			return nil
-		}
 		return fmt.Errorf("Error deleting S3 policy: %s", err)
 	}
 

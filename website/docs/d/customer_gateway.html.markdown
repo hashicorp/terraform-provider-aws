@@ -1,5 +1,5 @@
 ---
-subcategory: "VPC"
+subcategory: "VPN (Site-to-Site)"
 layout: "aws"
 page_title: "AWS: aws_customer_gateway"
 description: |-
@@ -53,3 +53,9 @@ In addition to the arguments above, the following attributes are exported:
 * `ip_address` - The IP address of the gateway's Internet-routable external interface.
 * `tags` - Map of key-value pairs assigned to the gateway.
 * `type` - The type of customer gateway. The only type AWS supports at this time is "ipsec.1".
+
+## Timeouts
+
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+
+- `read` - (Default `20m`)

@@ -1,5 +1,5 @@
 ---
-subcategory: "Glacier"
+subcategory: "S3 Glacier"
 layout: "aws"
 page_title: "AWS: aws_glacier_vault_lock"
 description: |-

@@ -1,5 +1,5 @@
 ---
-subcategory: "API Gateway (REST APIs)"
+subcategory: "API Gateway"
 layout: "aws"
 page_title: "AWS: aws_api_gateway_integration"
 description: |-
@@ -106,7 +106,7 @@ resource "aws_lambda_function" "lambda" {
   function_name = "mylambda"
   role          = aws_iam_role.role.arn
   handler       = "lambda.lambda_handler"
-  runtime       = "python3.6"
+  runtime       = "python3.7"
 
   source_code_hash = filebase64sha256("lambda.zip")
 }

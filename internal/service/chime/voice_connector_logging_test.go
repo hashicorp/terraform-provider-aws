@@ -19,16 +19,17 @@ func TestAccChimeVoiceConnectorLogging_basic(t *testing.T) {
 	resourceName := "aws_chime_voice_connector_logging.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, chime.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckVoiceConnectorDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, chime.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVoiceConnectorDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVoiceConnectorLoggingConfig(name),
+				Config: testAccVoiceConnectorLoggingConfig_basic(name),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVoiceConnectorLoggingExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "enable_sip_logs", "true"),
+					resource.TestCheckResourceAttr(resourceName, "enable_media_metric_logs", "true"),
 				),
 			},
 			{
@@ -45,13 +46,13 @@ func TestAccChimeVoiceConnectorLogging_disappears(t *testing.T) {
 	resourceName := "aws_chime_voice_connector_logging.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, chime.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckVoiceConnectorDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, chime.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVoiceConnectorDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVoiceConnectorLoggingConfig(name),
+				Config: testAccVoiceConnectorLoggingConfig_basic(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVoiceConnectorLoggingExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfchime.ResourceVoiceConnectorLogging(), resourceName),
@@ -67,22 +68,23 @@ func TestAccChimeVoiceConnectorLogging_update(t *testing.T) {
 	resourceName := "aws_chime_voice_connector_logging.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, chime.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckVoiceConnectorDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, chime.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVoiceConnectorDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVoiceConnectorLoggingConfig(name),
+				Config: testAccVoiceConnectorLoggingConfig_basic(name),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVoiceConnectorLoggingExists(resourceName),
 				),
 			},
 			{
-				Config: testAccVoiceConnectorLoggingUpdated(name),
+				Config: testAccVoiceConnectorLoggingConfig_updated(name),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVoiceConnectorLoggingExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "enable_sip_logs", "false"),
+					resource.TestCheckResourceAttr(resourceName, "enable_media_metric_logs", "false"),
 				),
 			},
 			{
@@ -94,7 +96,7 @@ func TestAccChimeVoiceConnectorLogging_update(t *testing.T) {
 	})
 }
 
-func testAccVoiceConnectorLoggingConfig(name string) string {
+func testAccVoiceConnectorLoggingConfig_basic(name string) string {
 	return fmt.Sprintf(`
 resource "aws_chime_voice_connector" "chime" {
   name               = "vc-%[1]s"
@@ -102,13 +104,14 @@ resource "aws_chime_voice_connector" "chime" {
 }
 
 resource "aws_chime_voice_connector_logging" "test" {
-  voice_connector_id = aws_chime_voice_connector.chime.id
-  enable_sip_logs    = true
+  voice_connector_id       = aws_chime_voice_connector.chime.id
+  enable_sip_logs          = true
+  enable_media_metric_logs = true
 }
 `, name)
 }
 
-func testAccVoiceConnectorLoggingUpdated(name string) string {
+func testAccVoiceConnectorLoggingConfig_updated(name string) string {
 	return fmt.Sprintf(`
 resource "aws_chime_voice_connector" "chime" {
   name               = "vc-%[1]s"
@@ -116,8 +119,9 @@ resource "aws_chime_voice_connector" "chime" {
 }
 
 resource "aws_chime_voice_connector_logging" "test" {
-  voice_connector_id = aws_chime_voice_connector.chime.id
-  enable_sip_logs    = false
+  voice_connector_id       = aws_chime_voice_connector.chime.id
+  enable_sip_logs          = false
+  enable_media_metric_logs = false
 }
 `, name)
 }

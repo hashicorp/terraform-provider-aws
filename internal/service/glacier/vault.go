@@ -183,7 +183,7 @@ func resourceVaultRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("name", out.VaultName)
 	d.Set("arn", out.VaultARN)
 
-	location, err := buildGlacierVaultLocation(awsClient.AccountID, d.Id())
+	location, err := buildVaultLocation(awsClient.AccountID, d.Id())
 	if err != nil {
 		return err
 	}
@@ -225,7 +225,7 @@ func resourceVaultRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("access_policy", policy)
 	}
 
-	notifications, err := getGlacierVaultNotification(conn, d.Id())
+	notifications, err := getVaultNotification(conn, d.Id())
 	if tfawserr.ErrCodeEquals(err, glacier.ErrCodeResourceNotFoundException) {
 		d.Set("notification", []map[string]interface{}{})
 	} else if pol != nil {
@@ -319,14 +319,14 @@ func resourceVaultPolicyUpdate(conn *glacier.Glacier, d *schema.ResourceData) er
 	return nil
 }
 
-func buildGlacierVaultLocation(accountId, vaultName string) (string, error) {
+func buildVaultLocation(accountId, vaultName string) (string, error) {
 	if accountId == "" {
 		return "", errors.New("AWS account ID unavailable - failed to construct Vault location")
 	}
 	return fmt.Sprintf("/" + accountId + "/vaults/" + vaultName), nil
 }
 
-func getGlacierVaultNotification(conn *glacier.Glacier, vaultName string) ([]map[string]interface{}, error) {
+func getVaultNotification(conn *glacier.Glacier, vaultName string) ([]map[string]interface{}, error) {
 	request := &glacier.GetVaultNotificationsInput{
 		VaultName: aws.String(vaultName),
 	}

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"regexp"
-	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cognitoidentity"
@@ -12,8 +11,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func ResourcePoolProviderPrincipalTag() *schema.Resource {
@@ -90,6 +91,7 @@ func resourcePoolProviderPrincipalTagRead(d *schema.ResourceData, meta interface
 	log.Printf("[DEBUG] Reading Cognito Identity Provider Principal Tags: %s", d.Id())
 
 	poolId, providerName, err := DecodePoolProviderPrincipalTagsID(d.Id())
+
 	if err != nil {
 		return err
 	}
@@ -99,13 +101,14 @@ func resourcePoolProviderPrincipalTagRead(d *schema.ResourceData, meta interface
 		IdentityPoolId:       aws.String(poolId),
 	})
 
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, cognitoidentity.ErrCodeResourceNotFoundException) {
+		create.LogNotFoundRemoveState(names.CognitoIdentity, create.ErrActionReading, ResNamePoolProviderPrincipalTag, d.Id())
+		d.SetId("")
+		return nil
+	}
+
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, cognitoidentity.ErrCodeResourceNotFoundException) {
-			log.Printf("[WARN] Cognito Identity Provider %q not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
-		return err
+		return create.Error(names.CognitoIdentity, create.ErrActionReading, ResNamePoolProviderPrincipalTag, d.Id(), err)
 	}
 
 	d.Set("identity_pool_id", ret.IdentityPoolId)
@@ -174,11 +177,10 @@ func resourcePoolProviderPrincipalTagDelete(d *schema.ResourceData, meta interfa
 }
 
 func DecodePoolProviderPrincipalTagsID(id string) (string, string, error) {
-	idParts := strings.Split(id, ":")
+	r := regexp.MustCompile(`(?P<ProviderID>[\w-]+:[0-9a-f-]+):(?P<ProviderName>[[:graph:]]+)`)
+	idParts := r.FindStringSubmatch(id)
 	if len(idParts) <= 2 {
 		return "", "", fmt.Errorf("expected ID in format UserPoolID:ProviderName, received: %s", id)
 	}
-	providerName := idParts[len(idParts)-1:]
-	userPoolId := idParts[:len(idParts)-1]
-	return strings.Join(userPoolId, ":"), strings.Join(providerName, ""), nil
+	return idParts[1], idParts[2], nil
 }

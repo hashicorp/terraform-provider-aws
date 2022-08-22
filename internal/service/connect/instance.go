@@ -28,8 +28,8 @@ func ResourceInstance() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(connectInstanceCreatedTimeout),
-			Delete: schema.DefaultTimeout(connectInstanceDeletedTimeout),
+			Create: schema.DefaultTimeout(instanceCreatedTimeout),
+			Delete: schema.DefaultTimeout(instanceDeletedTimeout),
 		},
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -84,7 +84,7 @@ func ResourceInstance() *schema.Resource {
 				AtLeastOneOf: []string{"directory_id", "instance_alias"},
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 64),
-					validation.StringMatch(regexp.MustCompile(`^([\da-zA-Z]+)([\da-zA-Z-]+)$`), "must contain only alphanumeric hyphen and underscore characters"),
+					validation.StringMatch(regexp.MustCompile(`^([\da-zA-Z]+)([\da-zA-Z-]+)$`), "must contain only alphanumeric or hyphen characters"),
 					validation.StringDoesNotMatch(regexp.MustCompile(`^(d-).+$`), "can not start with d-"),
 				),
 			},
@@ -136,7 +136,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 	d.SetId(aws.StringValue(output.Id))
 
-	if _, err := waitInstanceCreated(ctx, conn, d.Id()); err != nil {
+	if _, err := waitInstanceCreated(ctx, conn, d.Timeout(schema.TimeoutCreate), d.Id()); err != nil {
 		return diag.FromErr(fmt.Errorf("error waiting for Connect instance creation (%s): %w", d.Id(), err))
 	}
 
@@ -238,7 +238,7 @@ func resourceInstanceDelete(ctx context.Context, d *schema.ResourceData, meta in
 		return diag.FromErr(fmt.Errorf("error deleting Connect Instance (%s): %s", d.Id(), err))
 	}
 
-	if _, err := waitInstanceDeleted(ctx, conn, d.Id()); err != nil {
+	if _, err := waitInstanceDeleted(ctx, conn, d.Timeout(schema.TimeoutCreate), d.Id()); err != nil {
 		return diag.FromErr(fmt.Errorf("error waiting for Connect Instance deletion (%s): %s", d.Id(), err))
 	}
 	return nil
@@ -252,10 +252,8 @@ func resourceInstanceUpdateAttribute(ctx context.Context, conn *connect.Connect,
 	}
 
 	_, err := conn.UpdateInstanceAttributeWithContext(ctx, input)
-	if err != nil {
-		return err
-	}
-	return nil
+
+	return err
 }
 
 func resourceInstanceReadAttribute(ctx context.Context, conn *connect.Connect, instanceID string, attributeType string) (bool, error) {

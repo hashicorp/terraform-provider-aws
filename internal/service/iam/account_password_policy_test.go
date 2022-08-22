@@ -17,13 +17,13 @@ func TestAccIAMAccountPasswordPolicy_basic(t *testing.T) {
 	resourceName := "aws_iam_account_password_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAccountPasswordPolicyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAccountPasswordPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAccountPasswordPolicy,
+				Config: testAccAccountPasswordPolicyConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountPasswordPolicyExists(resourceName, &policy),
 					resource.TestCheckResourceAttr(resourceName, "minimum_password_length", "8"),
@@ -35,7 +35,7 @@ func TestAccIAMAccountPasswordPolicy_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAccountPasswordPolicy_modified,
+				Config: testAccAccountPasswordPolicyConfig_modified,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountPasswordPolicyExists(resourceName, &policy),
 					resource.TestCheckResourceAttr(resourceName, "minimum_password_length", "7"),
@@ -96,7 +96,7 @@ func testAccCheckAccountPasswordPolicyExists(n string, res *iam.GetAccountPasswo
 	}
 }
 
-const testAccAccountPasswordPolicy = `
+const testAccAccountPasswordPolicyConfig_basic = `
 resource "aws_iam_account_password_policy" "test" {
   allow_users_to_change_password = true
   minimum_password_length        = 8
@@ -104,7 +104,7 @@ resource "aws_iam_account_password_policy" "test" {
 }
 `
 
-const testAccAccountPasswordPolicy_modified = `
+const testAccAccountPasswordPolicyConfig_modified = `
 resource "aws_iam_account_password_policy" "test" {
   allow_users_to_change_password = true
   minimum_password_length        = 7

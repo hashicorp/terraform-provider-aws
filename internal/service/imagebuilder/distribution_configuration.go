@@ -73,6 +73,22 @@ func ResourceDistributionConfiguration() *schema.Resource {
 										Optional: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
+												"organization_arns": {
+													Type:     schema.TypeSet,
+													Optional: true,
+													Elem: &schema.Schema{
+														Type:         schema.TypeString,
+														ValidateFunc: verify.ValidARN,
+													},
+												},
+												"organizational_unit_arns": {
+													Type:     schema.TypeSet,
+													Optional: true,
+													Elem: &schema.Schema{
+														Type:         schema.TypeString,
+														ValidateFunc: verify.ValidARN,
+													},
+												},
 												"user_groups": {
 													Type:     schema.TypeSet,
 													Optional: true,
@@ -152,12 +168,79 @@ func ResourceDistributionConfiguration() *schema.Resource {
 								},
 							},
 						},
+						"fast_launch_configuration": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							MaxItems: 1000,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"account_id": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: verify.ValidAccountID,
+									},
+									"enabled": {
+										Type:     schema.TypeBool,
+										Required: true,
+									},
+									"launch_template": {
+										Type:     schema.TypeList,
+										MaxItems: 1,
+										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"launch_template_id": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: verify.ValidLaunchTemplateID,
+												},
+												"launch_template_name": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: verify.ValidLaunchTemplateName,
+												},
+												"launch_template_version": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: validation.StringLenBetween(1, 1024),
+												},
+											},
+										},
+									},
+									"max_parallel_launches": {
+										Type:         schema.TypeInt,
+										Optional:     true,
+										Default:      0,
+										ValidateFunc: validation.IntBetween(1, 10000),
+									},
+									"snapshot_configuration": {
+										Type:     schema.TypeList,
+										MaxItems: 1,
+										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"target_resource_count": {
+													Type:         schema.TypeInt,
+													Optional:     true,
+													ValidateFunc: validation.IntBetween(1, 10000),
+												},
+											},
+										},
+									},
+								},
+							},
+						},
 						"launch_template_configuration": {
 							Type:     schema.TypeSet,
 							Optional: true,
 							MaxItems: 100,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
+									"account_id": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: verify.ValidAccountID,
+									},
 									"default": {
 										Type:     schema.TypeBool,
 										Optional: true,
@@ -440,6 +523,10 @@ func expandDistribution(tfMap map[string]interface{}) *imagebuilder.Distribution
 		apiObject.ContainerDistributionConfiguration = expandContainerDistributionConfiguration(v[0].(map[string]interface{}))
 	}
 
+	if v, ok := tfMap["fast_launch_configuration"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.FastLaunchConfigurations = expandFastLaunchConfigurations(v.List())
+	}
+
 	if v, ok := tfMap["launch_template_configuration"].(*schema.Set); ok && v.Len() > 0 {
 		apiObject.LaunchTemplateConfigurations = expandLaunchTemplateConfigurations(v.List())
 	}
@@ -495,6 +582,14 @@ func expandLaunchPermissionConfiguration(tfMap map[string]interface{}) *imagebui
 
 	apiObject := &imagebuilder.LaunchPermissionConfiguration{}
 
+	if v, ok := tfMap["organization_arns"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.OrganizationArns = flex.ExpandStringSet(v)
+	}
+
+	if v, ok := tfMap["organizational_unit_arns"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.OrganizationalUnitArns = flex.ExpandStringSet(v)
+	}
+
 	if v, ok := tfMap["user_ids"].(*schema.Set); ok && v.Len() > 0 {
 		apiObject.UserIds = flex.ExpandStringSet(v)
 	}
@@ -524,6 +619,98 @@ func expandTargetContainerRepository(tfMap map[string]interface{}) *imagebuilder
 	return apiObject
 }
 
+func expandFastLaunchConfigurations(tfList []interface{}) []*imagebuilder.FastLaunchConfiguration {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var apiObjects []*imagebuilder.FastLaunchConfiguration
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
+
+		if !ok {
+			continue
+		}
+
+		apiObject := expandFastLaunchConfiguration(tfMap)
+
+		if apiObject == nil {
+			continue
+		}
+
+		apiObjects = append(apiObjects, apiObject)
+	}
+
+	return apiObjects
+}
+
+func expandFastLaunchConfiguration(tfMap map[string]interface{}) *imagebuilder.FastLaunchConfiguration {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &imagebuilder.FastLaunchConfiguration{}
+
+	if v, ok := tfMap["account_id"].(string); ok && v != "" {
+		apiObject.AccountId = aws.String(v)
+	}
+
+	if v, ok := tfMap["enabled"].(bool); ok {
+		apiObject.Enabled = aws.Bool(v)
+	}
+
+	if v, ok := tfMap["launch_template"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		apiObject.LaunchTemplate = expandFastLaunchLaunchTemplateSpecification(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["max_parallel_launches"].(int); ok && v != 0 {
+		apiObject.MaxParallelLaunches = aws.Int64(int64(v))
+	}
+
+	if v, ok := tfMap["snapshot_configuration"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		apiObject.SnapshotConfiguration = expandFastLaunchSnapshotConfiguration(v[0].(map[string]interface{}))
+	}
+
+	return apiObject
+}
+
+func expandFastLaunchLaunchTemplateSpecification(tfMap map[string]interface{}) *imagebuilder.FastLaunchLaunchTemplateSpecification {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &imagebuilder.FastLaunchLaunchTemplateSpecification{}
+
+	if v, ok := tfMap["launch_template_id"].(string); ok && v != "" {
+		apiObject.LaunchTemplateId = aws.String(v)
+	}
+
+	if v, ok := tfMap["launch_template_name"].(string); ok && v != "" {
+		apiObject.LaunchTemplateName = aws.String(v)
+	}
+
+	if v, ok := tfMap["launch_template_version"].(string); ok && v != "" {
+		apiObject.LaunchTemplateVersion = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func expandFastLaunchSnapshotConfiguration(tfMap map[string]interface{}) *imagebuilder.FastLaunchSnapshotConfiguration {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &imagebuilder.FastLaunchSnapshotConfiguration{}
+
+	if v, ok := tfMap["target_resource_count"].(int); ok && v != 0 {
+		apiObject.TargetResourceCount = aws.Int64(int64(v))
+	}
+
+	return apiObject
+}
+
 func expandLaunchTemplateConfiguration(tfMap map[string]interface{}) *imagebuilder.LaunchTemplateConfiguration {
 	if tfMap == nil {
 		return nil
@@ -537,6 +724,10 @@ func expandLaunchTemplateConfiguration(tfMap map[string]interface{}) *imagebuild
 
 	if v, ok := tfMap["default"].(bool); ok {
 		apiObject.SetDefaultVersion = aws.Bool(v)
+	}
+
+	if v, ok := tfMap["account_id"].(string); ok && v != "" {
+		apiObject.AccountId = aws.String(v)
 	}
 
 	return apiObject
@@ -631,6 +822,10 @@ func flattenDistribution(apiObject *imagebuilder.Distribution) map[string]interf
 		tfMap["container_distribution_configuration"] = []interface{}{flattenContainerDistributionConfiguration(v)}
 	}
 
+	if v := apiObject.FastLaunchConfigurations; v != nil {
+		tfMap["fast_launch_configuration"] = flattenFastLaunchConfigurations(v)
+	}
+
 	if v := apiObject.LaunchTemplateConfigurations; v != nil {
 		tfMap["launch_template_configuration"] = flattenLaunchTemplateConfigurations(v)
 	}
@@ -670,6 +865,14 @@ func flattenLaunchPermissionConfiguration(apiObject *imagebuilder.LaunchPermissi
 	}
 
 	tfMap := map[string]interface{}{}
+
+	if v := apiObject.OrganizationArns; v != nil {
+		tfMap["organization_arns"] = aws.StringValueSlice(v)
+	}
+
+	if v := apiObject.OrganizationalUnitArns; v != nil {
+		tfMap["organizational_unit_arns"] = aws.StringValueSlice(v)
+	}
 
 	if v := apiObject.UserGroups; v != nil {
 		tfMap["user_groups"] = aws.StringValueSlice(v)
@@ -713,6 +916,94 @@ func flattenLaunchTemplateConfiguration(apiObject *imagebuilder.LaunchTemplateCo
 
 	if v := apiObject.SetDefaultVersion; v != nil {
 		tfMap["default"] = aws.BoolValue(v)
+	}
+
+	if v := apiObject.AccountId; v != nil {
+		tfMap["account_id"] = aws.StringValue(v)
+	}
+
+	return tfMap
+}
+
+func flattenFastLaunchConfigurations(apiObjects []*imagebuilder.FastLaunchConfiguration) []interface{} {
+	if apiObjects == nil {
+		return nil
+	}
+
+	var tfList []interface{}
+
+	for _, apiObject := range apiObjects {
+		if apiObject == nil {
+			continue
+		}
+
+		tfList = append(tfList, flattenFastLaunchConfiguration(apiObject))
+	}
+
+	return tfList
+}
+
+func flattenFastLaunchConfiguration(apiObject *imagebuilder.FastLaunchConfiguration) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.AccountId; v != nil {
+		tfMap["account_id"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.Enabled; v != nil {
+		tfMap["enabled"] = aws.BoolValue(v)
+	}
+
+	if v := apiObject.LaunchTemplate; v != nil {
+		tfMap["launch_template"] = []interface{}{flattenFastLaunchLaunchTemplateSpecification(v)}
+	}
+
+	if v := apiObject.MaxParallelLaunches; v != nil {
+		tfMap["max_parallel_launches"] = aws.Int64Value(v)
+	}
+
+	if v := apiObject.SnapshotConfiguration; v != nil {
+		tfMap["snapshot_configuration"] = []interface{}{flattenFastLaunchSnapshotConfiguration(v)}
+	}
+
+	return tfMap
+}
+
+func flattenFastLaunchLaunchTemplateSpecification(apiObject *imagebuilder.FastLaunchLaunchTemplateSpecification) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.LaunchTemplateId; v != nil {
+		tfMap["launch_template_id"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.LaunchTemplateName; v != nil {
+		tfMap["launch_template_name"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.LaunchTemplateVersion; v != nil {
+		tfMap["launch_template_version"] = aws.StringValue(v)
+	}
+
+	return tfMap
+}
+
+func flattenFastLaunchSnapshotConfiguration(apiObject *imagebuilder.FastLaunchSnapshotConfiguration) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.TargetResourceCount; v != nil {
+		tfMap["target_resource_count"] = aws.Int64Value(v)
 	}
 
 	return tfMap

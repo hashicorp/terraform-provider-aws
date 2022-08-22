@@ -76,7 +76,7 @@ func ResourceWindowsFileSystem() *schema.Resource {
 							Optional:     true,
 							Computed:     true,
 							ValidateFunc: verify.ValidARN,
-							StateFunc:    fsxWindowsAuditLogStateFunc,
+							StateFunc:    windowsAuditLogStateFunc,
 							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 								return strings.HasPrefix(old, fmt.Sprintf("%s:", new))
 							},
@@ -330,13 +330,13 @@ func resourceWindowsFileSystemCreate(d *schema.ResourceData, meta interface{}) e
 	}
 
 	if v, ok := d.GetOk("self_managed_active_directory"); ok {
-		input.WindowsConfiguration.SelfManagedActiveDirectoryConfiguration = expandFsxSelfManagedActiveDirectoryConfigurationCreate(v.([]interface{}))
-		backupInput.WindowsConfiguration.SelfManagedActiveDirectoryConfiguration = expandFsxSelfManagedActiveDirectoryConfigurationCreate(v.([]interface{}))
+		input.WindowsConfiguration.SelfManagedActiveDirectoryConfiguration = expandSelfManagedActiveDirectoryConfigurationCreate(v.([]interface{}))
+		backupInput.WindowsConfiguration.SelfManagedActiveDirectoryConfiguration = expandSelfManagedActiveDirectoryConfigurationCreate(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("audit_log_configuration"); ok && len(v.([]interface{})) > 0 {
-		input.WindowsConfiguration.AuditLogConfiguration = expandFsxWindowsAuditLogCreateConfiguration(v.([]interface{}))
-		backupInput.WindowsConfiguration.AuditLogConfiguration = expandFsxWindowsAuditLogCreateConfiguration(v.([]interface{}))
+		input.WindowsConfiguration.AuditLogConfiguration = expandWindowsAuditLogCreateConfiguration(v.([]interface{}))
+		backupInput.WindowsConfiguration.AuditLogConfiguration = expandWindowsAuditLogCreateConfiguration(v.([]interface{}))
 	}
 
 	if len(tags) > 0 {
@@ -397,7 +397,7 @@ func resourceWindowsFileSystemUpdate(d *schema.ResourceData, meta interface{}) e
 	if d.HasChange("aliases") {
 		o, n := d.GetChange("aliases")
 
-		if err := updateFsxAliases(conn, d.Id(), o.(*schema.Set), n.(*schema.Set), d.Timeout(schema.TimeoutUpdate)); err != nil {
+		if err := updateAliases(conn, d.Id(), o.(*schema.Set), n.(*schema.Set), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return fmt.Errorf("error updating FSx Windows File System (%s) aliases: %w", d.Id(), err)
 		}
 	}
@@ -426,7 +426,7 @@ func resourceWindowsFileSystemUpdate(d *schema.ResourceData, meta interface{}) e
 		}
 
 		if d.HasChange("self_managed_active_directory") {
-			input.WindowsConfiguration.SelfManagedActiveDirectoryConfiguration = expandFsxSelfManagedActiveDirectoryConfigurationUpdate(d.Get("self_managed_active_directory").([]interface{}))
+			input.WindowsConfiguration.SelfManagedActiveDirectoryConfiguration = expandSelfManagedActiveDirectoryConfigurationUpdate(d.Get("self_managed_active_directory").([]interface{}))
 		}
 
 		if d.HasChange("weekly_maintenance_start_time") {
@@ -434,7 +434,7 @@ func resourceWindowsFileSystemUpdate(d *schema.ResourceData, meta interface{}) e
 		}
 
 		if d.HasChange("audit_log_configuration") {
-			input.WindowsConfiguration.AuditLogConfiguration = expandFsxWindowsAuditLogCreateConfiguration(d.Get("audit_log_configuration").([]interface{}))
+			input.WindowsConfiguration.AuditLogConfiguration = expandWindowsAuditLogCreateConfiguration(d.Get("audit_log_configuration").([]interface{}))
 		}
 
 		_, err := conn.UpdateFileSystem(input)
@@ -488,7 +488,7 @@ func resourceWindowsFileSystemRead(d *schema.ResourceData, meta interface{}) err
 	d.Set("kms_key_id", filesystem.KmsKeyId)
 	d.Set("storage_type", filesystem.StorageType)
 
-	if err := d.Set("aliases", aws.StringValueSlice(expandFsxAliasValues(filesystem.WindowsConfiguration.Aliases))); err != nil {
+	if err := d.Set("aliases", aws.StringValueSlice(expandAliasValues(filesystem.WindowsConfiguration.Aliases))); err != nil {
 		return fmt.Errorf("error setting aliases: %w", err)
 	}
 
@@ -498,11 +498,11 @@ func resourceWindowsFileSystemRead(d *schema.ResourceData, meta interface{}) err
 
 	d.Set("owner_id", filesystem.OwnerId)
 
-	if err := d.Set("self_managed_active_directory", flattenFsxSelfManagedActiveDirectoryConfiguration(d, filesystem.WindowsConfiguration.SelfManagedActiveDirectoryConfiguration)); err != nil {
+	if err := d.Set("self_managed_active_directory", flattenSelfManagedActiveDirectoryConfiguration(d, filesystem.WindowsConfiguration.SelfManagedActiveDirectoryConfiguration)); err != nil {
 		return fmt.Errorf("error setting self_managed_active_directory: %w", err)
 	}
 
-	if err := d.Set("audit_log_configuration", flattenFsxWindowsAuditLogConfiguration(filesystem.WindowsConfiguration.AuditLogConfiguration)); err != nil {
+	if err := d.Set("audit_log_configuration", flattenWindowsAuditLogConfiguration(filesystem.WindowsConfiguration.AuditLogConfiguration)); err != nil {
 		return fmt.Errorf("error setting audit_log_configuration: %w", err)
 	}
 
@@ -559,7 +559,7 @@ func resourceWindowsFileSystemDelete(d *schema.ResourceData, meta interface{}) e
 	return nil
 }
 
-func expandFsxAliasValues(aliases []*fsx.Alias) []*string {
+func expandAliasValues(aliases []*fsx.Alias) []*string {
 	var alternateDNSNames []*string
 
 	for _, alias := range aliases {
@@ -570,7 +570,7 @@ func expandFsxAliasValues(aliases []*fsx.Alias) []*string {
 	return alternateDNSNames
 }
 
-func updateFsxAliases(conn *fsx.FSx, identifier string, oldSet *schema.Set, newSet *schema.Set, timeout time.Duration) error {
+func updateAliases(conn *fsx.FSx, identifier string, oldSet *schema.Set, newSet *schema.Set, timeout time.Duration) error {
 	if newSet.Len() > 0 {
 		if newAliases := newSet.Difference(oldSet); newAliases.Len() > 0 {
 
@@ -613,7 +613,7 @@ func updateFsxAliases(conn *fsx.FSx, identifier string, oldSet *schema.Set, newS
 	return nil
 }
 
-func expandFsxSelfManagedActiveDirectoryConfigurationCreate(l []interface{}) *fsx.SelfManagedActiveDirectoryConfiguration {
+func expandSelfManagedActiveDirectoryConfigurationCreate(l []interface{}) *fsx.SelfManagedActiveDirectoryConfiguration {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -637,7 +637,7 @@ func expandFsxSelfManagedActiveDirectoryConfigurationCreate(l []interface{}) *fs
 	return req
 }
 
-func expandFsxSelfManagedActiveDirectoryConfigurationUpdate(l []interface{}) *fsx.SelfManagedActiveDirectoryConfigurationUpdates {
+func expandSelfManagedActiveDirectoryConfigurationUpdate(l []interface{}) *fsx.SelfManagedActiveDirectoryConfigurationUpdates {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -660,7 +660,7 @@ func expandFsxSelfManagedActiveDirectoryConfigurationUpdate(l []interface{}) *fs
 	return req
 }
 
-func flattenFsxSelfManagedActiveDirectoryConfiguration(d *schema.ResourceData, adopts *fsx.SelfManagedActiveDirectoryAttributes) []map[string]interface{} {
+func flattenSelfManagedActiveDirectoryConfiguration(d *schema.ResourceData, adopts *fsx.SelfManagedActiveDirectoryAttributes) []map[string]interface{} {
 	if adopts == nil {
 		return []map[string]interface{}{}
 	}
@@ -683,7 +683,7 @@ func flattenFsxSelfManagedActiveDirectoryConfiguration(d *schema.ResourceData, a
 	return []map[string]interface{}{m}
 }
 
-func expandFsxWindowsAuditLogCreateConfiguration(l []interface{}) *fsx.WindowsAuditLogCreateConfiguration {
+func expandWindowsAuditLogCreateConfiguration(l []interface{}) *fsx.WindowsAuditLogCreateConfiguration {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -695,13 +695,13 @@ func expandFsxWindowsAuditLogCreateConfiguration(l []interface{}) *fsx.WindowsAu
 	}
 
 	if v, ok := data["audit_log_destination"].(string); ok && v != "" {
-		req.AuditLogDestination = aws.String(fsxWindowsAuditLogStateFunc(v))
+		req.AuditLogDestination = aws.String(windowsAuditLogStateFunc(v))
 	}
 
 	return req
 }
 
-func flattenFsxWindowsAuditLogConfiguration(adopts *fsx.WindowsAuditLogConfiguration) []map[string]interface{} {
+func flattenWindowsAuditLogConfiguration(adopts *fsx.WindowsAuditLogConfiguration) []map[string]interface{} {
 	if adopts == nil {
 		return []map[string]interface{}{}
 	}
@@ -718,7 +718,7 @@ func flattenFsxWindowsAuditLogConfiguration(adopts *fsx.WindowsAuditLogConfigura
 	return []map[string]interface{}{m}
 }
 
-func fsxWindowsAuditLogStateFunc(v interface{}) string {
+func windowsAuditLogStateFunc(v interface{}) string {
 	value := v.(string)
 	// API returns the specific log stream arn instead of provided log group
 	logArn, _ := arn.Parse(value)

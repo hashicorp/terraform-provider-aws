@@ -1,40 +1,37 @@
 package kafkaconnect_test
 
 import (
-	"encoding/base64"
+	"context"
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kafkaconnect"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfkafkaconnect "github.com/hashicorp/terraform-provider-aws/internal/service/kafkaconnect"
 )
 
 func TestAccKafkaConnectWorkerConfiguration_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	propertiesFileContent := "key.converter=hello\nvalue.converter=world"
-
 	resourceName := "aws_mskconnect_worker_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(kafkaconnect.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, kafkaconnect.EndpointsID),
-		CheckDestroy: nil,
-		Providers:    acctest.Providers,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(kafkaconnect.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, kafkaconnect.EndpointsID),
+		CheckDestroy:             nil,
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWorkerConfigurationBasic(rName, propertiesFileContent),
-				Check: resource.ComposeTestCheckFunc(
+				Config: testAccWorkerConfigurationConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckWorkerConfigurationExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "latest_revision"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "properties_file_content", propertiesFileContent),
+					resource.TestCheckResourceAttr(resourceName, "properties_file_content", "key.converter=org.apache.kafka.connect.storage.StringConverter\nvalue.converter=org.apache.kafka.connect.storage.StringConverter\n"),
 				),
 			},
 			{
@@ -48,23 +45,19 @@ func TestAccKafkaConnectWorkerConfiguration_basic(t *testing.T) {
 
 func TestAccKafkaConnectWorkerConfiguration_description(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rDescription := sdkacctest.RandString(20)
-
-	propertiesFileContent := "key.converter=hello\nvalue.converter=world"
-
 	resourceName := "aws_mskconnect_worker_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(kafkaconnect.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, kafkaconnect.EndpointsID),
-		CheckDestroy: nil,
-		Providers:    acctest.Providers,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(kafkaconnect.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, kafkaconnect.EndpointsID),
+		CheckDestroy:             nil,
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWorkerConfigurationDescription(rName, propertiesFileContent, rDescription),
+				Config: testAccWorkerConfigurationConfig_description(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkerConfigurationExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "description", rDescription),
+					resource.TestCheckResourceAttr(resourceName, "description", "testing"),
 				),
 			},
 			{
@@ -76,84 +69,48 @@ func TestAccKafkaConnectWorkerConfiguration_description(t *testing.T) {
 	})
 }
 
-func TestAccKafkaConnectWorkerConfiguration_properties_file_content(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	propertiesFileContent := "key.converter=hello\nvalue.converter=world"
-	propertiesFileContentBase64 := base64.StdEncoding.EncodeToString([]byte(propertiesFileContent))
-
-	resourceName := "aws_mskconnect_worker_configuration.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(kafkaconnect.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, kafkaconnect.EndpointsID),
-		CheckDestroy: nil,
-		Providers:    acctest.Providers,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccWorkerConfigurationBasic(rName, propertiesFileContent),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWorkerConfigurationExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "properties_file_content", propertiesFileContent),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccWorkerConfigurationBasic(rName, propertiesFileContentBase64),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWorkerConfigurationExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "properties_file_content", propertiesFileContent),
-				),
-			},
-		},
-	})
-}
-
-func testAccCheckWorkerConfigurationExists(name string) resource.TestCheckFunc {
+func testAccCheckWorkerConfigurationExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", name)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No MSK Worker Configuration ID is set")
+			return fmt.Errorf("No MSK Connect Worker Configuration ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaConnectConn
 
-		params := &kafkaconnect.DescribeWorkerConfigurationInput{
-			WorkerConfigurationArn: aws.String(rs.Primary.ID),
-		}
+		_, err := tfkafkaconnect.FindWorkerConfigurationByARN(context.Background(), conn, rs.Primary.ID)
 
-		_, err := conn.DescribeWorkerConfiguration(params)
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 
-func testAccWorkerConfigurationBasic(name, content string) string {
+func testAccWorkerConfigurationConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_mskconnect_worker_configuration" "test" {
-  name                    = %[1]q
-  properties_file_content = %[2]q
+  name = %[1]q
+
+  properties_file_content = <<EOF
+key.converter=org.apache.kafka.connect.storage.StringConverter
+value.converter=org.apache.kafka.connect.storage.StringConverter
+EOF
 }
-`, name, content)
+`, rName)
 }
 
-func testAccWorkerConfigurationDescription(name, content, description string) string {
+func testAccWorkerConfigurationConfig_description(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_mskconnect_worker_configuration" "test" {
-  name                    = %[1]q
-  properties_file_content = %[2]q
-  description             = %[3]q
+  name        = %[1]q
+  description = "testing"
+
+  properties_file_content = <<EOF
+key.converter=org.apache.kafka.connect.storage.StringConverter
+value.converter=org.apache.kafka.connect.storage.StringConverter
+EOF
 }
-`, name, content, description)
+`, rName)
 }

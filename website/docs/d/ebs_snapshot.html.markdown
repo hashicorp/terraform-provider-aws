@@ -1,5 +1,5 @@
 ---
-subcategory: "EC2"
+subcategory: "EBS (EC2)"
 layout: "aws"
 page_title: "AWS: aws_ebs_snapshot"
 description: |-
@@ -65,5 +65,11 @@ In addition to all arguments above, the following attributes are exported:
 * `storage_tier` - The storage tier in which the snapshot is stored.
 * `outpost_arn` - The ARN of the Outpost on which the snapshot is stored.
 * `tags` - A map of tags for the resource.
+
+## Timeouts
+
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+
+- `read` - (Default `20m`)
 
 [1]: http://docs.aws.amazon.com/cli/latest/reference/ec2/describe-snapshots.html
