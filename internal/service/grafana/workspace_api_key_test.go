@@ -25,7 +25,7 @@ func TestAccWorkspaceApiKey_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "workspace_id", workspaceResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "key_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "key_role", "EDITOR"),
+					resource.TestCheckResourceAttr(resourceName, "key_role", "Editor"),
 					resource.TestCheckResourceAttr(resourceName, "seconds_to_live", "3600"),
 				),
 			},
@@ -38,7 +38,7 @@ func testAccWorkspaceApiKey_providerBasic(rName string) string {
 resource "aws_grafana_workspace_api_key" "test" {
 	workspace_id    = aws_grafana_workspace.test.id
 	key_name        = "example-key"
-	key_role        = "EDITOR"
+	key_role        = "Editor"
 	seconds_to_live = 3600
 }`)
 }
