@@ -1,6 +1,7 @@
 package ec2_test
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"testing"
@@ -198,7 +199,7 @@ func testAccCheckNetworkInsightsAnalysisExists(n string) resource.TestCheckFunc 
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
-		_, err := tfec2.FindNetworkInsightsAnalysisByID(conn, rs.Primary.ID)
+		_, err := tfec2.FindNetworkInsightsAnalysisByID(context.Background(), conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -216,7 +217,7 @@ func testAccCheckNetworkInsightsAnalysisDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := tfec2.FindNetworkInsightsAnalysisByID(conn, rs.Primary.ID)
+		_, err := tfec2.FindNetworkInsightsAnalysisByID(context.Background(), conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue

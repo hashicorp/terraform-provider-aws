@@ -20,10 +20,11 @@ import (
 
 func ResourceNetworkInsightsAnalysis() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceNetworkInsightsAnalysisCreate,
-		ReadContext:   resourceNetworkInsightsAnalysisRead,
-		UpdateContext: resourceNetworkInsightsAnalysisUpdate,
-		DeleteContext: resourceNetworkInsightsAnalysisDelete,
+		CreateWithoutTimeout: resourceNetworkInsightsAnalysisCreate,
+		ReadWithoutTimeout:   resourceNetworkInsightsAnalysisRead,
+		UpdateWithoutTimeout: resourceNetworkInsightsAnalysisUpdate,
+		DeleteWithoutTimeout: resourceNetworkInsightsAnalysisDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -96,10 +97,13 @@ func resourceNetworkInsightsAnalysisCreate(ctx context.Context, d *schema.Resour
 		}
 	}
 
-	response, err := conn.StartNetworkInsightsAnalysis(input)
+	log.Printf("[DEBUG] Creating EC2 Network Insights Analysis: %s", input)
+	response, err := conn.StartNetworkInsightsAnalysisWithContext(ctx, input)
+
 	if err != nil {
 		return diag.Errorf("error creating Network Insights Analysis: %s", err)
 	}
+
 	d.SetId(aws.StringValue(response.NetworkInsightsAnalysis.NetworkInsightsAnalysisId))
 
 	if d.Get("wait_for_completion").(bool) {
@@ -108,7 +112,7 @@ func resourceNetworkInsightsAnalysisCreate(ctx context.Context, d *schema.Resour
 			Pending: []string{"running"},
 			Target:  []string{"succeeded", "failed"},
 			Refresh: func() (result interface{}, state string, err error) {
-				nia, err := FindNetworkInsightsAnalysisByID(conn, d.Id())
+				nia, err := FindNetworkInsightsAnalysisByID(ctx, conn, d.Id())
 				if err != nil {
 					return nil, "", err
 				}
@@ -134,7 +138,7 @@ func resourceNetworkInsightsAnalysisRead(ctx context.Context, d *schema.Resource
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	nia, err := FindNetworkInsightsAnalysisByID(conn, d.Id())
+	nia, err := FindNetworkInsightsAnalysisByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Network Insights Analysis (%s) not found, removing from state", d.Id())
@@ -174,7 +178,7 @@ func resourceNetworkInsightsAnalysisUpdate(ctx context.Context, d *schema.Resour
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
+		if err := UpdateTagsWithContext(ctx, conn, d.Id(), o, n); err != nil {
 			return diag.Errorf("error updating Network Insights Analysis (%s) tags: %s", d.Id(), err)
 		}
 	}
@@ -183,11 +187,13 @@ func resourceNetworkInsightsAnalysisUpdate(ctx context.Context, d *schema.Resour
 
 func resourceNetworkInsightsAnalysisDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).EC2Conn
+
+	log.Printf("[DEBUG] Deleting EC2 Network Insights Analysis: %s", d.Id())
 	_, err := conn.DeleteNetworkInsightsAnalysisWithContext(ctx, &ec2.DeleteNetworkInsightsAnalysisInput{
 		NetworkInsightsAnalysisId: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidNetworkInsightsAnalysisIdNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidNetworkInsightsAnalysisIdNotFound) {
 		return nil
 	}
 

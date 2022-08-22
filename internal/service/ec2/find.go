@@ -1460,8 +1460,8 @@ func FindNetworkInterfaceSecurityGroup(conn *ec2.EC2, networkInterfaceID string,
 	}
 }
 
-func FindNetworkInsightsAnalysis(conn *ec2.EC2, input *ec2.DescribeNetworkInsightsAnalysesInput) (*ec2.NetworkInsightsAnalysis, error) {
-	output, err := FindNetworkInsightsAnalyses(conn, input)
+func FindNetworkInsightsAnalysis(ctx context.Context, conn *ec2.EC2, input *ec2.DescribeNetworkInsightsAnalysesInput) (*ec2.NetworkInsightsAnalysis, error) {
+	output, err := FindNetworkInsightsAnalyses(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
@@ -1478,10 +1478,10 @@ func FindNetworkInsightsAnalysis(conn *ec2.EC2, input *ec2.DescribeNetworkInsigh
 	return output[0], nil
 }
 
-func FindNetworkInsightsAnalyses(conn *ec2.EC2, input *ec2.DescribeNetworkInsightsAnalysesInput) ([]*ec2.NetworkInsightsAnalysis, error) {
+func FindNetworkInsightsAnalyses(ctx context.Context, conn *ec2.EC2, input *ec2.DescribeNetworkInsightsAnalysesInput) ([]*ec2.NetworkInsightsAnalysis, error) {
 	var output []*ec2.NetworkInsightsAnalysis
 
-	err := conn.DescribeNetworkInsightsAnalysesPages(input, func(page *ec2.DescribeNetworkInsightsAnalysesOutput, lastPage bool) bool {
+	err := conn.DescribeNetworkInsightsAnalysesPagesWithContext(ctx, input, func(page *ec2.DescribeNetworkInsightsAnalysesOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -1495,7 +1495,7 @@ func FindNetworkInsightsAnalyses(conn *ec2.EC2, input *ec2.DescribeNetworkInsigh
 		return !lastPage
 	})
 
-	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidNetworkInsightsAnalysisIdNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidNetworkInsightsAnalysisIdNotFound) {
 		return nil, &resource.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -1509,12 +1509,12 @@ func FindNetworkInsightsAnalyses(conn *ec2.EC2, input *ec2.DescribeNetworkInsigh
 	return output, nil
 }
 
-func FindNetworkInsightsAnalysisByID(conn *ec2.EC2, id string) (*ec2.NetworkInsightsAnalysis, error) {
+func FindNetworkInsightsAnalysisByID(ctx context.Context, conn *ec2.EC2, id string) (*ec2.NetworkInsightsAnalysis, error) {
 	input := &ec2.DescribeNetworkInsightsAnalysesInput{
 		NetworkInsightsAnalysisIds: aws.StringSlice([]string{id}),
 	}
 
-	output, err := FindNetworkInsightsAnalysis(conn, input)
+	output, err := FindNetworkInsightsAnalysis(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
