@@ -1,4 +1,17 @@
 ## 4.28.0 (Unreleased)
+
+FEATURES:
+
+* **New Data Source:** `aws_location_tracker_association` ([#26404](https://github.com/hashicorp/terraform-provider-aws/issues/26404))
+
+ENHANCEMENTS:
+
+* resource/aws_glue_job: Add support for `3.9` as valid `python_version` value ([#26407](https://github.com/hashicorp/terraform-provider-aws/issues/26407))
+
+BUG FIXES:
+
+* resource/aws_eip: Include any provider-level configured `default_tags` on resource Create ([#26308](https://github.com/hashicorp/terraform-provider-aws/issues/26308))
+
 ## 4.27.0 (August 19, 2022)
 
 FEATURES:
