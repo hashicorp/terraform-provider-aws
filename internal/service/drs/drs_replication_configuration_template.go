@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/drs"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -89,6 +90,10 @@ func ResourceReplicationConfigurationTemplate() *schema.Resource {
 			"replication_servers_security_groups_ids": {
 				Type:     schema.TypeList,
 				Required: true,
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: validation.StringInSlice(drs.ValidationExceptionReason_Values(), false),
+				},
 			},
 			"staging_area_subnet_id": {
 				Type:     schema.TypeString,
