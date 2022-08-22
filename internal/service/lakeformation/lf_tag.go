@@ -15,6 +15,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
+// This value is defined by AWS API
+const lfTagsValuesMaxBatchSize = 50
+
 func ResourceLFTag() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceLFTagCreate,
@@ -42,7 +45,9 @@ func ResourceLFTag() *schema.Resource {
 				Type:     schema.TypeSet,
 				Required: true,
 				MinItems: 1,
-				MaxItems: 15,
+				// Soft limit stated in AWS Doc
+				// https://docs.aws.amazon.com/lake-formation/latest/dg/TBAC-notes.html
+				MaxItems: 1000,
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
 					ValidateFunc: validateLFTagValues(),
@@ -58,6 +63,7 @@ func resourceLFTagCreate(d *schema.ResourceData, meta interface{}) error {
 
 	tagKey := d.Get("key").(string)
 	tagValues := d.Get("values").(*schema.Set)
+	tagValuesLen := tagValues.Len()
 
 	var catalogID string
 	if v, ok := d.GetOk("catalog_id"); ok {
@@ -66,15 +72,43 @@ func resourceLFTagCreate(d *schema.ResourceData, meta interface{}) error {
 		catalogID = meta.(*conns.AWSClient).AccountID
 	}
 
+	end := lfTagsValuesMaxBatchSize
+	if end > tagValuesLen {
+		end = tagValuesLen
+	}
+
+	valuesSubset := schema.NewSet(tagValues.F, tagValues.List()[0:end])
 	input := &lakeformation.CreateLFTagInput{
 		CatalogId: aws.String(catalogID),
 		TagKey:    aws.String(tagKey),
-		TagValues: flex.ExpandStringSet(tagValues),
+		TagValues: flex.ExpandStringSet(valuesSubset),
 	}
 
 	_, err := conn.CreateLFTag(input)
 	if err != nil {
 		return fmt.Errorf("error creating Lake Formation LF-Tag: %w", err)
+	}
+
+	// If there are more than 50 values, create them in batches of 50 using UpdateLFTag API
+	for i := lfTagsValuesMaxBatchSize; i < tagValuesLen; i += lfTagsValuesMaxBatchSize {
+		end := i + lfTagsValuesMaxBatchSize
+
+		if end > tagValuesLen {
+			end = tagValuesLen
+		}
+
+		subset := schema.NewSet(tagValues.F, tagValues.List()[i:end])
+
+		input := &lakeformation.UpdateLFTagInput{
+			CatalogId:      aws.String(catalogID),
+			TagKey:         aws.String(tagKey),
+			TagValuesToAdd: flex.ExpandStringSet(subset),
+		}
+
+		_, err := conn.UpdateLFTag(input)
+		if err != nil {
+			return fmt.Errorf("error creating Lake Formation LF-Tag (batch: %d to %d): %w", i, end, err)
+		}
 	}
 
 	d.SetId(fmt.Sprintf("%s:%s", catalogID, tagKey))
@@ -126,25 +160,41 @@ func resourceLFTagUpdate(d *schema.ResourceData, meta interface{}) error {
 	o, n := d.GetChange("values")
 	os := o.(*schema.Set)
 	ns := n.(*schema.Set)
-	toAdd := flex.ExpandStringSet(ns.Difference(os))
-	toDelete := flex.ExpandStringSet(os.Difference(ns))
+	toAdd := ns.Difference(os)
+	toDelete := os.Difference(ns)
+	toAddLen := toAdd.Len()
+	toDeleteLen := toDelete.Len()
 
-	input := &lakeformation.UpdateLFTagInput{
-		CatalogId: aws.String(catalogID),
-		TagKey:    aws.String(tagKey),
-	}
+	for i := 0; i < Max(toAddLen, toDeleteLen); i += lfTagsValuesMaxBatchSize {
+		input := &lakeformation.UpdateLFTagInput{
+			CatalogId: aws.String(catalogID),
+			TagKey:    aws.String(tagKey),
+		}
 
-	if len(toAdd) > 0 {
-		input.TagValuesToAdd = toAdd
-	}
+		if i < toAddLen {
+			end := i + lfTagsValuesMaxBatchSize
+			if end > toAddLen {
+				end = toAddLen
+			}
 
-	if len(toDelete) > 0 {
-		input.TagValuesToDelete = toDelete
-	}
+			toAddSubset := schema.NewSet(toAdd.F, toAdd.List()[i:end])
+			input.TagValuesToAdd = flex.ExpandStringSet(toAddSubset)
+		}
 
-	_, err = conn.UpdateLFTag(input)
-	if err != nil {
-		return fmt.Errorf("error updating Lake Formation LF-Tag (%s): %w", d.Id(), err)
+		if i < toDeleteLen {
+			end := i + lfTagsValuesMaxBatchSize
+			if end > toDeleteLen {
+				end = toDeleteLen
+			}
+
+			toDeleteSubset := schema.NewSet(toAdd.F, toDelete.List()[i:end])
+			input.TagValuesToDelete = flex.ExpandStringSet(toDeleteSubset)
+		}
+
+		_, err := conn.UpdateLFTag(input)
+		if err != nil {
+			return fmt.Errorf("error updating Lake Formation LF-Tag (%s) (batch %d): %w", d.Id(), i, err)
+		}
 	}
 
 	return resourceLFTagRead(d, meta)
@@ -184,4 +234,11 @@ func validateLFTagValues() schema.SchemaValidateFunc {
 		validation.StringLenBetween(1, 255),
 		validation.StringMatch(regexp.MustCompile(`^([\p{L}\p{Z}\p{N}_.:\*\/=+\-@%]*)$`), ""),
 	)
+}
+
+func Max(x, y int) int {
+	if x > y {
+		return x
+	}
+	return y
 }
