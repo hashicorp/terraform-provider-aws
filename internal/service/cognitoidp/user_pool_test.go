@@ -1249,6 +1249,42 @@ func TestAccCognitoIDPUserPool_schemaAttributesModified(t *testing.T) {
 	})
 }
 
+func TestAccCognitoIDPUserPool_withUserAttributeUpdateSettings(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_cognito_user_pool.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserPoolDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccUserPoolConfig_userAttributeUpdateSettings(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckUserPoolExists(resourceName, nil),
+					resource.TestCheckResourceAttr(resourceName, "user_attribute_update_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "user_attribute_update_settings.0.attributes_require_verification_before_update.0", "email"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccUserPoolConfig_userAttributeUpdateSettingsUpdate(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckUserPoolExists(resourceName, nil),
+					resource.TestCheckResourceAttr(resourceName, "user_attribute_update_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "user_attribute_update_settings.0.attributes_require_verification_before_update.0", "email"),
+					resource.TestCheckResourceAttr(resourceName, "user_attribute_update_settings.0.attributes_require_verification_before_update.1", "phone_number"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccCognitoIDPUserPool_withVerificationMessageTemplate(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cognito_user_pool.test"
@@ -2211,6 +2247,90 @@ resource "aws_cognito_user_pool" "test" {
   }
 }
 `, name, boolname)
+}
+
+func testAccUserPoolConfig_userAttributeUpdateSettings(name string) string {
+	return fmt.Sprintf(`
+resource "aws_cognito_user_pool" "test" {
+  name = %[1]q
+
+  auto_verified_attributes = ["email"]
+
+  user_attribute_update_settings {
+    attributes_require_verification_before_update = ["email"]
+  }
+}
+`, name)
+}
+
+func testAccUserPoolConfig_userAttributeUpdateSettingsUpdate(name string) string {
+	return fmt.Sprintf(`
+data "aws_caller_identity" "current" {
+}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+  path = "/service-role/"
+
+  assume_role_policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "",
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "cognito-idp.amazonaws.com"
+      },
+      "Action": "sts:AssumeRole",
+      "Condition": {
+        "StringEquals": {
+          "sts:ExternalId": "${data.aws_caller_identity.current.account_id}"
+        }
+      }
+    }
+  ]
+}
+POLICY
+}
+
+resource "aws_iam_role_policy" "test" {
+  name = %[1]q
+  role = aws_iam_role.test.id
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "sns:publish"
+      ],
+      "Resource": [
+        "*"
+      ]
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_cognito_user_pool" "test" {
+  name = %[1]q
+
+  sms_configuration {
+    external_id    = data.aws_caller_identity.current.account_id
+    sns_caller_arn = aws_iam_role.test.arn
+  }
+
+  auto_verified_attributes = ["email", "phone_number"]
+
+  user_attribute_update_settings {
+    attributes_require_verification_before_update = ["email", "phone_number"]
+  }
+}
+`, name)
 }
 
 func testAccUserPoolConfig_verificationMessageTemplate(name string) string {

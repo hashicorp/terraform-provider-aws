@@ -88,6 +88,7 @@ The following arguments are optional:
 * `user_pool_add_ons` - (Optional) Configuration block for user pool add-ons to enable user pool advanced security mode features. [Detailed below](#user_pool_add_ons).
 * `username_attributes` - (Optional) Whether email addresses or phone numbers can be specified as usernames when a user signs up. Conflicts with `alias_attributes`.
 * `username_configuration` - (Optional) Configuration block for username configuration. [Detailed below](#username_configuration).
+* `user_attribute_update_settings` - (Optional) Configuration block for updates to user attributes. [Details below](#user_attribute_update_settings). Requires `auto_verified_attributes` to be configured.
 * `verification_message_template` - (Optional) Configuration block for verification message templates. [Detailed below](#verification_message_template).
 
 ### account_recovery_setting
@@ -209,6 +210,10 @@ resource "aws_cognito_user_pool" "example" {
 The following arguments are required in the `software_token_mfa_configuration` configuration block:
 
 * `enabled` - (Required) Boolean whether to enable software token Multi-Factor (MFA) tokens, such as Time-based One-Time Password (TOTP). To disable software token MFA When `sms_configuration` is not present, the `mfa_configuration` argument must be set to `OFF` and the `software_token_mfa_configuration` configuration block must be fully removed.
+
+### user_attribute_update_settings
+
+* `attributes_require_verification_before_update` - (Required) Attributes to be verified before update. Valid values: `email`, `phone_number`.
 
 ### user_pool_add_ons
 

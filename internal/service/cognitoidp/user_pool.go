@@ -513,6 +513,24 @@ func ResourceUserPool() *schema.Resource {
 					},
 				},
 			},
+			"user_attribute_update_settings": {
+				Type:             schema.TypeList,
+				Optional:         true,
+				MaxItems:         1,
+				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"attributes_require_verification_before_update": {
+							Type:     schema.TypeSet,
+							Required: true,
+							Elem: &schema.Schema{
+								Type:         schema.TypeString,
+								ValidateFunc: validation.StringInSlice(cognitoidentityprovider.VerifiedAttributeType_Values(), false),
+							},
+						},
+					},
+				},
+			},
 			"user_pool_add_ons": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -690,6 +708,15 @@ func resourceUserPoolCreate(d *schema.ResourceData, meta interface{}) error {
 
 		if ok && config != nil {
 			params.UsernameConfiguration = expandUserPoolUsernameConfiguration(config)
+		}
+	}
+
+	if v, ok := d.GetOk("user_attribute_update_settings"); ok {
+		configs := v.([]interface{})
+		config, ok := configs[0].(map[string]interface{})
+
+		if ok && config != nil {
+			params.UserAttributeUpdateSettings = expandUserAttributeUpdateSettings(config)
 		}
 	}
 
@@ -894,6 +921,10 @@ func resourceUserPoolRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("failed setting username_configuration: %w", err)
 	}
 
+	if err := d.Set("user_attribute_update_settings", flattenUserAttributeUpdateSettings(userPool.UserAttributeUpdateSettings)); err != nil {
+		return fmt.Errorf("failed setting user_attribute_update_settings: %w", err)
+	}
+
 	if err := d.Set("user_pool_add_ons", flattenUserPoolUserPoolAddOns(userPool.UserPoolAddOns)); err != nil {
 		return fmt.Errorf("failed setting user_pool_add_ons: %w", err)
 	}
@@ -1019,6 +1050,7 @@ func resourceUserPoolUpdate(d *schema.ResourceData, meta interface{}) error {
 		"sms_verification_message",
 		"tags",
 		"tags_all",
+		"user_attribute_update_settings",
 		"user_pool_add_ons",
 		"verification_message_template",
 		"account_recovery_setting",
@@ -1097,6 +1129,15 @@ func resourceUserPoolUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		if v, ok := d.GetOk("sms_configuration"); ok {
 			params.SmsConfiguration = expandSMSConfiguration(v.([]interface{}))
+		}
+
+		if v, ok := d.GetOk("user_attribute_update_settings"); ok {
+			configs := v.([]interface{})
+			config, ok := configs[0].(map[string]interface{})
+
+			if ok && config != nil {
+				params.UserAttributeUpdateSettings = expandUserAttributeUpdateSettings(config)
+			}
 		}
 
 		if v, ok := d.GetOk("user_pool_add_ons"); ok {
@@ -1279,6 +1320,32 @@ func flattenSoftwareTokenMFAConfiguration(apiObject *cognitoidentityprovider.Sof
 	}
 
 	return []interface{}{tfMap}
+}
+
+func expandUserAttributeUpdateSettings(config map[string]interface{}) *cognitoidentityprovider.UserAttributeUpdateSettingsType {
+	var arr []string
+
+	for _, v := range config["attributes_require_verification_before_update"].(*schema.Set).List() {
+		arr = append(arr, v.(string))
+	}
+
+	userAttributeUpdateSettingsType := &cognitoidentityprovider.UserAttributeUpdateSettingsType{
+		AttributesRequireVerificationBeforeUpdate: aws.StringSlice(arr),
+	}
+
+	return userAttributeUpdateSettingsType
+}
+
+func flattenUserAttributeUpdateSettings(u *cognitoidentityprovider.UserAttributeUpdateSettingsType) []map[string]interface{} {
+	m := map[string]interface{}{}
+
+	if u == nil {
+		return nil
+	}
+
+	m["attributes_require_verification_before_update"] = aws.StringValueSlice(u.AttributesRequireVerificationBeforeUpdate)
+
+	return []map[string]interface{}{m}
 }
 
 func expandUserPoolAccountRecoverySettingConfig(config map[string]interface{}) *cognitoidentityprovider.AccountRecoverySettingType {
