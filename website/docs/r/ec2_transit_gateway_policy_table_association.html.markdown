@@ -14,7 +14,7 @@ Manages an EC2 Transit Gateway Policy Table association.
 
 ```terraform
 resource "aws_ec2_transit_gateway_policy_table_association" "example" {
-  transit_gateway_attachment_id   = aws_ec2_transit_gateway_vpc_attachment.example.id
+  transit_gateway_attachment_id   = aws_networkmanager_transit_gateway_peering.example.transit_gateway_peering_attachment_id
   transit_gateway_policy_table_id = aws_ec2_transit_gateway_policy_table.example.id
 }
 ```
