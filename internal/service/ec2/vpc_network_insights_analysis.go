@@ -37,7 +37,10 @@ func ResourceNetworkInsightsAnalysis() *schema.Resource {
 				Type:     schema.TypeSet,
 				Optional: true,
 				ForceNew: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: verify.ValidARN,
+				},
 			},
 			"network_insights_path_id": {
 				Type:     schema.TypeString,
