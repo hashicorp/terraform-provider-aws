@@ -2585,7 +2585,7 @@ resource "aws_wafv2_rule_group" "test" {
 		  cookies {
 		    match_pattern {
 		      included_cookies = ["test", "cookie_test"]
-			  }
+			}
 			match_scope = "ALL"
 			oversize_handling = "NO_MATCH"
 		  }
