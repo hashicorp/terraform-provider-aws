@@ -31,11 +31,11 @@ func TestAccVPCNetworkInsightsPath_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNetworkInsightsPathExists(resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`network-insights-path/.+$`)),
-					resource.TestCheckResourceAttrPair(resourceName, "destination", "aws_network_interface.test_destination", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "destination", "aws_network_interface.test.1", "id"),
 					resource.TestCheckResourceAttr(resourceName, "destination_ip", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_port", "0"),
 					resource.TestCheckResourceAttr(resourceName, "protocol", "tcp"),
-					resource.TestCheckResourceAttrPair(resourceName, "source", "aws_network_interface.test_source", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "source", "aws_network_interface.test.0", "id"),
 					resource.TestCheckResourceAttr(resourceName, "source_ip", ""),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
@@ -259,15 +259,9 @@ func testAccCheckNetworkInsightsPathDestroy(s *terraform.State) error {
 
 func testAccVPCNetworkInsightsPathConfig_basic(rName, protocol string) string {
 	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 1), fmt.Sprintf(`
-resource "aws_network_interface" "test_source" {
-  subnet_id = aws_subnet.test[0].id
+resource "aws_network_interface" "test" {
+  count = 2
 
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_network_interface" "test_destination" {
   subnet_id = aws_subnet.test[0].id
 
   tags = {
@@ -276,8 +270,8 @@ resource "aws_network_interface" "test_destination" {
 }
 
 resource "aws_ec2_network_insights_path" "test" {
-  source      = aws_network_interface.test_source.id
-  destination = aws_network_interface.test_destination.id
+  source      = aws_network_interface.test[0].id
+  destination = aws_network_interface.test[1].id
   protocol    = %[2]q
 }
 `, rName, protocol))
@@ -285,15 +279,9 @@ resource "aws_ec2_network_insights_path" "test" {
 
 func testAccVPCNetworkInsightsPathConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 1), fmt.Sprintf(`
-resource "aws_network_interface" "test_source" {
-  subnet_id = aws_subnet.test[0].id
+resource "aws_network_interface" "test" {
+  count = 2
 
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_network_interface" "test_destination" {
   subnet_id = aws_subnet.test[0].id
 
   tags = {
@@ -302,8 +290,8 @@ resource "aws_network_interface" "test_destination" {
 }
 
 resource "aws_ec2_network_insights_path" "test" {
-  source      = aws_network_interface.test_source.id
-  destination = aws_network_interface.test_destination.id
+  source      = aws_network_interface.test[0].id
+  destination = aws_network_interface.test[1].id
   protocol    = "tcp"
 
   tags = {
@@ -315,15 +303,9 @@ resource "aws_ec2_network_insights_path" "test" {
 
 func testAccVPCNetworkInsightsPathConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 1), fmt.Sprintf(`
-resource "aws_network_interface" "test_source" {
-  subnet_id = aws_subnet.test[0].id
+resource "aws_network_interface" "test" {
+  count = 2
 
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_network_interface" "test_destination" {
   subnet_id = aws_subnet.test[0].id
 
   tags = {
@@ -332,8 +314,8 @@ resource "aws_network_interface" "test_destination" {
 }
 
 resource "aws_ec2_network_insights_path" "test" {
-  source      = aws_network_interface.test_source.id
-  destination = aws_network_interface.test_destination.id
+  source      = aws_network_interface.test[0].id
+  destination = aws_network_interface.test[1].id
   protocol    = "tcp"
 
   tags = {
@@ -408,15 +390,9 @@ resource "aws_ec2_network_insights_path" "test" {
 
 func testAccVPCNetworkInsightsPathConfig_destinationPort(rName string, destinationPort int) string {
 	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 1), fmt.Sprintf(`
-resource "aws_network_interface" "test_source" {
-  subnet_id = aws_subnet.test[0].id
+resource "aws_network_interface" "test" {
+  count = 2
 
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_network_interface" "test_destination" {
   subnet_id = aws_subnet.test[0].id
 
   tags = {
@@ -425,8 +401,8 @@ resource "aws_network_interface" "test_destination" {
 }
 
 resource "aws_ec2_network_insights_path" "test" {
-  source           = aws_network_interface.test_source.id
-  destination      = aws_network_interface.test_destination.id
+  source           = aws_network_interface.test[0].id
+  destination      = aws_network_interface.test[1].id
   protocol         = "tcp"
   destination_port = %[2]d
 
