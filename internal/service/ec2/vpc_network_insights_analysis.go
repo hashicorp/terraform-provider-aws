@@ -890,470 +890,7 @@ func ResourceNetworkInsightsAnalysis() *schema.Resource {
 					ValidateFunc: verify.ValidARN,
 				},
 			},
-			"forward_path_components": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"acl_rule": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"cidr": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"egress": {
-										Type:     schema.TypeBool,
-										Computed: true,
-									},
-									"port_range": {
-										Type:     schema.TypeList,
-										Computed: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"from": {
-													Type:     schema.TypeInt,
-													Computed: true,
-												},
-												"to": {
-													Type:     schema.TypeInt,
-													Computed: true,
-												},
-											},
-										},
-									},
-									"protocol": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"rule_action": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"rule_number": {
-										Type:     schema.TypeInt,
-										Computed: true,
-									},
-								},
-							},
-						},
-						"additional_details": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"additional_detail_type": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"component": {
-										Type:     schema.TypeList,
-										Computed: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"arn": {
-													Type:     schema.TypeString,
-													Computed: true,
-												},
-												"id": {
-													Type:     schema.TypeString,
-													Computed: true,
-												},
-												"name": {
-													Type:     schema.TypeString,
-													Computed: true,
-												},
-											},
-										},
-									},
-								},
-							},
-						},
-						"attached_to": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"arn": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"id": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"name": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-								},
-							},
-						},
-						"component": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"arn": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"id": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"name": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-								},
-							},
-						},
-						"destination_vpc": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"arn": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"id": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"name": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-								},
-							},
-						},
-						"inbound_header": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"destination_addresses": {
-										Type:     schema.TypeList,
-										Computed: true,
-										Elem:     &schema.Schema{Type: schema.TypeString},
-									},
-									"destination_port_ranges": {
-										Type:     schema.TypeList,
-										Computed: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"from": {
-													Type:     schema.TypeInt,
-													Computed: true,
-												},
-												"to": {
-													Type:     schema.TypeInt,
-													Computed: true,
-												},
-											},
-										},
-									},
-									"protocol": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"source_addresses": {
-										Type:     schema.TypeList,
-										Computed: true,
-										Elem:     &schema.Schema{Type: schema.TypeString},
-									},
-									"source_port_ranges": {
-										Type:     schema.TypeList,
-										Computed: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"from": {
-													Type:     schema.TypeInt,
-													Computed: true,
-												},
-												"to": {
-													Type:     schema.TypeInt,
-													Computed: true,
-												},
-											},
-										},
-									},
-								},
-							},
-						},
-						"outbound_header": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"destination_addresses": {
-										Type:     schema.TypeList,
-										Computed: true,
-										Elem:     &schema.Schema{Type: schema.TypeString},
-									},
-									"destination_port_ranges": {
-										Type:     schema.TypeList,
-										Computed: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"from": {
-													Type:     schema.TypeInt,
-													Computed: true,
-												},
-												"to": {
-													Type:     schema.TypeInt,
-													Computed: true,
-												},
-											},
-										},
-									},
-									"protocol": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"source_addresses": {
-										Type:     schema.TypeList,
-										Computed: true,
-										Elem:     &schema.Schema{Type: schema.TypeString},
-									},
-									"source_port_ranges": {
-										Type:     schema.TypeList,
-										Computed: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"from": {
-													Type:     schema.TypeInt,
-													Computed: true,
-												},
-												"to": {
-													Type:     schema.TypeInt,
-													Computed: true,
-												},
-											},
-										},
-									},
-								},
-							},
-						},
-						"route_table_route": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"destination_cidr": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"destination_prefix_list_id": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"egress_only_internet_gateway_id": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"gateway_id": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"instance_id": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"nat_gateway_id": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"network_interface_id": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"origin": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"transit_gateway_id": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"vpc_peering_connection_id": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-								},
-							},
-						},
-						"security_group_rule": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"cidr": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"direction": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"port_range": {
-										Type:     schema.TypeList,
-										Computed: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"from": {
-													Type:     schema.TypeInt,
-													Computed: true,
-												},
-												"to": {
-													Type:     schema.TypeInt,
-													Computed: true,
-												},
-											},
-										},
-									},
-									"prefix_list_id": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"protocol": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"security_group_id": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-								},
-							},
-						},
-						"sequence_number": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"source_vpc": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"arn": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"id": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"name": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-								},
-							},
-						},
-						"subnet": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"arn": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"id": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"name": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-								},
-							},
-						},
-						"transit_gateway": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"arn": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"id": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"name": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-								},
-							},
-						},
-						"transit_gateway_route_table_route": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"attachment_id": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"destination_cidr": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"prefix_list_id": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"resource_id": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"resource_type": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"route_origin": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"state": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-								},
-							},
-						},
-						"vpc": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"arn": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"id": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"name": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-								},
-							},
-						},
-					},
-				},
-			},
+			"forward_path_components": networkInsightsAnalysisPathComponentsSchema,
 			"network_insights_path_id": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -1363,470 +900,7 @@ func ResourceNetworkInsightsAnalysis() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"return_path_components": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"acl_rule": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"cidr": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"egress": {
-										Type:     schema.TypeBool,
-										Computed: true,
-									},
-									"port_range": {
-										Type:     schema.TypeList,
-										Computed: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"from": {
-													Type:     schema.TypeInt,
-													Computed: true,
-												},
-												"to": {
-													Type:     schema.TypeInt,
-													Computed: true,
-												},
-											},
-										},
-									},
-									"protocol": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"rule_action": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"rule_number": {
-										Type:     schema.TypeInt,
-										Computed: true,
-									},
-								},
-							},
-						},
-						"additional_details": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"additional_detail_type": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"component": {
-										Type:     schema.TypeList,
-										Computed: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"arn": {
-													Type:     schema.TypeString,
-													Computed: true,
-												},
-												"id": {
-													Type:     schema.TypeString,
-													Computed: true,
-												},
-												"name": {
-													Type:     schema.TypeString,
-													Computed: true,
-												},
-											},
-										},
-									},
-								},
-							},
-						},
-						"attached_to": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"arn": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"id": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"name": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-								},
-							},
-						},
-						"component": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"arn": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"id": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"name": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-								},
-							},
-						},
-						"destination_vpc": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"arn": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"id": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"name": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-								},
-							},
-						},
-						"inbound_header": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"destination_addresses": {
-										Type:     schema.TypeList,
-										Computed: true,
-										Elem:     &schema.Schema{Type: schema.TypeString},
-									},
-									"destination_port_ranges": {
-										Type:     schema.TypeList,
-										Computed: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"from": {
-													Type:     schema.TypeInt,
-													Computed: true,
-												},
-												"to": {
-													Type:     schema.TypeInt,
-													Computed: true,
-												},
-											},
-										},
-									},
-									"protocol": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"source_addresses": {
-										Type:     schema.TypeList,
-										Computed: true,
-										Elem:     &schema.Schema{Type: schema.TypeString},
-									},
-									"source_port_ranges": {
-										Type:     schema.TypeList,
-										Computed: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"from": {
-													Type:     schema.TypeInt,
-													Computed: true,
-												},
-												"to": {
-													Type:     schema.TypeInt,
-													Computed: true,
-												},
-											},
-										},
-									},
-								},
-							},
-						},
-						"outbound_header": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"destination_addresses": {
-										Type:     schema.TypeList,
-										Computed: true,
-										Elem:     &schema.Schema{Type: schema.TypeString},
-									},
-									"destination_port_ranges": {
-										Type:     schema.TypeList,
-										Computed: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"from": {
-													Type:     schema.TypeInt,
-													Computed: true,
-												},
-												"to": {
-													Type:     schema.TypeInt,
-													Computed: true,
-												},
-											},
-										},
-									},
-									"protocol": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"source_addresses": {
-										Type:     schema.TypeList,
-										Computed: true,
-										Elem:     &schema.Schema{Type: schema.TypeString},
-									},
-									"source_port_ranges": {
-										Type:     schema.TypeList,
-										Computed: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"from": {
-													Type:     schema.TypeInt,
-													Computed: true,
-												},
-												"to": {
-													Type:     schema.TypeInt,
-													Computed: true,
-												},
-											},
-										},
-									},
-								},
-							},
-						},
-						"route_table_route": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"destination_cidr": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"destination_prefix_list_id": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"egress_only_internet_gateway_id": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"gateway_id": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"instance_id": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"nat_gateway_id": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"network_interface_id": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"origin": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"transit_gateway_id": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"vpc_peering_connection_id": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-								},
-							},
-						},
-						"security_group_rule": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"cidr": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"direction": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"port_range": {
-										Type:     schema.TypeList,
-										Computed: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"from": {
-													Type:     schema.TypeInt,
-													Computed: true,
-												},
-												"to": {
-													Type:     schema.TypeInt,
-													Computed: true,
-												},
-											},
-										},
-									},
-									"prefix_list_id": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"protocol": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"security_group_id": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-								},
-							},
-						},
-						"sequence_number": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"source_vpc": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"arn": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"id": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"name": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-								},
-							},
-						},
-						"subnet": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"arn": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"id": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"name": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-								},
-							},
-						},
-						"transit_gateway": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"arn": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"id": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"name": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-								},
-							},
-						},
-						"transit_gateway_route_table_route": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"attachment_id": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"destination_cidr": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"prefix_list_id": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"resource_id": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"resource_type": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"route_origin": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"state": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-								},
-							},
-						},
-						"vpc": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"arn": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"id": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"name": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-								},
-							},
-						},
-					},
-				},
-			},
+			"return_path_components": networkInsightsAnalysisPathComponentsSchema,
 			"start_date": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -1854,6 +928,471 @@ func ResourceNetworkInsightsAnalysis() *schema.Resource {
 
 		CustomizeDiff: verify.SetTagsDiff,
 	}
+}
+
+var networkInsightsAnalysisPathComponentsSchema = &schema.Schema{
+	Type:     schema.TypeList,
+	Computed: true,
+	Elem: &schema.Resource{
+		Schema: map[string]*schema.Schema{
+			"acl_rule": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"cidr": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"egress": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+						"port_range": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"from": {
+										Type:     schema.TypeInt,
+										Computed: true,
+									},
+									"to": {
+										Type:     schema.TypeInt,
+										Computed: true,
+									},
+								},
+							},
+						},
+						"protocol": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"rule_action": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"rule_number": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+					},
+				},
+			},
+			"additional_details": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"additional_detail_type": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"component": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"arn": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"id": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"name": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			"attached_to": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"arn": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
+			"component": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"arn": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
+			"destination_vpc": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"arn": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
+			"inbound_header": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"destination_addresses": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+						"destination_port_ranges": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"from": {
+										Type:     schema.TypeInt,
+										Computed: true,
+									},
+									"to": {
+										Type:     schema.TypeInt,
+										Computed: true,
+									},
+								},
+							},
+						},
+						"protocol": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"source_addresses": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+						"source_port_ranges": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"from": {
+										Type:     schema.TypeInt,
+										Computed: true,
+									},
+									"to": {
+										Type:     schema.TypeInt,
+										Computed: true,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			"outbound_header": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"destination_addresses": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+						"destination_port_ranges": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"from": {
+										Type:     schema.TypeInt,
+										Computed: true,
+									},
+									"to": {
+										Type:     schema.TypeInt,
+										Computed: true,
+									},
+								},
+							},
+						},
+						"protocol": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"source_addresses": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+						"source_port_ranges": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"from": {
+										Type:     schema.TypeInt,
+										Computed: true,
+									},
+									"to": {
+										Type:     schema.TypeInt,
+										Computed: true,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			"route_table_route": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"destination_cidr": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"destination_prefix_list_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"egress_only_internet_gateway_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"gateway_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"instance_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"nat_gateway_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"network_interface_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"origin": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"transit_gateway_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"vpc_peering_connection_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
+			"security_group_rule": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"cidr": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"direction": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"port_range": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"from": {
+										Type:     schema.TypeInt,
+										Computed: true,
+									},
+									"to": {
+										Type:     schema.TypeInt,
+										Computed: true,
+									},
+								},
+							},
+						},
+						"prefix_list_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"protocol": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"security_group_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
+			"sequence_number": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
+			"source_vpc": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"arn": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
+			"subnet": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"arn": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
+			"transit_gateway": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"arn": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
+			"transit_gateway_route_table_route": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"attachment_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"destination_cidr": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"prefix_list_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"resource_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"resource_type": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"route_origin": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"state": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
+			"vpc": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"arn": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
+		},
+	},
 }
 
 func resourceNetworkInsightsAnalysisCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
