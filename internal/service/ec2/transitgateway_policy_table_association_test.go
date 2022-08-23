@@ -18,7 +18,7 @@ func testAccTransitGatewayPolicyTableAssociation_basic(t *testing.T) {
 	var v ec2.TransitGatewayPolicyTableAssociation
 	resourceName := "aws_ec2_transit_gateway_policy_table_association.test"
 	transitGatewayPolicyTableResourceName := "aws_ec2_transit_gateway_policy_table.test"
-	transitGatewayVpcAttachmentResourceName := "aws_ec2_transit_gateway_vpc_attachment.test"
+	transitGatewayPeeringResourceName := "aws_networkmanager_transit_gateway_peering.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
@@ -33,7 +33,7 @@ func testAccTransitGatewayPolicyTableAssociation_basic(t *testing.T) {
 					testAccCheckTransitGatewayPolicyTableAssociationExists(resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "resource_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "resource_type"),
-					resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_attachment_id", transitGatewayVpcAttachmentResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_attachment_id", transitGatewayPeeringResourceName, "transit_gateway_peering_attachment_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_policy_table_id", transitGatewayPolicyTableResourceName, "id"),
 				),
 			},
