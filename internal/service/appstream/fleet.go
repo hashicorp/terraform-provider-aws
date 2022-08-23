@@ -561,11 +561,17 @@ func expandDomainJoinInfo(tfList []interface{}) *appstream.DomainJoinInfo {
 
 	apiObject := &appstream.DomainJoinInfo{}
 
-	tfMap := tfList[0].(map[string]interface{})
-	if v, ok := tfMap["directory_name"]; ok {
+	tfMap, ok := tfList[0].(map[string]interface{})
+
+	if !ok {
+		return nil
+	}
+
+	if v, ok := tfMap["directory_name"]; ok && v != "" {
 		apiObject.DirectoryName = aws.String(v.(string))
 	}
-	if v, ok := tfMap["organizational_unit_distinguished_name"]; ok {
+
+	if v, ok := tfMap["organizational_unit_distinguished_name"]; ok && v != "" {
 		apiObject.OrganizationalUnitDistinguishedName = aws.String(v.(string))
 	}
 
