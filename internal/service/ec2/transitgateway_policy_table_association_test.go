@@ -19,12 +19,19 @@ func testAccTransitGatewayPolicyTableAssociation_basic(t *testing.T) {
 	resourceName := "aws_ec2_transit_gateway_policy_table_association.test"
 	transitGatewayPolicyTableResourceName := "aws_ec2_transit_gateway_policy_table.test"
 	transitGatewayPeeringResourceName := "aws_networkmanager_transit_gateway_peering.test"
+	testExternalProviders := map[string]resource.ExternalProvider{
+		"awscc": {
+			Source:            "hashicorp/awscc",
+			VersionConstraint: "0.29.0",
+		},
+	}
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		ExternalProviders:        testExternalProviders,
 		CheckDestroy:             testAccCheckTransitGatewayPolicyTableAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -49,12 +56,19 @@ func testAccTransitGatewayPolicyTableAssociation_basic(t *testing.T) {
 func testAccTransitGatewayPolicyTableAssociation_disappears(t *testing.T) {
 	var v ec2.TransitGatewayPolicyTableAssociation
 	resourceName := "aws_ec2_transit_gateway_policy_table_association.test"
+	testExternalProviders := map[string]resource.ExternalProvider{
+		"awscc": {
+			Source:            "hashicorp/awscc",
+			VersionConstraint: "0.29.0",
+		},
+	}
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		ExternalProviders:        testExternalProviders,
 		CheckDestroy:             testAccCheckTransitGatewayPolicyTableAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
