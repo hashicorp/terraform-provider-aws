@@ -2270,6 +2270,27 @@ func WaitManagedPrefixListDeleted(conn *ec2.EC2, id string) (*ec2.ManagedPrefixL
 	return nil, err
 }
 
+func WaitNetworkInsightsAnalysisCreated(ctx context.Context, conn *ec2.EC2, id string, timeout time.Duration) (*ec2.NetworkInsightsAnalysis, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{ec2.AnalysisStatusRunning},
+		Target:     []string{ec2.AnalysisStatusSucceeded},
+		Timeout:    timeout,
+		Refresh:    StatusNetworkInsightsAnalysis(ctx, conn, id),
+		Delay:      10 * time.Second,
+		MinTimeout: 5 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*ec2.NetworkInsightsAnalysis); ok {
+		tfresource.SetLastError(err, errors.New(aws.StringValue(output.StatusMessage)))
+
+		return output, err
+	}
+
+	return nil, err
+}
+
 const (
 	networkInterfaceAttachedTimeout = 5 * time.Minute
 	NetworkInterfaceDetachedTimeout = 10 * time.Minute
