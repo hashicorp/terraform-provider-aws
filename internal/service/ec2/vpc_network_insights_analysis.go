@@ -29,6 +29,22 @@ func ResourceNetworkInsightsAnalysis() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"alternate_path_hints": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"component_arn": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"component_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -118,7 +134,7 @@ func resourceNetworkInsightsAnalysisRead(ctx context.Context, d *schema.Resource
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	nia, err := FindNetworkInsightsAnalysisByID(ctx, conn, d.Id())
+	output, err := FindNetworkInsightsAnalysisByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EC2 Network Insights Analysis (%s) not found, removing from state", d.Id())
@@ -130,16 +146,19 @@ func resourceNetworkInsightsAnalysisRead(ctx context.Context, d *schema.Resource
 		return diag.Errorf("reading EC2 Network Insights Analysis (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", nia.NetworkInsightsAnalysisArn)
-	d.Set("filter_in_arns", aws.StringValueSlice(nia.FilterInArns))
-	d.Set("network_insights_path_id", nia.NetworkInsightsPathId)
-	d.Set("path_found", nia.NetworkPathFound)
-	d.Set("start_date", nia.StartDate.Format(time.RFC3339))
-	d.Set("status", nia.Status)
-	d.Set("status_message", nia.StatusMessage)
-	d.Set("warning_message", nia.WarningMessage)
+	if err := d.Set("alternate_path_hints", flattenAlternatePathHints(output.AlternatePathHints)); err != nil {
+		return diag.Errorf("setting alternate_path_hints: %s", err)
+	}
+	d.Set("arn", output.NetworkInsightsAnalysisArn)
+	d.Set("filter_in_arns", aws.StringValueSlice(output.FilterInArns))
+	d.Set("network_insights_path_id", output.NetworkInsightsPathId)
+	d.Set("path_found", output.NetworkPathFound)
+	d.Set("start_date", output.StartDate.Format(time.RFC3339))
+	d.Set("status", output.Status)
+	d.Set("status_message", output.StatusMessage)
+	d.Set("warning_message", output.WarningMessage)
 
-	tags := KeyValueTags(nia.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(output.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -184,4 +203,40 @@ func resourceNetworkInsightsAnalysisDelete(ctx context.Context, d *schema.Resour
 	}
 
 	return nil
+}
+
+func flattenAlternatePathHint(apiObject *ec2.AlternatePathHint) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.ComponentArn; v != nil {
+		tfMap["component_arn"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.ComponentId; v != nil {
+		tfMap["component_id"] = aws.StringValue(v)
+	}
+
+	return tfMap
+}
+
+func flattenAlternatePathHints(apiObjects []*ec2.AlternatePathHint) []interface{} {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+
+	for _, apiObject := range apiObjects {
+		if apiObject == nil {
+			continue
+		}
+
+		tfList = append(tfList, flattenAlternatePathHint(apiObject))
+	}
+
+	return tfList
 }

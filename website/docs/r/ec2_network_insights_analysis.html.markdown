@@ -40,6 +40,7 @@ The following arguments are optional:
 
 In addition to all arguments above, the following attributes are exported:
 
+* `alternate_path_hints` - Potential intermediate components of a feasible path. Described below.
 * `arn` - ARN of the Network Insights Analysis.
 * `id` - ID of the Network Insights Analysis.
 * `path_found` - Set to `true` if the destination was reachable.
@@ -48,6 +49,11 @@ In addition to all arguments above, the following attributes are exported:
 * `status_message` - A message to provide more context when the `status` is `failed`.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 * `warning_message` - The warning message.
+
+The `alternate_path_hints` object supports the following:
+
+* `component_arn` - The Amazon Resource Name (ARN) of the component.
+* `component_id` - The ID of the component.
 
 ## Import
 
