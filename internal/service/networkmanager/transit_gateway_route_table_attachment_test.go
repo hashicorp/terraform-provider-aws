@@ -193,12 +193,28 @@ func testAccCheckTransitGatewayRouteTableAttachmentDestroy(s *terraform.State) e
 
 func testAccTransitGatewayRouteTableAttachmentConfig_base(rName string) string {
 	return acctest.ConfigCompose(testAccTransitGatewayPeeringConfig_base(rName), fmt.Sprintf(`
+resource "aws_networkmanager_transit_gateway_peering" "test" {
+  core_network_id     = awscc_networkmanager_core_network.test.id
+  transit_gateway_arn = aws_ec2_transit_gateway.test.arn
+
+  tags = {
+    Name = %[1]q
+  }
+
+  depends_on = [aws_ec2_transit_gateway_policy_table.test]
+}
+
 resource "aws_ec2_transit_gateway_route_table" "test" {
   transit_gateway_id = aws_ec2_transit_gateway.test.id
 
   tags = {
     Name = %[1]q
   }
+}
+
+resource "aws_ec2_transit_gateway_policy_table_association" "test" {
+  transit_gateway_attachment_id   = aws_networkmanager_transit_gateway_peering.test.transit_gateway_peering_attachment_id
+  transit_gateway_policy_table_id = aws_ec2_transit_gateway_policy_table.test.id
 }
 `, rName))
 }
@@ -208,6 +224,8 @@ func testAccTransitGatewayRouteTableAttachmentConfig_basic(rName string) string 
 resource "aws_networkmanager_transit_gateway_route_table_attachment" "test" {
   peering_id                      = aws_networkmanager_transit_gateway_peering.test.id
   transit_gateway_route_table_arn = aws_ec2_transit_gateway_route_table.test.arn
+
+  depends_on = [aws_ec2_transit_gateway_policy_table_association.test]
 }
 `)
 }
