@@ -3,7 +3,7 @@ subcategory: "SSM (Systems Manager)"
 layout: "aws"
 page_title: "AWS: aws_ssm_parameter"
 description: |-
-  Provides a SSM Parameter datasource
+  Provides a SSM Parameter Data Source
 ---
 
 # Data Source: aws_ssm_parameter

@@ -49,11 +49,11 @@ func ResourceCertificateAuthorityCertificate() *schema.Resource {
 func resourceCertificateAuthorityCertificateCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ACMPCAConn
 
-	certificateAuthorityArn := d.Get("certificate_authority_arn").(string)
+	certificateAuthorityARN := d.Get("certificate_authority_arn").(string)
 
 	input := &acmpca.ImportCertificateAuthorityCertificateInput{
 		Certificate:             []byte(d.Get("certificate").(string)),
-		CertificateAuthorityArn: aws.String(certificateAuthorityArn),
+		CertificateAuthorityArn: aws.String(certificateAuthorityARN),
 	}
 	if v, ok := d.Get("certificate_chain").(string); ok && v != "" {
 		input.CertificateChain = []byte(v)
@@ -61,10 +61,10 @@ func resourceCertificateAuthorityCertificateCreate(d *schema.ResourceData, meta 
 
 	_, err := conn.ImportCertificateAuthorityCertificate(input)
 	if err != nil {
-		return fmt.Errorf("error associating ACM PCA Certificate with Certificate Authority (%s): %w", certificateAuthorityArn, err)
+		return fmt.Errorf("error associating ACM PCA Certificate with Certificate Authority (%s): %w", certificateAuthorityARN, err)
 	}
 
-	d.SetId(certificateAuthorityArn)
+	d.SetId(certificateAuthorityARN)
 
 	return resourceCertificateAuthorityCertificateRead(d, meta)
 }

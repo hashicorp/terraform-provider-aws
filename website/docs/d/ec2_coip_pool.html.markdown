@@ -59,3 +59,9 @@ In addition, the following attributes are exported:
 
 * `arn` - ARN of the COIP pool
 * `pool_cidrs` - Set of CIDR blocks in pool
+
+## Timeouts
+
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+
+- `read` - (Default `20m`)

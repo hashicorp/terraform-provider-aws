@@ -2,6 +2,7 @@ package ec2
 
 import (
 	"context"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -14,6 +15,11 @@ import (
 func DataSourceManagedPrefixList() *schema.Resource {
 	return &schema.Resource{
 		ReadContext: dataSourceManagedPrefixListRead,
+
+		Timeouts: &schema.ResourceTimeout{
+			Read: schema.DefaultTimeout(20 * time.Minute),
+		},
+
 		Schema: map[string]*schema.Schema{
 			"address_family": {
 				Type:     schema.TypeString,

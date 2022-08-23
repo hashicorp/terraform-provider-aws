@@ -17,20 +17,20 @@ import (
 )
 
 func TestAccEMRInstanceGroup_basic(t *testing.T) {
-	var ig emr.InstanceGroup
-	rInt := sdkacctest.RandInt()
+	var v emr.InstanceGroup
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_emr_instance_group.test"
 
-	resourceName := "aws_emr_instance_group.task"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, emr.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckInstanceGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, emr.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceGroupConfig_basic(rInt),
+				Config: testAccInstanceGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceGroupExists(resourceName, &ig),
+					testAccCheckInstanceGroupExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "autoscaling_policy", ""),
 					resource.TestCheckResourceAttr(resourceName, "bid_price", ""),
 					resource.TestCheckResourceAttr(resourceName, "ebs_optimized", "false"),
@@ -47,21 +47,72 @@ func TestAccEMRInstanceGroup_basic(t *testing.T) {
 	})
 }
 
-func TestAccEMRInstanceGroup_bidPrice(t *testing.T) {
-	var ig1, ig2 emr.InstanceGroup
-	rInt := sdkacctest.RandInt()
+func TestAccEMRInstanceGroup_disappears(t *testing.T) {
+	var v emr.InstanceGroup
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_emr_instance_group.test"
 
-	resourceName := "aws_emr_instance_group.task"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, emr.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckInstanceGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, emr.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceGroupConfig_basic(rInt),
+				Config: testAccInstanceGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceGroupExists(resourceName, &ig1),
+					testAccCheckInstanceGroupExists(resourceName, &v),
+					acctest.CheckResourceDisappears(acctest.Provider, tfemr.ResourceInstanceGroup(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfemr.ResourceInstanceGroup(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+// Regression test for https://github.com/hashicorp/terraform-provider-aws/issues/1355
+func TestAccEMRInstanceGroup_Disappears_emrCluster(t *testing.T) {
+	var cluster emr.Cluster
+	var ig emr.InstanceGroup
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_emr_instance_group.test"
+	emrClusterResourceName := "aws_emr_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, emr.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceGroupConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(emrClusterResourceName, &cluster),
+					testAccCheckInstanceGroupExists(resourceName, &ig),
+					acctest.CheckResourceDisappears(acctest.Provider, tfemr.ResourceCluster(), emrClusterResourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccEMRInstanceGroup_bidPrice(t *testing.T) {
+	var v1, v2 emr.InstanceGroup
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_emr_instance_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, emr.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceGroupConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceGroupExists(resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "bid_price", ""),
 				),
 			},
@@ -73,11 +124,11 @@ func TestAccEMRInstanceGroup_bidPrice(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"status"},
 			},
 			{
-				Config: testAccInstanceGroupConfig_bidPrice(rInt),
+				Config: testAccInstanceGroupConfig_bidPrice(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceGroupExists(resourceName, &ig2),
+					testAccCheckInstanceGroupExists(resourceName, &v2),
 					resource.TestCheckResourceAttr(resourceName, "bid_price", "0.30"),
-					testAccInstanceGroupRecreated(t, &ig1, &ig2),
+					testAccInstanceGroupRecreated(t, &v1, &v2),
 				),
 			},
 			{
@@ -88,11 +139,11 @@ func TestAccEMRInstanceGroup_bidPrice(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"status"},
 			},
 			{
-				Config: testAccInstanceGroupConfig_basic(rInt),
+				Config: testAccInstanceGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceGroupExists(resourceName, &ig1),
+					testAccCheckInstanceGroupExists(resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "bid_price", ""),
-					testAccInstanceGroupRecreated(t, &ig1, &ig2),
+					testAccInstanceGroupRecreated(t, &v2, &v1),
 				),
 			},
 		},
@@ -100,20 +151,20 @@ func TestAccEMRInstanceGroup_bidPrice(t *testing.T) {
 }
 
 func TestAccEMRInstanceGroup_sJSON(t *testing.T) {
-	var ig emr.InstanceGroup
-	rInt := sdkacctest.RandInt()
+	var v emr.InstanceGroup
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_emr_instance_group.test"
 
-	resourceName := "aws_emr_instance_group.task"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, emr.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckInstanceGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, emr.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceGroupConfig_configurationsJSON(rInt, "partitionName1"),
+				Config: testAccInstanceGroupConfig_configurationsJSON(rName, "partitionName1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceGroupExists(resourceName, &ig),
+					testAccCheckInstanceGroupExists(resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "configurations_json"),
 				),
 			},
@@ -125,9 +176,9 @@ func TestAccEMRInstanceGroup_sJSON(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"status"},
 			},
 			{
-				Config: testAccInstanceGroupConfig_configurationsJSON(rInt, "partitionName2"),
+				Config: testAccInstanceGroupConfig_configurationsJSON(rName, "partitionName2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceGroupExists(resourceName, &ig),
+					testAccCheckInstanceGroupExists(resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "configurations_json"),
 				),
 			},
@@ -143,20 +194,20 @@ func TestAccEMRInstanceGroup_sJSON(t *testing.T) {
 }
 
 func TestAccEMRInstanceGroup_autoScalingPolicy(t *testing.T) {
-	var ig emr.InstanceGroup
-	rInt := sdkacctest.RandInt()
+	var v emr.InstanceGroup
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_emr_instance_group.test"
 
-	resourceName := "aws_emr_instance_group.task"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, emr.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckInstanceGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, emr.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceGroupConfig_autoScalingPolicy(rInt, 1, 3),
+				Config: testAccInstanceGroupConfig_autoScalingPolicy(rName, 1, 3),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceGroupExists(resourceName, &ig),
+					testAccCheckInstanceGroupExists(resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "autoscaling_policy"),
 				),
 			},
@@ -168,9 +219,9 @@ func TestAccEMRInstanceGroup_autoScalingPolicy(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"status"},
 			},
 			{
-				Config: testAccInstanceGroupConfig_autoScalingPolicy(rInt, 2, 3),
+				Config: testAccInstanceGroupConfig_autoScalingPolicy(rName, 2, 3),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceGroupExists(resourceName, &ig),
+					testAccCheckInstanceGroupExists(resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "autoscaling_policy"),
 				),
 			},
@@ -188,19 +239,19 @@ func TestAccEMRInstanceGroup_autoScalingPolicy(t *testing.T) {
 // Confirm we can scale down the instance count.
 // Regression test for https://github.com/hashicorp/terraform-provider-aws/issues/1264
 func TestAccEMRInstanceGroup_instanceCount(t *testing.T) {
-	var ig emr.InstanceGroup
-	rInt := sdkacctest.RandInt()
+	var v emr.InstanceGroup
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_emr_instance_group.test"
 
-	resourceName := "aws_emr_instance_group.task"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, emr.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckInstanceGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, emr.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceGroupConfig_basic(rInt),
-				Check:  testAccCheckInstanceGroupExists(resourceName, &ig),
+				Config: testAccInstanceGroupConfig_basic(rName),
+				Check:  testAccCheckInstanceGroupExists(resourceName, &v),
 			},
 			{
 				ResourceName:            resourceName,
@@ -210,55 +261,28 @@ func TestAccEMRInstanceGroup_instanceCount(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"status"},
 			},
 			{
-				Config: testAccInstanceGroupConfig_zeroCount(rInt),
-				Check:  testAccCheckInstanceGroupExists(resourceName, &ig),
-			},
-		},
-	})
-}
-
-// Regression test for https://github.com/hashicorp/terraform-provider-aws/issues/1355
-func TestAccEMRInstanceGroup_Disappears_emrCluster(t *testing.T) {
-	var cluster emr.Cluster
-	var ig emr.InstanceGroup
-	rInt := sdkacctest.RandInt()
-	emrClusterResourceName := "aws_emr_cluster.tf-test-cluster"
-	resourceName := "aws_emr_instance_group.task"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, emr.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckInstanceGroupDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccInstanceGroupConfig_basic(rInt),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(emrClusterResourceName, &cluster),
-					testAccCheckInstanceGroupExists(resourceName, &ig),
-					acctest.CheckResourceDisappears(acctest.Provider, tfemr.ResourceCluster(), emrClusterResourceName),
-				),
-				ExpectNonEmptyPlan: true,
+				Config: testAccInstanceGroupConfig_zeroCount(rName),
+				Check:  testAccCheckInstanceGroupExists(resourceName, &v),
 			},
 		},
 	})
 }
 
 func TestAccEMRInstanceGroup_EBS_ebsOptimized(t *testing.T) {
-	var ig emr.InstanceGroup
-	rInt := sdkacctest.RandInt()
+	var v emr.InstanceGroup
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_emr_instance_group.test"
 
-	resourceName := "aws_emr_instance_group.task"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, emr.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckInstanceGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, emr.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceGroupConfig_ebs(rInt, true),
+				Config: testAccInstanceGroupConfig_ebs(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceGroupExists(resourceName, &ig),
+					testAccCheckInstanceGroupExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "ebs_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "ebs_optimized", "true"),
 				),
@@ -271,9 +295,9 @@ func TestAccEMRInstanceGroup_EBS_ebsOptimized(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"status"},
 			},
 			{
-				Config: testAccInstanceGroupConfig_ebs(rInt, false),
+				Config: testAccInstanceGroupConfig_ebs(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceGroupExists(resourceName, &ig),
+					testAccCheckInstanceGroupExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "ebs_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "ebs_optimized", "false"),
 				),
@@ -360,90 +384,29 @@ func testAccInstanceGroupRecreated(t *testing.T, before, after *emr.InstanceGrou
 	}
 }
 
-const testAccInstanceGroupBase = `
-data "aws_availability_zones" "available" {
-  # Many instance types are not available in this availability zone
-  exclude_zone_ids = ["usw2-az4"]
-  state            = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+func testAccInstanceGroupConfig_base(rName string) string {
+	return acctest.ConfigCompose(
+		testAccClusterConfig_baseVPC(rName, false),
+		testAccClusterConfig_baseIAMServiceRole(rName),
+		testAccClusterConfig_baseIAMInstanceProfile(rName),
+		testAccClusterConfig_baseIAMAutoScalingRole(rName),
+		fmt.Sprintf(`
 data "aws_partition" "current" {}
 
-resource "aws_security_group" "allow_all" {
-  name        = "allow_all"
-  description = "Allow all inbound traffic"
-  vpc_id      = aws_vpc.main.id
-
-  ingress {
-    from_port = 0
-    to_port   = 0
-    protocol  = "-1"
-    self      = true
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  depends_on = [aws_subnet.main]
-
-  lifecycle {
-    ignore_changes = ["ingress", "egress"]
-  }
-}
-
-resource "aws_vpc" "main" {
-  cidr_block           = "168.31.0.0/16"
-  enable_dns_hostnames = true
-}
-
-resource "aws_subnet" "main" {
-  availability_zone = data.aws_availability_zones.available.names[0]
-  cidr_block        = "168.31.0.0/20"
-  vpc_id            = aws_vpc.main.id
-}
-
-resource "aws_internet_gateway" "gw" {
-  vpc_id = aws_vpc.main.id
-}
-
-resource "aws_route_table" "r" {
-  vpc_id = aws_vpc.main.id
-
-  route {
-    cidr_block = "0.0.0.0/0"
-    gateway_id = aws_internet_gateway.gw.id
-  }
-}
-
-resource "aws_main_route_table_association" "a" {
-  vpc_id         = aws_vpc.main.id
-  route_table_id = aws_route_table.r.id
-}
-
-## EMR Cluster Configuration
-resource "aws_emr_cluster" "tf-test-cluster" {
+resource "aws_emr_cluster" "test" {
   applications                      = ["Spark"]
-  autoscaling_role                  = aws_iam_role.emr-autoscaling-role.arn
+  autoscaling_role                  = aws_iam_role.emr_autoscaling_role.arn
   configurations                    = "test-fixtures/emr_configurations.json"
   keep_job_flow_alive_when_no_steps = true
-  name                              = "tf-test-emr-%[1]d"
+  name                              = %[1]q
   release_label                     = "emr-5.26.0"
-  service_role                      = aws_iam_role.iam_emr_default_role.arn
+  service_role                      = aws_iam_role.emr_service.arn
 
   ec2_attributes {
-    subnet_id                         = aws_subnet.main.id
-    emr_managed_master_security_group = aws_security_group.allow_all.id
-    emr_managed_slave_security_group  = aws_security_group.allow_all.id
-    instance_profile                  = aws_iam_instance_profile.emr_profile.arn
+    subnet_id                         = aws_subnet.test.id
+    emr_managed_master_security_group = aws_security_group.test.id
+    emr_managed_slave_security_group  = aws_security_group.test.id
+    instance_profile                  = aws_iam_instance_profile.emr_instance_profile.arn
   }
 
   master_instance_group {
@@ -451,228 +414,45 @@ resource "aws_emr_cluster" "tf-test-cluster" {
   }
 
   core_instance_group {
+    instance_count = 1
     instance_type  = "c4.large"
-    instance_count = 2
   }
 
-  depends_on = [aws_internet_gateway.gw]
-}
-
-
-###
-
-# IAM role for EMR Service
-resource "aws_iam_role" "iam_emr_default_role" {
-  name = "iam_emr_default_role_%[1]d"
-
-  assume_role_policy = <<EOT
-{
-  "Version": "2008-10-17",
-  "Statement": [
-    {
-      "Sid": "",
-      "Effect": "Allow",
-      "Principal": {
-        "Service": "elasticmapreduce.${data.aws_partition.current.dns_suffix}"
-      },
-      "Action": "sts:AssumeRole"
-    }
+  depends_on = [
+    aws_route_table_association.test,
+    aws_iam_role_policy_attachment.emr_service,
+    aws_iam_role_policy_attachment.emr_instance_profile,
+    aws_iam_role_policy_attachment.emr_autoscaling_role,
   ]
 }
-EOT
+`, rName))
 }
 
-resource "aws_iam_role_policy_attachment" "service-attach" {
-  role       = aws_iam_role.iam_emr_default_role.id
-  policy_arn = aws_iam_policy.iam_emr_default_policy.arn
-}
-
-resource "aws_iam_policy" "iam_emr_default_policy" {
-  name = "iam_emr_default_policy_%[1]d"
-
-  policy = <<EOT
-{
-    "Version": "2012-10-17",
-    "Statement": [{
-        "Effect": "Allow",
-        "Resource": "*",
-        "Action": [
-            "ec2:AuthorizeSecurityGroupEgress",
-            "ec2:AuthorizeSecurityGroupIngress",
-            "ec2:CancelSpotInstanceRequests",
-            "ec2:CreateNetworkInterface",
-            "ec2:CreateSecurityGroup",
-            "ec2:CreateTags",
-            "ec2:DeleteNetworkInterface",
-            "ec2:DeleteSecurityGroup",
-            "ec2:DeleteTags",
-            "ec2:DescribeAvailabilityZones",
-            "ec2:DescribeAccountAttributes",
-            "ec2:DescribeDhcpOptions",
-            "ec2:DescribeInstanceStatus",
-            "ec2:DescribeInstances",
-            "ec2:DescribeKeyPairs",
-            "ec2:DescribeNetworkAcls",
-            "ec2:DescribeNetworkInterfaces",
-            "ec2:DescribePrefixLists",
-            "ec2:DescribeRouteTables",
-            "ec2:DescribeSecurityGroups",
-            "ec2:DescribeSpotInstanceRequests",
-            "ec2:DescribeSpotPriceHistory",
-            "ec2:DescribeSubnets",
-            "ec2:DescribeVpcAttribute",
-            "ec2:DescribeVpcEndpoints",
-            "ec2:DescribeVpcEndpointServices",
-            "ec2:DescribeVpcs",
-            "ec2:DetachNetworkInterface",
-            "ec2:ModifyImageAttribute",
-            "ec2:ModifyInstanceAttribute",
-            "ec2:RequestSpotInstances",
-            "ec2:RevokeSecurityGroupEgress",
-            "ec2:RunInstances",
-            "ec2:TerminateInstances",
-            "ec2:DeleteVolume",
-            "ec2:DescribeVolumeStatus",
-            "ec2:DescribeVolumes",
-            "ec2:DetachVolume",
-            "iam:GetRole",
-            "iam:GetRolePolicy",
-            "iam:ListInstanceProfiles",
-            "iam:ListRolePolicies",
-            "iam:PassRole",
-            "s3:CreateBucket",
-            "s3:Get*",
-            "s3:List*",
-            "sdb:BatchPutAttributes",
-            "sdb:Select",
-            "sqs:CreateQueue",
-            "sqs:Delete*",
-            "sqs:GetQueue*",
-            "sqs:PurgeQueue",
-            "sqs:ReceiveMessage"
-        ]
-    }]
-}
-EOT
-}
-
-# IAM Role for EC2 Instance Profile
-resource "aws_iam_role" "iam_emr_profile_role" {
-  name = "iam_emr_profile_role_%[1]d"
-
-  assume_role_policy = <<EOT
-{
-  "Version": "2008-10-17",
-  "Statement": [
-    {
-      "Sid": "",
-      "Effect": "Allow",
-      "Principal": {
-        "Service": "ec2.${data.aws_partition.current.dns_suffix}"
-      },
-      "Action": "sts:AssumeRole"
-    }
-  ]
-}
-EOT
-}
-
-resource "aws_iam_instance_profile" "emr_profile" {
-  name = "emr_profile_%[1]d"
-  role = aws_iam_role.iam_emr_profile_role.name
-}
-
-resource "aws_iam_role_policy_attachment" "profile-attach" {
-  role       = aws_iam_role.iam_emr_profile_role.id
-  policy_arn = aws_iam_policy.iam_emr_profile_policy.arn
-}
-
-resource "aws_iam_policy" "iam_emr_profile_policy" {
-  name = "iam_emr_profile_policy_%[1]d"
-
-  policy = <<EOT
-{
-    "Version": "2012-10-17",
-    "Statement": [{
-        "Effect": "Allow",
-        "Resource": "*",
-        "Action": [
-            "cloudwatch:*",
-            "dynamodb:*",
-            "ec2:Describe*",
-            "elasticmapreduce:Describe*",
-            "elasticmapreduce:ListBootstrapActions",
-            "elasticmapreduce:ListClusters",
-            "elasticmapreduce:ListInstanceGroups",
-            "elasticmapreduce:ListInstances",
-            "elasticmapreduce:ListSteps",
-            "kinesis:CreateStream",
-            "kinesis:DeleteStream",
-            "kinesis:DescribeStream",
-            "kinesis:GetRecords",
-            "kinesis:GetShardIterator",
-            "kinesis:MergeShards",
-            "kinesis:PutRecord",
-            "kinesis:SplitShard",
-            "rds:Describe*",
-            "s3:*",
-            "sdb:*",
-            "sns:*",
-            "sqs:*"
-        ]
-    }]
-}
-EOT
-}
-
-# IAM Role for autoscaling
-resource "aws_iam_role" "emr-autoscaling-role" {
-  name               = "EMR_AutoScaling_DefaultRole_%[1]d"
-  assume_role_policy = data.aws_iam_policy_document.emr-autoscaling-role-policy.json
-}
-
-data "aws_iam_policy_document" "emr-autoscaling-role-policy" {
-  statement {
-    effect  = "Allow"
-    actions = ["sts:AssumeRole"]
-    principals {
-      type        = "Service"
-      identifiers = ["elasticmapreduce.${data.aws_partition.current.dns_suffix}", "application-autoscaling.${data.aws_partition.current.dns_suffix}"]
-    }
-  }
-}
-
-resource "aws_iam_role_policy_attachment" "emr-autoscaling-role" {
-  role       = aws_iam_role.emr-autoscaling-role.name
-  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AmazonElasticMapReduceforAutoScalingRole"
-}
-`
-
-func testAccInstanceGroupConfig_basic(r int) string {
-	return fmt.Sprintf(testAccInstanceGroupBase+`
-resource "aws_emr_instance_group" "task" {
-  cluster_id     = aws_emr_cluster.tf-test-cluster.id
+func testAccInstanceGroupConfig_basic(rName string) string {
+	return acctest.ConfigCompose(testAccInstanceGroupConfig_base(rName), `
+resource "aws_emr_instance_group" "test" {
+  cluster_id     = aws_emr_cluster.test.id
   instance_count = 1
   instance_type  = "c4.large"
 }
-`, r)
+`)
 }
 
-func testAccInstanceGroupConfig_bidPrice(r int) string {
-	return fmt.Sprintf(testAccInstanceGroupBase+`
-resource "aws_emr_instance_group" "task" {
-  cluster_id     = aws_emr_cluster.tf-test-cluster.id
+func testAccInstanceGroupConfig_bidPrice(rName string) string {
+	return acctest.ConfigCompose(testAccInstanceGroupConfig_base(rName), `
+resource "aws_emr_instance_group" "test" {
+  cluster_id     = aws_emr_cluster.test.id
   bid_price      = "0.30"
   instance_count = 1
   instance_type  = "c4.large"
 }
-`, r)
+`)
 }
 
-func testAccInstanceGroupConfig_configurationsJSON(r int, name string) string {
-	return fmt.Sprintf(testAccInstanceGroupBase+`
-resource "aws_emr_instance_group" "task" {
-  cluster_id          = aws_emr_cluster.tf-test-cluster.id
+func testAccInstanceGroupConfig_configurationsJSON(rName, name string) string {
+	return acctest.ConfigCompose(testAccInstanceGroupConfig_base(rName), fmt.Sprintf(`
+resource "aws_emr_instance_group" "test" {
+  cluster_id          = aws_emr_cluster.test.id
   instance_count      = 1
   instance_type       = "c4.large"
   configurations_json = <<EOF
@@ -681,26 +461,25 @@ resource "aws_emr_instance_group" "task" {
         "Classification": "yarn-site",
         "Properties": {
           "yarn.nodemanager.node-labels.provider": "config",
-          "yarn.nodemanager.node-labels.provider.configured-node-partition": "%s"
+          "yarn.nodemanager.node-labels.provider.configured-node-partition": %[1]q
         }
       }
     ]
 EOF
 }
-`, r, name)
+`, name))
 }
 
-func testAccInstanceGroupConfig_autoScalingPolicy(r, min, max int) string {
-	return fmt.Sprintf(testAccInstanceGroupBase+`
-resource "aws_emr_instance_group" "task" {
-  cluster_id         = aws_emr_cluster.tf-test-cluster.id
-  instance_count     = 1
+func testAccInstanceGroupConfig_autoScalingPolicy(rName string, min, max int) string {
+	return acctest.ConfigCompose(testAccInstanceGroupConfig_base(rName), fmt.Sprintf(`
+resource "aws_emr_instance_group" "test" {
+  cluster_id         = aws_emr_cluster.test.id
   instance_type      = "c4.large"
   autoscaling_policy = <<EOT
 {
   "Constraints": {
-    "MinCapacity": %d,
-    "MaxCapacity": %d
+    "MinCapacity": %[1]d,
+    "MaxCapacity": %[2]d
   },
   "Rules": [
     {
@@ -730,31 +509,31 @@ resource "aws_emr_instance_group" "task" {
 }
 EOT
 }
-`, r, min, max)
+`, min, max))
 }
 
-func testAccInstanceGroupConfig_ebs(r int, o bool) string {
-	return fmt.Sprintf(testAccInstanceGroupBase+`
-resource "aws_emr_instance_group" "task" {
-  cluster_id     = aws_emr_cluster.tf-test-cluster.id
+func testAccInstanceGroupConfig_ebs(rName string, o bool) string {
+	return acctest.ConfigCompose(testAccInstanceGroupConfig_base(rName), fmt.Sprintf(`
+resource "aws_emr_instance_group" "test" {
+  cluster_id     = aws_emr_cluster.test.id
   instance_count = 1
   instance_type  = "c4.large"
-  ebs_optimized  = %t
+  ebs_optimized  = %[1]t
 
   ebs_config {
     size = 10
     type = "gp2"
   }
 }
-`, r, o)
+`, o))
 }
 
-func testAccInstanceGroupConfig_zeroCount(r int) string {
-	return fmt.Sprintf(testAccInstanceGroupBase+`
-resource "aws_emr_instance_group" "task" {
-  cluster_id     = aws_emr_cluster.tf-test-cluster.id
+func testAccInstanceGroupConfig_zeroCount(rName string) string {
+	return acctest.ConfigCompose(testAccInstanceGroupConfig_base(rName), `
+resource "aws_emr_instance_group" "test" {
+  cluster_id     = aws_emr_cluster.test.id
   instance_count = 0
   instance_type  = "c4.large"
 }
-`, r)
+`)
 }

@@ -16,10 +16,10 @@ func TestAccLocationTrackerDataSource_indexName(t *testing.T) {
 	resourceName := "aws_location_tracker.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, locationservice.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTrackerDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, locationservice.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTrackerDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTrackerDataSourceConfig_indexName(rName),

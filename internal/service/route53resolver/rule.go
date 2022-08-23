@@ -270,14 +270,9 @@ func resourceRuleDelete(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error deleting Route 53 Resolver rule (%s): %s", d.Id(), err)
 	}
 
-	err = RuleWaitUntilTargetState(conn, d.Id(), d.Timeout(schema.TimeoutDelete),
+	return RuleWaitUntilTargetState(conn, d.Id(), d.Timeout(schema.TimeoutDelete),
 		[]string{route53resolver.ResolverRuleStatusDeleting},
 		[]string{RuleStatusDeleted})
-	if err != nil {
-		return err
-	}
-
-	return nil
 }
 
 func resourceRuleCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {

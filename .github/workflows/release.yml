@@ -33,7 +33,7 @@ jobs:
   terraform-provider-release:
     name: 'Terraform Provider Release'
     needs: [go-version, release-notes]
-    uses: hashicorp/ghaction-terraform-provider-release/.github/workflows/hashicorp.yml@v2
+    uses: hashicorp/ghaction-terraform-provider-release/.github/workflows/hashicorp.yml@v2.0.0
     secrets:
       hc-releases-key-prod: '${{ secrets.HC_RELEASES_KEY_PROD }}'
       hc-releases-key-staging: '${{ secrets.HC_RELEASES_KEY_STAGING }}'
@@ -51,7 +51,7 @@ jobs:
       # Product Version (e.g. v1.2.3 or github.ref_name)
       product-version: '${{ github.ref_name }}'
   highest-version-tag:
-    needs: [ terraform-provider-release ]
+    needs: [terraform-provider-release]
     runs-on: macos-latest
     outputs:
       tag: ${{ steps.highest-version-tag.outputs.tag }}
@@ -66,47 +66,47 @@ jobs:
           HIGHEST=$(git tag | sort -V | tail -1)
           echo ::set-output name=tag::$HIGHEST
   changelog-newversion:
-      needs: [terraform-provider-release, highest-version-tag]
-      # write new changelog header only if release tag is the $HIGHEST i.e. exists on main
-      # and not a backport release branch (e.g. release/3.x). This results in
-      # manually updating the CHANGELOG header if releasing from the non-default branch.
-      # TODO: find a more deterministic way to determine release branch from tag commit
-      if: github.ref_name == needs.highest-version-tag.outputs.tag
-      runs-on: macos-latest
-      steps:
-        - uses: actions/checkout@v3
-          with:
-            fetch-depth: 0
-            ref: main
-        - name: Update Changelog Header
-          run: |
-            CHANGELOG_FILE_NAME="CHANGELOG.md"
-            PREVIOUS_RELEASE_TAG=${{ github.ref_name }}
-           
-            # Add Release Date
-            RELEASE_DATE=`date +%B' '%e', '%Y`
-            sed -i -e "1 s/Unreleased/$RELEASE_DATE/" $CHANGELOG_FILE_NAME           
-            
-            # Prepend next release line
-            echo Previous release is: $PREVIOUS_RELEASE_TAG
-            
-            NEW_RELEASE_LINE=$(echo $PREVIOUS_RELEASE_TAG | awk -F. '{
-                $1 = substr($1,2)
-                $2 += 1
-                printf("%s.%01d.0\n\n", $1, $2);
-            }')
-            
-            echo New minor version is: v$NEW_RELEASE_LINE
-            
-            echo -e "## $NEW_RELEASE_LINE (Unreleased)\n$(cat $CHANGELOG_FILE_NAME)" > $CHANGELOG_FILE_NAME
-        - run: |
-              git config --local user.email changelogbot@hashicorp.com
-              git config --local user.name changelogbot
-              git add CHANGELOG.md
-              git commit -m "Update CHANGELOG.md after ${{ github.ref_name }}" 
-              git push
+    needs: [terraform-provider-release, highest-version-tag]
+    # write new changelog header only if release tag is the $HIGHEST i.e. exists on main
+    # and not a backport release branch (e.g. release/3.x). This results in
+    # manually updating the CHANGELOG header if releasing from the non-default branch.
+    # TODO: find a more deterministic way to determine release branch from tag commit
+    if: github.ref_name == needs.highest-version-tag.outputs.tag
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          ref: main
+      - name: Update Changelog Header
+        run: |
+          CHANGELOG_FILE_NAME="CHANGELOG.md"
+          PREVIOUS_RELEASE_TAG=${{ github.ref_name }}
+
+          # Add Release Date
+          RELEASE_DATE=`date +%B' '%e', '%Y`
+          sed -i -e "1 s/Unreleased/$RELEASE_DATE/" $CHANGELOG_FILE_NAME
+
+          # Prepend next release line
+          echo Previous release is: $PREVIOUS_RELEASE_TAG
+
+          NEW_RELEASE_LINE=$(echo $PREVIOUS_RELEASE_TAG | awk -F. '{
+              $1 = substr($1,2)
+              $2 += 1
+              printf("%s.%01d.0\n\n", $1, $2);
+          }')
+
+          echo New minor version is: v$NEW_RELEASE_LINE
+
+          echo -e "## $NEW_RELEASE_LINE (Unreleased)\n$(cat $CHANGELOG_FILE_NAME)" > $CHANGELOG_FILE_NAME
+      - run: |
+            git config --local user.email changelogbot@hashicorp.com
+            git config --local user.name changelogbot
+            git add CHANGELOG.md
+            git commit -m "Update CHANGELOG.md after ${{ github.ref_name }}"
+            git push
   upload-tag-before-post-publish:
-    needs: [ terraform-provider-release ]
+    needs: [terraform-provider-release]
     runs-on: ubuntu-latest
     steps:
       - name: Save Release Tag

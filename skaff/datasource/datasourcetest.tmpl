@@ -163,7 +163,7 @@ func TestAcc{{ .Service }}{{ .DataSource }}DataSource_basic(t *testing.T) {
 
 	var {{ .DataSourceLower }} {{ .ServicePackage }}.Describe{{ .DataSource }}Response
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	dataSourceName := "data.aws_{{ .ServicePackage }}_{{ .DataSourceLower }}.test"
+	dataSourceName := "data.aws_{{ .ServicePackage }}_{{ .DataSourceSnake }}.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -171,9 +171,9 @@ func TestAcc{{ .Service }}{{ .DataSource }}DataSource_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService({{ .ServicePackage }}.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, {{ .ServicePackage }}.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheck{{ .DataSource }}Destroy,
+		ErrorCheck:               acctest.ErrorCheck(t, {{ .ServicePackage }}.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheck{{ .DataSource }}Destroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAcc{{ .DataSource }}DataSourceConfig_basic(rName),
@@ -200,8 +200,8 @@ data "aws_security_group" "test" {
   name = %[1]q
 }
 
-data "aws_{{ .ServicePackage }}_{{ .DataSourceLower }}" "test" {
-  {{ .DataSourceLower }}_name             = %[1]q
+data "aws_{{ .ServicePackage }}_{{ .DataSourceSnake }}" "test" {
+  {{ .DataSourceSnake }}_name             = %[1]q
   engine_type             = "Active{{ .Service }}"
   engine_version          = %[2]q
   host_instance_type      = "{{ .ServicePackage }}.t2.micro"

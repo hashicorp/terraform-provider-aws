@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -355,23 +356,23 @@ func resourceMetricAlarmRead(d *schema.ResourceData, meta interface{}) error {
 
 	resp, err := FindMetricAlarmByName(conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		names.LogNotFoundRemoveState(names.CloudWatch, names.ErrActionReading, ResMetricAlarm, d.Id())
+		create.LogNotFoundRemoveState(names.CloudWatch, create.ErrActionReading, ResNameMetricAlarm, d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return names.Error(names.CloudWatch, names.ErrActionReading, ResMetricAlarm, d.Id(), err)
+		return create.Error(names.CloudWatch, create.ErrActionReading, ResNameMetricAlarm, d.Id(), err)
 	}
 
 	if !d.IsNewResource() && resp == nil {
-		names.LogNotFoundRemoveState(names.CloudWatch, names.ErrActionReading, ResMetricAlarm, d.Id())
+		create.LogNotFoundRemoveState(names.CloudWatch, create.ErrActionReading, ResNameMetricAlarm, d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if resp == nil {
-		return names.Error(names.CloudWatch, names.ErrActionReading, ResMetricAlarm, d.Id(), errors.New("not found after create"))
+		return create.Error(names.CloudWatch, create.ErrActionReading, ResNameMetricAlarm, d.Id(), errors.New("not found after create"))
 	}
 
 	log.Printf("[DEBUG] Reading CloudWatch Metric Alarm: %s", d.Id())

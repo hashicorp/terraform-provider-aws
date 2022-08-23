@@ -218,7 +218,7 @@ func resourceDefaultSubnetCreate(d *schema.ResourceData, meta interface{}) error
 			computedIPv6CIDRBlock = true
 		}
 	} else {
-		return fmt.Errorf("error reading EC2 Default Subnet (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading EC2 Default Subnet (%s): %w", availabilityZone, err)
 	}
 
 	if err := modifySubnetAttributesOnCreate(conn, d, subnet, computedIPv6CIDRBlock); err != nil {

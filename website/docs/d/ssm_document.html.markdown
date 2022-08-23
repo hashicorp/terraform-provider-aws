@@ -3,7 +3,7 @@ subcategory: "SSM (Systems Manager)"
 layout: "aws"
 page_title: "AWS: aws_ssm_document"
 description: |-
-  Provides a SSM Document datasource
+  Provides a SSM Document data source
 ---
 
 # Data Source: aws_ssm_document

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/directoryservice"
@@ -12,12 +13,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
-	ResourceNameSharedDirectory = "Shared Directory"
+	ResNameSharedDirectory = "Shared Directory"
 )
 
 func ResourceSharedDirectory() *schema.Resource {
@@ -25,8 +27,13 @@ func ResourceSharedDirectory() *schema.Resource {
 		CreateContext: resourceSharedDirectoryCreate,
 		ReadContext:   resourceSharedDirectoryRead,
 		DeleteContext: resourceSharedDirectoryDelete,
+
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
+		},
+
+		Timeouts: &schema.ResourceTimeout{
+			Delete: schema.DefaultTimeout(60 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -95,7 +102,7 @@ func resourceSharedDirectoryCreate(ctx context.Context, d *schema.ResourceData, 
 	out, err := conn.ShareDirectoryWithContext(ctx, &input)
 
 	if err != nil {
-		return names.DiagError(names.DS, names.ErrActionCreating, ResourceNameSharedDirectory, d.Id(), err)
+		return create.DiagError(names.DS, create.ErrActionCreating, ResNameSharedDirectory, d.Id(), err)
 	}
 
 	log.Printf("[DEBUG] Shared Directory created: %s", out)
@@ -111,29 +118,31 @@ func resourceSharedDirectoryRead(ctx context.Context, d *schema.ResourceData, me
 	ownerDirID, sharedDirID, err := parseSharedDirectoryID(d.Id())
 
 	if err != nil {
-		return names.DiagError(names.DS, names.ErrActionReading, ResourceNameSharedDirectory, d.Id(), err)
+		return create.DiagError(names.DS, create.ErrActionReading, ResNameSharedDirectory, d.Id(), err)
 	}
 
-	output, err := findSharedDirectoryByIDs(ctx, conn, ownerDirID, sharedDirID)
+	output, err := FindSharedDirectory(ctx, conn, ownerDirID, sharedDirID)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		names.LogNotFoundRemoveState(names.DS, names.ErrActionReading, ResourceNameSharedDirectory, d.Id())
+		create.LogNotFoundRemoveState(names.DS, create.ErrActionReading, ResNameSharedDirectory, d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return names.DiagError(names.DS, names.ErrActionReading, ResourceNameSharedDirectory, d.Id(), err)
+		return create.DiagError(names.DS, create.ErrActionReading, ResNameSharedDirectory, d.Id(), err)
 	}
 
 	log.Printf("[DEBUG] Received DS shared directory: %s", output)
 
+	d.Set("directory_id", output.OwnerDirectoryId)
 	d.Set("method", output.ShareMethod)
 	d.Set("notes", output.ShareNotes)
+	d.Set("shared_directory_id", output.SharedDirectoryId)
 
 	if output.SharedAccountId != nil {
 		if err := d.Set("target", []interface{}{flattenShareTarget(output)}); err != nil {
-			return names.DiagError(names.DS, names.ErrActionSetting, ResourceNameSharedDirectory, d.Id(), err)
+			return create.DiagError(names.DS, create.ErrActionSetting, ResNameSharedDirectory, d.Id(), err)
 		}
 	} else {
 		d.Set("target", nil)
@@ -157,13 +166,13 @@ func resourceSharedDirectoryDelete(ctx context.Context, d *schema.ResourceData, 
 	output, err := conn.UnshareDirectoryWithContext(ctx, &input)
 
 	if err != nil {
-		return names.DiagError(names.DS, names.ErrActionDeleting, ResourceNameSharedDirectory, d.Id(), err)
+		return create.DiagError(names.DS, create.ErrActionDeleting, ResNameSharedDirectory, d.Id(), err)
 	}
 
-	_, err = waitSharedDirectoryDeleted(ctx, conn, dirId, sharedId)
+	_, err = waitSharedDirectoryDeleted(ctx, conn, dirId, sharedId, d.Timeout(schema.TimeoutDelete))
 
 	if err != nil {
-		return names.DiagError(names.DS, names.ErrActionWaitingForDeletion, ResourceNameSharedDirectory, d.Id(), err)
+		return create.DiagError(names.DS, create.ErrActionWaitingForDeletion, ResNameSharedDirectory, d.Id(), err)
 	}
 
 	log.Printf("[DEBUG] Unshared Directory Service Directory: %s", output)
@@ -171,7 +180,7 @@ func resourceSharedDirectoryDelete(ctx context.Context, d *schema.ResourceData, 
 	return nil
 }
 
-func expandShareTarget(tfMap map[string]interface{}) *directoryservice.ShareTarget { // nosemgrep:ds-in-func-name
+func expandShareTarget(tfMap map[string]interface{}) *directoryservice.ShareTarget { // nosemgrep:ci.ds-in-func-name
 	if tfMap == nil {
 		return nil
 	}

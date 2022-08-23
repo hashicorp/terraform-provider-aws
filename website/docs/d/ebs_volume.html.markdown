@@ -59,4 +59,10 @@ In addition to all arguments above, the following attributes are exported:
 * `tags` - A map of tags for the resource.
 * `throughput` - The throughput that the volume supports, in MiB/s.
 
+## Timeouts
+
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+
+- `read` - (Default `20m`)
+
 [1]: http://docs.aws.amazon.com/cli/latest/reference/ec2/describe-volumes.html

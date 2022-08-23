@@ -151,7 +151,7 @@ func resourceVPCEndpointSubnetAssociationDelete(d *schema.ResourceData, meta int
 func resourceVPCEndpointSubnetAssociationImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	parts := strings.Split(d.Id(), "/")
 	if len(parts) != 2 {
-		return nil, fmt.Errorf("Wrong format of resource: %s. Please follow 'vpc-endpoint-id/subnet-id'", d.Id())
+		return nil, fmt.Errorf("wrong format of import ID (%s), use: 'vpc-endpoint-id/subnet-id'", d.Id())
 	}
 
 	endpointID := parts[0]
