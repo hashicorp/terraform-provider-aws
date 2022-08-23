@@ -1587,7 +1587,7 @@ func flattenAlternatePathHints(apiObjects []*ec2.AlternatePathHint) []interface{
 	return tfList
 }
 
-func flattenAnalysisAclRule(apiObject *ec2.AnalysisAclRule) map[string]interface{} {
+func flattenAnalysisAclRule(apiObject *ec2.AnalysisAclRule) map[string]interface{} { // nosemgrep:ci.caps2-in-func-name
 	if apiObject == nil {
 		return nil
 	}
