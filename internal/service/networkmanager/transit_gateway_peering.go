@@ -33,8 +33,8 @@ func ResourceTransitGatewayPeering() *schema.Resource {
 		CustomizeDiff: verify.SetTagsDiff,
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(10 * time.Minute),
-			Delete: schema.DefaultTimeout(10 * time.Minute),
+			Create: schema.DefaultTimeout(20 * time.Minute),
+			Delete: schema.DefaultTimeout(20 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -180,7 +180,7 @@ func resourceTransitGatewayPeeringUpdate(ctx context.Context, d *schema.Resource
 func resourceTransitGatewayPeeringDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).NetworkManagerConn
 
-	log.Printf("[DEBUG] Creating Network Manager Transit Gateway Peering: %s", d.Id())
+	log.Printf("[DEBUG] Deleting Network Manager Transit Gateway Peering: %s", d.Id())
 	_, err := conn.DeletePeeringWithContext(ctx, &networkmanager.DeletePeeringInput{
 		PeeringId: aws.String(d.Id()),
 	})
