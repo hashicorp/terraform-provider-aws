@@ -974,7 +974,7 @@ func flattenFieldToMatch(f *wafv2.FieldToMatch) interface{} {
 		m["body"] = make([]map[string]interface{}, 1)
 	}
 
-	if f.Body != nil {
+	if f.Cookies != nil {
 		m["cookies"] = flattenCookies(f.Cookies)
 	}
 
