@@ -85,6 +85,7 @@ jobs:
         with:
           path: ~/.tflint.d/plugins
           key: ${{ runner.os }}-tflint-${{ hashFiles('.ci/.tflint.hcl') }}
+      - run: find ~/ -type d -name .tflint.d
       - run: ls -hal ~/.tflint.d
       - run: ls -hal ~/.tflint.d/plugins
       - run: echo -n "File count $( find ./internal -type f -regextype egrep -regex ${{ env.TEST_FILES_PARTITION2 }} | wc -l | xargs )"
