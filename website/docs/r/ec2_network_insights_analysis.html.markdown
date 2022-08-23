@@ -43,6 +43,7 @@ In addition to all arguments above, the following attributes are exported:
 * `alternate_path_hints` - Potential intermediate components of a feasible path. Described below.
 * `arn` - ARN of the Network Insights Analysis.
 * `explanations` - Explanation codes for an unreachable path. See the [AWS documentation](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_Explanation.html) for details.
+* `forward_path_components` - The components in the path from source to destination. See the [AWS documentation](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_PathComponent.html) for details.
 * `id` - ID of the Network Insights Analysis.
 * `path_found` - Set to `true` if the destination was reachable.
 * `start_date` - The date/time the analysis was started.
