@@ -33,10 +33,6 @@ func ResourceTransitGatewayPolicyTableAssociation() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"state": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"transit_gateway_attachment_id": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -102,7 +98,6 @@ func resourceTransitGatewayPolicyTableAssociationRead(d *schema.ResourceData, me
 
 	d.Set("resource_id", transitGatewayPolicyTableAssociation.ResourceId)
 	d.Set("resource_type", transitGatewayPolicyTableAssociation.ResourceType)
-	d.Set("state", transitGatewayPolicyTableAssociation.State)
 	d.Set("transit_gateway_attachment_id", transitGatewayPolicyTableAssociation.TransitGatewayAttachmentId)
 	d.Set("transit_gateway_policy_table_id", transitGatewayPolicyTableAssociation.TransitGatewayPolicyTableId)
 
