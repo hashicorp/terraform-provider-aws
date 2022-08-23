@@ -1711,25 +1711,25 @@ func expandRedisSettings(tfMap map[string]interface{}) *dms.RedisSettings {
 
 	apiObject := &dms.RedisSettings{}
 
-	if v, ok := tfMap["auth_password"].(string); ok {
+	if v, ok := tfMap["auth_password"].(string); ok && v != "" {
 		apiObject.AuthPassword = aws.String(v)
 	}
-	if v, ok := tfMap["auth_type"].(string); ok {
+	if v, ok := tfMap["auth_type"].(string); ok && v != "" {
 		apiObject.AuthType = aws.String(v)
 	}
-	if v, ok := tfMap["auth_user_name"].(string); ok {
+	if v, ok := tfMap["auth_user_name"].(string); ok && v != "" {
 		apiObject.AuthUserName = aws.String(v)
 	}
 	if v, ok := tfMap["port"].(int); ok {
 		apiObject.Port = aws.Int64(int64(v))
 	}
-	if v, ok := tfMap["server_name"].(string); ok {
+	if v, ok := tfMap["server_name"].(string); ok && v != "" {
 		apiObject.ServerName = aws.String(v)
 	}
-	if v, ok := tfMap["ssl_ca_certificate_arn"].(string); ok {
+	if v, ok := tfMap["ssl_ca_certificate_arn"].(string); ok && v != "" {
 		apiObject.SslCaCertificateArn = aws.String(v)
 	}
-	if v, ok := tfMap["ssl_security_protocol"].(string); ok {
+	if v, ok := tfMap["ssl_security_protocol"].(string); ok && v != "" {
 		apiObject.SslSecurityProtocol = aws.String(v)
 	}
 
