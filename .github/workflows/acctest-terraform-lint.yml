@@ -60,7 +60,6 @@ jobs:
         with:
           path: ~/.tflint.d/plugins
           key: ${{ runner.os }}-tflint-${{ hashFiles('.ci/.tflint.hcl') }}
-      - run: tflint -c .ci/.tflint.hcl --init
       - run: echo -n "File count $( find ./internal -type f -regextype egrep -regex ${{ env.TEST_FILES_PARTITION1 }} | wc -l | xargs )"
       - run: |
           find ./internal -type f -regextype egrep -regex ${{ env.TEST_FILES_PARTITION1 }} \
@@ -86,7 +85,8 @@ jobs:
         with:
           path: ~/.tflint.d/plugins
           key: ${{ runner.os }}-tflint-${{ hashFiles('.ci/.tflint.hcl') }}
-      - run: tflint -c .ci/.tflint.hcl --init
+      - run: ls -hal ~/.tflint.d
+      - run: ls -hal ~/.tflint.d/plugins
       - run: echo -n "File count $( find ./internal -type f -regextype egrep -regex ${{ env.TEST_FILES_PARTITION2 }} | wc -l | xargs )"
       - run: |
           find ./internal -type f -regextype egrep -regex ${{ env.TEST_FILES_PARTITION2 }} \
