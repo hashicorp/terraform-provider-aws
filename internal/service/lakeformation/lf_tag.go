@@ -42,7 +42,7 @@ func ResourceLFTag() *schema.Resource {
 				Type:     schema.TypeSet,
 				Required: true,
 				MinItems: 1,
-				MaxItems: 15,
+				// MaxItems: 15, // Currently AWS allows creating more values
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
 					ValidateFunc: validateLFTagValues(),
