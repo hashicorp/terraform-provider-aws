@@ -337,6 +337,7 @@ func fieldToMatchBaseSchema() *schema.Resource {
 			"cookies": {
 				Type:     schema.TypeList,
 				Optional: true,
+				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"match_scope": {
@@ -362,13 +363,11 @@ func fieldToMatchBaseSchema() *schema.Resource {
 									"included_cookies": {
 										Type:     schema.TypeList,
 										Optional: true,
-										Computed: true,
 										Elem:     &schema.Schema{Type: schema.TypeString},
 									},
 									"excluded_cookies": {
 										Type:     schema.TypeList,
 										Optional: true,
-										Computed: true,
 										Elem:     &schema.Schema{Type: schema.TypeString},
 									},
 								},
