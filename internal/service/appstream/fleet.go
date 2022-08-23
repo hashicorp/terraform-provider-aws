@@ -555,7 +555,7 @@ func resourceFleetCustDiff(_ context.Context, diff *schema.ResourceDiff, meta in
 		o, n := diff.GetChange("domain_join_info")
 
 		if reflect.DeepEqual(expandDomainJoinInfo(o.([]interface{})), expandDomainJoinInfo(n.([]interface{}))) {
-			diff.Clear("domain_join_info")
+			return diff.Clear("domain_join_info")
 		}
 	}
 	return nil
