@@ -231,15 +231,9 @@ func testAccCheckNetworkInsightsAnalysisDestroy(s *terraform.State) error {
 
 func testAccVPCNetworkInsightsAnalysisConfig_base(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 1), fmt.Sprintf(`
-resource "aws_network_interface" "test_source" {
-  subnet_id = aws_subnet.test[0].id
+resource "aws_network_interface" "test" {
+  count = 2
 
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_network_interface" "test_destination" {
   subnet_id = aws_subnet.test[0].id
 
   tags = {
@@ -248,8 +242,8 @@ resource "aws_network_interface" "test_destination" {
 }
 
 resource "aws_ec2_network_insights_path" "test" {
-  source      = aws_network_interface.test_source.id
-  destination = aws_network_interface.test_destination.id
+  source      = aws_network_interface.test[0].id
+  destination = aws_network_interface.test[1].id
   protocol    = "tcp"
 
   tags = {

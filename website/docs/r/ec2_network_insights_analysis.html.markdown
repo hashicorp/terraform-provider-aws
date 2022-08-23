@@ -46,6 +46,7 @@ In addition to all arguments above, the following attributes are exported:
 * `forward_path_components` - The components in the path from source to destination. See the [AWS documentation](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_PathComponent.html) for details.
 * `id` - ID of the Network Insights Analysis.
 * `path_found` - Set to `true` if the destination was reachable.
+* `return_path_components` - The components in the path from destination to source. See the [AWS documentation](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_PathComponent.html) for details.
 * `start_date` - The date/time the analysis was started.
 * `status` - The status of the analysis. `succeeded` means the analysis was completed, not that a path was found, for that see `path_found`.
 * `status_message` - A message to provide more context when the `status` is `failed`.
