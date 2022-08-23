@@ -52,7 +52,33 @@ func ResourceTransitGatewayPolicyTableAssociation() *schema.Resource {
 func resourceTransitGatewayPolicyTableAssociationCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
+	// If the TGW attachment is already associated with a TGW route table, disassociate it to prevent errors like
+	// "IncorrectState: Cannot have both PolicyTableAssociation and RouteTableAssociation on the same TransitGateway Attachment".
 	transitGatewayAttachmentID := d.Get("transit_gateway_attachment_id").(string)
+	transitGatewayAttachment, err := FindTransitGatewayAttachmentByID(conn, transitGatewayAttachmentID)
+
+	if err != nil {
+		return fmt.Errorf("reading EC2 Transit Gateway Attachment (%s): %w", transitGatewayAttachmentID, err)
+	}
+
+	if v := transitGatewayAttachment.Association; v != nil {
+		if transitGatewayRouteTableID := aws.StringValue(v.TransitGatewayRouteTableId); transitGatewayRouteTableID != "" && aws.StringValue(v.State) == ec2.TransitGatewayAssociationStateAssociated {
+			id := TransitGatewayRouteTableAssociationCreateResourceID(transitGatewayRouteTableID, transitGatewayAttachmentID)
+			input := &ec2.DisassociateTransitGatewayRouteTableInput{
+				TransitGatewayAttachmentId: aws.String(transitGatewayAttachmentID),
+				TransitGatewayRouteTableId: aws.String(transitGatewayRouteTableID),
+			}
+
+			if _, err := conn.DisassociateTransitGatewayRouteTable(input); err != nil {
+				return fmt.Errorf("deleting EC2 Transit Gateway Route Table Association (%s): %w", id, err)
+			}
+
+			if _, err := WaitTransitGatewayRouteTableAssociationDeleted(conn, transitGatewayRouteTableID, transitGatewayAttachmentID); err != nil {
+				return fmt.Errorf("waiting for EC2 Transit Gateway Route Table Association (%s) delete: %w", id, err)
+			}
+		}
+	}
+
 	transitGatewayPolicyTableID := d.Get("transit_gateway_policy_table_id").(string)
 	id := TransitGatewayPolicyTableAssociationCreateResourceID(transitGatewayPolicyTableID, transitGatewayAttachmentID)
 	input := &ec2.AssociateTransitGatewayPolicyTableInput{
@@ -60,7 +86,7 @@ func resourceTransitGatewayPolicyTableAssociationCreate(d *schema.ResourceData, 
 		TransitGatewayPolicyTableId: aws.String(transitGatewayPolicyTableID),
 	}
 
-	_, err := conn.AssociateTransitGatewayPolicyTable(input)
+	_, err = conn.AssociateTransitGatewayPolicyTable(input)
 
 	if err != nil {
 		return fmt.Errorf("creating EC2 Transit Gateway Policy Table Association (%s): %w", id, err)
