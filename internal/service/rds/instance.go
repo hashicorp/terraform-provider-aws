@@ -1814,7 +1814,7 @@ func resourceInstanceDelete(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	log.Printf("[DEBUG] Deleting DB Instance: %s", d.Id())
+	log.Printf("[DEBUG] Deleting RDS DB Instance: %s", d.Id())
 	_, err := conn.DeleteDBInstance(input)
 
 	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBInstanceNotFoundFault) {

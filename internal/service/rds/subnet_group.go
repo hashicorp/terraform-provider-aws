@@ -6,9 +6,8 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/rds"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -150,11 +149,14 @@ func resourceSubnetGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RDSConn
 
 	if d.HasChanges("description", "subnet_ids") {
-		_, err := conn.ModifyDBSubnetGroup(&rds.ModifyDBSubnetGroupInput{
+		input := &rds.ModifyDBSubnetGroupInput{
 			DBSubnetGroupDescription: aws.String(d.Get("description").(string)),
 			DBSubnetGroupName:        aws.String(d.Id()),
 			SubnetIds:                flex.ExpandStringSet(d.Get("subnet_ids").(*schema.Set)),
-		})
+		}
+
+		log.Printf("[DEBUG] Modifying RDS DB Subnet Group: %s", input)
+		_, err := conn.ModifyDBSubnetGroup(input)
 
 		if err != nil {
 			return fmt.Errorf("updating RDS DB Subnet Group (%s): %w", d.Id(), err)
@@ -173,44 +175,28 @@ func resourceSubnetGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceSubnetGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	stateConf := &resource.StateChangeConf{
-		Pending:    []string{"pending"},
-		Target:     []string{"destroyed"},
-		Refresh:    resourceSubnetGroupDeleteRefreshFunc(d, meta),
-		Timeout:    3 * time.Minute,
-		MinTimeout: 1 * time.Second,
+	conn := meta.(*conns.AWSClient).RDSConn
+
+	log.Printf("[DEBUG] Deleting RDS DB Subnet Group: %s", d.Id())
+	_, err := conn.DeleteDBSubnetGroup(&rds.DeleteDBSubnetGroupInput{
+		DBSubnetGroupName: aws.String(d.Id()),
+	})
+
+	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBSubnetGroupNotFoundFault) {
+		return nil
 	}
-	_, err := stateConf.WaitForState()
 
 	if err != nil {
 		return fmt.Errorf("deleting RDS Subnet Group (%s): %w", d.Id(), err)
 	}
 
-	return nil
-}
+	_, err = tfresource.RetryUntilNotFound(3*time.Minute, func() (interface{}, error) {
+		return FindDBSubnetGroupByName(conn, d.Id())
+	})
 
-func resourceSubnetGroupDeleteRefreshFunc(
-	d *schema.ResourceData,
-	meta interface{}) resource.StateRefreshFunc {
-	conn := meta.(*conns.AWSClient).RDSConn
-
-	return func() (interface{}, string, error) {
-
-		deleteOpts := rds.DeleteDBSubnetGroupInput{
-			DBSubnetGroupName: aws.String(d.Id()),
-		}
-
-		if _, err := conn.DeleteDBSubnetGroup(&deleteOpts); err != nil {
-			rdserr, ok := err.(awserr.Error)
-			if !ok {
-				return d, "error", err
-			}
-
-			if rdserr.Code() != "DBSubnetGroupNotFoundFault" {
-				return d, "error", err
-			}
-		}
-
-		return d, "destroyed", nil
+	if err != nil {
+		return fmt.Errorf("waiting for RDS Subnet Group (%s) delete: %w", d.Id(), err)
 	}
+
+	return nil
 }
