@@ -40,6 +40,7 @@ func ResourceWorkgroup() *schema.Resource {
 			"config_parameter": {
 				Type:     schema.TypeList,
 				Optional: true,
+				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"parameter_key": {
