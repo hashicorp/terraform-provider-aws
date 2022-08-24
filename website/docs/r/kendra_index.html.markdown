@@ -264,7 +264,7 @@ resource "aws_kendra_index" "example" {
 }
 ```
 
-#### Appending additional elements.
+#### Appending additional elements
 
 The example below shows additional elements with names, `example-string-value`, `example-long-value`, `example-string-list-value`, `example-date-value` representing the 4 types of `STRING_VALUE`, `LONG_VALUE`, `STRING_LIST_VALUE`, `DATE_VALUE` respectively.
 
