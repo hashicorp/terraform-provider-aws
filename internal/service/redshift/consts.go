@@ -12,6 +12,7 @@ const (
 )
 
 // https://docs.aws.amazon.com/redshift/latest/mgmt/working-with-clusters.html#rs-mgmt-cluster-status.
+
 const (
 	clusterStatusAvailable = "available"
 	clusterStatusModifying = "modifying"

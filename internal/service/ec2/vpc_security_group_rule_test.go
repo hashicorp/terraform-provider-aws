@@ -690,6 +690,24 @@ func TestAccVPCSecurityGroupRule_prefixListEgress(t *testing.T) {
 	})
 }
 
+// https://github.com/hashicorp/terraform-provider-aws/issues/26191.
+func TestAccVPCSecurityGroupRule_prefixListEmptyString(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSecurityGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccVPCSecurityGroupRuleConfig_prefixListEmptyString(rName),
+				ExpectError: regexp.MustCompile(`prefix_list_ids.0 must not be empty`),
+			},
+		},
+	})
+}
+
 func TestAccVPCSecurityGroupRule_ingressDescription(t *testing.T) {
 	var group ec2.SecurityGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1971,6 +1989,36 @@ resource "aws_security_group_rule" "test" {
   from_port         = 0
   to_port           = 0
   prefix_list_ids   = [aws_vpc_endpoint.test.prefix_list_id]
+  security_group_id = aws_security_group.test.id
+}
+`, rName)
+}
+
+func testAccVPCSecurityGroupRuleConfig_prefixListEmptyString(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_security_group" "test" {
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_security_group_rule" "test" {
+  type              = "egress"
+  from_port         = 443
+  to_port           = 443
+  protocol          = "TCP"
+  prefix_list_ids   = [""]
   security_group_id = aws_security_group.test.id
 }
 `, rName)

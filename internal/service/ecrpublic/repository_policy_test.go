@@ -166,11 +166,7 @@ func testAccCheckRepositoryPolicyExists(name string) resource.TestCheckFunc {
 
 		_, err := tfecrpublic.FindRepositoryPolicyByName(conn, rs.Primary.ID)
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 

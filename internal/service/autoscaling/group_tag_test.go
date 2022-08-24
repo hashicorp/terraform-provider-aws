@@ -146,11 +146,7 @@ func testAccCheckGroupTagExists(n string) resource.TestCheckFunc {
 
 		_, err = tfautoscaling.GetTag(conn, identifier, tfautoscaling.TagResourceTypeGroup, key)
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 

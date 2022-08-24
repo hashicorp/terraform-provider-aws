@@ -5,7 +5,9 @@ package {{ .PackageName }}
 import (
     "context"
 
+    "github.com/hashicorp/terraform-plugin-framework/datasource"
     "github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
     "github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -16,7 +18,7 @@ func init() {
 }
 
 // newDataSource{{ .Name }}Type instantiates a new DataSourceType for the {{ .TFTypeName }} data source.
-func newDataSource{{ .Name }}Type(ctx context.Context) (tfsdk.DataSourceType, error) {
+func newDataSource{{ .Name }}Type(ctx context.Context) (provider.DataSourceType, error) {
 	return &dataSource{{ .Name }}Type{}, nil
 }
 
@@ -30,14 +32,14 @@ func (t *dataSource{{ .Name }}Type) GetSchema(context.Context) (tfsdk.Schema, di
 }
 
 // NewDataSource instantiates a new DataSource of this DataSourceType.
-func (t *dataSource{{ .Name }}Type) NewDataSource(ctx context.Context, provider tfsdk.Provider) (tfsdk.DataSource, diag.Diagnostics) {
+func (t *dataSource{{ .Name }}Type) NewDataSource(ctx context.Context, provider provider.Provider) (provider.DataSource, diag.Diagnostics) {
     return &dataSource{{ .Name }}{}, nil
 }
 
 type dataSource{{ .Name }} struct {}
 
 // Read is called when the provider must read data source values in order to update state.
-// Config values should be read from the ReadDataSourceRequest and new state values set on the ReadDataSourceResponse.
-func (d *dataSource{{ .Name }}) Read(ctx context.Context, request tfsdk.ReadDataSourceRequest, response *tfsdk.ReadDataSourceResponse) {
+// Config values should be read from the ReadRequest and new state values set on the ReadResponse.
+func (d *dataSource{{ .Name }}) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
     tflog.Trace(ctx, "dataSource{{ .Name }}.Read enter")
 }

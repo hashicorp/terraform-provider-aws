@@ -8,6 +8,7 @@ ACCTEST_PARALLELISM ?= 20
 
 ifneq ($(origin PKG), undefined)
 	PKG_NAME = internal/service/$(PKG)
+	TEST = ./$(PKG_NAME)/...
 endif
 
 ifneq ($(origin TESTS), undefined)
@@ -31,7 +32,6 @@ gen:
 	rm -f internal/service/**/*_gen.go
 	rm -f internal/sweep/sweep_test.go
 	rm -f names/*_gen.go
-	rm -f names/caps.md
 	rm -f website/allowed-subcategories.txt
 	rm -f website/docs/guides/custom-service-endpoints.html.md
 	rm -f .ci/.semgrep-caps-aws-ec2.yml
@@ -202,13 +202,16 @@ semgrep:
 
 semall:
 	@echo "==> Running Semgrep checks locally (must have semgrep installed)..."
-	@semgrep -c .ci/.semgrep.yml
-	@semgrep -c .ci/.semgrep-caps-aws-ec2.yml
-	@semgrep -c .ci/.semgrep-configs.yml
-	@semgrep -c .ci/.semgrep-service-name0.yml
-	@semgrep -c .ci/.semgrep-service-name1.yml
-	@semgrep -c .ci/.semgrep-service-name2.yml
-	@semgrep -c .ci/.semgrep-service-name3.yml
+	@semgrep --error --metrics=off \
+		--config .ci/.semgrep.yml \
+		--config .ci/.semgrep-caps-aws-ec2.yml \
+		--config .ci/.semgrep-configs.yml \
+		--config .ci/.semgrep-service-name0.yml \
+		--config .ci/.semgrep-service-name1.yml \
+		--config .ci/.semgrep-service-name2.yml \
+		--config .ci/.semgrep-service-name3.yml \
+		--config 'r/dgryski.semgrep-go.errnilcheck' \
+		--config 'r/dgryski.semgrep-go.nilerr'
 
 skaff:
 	cd skaff && go install github.com/hashicorp/terraform-provider-aws/skaff

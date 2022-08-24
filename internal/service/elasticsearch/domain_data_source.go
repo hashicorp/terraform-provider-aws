@@ -215,6 +215,10 @@ func DataSourceDomain() *schema.Resource {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
+						"throughput": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
 						"volume_size": {
 							Type:     schema.TypeInt,
 							Computed: true,

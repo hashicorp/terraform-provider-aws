@@ -262,11 +262,7 @@ func testAccCheckSnapshotExists(n string) resource.TestCheckFunc {
 
 		_, err := tfmemorydb.FindSnapshotByName(context.Background(), conn, rs.Primary.Attributes["name"])
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 
