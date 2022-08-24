@@ -62,10 +62,11 @@ func TestAccRDSSubnetGroup_namePrefix(t *testing.T) {
 		CheckDestroy:             testAccCheckDBSubnetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDBSubnetGroupConfig_namePrefix,
+				Config: testAccSubnetGroupConfig_namePrefix("tf-acc-test-prefix-"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDBSubnetGroupExists(resourceName, &v),
-					resource.TestMatchResourceAttr(resourceName, "name", regexp.MustCompile("^tf_test-")),
+					acctest.CheckResourceAttrNameFromPrefix(resourceName, "name", "tf-acc-test-prefix-"),
+					resource.TestCheckResourceAttr(resourceName, "name_prefix", "tf-acc-test-prefix-"),
 				),
 			},
 		},
@@ -246,6 +247,14 @@ resource "aws_db_subnet_group" "test" {
 `, rName))
 }
 
+func testAccSubnetGroupConfig_namePrefix(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
+resource "aws_db_subnet_group" "test" {
+  name_prefix = %[1]q
+  subnet_ids  = aws_subnet.test[*].id
+}`, rName))
+}
+
 func testAccSubnetGroupConfig_dualStack(rName string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
@@ -351,46 +360,6 @@ resource "aws_db_subnet_group" "test" {
 }
 `, rName)
 }
-
-const testAccDBSubnetGroupConfig_namePrefix = `
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
-resource "aws_vpc" "test" {
-  cidr_block = "10.1.0.0/16"
-  tags = {
-    Name = "terraform-testacc-db-subnet-group-name-prefix"
-  }
-}
-
-resource "aws_subnet" "a" {
-  vpc_id            = aws_vpc.test.id
-  cidr_block        = "10.1.1.0/24"
-  availability_zone = data.aws_availability_zones.available.names[0]
-  tags = {
-    Name = "tf-acc-db-subnet-group-name-prefix-a"
-  }
-}
-
-resource "aws_subnet" "b" {
-  vpc_id            = aws_vpc.test.id
-  cidr_block        = "10.1.2.0/24"
-  availability_zone = data.aws_availability_zones.available.names[1]
-  tags = {
-    Name = "tf-acc-db-subnet-group-name-prefix-b"
-  }
-}
-
-resource "aws_db_subnet_group" "test" {
-  name_prefix = "tf_test-"
-  subnet_ids  = [aws_subnet.a.id, aws_subnet.b.id]
-}`
 
 const testAccDBSubnetGroupConfig_generatedName = `
 data "aws_availability_zones" "available" {
