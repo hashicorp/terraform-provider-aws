@@ -1,0 +1,3 @@
+```release-note:bug
+resource/s3_bucket: Fix default region output for the Regional Endpoint Domain Name URL
+```
