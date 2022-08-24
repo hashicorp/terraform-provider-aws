@@ -200,45 +200,10 @@ func TestAccRDSSubnetGroup_dualStack(t *testing.T) {
 	})
 }
 
-// Regression test for https://github.com/hashicorp/terraform/issues/2603 and
-// https://github.com/hashicorp/terraform/issues/2664
-func TestAccRDSSubnetGroup_withUndocumentedCharacters(t *testing.T) {
-	var v rds.DBSubnetGroup
-
-	testCheck := func(*terraform.State) error {
-		return nil
-	}
-	resourceName := "aws_db_subnet_group.underscores"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSubnetGroupDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccDBSubnetGroupConfig_withUnderscoresAndPeriodsAndSpaces,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSubnetGroupExists("aws_db_subnet_group.underscores", &v),
-					testAccCheckSubnetGroupExists("aws_db_subnet_group.periods", &v),
-					testAccCheckSubnetGroupExists("aws_db_subnet_group.spaces", &v),
-					testCheck,
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"description"},
-			},
-		},
-	})
-}
-
 func TestAccRDSSubnetGroup_updateDescription(t *testing.T) {
 	var v rds.DBSubnetGroup
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_db_subnet_group.test"
-	rName := fmt.Sprintf("tf-test-%d", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
@@ -257,8 +222,6 @@ func TestAccRDSSubnetGroup_updateDescription(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"description"},
 			},
 			{
 				Config: testAccDBSubnetGroupConfig_updatedDescription(rName),
@@ -427,106 +390,11 @@ resource "aws_db_subnet_group" "test" {
 }
 
 func testAccDBSubnetGroupConfig_updatedDescription(rName string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
-resource "aws_vpc" "test" {
-  cidr_block = "10.1.0.0/16"
-
-  tags = {
-    Name = "terraform-testacc-db-subnet-group-updated-description"
-  }
-}
-
-resource "aws_subnet" "test" {
-  cidr_block        = "10.1.1.0/24"
-  availability_zone = data.aws_availability_zones.available.names[0]
-  vpc_id            = aws_vpc.test.id
-
-  tags = {
-    Name = "tf-acc-db-subnet-group-1"
-  }
-}
-
-resource "aws_subnet" "bar" {
-  cidr_block        = "10.1.2.0/24"
-  availability_zone = data.aws_availability_zones.available.names[1]
-  vpc_id            = aws_vpc.test.id
-
-  tags = {
-    Name = "tf-acc-db-subnet-group-2"
-  }
-}
-
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
 resource "aws_db_subnet_group" "test" {
-  name        = "%s"
+  name        = %[1]q
+  subnet_ids  = aws_subnet.test[*].id
   description = "test description updated"
-  subnet_ids  = [aws_subnet.test.id, aws_subnet.bar.id]
-
-  tags = {
-    Name = "tf-dbsubnet-group-test"
-  }
 }
-`, rName)
+`, rName))
 }
-
-const testAccDBSubnetGroupConfig_withUnderscoresAndPeriodsAndSpaces = `
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
-resource "aws_vpc" "main" {
-  cidr_block = "192.168.0.0/16"
-  tags = {
-    Name = "terraform-testacc-db-subnet-group-w-underscores-etc"
-  }
-}
-
-resource "aws_subnet" "frontend" {
-  vpc_id            = aws_vpc.main.id
-  availability_zone = data.aws_availability_zones.available.names[0]
-  cidr_block        = "192.168.1.0/24"
-  tags = {
-    Name = "tf-acc-db-subnet-group-w-underscores-etc-front"
-  }
-}
-
-resource "aws_subnet" "backend" {
-  vpc_id            = aws_vpc.main.id
-  availability_zone = data.aws_availability_zones.available.names[1]
-  cidr_block        = "192.168.2.0/24"
-  tags = {
-    Name = "tf-acc-db-subnet-group-w-underscores-etc-back"
-  }
-}
-
-resource "aws_db_subnet_group" "underscores" {
-  name        = "with_underscores"
-  description = "Our main group of subnets"
-  subnet_ids  = [aws_subnet.frontend.id, aws_subnet.backend.id]
-}
-
-resource "aws_db_subnet_group" "periods" {
-  name        = "with.periods"
-  description = "Our main group of subnets"
-  subnet_ids  = [aws_subnet.frontend.id, aws_subnet.backend.id]
-}
-
-resource "aws_db_subnet_group" "spaces" {
-  name        = "with spaces"
-  description = "Our main group of subnets"
-  subnet_ids  = [aws_subnet.frontend.id, aws_subnet.backend.id]
-}
-`
