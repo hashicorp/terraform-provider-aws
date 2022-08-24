@@ -4272,7 +4272,7 @@ func testAccCheckInstanceDestroy(s *terraform.State) error {
 			return err
 		}
 
-		return fmt.Errorf("DB Instance %s still exists", rs.Primary.ID)
+		return fmt.Errorf("RDS DB Instance %s still exists", rs.Primary.ID)
 	}
 
 	return nil
@@ -4463,7 +4463,7 @@ func testAccCheckInstanceExists(n string, v *rds.DBInstance) resource.TestCheckF
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No DB Instance ID is set")
+			return fmt.Errorf("No RDS DB Instance ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
@@ -4498,7 +4498,7 @@ func testAccCheckInstanceEC2ClassicDestroy(s *terraform.State) error {
 			return err
 		}
 
-		return fmt.Errorf("DB Instance %s still exists", rs.Primary.ID)
+		return fmt.Errorf("RDS DB Instance %s still exists", rs.Primary.ID)
 	}
 
 	return nil
