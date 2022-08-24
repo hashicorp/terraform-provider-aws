@@ -12,6 +12,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
@@ -31,7 +33,11 @@ func ResourceSubnetGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
+			"description": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "Managed by Terraform",
+			},
 			"name": {
 				Type:          schema.TypeString,
 				Optional:      true,
@@ -48,26 +54,16 @@ func ResourceSubnetGroup() *schema.Resource {
 				ConflictsWith: []string{"name"},
 				ValidateFunc:  validSubnetGroupNamePrefix,
 			},
-
-			"description": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "Managed by Terraform",
-			},
-
 			"subnet_ids": {
 				Type:     schema.TypeSet,
 				Required: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
 			},
-
 			"supported_network_types": {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
 		},
@@ -81,36 +77,23 @@ func resourceSubnetGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
-	subnetIdsSet := d.Get("subnet_ids").(*schema.Set)
-	subnetIds := make([]*string, subnetIdsSet.Len())
-	for i, subnetId := range subnetIdsSet.List() {
-		subnetIds[i] = aws.String(subnetId.(string))
-	}
-
-	var groupName string
-	if v, ok := d.GetOk("name"); ok {
-		groupName = v.(string)
-	} else if v, ok := d.GetOk("name_prefix"); ok {
-		groupName = resource.PrefixedUniqueId(v.(string))
-	} else {
-		groupName = resource.UniqueId()
-	}
-
-	createOpts := rds.CreateDBSubnetGroupInput{
-		DBSubnetGroupName:        aws.String(groupName),
+	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
+	input := &rds.CreateDBSubnetGroupInput{
 		DBSubnetGroupDescription: aws.String(d.Get("description").(string)),
-		SubnetIds:                subnetIds,
+		DBSubnetGroupName:        aws.String(name),
+		SubnetIds:                flex.ExpandStringSet(d.Get("subnet_ids").(*schema.Set)),
 		Tags:                     Tags(tags.IgnoreAWS()),
 	}
 
-	log.Printf("[DEBUG] Create DB Subnet Group: %#v", createOpts)
-	_, err := conn.CreateDBSubnetGroup(&createOpts)
+	log.Printf("[DEBUG] Creating RDS DB Subnet Group: %s", input)
+	output, err := conn.CreateDBSubnetGroup(input)
+
 	if err != nil {
-		return fmt.Errorf("Error creating DB Subnet Group: %s", err)
+		return fmt.Errorf("creating RDS DB Subnet Group (%s): %w", name, err)
 	}
 
-	d.SetId(aws.StringValue(createOpts.DBSubnetGroupName))
-	log.Printf("[INFO] DB Subnet Group ID: %s", d.Id())
+	d.SetId(aws.StringValue(output.DBSubnetGroup.DBSubnetGroupName))
+
 	return resourceSubnetGroupRead(d, meta)
 }
 
