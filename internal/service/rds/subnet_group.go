@@ -3,7 +3,6 @@ package rds
 import (
 	"fmt"
 	"log"
-	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -15,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -102,71 +102,45 @@ func resourceSubnetGroupRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	describeOpts := rds.DescribeDBSubnetGroupsInput{
-		DBSubnetGroupName: aws.String(d.Id()),
+	v, err := FindDBSubnetGroupByName(conn, d.Id())
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] RDS DB Subnet Group (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
 	}
 
-	describeResp, err := conn.DescribeDBSubnetGroups(&describeOpts)
 	if err != nil {
-		if ec2err, ok := err.(awserr.Error); ok && ec2err.Code() == "DBSubnetGroupNotFoundFault" {
-			// Update state to indicate the db subnet no longer exists.
-			d.SetId("")
-			return nil
-		}
-		return err
+		return fmt.Errorf("reading RDS DB Subnet Group (%s): %w", d.Id(), err)
 	}
 
-	if len(describeResp.DBSubnetGroups) == 0 {
-		return fmt.Errorf("Unable to find DB Subnet Group: %#v", describeResp.DBSubnetGroups)
-	}
-
-	var subnetGroup *rds.DBSubnetGroup
-	for _, s := range describeResp.DBSubnetGroups {
-		// AWS is down casing the name provided, so we compare lower case versions
-		// of the names. We lower case both our name and their name in the check,
-		// incase they change that someday.
-		if strings.EqualFold(d.Id(), *s.DBSubnetGroupName) {
-			subnetGroup = describeResp.DBSubnetGroups[0]
-		}
-	}
-
-	if subnetGroup.DBSubnetGroupName == nil {
-		return fmt.Errorf("Unable to find DB Subnet Group: %#v", describeResp.DBSubnetGroups)
-	}
-
-	d.Set("name", subnetGroup.DBSubnetGroupName)
-	d.Set("description", subnetGroup.DBSubnetGroupDescription)
-
-	subnets := make([]string, 0, len(subnetGroup.Subnets))
-	for _, s := range subnetGroup.Subnets {
-		subnets = append(subnets, *s.SubnetIdentifier)
-	}
-	d.Set("subnet_ids", subnets)
-
-	arn := aws.StringValue(subnetGroup.DBSubnetGroupArn)
+	arn := aws.StringValue(v.DBSubnetGroupArn)
 	d.Set("arn", arn)
-
-	supportedNetworkTypes := make([]string, 0, len(subnetGroup.SupportedNetworkTypes))
-	for _, networkType := range subnetGroup.SupportedNetworkTypes {
-		supportedNetworkTypes = append(supportedNetworkTypes, *networkType)
+	d.Set("description", v.DBSubnetGroupDescription)
+	d.Set("name", v.DBSubnetGroupName)
+	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(v.DBSubnetGroupName)))
+	var subnetIDs []string
+	for _, v := range v.Subnets {
+		subnetIDs = append(subnetIDs, aws.StringValue(v.SubnetIdentifier))
 	}
-	d.Set("supported_network_types", supportedNetworkTypes)
+	d.Set("subnet_ids", subnetIDs)
+	d.Set("supported_network_types", aws.StringValueSlice(v.SupportedNetworkTypes))
 
-	tags, err := ListTags(conn, d.Get("arn").(string))
+	tags, err := ListTags(conn, arn)
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for RDS DB Subnet Group (%s): %s", d.Get("arn").(string), err)
+		return fmt.Errorf("listing tags for RDS DB Subnet Group (%s): %w", arn, err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return fmt.Errorf("setting tags: %w", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return fmt.Errorf("setting tags_all: %w", err)
 	}
 
 	return nil
