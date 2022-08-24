@@ -148,26 +148,16 @@ func resourceSubnetGroupRead(d *schema.ResourceData, meta interface{}) error {
 
 func resourceSubnetGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RDSConn
-	if d.HasChanges("subnet_ids", "description") {
-		_, n := d.GetChange("subnet_ids")
-		if n == nil {
-			n = new(schema.Set)
-		}
-		ns := n.(*schema.Set)
 
-		var sIds []*string
-		for _, s := range ns.List() {
-			sIds = append(sIds, aws.String(s.(string)))
-		}
-
+	if d.HasChanges("description", "subnet_ids") {
 		_, err := conn.ModifyDBSubnetGroup(&rds.ModifyDBSubnetGroupInput{
-			DBSubnetGroupName:        aws.String(d.Id()),
 			DBSubnetGroupDescription: aws.String(d.Get("description").(string)),
-			SubnetIds:                sIds,
+			DBSubnetGroupName:        aws.String(d.Id()),
+			SubnetIds:                flex.ExpandStringSet(d.Get("subnet_ids").(*schema.Set)),
 		})
 
 		if err != nil {
-			return err
+			return fmt.Errorf("updating RDS DB Subnet Group (%s): %w", d.Id(), err)
 		}
 	}
 
@@ -175,7 +165,7 @@ func resourceSubnetGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating RDS DB Subnet Group (%s) tags: %s", d.Get("arn").(string), err)
+			return fmt.Errorf("updating RDS DB Subnet Group (%s) tags: %w", d.Get("arn").(string), err)
 		}
 	}
 
