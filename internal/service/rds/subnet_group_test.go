@@ -51,6 +51,29 @@ func TestAccRDSSubnetGroup_basic(t *testing.T) {
 	})
 }
 
+func TestAccRDSSubnetGroup_disappears(t *testing.T) {
+	var v rds.DBSubnetGroup
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_db_subnet_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDBSubnetGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSubnetGroupConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDBSubnetGroupExists(resourceName, &v),
+					acctest.CheckResourceDisappears(acctest.Provider, tfrds.ResourceSubnetGroup(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func TestAccRDSSubnetGroup_nameGenerated(t *testing.T) {
 	var v rds.DBSubnetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -69,6 +92,11 @@ func TestAccRDSSubnetGroup_nameGenerated(t *testing.T) {
 					acctest.CheckResourceAttrNameGenerated(resourceName, "name"),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", resource.UniqueIdPrefix),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -91,6 +119,11 @@ func TestAccRDSSubnetGroup_namePrefix(t *testing.T) {
 					acctest.CheckResourceAttrNameFromPrefix(resourceName, "name", "tf-acc-test-prefix-"),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", "tf-acc-test-prefix-"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
