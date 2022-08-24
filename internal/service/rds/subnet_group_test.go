@@ -15,9 +15,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-const ipv4SupportedNetworkType = "IPV4"
-const dualSupportedNetworkType = "DUAL"
-
 func TestAccRDSSubnetGroup_basic(t *testing.T) {
 	var v rds.DBSubnetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -39,7 +36,7 @@ func TestAccRDSSubnetGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", ""),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "supported_network_types.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "supported_network_types.0", "IPV4"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "supported_network_types.*", "IPV4"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -192,8 +189,8 @@ func TestAccRDSSubnetGroup_dualStack(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetGroupExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "supported_network_types.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "supported_network_types.0", dualSupportedNetworkType),
-					resource.TestCheckResourceAttr(resourceName, "supported_network_types.1", ipv4SupportedNetworkType),
+					resource.TestCheckTypeSetElemAttr(resourceName, "supported_network_types.*", "IPV4"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "supported_network_types.*", "DUAL"),
 				),
 			},
 		},
@@ -373,58 +370,12 @@ resource "aws_db_subnet_group" "test" {
 }
 
 func testAccSubnetGroupConfig_dualStack(rName string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
-resource "aws_vpc" "test" {
-  cidr_block                       = "10.1.0.0/16"
-  assign_generated_ipv6_cidr_block = true	
-
-  tags = {
-    Name = "terraform-testacc-db-subnet-group"
-  }
-}
-
-resource "aws_subnet" "test" {
-  cidr_block                      = "10.1.1.0/24"
-  ipv6_cidr_block                 = cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, 0)
-  assign_ipv6_address_on_creation = true
-  availability_zone               = data.aws_availability_zones.available.names[0]
-  vpc_id                          = aws_vpc.test.id
-
-  tags = {
-    Name = "tf-acc-db-subnet-group-1"
-  }
-}
-
-resource "aws_subnet" "bar" {
-  cidr_block                      = "10.1.2.0/24"
-  ipv6_cidr_block                 = cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, 1)
-  assign_ipv6_address_on_creation = true
-  availability_zone               = data.aws_availability_zones.available.names[1]
-  vpc_id                          = aws_vpc.test.id
-
-  tags = {
-    Name = "tf-acc-db-subnet-group-2"
-  }
-}
-
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnetsIPv6(rName, 2), fmt.Sprintf(`
 resource "aws_db_subnet_group" "test" {
-  name       = "%s"
-  subnet_ids = [aws_subnet.test.id, aws_subnet.bar.id]
-
-  tags = {
-    Name = "tf-dbsubnet-group-test"
-  }
+  name       = %[1]q
+  subnet_ids = aws_subnet.test[*].id
 }
-`, rName)
+`, rName))
 }
 
 func testAccDBSubnetGroupConfig_updatedDescription(rName string) string {
