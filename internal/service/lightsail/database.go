@@ -1,7 +1,7 @@
 package lightsail
 
 import (
-	"fmt"
+	"context"
 	"log"
 	"regexp"
 	"time"
@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/lightsail"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -22,12 +23,12 @@ const (
 
 func ResourceDatabase() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceDatabaseCreate,
-		Read:   resourceDatabaseRead,
-		Update: resourceDatabaseUpdate,
-		Delete: resourceDatabaseDelete,
+		CreateContext: resourceDatabaseCreate,
+		ReadContext:   resourceDatabaseRead,
+		UpdateContext: resourceDatabaseUpdate,
+		DeleteContext: resourceDatabaseDelete,
 		Importer: &schema.ResourceImporter{
-			State: ResourceDatabaseImport,
+			StateContext: ResourceDatabaseImport,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -176,11 +177,17 @@ func ResourceDatabase() *schema.Resource {
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
 		},
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(30 * time.Minute),
+			Read:   schema.DefaultTimeout(30 * time.Minute),
+			Update: schema.DefaultTimeout(30 * time.Minute),
+			Delete: schema.DefaultTimeout(30 * time.Minute),
+		},
 		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceDatabaseCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceDatabaseCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).LightsailConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
@@ -217,21 +224,21 @@ func resourceDatabaseCreate(d *schema.ResourceData, meta interface{}) error {
 		req.Tags = Tags(tags.IgnoreAWS())
 	}
 
-	resp, err := conn.CreateRelationalDatabase(&req)
+	resp, err := conn.CreateRelationalDatabaseWithContext(ctx, &req)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if len(resp.Operations) == 0 {
-		return fmt.Errorf("No operations found for Create Relational Database request")
+		return diag.Errorf("No operations found for Create Relational Database request")
 	}
 
 	op := resp.Operations[0]
 	d.SetId(d.Get("relational_database_name").(string))
 
-	err = waitOperation(conn, op.Id)
+	err = waitOperation(ctx, conn, op.Id)
 	if err != nil {
-		return fmt.Errorf("Error waiting for Relational Database (%s) to become ready: %s", d.Id(), err)
+		return diag.Errorf("Error waiting for Relational Database (%s) to become ready: %s", d.Id(), err)
 	}
 
 	// Backup Retention is not a value you can pass on creation and defaults to true.
@@ -244,46 +251,46 @@ func resourceDatabaseCreate(d *schema.ResourceData, meta interface{}) error {
 			DisableBackupRetention: aws.Bool(true),
 		}
 
-		resp, err := conn.UpdateRelationalDatabase(&req)
+		resp, err := conn.UpdateRelationalDatabaseWithContext(ctx, &req)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 
 		if len(resp.Operations) == 0 {
-			return fmt.Errorf("No operations found for Update Relational Database request")
+			return diag.Errorf("No operations found for Update Relational Database request")
 		}
 
 		op := resp.Operations[0]
 
-		err = waitOperation(conn, op.Id)
+		err = waitOperation(ctx, conn, op.Id)
 		if err != nil {
-			return fmt.Errorf("Error waiting for Relational Database (%s) to become ready: %s", d.Id(), err)
+			return diag.Errorf("Error waiting for Relational Database (%s) to become ready: %s", d.Id(), err)
 		}
 
-		err = waitDatabaseBackupRetentionModified(conn, aws.String(d.Id()), aws.Bool(v.(bool)))
+		err = waitDatabaseBackupRetentionModified(ctx, conn, aws.String(d.Id()), aws.Bool(v.(bool)))
 		if err != nil {
-			return fmt.Errorf("Error waiting for Relational Database (%s) Backup Retention to be updated: %s", d.Id(), err)
+			return diag.Errorf("Error waiting for Relational Database (%s) Backup Retention to be updated: %s", d.Id(), err)
 		}
 
 	}
 
 	// Some Operations can complete before the Database enters the Available state. Added a waiter to make sure the Database is available before continuing.
-	_, err = waitDatabaseModified(conn, aws.String(d.Id()))
+	_, err = waitDatabaseModified(ctx, conn, aws.String(d.Id()))
 	if err != nil {
-		return fmt.Errorf("Error waiting for Relational Database (%s) to become available: %s", d.Id(), err)
+		return diag.Errorf("Error waiting for Relational Database (%s) to become available: %s", d.Id(), err)
 	}
 
-	return resourceDatabaseRead(d, meta)
+	return resourceDatabaseRead(ctx, d, meta)
 }
 
-func resourceDatabaseRead(d *schema.ResourceData, meta interface{}) error {
+func resourceDatabaseRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).LightsailConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	// Some Operations can complete before the Database enters the Available state. Added a waiter to make sure the Database is available before continuing.
 	// This is to support importing a resource that is not in a ready state.
-	database, err := waitDatabaseModified(conn, aws.String(d.Id()))
+	database, err := waitDatabaseModified(ctx, conn, aws.String(d.Id()))
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, lightsail.ErrCodeNotFoundException) {
 		log.Printf("[WARN] Lightsail Relational Database (%s) not found, removing from state", d.Id())
@@ -292,7 +299,7 @@ func resourceDatabaseRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading LightSail Relational Database (%s): %w", d.Id(), err)
+		return diag.Errorf("error reading LightSail Relational Database (%s): %s", d.Id(), err)
 	}
 
 	rd := database.RelationalDatabase
@@ -324,23 +331,23 @@ func resourceDatabaseRead(d *schema.ResourceData, meta interface{}) error {
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return diag.Errorf("error setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return diag.Errorf("error setting tags_all: %s", err)
 	}
 
 	return nil
 }
 
-func resourceDatabaseDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceDatabaseDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).LightsailConn
 
 	// Some Operations can complete before the Database enters the Available state. Added a waiter to make sure the Database is available before continuing.
-	_, err := waitDatabaseModified(conn, aws.String(d.Id()))
+	_, err := waitDatabaseModified(ctx, conn, aws.String(d.Id()))
 	if err != nil {
-		return fmt.Errorf("Error waiting for Relational Database (%s) to become available: %s", d.Id(), err)
+		return diag.Errorf("Error waiting for Relational Database (%s) to become available: %s", d.Id(), err)
 	}
 
 	skipFinalSnapshot := d.Get("skip_final_snapshot").(bool)
@@ -354,28 +361,28 @@ func resourceDatabaseDelete(d *schema.ResourceData, meta interface{}) error {
 		if name, present := d.GetOk("final_snapshot_name"); present {
 			req.FinalRelationalDatabaseSnapshotName = aws.String(name.(string))
 		} else {
-			return fmt.Errorf("Lightsail Database FinalRelationalDatabaseSnapshotName is required when a final snapshot is required")
+			return diag.Errorf("Lightsail Database FinalRelationalDatabaseSnapshotName is required when a final snapshot is required")
 		}
 	}
 
-	resp, err := conn.DeleteRelationalDatabase(&req)
+	resp, err := conn.DeleteRelationalDatabaseWithContext(ctx, &req)
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	op := resp.Operations[0]
 
-	err = waitOperation(conn, op.Id)
+	err = waitOperation(ctx, conn, op.Id)
 	if err != nil {
-		return fmt.Errorf("Error waiting for Relational Database (%s) to Delete: %s", d.Id(), err)
+		return diag.Errorf("Error waiting for Relational Database (%s) to Delete: %s", d.Id(), err)
 	}
 
 	return nil
 }
 
 func ResourceDatabaseImport(
-	d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	// Neither skip_final_snapshot nor final_snapshot_identifier can be fetched
 	// from any API call, so we need to default skip_final_snapshot to true so
 	// that final_snapshot_identifier is not required
@@ -383,7 +390,7 @@ func ResourceDatabaseImport(
 	return []*schema.ResourceData{d}, nil
 }
 
-func resourceDatabaseUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceDatabaseUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).LightsailConn
 	requestUpdate := false
 
@@ -429,48 +436,48 @@ func resourceDatabaseUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags") {
 		o, n := d.GetChange("tags")
 
-		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating Lightsail Database (%s) tags: %s", d.Id(), err)
+		if err := UpdateTagsWithContext(ctx, conn, d.Id(), o, n); err != nil {
+			return diag.Errorf("error updating Lightsail Database (%s) tags: %s", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating Lightsail Database (%s) tags: %s", d.Id(), err)
+		if err := UpdateTagsWithContext(ctx, conn, d.Id(), o, n); err != nil {
+			return diag.Errorf("error updating Lightsail Database (%s) tags: %s", d.Id(), err)
 		}
 	}
 
 	if requestUpdate {
-		resp, err := conn.UpdateRelationalDatabase(&req)
+		resp, err := conn.UpdateRelationalDatabaseWithContext(ctx, &req)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 
 		if len(resp.Operations) == 0 {
-			return fmt.Errorf("No operations found for Update Relational Database request")
+			return diag.Errorf("No operations found for Update Relational Database request")
 		}
 
 		op := resp.Operations[0]
 
-		err = waitOperation(conn, op.Id)
+		err = waitOperation(ctx, conn, op.Id)
 		if err != nil {
-			return fmt.Errorf("Error waiting for Relational Database (%s) to become ready: %s", d.Id(), err)
+			return diag.Errorf("Error waiting for Relational Database (%s) to become ready: %s", d.Id(), err)
 		}
 
 		if d.HasChange("backup_retention_enabled") {
-			err = waitDatabaseBackupRetentionModified(conn, aws.String(d.Id()), aws.Bool(d.Get("backup_retention_enabled").(bool)))
+			err = waitDatabaseBackupRetentionModified(ctx, conn, aws.String(d.Id()), aws.Bool(d.Get("backup_retention_enabled").(bool)))
 			if err != nil {
-				return fmt.Errorf("Error waiting for Relational Database (%s) Backup Retention to be updated: %s", d.Id(), err)
+				return diag.Errorf("Error waiting for Relational Database (%s) Backup Retention to be updated: %s", d.Id(), err)
 			}
 		}
 
 		// Some Operations can complete before the Database enters the Available state. Added a waiter to make sure the Database is available before continuing.
-		_, err = waitDatabaseModified(conn, aws.String(d.Id()))
+		_, err = waitDatabaseModified(ctx, conn, aws.String(d.Id()))
 		if err != nil {
-			return fmt.Errorf("Error waiting for Relational Database (%s) to become available: %s", d.Id(), err)
+			return diag.Errorf("Error waiting for Relational Database (%s) to become available: %s", d.Id(), err)
 		}
 	}
 
-	return resourceDatabaseRead(d, meta)
+	return resourceDatabaseRead(ctx, d, meta)
 }
