@@ -73,6 +73,8 @@ func ResourceSecurityGroup() *schema.Resource {
 				Set: resourceSecurityGroupIngressHash,
 			},
 		},
+
+		DeprecationMessage: `With the retirement of EC2-Classic the aws_redshift_security_group resource has been deprecated and will be removed in a future version.`,
 	}
 }
 
