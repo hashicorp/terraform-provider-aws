@@ -51,6 +51,29 @@ func TestAccRDSSubnetGroup_basic(t *testing.T) {
 	})
 }
 
+func TestAccRDSSubnetGroup_nameGenerated(t *testing.T) {
+	var v rds.DBSubnetGroup
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_db_subnet_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDBSubnetGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSubnetGroupConfig_nameGenerated(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDBSubnetGroupExists(resourceName, &v),
+					acctest.CheckResourceAttrNameGenerated(resourceName, "name"),
+					resource.TestCheckResourceAttr(resourceName, "name_prefix", resource.UniqueIdPrefix),
+				),
+			},
+		},
+	})
+}
+
 func TestAccRDSSubnetGroup_namePrefix(t *testing.T) {
 	var v rds.DBSubnetGroup
 	resourceName := "aws_db_subnet_group.test"
@@ -67,26 +90,6 @@ func TestAccRDSSubnetGroup_namePrefix(t *testing.T) {
 					testAccCheckDBSubnetGroupExists(resourceName, &v),
 					acctest.CheckResourceAttrNameFromPrefix(resourceName, "name", "tf-acc-test-prefix-"),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", "tf-acc-test-prefix-"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccRDSSubnetGroup_generatedName(t *testing.T) {
-	var v rds.DBSubnetGroup
-	resourceName := "aws_db_subnet_group.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDBSubnetGroupDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccDBSubnetGroupConfig_generatedName,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDBSubnetGroupExists(resourceName, &v),
 				),
 			},
 		},
@@ -247,6 +250,13 @@ resource "aws_db_subnet_group" "test" {
 `, rName))
 }
 
+func testAccSubnetGroupConfig_nameGenerated(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), `
+resource "aws_db_subnet_group" "test" {
+  subnet_ids = aws_subnet.test[*].id
+}`)
+}
+
 func testAccSubnetGroupConfig_namePrefix(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
 resource "aws_db_subnet_group" "test" {
@@ -360,45 +370,6 @@ resource "aws_db_subnet_group" "test" {
 }
 `, rName)
 }
-
-const testAccDBSubnetGroupConfig_generatedName = `
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
-resource "aws_vpc" "test" {
-  cidr_block = "10.1.0.0/16"
-  tags = {
-    Name = "terraform-testacc-db-subnet-group-generated-name"
-  }
-}
-
-resource "aws_subnet" "a" {
-  vpc_id            = aws_vpc.test.id
-  cidr_block        = "10.1.1.0/24"
-  availability_zone = data.aws_availability_zones.available.names[0]
-  tags = {
-    Name = "tf-acc-db-subnet-group-generated-name-a"
-  }
-}
-
-resource "aws_subnet" "b" {
-  vpc_id            = aws_vpc.test.id
-  cidr_block        = "10.1.2.0/24"
-  availability_zone = data.aws_availability_zones.available.names[1]
-  tags = {
-    Name = "tf-acc-db-subnet-group-generated-name-a"
-  }
-}
-
-resource "aws_db_subnet_group" "test" {
-  subnet_ids = [aws_subnet.a.id, aws_subnet.b.id]
-}`
 
 const testAccDBSubnetGroupConfig_withUnderscoresAndPeriodsAndSpaces = `
 data "aws_availability_zones" "available" {
