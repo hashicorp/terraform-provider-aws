@@ -394,6 +394,11 @@ func TestAccKendraIndex_addDocumentMetadataConfigurationUpdates(t *testing.T) {
 	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName3 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	resourceName := "aws_kendra_index.test"
+	authorsFacetable := false
+	longValDisplayable := true
+	stringListValSearchable := true
+	dateValSortable := false
+	stringValImportance := 1
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
@@ -572,7 +577,7 @@ func TestAccKendraIndex_addDocumentMetadataConfigurationUpdates(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccIndexConfig_documentMetadataConfigurationUpdatesAddNewMetadata(rName, rName2, rName3),
+				Config: testAccIndexConfig_documentMetadataConfigurationUpdatesAddNewMetadata(rName, rName2, rName3, authorsFacetable, longValDisplayable, stringListValSearchable, dateValSortable, stringValImportance),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIndexExists(resourceName, &index),
 					resource.TestCheckResourceAttr(resourceName, "document_metadata_configuration_updates.#", "17"),
@@ -583,7 +588,7 @@ func TestAccKendraIndex_addDocumentMetadataConfigurationUpdates(t *testing.T) {
 						"relevance.0.importance": "1",
 						"search.#":               "1",
 						"search.0.displayable":   "false",
-						"search.0.facetable":     "false",
+						"search.0.facetable":     strconv.FormatBool(authorsFacetable),
 						"search.0.searchable":    "false",
 						"search.0.sortable":      "false",
 					}),
@@ -738,7 +743,7 @@ func TestAccKendraIndex_addDocumentMetadataConfigurationUpdates(t *testing.T) {
 						"name":                                "example-string-value",
 						"type":                                string(types.DocumentAttributeValueTypeStringValue),
 						"relevance.#":                         "1",
-						"relevance.0.importance":              "1",
+						"relevance.0.importance":              strconv.Itoa(stringValImportance),
 						"relevance.0.values_importance_map.%": "0",
 						"search.#":                            "1",
 						"search.0.displayable":                "true",
@@ -753,7 +758,7 @@ func TestAccKendraIndex_addDocumentMetadataConfigurationUpdates(t *testing.T) {
 						"relevance.0.importance": "1",
 						"relevance.0.rank_order": "ASCENDING",
 						"search.#":               "1",
-						"search.0.displayable":   "true",
+						"search.0.displayable":   strconv.FormatBool(longValDisplayable),
 						"search.0.facetable":     "true",
 						"search.0.searchable":    "false",
 						"search.0.sortable":      "true",
@@ -766,7 +771,7 @@ func TestAccKendraIndex_addDocumentMetadataConfigurationUpdates(t *testing.T) {
 						"search.#":               "1",
 						"search.0.displayable":   "true",
 						"search.0.facetable":     "true",
-						"search.0.searchable":    "true",
+						"search.0.searchable":    strconv.FormatBool(stringListValSearchable),
 						"search.0.sortable":      "false",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
@@ -781,7 +786,7 @@ func TestAccKendraIndex_addDocumentMetadataConfigurationUpdates(t *testing.T) {
 						"search.0.displayable":   "true",
 						"search.0.facetable":     "true",
 						"search.0.searchable":    "false",
-						"search.0.sortable":      "false",
+						"search.0.sortable":      strconv.FormatBool(dateValSortable),
 					}),
 				),
 			},
@@ -1317,7 +1322,7 @@ resource "aws_kendra_index" "test" {
 `, rName3))
 }
 
-func testAccIndexConfig_documentMetadataConfigurationUpdatesAddNewMetadata(rName, rName2, rName3 string) string {
+func testAccIndexConfig_documentMetadataConfigurationUpdatesAddNewMetadata(rName, rName2, rName3 string, authorsFacetable, longValDisplayable, stringListValSearchable, dateValSortable bool, stringValImportance int) string {
 	return acctest.ConfigCompose(
 		testAccIndexConfigBase(rName, rName2),
 		fmt.Sprintf(`
@@ -1329,7 +1334,7 @@ resource "aws_kendra_index" "test" {
     type = "STRING_LIST_VALUE"
     search {
       displayable = false
-      facetable   = false
+      facetable   = %[2]t
       searchable  = false
       sortable    = false
     }
@@ -1532,7 +1537,7 @@ resource "aws_kendra_index" "test" {
       sortable    = true
     }
     relevance {
-      importance            = 1
+      importance            = %[6]d
       values_importance_map = {}
     }
   }
@@ -1541,7 +1546,7 @@ resource "aws_kendra_index" "test" {
     name = "example-long-value"
     type = "LONG_VALUE"
     search {
-      displayable = true
+      displayable = %[3]t
       facetable   = true
       searchable  = false
       sortable    = true
@@ -1558,7 +1563,7 @@ resource "aws_kendra_index" "test" {
     search {
       displayable = true
       facetable   = true
-      searchable  = true
+      searchable  = %[4]t
       sortable    = false
     }
     relevance {
@@ -1573,7 +1578,7 @@ resource "aws_kendra_index" "test" {
       displayable = true
       facetable   = true
       searchable  = false
-      sortable    = false
+      sortable    = %[5]t
     }
     relevance {
       freshness  = false
@@ -1583,5 +1588,5 @@ resource "aws_kendra_index" "test" {
     }
   }
 }
-`, rName3))
+`, rName3, authorsFacetable, longValDisplayable, stringListValSearchable, dateValSortable, stringValImportance))
 }
