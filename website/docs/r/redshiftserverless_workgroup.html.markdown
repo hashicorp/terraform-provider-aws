@@ -25,7 +25,7 @@ The following arguments are supported:
 
 * `base_capacity` - (Optional) The base data warehouse capacity of the workgroup in Redshift Processing Units (RPUs).
 * `config_parameter` - (Optional) An array of parameters to set for more control over a serverless database. See `Config Parameter` below.
-* `enhanced_vpc_routing` - (Required) The value that specifies whether to turn on enhanced virtual private cloud (VPC) routing, which forces Amazon Redshift Serverless to route traffic through your VPC instead of over the internet.
+* `enhanced_vpc_routing` - (Optional) The value that specifies whether to turn on enhanced virtual private cloud (VPC) routing, which forces Amazon Redshift Serverless to route traffic through your VPC instead of over the internet.
 * `publicly_accessible` - (Optional) A value that specifies whether the workgroup can be accessed from a public network.
 * `security_group_ids` - (Optional) An array of security group IDs to associate with the workgroup.
 * `subnet_ids` - (Optional) An array of VPC subnet IDs to associate with the workgroup.
@@ -35,8 +35,8 @@ The following arguments are supported:
 
 ### Config Parameter
 
-* `parameter_key` - (Optional) The key of the parameter. The options are `datestyle`, `enable_user_activity_logging`, `query_group`, `search_path`, and `max_query_execution_time`.
-* `parameter_value` - (Optional) The value of the parameter to set.
+* `parameter_key` - (Required) The key of the parameter. The options are `datestyle`, `enable_user_activity_logging`, `query_group`, `search_path`, and `max_query_execution_time`.
+* `parameter_value` - (Required) The value of the parameter to set.
 
 ## Attributes Reference
 

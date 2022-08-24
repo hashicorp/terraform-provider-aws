@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/redshiftserverless"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -35,6 +36,31 @@ func ResourceWorkgroup() *schema.Resource {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
+			},
+			"config_parameter": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"parameter_key": {
+							Type:         schema.TypeString,
+							ValidateFunc: validation.StringInSlice([]string{"datestyle", "enable_user_activity_logging", "query_group", "search_path", "max_query_execution_time"}, false),
+							Required:     true,
+						},
+						"parameter_value": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+					},
+				},
+			},
+			"enhanced_vpc_routing": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
+			"publicly_accessible": {
+				Type:     schema.TypeBool,
+				Optional: true,
 			},
 			"namespace_name": {
 				Type:     schema.TypeString,
@@ -88,6 +114,18 @@ func resourceWorkgroupCreate(d *schema.ResourceData, meta interface{}) error {
 		input.BaseCapacity = aws.Int64(int64(v.(int)))
 	}
 
+	if v, ok := d.GetOk("config_parameter"); ok && len(v.([]interface{})) > 0 {
+		input.ConfigParameters = expandConfigParameters(v.([]interface{}))
+	}
+
+	if v, ok := d.GetOk("enhanced_vpc_routing"); ok {
+		input.EnhancedVpcRouting = aws.Bool(v.(bool))
+	}
+
+	if v, ok := d.GetOk("publicly_accessible"); ok {
+		input.PubliclyAccessible = aws.Bool(v.(bool))
+	}
+
 	if v, ok := d.GetOk("security_group_ids"); ok && v.(*schema.Set).Len() > 0 {
 		input.SecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
 	}
@@ -135,8 +173,13 @@ func resourceWorkgroupRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("workgroup_name", out.WorkgroupName)
 	d.Set("workgroup_id", out.WorkgroupId)
 	d.Set("base_capacity", out.BaseCapacity)
+	d.Set("enhanced_vpc_routing", out.EnhancedVpcRouting)
+	d.Set("publicly_accessible", out.PubliclyAccessible)
 	d.Set("security_group_ids", flex.FlattenStringSet(out.SecurityGroupIds))
 	d.Set("subnet_ids", flex.FlattenStringSet(out.SubnetIds))
+	if err := d.Set("config_parameter", flattenConfigParameters(out.ConfigParameters)); err != nil {
+		return fmt.Errorf("setting config_parameter: %w", err)
+	}
 
 	tags, err := ListTags(conn, arn)
 
@@ -172,6 +215,18 @@ func resourceWorkgroupUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		if v, ok := d.GetOk("base_capacity"); ok {
 			input.BaseCapacity = aws.Int64(int64(v.(int)))
+		}
+
+		if v, ok := d.GetOk("config_parameter"); ok && len(v.([]interface{})) > 0 {
+			input.ConfigParameters = expandConfigParameters(v.([]interface{}))
+		}
+
+		if v, ok := d.GetOk("enhanced_vpc_routing"); ok {
+			input.EnhancedVpcRouting = aws.Bool(v.(bool))
+		}
+
+		if v, ok := d.GetOk("publicly_accessible"); ok {
+			input.PubliclyAccessible = aws.Bool(v.(bool))
 		}
 
 		if v, ok := d.GetOk("security_group_ids"); ok && v.(*schema.Set).Len() > 0 {
@@ -225,4 +280,83 @@ func resourceWorkgroupDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	return nil
+}
+
+func expandConfigParameter(tfMap map[string]interface{}) *redshiftserverless.ConfigParameter {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &redshiftserverless.ConfigParameter{}
+
+	if v, ok := tfMap["parameter_key"].(string); ok {
+		apiObject.ParameterKey = aws.String(v)
+	}
+
+	if v, ok := tfMap["parameter_value"].(string); ok {
+		apiObject.ParameterValue = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func expandConfigParameters(tfList []interface{}) []*redshiftserverless.ConfigParameter {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var apiObjects []*redshiftserverless.ConfigParameter
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
+
+		if !ok {
+			continue
+		}
+
+		apiObject := expandConfigParameter(tfMap)
+
+		if apiObject == nil {
+			continue
+		}
+
+		apiObjects = append(apiObjects, apiObject)
+	}
+
+	return apiObjects
+}
+
+func flattenConfigParameter(apiObject *redshiftserverless.ConfigParameter) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.ParameterKey; v != nil {
+		tfMap["parameter_key"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.ParameterValue; v != nil {
+		tfMap["parameter_value"] = aws.StringValue(v)
+	}
+	return tfMap
+}
+
+func flattenConfigParameters(apiObjects []*redshiftserverless.ConfigParameter) []interface{} {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+
+	for _, apiObject := range apiObjects {
+		if apiObject == nil {
+			continue
+		}
+
+		tfList = append(tfList, flattenConfigParameter(apiObject))
+	}
+
+	return tfList
 }
