@@ -30,13 +30,29 @@ If you are running into one of these scenarios, we recommend opening an issue in
 
 <!--- Please run `terraform -v` to show the Terraform core version and provider version(s). If you are not running the latest version of Terraform or the provider, please upgrade because your issue may have already been fixed. [Terraform documentation on provider versioning](https://www.terraform.io/docs/configuration/providers.html#provider-versions). --->
 
+$ terraform --version
+Terraform v1.2.6
+on windows_amd64
++ provider registry.terraform.io/hashicorp/aws v3.75.2
+
+Your version of Terraform is out of date! The latest version
+is 1.2.7. You can update by downloading from https://www.terraform.io/downloads.html
+
 ### Affected Resource(s)
 
 <!--- Please list the affected resources and data sources. --->
+The following resources are affected when I run command terraform plan, even though there is no change in the terraform configuration file nor manually did the changes.
+resource "aws_s3_bucket_lifecycle_configuration" "lifecycle1"  and
+resource "aws_s3_bucket_logging" "logging_bucket"
 
 * aws_XXXXX
 
 ### Terraform Configuration Files
+
+added the terraform configuration files to following gist link
+
+https://gist.github.com/dinesh1202/4ef5491cfab0c4ed508fe73cb26591a5
+
 
 <!--- Information about code formatting: https://help.github.com/articles/basic-writing-and-formatting-syntax/#quoting-code --->
 
@@ -55,28 +71,46 @@ Please provide a link to a GitHub Gist containing the complete debug output. Ple
 
 To obtain the debug output, see the [Terraform documentation on debugging](https://www.terraform.io/docs/internals/debugging.html).
 --->
+added the output to the following gist link
+https://gist.github.com/dinesh1202/006407323a6cde5b7bdb00b6fce93d4f
 
 ### Panic Output
 
 <!--- If Terraform produced a panic, please provide a link to a GitHub Gist containing the output of the `crash.log`. --->
-
+No
 ### Expected Behavior
 
 <!--- What should have happened? --->
+
+The expected output should be " Plan: 0 to add, 0 to change, 0 to destroy "
+
+It should give the output as "0 to change" , because I did not change any thing in the terraform configuration file or code
 
 ### Actual Behavior
 
 <!--- What actually happened? --->
 
+The output is : " Plan: 0 to add, 2 to change, 0 to destroy "
+
+when running the command terraform plan getting above plan as " 2 to change" which unexpected
+
 ### Steps to Reproduce
 
 <!--- Please list the steps required to reproduce the issue. --->
 
-1. `terraform apply`
+If you will use the terraform code which I have shared in the issue I shared
+
+1. `terraform workspace new dev`
+2. `terraform workspace select dev`
+3. `terraform plan`
+4. `terraform apply`
+5. after successfully created the infrastructure, when running terraform plan, getting the unexpected output, also I checked to see the output for terraform apply, but getting the same result/output
+6. again run `terraform plan`
 
 ### Important Factoids
 
 <!--- Are there anything atypical about your accounts that we should know? For example: Running in EC2 Classic? --->
+No
 
 ### References
 
@@ -85,5 +119,6 @@ Information about referencing Github Issues: https://help.github.com/articles/ba
 
 Are there any other GitHub issues (open or closed) or pull requests that should be linked here? Vendor documentation? For example:
 --->
+No
 
 * #0000
