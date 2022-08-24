@@ -42,7 +42,8 @@ func ResourceDatabase() *schema.Resource {
 			},
 			"availability_zone": {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
+				Computed: true,
 				ForceNew: true,
 			},
 			"backup_retention_enabled": {
