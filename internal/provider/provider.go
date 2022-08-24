@@ -1855,6 +1855,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_redshiftdata_statement": redshiftdata.ResourceStatement(),
 
 			"aws_redshiftserverless_namespace": redshiftserverless.ResourceNamespace(),
+			"aws_redshiftserverless_workgroup": redshiftserverless.ResourceWorkgroup(),
 
 			"aws_resourcegroups_group": resourcegroups.ResourceGroup(),
 
