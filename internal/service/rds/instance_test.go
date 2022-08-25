@@ -390,6 +390,39 @@ func TestAccRDSInstance_subnetGroup(t *testing.T) {
 	})
 }
 
+func TestAccRDSInstance_networkType(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var v rds.DBInstance
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_db_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_networkType(rName, "IPV4"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "network_type", "IPV4"),
+				),
+			},
+			{
+				Config: testAccInstanceConfig_networkType(rName, "DUAL"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "network_type", "DUAL"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccRDSInstance_optionGroup(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -1566,15 +1599,6 @@ func TestAccRDSInstance_ReplicateSourceDB_networkType(t *testing.T) {
 					testAccCheckInstanceExists(resourceName, &dbInstance),
 					testAccCheckInstanceReplicaAttributes(&sourceDbInstance, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "network_type", "IPV4"),
-				),
-			},
-			{
-				Config: testAccInstanceConfig_ReplicateSourceDB_networkType(rName, "DUAL"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(sourceResourceName, &sourceDbInstance),
-					testAccCheckInstanceExists(resourceName, &dbInstance),
-					testAccCheckInstanceReplicaAttributes(&sourceDbInstance, &dbInstance),
-					resource.TestCheckResourceAttr(resourceName, "network_type", "DUAL"),
 				),
 			},
 		},
@@ -4872,6 +4896,32 @@ resource "aws_db_instance" "test" {
   depends_on = [aws_db_subnet_group.test]
 }
 `, rName))
+}
+
+func testAccInstanceConfig_networkType(rName string, networkType string) string {
+	return acctest.ConfigCompose(
+		testAccInstanceConfig_orderableClassMySQL(),
+		acctest.ConfigVPCWithSubnetsIPv6(rName, 2),
+		fmt.Sprintf(`
+resource "aws_db_subnet_group" "test" {
+  name       = %[1]q
+  subnet_ids = aws_subnet.test[*].id
+}
+
+resource "aws_db_instance" "test" {
+  allocated_storage       = 5
+  backup_retention_period = 1
+  db_subnet_group_name    = aws_db_subnet_group.test.name
+  engine                  = data.aws_rds_orderable_db_instance.test.engine
+  identifier              = %[1]q
+  instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
+  password                = "avoid-plaintext-passwords"
+  username                = "tfacctest"
+  skip_final_snapshot     = true
+  network_type            = %[2]q
+  apply_immediately       = true
+}
+`, rName, networkType))
 }
 
 func testAccInstanceConfig_optionGroup(rName string) string {
