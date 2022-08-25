@@ -47,9 +47,6 @@ func ResourceProject() *schema.Resource {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
-				// while there is an API for UpdateProjectDataDelivery, ForceNew because there is a bug in the service API
-				// A bug in the service API for UpdateProjectDataDelivery has been reported
-				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"cloudwatch_logs": {
