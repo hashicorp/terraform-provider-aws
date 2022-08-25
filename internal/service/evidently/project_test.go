@@ -14,7 +14,7 @@ import (
 	tfcloudwatchevidently "github.com/hashicorp/terraform-provider-aws/internal/service/evidently"
 )
 
-func TestAccProject_basic(t *testing.T) {
+func TestAccEvidentlyProject_basic(t *testing.T) {
 	var project cloudwatchevidently.Project
 
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
@@ -77,7 +77,7 @@ func TestAccProject_basic(t *testing.T) {
 	})
 }
 
-func TestAccProject_tags(t *testing.T) {
+func TestAccEvidentlyProject_tags(t *testing.T) {
 	var project cloudwatchevidently.Project
 
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
@@ -134,7 +134,7 @@ func TestAccProject_tags(t *testing.T) {
 	})
 }
 
-func TestAccProject_updateDataDelivery(t *testing.T) {
+func TestAccEvidentlyProject_updateDataDelivery(t *testing.T) {
 	var project cloudwatchevidently.Project
 
 	rName := sdkacctest.RandomWithPrefix("tf-test-bucket")
@@ -207,7 +207,7 @@ func TestAccProject_updateDataDelivery(t *testing.T) {
 	})
 }
 
-func TestAccProject_disappears(t *testing.T) {
+func TestAccEvidentlyProject_disappears(t *testing.T) {
 	var project cloudwatchevidently.Project
 
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
