@@ -8,6 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/directconnect"
+	"github.com/aws/aws-sdk-go/service/secretsmanager"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -112,10 +113,32 @@ func resourceMacSecKeyDelete(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("Unable to disassociate MACSec secret key on Direct Connect Connection (%s): %w", *input.ConnectionId, err)
 	}
 
+	// Disassociating the key does not delete it from Secrets Manager, do that here
+	err = resourceMacSecKeySecretDelete(*input.SecretARN, meta)
+	if err != nil {
+		return fmt.Errorf("Unable to delete MACSec secret key %s: %w", *input.SecretARN, err)
+	}
+
 	return nil
 }
 
-// MacSecKeyParseSecretArn parses the secret ARN returned from a CMK or secret_arn
+func resourceMacSecKeySecretDelete(secretId string, meta interface{}) error {
+	conn := meta.(*conns.AWSClient).SecretsManagerConn
+	input := &secretsmanager.DeleteSecretInput{
+		SecretId: aws.String(secretId),
+	}
+
+	log.Printf("[DEBUG] Deleting MACSec secret key: %s", *input.SecretId)
+	_, err := conn.DeleteSecret(input)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// MacSecKeyParseSecretARN parses the secret ARN returned from a CMK or secret_arn
 func MacSecKeyParseSecretARN(output *directconnect.AssociateMacSecKeyOutput) string {
 	var result string
 
