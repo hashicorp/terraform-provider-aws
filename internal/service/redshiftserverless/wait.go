@@ -47,7 +47,7 @@ func waitNamespaceUpdated(conn *redshiftserverless.RedshiftServerless, name stri
 	return nil, err
 }
 
-func waitWorkgroupAvailable(conn *redshiftserverless.RedshiftServerless, name string) (*redshiftserverless.Workgroup, error) {
+func waitWorkgroupAvailable(conn *redshiftserverless.RedshiftServerless, name string) (*redshiftserverless.Workgroup, error) { //nolint:unparam
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
 			redshiftserverless.WorkgroupStatusCreating,
