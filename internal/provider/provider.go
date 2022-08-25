@@ -123,6 +123,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/macie"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/macie2"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/mediaconvert"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/medialive"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/mediapackage"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/mediastore"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/memorydb"
@@ -1721,6 +1722,8 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_media_convert_queue": mediaconvert.ResourceQueue(),
 
 			"aws_media_package_channel": mediapackage.ResourceChannel(),
+
+			"aws_medialive_input": medialive.ResourceInput(),
 
 			"aws_media_store_container":        mediastore.ResourceContainer(),
 			"aws_media_store_container_policy": mediastore.ResourceContainerPolicy(),

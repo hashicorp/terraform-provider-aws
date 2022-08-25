@@ -12,11 +12,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -45,7 +45,7 @@ func ResourceInput() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"destination": {
+			"destinations": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Resource{
@@ -57,7 +57,7 @@ func ResourceInput() *schema.Resource {
 					},
 				},
 			},
-			"input_device": {
+			"input_devices": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Resource{
@@ -69,7 +69,13 @@ func ResourceInput() *schema.Resource {
 					},
 				},
 			},
-			"media_connect_flow": {
+			"input_security_groups": {
+				Type:     schema.TypeList,
+				Required: true,
+				MinItems: 1,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"media_connect_flows": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Resource{
@@ -90,7 +96,7 @@ func ResourceInput() *schema.Resource {
 				Required:         true,
 				ValidateDiagFunc: validation.ToDiagFunc(verify.ValidARN),
 			},
-			"source": {
+			"sources": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Resource{
@@ -132,16 +138,27 @@ func resourceInputCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	conn := meta.(*conns.AWSClient).MediaLiveConn
 
 	in := &medialive.CreateInputInput{
-		Name: aws.String(d.Get("name").(string)),
-		Type: types.InputType(d.Get("type").(string)),
+		RequestId:           aws.String(resource.UniqueId()),
+		InputSecurityGroups: flex.ExpandStringValueList(d.Get("input_security_groups").([]interface{})),
+		Name:                aws.String(d.Get("name").(string)),
+		Type:                types.InputType(d.Get("type").(string)),
+		RoleArn:             aws.String(d.Get("role_arn").(string)),
 	}
 
-	if v, ok := d.GetOk("max_size"); ok {
-		in.MaxSize = aws.Int64(int64(v.(int)))
+	if v, ok := d.GetOk("destinations"); ok && v.(*schema.Set).Len() > 0 {
+		in.Destinations = expandDestinations(v.(*schema.Set).List())
 	}
 
-	if v, ok := d.GetOk("complex_argument"); ok && len(v.([]interface{})) > 0 {
-		in.ComplexArguments = expandComplexArguments(v.([]interface{}))
+	if v, ok := d.GetOk("input_devices"); ok && v.(*schema.Set).Len() > 0 {
+		in.InputDevices = expandInputDevices(v.([]interface{}))
+	}
+
+	if v, ok := d.GetOk("media_connect_flows"); ok && v.(*schema.Set).Len() > 0 {
+		in.MediaConnectFlows = expandMediaConnectFlows(v.([]interface{}))
+	}
+
+	if v, ok := d.GetOk("sources"); ok && v.(*schema.Set).Len() > 0 {
+		in.Sources = expandSources(v.([]interface{}))
 	}
 
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
@@ -160,7 +177,7 @@ func resourceInputCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		return create.DiagError(names.MediaLive, create.ErrActionCreating, ResNameInput, d.Get("name").(string), errors.New("empty output"))
 	}
 
-	d.SetId(aws.ToString(out.Input.InputID))
+	d.SetId(aws.ToString(out.Input.Id))
 
 	if _, err := waitInputCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return create.DiagError(names.MediaLive, create.ErrActionWaitingForCreation, ResNameInput, d.Id(), err)
@@ -186,24 +203,9 @@ func resourceInputRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	d.Set("arn", out.Arn)
 	d.Set("name", out.Name)
+	d.Set("input_security_groups", out.SecurityGroups)
 
-	if err := d.Set("complex_argument", flattenComplexArguments(out.ComplexArguments)); err != nil {
-		return create.DiagError(names.MediaLive, create.ErrActionSetting, ResNameInput, d.Id(), err)
-	}
-
-	p, err := verify.SecondJSONUnlessEquivalent(d.Get("policy").(string), aws.ToString(out.Policy))
-	if err != nil {
-		return create.DiagError(names.MediaLive, create.ErrActionSetting, ResNameInput, d.Id(), err)
-	}
-
-	p, err = structure.NormalizeJsonString(p)
-	if err != nil {
-		return create.DiagError(names.MediaLive, create.ErrActionSetting, ResNameInput, d.Id(), err)
-	}
-
-	d.Set("policy", p)
-
-	tags, err := ListTags(ctx, conn, d.Id())
+	tags, err := ListTags(ctx, conn, aws.ToString(out.Arn))
 	if err != nil {
 		return create.DiagError(names.MediaLive, create.ErrActionReading, ResNameInput, d.Id(), err)
 	}
@@ -226,29 +228,36 @@ func resourceInputRead(ctx context.Context, d *schema.ResourceData, meta interfa
 func resourceInputUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).MediaLiveConn
 
-	update := false
+	if d.HasChangesExcept("tags", "tags_all") {
+		in := &medialive.UpdateInputInput{
+			InputId: aws.String(d.Id()),
+		}
 
-	in := &medialive.UpdateInputInput{
-		Id: aws.String(d.Id()),
+		if d.HasChange("destinations") {
+			in.Destinations = expandDestinations(d.Get("destinations").(*schema.Set).List())
+		}
+
+		if d.HasChange("name") {
+			in.Name = aws.String(d.Get("name").(string))
+		}
+
+		log.Printf("[DEBUG] Updating MediaLive Input (%s): %#v", d.Id(), in)
+		out, err := conn.UpdateInput(ctx, in)
+		if err != nil {
+			return create.DiagError(names.MediaLive, create.ErrActionUpdating, ResNameInput, d.Id(), err)
+		}
+
+		if _, err := waitInputUpdated(ctx, conn, aws.ToString(out.Input.Id), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return create.DiagError(names.MediaLive, create.ErrActionWaitingForUpdate, ResNameInput, d.Id(), err)
+		}
 	}
 
-	if d.HasChanges("an_argument") {
-		in.AnArgument = aws.String(d.Get("an_argument").(string))
-		update = true
-	}
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
 
-	if !update {
-		return nil
-	}
-
-	log.Printf("[DEBUG] Updating MediaLive Input (%s): %#v", d.Id(), in)
-	out, err := conn.UpdateInput(ctx, in)
-	if err != nil {
-		return create.DiagError(names.MediaLive, create.ErrActionUpdating, ResNameInput, d.Id(), err)
-	}
-
-	if _, err := waitInputUpdated(ctx, conn, aws.ToString(out.OperationId), d.Timeout(schema.TimeoutUpdate)); err != nil {
-		return create.DiagError(names.MediaLive, create.ErrActionWaitingForUpdate, ResNameInput, d.Id(), err)
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
+			return create.DiagError(names.MediaLive, create.ErrActionUpdating, ResNameInput, d.Id(), err)
+		}
 	}
 
 	return resourceInputRead(ctx, d, meta)
@@ -260,16 +269,16 @@ func resourceInputDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	log.Printf("[INFO] Deleting MediaLive Input %s", d.Id())
 
 	_, err := conn.DeleteInput(ctx, &medialive.DeleteInputInput{
-		Id: aws.String(d.Id()),
+		InputId: aws.String(d.Id()),
 	})
 
 	if err != nil {
-		var nfe *types.ResourceNotFoundException
+		var nfe *types.NotFoundException
 		if errors.As(err, &nfe) {
 			return nil
 		}
 
-		return create.DiagError(names.MediaLive, create.ErrActionDeleting, ResNameEndpoint, d.Id(), err)
+		return create.DiagError(names.MediaLive, create.ErrActionDeleting, ResNameInput, d.Id(), err)
 	}
 
 	if _, err := waitInputDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
@@ -286,10 +295,10 @@ const (
 	statusUpdated       = "Updated"
 )
 
-func waitInputCreated(ctx context.Context, conn *medialive.Client, id string, timeout time.Duration) (*medialive.Input, error) {
+func waitInputCreated(ctx context.Context, conn *medialive.Client, id string, timeout time.Duration) (*medialive.DescribeInputOutput, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending:                   enum.Slice(types.InputStateCreating),
-		Target:                    enum.Slice(types.InputStateAttached),
+		Target:                    enum.Slice(types.InputStateDetached, types.InputStateAttached),
 		Refresh:                   statusInput(ctx, conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
@@ -297,17 +306,17 @@ func waitInputCreated(ctx context.Context, conn *medialive.Client, id string, ti
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*medialive.Input); ok {
+	if out, ok := outputRaw.(*medialive.DescribeInputOutput); ok {
 		return out, err
 	}
 
 	return nil, err
 }
 
-func waitInputUpdated(ctx context.Context, conn *medialive.Client, id string, timeout time.Duration) (*medialive.Input, error) {
+func waitInputUpdated(ctx context.Context, conn *medialive.Client, id string, timeout time.Duration) (*medialive.DescribeInputOutput, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending:                   []string{statusChangePending},
-		Target:                    []string{statusUpdated},
+		Pending:                   []string{},
+		Target:                    enum.Slice(types.InputStateDetached, types.InputStateAttached),
 		Refresh:                   statusInput(ctx, conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
@@ -315,23 +324,23 @@ func waitInputUpdated(ctx context.Context, conn *medialive.Client, id string, ti
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*medialive.Input); ok {
+	if out, ok := outputRaw.(*medialive.DescribeInputOutput); ok {
 		return out, err
 	}
 
 	return nil, err
 }
 
-func waitInputDeleted(ctx context.Context, conn *medialive.Client, id string, timeout time.Duration) (*medialive.Input, error) {
+func waitInputDeleted(ctx context.Context, conn *medialive.Client, id string, timeout time.Duration) (*medialive.DescribeInputOutput, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{statusDeleting, statusNormal},
-		Target:  []string{},
+		Pending: enum.Slice(types.InputStateDeleting),
+		Target:  enum.Slice(types.InputStateDeleted),
 		Refresh: statusInput(ctx, conn, id),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*medialive.Input); ok {
+	if out, ok := outputRaw.(*medialive.DescribeInputOutput); ok {
 		return out, err
 	}
 
@@ -377,81 +386,136 @@ func FindInputByID(ctx context.Context, conn *medialive.Client, id string) (*med
 	return out, nil
 }
 
-func flattenComplexArgument(apiObject *medialive.ComplexArgument) map[string]interface{} {
-	if apiObject == nil {
+//func flattenComplexArgument(apiObject *medialive.ComplexArgument) map[string]interface{} {
+//	if apiObject == nil {
+//		return nil
+//	}
+//
+//	m := map[string]interface{}{}
+//
+//	if v := apiObject.SubFieldOne; v != nil {
+//		m["sub_field_one"] = aws.ToString(v)
+//	}
+//
+//	if v := apiObject.SubFieldTwo; v != nil {
+//		m["sub_field_two"] = aws.ToString(v)
+//	}
+//
+//	return m
+//}
+//
+//func flattenComplexArguments(apiObjects []*medialive.ComplexArgument) []interface{} {
+//	if len(apiObjects) == 0 {
+//		return nil
+//	}
+//
+//	var l []interface{}
+//
+//	for _, apiObject := range apiObjects {
+//		if apiObject == nil {
+//			continue
+//		}
+//
+//		l = append(l, flattenComplexArgument(apiObject))
+//	}
+//
+//	return l
+//}
+
+func expandDestinations(tfList []interface{}) []types.InputDestinationRequest {
+	if tfList == nil || len(tfList) == 0 {
 		return nil
 	}
 
-	m := map[string]interface{}{}
+	var s []types.InputDestinationRequest
 
-	if v := apiObject.SubFieldOne; v != nil {
-		m["sub_field_one"] = aws.ToString(v)
-	}
-
-	if v := apiObject.SubFieldTwo; v != nil {
-		m["sub_field_two"] = aws.ToString(v)
-	}
-
-	return m
-}
-
-func flattenComplexArguments(apiObjects []*medialive.ComplexArgument) []interface{} {
-	if len(apiObjects) == 0 {
-		return nil
-	}
-
-	var l []interface{}
-
-	for _, apiObject := range apiObjects {
-		if apiObject == nil {
-			continue
-		}
-
-		l = append(l, flattenComplexArgument(apiObject))
-	}
-
-	return l
-}
-
-func expandComplexArgument(tfMap map[string]interface{}) *medialive.ComplexArgument {
-	if tfMap == nil {
-		return nil
-	}
-
-	a := &medialive.ComplexArgument{}
-
-	if v, ok := tfMap["sub_field_one"].(string); ok && v != "" {
-		a.SubFieldOne = aws.String(v)
-	}
-
-	if v, ok := tfMap["sub_field_two"].(string); ok && v != "" {
-		a.SubFieldTwo = aws.String(v)
-	}
-
-	return a
-}
-
-func expandComplexArguments(tfList []interface{}) []*medialive.ComplexArgument {
-
-	var s []*medialive.ComplexArgument
-
-	// s := make([]*medialive.ComplexArgument, 0)
-
-	for _, r := range tfList {
-		m, ok := r.(map[string]interface{})
+	for _, v := range tfList {
+		m, ok := v.(map[string]interface{})
 
 		if !ok {
 			continue
 		}
 
-		a := expandComplexArgument(m)
+		var id types.InputDestinationRequest
+		if val, ok := m["stream_name"]; ok {
+			id.StreamName = aws.String(val.(string))
+			s = append(s, id)
+		}
+	}
+	return s
+}
 
-		if a == nil {
+func expandInputDevices(tfList []interface{}) []types.InputDeviceSettings {
+	if tfList == nil || len(tfList) == 0 {
+		return nil
+	}
+
+	var s []types.InputDeviceSettings
+
+	for _, v := range tfList {
+		m, ok := v.(map[string]interface{})
+
+		if !ok {
 			continue
 		}
 
-		s = append(s, a)
+		var id types.InputDeviceSettings
+		if val, ok := m["id"]; ok {
+			id.Id = aws.String(val.(string))
+			s = append(s, id)
+		}
+	}
+	return s
+}
+
+func expandMediaConnectFlows(tfList []interface{}) []types.MediaConnectFlowRequest {
+	if tfList == nil || len(tfList) == 0 {
+		return nil
 	}
 
+	var s []types.MediaConnectFlowRequest
+
+	for _, v := range tfList {
+		m, ok := v.(map[string]interface{})
+
+		if !ok {
+			continue
+		}
+
+		var id types.MediaConnectFlowRequest
+		if val, ok := m["flow_arn"]; ok {
+			id.FlowArn = aws.String(val.(string))
+			s = append(s, id)
+		}
+	}
+	return s
+}
+
+func expandSources(tfList []interface{}) []types.InputSourceRequest {
+	if tfList == nil || len(tfList) == 0 {
+		return nil
+	}
+
+	var s []types.InputSourceRequest
+
+	for _, v := range tfList {
+		m, ok := v.(map[string]interface{})
+
+		if !ok {
+			continue
+		}
+
+		var id types.InputSourceRequest
+		if val, ok := m["password_param"]; ok {
+			id.PasswordParam = aws.String(val.(string))
+		}
+		if val, ok := m["url"]; ok {
+			id.Url = aws.String(val.(string))
+		}
+		if val, ok := m["username"]; ok {
+			id.Username = aws.String(val.(string))
+		}
+		s = append(s, id)
+	}
 	return s
 }
