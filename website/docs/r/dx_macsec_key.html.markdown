@@ -6,7 +6,7 @@ description: |-
   Provides a MAC Security (MACSec) secret key resource for use with Direct Connect.
 ---
 
-# Resource: aws_macsec_key
+# Resource: aws_dx_macsec_key
 
 Provides a MAC Security (MACSec) secret key resource for use with Direct Connect. See [MACsec prerequisites](https://docs.aws.amazon.com/directconnect/latest/UserGuide/direct-connect-mac-sec-getting-started.html#mac-sec-prerequisites) for information about MAC Security (MACsec) prerequisites.
 
@@ -20,6 +20,7 @@ Creating this resource will also create a resource of type [`aws_secretsmanager_
 ## Example Usage
 
 ### Create MACSec key with CKN and CAK
+
 ```terraform
 data "aws_dx_connection" "example" {
   name = "tf-dx-connection"
@@ -33,6 +34,7 @@ resource "aws_dx_macsec_key" "test" {
 ```
 
 ### Create MACSec key with existing Secrets Manager secret
+
 ```terraform
 data "aws_dx_connection" "example" {
   name = "tf-dx-connection"
@@ -44,7 +46,7 @@ data "aws_secretsmanager_secret" "example" {
 
 resource "aws_dx_macsec_key" "test" {
   connection_id = data.aws_dx_connection.example.id
-  secret_arn = data.aws_secretsmanager_secret.example.arn
+  secret_arn    = data.aws_secretsmanager_secret.example.arn
 }
 ```
 

@@ -87,7 +87,7 @@ func resourceMacSecKeyCreate(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error creating MACSec secret key on Direct Connect Connection (%s): %w", *input.ConnectionId, err)
 	}
 
-	secret_arn := MacSecKeyParseSecretArn(output)
+	secret_arn := MacSecKeyParseSecretARN(output)
 
 	// Create a composite ID based on connection ID and secret ARN
 	d.SetId(fmt.Sprintf("%s/%s", secret_arn, aws.StringValue(output.ConnectionId)))
@@ -116,7 +116,7 @@ func resourceMacSecKeyDelete(d *schema.ResourceData, meta interface{}) error {
 }
 
 // MacSecKeyParseSecretArn parses the secret ARN returned from a CMK or secret_arn
-func MacSecKeyParseSecretArn(output *directconnect.AssociateMacSecKeyOutput) string {
+func MacSecKeyParseSecretARN(output *directconnect.AssociateMacSecKeyOutput) string {
 	var result string
 
 	for _, key := range output.MacSecKeys {
