@@ -155,7 +155,7 @@ func TestAccEvidentlyProject_updateDataDeliveryCloudWatchToS3(t *testing.T) {
 		CheckDestroy:             testAccCheckProjectDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProjectConfig_dataDeliveryCloudWatchLogs(rName, rName2, rName3, rName4, rName5),
+				Config: testAccProjectConfig_dataDeliveryCloudWatchLogs(rName, rName2, rName3, rName4, rName5, "first"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectExists(resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "data_delivery.#", "1"),
@@ -168,7 +168,7 @@ func TestAccEvidentlyProject_updateDataDeliveryCloudWatchToS3(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccProjectConfig_dataDeliveryS3Bucket(rName, rName2, rName3, rName4, rName5, prefix),
+				Config: testAccProjectConfig_dataDeliveryS3Bucket(rName, rName2, rName3, rName4, rName5, prefix, "first"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectExists(resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "data_delivery.#", "1"),
@@ -314,35 +314,43 @@ resource "aws_cloudwatch_log_group" "test2" {
 `, rName, rName2, rName3, rName4)
 }
 
-func testAccProjectConfig_dataDeliveryCloudWatchLogs(rName, rName2, rName3, rName4, rName5 string) string {
+func testAccProjectConfig_dataDeliveryCloudWatchLogs(rName, rName2, rName3, rName4, rName5, selectLogGroup string) string {
 	return acctest.ConfigCompose(
 		testAccProjectBaseConfig(rName, rName2, rName3, rName4),
 		fmt.Sprintf(`
+locals {
+  select_log_group = %[2]q
+}
+
 resource "aws_evidently_project" "test" {
   name = %[1]q
 
   data_delivery {
     cloudwatch_logs {
-      log_group = aws_cloudwatch_log_group.test.name
+      log_group = local.select_log_group == "first" ? aws_cloudwatch_log_group.test.name : aws_cloudwatch_log_group.test2.name
     }
   }
 }
-`, rName5))
+`, rName5, selectLogGroup))
 }
 
-func testAccProjectConfig_dataDeliveryS3Bucket(rName, rName2, rName3, rName4, rName5, prefix string) string {
+func testAccProjectConfig_dataDeliveryS3Bucket(rName, rName2, rName3, rName4, rName5, prefix, selectBucket string) string {
 	return acctest.ConfigCompose(
 		testAccProjectBaseConfig(rName, rName2, rName3, rName4),
 		fmt.Sprintf(`
+locals {
+  select_bucket = %[3]q
+}
+
 resource "aws_evidently_project" "test" {
   name = %[1]q
 
   data_delivery {
     s3_destination {
-      bucket = aws_s3_bucket.test.id
+      bucket = local.select_bucket == "first" ? aws_s3_bucket.test.id : aws_s3_bucket.test2.id
       prefix = %[2]q
     }
   }
 }
-`, rName5, prefix))
+`, rName5, prefix, selectBucket))
 }
