@@ -2,7 +2,6 @@ package rds
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
@@ -118,6 +117,12 @@ func DataSourceOrderableInstance() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 
+			"supported_network_types": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+
 			"supports_enhanced_monitoring": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -204,7 +209,6 @@ func dataSourceOrderableInstanceRead(d *schema.ResourceData, meta interface{}) e
 		input.Vpc = aws.Bool(v.(bool))
 	}
 
-	log.Printf("[DEBUG] Reading RDS Orderable DB Instance Options: %v", input)
 	var instanceClassResults []*rds.OrderableDBInstanceOption
 
 	err := conn.DescribeOrderableDBInstanceOptionsPages(input, func(resp *rds.DescribeOrderableDBInstanceOptionsOutput, lastPage bool) bool {
@@ -273,11 +277,11 @@ func dataSourceOrderableInstanceRead(d *schema.ResourceData, meta interface{}) e
 	})
 
 	if err != nil {
-		return fmt.Errorf("error reading RDS orderable DB instance options: %w", err)
+		return fmt.Errorf("reading RDS Orderable DB Instance Options: %w", err)
 	}
 
 	if len(instanceClassResults) == 0 {
-		return fmt.Errorf("no RDS Orderable DB Instance options found matching criteria; try different search")
+		return fmt.Errorf("no RDS Orderable DB Instance Options found matching criteria; try different search")
 	}
 
 	// preferred classes/versions
@@ -369,18 +373,15 @@ func dataSourceOrderableInstanceRead(d *schema.ResourceData, meta interface{}) e
 	}
 
 	d.SetId(aws.StringValue(found.DBInstanceClass))
-
-	d.Set("instance_class", found.DBInstanceClass)
 	d.Set("availability_zone_group", found.AvailabilityZoneGroup)
-
 	var availabilityZones []string
-	for _, az := range found.AvailabilityZones {
-		availabilityZones = append(availabilityZones, aws.StringValue(az.Name))
+	for _, v := range found.AvailabilityZones {
+		availabilityZones = append(availabilityZones, aws.StringValue(v.Name))
 	}
 	d.Set("availability_zones", availabilityZones)
-
 	d.Set("engine", found.Engine)
 	d.Set("engine_version", found.EngineVersion)
+	d.Set("instance_class", found.DBInstanceClass)
 	d.Set("license_model", found.LicenseModel)
 	d.Set("max_iops_per_db_instance", found.MaxIopsPerDbInstance)
 	d.Set("max_iops_per_gib", found.MaxIopsPerGib)
@@ -392,7 +393,8 @@ func dataSourceOrderableInstanceRead(d *schema.ResourceData, meta interface{}) e
 	d.Set("outpost_capable", found.OutpostCapable)
 	d.Set("read_replica_capable", found.ReadReplicaCapable)
 	d.Set("storage_type", found.StorageType)
-	d.Set("supported_engine_modes", found.SupportedEngineModes)
+	d.Set("supported_engine_modes", aws.StringValueSlice(found.SupportedEngineModes))
+	d.Set("supported_network_types", aws.StringValueSlice(found.SupportedNetworkTypes))
 	d.Set("supports_enhanced_monitoring", found.SupportsEnhancedMonitoring)
 	d.Set("supports_global_databases", found.SupportsGlobalDatabases)
 	d.Set("supports_iam_database_authentication", found.SupportsIAMDatabaseAuthentication)

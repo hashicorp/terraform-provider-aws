@@ -53,6 +53,7 @@ In addition to all arguments above, the following attributes are exported:
 * `monitoring_interval` - The interval, in seconds, between points when Enhanced Monitoring metrics are collected for the DB instance.
 * `monitoring_role_arn` - The ARN for the IAM role that permits RDS to send Enhanced Monitoring metrics to CloudWatch Logs.
 * `multi_az` - Specifies if the DB instance is a Multi-AZ deployment.
+* `network_type` - The network type of the DB instance.
 * `option_group_memberships` - Provides the list of option group memberships for this DB instance.
 * `port` - The database port.
 * `preferred_backup_window` - Specifies the daily time range during which automated backups are created.
