@@ -4786,10 +4786,6 @@ func testAccInstanceConfig_subnetGroup(rName string) string {
 resource "aws_db_subnet_group" "test" {
   name       = %[1]q
   subnet_ids = aws_subnet.test[*].id
-
-  tags = {
-    Name = %[1]q
-  }
 }
 
 resource "aws_db_instance" "test" {
@@ -4820,10 +4816,6 @@ func testAccInstanceConfig_subnetGroupUpdated(rName string) string {
 resource "aws_db_subnet_group" "test" {
   name       = %[1]q
   subnet_ids = aws_subnet.test[*].id
-
-  tags = {
-    Name = %[1]q
-  }
 }
 
 resource "aws_vpc" "test2" {
@@ -4849,10 +4841,6 @@ resource "aws_subnet" "test2" {
 resource "aws_db_subnet_group" "test2" {
   name       = "%[1]s-2"
   subnet_ids = aws_subnet.test2[*].id
-
-  tags = {
-    Name = %[1]q
-  }
 }
 
 resource "aws_db_instance" "test" {
@@ -5434,63 +5422,29 @@ resource "aws_db_instance" "test" {
 func testAccInstanceConfig_MSSQL_timezone(rName string) string {
 	return acctest.ConfigCompose(
 		testAccInstanceConfig_orderableClassSQLServerEx(),
-		acctest.ConfigAvailableAZsNoOptIn(),
+		testAccInstanceConfig_baseVPC(rName),
 		fmt.Sprintf(`
-resource "aws_vpc" "foo" {
-  cidr_block           = "10.1.0.0/16"
-  enable_dns_hostnames = true
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_db_subnet_group" "rds_one" {
-  name        = %[1]q
-  description = "db subnets for rds_one"
-
-  subnet_ids = [aws_subnet.main.id, aws_subnet.other.id]
-}
-
-resource "aws_subnet" "main" {
-  vpc_id            = aws_vpc.foo.id
-  availability_zone = data.aws_availability_zones.available.names[0]
-  cidr_block        = "10.1.1.0/24"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "other" {
-  vpc_id            = aws_vpc.foo.id
-  availability_zone = data.aws_availability_zones.available.names[1]
-  cidr_block        = "10.1.2.0/24"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
 resource "aws_db_instance" "test" {
   allocated_storage       = 20
   backup_retention_period = 0
-  db_subnet_group_name    = aws_db_subnet_group.rds_one.name
+  db_subnet_group_name    = aws_db_subnet_group.test.name
   engine                  = data.aws_rds_orderable_db_instance.test.engine
   engine_version          = data.aws_rds_orderable_db_instance.test.engine_version
   identifier              = %[1]q
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
-  password                = "somecrazypassword"
   skip_final_snapshot     = true
-  username                = "somecrazyusername"
+  password                = "avoid-plaintext-passwords"
+  username                = "tfacctest"
   vpc_security_group_ids  = [aws_security_group.test.id]
 }
 
 resource "aws_security_group" "test" {
-  name = %[1]q
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
 
-  description = %[1]q
-  vpc_id      = aws_vpc.foo.id
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_security_group_rule" "test" {
@@ -5508,64 +5462,30 @@ resource "aws_security_group_rule" "test" {
 func testAccInstanceConfig_MSSQL_timezone_AKST(rName string) string {
 	return acctest.ConfigCompose(
 		testAccInstanceConfig_orderableClassSQLServerEx(),
-		acctest.ConfigAvailableAZsNoOptIn(),
+		testAccInstanceConfig_baseVPC(rName),
 		fmt.Sprintf(`
-resource "aws_vpc" "foo" {
-  cidr_block           = "10.1.0.0/16"
-  enable_dns_hostnames = true
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_db_subnet_group" "rds_one" {
-  name        = %[1]q
-  description = "db subnets for rds_one"
-
-  subnet_ids = [aws_subnet.main.id, aws_subnet.other.id]
-}
-
-resource "aws_subnet" "main" {
-  vpc_id            = aws_vpc.foo.id
-  availability_zone = data.aws_availability_zones.available.names[0]
-  cidr_block        = "10.1.1.0/24"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "other" {
-  vpc_id            = aws_vpc.foo.id
-  availability_zone = data.aws_availability_zones.available.names[1]
-  cidr_block        = "10.1.2.0/24"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
 resource "aws_db_instance" "test" {
   allocated_storage       = 20
   backup_retention_period = 0
-  db_subnet_group_name    = aws_db_subnet_group.rds_one.name
+  db_subnet_group_name    = aws_db_subnet_group.test.name
   engine                  = data.aws_rds_orderable_db_instance.test.engine
   engine_version          = data.aws_rds_orderable_db_instance.test.engine_version
   identifier              = %[1]q
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
-  password                = "somecrazypassword"
   skip_final_snapshot     = true
   timezone                = "Alaskan Standard Time"
-  username                = "somecrazyusername"
+  password                = "avoid-plaintext-passwords"
+  username                = "tfacctest"
   vpc_security_group_ids  = [aws_security_group.test.id]
 }
 
 resource "aws_security_group" "test" {
-  name = %[1]q
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
 
-  description = %[1]q
-  vpc_id      = aws_vpc.foo.id
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_security_group_rule" "test" {
