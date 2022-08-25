@@ -2,7 +2,6 @@ package evidently
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"regexp"
 	"time"
@@ -172,11 +171,11 @@ func resourceProjectCreate(ctx context.Context, d *schema.ResourceData, meta int
 	output, err := conn.CreateProjectWithContext(ctx, input)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error creating CloudWatch Evidently Project (%s): %w", name, err))
+		return diag.Errorf("creating CloudWatch Evidently Project (%s): %s", name, err)
 	}
 
 	if output == nil {
-		return diag.FromErr(fmt.Errorf("error creating CloudWatch Evidently Project (%s): empty output", name))
+		return diag.Errorf("creating CloudWatch Evidently Project (%s): empty output", name)
 	}
 
 	d.SetId(aws.StringValue(output.Project.Name))
@@ -202,11 +201,11 @@ func resourceProjectRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error getting CloudWatch Evidently Project (%s): %w", d.Id(), err))
+		return diag.Errorf("getting CloudWatch Evidently Project (%s): %s", d.Id(), err)
 	}
 
 	if resp == nil || resp.Project == nil {
-		return diag.FromErr(fmt.Errorf("error getting CloudWatch Evidently Project (%s): empty response", d.Id()))
+		return diag.Errorf("getting CloudWatch Evidently Project (%s): empty response", d.Id())
 	}
 
 	project := resp.Project
@@ -231,11 +230,11 @@ func resourceProjectRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting tags: %w", err))
+		return diag.Errorf("setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting tags_all: %w", err))
+		return diag.Errorf("setting tags_all: %s", err)
 	}
 
 	return nil
@@ -257,7 +256,7 @@ func resourceProjectUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		})
 
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("[ERROR] Error updating Project Description (%s): %w", d.Id(), err))
+			return diag.Errorf("updating Project Description (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -272,7 +271,7 @@ func resourceProjectUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	// 	tfMap, ok := dataDelivery[0].(map[string]interface{})
 
 	// 	if !ok {
-	// 		return diag.FromErr(fmt.Errorf("[ERROR] Error updating Project (%s)", d.Id()))
+	// 		return diag.Errorf("updating Project (%s)", d.Id())
 	// 	}
 
 	// 	// You can't specify both cloudWatchLogs and s3Destination in the same operation.
@@ -286,7 +285,7 @@ func resourceProjectUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 	// 	_, err := conn.UpdateProjectDataDeliveryWithContext(ctx, input)
 	// 	if err != nil {
-	// 		return diag.FromErr(fmt.Errorf("[ERROR] Error updating Project (%s): %w", d.Id(), err))
+	// 		return diag.Errorf("updating Project (%s): %s", d.Id(), err)
 	// 	}
 	// }
 
@@ -294,7 +293,7 @@ func resourceProjectUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return diag.FromErr(fmt.Errorf("error updating tags: %w", err))
+			return diag.Errorf("updating tags: %s", err)
 		}
 	}
 
@@ -311,7 +310,7 @@ func resourceProjectDelete(ctx context.Context, d *schema.ResourceData, meta int
 	})
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error deleting Project (%s): %w", name, err))
+		return diag.Errorf("deleting Project (%s): %s", name, err)
 	}
 
 	return nil
