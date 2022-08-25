@@ -51,7 +51,7 @@ resource "aws_ecs_service" "mongo" {
   desired_count = 2
 
   # Track the latest ACTIVE revision
-  task_definition = aws_ecs_task_definition.mongo.arn
+  task_definition = data.aws_ecs_task_definition.mongo.arn
 }
 ```
 
