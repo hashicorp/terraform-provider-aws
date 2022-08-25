@@ -2,14 +2,13 @@ package rds
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func DataSourceInstance() *schema.Resource {
@@ -184,123 +183,90 @@ func dataSourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RDSConn
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	opts := &rds.DescribeDBInstancesInput{
-		DBInstanceIdentifier: aws.String(d.Get("db_instance_identifier").(string)),
-	}
+	v, err := FindDBInstanceByID(conn, d.Id())
 
-	log.Printf("[DEBUG] Reading DB Instance: %s", opts)
-
-	resp, err := conn.DescribeDBInstances(opts)
 	if err != nil {
-		return err
+		return tfresource.SingularDataSourceFindError("RDS DB Instance", err)
 	}
-
-	if resp == nil || len(resp.DBInstances) < 1 || resp.DBInstances[0] == nil {
-		return fmt.Errorf("Your query returned no results. Please change your search criteria and try again.")
-	}
-	if len(resp.DBInstances) > 1 {
-		return fmt.Errorf("Your query returned more than one result. Please try a more specific search criteria.")
-	}
-
-	dbInstance := resp.DBInstances[0]
 
 	d.SetId(d.Get("db_instance_identifier").(string))
-
-	d.Set("allocated_storage", dbInstance.AllocatedStorage)
-	d.Set("auto_minor_version_upgrade", dbInstance.AutoMinorVersionUpgrade)
-	d.Set("availability_zone", dbInstance.AvailabilityZone)
-	d.Set("backup_retention_period", dbInstance.BackupRetentionPeriod)
-	d.Set("db_cluster_identifier", dbInstance.DBClusterIdentifier)
-	d.Set("db_instance_arn", dbInstance.DBInstanceArn)
-	d.Set("db_instance_class", dbInstance.DBInstanceClass)
-	d.Set("db_name", dbInstance.DBName)
-	d.Set("resource_id", dbInstance.DbiResourceId)
-
-	var parameterGroups []string
-	for _, v := range dbInstance.DBParameterGroups {
-		parameterGroups = append(parameterGroups, aws.StringValue(v.DBParameterGroupName))
+	d.Set("allocated_storage", v.AllocatedStorage)
+	d.Set("auto_minor_version_upgrade", v.AutoMinorVersionUpgrade)
+	d.Set("availability_zone", v.AvailabilityZone)
+	d.Set("backup_retention_period", v.BackupRetentionPeriod)
+	d.Set("ca_cert_identifier", v.CACertificateIdentifier)
+	d.Set("db_cluster_identifier", v.DBClusterIdentifier)
+	d.Set("db_instance_arn", v.DBInstanceArn)
+	d.Set("db_instance_class", v.DBInstanceClass)
+	d.Set("db_instance_port", v.DbInstancePort)
+	d.Set("db_name", v.DBName)
+	var parameterGroupNames []string
+	for _, v := range v.DBParameterGroups {
+		parameterGroupNames = append(parameterGroupNames, aws.StringValue(v.DBParameterGroupName))
 	}
-	if err := d.Set("db_parameter_groups", parameterGroups); err != nil {
-		return fmt.Errorf("Error setting db_parameter_groups attribute: %#v, error: %w", parameterGroups, err)
+	d.Set("db_parameter_groups", parameterGroupNames)
+	var securityGroupNames []string
+	for _, v := range v.DBSecurityGroups {
+		securityGroupNames = append(securityGroupNames, aws.StringValue(v.DBSecurityGroupName))
 	}
-
-	var dbSecurityGroups []string
-	for _, v := range dbInstance.DBSecurityGroups {
-		dbSecurityGroups = append(dbSecurityGroups, aws.StringValue(v.DBSecurityGroupName))
-	}
-	if err := d.Set("db_security_groups", dbSecurityGroups); err != nil {
-		return fmt.Errorf("Error setting db_security_groups attribute: %#v, error: %w", dbSecurityGroups, err)
-	}
-
-	if dbInstance.DBSubnetGroup != nil {
-		d.Set("db_subnet_group", dbInstance.DBSubnetGroup.DBSubnetGroupName)
+	d.Set("db_security_groups", securityGroupNames)
+	if v.DBSubnetGroup != nil {
+		d.Set("db_subnet_group", v.DBSubnetGroup.DBSubnetGroupName)
 	} else {
 		d.Set("db_subnet_group", "")
 	}
-
-	d.Set("db_instance_port", dbInstance.DbInstancePort)
-	d.Set("engine", dbInstance.Engine)
-	d.Set("engine_version", dbInstance.EngineVersion)
-	d.Set("iops", dbInstance.Iops)
-	d.Set("kms_key_id", dbInstance.KmsKeyId)
-	d.Set("license_model", dbInstance.LicenseModel)
-	d.Set("master_username", dbInstance.MasterUsername)
-	d.Set("monitoring_interval", dbInstance.MonitoringInterval)
-	d.Set("monitoring_role_arn", dbInstance.MonitoringRoleArn)
-	d.Set("multi_az", dbInstance.MultiAZ)
+	d.Set("enabled_cloudwatch_logs_exports", aws.StringValueSlice(v.EnabledCloudwatchLogsExports))
+	d.Set("engine", v.Engine)
+	d.Set("engine_version", v.EngineVersion)
+	d.Set("iops", v.Iops)
+	d.Set("kms_key_id", v.KmsKeyId)
+	d.Set("license_model", v.LicenseModel)
+	d.Set("master_username", v.MasterUsername)
+	d.Set("monitoring_interval", v.MonitoringInterval)
+	d.Set("monitoring_role_arn", v.MonitoringRoleArn)
+	d.Set("multi_az", v.MultiAZ)
+	var optionGroupNames []string
+	for _, v := range v.OptionGroupMemberships {
+		optionGroupNames = append(optionGroupNames, aws.StringValue(v.OptionGroupName))
+	}
+	d.Set("option_group_memberships", optionGroupNames)
+	d.Set("preferred_backup_window", v.PreferredBackupWindow)
+	d.Set("preferred_maintenance_window", v.PreferredMaintenanceWindow)
+	d.Set("publicly_accessible", v.PubliclyAccessible)
+	d.Set("replicate_source_db", v.ReadReplicaSourceDBInstanceIdentifier)
+	d.Set("resource_id", v.DbiResourceId)
+	d.Set("storage_encrypted", v.StorageEncrypted)
+	d.Set("storage_type", v.StorageType)
+	d.Set("timezone", v.Timezone)
+	var vpcSecurityGroupIDs []string
+	for _, v := range v.VpcSecurityGroups {
+		vpcSecurityGroupIDs = append(vpcSecurityGroupIDs, aws.StringValue(v.VpcSecurityGroupId))
+	}
+	d.Set("vpc_security_groups", vpcSecurityGroupIDs)
 
 	// Per AWS SDK Go docs:
 	// The endpoint might not be shown for instances whose status is creating.
-	if dbEndpoint := dbInstance.Endpoint; dbEndpoint != nil {
+	if dbEndpoint := v.Endpoint; dbEndpoint != nil {
 		d.Set("address", dbEndpoint.Address)
-		d.Set("port", dbEndpoint.Port)
-		d.Set("hosted_zone_id", dbEndpoint.HostedZoneId)
 		d.Set("endpoint", fmt.Sprintf("%s:%d", aws.StringValue(dbEndpoint.Address), aws.Int64Value(dbEndpoint.Port)))
+		d.Set("hosted_zone_id", dbEndpoint.HostedZoneId)
+		d.Set("port", dbEndpoint.Port)
 
 	} else {
 		d.Set("address", nil)
-		d.Set("port", nil)
-		d.Set("hosted_zone_id", nil)
 		d.Set("endpoint", nil)
-	}
-
-	if err := d.Set("enabled_cloudwatch_logs_exports", aws.StringValueSlice(dbInstance.EnabledCloudwatchLogsExports)); err != nil {
-		return fmt.Errorf("error setting enabled_cloudwatch_logs_exports: %w", err)
-	}
-
-	var optionGroups []string
-	for _, v := range dbInstance.OptionGroupMemberships {
-		optionGroups = append(optionGroups, aws.StringValue(v.OptionGroupName))
-	}
-	if err := d.Set("option_group_memberships", optionGroups); err != nil {
-		return fmt.Errorf("Error setting option_group_memberships attribute: %#v, error: %w", optionGroups, err)
-	}
-
-	d.Set("preferred_backup_window", dbInstance.PreferredBackupWindow)
-	d.Set("preferred_maintenance_window", dbInstance.PreferredMaintenanceWindow)
-	d.Set("publicly_accessible", dbInstance.PubliclyAccessible)
-	d.Set("storage_encrypted", dbInstance.StorageEncrypted)
-	d.Set("storage_type", dbInstance.StorageType)
-	d.Set("timezone", dbInstance.Timezone)
-	d.Set("replicate_source_db", dbInstance.ReadReplicaSourceDBInstanceIdentifier)
-	d.Set("ca_cert_identifier", dbInstance.CACertificateIdentifier)
-
-	var vpcSecurityGroups []string
-	for _, v := range dbInstance.VpcSecurityGroups {
-		vpcSecurityGroups = append(vpcSecurityGroups, aws.StringValue(v.VpcSecurityGroupId))
-	}
-	if err := d.Set("vpc_security_groups", vpcSecurityGroups); err != nil {
-		return fmt.Errorf("Error setting vpc_security_groups attribute: %#v, error: %w", vpcSecurityGroups, err)
+		d.Set("hosted_zone_id", nil)
+		d.Set("port", nil)
 	}
 
 	tags, err := ListTags(conn, d.Get("db_instance_arn").(string))
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for RDS DB Instance (%s): %w", d.Get("db_instance_arn").(string), err)
+		return fmt.Errorf("listing tags for RDS DB Instance (%s): %w", d.Get("db_instance_arn").(string), err)
 	}
 
 	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return fmt.Errorf("setting tags: %w", err)
 	}
 
 	return nil
