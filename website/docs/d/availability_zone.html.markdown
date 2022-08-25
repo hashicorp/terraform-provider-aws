@@ -101,3 +101,9 @@ For Local and Wavelength Zones this is a longer string, for example `wl1-sfo-wlz
 * `parent_zone_name` - The name of the zone that handles some of the Local Zone or Wavelength Zone control plane operations, such as API calls.
 * `region` - The region where the selected availability zone resides. This is always the region selected on the provider, since this data source searches only within that region.
 * `zone_type` - The type of zone. Values are `availability-zone`, `local-zone`, and `wavelength-zone`.
+
+## Timeouts
+
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+
+- `read` - (Default `20m`)

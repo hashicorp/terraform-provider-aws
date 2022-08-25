@@ -84,9 +84,10 @@ var vpcPeeringConnectionOptionsSchema = &schema.Schema{
 	Elem: &schema.Resource{
 		Schema: map[string]*schema.Schema{
 			"allow_classic_link_to_remote_vpc": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
+				Type:       schema.TypeBool,
+				Optional:   true,
+				Default:    false,
+				Deprecated: `With the retirement of EC2-Classic the allow_classic_link_to_remote_vpc attribute has been deprecated and will be removed in a future version.`,
 			},
 			"allow_remote_vpc_dns_resolution": {
 				Type:     schema.TypeBool,
@@ -94,9 +95,10 @@ var vpcPeeringConnectionOptionsSchema = &schema.Schema{
 				Default:  false,
 			},
 			"allow_vpc_to_remote_classic_link": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
+				Type:       schema.TypeBool,
+				Optional:   true,
+				Default:    false,
+				Deprecated: `With the retirement of EC2-Classic the allow_vpc_to_remote_classic_link attribute has been deprecated and will be removed in a future version.`,
 			},
 		},
 	},
@@ -109,7 +111,7 @@ func resourceVPCPeeringConnectionCreate(d *schema.ResourceData, meta interface{}
 
 	input := &ec2.CreateVpcPeeringConnectionInput{
 		PeerVpcId:         aws.String(d.Get("peer_vpc_id").(string)),
-		TagSpecifications: ec2TagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeVpcPeeringConnection),
+		TagSpecifications: tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeVpcPeeringConnection),
 		VpcId:             aws.String(d.Get("vpc_id").(string)),
 	}
 
@@ -188,7 +190,7 @@ func resourceVPCPeeringConnectionRead(d *schema.ResourceData, meta interface{}) 
 	}
 
 	if vpcPeeringConnection.AccepterVpcInfo.PeeringOptions != nil {
-		if err := d.Set("accepter", []interface{}{flattenVpcPeeringConnectionOptionsDescription(vpcPeeringConnection.AccepterVpcInfo.PeeringOptions)}); err != nil {
+		if err := d.Set("accepter", []interface{}{flattenVPCPeeringConnectionOptionsDescription(vpcPeeringConnection.AccepterVpcInfo.PeeringOptions)}); err != nil {
 			return fmt.Errorf("error setting accepter: %w", err)
 		}
 	} else {
@@ -196,7 +198,7 @@ func resourceVPCPeeringConnectionRead(d *schema.ResourceData, meta interface{}) 
 	}
 
 	if vpcPeeringConnection.RequesterVpcInfo.PeeringOptions != nil {
-		if err := d.Set("requester", []interface{}{flattenVpcPeeringConnectionOptionsDescription(vpcPeeringConnection.RequesterVpcInfo.PeeringOptions)}); err != nil {
+		if err := d.Set("requester", []interface{}{flattenVPCPeeringConnectionOptionsDescription(vpcPeeringConnection.RequesterVpcInfo.PeeringOptions)}); err != nil {
 			return fmt.Errorf("error setting requester: %w", err)
 		}
 	} else {
@@ -259,7 +261,7 @@ func resourceVPCPeeringConnectionDelete(d *schema.ResourceData, meta interface{}
 		VpcPeeringConnectionId: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidVpcPeeringConnectionIDNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidVPCPeeringConnectionIDNotFound) {
 		return nil
 	}
 
@@ -343,7 +345,7 @@ func modifyVPCPeeringConnectionOptions(conn *ec2.EC2, d *schema.ResourceData, vp
 
 	// Retry reading back the modified options to deal with eventual consistency.
 	// Often this is to do with a delay transitioning from pending-acceptance to active.
-	err := resource.Retry(VPCPeeringConnectionOptionsPropagationTimeout, func() *resource.RetryError { // nosem: helper-schema-resource-Retry-without-TimeoutError-check
+	err := resource.Retry(VPCPeeringConnectionOptionsPropagationTimeout, func() *resource.RetryError { // nosemgrep:ci.helper-schema-resource-Retry-without-TimeoutError-check
 		vpcPeeringConnection, err := FindVPCPeeringConnectionByID(conn, d.Id())
 
 		if err != nil {
@@ -402,7 +404,7 @@ func expandPeeringConnectionOptionsRequest(tfMap map[string]interface{}, crossRe
 	return apiObject
 }
 
-func flattenVpcPeeringConnectionOptionsDescription(apiObject *ec2.VpcPeeringConnectionOptionsDescription) map[string]interface{} {
+func flattenVPCPeeringConnectionOptionsDescription(apiObject *ec2.VpcPeeringConnectionOptionsDescription) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}

@@ -21,13 +21,13 @@ func TestAccFSxWindowsFileSystem_basic(t *testing.T) {
 	resourceName := "aws_fsx_windows_file_system.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, fsx.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckWindowsFileSystemDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWindowsFileSystemDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWindowsFileSystemSubnetIds1Config(),
+				Config: testAccWindowsFileSystemConfig_subnetIDs1(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWindowsFileSystemExists(resourceName, &filesystem),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "fsx", regexp.MustCompile(`file-system/fs-.+`)),
@@ -65,7 +65,7 @@ func TestAccFSxWindowsFileSystem_basic(t *testing.T) {
 				},
 			},
 			{
-				Config:   testAccWindowsFileSystemSubnetIds1WithSingleTypeConfig("SINGLE_AZ_1"),
+				Config:   testAccWindowsFileSystemConfig_subnetIDs1SingleType("SINGLE_AZ_1"),
 				PlanOnly: true,
 			},
 		},
@@ -77,13 +77,13 @@ func TestAccFSxWindowsFileSystem_singleAz2(t *testing.T) {
 	resourceName := "aws_fsx_windows_file_system.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, fsx.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckWindowsFileSystemDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWindowsFileSystemDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWindowsFileSystemSubnetIds1WithSingleTypeConfig("SINGLE_AZ_2"),
+				Config: testAccWindowsFileSystemConfig_subnetIDs1SingleType("SINGLE_AZ_2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWindowsFileSystemExists(resourceName, &filesystem),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "fsx", regexp.MustCompile(`file-system/fs-.+`)),
@@ -126,13 +126,13 @@ func TestAccFSxWindowsFileSystem_storageTypeHdd(t *testing.T) {
 	resourceName := "aws_fsx_windows_file_system.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, fsx.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckWindowsFileSystemDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWindowsFileSystemDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWindowsFileSystemSubnetIds1WithStorageTypeConfig("SINGLE_AZ_2", "HDD"),
+				Config: testAccWindowsFileSystemConfig_subnetIDs1StorageType("SINGLE_AZ_2", "HDD"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWindowsFileSystemExists(resourceName, &filesystem),
 					resource.TestCheckResourceAttr(resourceName, "deployment_type", "SINGLE_AZ_2"),
@@ -157,13 +157,13 @@ func TestAccFSxWindowsFileSystem_multiAz(t *testing.T) {
 	resourceName := "aws_fsx_windows_file_system.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, fsx.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckWindowsFileSystemDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWindowsFileSystemDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWindowsFileSystemSubnetIds2Config(),
+				Config: testAccWindowsFileSystemConfig_subnetIDs2(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWindowsFileSystemExists(resourceName, &filesystem),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "fsx", regexp.MustCompile(`file-system/fs-.+`)),
@@ -205,13 +205,13 @@ func TestAccFSxWindowsFileSystem_disappears(t *testing.T) {
 	resourceName := "aws_fsx_windows_file_system.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, fsx.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckWindowsFileSystemDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWindowsFileSystemDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWindowsFileSystemSubnetIds1Config(),
+				Config: testAccWindowsFileSystemConfig_subnetIDs1(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWindowsFileSystemExists(resourceName, &filesystem),
 					acctest.CheckResourceDisappears(acctest.Provider, tffsx.ResourceWindowsFileSystem(), resourceName),
@@ -227,13 +227,13 @@ func TestAccFSxWindowsFileSystem_aliases(t *testing.T) {
 	resourceName := "aws_fsx_windows_file_system.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, fsx.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckWindowsFileSystemDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWindowsFileSystemDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWindowsFileSystemAliases1Config("filesystem1.example.com"),
+				Config: testAccWindowsFileSystemConfig_aliases1("filesystem1.example.com"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWindowsFileSystemExists(resourceName, &filesystem1),
 					resource.TestCheckResourceAttr(resourceName, "aliases.#", "1"),
@@ -250,7 +250,7 @@ func TestAccFSxWindowsFileSystem_aliases(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccWindowsFileSystemAliases2Config("filesystem2.example.com", "filesystem3.example.com"),
+				Config: testAccWindowsFileSystemConfig_aliases2("filesystem2.example.com", "filesystem3.example.com"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWindowsFileSystemExists(resourceName, &filesystem2),
 					testAccCheckWindowsFileSystemNotRecreated(&filesystem1, &filesystem2),
@@ -260,7 +260,7 @@ func TestAccFSxWindowsFileSystem_aliases(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccWindowsFileSystemAliases1Config("filesystem3.example.com"),
+				Config: testAccWindowsFileSystemConfig_aliases1("filesystem3.example.com"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWindowsFileSystemExists(resourceName, &filesystem3),
 					testAccCheckWindowsFileSystemNotRecreated(&filesystem2, &filesystem3),
@@ -277,13 +277,13 @@ func TestAccFSxWindowsFileSystem_automaticBackupRetentionDays(t *testing.T) {
 	resourceName := "aws_fsx_windows_file_system.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, fsx.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckWindowsFileSystemDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWindowsFileSystemDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWindowsFileSystemAutomaticBackupRetentionDaysConfig(90),
+				Config: testAccWindowsFileSystemConfig_automaticBackupRetentionDays(90),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWindowsFileSystemExists(resourceName, &filesystem1),
 					resource.TestCheckResourceAttr(resourceName, "automatic_backup_retention_days", "90"),
@@ -299,7 +299,7 @@ func TestAccFSxWindowsFileSystem_automaticBackupRetentionDays(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccWindowsFileSystemAutomaticBackupRetentionDaysConfig(0),
+				Config: testAccWindowsFileSystemConfig_automaticBackupRetentionDays(0),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWindowsFileSystemExists(resourceName, &filesystem2),
 					testAccCheckWindowsFileSystemNotRecreated(&filesystem1, &filesystem2),
@@ -307,7 +307,7 @@ func TestAccFSxWindowsFileSystem_automaticBackupRetentionDays(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccWindowsFileSystemAutomaticBackupRetentionDaysConfig(14),
+				Config: testAccWindowsFileSystemConfig_automaticBackupRetentionDays(14),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWindowsFileSystemExists(resourceName, &filesystem3),
 					testAccCheckWindowsFileSystemNotRecreated(&filesystem2, &filesystem3),
@@ -323,13 +323,13 @@ func TestAccFSxWindowsFileSystem_copyTagsToBackups(t *testing.T) {
 	resourceName := "aws_fsx_windows_file_system.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, fsx.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckWindowsFileSystemDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWindowsFileSystemDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWindowsFileSystemCopyTagsToBackupsConfig(true),
+				Config: testAccWindowsFileSystemConfig_copyTagsToBackups(true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWindowsFileSystemExists(resourceName, &filesystem1),
 					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_backups", "true"),
@@ -345,7 +345,7 @@ func TestAccFSxWindowsFileSystem_copyTagsToBackups(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccWindowsFileSystemCopyTagsToBackupsConfig(false),
+				Config: testAccWindowsFileSystemConfig_copyTagsToBackups(false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWindowsFileSystemExists(resourceName, &filesystem2),
 					testAccCheckWindowsFileSystemRecreated(&filesystem1, &filesystem2),
@@ -361,13 +361,13 @@ func TestAccFSxWindowsFileSystem_dailyAutomaticBackupStartTime(t *testing.T) {
 	resourceName := "aws_fsx_windows_file_system.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, fsx.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckWindowsFileSystemDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWindowsFileSystemDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWindowsFileSystemDailyAutomaticBackupStartTimeConfig("01:01"),
+				Config: testAccWindowsFileSystemConfig_dailyAutomaticBackupStartTime("01:01"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWindowsFileSystemExists(resourceName, &filesystem1),
 					resource.TestCheckResourceAttr(resourceName, "daily_automatic_backup_start_time", "01:01"),
@@ -383,7 +383,7 @@ func TestAccFSxWindowsFileSystem_dailyAutomaticBackupStartTime(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccWindowsFileSystemDailyAutomaticBackupStartTimeConfig("02:02"),
+				Config: testAccWindowsFileSystemConfig_dailyAutomaticBackupStartTime("02:02"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWindowsFileSystemExists(resourceName, &filesystem2),
 					testAccCheckWindowsFileSystemNotRecreated(&filesystem1, &filesystem2),
@@ -401,13 +401,13 @@ func TestAccFSxWindowsFileSystem_kmsKeyID(t *testing.T) {
 	resourceName := "aws_fsx_windows_file_system.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, fsx.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckWindowsFileSystemDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWindowsFileSystemDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWindowsFileSystemKMSKeyId1Config(),
+				Config: testAccWindowsFileSystemConfig_kmsKeyID1(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWindowsFileSystemExists(resourceName, &filesystem1),
 					resource.TestCheckResourceAttrPair(resourceName, "kms_key_id", kmsKeyResourceName1, "arn"),
@@ -423,7 +423,7 @@ func TestAccFSxWindowsFileSystem_kmsKeyID(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccWindowsFileSystemKMSKeyId2Config(),
+				Config: testAccWindowsFileSystemConfig_kmsKeyID2(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWindowsFileSystemExists(resourceName, &filesystem2),
 					testAccCheckWindowsFileSystemRecreated(&filesystem1, &filesystem2),
@@ -439,13 +439,13 @@ func TestAccFSxWindowsFileSystem_securityGroupIDs(t *testing.T) {
 	resourceName := "aws_fsx_windows_file_system.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, fsx.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckWindowsFileSystemDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWindowsFileSystemDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWindowsFileSystemSecurityGroupIds1Config(),
+				Config: testAccWindowsFileSystemConfig_securityGroupIDs1(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWindowsFileSystemExists(resourceName, &filesystem1),
 					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "1"),
@@ -461,7 +461,7 @@ func TestAccFSxWindowsFileSystem_securityGroupIDs(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccWindowsFileSystemSecurityGroupIds2Config(),
+				Config: testAccWindowsFileSystemConfig_securityGroupIDs2(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWindowsFileSystemExists(resourceName, &filesystem2),
 					testAccCheckWindowsFileSystemRecreated(&filesystem1, &filesystem2),
@@ -477,13 +477,13 @@ func TestAccFSxWindowsFileSystem_selfManagedActiveDirectory(t *testing.T) {
 	resourceName := "aws_fsx_windows_file_system.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, fsx.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckWindowsFileSystemDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWindowsFileSystemDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWindowsFileSystemSelfManagedActiveDirectoryConfig(),
+				Config: testAccWindowsFileSystemConfig_selfManagedActiveDirectory(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWindowsFileSystemExists(resourceName, &filesystem),
 					resource.TestCheckResourceAttr(resourceName, "self_managed_active_directory.#", "1"),
@@ -508,13 +508,13 @@ func TestAccFSxWindowsFileSystem_SelfManagedActiveDirectory_username(t *testing.
 	resourceName := "aws_fsx_windows_file_system.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, fsx.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckWindowsFileSystemDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWindowsFileSystemDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWindowsFileSystemSelfManagedActiveDirectoryUsernameConfig("Admin"),
+				Config: testAccWindowsFileSystemConfig_selfManagedActiveDirectoryUsername("Admin"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWindowsFileSystemExists(resourceName, &filesystem),
 					resource.TestCheckResourceAttr(resourceName, "self_managed_active_directory.#", "1"),
@@ -531,7 +531,7 @@ func TestAccFSxWindowsFileSystem_SelfManagedActiveDirectory_username(t *testing.
 				},
 			},
 			{
-				Config: testAccWindowsFileSystemSelfManagedActiveDirectoryUsernameConfig("Administrator"),
+				Config: testAccWindowsFileSystemConfig_selfManagedActiveDirectoryUsername("Administrator"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWindowsFileSystemExists(resourceName, &filesystem),
 					resource.TestCheckResourceAttr(resourceName, "self_managed_active_directory.#", "1"),
@@ -546,13 +546,13 @@ func TestAccFSxWindowsFileSystem_storageCapacity(t *testing.T) {
 	resourceName := "aws_fsx_windows_file_system.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, fsx.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckWindowsFileSystemDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWindowsFileSystemDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWindowsFileSystemStorageCapacityConfig(32),
+				Config: testAccWindowsFileSystemConfig_storageCapacity(32),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWindowsFileSystemExists(resourceName, &filesystem1),
 					resource.TestCheckResourceAttr(resourceName, "storage_capacity", "32"),
@@ -568,7 +568,7 @@ func TestAccFSxWindowsFileSystem_storageCapacity(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccWindowsFileSystemStorageCapacityConfig(36),
+				Config: testAccWindowsFileSystemConfig_storageCapacity(36),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWindowsFileSystemExists(resourceName, &filesystem2),
 					testAccCheckWindowsFileSystemNotRecreated(&filesystem1, &filesystem2),
@@ -584,13 +584,13 @@ func TestAccFSxWindowsFileSystem_fromBackup(t *testing.T) {
 	resourceName := "aws_fsx_windows_file_system.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, fsx.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckWindowsFileSystemDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWindowsFileSystemDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWindowsFileSystemFromBackup(),
+				Config: testAccWindowsFileSystemConfig_fromBackup(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWindowsFileSystemExists(resourceName, &filesystem),
 					resource.TestCheckResourceAttrPair(resourceName, "backup_id", "aws_fsx_backup.test", "id"),
@@ -615,13 +615,13 @@ func TestAccFSxWindowsFileSystem_tags(t *testing.T) {
 	resourceName := "aws_fsx_windows_file_system.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, fsx.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckWindowsFileSystemDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWindowsFileSystemDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWindowsFileSystemTags1Config("key1", "value1"),
+				Config: testAccWindowsFileSystemConfig_tags1("key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWindowsFileSystemExists(resourceName, &filesystem1),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -638,7 +638,7 @@ func TestAccFSxWindowsFileSystem_tags(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccWindowsFileSystemTags2Config("key1", "value1updated", "key2", "value2"),
+				Config: testAccWindowsFileSystemConfig_tags2("key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWindowsFileSystemExists(resourceName, &filesystem2),
 					testAccCheckWindowsFileSystemNotRecreated(&filesystem1, &filesystem2),
@@ -648,7 +648,7 @@ func TestAccFSxWindowsFileSystem_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccWindowsFileSystemTags1Config("key2", "value2"),
+				Config: testAccWindowsFileSystemConfig_tags1("key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWindowsFileSystemExists(resourceName, &filesystem3),
 					testAccCheckWindowsFileSystemNotRecreated(&filesystem2, &filesystem3),
@@ -665,13 +665,13 @@ func TestAccFSxWindowsFileSystem_throughputCapacity(t *testing.T) {
 	resourceName := "aws_fsx_windows_file_system.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, fsx.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckWindowsFileSystemDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWindowsFileSystemDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWindowsFileSystemThroughputCapacityConfig(16),
+				Config: testAccWindowsFileSystemConfig_throughputCapacity(16),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWindowsFileSystemExists(resourceName, &filesystem1),
 					resource.TestCheckResourceAttr(resourceName, "throughput_capacity", "16"),
@@ -687,7 +687,7 @@ func TestAccFSxWindowsFileSystem_throughputCapacity(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccWindowsFileSystemThroughputCapacityConfig(32),
+				Config: testAccWindowsFileSystemConfig_throughputCapacity(32),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWindowsFileSystemExists(resourceName, &filesystem2),
 					testAccCheckWindowsFileSystemNotRecreated(&filesystem1, &filesystem2),
@@ -703,13 +703,13 @@ func TestAccFSxWindowsFileSystem_weeklyMaintenanceStartTime(t *testing.T) {
 	resourceName := "aws_fsx_windows_file_system.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, fsx.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckWindowsFileSystemDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWindowsFileSystemDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWindowsFileSystemWeeklyMaintenanceStartTimeConfig("1:01:01"),
+				Config: testAccWindowsFileSystemConfig_weeklyMaintenanceStartTime("1:01:01"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWindowsFileSystemExists(resourceName, &filesystem1),
 					resource.TestCheckResourceAttr(resourceName, "weekly_maintenance_start_time", "1:01:01"),
@@ -725,7 +725,7 @@ func TestAccFSxWindowsFileSystem_weeklyMaintenanceStartTime(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccWindowsFileSystemWeeklyMaintenanceStartTimeConfig("2:02:02"),
+				Config: testAccWindowsFileSystemConfig_weeklyMaintenanceStartTime("2:02:02"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWindowsFileSystemExists(resourceName, &filesystem2),
 					testAccCheckWindowsFileSystemNotRecreated(&filesystem1, &filesystem2),
@@ -742,13 +742,13 @@ func TestAccFSxWindowsFileSystem_audit(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, fsx.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckWindowsFileSystemDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWindowsFileSystemDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWindowsFileSystemAuditConfig(rName, "SUCCESS_ONLY"),
+				Config: testAccWindowsFileSystemConfig_audit(rName, "SUCCESS_ONLY"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWindowsFileSystemExists(resourceName, &filesystem),
 					resource.TestCheckResourceAttr(resourceName, "audit_log_configuration.#", "1"),
@@ -767,7 +767,7 @@ func TestAccFSxWindowsFileSystem_audit(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccWindowsFileSystemAuditConfig(rName, "SUCCESS_AND_FAILURE"),
+				Config: testAccWindowsFileSystemConfig_audit(rName, "SUCCESS_AND_FAILURE"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWindowsFileSystemExists(resourceName, &filesystem),
 					resource.TestCheckResourceAttr(resourceName, "audit_log_configuration.#", "1"),
@@ -885,7 +885,7 @@ resource "aws_directory_service_directory" "test" {
 `
 }
 
-func testAccWindowsFileSystemAliases1Config(alias1 string) string {
+func testAccWindowsFileSystemConfig_aliases1(alias1 string) string {
 	return testAccWindowsFileSystemBaseConfig() + fmt.Sprintf(`
 resource "aws_fsx_windows_file_system" "test" {
   active_directory_id = aws_directory_service_directory.test.id
@@ -899,7 +899,7 @@ resource "aws_fsx_windows_file_system" "test" {
 `, alias1)
 }
 
-func testAccWindowsFileSystemAliases2Config(alias1, alias2 string) string {
+func testAccWindowsFileSystemConfig_aliases2(alias1, alias2 string) string {
 	return testAccWindowsFileSystemBaseConfig() + fmt.Sprintf(`
 resource "aws_fsx_windows_file_system" "test" {
   active_directory_id = aws_directory_service_directory.test.id
@@ -913,7 +913,7 @@ resource "aws_fsx_windows_file_system" "test" {
 `, alias1, alias2)
 }
 
-func testAccWindowsFileSystemAutomaticBackupRetentionDaysConfig(automaticBackupRetentionDays int) string {
+func testAccWindowsFileSystemConfig_automaticBackupRetentionDays(automaticBackupRetentionDays int) string {
 	return testAccWindowsFileSystemBaseConfig() + fmt.Sprintf(`
 resource "aws_fsx_windows_file_system" "test" {
   active_directory_id             = aws_directory_service_directory.test.id
@@ -926,7 +926,7 @@ resource "aws_fsx_windows_file_system" "test" {
 `, automaticBackupRetentionDays)
 }
 
-func testAccWindowsFileSystemCopyTagsToBackupsConfig(copyTagsToBackups bool) string {
+func testAccWindowsFileSystemConfig_copyTagsToBackups(copyTagsToBackups bool) string {
 	return testAccWindowsFileSystemBaseConfig() + fmt.Sprintf(`
 resource "aws_fsx_windows_file_system" "test" {
   active_directory_id  = aws_directory_service_directory.test.id
@@ -939,7 +939,7 @@ resource "aws_fsx_windows_file_system" "test" {
 `, copyTagsToBackups)
 }
 
-func testAccWindowsFileSystemDailyAutomaticBackupStartTimeConfig(dailyAutomaticBackupStartTime string) string {
+func testAccWindowsFileSystemConfig_dailyAutomaticBackupStartTime(dailyAutomaticBackupStartTime string) string {
 	return testAccWindowsFileSystemBaseConfig() + fmt.Sprintf(`
 resource "aws_fsx_windows_file_system" "test" {
   active_directory_id               = aws_directory_service_directory.test.id
@@ -952,7 +952,7 @@ resource "aws_fsx_windows_file_system" "test" {
 `, dailyAutomaticBackupStartTime)
 }
 
-func testAccWindowsFileSystemKMSKeyId1Config() string {
+func testAccWindowsFileSystemConfig_kmsKeyID1() string {
 	return testAccWindowsFileSystemBaseConfig() + `
 resource "aws_kms_key" "test1" {
   description             = "FSx KMS Testing key"
@@ -970,7 +970,7 @@ resource "aws_fsx_windows_file_system" "test" {
 `
 }
 
-func testAccWindowsFileSystemKMSKeyId2Config() string {
+func testAccWindowsFileSystemConfig_kmsKeyID2() string {
 	return testAccWindowsFileSystemBaseConfig() + `
 resource "aws_kms_key" "test2" {
   description             = "FSx KMS Testing key"
@@ -988,7 +988,7 @@ resource "aws_fsx_windows_file_system" "test" {
 `
 }
 
-func testAccWindowsFileSystemSecurityGroupIds1Config() string {
+func testAccWindowsFileSystemConfig_securityGroupIDs1() string {
 	return testAccWindowsFileSystemBaseConfig() + `
 resource "aws_security_group" "test1" {
   description = "security group for FSx testing"
@@ -1020,7 +1020,7 @@ resource "aws_fsx_windows_file_system" "test" {
 `
 }
 
-func testAccWindowsFileSystemSecurityGroupIds2Config() string {
+func testAccWindowsFileSystemConfig_securityGroupIDs2() string {
 	return testAccWindowsFileSystemBaseConfig() + `
 resource "aws_security_group" "test1" {
   description = "security group for FSx testing"
@@ -1071,7 +1071,7 @@ resource "aws_fsx_windows_file_system" "test" {
 `
 }
 
-func testAccWindowsFileSystemSelfManagedActiveDirectoryConfig() string {
+func testAccWindowsFileSystemConfig_selfManagedActiveDirectory() string {
 	return testAccWindowsFileSystemBaseConfig() + `
 resource "aws_fsx_windows_file_system" "test" {
   skip_final_backup   = true
@@ -1089,7 +1089,7 @@ resource "aws_fsx_windows_file_system" "test" {
 `
 }
 
-func testAccWindowsFileSystemSelfManagedActiveDirectoryUsernameConfig(username string) string {
+func testAccWindowsFileSystemConfig_selfManagedActiveDirectoryUsername(username string) string {
 	return testAccWindowsFileSystemBaseConfig() + fmt.Sprintf(`
 resource "aws_fsx_windows_file_system" "test" {
   skip_final_backup   = true
@@ -1107,7 +1107,7 @@ resource "aws_fsx_windows_file_system" "test" {
 `, username)
 }
 
-func testAccWindowsFileSystemStorageCapacityConfig(storageCapacity int) string {
+func testAccWindowsFileSystemConfig_storageCapacity(storageCapacity int) string {
 	return testAccWindowsFileSystemBaseConfig() + fmt.Sprintf(`
 resource "aws_fsx_windows_file_system" "test" {
   active_directory_id = aws_directory_service_directory.test.id
@@ -1119,7 +1119,7 @@ resource "aws_fsx_windows_file_system" "test" {
 `, storageCapacity)
 }
 
-func testAccWindowsFileSystemSubnetIds1Config() string {
+func testAccWindowsFileSystemConfig_subnetIDs1() string {
 	return testAccWindowsFileSystemBaseConfig() + `
 resource "aws_fsx_windows_file_system" "test" {
   active_directory_id = aws_directory_service_directory.test.id
@@ -1131,7 +1131,7 @@ resource "aws_fsx_windows_file_system" "test" {
 `
 }
 
-func testAccWindowsFileSystemSubnetIds1WithSingleTypeConfig(azType string) string {
+func testAccWindowsFileSystemConfig_subnetIDs1SingleType(azType string) string {
 	return testAccWindowsFileSystemBaseConfig() + fmt.Sprintf(`
 resource "aws_fsx_windows_file_system" "test" {
   active_directory_id = aws_directory_service_directory.test.id
@@ -1144,7 +1144,7 @@ resource "aws_fsx_windows_file_system" "test" {
 `, azType)
 }
 
-func testAccWindowsFileSystemSubnetIds1WithStorageTypeConfig(azType, storageType string) string {
+func testAccWindowsFileSystemConfig_subnetIDs1StorageType(azType, storageType string) string {
 	return testAccWindowsFileSystemBaseConfig() + fmt.Sprintf(`
 resource "aws_fsx_windows_file_system" "test" {
   active_directory_id = aws_directory_service_directory.test.id
@@ -1158,7 +1158,7 @@ resource "aws_fsx_windows_file_system" "test" {
 `, azType, storageType)
 }
 
-func testAccWindowsFileSystemSubnetIds2Config() string {
+func testAccWindowsFileSystemConfig_subnetIDs2() string {
 	return acctest.ConfigCompose(testAccWindowsFileSystemBaseConfig(), `
 resource "aws_fsx_windows_file_system" "test" {
   active_directory_id = aws_directory_service_directory.test.id
@@ -1172,7 +1172,7 @@ resource "aws_fsx_windows_file_system" "test" {
 `)
 }
 
-func testAccWindowsFileSystemFromBackup() string {
+func testAccWindowsFileSystemConfig_fromBackup() string {
 	return testAccWindowsFileSystemBaseConfig() + `
 resource "aws_fsx_windows_file_system" "base" {
   active_directory_id = aws_directory_service_directory.test.id
@@ -1196,7 +1196,7 @@ resource "aws_fsx_windows_file_system" "test" {
 `
 }
 
-func testAccWindowsFileSystemTags1Config(tagKey1, tagValue1 string) string {
+func testAccWindowsFileSystemConfig_tags1(tagKey1, tagValue1 string) string {
 	return testAccWindowsFileSystemBaseConfig() + fmt.Sprintf(`
 resource "aws_fsx_windows_file_system" "test" {
   active_directory_id = aws_directory_service_directory.test.id
@@ -1212,7 +1212,7 @@ resource "aws_fsx_windows_file_system" "test" {
 `, tagKey1, tagValue1)
 }
 
-func testAccWindowsFileSystemTags2Config(tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccWindowsFileSystemConfig_tags2(tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return testAccWindowsFileSystemBaseConfig() + fmt.Sprintf(`
 resource "aws_fsx_windows_file_system" "test" {
   active_directory_id = aws_directory_service_directory.test.id
@@ -1229,7 +1229,7 @@ resource "aws_fsx_windows_file_system" "test" {
 `, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
-func testAccWindowsFileSystemThroughputCapacityConfig(throughputCapacity int) string {
+func testAccWindowsFileSystemConfig_throughputCapacity(throughputCapacity int) string {
 	return testAccWindowsFileSystemBaseConfig() + fmt.Sprintf(`
 resource "aws_fsx_windows_file_system" "test" {
   active_directory_id = aws_directory_service_directory.test.id
@@ -1241,7 +1241,7 @@ resource "aws_fsx_windows_file_system" "test" {
 `, throughputCapacity)
 }
 
-func testAccWindowsFileSystemWeeklyMaintenanceStartTimeConfig(weeklyMaintenanceStartTime string) string {
+func testAccWindowsFileSystemConfig_weeklyMaintenanceStartTime(weeklyMaintenanceStartTime string) string {
 	return testAccWindowsFileSystemBaseConfig() + fmt.Sprintf(`
 resource "aws_fsx_windows_file_system" "test" {
   active_directory_id           = aws_directory_service_directory.test.id
@@ -1254,7 +1254,7 @@ resource "aws_fsx_windows_file_system" "test" {
 `, weeklyMaintenanceStartTime)
 }
 
-func testAccWindowsFileSystemAuditConfig(rName, status string) string {
+func testAccWindowsFileSystemConfig_audit(rName, status string) string {
 	return testAccWindowsFileSystemBaseConfig() + fmt.Sprintf(`
 resource aws_cloudwatch_log_group "test" {
   name = "/aws/fsx/%[1]s"

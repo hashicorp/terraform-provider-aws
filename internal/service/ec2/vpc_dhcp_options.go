@@ -26,38 +26,45 @@ func ResourceVPCDHCPOptions() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 
+		// Keep in sync with aws_default_vpc_dhcp_options' schema.
+		// See notes in vpc_default_vpc_dhcp_options.go.
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"domain_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				AtLeastOneOf: []string{"domain_name", "domain_name_servers", "netbios_name_servers", "netbios_node_type", "ntp_servers"},
 			},
 			"domain_name_servers": {
-				Type:     schema.TypeList,
-				Optional: true,
-				ForceNew: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
+				Type:         schema.TypeList,
+				Optional:     true,
+				ForceNew:     true,
+				Elem:         &schema.Schema{Type: schema.TypeString},
+				AtLeastOneOf: []string{"domain_name", "domain_name_servers", "netbios_name_servers", "netbios_node_type", "ntp_servers"},
 			},
 			"netbios_name_servers": {
-				Type:     schema.TypeList,
-				Optional: true,
-				ForceNew: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
+				Type:         schema.TypeList,
+				Optional:     true,
+				ForceNew:     true,
+				Elem:         &schema.Schema{Type: schema.TypeString},
+				AtLeastOneOf: []string{"domain_name", "domain_name_servers", "netbios_name_servers", "netbios_node_type", "ntp_servers"},
 			},
 			"netbios_node_type": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				AtLeastOneOf: []string{"domain_name", "domain_name_servers", "netbios_name_servers", "netbios_node_type", "ntp_servers"},
 			},
 			"ntp_servers": {
-				Type:     schema.TypeList,
-				Optional: true,
-				ForceNew: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
+				Type:         schema.TypeList,
+				Optional:     true,
+				ForceNew:     true,
+				Elem:         &schema.Schema{Type: schema.TypeString},
+				AtLeastOneOf: []string{"domain_name", "domain_name_servers", "netbios_name_servers", "netbios_node_type", "ntp_servers"},
 			},
 			"owner_id": {
 				Type:     schema.TypeString,
@@ -86,7 +93,7 @@ func resourceVPCDHCPOptionsCreate(d *schema.ResourceData, meta interface{}) erro
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
-	dhcpConfigurations, err := optionsMap.resourceDataToDhcpConfigurations(d)
+	dhcpConfigurations, err := optionsMap.resourceDataToDHCPConfigurations(d)
 
 	if err != nil {
 		return err
@@ -94,7 +101,7 @@ func resourceVPCDHCPOptionsCreate(d *schema.ResourceData, meta interface{}) erro
 
 	input := &ec2.CreateDhcpOptionsInput{
 		DhcpConfigurations: dhcpConfigurations,
-		TagSpecifications:  ec2TagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeDhcpOptions),
+		TagSpecifications:  tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeDhcpOptions),
 	}
 
 	output, err := conn.CreateDhcpOptions(input)
@@ -196,7 +203,7 @@ func resourceVPCDHCPOptionsDelete(d *schema.ResourceData, meta interface{}) erro
 			VpcId:         aws.String(vpcID),
 		})
 
-		if tfawserr.ErrCodeEquals(err, ErrCodeInvalidVpcIDNotFound) {
+		if tfawserr.ErrCodeEquals(err, errCodeInvalidVPCIDNotFound) {
 			continue
 		}
 
@@ -212,9 +219,9 @@ func resourceVPCDHCPOptionsDelete(d *schema.ResourceData, meta interface{}) erro
 	log.Printf("[INFO] Deleting EC2 DHCP Options Set: %s", d.Id())
 	_, err = tfresource.RetryWhenAWSErrCodeEquals(dhcpOptionSetDeletedTimeout, func() (interface{}, error) {
 		return conn.DeleteDhcpOptions(input)
-	}, ErrCodeDependencyViolation)
+	}, errCodeDependencyViolation)
 
-	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidDhcpOptionIDNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidDHCPOptionIDNotFound) {
 		return nil
 	}
 
@@ -246,6 +253,10 @@ func newDHCPOptionsMap(tfToApi map[string]string) *dhcpOptionsMap {
 
 // dhcpConfigurationsToResourceData sets Terraform ResourceData from a list of AWS API DHCP configurations.
 func (m *dhcpOptionsMap) dhcpConfigurationsToResourceData(dhcpConfigurations []*ec2.DhcpConfiguration, d *schema.ResourceData) error {
+	for v := range m.tfToApi {
+		d.Set(v, nil)
+	}
+
 	for _, dhcpConfiguration := range dhcpConfigurations {
 		apiName := aws.StringValue(dhcpConfiguration.Key)
 		if tfName, ok := m.apiToTf[apiName]; ok {
@@ -270,7 +281,7 @@ func (m *dhcpOptionsMap) dhcpConfigurationsToResourceData(dhcpConfigurations []*
 }
 
 // resourceDataToNewDhcpConfigurations returns a list of AWS API DHCP configurations from Terraform ResourceData.
-func (m *dhcpOptionsMap) resourceDataToDhcpConfigurations(d *schema.ResourceData) ([]*ec2.NewDhcpConfiguration, error) {
+func (m *dhcpOptionsMap) resourceDataToDHCPConfigurations(d *schema.ResourceData) ([]*ec2.NewDhcpConfiguration, error) {
 	var output []*ec2.NewDhcpConfiguration
 
 	for tfName, apiName := range m.tfToApi {

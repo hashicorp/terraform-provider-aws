@@ -228,7 +228,7 @@ func ResourceBudget() *schema.Resource {
 func resourceBudgetCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).BudgetsConn
 
-	budget, err := expandBudgetsBudgetUnmarshal(d)
+	budget, err := expandBudgetUnmarshal(d)
 	if err != nil {
 		return fmt.Errorf("failed unmarshalling budget: %v", err)
 	}
@@ -303,7 +303,7 @@ func resourceBudgetRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting cost_filters: %w", err)
 	}
 
-	if err := d.Set("cost_types", flattenBudgetsCostTypes(budget.CostTypes)); err != nil {
+	if err := d.Set("cost_types", flattenCostTypes(budget.CostTypes)); err != nil {
 		return fmt.Errorf("error setting cost_types: %w", err)
 	}
 
@@ -393,7 +393,7 @@ func resourceBudgetUpdate(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	budget, err := expandBudgetsBudgetUnmarshal(d)
+	budget, err := expandBudgetUnmarshal(d)
 	if err != nil {
 		return fmt.Errorf("could not create budget: %v", err)
 	}
@@ -505,7 +505,7 @@ func resourceBudgetNotificationsUpdate(d *schema.ResourceData, meta interface{})
 	return nil
 }
 
-func flattenBudgetsCostTypes(costTypes *budgets.CostTypes) []map[string]interface{} {
+func flattenCostTypes(costTypes *budgets.CostTypes) []map[string]interface{} {
 	if costTypes == nil {
 		return []map[string]interface{}{}
 	}
@@ -556,7 +556,7 @@ func convertCostFiltersToStringMap(costFilters map[string][]*string) map[string]
 	return convertedCostFilters
 }
 
-func expandBudgetsBudgetUnmarshal(d *schema.ResourceData) (*budgets.Budget, error) {
+func expandBudgetUnmarshal(d *schema.ResourceData) (*budgets.Budget, error) {
 	budgetName := d.Get("name").(string)
 	budgetType := d.Get("budget_type").(string)
 	budgetLimitAmount := d.Get("limit_amount").(string)
@@ -607,13 +607,13 @@ func expandBudgetsBudgetUnmarshal(d *schema.ResourceData) (*budgets.Budget, erro
 	}
 
 	if v, ok := d.GetOk("cost_types"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		budget.CostTypes = expandBudgetsCostTypes(v.([]interface{})[0].(map[string]interface{}))
+		budget.CostTypes = expandCostTypes(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	return budget, nil
 }
 
-func expandBudgetsCostTypes(tfMap map[string]interface{}) *budgets.CostTypes {
+func expandCostTypes(tfMap map[string]interface{}) *budgets.CostTypes {
 	if tfMap == nil {
 		return nil
 	}
@@ -675,15 +675,15 @@ func expandBudgetNotificationsUnmarshal(notificationsRaw []interface{}) ([]*budg
 			NotificationType:   aws.String(notificationType),
 		}
 
-		emailSubscribers := expandBudgetSubscribers(notificationRaw["subscriber_email_addresses"], budgets.SubscriptionTypeEmail)
-		snsSubscribers := expandBudgetSubscribers(notificationRaw["subscriber_sns_topic_arns"], budgets.SubscriptionTypeSns)
+		emailSubscribers := expandSubscribers(notificationRaw["subscriber_email_addresses"], budgets.SubscriptionTypeEmail)
+		snsSubscribers := expandSubscribers(notificationRaw["subscriber_sns_topic_arns"], budgets.SubscriptionTypeSns)
 
 		subscribersForNotifications[i] = append(emailSubscribers, snsSubscribers...)
 	}
 	return notifications, subscribersForNotifications
 }
 
-func expandBudgetSubscribers(rawList interface{}, subscriptionType string) []*budgets.Subscriber {
+func expandSubscribers(rawList interface{}, subscriptionType string) []*budgets.Subscriber {
 	result := make([]*budgets.Subscriber, 0)
 	addrs := flex.ExpandStringSet(rawList.(*schema.Set))
 	for _, addr := range addrs {

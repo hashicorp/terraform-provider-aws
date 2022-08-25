@@ -10,18 +10,18 @@ import (
 
 func TestAccInspectorRulesPackagesDataSource_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, inspector.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, inspector.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAWSInspectorRulesPackagesConfig,
+				Config: testAccRulesPackagesDataSourceConfig_basic,
 				Check:  resource.TestCheckResourceAttrSet("data.aws_inspector_rules_packages.test", "arns.#"),
 			},
 		},
 	})
 }
 
-const testAccCheckAWSInspectorRulesPackagesConfig = `
+const testAccRulesPackagesDataSourceConfig_basic = `
 data "aws_inspector_rules_packages" "test" {}
 `

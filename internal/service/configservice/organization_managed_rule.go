@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -192,7 +193,7 @@ func resourceOrganizationManagedRuleRead(d *schema.ResourceData, meta interface{
 	}
 
 	if d.IsNewResource() && rule == nil {
-		return names.Error(names.ConfigService, names.ErrActionReading, "Organization Managed Rule", d.Id(), errors.New("empty rule after creation"))
+		return create.Error(names.ConfigService, create.ErrActionReading, ResNameOrganizationManagedRule, d.Id(), errors.New("empty rule after creation"))
 	}
 
 	if rule.OrganizationCustomRuleMetadata != nil {

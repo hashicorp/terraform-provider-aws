@@ -15,21 +15,6 @@ import (
 	tfconnect "github.com/hashicorp/terraform-provider-aws/internal/service/connect"
 )
 
-//Serialized acceptance tests due to Connect account limits (max 2 parallel tests)
-func TestAccConnectUserHierarchyStructure_serial(t *testing.T) {
-	testCases := map[string]func(t *testing.T){
-		"basic":      testAccUserHierarchyStructure_basic,
-		"disappears": testAccUserHierarchyStructure_disappears,
-	}
-
-	for name, tc := range testCases {
-		tc := tc
-		t.Run(name, func(t *testing.T) {
-			tc(t)
-		})
-	}
-}
-
 func testAccUserHierarchyStructure_basic(t *testing.T) {
 	var v connect.DescribeUserHierarchyStructureOutput
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
@@ -41,13 +26,13 @@ func testAccUserHierarchyStructure_basic(t *testing.T) {
 	resourceName := "aws_connect_user_hierarchy_structure.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, connect.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckUserHierarchyStructureDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserHierarchyStructureDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserHierarchyStructureBasicConfig(rName, levelOneName),
+				Config: testAccUserHierarchyStructureConfig_basic(rName, levelOneName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserHierarchyStructureExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "hierarchy_structure.#", "1"),
@@ -65,7 +50,7 @@ func testAccUserHierarchyStructure_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccUserHierarchyStructureBasicTwoLevelsConfig(rName, levelOneName, levelTwoName),
+				Config: testAccUserHierarchyStructureConfig_twoLevels(rName, levelOneName, levelTwoName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserHierarchyStructureExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "hierarchy_structure.#", "1"),
@@ -87,7 +72,7 @@ func testAccUserHierarchyStructure_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccUserHierarchyStructureBasicThreeLevelsConfig(rName, levelOneName, levelTwoName, levelThreeName),
+				Config: testAccUserHierarchyStructureConfig_threeLevels(rName, levelOneName, levelTwoName, levelThreeName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserHierarchyStructureExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "hierarchy_structure.#", "1"),
@@ -113,7 +98,7 @@ func testAccUserHierarchyStructure_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccUserHierarchyStructureBasicFourLevelsConfig(rName, levelOneName, levelTwoName, levelThreeName, levelFourName),
+				Config: testAccUserHierarchyStructureConfig_fourLevels(rName, levelOneName, levelTwoName, levelThreeName, levelFourName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserHierarchyStructureExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "hierarchy_structure.#", "1"),
@@ -143,7 +128,7 @@ func testAccUserHierarchyStructure_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccUserHierarchyStructureBasicFiveLevelsConfig(rName, levelOneName, levelTwoName, levelThreeName, levelFourName, levelFiveName),
+				Config: testAccUserHierarchyStructureConfig_fiveLevels(rName, levelOneName, levelTwoName, levelThreeName, levelFourName, levelFiveName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserHierarchyStructureExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "hierarchy_structure.#", "1"),
@@ -178,7 +163,7 @@ func testAccUserHierarchyStructure_basic(t *testing.T) {
 			},
 			{
 				// test removing 4 levels
-				Config: testAccUserHierarchyStructureBasicConfig(rName, levelOneName),
+				Config: testAccUserHierarchyStructureConfig_basic(rName, levelOneName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserHierarchyStructureExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "hierarchy_structure.#", "1"),
@@ -201,13 +186,13 @@ func testAccUserHierarchyStructure_disappears(t *testing.T) {
 	levelOneName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, connect.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckUserHierarchyStructureDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserHierarchyStructureDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserHierarchyStructureBasicConfig(rName, levelOneName),
+				Config: testAccUserHierarchyStructureConfig_basic(rName, levelOneName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserHierarchyStructureExists(resourceName, &v),
 					acctest.CheckResourceDisappears(acctest.Provider, tfconnect.ResourceUserHierarchyStructure(), resourceName),
@@ -280,7 +265,7 @@ func testAccCheckUserHierarchyStructureDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccUserHierarchyStructureBaseConfig(rName string) string {
+func testAccUserHierarchyStructureConfig_base(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_connect_instance" "test" {
   identity_management_type = "CONNECT_MANAGED"
@@ -291,9 +276,9 @@ resource "aws_connect_instance" "test" {
 `, rName)
 }
 
-func testAccUserHierarchyStructureBasicConfig(rName, levelOneName string) string {
+func testAccUserHierarchyStructureConfig_basic(rName, levelOneName string) string {
 	return acctest.ConfigCompose(
-		testAccUserHierarchyStructureBaseConfig(rName),
+		testAccUserHierarchyStructureConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_connect_user_hierarchy_structure" "test" {
   instance_id = aws_connect_instance.test.id
@@ -307,9 +292,9 @@ resource "aws_connect_user_hierarchy_structure" "test" {
 `, levelOneName))
 }
 
-func testAccUserHierarchyStructureBasicTwoLevelsConfig(rName, levelOneName, levelTwoName string) string {
+func testAccUserHierarchyStructureConfig_twoLevels(rName, levelOneName, levelTwoName string) string {
 	return acctest.ConfigCompose(
-		testAccUserHierarchyStructureBaseConfig(rName),
+		testAccUserHierarchyStructureConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_connect_user_hierarchy_structure" "test" {
   instance_id = aws_connect_instance.test.id
@@ -327,9 +312,9 @@ resource "aws_connect_user_hierarchy_structure" "test" {
 `, levelOneName, levelTwoName))
 }
 
-func testAccUserHierarchyStructureBasicThreeLevelsConfig(rName, levelOneName, levelTwoName, levelThreeName string) string {
+func testAccUserHierarchyStructureConfig_threeLevels(rName, levelOneName, levelTwoName, levelThreeName string) string {
 	return acctest.ConfigCompose(
-		testAccUserHierarchyStructureBaseConfig(rName),
+		testAccUserHierarchyStructureConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_connect_user_hierarchy_structure" "test" {
   instance_id = aws_connect_instance.test.id
@@ -351,9 +336,9 @@ resource "aws_connect_user_hierarchy_structure" "test" {
 `, levelOneName, levelTwoName, levelThreeName))
 }
 
-func testAccUserHierarchyStructureBasicFourLevelsConfig(rName, levelOneName, levelTwoName, levelThreeName, levelFourName string) string {
+func testAccUserHierarchyStructureConfig_fourLevels(rName, levelOneName, levelTwoName, levelThreeName, levelFourName string) string {
 	return acctest.ConfigCompose(
-		testAccUserHierarchyStructureBaseConfig(rName),
+		testAccUserHierarchyStructureConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_connect_user_hierarchy_structure" "test" {
   instance_id = aws_connect_instance.test.id
@@ -379,9 +364,9 @@ resource "aws_connect_user_hierarchy_structure" "test" {
 `, levelOneName, levelTwoName, levelThreeName, levelFourName))
 }
 
-func testAccUserHierarchyStructureBasicFiveLevelsConfig(rName, levelOneName, levelTwoName, levelThreeName, levelFourName, levelFiveName string) string {
+func testAccUserHierarchyStructureConfig_fiveLevels(rName, levelOneName, levelTwoName, levelThreeName, levelFourName, levelFiveName string) string {
 	return acctest.ConfigCompose(
-		testAccUserHierarchyStructureBaseConfig(rName),
+		testAccUserHierarchyStructureConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_connect_user_hierarchy_structure" "test" {
   instance_id = aws_connect_instance.test.id

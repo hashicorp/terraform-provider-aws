@@ -19,13 +19,13 @@ func TestAccELBCookieStickinessPolicy_basic(t *testing.T) {
 	lbName := fmt.Sprintf("tf-test-lb-%s", sdkacctest.RandString(5))
 	resourceName := "aws_lb_cookie_stickiness_policy.foo"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, elb.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckLBCookieStickinessPolicyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elb.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLBCookieStickinessPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLBCookieStickinessPolicyConfig(lbName),
+				Config: testAccLBCookieStickinessPolicyConfig_basic(lbName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "cookie_expiration_period", "300"),
 					testAccCheckLBCookieStickinessPolicy(
@@ -35,7 +35,7 @@ func TestAccELBCookieStickinessPolicy_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccLBCookieStickinessPolicyConfigUpdate(lbName),
+				Config: testAccLBCookieStickinessPolicyConfig_update(lbName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "cookie_expiration_period", "0"),
 					testAccCheckLBCookieStickinessPolicy(
@@ -110,13 +110,13 @@ func TestAccELBCookieStickinessPolicy_disappears(t *testing.T) {
 	resourceName := "aws_lb_cookie_stickiness_policy.foo"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, elb.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckLBCookieStickinessPolicyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elb.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLBCookieStickinessPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLBCookieStickinessPolicyConfig(lbName),
+				Config: testAccLBCookieStickinessPolicyConfig_basic(lbName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLBCookieStickinessPolicy(elbResourceName, resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfelb.ResourceCookieStickinessPolicy(), resourceName),
@@ -133,13 +133,13 @@ func TestAccELBCookieStickinessPolicy_Disappears_elb(t *testing.T) {
 	resourceName := "aws_lb_cookie_stickiness_policy.foo"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, elb.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckLBCookieStickinessPolicyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elb.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLBCookieStickinessPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLBCookieStickinessPolicyConfig(lbName),
+				Config: testAccLBCookieStickinessPolicyConfig_basic(lbName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLBCookieStickinessPolicy(elbResourceName, resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfelb.ResourceLoadBalancer(), elbResourceName),
@@ -150,7 +150,7 @@ func TestAccELBCookieStickinessPolicy_Disappears_elb(t *testing.T) {
 	})
 }
 
-func testAccLBCookieStickinessPolicyConfig(rName string) string {
+func testAccLBCookieStickinessPolicyConfig_basic(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_elb" "lb" {
   name               = "%s"
@@ -174,7 +174,7 @@ resource "aws_lb_cookie_stickiness_policy" "foo" {
 }
 
 // Sets the cookie_expiration_period to 0s.
-func testAccLBCookieStickinessPolicyConfigUpdate(rName string) string {
+func testAccLBCookieStickinessPolicyConfig_update(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_elb" "lb" {
   name               = "%s"

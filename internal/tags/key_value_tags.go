@@ -12,10 +12,10 @@ import (
 )
 
 const (
-	awsTagKeyPrefix                             = `aws:` // nosemgrep:aws-in-func-name,aws-in-var-name
+	awsTagKeyPrefix                             = `aws:` // nosemgrep:ci.aws-in-const-name,ci.aws-in-var-name
 	ElasticbeanstalkTagKeyPrefix                = `elasticbeanstalk:`
 	NameTagKey                                  = `Name`
-	RdsTagKeyPrefix                             = `rds:`
+	RDSTagKeyPrefix                             = `rds:`
 	ServerlessApplicationRepositoryTagKeyPrefix = `serverlessrepo:`
 )
 
@@ -37,7 +37,7 @@ type IgnoreConfig struct {
 type KeyValueTags map[string]*TagData
 
 // IgnoreAWS returns non-AWS tag keys.
-func (tags KeyValueTags) IgnoreAWS() KeyValueTags { // nosemgrep:aws-in-func-name
+func (tags KeyValueTags) IgnoreAWS() KeyValueTags { // nosemgrep:ci.aws-in-func-name
 	result := make(KeyValueTags)
 
 	for k, v := range tags {
@@ -148,7 +148,7 @@ func (tags KeyValueTags) IgnorePrefixes(ignoreTagPrefixes KeyValueTags) KeyValue
 }
 
 // IgnoreRDS returns non-AWS and non-RDS tag keys.
-func (tags KeyValueTags) IgnoreRds() KeyValueTags {
+func (tags KeyValueTags) IgnoreRDS() KeyValueTags {
 	result := make(KeyValueTags)
 
 	for k, v := range tags {
@@ -156,7 +156,7 @@ func (tags KeyValueTags) IgnoreRds() KeyValueTags {
 			continue
 		}
 
-		if strings.HasPrefix(k, RdsTagKeyPrefix) {
+		if strings.HasPrefix(k, RDSTagKeyPrefix) {
 			continue
 		}
 
@@ -507,8 +507,8 @@ func (tags KeyValueTags) String() string {
 	return builder.String()
 }
 
-// UrlEncode returns the KeyValueTags encoded as URL Query parameters.
-func (tags KeyValueTags) UrlEncode() string {
+// URLEncode returns the KeyValueTags encoded as URL Query parameters.
+func (tags KeyValueTags) URLEncode() string {
 	values := url.Values{}
 
 	for k, v := range tags {
@@ -522,8 +522,8 @@ func (tags KeyValueTags) UrlEncode() string {
 	return values.Encode()
 }
 
-// UrlQueryString returns the KeyValueTags formatted as URL Query parameters without encoding.
-func (tags KeyValueTags) UrlQueryString() string {
+// URLQueryString returns the KeyValueTags formatted as URL Query parameters without encoding.
+func (tags KeyValueTags) URLQueryString() string {
 	keys := make([]string, 0, len(tags))
 	for k, v := range tags {
 		if v == nil || v.Value == nil {

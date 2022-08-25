@@ -35,7 +35,7 @@ resource "aws_lambda_function" "example" {
 
 resource "aws_apigatewayv2_integration" "example" {
   api_id           = aws_apigatewayv2_api.example.id
-  integration_type = "AWS"
+  integration_type = "AWS_PROXY"
 
   connection_type           = "INTERNET"
   content_handling_strategy = "CONVERT_TO_TEXT"

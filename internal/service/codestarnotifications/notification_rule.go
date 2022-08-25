@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -21,7 +22,7 @@ import (
 
 const (
 	// Maximum amount of time to wait for target subscriptions to propagate
-	codestarNotificationsTargetSubscriptionTimeout = 30 * time.Second
+	targetSubscriptionTimeout = 30 * time.Second
 )
 
 func ResourceNotificationRule() *schema.Resource {
@@ -165,13 +166,13 @@ func resourceNotificationRuleRead(d *schema.ResourceData, meta interface{}) erro
 	})
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, codestarnotifications.ErrCodeResourceNotFoundException) {
-		names.LogNotFoundRemoveState(names.CodeStarNotifications, names.ErrActionReading, ResNotificationRule, d.Id())
+		create.LogNotFoundRemoveState(names.CodeStarNotifications, create.ErrActionReading, ResNotificationRule, d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return names.Error(names.CodeStarNotifications, names.ErrActionReading, ResNotificationRule, d.Id(), err)
+		return create.Error(names.CodeStarNotifications, create.ErrActionReading, ResNotificationRule, d.Id(), err)
 	}
 
 	d.Set("arn", rule.Arn)
@@ -212,7 +213,7 @@ func resourceNotificationRuleRead(d *schema.ResourceData, meta interface{}) erro
 	return nil
 }
 
-const awsCodeStartNotificationsNotificationRuleErrorSubscribed = "The target cannot be deleted because it is subscribed to one or more notification rules."
+const notificationRuleErrorSubscribed = "The target cannot be deleted because it is subscribed to one or more notification rules."
 
 // cleanupNotificationRuleTargets tries to remove unused notification targets. AWS API does not
 // provide expicit way for creating targets, they are created on first subscription. Here we are trying to remove all
@@ -235,10 +236,10 @@ func cleanupNotificationRuleTargets(conn *codestarnotifications.CodeStarNotifica
 			TargetAddress:       aws.String(target["address"].(string)),
 		}
 
-		err := resource.Retry(codestarNotificationsTargetSubscriptionTimeout, func() *resource.RetryError {
+		err := resource.Retry(targetSubscriptionTimeout, func() *resource.RetryError {
 			_, err := conn.DeleteTarget(input)
 
-			if tfawserr.ErrMessageContains(err, codestarnotifications.ErrCodeValidationException, awsCodeStartNotificationsNotificationRuleErrorSubscribed) {
+			if tfawserr.ErrMessageContains(err, codestarnotifications.ErrCodeValidationException, notificationRuleErrorSubscribed) {
 				return resource.RetryableError(err)
 			}
 
@@ -254,7 +255,7 @@ func cleanupNotificationRuleTargets(conn *codestarnotifications.CodeStarNotifica
 		}
 
 		// Treat target deletion as best effort
-		if tfawserr.ErrMessageContains(err, codestarnotifications.ErrCodeValidationException, awsCodeStartNotificationsNotificationRuleErrorSubscribed) {
+		if tfawserr.ErrMessageContains(err, codestarnotifications.ErrCodeValidationException, notificationRuleErrorSubscribed) {
 			continue
 		}
 

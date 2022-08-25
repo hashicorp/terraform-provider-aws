@@ -10,19 +10,20 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccConnectQueueDataSource_queueID(t *testing.T) {
+func testAccQueueDataSource_queueID(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	resourceName := "aws_connect_queue.test"
 	datasourceName := "data.aws_connect_queue.test"
 	outboundCallerConfigName := "exampleOutboundCallerConfigName"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, connect.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccQueueDataSourceConfig_QueueID(rName, resourceName, outboundCallerConfigName),
+				Config: testAccQueueDataSourceConfig_id(rName, rName2, outboundCallerConfigName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(datasourceName, "description", resourceName, "description"),
@@ -41,7 +42,7 @@ func TestAccConnectQueueDataSource_queueID(t *testing.T) {
 	})
 }
 
-func TestAccConnectQueueDataSource_name(t *testing.T) {
+func testAccQueueDataSource_name(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	resourceName := "aws_connect_queue.test"
@@ -49,12 +50,12 @@ func TestAccConnectQueueDataSource_name(t *testing.T) {
 	outboundCallerConfigName := "exampleOutboundCallerConfigName"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, connect.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccQueueDataSourceConfig_Name(rName, rName2, outboundCallerConfigName),
+				Config: testAccQueueDataSourceConfig_name(rName, rName2, outboundCallerConfigName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(datasourceName, "description", resourceName, "description"),
@@ -104,7 +105,7 @@ resource "aws_connect_queue" "test" {
 	`, rName, rName2, outboundCallerConfigName)
 }
 
-func testAccQueueDataSourceConfig_QueueID(rName, rName2, outboundCallerConfigName string) string {
+func testAccQueueDataSourceConfig_id(rName, rName2, outboundCallerConfigName string) string {
 	return acctest.ConfigCompose(
 		testAccQueueBaseDataSourceConfig(rName, rName2, outboundCallerConfigName),
 		`
@@ -115,7 +116,7 @@ data "aws_connect_queue" "test" {
 `)
 }
 
-func testAccQueueDataSourceConfig_Name(rName, rName2, outboundCallerConfigName string) string {
+func testAccQueueDataSourceConfig_name(rName, rName2, outboundCallerConfigName string) string {
 	return acctest.ConfigCompose(
 		testAccQueueBaseDataSourceConfig(rName, rName2, outboundCallerConfigName),
 		`

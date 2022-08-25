@@ -3,14 +3,18 @@ subcategory: "Managed Streaming for Kafka"
 layout: "aws"
 page_title: "AWS: aws_msk_cluster"
 description: |-
-  Terraform resource for managing an AWS Managed Streaming for Kafka cluster
+  Terraform resource for managing an AWS Managed Streaming for Kafka cluster.
 ---
 
 # Resource: aws_msk_cluster
 
-Manages AWS Managed Streaming for Kafka cluster
+Manages an Amazon MSK cluster.
+
+-> **Note:** This resource manages _provisioned_ clusters. To manage a _serverless_ Amazon MSK cluster, use the [`aws_msk_serverless_cluster`](/docs/providers/aws/r/msk_serverless_cluster.html) resource.
 
 ## Example Usage
+
+### Basic
 
 ```terraform
 resource "aws_vpc" "vpc" {
@@ -102,17 +106,21 @@ resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
 
 resource "aws_msk_cluster" "example" {
   cluster_name           = "example"
-  kafka_version          = "2.4.1"
+  kafka_version          = "3.2.0"
   number_of_broker_nodes = 3
 
   broker_node_group_info {
-    instance_type   = "kafka.m5.large"
-    ebs_volume_size = 1000
+    instance_type = "kafka.m5.large"
     client_subnets = [
       aws_subnet.subnet_az1.id,
       aws_subnet.subnet_az2.id,
       aws_subnet.subnet_az3.id,
     ]
+    storage_info {
+      ebs_storage_info {
+        volume_size = 1000
+      }
+    }
     security_groups = [aws_security_group.sg.id]
   }
 
@@ -164,6 +172,35 @@ output "bootstrap_brokers_tls" {
 }
 ```
 
+### With volume_throughput argument
+
+```terraform
+resource "aws_msk_cluster" "example" {
+  cluster_name           = "example"
+  kafka_version          = "2.7.1"
+  number_of_broker_nodes = 3
+
+  broker_node_group_info {
+    instance_type = "kafka.m5.4xlarge"
+    client_subnets = [
+      aws_subnet.subnet_az1.id,
+      aws_subnet.subnet_az2.id,
+      aws_subnet.subnet_az3.id,
+    ]
+    storage_info {
+      ebs_storage_info {
+        provisioned_throughput {
+          enabled           = true
+          volume_throughput = 250
+        }
+        volume_size = 1000
+      }
+    }
+    security_groups = [aws_security_group.sg.id]
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
@@ -178,16 +215,17 @@ The following arguments are supported:
 * `enhanced_monitoring` - (Optional) Specify the desired enhanced MSK CloudWatch monitoring level. See [Monitoring Amazon MSK with Amazon CloudWatch](https://docs.aws.amazon.com/msk/latest/developerguide/monitoring.html)
 * `open_monitoring` - (Optional) Configuration block for JMX and Node monitoring for the MSK cluster. See below.
 * `logging_info` - (Optional) Configuration block for streaming broker logs to Cloudwatch/S3/Kinesis Firehose. See below.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### broker_node_group_info Argument Reference
 
 * `client_subnets` - (Required) A list of subnets to connect to in client VPC ([documentation](https://docs.aws.amazon.com/msk/1.0/apireference/clusters.html#clusters-prop-brokernodegroupinfo-clientsubnets)).
-* `ebs_volume_size` - (Required) The size in GiB of the EBS volume for the data drive on each broker node.
+* `ebs_volume_size` - (Optional, **Deprecated** use `storage_info.ebs_storage_info.volume_size` instead) The size in GiB of the EBS volume for the data drive on each broker node.
 * `instance_type` - (Required) Specify the instance type to use for the kafka brokersE.g., kafka.m5.large. ([Pricing info](https://aws.amazon.com/msk/pricing/))
 * `security_groups` - (Required) A list of the security groups to associate with the elastic network interfaces to control who can communicate with the cluster.
 * `az_distribution` - (Optional) The distribution of broker nodes across availability zones ([documentation](https://docs.aws.amazon.com/msk/1.0/apireference/clusters.html#clusters-model-brokerazdistribution)). Currently the only valid value is `DEFAULT`.
 * `connectivity_info` - (Optional) Information about the cluster access configuration. See below. For security reasons, you can't turn on public access while creating an MSK cluster. However, you can update an existing cluster to make it publicly accessible. You can also create a new cluster and then update it to make it publicly accessible ([documentation](https://docs.aws.amazon.com/msk/latest/developerguide/public-access.html)).
+* `storage_info` - (Optional) A block that contains information about storage volumes attached to MSK broker nodes. See below.
 
 ### broker_node_group_info connectivity_info Argument Reference
 
@@ -196,6 +234,20 @@ The following arguments are supported:
 ### connectivity_info public_access Argument Reference
 
 * `type` - (Optional) Public access type. Valida values: `DISABLED`, `SERVICE_PROVIDED_EIPS`.
+
+### broker_node_group_info storage_info Argument Reference
+
+* `ebs_storage_info` - (Optional) A block that contains EBS volume information. See below.
+
+### storage_info ebs_storage_info Argument Reference
+
+* `provisioned_throughput` - (Optional) A block that contains EBS volume provisioned throughput information. To provision storage throughput, you must choose broker type kafka.m5.4xlarge or larger. See below.
+* `volume_size` - (Optional) The size in GiB of the EBS volume for the data drive on each broker node. Minimum value of `1` and maximum value of `16384`.
+
+### ebs_storage_info provisioned_throughput Argument Reference
+
+* `enabled` - (Optional) Controls whether provisioned throughput is enabled or not. Default value: `false`.
+* `volume_throughput` - (Optional) Throughput value of the EBS volumes for the data drive on each kafka broker node in MiB per second. The minimum value is `250`. The maximum value varies between broker type. You can refer to the valid values for the maximum volume throughput at the following [documentation on throughput bottlenecks](https://docs.aws.amazon.com/msk/latest/developerguide/msk-provision-throughput.html#throughput-bottlenecks)
 
 ### client_authentication Argument Reference
 
@@ -278,19 +330,18 @@ In addition to all arguments above, the following attributes are exported:
 * `bootstrap_brokers_tls` - One or more DNS names (or IP addresses) and TLS port pairs. For example, `b-1.exampleClusterName.abcde.c2.kafka.us-east-1.amazonaws.com:9094,b-2.exampleClusterName.abcde.c2.kafka.us-east-1.amazonaws.com:9094,b-3.exampleClusterName.abcde.c2.kafka.us-east-1.amazonaws.com:9094`. This attribute will have a value if `encryption_info.0.encryption_in_transit.0.client_broker` is set to `TLS_PLAINTEXT` or `TLS`. The resource sorts the list alphabetically. AWS may not always return all endpoints so the values may not be stable across applies.
 * `current_version` - Current version of the MSK Cluster used for updates, e.g., `K13V1IB3VIYZZH`
 * `encryption_info.0.encryption_at_rest_kms_key_arn` - The ARN of the KMS key used for encryption at rest of the broker data volumes.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `zookeeper_connect_string` - A comma separated list of one or more hostname:port pairs to use to connect to the Apache Zookeeper cluster. The returned values are sorted alphabetically. The AWS API may not return all endpoints, so this value is not guaranteed to be stable across applies.
 * `zookeeper_connect_string_tls` - A comma separated list of one or more hostname:port pairs to use to connect to the Apache Zookeeper cluster via TLS. The returned values are sorted alphabetically. The AWS API may not return all endpoints, so this value is not guaranteed to be stable across applies.
 
 ## Timeouts
 
-`aws_msk_cluster` provides the following
-[Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
 
-* `create` - (Default `120 minutes`) How long to wait for the MSK Cluster to be created.
-* `update` - (Default `120 minutes`) How long to wait for the MSK Cluster to be updated.
+* `create` - (Default `120m`)
+* `update` - (Default `120m`)
 Note that the `update` timeout is used separately for `ebs_volume_size`, `instance_type`, `number_of_broker_nodes`, `configuration_info`, `kafka_version` and monitoring and logging update timeouts.
-* `delete` - (Default `120 minutes`) How long to wait for the MSK Cluster to be deleted.
+* `delete` - (Default `120m`)
 
 ## Import
 

@@ -50,3 +50,13 @@ data "aws_directory_service_directory" "example" {
 * `customer_dns_ips` - The DNS IP addresses of the domain to connect to.
 * `subnet_ids` - The identifiers of the subnets for the connector servers (2 subnets in 2 different AZs).
 * `vpc_id` - The ID of the VPC that the connector is in.
+
+`radius_settings` is also exported with the following attributes:
+
+* `authentication_protocol` - The protocol specified for your RADIUS endpoints.
+* `display_label` - Display label.
+* `radius_port` - The port that your RADIUS server is using for communications.
+* `radius_retries` - The maximum number of times that communication with the RADIUS server is attempted.
+* `radius_servers` - A set of strings that contains the fully qualified domain name (FQDN) or IP addresses of the RADIUS server endpoints, or the FQDN or IP addresses of your RADIUS server load balancer.
+* `radius_timeout` - The amount of time, in seconds, to wait for the RADIUS server to respond.
+* `use_same_username` - Not currently used.

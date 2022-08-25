@@ -24,12 +24,12 @@ func TestAccCETagsDataSource_basic(t *testing.T) {
 	endDate := currentTime.Format(formatDate)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
-		ErrorCheck:        acctest.ErrorCheck(t, costexplorer.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		ErrorCheck:               acctest.ErrorCheck(t, costexplorer.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTagsSourceConfig(rName, startDate, endDate),
+				Config: testAccTagsDataSourceConfig_basic(rName, startDate, endDate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCostCategoryExists(resourceName, &output),
 					resource.TestCheckResourceAttr(dataSourceName, "tags.#", "1"),
@@ -52,12 +52,12 @@ func TestAccCETagsDataSource_filter(t *testing.T) {
 	endDate := currentTime.Format(formatDate)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
-		ErrorCheck:        acctest.ErrorCheck(t, costexplorer.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		ErrorCheck:               acctest.ErrorCheck(t, costexplorer.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTagsSourceFilterConfig(rName, startDate, endDate),
+				Config: testAccTagsDataSourceConfig_filter(rName, startDate, endDate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCostCategoryExists(resourceName, &output),
 					resource.TestCheckResourceAttr(dataSourceName, "tags.#", "1"),
@@ -67,7 +67,7 @@ func TestAccCETagsDataSource_filter(t *testing.T) {
 	})
 }
 
-func testAccTagsSourceConfig(rName, start, end string) string {
+func testAccTagsDataSourceConfig_basic(rName, start, end string) string {
 	return fmt.Sprintf(`
 resource "aws_ce_cost_category" "test" {
   name         = %[1]q
@@ -94,7 +94,7 @@ data "aws_ce_tags" "test" {
 `, rName, start, end)
 }
 
-func testAccTagsSourceFilterConfig(rName, start, end string) string {
+func testAccTagsDataSourceConfig_filter(rName, start, end string) string {
 	return fmt.Sprintf(`
 data "aws_region" "current" {}
 

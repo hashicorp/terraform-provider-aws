@@ -24,14 +24,14 @@ func testAccTransitGatewayPrefixListReference_basic(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			testAccPreCheckTransitGateway(t)
-			testAccPreCheckEc2ManagedPrefixList(t)
+			testAccPreCheckManagedPrefixList(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTransitGatewayPrefixListReferenceDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTransitGatewayPrefixListReferenceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTransitGatewayPrefixListReferenceConfig_Blackhole(rName),
+				Config: testAccTransitGatewayPrefixListReferenceConfig_blackhole(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccTransitGatewayPrefixListReferenceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "blackhole", "true"),
@@ -58,14 +58,14 @@ func testAccTransitGatewayPrefixListReference_disappears(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			testAccPreCheckTransitGateway(t)
-			testAccPreCheckEc2ManagedPrefixList(t)
+			testAccPreCheckManagedPrefixList(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTransitGatewayPrefixListReferenceDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTransitGatewayPrefixListReferenceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTransitGatewayPrefixListReferenceConfig_Blackhole(rName),
+				Config: testAccTransitGatewayPrefixListReferenceConfig_blackhole(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccTransitGatewayPrefixListReferenceExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceTransitGatewayPrefixListReference(), resourceName),
@@ -85,14 +85,14 @@ func testAccTransitGatewayPrefixListReference_disappears_TransitGateway(t *testi
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			testAccPreCheckTransitGateway(t)
-			testAccPreCheckEc2ManagedPrefixList(t)
+			testAccPreCheckManagedPrefixList(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTransitGatewayPrefixListReferenceDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTransitGatewayPrefixListReferenceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTransitGatewayPrefixListReferenceConfig_Blackhole(rName),
+				Config: testAccTransitGatewayPrefixListReferenceConfig_blackhole(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccTransitGatewayPrefixListReferenceExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceTransitGateway(), transitGatewayResourceName),
@@ -113,14 +113,14 @@ func testAccTransitGatewayPrefixListReference_TransitGatewayAttachmentID(t *test
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			testAccPreCheckTransitGateway(t)
-			testAccPreCheckEc2ManagedPrefixList(t)
+			testAccPreCheckManagedPrefixList(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTransitGatewayPrefixListReferenceDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTransitGatewayPrefixListReferenceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTransitGatewayPrefixListReferenceConfig_TransitGatewayAttachmentID(rName, 0),
+				Config: testAccTransitGatewayPrefixListReferenceConfig_attachmentID(rName, 0),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccTransitGatewayPrefixListReferenceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "blackhole", "false"),
@@ -133,7 +133,7 @@ func testAccTransitGatewayPrefixListReference_TransitGatewayAttachmentID(t *test
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccTransitGatewayPrefixListReferenceConfig_TransitGatewayAttachmentID(rName, 1),
+				Config: testAccTransitGatewayPrefixListReferenceConfig_attachmentID(rName, 1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccTransitGatewayPrefixListReferenceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "blackhole", "false"),
@@ -152,7 +152,7 @@ func testAccCheckTransitGatewayPrefixListReferenceDestroy(s *terraform.State) er
 			continue
 		}
 
-		transitGatewayRouteTableID, prefixListID, err := tfec2.TransitGatewayPrefixListReferenceParseID(rs.Primary.ID)
+		transitGatewayRouteTableID, prefixListID, err := tfec2.TransitGatewayPrefixListReferenceParseResourceID(rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -185,7 +185,7 @@ func testAccTransitGatewayPrefixListReferenceExists(n string) resource.TestCheck
 			return fmt.Errorf("No EC2 Transit Gateway Prefix List Reference is set")
 		}
 
-		transitGatewayRouteTableID, prefixListID, err := tfec2.TransitGatewayPrefixListReferenceParseID(rs.Primary.ID)
+		transitGatewayRouteTableID, prefixListID, err := tfec2.TransitGatewayPrefixListReferenceParseResourceID(rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -195,15 +195,11 @@ func testAccTransitGatewayPrefixListReferenceExists(n string) resource.TestCheck
 
 		_, err = tfec2.FindTransitGatewayPrefixListReferenceByTwoPartKey(conn, transitGatewayRouteTableID, prefixListID)
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 
-func testAccTransitGatewayPrefixListReferenceConfig_Blackhole(rName string) string {
+func testAccTransitGatewayPrefixListReferenceConfig_blackhole(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ec2_managed_prefix_list" "test" {
   address_family = "IPv4"
@@ -211,7 +207,11 @@ resource "aws_ec2_managed_prefix_list" "test" {
   name           = %[1]q
 }
 
-resource "aws_ec2_transit_gateway" "test" {}
+resource "aws_ec2_transit_gateway" "test" {
+  tags = {
+    Name = %[1]q
+  }
+}
 
 resource "aws_ec2_transit_gateway_prefix_list_reference" "test" {
   blackhole                      = true
@@ -221,7 +221,7 @@ resource "aws_ec2_transit_gateway_prefix_list_reference" "test" {
 `, rName)
 }
 
-func testAccTransitGatewayPrefixListReferenceConfig_TransitGatewayAttachmentID(rName string, index int) string {
+func testAccTransitGatewayPrefixListReferenceConfig_attachmentID(rName string, index int) string {
 	return fmt.Sprintf(`
 variable "index" {
   default = %[2]d
@@ -237,6 +237,10 @@ resource "aws_vpc" "test" {
   count = 2
 
   cidr_block = "10.${count.index}.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_subnet" "test" {
@@ -244,9 +248,17 @@ resource "aws_subnet" "test" {
 
   cidr_block = cidrsubnet(aws_vpc.test[count.index].cidr_block, 8, 0)
   vpc_id     = aws_vpc.test[count.index].id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
-resource "aws_ec2_transit_gateway" "test" {}
+resource "aws_ec2_transit_gateway" "test" {
+  tags = {
+    Name = %[1]q
+  }
+}
 
 resource "aws_ec2_transit_gateway_vpc_attachment" "test" {
   count = 2
@@ -254,6 +266,10 @@ resource "aws_ec2_transit_gateway_vpc_attachment" "test" {
   subnet_ids         = [aws_subnet.test[count.index].id]
   transit_gateway_id = aws_ec2_transit_gateway.test.id
   vpc_id             = aws_vpc.test[count.index].id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_ec2_transit_gateway_prefix_list_reference" "test" {

@@ -32,7 +32,7 @@ func dataSourceLambdaFunctionAssociationRead(ctx context.Context, d *schema.Reso
 	functionArn := d.Get("function_arn")
 	instanceID := d.Get("instance_id")
 
-	lfaArn, err := FindLambdaFunctionAssociationByArnWithContext(ctx, conn, instanceID.(string), functionArn.(string))
+	lfaArn, err := FindLambdaFunctionAssociationByARNWithContext(ctx, conn, instanceID.(string), functionArn.(string))
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("error finding Connect Lambda Function Association by ARN (%s): %w", functionArn, err))
 	}

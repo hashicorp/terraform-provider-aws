@@ -45,5 +45,5 @@ In addition to all arguments above, the following attributes are exported:
 * `id` - The CodeStar Connection ARN.
 * `host_arn` - The Amazon Resource Name (ARN) of the host associated with the connection.
 * `name` - The name of the CodeStar Connection. The name is unique in the calling AWS account.
-* `provider_type` - The name of the external provider where your third-party code repository is configured. Possible values are `Bitbucket`, `GitHub`, or `GitHubEnterpriseServer`.
+* `provider_type` - The name of the external provider where your third-party code repository is configured. Possible values are `Bitbucket` and `GitHub`. For connections to a GitHub Enterprise Server instance, you must create an [aws_codestarconnections_host](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/codestarconnections_host) resource and use `host_arn` instead.
 * `tags` - Map of key-value resource tags to associate with the resource.

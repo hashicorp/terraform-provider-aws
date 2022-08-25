@@ -22,13 +22,13 @@ func TestAccS3ControlBucketPolicy_basic(t *testing.T) {
 	resourceName := "aws_s3control_bucket_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, s3control.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckBucketPolicyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, s3control.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBucketPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketPolicyConfig_Policy(rName, "s3-outposts:*"),
+				Config: testAccBucketPolicyConfig_basic(rName, "s3-outposts:*"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketPolicyExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "bucket", "aws_s3control_bucket.test", "arn"),
@@ -49,13 +49,13 @@ func TestAccS3ControlBucketPolicy_disappears(t *testing.T) {
 	resourceName := "aws_s3control_bucket_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, s3control.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckBucketPolicyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, s3control.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBucketPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketPolicyConfig_Policy(rName, "s3-outposts:*"),
+				Config: testAccBucketPolicyConfig_basic(rName, "s3-outposts:*"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketPolicyExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfs3control.ResourceBucketPolicy(), resourceName),
@@ -71,13 +71,13 @@ func TestAccS3ControlBucketPolicy_policy(t *testing.T) {
 	resourceName := "aws_s3control_bucket_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, s3control.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckBucketPolicyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, s3control.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBucketPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketPolicyConfig_Policy(rName, "s3-outposts:GetObject"),
+				Config: testAccBucketPolicyConfig_basic(rName, "s3-outposts:GetObject"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketPolicyExists(resourceName),
 					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile(`s3-outposts:GetObject`)),
@@ -89,7 +89,7 @@ func TestAccS3ControlBucketPolicy_policy(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccBucketPolicyConfig_Policy(rName, "s3-outposts:PutObject"),
+				Config: testAccBucketPolicyConfig_basic(rName, "s3-outposts:PutObject"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketPolicyExists(resourceName),
 					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile(`s3-outposts:PutObject`)),
@@ -168,15 +168,11 @@ func testAccCheckBucketPolicyExists(resourceName string) resource.TestCheckFunc 
 
 		_, err = conn.GetBucketPolicy(input)
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 
-func testAccBucketPolicyConfig_Policy(rName, action string) string {
+func testAccBucketPolicyConfig_basic(rName, action string) string {
 	return fmt.Sprintf(`
 data "aws_outposts_outposts" "test" {}
 

@@ -200,7 +200,7 @@ func resourceImportOpenAPI(d *schema.ResourceData, meta interface{}) error {
 					return fmt.Errorf("error deleting CORS configuration for API Gateway v2 API (%s): %s", d.Id(), err)
 				}
 			} else {
-				revertReq.CorsConfiguration = expandApiGateway2CorsConfiguration(corsConfiguration.([]interface{}))
+				revertReq.CorsConfiguration = expandCORSConfiguration(corsConfiguration.([]interface{}))
 			}
 		}
 
@@ -233,7 +233,7 @@ func resourceAPICreate(d *schema.ResourceData, meta interface{}) error {
 		req.ApiKeySelectionExpression = aws.String(v.(string))
 	}
 	if v, ok := d.GetOk("cors_configuration"); ok {
-		req.CorsConfiguration = expandApiGateway2CorsConfiguration(v.([]interface{}))
+		req.CorsConfiguration = expandCORSConfiguration(v.([]interface{}))
 	}
 	if v, ok := d.GetOk("credentials_arn"); ok {
 		req.CredentialsArn = aws.String(v.(string))
@@ -299,7 +299,7 @@ func resourceAPIRead(d *schema.ResourceData, meta interface{}) error {
 		Resource:  fmt.Sprintf("/apis/%s", d.Id()),
 	}.String()
 	d.Set("arn", apiArn)
-	if err := d.Set("cors_configuration", flattenApiGateway2CorsConfiguration(resp.CorsConfiguration)); err != nil {
+	if err := d.Set("cors_configuration", flattenCORSConfiguration(resp.CorsConfiguration)); err != nil {
 		return fmt.Errorf("error setting cors_configuration: %s", err)
 	}
 	d.Set("description", resp.Description)
@@ -360,7 +360,7 @@ func resourceAPIUpdate(d *schema.ResourceData, meta interface{}) error {
 			req.ApiKeySelectionExpression = aws.String(d.Get("api_key_selection_expression").(string))
 		}
 		if d.HasChange("cors_configuration") {
-			req.CorsConfiguration = expandApiGateway2CorsConfiguration(d.Get("cors_configuration").([]interface{}))
+			req.CorsConfiguration = expandCORSConfiguration(d.Get("cors_configuration").([]interface{}))
 		}
 		if d.HasChange("description") {
 			req.Description = aws.String(d.Get("description").(string))
@@ -419,7 +419,7 @@ func resourceAPIDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func expandApiGateway2CorsConfiguration(vConfiguration []interface{}) *apigatewayv2.Cors {
+func expandCORSConfiguration(vConfiguration []interface{}) *apigatewayv2.Cors {
 	configuration := &apigatewayv2.Cors{}
 
 	if len(vConfiguration) == 0 || vConfiguration[0] == nil {
@@ -449,7 +449,7 @@ func expandApiGateway2CorsConfiguration(vConfiguration []interface{}) *apigatewa
 	return configuration
 }
 
-func flattenApiGateway2CorsConfiguration(configuration *apigatewayv2.Cors) []interface{} {
+func flattenCORSConfiguration(configuration *apigatewayv2.Cors) []interface{} {
 	if configuration == nil {
 		return []interface{}{}
 	}

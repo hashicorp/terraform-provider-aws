@@ -6,7 +6,7 @@ description: |-
   Get information on an ElastiCache User resource.
 ---
 
-# Data Source: aws_elasticache_replication_group
+# Data Source: aws_elasticache_user
 
 Use this data source to get information about an Elasticache User.
 

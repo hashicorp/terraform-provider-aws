@@ -27,6 +27,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/appconfig"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/appflow"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/appintegrations"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/applicationinsights"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/appmesh"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/appstream"
@@ -55,6 +56,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/codestarnotifications"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cognitoidentity"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cognitoidp"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/comprehend"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/configservice"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/connect"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cur"
@@ -85,9 +87,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/elbv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/emr"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/emrcontainers"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/emrserverless"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/events"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/evidently"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/firehose"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/fis"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/fms"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/fsx"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/gamelift"
@@ -103,6 +107,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/iot"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/kafka"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/kafkaconnect"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/kendra"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/keyspaces"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/kinesis"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/kinesisanalytics"
@@ -139,13 +144,17 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/ram"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/rds"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/redshift"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/redshiftdata"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/redshiftserverless"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/resourcegroups"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/resourcegroupstaggingapi"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/rolesanywhere"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/route53"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/route53domains"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/route53recoverycontrolconfig"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/route53recoveryreadiness"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/route53resolver"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/rum"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/s3"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/s3control"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/s3outposts"
@@ -171,6 +180,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/swf"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/synthetics"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/timestreamwrite"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/transcribe"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/transfer"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/waf"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/wafregional"
@@ -183,18 +193,17 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// Provider returns a *schema.Provider.
-func Provider() *schema.Provider {
-	// TODO: Move the validation to this, requires conditional schemas
-	// TODO: Move the configuration to this, requires validation
-
+// New returns a new, initialized Terraform Plugin SDK v2-style provider instance.
+// The provider instance is fully configured once the `ConfigureContextFunc` has been called.
+func New(_ context.Context) (*schema.Provider, error) {
 	// The actual provider
 	provider := &schema.Provider{
+		// This schema must match exactly the Terraform Protocol v6 (Terraform Plugin Framework) provider's schema.
+		// Notably the attributes can have no Default values.
 		Schema: map[string]*schema.Schema{
 			"access_key": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  "",
 				Description: "The access key for API operations. You can retrieve this\n" +
 					"from the 'Security & Credentials' section of the AWS console.",
 			},
@@ -283,14 +292,12 @@ func Provider() *schema.Provider {
 			"insecure": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  false,
 				Description: "Explicitly allow the provider to perform \"insecure\" SSL requests. If omitted, " +
 					"default value is `false`",
 			},
 			"max_retries": {
 				Type:     schema.TypeInt,
 				Optional: true,
-				Default:  25,
 				Description: "The maximum number of times an AWS API request is\n" +
 					"being executed. If the API request still fails, an error is\n" +
 					"thrown.",
@@ -298,7 +305,6 @@ func Provider() *schema.Provider {
 			"profile": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  "",
 				Description: "The profile for API operations. If not set, the default profile\n" +
 					"created with `aws configure` will be used.",
 			},
@@ -311,7 +317,6 @@ func Provider() *schema.Provider {
 			"s3_force_path_style": {
 				Type:       schema.TypeBool,
 				Optional:   true,
-				Default:    false,
 				Deprecated: "Use s3_use_path_style instead.",
 				Description: "Set this to true to enable the request to use path-style addressing,\n" +
 					"i.e., https://s3.amazonaws.com/BUCKET/KEY. By default, the S3 client will\n" +
@@ -321,7 +326,6 @@ func Provider() *schema.Provider {
 			"s3_use_path_style": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  false,
 				Description: "Set this to true to enable the request to use path-style addressing,\n" +
 					"i.e., https://s3.amazonaws.com/BUCKET/KEY. By default, the S3 client will\n" +
 					"use virtual hosted bucket addressing when possible\n" +
@@ -330,7 +334,6 @@ func Provider() *schema.Provider {
 			"secret_key": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  "",
 				Description: "The secret key for API operations. You can retrieve this\n" +
 					"from the 'Security & Credentials' section of the AWS console.",
 			},
@@ -343,7 +346,6 @@ func Provider() *schema.Provider {
 			"shared_credentials_file": {
 				Type:          schema.TypeString,
 				Optional:      true,
-				Default:       "",
 				Deprecated:    "Use shared_credentials_files instead.",
 				ConflictsWith: []string{"shared_credentials_files"},
 				Description:   "The path to the shared credentials file. If not set, defaults to ~/.aws/credentials.",
@@ -358,14 +360,12 @@ func Provider() *schema.Provider {
 			"skip_credentials_validation": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  false,
 				Description: "Skip the credentials validation via STS API. " +
 					"Used for AWS API implementations that do not have STS available/implemented.",
 			},
 			"skip_get_ec2_platforms": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  false,
 				Description: "Skip getting the supported EC2 platforms. " +
 					"Used by users that don't have ec2:DescribeAccountAttributes permissions.",
 			},
@@ -379,41 +379,35 @@ func Provider() *schema.Provider {
 			"skip_region_validation": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  false,
 				Description: "Skip static validation of region name. " +
 					"Used by users of alternative AWS-like APIs or users w/ access to regions that are not public (yet).",
 			},
 			"skip_requesting_account_id": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  false,
 				Description: "Skip requesting the account ID. " +
 					"Used for AWS API implementations that do not have IAM/STS API and/or metadata API.",
 			},
 			"sts_region": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  "",
 				Description: "The region where AWS STS operations will take place. Examples\n" +
 					"are us-east-1 and us-west-2.", // lintignore:AWSAT003,
 			},
 			"token": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  "",
 				Description: "session token. A session token is only required if you are\n" +
 					"using temporary security credentials.",
 			},
 			"use_dualstack_endpoint": {
 				Type:        schema.TypeBool,
 				Optional:    true,
-				Default:     false,
 				Description: "Resolve an endpoint with DualStack capability",
 			},
 			"use_fips_endpoint": {
 				Type:        schema.TypeBool,
 				Optional:    true,
-				Default:     false,
 				Description: "Resolve an endpoint with FIPS capability",
 			},
 		},
@@ -507,6 +501,7 @@ func Provider() *schema.Provider {
 			"aws_connect_quick_connect":               connect.DataSourceQuickConnect(),
 			"aws_connect_routing_profile":             connect.DataSourceRoutingProfile(),
 			"aws_connect_security_profile":            connect.DataSourceSecurityProfile(),
+			"aws_connect_user_hierarchy_group":        connect.DataSourceUserHierarchyGroup(),
 			"aws_connect_user_hierarchy_structure":    connect.DataSourceUserHierarchyStructure(),
 
 			"aws_cur_report_definition": cur.DataSourceReportDefinition(),
@@ -553,6 +548,8 @@ func Provider() *schema.Provider {
 			"aws_ec2_local_gateway":                          ec2.DataSourceLocalGateway(),
 			"aws_ec2_local_gateways":                         ec2.DataSourceLocalGateways(),
 			"aws_ec2_managed_prefix_list":                    ec2.DataSourceManagedPrefixList(),
+			"aws_ec2_network_insights_analysis":              ec2.DataSourceNetworkInsightsAnalysis(),
+			"aws_ec2_network_insights_path":                  ec2.DataSourceNetworkInsightsPath(),
 			"aws_ec2_serial_console_access":                  ec2.DataSourceSerialConsoleAccess(),
 			"aws_ec2_spot_price":                             ec2.DataSourceSpotPrice(),
 			"aws_ec2_transit_gateway":                        ec2.DataSourceTransitGateway(),
@@ -590,8 +587,8 @@ func Provider() *schema.Provider {
 			"aws_vpc_dhcp_options":                           ec2.DataSourceVPCDHCPOptions(),
 			"aws_vpc_endpoint_service":                       ec2.DataSourceVPCEndpointService(),
 			"aws_vpc_endpoint":                               ec2.DataSourceVPCEndpoint(),
-			"aws_vpc_ipam_pool":                              ec2.DataSourceVPCIpamPool(),
-			"aws_vpc_ipam_preview_next_cidr":                 ec2.DataSourceVPCIpamPreviewNextCidr(),
+			"aws_vpc_ipam_pool":                              ec2.DataSourceIPAMPool(),
+			"aws_vpc_ipam_preview_next_cidr":                 ec2.DataSourceIPAMPreviewNextCIDR(),
 			"aws_vpc_peering_connection":                     ec2.DataSourceVPCPeeringConnection(),
 			"aws_vpc_peering_connections":                    ec2.DataSourceVPCPeeringConnections(),
 			"aws_vpc":                                        ec2.DataSourceVPC(),
@@ -637,18 +634,21 @@ func Provider() *schema.Provider {
 			"aws_elb_service_account": elb.DataSourceServiceAccount(),
 
 			// Adding the Aliases for the ALB -> LB Rename
-			"aws_alb_listener":     elbv2.DataSourceListener(),
-			"aws_alb_target_group": elbv2.DataSourceTargetGroup(),
-			"aws_alb":              elbv2.DataSourceLoadBalancer(),
-			"aws_lb_listener":      elbv2.DataSourceListener(),
-			"aws_lb_target_group":  elbv2.DataSourceTargetGroup(),
-			"aws_lb":               elbv2.DataSourceLoadBalancer(),
+			"aws_alb":               elbv2.DataSourceLoadBalancer(),
+			"aws_alb_listener":      elbv2.DataSourceListener(),
+			"aws_alb_target_group":  elbv2.DataSourceTargetGroup(),
+			"aws_lb":                elbv2.DataSourceLoadBalancer(),
+			"aws_lb_hosted_zone_id": elbv2.DataSourceHostedZoneID(),
+			"aws_lb_listener":       elbv2.DataSourceListener(),
+			"aws_lb_target_group":   elbv2.DataSourceTargetGroup(),
 
 			"aws_emr_release_labels": emr.DataSourceReleaseLabels(),
 
 			"aws_emrcontainers_virtual_cluster": emrcontainers.DataSourceVirtualCluster(),
 
 			"aws_kinesis_firehose_delivery_stream": firehose.DataSourceDeliveryStream(),
+
+			"aws_fsx_openzfs_snapshot": fsx.DataSourceOpenzfsSnapshot(),
 
 			"aws_globalaccelerator_accelerator": globalaccelerator.DataSourceAccelerator(),
 
@@ -706,6 +706,12 @@ func Provider() *schema.Provider {
 			"aws_mskconnect_custom_plugin":        kafkaconnect.DataSourceCustomPlugin(),
 			"aws_mskconnect_worker_configuration": kafkaconnect.DataSourceWorkerConfiguration(),
 
+			"aws_kendra_experience":                   kendra.DataSourceExperience(),
+			"aws_kendra_faq":                          kendra.DataSourceFaq(),
+			"aws_kendra_index":                        kendra.DataSourceIndex(),
+			"aws_kendra_query_suggestions_block_list": kendra.DataSourceQuerySuggestionsBlockList(),
+			"aws_kendra_thesaurus":                    kendra.DataSourceThesaurus(),
+
 			"aws_kinesis_stream":          kinesis.DataSourceStream(),
 			"aws_kinesis_stream_consumer": kinesis.DataSourceStreamConsumer(),
 
@@ -732,9 +738,14 @@ func Provider() *schema.Provider {
 			"aws_lex_intent":    lexmodels.DataSourceIntent(),
 			"aws_lex_slot_type": lexmodels.DataSourceSlotType(),
 
-			"aws_location_map": location.DataSourceMap(),
+			"aws_location_geofence_collection": location.DataSourceGeofenceCollection(),
+			"aws_location_map":                 location.DataSourceMap(),
+			"aws_location_place_index":         location.DataSourcePlaceIndex(),
+			"aws_location_route_calculator":    location.DataSourceRouteCalculator(),
+			"aws_location_tracker":             location.DataSourceTracker(),
+			"aws_location_tracker_association": location.DataSourceTrackerAssociation(),
 
-			"aws_arn":                     meta.DataSourceARN(),
+			// "aws_arn":                     meta.DataSourceARN(), // Now implemented using Terraform Plugin Framework.
 			"aws_billing_service_account": meta.DataSourceBillingServiceAccount(),
 			"aws_default_tags":            meta.DataSourceDefaultTags(),
 			"aws_ip_ranges":               meta.DataSourceIPRanges(),
@@ -756,6 +767,9 @@ func Provider() *schema.Provider {
 			"aws_neptune_engine_version":        neptune.DataSourceEngineVersion(),
 			"aws_neptune_orderable_db_instance": neptune.DataSourceOrderableDBInstance(),
 
+			"aws_networkfirewall_firewall":        networkfirewall.DataSourceFirewall(),
+			"aws_networkfirewall_firewall_policy": networkfirewall.DataSourceFirewallPolicy(),
+
 			"aws_networkmanager_connection":                   networkmanager.DataSourceConnection(),
 			"aws_networkmanager_connections":                  networkmanager.DataSourceConnections(),
 			"aws_networkmanager_core_network_policy_document": networkmanager.DataSourceCoreNetworkPolicyDocument(),
@@ -776,6 +790,8 @@ func Provider() *schema.Provider {
 			"aws_organizations_organizational_units":     organizations.DataSourceOrganizationalUnits(),
 			"aws_organizations_resource_tags":            organizations.DataSourceResourceTags(),
 
+			"aws_outposts_asset":                  outposts.DataSourceOutpostAsset(),
+			"aws_outposts_assets":                 outposts.DataSourceOutpostAssets(),
 			"aws_outposts_outpost":                outposts.DataSourceOutpost(),
 			"aws_outposts_outpost_instance_type":  outposts.DataSourceOutpostInstanceType(),
 			"aws_outposts_outpost_instance_types": outposts.DataSourceOutpostInstanceTypes(),
@@ -784,6 +800,8 @@ func Provider() *schema.Provider {
 			"aws_outposts_sites":                  outposts.DataSourceSites(),
 
 			"aws_pricing_product": pricing.DataSourceProduct(),
+
+			"aws_prometheus_workspace": amp.DataSourceWorkspace(),
 
 			"aws_qldb_ledger": qldb.DataSourceLedger(),
 
@@ -804,9 +822,11 @@ func Provider() *schema.Provider {
 			"aws_rds_engine_version":        rds.DataSourceEngineVersion(),
 			"aws_rds_orderable_db_instance": rds.DataSourceOrderableInstance(),
 
-			"aws_redshift_cluster":           redshift.DataSourceCluster(),
-			"aws_redshift_orderable_cluster": redshift.DataSourceOrderableCluster(),
-			"aws_redshift_service_account":   redshift.DataSourceServiceAccount(),
+			"aws_redshift_cluster":             redshift.DataSourceCluster(),
+			"aws_redshift_cluster_credentials": redshift.DataSourceClusterCredentials(),
+			"aws_redshift_orderable_cluster":   redshift.DataSourceOrderableCluster(),
+			"aws_redshift_service_account":     redshift.DataSourceServiceAccount(),
+			"aws_redshift_subnet_group":        redshift.DataSourceSubnetGroup(),
 
 			"aws_resourcegroupstaggingapi_resources": resourcegroupstaggingapi.DataSourceResources(),
 
@@ -826,8 +846,11 @@ func Provider() *schema.Provider {
 			"aws_s3_bucket_objects": s3.DataSourceBucketObjects(), // DEPRECATED: use aws_s3_objects instead
 			"aws_s3_bucket_policy":  s3.DataSourceBucketPolicy(),
 
+			"aws_s3_account_public_access_block": s3control.DataSourceAccountPublicAccessBlock(),
+
 			"aws_sagemaker_prebuilt_ecr_image": sagemaker.DataSourcePrebuiltECRImage(),
 
+			"aws_secretsmanager_random_password": secretsmanager.DataSourceRandomPassword(),
 			"aws_secretsmanager_secret":          secretsmanager.DataSourceSecret(),
 			"aws_secretsmanager_secret_rotation": secretsmanager.DataSourceSecretRotation(),
 			"aws_secretsmanager_secret_version":  secretsmanager.DataSourceSecretVersion(),
@@ -841,7 +864,9 @@ func Provider() *schema.Provider {
 			"aws_servicecatalog_portfolio":             servicecatalog.DataSourcePortfolio(),
 			"aws_servicecatalog_product":               servicecatalog.DataSourceProduct(),
 
-			"aws_service_discovery_dns_namespace": servicediscovery.DataSourceDNSNamespace(),
+			"aws_service_discovery_dns_namespace":  servicediscovery.DataSourceDNSNamespace(),
+			"aws_service_discovery_http_namespace": servicediscovery.DataSourceHTTPNamespace(),
+			"aws_service_discovery_service":        servicediscovery.DataSourceService(),
 
 			"aws_servicequotas_service":       servicequotas.DataSourceService(),
 			"aws_servicequotas_service_quota": servicequotas.DataSourceServiceQuota(),
@@ -872,15 +897,17 @@ func Provider() *schema.Provider {
 
 			"aws_transfer_server": transfer.DataSourceServer(),
 
-			"aws_waf_ipset":           waf.DataSourceIPSet(),
-			"aws_waf_rule":            waf.DataSourceRule(),
-			"aws_waf_rate_based_rule": waf.DataSourceRateBasedRule(),
-			"aws_waf_web_acl":         waf.DataSourceWebACL(),
+			"aws_waf_ipset":                 waf.DataSourceIPSet(),
+			"aws_waf_rule":                  waf.DataSourceRule(),
+			"aws_waf_rate_based_rule":       waf.DataSourceRateBasedRule(),
+			"aws_waf_subscribed_rule_group": waf.DataSourceSubscribedRuleGroup(),
+			"aws_waf_web_acl":               waf.DataSourceWebACL(),
 
-			"aws_wafregional_ipset":           wafregional.DataSourceIPSet(),
-			"aws_wafregional_rule":            wafregional.DataSourceRule(),
-			"aws_wafregional_rate_based_rule": wafregional.DataSourceRateBasedRule(),
-			"aws_wafregional_web_acl":         wafregional.DataSourceWebACL(),
+			"aws_wafregional_ipset":                 wafregional.DataSourceIPSet(),
+			"aws_wafregional_rule":                  wafregional.DataSourceRule(),
+			"aws_wafregional_rate_based_rule":       wafregional.DataSourceRateBasedRule(),
+			"aws_wafregional_subscribed_rule_group": wafregional.DataSourceSubscribedRuleGroup(),
+			"aws_wafregional_web_acl":               wafregional.DataSourceWebACL(),
 
 			"aws_wafv2_ip_set":            wafv2.DataSourceIPSet(),
 			"aws_wafv2_regex_pattern_set": wafv2.DataSourceRegexPatternSet(),
@@ -894,7 +921,8 @@ func Provider() *schema.Provider {
 		},
 
 		ResourcesMap: map[string]*schema.Resource{
-			"aws_accessanalyzer_analyzer": accessanalyzer.ResourceAnalyzer(),
+			"aws_accessanalyzer_analyzer":     accessanalyzer.ResourceAnalyzer(),
+			"aws_accessanalyzer_archive_rule": accessanalyzer.ResourceArchiveRule(),
 
 			"aws_account_alternate_contact": account.ResourceAlternateContact(),
 
@@ -904,6 +932,10 @@ func Provider() *schema.Provider {
 			"aws_acmpca_certificate":                       acmpca.ResourceCertificate(),
 			"aws_acmpca_certificate_authority":             acmpca.ResourceCertificateAuthority(),
 			"aws_acmpca_certificate_authority_certificate": acmpca.ResourceCertificateAuthorityCertificate(),
+			"aws_acmpca_permission":                        acmpca.ResourcePermission(),
+			"aws_acmpca_policy":                            acmpca.ResourcePolicy(),
+
+			"aws_applicationinsights_application": applicationinsights.ResourceApplication(),
 
 			"aws_prometheus_workspace":                amp.ResourceWorkspace(),
 			"aws_prometheus_alert_manager_definition": amp.ResourceAlertManagerDefinition(),
@@ -977,8 +1009,9 @@ func Provider() *schema.Provider {
 			"aws_appmesh_virtual_router":  appmesh.ResourceVirtualRouter(),
 			"aws_appmesh_virtual_service": appmesh.ResourceVirtualService(),
 
-			"aws_apprunner_vpc_connector":                      apprunner.ResourceVpcConnector(),
+			"aws_apprunner_vpc_connector":                      apprunner.ResourceVPCConnector(),
 			"aws_apprunner_auto_scaling_configuration_version": apprunner.ResourceAutoScalingConfigurationVersion(),
+			"aws_apprunner_observability_configuration":        apprunner.ResourceObservabilityConfiguration(),
 			"aws_apprunner_connection":                         apprunner.ResourceConnection(),
 			"aws_apprunner_custom_domain_association":          apprunner.ResourceCustomDomainAssociation(),
 			"aws_apprunner_service":                            apprunner.ResourceService(),
@@ -995,7 +1028,7 @@ func Provider() *schema.Provider {
 			"aws_appsync_api_key":                     appsync.ResourceAPIKey(),
 			"aws_appsync_datasource":                  appsync.ResourceDataSource(),
 			"aws_appsync_domain_name":                 appsync.ResourceDomainName(),
-			"aws_appsync_domain_name_api_association": appsync.ResourceDomainNameApiAssociation(),
+			"aws_appsync_domain_name_api_association": appsync.ResourceDomainNameAPIAssociation(),
 			"aws_appsync_function":                    appsync.ResourceFunction(),
 			"aws_appsync_graphql_api":                 appsync.ResourceGraphQLAPI(),
 			"aws_appsync_resolver":                    appsync.ResourceResolver(),
@@ -1035,7 +1068,10 @@ func Provider() *schema.Provider {
 			"aws_budgets_budget":        budgets.ResourceBudget(),
 			"aws_budgets_budget_action": budgets.ResourceBudgetAction(),
 
-			"aws_ce_cost_category": ce.ResourceCostCategory(),
+			"aws_ce_anomaly_monitor":      ce.ResourceAnomalyMonitor(),
+			"aws_ce_anomaly_subscription": ce.ResourceAnomalySubscription(),
+			"aws_ce_cost_allocation_tag":  ce.ResourceCostAllocationTag(),
+			"aws_ce_cost_category":        ce.ResourceCostCategory(),
 
 			"aws_chime_voice_connector":                         chime.ResourceVoiceConnector(),
 			"aws_chime_voice_connector_group":                   chime.ResourceVoiceConnectorGroup(),
@@ -1100,6 +1136,8 @@ func Provider() *schema.Provider {
 			"aws_cloudwatch_log_subscription_filter": logs.ResourceSubscriptionFilter(),
 			"aws_cloudwatch_query_definition":        logs.ResourceQueryDefinition(),
 
+			"aws_rum_app_monitor": rum.ResourceAppMonitor(),
+
 			"aws_codeartifact_domain":                        codeartifact.ResourceDomain(),
 			"aws_codeartifact_domain_permissions_policy":     codeartifact.ResourceDomainPermissionsPolicy(),
 			"aws_codeartifact_repository":                    codeartifact.ResourceRepository(),
@@ -1134,6 +1172,7 @@ func Provider() *schema.Provider {
 
 			"aws_cognito_identity_provider":          cognitoidp.ResourceIdentityProvider(),
 			"aws_cognito_resource_server":            cognitoidp.ResourceResourceServer(),
+			"aws_cognito_risk_configuration":         cognitoidp.ResourceRiskConfiguration(),
 			"aws_cognito_user":                       cognitoidp.ResourceUser(),
 			"aws_cognito_user_group":                 cognitoidp.ResourceUserGroup(),
 			"aws_cognito_user_in_group":              cognitoidp.ResourceUserInGroup(),
@@ -1141,6 +1180,8 @@ func Provider() *schema.Provider {
 			"aws_cognito_user_pool_client":           cognitoidp.ResourceUserPoolClient(),
 			"aws_cognito_user_pool_domain":           cognitoidp.ResourceUserPoolDomain(),
 			"aws_cognito_user_pool_ui_customization": cognitoidp.ResourceUserPoolUICustomization(),
+
+			"aws_comprehend_entity_recognizer": comprehend.ResourceEntityRecognizer(),
 
 			"aws_config_aggregate_authorization":       configservice.ResourceAggregateAuthorization(),
 			"aws_config_config_rule":                   configservice.ResourceConfigRule(),
@@ -1158,14 +1199,17 @@ func Provider() *schema.Provider {
 			"aws_connect_contact_flow":                connect.ResourceContactFlow(),
 			"aws_connect_contact_flow_module":         connect.ResourceContactFlowModule(),
 			"aws_connect_instance":                    connect.ResourceInstance(),
+			"aws_connect_instance_storage_config":     connect.ResourceInstanceStorageConfig(),
 			"aws_connect_hours_of_operation":          connect.ResourceHoursOfOperation(),
 			"aws_connect_lambda_function_association": connect.ResourceLambdaFunctionAssociation(),
 			"aws_connect_queue":                       connect.ResourceQueue(),
 			"aws_connect_quick_connect":               connect.ResourceQuickConnect(),
 			"aws_connect_routing_profile":             connect.ResourceRoutingProfile(),
 			"aws_connect_security_profile":            connect.ResourceSecurityProfile(),
+			"aws_connect_user":                        connect.ResourceUser(),
 			"aws_connect_user_hierarchy_group":        connect.ResourceUserHierarchyGroup(),
 			"aws_connect_user_hierarchy_structure":    connect.ResourceUserHierarchyStructure(),
+			"aws_connect_vocabulary":                  connect.ResourceVocabulary(),
 
 			"aws_cur_report_definition": cur.ResourceReportDefinition(),
 
@@ -1237,15 +1281,20 @@ func Provider() *schema.Provider {
 			"aws_docdb_global_cluster":          docdb.ResourceGlobalCluster(),
 			"aws_docdb_subnet_group":            docdb.ResourceSubnetGroup(),
 
-			"aws_directory_service_conditional_forwarder": ds.ResourceConditionalForwarder(),
-			"aws_directory_service_directory":             ds.ResourceDirectory(),
-			"aws_directory_service_log_subscription":      ds.ResourceLogSubscription(),
+			"aws_directory_service_conditional_forwarder":     ds.ResourceConditionalForwarder(),
+			"aws_directory_service_directory":                 ds.ResourceDirectory(),
+			"aws_directory_service_log_subscription":          ds.ResourceLogSubscription(),
+			"aws_directory_service_region":                    ds.ResourceRegion(),
+			"aws_directory_service_radius_settings":           ds.ResourceRadiusSettings(),
+			"aws_directory_service_shared_directory_accepter": ds.ResourceSharedDirectoryAccepter(),
+			"aws_directory_service_shared_directory":          ds.ResourceSharedDirectory(),
 
 			"aws_dynamodb_contributor_insights":          dynamodb.ResourceContributorInsights(),
 			"aws_dynamodb_global_table":                  dynamodb.ResourceGlobalTable(),
 			"aws_dynamodb_kinesis_streaming_destination": dynamodb.ResourceKinesisStreamingDestination(),
 			"aws_dynamodb_table":                         dynamodb.ResourceTable(),
 			"aws_dynamodb_table_item":                    dynamodb.ResourceTableItem(),
+			"aws_dynamodb_table_replica":                 dynamodb.ResourceTableReplica(),
 			"aws_dynamodb_tag":                           dynamodb.ResourceTag(),
 
 			"aws_ami":                                              ec2.ResourceAMI(),
@@ -1278,6 +1327,7 @@ func Provider() *schema.Provider {
 			"aws_ec2_local_gateway_route_table_vpc_association":    ec2.ResourceLocalGatewayRouteTableVPCAssociation(),
 			"aws_ec2_managed_prefix_list":                          ec2.ResourceManagedPrefixList(),
 			"aws_ec2_managed_prefix_list_entry":                    ec2.ResourceManagedPrefixListEntry(),
+			"aws_ec2_network_insights_analysis":                    ec2.ResourceNetworkInsightsAnalysis(),
 			"aws_ec2_network_insights_path":                        ec2.ResourceNetworkInsightsPath(),
 			"aws_ec2_serial_console_access":                        ec2.ResourceSerialConsoleAccess(),
 			"aws_ec2_subnet_cidr_reservation":                      ec2.ResourceSubnetCIDRReservation(),
@@ -1343,13 +1393,13 @@ func Provider() *schema.Provider {
 			"aws_vpc_endpoint_service":                             ec2.ResourceVPCEndpointService(),
 			"aws_vpc_endpoint_service_allowed_principal":           ec2.ResourceVPCEndpointServiceAllowedPrincipal(),
 			"aws_vpc_endpoint_subnet_association":                  ec2.ResourceVPCEndpointSubnetAssociation(),
-			"aws_vpc_ipam":                                         ec2.ResourceVPCIpam(),
-			"aws_vpc_ipam_organization_admin_account":              ec2.ResourceVPCIpamOrganizationAdminAccount(),
-			"aws_vpc_ipam_pool":                                    ec2.ResourceVPCIpamPool(),
-			"aws_vpc_ipam_pool_cidr_allocation":                    ec2.ResourceVPCIpamPoolCidrAllocation(),
-			"aws_vpc_ipam_pool_cidr":                               ec2.ResourceVPCIpamPoolCidr(),
-			"aws_vpc_ipam_preview_next_cidr":                       ec2.ResourceVPCIpamPreviewNextCidr(),
-			"aws_vpc_ipam_scope":                                   ec2.ResourceVPCIpamScope(),
+			"aws_vpc_ipam":                                         ec2.ResourceIPAM(),
+			"aws_vpc_ipam_organization_admin_account":              ec2.ResourceIPAMOrganizationAdminAccount(),
+			"aws_vpc_ipam_pool":                                    ec2.ResourceIPAMPool(),
+			"aws_vpc_ipam_pool_cidr_allocation":                    ec2.ResourceIPAMPoolCIDRAllocation(),
+			"aws_vpc_ipam_pool_cidr":                               ec2.ResourceIPAMPoolCIDR(),
+			"aws_vpc_ipam_preview_next_cidr":                       ec2.ResourceIPAMPreviewNextCIDR(),
+			"aws_vpc_ipam_scope":                                   ec2.ResourceIPAMScope(),
 			"aws_vpc_ipv4_cidr_block_association":                  ec2.ResourceVPCIPv4CIDRBlockAssociation(),
 			"aws_vpc_ipv6_cidr_block_association":                  ec2.ResourceVPCIPv6CIDRBlockAssociation(),
 			"aws_vpc_peering_connection":                           ec2.ResourceVPCPeeringConnection(),
@@ -1381,11 +1431,12 @@ func Provider() *schema.Provider {
 			"aws_ecs_task_definition":            ecs.ResourceTaskDefinition(),
 			"aws_ecs_task_set":                   ecs.ResourceTaskSet(),
 
-			"aws_efs_access_point":       efs.ResourceAccessPoint(),
-			"aws_efs_backup_policy":      efs.ResourceBackupPolicy(),
-			"aws_efs_file_system":        efs.ResourceFileSystem(),
-			"aws_efs_file_system_policy": efs.ResourceFileSystemPolicy(),
-			"aws_efs_mount_target":       efs.ResourceMountTarget(),
+			"aws_efs_access_point":              efs.ResourceAccessPoint(),
+			"aws_efs_backup_policy":             efs.ResourceBackupPolicy(),
+			"aws_efs_file_system":               efs.ResourceFileSystem(),
+			"aws_efs_file_system_policy":        efs.ResourceFileSystemPolicy(),
+			"aws_efs_mount_target":              efs.ResourceMountTarget(),
+			"aws_efs_replication_configuration": efs.ResourceReplicationConfiguration(),
 
 			"aws_eks_addon":                    eks.ResourceAddon(),
 			"aws_eks_cluster":                  eks.ResourceCluster(),
@@ -1448,9 +1499,13 @@ func Provider() *schema.Provider {
 
 			"aws_emrcontainers_virtual_cluster": emrcontainers.ResourceVirtualCluster(),
 
+			"aws_emrserverless_application": emrserverless.ResourceApplication(),
+
 			"aws_evidently_project": evidently.ResourceProject(),
 
 			"aws_kinesis_firehose_delivery_stream": firehose.ResourceDeliveryStream(),
+
+			"aws_fis_experiment_template": fis.ResourceExperimentTemplate(),
 
 			"aws_fms_admin_account": fms.ResourceAdminAccount(),
 			"aws_fms_policy":        fms.ResourcePolicy(),
@@ -1502,7 +1557,8 @@ func Provider() *schema.Provider {
 			"aws_grafana_license_association":          grafana.ResourceLicenseAssociation(),
 			"aws_grafana_role_association":             grafana.ResourceRoleAssociation(),
 			"aws_grafana_workspace":                    grafana.ResourceWorkspace(),
-			"aws_grafana_workspace_saml_configuration": grafana.ResourceWorkspaceSamlConfiguration(),
+			"aws_grafana_workspace_api_key":            grafana.ResourceWorkspaceAPIKey(),
+			"aws_grafana_workspace_saml_configuration": grafana.ResourceWorkspaceSAMLConfiguration(),
 
 			"aws_guardduty_detector":                   guardduty.ResourceDetector(),
 			"aws_guardduty_filter":                     guardduty.ResourceFilter(),
@@ -1572,10 +1628,18 @@ func Provider() *schema.Provider {
 			"aws_msk_cluster":                  kafka.ResourceCluster(),
 			"aws_msk_configuration":            kafka.ResourceConfiguration(),
 			"aws_msk_scram_secret_association": kafka.ResourceScramSecretAssociation(),
+			"aws_msk_serverless_cluster":       kafka.ResourceServerlessCluster(),
 
 			"aws_mskconnect_connector":            kafkaconnect.ResourceConnector(),
 			"aws_mskconnect_custom_plugin":        kafkaconnect.ResourceCustomPlugin(),
 			"aws_mskconnect_worker_configuration": kafkaconnect.ResourceWorkerConfiguration(),
+
+			"aws_kendra_data_source":                  kendra.ResourceDataSource(),
+			"aws_kendra_experience":                   kendra.ResourceExperience(),
+			"aws_kendra_faq":                          kendra.ResourceFaq(),
+			"aws_kendra_index":                        kendra.ResourceIndex(),
+			"aws_kendra_query_suggestions_block_list": kendra.ResourceQuerySuggestionsBlockList(),
+			"aws_kendra_thesaurus":                    kendra.ResourceThesaurus(),
 
 			"aws_keyspaces_keyspace": keyspaces.ResourceKeyspace(),
 			"aws_keyspaces_table":    keyspaces.ResourceTable(),
@@ -1598,15 +1662,17 @@ func Provider() *schema.Provider {
 			"aws_kms_replica_key":          kms.ResourceReplicaKey(),
 
 			"aws_lakeformation_data_lake_settings": lakeformation.ResourceDataLakeSettings(),
+			"aws_lakeformation_lf_tag":             lakeformation.ResourceLFTag(),
 			"aws_lakeformation_permissions":        lakeformation.ResourcePermissions(),
 			"aws_lakeformation_resource":           lakeformation.ResourceResource(),
+			"aws_lakeformation_resource_lf_tags":   lakeformation.ResourceResourceLFTags(),
 
 			"aws_lambda_alias":                          lambda.ResourceAlias(),
 			"aws_lambda_code_signing_config":            lambda.ResourceCodeSigningConfig(),
 			"aws_lambda_event_source_mapping":           lambda.ResourceEventSourceMapping(),
 			"aws_lambda_function":                       lambda.ResourceFunction(),
 			"aws_lambda_function_event_invoke_config":   lambda.ResourceFunctionEventInvokeConfig(),
-			"aws_lambda_function_url":                   lambda.ResourceFunctionUrl(),
+			"aws_lambda_function_url":                   lambda.ResourceFunctionURL(),
 			"aws_lambda_invocation":                     lambda.ResourceInvocation(),
 			"aws_lambda_layer_version":                  lambda.ResourceLayerVersion(),
 			"aws_lambda_layer_version_permission":       lambda.ResourceLayerVersionPermission(),
@@ -1621,25 +1687,34 @@ func Provider() *schema.Provider {
 			"aws_licensemanager_association":           licensemanager.ResourceAssociation(),
 			"aws_licensemanager_license_configuration": licensemanager.ResourceLicenseConfiguration(),
 
-			"aws_lightsail_domain":                lightsail.ResourceDomain(),
-			"aws_lightsail_instance":              lightsail.ResourceInstance(),
-			"aws_lightsail_instance_public_ports": lightsail.ResourceInstancePublicPorts(),
-			"aws_lightsail_key_pair":              lightsail.ResourceKeyPair(),
-			"aws_lightsail_static_ip":             lightsail.ResourceStaticIP(),
-			"aws_lightsail_static_ip_attachment":  lightsail.ResourceStaticIPAttachment(),
+			"aws_lightsail_container_service":                    lightsail.ResourceContainerService(),
+			"aws_lightsail_container_service_deployment_version": lightsail.ResourceContainerServiceDeploymentVersion(),
+			"aws_lightsail_database":                             lightsail.ResourceDatabase(),
+			"aws_lightsail_domain":                               lightsail.ResourceDomain(),
+			"aws_lightsail_instance":                             lightsail.ResourceInstance(),
+			"aws_lightsail_instance_public_ports":                lightsail.ResourceInstancePublicPorts(),
+			"aws_lightsail_key_pair":                             lightsail.ResourceKeyPair(),
+			"aws_lightsail_static_ip":                            lightsail.ResourceStaticIP(),
+			"aws_lightsail_static_ip_attachment":                 lightsail.ResourceStaticIPAttachment(),
 
-			"aws_location_map": location.ResourceMap(),
+			"aws_location_geofence_collection": location.ResourceGeofenceCollection(),
+			"aws_location_map":                 location.ResourceMap(),
+			"aws_location_place_index":         location.ResourcePlaceIndex(),
+			"aws_location_route_calculator":    location.ResourceRouteCalculator(),
+			"aws_location_tracker":             location.ResourceTracker(),
+			"aws_location_tracker_association": location.ResourceTrackerAssociation(),
 
 			"aws_macie_member_account_association": macie.ResourceMemberAccountAssociation(),
 			"aws_macie_s3_bucket_association":      macie.ResourceS3BucketAssociation(),
 
-			"aws_macie2_account":                    macie2.ResourceAccount(),
-			"aws_macie2_classification_job":         macie2.ResourceClassificationJob(),
-			"aws_macie2_custom_data_identifier":     macie2.ResourceCustomDataIdentifier(),
-			"aws_macie2_findings_filter":            macie2.ResourceFindingsFilter(),
-			"aws_macie2_invitation_accepter":        macie2.ResourceInvitationAccepter(),
-			"aws_macie2_member":                     macie2.ResourceMember(),
-			"aws_macie2_organization_admin_account": macie2.ResourceOrganizationAdminAccount(),
+			"aws_macie2_account":                             macie2.ResourceAccount(),
+			"aws_macie2_classification_job":                  macie2.ResourceClassificationJob(),
+			"aws_macie2_custom_data_identifier":              macie2.ResourceCustomDataIdentifier(),
+			"aws_macie2_findings_filter":                     macie2.ResourceFindingsFilter(),
+			"aws_macie2_invitation_accepter":                 macie2.ResourceInvitationAccepter(),
+			"aws_macie2_member":                              macie2.ResourceMember(),
+			"aws_macie2_organization_admin_account":          macie2.ResourceOrganizationAdminAccount(),
+			"aws_macie2_classification_export_configuration": macie2.ResourceClassificationExportConfiguration(),
 
 			"aws_media_convert_queue": mediaconvert.ResourceQueue(),
 
@@ -1675,6 +1750,7 @@ func Provider() *schema.Provider {
 			"aws_networkfirewall_resource_policy":       networkfirewall.ResourceResourcePolicy(),
 			"aws_networkfirewall_rule_group":            networkfirewall.ResourceRuleGroup(),
 
+			"aws_networkmanager_attachment_accepter":                      networkmanager.ResourceAttachmentAccepter(),
 			"aws_networkmanager_connection":                               networkmanager.ResourceConnection(),
 			"aws_networkmanager_customer_gateway_association":             networkmanager.ResourceCustomerGatewayAssociation(),
 			"aws_networkmanager_device":                                   networkmanager.ResourceDevice(),
@@ -1684,6 +1760,7 @@ func Provider() *schema.Provider {
 			"aws_networkmanager_site":                                     networkmanager.ResourceSite(),
 			"aws_networkmanager_transit_gateway_connect_peer_association": networkmanager.ResourceTransitGatewayConnectPeerAssociation(),
 			"aws_networkmanager_transit_gateway_registration":             networkmanager.ResourceTransitGatewayRegistration(),
+			"aws_networkmanager_vpc_attachment":                           networkmanager.ResourceVPCAttachment(),
 
 			"aws_opensearch_domain":              opensearch.ResourceDomain(),
 			"aws_opensearch_domain_policy":       opensearch.ResourceDomainPolicy(),
@@ -1762,8 +1839,13 @@ func Provider() *schema.Provider {
 			"aws_rds_cluster_role_association":              rds.ResourceClusterRoleAssociation(),
 			"aws_rds_global_cluster":                        rds.ResourceGlobalCluster(),
 
+			"aws_redshift_authentication_profile":        redshift.ResourceAuthenticationProfile(),
 			"aws_redshift_cluster":                       redshift.ResourceCluster(),
+			"aws_redshift_cluster_iam_roles":             redshift.ResourceClusterIAMRoles(),
+			"aws_redshift_endpoint_access":               redshift.ResourceEndpointAccess(),
 			"aws_redshift_event_subscription":            redshift.ResourceEventSubscription(),
+			"aws_redshift_hsm_client_certificate":        redshift.ResourceHSMClientCertificate(),
+			"aws_redshift_hsm_configuration":             redshift.ResourceHSMConfiguration(),
 			"aws_redshift_parameter_group":               redshift.ResourceParameterGroup(),
 			"aws_redshift_scheduled_action":              redshift.ResourceScheduledAction(),
 			"aws_redshift_security_group":                redshift.ResourceSecurityGroup(),
@@ -1771,8 +1853,16 @@ func Provider() *schema.Provider {
 			"aws_redshift_snapshot_schedule":             redshift.ResourceSnapshotSchedule(),
 			"aws_redshift_snapshot_schedule_association": redshift.ResourceSnapshotScheduleAssociation(),
 			"aws_redshift_subnet_group":                  redshift.ResourceSubnetGroup(),
+			"aws_redshift_usage_limit":                   redshift.ResourceUsageLimit(),
+
+			"aws_redshiftdata_statement": redshiftdata.ResourceStatement(),
+
+			"aws_redshiftserverless_namespace": redshiftserverless.ResourceNamespace(),
 
 			"aws_resourcegroups_group": resourcegroups.ResourceGroup(),
+
+			"aws_rolesanywhere_profile":      rolesanywhere.ResourceProfile(),
+			"aws_rolesanywhere_trust_anchor": rolesanywhere.ResourceTrustAnchor(),
 
 			"aws_route53_delegation_set":                route53.ResourceDelegationSet(),
 			"aws_route53_health_check":                  route53.ResourceHealthCheck(),
@@ -1812,7 +1902,7 @@ func Provider() *schema.Provider {
 
 			"aws_s3_bucket":                                      s3.ResourceBucket(),
 			"aws_s3_bucket_accelerate_configuration":             s3.ResourceBucketAccelerateConfiguration(),
-			"aws_s3_bucket_acl":                                  s3.ResourceBucketAcl(),
+			"aws_s3_bucket_acl":                                  s3.ResourceBucketACL(),
 			"aws_s3_bucket_analytics_configuration":              s3.ResourceBucketAnalyticsConfiguration(),
 			"aws_s3_bucket_cors_configuration":                   s3.ResourceBucketCorsConfiguration(),
 			"aws_s3_bucket_intelligent_tiering_configuration":    s3.ResourceBucketIntelligentTieringConfiguration(),
@@ -1963,6 +2053,7 @@ func Provider() *schema.Provider {
 			"aws_ssm_patch_baseline":            ssm.ResourcePatchBaseline(),
 			"aws_ssm_patch_group":               ssm.ResourcePatchGroup(),
 			"aws_ssm_resource_data_sync":        ssm.ResourceResourceDataSync(),
+			"aws_ssm_service_setting":           ssm.ResourceServiceSetting(),
 
 			"aws_ssoadmin_account_assignment":           ssoadmin.ResourceAccountAssignment(),
 			"aws_ssoadmin_managed_policy_attachment":    ssoadmin.ResourceManagedPolicyAttachment(),
@@ -1986,6 +2077,11 @@ func Provider() *schema.Provider {
 
 			"aws_timestreamwrite_database": timestreamwrite.ResourceDatabase(),
 			"aws_timestreamwrite_table":    timestreamwrite.ResourceTable(),
+
+			"aws_transcribe_language_model":     transcribe.ResourceLanguageModel(),
+			"aws_transcribe_medical_vocabulary": transcribe.ResourceMedicalVocabulary(),
+			"aws_transcribe_vocabulary":         transcribe.ResourceVocabulary(),
+			"aws_transcribe_vocabulary_filter":  transcribe.ResourceVocabularyFilter(),
 
 			"aws_transfer_access":   transfer.ResourceAccess(),
 			"aws_transfer_server":   transfer.ResourceServer(),
@@ -2050,7 +2146,7 @@ func Provider() *schema.Provider {
 		return providerConfigure(ctx, d, terraformVersion)
 	}
 
-	return provider
+	return provider, nil
 }
 
 func providerConfigure(ctx context.Context, d *schema.ResourceData, terraformVersion string) (interface{}, diag.Diagnostics) {
@@ -2064,7 +2160,7 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData, terraformVer
 		HTTPProxy:                      d.Get("http_proxy").(string),
 		IgnoreTagsConfig:               expandProviderIgnoreTags(d.Get("ignore_tags").([]interface{})),
 		Insecure:                       d.Get("insecure").(bool),
-		MaxRetries:                     d.Get("max_retries").(int),
+		MaxRetries:                     25, // Set default here, not in schema (muxing with v6 provider).
 		Profile:                        d.Get("profile").(string),
 		Region:                         d.Get("region").(string),
 		S3UsePathStyle:                 d.Get("s3_use_path_style").(bool) || d.Get("s3_force_path_style").(bool),
@@ -2080,6 +2176,10 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData, terraformVer
 		UseFIPSEndpoint:                d.Get("use_fips_endpoint").(bool),
 	}
 
+	if v, ok := d.GetOk("max_retries"); ok {
+		config.MaxRetries = v.(int)
+	}
+
 	if raw := d.Get("shared_config_files").([]interface{}); len(raw) != 0 {
 		l := make([]string, len(raw))
 		for i, v := range raw {
@@ -2091,6 +2191,7 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData, terraformVer
 	if v := d.Get("shared_credentials_file").(string); v != "" {
 		config.SharedCredentialsFiles = []string{v}
 	}
+
 	if raw := d.Get("shared_credentials_files").([]interface{}); len(raw) != 0 {
 		l := make([]string, len(raw))
 		for i, v := range raw {
@@ -2109,8 +2210,7 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData, terraformVer
 		log.Printf("[INFO] assume_role_with_web_identity configuration set: (ARN: %q, SessionID: %q)", config.AssumeRoleWithWebIdentity.RoleARN, config.AssumeRoleWithWebIdentity.SessionName)
 	}
 
-	endpointsSet := d.Get("endpoints").(*schema.Set)
-	if err := expandEndpoints(endpointsSet.List(), config.Endpoints); err != nil {
+	if err := expandEndpoints(d.Get("endpoints").(*schema.Set).List(), config.Endpoints); err != nil {
 		return nil, diag.FromErr(err)
 	}
 

@@ -9,6 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/emr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
@@ -19,8 +20,8 @@ import (
 )
 
 const (
-	emrInstanceGroupCreateTimeout = 30 * time.Minute
-	emrInstanceGroupUpdateTimeout = 30 * time.Minute
+	instanceGroupCreateTimeout = 30 * time.Minute
+	instanceGroupUpdateTimeout = 30 * time.Minute
 )
 
 func ResourceInstanceGroup() *schema.Resource {
@@ -69,11 +70,6 @@ func ResourceInstanceGroup() *schema.Resource {
 					return json
 				},
 			},
-			"ebs_optimized": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				ForceNew: true,
-			},
 			"ebs_config": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -107,10 +103,15 @@ func ResourceInstanceGroup() *schema.Resource {
 				},
 				Set: resourceClusterEBSHashConfig,
 			},
+			"ebs_optimized": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				ForceNew: true,
+			},
 			"instance_count": {
 				Type:     schema.TypeInt,
 				Optional: true,
-				Default:  1,
+				Computed: true,
 			},
 			"instance_type": {
 				Type:     schema.TypeString,
@@ -141,7 +142,6 @@ func resourceInstanceGroupCreate(d *schema.ResourceData, meta interface{}) error
 	groupConfig := &emr.InstanceGroupConfig{
 		EbsConfiguration: readEBSConfig(d),
 		InstanceRole:     aws.String(instanceRole),
-		InstanceCount:    aws.Int64(int64(d.Get("instance_count").(int))),
 		InstanceType:     aws.String(d.Get("instance_type").(string)),
 		Name:             aws.String(d.Get("name").(string)),
 	}
@@ -160,10 +160,16 @@ func resourceInstanceGroupCreate(d *schema.ResourceData, meta interface{}) error
 		if err != nil {
 			return fmt.Errorf("configurations_json contains an invalid JSON: %s", err)
 		}
-		groupConfig.Configurations, err = expandConfigurationJson(info)
+		groupConfig.Configurations, err = expandConfigurationJSON(info)
 		if err != nil {
 			return fmt.Errorf("Error reading EMR configurations_json: %s", err)
 		}
+	}
+
+	if v, ok := d.GetOk("instance_count"); ok {
+		groupConfig.InstanceCount = aws.Int64(int64(v.(int)))
+	} else {
+		groupConfig.InstanceCount = aws.Int64(1)
 	}
 
 	groupConfig.Market = aws.String(emr.MarketTypeOnDemand)
@@ -189,7 +195,7 @@ func resourceInstanceGroupCreate(d *schema.ResourceData, meta interface{}) error
 	}
 	d.SetId(aws.StringValue(resp.InstanceGroupIds[0]))
 
-	if err := waitForInstanceGroupStateRunning(conn, d.Get("cluster_id").(string), d.Id(), emrInstanceGroupCreateTimeout); err != nil {
+	if err := waitForInstanceGroupStateRunning(conn, d.Get("cluster_id").(string), d.Id(), instanceGroupCreateTimeout); err != nil {
 		return fmt.Errorf("error waiting for EMR Instance Group (%s) creation: %s", d.Id(), err)
 	}
 
@@ -208,6 +214,11 @@ func resourceInstanceGroupRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
+		if tfawserr.ErrMessageContains(err, emr.ErrCodeInvalidRequestException, "is not valid") {
+			log.Printf("[DEBUG] EMR Cluster corresponding to Instance Group (%s) not found, removing", d.Id())
+			d.SetId("")
+			return nil
+		}
 		return fmt.Errorf("error reading EMR Instance Group (%s): %s", d.Id(), err)
 	}
 
@@ -224,7 +235,7 @@ func resourceInstanceGroupRead(d *schema.ResourceData, meta interface{}) error {
 
 	switch {
 	case len(ig.Configurations) > 0:
-		configOut, err := flattenConfigurationJson(ig.Configurations)
+		configOut, err := flattenConfigurationJSON(ig.Configurations)
 		if err != nil {
 			return fmt.Errorf("Error reading EMR instance group configurations: %s", err)
 		}
@@ -302,7 +313,7 @@ func resourceInstanceGroupUpdate(d *schema.ResourceData, meta interface{}) error
 				if err != nil {
 					return fmt.Errorf("configurations_json contains an invalid JSON: %s", err)
 				}
-				instanceGroupModifyConfig.Configurations, err = expandConfigurationJson(info)
+				instanceGroupModifyConfig.Configurations, err = expandConfigurationJSON(info)
 				if err != nil {
 					return fmt.Errorf("Error reading EMR configurations_json: %s", err)
 				}
@@ -319,7 +330,7 @@ func resourceInstanceGroupUpdate(d *schema.ResourceData, meta interface{}) error
 			return fmt.Errorf("error modifying EMR Instance Group (%s): %s", d.Id(), err)
 		}
 
-		if err := waitForInstanceGroupStateRunning(conn, d.Get("cluster_id").(string), d.Id(), emrInstanceGroupUpdateTimeout); err != nil {
+		if err := waitForInstanceGroupStateRunning(conn, d.Get("cluster_id").(string), d.Id(), instanceGroupUpdateTimeout); err != nil {
 			return fmt.Errorf("error waiting for EMR Instance Group (%s) modification: %s", d.Id(), err)
 		}
 	}

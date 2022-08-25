@@ -9,34 +9,55 @@ const (
 )
 
 const (
-	StorageTypeStandard = "standard"
-	StorageTypeGp2      = "gp2"
-	StorageTypeIo1      = "io1"
+	storageTypeStandard = "standard"
+	storageTypeGP2      = "gp2"
+	storageTypeIO1      = "io1"
 )
 
 func StorageType_Values() []string {
 	return []string{
-		StorageTypeStandard,
-		StorageTypeGp2,
-		StorageTypeIo1,
+		storageTypeStandard,
+		storageTypeGP2,
+		storageTypeIO1,
 	}
 }
+
+const (
+	InstanceEngineMariaDB             = "mariadb"
+	InstanceEngineMySQL               = "mysql"
+	InstanceEngineOracleEnterprise    = "oracle-ee"
+	InstanceEngineOracleEnterpriseCDB = "oracle-ee-cdb"
+	InstanceEngineOracleStandard2     = "oracle-se2"
+	InstanceEngineOracleStandard2CDB  = "oracle-se2-cdb"
+	InstanceEnginePostgres            = "postgres"
+	InstanceEngineSQLServerEnterprise = "sqlserver-ee"
+	InstanceEngineSQLServerExpress    = "sqlserver-ex"
+	InstanceEngineSQLServerStandard   = "sqlserver-se"
+	InstanceEngineSQLServerWeb        = "sqlserver-ewb"
+)
 
 // https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/accessing-monitoring.html#Overview.DBInstance.Status.
 const (
 	InstanceStatusAvailable                     = "available"
 	InstanceStatusBackingUp                     = "backing-up"
 	InstanceStatusConfiguringEnhancedMonitoring = "configuring-enhanced-monitoring"
+	InstanceStatusConfiguringIAMDatabaseAuth    = "configuring-iam-database-auth"
 	InstanceStatusConfiguringLogExports         = "configuring-log-exports"
 	InstanceStatusCreating                      = "creating"
 	InstanceStatusDeleting                      = "deleting"
 	InstanceStatusIncompatibleParameters        = "incompatible-parameters"
 	InstanceStatusIncompatibleRestore           = "incompatible-restore"
+	InstanceStatusMaintenance                   = "maintenance"
 	InstanceStatusModifying                     = "modifying"
+	InstanceStatusMovingToVPC                   = "moving-to-vpc"
+	InstanceStatusRebooting                     = "rebooting"
+	InstanceStatusRenaming                      = "renaming"
+	InstanceStatusResettingMasterCredentials    = "resetting-master-credentials"
 	InstanceStatusStarting                      = "starting"
 	InstanceStatusStopping                      = "stopping"
 	InstanceStatusStorageFull                   = "storage-full"
 	InstanceStatusStorageOptimization           = "storage-optimization"
+	InstanceStatusUpgrading                     = "upgrading"
 )
 
 const (
@@ -53,20 +74,20 @@ const (
 )
 
 const (
-	EngineAurora           = "aurora"
-	EngineAuroraMySQL      = "aurora-mysql"
-	EngineAuroraPostgreSQL = "aurora-postgresql"
-	EngineMySQL            = "mysql"
-	EnginePostgres         = "postgres"
+	ClusterEngineAurora           = "aurora"
+	ClusterEngineAuroraMySQL      = "aurora-mysql"
+	ClusterEngineAuroraPostgreSQL = "aurora-postgresql"
+	ClusterEngineMySQL            = "mysql"
+	ClusterEnginePostgres         = "postgres"
 )
 
-func Engine_Values() []string {
+func ClusterEngine_Values() []string {
 	return []string{
-		EngineAurora,
-		EngineAuroraMySQL,
-		EngineAuroraPostgreSQL,
-		EngineMySQL,
-		EnginePostgres,
+		ClusterEngineAurora,
+		ClusterEngineAuroraMySQL,
+		ClusterEngineAuroraPostgreSQL,
+		ClusterEngineMySQL,
+		ClusterEnginePostgres,
 	}
 }
 

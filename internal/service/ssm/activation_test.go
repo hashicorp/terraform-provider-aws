@@ -21,13 +21,13 @@ func TestAccSSMActivation_basic(t *testing.T) {
 	resourceName := "aws_ssm_activation.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ssm.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckActivationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ssm.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckActivationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccActivationBasicConfig(name, tag),
+				Config: testAccActivationConfig_basic(name, tag),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckActivationExists(resourceName, &ssmActivation),
 					resource.TestCheckResourceAttrSet(resourceName, "activation_code"),
@@ -53,13 +53,13 @@ func TestAccSSMActivation_update(t *testing.T) {
 	resourceName := "aws_ssm_activation.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ssm.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckActivationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ssm.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckActivationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccActivationBasicConfig(name, "My Activation"),
+				Config: testAccActivationConfig_basic(name, "My Activation"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckActivationExists(resourceName, &ssmActivation1),
 					resource.TestCheckResourceAttrSet(resourceName, "activation_code"),
@@ -76,7 +76,7 @@ func TestAccSSMActivation_update(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccActivationBasicConfig(name, "Foo"),
+				Config: testAccActivationConfig_basic(name, "Foo"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckActivationExists(resourceName, &ssmActivation2),
 					resource.TestCheckResourceAttrSet(resourceName, "activation_code"),
@@ -105,10 +105,10 @@ func TestAccSSMActivation_expirationDate(t *testing.T) {
 	resourceName := "aws_ssm_activation.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ssm.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckActivationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ssm.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckActivationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccActivationConfig_expirationDate(rName, expirationDateS),
@@ -136,13 +136,13 @@ func TestAccSSMActivation_disappears(t *testing.T) {
 	resourceName := "aws_ssm_activation.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ssm.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckActivationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ssm.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckActivationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccActivationBasicConfig(name, tag),
+				Config: testAccActivationConfig_basic(name, tag),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckActivationExists(resourceName, &ssmActivation),
 					testAccCheckActivationDisappears(&ssmActivation),
@@ -237,11 +237,7 @@ func testAccCheckActivationDestroy(s *terraform.State) error {
 			}
 		}
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 
 	return nil
@@ -278,7 +274,7 @@ resource "aws_iam_role_policy_attachment" "test_attach" {
 `, rName)
 }
 
-func testAccActivationBasicConfig(rName string, rTag string) string {
+func testAccActivationConfig_basic(rName string, rTag string) string {
 	return testAccActivationBasicBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_ssm_activation" "test" {
   name               = %[1]q

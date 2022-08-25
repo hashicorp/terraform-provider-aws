@@ -15,13 +15,13 @@ func TestAccOutpostsSitesDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_outposts_sites.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckSites(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, outposts.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      nil,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSites(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, outposts.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSitesDataSourceConfig(),
+				Config: testAccSitesDataSourceConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSitesAttributes(dataSourceName),
 				),
@@ -66,7 +66,7 @@ func testAccPreCheckSites(t *testing.T) {
 	}
 }
 
-func testAccSitesDataSourceConfig() string {
+func testAccSitesDataSourceConfig_basic() string {
 	return `
 data "aws_outposts_sites" "test" {}
 `

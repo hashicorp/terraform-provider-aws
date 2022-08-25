@@ -25,13 +25,13 @@ func TestAccKeyspacesKeyspace_basic(t *testing.T) {
 	resourceName := "aws_keyspaces_keyspace.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, keyspaces.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckKeyspaceDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, keyspaces.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckKeyspaceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccKeyspaceConfig(rName),
+				Config: testAccKeyspaceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyspaceExists(resourceName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "cassandra", "/keyspace/"+rName+"/"),
@@ -53,13 +53,13 @@ func TestAccKeyspacesKeyspace_disappears(t *testing.T) {
 	resourceName := "aws_keyspaces_keyspace.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, keyspaces.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckKeyspaceDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, keyspaces.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckKeyspaceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccKeyspaceConfig(rName),
+				Config: testAccKeyspaceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyspaceExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfkeyspaces.ResourceKeyspace(), resourceName),
@@ -75,13 +75,13 @@ func TestAccKeyspacesKeyspace_tags(t *testing.T) {
 	resourceName := "aws_keyspaces_keyspace.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, keyspaces.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckKeyspaceDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, keyspaces.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckKeyspaceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccKeyspaceConfigTags1(rName, "key1", "value1"),
+				Config: testAccKeyspaceConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyspaceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -94,7 +94,7 @@ func TestAccKeyspacesKeyspace_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccKeyspaceConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccKeyspaceConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyspaceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -103,7 +103,7 @@ func TestAccKeyspacesKeyspace_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccKeyspaceConfigTags1(rName, "key2", "value2"),
+				Config: testAccKeyspaceConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyspaceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -153,15 +153,11 @@ func testAccCheckKeyspaceExists(n string) resource.TestCheckFunc {
 
 		_, err := tfkeyspaces.FindKeyspaceByName(context.Background(), conn, rs.Primary.Attributes["name"])
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 
-func testAccKeyspaceConfig(rName string) string {
+func testAccKeyspaceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_keyspaces_keyspace" "test" {
   name = %[1]q
@@ -169,7 +165,7 @@ resource "aws_keyspaces_keyspace" "test" {
 `, rName)
 }
 
-func testAccKeyspaceConfigTags1(rName, tag1Key, tag1Value string) string {
+func testAccKeyspaceConfig_tags1(rName, tag1Key, tag1Value string) string {
 	return fmt.Sprintf(`
 resource "aws_keyspaces_keyspace" "test" {
   name = %[1]q
@@ -181,7 +177,7 @@ resource "aws_keyspaces_keyspace" "test" {
 `, rName, tag1Key, tag1Value)
 }
 
-func testAccKeyspaceConfigTags2(rName, tag1Key, tag1Value, tag2Key, tag2Value string) string {
+func testAccKeyspaceConfig_tags2(rName, tag1Key, tag1Value, tag2Key, tag2Value string) string {
 	return fmt.Sprintf(`
 resource "aws_keyspaces_keyspace" "test" {
   name = %[1]q

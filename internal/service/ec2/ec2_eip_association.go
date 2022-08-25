@@ -142,7 +142,7 @@ func resourceEIPAssociationCreate(d *schema.ResourceData, meta interface{}) erro
 		// EC2-Classic
 		d.SetId(aws.StringValue(request.PublicIp))
 
-		if err := waitForEc2AddressAssociationClassic(conn, aws.StringValue(request.PublicIp), aws.StringValue(request.InstanceId)); err != nil {
+		if err := waitForAddressAssociationClassic(conn, aws.StringValue(request.PublicIp), aws.StringValue(request.InstanceId)); err != nil {
 			return fmt.Errorf("error waiting for EC2 Address (%s) to associate with EC2-Classic Instance (%s): %w", aws.StringValue(request.PublicIp), aws.StringValue(request.InstanceId), err)
 		}
 	}

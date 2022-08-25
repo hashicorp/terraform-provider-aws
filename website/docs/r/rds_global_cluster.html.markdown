@@ -53,6 +53,10 @@ resource "aws_rds_cluster" "secondary" {
   cluster_identifier        = "test-secondary-cluster"
   global_cluster_identifier = aws_rds_global_cluster.example.id
   db_subnet_group_name      = "default"
+
+  depends_on = [
+    aws_rds_cluster_instance.primary
+  ]
 }
 
 resource "aws_rds_cluster_instance" "secondary" {
@@ -63,10 +67,6 @@ resource "aws_rds_cluster_instance" "secondary" {
   cluster_identifier   = aws_rds_cluster.secondary.id
   instance_class       = "db.r4.large"
   db_subnet_group_name = "default"
-
-  depends_on = [
-    aws_rds_cluster_instance.primary
-  ]
 }
 ```
 
@@ -226,12 +226,11 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-`aws_rds_global_cluster` provides the following
-[Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
 
-- `create` - (Default `30 minutes`)
-- `update` - (Default `90 minutes`)
-- `delete` - (Default `30 minutes`)
+- `create` - (Default `30m`)
+- `update` - (Default `90m`)
+- `delete` - (Default `30m`)
 
 ## Import
 

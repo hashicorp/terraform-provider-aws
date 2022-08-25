@@ -16,13 +16,13 @@ func TestAccEC2SerialConsoleAccess_basic(t *testing.T) {
 	resourceName := "aws_ec2_serial_console_access.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckSerialConsoleAccessDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSerialConsoleAccessDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSerialConsoleAccessConfig(false),
+				Config: testAccSerialConsoleAccessConfig_basic(false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSerialConsoleAccess(resourceName, false),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
@@ -34,7 +34,7 @@ func TestAccEC2SerialConsoleAccess_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccSerialConsoleAccessConfig(true),
+				Config: testAccSerialConsoleAccessConfig_basic(true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSerialConsoleAccess(resourceName, true),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
@@ -85,7 +85,7 @@ func testAccCheckSerialConsoleAccess(n string, enabled bool) resource.TestCheckF
 	}
 }
 
-func testAccSerialConsoleAccessConfig(enabled bool) string {
+func testAccSerialConsoleAccessConfig_basic(enabled bool) string {
 	return fmt.Sprintf(`
 resource "aws_ec2_serial_console_access" "test" {
   enabled = %[1]t

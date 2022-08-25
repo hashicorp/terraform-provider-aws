@@ -30,9 +30,9 @@ func TestAccDeviceFarmDevicePool_basic(t *testing.T) {
 			// https://docs.aws.amazon.com/general/latest/gr/devicefarm.html
 			acctest.PreCheckRegion(t, endpoints.UsWest2RegionID)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, devicefarm.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDevicePoolDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, devicefarm.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDevicePoolDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDevicePoolConfig_basic(rName),
@@ -75,9 +75,9 @@ func TestAccDeviceFarmDevicePool_tags(t *testing.T) {
 			// https://docs.aws.amazon.com/general/latest/gr/devicefarm.html
 			acctest.PreCheckRegion(t, endpoints.UsWest2RegionID)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, devicefarm.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDevicePoolDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, devicefarm.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDevicePoolDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDevicePoolConfig_tags1(rName, "key1", "value1"),
@@ -126,9 +126,9 @@ func TestAccDeviceFarmDevicePool_disappears(t *testing.T) {
 			// https://docs.aws.amazon.com/general/latest/gr/devicefarm.html
 			acctest.PreCheckRegion(t, endpoints.UsWest2RegionID)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, devicefarm.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDevicePoolDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, devicefarm.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDevicePoolDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDevicePoolConfig_basic(rName),
@@ -156,9 +156,9 @@ func TestAccDeviceFarmDevicePool_disappears_project(t *testing.T) {
 			// https://docs.aws.amazon.com/general/latest/gr/devicefarm.html
 			acctest.PreCheckRegion(t, endpoints.UsWest2RegionID)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, devicefarm.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDevicePoolDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, devicefarm.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDevicePoolDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDevicePoolConfig_basic(rName),
@@ -185,7 +185,7 @@ func testAccCheckDevicePoolExists(n string, v *devicefarm.DevicePool) resource.T
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DeviceFarmConn
-		resp, err := tfdevicefarm.FindDevicepoolByArn(conn, rs.Primary.ID)
+		resp, err := tfdevicefarm.FindDevicePoolByARN(conn, rs.Primary.ID)
 		if err != nil {
 			return err
 		}
@@ -208,7 +208,7 @@ func testAccCheckDevicePoolDestroy(s *terraform.State) error {
 		}
 
 		// Try to find the resource
-		_, err := tfdevicefarm.FindDevicepoolByArn(conn, rs.Primary.ID)
+		_, err := tfdevicefarm.FindDevicePoolByARN(conn, rs.Primary.ID)
 		if tfresource.NotFound(err) {
 			continue
 		}

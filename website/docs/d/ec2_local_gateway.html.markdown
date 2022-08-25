@@ -59,3 +59,9 @@ The following attributes are additionally exported:
 * `outpost_arn` - Amazon Resource Name (ARN) of Outpost
 * `owner_id` - AWS account identifier that owns the Local Gateway.
 * `state` - State of the local gateway.
+
+## Timeouts
+
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+
+- `read` - (Default `20m`)

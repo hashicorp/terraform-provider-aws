@@ -14,7 +14,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
+)
+
+const (
+	ResNamePolicy = "Policy"
 )
 
 func ResourcePolicy() *schema.Resource {
@@ -228,7 +234,7 @@ func resourcePolicyCreate(d *schema.ResourceData, meta interface{}) error {
 			if tfawserr.ErrCodeEquals(err, applicationautoscaling.ErrCodeObjectNotFoundException) {
 				return resource.RetryableError(err)
 			}
-			return resource.NonRetryableError(fmt.Errorf("Error putting scaling policy: %s", err))
+			return resource.NonRetryableError(err)
 		}
 		return nil
 	})
@@ -236,7 +242,7 @@ func resourcePolicyCreate(d *schema.ResourceData, meta interface{}) error {
 		resp, err = conn.PutScalingPolicy(&params)
 	}
 	if err != nil {
-		return fmt.Errorf("Failed to create scaling policy: %s", err)
+		return create.Error(names.AppAutoScaling, create.ErrActionCreating, ResNamePolicy, d.Get("name").(string), err)
 	}
 
 	d.Set("arn", resp.PolicyARN)
@@ -267,7 +273,7 @@ func resourcePolicyRead(d *schema.ResourceData, meta interface{}) error {
 		p, err = getPolicy(d, meta)
 	}
 	if err != nil {
-		return fmt.Errorf("Failed to read scaling policy: %s", err)
+		return create.Error(names.AppAutoScaling, create.ErrActionReading, ResNamePolicy, d.Id(), err)
 	}
 
 	if p == nil && !d.IsNewResource() {
@@ -286,10 +292,10 @@ func resourcePolicyRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("service_namespace", p.ServiceNamespace)
 
 	if err := d.Set("step_scaling_policy_configuration", flattenStepScalingPolicyConfiguration(p.StepScalingPolicyConfiguration)); err != nil {
-		return fmt.Errorf("error setting step_scaling_policy_configuration: %s", err)
+		return create.SettingError(names.AppAutoScaling, ResNamePolicy, d.Id(), "step_scaling_policy_configuration", err)
 	}
 	if err := d.Set("target_tracking_scaling_policy_configuration", flattenTargetTrackingScalingPolicyConfiguration(p.TargetTrackingScalingPolicyConfiguration)); err != nil {
-		return fmt.Errorf("error setting target_tracking_scaling_policy_configuration: %s", err)
+		return create.SettingError(names.AppAutoScaling, ResNamePolicy, d.Id(), "target_tracking_scaling_policy_configuration", err)
 	}
 
 	return nil
@@ -321,7 +327,7 @@ func resourcePolicyUpdate(d *schema.ResourceData, meta interface{}) error {
 		_, err = conn.PutScalingPolicy(&params)
 	}
 	if err != nil {
-		return fmt.Errorf("Failed to update scaling policy: %s", err)
+		return create.Error(names.AppAutoScaling, create.ErrActionUpdating, ResNamePolicy, d.Id(), err)
 	}
 
 	return resourcePolicyRead(d, meta)
@@ -331,7 +337,7 @@ func resourcePolicyDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AppAutoScalingConn
 	p, err := getPolicy(d, meta)
 	if err != nil {
-		return fmt.Errorf("Error getting policy: %s", err)
+		return create.Error(names.AppAutoScaling, create.ErrActionDeleting, ResNamePolicy, d.Id(), err)
 	}
 	if p == nil {
 		return nil
@@ -366,7 +372,7 @@ func resourcePolicyDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("Failed to delete scaling policy: %s", err)
+		return create.Error(names.AppAutoScaling, create.ErrActionDeleting, ResNamePolicy, d.Id(), err)
 	}
 
 	return nil
@@ -375,7 +381,7 @@ func resourcePolicyDelete(d *schema.ResourceData, meta interface{}) error {
 func resourcePolicyImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	idParts, err := ValidPolicyImportInput(d.Id())
 	if err != nil {
-		return nil, fmt.Errorf("unexpected format (%q), expected <service-namespace>/<resource-id>/<scalable-dimension>/<policy-name>", d.Id())
+		return nil, create.Error(names.AppAutoScaling, create.ErrActionImporting, ResNamePolicy, d.Id(), err)
 	}
 
 	serviceNamespace := idParts[0]
@@ -429,7 +435,7 @@ func ValidPolicyImportInput(id string) ([]string, error) {
 
 // Takes the result of flatmap.Expand for an array of step adjustments and
 // returns a []*applicationautoscaling.StepAdjustment.
-func expandAppautoscalingStepAdjustments(configured []interface{}) ([]*applicationautoscaling.StepAdjustment, error) {
+func expandStepAdjustments(configured []interface{}) ([]*applicationautoscaling.StepAdjustment, error) {
 	var adjustments []*applicationautoscaling.StepAdjustment
 
 	// Loop over our configured step adjustments and create an array
@@ -449,13 +455,11 @@ func expandAppautoscalingStepAdjustments(configured []interface{}) ([]*applicati
 			case string:
 				f, err := strconv.ParseFloat(bound, 64)
 				if err != nil {
-					return nil, fmt.Errorf(
-						"metric_interval_lower_bound must be a float value represented as a string")
+					return nil, fmt.Errorf("metric_interval_lower_bound must be a float value represented as a string")
 				}
 				a.MetricIntervalLowerBound = aws.Float64(f)
 			default:
-				return nil, fmt.Errorf(
-					"metric_interval_lower_bound isn't a string. This is a bug. Please file an issue.")
+				return nil, fmt.Errorf("metric_interval_lower_bound isn't a string")
 			}
 		}
 		if data["metric_interval_upper_bound"] != "" {
@@ -464,13 +468,11 @@ func expandAppautoscalingStepAdjustments(configured []interface{}) ([]*applicati
 			case string:
 				f, err := strconv.ParseFloat(bound, 64)
 				if err != nil {
-					return nil, fmt.Errorf(
-						"metric_interval_upper_bound must be a float value represented as a string")
+					return nil, fmt.Errorf("metric_interval_upper_bound must be a float value represented as a string")
 				}
 				a.MetricIntervalUpperBound = aws.Float64(f)
 			default:
-				return nil, fmt.Errorf(
-					"metric_interval_upper_bound isn't a string. This is a bug. Please file an issue.")
+				return nil, fmt.Errorf("metric_interval_upper_bound isn't a string")
 			}
 		}
 		adjustments = append(adjustments, a)
@@ -479,7 +481,7 @@ func expandAppautoscalingStepAdjustments(configured []interface{}) ([]*applicati
 	return adjustments, nil
 }
 
-func expandAppautoscalingCustomizedMetricSpecification(configured []interface{}) *applicationautoscaling.CustomizedMetricSpecification {
+func expandCustomizedMetricSpecification(configured []interface{}) *applicationautoscaling.CustomizedMetricSpecification {
 	spec := &applicationautoscaling.CustomizedMetricSpecification{}
 
 	for _, raw := range configured {
@@ -515,7 +517,7 @@ func expandAppautoscalingCustomizedMetricSpecification(configured []interface{})
 	return spec
 }
 
-func expandAppautoscalingPredefinedMetricSpecification(configured []interface{}) *applicationautoscaling.PredefinedMetricSpecification {
+func expandPredefinedMetricSpecification(configured []interface{}) *applicationautoscaling.PredefinedMetricSpecification {
 	spec := &applicationautoscaling.PredefinedMetricSpecification{}
 
 	for _, raw := range configured {
@@ -557,7 +559,7 @@ func getPutScalingPolicyInput(d *schema.ResourceData) (applicationautoscaling.Pu
 	if l, ok := d.GetOk("target_tracking_scaling_policy_configuration"); ok {
 		v := l.([]interface{})
 		if len(v) < 1 {
-			return params, fmt.Errorf("Empty target_tracking_scaling_policy_configuration block")
+			return params, fmt.Errorf("empty target_tracking_scaling_policy_configuration block")
 		}
 		ttspCfg := v[0].(map[string]interface{})
 		cfg := &applicationautoscaling.TargetTrackingScalingPolicyConfiguration{
@@ -577,11 +579,11 @@ func getPutScalingPolicyInput(d *schema.ResourceData) (applicationautoscaling.Pu
 		}
 
 		if v, ok := ttspCfg["customized_metric_specification"].([]interface{}); ok && len(v) > 0 {
-			cfg.CustomizedMetricSpecification = expandAppautoscalingCustomizedMetricSpecification(v)
+			cfg.CustomizedMetricSpecification = expandCustomizedMetricSpecification(v)
 		}
 
 		if v, ok := ttspCfg["predefined_metric_specification"].([]interface{}); ok && len(v) > 0 {
-			cfg.PredefinedMetricSpecification = expandAppautoscalingPredefinedMetricSpecification(v)
+			cfg.PredefinedMetricSpecification = expandPredefinedMetricSpecification(v)
 		}
 
 		params.TargetTrackingScalingPolicyConfiguration = cfg
@@ -603,7 +605,7 @@ func getPolicy(d *schema.ResourceData, meta interface{}) (*applicationautoscalin
 	log.Printf("[DEBUG] Application AutoScaling Policy Describe Params: %#v", params)
 	resp, err := conn.DescribeScalingPolicies(&params)
 	if err != nil {
-		return nil, fmt.Errorf("Error retrieving scaling policies: %s", err)
+		return nil, fmt.Errorf("describing scaling policies: %s", err)
 	}
 	if len(resp.ScalingPolicies) == 0 {
 		return nil, nil
@@ -633,7 +635,7 @@ func expandStepScalingPolicyConfiguration(cfg []interface{}) *applicationautosca
 		out.MinAdjustmentMagnitude = aws.Int64(int64(v))
 	}
 	if v, ok := m["step_adjustment"].(*schema.Set); ok && v.Len() > 0 {
-		out.StepAdjustments, _ = expandAppautoscalingStepAdjustments(v.List())
+		out.StepAdjustments, _ = expandStepAdjustments(v.List())
 	}
 
 	return out
@@ -675,13 +677,13 @@ func flattenStepScalingPolicyConfiguration(cfg *applicationautoscaling.StepScali
 				},
 			},
 		}
-		m["step_adjustment"] = schema.NewSet(schema.HashResource(stepAdjustmentsResource), flattenAppautoscalingStepAdjustments(cfg.StepAdjustments))
+		m["step_adjustment"] = schema.NewSet(schema.HashResource(stepAdjustmentsResource), flattenStepAdjustments(cfg.StepAdjustments))
 	}
 
 	return []interface{}{m}
 }
 
-func flattenAppautoscalingStepAdjustments(adjs []*applicationautoscaling.StepAdjustment) []interface{} {
+func flattenStepAdjustments(adjs []*applicationautoscaling.StepAdjustment) []interface{} {
 	out := make([]interface{}, len(adjs))
 
 	for i, adj := range adjs {

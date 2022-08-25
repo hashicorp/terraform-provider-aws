@@ -27,12 +27,12 @@ func TestAccVPCTrafficMirrorTarget_nlb(t *testing.T) {
 			acctest.PreCheck(t)
 			testAccPreCheckTrafficMirrorTarget(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTrafficMirrorTargetDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTrafficMirrorTargetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTrafficMirrorTargetConfigNlb(rName, description),
+				Config: testAccVPCTrafficMirrorTargetConfig_nlb(rName, description),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrafficMirrorTargetExists(resourceName, &v),
 					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
@@ -62,12 +62,12 @@ func TestAccVPCTrafficMirrorTarget_eni(t *testing.T) {
 			acctest.PreCheck(t)
 			testAccPreCheckTrafficMirrorTarget(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTrafficMirrorTargetDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTrafficMirrorTargetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTrafficMirrorTargetConfigEni(rName, description),
+				Config: testAccVPCTrafficMirrorTargetConfig_eni(rName, description),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrafficMirrorTargetExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "description", description),
@@ -95,12 +95,12 @@ func TestAccVPCTrafficMirrorTarget_tags(t *testing.T) {
 			acctest.PreCheck(t)
 			testAccPreCheckTrafficMirrorTarget(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTrafficMirrorTargetDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTrafficMirrorTargetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTrafficMirrorTargetConfigTags1(rName, description, "key1", "value1"),
+				Config: testAccVPCTrafficMirrorTargetConfig_tags1(rName, description, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrafficMirrorTargetExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -113,7 +113,7 @@ func TestAccVPCTrafficMirrorTarget_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccTrafficMirrorTargetConfigTags2(rName, description, "key1", "value1updated", "key2", "value2"),
+				Config: testAccVPCTrafficMirrorTargetConfig_tags2(rName, description, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrafficMirrorTargetExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -122,7 +122,7 @@ func TestAccVPCTrafficMirrorTarget_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccTrafficMirrorTargetConfigTags1(rName, description, "key2", "value2"),
+				Config: testAccVPCTrafficMirrorTargetConfig_tags1(rName, description, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrafficMirrorTargetExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -144,12 +144,12 @@ func TestAccVPCTrafficMirrorTarget_disappears(t *testing.T) {
 			acctest.PreCheck(t)
 			testAccPreCheckTrafficMirrorTarget(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTrafficMirrorTargetDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTrafficMirrorTargetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTrafficMirrorTargetConfigNlb(rName, description),
+				Config: testAccVPCTrafficMirrorTargetConfig_nlb(rName, description),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrafficMirrorTargetExists(resourceName, &v),
 					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceTrafficMirrorTarget(), resourceName),
@@ -181,7 +181,7 @@ func testAccCheckTrafficMirrorTargetExists(name string, target *ec2.TrafficMirro
 			return err
 		}
 
-		if 0 == len(out.TrafficMirrorTargets) {
+		if len(out.TrafficMirrorTargets) == 0 {
 			return fmt.Errorf("Traffic mirror target %s not found", rs.Primary.ID)
 		}
 
@@ -232,7 +232,7 @@ resource "aws_subnet" "sub2" {
 `, rName)
 }
 
-func testAccTrafficMirrorTargetConfigNlb(rName, description string) string {
+func testAccVPCTrafficMirrorTargetConfig_nlb(rName, description string) string {
 	return acctest.ConfigCompose(testAccTrafficMirrorTargetConfigBase(rName), fmt.Sprintf(`
 resource "aws_lb" "lb" {
   name               = %[1]q
@@ -255,10 +255,10 @@ resource "aws_ec2_traffic_mirror_target" "test" {
 `, rName, description))
 }
 
-func testAccTrafficMirrorTargetConfigEni(rName, description string) string {
+func testAccVPCTrafficMirrorTargetConfig_eni(rName, description string) string {
 	return acctest.ConfigCompose(
 		testAccTrafficMirrorTargetConfigBase(rName),
-		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
+		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
 		fmt.Sprintf(`
 resource "aws_instance" "src" {
   ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
@@ -277,7 +277,7 @@ resource "aws_ec2_traffic_mirror_target" "test" {
 `, rName, description))
 }
 
-func testAccTrafficMirrorTargetConfigTags1(rName, description, tagKey1, tagValue1 string) string {
+func testAccVPCTrafficMirrorTargetConfig_tags1(rName, description, tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(testAccTrafficMirrorTargetConfigBase(rName), fmt.Sprintf(`
 resource "aws_lb" "lb" {
   name               = %[1]q
@@ -304,7 +304,7 @@ resource "aws_ec2_traffic_mirror_target" "test" {
 `, rName, description, tagKey1, tagValue1))
 }
 
-func testAccTrafficMirrorTargetConfigTags2(rName, description, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccVPCTrafficMirrorTargetConfig_tags2(rName, description, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return acctest.ConfigCompose(testAccTrafficMirrorTargetConfigBase(rName), fmt.Sprintf(`
 resource "aws_lb" "lb" {
   name               = %[1]q

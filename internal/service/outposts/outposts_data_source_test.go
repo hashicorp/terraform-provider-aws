@@ -14,10 +14,10 @@ func TestAccOutpostsDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_outposts_outposts.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, outposts.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      nil,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, outposts.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOutpostsDataSourceConfig_basic(),
@@ -29,7 +29,7 @@ func TestAccOutpostsDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckOutpostsAttributes(dataSourceName string) resource.TestCheckFunc { // nosemgrep: outposts-in-func-name
+func testAccCheckOutpostsAttributes(dataSourceName string) resource.TestCheckFunc { // nosemgrep:ci.outposts-in-func-name
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[dataSourceName]
 		if !ok {
@@ -48,7 +48,7 @@ func testAccCheckOutpostsAttributes(dataSourceName string) resource.TestCheckFun
 	}
 }
 
-func testAccOutpostsDataSourceConfig_basic() string { // nosemgrep: outposts-in-func-name
+func testAccOutpostsDataSourceConfig_basic() string { // nosemgrep:ci.outposts-in-func-name
 	return `
 data "aws_outposts_outposts" "test" {}
 `

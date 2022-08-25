@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/servicecatalog"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -415,9 +416,16 @@ func resourceProvisionedProductRead(d *schema.ResourceData, meta interface{}) er
 	d.Set("status_message", detail.StatusMessage)
 	d.Set("type", detail.Type)
 
-	// tags are only available from the record tied to the provisioned product
+	// Previously, we waited for the record to only return a target state of 'SUCCEEDED' or 'AVAILABLE'
+	// but this can interfere complete reads of this resource when an error occurs after initial creation
+	// or after an invalid update that returns a 'FAILED' record state. Thus, waiters are now present in the CREATE and UPDATE methods of this resource instead.
+	// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/24574#issuecomment-1126339193
+	recordInput := &servicecatalog.DescribeRecordInput{
+		Id:             detail.LastProvisioningRecordId,
+		AcceptLanguage: aws.String(acceptLanguage),
+	}
 
-	recordOutput, err := WaitRecordReady(conn, acceptLanguage, aws.StringValue(detail.LastProvisioningRecordId), RecordReadyTimeout)
+	recordOutput, err := conn.DescribeRecord(recordInput)
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] Service Catalog Provisioned Product (%s) Record (%s) not found, unable to set tags", d.Id(), aws.StringValue(detail.LastProvisioningRecordId))
@@ -432,12 +440,27 @@ func resourceProvisionedProductRead(d *schema.ResourceData, meta interface{}) er
 		return fmt.Errorf("error getting Service Catalog Provisioned Product (%s) Record (%s): empty response", d.Id(), aws.StringValue(detail.LastProvisioningRecordId))
 	}
 
+	// To enable debugging of potential errors, log as a warning
+	// instead of exiting prematurely with an error, e.g.
+	// errors can be present after update to a new version failed and the stack
+	// rolled back to the current version.
+	if errors := recordOutput.RecordDetail.RecordErrors; len(errors) > 0 {
+		var errs *multierror.Error
+
+		for _, err := range errors {
+			errs = multierror.Append(errs, fmt.Errorf("%s: %s", aws.StringValue(err.Code), aws.StringValue(err.Description)))
+		}
+
+		log.Printf("[WARN] Errors found when describing Service Catalog Provisioned Product (%s) Record (%s): %s", d.Id(), aws.StringValue(detail.LastProvisioningRecordId), errs.ErrorOrNil())
+	}
+
 	if err := d.Set("outputs", flattenRecordOutputs(recordOutput.RecordOutputs)); err != nil {
 		return fmt.Errorf("error setting outputs: %w", err)
 	}
 
 	d.Set("path_id", recordOutput.RecordDetail.PathId)
 
+	// tags are only available from the record tied to the provisioned product
 	tags := recordKeyValueTags(recordOutput.RecordDetail.RecordTags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002

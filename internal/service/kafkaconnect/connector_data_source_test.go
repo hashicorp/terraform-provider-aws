@@ -15,13 +15,13 @@ func TestAccKafkaConnectConnectorDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_mskconnect_connector.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(kafkaconnect.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, kafkaconnect.EndpointsID),
-		CheckDestroy:      nil,
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(kafkaconnect.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, kafkaconnect.EndpointsID),
+		CheckDestroy:             nil,
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConnectorDataSourceConfig(rName),
+				Config: testAccConnectorDataSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "description", dataSourceName, "description"),
@@ -33,8 +33,8 @@ func TestAccKafkaConnectConnectorDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccConnectorDataSourceConfig(rName string) string {
-	return acctest.ConfigCompose(testAccConnectorConfig(rName), `
+func testAccConnectorDataSourceConfig_basic(rName string) string {
+	return acctest.ConfigCompose(testAccConnectorConfig_basic(rName), `
 data "aws_mskconnect_connector" "test" {
   name = aws_mskconnect_connector.test.name
 }

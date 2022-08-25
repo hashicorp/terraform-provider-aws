@@ -17,20 +17,20 @@ func TestAccSSMMaintenanceWindowsDataSource_filter(t *testing.T) {
 	rName3 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ssm.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckMaintenanceWindowDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ssm.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMaintenanceWindowDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckMaintenanceWindowsDataSourceConfig_filter_name(rName1, rName2, rName3),
+				Config: testAccMaintenanceWindowsDataSourceConfig_filterName(rName1, rName2, rName3),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "ids.#", "1"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "ids.0", "aws_ssm_maintenance_window.test2", "id"),
 				),
 			},
 			{
-				Config: testAccCheckMaintenanceWindowsDataSourceConfig_filter_enabled(rName1, rName2, rName3),
+				Config: testAccMaintenanceWindowsDataSourceConfig_filterEnabled(rName1, rName2, rName3),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "ids.#", "1"),
 				),
@@ -66,7 +66,7 @@ resource "aws_ssm_maintenance_window" "test3" {
 `, rName1, rName2, rName3)
 }
 
-func testAccCheckMaintenanceWindowsDataSourceConfig_filter_name(rName1, rName2, rName3 string) string {
+func testAccMaintenanceWindowsDataSourceConfig_filterName(rName1, rName2, rName3 string) string {
 	return acctest.ConfigCompose(
 		testAccCheckMaintenanceWindowsDataSourceConfig(rName1, rName2, rName3),
 		fmt.Sprintf(`
@@ -85,7 +85,7 @@ data "aws_ssm_maintenance_windows" "test" {
 `, rName2))
 }
 
-func testAccCheckMaintenanceWindowsDataSourceConfig_filter_enabled(rName1, rName2, rName3 string) string {
+func testAccMaintenanceWindowsDataSourceConfig_filterEnabled(rName1, rName2, rName3 string) string {
 	return acctest.ConfigCompose(
 		testAccCheckMaintenanceWindowsDataSourceConfig(rName1, rName2, rName3),
 		`

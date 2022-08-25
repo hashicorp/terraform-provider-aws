@@ -15,7 +15,7 @@ const (
 	configurationDeletedTimeout = 5 * time.Minute
 )
 
-func waitClusterCreated(ctx context.Context, conn *kafka.Kafka, arn string, timeout time.Duration) (*kafka.ClusterInfo, error) {
+func waitClusterCreated(ctx context.Context, conn *kafka.Kafka, arn string, timeout time.Duration) (*kafka.ClusterInfo, error) { //nolint:unparam
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{kafka.ClusterStateCreating},
 		Target:  []string{kafka.ClusterStateActive},

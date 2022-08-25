@@ -25,10 +25,10 @@ func TestAccIAMUserPolicy_basic(t *testing.T) {
 	userResourceName := "aws_iam_user.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, iam.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckUserPolicyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccUserPolicyConfig_name(rName, strconv.Quote("NonJSONString")),
@@ -68,13 +68,13 @@ func TestAccIAMUserPolicy_disappears(t *testing.T) {
 	resourceName := "aws_iam_user_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, iam.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckUserPolicyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserPolicyConfig(rName),
+				Config: testAccUserPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserPolicyExists(resourceName, &out),
 					testAccCheckUserPolicyDisappears(&out),
@@ -93,10 +93,10 @@ func TestAccIAMUserPolicy_namePrefix(t *testing.T) {
 	userResourceName := "aws_iam_user.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, iam.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckUserPolicyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserPolicyConfig_namePrefix(rName, acctest.ResourcePrefix, strconv.Quote(policy1)),
@@ -134,10 +134,10 @@ func TestAccIAMUserPolicy_generatedName(t *testing.T) {
 	userResourceName := "aws_iam_user.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, iam.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckUserPolicyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserPolicyConfig_generatedName(rName, strconv.Quote(policy1)),
@@ -174,10 +174,10 @@ func TestAccIAMUserPolicy_multiplePolicies(t *testing.T) {
 	userResourceName := "aws_iam_user.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, iam.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckUserPolicyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserPolicyConfig_name(rName, strconv.Quote(policy1)),
@@ -230,20 +230,20 @@ func TestAccIAMUserPolicy_policyOrder(t *testing.T) {
 	userResourceName := "aws_iam_user.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, iam.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckUserPolicyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserPolicyOrderConfig(rName),
+				Config: testAccUserPolicyConfig_order(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserPolicy(userResourceName, policyResourceName),
 					testAccCheckUserPolicyExpectedPolicies(userResourceName, 1),
 				),
 			},
 			{
-				Config:   testAccUserPolicyNewOrderConfig(rName),
+				Config:   testAccUserPolicyConfig_newOrder(rName),
 				PlanOnly: true,
 			},
 		},
@@ -402,7 +402,7 @@ resource "aws_iam_user" "test" {
 `, rName, path)
 }
 
-func testAccUserPolicyConfig(rName string) string {
+func testAccUserPolicyConfig_basic(rName string) string {
 	return acctest.ConfigCompose(
 		testAccUserPolicyUserBaseConfig(rName, "/"),
 		fmt.Sprintf(`
@@ -477,7 +477,7 @@ resource "aws_iam_user_policy" "test2" {
 `, rName, policy1, policy2))
 }
 
-func testAccUserPolicyOrderConfig(rName string) string {
+func testAccUserPolicyConfig_order(rName string) string {
 	return acctest.ConfigCompose(
 		testAccUserPolicyUserBaseConfig(rName, "/"),
 		fmt.Sprintf(`
@@ -504,7 +504,7 @@ EOF
 `, rName))
 }
 
-func testAccUserPolicyNewOrderConfig(rName string) string {
+func testAccUserPolicyConfig_newOrder(rName string) string {
 	return acctest.ConfigCompose(
 		testAccUserPolicyUserBaseConfig(rName, "/"),
 		fmt.Sprintf(`

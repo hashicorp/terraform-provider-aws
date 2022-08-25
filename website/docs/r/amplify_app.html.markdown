@@ -145,7 +145,7 @@ The following arguments are supported:
 * `oauth_token` - (Optional) The OAuth token for a third-party source control system for an Amplify app. The OAuth token is used to create a webhook and a read-only deploy key. The OAuth token is not stored.
 * `platform` - (Optional) The platform or framework for an Amplify app. Valid values: `WEB`.
 * `repository` - (Optional) The repository for an Amplify app.
-* `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 
 An `auto_branch_creation_config` block supports the following arguments:
@@ -176,7 +176,7 @@ In addition to all arguments above, the following attributes are exported:
 * `default_domain` - The default domain for the Amplify app.
 * `id` - The unique ID of the Amplify app.
 * `production_branch` - Describes the information about a production branch for an Amplify app. A `production_branch` block is documented below.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 A `production_branch` block supports the following attributes:
 

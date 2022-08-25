@@ -169,8 +169,8 @@ func ResourceCluster() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				Default:      EngineAurora,
-				ValidateFunc: validEngine(),
+				Default:      ClusterEngineAurora,
+				ValidateFunc: validClusterEngine(),
 			},
 			"engine_mode": {
 				Type:         schema.TypeString,
@@ -1501,6 +1501,7 @@ var resourceClusterCreatePendingStates = []string{
 	"preparing-data-migration",
 	"migrating",
 	"resetting-master-credentials",
+	"rebooting",
 }
 
 var resourceClusterDeletePendingStates = []string{

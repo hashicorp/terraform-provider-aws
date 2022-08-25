@@ -1,6 +1,7 @@
 package ec2
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"strconv"
@@ -392,8 +393,8 @@ func WaitImageAvailable(conn *ec2.EC2, id string, timeout time.Duration) (*ec2.I
 		Target:     []string{ec2.ImageStateAvailable},
 		Refresh:    StatusImageState(conn, id),
 		Timeout:    timeout,
-		Delay:      AWSAMIRetryDelay,
-		MinTimeout: AMIRetryMinTimeout,
+		Delay:      amiRetryDelay,
+		MinTimeout: amiRetryMinTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
@@ -415,8 +416,8 @@ func WaitImageDeleted(conn *ec2.EC2, id string, timeout time.Duration) (*ec2.Ima
 		Target:     []string{},
 		Refresh:    StatusImageState(conn, id),
 		Timeout:    timeout,
-		Delay:      AWSAMIRetryDelay,
-		MinTimeout: AMIRetryMinTimeout,
+		Delay:      amiRetryDelay,
+		MinTimeout: amiRetryMinTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
@@ -698,11 +699,12 @@ const (
 
 func WaitRouteTableReady(conn *ec2.EC2, id string, timeout time.Duration) (*ec2.RouteTable, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending:        []string{},
-		Target:         []string{RouteTableStatusReady},
-		Refresh:        StatusRouteTable(conn, id),
-		Timeout:        timeout,
-		NotFoundChecks: RouteTableNotFoundChecks,
+		Pending:                   []string{},
+		Target:                    []string{RouteTableStatusReady},
+		Refresh:                   StatusRouteTable(conn, id),
+		Timeout:                   timeout,
+		NotFoundChecks:            RouteTableNotFoundChecks,
+		ContinuousTargetOccurence: 2,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
@@ -716,10 +718,11 @@ func WaitRouteTableReady(conn *ec2.EC2, id string, timeout time.Duration) (*ec2.
 
 func WaitRouteTableDeleted(conn *ec2.EC2, id string, timeout time.Duration) (*ec2.RouteTable, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{RouteTableStatusReady},
-		Target:  []string{},
-		Refresh: StatusRouteTable(conn, id),
-		Timeout: timeout,
+		Pending:                   []string{RouteTableStatusReady},
+		Target:                    []string{},
+		Refresh:                   StatusRouteTable(conn, id),
+		Timeout:                   timeout,
+		ContinuousTargetOccurence: 2,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
@@ -880,10 +883,10 @@ func WaitSubnetIPv6CIDRBlockAssociationDeleted(conn *ec2.EC2, id string) (*ec2.S
 	return nil, err
 }
 
-func WaitSubnetAssignIpv6AddressOnCreationUpdated(conn *ec2.EC2, subnetID string, expectedValue bool) (*ec2.Subnet, error) {
+func waitSubnetAssignIPv6AddressOnCreationUpdated(conn *ec2.EC2, subnetID string, expectedValue bool) (*ec2.Subnet, error) {
 	stateConf := &resource.StateChangeConf{
 		Target:     []string{strconv.FormatBool(expectedValue)},
-		Refresh:    StatusSubnetAssignIpv6AddressOnCreation(conn, subnetID),
+		Refresh:    StatusSubnetAssignIPv6AddressOnCreation(conn, subnetID),
 		Timeout:    SubnetAttributePropagationTimeout,
 		Delay:      10 * time.Second,
 		MinTimeout: 3 * time.Second,
@@ -898,10 +901,10 @@ func WaitSubnetAssignIpv6AddressOnCreationUpdated(conn *ec2.EC2, subnetID string
 	return nil, err
 }
 
-func WaitSubnetEnableDns64Updated(conn *ec2.EC2, subnetID string, expectedValue bool) (*ec2.Subnet, error) {
+func waitSubnetEnableDNS64Updated(conn *ec2.EC2, subnetID string, expectedValue bool) (*ec2.Subnet, error) {
 	stateConf := &resource.StateChangeConf{
 		Target:     []string{strconv.FormatBool(expectedValue)},
-		Refresh:    StatusSubnetEnableDns64(conn, subnetID),
+		Refresh:    StatusSubnetEnableDNS64(conn, subnetID),
 		Timeout:    SubnetAttributePropagationTimeout,
 		Delay:      10 * time.Second,
 		MinTimeout: 3 * time.Second,
@@ -916,10 +919,10 @@ func WaitSubnetEnableDns64Updated(conn *ec2.EC2, subnetID string, expectedValue 
 	return nil, err
 }
 
-func WaitSubnetEnableResourceNameDnsAAAARecordOnLaunchUpdated(conn *ec2.EC2, subnetID string, expectedValue bool) (*ec2.Subnet, error) {
+func waitSubnetEnableResourceNameDNSAAAARecordOnLaunchUpdated(conn *ec2.EC2, subnetID string, expectedValue bool) (*ec2.Subnet, error) {
 	stateConf := &resource.StateChangeConf{
 		Target:     []string{strconv.FormatBool(expectedValue)},
-		Refresh:    StatusSubnetEnableResourceNameDnsAAAARecordOnLaunch(conn, subnetID),
+		Refresh:    StatusSubnetEnableResourceNameDNSAAAARecordOnLaunch(conn, subnetID),
 		Timeout:    SubnetAttributePropagationTimeout,
 		Delay:      10 * time.Second,
 		MinTimeout: 3 * time.Second,
@@ -934,10 +937,10 @@ func WaitSubnetEnableResourceNameDnsAAAARecordOnLaunchUpdated(conn *ec2.EC2, sub
 	return nil, err
 }
 
-func WaitSubnetEnableResourceNameDnsARecordOnLaunchUpdated(conn *ec2.EC2, subnetID string, expectedValue bool) (*ec2.Subnet, error) {
+func waitSubnetEnableResourceNameDNSARecordOnLaunchUpdated(conn *ec2.EC2, subnetID string, expectedValue bool) (*ec2.Subnet, error) {
 	stateConf := &resource.StateChangeConf{
 		Target:     []string{strconv.FormatBool(expectedValue)},
-		Refresh:    StatusSubnetEnableResourceNameDnsARecordOnLaunch(conn, subnetID),
+		Refresh:    StatusSubnetEnableResourceNameDNSARecordOnLaunch(conn, subnetID),
 		Timeout:    SubnetAttributePropagationTimeout,
 		Delay:      10 * time.Second,
 		MinTimeout: 3 * time.Second,
@@ -1200,6 +1203,80 @@ func WaitTransitGatewayMulticastDomainAssociationDeleted(conn *ec2.EC2, multicas
 }
 
 const (
+	TransitGatewayPeeringAttachmentCreatedTimeout = 10 * time.Minute
+	TransitGatewayPeeringAttachmentDeletedTimeout = 10 * time.Minute
+	TransitGatewayPeeringAttachmentUpdatedTimeout = 10 * time.Minute
+)
+
+func WaitTransitGatewayPeeringAttachmentAccepted(conn *ec2.EC2, id string) (*ec2.TransitGatewayPeeringAttachment, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.TransitGatewayAttachmentStatePending, ec2.TransitGatewayAttachmentStatePendingAcceptance},
+		Target:  []string{ec2.TransitGatewayAttachmentStateAvailable},
+		Timeout: TransitGatewayPeeringAttachmentUpdatedTimeout,
+		Refresh: StatusTransitGatewayPeeringAttachmentState(conn, id),
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.TransitGatewayPeeringAttachment); ok {
+		if status := output.Status; status != nil {
+			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.StringValue(status.Code), aws.StringValue(status.Message)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func WaitTransitGatewayPeeringAttachmentCreated(conn *ec2.EC2, id string) (*ec2.TransitGatewayPeeringAttachment, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.TransitGatewayAttachmentStateFailing, ec2.TransitGatewayAttachmentStateInitiatingRequest, ec2.TransitGatewayAttachmentStatePending},
+		Target:  []string{ec2.TransitGatewayAttachmentStateAvailable, ec2.TransitGatewayAttachmentStatePendingAcceptance},
+		Timeout: TransitGatewayPeeringAttachmentCreatedTimeout,
+		Refresh: StatusTransitGatewayPeeringAttachmentState(conn, id),
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.TransitGatewayPeeringAttachment); ok {
+		if status := output.Status; status != nil {
+			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.StringValue(status.Code), aws.StringValue(status.Message)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func WaitTransitGatewayPeeringAttachmentDeleted(conn *ec2.EC2, id string) (*ec2.TransitGatewayPeeringAttachment, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{
+			ec2.TransitGatewayAttachmentStateAvailable,
+			ec2.TransitGatewayAttachmentStateDeleting,
+			ec2.TransitGatewayAttachmentStatePendingAcceptance,
+			ec2.TransitGatewayAttachmentStateRejecting,
+		},
+		Target:  []string{ec2.TransitGatewayAttachmentStateDeleted},
+		Timeout: TransitGatewayPeeringAttachmentDeletedTimeout,
+		Refresh: StatusTransitGatewayPeeringAttachmentState(conn, id),
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.TransitGatewayPeeringAttachment); ok {
+		if status := output.Status; status != nil {
+			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.StringValue(status.Code), aws.StringValue(status.Message)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+const (
 	TransitGatewayPrefixListReferenceTimeout = 5 * time.Minute
 )
 
@@ -1294,14 +1371,94 @@ func WaitTransitGatewayRouteDeleted(conn *ec2.EC2, transitGatewayRouteTableID, d
 }
 
 const (
-	TransitGatewayRouteTablePropagationTimeout = 5 * time.Minute
+	TransitGatewayRouteTableCreatedTimeout = 10 * time.Minute
+	TransitGatewayRouteTableDeletedTimeout = 10 * time.Minute
 )
 
-func WaitTransitGatewayRouteTablePropagationStateEnabled(conn *ec2.EC2, transitGatewayRouteTableID string, transitGatewayAttachmentID string) (*ec2.TransitGatewayRouteTablePropagation, error) {
+func WaitTransitGatewayRouteTableCreated(conn *ec2.EC2, id string) (*ec2.TransitGatewayRouteTable, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.TransitGatewayRouteTableStatePending},
+		Target:  []string{ec2.TransitGatewayRouteTableStateAvailable},
+		Timeout: TransitGatewayRouteTableCreatedTimeout,
+		Refresh: StatusTransitGatewayRouteTableState(conn, id),
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.TransitGatewayRouteTable); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func WaitTransitGatewayRouteTableDeleted(conn *ec2.EC2, id string) (*ec2.TransitGatewayRouteTable, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.TransitGatewayRouteTableStateAvailable, ec2.TransitGatewayRouteTableStateDeleting},
+		Target:  []string{},
+		Timeout: TransitGatewayRouteTableDeletedTimeout,
+		Refresh: StatusTransitGatewayRouteTableState(conn, id),
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.TransitGatewayRouteTable); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+const (
+	TransitGatewayRouteTableAssociationCreatedTimeout = 5 * time.Minute
+	TransitGatewayRouteTableAssociationDeletedTimeout = 10 * time.Minute
+)
+
+func WaitTransitGatewayRouteTableAssociationCreated(conn *ec2.EC2, transitGatewayRouteTableID, transitGatewayAttachmentID string) (*ec2.TransitGatewayRouteTableAssociation, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.TransitGatewayAssociationStateAssociating},
+		Target:  []string{ec2.TransitGatewayAssociationStateAssociated},
+		Timeout: TransitGatewayRouteTableAssociationCreatedTimeout,
+		Refresh: StatusTransitGatewayRouteTableAssociationState(conn, transitGatewayRouteTableID, transitGatewayAttachmentID),
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.TransitGatewayRouteTableAssociation); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func WaitTransitGatewayRouteTableAssociationDeleted(conn *ec2.EC2, transitGatewayRouteTableID, transitGatewayAttachmentID string) (*ec2.TransitGatewayRouteTableAssociation, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending:        []string{ec2.TransitGatewayAssociationStateAssociated, ec2.TransitGatewayAssociationStateDisassociating},
+		Target:         []string{},
+		Timeout:        TransitGatewayRouteTableAssociationDeletedTimeout,
+		Refresh:        StatusTransitGatewayRouteTableAssociationState(conn, transitGatewayRouteTableID, transitGatewayAttachmentID),
+		NotFoundChecks: 1,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.TransitGatewayRouteTableAssociation); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+const (
+	TransitGatewayRouteTablePropagationCreatedTimeout = 5 * time.Minute
+	TransitGatewayRouteTablePropagationDeletedTimeout = 5 * time.Minute
+)
+
+func WaitTransitGatewayRouteTablePropagationCreated(conn *ec2.EC2, transitGatewayRouteTableID string, transitGatewayAttachmentID string) (*ec2.TransitGatewayRouteTablePropagation, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{ec2.TransitGatewayPropagationStateEnabling},
 		Target:  []string{ec2.TransitGatewayPropagationStateEnabled},
-		Timeout: TransitGatewayRouteTablePropagationTimeout,
+		Timeout: TransitGatewayRouteTablePropagationCreatedTimeout,
 		Refresh: StatusTransitGatewayRouteTablePropagationState(conn, transitGatewayRouteTableID, transitGatewayAttachmentID),
 	}
 
@@ -1314,21 +1471,100 @@ func WaitTransitGatewayRouteTablePropagationStateEnabled(conn *ec2.EC2, transitG
 	return nil, err
 }
 
-func WaitTransitGatewayRouteTablePropagationStateDisabled(conn *ec2.EC2, transitGatewayRouteTableID string, transitGatewayAttachmentID string) (*ec2.TransitGatewayRouteTablePropagation, error) {
+func WaitTransitGatewayRouteTablePropagationDeleted(conn *ec2.EC2, transitGatewayRouteTableID string, transitGatewayAttachmentID string) (*ec2.TransitGatewayRouteTablePropagation, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{ec2.TransitGatewayPropagationStateDisabling},
 		Target:  []string{},
-		Timeout: TransitGatewayRouteTablePropagationTimeout,
+		Timeout: TransitGatewayRouteTablePropagationDeletedTimeout,
 		Refresh: StatusTransitGatewayRouteTablePropagationState(conn, transitGatewayRouteTableID, transitGatewayAttachmentID),
 	}
 
 	outputRaw, err := stateConf.WaitForState()
 
-	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidRouteTableIDNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidRouteTableIDNotFound) {
 		return nil, nil
 	}
 
 	if output, ok := outputRaw.(*ec2.TransitGatewayRouteTablePropagation); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+const (
+	TransitGatewayVPCAttachmentCreatedTimeout = 10 * time.Minute
+	TransitGatewayVPCAttachmentDeletedTimeout = 10 * time.Minute
+	TransitGatewayVPCAttachmentUpdatedTimeout = 10 * time.Minute
+)
+
+func WaitTransitGatewayVPCAttachmentAccepted(conn *ec2.EC2, id string) (*ec2.TransitGatewayVpcAttachment, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.TransitGatewayAttachmentStatePending, ec2.TransitGatewayAttachmentStatePendingAcceptance},
+		Target:  []string{ec2.TransitGatewayAttachmentStateAvailable},
+		Timeout: TransitGatewayVPCAttachmentUpdatedTimeout,
+		Refresh: StatusTransitGatewayVPCAttachmentState(conn, id),
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.TransitGatewayVpcAttachment); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func WaitTransitGatewayVPCAttachmentCreated(conn *ec2.EC2, id string) (*ec2.TransitGatewayVpcAttachment, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.TransitGatewayAttachmentStateFailing, ec2.TransitGatewayAttachmentStatePending},
+		Target:  []string{ec2.TransitGatewayAttachmentStateAvailable, ec2.TransitGatewayAttachmentStatePendingAcceptance},
+		Timeout: TransitGatewayVPCAttachmentCreatedTimeout,
+		Refresh: StatusTransitGatewayVPCAttachmentState(conn, id),
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.TransitGatewayVpcAttachment); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func WaitTransitGatewayVPCAttachmentDeleted(conn *ec2.EC2, id string) (*ec2.TransitGatewayVpcAttachment, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{
+			ec2.TransitGatewayAttachmentStateAvailable,
+			ec2.TransitGatewayAttachmentStateDeleting,
+			ec2.TransitGatewayAttachmentStatePendingAcceptance,
+			ec2.TransitGatewayAttachmentStateRejecting,
+		},
+		Target:  []string{ec2.TransitGatewayAttachmentStateDeleted},
+		Timeout: TransitGatewayVPCAttachmentDeletedTimeout,
+		Refresh: StatusTransitGatewayVPCAttachmentState(conn, id),
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.TransitGatewayVpcAttachment); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func WaitTransitGatewayVPCAttachmentUpdated(conn *ec2.EC2, id string) (*ec2.TransitGatewayVpcAttachment, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.TransitGatewayAttachmentStateModifying},
+		Target:  []string{ec2.TransitGatewayAttachmentStateAvailable},
+		Timeout: TransitGatewayVPCAttachmentUpdatedTimeout,
+		Refresh: StatusTransitGatewayVPCAttachmentState(conn, id),
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.TransitGatewayVpcAttachment); ok {
 		return output, err
 	}
 
@@ -1815,7 +2051,7 @@ func WaitVPNConnectionDeleted(conn *ec2.EC2, id string) (*ec2.VpnConnection, err
 
 func WaitVPNConnectionUpdated(conn *ec2.EC2, id string) (*ec2.VpnConnection, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending:    []string{VpnStateModifying},
+		Pending:    []string{vpnStateModifying},
 		Target:     []string{ec2.VpnStateAvailable},
 		Refresh:    StatusVPNConnectionState(conn, id),
 		Timeout:    vpnConnectionUpdatedTimeout,
@@ -1932,12 +2168,6 @@ const (
 	dhcpOptionSetDeletedTimeout = 3 * time.Minute
 )
 
-const (
-	internetGatewayAttachedTimeout = 4 * time.Minute
-	internetGatewayDeletedTimeout  = 10 * time.Minute
-	internetGatewayDetachedTimeout = 15 * time.Minute
-)
-
 func WaitInternetGatewayAttached(conn *ec2.EC2, internetGatewayID, vpcID string, timeout time.Duration) (*ec2.InternetGatewayAttachment, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending:        []string{ec2.AttachmentStatusAttaching},
@@ -2040,20 +2270,41 @@ func WaitManagedPrefixListDeleted(conn *ec2.EC2, id string) (*ec2.ManagedPrefixL
 	return nil, err
 }
 
+func WaitNetworkInsightsAnalysisCreated(ctx context.Context, conn *ec2.EC2, id string, timeout time.Duration) (*ec2.NetworkInsightsAnalysis, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{ec2.AnalysisStatusRunning},
+		Target:     []string{ec2.AnalysisStatusSucceeded},
+		Timeout:    timeout,
+		Refresh:    StatusNetworkInsightsAnalysis(ctx, conn, id),
+		Delay:      10 * time.Second,
+		MinTimeout: 5 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*ec2.NetworkInsightsAnalysis); ok {
+		tfresource.SetLastError(err, errors.New(aws.StringValue(output.StatusMessage)))
+
+		return output, err
+	}
+
+	return nil, err
+}
+
 const (
 	networkInterfaceAttachedTimeout = 5 * time.Minute
 	NetworkInterfaceDetachedTimeout = 10 * time.Minute
 )
 
-func WaitNetworkInterfaceAttached(conn *ec2.EC2, id string, timeout time.Duration) (*ec2.NetworkInterfaceAttachment, error) {
+func WaitNetworkInterfaceAttached(ctx context.Context, conn *ec2.EC2, id string, timeout time.Duration) (*ec2.NetworkInterfaceAttachment, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{ec2.AttachmentStatusAttaching},
 		Target:  []string{ec2.AttachmentStatusAttached},
 		Timeout: timeout,
-		Refresh: StatusNetworkInterfaceAttachmentStatus(conn, id),
+		Refresh: StatusNetworkInterfaceAttachmentStatus(ctx, conn, id),
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*ec2.NetworkInterfaceAttachment); ok {
 		return output, err
@@ -2103,15 +2354,15 @@ func WaitNetworkInterfaceCreated(conn *ec2.EC2, id string, timeout time.Duration
 	return nil, err
 }
 
-func WaitNetworkInterfaceDetached(conn *ec2.EC2, id string, timeout time.Duration) (*ec2.NetworkInterfaceAttachment, error) {
+func WaitNetworkInterfaceDetached(ctx context.Context, conn *ec2.EC2, id string, timeout time.Duration) (*ec2.NetworkInterfaceAttachment, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{ec2.AttachmentStatusDetaching},
+		Pending: []string{ec2.AttachmentStatusAttached, ec2.AttachmentStatusDetaching},
 		Target:  []string{ec2.AttachmentStatusDetached},
 		Timeout: timeout,
-		Refresh: StatusNetworkInterfaceAttachmentStatus(conn, id),
+		Refresh: StatusNetworkInterfaceAttachmentStatus(ctx, conn, id),
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*ec2.NetworkInterfaceAttachment); ok {
 		return output, err
@@ -2218,8 +2469,8 @@ func WaitSpotFleetRequestUpdated(conn *ec2.EC2, id string, timeout time.Duration
 
 func WaitVPCEndpointAccepted(conn *ec2.EC2, vpcEndpointID string, timeout time.Duration) (*ec2.VpcEndpoint, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending:    []string{VpcEndpointStatePendingAcceptance},
-		Target:     []string{VpcEndpointStateAvailable},
+		Pending:    []string{vpcEndpointStatePendingAcceptance},
+		Target:     []string{vpcEndpointStateAvailable},
 		Timeout:    timeout,
 		Refresh:    StatusVPCEndpointState(conn, vpcEndpointID),
 		Delay:      5 * time.Second,
@@ -2229,7 +2480,7 @@ func WaitVPCEndpointAccepted(conn *ec2.EC2, vpcEndpointID string, timeout time.D
 	outputRaw, err := stateConf.WaitForState()
 
 	if output, ok := outputRaw.(*ec2.VpcEndpoint); ok {
-		if state, lastError := aws.StringValue(output.State), output.LastError; state == VpcEndpointStateFailed && lastError != nil {
+		if state, lastError := aws.StringValue(output.State), output.LastError; state == vpcEndpointStateFailed && lastError != nil {
 			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.StringValue(lastError.Code), aws.StringValue(lastError.Message)))
 		}
 
@@ -2241,8 +2492,8 @@ func WaitVPCEndpointAccepted(conn *ec2.EC2, vpcEndpointID string, timeout time.D
 
 func WaitVPCEndpointAvailable(conn *ec2.EC2, vpcEndpointID string, timeout time.Duration) (*ec2.VpcEndpoint, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending:    []string{VpcEndpointStatePending},
-		Target:     []string{VpcEndpointStateAvailable, VpcEndpointStatePendingAcceptance},
+		Pending:    []string{vpcEndpointStatePending},
+		Target:     []string{vpcEndpointStateAvailable, vpcEndpointStatePendingAcceptance},
 		Timeout:    timeout,
 		Refresh:    StatusVPCEndpointState(conn, vpcEndpointID),
 		Delay:      5 * time.Second,
@@ -2252,7 +2503,7 @@ func WaitVPCEndpointAvailable(conn *ec2.EC2, vpcEndpointID string, timeout time.
 	outputRaw, err := stateConf.WaitForState()
 
 	if output, ok := outputRaw.(*ec2.VpcEndpoint); ok {
-		if state, lastError := aws.StringValue(output.State), output.LastError; state == VpcEndpointStateFailed && lastError != nil {
+		if state, lastError := aws.StringValue(output.State), output.LastError; state == vpcEndpointStateFailed && lastError != nil {
 			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.StringValue(lastError.Code), aws.StringValue(lastError.Message)))
 		}
 
@@ -2264,10 +2515,10 @@ func WaitVPCEndpointAvailable(conn *ec2.EC2, vpcEndpointID string, timeout time.
 
 func WaitVPCEndpointDeleted(conn *ec2.EC2, vpcEndpointID string, timeout time.Duration) (*ec2.VpcEndpoint, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending:    []string{VpcEndpointStateDeleting},
+		Pending:    []string{vpcEndpointStateDeleting},
 		Target:     []string{},
-		Timeout:    timeout,
 		Refresh:    StatusVPCEndpointState(conn, vpcEndpointID),
+		Timeout:    timeout,
 		Delay:      5 * time.Second,
 		MinTimeout: 5 * time.Second,
 	}
@@ -2275,6 +2526,44 @@ func WaitVPCEndpointDeleted(conn *ec2.EC2, vpcEndpointID string, timeout time.Du
 	outputRaw, err := stateConf.WaitForState()
 
 	if output, ok := outputRaw.(*ec2.VpcEndpoint); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func WaitVPCEndpointServiceAvailable(conn *ec2.EC2, id string, timeout time.Duration) (*ec2.ServiceConfiguration, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{ec2.ServiceStatePending},
+		Target:     []string{ec2.ServiceStateAvailable},
+		Refresh:    StatusVPCEndpointServiceStateAvailable(conn, id),
+		Timeout:    timeout,
+		Delay:      5 * time.Second,
+		MinTimeout: 5 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.ServiceConfiguration); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func WaitVPCEndpointServiceDeleted(conn *ec2.EC2, id string, timeout time.Duration) (*ec2.ServiceConfiguration, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{ec2.ServiceStateAvailable, ec2.ServiceStateDeleting},
+		Target:     []string{},
+		Timeout:    timeout,
+		Refresh:    StatusVPCEndpointServiceStateDeleted(conn, id),
+		Delay:      5 * time.Second,
+		MinTimeout: 5 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.ServiceConfiguration); ok {
 		return output, err
 	}
 
@@ -2309,7 +2598,7 @@ func WaitVPCEndpointRouteTableAssociationReady(conn *ec2.EC2, vpcEndpointID, rou
 	return err
 }
 
-func WaitEBSSnapshotImportComplete(conn *ec2.EC2, importTaskID string) (*ec2.SnapshotTaskDetail, error) {
+func WaitEBSSnapshotImportComplete(conn *ec2.EC2, importTaskID string, timeout time.Duration) (*ec2.SnapshotTaskDetail, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
 			EBSSnapshotImportStateActive,
@@ -2320,7 +2609,7 @@ func WaitEBSSnapshotImportComplete(conn *ec2.EC2, importTaskID string) (*ec2.Sna
 		},
 		Target:  []string{EBSSnapshotImportStateCompleted},
 		Refresh: StatusEBSSnapshotImport(conn, importTaskID),
-		Timeout: 60 * time.Minute,
+		Timeout: timeout,
 		Delay:   10 * time.Second,
 	}
 
@@ -2337,8 +2626,8 @@ func WaitEBSSnapshotImportComplete(conn *ec2.EC2, importTaskID string) (*ec2.Sna
 
 func waitVPCEndpointConnectionAccepted(conn *ec2.EC2, serviceID, vpcEndpointID string, timeout time.Duration) (*ec2.VpcEndpointConnection, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending:    []string{VpcEndpointStatePendingAcceptance, VpcEndpointStatePending},
-		Target:     []string{VpcEndpointStateAvailable},
+		Pending:    []string{vpcEndpointStatePendingAcceptance, vpcEndpointStatePending},
+		Target:     []string{vpcEndpointStateAvailable},
 		Refresh:    statusVPCEndpointConnectionVPCEndpointState(conn, serviceID, vpcEndpointID),
 		Timeout:    timeout,
 		Delay:      5 * time.Second,
@@ -2354,35 +2643,26 @@ func waitVPCEndpointConnectionAccepted(conn *ec2.EC2, serviceID, vpcEndpointID s
 	return nil, err
 }
 
-func WaitEBSSnapshotTierArchive(conn *ec2.EC2, id string) (*ec2.SnapshotTierStatus, error) {
+const (
+	ebsSnapshotArchivedTimeout = 60 * time.Minute
+)
+
+func waitEBSSnapshotTierArchive(conn *ec2.EC2, id string, timeout time.Duration) (*ec2.SnapshotTierStatus, error) { //nolint:unparam
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{"standard"},
+		Pending: []string{TargetStorageTierStandard},
 		Target:  []string{ec2.TargetStorageTierArchive},
-		Refresh: StatusSnapshotTierStatus(conn, id),
-		Timeout: 60 * time.Minute,
+		Refresh: StatusSnapshotStorageTier(conn, id),
+		Timeout: timeout,
 		Delay:   10 * time.Second,
 	}
 
-	detail, err := stateConf.WaitForState()
-	if err != nil {
-		return nil, err
-	} else {
-		return detail.(*ec2.SnapshotTierStatus), nil
-	}
-}
+	outputRaw, err := stateConf.WaitForState()
 
-// WaitVolumeAttachmentAttached waits for a VolumeAttachment to return Attached
-func WaitVolumeAttachmentAttached(conn *ec2.EC2, name, volumeID, instanceID string) error {
-	stateConf := &resource.StateChangeConf{
-		Pending:    []string{ec2.VolumeAttachmentStateAttaching},
-		Target:     []string{ec2.VolumeAttachmentStateAttached},
-		Refresh:    volumeAttachmentStateRefreshFunc(conn, name, volumeID, instanceID),
-		Timeout:    5 * time.Minute,
-		Delay:      10 * time.Second,
-		MinTimeout: 3 * time.Second,
+	if output, ok := outputRaw.(*ec2.SnapshotTierStatus); ok {
+		tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.StringValue(output.LastTieringOperationStatus), aws.StringValue(output.LastTieringOperationStatusDetail)))
+
+		return output, err
 	}
 
-	_, err := stateConf.WaitForState()
-
-	return err
+	return nil, err
 }

@@ -18,10 +18,10 @@ func TestAccAutoScalingGroupTag_basic(t *testing.T) {
 	resourceName := "aws_autoscaling_group_tag.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckGroupTagDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGroupTagDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupTagConfig_basic("key1", "value1"),
@@ -44,10 +44,10 @@ func TestAccAutoScalingGroupTag_disappears(t *testing.T) {
 	resourceName := "aws_autoscaling_group_tag.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckGroupTagDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGroupTagDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupTagConfig_basic("key1", "value1"),
@@ -65,10 +65,10 @@ func TestAccAutoScalingGroupTag_value(t *testing.T) {
 	resourceName := "aws_autoscaling_group_tag.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, autoscaling.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckGroupTagDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGroupTagDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupTagConfig_basic("key1", "value1"),
@@ -146,18 +146,14 @@ func testAccCheckGroupTagExists(n string) resource.TestCheckFunc {
 
 		_, err = tfautoscaling.GetTag(conn, identifier, tfautoscaling.TagResourceTypeGroup, key)
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 
 func testAccGroupTagConfig_basic(key string, value string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
-		acctest.ConfigLatestAmazonLinuxHvmEbsAmi(),
+		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
 		fmt.Sprintf(`
 resource "aws_launch_template" "test" {
   name_prefix   = "terraform-test-"

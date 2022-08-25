@@ -13,12 +13,12 @@ import (
 
 func TestAccPricingProductDataSource_ec2(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, pricing.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, pricing.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProductEC2DataSourceConfig(),
+				Config: testAccProductDataSourceConfig_ec2(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet("data.aws_pricing_product.test", "result"),
 					testAccCheckValueIsJSON("data.aws_pricing_product.test"),
@@ -30,12 +30,12 @@ func TestAccPricingProductDataSource_ec2(t *testing.T) {
 
 func TestAccPricingProductDataSource_redshift(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, pricing.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, pricing.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProductRedshiftDataSourceConfig(),
+				Config: testAccProductDataSourceConfig_redshift(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet("data.aws_pricing_product.test", "result"),
 					testAccCheckValueIsJSON("data.aws_pricing_product.test"),
@@ -45,7 +45,7 @@ func TestAccPricingProductDataSource_redshift(t *testing.T) {
 	})
 }
 
-func testAccProductEC2DataSourceConfig() string {
+func testAccProductDataSourceConfig_ec2() string {
 	return acctest.ConfigCompose(
 		testAccRegionProviderConfig(),
 		`
@@ -96,7 +96,7 @@ data "aws_pricing_product" "test" {
 `)
 }
 
-func testAccProductRedshiftDataSourceConfig() string {
+func testAccProductDataSourceConfig_redshift() string {
 	return acctest.ConfigCompose(
 		testAccRegionProviderConfig(),
 		`

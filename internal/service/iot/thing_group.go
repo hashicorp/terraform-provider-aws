@@ -333,13 +333,13 @@ func flattenThingGroupMetadata(apiObject *iot.ThingGroupMetadata) map[string]int
 	}
 
 	if v := apiObject.RootToParentThingGroups; v != nil {
-		tfMap["root_to_parent_groups"] = flattenGroupNameAndArns(v)
+		tfMap["root_to_parent_groups"] = flattenGroupNameAndARNs(v)
 	}
 
 	return tfMap
 }
 
-func flattenGroupNameAndArn(apiObject *iot.GroupNameAndArn) map[string]interface{} {
+func flattenGroupNameAndARN(apiObject *iot.GroupNameAndArn) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -357,7 +357,7 @@ func flattenGroupNameAndArn(apiObject *iot.GroupNameAndArn) map[string]interface
 	return tfMap
 }
 
-func flattenGroupNameAndArns(apiObjects []*iot.GroupNameAndArn) []interface{} {
+func flattenGroupNameAndARNs(apiObjects []*iot.GroupNameAndArn) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -369,7 +369,7 @@ func flattenGroupNameAndArns(apiObjects []*iot.GroupNameAndArn) []interface{} {
 			continue
 		}
 
-		tfList = append(tfList, flattenGroupNameAndArn(apiObject))
+		tfList = append(tfList, flattenGroupNameAndARN(apiObject))
 	}
 
 	return tfList

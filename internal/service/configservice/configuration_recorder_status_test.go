@@ -20,13 +20,13 @@ func testAccConfigurationRecorderStatus_basic(t *testing.T) {
 	expectedName := fmt.Sprintf("tf-acc-test-%d", rInt)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, configservice.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckConfigurationRecorderStatusDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, configservice.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckConfigurationRecorderStatusDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfigurationRecorderStatusConfig(rInt, false),
+				Config: testAccConfigurationRecorderStatusConfig_basic(rInt, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationRecorderExists("aws_config_configuration_recorder.foo", &cr),
 					testAccCheckConfigurationRecorderStatusExists("aws_config_configuration_recorder_status.foo", &crs),
@@ -46,13 +46,13 @@ func testAccConfigurationRecorderStatus_startEnabled(t *testing.T) {
 	expectedName := fmt.Sprintf("tf-acc-test-%d", rInt)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, configservice.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckConfigurationRecorderStatusDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, configservice.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckConfigurationRecorderStatusDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfigurationRecorderStatusConfig(rInt, true),
+				Config: testAccConfigurationRecorderStatusConfig_basic(rInt, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationRecorderExists("aws_config_configuration_recorder.foo", &cr),
 					testAccCheckConfigurationRecorderStatusExists("aws_config_configuration_recorder_status.foo", &crs),
@@ -62,7 +62,7 @@ func testAccConfigurationRecorderStatus_startEnabled(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccConfigurationRecorderStatusConfig(rInt, false),
+				Config: testAccConfigurationRecorderStatusConfig_basic(rInt, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationRecorderExists("aws_config_configuration_recorder.foo", &cr),
 					testAccCheckConfigurationRecorderStatusExists("aws_config_configuration_recorder_status.foo", &crs),
@@ -72,7 +72,7 @@ func testAccConfigurationRecorderStatus_startEnabled(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccConfigurationRecorderStatusConfig(rInt, true),
+				Config: testAccConfigurationRecorderStatusConfig_basic(rInt, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationRecorderExists("aws_config_configuration_recorder.foo", &cr),
 					testAccCheckConfigurationRecorderStatusExists("aws_config_configuration_recorder_status.foo", &crs),
@@ -90,13 +90,13 @@ func testAccConfigurationRecorderStatus_importBasic(t *testing.T) {
 	rInt := sdkacctest.RandInt()
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, configservice.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckConfigurationRecorderStatusDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, configservice.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckConfigurationRecorderStatusDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfigurationRecorderStatusConfig(rInt, true),
+				Config: testAccConfigurationRecorderStatusConfig_basic(rInt, true),
 			},
 
 			{
@@ -173,7 +173,7 @@ func testAccCheckConfigurationRecorderStatusDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccConfigurationRecorderStatusConfig(randInt int, enabled bool) string {
+func testAccConfigurationRecorderStatusConfig_basic(randInt int, enabled bool) string {
 	return fmt.Sprintf(`
 resource "aws_config_configuration_recorder" "foo" {
   name     = "tf-acc-test-%d"

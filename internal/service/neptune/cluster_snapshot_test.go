@@ -21,13 +21,13 @@ func TestAccNeptuneClusterSnapshot_basic(t *testing.T) {
 	resourceName := "aws_neptune_cluster_snapshot.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, neptune.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckClusterSnapshotDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, neptune.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterSnapshotDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterSnapshotConfig(rName),
+				Config: testAccClusterSnapshotConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterSnapshotExists(resourceName, &dbClusterSnapshot),
 					resource.TestCheckResourceAttrSet(resourceName, "allocated_storage"),
@@ -114,7 +114,7 @@ func testAccCheckClusterSnapshotExists(resourceName string, dbClusterSnapshot *n
 	}
 }
 
-func testAccClusterSnapshotConfig(rName string) string {
+func testAccClusterSnapshotConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_neptune_cluster" "test" {
   cluster_identifier  = %[1]q

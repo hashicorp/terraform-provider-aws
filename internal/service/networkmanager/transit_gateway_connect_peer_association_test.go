@@ -36,13 +36,13 @@ func testAccTransitGatewayConnectPeerAssociation_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, networkmanager.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTransitGatewayConnectPeerAssociationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, networkmanager.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTransitGatewayConnectPeerAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTransitGatewayConnectPeerAssociationConfig(rName),
+				Config: testAccTransitGatewayConnectPeerAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayConnectPeerAssociationExists(resourceName),
 				),
@@ -61,13 +61,13 @@ func testAccTransitGatewayConnectPeerAssociation_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, networkmanager.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTransitGatewayConnectPeerAssociationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, networkmanager.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTransitGatewayConnectPeerAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTransitGatewayConnectPeerAssociationConfig(rName),
+				Config: testAccTransitGatewayConnectPeerAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayConnectPeerAssociationExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfnetworkmanager.ResourceTransitGatewayConnectPeerAssociation(), resourceName),
@@ -84,13 +84,13 @@ func testAccTransitGatewayConnectPeerAssociation_Disappears_connectPeer(t *testi
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, networkmanager.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTransitGatewayConnectPeerAssociationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, networkmanager.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTransitGatewayConnectPeerAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTransitGatewayConnectPeerAssociationConfig(rName),
+				Config: testAccTransitGatewayConnectPeerAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayConnectPeerAssociationExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceTransitGatewayConnectPeer(), connetPeerResourceName),
@@ -115,7 +115,7 @@ func testAccCheckTransitGatewayConnectPeerAssociationDestroy(s *terraform.State)
 			return err
 		}
 
-		_, err = tfnetworkmanager.FindTransitGatewayConnectPeerAssociationByTwoPartKey(context.TODO(), conn, globalNetworkID, connectPeerARN)
+		_, err = tfnetworkmanager.FindTransitGatewayConnectPeerAssociationByTwoPartKey(context.Background(), conn, globalNetworkID, connectPeerARN)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -150,17 +150,13 @@ func testAccCheckTransitGatewayConnectPeerAssociationExists(n string) resource.T
 			return err
 		}
 
-		_, err = tfnetworkmanager.FindTransitGatewayConnectPeerAssociationByTwoPartKey(context.TODO(), conn, globalNetworkID, connectPeerARN)
+		_, err = tfnetworkmanager.FindTransitGatewayConnectPeerAssociationByTwoPartKey(context.Background(), conn, globalNetworkID, connectPeerARN)
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 
-func testAccTransitGatewayConnectPeerAssociationConfig(rName string) string {
+func testAccTransitGatewayConnectPeerAssociationConfig_basic(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInDefaultExclude(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"

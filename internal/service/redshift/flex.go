@@ -3,6 +3,7 @@ package redshift
 import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/redshift"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
 func ExpandParameters(configured []interface{}) []*redshift.Parameter {
@@ -37,6 +38,12 @@ func flattenLogging(ls *redshift.LoggingStatus) []interface{} {
 	cfg["enable"] = aws.BoolValue(ls.LoggingEnabled)
 	if ls.BucketName != nil {
 		cfg["bucket_name"] = aws.StringValue(ls.BucketName)
+	}
+	if ls.LogDestinationType != nil {
+		cfg["log_destination_type"] = aws.StringValue(ls.LogDestinationType)
+	}
+	if ls.LogExports != nil {
+		cfg["log_exports"] = flex.FlattenStringSet(ls.LogExports)
 	}
 	if ls.S3KeyPrefix != nil {
 		cfg["s3_key_prefix"] = aws.StringValue(ls.S3KeyPrefix)

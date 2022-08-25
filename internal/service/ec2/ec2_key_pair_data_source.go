@@ -2,6 +2,7 @@ package ec2
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
@@ -16,8 +17,16 @@ func DataSourceKeyPair() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourceKeyPairRead,
 
+		Timeouts: &schema.ResourceTimeout{
+			Read: schema.DefaultTimeout(20 * time.Minute),
+		},
+
 		Schema: map[string]*schema.Schema{
 			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"create_time": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -33,6 +42,19 @@ func DataSourceKeyPair() *schema.Resource {
 			"key_pair_id": {
 				Type:     schema.TypeString,
 				Optional: true,
+			},
+			"key_type": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"include_public_key": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+			"public_key": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"tags": tftags.TagsSchemaComputed(),
 		},
@@ -57,6 +79,10 @@ func dataSourceKeyPairRead(d *schema.ResourceData, meta interface{}) error {
 		input.KeyPairIds = aws.StringSlice([]string{v.(string)})
 	}
 
+	if v, ok := d.GetOk("include_public_key"); ok {
+		input.IncludePublicKey = aws.Bool(v.(bool))
+	}
+
 	keyPair, err := FindKeyPair(conn, input)
 
 	if err != nil {
@@ -74,9 +100,13 @@ func dataSourceKeyPairRead(d *schema.ResourceData, meta interface{}) error {
 		Resource:  fmt.Sprintf("key-pair/%s", keyName),
 	}.String()
 	d.Set("arn", arn)
+	d.Set("create_time", aws.TimeValue(keyPair.CreateTime).Format(time.RFC3339))
 	d.Set("fingerprint", keyPair.KeyFingerprint)
 	d.Set("key_name", keyName)
 	d.Set("key_pair_id", keyPair.KeyPairId)
+	d.Set("key_type", keyPair.KeyType)
+	d.Set("include_public_key", input.IncludePublicKey)
+	d.Set("public_key", keyPair.PublicKey)
 
 	if err := d.Set("tags", KeyValueTags(keyPair.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %w", err)

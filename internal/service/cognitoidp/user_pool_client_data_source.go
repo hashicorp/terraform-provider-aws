@@ -2,10 +2,7 @@ package cognitoidp
 
 import (
 	"fmt"
-	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
@@ -87,6 +84,10 @@ func DataSourceUserPoolClient() *schema.Resource {
 				Computed: true,
 			},
 			"enable_token_revocation": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
+			"enable_propagate_additional_user_context_data": {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
@@ -179,20 +180,12 @@ func dataSourceUserPoolClientRead(d *schema.ResourceData, meta interface{}) erro
 	clientId := d.Get("client_id").(string)
 	d.SetId(clientId)
 
-	params := &cognitoidentityprovider.DescribeUserPoolClientInput{
-		ClientId:   aws.String(clientId),
-		UserPoolId: aws.String(d.Get("user_pool_id").(string)),
-	}
-
-	log.Printf("[DEBUG] Reading Cognito User Pool Client: %s", params)
-
-	resp, err := conn.DescribeUserPoolClient(params)
+	userPoolClient, err := FindCognitoUserPoolClient(conn, d.Get("user_pool_id").(string), d.Id())
 
 	if err != nil {
 		return fmt.Errorf("error reading Cognito User Pool Client (%s): %w", clientId, err)
 	}
 
-	userPoolClient := resp.UserPoolClient
 	d.Set("user_pool_id", userPoolClient.UserPoolId)
 	d.Set("name", userPoolClient.ClientName)
 	d.Set("explicit_auth_flows", flex.FlattenStringSet(userPoolClient.ExplicitAuthFlows))
@@ -211,6 +204,7 @@ func dataSourceUserPoolClientRead(d *schema.ResourceData, meta interface{}) erro
 	d.Set("prevent_user_existence_errors", userPoolClient.PreventUserExistenceErrors)
 	d.Set("supported_identity_providers", flex.FlattenStringSet(userPoolClient.SupportedIdentityProviders))
 	d.Set("enable_token_revocation", userPoolClient.EnableTokenRevocation)
+	d.Set("enable_propagate_additional_user_context_data", userPoolClient.EnablePropagateAdditionalUserContextData)
 
 	if err := d.Set("analytics_configuration", flattenUserPoolClientAnalyticsConfig(userPoolClient.AnalyticsConfiguration)); err != nil {
 		return fmt.Errorf("error setting analytics_configuration: %w", err)

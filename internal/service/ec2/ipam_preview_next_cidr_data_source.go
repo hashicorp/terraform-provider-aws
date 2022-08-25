@@ -2,6 +2,7 @@ package ec2
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -13,9 +14,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func DataSourceVPCIpamPreviewNextCidr() *schema.Resource {
+func DataSourceIPAMPreviewNextCIDR() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceVPCIpamPreviewNextCidrRead,
+		Read: dataSourceIPAMPreviewNextCIDRRead,
+
+		Timeouts: &schema.ResourceTimeout{
+			Read: schema.DefaultTimeout(20 * time.Minute),
+		},
 
 		Schema: map[string]*schema.Schema{
 			"cidr": {
@@ -54,7 +59,7 @@ func DataSourceVPCIpamPreviewNextCidr() *schema.Resource {
 	}
 }
 
-func dataSourceVPCIpamPreviewNextCidrRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceIPAMPreviewNextCIDRRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	poolId := d.Get("ipam_pool_id").(string)
 
@@ -85,7 +90,7 @@ func dataSourceVPCIpamPreviewNextCidrRead(d *schema.ResourceData, meta interface
 	cidr := output.IpamPoolAllocation.Cidr
 
 	d.Set("cidr", cidr)
-	d.SetId(encodeVPCIpamPreviewNextCidrID(aws.StringValue(cidr), poolId))
+	d.SetId(encodeIPAMPreviewNextCIDRID(aws.StringValue(cidr), poolId))
 
 	return nil
 }

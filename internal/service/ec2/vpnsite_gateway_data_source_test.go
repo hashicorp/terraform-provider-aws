@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccVPNSiteGatewayDataSource_unattached(t *testing.T) {
+func TestAccSiteVPNGatewayDataSource_unattached(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceNameById := "data.aws_vpn_gateway.test_by_id"
 	dataSourceNameByTags := "data.aws_vpn_gateway.test_by_tags"
@@ -19,12 +19,12 @@ func TestAccVPNSiteGatewayDataSource_unattached(t *testing.T) {
 	resourceName := "aws_vpn_gateway.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPNGatewayUnattachedDataSourceConfig(rName),
+				Config: testAccSiteVPNGatewayDataSourceConfig_unattached(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceNameById, "id", resourceName, "id"),
 					resource.TestCheckResourceAttrPair(dataSourceNameById, "arn", resourceName, "arn"),
@@ -40,17 +40,17 @@ func TestAccVPNSiteGatewayDataSource_unattached(t *testing.T) {
 	})
 }
 
-func TestAccVPNSiteGatewayDataSource_attached(t *testing.T) {
+func TestAccSiteVPNGatewayDataSource_attached(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_vpn_gateway.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPNGatewayAttachedDataSourceConfig(rName),
+				Config: testAccSiteVPNGatewayDataSourceConfig_attached(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "id", "aws_vpn_gateway.test", "id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "attached_vpc_id", "aws_vpc.test", "id"),
@@ -61,7 +61,7 @@ func TestAccVPNSiteGatewayDataSource_attached(t *testing.T) {
 	})
 }
 
-func testAccVPNGatewayUnattachedDataSourceConfig(rName string) string {
+func testAccSiteVPNGatewayDataSourceConfig_unattached(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpn_gateway" "test" {
   tags = {
@@ -88,7 +88,7 @@ data "aws_vpn_gateway" "test_by_amazon_side_asn" {
 `, rName)
 }
 
-func testAccVPNGatewayAttachedDataSourceConfig(rName string) string {
+func testAccSiteVPNGatewayDataSourceConfig_attached(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"

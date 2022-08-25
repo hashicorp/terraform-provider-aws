@@ -384,6 +384,12 @@ func ResourceDomain() *schema.Resource {
 							Type:     schema.TypeInt,
 							Optional: true,
 						},
+						"throughput": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: validation.IntBetween(125, 1000),
+						},
 						"volume_size": {
 							Type:     schema.TypeInt,
 							Optional: true,
@@ -413,7 +419,7 @@ func ResourceDomain() *schema.Resource {
 							Optional:         true,
 							Computed:         true,
 							ForceNew:         true,
-							DiffSuppressFunc: suppressEquivalentKmsKeyIds,
+							DiffSuppressFunc: suppressEquivalentKMSKeyIDs,
 						},
 					},
 				},
@@ -1072,7 +1078,7 @@ func inPlaceEncryptionEnableVersion(version string) bool {
 	return false
 }
 
-func suppressEquivalentKmsKeyIds(k, old, new string, d *schema.ResourceData) bool {
+func suppressEquivalentKMSKeyIDs(k, old, new string, d *schema.ResourceData) bool {
 	// The OpenSearch API accepts a short KMS key id but always returns the ARN of the key.
 	// The ARN is of the format 'arn:aws:kms:REGION:ACCOUNT_ID:key/KMS_KEY_ID'.
 	// These should be treated as equivalent.

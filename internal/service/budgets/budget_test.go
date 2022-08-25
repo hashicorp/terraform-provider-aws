@@ -12,7 +12,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfbudgets "github.com/hashicorp/terraform-provider-aws/internal/service/budgets"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -23,13 +22,13 @@ func TestAccBudgetsBudget_basic(t *testing.T) {
 	resourceName := "aws_budgets_budget.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(budgets.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, budgets.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccBudgetDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(budgets.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, budgets.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccBudgetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBudgetConfigDeprecated(rName),
+				Config: testAccBudgetConfig_deprecated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccBudgetExists(resourceName, &budget),
 					acctest.CheckResourceAttrAccountID(resourceName, "account_id"),
@@ -66,13 +65,13 @@ func TestAccBudgetsBudget_Name_generated(t *testing.T) {
 	resourceName := "aws_budgets_budget.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(budgets.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, budgets.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccBudgetDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(budgets.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, budgets.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccBudgetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBudgetNameGeneratedConfig(),
+				Config: testAccBudgetConfig_nameGenerated(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccBudgetExists(resourceName, &budget),
 					resource.TestCheckResourceAttr(resourceName, "budget_type", "RI_COVERAGE"),
@@ -86,7 +85,7 @@ func TestAccBudgetsBudget_Name_generated(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "cost_filters.Service", "Amazon Redshift"),
 					resource.TestCheckResourceAttr(resourceName, "limit_amount", "100.0"),
 					resource.TestCheckResourceAttr(resourceName, "limit_unit", "PERCENTAGE"),
-					create.TestCheckResourceAttrNameGenerated(resourceName, "name"),
+					acctest.CheckResourceAttrNameGenerated(resourceName, "name"),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
 					resource.TestCheckResourceAttr(resourceName, "notification.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "time_period_end"),
@@ -108,13 +107,13 @@ func TestAccBudgetsBudget_namePrefix(t *testing.T) {
 	resourceName := "aws_budgets_budget.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(budgets.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, budgets.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccBudgetDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(budgets.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, budgets.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccBudgetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBudgetNamePrefixConfig("tf-acc-test-prefix-"),
+				Config: testAccBudgetConfig_namePrefix("tf-acc-test-prefix-"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccBudgetExists(resourceName, &budget),
 					resource.TestCheckResourceAttr(resourceName, "budget_type", "SAVINGS_PLANS_UTILIZATION"),
@@ -122,7 +121,7 @@ func TestAccBudgetsBudget_namePrefix(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "cost_filters.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "limit_amount", "100.0"),
 					resource.TestCheckResourceAttr(resourceName, "limit_unit", "PERCENTAGE"),
-					create.TestCheckResourceAttrNameFromPrefix(resourceName, "name", "tf-acc-test-prefix-"),
+					acctest.CheckResourceAttrNameFromPrefix(resourceName, "name", "tf-acc-test-prefix-"),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", "tf-acc-test-prefix-"),
 					resource.TestCheckResourceAttr(resourceName, "notification.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "time_period_end"),
@@ -145,13 +144,13 @@ func TestAccBudgetsBudget_disappears(t *testing.T) {
 	resourceName := "aws_budgets_budget.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(budgets.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, budgets.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccBudgetDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(budgets.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, budgets.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccBudgetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBudgetConfigDeprecated(rName),
+				Config: testAccBudgetConfig_deprecated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccBudgetExists(resourceName, &budget),
 					acctest.CheckResourceDisappears(acctest.Provider, tfbudgets.ResourceBudget(), resourceName),
@@ -178,13 +177,13 @@ func TestAccBudgetsBudget_costTypes(t *testing.T) {
 	endDate2 := tfbudgets.TimePeriodTimestampToString(&ts4)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(budgets.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, budgets.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccBudgetDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(budgets.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, budgets.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccBudgetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBudgetCostTypesConfig(rName, startDate1, endDate1),
+				Config: testAccBudgetConfig_costTypes(rName, startDate1, endDate1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccBudgetExists(resourceName, &budget),
 					resource.TestCheckResourceAttr(resourceName, "budget_type", "COST"),
@@ -224,7 +223,7 @@ func TestAccBudgetsBudget_costTypes(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccBudgetCostTypesUpdatedConfig(rName, startDate2, endDate2),
+				Config: testAccBudgetConfig_costTypesUpdated(rName, startDate2, endDate2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccBudgetExists(resourceName, &budget),
 					resource.TestCheckResourceAttr(resourceName, "budget_type", "COST"),
@@ -274,13 +273,13 @@ func TestAccBudgetsBudget_notifications(t *testing.T) {
 	emailAddress3 := acctest.RandomEmailAddress(domain)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(budgets.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, budgets.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccBudgetDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(budgets.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, budgets.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccBudgetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBudgetNotificationsConfig(rName, emailAddress1, emailAddress2),
+				Config: testAccBudgetConfig_notifications(rName, emailAddress1, emailAddress2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccBudgetExists(resourceName, &budget),
 					resource.TestCheckResourceAttr(resourceName, "budget_type", "USAGE"),
@@ -318,7 +317,7 @@ func TestAccBudgetsBudget_notifications(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccBudgetNotificationsUpdatedConfig(rName, emailAddress3),
+				Config: testAccBudgetConfig_notificationsUpdated(rName, emailAddress3),
 				Check: resource.ComposeTestCheckFunc(
 					testAccBudgetExists(resourceName, &budget),
 					resource.TestCheckResourceAttr(resourceName, "budget_type", "USAGE"),
@@ -405,7 +404,7 @@ func testAccBudgetDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccBudgetConfigDeprecated(rName string) string {
+func testAccBudgetConfig_deprecated(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_budgets_budget" "test" {
   name         = %[1]q
@@ -421,7 +420,7 @@ resource "aws_budgets_budget" "test" {
 `, rName)
 }
 
-func testAccBudgetNameGeneratedConfig() string {
+func testAccBudgetConfig_nameGenerated() string {
 	return `
 resource "aws_budgets_budget" "test" {
   budget_type  = "RI_COVERAGE"
@@ -437,7 +436,7 @@ resource "aws_budgets_budget" "test" {
 `
 }
 
-func testAccBudgetNamePrefixConfig(namePrefix string) string {
+func testAccBudgetConfig_namePrefix(namePrefix string) string {
 	return fmt.Sprintf(`
 resource "aws_budgets_budget" "test" {
   name_prefix  = %[1]q
@@ -449,7 +448,7 @@ resource "aws_budgets_budget" "test" {
 `, namePrefix)
 }
 
-func testAccBudgetCostTypesConfig(rName, startDate, endDate string) string {
+func testAccBudgetConfig_costTypes(rName, startDate, endDate string) string {
 	return fmt.Sprintf(`
 resource "aws_budgets_budget" "test" {
   name         = %[1]q
@@ -476,7 +475,7 @@ resource "aws_budgets_budget" "test" {
 `, rName, startDate, endDate, acctest.Region(), acctest.AlternateRegion())
 }
 
-func testAccBudgetCostTypesUpdatedConfig(rName, startDate, endDate string) string {
+func testAccBudgetConfig_costTypesUpdated(rName, startDate, endDate string) string {
 	return fmt.Sprintf(`
 resource "aws_budgets_budget" "test" {
   name         = %[1]q
@@ -505,7 +504,7 @@ resource "aws_budgets_budget" "test" {
 `, rName, startDate, endDate, acctest.AlternateRegion(), acctest.ThirdRegion())
 }
 
-func testAccBudgetNotificationsConfig(rName, emailAddress1, emailAddress2 string) string {
+func testAccBudgetConfig_notifications(rName, emailAddress1, emailAddress2 string) string {
 	return fmt.Sprintf(`
 resource "aws_sns_topic" "test" {
   name = %[1]q
@@ -537,7 +536,7 @@ resource "aws_budgets_budget" "test" {
 `, rName, emailAddress1, emailAddress2)
 }
 
-func testAccBudgetNotificationsUpdatedConfig(rName, emailAddress1 string) string {
+func testAccBudgetConfig_notificationsUpdated(rName, emailAddress1 string) string {
 	return fmt.Sprintf(`
 resource "aws_budgets_budget" "test" {
   name         = %[1]q

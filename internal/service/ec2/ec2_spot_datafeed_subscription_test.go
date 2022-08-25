@@ -33,13 +33,13 @@ func testAccSpotDatafeedSubscription_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckSpotDatafeedSubscription(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckSpotDatafeedSubscriptionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSpotDatafeedSubscription(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSpotDatafeedSubscriptionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSpotDatafeedSubscription(rName),
+				Config: testAccSpotDatafeedSubscriptionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSpotDatafeedSubscriptionExists(resourceName, &subscription),
 				),
@@ -59,13 +59,13 @@ func testAccSpotDatafeedSubscription_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckSpotDatafeedSubscription(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckSpotDatafeedSubscriptionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSpotDatafeedSubscription(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSpotDatafeedSubscriptionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSpotDatafeedSubscription(rName),
+				Config: testAccSpotDatafeedSubscriptionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSpotDatafeedSubscriptionExists(resourceName, &subscription),
 					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceSpotDataFeedSubscription(), resourceName),
@@ -142,7 +142,7 @@ func testAccPreCheckSpotDatafeedSubscription(t *testing.T) {
 	}
 }
 
-func testAccSpotDatafeedSubscription(rName string) string {
+func testAccSpotDatafeedSubscriptionConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 data "aws_canonical_user_id" "current" {}
 

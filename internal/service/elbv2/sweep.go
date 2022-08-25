@@ -37,7 +37,7 @@ func init() {
 func sweepLoadBalancers(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("getting client: %s", err)
 	}
 	conn := client.(*conns.AWSClient).ELBV2Conn
 
@@ -67,7 +67,7 @@ func sweepLoadBalancers(region string) error {
 		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 	}
 	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving LBs: %w", err))
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("retrieving LBs: %w", err))
 	}
 
 	return sweeperErrs.ErrorOrNil()
@@ -76,7 +76,7 @@ func sweepLoadBalancers(region string) error {
 func sweepTargetGroups(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 	conn := client.(*conns.AWSClient).ELBV2Conn
 
@@ -104,7 +104,7 @@ func sweepTargetGroups(region string) error {
 			log.Printf("[WARN] Skipping LB Target Group sweep for %s: %s", region, err)
 			return nil
 		}
-		return fmt.Errorf("error retrieving LB Target Groups: %w", err)
+		return fmt.Errorf("retrieving LB Target Groups: %w", err)
 	}
 	return nil
 }
