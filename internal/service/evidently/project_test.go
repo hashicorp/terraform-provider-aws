@@ -174,35 +174,34 @@ func TestAccEvidentlyProject_updateDataDelivery(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "Test Project"),
 				),
 			},
-			// A bug in the service API for UpdateProjectDataDelivery has been reported
-			// {
-			// 	ResourceName:      resourceName,
-			// 	ImportState:       true,
-			// 	ImportStateVerify: true,
-			// },
-			// {
-			// 	Config: testAccProjectConfig_dataDeliveryS3Bucket(rName, rName2, rName3, description),
-			// 	Check: resource.ComposeTestCheckFunc(
-			// 		testAccCheckProjectExists(resourceName, &project),
-			// 		resource.TestCheckResourceAttrSet(resourceName, "active_experiment_count"),
-			// 		resource.TestCheckResourceAttrSet(resourceName, "active_launch_count"),
-			// 		acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "evidently", fmt.Sprintf("project/%s", rName)),
-			// 		resource.TestCheckResourceAttrSet(resourceName, "created_time"),
-			// 		resource.TestCheckResourceAttr(resourceName, "data_delivery.#", "1"),
-			// 		resource.TestCheckResourceAttr(resourceName, "data_delivery.0.s3_destination.#", "1"),
-			// 		resource.TestCheckResourceAttrPair(resourceName, "data_delivery.0.s3_destination.0.bucket", "aws_s3_bucket.test", "id"),
-			// 		resource.TestCheckResourceAttr(resourceName, "data_delivery.0.s3_destination.0.prefix", "test"),
-			// 		resource.TestCheckResourceAttr(resourceName, "description", description),
-			// 		resource.TestCheckResourceAttrSet(resourceName, "experiment_count"),
-			// 		resource.TestCheckResourceAttrSet(resourceName, "feature_count"),
-			// 		resource.TestCheckResourceAttrSet(resourceName, "last_updated_time"),
-			// 		resource.TestCheckResourceAttrSet(resourceName, "launch_count"),
-			// 		resource.TestCheckResourceAttr(resourceName, "name", rName3),
-			// 		resource.TestCheckResourceAttrSet(resourceName, "status"),
-			// 		resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-			// 		resource.TestCheckResourceAttr(resourceName, "tags.Key1", "Test Project"),
-			// 	),
-			// },
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccProjectConfig_dataDeliveryS3Bucket(rName, rName2, rName3, description),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProjectExists(resourceName, &project),
+					resource.TestCheckResourceAttrSet(resourceName, "active_experiment_count"),
+					resource.TestCheckResourceAttrSet(resourceName, "active_launch_count"),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "evidently", fmt.Sprintf("project/%s", rName3)),
+					resource.TestCheckResourceAttrSet(resourceName, "created_time"),
+					resource.TestCheckResourceAttr(resourceName, "data_delivery.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "data_delivery.0.s3_destination.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "data_delivery.0.s3_destination.0.bucket", "aws_s3_bucket.test", "id"),
+					resource.TestCheckResourceAttr(resourceName, "data_delivery.0.s3_destination.0.prefix", "test"),
+					resource.TestCheckResourceAttr(resourceName, "description", description),
+					resource.TestCheckResourceAttrSet(resourceName, "experiment_count"),
+					resource.TestCheckResourceAttrSet(resourceName, "feature_count"),
+					resource.TestCheckResourceAttrSet(resourceName, "last_updated_time"),
+					resource.TestCheckResourceAttrSet(resourceName, "launch_count"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName3),
+					resource.TestCheckResourceAttrSet(resourceName, "status"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "Test Project"),
+				),
+			},
 		},
 	})
 }
@@ -360,24 +359,24 @@ resource "aws_evidently_project" "test" {
 `, rName3, description))
 }
 
-// func testAccProjectConfig_dataDeliveryS3Bucket(rName, rName2, rName3, description string) string {
-// 	return acctest.ConfigCompose(
-// 		testAccProjectBaseConfig(rName, rName2),
-// 		fmt.Sprintf(`
-// resource "aws_evidently_project" "test" {
-//   name        = %[1]q
-//   description = %[2]q
+func testAccProjectConfig_dataDeliveryS3Bucket(rName, rName2, rName3, description string) string {
+	return acctest.ConfigCompose(
+		testAccProjectBaseConfig(rName, rName2),
+		fmt.Sprintf(`
+resource "aws_evidently_project" "test" {
+  name        = %[1]q
+  description = %[2]q
 
-//   data_delivery {
-//     s3_destination {
-//       bucket = aws_s3_bucket.test.id
-//       prefix = "test"
-//     }
-//   }
+  data_delivery {
+    s3_destination {
+      bucket = aws_s3_bucket.test.id
+      prefix = "test"
+    }
+  }
 
-//   tags = {
-//     "Key1" = "Test Project"
-//   }
-// }
-// `, rName3, description))
-// }
+  tags = {
+    "Key1" = "Test Project"
+  }
+}
+`, rName3, description))
+}
