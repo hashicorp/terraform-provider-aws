@@ -142,6 +142,12 @@ func ResourceClusterInstance() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"network_type": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.StringInSlice(NetworkType_Values(), false),
+			},
 			"performance_insights_enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -265,6 +271,10 @@ func resourceClusterInstanceCreate(d *schema.ResourceData, meta interface{}) err
 
 	if v, ok := d.GetOk("monitoring_role_arn"); ok {
 		input.MonitoringRoleArn = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("network_type"); ok {
+		input.NetworkType = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("performance_insights_enabled"); ok {
@@ -409,6 +419,7 @@ func resourceClusterInstanceRead(d *schema.ResourceData, meta interface{}) error
 	d.Set("preferred_maintenance_window", db.PreferredMaintenanceWindow)
 	d.Set("promotion_tier", db.PromotionTier)
 	d.Set("publicly_accessible", db.PubliclyAccessible)
+	d.Set("network_type", db.NetworkType)
 	d.Set("storage_encrypted", db.StorageEncrypted)
 
 	clusterSetResourceDataEngineVersionFromClusterInstance(d, db)
@@ -496,6 +507,10 @@ func resourceClusterInstanceUpdate(d *schema.ResourceData, meta interface{}) err
 
 		if d.HasChange("publicly_accessible") {
 			input.PubliclyAccessible = aws.Bool(d.Get("publicly_accessible").(bool))
+		}
+
+		if d.HasChange("network_type") {
+			input.NetworkType = aws.String(d.Get("network_type").(string))
 		}
 
 		log.Printf("[DEBUG] Updating RDS Cluster Instance: %s", input)

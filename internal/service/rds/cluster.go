@@ -235,6 +235,12 @@ func ResourceCluster() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
+			"network_type": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.StringInSlice(NetworkType_Values(), false),
+			},
 			"master_password": {
 				Type:      schema.TypeString,
 				Optional:  true,
@@ -540,6 +546,10 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 			requiresModifyDbCluster = true
 		}
 
+		if attr, ok := d.GetOk("network_type"); ok {
+			opts.NetworkType = aws.String(attr.(string))
+		}
+
 		if attr, ok := d.GetOk("option_group_name"); ok {
 			opts.OptionGroupName = aws.String(attr.(string))
 		}
@@ -654,6 +664,10 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 			createOpts.KmsKeyId = aws.String(attr.(string))
 		}
 
+		if attr, ok := d.GetOk("network_type"); ok {
+			createOpts.NetworkType = aws.String(attr.(string))
+		}
+
 		if attr, ok := d.GetOk("iam_database_authentication_enabled"); ok {
 			createOpts.EnableIAMDatabaseAuthentication = aws.Bool(attr.(bool))
 		}
@@ -746,6 +760,10 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 
 		if attr, ok := d.GetOk("kms_key_id"); ok {
 			createOpts.KmsKeyId = aws.String(attr.(string))
+		}
+
+		if attr, ok := d.GetOk("network_type"); ok {
+			createOpts.NetworkType = aws.String(attr.(string))
 		}
 
 		if attr, ok := d.GetOk("enabled_cloudwatch_logs_exports"); ok && attr.(*schema.Set).Len() > 0 {
@@ -881,6 +899,10 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 
 		if v, ok := d.GetOk("preferred_maintenance_window"); ok {
 			createOpts.PreferredMaintenanceWindow = aws.String(v.(string))
+		}
+
+		if attr, ok := d.GetOk("network_type"); ok {
+			createOpts.NetworkType = aws.String(attr.(string))
 		}
 
 		if attr, ok := d.GetOk("kms_key_id"); ok {
@@ -1051,6 +1073,7 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("endpoint", dbc.Endpoint)
 	d.Set("db_cluster_instance_class", dbc.DBClusterInstanceClass)
 	d.Set("engine_mode", dbc.EngineMode)
+	d.Set("network_type", dbc.NetworkType)
 	d.Set("engine", dbc.Engine)
 	d.Set("hosted_zone_id", dbc.HostedZoneId)
 	d.Set("iam_database_authentication_enabled", dbc.IAMDatabaseAuthenticationEnabled)
@@ -1234,6 +1257,11 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("iam_database_authentication_enabled") {
 		req.EnableIAMDatabaseAuthentication = aws.Bool(d.Get("iam_database_authentication_enabled").(bool))
+		requestUpdate = true
+	}
+
+	if d.HasChange("network_type") {
+		req.NetworkType = aws.String(d.Get("network_type").(string))
 		requestUpdate = true
 	}
 
