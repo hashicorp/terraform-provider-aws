@@ -484,7 +484,7 @@ func expandCookieMatchPattern(l []interface{}) *wafv2.CookieMatchPattern {
 		CookieMatchPattern.ExcludedCookies = flex.ExpandStringList(v.([]interface{}))
 	}
 
-	if v, ok := m["all"]; ok && v == true {
+	if v, ok := m["all"].([]interface{}); ok && len(v) > 0 {
 		CookieMatchPattern.All = &wafv2.All{}
 	}
 

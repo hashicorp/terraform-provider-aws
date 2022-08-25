@@ -355,11 +355,7 @@ func fieldToMatchBaseSchema() *schema.Resource {
 							Required: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"all": {
-										Type:     schema.TypeBool,
-										Default:  false,
-										Optional: true,
-									},
+									"all": emptySchema(),
 									"included_cookies": {
 										Type:     schema.TypeList,
 										Optional: true,
