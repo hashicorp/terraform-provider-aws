@@ -128,6 +128,10 @@ func DataSourceInstance() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
+			"network_type": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"option_group_memberships": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -225,6 +229,7 @@ func dataSourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("monitoring_interval", v.MonitoringInterval)
 	d.Set("monitoring_role_arn", v.MonitoringRoleArn)
 	d.Set("multi_az", v.MultiAZ)
+	d.Set("network_type", v.NetworkType)
 	var optionGroupNames []string
 	for _, v := range v.OptionGroupMemberships {
 		optionGroupNames = append(optionGroupNames, aws.StringValue(v.OptionGroupName))
