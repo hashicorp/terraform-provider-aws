@@ -31,9 +31,9 @@ func TestAccRedshiftServerlessWorkgroup_basic(t *testing.T) {
 					testAccCheckWorkgroupExists(resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "redshift-serverless", regexp.MustCompile("workgroup/.+$")),
 					resource.TestCheckResourceAttr(resourceName, "namespace_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "workgroup_name", rName),
-					resource.TestCheckResourceAttrSet(resourceName, "workgroup_id"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, "workgroup_id"),
+					resource.TestCheckResourceAttr(resourceName, "workgroup_name", rName),
 				),
 			},
 			{
@@ -141,7 +141,7 @@ func testAccCheckWorkgroupExists(name string) resource.TestCheckFunc {
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("Redshift Serverless Workgroup is not set")
+			return fmt.Errorf("Redshift Serverless Workgroup ID is not set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftServerlessConn
