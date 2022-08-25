@@ -5789,16 +5789,10 @@ resource "aws_db_instance" "bar" {
 func testAccInstanceConfig_cloudWatchLogsExportConfiguration(rName string) string {
 	return acctest.ConfigCompose(
 		testAccInstanceConfig_orderableClassMySQL(),
-		acctest.ConfigVPCWithSubnets(rName, 2),
+		testAccInstanceConfig_baseVPC(rName),
 		fmt.Sprintf(`
-resource "aws_db_subnet_group" "test" {
-  name       = %[1]q
-  subnet_ids = aws_subnet.test[*].id
-}
-
 resource "aws_db_instance" "test" {
-  identifier = %[1]q
-
+  identifier           = %[1]q
   db_subnet_group_name = aws_db_subnet_group.test.name
   allocated_storage    = 10
   engine               = data.aws_rds_orderable_db_instance.test.engine
@@ -5820,16 +5814,10 @@ resource "aws_db_instance" "test" {
 func testAccInstanceConfig_cloudWatchLogsExportConfigurationAdd(rName string) string {
 	return acctest.ConfigCompose(
 		testAccInstanceConfig_orderableClassMySQL(),
-		acctest.ConfigVPCWithSubnets(rName, 2),
+		testAccInstanceConfig_baseVPC(rName),
 		fmt.Sprintf(`
-resource "aws_db_subnet_group" "test" {
-  name       = %[1]q
-  subnet_ids = aws_subnet.test[*].id
-}
-
 resource "aws_db_instance" "test" {
-  identifier = %[1]q
-
+  identifier           = %[1]q
   db_subnet_group_name = aws_db_subnet_group.test.name
   allocated_storage    = 10
   engine               = data.aws_rds_orderable_db_instance.test.engine
@@ -5854,16 +5842,10 @@ resource "aws_db_instance" "test" {
 func testAccInstanceConfig_cloudWatchLogsExportConfigurationModify(rName string) string {
 	return acctest.ConfigCompose(
 		testAccInstanceConfig_orderableClassMySQL(),
-		acctest.ConfigVPCWithSubnets(rName, 2),
+		testAccInstanceConfig_baseVPC(rName),
 		fmt.Sprintf(`
-resource "aws_db_subnet_group" "test" {
-  name       = %[1]q
-  subnet_ids = aws_subnet.test[*].id
-}
-
 resource "aws_db_instance" "test" {
-  identifier = %[1]q
-
+  identifier           = %[1]q
   db_subnet_group_name = aws_db_subnet_group.test.name
   allocated_storage    = 10
   engine               = data.aws_rds_orderable_db_instance.test.engine
@@ -5888,16 +5870,10 @@ resource "aws_db_instance" "test" {
 func testAccInstanceConfig_cloudWatchLogsExportConfigurationDelete(rName string) string {
 	return acctest.ConfigCompose(
 		testAccInstanceConfig_orderableClassMySQL(),
-		acctest.ConfigVPCWithSubnets(rName, 2),
+		testAccInstanceConfig_baseVPC(rName),
 		fmt.Sprintf(`
-resource "aws_db_subnet_group" "test" {
-  name       = %[1]q
-  subnet_ids = aws_subnet.test[*].id
-}
-
 resource "aws_db_instance" "test" {
-  identifier = %[1]q
-
+  identifier           = %[1]q
   db_subnet_group_name = aws_db_subnet_group.test.name
   allocated_storage    = 10
   engine               = data.aws_rds_orderable_db_instance.test.engine
@@ -5963,33 +5939,8 @@ resource "aws_db_instance" "test" {
 func testAccInstanceConfig_dbSubnetGroupName(rName string) string {
 	return acctest.ConfigCompose(
 		testAccInstanceConfig_orderableClassMySQL(),
-		acctest.ConfigAvailableAZsNoOptIn(),
+		testAccInstanceConfig_baseVPC(rName),
 		fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test" {
-  count = 2
-
-  availability_zone = data.aws_availability_zones.available.names[count.index]
-  cidr_block        = "10.0.${count.index}.0/24"
-  vpc_id            = aws_vpc.test.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_db_subnet_group" "test" {
-  name       = %[1]q
-  subnet_ids = aws_subnet.test[*].id
-}
-
 resource "aws_db_instance" "test" {
   allocated_storage    = 5
   db_subnet_group_name = aws_db_subnet_group.test.name
@@ -6096,36 +6047,15 @@ resource "aws_db_instance" "test" {
 func testAccInstanceConfig_DBSubnetGroupName_vpcSecurityGroupIDs(rName string) string {
 	return acctest.ConfigCompose(
 		testAccInstanceConfig_orderableClassMySQL(),
-		acctest.ConfigAvailableAZsNoOptIn(),
+		testAccInstanceConfig_baseVPC(rName),
 		fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
 resource "aws_security_group" "test" {
   name   = %[1]q
   vpc_id = aws_vpc.test.id
-}
-
-resource "aws_subnet" "test" {
-  count = 2
-
-  availability_zone = data.aws_availability_zones.available.names[count.index]
-  cidr_block        = "10.0.${count.index}.0/24"
-  vpc_id            = aws_vpc.test.id
 
   tags = {
     Name = %[1]q
   }
-}
-
-resource "aws_db_subnet_group" "test" {
-  name       = %[1]q
-  subnet_ids = aws_subnet.test[*].id
 }
 
 resource "aws_db_instance" "test" {
