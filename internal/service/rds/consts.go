@@ -150,6 +150,18 @@ func InstanceExportableLogType_Values() []string {
 }
 
 const (
+	NetworkTypeDual = "DUAL"
+	NetworkTypeIPv4 = "IPV4"
+)
+
+func NetworkType_Values() []string {
+	return []string{
+		NetworkTypeDual,
+		NetworkTypeIPv4,
+	}
+}
+
+const (
 	RestoreTypeCopyOnWrite = "copy-on-write"
 	RestoreTypeFullCopy    = "full-copy"
 )

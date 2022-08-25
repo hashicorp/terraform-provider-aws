@@ -317,9 +317,10 @@ func ResourceInstance() *schema.Resource {
 				ForceNew: true,
 			},
 			"network_type": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.StringInSlice(NetworkType_Values(), false),
 			},
 			"option_group_name": {
 				Type:     schema.TypeString,
