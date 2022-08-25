@@ -8849,10 +8849,10 @@ resource "aws_vpc" "test" {
   }
 }
 
-resource "aws_subnet" "foo" {
+resource "aws_subnet" "test" {
   cidr_block        = "10.128.1.0/24"
   availability_zone = data.aws_outposts_outpost.test.availability_zone
-  vpc_id            = aws_vpc.foo.id
+  vpc_id            = aws_vpc.test.id
   outpost_arn       = data.aws_outposts_outpost.test.arn
 
   tags = {
@@ -8860,13 +8860,9 @@ resource "aws_subnet" "foo" {
   }
 }
 
-resource "aws_db_subnet_group" "foo" {
+resource "aws_db_subnet_group" "test" {
   name       = %[1]q
-  subnet_ids = [aws_subnet.foo.id]
-
-  tags = {
-    Name = %[1]q
-  }
+  subnet_ids = [aws_subnet.test.id]
 }
 
 data "aws_ec2_local_gateway_route_table" "test" {
@@ -8875,17 +8871,11 @@ data "aws_ec2_local_gateway_route_table" "test" {
 
 resource "aws_ec2_local_gateway_route_table_vpc_association" "test" {
   local_gateway_route_table_id = data.aws_ec2_local_gateway_route_table.test.id
-  vpc_id                       = aws_vpc.foo.id
-}
+  vpc_id                       = aws_vpc.test.id
 
-data "aws_rds_engine_version" "default" {
-  engine = "mysql"
-}
-
-data "aws_rds_orderable_db_instance" "test" {
-  engine                     = data.aws_rds_engine_version.default.engine
-  engine_version             = data.aws_rds_engine_version.default.version
-  preferred_instance_classes = ["db.m5.large", "db.m5.xlarge", "db.r5.large", "db.r5.xlarge"]
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_db_instance" "test" {
@@ -8895,12 +8885,12 @@ resource "aws_db_instance" "test" {
   engine                    = data.aws_rds_orderable_db_instance.test.engine
   engine_version            = data.aws_rds_orderable_db_instance.test.engine_version
   instance_class            = data.aws_rds_orderable_db_instance.test.instance_class
-  db_name                   = "baz"
+  db_name                   = "test"
   parameter_group_name      = "default.${data.aws_rds_engine_version.default.parameter_group_family}"
-  password                  = "barbarbarbar"
   skip_final_snapshot       = true
-  username                  = "foo"
-  db_subnet_group_name      = aws_db_subnet_group.foo.name
+  password                  = "avoid-plaintext-passwords"
+  username                  = "tfacctest"
+  db_subnet_group_name      = aws_db_subnet_group.test.name
   storage_encrypted         = true
   customer_owned_ip_enabled = %[2]t
 }
