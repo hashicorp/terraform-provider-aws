@@ -134,6 +134,55 @@ func TestAccEvidentlyProject_tags(t *testing.T) {
 	})
 }
 
+func TestAccEvidentlyProject_updateDataDeliveryS3Bucket(t *testing.T) {
+	var project cloudwatchevidently.Project
+
+	rName := sdkacctest.RandomWithPrefix("tf-test-bucket")
+	rName2 := sdkacctest.RandomWithPrefix("tf-test-bucket")
+	rName3 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName4 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName5 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	resourceName := "aws_evidently_project.test"
+	prefix := "tests3prefix"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(cloudwatchevidently.EndpointsID, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, cloudwatchevidently.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProjectDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccProjectConfig_dataDeliveryS3Bucket(rName, rName2, rName3, rName4, rName5, prefix, "first"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProjectExists(resourceName, &project),
+					resource.TestCheckResourceAttr(resourceName, "data_delivery.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "data_delivery.0.s3_destination.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "data_delivery.0.s3_destination.0.bucket", "aws_s3_bucket.test", "id"),
+					resource.TestCheckResourceAttr(resourceName, "data_delivery.0.s3_destination.0.prefix", prefix),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccProjectConfig_dataDeliveryS3Bucket(rName, rName2, rName3, rName4, rName5, prefix, "second"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProjectExists(resourceName, &project),
+					resource.TestCheckResourceAttr(resourceName, "data_delivery.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "data_delivery.0.s3_destination.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "data_delivery.0.s3_destination.0.bucket", "aws_s3_bucket.test2", "id"),
+					resource.TestCheckResourceAttr(resourceName, "data_delivery.0.s3_destination.0.prefix", prefix),
+				),
+			},
+		},
+	})
+}
+
 func TestAccEvidentlyProject_updateDataDeliveryCloudWatchToS3(t *testing.T) {
 	var project cloudwatchevidently.Project
 
