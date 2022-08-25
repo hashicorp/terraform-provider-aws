@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_autoscaling_group: Update documentation to include [Custom Termination Policies](https://docs.aws.amazon.com/autoscaling/ec2/APIReference/API_CreateAutoScalingGroup.html)
+```
