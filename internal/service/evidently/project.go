@@ -260,34 +260,33 @@ func resourceProjectUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 	}
 
-	// A bug in the service API for UpdateProjectDataDelivery has been reported
-	// if d.HasChange("data_delivery") {
-	// 	input := &cloudwatchevidently.UpdateProjectDataDeliveryInput{
-	// 		Project: aws.String(name),
-	// 	}
+	if d.HasChange("data_delivery") {
+		input := &cloudwatchevidently.UpdateProjectDataDeliveryInput{
+			Project: aws.String(name),
+		}
 
-	// 	dataDelivery := d.Get("data_delivery").([]interface{})
+		dataDelivery := d.Get("data_delivery").([]interface{})
 
-	// 	tfMap, ok := dataDelivery[0].(map[string]interface{})
+		tfMap, ok := dataDelivery[0].(map[string]interface{})
 
-	// 	if !ok {
-	// 		return diag.Errorf("updating Project (%s)", d.Id())
-	// 	}
+		if !ok {
+			return diag.Errorf("updating Project (%s)", d.Id())
+		}
 
-	// 	// You can't specify both cloudWatchLogs and s3Destination in the same operation.
-	// 	if v, ok := tfMap["cloudwatch_logs"]; ok && len(v.([]interface{})) > 0 {
-	// 		input.CloudWatchLogs = expandCloudWatchLogs(v.([]interface{}))
-	// 	}
+		// You can't specify both cloudWatchLogs and s3Destination in the same operation.
+		if v, ok := tfMap["cloudwatch_logs"]; ok && len(v.([]interface{})) > 0 {
+			input.CloudWatchLogs = expandCloudWatchLogs(v.([]interface{}))
+		}
 
-	// 	if v, ok := tfMap["s3_destination"]; ok && len(v.([]interface{})) > 0 {
-	// 		input.S3Destination = expandS3Destination(v.([]interface{}))
-	// 	}
+		if v, ok := tfMap["s3_destination"]; ok && len(v.([]interface{})) > 0 {
+			input.S3Destination = expandS3Destination(v.([]interface{}))
+		}
 
-	// 	_, err := conn.UpdateProjectDataDeliveryWithContext(ctx, input)
-	// 	if err != nil {
-	// 		return diag.Errorf("updating Project (%s): %s", d.Id(), err)
-	// 	}
-	// }
+		_, err := conn.UpdateProjectDataDeliveryWithContext(ctx, input)
+		if err != nil {
+			return diag.Errorf("updating Project (%s): %s", d.Id(), err)
+		}
+	}
 
 	// updates to tags
 	if d.HasChange("tags_all") {
