@@ -17,202 +17,164 @@ func DataSourceInstance() *schema.Resource {
 		Read: dataSourceInstanceRead,
 
 		Schema: map[string]*schema.Schema{
+			"address": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"allocated_storage": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
+			"auto_minor_version_upgrade": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
+			"availability_zone": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"backup_retention_period": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
+			"ca_cert_identifier": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"db_cluster_identifier": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"db_instance_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"db_instance_class": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"db_instance_identifier": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringIsNotEmpty,
 			},
-
-			"tags": tftags.TagsSchemaComputed(),
-
-			"address": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"allocated_storage": {
+			"db_instance_port": {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-
-			"auto_minor_version_upgrade": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-
-			"availability_zone": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"backup_retention_period": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-
-			"db_cluster_identifier": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"db_instance_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"db_instance_class": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
 			"db_name": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"db_parameter_groups": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-
 			"db_security_groups": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-
 			"db_subnet_group": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
-			"db_instance_port": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-
 			"enabled_cloudwatch_logs_exports": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-
 			"endpoint": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"engine": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"engine_version": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"hosted_zone_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"iops": {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-
 			"kms_key_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"license_model": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"master_username": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"monitoring_interval": {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-
 			"monitoring_role_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"multi_az": {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-
 			"option_group_memberships": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-
 			"port": {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-
 			"preferred_backup_window": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"preferred_maintenance_window": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"publicly_accessible": {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-
-			"resource_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"storage_encrypted": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-
-			"storage_type": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"timezone": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"vpc_security_groups": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-
 			"replicate_source_db": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
-			"ca_cert_identifier": {
+			"resource_id": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"storage_encrypted": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
+			"storage_type": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"tags": tftags.TagsSchemaComputed(),
+			"timezone": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"vpc_security_groups": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 		},
 	}
