@@ -187,13 +187,13 @@ func dataSourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RDSConn
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	v, err := FindDBInstanceByID(conn, d.Id())
+	v, err := FindDBInstanceByID(conn, d.Get("db_instance_identifier").(string))
 
 	if err != nil {
 		return tfresource.SingularDataSourceFindError("RDS DB Instance", err)
 	}
 
-	d.SetId(d.Get("db_instance_identifier").(string))
+	d.SetId(aws.StringValue(v.DBInstanceIdentifier))
 	d.Set("allocated_storage", v.AllocatedStorage)
 	d.Set("auto_minor_version_upgrade", v.AutoMinorVersionUpgrade)
 	d.Set("availability_zone", v.AvailabilityZone)
