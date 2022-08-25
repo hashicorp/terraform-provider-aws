@@ -7131,11 +7131,11 @@ resource "aws_db_instance" "source" {
 }
 
 resource "aws_db_instance" "test" {
-  identifier           = %[1]q
-  instance_class       = aws_db_instance.source.instance_class
-  network_type         = %[2]q
-  replicate_source_db  = aws_db_instance.source.id
-  skip_final_snapshot  = true
+  identifier          = %[1]q
+  instance_class      = aws_db_instance.source.instance_class
+  network_type        = %[2]q
+  replicate_source_db = aws_db_instance.source.id
+  skip_final_snapshot = true
 }
 `, rName, networkType))
 }
