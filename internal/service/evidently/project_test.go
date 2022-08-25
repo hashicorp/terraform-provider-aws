@@ -27,9 +27,9 @@ func TestAccProject_basic(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(cloudwatchevidently.EndpointsID, t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, cloudwatchevidently.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckProjectDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, cloudwatchevidently.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProjectDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProjectConfig_basic(rName, originalDescription),
@@ -89,9 +89,9 @@ func TestAccProject_tags(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(cloudwatchevidently.EndpointsID, t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, cloudwatchevidently.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckProjectDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, cloudwatchevidently.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProjectDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProjectConfig_basic(rName, description),
@@ -148,9 +148,9 @@ func TestAccProject_updateDataDelivery(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(cloudwatchevidently.EndpointsID, t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, cloudwatchevidently.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckProjectDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, cloudwatchevidently.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProjectDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProjectConfig_dataDeliveryCloudWatchLogs(rName, rName2, rName3, description),
@@ -215,10 +215,10 @@ func TestAccProject_disappears(t *testing.T) {
 	resourceName := "aws_evidently_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cloudwatchevidently.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckProjectDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudwatchevidently.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProjectDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProjectConfig_basic(rName, description),
