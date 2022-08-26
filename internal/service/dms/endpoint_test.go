@@ -1310,7 +1310,7 @@ func TestAccDMSEndpoint_db2(t *testing.T) {
 	})
 }
 
-func TestAccDMSEndpoint_Redis_basic(t *testing.T) {
+func TestAccDMSEndpoint_redis(t *testing.T) {
 	resourceName := "aws_dms_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1326,60 +1326,33 @@ func TestAccDMSEndpoint_Redis_basic(t *testing.T) {
 					testAccCheckEndpointExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_arn"),
 					resource.TestCheckResourceAttr(resourceName, "redis_settings.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "redis_settings.0.auth_type", "auth-role"),
-					resource.TestCheckResourceAttr(resourceName, "redis_settings.0.auth_user_name", "user"),
+					resource.TestCheckResourceAttr(resourceName, "redis_settings.0.auth_password", ""),
+					resource.TestCheckResourceAttr(resourceName, "redis_settings.0.auth_type", "none"),
+					resource.TestCheckResourceAttr(resourceName, "redis_settings.0.auth_user_name", ""),
 					resource.TestCheckResourceAttr(resourceName, "redis_settings.0.port", "6379"),
-					resource.TestCheckResourceAttr(resourceName, "redis_settings.0.server_name", "redis_dns"),
-					resource.TestCheckResourceAttr(resourceName, "redis_settings.0.ssl_ca_certificate_arn", "arn"),
-					resource.TestCheckResourceAttr(resourceName, "redis_settings.0.ssl_security_protocol", "ssl-encryption"),
+					resource.TestCheckResourceAttr(resourceName, "redis_settings.0.server_name", "redis1.test"),
+					resource.TestCheckResourceAttr(resourceName, "redis_settings.0.ssl_ca_certificate_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, "redis_settings.0.ssl_security_protocol", "plaintext"),
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"redis_settings.0.auth_password"},
-			},
-		},
-	})
-}
-
-func TestAccDMSEndpoint_Redis_update(t *testing.T) {
-	resourceName := "aws_dms_endpoint.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEndpointDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccEndpointConfig_redisUpdate(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEndpointExists(resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, "endpoint_arn"),
-					resource.TestCheckResourceAttr(resourceName, "redis_settings.#", "1"),
-				),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccEndpointConfig_redisUpdate(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEndpointExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "redis_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "redis_settings.0.auth_password", "avoid-plaintext-passwords"),
 					resource.TestCheckResourceAttr(resourceName, "redis_settings.0.auth_type", "auth-role"),
-					resource.TestCheckResourceAttr(resourceName, "redis_settings.0.auth_user_name", "user"),
+					resource.TestCheckResourceAttr(resourceName, "redis_settings.0.auth_user_name", "tfacctest"),
 					resource.TestCheckResourceAttr(resourceName, "redis_settings.0.port", "6379"),
-					resource.TestCheckResourceAttr(resourceName, "redis_settings.0.server_name", "redis_dns"),
-					resource.TestCheckResourceAttr(resourceName, "redis_settings.0.ssl_ca_certificate_arn", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "redis_settings.0.server_name", "redis2.test"),
+					resource.TestCheckResourceAttr(resourceName, "redis_settings.0.ssl_ca_certificate_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "redis_settings.0.ssl_security_protocol", "ssl-encryption"),
 				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"redis_settings.0.auth_password"},
 			},
 		},
 	})
@@ -3001,13 +2974,10 @@ resource "aws_dms_endpoint" "test" {
   engine_name   = "redis"
 
   redis_settings {
-    auth_password          = "password"
-    auth_type              = "auth-role"
-    auth_user_name         = "user"
-    port                   = 6379
-    server_name            = "redis_dns"
-    ssl_ca_certificate_arn = "arn"
-    ssl_security_protocol  = "ssl-encryption"
+    auth_type             = "none"
+    port                  = 6379
+    server_name           = "redis1.test"
+    ssl_security_protocol = "plaintext"
   }
 }
 `, rName)
@@ -3021,13 +2991,11 @@ resource "aws_dms_endpoint" "test" {
   engine_name   = "redis"
 
   redis_settings {
-    auth_password          = "password"
-    auth_type              = "auth-role"
-    auth_user_name         = "user"
-    port                   = 6379
-    server_name            = "redis_dns"
-    ssl_ca_certificate_arn = "arn"
-    ssl_security_protocol  = "ssl-encryption"
+    auth_password  = "avoid-plaintext-passwords"
+    auth_type      = "auth-role"
+    auth_user_name = "tfacctest"
+    port           = 6379
+    server_name    = "redis2.test"
   }
 }
 `, rName)
