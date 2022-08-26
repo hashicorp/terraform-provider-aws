@@ -8,7 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/fsx"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -33,6 +33,15 @@ func ResourceOntapStorageVirtualMachine() *schema.Resource {
 			Create: schema.DefaultTimeout(30 * time.Minute),
 			Update: schema.DefaultTimeout(30 * time.Minute),
 			Delete: schema.DefaultTimeout(30 * time.Minute),
+		},
+
+		SchemaVersion: 1,
+		StateUpgraders: []schema.StateUpgrader{
+			{
+				Type:    ResourceOntapStorageVirtualMachineV0().CoreConfigSchema().ImpliedType(),
+				Upgrade: ResourceOntapStorageVirtualMachineStateUpgradeV0,
+				Version: 0,
+			},
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -82,7 +91,7 @@ func ResourceOntapStorageVirtualMachine() *schema.Resource {
 										ForceNew:     true,
 										ValidateFunc: validation.StringLenBetween(1, 256),
 									},
-									"organizational_unit_distinguidshed_name": {
+									"organizational_unit_distinguished_name": {
 										Type:         schema.TypeString,
 										Optional:     true,
 										ForceNew:     true,
@@ -231,7 +240,7 @@ func resourceOntapStorageVirtualMachineCreate(d *schema.ResourceData, meta inter
 	}
 
 	if v, ok := d.GetOk("active_directory_configuration"); ok {
-		input.ActiveDirectoryConfiguration = expandFsxOntapSvmActiveDirectoryConfigurationCreate(v.([]interface{}))
+		input.ActiveDirectoryConfiguration = expandOntapSvmActiveDirectoryConfigurationCreate(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("root_volume_security_style"); ok {
@@ -289,11 +298,11 @@ func resourceOntapStorageVirtualMachineRead(d *schema.ResourceData, meta interfa
 	d.Set("subtype", storageVirtualMachine.Subtype)
 	d.Set("uuid", storageVirtualMachine.UUID)
 
-	if err := d.Set("active_directory_configuration", flattenFsxOntapSvmActiveDirectoryConfiguration(d, storageVirtualMachine.ActiveDirectoryConfiguration)); err != nil {
+	if err := d.Set("active_directory_configuration", flattenOntapSvmActiveDirectoryConfiguration(d, storageVirtualMachine.ActiveDirectoryConfiguration)); err != nil {
 		return fmt.Errorf("error setting svm_active_directory: %w", err)
 	}
 
-	if err := d.Set("endpoints", flattenFsxOntapStorageVirtualMachineEndpoints(storageVirtualMachine.Endpoints)); err != nil {
+	if err := d.Set("endpoints", flattenOntapStorageVirtualMachineEndpoints(storageVirtualMachine.Endpoints)); err != nil {
 		return fmt.Errorf("error setting endpoints: %w", err)
 	}
 
@@ -336,7 +345,7 @@ func resourceOntapStorageVirtualMachineUpdate(d *schema.ResourceData, meta inter
 		}
 
 		if d.HasChange("active_directory_configuration") {
-			input.ActiveDirectoryConfiguration = expandFsxOntapSvmActiveDirectoryConfigurationUpdate(d.Get("active_directory_configuration").([]interface{}))
+			input.ActiveDirectoryConfiguration = expandOntapSvmActiveDirectoryConfigurationUpdate(d.Get("active_directory_configuration").([]interface{}))
 		}
 
 		if d.HasChange("svm_admin_password") {
@@ -380,7 +389,7 @@ func resourceOntapStorageVirtualMachineDelete(d *schema.ResourceData, meta inter
 	return nil
 }
 
-func expandFsxOntapSvmActiveDirectoryConfigurationCreate(cfg []interface{}) *fsx.CreateSvmActiveDirectoryConfiguration {
+func expandOntapSvmActiveDirectoryConfigurationCreate(cfg []interface{}) *fsx.CreateSvmActiveDirectoryConfiguration {
 	if len(cfg) < 1 {
 		return nil
 	}
@@ -394,13 +403,13 @@ func expandFsxOntapSvmActiveDirectoryConfigurationCreate(cfg []interface{}) *fsx
 	}
 
 	if v, ok := conf["self_managed_active_directory_configuration"].([]interface{}); ok {
-		out.SelfManagedActiveDirectoryConfiguration = expandFsxOntapSvmSelfManagedActiveDirectoryConfiguration(v)
+		out.SelfManagedActiveDirectoryConfiguration = expandOntapSvmSelfManagedActiveDirectoryConfiguration(v)
 	}
 
 	return &out
 }
 
-func expandFsxOntapSvmSelfManagedActiveDirectoryConfiguration(cfg []interface{}) *fsx.SelfManagedActiveDirectoryConfiguration {
+func expandOntapSvmSelfManagedActiveDirectoryConfiguration(cfg []interface{}) *fsx.SelfManagedActiveDirectoryConfiguration {
 	if len(cfg) < 1 {
 		return nil
 	}
@@ -421,7 +430,7 @@ func expandFsxOntapSvmSelfManagedActiveDirectoryConfiguration(cfg []interface{})
 		out.FileSystemAdministratorsGroup = aws.String(v)
 	}
 
-	if v, ok := conf["organizational_unit_distinguidshed_name"].(string); ok && len(v) > 0 {
+	if v, ok := conf["organizational_unit_distinguished_name"].(string); ok && len(v) > 0 {
 		out.OrganizationalUnitDistinguishedName = aws.String(v)
 	}
 
@@ -436,7 +445,7 @@ func expandFsxOntapSvmSelfManagedActiveDirectoryConfiguration(cfg []interface{})
 	return &out
 }
 
-func expandFsxOntapSvmActiveDirectoryConfigurationUpdate(cfg []interface{}) *fsx.UpdateSvmActiveDirectoryConfiguration {
+func expandOntapSvmActiveDirectoryConfigurationUpdate(cfg []interface{}) *fsx.UpdateSvmActiveDirectoryConfiguration {
 	if len(cfg) < 1 {
 		return nil
 	}
@@ -446,13 +455,13 @@ func expandFsxOntapSvmActiveDirectoryConfigurationUpdate(cfg []interface{}) *fsx
 	out := fsx.UpdateSvmActiveDirectoryConfiguration{}
 
 	if v, ok := conf["self_managed_active_directory_configuration"].([]interface{}); ok {
-		out.SelfManagedActiveDirectoryConfiguration = expandFsxOntapSvmSelfManagedActiveDirectoryConfigurationUpdate(v)
+		out.SelfManagedActiveDirectoryConfiguration = expandOntapSvmSelfManagedActiveDirectoryConfigurationUpdate(v)
 	}
 
 	return &out
 }
 
-func expandFsxOntapSvmSelfManagedActiveDirectoryConfigurationUpdate(cfg []interface{}) *fsx.SelfManagedActiveDirectoryConfigurationUpdates {
+func expandOntapSvmSelfManagedActiveDirectoryConfigurationUpdate(cfg []interface{}) *fsx.SelfManagedActiveDirectoryConfigurationUpdates {
 	if len(cfg) < 1 {
 		return nil
 	}
@@ -476,7 +485,7 @@ func expandFsxOntapSvmSelfManagedActiveDirectoryConfigurationUpdate(cfg []interf
 	return &out
 }
 
-func flattenFsxOntapSvmActiveDirectoryConfiguration(d *schema.ResourceData, rs *fsx.SvmActiveDirectoryConfiguration) []interface{} {
+func flattenOntapSvmActiveDirectoryConfiguration(d *schema.ResourceData, rs *fsx.SvmActiveDirectoryConfiguration) []interface{} {
 	if rs == nil {
 		return []interface{}{}
 	}
@@ -487,13 +496,13 @@ func flattenFsxOntapSvmActiveDirectoryConfiguration(d *schema.ResourceData, rs *
 	}
 
 	if rs.SelfManagedActiveDirectoryConfiguration != nil {
-		m["self_managed_active_directory_configuration"] = flattenFsxOntapSelfManagedActiveDirectoryConfiguration(d, rs.SelfManagedActiveDirectoryConfiguration)
+		m["self_managed_active_directory_configuration"] = flattenOntapSelfManagedActiveDirectoryConfiguration(d, rs.SelfManagedActiveDirectoryConfiguration)
 	}
 
 	return []interface{}{m}
 }
 
-func flattenFsxOntapSelfManagedActiveDirectoryConfiguration(d *schema.ResourceData, rs *fsx.SelfManagedActiveDirectoryAttributes) []interface{} {
+func flattenOntapSelfManagedActiveDirectoryConfiguration(d *schema.ResourceData, rs *fsx.SelfManagedActiveDirectoryAttributes) []interface{} {
 	if rs == nil {
 		return []interface{}{}
 	}
@@ -512,7 +521,9 @@ func flattenFsxOntapSelfManagedActiveDirectoryConfiguration(d *schema.ResourceDa
 	}
 
 	if rs.OrganizationalUnitDistinguishedName != nil {
-		m["organizational_unit_distinguidshed_name"] = aws.StringValue(rs.OrganizationalUnitDistinguishedName)
+		if _, ok := d.GetOk("active_directory_configuration.0.self_managed_active_directory_configuration.0.organizational_unit_distinguished_name"); ok {
+			m["organizational_unit_distinguished_name"] = aws.StringValue(rs.OrganizationalUnitDistinguishedName)
+		}
 	}
 
 	if rs.UserName != nil {
@@ -529,28 +540,28 @@ func flattenFsxOntapSelfManagedActiveDirectoryConfiguration(d *schema.ResourceDa
 	return []interface{}{m}
 }
 
-func flattenFsxOntapStorageVirtualMachineEndpoints(rs *fsx.SvmEndpoints) []interface{} {
+func flattenOntapStorageVirtualMachineEndpoints(rs *fsx.SvmEndpoints) []interface{} {
 	if rs == nil {
 		return []interface{}{}
 	}
 
 	m := make(map[string]interface{})
 	if rs.Iscsi != nil {
-		m["iscsi"] = flattenFsxOntapStorageVirtualMachineEndpoint(rs.Iscsi)
+		m["iscsi"] = flattenOntapStorageVirtualMachineEndpoint(rs.Iscsi)
 	}
 	if rs.Management != nil {
-		m["management"] = flattenFsxOntapStorageVirtualMachineEndpoint(rs.Management)
+		m["management"] = flattenOntapStorageVirtualMachineEndpoint(rs.Management)
 	}
 	if rs.Nfs != nil {
-		m["nfs"] = flattenFsxOntapStorageVirtualMachineEndpoint(rs.Nfs)
+		m["nfs"] = flattenOntapStorageVirtualMachineEndpoint(rs.Nfs)
 	}
 	if rs.Smb != nil {
-		m["smb"] = flattenFsxOntapStorageVirtualMachineEndpoint(rs.Smb)
+		m["smb"] = flattenOntapStorageVirtualMachineEndpoint(rs.Smb)
 	}
 	return []interface{}{m}
 }
 
-func flattenFsxOntapStorageVirtualMachineEndpoint(rs *fsx.SvmEndpoint) []interface{} {
+func flattenOntapStorageVirtualMachineEndpoint(rs *fsx.SvmEndpoint) []interface{} {
 	if rs == nil {
 		return []interface{}{}
 	}

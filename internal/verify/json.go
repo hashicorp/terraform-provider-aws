@@ -3,6 +3,7 @@ package verify
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"log"
 	"reflect"
 	"regexp"
@@ -14,6 +15,22 @@ import (
 )
 
 func SuppressEquivalentPolicyDiffs(k, old, new string, d *schema.ResourceData) bool {
+	if strings.TrimSpace(old) == "" && strings.TrimSpace(new) == "" {
+		return true
+	}
+
+	if strings.TrimSpace(old) == "{}" && strings.TrimSpace(new) == "" {
+		return true
+	}
+
+	if strings.TrimSpace(old) == "" && strings.TrimSpace(new) == "{}" {
+		return true
+	}
+
+	if strings.TrimSpace(old) == "{}" && strings.TrimSpace(new) == "{}" {
+		return true
+	}
+
 	equivalent, err := awspolicy.PoliciesAreEquivalent(old, new)
 	if err != nil {
 		return false
@@ -87,7 +104,11 @@ func SecondJSONUnlessEquivalent(old, new string) (string, error) {
 		return "", nil
 	}
 
-	if strings.TrimSpace(old) == "" {
+	if strings.TrimSpace(new) == "{}" {
+		return "{}", nil
+	}
+
+	if strings.TrimSpace(old) == "" || strings.TrimSpace(old) == "{}" {
 		return new, nil
 	}
 
@@ -102,4 +123,22 @@ func SecondJSONUnlessEquivalent(old, new string) (string, error) {
 	}
 
 	return new, nil
+}
+
+// PolicyToSet returns the existing policy if the new policy is equivalent.
+// Otherwise, it returns the new policy. Either policy is normalized.
+func PolicyToSet(exist, new string) (string, error) {
+	policyToSet, err := SecondJSONUnlessEquivalent(exist, new)
+
+	if err != nil {
+		return "", fmt.Errorf("while checking equivalency of existing policy (%s) and new policy (%s), encountered: %w", exist, new, err)
+	}
+
+	policyToSet, err = structure.NormalizeJsonString(policyToSet)
+
+	if err != nil {
+		return "", fmt.Errorf("policy (%s) is invalid JSON: %w", policyToSet, err)
+	}
+
+	return policyToSet, nil
 }

@@ -13,20 +13,21 @@ import (
 func DataSourceUserPools() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourceUserPoolsRead,
+
 		Schema: map[string]*schema.Schema{
+			"arns": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"ids": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
-			},
-			"ids": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"arns": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 		},
 	}
@@ -34,64 +35,64 @@ func DataSourceUserPools() *schema.Resource {
 
 func dataSourceUserPoolsRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CognitoIDPConn
-	name := d.Get("name").(string)
-	var ids []string
-	var arns []string
 
-	pools, err := getAllCognitoUserPools(conn)
+	output, err := findUserPoolDescriptionTypes(conn)
+
 	if err != nil {
-		return fmt.Errorf("Error listing cognito user pools: %w", err)
+		return fmt.Errorf("error reading Cognito User Pools: %w", err)
 	}
-	for _, pool := range pools {
-		if name == aws.StringValue(pool.Name) {
-			id := aws.StringValue(pool.Id)
-			arn := arn.ARN{
-				Partition: meta.(*conns.AWSClient).Partition,
-				Service:   "cognito-idp",
-				Region:    meta.(*conns.AWSClient).Region,
-				AccountID: meta.(*conns.AWSClient).AccountID,
-				Resource:  fmt.Sprintf("userpool/%s", id),
-			}.String()
 
-			ids = append(ids, id)
-			arns = append(arns, arn)
+	name := d.Get("name").(string)
+	var arns, userPoolIDs []string
+
+	for _, v := range output {
+		if name != aws.StringValue(v.Name) {
+			continue
 		}
-	}
 
-	if len(ids) == 0 {
-		return fmt.Errorf("No cognito user pool found with name: %s", name)
+		userPoolID := aws.StringValue(v.Id)
+		arn := arn.ARN{
+			Partition: meta.(*conns.AWSClient).Partition,
+			Service:   cognitoidentityprovider.ServiceName,
+			Region:    meta.(*conns.AWSClient).Region,
+			AccountID: meta.(*conns.AWSClient).AccountID,
+			Resource:  fmt.Sprintf("userpool/%s", userPoolID),
+		}.String()
+
+		userPoolIDs = append(userPoolIDs, userPoolID)
+		arns = append(arns, arn)
 	}
 
 	d.SetId(name)
-	d.Set("ids", ids)
+	d.Set("ids", userPoolIDs)
 	d.Set("arns", arns)
 
 	return nil
 }
 
-func getAllCognitoUserPools(conn *cognitoidentityprovider.CognitoIdentityProvider) ([]*cognitoidentityprovider.UserPoolDescriptionType, error) {
-	var pools []*cognitoidentityprovider.UserPoolDescriptionType
-	var nextToken string
+func findUserPoolDescriptionTypes(conn *cognitoidentityprovider.CognitoIdentityProvider) ([]*cognitoidentityprovider.UserPoolDescriptionType, error) {
+	input := &cognitoidentityprovider.ListUserPoolsInput{
+		MaxResults: aws.Int64(60),
+	}
+	var output []*cognitoidentityprovider.UserPoolDescriptionType
 
-	for {
-		input := &cognitoidentityprovider.ListUserPoolsInput{
-			// MaxResults Valid Range: Minimum value of 1. Maximum value of 60
-			MaxResults: aws.Int64(60),
+	err := conn.ListUserPoolsPages(input, func(page *cognitoidentityprovider.ListUserPoolsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
 		}
-		if nextToken != "" {
-			input.NextToken = aws.String(nextToken)
-		}
-		out, err := conn.ListUserPools(input)
-		if err != nil {
-			return pools, err
-		}
-		pools = append(pools, out.UserPools...)
 
-		if out.NextToken == nil {
-			break
+		for _, v := range page.UserPools {
+			if v != nil {
+				output = append(output, v)
+			}
 		}
-		nextToken = aws.StringValue(out.NextToken)
+
+		return !lastPage
+	})
+
+	if err != nil {
+		return nil, err
 	}
 
-	return pools, nil
+	return output, nil
 }

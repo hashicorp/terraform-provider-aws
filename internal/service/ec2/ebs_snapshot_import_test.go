@@ -9,14 +9,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	tfs3 "github.com/hashicorp/terraform-provider-aws/internal/service/s3"
 )
@@ -27,65 +23,18 @@ func TestAccEC2EBSSnapshotImport_basic(t *testing.T) {
 	resourceName := "aws_ebs_snapshot_import.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEBSSnapshotImportDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEBSSnapshotDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEBSSnapshotImportBasicConfig(rName, t),
+				Config: testAccEBSSnapshotImportConfig_basic(t, rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSnapshotImportExists(resourceName, &v),
+					testAccCheckSnapshotExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "ec2", regexp.MustCompile(`snapshot/snap-.+`)),
+					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "0"),
-					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccEC2EBSSnapshotImport_tags(t *testing.T) {
-	var v ec2.Snapshot
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_ebs_snapshot_import.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEBSSnapshotImportDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccEBSSnapshotImportTags1Config(rName, t, "key1", "value1"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSnapshotImportExists(resourceName, &v),
-					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "ec2", regexp.MustCompile(`snapshot/snap-.+`)),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
-					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
-				),
-			},
-			{
-				Config: testAccEBSSnapshotImportTags2Config(rName, t, "key1", "value1updated", "key2", "value2"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSnapshotImportExists(resourceName, &v),
-					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "ec2", regexp.MustCompile(`snapshot/snap-.+`)),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
-					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
-				),
-			},
-			{
-				Config: testAccEBSSnapshotImportTags1Config(rName, t, "key2", "value2"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSnapshotImportExists(resourceName, &v),
-					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "ec2", regexp.MustCompile(`snapshot/snap-.+`)),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
-					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
 				),
 			},
 		},
@@ -98,18 +47,15 @@ func TestAccEC2EBSSnapshotImport_disappears(t *testing.T) {
 	resourceName := "aws_ebs_snapshot_import.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEBSSnapshotImportDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEBSSnapshotDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEBSSnapshotImportBasicConfig(rName, t),
+				Config: testAccEBSSnapshotImportConfig_basic(t, rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSnapshotImportExists(resourceName, &v),
-					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "ec2", regexp.MustCompile(`snapshot/snap-.+`)),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
+					testAccCheckSnapshotExists(resourceName, &v),
 					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceEBSSnapshotImport(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -118,26 +64,23 @@ func TestAccEC2EBSSnapshotImport_disappears(t *testing.T) {
 	})
 }
 
-func TestAccEC2EBSSnapshotImport_Disappears_s3BucketObject(t *testing.T) {
+func TestAccEC2EBSSnapshotImport_Disappears_s3Object(t *testing.T) {
 	var v ec2.Snapshot
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	parentResourceName := "aws_s3_bucket_object.image"
+	parentResourceName := "aws_s3_object.test"
 	resourceName := "aws_ebs_snapshot_import.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEBSSnapshotImportDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEBSSnapshotDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEBSSnapshotImportBasicConfig(rName, t),
+				Config: testAccEBSSnapshotImportConfig_basic(t, rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSnapshotImportExists(resourceName, &v),
-					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "ec2", regexp.MustCompile(`snapshot/snap-.+`)),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
-					acctest.CheckResourceDisappears(acctest.Provider, tfs3.ResourceBucketObject(), parentResourceName),
+					testAccCheckSnapshotExists(resourceName, &v),
+					acctest.CheckResourceDisappears(acctest.Provider, tfs3.ResourceObject(), parentResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -145,81 +88,89 @@ func TestAccEC2EBSSnapshotImport_Disappears_s3BucketObject(t *testing.T) {
 	})
 }
 
-func testAccCheckSnapshotImportExists(n string, v *ec2.Snapshot) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[n]
-		if !ok {
-			return fmt.Errorf("Not found: %s", n)
-		}
+func TestAccEC2EBSSnapshotImport_tags(t *testing.T) {
+	var v ec2.Snapshot
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_ebs_snapshot_import.test"
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ID is set")
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
-
-		request := &ec2.DescribeSnapshotsInput{
-			SnapshotIds: []*string{aws.String(rs.Primary.ID)},
-		}
-
-		response, err := conn.DescribeSnapshots(request)
-		if err == nil {
-			if response.Snapshots != nil && len(response.Snapshots) > 0 {
-				*v = *response.Snapshots[0]
-				return nil
-			}
-		}
-		return fmt.Errorf("Error finding EC2 Snapshot %s", rs.Primary.ID)
-	}
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEBSSnapshotDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEBSSnapshotImportConfig_tags1(t, rName, "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSnapshotExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				Config: testAccEBSSnapshotImportConfig_tags2(t, rName, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSnapshotExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccEBSSnapshotImportConfig_tags1(t, rName, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSnapshotExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+		},
+	})
 }
 
-func testAccCheckEBSSnapshotImportDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+func TestAccEC2EBSSnapshotImport_storageTier(t *testing.T) {
+	var v ec2.Snapshot
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_ebs_snapshot_import.test"
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_ebs_snapshot_import" {
-			continue
-		}
-		input := &ec2.DescribeSnapshotsInput{
-			SnapshotIds: []*string{aws.String(rs.Primary.ID)},
-		}
-
-		output, err := conn.DescribeSnapshots(input)
-		if err != nil {
-			if tfawserr.ErrMessageContains(err, "InvalidSnapshot.NotFound", "") {
-				continue
-			}
-			return err
-		}
-		if output != nil && len(output.Snapshots) > 0 && aws.StringValue(output.Snapshots[0].SnapshotId) == rs.Primary.ID {
-			return fmt.Errorf("EBS Snapshot %q still exists", rs.Primary.ID)
-		}
-	}
-
-	return nil
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEBSSnapshotDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEBSSnapshotImportConfig_storageTier(t, rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSnapshotExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "storage_tier", "archive"),
+				),
+			},
+		},
+	})
 }
 
-func testAccEBSSnapshotImportConfig_Base(t *testing.T) string {
+func testAccEBSSnapshotImportBaseConfig(t *testing.T, rName string) string {
 	return fmt.Sprintf(`
-resource "aws_s3_bucket" "images" {
-  bucket_prefix = "images-"
+resource "aws_s3_bucket" "test" {
+  bucket        = %[1]q
   force_destroy = true
 }
 
-resource "aws_s3_bucket_object" "image" {
-  bucket         = aws_s3_bucket.images.id
+resource "aws_s3_object" "test" {
+  bucket         = aws_s3_bucket.test.id
   key            = "diskimage.vhd"
-  content_base64 = %[1]q
+  content_base64 = %[2]q
 }
 
 # The following resources are for the *vmimport service user*
 # See: https://docs.aws.amazon.com/vm-import/latest/userguide/vmie_prereqs.html#vmimport-role
-resource "aws_iam_role" "vmimport" {
+resource "aws_iam_role" "test" {
   assume_role_policy = data.aws_iam_policy_document.vmimport-trust.json
 }
 
-resource "aws_iam_role_policy" "vmimport-access" {
-  role   = aws_iam_role.vmimport.id
+resource "aws_iam_role_policy" "test" {
+  role   = aws_iam_role.test.id
   policy = data.aws_iam_policy_document.vmimport-access.json
 }
 
@@ -232,8 +183,8 @@ data "aws_iam_policy_document" "vmimport-access" {
       "s3:ListBucket",
     ]
     resources = [
-      aws_s3_bucket.images.arn,
-      "${aws_s3_bucket.images.arn}/*"
+      aws_s3_bucket.test.arn,
+      "${aws_s3_bucket.test.arn}/*"
     ]
   }
   statement {
@@ -249,7 +200,6 @@ data "aws_iam_policy_document" "vmimport-access" {
     ]
   }
 }
-
 
 data "aws_iam_policy_document" "vmimport-trust" {
   statement {
@@ -270,82 +220,89 @@ data "aws_iam_policy_document" "vmimport-trust" {
     }
   }
 }
-`, testAccEBSSnapshotDisk(t))
+`, rName, testAccEBSSnapshotDisk(t))
 }
 
-func testAccEBSSnapshotImportBasicConfig(rName string, t *testing.T) string {
-	return acctest.ConfigCompose(testAccEBSSnapshotImportConfig_Base(t), fmt.Sprintf(`
+func testAccEBSSnapshotImportConfig_basic(t *testing.T, rName string) string {
+	return acctest.ConfigCompose(testAccEBSSnapshotImportBaseConfig(t, rName), `
 resource "aws_ebs_snapshot_import" "test" {
   disk_container {
-    description = %[1]q
+    description = "test"
     format      = "VHD"
     user_bucket {
-      s3_bucket = aws_s3_bucket.images.id
-      s3_key    = aws_s3_bucket_object.image.key
+      s3_bucket = aws_s3_bucket.test.id
+      s3_key    = aws_s3_object.test.key
     }
   }
 
-  role_name = aws_iam_role.vmimport.name
+  role_name = aws_iam_role.test.name
+}
+`)
+}
 
-  timeouts {
-    create = "10m"
-    delete = "10m"
+func testAccEBSSnapshotImportConfig_storageTier(t *testing.T, rName string) string {
+	return acctest.ConfigCompose(testAccEBSSnapshotImportBaseConfig(t, rName), fmt.Sprintf(`
+resource "aws_ebs_snapshot_import" "test" {
+  disk_container {
+    description = "test"
+    format      = "VHD"
+    user_bucket {
+      s3_bucket = aws_s3_bucket.test.id
+      s3_key    = aws_s3_object.test.key
+    }
+  }
+
+  role_name    = aws_iam_role.test.name
+  storage_tier = "archive"
+
+  tags = {
+    Name = %[1]q
   }
 }
 `, rName))
 }
 
-func testAccEBSSnapshotImportTags1Config(rName string, t *testing.T, tagKey1 string, tagValue1 string) string {
-	return acctest.ConfigCompose(testAccEBSSnapshotImportConfig_Base(t), fmt.Sprintf(`
+func testAccEBSSnapshotImportConfig_tags1(t *testing.T, rName, tagKey1, tagValue1 string) string {
+	return acctest.ConfigCompose(testAccEBSSnapshotImportBaseConfig(t, rName), fmt.Sprintf(`
 resource "aws_ebs_snapshot_import" "test" {
   disk_container {
-    description = %[1]q
+    description = "test"
     format      = "VHD"
     user_bucket {
-      s3_bucket = aws_s3_bucket.images.id
-      s3_key    = aws_s3_bucket_object.image.key
+      s3_bucket = aws_s3_bucket.test.id
+      s3_key    = aws_s3_object.test.key
     }
   }
 
-  role_name = aws_iam_role.vmimport.name
-
-  timeouts {
-    create = "10m"
-    delete = "10m"
-  }
+  role_name = aws_iam_role.test.name
 
   tags = {
-    %[2]q = %[3]q
+    %[1]q = %[2]q
   }
 }
-`, rName, tagKey1, tagValue1))
+`, tagKey1, tagValue1))
 }
 
-func testAccEBSSnapshotImportTags2Config(rName string, t *testing.T, tagKey1 string, tagValue1 string, tagKey2 string, tagValue2 string) string {
-	return acctest.ConfigCompose(testAccEBSSnapshotImportConfig_Base(t), fmt.Sprintf(`
+func testAccEBSSnapshotImportConfig_tags2(t *testing.T, rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return acctest.ConfigCompose(testAccEBSSnapshotImportBaseConfig(t, rName), fmt.Sprintf(`
 resource "aws_ebs_snapshot_import" "test" {
   disk_container {
-    description = %[1]q
+    description = "test"
     format      = "VHD"
     user_bucket {
-      s3_bucket = aws_s3_bucket.images.id
-      s3_key    = aws_s3_bucket_object.image.key
+      s3_bucket = aws_s3_bucket.test.id
+      s3_key    = aws_s3_object.test.key
     }
   }
 
-  role_name = aws_iam_role.vmimport.name
-
-  timeouts {
-    create = "10m"
-    delete = "10m"
-  }
+  role_name = aws_iam_role.test.name
 
   tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
+    %[1]q = %[2]q
+    %[3]q = %[4]q
   }
 }
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
+`, tagKey1, tagValue1, tagKey2, tagValue2))
 }
 
 func testAccEBSSnapshotDisk(t *testing.T) string {
@@ -357,10 +314,9 @@ func testAccEBSSnapshotDisk(t *testing.T) string {
 	// $ VBoxManage createmedium disk --filename ./image.vhd --sizebytes 512 --format vhd
 	// $ cat image.vhd | gzip --best | base64
 	b64_compressed := "H4sIAAAAAAACA0vOz0tNLsmsYGBgYGJgZIACJgZ1789hZUn5FQxsDIzhmUbZMHEEzSIIJJj///+QlV1rMXFVnLzHwteXYmWDDfYxjIIhA5IrigsSi4pT/0MBRJSNAZoWGBkUGBj+//9SNhpSo2AUDD+AyPOjYESW/6P1/4gGAAvDpVcACgAA"
-
 	decoder := base64.NewDecoder(base64.StdEncoding, strings.NewReader(b64_compressed))
-
 	zr, err := gzip.NewReader(decoder)
+
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -369,9 +325,11 @@ func testAccEBSSnapshotDisk(t *testing.T) string {
 	encoder := base64.NewEncoder(base64.StdEncoding, &out)
 
 	_, err = io.Copy(encoder, zr)
+
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	encoder.Close()
 
 	return out.String()

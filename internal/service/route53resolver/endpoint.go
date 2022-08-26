@@ -8,7 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/route53resolver"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -73,7 +73,7 @@ func ResourceEndpoint() *schema.Resource {
 						},
 					},
 				},
-				Set: route53ResolverEndpointHashIpAddress,
+				Set: endpointHashIPAddress,
 			},
 
 			"security_group_ids": {
@@ -157,7 +157,7 @@ func resourceEndpointRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	epRaw, state, err := route53ResolverEndpointRefresh(conn, d.Id())()
+	epRaw, state, err := endpointRefresh(conn, d.Id())()
 	if err != nil {
 		return fmt.Errorf("error getting Route53 Resolver endpoint (%s): %s", d.Id(), err)
 	}
@@ -193,7 +193,7 @@ func resourceEndpointRead(d *schema.ResourceData, meta interface{}) error {
 		}
 		req.NextToken = resp.NextToken
 	}
-	if err := d.Set("ip_address", schema.NewSet(route53ResolverEndpointHashIpAddress, ipAddresses)); err != nil {
+	if err := d.Set("ip_address", schema.NewSet(endpointHashIPAddress, ipAddresses)); err != nil {
 		return err
 	}
 
@@ -300,29 +300,24 @@ func resourceEndpointDelete(d *schema.ResourceData, meta interface{}) error {
 	_, err := conn.DeleteResolverEndpoint(&route53resolver.DeleteResolverEndpointInput{
 		ResolverEndpointId: aws.String(d.Id()),
 	})
-	if tfawserr.ErrMessageContains(err, route53resolver.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, route53resolver.ErrCodeResourceNotFoundException) {
 		return nil
 	}
 	if err != nil {
 		return fmt.Errorf("error deleting Route53 Resolver endpoint (%s): %s", d.Id(), err)
 	}
 
-	err = EndpointWaitUntilTargetState(conn, d.Id(), d.Timeout(schema.TimeoutDelete),
+	return EndpointWaitUntilTargetState(conn, d.Id(), d.Timeout(schema.TimeoutDelete),
 		[]string{route53resolver.ResolverEndpointStatusDeleting},
 		[]string{EndpointStatusDeleted})
-	if err != nil {
-		return err
-	}
-
-	return nil
 }
 
-func route53ResolverEndpointRefresh(conn *route53resolver.Route53Resolver, epId string) resource.StateRefreshFunc {
+func endpointRefresh(conn *route53resolver.Route53Resolver, epId string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		resp, err := conn.GetResolverEndpoint(&route53resolver.GetResolverEndpointInput{
 			ResolverEndpointId: aws.String(epId),
 		})
-		if tfawserr.ErrMessageContains(err, route53resolver.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, route53resolver.ErrCodeResourceNotFoundException) {
 			return &route53resolver.ResolverEndpoint{}, EndpointStatusDeleted, nil
 		}
 		if err != nil {
@@ -341,7 +336,7 @@ func EndpointWaitUntilTargetState(conn *route53resolver.Route53Resolver, epId st
 	stateConf := &resource.StateChangeConf{
 		Pending:    pending,
 		Target:     target,
-		Refresh:    route53ResolverEndpointRefresh(conn, epId),
+		Refresh:    endpointRefresh(conn, epId),
 		Timeout:    timeout,
 		Delay:      10 * time.Second,
 		MinTimeout: 5 * time.Second,
@@ -353,7 +348,7 @@ func EndpointWaitUntilTargetState(conn *route53resolver.Route53Resolver, epId st
 	return nil
 }
 
-func route53ResolverEndpointHashIpAddress(v interface{}) int {
+func endpointHashIPAddress(v interface{}) int {
 	var buf bytes.Buffer
 	m := v.(map[string]interface{})
 	buf.WriteString(fmt.Sprintf("%s-", m["subnet_id"].(string)))

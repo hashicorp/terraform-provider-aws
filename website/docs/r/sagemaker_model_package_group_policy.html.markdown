@@ -1,14 +1,14 @@
 ---
-subcategory: "Sagemaker"
+subcategory: "SageMaker"
 layout: "aws"
 page_title: "AWS: aws_sagemaker_model_package_group_policy"
 description: |-
-  Provides a Sagemaker Model Package Group Policy resource.
+  Provides a SageMaker Model Package Group Policy resource.
 ---
 
 # Resource: aws_sagemaker_model_package_group_policy
 
-Provides a Sagemaker Model Package Group Policy resource.
+Provides a SageMaker Model Package Group Policy resource.
 
 ## Example Usage
 
@@ -54,7 +54,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Sagemaker Code Model Package Groups can be imported using the `name`, e.g.,
+SageMaker Code Model Package Groups can be imported using the `name`, e.g.,
 
 ```
 $ terraform import aws_sagemaker_model_package_group_policy.example example

@@ -22,15 +22,15 @@ func TestAccGlobalAcceleratorAccelerator_basic(t *testing.T) {
 	dnsNameRegex := regexp.MustCompile(`^a[a-f0-9]{16}\.awsglobalaccelerator\.com$`)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckGlobalAccelerator(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, globalaccelerator.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckGlobalAcceleratorAcceleratorDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, globalaccelerator.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAcceleratorDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGlobalAcceleratorAcceleratorConfig(rName),
+				Config: testAccAcceleratorConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGlobalAcceleratorAcceleratorExists(resourceName),
+					testAccCheckAcceleratorExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "attributes.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "attributes.0.flow_logs_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "attributes.0.flow_logs_s3_bucket", ""),
@@ -56,20 +56,53 @@ func TestAccGlobalAcceleratorAccelerator_basic(t *testing.T) {
 	})
 }
 
+func TestAccGlobalAcceleratorAccelerator_ipAddressType_dualStack(t *testing.T) {
+	resourceName := "aws_globalaccelerator_accelerator.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, globalaccelerator.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAcceleratorDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAcceleratorConfig_ipAddressTypeDualStack(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAcceleratorExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "ip_address_type", "DUAL_STACK"),
+					resource.TestCheckResourceAttr(resourceName, "ip_sets.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "ip_sets.0.ip_addresses.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "ip_sets.0.ip_family", "IPv4"),
+					resource.TestCheckResourceAttr(resourceName, "ip_sets.1.ip_addresses.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "ip_sets.1.ip_family", "IPv6"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccGlobalAcceleratorAccelerator_disappears(t *testing.T) {
 	resourceName := "aws_globalaccelerator_accelerator.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckGlobalAccelerator(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, globalaccelerator.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckGlobalAcceleratorAcceleratorDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, globalaccelerator.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAcceleratorDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGlobalAcceleratorAcceleratorConfig(rName),
+				Config: testAccAcceleratorConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGlobalAcceleratorAcceleratorExists(resourceName),
+					testAccCheckAcceleratorExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfglobalaccelerator.ResourceAccelerator(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -84,15 +117,15 @@ func TestAccGlobalAcceleratorAccelerator_update(t *testing.T) {
 	newName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckGlobalAccelerator(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, globalaccelerator.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckGlobalAcceleratorAcceleratorDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, globalaccelerator.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAcceleratorDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGlobalAcceleratorAcceleratorConfigEnabled(rName, false),
+				Config: testAccAcceleratorConfig_enabled(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGlobalAcceleratorAcceleratorExists(resourceName),
+					testAccCheckAcceleratorExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 				),
@@ -103,17 +136,17 @@ func TestAccGlobalAcceleratorAccelerator_update(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccGlobalAcceleratorAcceleratorConfigEnabled(newName, true),
+				Config: testAccAcceleratorConfig_enabled(newName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGlobalAcceleratorAcceleratorExists(resourceName),
+					testAccCheckAcceleratorExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "name", newName),
 				),
 			},
 			{
-				Config: testAccGlobalAcceleratorAcceleratorConfigEnabled(rName, false),
+				Config: testAccAcceleratorConfig_enabled(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGlobalAcceleratorAcceleratorExists(resourceName),
+					testAccCheckAcceleratorExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 				),
@@ -123,20 +156,24 @@ func TestAccGlobalAcceleratorAccelerator_update(t *testing.T) {
 }
 
 func TestAccGlobalAcceleratorAccelerator_attributes(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	resourceName := "aws_globalaccelerator_accelerator.test"
 	s3BucketResourceName := "aws_s3_bucket.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckGlobalAccelerator(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, globalaccelerator.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckGlobalAcceleratorAcceleratorDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, globalaccelerator.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAcceleratorDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGlobalAcceleratorAcceleratorConfigAttributes(rName, false, "flow-logs/"),
+				Config: testAccAcceleratorConfig_attributes(rName, false, "flow-logs/"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGlobalAcceleratorAcceleratorExists(resourceName),
+					testAccCheckAcceleratorExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "attributes.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "attributes.0.flow_logs_enabled", "false"),
 					resource.TestCheckResourceAttrPair(resourceName, "attributes.0.flow_logs_s3_bucket", s3BucketResourceName, "bucket"),
@@ -149,9 +186,9 @@ func TestAccGlobalAcceleratorAccelerator_attributes(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccGlobalAcceleratorAcceleratorConfigAttributes(rName, true, "flow-logs/"),
+				Config: testAccAcceleratorConfig_attributes(rName, true, "flow-logs/"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGlobalAcceleratorAcceleratorExists(resourceName),
+					testAccCheckAcceleratorExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "attributes.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "attributes.0.flow_logs_enabled", "true"),
 					resource.TestCheckResourceAttrPair(resourceName, "attributes.0.flow_logs_s3_bucket", s3BucketResourceName, "bucket"),
@@ -159,9 +196,9 @@ func TestAccGlobalAcceleratorAccelerator_attributes(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccGlobalAcceleratorAcceleratorConfigAttributes(rName, true, "flow-logs-updated/"),
+				Config: testAccAcceleratorConfig_attributes(rName, true, "flow-logs-updated/"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGlobalAcceleratorAcceleratorExists(resourceName),
+					testAccCheckAcceleratorExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "attributes.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "attributes.0.flow_logs_enabled", "true"),
 					resource.TestCheckResourceAttrPair(resourceName, "attributes.0.flow_logs_s3_bucket", s3BucketResourceName, "bucket"),
@@ -169,9 +206,9 @@ func TestAccGlobalAcceleratorAccelerator_attributes(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccGlobalAcceleratorAcceleratorConfigAttributes(rName, false, "flow-logs/"),
+				Config: testAccAcceleratorConfig_attributes(rName, false, "flow-logs/"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGlobalAcceleratorAcceleratorExists(resourceName),
+					testAccCheckAcceleratorExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "attributes.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "attributes.0.flow_logs_enabled", "false"),
 					resource.TestCheckResourceAttrPair(resourceName, "attributes.0.flow_logs_s3_bucket", s3BucketResourceName, "bucket"),
@@ -187,15 +224,15 @@ func TestAccGlobalAcceleratorAccelerator_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckGlobalAccelerator(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, globalaccelerator.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckGlobalAcceleratorAcceleratorDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, globalaccelerator.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAcceleratorDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGlobalAcceleratorAcceleratorConfigTags1(rName, "key1", "value1"),
+				Config: testAccAcceleratorConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGlobalAcceleratorAcceleratorExists(resourceName),
+					testAccCheckAcceleratorExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
@@ -207,18 +244,18 @@ func TestAccGlobalAcceleratorAccelerator_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccGlobalAcceleratorAcceleratorConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccAcceleratorConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGlobalAcceleratorAcceleratorExists(resourceName),
+					testAccCheckAcceleratorExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccGlobalAcceleratorAcceleratorConfigTags1(rName, "key2", "value2"),
+				Config: testAccAcceleratorConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGlobalAcceleratorAcceleratorExists(resourceName),
+					testAccCheckAcceleratorExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -227,7 +264,7 @@ func TestAccGlobalAcceleratorAccelerator_tags(t *testing.T) {
 	})
 }
 
-func testAccPreCheckGlobalAccelerator(t *testing.T) {
+func testAccPreCheck(t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).GlobalAcceleratorConn
 
 	input := &globalaccelerator.ListAcceleratorsInput{}
@@ -243,7 +280,7 @@ func testAccPreCheckGlobalAccelerator(t *testing.T) {
 	}
 }
 
-func testAccCheckGlobalAcceleratorAcceleratorExists(name string) resource.TestCheckFunc {
+func testAccCheckAcceleratorExists(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).GlobalAcceleratorConn
 
@@ -258,15 +295,11 @@ func testAccCheckGlobalAcceleratorAcceleratorExists(name string) resource.TestCh
 
 		_, err := tfglobalaccelerator.FindAcceleratorByARN(conn, rs.Primary.ID)
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 
-func testAccCheckGlobalAcceleratorAcceleratorDestroy(s *terraform.State) error {
+func testAccCheckAcceleratorDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).GlobalAcceleratorConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -289,7 +322,7 @@ func testAccCheckGlobalAcceleratorAcceleratorDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccGlobalAcceleratorAcceleratorConfig(rName string) string {
+func testAccAcceleratorConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_globalaccelerator_accelerator" "test" {
   name = %[1]q
@@ -297,7 +330,16 @@ resource "aws_globalaccelerator_accelerator" "test" {
 `, rName)
 }
 
-func testAccGlobalAcceleratorAcceleratorConfigEnabled(rName string, enabled bool) string {
+func testAccAcceleratorConfig_ipAddressTypeDualStack(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_globalaccelerator_accelerator" "test" {
+  name            = %[1]q
+  ip_address_type = "DUAL_STACK"
+}
+`, rName)
+}
+
+func testAccAcceleratorConfig_enabled(rName string, enabled bool) string {
 	return fmt.Sprintf(`
 resource "aws_globalaccelerator_accelerator" "test" {
   name            = %[1]q
@@ -307,12 +349,16 @@ resource "aws_globalaccelerator_accelerator" "test" {
 `, rName, enabled)
 }
 
-func testAccGlobalAcceleratorAcceleratorConfigAttributes(rName string, flowLogsEnabled bool, flowLogsPrefix string) string {
+func testAccAcceleratorConfig_attributes(rName string, flowLogsEnabled bool, flowLogsPrefix string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
-  acl           = "private"
   bucket        = %[1]q
   force_destroy = true
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.test.id
+  acl    = "private"
 }
 
 resource "aws_globalaccelerator_accelerator" "test" {
@@ -329,7 +375,7 @@ resource "aws_globalaccelerator_accelerator" "test" {
 `, rName, flowLogsEnabled, flowLogsPrefix)
 }
 
-func testAccGlobalAcceleratorAcceleratorConfigTags1(rName, tagKey1, tagValue1 string) string {
+func testAccAcceleratorConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_globalaccelerator_accelerator" "test" {
   name            = %[1]q
@@ -343,7 +389,7 @@ resource "aws_globalaccelerator_accelerator" "test" {
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccGlobalAcceleratorAcceleratorConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccAcceleratorConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_globalaccelerator_accelerator" "test" {
   name            = %[1]q

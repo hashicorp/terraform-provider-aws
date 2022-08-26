@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/inspector"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -113,7 +113,7 @@ func resourceAssessmentTargetDelete(d *schema.ResourceData, meta interface{}) er
 	err := resource.Retry(60*time.Minute, func() *resource.RetryError {
 		_, err := conn.DeleteAssessmentTarget(input)
 
-		if tfawserr.ErrMessageContains(err, inspector.ErrCodeAssessmentRunInProgressException, "") {
+		if tfawserr.ErrCodeEquals(err, inspector.ErrCodeAssessmentRunInProgressException) {
 			return resource.RetryableError(err)
 		}
 
@@ -139,7 +139,7 @@ func DescribeAssessmentTarget(conn *inspector.Inspector, arn string) (*inspector
 
 	output, err := conn.DescribeAssessmentTargets(input)
 
-	if tfawserr.ErrMessageContains(err, inspector.ErrCodeInvalidInputException, "") {
+	if tfawserr.ErrCodeEquals(err, inspector.ErrCodeInvalidInputException) {
 		return nil, nil
 	}
 

@@ -1,5 +1,5 @@
 ---
-subcategory: "EC2"
+subcategory: "EBS (EC2)"
 layout: "aws"
 page_title: "AWS: aws_ebs_encryption_by_default"
 description: |-
@@ -22,3 +22,9 @@ The following attributes are exported:
 
 * `enabled` - Whether or not default EBS encryption is enabled. Returns as `true` or `false`.
 * `id` - Region of default EBS encryption.
+
+## Timeouts
+
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+
+- `read` - (Default `20m`)

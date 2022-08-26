@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appstream"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -27,12 +27,12 @@ func TestAccAppStreamUserStackAssociation_basic(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 		},
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckUserStackAssociationDestroy,
-		ErrorCheck:        acctest.ErrorCheck(t, appstream.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserStackAssociationDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, appstream.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserStackAssociationConfig(rName, authType, rEmail),
+				Config: testAccUserStackAssociationConfig_basic(rName, authType, rEmail),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserStackAssociationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "authentication_type", authType),
@@ -60,12 +60,12 @@ func TestAccAppStreamUserStackAssociation_disappears(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 		},
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckUserStackAssociationDestroy,
-		ErrorCheck:        acctest.ErrorCheck(t, appstream.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserStackAssociationDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, appstream.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserStackAssociationConfig(rName, authType, rEmail),
+				Config: testAccUserStackAssociationConfig_basic(rName, authType, rEmail),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserStackAssociationExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfappstream.ResourceUserStackAssociation(), resourceName),
@@ -88,18 +88,18 @@ func TestAccAppStreamUserStackAssociation_complete(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 		},
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckUserStackAssociationDestroy,
-		ErrorCheck:        acctest.ErrorCheck(t, appstream.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserStackAssociationDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, appstream.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserStackAssociationConfig(rName, authType, rEmail),
+				Config: testAccUserStackAssociationConfig_basic(rName, authType, rEmail),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserStackAssociationExists(resourceName),
 				),
 			},
 			{
-				Config: testAccUserStackAssociationConfig(rName, authType, rEmailUpdated),
+				Config: testAccUserStackAssociationConfig_basic(rName, authType, rEmailUpdated),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserStackAssociationExists(resourceName),
 				),
@@ -180,7 +180,7 @@ func testAccCheckUserStackAssociationDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccUserStackAssociationConfig(name, authType, userName string) string {
+func testAccUserStackAssociationConfig_basic(name, authType, userName string) string {
 	return fmt.Sprintf(`
 resource "aws_appstream_stack" "test" {
   name = %[1]q

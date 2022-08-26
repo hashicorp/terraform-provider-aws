@@ -1,21 +1,21 @@
 package configservice
 
 import (
+	"errors"
 	"fmt"
-	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/configservice"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func ResourceDeliveryChannel() *schema.Resource {
@@ -105,13 +105,13 @@ func resourceDeliveryChannelPut(d *schema.ResourceData, meta interface{}) error 
 
 	input := configservice.PutDeliveryChannelInput{DeliveryChannel: &channel}
 
-	err := resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
 		_, err := conn.PutDeliveryChannel(&input)
 		if err == nil {
 			return nil
 		}
 
-		if tfawserr.ErrMessageContains(err, "InsufficientDeliveryPolicyException", "") {
+		if tfawserr.ErrCodeEquals(err, "InsufficientDeliveryPolicyException") {
 			return resource.RetryableError(err)
 		}
 
@@ -135,22 +135,26 @@ func resourceDeliveryChannelRead(d *schema.ResourceData, meta interface{}) error
 	input := configservice.DescribeDeliveryChannelsInput{
 		DeliveryChannelNames: []*string{aws.String(d.Id())},
 	}
-	out, err := conn.DescribeDeliveryChannels(&input)
-	if err != nil {
-		if awsErr, ok := err.(awserr.Error); ok {
-			if awsErr.Code() == "NoSuchDeliveryChannelException" {
-				log.Printf("[WARN] Delivery Channel %q is gone (NoSuchDeliveryChannelException)", d.Id())
-				d.SetId("")
-				return nil
-			}
-		}
-		return fmt.Errorf("Getting Delivery Channel failed: %s", err)
-	}
 
-	if len(out.DeliveryChannels) < 1 {
-		log.Printf("[WARN] Delivery Channel %q is gone (no channels found)", d.Id())
+	out, err := conn.DescribeDeliveryChannels(&input)
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, configservice.ErrCodeNoSuchDeliveryChannelException) {
+		create.LogNotFoundRemoveState(names.ConfigService, create.ErrActionReading, ResNameDeliveryChannel, d.Id())
 		d.SetId("")
 		return nil
+	}
+
+	if err != nil {
+		return create.Error(names.ConfigService, create.ErrActionReading, ResNameDeliveryChannel, d.Id(), err)
+	}
+
+	if !d.IsNewResource() && len(out.DeliveryChannels) < 1 {
+		create.LogNotFoundRemoveState(names.ConfigService, create.ErrActionReading, ResNameDeliveryChannel, d.Id())
+		d.SetId("")
+		return nil
+	}
+
+	if d.IsNewResource() && len(out.DeliveryChannels) < 1 {
+		return create.Error(names.ConfigService, create.ErrActionReading, ResNameDeliveryChannel, d.Id(), errors.New("not found after creation"))
 	}
 
 	if len(out.DeliveryChannels) > 1 {

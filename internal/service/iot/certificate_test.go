@@ -15,13 +15,13 @@ import (
 
 func TestAccIoTCertificate_csr(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, iot.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckCertificateDestroy_basic,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iot.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCertificateDestroy_basic,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCertificate_csr,
+				Config: testAccCertificateConfig_csr,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet("aws_iot_certificate.foo_cert", "arn"),
 					resource.TestCheckResourceAttrSet("aws_iot_certificate.foo_cert", "csr"),
@@ -37,19 +37,44 @@ func TestAccIoTCertificate_csr(t *testing.T) {
 
 func TestAccIoTCertificate_Keys_certificate(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, iot.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckCertificateDestroy_basic,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iot.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCertificateDestroy_basic,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCertificate_keys_certificate,
+				Config: testAccCertificateConfig_keys,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet("aws_iot_certificate.foo_cert", "arn"),
 					resource.TestCheckNoResourceAttr("aws_iot_certificate.foo_cert", "csr"),
 					resource.TestCheckResourceAttrSet("aws_iot_certificate.foo_cert", "certificate_pem"),
 					resource.TestCheckResourceAttrSet("aws_iot_certificate.foo_cert", "public_key"),
 					resource.TestCheckResourceAttrSet("aws_iot_certificate.foo_cert", "private_key"),
+					resource.TestCheckResourceAttr("aws_iot_certificate.foo_cert", "active", "true"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccIoTCertificate_Keys_existingCertificate(t *testing.T) {
+	key := acctest.TLSRSAPrivateKeyPEM(2048)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, "testcert")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iot.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCertificateDestroy_basic,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCertificateConfig_existingCertificate(acctest.TLSPEMEscapeNewlines(certificate)),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet("aws_iot_certificate.foo_cert", "arn"),
+					resource.TestCheckNoResourceAttr("aws_iot_certificate.foo_cert", "csr"),
+					resource.TestCheckResourceAttrSet("aws_iot_certificate.foo_cert", "certificate_pem"),
+					resource.TestCheckNoResourceAttr("aws_iot_certificate.foo_cert", "public_key"),
+					resource.TestCheckNoResourceAttr("aws_iot_certificate.foo_cert", "private_key"),
 					resource.TestCheckResourceAttr("aws_iot_certificate.foo_cert", "active", "true"),
 				),
 			},
@@ -91,15 +116,24 @@ func testAccCheckCertificateDestroy_basic(s *terraform.State) error {
 	return nil
 }
 
-var testAccCertificate_csr = `
+var testAccCertificateConfig_csr = `
 resource "aws_iot_certificate" "foo_cert" {
   csr    = file("test-fixtures/iot-csr.pem")
   active = true
 }
 `
 
-var testAccCertificate_keys_certificate = `
+var testAccCertificateConfig_keys = `
 resource "aws_iot_certificate" "foo_cert" {
   active = true
 }
 `
+
+func testAccCertificateConfig_existingCertificate(pem string) string {
+	return fmt.Sprintf(`
+resource "aws_iot_certificate" "foo_cert" {
+  active          = true
+  certificate_pem = "%[1]s"
+}
+`, pem)
+}

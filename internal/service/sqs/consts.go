@@ -1,10 +1,6 @@
 package sqs
 
 const (
-	ErrCodeInvalidAction = "InvalidAction"
-)
-
-const (
 	FIFOQueueNameSuffix = ".fifo"
 )
 

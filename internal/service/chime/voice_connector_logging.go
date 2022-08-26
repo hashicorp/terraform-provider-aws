@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/chime"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -24,6 +24,11 @@ func ResourceVoiceConnectorLogging() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"enable_media_metric_logs": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 			"enable_sip_logs": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -45,7 +50,8 @@ func resourceVoiceConnectorLoggingCreate(ctx context.Context, d *schema.Resource
 	input := &chime.PutVoiceConnectorLoggingConfigurationInput{
 		VoiceConnectorId: aws.String(vcId),
 		LoggingConfiguration: &chime.LoggingConfiguration{
-			EnableSIPLogs: aws.Bool(d.Get("enable_sip_logs").(bool)),
+			EnableMediaMetricLogs: aws.Bool(d.Get("enable_media_metric_logs").(bool)),
+			EnableSIPLogs:         aws.Bool(d.Get("enable_sip_logs").(bool)),
 		},
 	}
 
@@ -65,7 +71,7 @@ func resourceVoiceConnectorLoggingRead(ctx context.Context, d *schema.ResourceDa
 	}
 
 	resp, err := conn.GetVoiceConnectorLoggingConfigurationWithContext(ctx, input)
-	if !d.IsNewResource() && tfawserr.ErrMessageContains(err, chime.ErrCodeNotFoundException, "") {
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, chime.ErrCodeNotFoundException) {
 		log.Printf("[WARN] Chime Voice Connector logging configuration %s not found", d.Id())
 		d.SetId("")
 		return nil
@@ -74,7 +80,7 @@ func resourceVoiceConnectorLoggingRead(ctx context.Context, d *schema.ResourceDa
 	if err != nil || resp.LoggingConfiguration == nil {
 		return diag.Errorf("error getting Chime Voice Connector (%s) logging configuration: %s", d.Id(), err)
 	}
-
+	d.Set("enable_media_metric_logs", resp.LoggingConfiguration.EnableMediaMetricLogs)
 	d.Set("enable_sip_logs", resp.LoggingConfiguration.EnableSIPLogs)
 	d.Set("voice_connector_id", d.Id())
 
@@ -84,20 +90,16 @@ func resourceVoiceConnectorLoggingRead(ctx context.Context, d *schema.ResourceDa
 func resourceVoiceConnectorLoggingUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).ChimeConn
 
-	if d.HasChange("enable_sip_logs") {
+	if d.HasChanges("enable_sip_logs", "enable_media_metric_logs") {
 		input := &chime.PutVoiceConnectorLoggingConfigurationInput{
 			VoiceConnectorId: aws.String(d.Id()),
 			LoggingConfiguration: &chime.LoggingConfiguration{
-				EnableSIPLogs: aws.Bool(d.Get("enable_sip_logs").(bool)),
+				EnableMediaMetricLogs: aws.Bool(d.Get("enable_media_metric_logs").(bool)),
+				EnableSIPLogs:         aws.Bool(d.Get("enable_sip_logs").(bool)),
 			},
 		}
 
 		if _, err := conn.PutVoiceConnectorLoggingConfigurationWithContext(ctx, input); err != nil {
-			if tfawserr.ErrMessageContains(err, chime.ErrCodeNotFoundException, "") {
-				log.Printf("[WARN] Chime Voice Connector logging configuration %s not found", d.Id())
-				d.SetId("")
-				return nil
-			}
 			return diag.Errorf("error updating Chime Voice Connector (%s) logging configuration: %s", d.Id(), err)
 		}
 	}
@@ -111,13 +113,14 @@ func resourceVoiceConnectorLoggingDelete(ctx context.Context, d *schema.Resource
 	input := &chime.PutVoiceConnectorLoggingConfigurationInput{
 		VoiceConnectorId: aws.String(d.Id()),
 		LoggingConfiguration: &chime.LoggingConfiguration{
-			EnableSIPLogs: aws.Bool(false),
+			EnableSIPLogs:         aws.Bool(false),
+			EnableMediaMetricLogs: aws.Bool(false),
 		},
 	}
 
 	_, err := conn.PutVoiceConnectorLoggingConfigurationWithContext(ctx, input)
 
-	if tfawserr.ErrMessageContains(err, chime.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, chime.ErrCodeNotFoundException) {
 		return nil
 	}
 

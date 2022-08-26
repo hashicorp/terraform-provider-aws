@@ -10,9 +10,9 @@ import (
 
 func TestAccKMSCiphertextDataSource_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, kms.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, kms.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCiphertextDataSourceConfig_basic,
@@ -27,9 +27,9 @@ func TestAccKMSCiphertextDataSource_basic(t *testing.T) {
 
 func TestAccKMSCiphertextDataSource_validate(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, kms.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, kms.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCiphertextDataSourceConfig_validate,
@@ -44,12 +44,12 @@ func TestAccKMSCiphertextDataSource_validate(t *testing.T) {
 
 func TestAccKMSCiphertextDataSource_Validate_withContext(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, kms.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, kms.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCiphertextDataSourceConfig_validate_withContext,
+				Config: testAccCiphertextDataSourceConfig_validateContext,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(
 						"data.aws_kms_ciphertext.foo", "ciphertext_blob"),
@@ -85,7 +85,7 @@ data "aws_kms_ciphertext" "foo" {
 }
 `
 
-const testAccCiphertextDataSourceConfig_validate_withContext = `
+const testAccCiphertextDataSourceConfig_validateContext = `
 resource "aws_kms_key" "foo" {
   description = "tf-test-acc-data-source-aws-kms-ciphertext-validate-with-context"
   is_enabled  = true

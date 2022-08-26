@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/prometheusservice"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -96,7 +96,7 @@ func resourceRuleGroupNamespaceUpdate(ctx context.Context, d *schema.ResourceDat
 func resourceRuleGroupNamespaceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).AMPConn
 
-	rgn, err := FindRuleGroupNamespaceByArn(ctx, conn, d.Id())
+	rgn, err := FindRuleGroupNamespaceByARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Prometheus Rule Group Namespace (%s) not found, removing from state", d.Id())
@@ -110,7 +110,7 @@ func resourceRuleGroupNamespaceRead(ctx context.Context, d *schema.ResourceData,
 
 	d.Set("data", string(rgn.Data))
 	d.Set("name", rgn.Name)
-	_, workspaceID, err := nameAndWorkspaceIdFromRuleGroupNamespaceArn(d.Id())
+	_, workspaceID, err := nameAndWorkspaceIDFromRuleGroupNamespaceARN(d.Id())
 	if err != nil {
 		return diag.FromErr(err)
 	}

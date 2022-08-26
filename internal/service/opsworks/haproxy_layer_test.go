@@ -1,7 +1,6 @@
 package opsworks_test
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/opsworks"
@@ -12,125 +11,46 @@ import (
 )
 
 func TestAccOpsWorksHAProxyLayer_basic(t *testing.T) {
-	var opslayer opsworks.Layer
-	stackName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	var v opsworks.Layer
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_opsworks_haproxy_layer.test"
+
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, opsworks.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckHAProxyLayerDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, opsworks.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckHAProxyLayerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccHAProxyLayerVPCCreateConfig(stackName),
+				Config: testAccHAProxyLayerConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLayerExists(resourceName, &opslayer),
-					resource.TestCheckResourceAttr(resourceName, "name", stackName),
+					testAccCheckLayerExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "healthcheck_method", "OPTIONS"),
+					resource.TestCheckResourceAttr(resourceName, "healthcheck_url", "/"),
+					resource.TestCheckResourceAttr(resourceName, "name", "HAProxy"),
+					resource.TestCheckResourceAttr(resourceName, "stats_enabled", "true"),
+					resource.TestCheckResourceAttrSet(resourceName, "stats_password"),
+					resource.TestCheckResourceAttr(resourceName, "stats_url", "/haproxy?stats"),
+					resource.TestCheckResourceAttr(resourceName, "stats_user", "opsworks"),
 				),
 			},
 		},
 	})
 }
 
-func TestAccOpsWorksHAProxyLayer_tags(t *testing.T) {
-	var opslayer opsworks.Layer
-	stackName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_opsworks_haproxy_layer.test"
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, opsworks.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckHAProxyLayerDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccHAProxyLayerTags1Config(stackName, "key1", "value1"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLayerExists(resourceName, &opslayer),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
-				),
-			},
-			{
-				Config: testAccHAProxyLayerTags2Config(stackName, "key1", "value1updated", "key2", "value2"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLayerExists(resourceName, &opslayer),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
-				),
-			},
-			{
-				Config: testAccHAProxyLayerTags1Config(stackName, "key2", "value2"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLayerExists(resourceName, &opslayer),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
-				),
-			},
-		},
-	})
-}
+// _disappears and _tags for OpsWorks Layers are tested via aws_opsworks_rails_app_layer.
 
 func testAccCheckHAProxyLayerDestroy(s *terraform.State) error {
 	return testAccCheckLayerDestroy("aws_opsworks_haproxy_layer", s)
 }
 
-func testAccHAProxyLayerVPCCreateConfig(name string) string {
-	return testAccStackVPCCreateConfig(name) +
-		testAccCustomLayerSecurityGroups(name) +
-		fmt.Sprintf(`
+func testAccHAProxyLayerConfig_basic(rName string) string {
+	return acctest.ConfigCompose(testAccLayerConfig_base(rName), `
 resource "aws_opsworks_haproxy_layer" "test" {
-  stack_id       = aws_opsworks_stack.tf-acc.id
-  name           = %[1]q
-  stats_password = %[1]q
+  stack_id       = aws_opsworks_stack.test.id
+  stats_password = "avoid-plaintext-passwords"
 
-  custom_security_group_ids = [
-    aws_security_group.tf-ops-acc-layer1.id,
-    aws_security_group.tf-ops-acc-layer2.id,
-  ]
+  custom_security_group_ids = aws_security_group.test[*].id
 }
-`, name)
-}
-
-func testAccHAProxyLayerTags1Config(name, tagKey1, tagValue1 string) string {
-	return testAccStackVPCCreateConfig(name) +
-		testAccCustomLayerSecurityGroups(name) +
-		fmt.Sprintf(`
-resource "aws_opsworks_haproxy_layer" "test" {
-  stack_id       = aws_opsworks_stack.tf-acc.id
-  name           = %[1]q
-  stats_password = %[1]q
-
-  custom_security_group_ids = [
-    aws_security_group.tf-ops-acc-layer1.id,
-    aws_security_group.tf-ops-acc-layer2.id,
-  ]
-
-  tags = {
-    %[2]q = %[3]q
-  }
-}
-`, name, tagKey1, tagValue1)
-}
-
-func testAccHAProxyLayerTags2Config(name, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return testAccStackVPCCreateConfig(name) +
-		testAccCustomLayerSecurityGroups(name) +
-		fmt.Sprintf(`
-resource "aws_opsworks_haproxy_layer" "test" {
-  stack_id       = aws_opsworks_stack.tf-acc.id
-  name           = %[1]q
-  stats_password = %[1]q
-
-  custom_security_group_ids = [
-    aws_security_group.tf-ops-acc-layer1.id,
-    aws_security_group.tf-ops-acc-layer2.id,
-  ]
-
-  tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
-  }
-}
-`, name, tagKey1, tagValue1, tagKey2, tagValue2)
+`)
 }

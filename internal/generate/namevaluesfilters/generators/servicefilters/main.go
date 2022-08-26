@@ -1,5 +1,5 @@
-//go:build ignore
-// +build ignore
+//go:build generate
+// +build generate
 
 package main
 
@@ -12,7 +12,7 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/hashicorp/terraform-provider-aws/internal/namevaluesfilters"
+	"github.com/hashicorp/terraform-provider-aws/internal/generate/namevaluesfilters"
 )
 
 const filename = `service_filters_gen.go`
@@ -32,6 +32,7 @@ var sliceServiceNames = []string{
 	"rds",
 	"resourcegroupstaggingapi",
 	"route53resolver",
+	"secretsmanager",
 }
 
 type TemplateData struct {
@@ -92,7 +93,7 @@ var templateBody = `
 
 package namevaluesfilters
 
-import ( // nosemgrep: aws-sdk-go-multiple-service-imports
+import ( // nosemgrep:ci.aws-sdk-go-multiple-service-imports
 	"github.com/aws/aws-sdk-go/aws"
 {{- range .SliceServiceNames }}
 {{- if eq . (. | FilterPackage) }}

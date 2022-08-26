@@ -8,7 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/aws/aws-sdk-go/service/wafregional"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfwaf "github.com/hashicorp/terraform-provider-aws/internal/service/waf"
@@ -86,7 +86,7 @@ func resourceRegexMatchSetCreate(d *schema.ResourceData, meta interface{}) error
 		return conn.CreateRegexMatchSet(params)
 	})
 	if err != nil {
-		return fmt.Errorf("Failed creating WAF Regional Regex Match Set: %s", err)
+		return fmt.Errorf("Failed creating WAF Regional Regex Match Set: %w", err)
 	}
 	resp := out.(*waf.CreateRegexMatchSetOutput)
 
@@ -98,15 +98,14 @@ func resourceRegexMatchSetCreate(d *schema.ResourceData, meta interface{}) error
 func resourceRegexMatchSetRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WAFRegionalConn
 
-	log.Printf("[INFO] Reading WAF Regional Regex Match Set: %s", d.Get("name").(string))
 	set, err := FindRegexMatchSetByID(conn, d.Id())
-	if tfawserr.ErrCodeEquals(err, wafregional.ErrCodeWAFNonexistentItemException) {
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, wafregional.ErrCodeWAFNonexistentItemException) {
 		log.Printf("[WARN] WAF Regional Regex Match Set (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 	if err != nil {
-		return fmt.Errorf("Error getting WAF Regional Regex Match Set (%s): %s", d.Id(), err)
+		return fmt.Errorf("error getting WAF Regional Regex Match Set (%s): %w", d.Id(), err)
 	}
 
 	d.Set("name", set.Name)
@@ -119,19 +118,12 @@ func resourceRegexMatchSetUpdate(d *schema.ResourceData, meta interface{}) error
 	conn := meta.(*conns.AWSClient).WAFRegionalConn
 	region := meta.(*conns.AWSClient).Region
 
-	log.Printf("[INFO] Updating WAF Regional Regex Match Set: %s", d.Get("name").(string))
-
 	if d.HasChange("regex_match_tuple") {
 		o, n := d.GetChange("regex_match_tuple")
 		oldT, newT := o.(*schema.Set).List(), n.(*schema.Set).List()
 		err := updateRegexMatchSetResourceWR(d.Id(), oldT, newT, conn, region)
-		if tfawserr.ErrCodeEquals(err, wafregional.ErrCodeWAFNonexistentItemException) {
-			log.Printf("[WARN] WAF Regional Rate Based Rule (%s) not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
 		if err != nil {
-			return fmt.Errorf("Failed updating WAF Regional Regex Match Set(%s): %s", d.Id(), err)
+			return fmt.Errorf("failed updating WAF Regional Regex Match Set (%s): %w", d.Id(), err)
 		}
 	}
 
@@ -143,13 +135,13 @@ func resourceRegexMatchSetDelete(d *schema.ResourceData, meta interface{}) error
 	region := meta.(*conns.AWSClient).Region
 
 	err := DeleteRegexMatchSetResource(conn, region, "global", d.Id(), getRegexMatchTuplesFromResourceData(d))
+
 	if tfawserr.ErrCodeEquals(err, wafregional.ErrCodeWAFNonexistentItemException) {
-		log.Printf("[WARN] WAF Regional Regex Match Set (%s) not found, removing from state", d.Id())
-		d.SetId("")
 		return nil
 	}
+
 	if err != nil {
-		return err
+		return fmt.Errorf("error deleting WAF Regional Regex Match Set (%s): %w", d.Id(), err)
 	}
 
 	return nil

@@ -8,7 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/aws/aws-sdk-go/service/wafregional"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -105,7 +105,7 @@ func resourceRateBasedRuleCreate(d *schema.ResourceData, meta interface{}) error
 		return conn.CreateRateBasedRule(params)
 	})
 	if err != nil {
-		return fmt.Errorf("Error creating WAF Regional Rate Based Rule (%s): %s", d.Id(), err)
+		return fmt.Errorf("error creating WAF Regional Rate Based Rule (%s): %w", d.Get("name").(string), err)
 	}
 	resp := out.(*waf.CreateRateBasedRuleOutput)
 	d.SetId(aws.StringValue(resp.Rule.RuleId))
@@ -113,9 +113,9 @@ func resourceRateBasedRuleCreate(d *schema.ResourceData, meta interface{}) error
 	newPredicates := d.Get("predicate").(*schema.Set).List()
 	if len(newPredicates) > 0 {
 		noPredicates := []interface{}{}
-		err := updateWafRateBasedRuleResourceWR(d.Id(), noPredicates, newPredicates, d.Get("rate_limit"), conn, region)
+		err := updateRateBasedRuleResourceWR(d.Id(), noPredicates, newPredicates, d.Get("rate_limit"), conn, region)
 		if err != nil {
-			return fmt.Errorf("Error Updating WAF Rate Based Rule: %s", err)
+			return fmt.Errorf("error updating WAF Regional Rate Based Rule (%s): %w", d.Get("name").(string), err)
 		}
 	}
 
@@ -132,13 +132,13 @@ func resourceRateBasedRuleRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	resp, err := conn.GetRateBasedRule(params)
-	if tfawserr.ErrMessageContains(err, wafregional.ErrCodeWAFNonexistentItemException, "") {
-		log.Printf("[WARN] WAF Regional Rate Based Rule (%s) not found, removing from state", d.Id())
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, wafregional.ErrCodeWAFNonexistentItemException) {
+		log.Printf("[WARN] WAF Regional Rate Based Rule (%s) not found, removing from state", d.Get("name").(string))
 		d.SetId("")
 		return nil
 	}
 	if err != nil {
-		return fmt.Errorf("Error getting WAF Regional Rate Based Rule (%s): %s", d.Id(), err)
+		return fmt.Errorf("error getting WAF Regional Rate Based Rule (%s): %w", d.Get("name").(string), err)
 	}
 
 	var predicates []map[string]interface{}
@@ -162,7 +162,7 @@ func resourceRateBasedRuleRead(d *schema.ResourceData, meta interface{}) error {
 
 	tagList, err := ListTags(conn, arn)
 	if err != nil {
-		return fmt.Errorf("Failed to get WAF Regional Rated Based Rule parameter tags for %s: %s", d.Get("name"), err)
+		return fmt.Errorf("failed to get WAF Regional Rated Based Rule parameter tags for %s: %w", d.Get("name"), err)
 	}
 
 	tags := tagList.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
@@ -194,14 +194,9 @@ func resourceRateBasedRuleUpdate(d *schema.ResourceData, meta interface{}) error
 		oldP, newP := o.(*schema.Set).List(), n.(*schema.Set).List()
 		rateLimit := d.Get("rate_limit")
 
-		err := updateWafRateBasedRuleResourceWR(d.Id(), oldP, newP, rateLimit, conn, region)
-		if tfawserr.ErrMessageContains(err, wafregional.ErrCodeWAFNonexistentItemException, "") {
-			log.Printf("[WARN] WAF Regional Rate Based Rule (%s) not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
+		err := updateRateBasedRuleResourceWR(d.Id(), oldP, newP, rateLimit, conn, region)
 		if err != nil {
-			return fmt.Errorf("Error updating WAF Regional Rate Based Rule Predicates (%s): %s", d.Id(), err)
+			return fmt.Errorf("error updating WAF Regional Rate Based Rule Predicates (%s): %w", d.Get("name").(string), err)
 		}
 	}
 
@@ -209,7 +204,7 @@ func resourceRateBasedRuleUpdate(d *schema.ResourceData, meta interface{}) error
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating tags: %s", err)
+			return fmt.Errorf("error updating tags: %w", err)
 		}
 	}
 
@@ -225,12 +220,12 @@ func resourceRateBasedRuleDelete(d *schema.ResourceData, meta interface{}) error
 		noPredicates := []interface{}{}
 		rateLimit := d.Get("rate_limit")
 
-		err := updateWafRateBasedRuleResourceWR(d.Id(), oldPredicates, noPredicates, rateLimit, conn, region)
-		if tfawserr.ErrMessageContains(err, wafregional.ErrCodeWAFNonexistentItemException, "") {
+		err := updateRateBasedRuleResourceWR(d.Id(), oldPredicates, noPredicates, rateLimit, conn, region)
+		if tfawserr.ErrCodeEquals(err, wafregional.ErrCodeWAFNonexistentItemException) {
 			return nil
 		}
 		if err != nil {
-			return fmt.Errorf("Error updating WAF Regional Rate Based Rule Predicates (%s): %s", d.Id(), err)
+			return fmt.Errorf("error updating WAF Regional Rate Based Rule Predicates (%s): %w", d.Get("name").(string), err)
 		}
 	}
 
@@ -243,17 +238,17 @@ func resourceRateBasedRuleDelete(d *schema.ResourceData, meta interface{}) error
 		log.Printf("[INFO] Deleting WAF Regional Rate Based Rule")
 		return conn.DeleteRateBasedRule(req)
 	})
-	if tfawserr.ErrMessageContains(err, wafregional.ErrCodeWAFNonexistentItemException, "") {
+	if tfawserr.ErrCodeEquals(err, wafregional.ErrCodeWAFNonexistentItemException) {
 		return nil
 	}
 	if err != nil {
-		return fmt.Errorf("Error deleting WAF Regional Rate Based Rule (%s): %s", d.Id(), err)
+		return fmt.Errorf("error deleting WAF Regional Rate Based Rule (%s): %w", d.Get("name").(string), err)
 	}
 
 	return nil
 }
 
-func updateWafRateBasedRuleResourceWR(id string, oldP, newP []interface{}, rateLimit interface{}, conn *wafregional.WAFRegional, region string) error {
+func updateRateBasedRuleResourceWR(id string, oldP, newP []interface{}, rateLimit interface{}, conn *wafregional.WAFRegional, region string) error {
 	wr := NewRetryer(conn, region)
 	_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
 		req := &waf.UpdateRateBasedRuleInput{

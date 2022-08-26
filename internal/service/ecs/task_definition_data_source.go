@@ -20,6 +20,10 @@ func DataSourceTaskDefinition() *schema.Resource {
 				Required: true,
 			},
 			// Computed values.
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"family": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -64,6 +68,7 @@ func dataSourceTaskDefinitionRead(d *schema.ResourceData, meta interface{}) erro
 	taskDefinition := desc.TaskDefinition
 
 	d.SetId(aws.StringValue(taskDefinition.TaskDefinitionArn))
+	d.Set("arn", taskDefinition.TaskDefinitionArn)
 	d.Set("family", taskDefinition.Family)
 	d.Set("network_mode", taskDefinition.NetworkMode)
 	d.Set("revision", taskDefinition.Revision)

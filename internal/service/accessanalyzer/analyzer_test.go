@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/accessanalyzer"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-// This test can be run via the pattern: TestAccAWSAccessAnalyzer
 func testAccAnalyzer_basic(t *testing.T) {
 	var analyzer accessanalyzer.AnalyzerSummary
 
@@ -22,13 +21,13 @@ func testAccAnalyzer_basic(t *testing.T) {
 	resourceName := "aws_accessanalyzer_analyzer.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, accessanalyzer.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAccessAnalyzerAnalyzerDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, accessanalyzer.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAnalyzerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAnalyzerAnalyzerNameConfig(rName),
+				Config: testAccAnalyzerConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAnalyzerExists(resourceName, &analyzer),
 					resource.TestCheckResourceAttr(resourceName, "analyzer_name", rName),
@@ -46,7 +45,6 @@ func testAccAnalyzer_basic(t *testing.T) {
 	})
 }
 
-// This test can be run via the pattern: TestAccAWSAccessAnalyzer
 func testAccAnalyzer_disappears(t *testing.T) {
 	var analyzer accessanalyzer.AnalyzerSummary
 
@@ -54,13 +52,13 @@ func testAccAnalyzer_disappears(t *testing.T) {
 	resourceName := "aws_accessanalyzer_analyzer.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, accessanalyzer.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAccessAnalyzerAnalyzerDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, accessanalyzer.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAnalyzerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAnalyzerAnalyzerNameConfig(rName),
+				Config: testAccAnalyzerConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAnalyzerExists(resourceName, &analyzer),
 					testAccCheckAnalyzerDisappears(&analyzer),
@@ -71,7 +69,6 @@ func testAccAnalyzer_disappears(t *testing.T) {
 	})
 }
 
-// This test can be run via the pattern: TestAccAWSAccessAnalyzer
 func testAccAnalyzer_Tags(t *testing.T) {
 	var analyzer accessanalyzer.AnalyzerSummary
 
@@ -79,13 +76,13 @@ func testAccAnalyzer_Tags(t *testing.T) {
 	resourceName := "aws_accessanalyzer_analyzer.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, accessanalyzer.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAccessAnalyzerAnalyzerDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, accessanalyzer.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAnalyzerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAnalyzerTags1Config(rName, "key1", "value1"),
+				Config: testAccAnalyzerConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAnalyzerExists(resourceName, &analyzer),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -98,7 +95,7 @@ func testAccAnalyzer_Tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAnalyzerTags2Config(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccAnalyzerConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAnalyzerExists(resourceName, &analyzer),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -107,7 +104,7 @@ func testAccAnalyzer_Tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAnalyzerTags1Config(rName, "key2", "value2"),
+				Config: testAccAnalyzerConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAnalyzerExists(resourceName, &analyzer),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -118,7 +115,6 @@ func testAccAnalyzer_Tags(t *testing.T) {
 	})
 }
 
-// This test can be run via the pattern: TestAccAWSAccessAnalyzer
 func testAccAnalyzer_Type_Organization(t *testing.T) {
 	var analyzer accessanalyzer.AnalyzerSummary
 
@@ -131,12 +127,12 @@ func testAccAnalyzer_Type_Organization(t *testing.T) {
 			testAccPreCheck(t)
 			acctest.PreCheckOrganizationsAccount(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, accessanalyzer.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAccessAnalyzerAnalyzerDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, accessanalyzer.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAnalyzerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAnalyzerTypeOrganizationConfig(rName),
+				Config: testAccAnalyzerConfig_typeOrganization(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAnalyzerExists(resourceName, &analyzer),
 					resource.TestCheckResourceAttr(resourceName, "type", accessanalyzer.TypeOrganization),
@@ -151,7 +147,7 @@ func testAccAnalyzer_Type_Organization(t *testing.T) {
 	})
 }
 
-func testAccCheckAccessAnalyzerAnalyzerDestroy(s *terraform.State) error {
+func testAccCheckAnalyzerDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).AccessAnalyzerConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -165,7 +161,7 @@ func testAccCheckAccessAnalyzerAnalyzerDestroy(s *terraform.State) error {
 
 		output, err := conn.GetAnalyzer(input)
 
-		if tfawserr.ErrMessageContains(err, accessanalyzer.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, accessanalyzer.ErrCodeResourceNotFoundException) {
 			continue
 		}
 
@@ -200,11 +196,11 @@ func testAccCheckAnalyzerExists(resourceName string, analyzer *accessanalyzer.An
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
-			return fmt.Errorf("Resource not found: %s", resourceName)
+			return fmt.Errorf("resource not found: %s", resourceName)
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("Resource (%s) ID not set", resourceName)
+			return fmt.Errorf("resource (%s) ID not set", resourceName)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AccessAnalyzerConn
@@ -225,7 +221,7 @@ func testAccCheckAnalyzerExists(resourceName string, analyzer *accessanalyzer.An
 	}
 }
 
-func testAccAnalyzerAnalyzerNameConfig(rName string) string {
+func testAccAnalyzerConfig_name(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_accessanalyzer_analyzer" "test" {
   analyzer_name = %[1]q
@@ -233,7 +229,7 @@ resource "aws_accessanalyzer_analyzer" "test" {
 `, rName)
 }
 
-func testAccAnalyzerTags1Config(rName, tagKey1, tagValue1 string) string {
+func testAccAnalyzerConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_accessanalyzer_analyzer" "test" {
   analyzer_name = %[1]q
@@ -245,7 +241,7 @@ resource "aws_accessanalyzer_analyzer" "test" {
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccAnalyzerTags2Config(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccAnalyzerConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_accessanalyzer_analyzer" "test" {
   analyzer_name = %[1]q
@@ -258,7 +254,7 @@ resource "aws_accessanalyzer_analyzer" "test" {
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
-func testAccAnalyzerTypeOrganizationConfig(rName string) string {
+func testAccAnalyzerConfig_typeOrganization(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 

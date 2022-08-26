@@ -45,6 +45,8 @@ The following attributes are exported:
         * `cron_expression_for_recurrence` - A cron expression specifying the recurrence pattern for an Auto-Tune maintenance schedule.
     * `rollback_on_disable` - Whether the domain is set to roll back to default Auto-Tune settings when disabling Auto-Tune.
 * `cluster_config` - Cluster configuration of the domain.
+    * `cold_storage_options` - Configuration block containing cold storage configuration.
+        * `enabled` - Indicates  cold storage is enabled.
     * `instance_type` - Instance type of data nodes in the cluster.
     * `instance_count` - Number of instances in the cluster.
     * `dedicated_master_enabled` - Indicates whether dedicated master nodes are enabled for the cluster.
@@ -66,6 +68,7 @@ The following attributes are exported:
 * `domain_id` – Unique identifier for the domain.
 * `ebs_options` - EBS Options for the instances in the domain.
     * `ebs_enabled` - Whether EBS volumes are attached to data nodes in the domain.
+    * `throughput` - The throughput (in MiB/s) of the EBS volumes attached to data nodes.
     * `volume_type` - The type of EBS volumes attached to data nodes.
     * `volume_size` - The size of EBS volumes attached to data nodes (in GB).
     * `iops` - The baseline input/output (I/O) performance of EBS volumes attached to data nodes.

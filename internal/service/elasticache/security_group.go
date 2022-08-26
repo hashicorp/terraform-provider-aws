@@ -43,6 +43,8 @@ func ResourceSecurityGroup() *schema.Resource {
 				Set:      schema.HashString,
 			},
 		},
+
+		DeprecationMessage: `With the retirement of EC2-Classic the aws_elasticache_security_group resource has been deprecated and will be removed in a future version.`,
 	}
 }
 
@@ -105,7 +107,7 @@ func resourceSecurityGroupRead(d *schema.ResourceData, meta interface{}) error {
 	var group *elasticache.CacheSecurityGroup
 	for _, g := range res.CacheSecurityGroups {
 		log.Printf("[DEBUG] CacheSecurityGroupName: %v, id: %v", g.CacheSecurityGroupName, d.Id())
-		if *g.CacheSecurityGroupName == d.Id() {
+		if aws.StringValue(g.CacheSecurityGroupName) == d.Id() {
 			group = g
 		}
 	}

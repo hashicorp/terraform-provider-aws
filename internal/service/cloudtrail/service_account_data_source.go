@@ -12,6 +12,7 @@ import (
 // See http://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-supported-regions.html
 // See https://docs.aws.amazon.com/govcloud-us/latest/ug-east/verifying-cloudtrail.html
 // See https://docs.aws.amazon.com/govcloud-us/latest/ug-west/verifying-cloudtrail.html
+
 var ServiceAccountPerRegionMap = map[string]string{
 	endpoints.AfSouth1RegionID:     "525921808201",
 	endpoints.ApEast1RegionID:      "119688915426",
@@ -21,6 +22,7 @@ var ServiceAccountPerRegionMap = map[string]string{
 	endpoints.ApSouth1RegionID:     "977081816279",
 	endpoints.ApSoutheast1RegionID: "903692715234",
 	endpoints.ApSoutheast2RegionID: "284668455005",
+	endpoints.ApSoutheast3RegionID: "069019280451",
 	endpoints.CaCentral1RegionID:   "819402241893",
 	endpoints.CnNorth1RegionID:     "193415116832",
 	endpoints.CnNorthwest1RegionID: "681348832753",

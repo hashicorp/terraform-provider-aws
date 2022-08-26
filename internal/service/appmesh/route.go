@@ -9,7 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appmesh"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -325,13 +325,13 @@ func ResourceRoute() *schema.Resource {
 						},
 
 						"http2_route": func() *schema.Schema {
-							schema := appmeshRouteHttpRouteSchema()
+							schema := RouteHTTPRouteSchema()
 							schema.ConflictsWith = []string{"spec.0.grpc_route", "spec.0.http_route", "spec.0.tcp_route"}
 							return schema
 						}(),
 
 						"http_route": func() *schema.Schema {
-							schema := appmeshRouteHttpRouteSchema()
+							schema := RouteHTTPRouteSchema()
 							schema.ConflictsWith = []string{"spec.0.grpc_route", "spec.0.http2_route", "spec.0.tcp_route"}
 							return schema
 						}(),
@@ -448,8 +448,8 @@ func ResourceRoute() *schema.Resource {
 	}
 }
 
-// appmeshRouteHttpRouteSchema returns the schema for `http2_route` and `http_route` attributes.
-func appmeshRouteHttpRouteSchema() *schema.Schema {
+// RouteHTTPRouteSchema returns the schema for `http2_route` and `http_route` attributes.
+func RouteHTTPRouteSchema() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		Optional: true,
@@ -797,7 +797,7 @@ func resourceRouteRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("created_date", resp.Route.Metadata.CreatedAt.Format(time.RFC3339))
 	d.Set("last_updated_date", resp.Route.Metadata.LastUpdatedAt.Format(time.RFC3339))
 	d.Set("resource_owner", resp.Route.Metadata.ResourceOwner)
-	err = d.Set("spec", flattenAppMeshRouteSpec(resp.Route.Spec))
+	err = d.Set("spec", flattenRouteSpec(resp.Route.Spec))
 	if err != nil {
 		return fmt.Errorf("error setting spec: %s", err)
 	}
@@ -865,7 +865,7 @@ func resourceRouteDelete(d *schema.ResourceData, meta interface{}) error {
 		RouteName:         aws.String(d.Get("name").(string)),
 		VirtualRouterName: aws.String(d.Get("virtual_router_name").(string)),
 	})
-	if tfawserr.ErrMessageContains(err, appmesh.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, appmesh.ErrCodeNotFoundException) {
 		return nil
 	}
 	if err != nil {
@@ -878,7 +878,7 @@ func resourceRouteDelete(d *schema.ResourceData, meta interface{}) error {
 func resourceRouteImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	parts := strings.Split(d.Id(), "/")
 	if len(parts) != 3 {
-		return []*schema.ResourceData{}, fmt.Errorf("Wrong format of resource: %s. Please follow 'mesh-name/virtual-router-name/route-name'", d.Id())
+		return []*schema.ResourceData{}, fmt.Errorf("wrong format of import ID (%s), use: 'mesh-name/virtual-router-name/route-name'", d.Id())
 	}
 
 	mesh := parts[0]

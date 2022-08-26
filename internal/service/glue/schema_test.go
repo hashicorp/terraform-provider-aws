@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/glue"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -23,13 +23,13 @@ func TestAccGlueSchema_basic(t *testing.T) {
 	registryResourceName := "aws_glue_registry.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckSchema(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSchemaDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSchema(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSchemaDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSchemaBasicConfig(rName),
+				Config: testAccSchemaConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSchemaExists(resourceName, &schema),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "glue", fmt.Sprintf("schema/%s/%s", rName, rName)),
@@ -55,6 +55,64 @@ func TestAccGlueSchema_basic(t *testing.T) {
 	})
 }
 
+func TestAccGlueSchema_json(t *testing.T) {
+	var schema glue.GetSchemaOutput
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_glue_schema.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSchema(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSchemaDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSchemaConfig_json(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSchemaExists(resourceName, &schema),
+					resource.TestCheckResourceAttr(resourceName, "data_format", "JSON"),
+					resource.TestCheckResourceAttr(resourceName, "schema_definition", "{\"$id\":\"https://example.com/person.schema.json\",\"$schema\":\"http://json-schema.org/draft-07/schema#\",\"title\":\"Person\",\"type\":\"object\",\"properties\":{\"firstName\":{\"type\":\"string\",\"description\":\"The person's first name.\"},\"lastName\":{\"type\":\"string\",\"description\":\"The person's last name.\"},\"age\":{\"description\":\"Age in years which must be equal to or greater than zero.\",\"type\":\"integer\",\"minimum\":0}}}"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccGlueSchema_protobuf(t *testing.T) {
+	var schema glue.GetSchemaOutput
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_glue_schema.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSchema(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSchemaDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSchemaConfig_protobuf(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSchemaExists(resourceName, &schema),
+					resource.TestCheckResourceAttr(resourceName, "data_format", "PROTOBUF"),
+					resource.TestCheckResourceAttr(resourceName, "schema_definition", "syntax = \"proto2\";\n\npackage tutorial;\n\noption java_multiple_files = true;\noption java_package = \"com.example.tutorial.protos\";\noption java_outer_classname = \"AddressBookProtos\";\n\nmessage Person {\n  optional string name = 1;\n  optional int32 id = 2;\n  optional string email = 3;\n\n  enum PhoneType {\n    MOBILE = 0;\n    HOME = 1;\n    WORK = 2;\n  }\n\n  message PhoneNumber {\n    optional string number = 1;\n    optional PhoneType type = 2 [default = HOME];\n  }\n\n  repeated PhoneNumber phones = 4;\n}\n\nmessage AddressBook {\n  repeated Person people = 1;\n}"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccGlueSchema_description(t *testing.T) {
 	var schema glue.GetSchemaOutput
 
@@ -62,20 +120,20 @@ func TestAccGlueSchema_description(t *testing.T) {
 	resourceName := "aws_glue_schema.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckSchema(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSchemaDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSchema(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSchemaDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSchemaDescriptionConfig(rName, "First Description"),
+				Config: testAccSchemaConfig_description(rName, "First Description"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSchemaExists(resourceName, &schema),
 					resource.TestCheckResourceAttr(resourceName, "description", "First Description"),
 				),
 			},
 			{
-				Config: testAccSchemaDescriptionConfig(rName, "Second Description"),
+				Config: testAccSchemaConfig_description(rName, "Second Description"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSchemaExists(resourceName, &schema),
 					resource.TestCheckResourceAttr(resourceName, "description", "Second Description"),
@@ -97,20 +155,20 @@ func TestAccGlueSchema_compatibility(t *testing.T) {
 	resourceName := "aws_glue_schema.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckSchema(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSchemaDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSchema(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSchemaDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSchemaCompatibillityConfig(rName, "DISABLED"),
+				Config: testAccSchemaConfig_compatibility(rName, "DISABLED"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSchemaExists(resourceName, &schema),
 					resource.TestCheckResourceAttr(resourceName, "compatibility", "DISABLED"),
 				),
 			},
 			{
-				Config: testAccSchemaCompatibillityConfig(rName, "FULL"),
+				Config: testAccSchemaConfig_compatibility(rName, "FULL"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSchemaExists(resourceName, &schema),
 					resource.TestCheckResourceAttr(resourceName, "compatibility", "FULL"),
@@ -131,13 +189,13 @@ func TestAccGlueSchema_tags(t *testing.T) {
 	resourceName := "aws_glue_schema.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckSchema(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSchemaDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSchema(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSchemaDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSchemaTags1Config(rName, "key1", "value1"),
+				Config: testAccSchemaConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSchemaExists(resourceName, &schema),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -150,7 +208,7 @@ func TestAccGlueSchema_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccSchemaTags2Config(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccSchemaConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSchemaExists(resourceName, &schema),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -159,7 +217,7 @@ func TestAccGlueSchema_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccSchemaTags1Config(rName, "key2", "value2"),
+				Config: testAccSchemaConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSchemaExists(resourceName, &schema),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -177,13 +235,13 @@ func TestAccGlueSchema_schemaDefUpdated(t *testing.T) {
 	resourceName := "aws_glue_schema.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckSchema(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSchemaDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSchema(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSchemaDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSchemaBasicConfig(rName),
+				Config: testAccSchemaConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSchemaExists(resourceName, &schema),
 					resource.TestCheckResourceAttr(resourceName, "schema_definition", "{\"type\": \"record\", \"name\": \"r1\", \"fields\": [ {\"name\": \"f1\", \"type\": \"int\"}, {\"name\": \"f2\", \"type\": \"string\"} ]}"),
@@ -192,7 +250,7 @@ func TestAccGlueSchema_schemaDefUpdated(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccSchemaSchemaDefinitionUpdatedConfig(rName),
+				Config: testAccSchemaConfig_definitionUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSchemaExists(resourceName, &schema),
 					resource.TestCheckResourceAttr(resourceName, "schema_definition", "{\"type\": \"record\", \"name\": \"r1\", \"fields\": [ {\"name\": \"f1\", \"type\": \"string\"}, {\"name\": \"f2\", \"type\": \"int\"} ]}"),
@@ -216,13 +274,13 @@ func TestAccGlueSchema_disappears(t *testing.T) {
 	resourceName := "aws_glue_schema.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckSchema(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSchemaDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSchema(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSchemaDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSchemaBasicConfig(rName),
+				Config: testAccSchemaConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSchemaExists(resourceName, &schema),
 					acctest.CheckResourceDisappears(acctest.Provider, tfglue.ResourceSchema(), resourceName),
@@ -240,13 +298,13 @@ func TestAccGlueSchema_Disappears_registry(t *testing.T) {
 	resourceName := "aws_glue_schema.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckSchema(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSchemaDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSchema(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSchemaDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSchemaBasicConfig(rName),
+				Config: testAccSchemaConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSchemaExists(resourceName, &schema),
 					acctest.CheckResourceDisappears(acctest.Provider, tfglue.ResourceRegistry(), "aws_glue_registry.test"),
@@ -263,7 +321,7 @@ func testAccPreCheckSchema(t *testing.T) {
 	_, err := conn.ListRegistries(&glue.ListRegistriesInput{})
 
 	// Some endpoints that do not support Glue Schemas return InternalFailure
-	if acctest.PreCheckSkipError(err) || tfawserr.ErrMessageContains(err, "InternalFailure", "") {
+	if acctest.PreCheckSkipError(err) || tfawserr.ErrCodeEquals(err, "InternalFailure") {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}
 
@@ -311,7 +369,7 @@ func testAccCheckSchemaDestroy(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn
 		output, err := tfglue.FindSchemaByID(conn, rs.Primary.ID)
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {
+			if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
 				return nil
 			}
 
@@ -335,7 +393,7 @@ resource "aws_glue_registry" "test" {
 `, rName)
 }
 
-func testAccSchemaDescriptionConfig(rName, description string) string {
+func testAccSchemaConfig_description(rName, description string) string {
 	return testAccSchemaBase(rName) + fmt.Sprintf(`
 resource "aws_glue_schema" "test" {
   schema_name       = %[1]q
@@ -348,7 +406,7 @@ resource "aws_glue_schema" "test" {
 `, rName, description)
 }
 
-func testAccSchemaCompatibillityConfig(rName, compat string) string {
+func testAccSchemaConfig_compatibility(rName, compat string) string {
 	return testAccSchemaBase(rName) + fmt.Sprintf(`
 resource "aws_glue_schema" "test" {
   schema_name       = %[1]q
@@ -360,7 +418,7 @@ resource "aws_glue_schema" "test" {
 `, rName, compat)
 }
 
-func testAccSchemaBasicConfig(rName string) string {
+func testAccSchemaConfig_basic(rName string) string {
 	return testAccSchemaBase(rName) + fmt.Sprintf(`
 resource "aws_glue_schema" "test" {
   schema_name       = %[1]q
@@ -372,7 +430,31 @@ resource "aws_glue_schema" "test" {
 `, rName)
 }
 
-func testAccSchemaTags1Config(rName, tagKey1, tagValue1 string) string {
+func testAccSchemaConfig_json(rName string) string {
+	return testAccSchemaBase(rName) + fmt.Sprintf(`
+resource "aws_glue_schema" "test" {
+  schema_name       = %[1]q
+  registry_arn      = aws_glue_registry.test.arn
+  data_format       = "JSON"
+  compatibility     = "NONE"
+  schema_definition = "{\"$id\":\"https://example.com/person.schema.json\",\"$schema\":\"http://json-schema.org/draft-07/schema#\",\"title\":\"Person\",\"type\":\"object\",\"properties\":{\"firstName\":{\"type\":\"string\",\"description\":\"The person's first name.\"},\"lastName\":{\"type\":\"string\",\"description\":\"The person's last name.\"},\"age\":{\"description\":\"Age in years which must be equal to or greater than zero.\",\"type\":\"integer\",\"minimum\":0}}}"
+}
+`, rName)
+}
+
+func testAccSchemaConfig_protobuf(rName string) string {
+	return testAccSchemaBase(rName) + fmt.Sprintf(`
+resource "aws_glue_schema" "test" {
+  schema_name       = %[1]q
+  registry_arn      = aws_glue_registry.test.arn
+  data_format       = "PROTOBUF"
+  compatibility     = "NONE"
+  schema_definition = "syntax = \"proto2\";\n\npackage tutorial;\n\noption java_multiple_files = true;\noption java_package = \"com.example.tutorial.protos\";\noption java_outer_classname = \"AddressBookProtos\";\n\nmessage Person {\n  optional string name = 1;\n  optional int32 id = 2;\n  optional string email = 3;\n\n  enum PhoneType {\n    MOBILE = 0;\n    HOME = 1;\n    WORK = 2;\n  }\n\n  message PhoneNumber {\n    optional string number = 1;\n    optional PhoneType type = 2 [default = HOME];\n  }\n\n  repeated PhoneNumber phones = 4;\n}\n\nmessage AddressBook {\n  repeated Person people = 1;\n}"
+}
+`, rName)
+}
+
+func testAccSchemaConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return testAccSchemaBase(rName) + fmt.Sprintf(`
 resource "aws_glue_schema" "test" {
   schema_name       = %[1]q
@@ -388,7 +470,7 @@ resource "aws_glue_schema" "test" {
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccSchemaTags2Config(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccSchemaConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return testAccSchemaBase(rName) + fmt.Sprintf(`
 resource "aws_glue_schema" "test" {
   schema_name       = %[1]q
@@ -405,7 +487,7 @@ resource "aws_glue_schema" "test" {
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
-func testAccSchemaSchemaDefinitionUpdatedConfig(rName string) string {
+func testAccSchemaConfig_definitionUpdated(rName string) string {
 	return testAccSchemaBase(rName) + fmt.Sprintf(`
 resource "aws_glue_schema" "test" {
   schema_name       = %[1]q

@@ -8,7 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/kms"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -151,7 +151,7 @@ func resourceReplicaKeyCreate(d *schema.ResourceData, meta interface{}) error {
 	d.Set("key_id", d.Id())
 
 	if enabled := d.Get("enabled").(bool); !enabled {
-		if err := updateKmsKeyEnabled(conn, d.Id(), enabled); err != nil {
+		if err := updateKeyEnabled(conn, d.Id(), enabled); err != nil {
 			return err
 		}
 	}
@@ -177,7 +177,7 @@ func resourceReplicaKeyRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	key, err := findKmsKey(conn, d.Id(), d.IsNewResource())
+	key, err := findKey(conn, d.Id(), d.IsNewResource())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] KMS Replica Key (%s) not found, removing from state", d.Id())
@@ -239,26 +239,26 @@ func resourceReplicaKeyUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if hasChange, enabled := d.HasChange("enabled"), d.Get("enabled").(bool); hasChange && enabled {
 		// Enable before any attributes are modified.
-		if err := updateKmsKeyEnabled(conn, d.Id(), enabled); err != nil {
+		if err := updateKeyEnabled(conn, d.Id(), enabled); err != nil {
 			return err
 		}
 	}
 
 	if d.HasChange("description") {
-		if err := updateKmsKeyDescription(conn, d.Id(), d.Get("description").(string)); err != nil {
+		if err := updateKeyDescription(conn, d.Id(), d.Get("description").(string)); err != nil {
 			return err
 		}
 	}
 
 	if d.HasChange("policy") {
-		if err := updateKmsKeyPolicy(conn, d.Id(), d.Get("policy").(string), d.Get("bypass_policy_lockout_safety_check").(bool)); err != nil {
+		if err := updateKeyPolicy(conn, d.Id(), d.Get("policy").(string), d.Get("bypass_policy_lockout_safety_check").(bool)); err != nil {
 			return err
 		}
 	}
 
 	if hasChange, enabled := d.HasChange("enabled"), d.Get("enabled").(bool); hasChange && !enabled {
 		// Only disable after all attributes have been modified because we cannot modify disabled keys.
-		if err := updateKmsKeyEnabled(conn, d.Id(), enabled); err != nil {
+		if err := updateKeyEnabled(conn, d.Id(), enabled); err != nil {
 			return err
 		}
 	}

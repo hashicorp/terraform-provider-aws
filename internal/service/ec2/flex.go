@@ -9,19 +9,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func flattenAttributeValues(l []*ec2.AttributeValue) []string {
-	values := make([]string, 0, len(l))
-	for _, v := range l {
-		values = append(values, aws.StringValue(v.Value))
-	}
-	return values
-}
-
-//Flattens security group identifiers into a []string, where the elements returned are the GroupIDs
+// Flattens security group identifiers into a []string, where the elements returned are the GroupIDs
 func FlattenGroupIdentifiers(dtos []*ec2.GroupIdentifier) []string {
 	ids := make([]string, 0, len(dtos))
 	for _, v := range dtos {
-		group_id := *v.GroupId
+		group_id := aws.StringValue(v.GroupId)
 		ids = append(ids, group_id)
 	}
 	return ids
@@ -44,7 +36,7 @@ type GroupIdentifier struct {
 // to_port or from_port set to a non-zero value.
 func ExpandIPPerms(
 	group *ec2.SecurityGroup, configured []interface{}) ([]*ec2.IpPermission, error) {
-	vpc := group.VpcId != nil && *group.VpcId != ""
+	vpc := aws.StringValue(group.VpcId) != ""
 
 	perms := make([]*ec2.IpPermission, len(configured))
 	for i, mRaw := range configured {
@@ -60,7 +52,7 @@ func ExpandIPPerms(
 		// than '0'. Force the user to make a deliberate '0' port
 		// choice when specifying a "-1" protocol, and tell them about
 		// AWS's behavior in the error message.
-		if *perm.IpProtocol == "-1" && (*perm.FromPort != 0 || *perm.ToPort != 0) {
+		if aws.StringValue(perm.IpProtocol) == "-1" && (aws.Int64Value(perm.FromPort) != 0 || aws.Int64Value(perm.ToPort) != 0) {
 			return nil, fmt.Errorf(
 				"from_port (%d) and to_port (%d) must both be 0 to use the 'ALL' \"-1\" protocol!",
 				*perm.FromPort, *perm.ToPort)
@@ -153,12 +145,12 @@ func FlattenSecurityGroups(list []*ec2.UserIdGroupPair, ownerId *string) []*Grou
 	result := make([]*GroupIdentifier, 0, len(list))
 	for _, g := range list {
 		var userId *string
-		if g.UserId != nil && *g.UserId != "" && (ownerId == nil || *ownerId != *g.UserId) {
+		if aws.StringValue(g.UserId) != "" && (ownerId == nil || aws.StringValue(ownerId) != aws.StringValue(g.UserId)) {
 			userId = g.UserId
 		}
 		// userid nil here for same vpc groups
 
-		vpc := g.GroupName == nil || *g.GroupName == ""
+		vpc := aws.StringValue(g.GroupName) == ""
 		var id *string
 		if vpc {
 			id = g.GroupId
@@ -187,43 +179,4 @@ func FlattenSecurityGroups(list []*ec2.UserIdGroupPair, ownerId *string) []*Grou
 		}
 	}
 	return result
-}
-
-func expandVPCPeeringConnectionOptions(vOptions []interface{}, crossRegionPeering bool) *ec2.PeeringConnectionOptionsRequest {
-	if len(vOptions) == 0 || vOptions[0] == nil {
-		return nil
-	}
-
-	mOptions := vOptions[0].(map[string]interface{})
-
-	options := &ec2.PeeringConnectionOptionsRequest{}
-
-	if v, ok := mOptions["allow_remote_vpc_dns_resolution"].(bool); ok {
-		options.AllowDnsResolutionFromRemoteVpc = aws.Bool(v)
-	}
-	if !crossRegionPeering {
-		if v, ok := mOptions["allow_classic_link_to_remote_vpc"].(bool); ok {
-			options.AllowEgressFromLocalClassicLinkToRemoteVpc = aws.Bool(v)
-		}
-		if v, ok := mOptions["allow_vpc_to_remote_classic_link"].(bool); ok {
-			options.AllowEgressFromLocalVpcToRemoteClassicLink = aws.Bool(v)
-		}
-	}
-
-	return options
-}
-
-func flattenVPCPeeringConnectionOptions(options *ec2.VpcPeeringConnectionOptionsDescription) []interface{} {
-	// When the VPC Peering Connection is pending acceptance,
-	// the details about accepter and/or requester peering
-	// options would not be included in the response.
-	if options == nil {
-		return []interface{}{}
-	}
-
-	return []interface{}{map[string]interface{}{
-		"allow_remote_vpc_dns_resolution":  aws.BoolValue(options.AllowDnsResolutionFromRemoteVpc),
-		"allow_classic_link_to_remote_vpc": aws.BoolValue(options.AllowEgressFromLocalClassicLinkToRemoteVpc),
-		"allow_vpc_to_remote_classic_link": aws.BoolValue(options.AllowEgressFromLocalVpcToRemoteClassicLink),
-	}}
 }

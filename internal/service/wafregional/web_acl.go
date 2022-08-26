@@ -8,7 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/aws/aws-sdk-go/service/wafregional"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -82,17 +82,9 @@ func ResourceWebACL() *schema.Resource {
 													Optional: true,
 												},
 												"type": {
-													Type:     schema.TypeString,
-													Required: true,
-													ValidateFunc: validation.StringInSlice([]string{
-														waf.MatchFieldTypeAllQueryArgs,
-														waf.MatchFieldTypeBody,
-														waf.MatchFieldTypeHeader,
-														waf.MatchFieldTypeMethod,
-														waf.MatchFieldTypeQueryString,
-														waf.MatchFieldTypeSingleQueryArg,
-														waf.MatchFieldTypeUri,
-													}, false),
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: validation.StringInSlice(wafregional.MatchFieldType_Values(), false),
 												},
 											},
 										},
@@ -220,7 +212,7 @@ func resourceWebACLCreate(d *schema.ResourceData, meta interface{}) error {
 
 	if len(loggingConfiguration) == 1 {
 		input := &waf.PutLoggingConfigurationInput{
-			LoggingConfiguration: expandWAFRegionalLoggingConfiguration(loggingConfiguration, webACLARN),
+			LoggingConfiguration: expandLoggingConfiguration(loggingConfiguration, webACLARN),
 		}
 
 		log.Printf("[DEBUG] Updating WAF Regional Web ACL (%s) Logging Configuration: %s", d.Id(), input)
@@ -260,16 +252,16 @@ func resourceWebACLRead(d *schema.ResourceData, meta interface{}) error {
 
 	resp, err := conn.GetWebACL(params)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, wafregional.ErrCodeWAFNonexistentItemException, "") {
+		if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, wafregional.ErrCodeWAFNonexistentItemException) {
 			log.Printf("[WARN] WAF Regional ACL (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
 		}
 
-		return err
+		return fmt.Errorf("unable to read WAF Regional ACL (%s): %w", d.Id(), err)
 	}
 
-	if resp == nil || resp.WebACL == nil {
+	if !d.IsNewResource() && (resp == nil || resp.WebACL == nil) {
 		log.Printf("[WARN] WAF Regional ACL (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -321,12 +313,12 @@ func resourceWebACLRead(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] Getting WAF Regional Web ACL (%s) Logging Configuration: %s", d.Id(), getLoggingConfigurationInput)
 	getLoggingConfigurationOutput, err := conn.GetLoggingConfiguration(getLoggingConfigurationInput)
 
-	if err != nil && !tfawserr.ErrMessageContains(err, waf.ErrCodeNonexistentItemException, "") {
+	if err != nil && !tfawserr.ErrCodeEquals(err, waf.ErrCodeNonexistentItemException) {
 		return fmt.Errorf("error getting WAF Regional Web ACL (%s) Logging Configuration: %s", d.Id(), err)
 	}
 
 	if getLoggingConfigurationOutput != nil {
-		loggingConfiguration = flattenWAFRegionalLoggingConfiguration(getLoggingConfigurationOutput.LoggingConfiguration)
+		loggingConfiguration = flattenLoggingConfiguration(getLoggingConfigurationOutput.LoggingConfiguration)
 	}
 
 	if err := d.Set("logging_configuration", loggingConfiguration); err != nil {
@@ -364,7 +356,7 @@ func resourceWebACLUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		if len(loggingConfiguration) == 1 {
 			input := &waf.PutLoggingConfigurationInput{
-				LoggingConfiguration: expandWAFRegionalLoggingConfiguration(loggingConfiguration, d.Get("arn").(string)),
+				LoggingConfiguration: expandLoggingConfiguration(loggingConfiguration, d.Get("arn").(string)),
 			}
 
 			log.Printf("[DEBUG] Updating WAF Regional Web ACL (%s) Logging Configuration: %s", d.Id(), input)
@@ -432,7 +424,7 @@ func resourceWebACLDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func expandWAFRegionalLoggingConfiguration(l []interface{}, resourceARN string) *waf.LoggingConfiguration {
+func expandLoggingConfiguration(l []interface{}, resourceARN string) *waf.LoggingConfiguration {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -443,14 +435,14 @@ func expandWAFRegionalLoggingConfiguration(l []interface{}, resourceARN string) 
 		LogDestinationConfigs: []*string{
 			aws.String(m["log_destination"].(string)),
 		},
-		RedactedFields: expandWAFRegionalRedactedFields(m["redacted_fields"].([]interface{})),
+		RedactedFields: expandRedactedFields(m["redacted_fields"].([]interface{})),
 		ResourceArn:    aws.String(resourceARN),
 	}
 
 	return loggingConfiguration
 }
 
-func expandWAFRegionalRedactedFields(l []interface{}) []*waf.FieldToMatch {
+func expandRedactedFields(l []interface{}) []*waf.FieldToMatch {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -474,14 +466,14 @@ func expandWAFRegionalRedactedFields(l []interface{}) []*waf.FieldToMatch {
 	return redactedFields
 }
 
-func flattenWAFRegionalLoggingConfiguration(loggingConfiguration *waf.LoggingConfiguration) []interface{} {
+func flattenLoggingConfiguration(loggingConfiguration *waf.LoggingConfiguration) []interface{} {
 	if loggingConfiguration == nil {
 		return []interface{}{}
 	}
 
 	m := map[string]interface{}{
 		"log_destination": "",
-		"redacted_fields": flattenWAFRegionalRedactedFields(loggingConfiguration.RedactedFields),
+		"redacted_fields": flattenRedactedFields(loggingConfiguration.RedactedFields),
 	}
 
 	if len(loggingConfiguration.LogDestinationConfigs) > 0 {
@@ -491,7 +483,7 @@ func flattenWAFRegionalLoggingConfiguration(loggingConfiguration *waf.LoggingCon
 	return []interface{}{m}
 }
 
-func flattenWAFRegionalRedactedFields(fieldToMatches []*waf.FieldToMatch) []interface{} {
+func flattenRedactedFields(fieldToMatches []*waf.FieldToMatch) []interface{} {
 	if len(fieldToMatches) == 0 {
 		return []interface{}{}
 	}

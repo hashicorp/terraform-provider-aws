@@ -5,8 +5,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/applicationautoscaling"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -14,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfappautoscaling "github.com/hashicorp/terraform-provider-aws/internal/service/appautoscaling"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccAppAutoScalingTarget_basic(t *testing.T) {
@@ -22,13 +21,13 @@ func TestAccAppAutoScalingTarget_basic(t *testing.T) {
 	randClusterName := fmt.Sprintf("cluster-%s", sdkacctest.RandString(10))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, applicationautoscaling.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTargetDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, applicationautoscaling.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTargetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTargetConfig(randClusterName),
+				Config: testAccTargetConfig_basic(randClusterName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTargetExists("aws_appautoscaling_target.bar", &target),
 					resource.TestCheckResourceAttr("aws_appautoscaling_target.bar", "service_namespace", "ecs"),
@@ -39,7 +38,7 @@ func TestAccAppAutoScalingTarget_basic(t *testing.T) {
 			},
 
 			{
-				Config: testAccTargetUpdateConfig(randClusterName),
+				Config: testAccTargetConfig_update(randClusterName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTargetExists("aws_appautoscaling_target.bar", &target),
 					resource.TestCheckResourceAttr("aws_appautoscaling_target.bar", "min_capacity", "2"),
@@ -62,13 +61,13 @@ func TestAccAppAutoScalingTarget_disappears(t *testing.T) {
 	resourceName := "aws_appautoscaling_target.bar"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, applicationautoscaling.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTargetDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, applicationautoscaling.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTargetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTargetConfig(rName),
+				Config: testAccTargetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTargetExists(resourceName, &target),
 					acctest.CheckResourceDisappears(acctest.Provider, tfappautoscaling.ResourceTarget(), resourceName),
@@ -84,13 +83,13 @@ func TestAccAppAutoScalingTarget_spotFleetRequest(t *testing.T) {
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, applicationautoscaling.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTargetDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, applicationautoscaling.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTargetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTargetSpotFleetRequestConfig(validUntil),
+				Config: testAccTargetConfig_spotFleetRequest(validUntil),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTargetExists("aws_appautoscaling_target.test", &target),
 					resource.TestCheckResourceAttr("aws_appautoscaling_target.test", "service_namespace", "ec2"),
@@ -112,13 +111,13 @@ func TestAccAppAutoScalingTarget_emrCluster(t *testing.T) {
 	rInt := sdkacctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, applicationautoscaling.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTargetDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, applicationautoscaling.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTargetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTargetEMRClusterConfig(rInt),
+				Config: testAccTargetConfig_emrCluster(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTargetExists("aws_appautoscaling_target.bar", &target),
 					resource.TestCheckResourceAttr("aws_appautoscaling_target.bar", "service_namespace", "elasticmapreduce"),
@@ -143,13 +142,13 @@ func TestAccAppAutoScalingTarget_multipleTargets(t *testing.T) {
 	tableName := fmt.Sprintf("tf_acc_test_table_%d", rInt)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, applicationautoscaling.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTargetDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, applicationautoscaling.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTargetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTarget_multipleTargets(tableName),
+				Config: testAccTargetConfig_multiple(tableName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTargetExists("aws_appautoscaling_target.write", &writeTarget),
 					resource.TestCheckResourceAttr("aws_appautoscaling_target.write", "service_namespace", "dynamodb"),
@@ -177,13 +176,13 @@ func TestAccAppAutoScalingTarget_optionalRoleARN(t *testing.T) {
 	tableName := fmt.Sprintf("tf_acc_test_table_%d", rInt)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, applicationautoscaling.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTargetDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, applicationautoscaling.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTargetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTarget_optionalRoleARN(tableName),
+				Config: testAccTargetConfig_optionalRoleARN(tableName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTargetExists("aws_appautoscaling_target.read", &readTarget),
 					acctest.CheckResourceAttrGlobalARN("aws_appautoscaling_target.read", "role_arn", "iam",
@@ -202,35 +201,23 @@ func testAccCheckTargetDestroy(s *terraform.State) error {
 			continue
 		}
 
-		// Try to find the target
-		describeTargets, err := conn.DescribeScalableTargets(
-			&applicationautoscaling.DescribeScalableTargetsInput{
-				ResourceIds:      []*string{aws.String(rs.Primary.ID)},
-				ServiceNamespace: aws.String(rs.Primary.Attributes["service_namespace"]),
-			},
-		)
+		_, err := tfappautoscaling.FindTargetByThreePartKey(conn, rs.Primary.ID, rs.Primary.Attributes["service_namespace"], rs.Primary.Attributes["scalable_dimension"])
 
-		if err == nil {
-			if len(describeTargets.ScalableTargets) != 0 &&
-				*describeTargets.ScalableTargets[0].ResourceId == rs.Primary.ID {
-				return fmt.Errorf("Application AutoScaling Target still exists")
-			}
+		if tfresource.NotFound(err) {
+			continue
 		}
 
-		// Verify error
-		e, ok := err.(awserr.Error)
-		if !ok {
+		if err != nil {
 			return err
 		}
-		if e.Code() != "" {
-			return e
-		}
+
+		return fmt.Errorf("Application AutoScaling Target %s still exists", rs.Primary.ID)
 	}
 
 	return nil
 }
 
-func testAccCheckTargetExists(n string, target *applicationautoscaling.ScalableTarget) resource.TestCheckFunc {
+func testAccCheckTargetExists(n string, v *applicationautoscaling.ScalableTarget) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -243,25 +230,19 @@ func testAccCheckTargetExists(n string, target *applicationautoscaling.ScalableT
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AppAutoScalingConn
 
-		namespace := rs.Primary.Attributes["service_namespace"]
-		dimension := rs.Primary.Attributes["scalable_dimension"]
+		output, err := tfappautoscaling.FindTargetByThreePartKey(conn, rs.Primary.ID, rs.Primary.Attributes["service_namespace"], rs.Primary.Attributes["scalable_dimension"])
 
-		tgt, err := tfappautoscaling.GetTarget(rs.Primary.ID, namespace, dimension, conn)
 		if err != nil {
 			return err
 		}
-		if tgt == nil {
-			return fmt.Errorf("Scalable target for %q (%s/%s) not found",
-				rs.Primary.ID, namespace, dimension)
-		}
 
-		*target = *tgt
+		*v = *output
 
 		return nil
 	}
 }
 
-func testAccTargetConfig(
+func testAccTargetConfig_basic(
 	randClusterName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "foo" {
@@ -304,7 +285,7 @@ resource "aws_appautoscaling_target" "bar" {
 `, randClusterName)
 }
 
-func testAccTargetUpdateConfig(
+func testAccTargetConfig_update(
 	randClusterName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "foo" {
@@ -347,7 +328,7 @@ resource "aws_appautoscaling_target" "bar" {
 `, randClusterName)
 }
 
-func testAccTargetEMRClusterConfig(rInt int) string {
+func testAccTargetConfig_emrCluster(rInt int) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   # The requested instance type m3.xlarge is not supported in the requested availability zone.
@@ -679,7 +660,7 @@ resource "aws_appautoscaling_target" "bar" {
 `, rInt, rInt, rInt, rInt, rInt, rInt, rInt, rInt)
 }
 
-func testAccTargetSpotFleetRequestConfig(validUntil string) string {
+func testAccTargetConfig_spotFleetRequest(validUntil string) string {
 	return fmt.Sprintf(`
 data "aws_ami" "amzn-ami-minimal-hvm-ebs" {
   most_recent = true
@@ -746,7 +727,7 @@ resource "aws_appautoscaling_target" "test" {
 `, validUntil)
 }
 
-func testAccTarget_multipleTargets(tableName string) string {
+func testAccTargetConfig_multiple(tableName string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "dynamodb_table_test" {
   name           = "%s"
@@ -778,7 +759,7 @@ resource "aws_appautoscaling_target" "read" {
 `, tableName)
 }
 
-func testAccTarget_optionalRoleARN(tableName string) string {
+func testAccTargetConfig_optionalRoleARN(tableName string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "dynamodb_table_test" {
   name           = "%s"

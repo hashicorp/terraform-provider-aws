@@ -39,6 +39,7 @@ In addition to all arguments above, the following attributes are exported:
 * `dead_letter_config` - Configure the function's *dead letter queue*.
 * `description` - Description of what your Lambda Function does.
 * `environment` - The Lambda environment's configuration settings.
+* `ephemeral_storage` - The amount of Ephemeral storage(`/tmp`) allocated for the Lambda Function.
 * `file_system_config` - The connection settings for an Amazon EFS file system.
 * `handler` - The function entrypoint in your code.
 * `image_uri` - The URI of the container image.

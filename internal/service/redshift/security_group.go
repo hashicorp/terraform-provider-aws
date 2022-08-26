@@ -73,6 +73,8 @@ func ResourceSecurityGroup() *schema.Resource {
 				Set: resourceSecurityGroupIngressHash,
 			},
 		},
+
+		DeprecationMessage: `With the retirement of EC2-Classic the aws_redshift_security_group resource has been deprecated and will be removed in a future version.`,
 	}
 }
 
@@ -175,7 +177,7 @@ func resourceSecurityGroupUpdate(d *schema.ResourceData, meta interface{}) error
 		os := o.(*schema.Set)
 		ns := n.(*schema.Set)
 
-		removeIngressRules := expandRedshiftSGRevokeIngress(os.Difference(ns).List())
+		removeIngressRules := expandSGRevokeIngress(os.Difference(ns).List())
 		if len(removeIngressRules) > 0 {
 			for _, r := range removeIngressRules {
 				r.ClusterSecurityGroupName = aws.String(d.Id())
@@ -187,7 +189,7 @@ func resourceSecurityGroupUpdate(d *schema.ResourceData, meta interface{}) error
 			}
 		}
 
-		addIngressRules := expandRedshiftSGAuthorizeIngress(ns.Difference(os).List())
+		addIngressRules := expandSGAuthorizeIngress(ns.Difference(os).List())
 		if len(addIngressRules) > 0 {
 			for _, r := range addIngressRules {
 				r.ClusterSecurityGroupName = aws.String(d.Id())
@@ -241,7 +243,7 @@ func resourceSecurityGroupRetrieve(d *schema.ResourceData, meta interface{}) (*r
 	}
 
 	if len(resp.ClusterSecurityGroups) != 1 ||
-		*resp.ClusterSecurityGroups[0].ClusterSecurityGroupName != d.Id() {
+		aws.StringValue(resp.ClusterSecurityGroups[0].ClusterSecurityGroupName) != d.Id() {
 		return nil, fmt.Errorf("Unable to find Redshift Security Group: %#v", resp.ClusterSecurityGroups)
 	}
 
@@ -325,7 +327,7 @@ func resourceSecurityGroupStateRefreshFunc(
 	}
 }
 
-func expandRedshiftSGAuthorizeIngress(configured []interface{}) []redshift.AuthorizeClusterSecurityGroupIngressInput {
+func expandSGAuthorizeIngress(configured []interface{}) []redshift.AuthorizeClusterSecurityGroupIngressInput {
 	var ingress []redshift.AuthorizeClusterSecurityGroupIngressInput
 
 	// Loop over our configured parameters and create
@@ -353,7 +355,7 @@ func expandRedshiftSGAuthorizeIngress(configured []interface{}) []redshift.Autho
 	return ingress
 }
 
-func expandRedshiftSGRevokeIngress(configured []interface{}) []redshift.RevokeClusterSecurityGroupIngressInput {
+func expandSGRevokeIngress(configured []interface{}) []redshift.RevokeClusterSecurityGroupIngressInput {
 	var ingress []redshift.RevokeClusterSecurityGroupIngressInput
 
 	// Loop over our configured parameters and create

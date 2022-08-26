@@ -1,5 +1,5 @@
 ---
-subcategory: "VPC"
+subcategory: "VPC (Virtual Private Cloud)"
 layout: "aws"
 page_title: "AWS: aws_network_interface"
 description: |-
@@ -59,10 +59,8 @@ Additionally, the following attributes are exported:
 * `public_dns_name` - The public DNS name.
 * `public_ip` - The address of the Elastic IP address bound to the network interface.
 
-## Import
+## Timeouts
 
-Elastic Network Interfaces can be imported using the `id`, e.g.,
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
 
-```
-$ terraform import aws_network_interface.test eni-12345
-```
+- `read` - (Default `20m`)

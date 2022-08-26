@@ -7,7 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	dms "github.com/aws/aws-sdk-go/service/databasemigrationservice"
 	"github.com/aws/aws-sdk-go/service/eks"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -23,15 +23,15 @@ func TestAccDMSEventSubscription_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, dms.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDmsEventSubscriptionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEventSubscriptionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDmsEventSubscriptionConfigEnabled(rName, true),
+				Config: testAccEventSubscriptionConfig_enabled(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDmsEventSubscriptionExists(resourceName, &eventSubscription),
+					testAccCheckEventSubscriptionExists(resourceName, &eventSubscription),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "source_type", "replication-instance"),
@@ -57,16 +57,16 @@ func TestAccDMSEventSubscription_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, dms.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDmsEventSubscriptionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEventSubscriptionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDmsEventSubscriptionConfigEnabled(rName, true),
+				Config: testAccEventSubscriptionConfig_enabled(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDmsEventSubscriptionExists(resourceName, &eventSubscription),
-					testAccCheckDmsEventSubscriptionDisappears(resourceName),
+					testAccCheckEventSubscriptionExists(resourceName, &eventSubscription),
+					testAccCheckEventSubscriptionDisappears(resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -80,15 +80,15 @@ func TestAccDMSEventSubscription_enabled(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, dms.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDmsEventSubscriptionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEventSubscriptionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDmsEventSubscriptionConfigEnabled(rName, false),
+				Config: testAccEventSubscriptionConfig_enabled(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDmsEventSubscriptionExists(resourceName, &eventSubscription),
+					testAccCheckEventSubscriptionExists(resourceName, &eventSubscription),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
 				),
 			},
@@ -98,16 +98,16 @@ func TestAccDMSEventSubscription_enabled(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDmsEventSubscriptionConfigEnabled(rName, true),
+				Config: testAccEventSubscriptionConfig_enabled(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDmsEventSubscriptionExists(resourceName, &eventSubscription),
+					testAccCheckEventSubscriptionExists(resourceName, &eventSubscription),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
 				),
 			},
 			{
-				Config: testAccDmsEventSubscriptionConfigEnabled(rName, false),
+				Config: testAccEventSubscriptionConfig_enabled(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDmsEventSubscriptionExists(resourceName, &eventSubscription),
+					testAccCheckEventSubscriptionExists(resourceName, &eventSubscription),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
 				),
 			},
@@ -121,15 +121,15 @@ func TestAccDMSEventSubscription_eventCategories(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, dms.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDmsEventSubscriptionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEventSubscriptionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDmsEventSubscriptionConfigEventCategories2(rName, "creation", "failure"),
+				Config: testAccEventSubscriptionConfig_categories2(rName, "creation", "failure"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDmsEventSubscriptionExists(resourceName, &eventSubscription),
+					testAccCheckEventSubscriptionExists(resourceName, &eventSubscription),
 					resource.TestCheckResourceAttr(resourceName, "event_categories.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "event_categories.*", "creation"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "event_categories.*", "failure"),
@@ -141,9 +141,9 @@ func TestAccDMSEventSubscription_eventCategories(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDmsEventSubscriptionConfigEventCategories2(rName, "configuration change", "deletion"),
+				Config: testAccEventSubscriptionConfig_categories2(rName, "configuration change", "deletion"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDmsEventSubscriptionExists(resourceName, &eventSubscription),
+					testAccCheckEventSubscriptionExists(resourceName, &eventSubscription),
 					resource.TestCheckResourceAttr(resourceName, "event_categories.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "event_categories.*", "configuration change"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "event_categories.*", "deletion"),
@@ -159,15 +159,15 @@ func TestAccDMSEventSubscription_tags(t *testing.T) {
 	resourceName := "aws_dms_event_subscription.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckEKS(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, dms.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDmsEventSubscriptionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckEKS(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEventSubscriptionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDmsEventSubscriptionConfigTags1(rName, "key1", "value1"),
+				Config: testAccEventSubscriptionConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDmsEventSubscriptionExists(resourceName, &eventSubscription),
+					testAccCheckEventSubscriptionExists(resourceName, &eventSubscription),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -178,18 +178,18 @@ func TestAccDMSEventSubscription_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDmsEventSubscriptionConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccEventSubscriptionConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDmsEventSubscriptionExists(resourceName, &eventSubscription),
+					testAccCheckEventSubscriptionExists(resourceName, &eventSubscription),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccDmsEventSubscriptionConfigTags1(rName, "key2", "value2"),
+				Config: testAccEventSubscriptionConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDmsEventSubscriptionExists(resourceName, &eventSubscription),
+					testAccCheckEventSubscriptionExists(resourceName, &eventSubscription),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -198,7 +198,7 @@ func TestAccDMSEventSubscription_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckDmsEventSubscriptionDestroy(s *terraform.State) error {
+func testAccCheckEventSubscriptionDestroy(s *terraform.State) error {
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_dms_event_subscription" {
 			continue
@@ -210,7 +210,7 @@ func testAccCheckDmsEventSubscriptionDestroy(s *terraform.State) error {
 			SubscriptionName: aws.String(rs.Primary.ID),
 		})
 
-		if tfawserr.ErrMessageContains(err, dms.ErrCodeResourceNotFoundFault, "") {
+		if tfawserr.ErrCodeEquals(err, dms.ErrCodeResourceNotFoundFault) {
 			continue
 		}
 
@@ -226,7 +226,7 @@ func testAccCheckDmsEventSubscriptionDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckDmsEventSubscriptionDisappears(resourceName string) resource.TestCheckFunc {
+func testAccCheckEventSubscriptionDisappears(resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -243,7 +243,7 @@ func testAccCheckDmsEventSubscriptionDisappears(resourceName string) resource.Te
 	}
 }
 
-func testAccCheckDmsEventSubscriptionExists(n string, eventSubscription *dms.EventSubscription) resource.TestCheckFunc {
+func testAccCheckEventSubscriptionExists(n string, eventSubscription *dms.EventSubscription) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -273,7 +273,7 @@ func testAccCheckDmsEventSubscriptionExists(n string, eventSubscription *dms.Eve
 	}
 }
 
-func testAccDmsEventSubscriptionConfigBase(rName string) string {
+func testAccEventSubscriptionConfigBase(rName string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
@@ -325,9 +325,9 @@ resource "aws_sns_topic" "test" {
 `, rName)
 }
 
-func testAccDmsEventSubscriptionConfigEnabled(rName string, enabled bool) string {
+func testAccEventSubscriptionConfig_enabled(rName string, enabled bool) string {
 	return acctest.ConfigCompose(
-		testAccDmsEventSubscriptionConfigBase(rName),
+		testAccEventSubscriptionConfigBase(rName),
 		fmt.Sprintf(`
 resource "aws_dms_event_subscription" "test" {
   name             = %[1]q
@@ -340,9 +340,9 @@ resource "aws_dms_event_subscription" "test" {
 `, rName, enabled))
 }
 
-func testAccDmsEventSubscriptionConfigEventCategories2(rName string, eventCategory1 string, eventCategory2 string) string {
+func testAccEventSubscriptionConfig_categories2(rName string, eventCategory1 string, eventCategory2 string) string {
 	return acctest.ConfigCompose(
-		testAccDmsEventSubscriptionConfigBase(rName),
+		testAccEventSubscriptionConfigBase(rName),
 		fmt.Sprintf(`
 resource "aws_dms_event_subscription" "test" {
   name             = %[1]q
@@ -355,9 +355,9 @@ resource "aws_dms_event_subscription" "test" {
 `, rName, eventCategory1, eventCategory2))
 }
 
-func testAccDmsEventSubscriptionConfigTags1(rName, tagKey1, tagValue1 string) string {
+func testAccEventSubscriptionConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(
-		testAccDmsEventSubscriptionConfigBase(rName),
+		testAccEventSubscriptionConfigBase(rName),
 		fmt.Sprintf(`
 resource "aws_dms_event_subscription" "test" {
   name             = %[1]q
@@ -374,9 +374,9 @@ resource "aws_dms_event_subscription" "test" {
 `, rName, tagKey1, tagValue1))
 }
 
-func testAccDmsEventSubscriptionConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccEventSubscriptionConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return acctest.ConfigCompose(
-		testAccDmsEventSubscriptionConfigBase(rName),
+		testAccEventSubscriptionConfigBase(rName),
 		fmt.Sprintf(`
 resource "aws_dms_event_subscription" "test" {
   name             = %[1]q

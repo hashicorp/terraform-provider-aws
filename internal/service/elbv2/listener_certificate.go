@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elbv2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -62,7 +62,7 @@ func resourceListenerCertificateCreate(d *schema.ResourceData, meta interface{})
 		_, err := conn.AddListenerCertificates(params)
 
 		// Retry for IAM Server Certificate eventual consistency
-		if tfawserr.ErrMessageContains(err, elbv2.ErrCodeCertificateNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, elbv2.ErrCodeCertificateNotFoundException) {
 			return resource.RetryableError(err)
 		}
 
@@ -78,7 +78,7 @@ func resourceListenerCertificateCreate(d *schema.ResourceData, meta interface{})
 	}
 
 	if err != nil {
-		return fmt.Errorf("error adding LB Listener Certificate: %w", err)
+		return fmt.Errorf("adding LB Listener Certificate: %w", err)
 	}
 
 	d.SetId(listenerCertificateCreateID(listenerArn, certificateArn))
@@ -91,7 +91,7 @@ func resourceListenerCertificateRead(d *schema.ResourceData, meta interface{}) e
 
 	listenerArn, certificateArn, err := listenerCertificateParseID(d.Id())
 	if err != nil {
-		return fmt.Errorf("error parsing ELBv2 Listener Certificate ID (%s): %w", d.Id(), err)
+		return fmt.Errorf("parsing ELBv2 Listener Certificate ID (%s): %w", d.Id(), err)
 	}
 
 	log.Printf("[DEBUG] Reading certificate: %s of listener: %s", certificateArn, listenerArn)
@@ -151,10 +151,10 @@ func resourceListenerCertificateDelete(d *schema.ResourceData, meta interface{})
 
 	_, err := conn.RemoveListenerCertificates(params)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, elbv2.ErrCodeCertificateNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, elbv2.ErrCodeCertificateNotFoundException) {
 			return nil
 		}
-		if tfawserr.ErrMessageContains(err, elbv2.ErrCodeListenerNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, elbv2.ErrCodeListenerNotFoundException) {
 			return nil
 		}
 		return fmt.Errorf("Error removing LB Listener Certificate: %w", err)

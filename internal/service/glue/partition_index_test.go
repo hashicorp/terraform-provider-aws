@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/glue"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -19,16 +19,16 @@ func TestAccGluePartitionIndex_basic(t *testing.T) {
 	resourceName := "aws_glue_partition_index.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckGluePartitionIndexDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPartitionIndexDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:  testAccGluePartitionIndex_basic(rName),
+				Config:  testAccPartitionIndexConfig_basic(rName),
 				Destroy: false,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGluePartitionIndexExists(resourceName),
+					testAccCheckPartitionIndexExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "table_name", "aws_glue_catalog_table.test", "name"),
 					resource.TestCheckResourceAttrPair(resourceName, "database_name", "aws_glue_catalog_database.test", "name"),
 					resource.TestCheckResourceAttr(resourceName, "partition_index.#", "1"),
@@ -50,16 +50,16 @@ func TestAccGluePartitionIndex_disappears(t *testing.T) {
 	resourceName := "aws_glue_partition_index.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckGluePartitionIndexDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPartitionIndexDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:  testAccGluePartitionIndex_basic(rName),
+				Config:  testAccPartitionIndexConfig_basic(rName),
 				Destroy: false,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGluePartitionIndexExists(resourceName),
+					testAccCheckPartitionIndexExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfglue.ResourcePartitionIndex(), resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfglue.ResourcePartitionIndex(), resourceName),
 				),
@@ -74,16 +74,16 @@ func TestAccGluePartitionIndex_Disappears_table(t *testing.T) {
 	resourceName := "aws_glue_partition_index.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckGluePartitionIndexDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPartitionIndexDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:  testAccGluePartitionIndex_basic(rName),
+				Config:  testAccPartitionIndexConfig_basic(rName),
 				Destroy: false,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGluePartitionIndexExists(resourceName),
+					testAccCheckPartitionIndexExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfglue.ResourceCatalogTable(), "aws_glue_catalog_table.test"),
 					acctest.CheckResourceDisappears(acctest.Provider, tfglue.ResourcePartitionIndex(), resourceName),
 				),
@@ -98,16 +98,16 @@ func TestAccGluePartitionIndex_Disappears_database(t *testing.T) {
 	resourceName := "aws_glue_partition_index.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, glue.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckGluePartitionIndexDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPartitionIndexDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:  testAccGluePartitionIndex_basic(rName),
+				Config:  testAccPartitionIndexConfig_basic(rName),
 				Destroy: false,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGluePartitionIndexExists(resourceName),
+					testAccCheckPartitionIndexExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfglue.ResourceCatalogDatabase(), "aws_glue_catalog_database.test"),
 					acctest.CheckResourceDisappears(acctest.Provider, tfglue.ResourcePartitionIndex(), resourceName),
 				),
@@ -117,7 +117,7 @@ func TestAccGluePartitionIndex_Disappears_database(t *testing.T) {
 	})
 }
 
-func testAccGluePartitionIndex_basic(rName string) string {
+func testAccPartitionIndexConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_glue_catalog_database" "test" {
   name = %[1]q
@@ -216,7 +216,7 @@ resource "aws_glue_partition_index" "test" {
 `, rName)
 }
 
-func testAccCheckGluePartitionIndexDestroy(s *terraform.State) error {
+func testAccCheckPartitionIndexDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -226,7 +226,7 @@ func testAccCheckGluePartitionIndexDestroy(s *terraform.State) error {
 
 		if _, err := tfglue.FindPartitionIndexByName(conn, rs.Primary.ID); err != nil {
 			//Verify the error is what we want
-			if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {
+			if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
 				continue
 			}
 
@@ -237,7 +237,7 @@ func testAccCheckGluePartitionIndexDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckGluePartitionIndexExists(name string) resource.TestCheckFunc {
+func testAccCheckPartitionIndexExists(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {

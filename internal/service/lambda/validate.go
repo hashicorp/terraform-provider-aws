@@ -1,91 +1,47 @@
 package lambda
 
 import (
-	"fmt"
 	"regexp"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
-func validFunctionName(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-	if len(value) > 140 {
-		errors = append(errors, fmt.Errorf(
-			"%q cannot be longer than 140 characters: %q", k, value))
-	}
+func validFunctionName() schema.SchemaValidateFunc {
 	// http://docs.aws.amazon.com/lambda/latest/dg/API_AddPermission.html
 	pattern := `^(arn:[\w-]+:lambda:)?([a-z]{2}-(?:[a-z]+-){1,2}\d{1}:)?(\d{12}:)?(function:)?([a-zA-Z0-9-_]+)(:(\$LATEST|[a-zA-Z0-9-_]+))?$`
-	if !regexp.MustCompile(pattern).MatchString(value) {
-		errors = append(errors, fmt.Errorf(
-			"%q doesn't comply with restrictions (%q): %q",
-			k, pattern, value))
-	}
 
-	return
+	return validation.All(
+		validation.StringMatch(regexp.MustCompile(pattern), "must be valid function name or function ARN"),
+		validation.StringLenBetween(1, 140),
+	)
 }
 
-func validPermissionAction(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-
-	// http://docs.aws.amazon.com/lambda/latest/dg/API_AddPermission.html
+func validPermissionAction() schema.SchemaValidateFunc {
 	pattern := `^(lambda:[*]|lambda:[a-zA-Z]+|[*])$`
-	if !regexp.MustCompile(pattern).MatchString(value) {
-		errors = append(errors, fmt.Errorf(
-			"%q doesn't comply with restrictions (%q): %q",
-			k, pattern, value))
-	}
-
-	return
+	return validation.StringMatch(regexp.MustCompile(pattern), "must be a valid action (usually starts with lambda:)")
 }
 
-func validPermissionEventSourceToken(v interface{}, k string) (ws []string, errors []error) {
+func validPermissionEventSourceToken() schema.SchemaValidateFunc {
 	// https://docs.aws.amazon.com/lambda/latest/dg/API_AddPermission.html
-	value := v.(string)
-
-	if len(value) > 256 {
-		errors = append(errors, fmt.Errorf("%q cannot be longer than 256 characters: %q", k, value))
-	}
-
-	pattern := `^[a-zA-Z0-9._\-]+$`
-	if !regexp.MustCompile(pattern).MatchString(value) {
-		errors = append(errors, fmt.Errorf(
-			"%q doesn't comply with restrictions (%q): %q",
-			k, pattern, value))
-	}
-
-	return
+	return validation.All(
+		validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9._\-]+$`), "must contain alphanumeric, periods, underscores or dashes only"),
+		validation.StringLenBetween(1, 256),
+	)
 }
 
-func validQualifier(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-	if len(value) > 128 {
-		errors = append(errors, fmt.Errorf(
-			"%q cannot be longer than 128 characters: %q", k, value))
-	}
+func validQualifier() schema.SchemaValidateFunc {
 	// http://docs.aws.amazon.com/lambda/latest/dg/API_AddPermission.html
-	pattern := `^[a-zA-Z0-9$_-]+$`
-	if !regexp.MustCompile(pattern).MatchString(value) {
-		errors = append(errors, fmt.Errorf(
-			"%q doesn't comply with restrictions (%q): %q",
-			k, pattern, value))
-	}
-
-	return
+	return validation.All(
+		validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9$_-]+$`), "must contain alphanumeric, dollar signs, underscores or dashes only"),
+		validation.StringLenBetween(1, 128),
+	)
 }
 
-func validPolicyStatementID(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-
-	if len(value) > 100 {
-		errors = append(errors, fmt.Errorf(
-			"%q cannot be longer than 100 characters: %q", k, value))
-	}
-
+func validPolicyStatementID() schema.SchemaValidateFunc {
 	// http://docs.aws.amazon.com/lambda/latest/dg/API_AddPermission.html
-	pattern := `^[a-zA-Z0-9-_]+$`
-	if !regexp.MustCompile(pattern).MatchString(value) {
-		errors = append(errors, fmt.Errorf(
-			"%q doesn't look like a valid statement ID (%q): %q",
-			k, pattern, value))
-	}
-
-	return
+	return validation.All(
+		validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9_-]+$`), "must contain alphanumeric, underscores or dashes only"),
+		validation.StringLenBetween(1, 100),
+	)
 }

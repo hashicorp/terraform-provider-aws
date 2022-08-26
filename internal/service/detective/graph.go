@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/detective"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -55,7 +55,7 @@ func resourceGraphCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	var output *detective.CreateGraphOutput
 	var err error
-	err = resource.RetryContext(ctx, DetectiveOperationTimeout, func() *resource.RetryError {
+	err = resource.RetryContext(ctx, GraphOperationTimeout, func() *resource.RetryError {
 		output, err = conn.CreateGraphWithContext(ctx, input)
 		if err != nil {
 			if tfawserr.ErrCodeEquals(err, detective.ErrCodeInternalServerException) {
@@ -87,7 +87,7 @@ func resourceGraphRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	resp, err := FindDetectiveGraphByArn(conn, ctx, d.Id())
+	resp, err := FindGraphByARN(conn, ctx, d.Id())
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, detective.ErrCodeResourceNotFoundException) || resp == nil {
 		d.SetId("")

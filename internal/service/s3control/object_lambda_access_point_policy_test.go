@@ -19,13 +19,13 @@ func TestAccS3ControlObjectLambdaAccessPointPolicy_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, s3control.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckObjectLambdaAccessPointPolicyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, s3control.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckObjectLambdaAccessPointPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccObjectLambdaAccessPointPolicyConfig(rName),
+				Config: testAccObjectLambdaAccessPointPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckObjectLambdaAccessPointPolicyExists(resourceName),
 					acctest.CheckResourceAttrAccountID(resourceName, "account_id"),
@@ -48,13 +48,13 @@ func TestAccS3ControlObjectLambdaAccessPointPolicy_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, s3control.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckObjectLambdaAccessPointPolicyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, s3control.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckObjectLambdaAccessPointPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccObjectLambdaAccessPointPolicyConfig(rName),
+				Config: testAccObjectLambdaAccessPointPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckObjectLambdaAccessPointPolicyExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfs3control.ResourceObjectLambdaAccessPointPolicy(), resourceName),
@@ -65,19 +65,19 @@ func TestAccS3ControlObjectLambdaAccessPointPolicy_disappears(t *testing.T) {
 	})
 }
 
-func TestAccS3ControlObjectLambdaAccessPointPolicy_disappears_AccessPoint(t *testing.T) {
+func TestAccS3ControlObjectLambdaAccessPointPolicy_Disappears_accessPoint(t *testing.T) {
 	resourceName := "aws_s3control_object_lambda_access_point_policy.test"
 	accessPointResourceName := "aws_s3control_object_lambda_access_point.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, s3control.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckObjectLambdaAccessPointPolicyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, s3control.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckObjectLambdaAccessPointPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccObjectLambdaAccessPointPolicyConfig(rName),
+				Config: testAccObjectLambdaAccessPointPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckObjectLambdaAccessPointPolicyExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfs3control.ResourceObjectLambdaAccessPoint(), accessPointResourceName),
@@ -93,13 +93,13 @@ func TestAccS3ControlObjectLambdaAccessPointPolicy_update(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, s3control.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckObjectLambdaAccessPointPolicyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, s3control.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckObjectLambdaAccessPointPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccObjectLambdaAccessPointPolicyConfig(rName),
+				Config: testAccObjectLambdaAccessPointPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckObjectLambdaAccessPointPolicyExists(resourceName),
 					acctest.CheckResourceAttrAccountID(resourceName, "account_id"),
@@ -114,7 +114,7 @@ func TestAccS3ControlObjectLambdaAccessPointPolicy_update(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccObjectLambdaAccessPointPolicyUpdatedConfig(rName),
+				Config: testAccObjectLambdaAccessPointPolicyConfig_updated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckObjectLambdaAccessPointPolicyExists(resourceName),
 					acctest.CheckResourceAttrAccountID(resourceName, "account_id"),
@@ -178,15 +178,11 @@ func testAccCheckObjectLambdaAccessPointPolicyExists(n string) resource.TestChec
 
 		_, _, err = tfs3control.FindObjectLambdaAccessPointPolicyAndStatusByAccountIDAndName(conn, accountID, name)
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 
-func testAccObjectLambdaAccessPointPolicyConfig(rName string) string {
+func testAccObjectLambdaAccessPointPolicyConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccObjectLambdaAccessPointBaseConfig(rName), fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 
@@ -226,7 +222,7 @@ resource "aws_s3control_object_lambda_access_point_policy" "test" {
       Effect = "Allow"
       Action = "s3-object-lambda:GetObject"
       Principal = {
-        AWS = data.aws_caller_identity.current.account_id
+        AWS = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"
       }
       Resource = aws_s3control_object_lambda_access_point.test.arn
     }]
@@ -235,7 +231,7 @@ resource "aws_s3control_object_lambda_access_point_policy" "test" {
 `, rName))
 }
 
-func testAccObjectLambdaAccessPointPolicyUpdatedConfig(rName string) string {
+func testAccObjectLambdaAccessPointPolicyConfig_updated(rName string) string {
 	return acctest.ConfigCompose(testAccObjectLambdaAccessPointBaseConfig(rName), fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 
@@ -275,7 +271,7 @@ resource "aws_s3control_object_lambda_access_point_policy" "test" {
       Effect = "Allow"
       Action = "s3-object-lambda:*"
       Principal = {
-        AWS = data.aws_caller_identity.current.account_id
+        AWS = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"
       }
       Resource = aws_s3control_object_lambda_access_point.test.arn
     }]

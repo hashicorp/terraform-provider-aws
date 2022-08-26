@@ -7,10 +7,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ram"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -19,7 +18,6 @@ import (
 )
 
 func TestAccRAMResourceShareAccepter_basic(t *testing.T) {
-	var providers []*schema.Provider
 	resourceName := "aws_ram_resource_share_accepter.test"
 	principalAssociationResourceName := "aws_ram_principal_association.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -29,12 +27,12 @@ func TestAccRAMResourceShareAccepter_basic(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckAlternateAccount(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, ram.EndpointsID),
-		ProviderFactories: acctest.FactoriesAlternate(&providers),
-		CheckDestroy:      testAccCheckResourceShareAccepterDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, ram.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
+		CheckDestroy:             testAccCheckResourceShareAccepterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccResourceShareAccepterBasic(rName),
+				Config: testAccResourceShareAccepterConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceShareAccepterExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "share_arn", principalAssociationResourceName, "resource_share_arn"),
@@ -48,7 +46,7 @@ func TestAccRAMResourceShareAccepter_basic(t *testing.T) {
 				),
 			},
 			{
-				Config:            testAccResourceShareAccepterBasic(rName),
+				Config:            testAccResourceShareAccepterConfig_basic(rName),
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -58,7 +56,6 @@ func TestAccRAMResourceShareAccepter_basic(t *testing.T) {
 }
 
 func TestAccRAMResourceShareAccepter_disappears(t *testing.T) {
-	var providers []*schema.Provider
 	resourceName := "aws_ram_resource_share_accepter.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -67,12 +64,12 @@ func TestAccRAMResourceShareAccepter_disappears(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckAlternateAccount(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, ram.EndpointsID),
-		ProviderFactories: acctest.FactoriesAlternate(&providers),
-		CheckDestroy:      testAccCheckResourceShareAccepterDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, ram.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
+		CheckDestroy:             testAccCheckResourceShareAccepterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccResourceShareAccepterBasic(rName),
+				Config: testAccResourceShareAccepterConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceShareAccepterExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfram.ResourceResourceShareAccepter(), resourceName),
@@ -84,7 +81,6 @@ func TestAccRAMResourceShareAccepter_disappears(t *testing.T) {
 }
 
 func TestAccRAMResourceShareAccepter_resourceAssociation(t *testing.T) {
-	var providers []*schema.Provider
 	resourceName := "aws_ram_resource_share_accepter.test"
 	principalAssociationResourceName := "aws_ram_principal_association.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -94,12 +90,12 @@ func TestAccRAMResourceShareAccepter_resourceAssociation(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckAlternateAccount(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, ram.EndpointsID),
-		ProviderFactories: acctest.FactoriesAlternate(&providers),
-		CheckDestroy:      testAccCheckResourceShareAccepterDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, ram.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
+		CheckDestroy:             testAccCheckResourceShareAccepterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccResourceShareAccepterResourceAssociation(rName),
+				Config: testAccResourceShareAccepterConfig_association(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceShareAccepterExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "share_arn", principalAssociationResourceName, "resource_share_arn"),
@@ -113,7 +109,7 @@ func TestAccRAMResourceShareAccepter_resourceAssociation(t *testing.T) {
 				),
 			},
 			{
-				Config:            testAccResourceShareAccepterResourceAssociation(rName),
+				Config:            testAccResourceShareAccepterConfig_association(rName),
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -137,7 +133,7 @@ func testAccCheckResourceShareAccepterDestroy(s *terraform.State) error {
 
 		output, err := conn.GetResourceShares(input)
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, ram.ErrCodeUnknownResourceException, "") {
+			if tfawserr.ErrCodeEquals(err, ram.ErrCodeUnknownResourceException) {
 				return nil
 			}
 			return fmt.Errorf("Error deleting RAM resource share: %s", err)
@@ -175,7 +171,7 @@ func testAccCheckResourceShareAccepterExists(name string) resource.TestCheckFunc
 	}
 }
 
-func testAccResourceShareAccepterBasic(rName string) string {
+func testAccResourceShareAccepterConfig_basic(rName string) string {
 	return acctest.ConfigAlternateAccountProvider() + fmt.Sprintf(`
 resource "aws_ram_resource_share_accepter" "test" {
   share_arn = aws_ram_principal_association.test.resource_share_arn
@@ -203,8 +199,8 @@ data "aws_caller_identity" "receiver" {}
 `, rName)
 }
 
-func testAccResourceShareAccepterResourceAssociation(rName string) string {
-	return acctest.ConfigCompose(testAccResourceShareAccepterBasic(rName), fmt.Sprintf(`
+func testAccResourceShareAccepterConfig_association(rName string) string {
+	return acctest.ConfigCompose(testAccResourceShareAccepterConfig_basic(rName), fmt.Sprintf(`
 resource "aws_ram_resource_association" "test" {
   provider = "awsalternate"
 

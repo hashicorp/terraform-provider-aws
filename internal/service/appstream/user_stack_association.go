@@ -8,7 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appstream"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -109,7 +109,14 @@ func resourceUserStackAssociationRead(ctx context.Context, d *schema.ResourceDat
 		return nil
 	}
 
-	if len(resp.UserStackAssociations) == 0 && !d.IsNewResource() {
+	if err != nil {
+		return diag.FromErr(fmt.Errorf("error reading AppStream User Stack Association (%s): %w", d.Id(), err))
+	}
+
+	if resp == nil || len(resp.UserStackAssociations) == 0 || resp.UserStackAssociations[0] == nil {
+		if d.IsNewResource() {
+			return diag.Errorf("error reading AppStream User Stack Association (%s): empty output after creation", d.Id())
+		}
 		log.Printf("[WARN] AppStream User Stack Association (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil

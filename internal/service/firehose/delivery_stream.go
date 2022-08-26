@@ -9,13 +9,12 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/firehose"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -27,7 +26,7 @@ const (
 	destinationTypeElasticsearch = "elasticsearch"
 	destinationTypeRedshift      = "redshift"
 	destinationTypeSplunk        = "splunk"
-	destinationTypeHttpEndpoint  = "http_endpoint"
+	destinationTypeHTTPEndpoint  = "http_endpoint"
 )
 
 func cloudWatchLoggingOptionsSchema() *schema.Schema {
@@ -151,6 +150,12 @@ func s3ConfigurationSchema() *schema.Schema {
 					ValidateFunc: validation.StringInSlice(firehose.CompressionFormat_Values(), false),
 				},
 
+				"error_output_prefix": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(0, 1024),
+				},
+
 				"kms_key_arn": {
 					Type:         schema.TypeString,
 					Optional:     true,
@@ -204,7 +209,7 @@ func processingConfigurationSchema() *schema.Schema {
 										"parameter_value": {
 											Type:         schema.TypeString,
 											Required:     true,
-											ValidateFunc: validation.StringLenBetween(1, 512),
+											ValidateFunc: validation.StringLenBetween(1, 5120),
 										},
 									},
 								},
@@ -222,7 +227,7 @@ func processingConfigurationSchema() *schema.Schema {
 	}
 }
 
-func flattenCloudwatchLoggingOptions(clo *firehose.CloudWatchLoggingOptions) []interface{} {
+func flattenCloudWatchLoggingOptions(clo *firehose.CloudWatchLoggingOptions) []interface{} {
 	if clo == nil {
 		return []interface{}{}
 	}
@@ -243,13 +248,13 @@ func flattenElasticsearchConfiguration(description *firehose.ElasticsearchDestin
 	}
 
 	m := map[string]interface{}{
-		"cloudwatch_logging_options": flattenCloudwatchLoggingOptions(description.CloudWatchLoggingOptions),
+		"cloudwatch_logging_options": flattenCloudWatchLoggingOptions(description.CloudWatchLoggingOptions),
 		"role_arn":                   aws.StringValue(description.RoleARN),
 		"type_name":                  aws.StringValue(description.TypeName),
 		"index_name":                 aws.StringValue(description.IndexName),
 		"s3_backup_mode":             aws.StringValue(description.S3BackupMode),
 		"index_rotation_period":      aws.StringValue(description.IndexRotationPeriod),
-		"vpc_config":                 flattenVpcConfiguration(description.VpcConfigurationDescription),
+		"vpc_config":                 flattenVPCConfiguration(description.VpcConfigurationDescription),
 		"processing_configuration":   flattenProcessingConfiguration(description.ProcessingConfiguration, aws.StringValue(description.RoleARN)),
 	}
 
@@ -273,7 +278,7 @@ func flattenElasticsearchConfiguration(description *firehose.ElasticsearchDestin
 	return []map[string]interface{}{m}
 }
 
-func flattenVpcConfiguration(description *firehose.VpcConfigurationDescription) []map[string]interface{} {
+func flattenVPCConfiguration(description *firehose.VpcConfigurationDescription) []map[string]interface{} {
 	if description == nil {
 		return []map[string]interface{}{}
 	}
@@ -295,7 +300,7 @@ func flattenExtendedS3Configuration(description *firehose.ExtendedS3DestinationD
 
 	m := map[string]interface{}{
 		"bucket_arn":                           aws.StringValue(description.BucketARN),
-		"cloudwatch_logging_options":           flattenCloudwatchLoggingOptions(description.CloudWatchLoggingOptions),
+		"cloudwatch_logging_options":           flattenCloudWatchLoggingOptions(description.CloudWatchLoggingOptions),
 		"compression_format":                   aws.StringValue(description.CompressionFormat),
 		"data_format_conversion_configuration": flattenDataFormatConversionConfiguration(description.DataFormatConversionConfiguration),
 		"error_output_prefix":                  aws.StringValue(description.ErrorOutputPrefix),
@@ -325,7 +330,7 @@ func flattenRedshiftConfiguration(description *firehose.RedshiftDestinationDescr
 	}
 
 	m := map[string]interface{}{
-		"cloudwatch_logging_options": flattenCloudwatchLoggingOptions(description.CloudWatchLoggingOptions),
+		"cloudwatch_logging_options": flattenCloudWatchLoggingOptions(description.CloudWatchLoggingOptions),
 		"cluster_jdbcurl":            aws.StringValue(description.ClusterJDBCURL),
 		"password":                   configuredPassword,
 		"processing_configuration":   flattenProcessingConfiguration(description.ProcessingConfiguration, aws.StringValue(description.RoleARN)),
@@ -353,7 +358,7 @@ func flattenSplunkConfiguration(description *firehose.SplunkDestinationDescripti
 		return []map[string]interface{}{}
 	}
 	m := map[string]interface{}{
-		"cloudwatch_logging_options": flattenCloudwatchLoggingOptions(description.CloudWatchLoggingOptions),
+		"cloudwatch_logging_options": flattenCloudWatchLoggingOptions(description.CloudWatchLoggingOptions),
 		"hec_acknowledgment_timeout": int(aws.Int64Value(description.HECAcknowledgmentTimeoutInSeconds)),
 		"hec_endpoint_type":          aws.StringValue(description.HECEndpointType),
 		"hec_endpoint":               aws.StringValue(description.HECEndpoint),
@@ -376,8 +381,9 @@ func flattenS3Configuration(description *firehose.S3DestinationDescription) []ma
 
 	m := map[string]interface{}{
 		"bucket_arn":                 aws.StringValue(description.BucketARN),
-		"cloudwatch_logging_options": flattenCloudwatchLoggingOptions(description.CloudWatchLoggingOptions),
+		"cloudwatch_logging_options": flattenCloudWatchLoggingOptions(description.CloudWatchLoggingOptions),
 		"compression_format":         aws.StringValue(description.CompressionFormat),
+		"error_output_prefix":        aws.StringValue(description.ErrorOutputPrefix),
 		"prefix":                     aws.StringValue(description.Prefix),
 		"role_arn":                   aws.StringValue(description.RoleARN),
 	}
@@ -778,7 +784,7 @@ func flattenDeliveryStream(d *schema.ResourceData, s *firehose.DeliveryStreamDes
 				return fmt.Errorf("error setting s3_configuration: %s", err)
 			}
 		} else if destination.HttpEndpointDestinationDescription != nil {
-			d.Set("destination", destinationTypeHttpEndpoint)
+			d.Set("destination", destinationTypeHTTPEndpoint)
 			configuredAccessKey := d.Get("http_endpoint_configuration.0.access_key").(string)
 			if err := d.Set("http_endpoint_configuration", flattenHTTPEndpointConfiguration(destination.HttpEndpointDestinationDescription, configuredAccessKey)); err != nil {
 				return fmt.Errorf("error setting http_endpoint_configuration: %s", err)
@@ -814,7 +820,7 @@ func flattenHTTPEndpointConfiguration(description *firehose.HttpEndpointDestinat
 		"role_arn":                   aws.StringValue(description.RoleARN),
 		"s3_backup_mode":             aws.StringValue(description.S3BackupMode),
 		"request_configuration":      flattenRequestConfiguration(description.RequestConfiguration),
-		"cloudwatch_logging_options": flattenCloudwatchLoggingOptions(description.CloudWatchLoggingOptions),
+		"cloudwatch_logging_options": flattenCloudWatchLoggingOptions(description.CloudWatchLoggingOptions),
 		"processing_configuration":   flattenProcessingConfiguration(description.ProcessingConfiguration, aws.StringValue(description.RoleARN)),
 	}
 
@@ -941,7 +947,7 @@ func ResourceDeliveryStream() *schema.Resource {
 					destinationTypeRedshift,
 					destinationTypeElasticsearch,
 					destinationTypeSplunk,
-					destinationTypeHttpEndpoint,
+					destinationTypeHTTPEndpoint,
 				}, false),
 			},
 
@@ -1225,8 +1231,9 @@ func ResourceDeliveryStream() *schema.Resource {
 						},
 
 						"error_output_prefix": {
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringLenBetween(0, 1024),
 						},
 
 						"kms_key_arn": {
@@ -1617,6 +1624,10 @@ func createS3Config(d *schema.ResourceData) *firehose.S3DestinationConfiguration
 		EncryptionConfiguration: extractEncryptionConfiguration(s3),
 	}
 
+	if v, ok := s3["error_output_prefix"].(string); ok && v != "" {
+		configuration.ErrorOutputPrefix = aws.String(v)
+	}
+
 	if _, ok := s3["cloudwatch_logging_options"]; ok {
 		configuration.CloudWatchLoggingOptions = extractCloudWatchLoggingConfiguration(s3)
 	}
@@ -1646,6 +1657,10 @@ func expandS3BackupConfig(d map[string]interface{}) *firehose.S3DestinationConfi
 
 	if _, ok := s3["cloudwatch_logging_options"]; ok {
 		configuration.CloudWatchLoggingOptions = extractCloudWatchLoggingConfiguration(s3)
+	}
+
+	if v, ok := s3["error_output_prefix"].(string); ok && v != "" {
+		configuration.ErrorOutputPrefix = aws.String(v)
 	}
 
 	return configuration
@@ -1679,8 +1694,8 @@ func createExtendedS3Config(d *schema.ResourceData) *firehose.ExtendedS3Destinat
 		configuration.CloudWatchLoggingOptions = extractCloudWatchLoggingConfiguration(s3)
 	}
 
-	if v, ok := s3["error_output_prefix"]; ok && v.(string) != "" {
-		configuration.ErrorOutputPrefix = aws.String(v.(string))
+	if v, ok := s3["error_output_prefix"].(string); ok && v != "" {
+		configuration.ErrorOutputPrefix = aws.String(v)
 	}
 
 	if s3BackupMode, ok := s3["s3_backup_mode"]; ok {
@@ -1701,6 +1716,7 @@ func updateS3Config(d *schema.ResourceData) *firehose.S3DestinationUpdate {
 			IntervalInSeconds: aws.Int64((int64)(s3["buffer_interval"].(int))),
 			SizeInMBs:         aws.Int64((int64)(s3["buffer_size"].(int))),
 		},
+		ErrorOutputPrefix:        aws.String(s3["error_output_prefix"].(string)),
 		Prefix:                   extractPrefixConfiguration(s3),
 		CompressionFormat:        aws.String(s3["compression_format"].(string)),
 		EncryptionConfiguration:  extractEncryptionConfiguration(s3),
@@ -1729,6 +1745,7 @@ func updateS3BackupConfig(d map[string]interface{}) *firehose.S3DestinationUpdat
 			IntervalInSeconds: aws.Int64((int64)(s3["buffer_interval"].(int))),
 			SizeInMBs:         aws.Int64((int64)(s3["buffer_size"].(int))),
 		},
+		ErrorOutputPrefix:        aws.String(s3["error_output_prefix"].(string)),
 		Prefix:                   extractPrefixConfiguration(s3),
 		CompressionFormat:        aws.String(s3["compression_format"].(string)),
 		EncryptionConfiguration:  extractEncryptionConfiguration(s3),
@@ -1752,6 +1769,7 @@ func updateExtendedS3Config(d *schema.ResourceData) *firehose.ExtendedS3Destinat
 			IntervalInSeconds: aws.Int64((int64)(s3["buffer_interval"].(int))),
 			SizeInMBs:         aws.Int64((int64)(s3["buffer_size"].(int))),
 		},
+		ErrorOutputPrefix:                 aws.String(s3["error_output_prefix"].(string)),
 		Prefix:                            extractPrefixConfiguration(s3),
 		CompressionFormat:                 aws.String(s3["compression_format"].(string)),
 		EncryptionConfiguration:           extractEncryptionConfiguration(s3),
@@ -1766,10 +1784,6 @@ func updateExtendedS3Config(d *schema.ResourceData) *firehose.ExtendedS3Destinat
 
 	if _, ok := s3["dynamic_partitioning_configuration"]; ok {
 		configuration.DynamicPartitioningConfiguration = extractDynamicPartitioningConfiguration(s3)
-	}
-
-	if v, ok := s3["error_output_prefix"]; ok && v.(string) != "" {
-		configuration.ErrorOutputPrefix = aws.String(v.(string))
 	}
 
 	if s3BackupMode, ok := s3["s3_backup_mode"]; ok {
@@ -2162,6 +2176,12 @@ func updateRedshiftConfig(d *schema.ResourceData, s3Update *firehose.S3Destinati
 	if s3BackupMode, ok := redshift["s3_backup_mode"]; ok {
 		configuration.S3BackupMode = aws.String(s3BackupMode.(string))
 		configuration.S3BackupUpdate = updateS3BackupConfig(d.Get("redshift_configuration").([]interface{})[0].(map[string]interface{}))
+		if configuration.S3BackupUpdate != nil {
+			// Redshift does not currently support ErrorOutputPrefix,
+			// which is set to the empty string within "updateS3BackupConfig",
+			// thus we must remove it here to avoid an InvalidArgumentException.
+			configuration.S3BackupUpdate.ErrorOutputPrefix = nil
+		}
 	}
 
 	return configuration, nil
@@ -2581,7 +2601,7 @@ func resourceDeliveryStreamCreate(d *schema.ResourceData, meta interface{}) erro
 				return err
 			}
 			createInput.SplunkDestinationConfiguration = rc
-		} else if d.Get("destination").(string) == destinationTypeHttpEndpoint {
+		} else if d.Get("destination").(string) == destinationTypeHTTPEndpoint {
 			rc, err := createHTTPEndpointConfig(d, s3Config)
 			if err != nil {
 				return err
@@ -2594,7 +2614,7 @@ func resourceDeliveryStreamCreate(d *schema.ResourceData, meta interface{}) erro
 		createInput.Tags = Tags(tags.IgnoreAWS())
 	}
 
-	err := resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
 		_, err := conn.CreateDeliveryStream(createInput)
 		if err != nil {
 			// Access was denied when calling Glue. Please ensure that the role specified in the data format conversion configuration has the necessary permissions.
@@ -2701,86 +2721,95 @@ func resourceDeliveryStreamUpdate(d *schema.ResourceData, meta interface{}) erro
 	conn := meta.(*conns.AWSClient).FirehoseConn
 
 	sn := d.Get("name").(string)
-	updateInput := &firehose.UpdateDestinationInput{
-		DeliveryStreamName:             aws.String(sn),
-		CurrentDeliveryStreamVersionId: aws.String(d.Get("version_id").(string)),
-		DestinationId:                  aws.String(d.Get("destination_id").(string)),
-	}
 
-	if d.Get("destination").(string) == destinationTypeExtendedS3 {
-		extendedS3Config := updateExtendedS3Config(d)
-		updateInput.ExtendedS3DestinationUpdate = extendedS3Config
-	} else {
-		s3Config := updateS3Config(d)
-
-		if d.Get("destination").(string) == destinationTypeS3 {
-			updateInput.S3DestinationUpdate = s3Config
-		} else if d.Get("destination").(string) == destinationTypeElasticsearch {
-			esUpdate, err := updateElasticsearchConfig(d, s3Config)
-			if err != nil {
-				return err
-			}
-			updateInput.ElasticsearchDestinationUpdate = esUpdate
-		} else if d.Get("destination").(string) == destinationTypeRedshift {
-			rc, err := updateRedshiftConfig(d, s3Config)
-			if err != nil {
-				return err
-			}
-			updateInput.RedshiftDestinationUpdate = rc
-		} else if d.Get("destination").(string) == destinationTypeSplunk {
-			rc, err := updateSplunkConfig(d, s3Config)
-			if err != nil {
-				return err
-			}
-			updateInput.SplunkDestinationUpdate = rc
-		} else if d.Get("destination").(string) == destinationTypeHttpEndpoint {
-			rc, err := updateHTTPEndpointConfig(d, s3Config)
-			if err != nil {
-				return err
-			}
-			updateInput.HttpEndpointDestinationUpdate = rc
+	if d.HasChangesExcept("tags", "tags_all") {
+		updateInput := &firehose.UpdateDestinationInput{
+			DeliveryStreamName:             aws.String(sn),
+			CurrentDeliveryStreamVersionId: aws.String(d.Get("version_id").(string)),
+			DestinationId:                  aws.String(d.Get("destination_id").(string)),
 		}
-	}
 
-	err := resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
-		_, err := conn.UpdateDestination(updateInput)
+		if d.Get("destination").(string) == destinationTypeExtendedS3 {
+			extendedS3Config := updateExtendedS3Config(d)
+			updateInput.ExtendedS3DestinationUpdate = extendedS3Config
+		} else {
+			s3Config := updateS3Config(d)
+
+			if d.Get("destination").(string) == destinationTypeS3 {
+				updateInput.S3DestinationUpdate = s3Config
+			} else if d.Get("destination").(string) == destinationTypeElasticsearch {
+				esUpdate, err := updateElasticsearchConfig(d, s3Config)
+				if err != nil {
+					return err
+				}
+				updateInput.ElasticsearchDestinationUpdate = esUpdate
+			} else if d.Get("destination").(string) == destinationTypeRedshift {
+				// Redshift does not currently support ErrorOutputPrefix,
+				// which is set to the empty string within "updateS3Config",
+				// thus we must remove it here to avoid an InvalidArgumentException.
+				if s3Config != nil {
+					s3Config.ErrorOutputPrefix = nil
+				}
+				rc, err := updateRedshiftConfig(d, s3Config)
+				if err != nil {
+					return err
+				}
+				updateInput.RedshiftDestinationUpdate = rc
+			} else if d.Get("destination").(string) == destinationTypeSplunk {
+				rc, err := updateSplunkConfig(d, s3Config)
+				if err != nil {
+					return err
+				}
+				updateInput.SplunkDestinationUpdate = rc
+			} else if d.Get("destination").(string) == destinationTypeHTTPEndpoint {
+				rc, err := updateHTTPEndpointConfig(d, s3Config)
+				if err != nil {
+					return err
+				}
+				updateInput.HttpEndpointDestinationUpdate = rc
+			}
+		}
+
+		err := resource.Retry(propagationTimeout, func() *resource.RetryError {
+			_, err := conn.UpdateDestination(updateInput)
+			if err != nil {
+				// Access was denied when calling Glue. Please ensure that the role specified in the data format conversion configuration has the necessary permissions.
+				if tfawserr.ErrMessageContains(err, firehose.ErrCodeInvalidArgumentException, "Access was denied") {
+					return resource.RetryableError(err)
+				}
+
+				if tfawserr.ErrMessageContains(err, firehose.ErrCodeInvalidArgumentException, "is not authorized to") {
+					return resource.RetryableError(err)
+				}
+
+				if tfawserr.ErrMessageContains(err, firehose.ErrCodeInvalidArgumentException, "Please make sure the role specified in VpcConfiguration has permissions") {
+					return resource.RetryableError(err)
+				}
+
+				// InvalidArgumentException: Verify that the IAM role has access to the Elasticsearch domain.
+				if tfawserr.ErrMessageContains(err, firehose.ErrCodeInvalidArgumentException, "Verify that the IAM role has access") {
+					return resource.RetryableError(err)
+				}
+
+				if tfawserr.ErrMessageContains(err, firehose.ErrCodeInvalidArgumentException, "Firehose is unable to assume role") {
+					return resource.RetryableError(err)
+				}
+
+				return resource.NonRetryableError(err)
+			}
+
+			return nil
+		})
+
+		if tfresource.TimedOut(err) {
+			_, err = conn.UpdateDestination(updateInput)
+		}
+
 		if err != nil {
-			// Access was denied when calling Glue. Please ensure that the role specified in the data format conversion configuration has the necessary permissions.
-			if tfawserr.ErrMessageContains(err, firehose.ErrCodeInvalidArgumentException, "Access was denied") {
-				return resource.RetryableError(err)
-			}
-
-			if tfawserr.ErrMessageContains(err, firehose.ErrCodeInvalidArgumentException, "is not authorized to") {
-				return resource.RetryableError(err)
-			}
-
-			if tfawserr.ErrMessageContains(err, firehose.ErrCodeInvalidArgumentException, "Please make sure the role specified in VpcConfiguration has permissions") {
-				return resource.RetryableError(err)
-			}
-
-			// InvalidArgumentException: Verify that the IAM role has access to the Elasticsearch domain.
-			if tfawserr.ErrMessageContains(err, firehose.ErrCodeInvalidArgumentException, "Verify that the IAM role has access") {
-				return resource.RetryableError(err)
-			}
-
-			if tfawserr.ErrMessageContains(err, firehose.ErrCodeInvalidArgumentException, "Firehose is unable to assume role") {
-				return resource.RetryableError(err)
-			}
-
-			return resource.NonRetryableError(err)
+			return fmt.Errorf(
+				"Error Updating Kinesis Firehose Delivery Stream: \"%s\"\n%s",
+				sn, err)
 		}
-
-		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		_, err = conn.UpdateDestination(updateInput)
-	}
-
-	if err != nil {
-		return fmt.Errorf(
-			"Error Updating Kinesis Firehose Delivery Stream: \"%s\"\n%s",
-			sn, err)
 	}
 
 	if d.HasChange("tags_all") {

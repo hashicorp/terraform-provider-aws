@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/imagebuilder"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -82,12 +82,19 @@ func ResourceImageRecipe() *schema.Resource {
 										Type:         schema.TypeString,
 										Optional:     true,
 										ForceNew:     true,
-										ValidateFunc: verify.ValidARN,
+										ValidateFunc: validation.StringLenBetween(1, 1024),
 									},
 									"snapshot_id": {
-										Type:     schema.TypeString,
-										Optional: true,
-										ForceNew: true,
+										Type:         schema.TypeString,
+										Optional:     true,
+										ForceNew:     true,
+										ValidateFunc: validation.StringLenBetween(1, 1024),
+									},
+									"throughput": {
+										Type:         schema.TypeInt,
+										Optional:     true,
+										ForceNew:     true,
+										ValidateFunc: validation.IntBetween(125, 1000),
 									},
 									"volume_size": {
 										Type:         schema.TypeInt,
@@ -96,11 +103,10 @@ func ResourceImageRecipe() *schema.Resource {
 										ValidateFunc: validation.IntBetween(1, 16000),
 									},
 									"volume_type": {
-										Type:     schema.TypeString,
-										Optional: true,
-										ForceNew: true,
-										// https://github.com/hashicorp/terraform-provider-aws/issues/17274.
-										ValidateFunc: validation.StringInSlice(append(imagebuilder.EbsVolumeType_Values(), EBSVolumeTypeGP3), false),
+										Type:         schema.TypeString,
+										Optional:     true,
+										ForceNew:     true,
+										ValidateFunc: validation.StringInSlice(imagebuilder.EbsVolumeType_Values(), false),
 									},
 								},
 							},
@@ -132,7 +138,27 @@ func ResourceImageRecipe() *schema.Resource {
 						"component_arn": {
 							Type:         schema.TypeString,
 							Required:     true,
+							ForceNew:     true,
 							ValidateFunc: verify.ValidARN,
+						},
+						"parameter": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"name": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ForceNew:     true,
+										ValidateFunc: validation.StringLenBetween(1, 256),
+									},
+									"value": {
+										Type:     schema.TypeString,
+										Required: true,
+										ForceNew: true,
+									},
+								},
+							},
 						},
 					},
 				},
@@ -144,13 +170,14 @@ func ResourceImageRecipe() *schema.Resource {
 			"description": {
 				Type:         schema.TypeString,
 				Optional:     true,
+				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 1024),
 			},
 			"name": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 126),
+				ValidateFunc: validation.StringLenBetween(1, 128),
 			},
 			"owner": {
 				Type:     schema.TypeString,
@@ -160,14 +187,48 @@ func ResourceImageRecipe() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 126),
+				ValidateFunc: validation.StringLenBetween(1, 1024),
 			},
 			"platform": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"systems_manager_agent": {
+				Type:     schema.TypeList,
+				Optional: true,
+				ForceNew: true,
+				MaxItems: 1,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"uninstall_after_build": {
+							Type:     schema.TypeBool,
+							Required: true,
+							ForceNew: true,
+						},
+					},
+				},
+			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
+			"user_data_base64": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+				Computed: true,
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(1, 21847),
+					func(v interface{}, name string) (warns []string, errs []error) {
+						s := v.(string)
+						if !verify.IsBase64Encoded([]byte(s)) {
+							errs = append(errs, fmt.Errorf(
+								"%s: must be base64-encoded", name,
+							))
+						}
+						return
+					},
+				),
+			},
 			"version": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -215,8 +276,21 @@ func resourceImageRecipeCreate(d *schema.ResourceData, meta interface{}) error {
 		input.ParentImage = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("systems_manager_agent"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.AdditionalInstanceConfiguration = &imagebuilder.AdditionalInstanceConfiguration{
+			SystemsManagerAgent: expandSystemsManagerAgent(v.([]interface{})[0].(map[string]interface{})),
+		}
+	}
+
 	if len(tags) > 0 {
 		input.Tags = Tags(tags.IgnoreAWS())
+	}
+
+	if v, ok := d.GetOk("user_data_base64"); ok {
+		if input.AdditionalInstanceConfiguration == nil {
+			input.AdditionalInstanceConfiguration = &imagebuilder.AdditionalInstanceConfiguration{}
+		}
+		input.AdditionalInstanceConfiguration.UserDataOverride = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("version"); ok {
@@ -287,6 +361,12 @@ func resourceImageRecipeRead(d *schema.ResourceData, meta interface{}) error {
 	if err := d.Set("tags_all", tags.Map()); err != nil {
 		return fmt.Errorf("error setting tags_all: %w", err)
 	}
+
+	if imageRecipe.AdditionalInstanceConfiguration != nil {
+		d.Set("systems_manager_agent", []interface{}{flattenSystemsManagerAgent(imageRecipe.AdditionalInstanceConfiguration.SystemsManagerAgent)})
+		d.Set("user_data_base64", imageRecipe.AdditionalInstanceConfiguration.UserDataOverride)
+	}
+
 	d.Set("version", imageRecipe.Version)
 	d.Set("working_directory", imageRecipe.WorkingDirectory)
 
@@ -336,6 +416,56 @@ func expandComponentConfiguration(tfMap map[string]interface{}) *imagebuilder.Co
 
 	if v, ok := tfMap["component_arn"].(string); ok && v != "" {
 		apiObject.ComponentArn = aws.String(v)
+	}
+
+	if v, ok := tfMap["parameter"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.Parameters = expandComponentParameters(v.List())
+	}
+
+	return apiObject
+}
+
+func expandComponentParameters(tfList []interface{}) []*imagebuilder.ComponentParameter {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var apiObjects []*imagebuilder.ComponentParameter
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
+
+		if !ok {
+			continue
+		}
+
+		apiObject := expandComponentParameter(tfMap)
+
+		if apiObject == nil {
+			continue
+		}
+
+		apiObjects = append(apiObjects, apiObject)
+	}
+
+	return apiObjects
+}
+
+func expandComponentParameter(tfMap map[string]interface{}) *imagebuilder.ComponentParameter {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &imagebuilder.ComponentParameter{}
+
+	if v, ok := tfMap["name"].(string); ok && v != "" {
+		apiObject.Name = aws.String(v)
+	}
+
+	if v, ok := tfMap["value"].(string); ok && v != "" {
+		// ImageBuilder API quirk
+		// Even though Value is a slice, only one element is accepted.
+		apiObject.Value = aws.StringSlice([]string{v})
 	}
 
 	return apiObject
@@ -394,6 +524,10 @@ func expandEBSInstanceBlockDeviceSpecification(tfMap map[string]interface{}) *im
 
 	if v, ok := tfMap["snapshot_id"].(string); ok && v != "" {
 		apiObject.SnapshotId = aws.String(v)
+	}
+
+	if v, ok := tfMap["throughput"].(int); ok && v != 0 {
+		apiObject.Throughput = aws.Int64(int64(v))
 	}
 
 	if v, ok := tfMap["volume_size"].(int); ok && v != 0 {
@@ -459,6 +593,20 @@ func expandInstanceBlockDeviceMappings(tfList []interface{}) []*imagebuilder.Ins
 	return apiObjects
 }
 
+func expandSystemsManagerAgent(tfMap map[string]interface{}) *imagebuilder.SystemsManagerAgent {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &imagebuilder.SystemsManagerAgent{}
+
+	if v, ok := tfMap["uninstall_after_build"].(bool); ok {
+		apiObject.UninstallAfterBuild = aws.Bool(v)
+	}
+
+	return apiObject
+}
+
 func flattenComponentConfiguration(apiObject *imagebuilder.ComponentConfiguration) map[string]interface{} {
 	if apiObject == nil {
 		return nil
@@ -468,6 +616,48 @@ func flattenComponentConfiguration(apiObject *imagebuilder.ComponentConfiguratio
 
 	if v := apiObject.ComponentArn; v != nil {
 		tfMap["component_arn"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.Parameters; v != nil {
+		tfMap["parameter"] = flattenComponentParameters(v)
+	}
+
+	return tfMap
+}
+
+func flattenComponentParameters(apiObjects []*imagebuilder.ComponentParameter) []interface{} {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+
+	for _, apiObject := range apiObjects {
+		if apiObject == nil {
+			continue
+		}
+
+		tfList = append(tfList, flattenComponentParameter(apiObject))
+	}
+
+	return tfList
+}
+
+func flattenComponentParameter(apiObject *imagebuilder.ComponentParameter) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.Name; v != nil {
+		tfMap["name"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.Value; v != nil {
+		// ImageBuilder API quirk
+		// Even though Value is a slice, only one element is accepted.
+		tfMap["value"] = aws.StringValueSlice(v)[0]
 	}
 
 	return tfMap
@@ -516,6 +706,10 @@ func flattenEBSInstanceBlockDeviceSpecification(apiObject *imagebuilder.EbsInsta
 
 	if v := apiObject.SnapshotId; v != nil {
 		tfMap["snapshot_id"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.Throughput; v != nil {
+		tfMap["throughput"] = aws.Int64Value(v)
 	}
 
 	if v := apiObject.VolumeSize; v != nil {
@@ -571,4 +765,18 @@ func flattenInstanceBlockDeviceMappings(apiObjects []*imagebuilder.InstanceBlock
 	}
 
 	return tfList
+}
+
+func flattenSystemsManagerAgent(apiObject *imagebuilder.SystemsManagerAgent) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.UninstallAfterBuild; v != nil {
+		tfMap["uninstall_after_build"] = aws.BoolValue(v)
+	}
+
+	return tfMap
 }

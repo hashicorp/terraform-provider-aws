@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/securityhub"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -18,13 +18,13 @@ func testAccFindingAggregator_basic(t *testing.T) {
 	resourceName := "aws_securityhub_finding_aggregator.test_aggregator"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, securityhub.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckFindingAggregatorDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, securityhub.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFindingAggregatorDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFindingAggregatorAllRegionsConfig(),
+				Config: testAccFindingAggregatorConfig_allRegions(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFindingAggregatorExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "linking_mode", "ALL_REGIONS"),
@@ -37,7 +37,7 @@ func testAccFindingAggregator_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccFindingAggregatorSpecifiedRegionsConfig(),
+				Config: testAccFindingAggregatorConfig_specifiedRegions(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFindingAggregatorExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "linking_mode", "SPECIFIED_REGIONS"),
@@ -45,7 +45,7 @@ func testAccFindingAggregator_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccFindingAggregatorAllRegionsExceptSpecifiedConfig(),
+				Config: testAccFindingAggregatorConfig_allRegionsExceptSpecified(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFindingAggregatorExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "linking_mode", "ALL_REGIONS_EXCEPT_SPECIFIED"),
@@ -60,13 +60,13 @@ func testAccFindingAggregator_disappears(t *testing.T) {
 	resourceName := "aws_securityhub_finding_aggregator.test_aggregator"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, securityhub.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckFindingAggregatorDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, securityhub.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFindingAggregatorDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFindingAggregatorAllRegionsConfig(),
+				Config: testAccFindingAggregatorConfig_allRegions(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFindingAggregatorExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfsecurityhub.ResourceFindingAggregator(), resourceName),
@@ -128,7 +128,7 @@ func testAccCheckFindingAggregatorDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccFindingAggregatorAllRegionsConfig() string {
+func testAccFindingAggregatorConfig_allRegions() string {
 	return `
 resource "aws_securityhub_account" "example" {}
 
@@ -140,7 +140,7 @@ resource "aws_securityhub_finding_aggregator" "test_aggregator" {
 `
 }
 
-func testAccFindingAggregatorSpecifiedRegionsConfig() string {
+func testAccFindingAggregatorConfig_specifiedRegions() string {
 	return fmt.Sprintf(`
 resource "aws_securityhub_account" "example" {}
 
@@ -153,7 +153,7 @@ resource "aws_securityhub_finding_aggregator" "test_aggregator" {
 `, endpoints.EuWest1RegionID, endpoints.EuWest2RegionID, endpoints.UsEast1RegionID)
 }
 
-func testAccFindingAggregatorAllRegionsExceptSpecifiedConfig() string {
+func testAccFindingAggregatorConfig_allRegionsExceptSpecified() string {
 	return fmt.Sprintf(`
 resource "aws_securityhub_account" "example" {}
 

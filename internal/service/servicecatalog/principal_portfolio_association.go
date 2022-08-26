@@ -6,12 +6,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/servicecatalog"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -22,6 +21,12 @@ func ResourcePrincipalPortfolioAssociation() *schema.Resource {
 		Delete: resourcePrincipalPortfolioAssociationDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
+		},
+
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(PrincipalPortfolioAssociationReadyTimeout),
+			Read:   schema.DefaultTimeout(PrincipalPortfolioAssociationReadTimeout),
+			Delete: schema.DefaultTimeout(PrincipalPortfolioAssociationDeleteTimeout),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -70,7 +75,7 @@ func resourcePrincipalPortfolioAssociationCreate(d *schema.ResourceData, meta in
 	}
 
 	var output *servicecatalog.AssociatePrincipalWithPortfolioOutput
-	err := resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
 		var err error
 
 		output, err = conn.AssociatePrincipalWithPortfolio(input)
@@ -116,7 +121,7 @@ func resourcePrincipalPortfolioAssociationRead(d *schema.ResourceData, meta inte
 		acceptLanguage = AcceptLanguageEnglish
 	}
 
-	output, err := WaitPrincipalPortfolioAssociationReady(conn, acceptLanguage, principalARN, portfolioID)
+	output, err := WaitPrincipalPortfolioAssociationReady(conn, acceptLanguage, principalARN, portfolioID, d.Timeout(schema.TimeoutRead))
 
 	if !d.IsNewResource() && (tfresource.NotFound(err) || tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException)) {
 		log.Printf("[WARN] Service Catalog Principal Portfolio Association (%s) not found, removing from state", d.Id())
@@ -169,7 +174,7 @@ func resourcePrincipalPortfolioAssociationDelete(d *schema.ResourceData, meta in
 		return fmt.Errorf("error disassociating Service Catalog Principal from Portfolio (%s): %w", d.Id(), err)
 	}
 
-	err = WaitPrincipalPortfolioAssociationDeleted(conn, acceptLanguage, principalARN, portfolioID)
+	err = WaitPrincipalPortfolioAssociationDeleted(conn, acceptLanguage, principalARN, portfolioID, d.Timeout(schema.TimeoutDelete))
 
 	if tfresource.NotFound(err) || tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
 		return nil

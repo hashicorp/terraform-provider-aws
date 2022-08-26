@@ -20,7 +20,7 @@ package ecs
 
 Some flags control generation a certain section of code, such as whether the generator generates a certain function. Other flags determine how generated code will work. Do not include flags where you want the generator to use the default value.
 
-| Flag | Default | Description | Example Use | 
+| Flag | Default | Description | Example Use |
 | --- | --- | --- | --- |
 | `GetTag` |  | Whether to generate GetTag | `-GetTag` |
 | `ListTags` |  | Whether to generate ListTags | `-ListTags` |
@@ -28,12 +28,12 @@ Some flags control generation a certain section of code, such as whether the gen
 | `ServiceTagsSlice` |  | Whether to generate slice service tags (use this or `ServiceTagsMap`, not both) | `-ServiceTagsSlice` |
 | `UpdateTags` |  | Whether to generate UpdateTags | `-UpdateTags` |
 | `ListTagsInFiltIDName` |  | List tags input filter identifier name | `-ListTagsInFiltIDName=resource-id` |
-| `ListTagsInIDElem` | `ResourceArn` | List tags input identifier element | `-ListTagsInEDElem=ResourceARN` |
+| `ListTagsInIDElem` | `ResourceArn` | List tags input identifier element | `-ListTagsInIDElem=ResourceARN` |
 | `ListTagsInIDNeedSlice` |  | Whether list tags input identifier needs a slice | `-ListTagsInIDNeedSlice=yes` |
 | `ListTagsOp` | `ListTagsForResource` | List tags operation | `-ListTagsOp=ListTags` |
 | `ListTagsOutTagsElem` | `Tags` | List tags output tags element | `-ListTagsOutTagsElem=TagList` |
 | `TagInCustomVal` |  | Tag input custom value | `-TagInCustomVal=aws.StringMap(updatedTags.IgnoreAWS().Map())` |
-| `TagInIDElem` | `ResourceArn` | Tag input identifier element | `-TagInCustomVal=ResourceARN` |
+| `TagInIDElem` | `ResourceArn` | Tag input identifier element | `-TagInIDElem=ResourceARN` |
 | `TagInIDNeedSlice` |  | Tag input identifier needs a slice | `-TagInIDNeedSlice=yes` |
 | `TagInTagsElem` | Tags | Tag input tags element | `-TagInTagsElem=TagsList` |
 | `TagKeyType` |  | Tag key type | `-TagKeyType=TagKeyOnly` |
@@ -54,7 +54,7 @@ Some flags control generation a certain section of code, such as whether the gen
 
 ## Legacy Documentation
 
-(This needs to be updated...)
+(TODO: This needs to be updated...)
 
 The `keyvaluetags` package is designed to provide a consistent interface for handling AWS resource key-value tags. Many of the AWS Go SDK services, implement their own Go struct with `Key` and `Value` fields (e.g. `athena.Tag`) while others simply use a map (e.g. `map[string]string`). These inconsistent implementations and numerous Go types makes the process of correctly working with each of the services a tedius, previously copy-paste-modify process.
 
@@ -62,11 +62,11 @@ This package instead implements a single `KeyValueTags` type, which covers all k
 
 Full documentation for this package can be found on [GoDoc](https://godoc.org/github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags).
 
-Many AWS Go SDK services that support tagging have their service-specific Go type conversion functions to and from `KeyValueTags` code generated. Converting from `KeyValueTags` to AWS Go SDK types is done via `{SERVICE}Tags()` functions on the type, while converting from AWS Go SDK types to the `KeyValueTags` type is done via `{SERVICE}KeyValueTags()` functions. For more information about this code generation, see the [`generators/servicetags` README](generators/servicetags/README.md).
+Many AWS Go SDK services that support tagging have their service-specific Go type conversion functions to and from `KeyValueTags` code generated. Converting from `KeyValueTags` to AWS Go SDK types is done via `{SERVICE}Tags()` functions on the type, while converting from AWS Go SDK types to the `KeyValueTags` type is done via `{SERVICE}KeyValueTags()` functions. For more information about this code generation, see the [`servicetags` README](README_servicetags.md).
 
-Some AWS Go SDK services that have common tag listing functionality (such as `ListTagsForResource` API call), also have auto-generated list functions. For more information about this code generation, see the [`generators/listtags` README](generators/listtags/README.md).
+Some AWS Go SDK services that have common tag listing functionality (such as `ListTagsForResource` API call), also have auto-generated list functions. For more information about this code generation, see the [`listtags` README](README_listtags.md).
 
-Some AWS Go SDK services that have common tagging update functionality (such as `TagResource` and `UntagResource` API calls), also have auto-generated update functions. For more information about this code generation, see the [`generators/updatetags` README](generators/updatetags/README.md).
+Some AWS Go SDK services that have common tagging update functionality (such as `TagResource` and `UntagResource` API calls), also have auto-generated update functions. For more information about this code generation, see the [`updatetags` README](README_updatetags.md).
 
 Any tagging functions that cannot be generated should be hand implemented in a service-specific source file (e.g. `iam_tags.go`) and follow the format of similar generated code wherever possible. The first line of the source file should be `// +build !generate`. This prevents the file's inclusion during the code generation phase.
 
@@ -89,6 +89,7 @@ aws/internal/keyvaluetags
 └── <service name>_tags.go (any service-specific functions that cannot be generated)
 ```
 
+<!-- markdownlint-disable -->
 # listtags
 
 This package contains a code generator to consistently handle the various AWS Go SDK service implementations for listing resource tags. Not all AWS Go SDK services that support tagging are generated in this manner.
@@ -126,7 +127,7 @@ func AmplifyListTags(conn *amplify.Amplify, identifier string) (KeyValueTags, er
 
 Before a new service can be added to the generator, the new service must:
 
-- Have the `KeyValueTags` conversion functions implemented for the AWS Go SDK service type/map. See also the [`servicetags` generator README](../servicetags/README.md).
+- Have the `KeyValueTags` conversion functions implemented for the AWS Go SDK service type/map. See also the [`servicetags` README](README_servicetags.md).
 - Implement a function for listing resource tags (e.g. `ListTagsforResource`)
 - Have the service included in `aws/internal/keyvaluetags/service_generation_customizations.go`, if not present the following compilation error will be seen:
 
@@ -376,7 +377,7 @@ func AthenaUpdateTags(conn *athena.Athena, identifier string, oldTagsMap interfa
 
 Before a new service can be added to the generator, the new service must:
 
-- Have the `KeyValueTags` conversion functions implemented for the AWS Go SDK service type/map. See also the [`servicetags` generator README](../servicetags/README.md).
+- Have the `KeyValueTags` conversion functions implemented for the AWS Go SDK service type/map. See also the [`servicetags` README](README_servicetags.md).
 - Implement a function for tagging (e.g. `TagResource`) and a function for untagging via keys (e.g. `UntagResource`)
 - Have the service included in `aws/internal/keyvaluetags/service_generation_customizations.go`, if not present the following compilation error will be seen:
 

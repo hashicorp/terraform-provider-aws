@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elbv2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -74,7 +74,7 @@ func resourceAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
 	err := resource.Retry(10*time.Minute, func() *resource.RetryError {
 		_, err := conn.RegisterTargets(params)
 
-		if tfawserr.ErrMessageContains(err, "InvalidTarget", "") {
+		if tfawserr.ErrCodeEquals(err, "InvalidTarget") {
 			return resource.RetryableError(fmt.Errorf("Error attaching instance to LB, retrying: %s", err))
 		}
 
@@ -118,7 +118,7 @@ func resourceAttachmentDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	_, err := conn.DeregisterTargets(params)
-	if err != nil && !tfawserr.ErrMessageContains(err, elbv2.ErrCodeTargetGroupNotFoundException, "") {
+	if err != nil && !tfawserr.ErrCodeEquals(err, elbv2.ErrCodeTargetGroupNotFoundException) {
 		return fmt.Errorf("Error deregistering Targets: %s", err)
 	}
 
@@ -148,12 +148,12 @@ func resourceAttachmentRead(d *schema.ResourceData, meta interface{}) error {
 	})
 
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, elbv2.ErrCodeTargetGroupNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, elbv2.ErrCodeTargetGroupNotFoundException) {
 			log.Printf("[WARN] Target group does not exist, removing target attachment %s", d.Id())
 			d.SetId("")
 			return nil
 		}
-		if tfawserr.ErrMessageContains(err, elbv2.ErrCodeInvalidTargetException, "") {
+		if tfawserr.ErrCodeEquals(err, elbv2.ErrCodeInvalidTargetException) {
 			log.Printf("[WARN] Target does not exist, removing target attachment %s", d.Id())
 			d.SetId("")
 			return nil

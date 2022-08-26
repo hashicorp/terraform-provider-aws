@@ -22,13 +22,13 @@ func TestAccSignerSigningJob_basic(t *testing.T) {
 	var conf signer.GetSigningProfileOutput
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckSingerSigningProfile(t, "AWSLambda-SHA384-ECDSA") },
-		ErrorCheck:   acctest.ErrorCheck(t, signer.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: nil,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSingerSigningProfile(t, "AWSLambda-SHA384-ECDSA") },
+		ErrorCheck:               acctest.ErrorCheck(t, signer.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSigningJobConfig(rName),
+				Config: testAccSigningJobConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSigningProfileExists(profileResourceName, &conf),
 					testAccCheckSigningJobExists(resourceName, &job),
@@ -42,7 +42,7 @@ func TestAccSignerSigningJob_basic(t *testing.T) {
 
 }
 
-func testAccSigningJobConfig(rName string) string {
+func testAccSigningJobConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 
@@ -51,13 +51,15 @@ resource "aws_signer_signing_profile" "test" {
 }
 
 resource "aws_s3_bucket" "source" {
-  bucket = "%[1]s-source"
-
-  versioning {
-    enabled = true
-  }
-
+  bucket        = "%[1]s-source"
   force_destroy = true
+}
+
+resource "aws_s3_bucket_versioning" "source" {
+  bucket = aws_s3_bucket.source.id
+  versioning_configuration {
+    status = "Enabled"
+  }
 }
 
 resource "aws_s3_bucket" "destination" {
@@ -65,7 +67,10 @@ resource "aws_s3_bucket" "destination" {
   force_destroy = true
 }
 
-resource "aws_s3_bucket_object" "source" {
+resource "aws_s3_object" "source" {
+  # Must have bucket versioning enabled first
+  depends_on = [aws_s3_bucket_versioning.source]
+
   bucket = aws_s3_bucket.source.bucket
   key    = "lambdatest.zip"
   source = "test-fixtures/lambdatest.zip"
@@ -76,9 +81,9 @@ resource "aws_signer_signing_job" "test" {
 
   source {
     s3 {
-      bucket  = aws_s3_bucket_object.source.bucket
-      key     = aws_s3_bucket_object.source.key
-      version = aws_s3_bucket_object.source.version_id
+      bucket  = aws_s3_object.source.bucket
+      key     = aws_s3_object.source.key
+      version = aws_s3_object.source.version_id
     }
   }
 

@@ -9,7 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/budgets"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -19,7 +19,7 @@ import (
 func init() {
 	resource.AddTestSweepers("aws_budgets_budget_action", &resource.Sweeper{
 		Name: "aws_budgets_budget_action",
-		F:    sweepBudgetActionss,
+		F:    sweepBudgetActions,
 	})
 
 	resource.AddTestSweepers("aws_budgets_budget", &resource.Sweeper{
@@ -28,7 +28,7 @@ func init() {
 	})
 }
 
-func sweepBudgetActionss(region string) error {
+func sweepBudgetActions(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
@@ -78,7 +78,7 @@ func sweepBudgetActionss(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
-func sweepBudgets(region string) error {
+func sweepBudgets(region string) error { // nosemgrep:ci.budgets-in-func-name
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
@@ -109,7 +109,7 @@ func sweepBudgets(region string) error {
 				AccountId:  aws.String(accountID),
 				BudgetName: aws.String(name),
 			})
-			if tfawserr.ErrMessageContains(err, budgets.ErrCodeNotFoundException, "") {
+			if tfawserr.ErrCodeEquals(err, budgets.ErrCodeNotFoundException) {
 				continue
 			}
 			if err != nil {

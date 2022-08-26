@@ -6,6 +6,10 @@ import (
 	"sort"
 )
 
+const (
+	policyModelMarshallJSONStartSliceSize = 2
+)
+
 type IAMPolicyDoc struct {
 	Version    string                `json:",omitempty"`
 	Id         string                `json:",omitempty"`
@@ -110,7 +114,7 @@ func (ps IAMPolicyStatementPrincipalSet) MarshalJSON() ([]byte, error) {
 				raw[p.Type] = i
 			case string:
 				// Convert to []string to stop drop of principals
-				raw[p.Type] = make([]string, 0, 2)
+				raw[p.Type] = make([]string, 0, policyModelMarshallJSONStartSliceSize)
 				raw[p.Type] = append(raw[p.Type].([]string), v)
 				raw[p.Type] = append(raw[p.Type].([]string), i)
 			case []string:
@@ -209,7 +213,7 @@ func (cs *IAMPolicyStatementConditionSet) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
-func iamPolicyDecodeConfigStringList(lI []interface{}) interface{} {
+func policyDecodeConfigStringList(lI []interface{}) interface{} {
 	if len(lI) == 1 {
 		return lI[0].(string)
 	}

@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/glue"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -123,7 +123,7 @@ func resourceSecurityConfigurationCreate(d *schema.ResourceData, meta interface{
 	name := d.Get("name").(string)
 
 	input := &glue.CreateSecurityConfigurationInput{
-		EncryptionConfiguration: expandGlueEncryptionConfiguration(d.Get("encryption_configuration").([]interface{})),
+		EncryptionConfiguration: expandEncryptionConfiguration(d.Get("encryption_configuration").([]interface{})),
 		Name:                    aws.String(name),
 	}
 
@@ -148,7 +148,7 @@ func resourceSecurityConfigurationRead(d *schema.ResourceData, meta interface{})
 	log.Printf("[DEBUG] Reading Glue Security Configuration: %s", input)
 	output, err := conn.GetSecurityConfiguration(input)
 
-	if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
 		log.Printf("[WARN] Glue Security Configuration (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -165,7 +165,7 @@ func resourceSecurityConfigurationRead(d *schema.ResourceData, meta interface{})
 		return nil
 	}
 
-	if err := d.Set("encryption_configuration", flattenGlueEncryptionConfiguration(securityConfiguration.EncryptionConfiguration)); err != nil {
+	if err := d.Set("encryption_configuration", flattenEncryptionConfiguration(securityConfiguration.EncryptionConfiguration)); err != nil {
 		return fmt.Errorf("error setting encryption_configuration: %s", err)
 	}
 
@@ -193,18 +193,14 @@ func DeleteSecurityConfiguration(conn *glue.Glue, name string) error {
 
 	_, err := conn.DeleteSecurityConfiguration(input)
 
-	if tfawserr.ErrMessageContains(err, glue.ErrCodeEntityNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
 		return nil
 	}
 
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }
 
-func expandGlueCloudWatchEncryption(l []interface{}) *glue.CloudWatchEncryption {
+func expandCloudWatchEncryption(l []interface{}) *glue.CloudWatchEncryption {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -222,7 +218,7 @@ func expandGlueCloudWatchEncryption(l []interface{}) *glue.CloudWatchEncryption 
 	return cloudwatchEncryption
 }
 
-func expandGlueEncryptionConfiguration(l []interface{}) *glue.EncryptionConfiguration {
+func expandEncryptionConfiguration(l []interface{}) *glue.EncryptionConfiguration {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -230,15 +226,15 @@ func expandGlueEncryptionConfiguration(l []interface{}) *glue.EncryptionConfigur
 	m := l[0].(map[string]interface{})
 
 	encryptionConfiguration := &glue.EncryptionConfiguration{
-		CloudWatchEncryption:   expandGlueCloudWatchEncryption(m["cloudwatch_encryption"].([]interface{})),
-		JobBookmarksEncryption: expandGlueJobBookmarksEncryption(m["job_bookmarks_encryption"].([]interface{})),
-		S3Encryption:           expandGlueS3Encryptions(m["s3_encryption"].([]interface{})),
+		CloudWatchEncryption:   expandCloudWatchEncryption(m["cloudwatch_encryption"].([]interface{})),
+		JobBookmarksEncryption: expandJobBookmarksEncryption(m["job_bookmarks_encryption"].([]interface{})),
+		S3Encryption:           expandS3Encryptions(m["s3_encryption"].([]interface{})),
 	}
 
 	return encryptionConfiguration
 }
 
-func expandGlueJobBookmarksEncryption(l []interface{}) *glue.JobBookmarksEncryption {
+func expandJobBookmarksEncryption(l []interface{}) *glue.JobBookmarksEncryption {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -256,20 +252,20 @@ func expandGlueJobBookmarksEncryption(l []interface{}) *glue.JobBookmarksEncrypt
 	return jobBookmarksEncryption
 }
 
-func expandGlueS3Encryptions(l []interface{}) []*glue.S3Encryption {
+func expandS3Encryptions(l []interface{}) []*glue.S3Encryption {
 	s3Encryptions := make([]*glue.S3Encryption, 0)
 
 	for _, s3Encryption := range l {
 		if s3Encryption == nil {
 			continue
 		}
-		s3Encryptions = append(s3Encryptions, expandGlueS3Encryption(s3Encryption.(map[string]interface{})))
+		s3Encryptions = append(s3Encryptions, expandS3Encryption(s3Encryption.(map[string]interface{})))
 	}
 
 	return s3Encryptions
 }
 
-func expandGlueS3Encryption(m map[string]interface{}) *glue.S3Encryption {
+func expandS3Encryption(m map[string]interface{}) *glue.S3Encryption {
 	s3Encryption := &glue.S3Encryption{
 		S3EncryptionMode: aws.String(m["s3_encryption_mode"].(string)),
 	}
@@ -281,7 +277,7 @@ func expandGlueS3Encryption(m map[string]interface{}) *glue.S3Encryption {
 	return s3Encryption
 }
 
-func flattenGlueCloudWatchEncryption(cloudwatchEncryption *glue.CloudWatchEncryption) []interface{} {
+func flattenCloudWatchEncryption(cloudwatchEncryption *glue.CloudWatchEncryption) []interface{} {
 	if cloudwatchEncryption == nil {
 		return []interface{}{}
 	}
@@ -294,21 +290,21 @@ func flattenGlueCloudWatchEncryption(cloudwatchEncryption *glue.CloudWatchEncryp
 	return []interface{}{m}
 }
 
-func flattenGlueEncryptionConfiguration(encryptionConfiguration *glue.EncryptionConfiguration) []interface{} {
+func flattenEncryptionConfiguration(encryptionConfiguration *glue.EncryptionConfiguration) []interface{} {
 	if encryptionConfiguration == nil {
 		return []interface{}{}
 	}
 
 	m := map[string]interface{}{
-		"cloudwatch_encryption":    flattenGlueCloudWatchEncryption(encryptionConfiguration.CloudWatchEncryption),
-		"job_bookmarks_encryption": flattenGlueJobBookmarksEncryption(encryptionConfiguration.JobBookmarksEncryption),
-		"s3_encryption":            flattenGlueS3Encryptions(encryptionConfiguration.S3Encryption),
+		"cloudwatch_encryption":    flattenCloudWatchEncryption(encryptionConfiguration.CloudWatchEncryption),
+		"job_bookmarks_encryption": flattenJobBookmarksEncryption(encryptionConfiguration.JobBookmarksEncryption),
+		"s3_encryption":            flattenS3Encryptions(encryptionConfiguration.S3Encryption),
 	}
 
 	return []interface{}{m}
 }
 
-func flattenGlueJobBookmarksEncryption(jobBookmarksEncryption *glue.JobBookmarksEncryption) []interface{} {
+func flattenJobBookmarksEncryption(jobBookmarksEncryption *glue.JobBookmarksEncryption) []interface{} {
 	if jobBookmarksEncryption == nil {
 		return []interface{}{}
 	}
@@ -321,20 +317,20 @@ func flattenGlueJobBookmarksEncryption(jobBookmarksEncryption *glue.JobBookmarks
 	return []interface{}{m}
 }
 
-func flattenGlueS3Encryptions(s3Encryptions []*glue.S3Encryption) []interface{} {
+func flattenS3Encryptions(s3Encryptions []*glue.S3Encryption) []interface{} {
 	l := make([]interface{}, 0)
 
 	for _, s3Encryption := range s3Encryptions {
 		if s3Encryption == nil {
 			continue
 		}
-		l = append(l, flattenGlueS3Encryption(s3Encryption))
+		l = append(l, flattenS3Encryption(s3Encryption))
 	}
 
 	return l
 }
 
-func flattenGlueS3Encryption(s3Encryption *glue.S3Encryption) map[string]interface{} {
+func flattenS3Encryption(s3Encryption *glue.S3Encryption) map[string]interface{} {
 	m := map[string]interface{}{
 		"kms_key_arn":        aws.StringValue(s3Encryption.KmsKeyArn),
 		"s3_encryption_mode": aws.StringValue(s3Encryption.S3EncryptionMode),

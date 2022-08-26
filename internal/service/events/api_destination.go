@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/eventbridge"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -46,7 +46,7 @@ func ResourceAPIDestination() *schema.Resource {
 			"invocation_rate_limit_per_second": {
 				Type:         schema.TypeInt,
 				Optional:     true,
-				ValidateFunc: validation.IntBetween(1, 300),
+				ValidateFunc: validation.IntAtLeast(1),
 				Default:      300,
 			},
 			"http_method": {
@@ -91,11 +91,9 @@ func resourceAPIDestinationCreate(d *schema.ResourceData, meta interface{}) erro
 		input.ConnectionArn = aws.String(connectionArn.(string))
 	}
 
-	log.Printf("[DEBUG] Creating EventBridge API Destination: %v", input)
-
 	_, err := conn.CreateApiDestination(input)
 	if err != nil {
-		return fmt.Errorf("Creating EventBridge API Destination (%s) failed: %w", *input.Name, err)
+		return fmt.Errorf("Creating EventBridge API Destination (%s) failed: %w", aws.StringValue(input.Name), err)
 	}
 
 	d.SetId(aws.StringValue(input.Name))
@@ -112,18 +110,15 @@ func resourceAPIDestinationRead(d *schema.ResourceData, meta interface{}) error 
 		Name: aws.String(d.Id()),
 	}
 
-	log.Printf("[DEBUG] Reading EventBridge API Destination (%s)", d.Id())
 	output, err := conn.DescribeApiDestination(input)
-	if tfawserr.ErrMessageContains(err, eventbridge.ErrCodeResourceNotFoundException, "") {
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, eventbridge.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] EventBridge API Destination (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 	if err != nil {
-		return fmt.Errorf("error reading EventBridge API Destination: %w", err)
+		return fmt.Errorf("error reading EventBridge API Destination (%s): %w", d.Id(), err)
 	}
-
-	log.Printf("[DEBUG] Found EventBridge API Destination: %#v", *output)
 
 	d.Set("arn", output.ApiDestinationArn)
 	d.Set("name", output.Name)
@@ -178,7 +173,7 @@ func resourceAPIDestinationDelete(d *schema.ResourceData, meta interface{}) erro
 
 	_, err := conn.DeleteApiDestination(input)
 
-	if tfawserr.ErrMessageContains(err, eventbridge.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, eventbridge.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] EventBridge API Destination (%s) not found", d.Id())
 		return nil
 	}

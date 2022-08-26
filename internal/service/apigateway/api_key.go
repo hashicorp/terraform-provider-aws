@@ -8,7 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/apigateway"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -89,7 +89,7 @@ func resourceAPIKeyCreate(d *schema.ResourceData, meta interface{}) error {
 		Tags:        Tags(tags.IgnoreAWS()),
 	})
 	if err != nil {
-		return fmt.Errorf("Error creating API Gateway API Key: %s", err)
+		return fmt.Errorf("creating API Gateway API Key: %s", err)
 	}
 
 	d.SetId(aws.StringValue(apiKey.Id))
@@ -209,7 +209,7 @@ func resourceAPIKeyDelete(d *schema.ResourceData, meta interface{}) error {
 		ApiKey: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrMessageContains(err, apigateway.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, apigateway.ErrCodeNotFoundException) {
 		return nil
 	}
 

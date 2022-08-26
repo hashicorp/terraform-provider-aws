@@ -21,13 +21,13 @@ func TestAccChimeVoiceConnector_basic(t *testing.T) {
 	resourceName := "aws_chime_voice_connector.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, chime.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckVoiceConnectorDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, chime.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVoiceConnectorDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVoiceConnectorConfig(vcName),
+				Config: testAccVoiceConnectorConfig_basic(vcName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVoiceConnectorExists(resourceName, voiceConnector),
 					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("vc-%s", vcName)),
@@ -51,13 +51,13 @@ func TestAccChimeVoiceConnector_disappears(t *testing.T) {
 	resourceName := "aws_chime_voice_connector.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, chime.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckVoiceConnectorDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, chime.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVoiceConnectorDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVoiceConnectorConfig(vcName),
+				Config: testAccVoiceConnectorConfig_basic(vcName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVoiceConnectorExists(resourceName, voiceConnector),
 					acctest.CheckResourceDisappears(acctest.Provider, tfchime.ResourceVoiceConnector(), resourceName),
@@ -75,13 +75,13 @@ func TestAccChimeVoiceConnector_update(t *testing.T) {
 	resourceName := "aws_chime_voice_connector.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, chime.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckVoiceConnectorDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, chime.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVoiceConnectorDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVoiceConnectorConfig(vcName),
+				Config: testAccVoiceConnectorConfig_basic(vcName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVoiceConnectorExists(resourceName, voiceConnector),
 					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("vc-%s", vcName)),
@@ -90,7 +90,7 @@ func TestAccChimeVoiceConnector_update(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccVoiceConnectorUpdated(vcName),
+				Config: testAccVoiceConnectorConfig_updated(vcName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "require_encryption", "false"),
 				),
@@ -104,7 +104,7 @@ func TestAccChimeVoiceConnector_update(t *testing.T) {
 	})
 }
 
-func testAccVoiceConnectorConfig(name string) string {
+func testAccVoiceConnectorConfig_basic(name string) string {
 	return fmt.Sprintf(`
 resource "aws_chime_voice_connector" "test" {
   name               = "vc-%s"
@@ -113,7 +113,7 @@ resource "aws_chime_voice_connector" "test" {
 `, name)
 }
 
-func testAccVoiceConnectorUpdated(name string) string {
+func testAccVoiceConnectorConfig_updated(name string) string {
 	return fmt.Sprintf(`
 resource "aws_chime_voice_connector" "test" {
   name               = "vc-%s"

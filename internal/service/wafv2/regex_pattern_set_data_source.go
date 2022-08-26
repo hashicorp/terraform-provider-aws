@@ -106,7 +106,7 @@ func dataSourceRegexPatternSetRead(d *schema.ResourceData, meta interface{}) err
 	d.Set("arn", resp.RegexPatternSet.ARN)
 	d.Set("description", resp.RegexPatternSet.Description)
 
-	if err := d.Set("regular_expression", flattenWafv2RegexPatternSet(resp.RegexPatternSet.RegularExpressionList)); err != nil {
+	if err := d.Set("regular_expression", flattenRegexPatternSet(resp.RegexPatternSet.RegularExpressionList)); err != nil {
 		return fmt.Errorf("Error setting regular_expression: %w", err)
 	}
 

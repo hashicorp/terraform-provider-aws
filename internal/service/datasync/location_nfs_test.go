@@ -8,7 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/datasync"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -22,13 +22,13 @@ func TestAccDataSyncLocationNFS_basic(t *testing.T) {
 	resourceName := "aws_datasync_location_nfs.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, datasync.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLocationNFSDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, datasync.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLocationNFSDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLocationNFSConfig(rName),
+				Config: testAccLocationNFSConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocationNFSExists(resourceName, &locationNfs1),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "datasync", regexp.MustCompile(`location/loc-.+`)),
@@ -58,13 +58,13 @@ func TestAccDataSyncLocationNFS_mountOptions(t *testing.T) {
 	resourceName := "aws_datasync_location_nfs.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, datasync.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLocationNFSDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, datasync.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLocationNFSDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLocationNFSMountOptionsConfig(rName, "NFS4_0"),
+				Config: testAccLocationNFSConfig_mountOptions(rName, "NFS4_0"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocationNFSExists(resourceName, &locationNfs1),
 					resource.TestCheckResourceAttr(resourceName, "mount_options.0.version", "NFS4_0"),
@@ -77,7 +77,7 @@ func TestAccDataSyncLocationNFS_mountOptions(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"server_hostname"},
 			},
 			{
-				Config: testAccLocationNFSMountOptionsConfig(rName, "NFS4_1"),
+				Config: testAccLocationNFSConfig_mountOptions(rName, "NFS4_1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocationNFSExists(resourceName, &locationNfs1),
 					resource.TestCheckResourceAttr(resourceName, "mount_options.0.version", "NFS4_1"),
@@ -93,13 +93,13 @@ func TestAccDataSyncLocationNFS_disappears(t *testing.T) {
 	resourceName := "aws_datasync_location_nfs.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, datasync.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLocationNFSDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, datasync.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLocationNFSDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLocationNFSConfig(rName),
+				Config: testAccLocationNFSConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocationNFSExists(resourceName, &locationNfs1),
 					testAccCheckLocationNFSDisappears(&locationNfs1),
@@ -116,13 +116,13 @@ func TestAccDataSyncLocationNFS_AgentARNs_multiple(t *testing.T) {
 	resourceName := "aws_datasync_location_nfs.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, datasync.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLocationNFSDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, datasync.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLocationNFSDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLocationNFSAgentARNsMultipleConfig(rName),
+				Config: testAccLocationNFSConfig_agentARNsMultiple(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocationNFSExists(resourceName, &locationNfs1),
 					resource.TestCheckResourceAttr(resourceName, "on_prem_config.#", "1"),
@@ -145,13 +145,13 @@ func TestAccDataSyncLocationNFS_subdirectory(t *testing.T) {
 	resourceName := "aws_datasync_location_nfs.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, datasync.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLocationNFSDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, datasync.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLocationNFSDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLocationNFSSubdirectoryConfig(rName, "/subdirectory1/"),
+				Config: testAccLocationNFSConfig_subdirectory(rName, "/subdirectory1/"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocationNFSExists(resourceName, &locationNfs1),
 					resource.TestCheckResourceAttr(resourceName, "subdirectory", "/subdirectory1/"),
@@ -164,7 +164,7 @@ func TestAccDataSyncLocationNFS_subdirectory(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"server_hostname"},
 			},
 			{
-				Config: testAccLocationNFSSubdirectoryConfig(rName, "/subdirectory2/"),
+				Config: testAccLocationNFSConfig_subdirectory(rName, "/subdirectory2/"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocationNFSExists(resourceName, &locationNfs1),
 					resource.TestCheckResourceAttr(resourceName, "subdirectory", "/subdirectory2/"),
@@ -180,13 +180,13 @@ func TestAccDataSyncLocationNFS_tags(t *testing.T) {
 	resourceName := "aws_datasync_location_nfs.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, datasync.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLocationNFSDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, datasync.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLocationNFSDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLocationNFSTags1Config(rName, "key1", "value1"),
+				Config: testAccLocationNFSConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocationNFSExists(resourceName, &locationNfs1),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -200,7 +200,7 @@ func TestAccDataSyncLocationNFS_tags(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"server_hostname"},
 			},
 			{
-				Config: testAccLocationNFSTags2Config(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccLocationNFSConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocationNFSExists(resourceName, &locationNfs2),
 					testAccCheckLocationNFSNotRecreated(&locationNfs1, &locationNfs2),
@@ -210,7 +210,7 @@ func TestAccDataSyncLocationNFS_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccLocationNFSTags1Config(rName, "key1", "value1"),
+				Config: testAccLocationNFSConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocationNFSExists(resourceName, &locationNfs3),
 					testAccCheckLocationNFSNotRecreated(&locationNfs2, &locationNfs3),
@@ -400,7 +400,7 @@ resource "aws_datasync_agent" "test" {
 `, rName)
 }
 
-func testAccLocationNFSConfig(rName string) string {
+func testAccLocationNFSConfig_basic(rName string) string {
 	return testAccLocationNFSBaseConfig(rName) + `
 resource "aws_datasync_location_nfs" "test" {
   server_hostname = "example.com"
@@ -413,7 +413,7 @@ resource "aws_datasync_location_nfs" "test" {
 `
 }
 
-func testAccLocationNFSMountOptionsConfig(rName, option string) string {
+func testAccLocationNFSConfig_mountOptions(rName, option string) string {
 	return testAccLocationNFSBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_datasync_location_nfs" "test" {
   server_hostname = "example.com"
@@ -430,7 +430,7 @@ resource "aws_datasync_location_nfs" "test" {
 `, option)
 }
 
-func testAccLocationNFSAgentARNsMultipleConfig(rName string) string {
+func testAccLocationNFSConfig_agentARNsMultiple(rName string) string {
 	return testAccLocationNFSBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_instance" "test2" {
   depends_on = [aws_internet_gateway.test]
@@ -467,7 +467,7 @@ resource "aws_datasync_location_nfs" "test" {
 `, rName)
 }
 
-func testAccLocationNFSSubdirectoryConfig(rName, subdirectory string) string {
+func testAccLocationNFSConfig_subdirectory(rName, subdirectory string) string {
 	return testAccLocationNFSBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_datasync_location_nfs" "test" {
   server_hostname = "example.com"
@@ -480,7 +480,7 @@ resource "aws_datasync_location_nfs" "test" {
 `, subdirectory)
 }
 
-func testAccLocationNFSTags1Config(rName, key1, value1 string) string {
+func testAccLocationNFSConfig_tags1(rName, key1, value1 string) string {
 	return testAccLocationNFSBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_datasync_location_nfs" "test" {
   server_hostname = "example.com"
@@ -497,7 +497,7 @@ resource "aws_datasync_location_nfs" "test" {
 `, key1, value1)
 }
 
-func testAccLocationNFSTags2Config(rName, key1, value1, key2, value2 string) string {
+func testAccLocationNFSConfig_tags2(rName, key1, value1, key2, value2 string) string {
 	return testAccLocationNFSBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_datasync_location_nfs" "test" {
   server_hostname = "example.com"

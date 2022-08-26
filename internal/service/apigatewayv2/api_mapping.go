@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apigatewayv2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
@@ -60,7 +60,7 @@ func resourceAPIMappingCreate(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] Creating API Gateway v2 API mapping: %s", req)
 	resp, err := conn.CreateApiMapping(req)
 	if err != nil {
-		return fmt.Errorf("error creating API Gateway v2 API mapping: %s", err)
+		return fmt.Errorf("creating API Gateway v2 API mapping: %s", err)
 	}
 
 	d.SetId(aws.StringValue(resp.ApiMappingId))
@@ -81,7 +81,7 @@ func resourceAPIMappingRead(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 	if err != nil {
-		return fmt.Errorf("error reading API Gateway v2 API mapping: %s", err)
+		return fmt.Errorf("reading API Gateway v2 API mapping: %s", err)
 	}
 
 	d.Set("api_id", resp.ApiId)
@@ -109,7 +109,7 @@ func resourceAPIMappingUpdate(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] Updating API Gateway v2 API mapping: %s", req)
 	_, err := conn.UpdateApiMapping(req)
 	if err != nil {
-		return fmt.Errorf("error updating API Gateway v2 API mapping: %s", err)
+		return fmt.Errorf("updating API Gateway v2 API mapping: %s", err)
 	}
 
 	return resourceAPIMappingRead(d, meta)
@@ -123,11 +123,11 @@ func resourceAPIMappingDelete(d *schema.ResourceData, meta interface{}) error {
 		ApiMappingId: aws.String(d.Id()),
 		DomainName:   aws.String(d.Get("domain_name").(string)),
 	})
-	if tfawserr.ErrMessageContains(err, apigatewayv2.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, apigatewayv2.ErrCodeNotFoundException) {
 		return nil
 	}
 	if err != nil {
-		return fmt.Errorf("error deleting API Gateway v2 API mapping: %s", err)
+		return fmt.Errorf("deleting API Gateway v2 API mapping: %s", err)
 	}
 
 	return nil
@@ -136,7 +136,7 @@ func resourceAPIMappingDelete(d *schema.ResourceData, meta interface{}) error {
 func resourceAPIMappingImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	parts := strings.Split(d.Id(), "/")
 	if len(parts) != 2 {
-		return []*schema.ResourceData{}, fmt.Errorf("Wrong format of resource: %s. Please follow 'api-mapping-id/domain-name'", d.Id())
+		return []*schema.ResourceData{}, fmt.Errorf("wrong format of import ID (%s), use: 'api-mapping-id/domain-name'", d.Id())
 	}
 
 	d.SetId(parts[0])

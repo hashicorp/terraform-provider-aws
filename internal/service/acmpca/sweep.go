@@ -9,7 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/acmpca"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -36,7 +36,7 @@ func sweepCertificateAuthorities(region string) error {
 			log.Printf("[WARN] Skipping ACM PCA Certificate Authorities sweep for %s: %s", region, err)
 			return nil
 		}
-		return fmt.Errorf("Error retrieving ACM PCA Certificate Authorities: %w", err)
+		return fmt.Errorf("retrieving ACM PCA Certificate Authorities: %w", err)
 	}
 	if len(certificateAuthorities) == 0 {
 		log.Print("[DEBUG] No ACM PCA Certificate Authorities to sweep")
@@ -54,7 +54,7 @@ func sweepCertificateAuthorities(region string) error {
 				CertificateAuthorityArn: aws.String(arn),
 				Status:                  aws.String(acmpca.CertificateAuthorityStatusDisabled),
 			})
-			if tfawserr.ErrMessageContains(err, acmpca.ErrCodeResourceNotFoundException, "") {
+			if tfawserr.ErrCodeEquals(err, acmpca.ErrCodeResourceNotFoundException) {
 				continue
 			}
 			if err != nil {
@@ -70,7 +70,7 @@ func sweepCertificateAuthorities(region string) error {
 			CertificateAuthorityArn:     aws.String(arn),
 			PermanentDeletionTimeInDays: aws.Int64(7),
 		})
-		if tfawserr.ErrMessageContains(err, acmpca.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, acmpca.ErrCodeResourceNotFoundException) {
 			continue
 		}
 		if err != nil {

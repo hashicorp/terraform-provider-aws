@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/ssoadmin"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -27,12 +27,12 @@ func TestAccSSOAdminAccountAssignment_Basic_group(t *testing.T) {
 			testAccPreCheckInstances(t)
 			testAccPreCheckIdentityStoreGroupName(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, ssoadmin.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAccountAssignmentDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, ssoadmin.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAccountAssignmentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAccountAssignmentBasicGroupConfig(groupName, rName),
+				Config: testAccAccountAssignmentConfig_basicGroup(groupName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountAssignmentExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "target_type", "AWS_ACCOUNT"),
@@ -60,12 +60,12 @@ func TestAccSSOAdminAccountAssignment_Basic_user(t *testing.T) {
 			testAccPreCheckInstances(t)
 			testAccPreCheckIdentityStoreUserName(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, ssoadmin.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAccountAssignmentDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, ssoadmin.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAccountAssignmentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAccountAssignmentBasicUserConfig(userName, rName),
+				Config: testAccAccountAssignmentConfig_basicUser(userName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountAssignmentExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "target_type", "AWS_ACCOUNT"),
@@ -93,12 +93,12 @@ func TestAccSSOAdminAccountAssignment_disappears(t *testing.T) {
 			testAccPreCheckInstances(t)
 			testAccPreCheckIdentityStoreGroupName(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, ssoadmin.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAccountAssignmentDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, ssoadmin.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAccountAssignmentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAccountAssignmentBasicGroupConfig(groupName, rName),
+				Config: testAccAccountAssignmentConfig_basicGroup(groupName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountAssignmentExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfssoadmin.ResourceAccountAssignment(), resourceName),
@@ -199,7 +199,7 @@ resource "aws_ssoadmin_permission_set" "test" {
 `, rName)
 }
 
-func testAccAccountAssignmentBasicGroupConfig(groupName, rName string) string {
+func testAccAccountAssignmentConfig_basicGroup(groupName, rName string) string {
 	return acctest.ConfigCompose(
 		testAccAccountAssignmentBaseConfig(rName),
 		fmt.Sprintf(`
@@ -222,7 +222,7 @@ resource "aws_ssoadmin_account_assignment" "test" {
 `, groupName))
 }
 
-func testAccAccountAssignmentBasicUserConfig(userName, rName string) string {
+func testAccAccountAssignmentConfig_basicUser(userName, rName string) string {
 	return acctest.ConfigCompose(
 		testAccAccountAssignmentBaseConfig(rName),
 		fmt.Sprintf(`

@@ -9,13 +9,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/neptune"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -26,7 +25,7 @@ const (
 	// A constant for the supported CloudwatchLogsExports types
 	// is not currently available in the AWS sdk-for-go
 	// https://docs.aws.amazon.com/sdk-for-go/api/service/neptune/#pkg-constants
-	CloudwatchLogsExportsAudit = "audit"
+	cloudWatchLogsExportsAudit = "audit"
 
 	DefaultPort = 8182
 )
@@ -47,6 +46,14 @@ func ResourceCluster() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+
+			// allow_major_version_upgrade is used to indicate whether upgrades between different major versions
+			// are allowed.
+			"allow_major_version_upgrade": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Computed: true,
+			},
 
 			// apply_immediately is used to determine when the update modifications
 			// take place.
@@ -123,7 +130,7 @@ func ResourceCluster() *schema.Resource {
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 					ValidateFunc: validation.StringInSlice([]string{
-						CloudwatchLogsExportsAudit,
+						cloudWatchLogsExportsAudit,
 					}, false),
 				},
 				Set: schema.HashString,
@@ -388,7 +395,7 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 		log.Printf("[DEBUG] Neptune Cluster create options: %s", createDbClusterInput)
 	}
 
-	err := resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
 		var err error
 		if restoreDBClusterFromSnapshot {
 			_, err = conn.RestoreDBClusterFromSnapshot(restoreDBClusterFromSnapshotInput)
@@ -411,7 +418,7 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 	if err != nil {
-		return fmt.Errorf("error creating Neptune Cluster: %w", err)
+		return fmt.Errorf("creating Neptune Cluster: %w", err)
 	}
 
 	d.SetId(d.Get("cluster_identifier").(string))
@@ -421,12 +428,12 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 
 	_, err = WaitDBClusterAvailable(conn, d.Id(), d.Timeout(schema.TimeoutCreate))
 	if err != nil {
-		return fmt.Errorf("error waiting for Neptune Cluster (%q) to be Available: %w", d.Id(), err)
+		return fmt.Errorf("waiting for Neptune Cluster (%q) to be Available: %w", d.Id(), err)
 	}
 
 	if v, ok := d.GetOk("iam_roles"); ok {
 		for _, role := range v.(*schema.Set).List() {
-			err := setIamRoleToNeptuneCluster(d.Id(), role.(string), conn)
+			err := setIAMRoleToCluster(d.Id(), role.(string), conn)
 			if err != nil {
 				return err
 			}
@@ -449,7 +456,7 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	})
 
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, neptune.ErrCodeDBClusterNotFoundFault, "") {
+		if tfawserr.ErrCodeEquals(err, neptune.ErrCodeDBClusterNotFoundFault) {
 			d.SetId("")
 			log.Printf("[DEBUG] Neptune Cluster (%s) not found", d.Id())
 			return nil
@@ -539,18 +546,18 @@ func flattenClusterResource(d *schema.ResourceData, meta interface{}, dbc *neptu
 	tags, err := ListTags(conn, d.Get("arn").(string))
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for Neptune Cluster (%s): %w", d.Get("arn").(string), err)
+		return fmt.Errorf("listing tags for Neptune Cluster (%s): %w", d.Get("arn").(string), err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return fmt.Errorf("setting tags: %w", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return fmt.Errorf("setting tags_all: %w", err)
 	}
 
 	return nil
@@ -561,8 +568,9 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 	requestUpdate := false
 
 	req := &neptune.ModifyDBClusterInput{
-		ApplyImmediately:    aws.Bool(d.Get("apply_immediately").(bool)),
-		DBClusterIdentifier: aws.String(d.Id()),
+		AllowMajorVersionUpgrade: aws.Bool(d.Get("allow_major_version_upgrade").(bool)),
+		ApplyImmediately:         aws.Bool(d.Get("apply_immediately").(bool)),
+		DBClusterIdentifier:      aws.String(d.Id()),
 	}
 
 	if d.HasChange("copy_tags_to_snapshot") {
@@ -642,7 +650,7 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 				if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "IAM role ARN value is invalid or does not include the required permissions") {
 					return resource.RetryableError(err)
 				}
-				if tfawserr.ErrMessageContains(err, neptune.ErrCodeInvalidDBClusterStateFault, "") {
+				if tfawserr.ErrCodeEquals(err, neptune.ErrCodeInvalidDBClusterStateFault) {
 					return resource.RetryableError(err)
 				}
 				return resource.NonRetryableError(err)
@@ -658,7 +666,7 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		_, err = WaitDBClusterAvailable(conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
 		if err != nil {
-			return fmt.Errorf("error waiting for Neptune Cluster (%q) to be Available: %w", d.Id(), err)
+			return fmt.Errorf("waiting for Neptune Cluster (%q) to be Available: %w", d.Id(), err)
 		}
 	}
 
@@ -677,14 +685,14 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 		enableRoles := ns.Difference(os)
 
 		for _, role := range enableRoles.List() {
-			err := setIamRoleToNeptuneCluster(d.Id(), role.(string), conn)
+			err := setIAMRoleToCluster(d.Id(), role.(string), conn)
 			if err != nil {
 				return err
 			}
 		}
 
 		for _, role := range removeRoles.List() {
-			err := removeIamRoleFromNeptuneCluster(d.Id(), role.(string), conn)
+			err := removeIAMRoleFromCluster(d.Id(), role.(string), conn)
 			if err != nil {
 				return err
 			}
@@ -695,7 +703,7 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating Neptune Cluster (%s) tags: %w", d.Get("arn").(string), err)
+			return fmt.Errorf("updating Neptune Cluster (%s) tags: %w", d.Get("arn").(string), err)
 		}
 
 	}
@@ -730,7 +738,7 @@ func resourceClusterDelete(d *schema.ResourceData, meta interface{}) error {
 			if tfawserr.ErrMessageContains(err, neptune.ErrCodeInvalidDBClusterStateFault, "is not currently in the available state") {
 				return resource.RetryableError(err)
 			}
-			if tfawserr.ErrMessageContains(err, neptune.ErrCodeDBClusterNotFoundFault, "") {
+			if tfawserr.ErrCodeEquals(err, neptune.ErrCodeDBClusterNotFoundFault) {
 				return nil
 			}
 			return resource.NonRetryableError(err)
@@ -746,16 +754,16 @@ func resourceClusterDelete(d *schema.ResourceData, meta interface{}) error {
 
 	_, err = WaitDBClusterDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete))
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, neptune.ErrCodeDBClusterNotFoundFault, "") {
+		if tfawserr.ErrCodeEquals(err, neptune.ErrCodeDBClusterNotFoundFault) {
 			return nil
 		}
-		return fmt.Errorf("error waiting for Neptune Cluster (%q) to be Deleted: %w", d.Id(), err)
+		return fmt.Errorf("waiting for Neptune Cluster (%q) to be Deleted: %w", d.Id(), err)
 	}
 
 	return nil
 }
 
-func setIamRoleToNeptuneCluster(clusterIdentifier string, roleArn string, conn *neptune.Neptune) error {
+func setIAMRoleToCluster(clusterIdentifier string, roleArn string, conn *neptune.Neptune) error {
 	params := &neptune.AddRoleToDBClusterInput{
 		DBClusterIdentifier: aws.String(clusterIdentifier),
 		RoleArn:             aws.String(roleArn),
@@ -764,7 +772,7 @@ func setIamRoleToNeptuneCluster(clusterIdentifier string, roleArn string, conn *
 	return err
 }
 
-func removeIamRoleFromNeptuneCluster(clusterIdentifier string, roleArn string, conn *neptune.Neptune) error {
+func removeIAMRoleFromCluster(clusterIdentifier string, roleArn string, conn *neptune.Neptune) error {
 	params := &neptune.RemoveRoleFromDBClusterInput{
 		DBClusterIdentifier: aws.String(clusterIdentifier),
 		RoleArn:             aws.String(roleArn),

@@ -17,7 +17,7 @@ import (
 
 const (
 	// EC2-Classic region testing environment variable name
-	Ec2ClassicRegionEnvVar = "AWS_EC2_CLASSIC_REGION"
+	ec2ClassicRegionEnvVar = "AWS_EC2_CLASSIC_REGION"
 )
 
 // ProviderEC2Classic is the EC2-Classic provider instance
@@ -36,16 +36,22 @@ func PreCheckEC2Classic(t *testing.T) {
 	// Since we are outside the scope of the Terraform configuration we must
 	// call Configure() to properly initialize the provider configuration.
 	testAccProviderEc2ClassicConfigure.Do(func() {
-		ProviderEC2Classic = provider.Provider()
+		ctx := context.Background()
+		var err error
+		ProviderEC2Classic, err = provider.New(ctx)
+
+		if err != nil {
+			t.Fatal(err)
+		}
 
 		config := map[string]interface{}{
 			"region": EC2ClassicRegion(),
 		}
 
-		err := ProviderEC2Classic.Configure(context.Background(), terraform.NewResourceConfigRaw(config))
+		diags := ProviderEC2Classic.Configure(ctx, terraform.NewResourceConfigRaw(config))
 
-		if err != nil {
-			t.Fatal(err)
+		if diags.HasError() {
+			t.Fatal(diags)
 		}
 	})
 
@@ -67,7 +73,7 @@ func ConfigEC2ClassicRegionProvider() string {
 
 // EC2ClassicRegion returns the EC2-Classic region for testing
 func EC2ClassicRegion() string {
-	v := os.Getenv(Ec2ClassicRegionEnvVar)
+	v := os.Getenv(ec2ClassicRegionEnvVar)
 
 	if v != "" {
 		return v

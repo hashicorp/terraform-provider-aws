@@ -26,12 +26,12 @@ func testAccAccess_s3_basic(t *testing.T) {
 			acctest.PreCheckDirectoryService(t)
 			acctest.PreCheckDirectoryServiceSimpleDirectory(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, transfer.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAccessDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, transfer.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAccessDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAccessS3BasicConfig(rName),
+				Config: testAccAccessConfig_s3Basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "external_id", "S-1-1-12-1234567890-123456789-1234567890-1234"),
@@ -47,7 +47,7 @@ func testAccAccess_s3_basic(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"role"},
 			},
 			{
-				Config: testAccAccessS3UpdatedConfig(rName),
+				Config: testAccAccessConfig_s3Updated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "external_id", "S-1-1-12-1234567890-123456789-1234567890-1234"),
@@ -71,12 +71,12 @@ func testAccAccess_efs_basic(t *testing.T) {
 			acctest.PreCheckDirectoryService(t)
 			acctest.PreCheckDirectoryServiceSimpleDirectory(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, transfer.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAccessDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, transfer.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAccessDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAccessEFSBasicConfig(rName),
+				Config: testAccAccessConfig_efsBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "external_id", "S-1-1-12-1234567890-123456789-1234567890-1234"),
@@ -92,7 +92,7 @@ func testAccAccess_efs_basic(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"role"},
 			},
 			{
-				Config: testAccAccessEFSUpdatedConfig(rName),
+				Config: testAccAccessConfig_efsUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "external_id", "S-1-1-12-1234567890-123456789-1234567890-1234"),
@@ -117,12 +117,12 @@ func testAccAccess_disappears(t *testing.T) {
 			acctest.PreCheckDirectoryService(t)
 			acctest.PreCheckDirectoryServiceSimpleDirectory(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, transfer.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAccessDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, transfer.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAccessDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAccessS3BasicConfig(rName),
+				Config: testAccAccessConfig_s3Basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessExists(resourceName, &conf),
 					acctest.CheckResourceDisappears(acctest.Provider, tftransfer.ResourceAccess(), resourceName),
@@ -145,12 +145,12 @@ func testAccAccess_s3_policy(t *testing.T) {
 			acctest.PreCheckDirectoryService(t)
 			acctest.PreCheckDirectoryServiceSimpleDirectory(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, transfer.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAccessDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, transfer.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAccessDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAccessS3ScopeDownPolicyConfig(rName),
+				Config: testAccAccessConfig_s3ScopeDownPolicy(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessExists(resourceName, &conf),
 					resource.TestCheckResourceAttrSet(resourceName, "policy"),
@@ -308,6 +308,10 @@ resource "aws_transfer_server" "test" {
 
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.test.id
   acl    = "private"
 }
 
@@ -342,7 +346,7 @@ POLICY
 `, rName)
 }
 
-func testAccAccessS3BasicConfig(rName string) string {
+func testAccAccessConfig_s3Basic(rName string) string {
 	return acctest.ConfigCompose(
 		testAccAccessBaseConfig(rName),
 		testAccAccessBaseConfig_S3(rName),
@@ -358,7 +362,7 @@ resource "aws_transfer_access" "test" {
 `)
 }
 
-func testAccAccessS3UpdatedConfig(rName string) string {
+func testAccAccessConfig_s3Updated(rName string) string {
 	return acctest.ConfigCompose(
 		testAccAccessBaseConfig(rName),
 		testAccAccessBaseConfig_S3(rName),
@@ -374,7 +378,7 @@ resource "aws_transfer_access" "test" {
 `)
 }
 
-func testAccAccessS3ScopeDownPolicyConfig(rName string) string {
+func testAccAccessConfig_s3ScopeDownPolicy(rName string) string {
 	return acctest.ConfigCompose(
 		testAccAccessBaseConfig(rName),
 		testAccAccessBaseConfig_S3(rName),
@@ -453,7 +457,7 @@ POLICY
 `, rName)
 }
 
-func testAccAccessEFSBasicConfig(rName string) string {
+func testAccAccessConfig_efsBasic(rName string) string {
 	return acctest.ConfigCompose(
 		testAccAccessBaseConfig(rName),
 		testAccAccessBaseConfig_efs(rName),
@@ -474,7 +478,7 @@ resource "aws_transfer_access" "test" {
 `)
 }
 
-func testAccAccessEFSUpdatedConfig(rName string) string {
+func testAccAccessConfig_efsUpdated(rName string) string {
 	return acctest.ConfigCompose(
 		testAccAccessBaseConfig(rName),
 		testAccAccessBaseConfig_efs(rName),
