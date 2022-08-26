@@ -370,6 +370,7 @@ func ResourceEndpoint() *schema.Resource {
 						"ssl_security_protocol": {
 							Type:         schema.TypeString,
 							Optional:     true,
+							Default:      dms.SslSecurityProtocolValueSslEncryption,
 							ValidateFunc: validation.StringInSlice(dms.SslSecurityProtocolValue_Values(), false),
 						},
 					},
@@ -1371,8 +1372,12 @@ func resourceEndpointSetState(d *schema.ResourceData, endpoint *dms.Endpoint) er
 			flattenTopLevelConnectionInfo(d, endpoint)
 		}
 	case engineNameRedis:
-		if err := d.Set("redis_settings", flattenRedisSettings(endpoint.RedisSettings)); err != nil {
-			return fmt.Errorf("Error setting redis_settings for DMS: %s", err)
+		// Auth password isn't returned in API. Propagate state value.
+		tfMap := flattenRedisSettings(endpoint.RedisSettings)
+		tfMap["auth_password"] = d.Get("redis_settings.0.auth_password").(string)
+
+		if err := d.Set("redis_settings", []interface{}{tfMap}); err != nil {
+			return fmt.Errorf("setting redis_settings: %w", err)
 		}
 	case engineNameRedshift:
 		if endpoint.RedshiftSettings != nil {
@@ -1737,9 +1742,9 @@ func expandRedisSettings(tfMap map[string]interface{}) *dms.RedisSettings {
 	return apiObject
 }
 
-func flattenRedisSettings(apiObject *dms.RedisSettings) []map[string]interface{} {
+func flattenRedisSettings(apiObject *dms.RedisSettings) map[string]interface{} {
 	if apiObject == nil {
-		return []map[string]interface{}{}
+		return nil
 	}
 
 	tfMap := map[string]interface{}{}
@@ -1766,7 +1771,7 @@ func flattenRedisSettings(apiObject *dms.RedisSettings) []map[string]interface{}
 		tfMap["ssl_security_protocol"] = aws.StringValue(v)
 	}
 
-	return []map[string]interface{}{tfMap}
+	return tfMap
 }
 
 func flattenRedshiftSettings(settings *dms.RedshiftSettings) []map[string]interface{} {
