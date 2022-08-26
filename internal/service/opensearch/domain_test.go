@@ -843,8 +843,7 @@ func TestAccOpenSearchDomain_AdvancedSecurityOptions_disabled(t *testing.T) {
 				ImportStateVerify: true,
 				// MasterUserOptions are not returned from DescribeDomainConfig
 				ImportStateVerifyIgnore: []string{
-					"advanced_security_options.0.internal_user_database_enabled",
-					"advanced_security_options.0.master_user_options",
+					"advanced_security_options",
 				},
 			},
 		},
