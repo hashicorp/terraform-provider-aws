@@ -1828,7 +1828,7 @@ func testAccCheckSpotFleetRequest_IAMInstanceProfileARN(sfr *ec2.SpotFleetReques
 	}
 }
 
-func testAccSpotFleetRequestBaseConfig(rName, publicKey string) string {
+func testAccSpotFleetRequestConfig_base(rName, publicKey string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
 		acctest.ConfigAvailableAZsNoOptIn(),
@@ -1909,7 +1909,7 @@ resource "aws_iam_policy_attachment" "test" {
 }
 
 func testAccSpotFleetRequestConfig_basic(rName, publicKey, validUntil string) string {
-	return acctest.ConfigCompose(testAccSpotFleetRequestBaseConfig(rName, publicKey), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccSpotFleetRequestConfig_base(rName, publicKey), fmt.Sprintf(`
 resource "aws_spot_fleet_request" "test" {
   iam_fleet_role                      = aws_iam_role.test.arn
   spot_price                          = "0.05"
@@ -1935,7 +1935,7 @@ resource "aws_spot_fleet_request" "test" {
 }
 
 func testAccSpotFleetRequestConfig_tags1(rName, publicKey, validUntil, tagKey1, tagValue1 string) string {
-	return acctest.ConfigCompose(testAccSpotFleetRequestBaseConfig(rName, publicKey), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccSpotFleetRequestConfig_base(rName, publicKey), fmt.Sprintf(`
 resource "aws_spot_fleet_request" "test" {
   iam_fleet_role                      = aws_iam_role.test.arn
   spot_price                          = "0.05"
@@ -1965,7 +1965,7 @@ resource "aws_spot_fleet_request" "test" {
 }
 
 func testAccSpotFleetRequestConfig_tags2(rName, publicKey, validUntil, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return acctest.ConfigCompose(testAccSpotFleetRequestBaseConfig(rName, publicKey), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccSpotFleetRequestConfig_base(rName, publicKey), fmt.Sprintf(`
 resource "aws_spot_fleet_request" "test" {
   iam_fleet_role                      = aws_iam_role.test.arn
   spot_price                          = "0.05"
@@ -1996,7 +1996,7 @@ resource "aws_spot_fleet_request" "test" {
 }
 
 func testAccSpotFleetRequestConfig_associatePublicIPAddress(rName, publicKey, validUntil string) string {
-	return acctest.ConfigCompose(testAccSpotFleetRequestBaseConfig(rName, publicKey), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccSpotFleetRequestConfig_base(rName, publicKey), fmt.Sprintf(`
 resource "aws_spot_fleet_request" "test" {
   iam_fleet_role                      = aws_iam_role.test.arn
   spot_price                          = "0.05"
@@ -2022,7 +2022,7 @@ resource "aws_spot_fleet_request" "test" {
 }
 
 func testAccSpotFleetRequestConfig_targetCapacity(rName, publicKey, validUntil string) string {
-	return acctest.ConfigCompose(testAccSpotFleetRequestBaseConfig(rName, publicKey), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccSpotFleetRequestConfig_base(rName, publicKey), fmt.Sprintf(`
 resource "aws_spot_fleet_request" "test" {
   iam_fleet_role                      = aws_iam_role.test.arn
   spot_price                          = "0.05"
@@ -2047,7 +2047,7 @@ resource "aws_spot_fleet_request" "test" {
 }
 
 func testAccSpotFleetRequestConfig_launchTemplate(rName, publicKey, validUntil string) string {
-	return acctest.ConfigCompose(testAccSpotFleetRequestBaseConfig(rName, publicKey), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccSpotFleetRequestConfig_base(rName, publicKey), fmt.Sprintf(`
 resource "aws_launch_template" "test" {
   name          = %[1]q
   image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
@@ -2085,7 +2085,7 @@ resource "aws_spot_fleet_request" "test" {
 }
 
 func testAccSpotFleetRequestConfig_launchTemplateMultiple(rName, publicKey, validUntil string) string {
-	return acctest.ConfigCompose(testAccSpotFleetRequestBaseConfig(rName, publicKey), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccSpotFleetRequestConfig_base(rName, publicKey), fmt.Sprintf(`
 data "aws_ec2_instance_type_offering" "test" {
   filter {
     name   = "instance-type"
@@ -2154,7 +2154,7 @@ resource "aws_spot_fleet_request" "test" {
 }
 
 func testAccSpotFleetRequestConfig_launchTemplateInstanceTypeOverrides(rName, publicKey, validUntil string) string {
-	return acctest.ConfigCompose(testAccSpotFleetRequestBaseConfig(rName, publicKey), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccSpotFleetRequestConfig_base(rName, publicKey), fmt.Sprintf(`
 resource "aws_launch_template" "test" {
   name          = %[1]q
   image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
@@ -2203,7 +2203,7 @@ resource "aws_spot_fleet_request" "test" {
 }
 
 func testAccSpotFleetRequestConfig_launchTemplateInstanceRequirementsOverrides(rName, publicKey, validUntil string) string {
-	return acctest.ConfigCompose(testAccSpotFleetRequestBaseConfig(rName, publicKey), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccSpotFleetRequestConfig_base(rName, publicKey), fmt.Sprintf(`
 resource "aws_launch_template" "test" {
   name          = %[1]q
   image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
@@ -2259,7 +2259,7 @@ resource "aws_spot_fleet_request" "test" {
 }
 
 func testAccSpotFleetRequestConfig_excessCapacityTermination(rName, publicKey, validUntil string) string {
-	return acctest.ConfigCompose(testAccSpotFleetRequestBaseConfig(rName, publicKey), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccSpotFleetRequestConfig_base(rName, publicKey), fmt.Sprintf(`
 resource "aws_spot_fleet_request" "test" {
   iam_fleet_role                      = aws_iam_role.test.arn
   spot_price                          = "0.05"
@@ -2285,7 +2285,7 @@ resource "aws_spot_fleet_request" "test" {
 }
 
 func testAccSpotFleetRequestConfig_type(rName, publicKey, validUntil string) string {
-	return acctest.ConfigCompose(testAccSpotFleetRequestBaseConfig(rName, publicKey), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccSpotFleetRequestConfig_base(rName, publicKey), fmt.Sprintf(`
 resource "aws_spot_fleet_request" "test" {
   iam_fleet_role                      = aws_iam_role.test.arn
   spot_price                          = "0.05"
@@ -2310,7 +2310,7 @@ resource "aws_spot_fleet_request" "test" {
 }
 
 func testAccSpotFleetRequestConfig_iamInstanceProfileARN(rName, publicKey, validUntil string) string {
-	return acctest.ConfigCompose(testAccSpotFleetRequestBaseConfig(rName, publicKey), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccSpotFleetRequestConfig_base(rName, publicKey), fmt.Sprintf(`
 resource "aws_iam_role" "test-role1" {
   name = "tf-test-role1-%[1]s"
 
@@ -2381,7 +2381,7 @@ resource "aws_spot_fleet_request" "test" {
 }
 
 func testAccSpotFleetRequestConfig_changeBidPrice(rName, publicKey, validUntil string) string {
-	return acctest.ConfigCompose(testAccSpotFleetRequestBaseConfig(rName, publicKey), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccSpotFleetRequestConfig_base(rName, publicKey), fmt.Sprintf(`
 resource "aws_spot_fleet_request" "test" {
   iam_fleet_role                      = aws_iam_role.test.arn
   spot_price                          = "0.05"
@@ -2406,7 +2406,7 @@ resource "aws_spot_fleet_request" "test" {
 }
 
 func testAccSpotFleetRequestConfig_azs(rName, publicKey, validUntil string) string {
-	return acctest.ConfigCompose(testAccSpotFleetRequestBaseConfig(rName, publicKey), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccSpotFleetRequestConfig_base(rName, publicKey), fmt.Sprintf(`
 resource "aws_spot_fleet_request" "test" {
   iam_fleet_role                      = aws_iam_role.test.arn
   spot_price                          = "0.05"
@@ -2443,7 +2443,7 @@ resource "aws_spot_fleet_request" "test" {
 }
 
 func testAccSpotFleetRequestConfig_subnet(rName, publicKey, validUntil string) string {
-	return acctest.ConfigCompose(testAccSpotFleetRequestBaseConfig(rName, publicKey), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccSpotFleetRequestConfig_base(rName, publicKey), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
@@ -2508,7 +2508,7 @@ resource "aws_spot_fleet_request" "test" {
 }
 
 func testAccSpotFleetRequestConfig_elbs(rName, publicKey, validUntil string) string {
-	return acctest.ConfigCompose(testAccSpotFleetRequestBaseConfig(rName, publicKey), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccSpotFleetRequestConfig_base(rName, publicKey), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
@@ -2576,7 +2576,7 @@ resource "aws_spot_fleet_request" "test" {
 }
 
 func testAccSpotFleetRequestConfig_targetGroups(rName, publicKey, validUntil string) string {
-	return acctest.ConfigCompose(testAccSpotFleetRequestBaseConfig(rName, publicKey), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccSpotFleetRequestConfig_base(rName, publicKey), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
@@ -2655,7 +2655,7 @@ resource "aws_spot_fleet_request" "test" {
 }
 
 func testAccSpotFleetRequestConfig_multipleInstanceTypesinSameAZ(rName, publicKey, validUntil string) string {
-	return acctest.ConfigCompose(testAccSpotFleetRequestBaseConfig(rName, publicKey), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccSpotFleetRequestConfig_base(rName, publicKey), fmt.Sprintf(`
 resource "aws_spot_fleet_request" "test" {
   iam_fleet_role                      = aws_iam_role.test.arn
   spot_price                          = "0.05"
@@ -2692,7 +2692,7 @@ resource "aws_spot_fleet_request" "test" {
 }
 
 func testAccSpotFleetRequestConfig_multipleInstanceTypesinSameSubnet(rName, publicKey, validUntil string) string {
-	return acctest.ConfigCompose(testAccSpotFleetRequestBaseConfig(rName, publicKey), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccSpotFleetRequestConfig_base(rName, publicKey), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
@@ -2743,7 +2743,7 @@ resource "aws_spot_fleet_request" "test" {
 }
 
 func testAccSpotFleetRequestConfig_overridingPrice(rName, publicKey, validUntil string) string {
-	return acctest.ConfigCompose(testAccSpotFleetRequestBaseConfig(rName, publicKey), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccSpotFleetRequestConfig_base(rName, publicKey), fmt.Sprintf(`
 resource "aws_spot_fleet_request" "test" {
   iam_fleet_role                      = aws_iam_role.test.arn
   spot_price                          = "0.05"
@@ -2781,7 +2781,7 @@ resource "aws_spot_fleet_request" "test" {
 }
 
 func testAccSpotFleetRequestConfig_noPrice(rName, publicKey, validUntil string) string {
-	return acctest.ConfigCompose(testAccSpotFleetRequestBaseConfig(rName, publicKey), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccSpotFleetRequestConfig_base(rName, publicKey), fmt.Sprintf(`
 resource "aws_spot_fleet_request" "test" {
   iam_fleet_role                      = aws_iam_role.test.arn
   target_capacity                     = 2
@@ -2817,7 +2817,7 @@ resource "aws_spot_fleet_request" "test" {
 }
 
 func testAccSpotFleetRequestConfig_multipleInstancePools(rName, publicKey, validUntil string) string {
-	return acctest.ConfigCompose(testAccSpotFleetRequestBaseConfig(rName, publicKey), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccSpotFleetRequestConfig_base(rName, publicKey), fmt.Sprintf(`
 resource "aws_spot_fleet_request" "test" {
   iam_fleet_role                      = aws_iam_role.test.arn
   spot_price                          = "0.7"
@@ -2866,7 +2866,7 @@ resource "aws_spot_fleet_request" "test" {
 }
 
 func testAccSpotFleetRequestConfig_diversifiedAllocation(rName, publicKey, validUntil string) string {
-	return acctest.ConfigCompose(testAccSpotFleetRequestBaseConfig(rName, publicKey), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccSpotFleetRequestConfig_base(rName, publicKey), fmt.Sprintf(`
 resource "aws_spot_fleet_request" "test" {
   iam_fleet_role                      = aws_iam_role.test.arn
   spot_price                          = "0.7"
@@ -2915,7 +2915,7 @@ resource "aws_spot_fleet_request" "test" {
 }
 
 func testAccSpotFleetRequestConfig_weightedCapacity(rName, publicKey, validUntil string) string {
-	return acctest.ConfigCompose(testAccSpotFleetRequestBaseConfig(rName, publicKey), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccSpotFleetRequestConfig_base(rName, publicKey), fmt.Sprintf(`
 resource "aws_spot_fleet_request" "test" {
   iam_fleet_role                      = aws_iam_role.test.arn
   spot_price                          = "0.7"
@@ -2954,7 +2954,7 @@ resource "aws_spot_fleet_request" "test" {
 }
 
 func testAccSpotFleetRequestConfig_ebs(rName, publicKey, validUntil string) string {
-	return acctest.ConfigCompose(testAccSpotFleetRequestBaseConfig(rName, publicKey), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccSpotFleetRequestConfig_base(rName, publicKey), fmt.Sprintf(`
 resource "aws_spot_fleet_request" "test" {
   iam_fleet_role                      = aws_iam_role.test.arn
   spot_price                          = "0.05"
@@ -2990,7 +2990,7 @@ resource "aws_spot_fleet_request" "test" {
 }
 
 func testAccSpotFleetRequestConfig_launchSpecificationEBSBlockDeviceKMSKeyID(rName, publicKey, validUntil string) string {
-	return acctest.ConfigCompose(testAccSpotFleetRequestBaseConfig(rName, publicKey), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccSpotFleetRequestConfig_base(rName, publicKey), fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   deletion_window_in_days = 7
 
@@ -3036,7 +3036,7 @@ resource "aws_spot_fleet_request" "test" {
 }
 
 func testAccSpotFleetRequestConfig_launchSpecificationRootBlockDeviceKMSKeyID(rName, publicKey, validUntil string) string {
-	return acctest.ConfigCompose(testAccSpotFleetRequestBaseConfig(rName, publicKey), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccSpotFleetRequestConfig_base(rName, publicKey), fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   deletion_window_in_days = 7
 
@@ -3075,7 +3075,7 @@ resource "aws_spot_fleet_request" "test" {
 }
 
 func testAccSpotFleetRequestConfig_launchSpecificationEBSBlockDeviceGP3(rName, publicKey string) string {
-	return acctest.ConfigCompose(testAccSpotFleetRequestBaseConfig(rName, publicKey), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccSpotFleetRequestConfig_base(rName, publicKey), fmt.Sprintf(`
 resource "aws_spot_fleet_request" "test" {
   iam_fleet_role                      = aws_iam_role.test.arn
   spot_price                          = "0.05"
@@ -3112,7 +3112,7 @@ resource "aws_spot_fleet_request" "test" {
 }
 
 func testAccSpotFleetRequestConfig_launchSpecificationRootBlockDeviceGP3(rName, publicKey string) string {
-	return acctest.ConfigCompose(testAccSpotFleetRequestBaseConfig(rName, publicKey), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccSpotFleetRequestConfig_base(rName, publicKey), fmt.Sprintf(`
 resource "aws_spot_fleet_request" "test" {
   iam_fleet_role                      = aws_iam_role.test.arn
   spot_price                          = "0.05"
@@ -3144,7 +3144,7 @@ resource "aws_spot_fleet_request" "test" {
 func testAccSpotFleetRequestConfig_launchSpecificationInstanceStoreAMI(rName, publicKey, validUntil string) string {
 	return acctest.ConfigCompose(
 		testAccAMIDataSourceConfig_latestAmazonLinuxHVMInstanceStore(),
-		testAccSpotFleetRequestBaseConfig(rName, publicKey),
+		testAccSpotFleetRequestConfig_base(rName, publicKey),
 		fmt.Sprintf(`
 resource "aws_spot_fleet_request" "test" {
   iam_fleet_role                      = aws_iam_role.test-role.arn
@@ -3169,7 +3169,7 @@ resource "aws_spot_fleet_request" "test" {
 }
 
 func testAccSpotFleetRequestConfig_tags(rName, publicKey, validUntil string) string {
-	return acctest.ConfigCompose(testAccSpotFleetRequestBaseConfig(rName, publicKey), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccSpotFleetRequestConfig_base(rName, publicKey), fmt.Sprintf(`
 resource "aws_spot_fleet_request" "test" {
   iam_fleet_role                      = aws_iam_role.test.arn
   spot_price                          = "0.05"
@@ -3195,7 +3195,7 @@ resource "aws_spot_fleet_request" "test" {
 }
 
 func testAccSpotFleetRequestConfig_tenancyGroup(rName, publicKey, validUntil string) string {
-	return acctest.ConfigCompose(testAccSpotFleetRequestBaseConfig(rName, publicKey), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccSpotFleetRequestConfig_base(rName, publicKey), fmt.Sprintf(`
 resource "aws_placement_group" "test" {
   name     = %[1]q
   strategy = "cluster"
@@ -3226,7 +3226,7 @@ resource "aws_spot_fleet_request" "test" {
 }
 
 func testAccSpotFleetRequestConfig_zeroCapacity(rName, publicKey, validUntil string) string {
-	return acctest.ConfigCompose(testAccSpotFleetRequestBaseConfig(rName, publicKey), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccSpotFleetRequestConfig_base(rName, publicKey), fmt.Sprintf(`
 resource "aws_spot_fleet_request" "test" {
   iam_fleet_role                      = aws_iam_role.test.arn
   spot_price                          = "0.05"
@@ -3252,7 +3252,7 @@ resource "aws_spot_fleet_request" "test" {
 }
 
 func testAccSpotFleetRequestConfig_capacityRebalance(rName, publicKey, validUntil string) string {
-	return acctest.ConfigCompose(testAccSpotFleetRequestBaseConfig(rName, publicKey), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccSpotFleetRequestConfig_base(rName, publicKey), fmt.Sprintf(`
 resource "aws_spot_fleet_request" "test" {
   iam_fleet_role                      = aws_iam_role.test.arn
   spot_price                          = "0.05"
@@ -3283,7 +3283,7 @@ resource "aws_spot_fleet_request" "test" {
 }
 
 func testAccSpotFleetRequestConfig_onDemandTargetCapacity(rName, publicKey, validUntil string, targetCapacity int) string {
-	return acctest.ConfigCompose(testAccSpotFleetRequestBaseConfig(rName, publicKey), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccSpotFleetRequestConfig_base(rName, publicKey), fmt.Sprintf(`
 resource "aws_launch_template" "test" {
   name          = %[1]q
   image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
@@ -3322,7 +3322,7 @@ resource "aws_spot_fleet_request" "test" {
 }
 
 func testAccSpotFleetRequestConfig_onDemandMaxTotalPrice(rName, publicKey, validUntil, price string) string {
-	return acctest.ConfigCompose(testAccSpotFleetRequestBaseConfig(rName, publicKey), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccSpotFleetRequestConfig_base(rName, publicKey), fmt.Sprintf(`
 resource "aws_launch_template" "test" {
   name          = %[1]q
   image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
@@ -3361,7 +3361,7 @@ resource "aws_spot_fleet_request" "test" {
 }
 
 func testAccSpotFleetRequestConfig_onDemandAllocationStrategy(rName, publicKey, validUntil, strategy string) string {
-	return acctest.ConfigCompose(testAccSpotFleetRequestBaseConfig(rName, publicKey), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccSpotFleetRequestConfig_base(rName, publicKey), fmt.Sprintf(`
 resource "aws_launch_template" "test" {
   name          = %[1]q
   image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
@@ -3400,7 +3400,7 @@ resource "aws_spot_fleet_request" "test" {
 }
 
 func testAccSpotFleetRequestConfig_noTerminateInstancesExpiration(rName, publicKey, validUntil string) string {
-	return acctest.ConfigCompose(testAccSpotFleetRequestBaseConfig(rName, publicKey), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccSpotFleetRequestConfig_base(rName, publicKey), fmt.Sprintf(`
 resource "aws_spot_fleet_request" "test" {
   iam_fleet_role                  = aws_iam_role.test.arn
   spot_price                      = "0.05"
@@ -3426,7 +3426,7 @@ resource "aws_spot_fleet_request" "test" {
 }
 
 func testAccSpotFleetRequestConfig_targetCapacityUnitType(rName, publicKey, validUntil, targetCapacityUnitType string) string {
-	return acctest.ConfigCompose(testAccSpotFleetRequestBaseConfig(rName, publicKey), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccSpotFleetRequestConfig_base(rName, publicKey), fmt.Sprintf(`
 resource "aws_launch_template" "test" {
   name          = %[1]q
   image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
