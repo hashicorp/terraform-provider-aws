@@ -20,7 +20,7 @@ type AWSClient struct {
 	Region                    string
 	ReverseDNSPrefix          string
 	S3ConnURICleaningDisabled *s3.S3
-	ServiceDataMap            map[string]intf.ServiceData
+	ServiceMap                map[string]intf.ServiceData
 	Session                   *session.Session
 	SupportedPlatforms        []string
 	TerraformVersion          string

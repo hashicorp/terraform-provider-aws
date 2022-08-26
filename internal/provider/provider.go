@@ -2148,7 +2148,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 		// TODO: This should be generated.
 
 		// ServiceData is used before configuration to determine the provider's exported resources and data sources.
-		ServiceDataMap: map[string]intf.ServiceData{
+		ServiceMap: map[string]intf.ServiceData{
 			"meta": meta.ServiceData,
 		},
 	}
@@ -2258,7 +2258,7 @@ func configure(ctx context.Context, provider *schema.Provider, d *schema.Resourc
 	}
 
 	// Configure each service.
-	for _, v := range providerData.ServiceDataMap {
+	for _, v := range providerData.ServiceMap {
 		if err := v.Configure(ctx, providerData); err != nil {
 			diags = append(diags, diag.FromErr(err)...)
 		}

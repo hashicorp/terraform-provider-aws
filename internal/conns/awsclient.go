@@ -22,5 +22,5 @@ func (client *AWSClient) RegionalHostname(prefix string) string {
 }
 
 func (client *AWSClient) Services(_ context.Context) map[string]intf.ServiceData {
-	return client.ServiceDataMap
+	return client.ServiceMap
 }
