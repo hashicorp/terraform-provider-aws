@@ -715,7 +715,51 @@ func TestAccOpenSearchDomain_AdvancedSecurityOptions_userDB(t *testing.T) {
 				Config: testAccDomainConfig_advancedSecurityOptionsUserDB(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName, &domain),
-					testAccCheckAdvancedSecurityOptions(true, true, &domain),
+					testAccCheckAdvancedSecurityOptions(true, true, false, &domain),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateId:     rName,
+				ImportStateVerify: true,
+				// MasterUserOptions are not returned from DescribeDomainConfig
+				ImportStateVerifyIgnore: []string{
+					"advanced_security_options.0.internal_user_database_enabled",
+					"advanced_security_options.0.master_user_options",
+				},
+			},
+		},
+	})
+}
+
+func TestAccOpenSearchDomain_AdvancedSecurityOptions_anonymousAuth(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var domain opensearchservice.DomainStatus
+	rName := testAccRandomDomainName()
+	resourceName := "aws_opensearch_domain.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRole(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, opensearchservice.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDomainDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDomainConfig_advancedSecurityOptionsAnonymousAuth(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(resourceName, &domain),
+					testAccCheckAdvancedSecurityOptions(false, true, true, &domain),
+				),
+			},
+			{
+				Config: testAccDomainConfig_advancedSecurityOptionsAnonymousAuth(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(resourceName, &domain),
+					testAccCheckAdvancedSecurityOptions(true, true, true, &domain),
 				),
 			},
 			{
@@ -752,7 +796,7 @@ func TestAccOpenSearchDomain_AdvancedSecurityOptions_iam(t *testing.T) {
 				Config: testAccDomainConfig_advancedSecurityOptionsIAM(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName, &domain),
-					testAccCheckAdvancedSecurityOptions(true, false, &domain),
+					testAccCheckAdvancedSecurityOptions(true, false, false, &domain),
 				),
 			},
 			{
@@ -789,7 +833,7 @@ func TestAccOpenSearchDomain_AdvancedSecurityOptions_disabled(t *testing.T) {
 				Config: testAccDomainConfig_advancedSecurityOptionsDisabled(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName, &domain),
-					testAccCheckAdvancedSecurityOptions(false, false, &domain),
+					testAccCheckAdvancedSecurityOptions(false, false, false, &domain),
 				),
 			},
 			{
@@ -1684,7 +1728,7 @@ func testAccCheckNodeToNodeEncrypted(encrypted bool, status *opensearchservice.D
 	}
 }
 
-func testAccCheckAdvancedSecurityOptions(enabled bool, userDbEnabled bool, status *opensearchservice.DomainStatus) resource.TestCheckFunc {
+func testAccCheckAdvancedSecurityOptions(enabled bool, userDbEnabled bool, anonymousAuthEnabled bool, status *opensearchservice.DomainStatus) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conf := status.AdvancedSecurityOptions
 
@@ -1702,6 +1746,16 @@ func testAccCheckAdvancedSecurityOptions(enabled bool, userDbEnabled bool, statu
 					"AdvancedSecurityOptions.InternalUserDatabaseEnabled not set properly. Given: %t, Expected: %t",
 					aws.BoolValue(conf.InternalUserDatabaseEnabled),
 					userDbEnabled,
+				)
+			}
+		}
+
+		if aws.BoolValue(conf.Enabled) {
+			if aws.BoolValue(conf.AnonymousAuthEnabled) != anonymousAuthEnabled {
+				return fmt.Errorf(
+					"AdvancedSecurityOptions.AnonymousAuthEnabled not set properly. Given: %t, Expected: %t",
+					aws.BoolValue(conf.AnonymousAuthEnabled),
+					anonymousAuthEnabled,
 				)
 			}
 		}
@@ -2885,6 +2939,47 @@ resource "aws_opensearch_domain" "test" {
   }
 }
 `, rName)
+}
+
+func testAccDomainConfig_advancedSecurityOptionsAnonymousAuth(rName string, enabled bool) string {
+	return fmt.Sprintf(`
+resource "aws_opensearch_domain" "test" {
+  domain_name    = %[1]q
+  engine_version = "Elasticsearch_7.1"
+
+  cluster_config {
+    instance_type = "r5.large.search"
+  }
+
+  advanced_security_options {
+    enabled                        = %[2]t
+	anonymous_auth_enabled         = true
+    internal_user_database_enabled = true
+    master_user_options {
+      master_user_name     = "testmasteruser"
+      master_user_password = "Barbarbarbar1!"
+    }
+  }
+
+  encrypt_at_rest {
+    enabled = true
+  }
+
+  domain_endpoint_options {
+    enforce_https       = true
+    tls_security_policy = "Policy-Min-TLS-1-2-2019-07"
+  }
+
+  node_to_node_encryption {
+    enabled = true
+  }
+
+  ebs_options {
+    ebs_enabled = true
+    volume_size = 10
+  }
+}
+`, rName, enabled)
 }
 
 func testAccDomainConfig_advancedSecurityOptionsIAM(rName string) string {
