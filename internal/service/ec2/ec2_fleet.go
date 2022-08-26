@@ -530,15 +530,15 @@ func ResourceFleet() *schema.Resource {
 								return oldInt == totalTargetCapacityO.(int)
 							},
 						},
-						"total_target_capacity": {
-							Type:     schema.TypeInt,
-							Required: true,
-						},
 						"target_capacity_unit_type": {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ForceNew:     true,
 							ValidateFunc: validation.StringInSlice(ec2.TargetCapacityUnitType_Values(), false),
+						},
+						"total_target_capacity": {
+							Type:     schema.TypeInt,
+							Required: true,
 						},
 					},
 				},
