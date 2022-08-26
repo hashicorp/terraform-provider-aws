@@ -83,7 +83,7 @@ POLICY
 }
 ```
 
-### Log Publishing to CloudWatch Logs
+### Log publishing to CloudWatch Logs
 
 ```terraform
 resource "aws_cloudwatch_log_group" "example" {
@@ -212,6 +212,94 @@ CONFIG
   }
 
   depends_on = [aws_iam_service_linked_role.example]
+}
+```
+
+### Enabling fine-grained access control on an existing domain
+
+This example shows two configurations: one to create a domain without fine-grained access control and the second to modify the domain to enable fine-grained access control. For more information, see [Enabling fine-grained access control](https://docs.aws.amazon.com/opensearch-service/latest/developerguide/fgac.html).
+
+#### First apply
+
+```terraform
+resource "aws_opensearch_domain" "example" {
+  domain_name    = "ggkitty"
+  engine_version = "Elasticsearch_7.1"
+
+  cluster_config {
+    instance_type = "r5.large.search"
+  }
+
+  advanced_security_options {
+    enabled                        = false
+    anonymous_auth_enabled         = true
+    internal_user_database_enabled = true
+    master_user_options {
+      master_user_name     = "example"
+      master_user_password = "Barbarbarbar1!"
+    }
+  }
+
+  encrypt_at_rest {
+    enabled = true
+  }
+
+  domain_endpoint_options {
+    enforce_https       = true
+    tls_security_policy = "Policy-Min-TLS-1-2-2019-07"
+  }
+
+  node_to_node_encryption {
+    enabled = true
+  }
+
+  ebs_options {
+    ebs_enabled = true
+    volume_size = 10
+  }
+}
+```
+
+#### Second apply
+
+Notice that the only change is `advanced_security_options.0.enabled` is now set to `true`.
+
+```terraform
+resource "aws_opensearch_domain" "example" {
+  domain_name    = "ggkitty"
+  engine_version = "Elasticsearch_7.1"
+
+  cluster_config {
+    instance_type = "r5.large.search"
+  }
+
+  advanced_security_options {
+    enabled                        = true
+    anonymous_auth_enabled         = true
+    internal_user_database_enabled = true
+    master_user_options {
+      master_user_name     = "example"
+      master_user_password = "Barbarbarbar1!"
+    }
+  }
+
+  encrypt_at_rest {
+    enabled = true
+  }
+
+  domain_endpoint_options {
+    enforce_https       = true
+    tls_security_policy = "Policy-Min-TLS-1-2-2019-07"
+  }
+
+  node_to_node_encryption {
+    enabled = true
+  }
+
+  ebs_options {
+    ebs_enabled = true
+    volume_size = 10
+  }
 }
 ```
 
