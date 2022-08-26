@@ -332,19 +332,19 @@ func TestAccNetworkFirewallFirewallPolicy_statefulRuleGroupOverrideActionReferen
 	var firewallPolicy networkfirewall.DescribeFirewallPolicyOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_firewall_policy.test"
-	override_action := "DROP_TO_ALERT"
+	override_action := networkfirewall.OverrideActionDropToAlert
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, networkfirewall.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckFirewallPolicyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, networkfirewall.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFirewallPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFirewallPolicyConfig_statefulRuleGroupReferenceManagedOverrideAction(rName, override_action),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFirewallPolicyExists(resourceName, &firewallPolicy),
-					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_rule_group_reference.0.override_action", override_action),
+					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateful_rule_group_reference.0.override.0.action", override_action),
 				),
 			},
 			{
@@ -1132,7 +1132,9 @@ resource "aws_networkfirewall_firewall_policy" "test" {
     stateless_default_actions          = ["aws:pass"]
     stateful_rule_group_reference {
       resource_arn    = "arn:${data.aws_partition.current.partition}:network-firewall:${data.aws_region.current.name}:aws-managed:stateful-rulegroup/MalwareDomainsActionOrder"
-      override_action = %[2]q
+      override {
+         action = %[2]q
+      }
     }
   }
 }

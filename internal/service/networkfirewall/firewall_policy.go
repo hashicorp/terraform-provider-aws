@@ -324,6 +324,21 @@ func expandStatefulEngineOptions(l []interface{}) *networkfirewall.StatefulEngin
 	return options
 }
 
+func expandStatefulRuleGroupOverride(l []interface{}) *networkfirewall.StatefulRuleGroupOverride {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	lRaw := l[0].(map[string]interface{})
+	override := &networkfirewall.StatefulRuleGroupOverride{}
+
+	if v, ok := lRaw["action"].(string); ok && v != "" {
+		override.SetAction(v)
+	}
+
+	return override
+}
+
 func expandStatefulRuleGroupReferences(l []interface{}) []*networkfirewall.StatefulRuleGroupReference {
 	if len(l) == 0 || l[0] == nil {
 		return nil
@@ -334,6 +349,7 @@ func expandStatefulRuleGroupReferences(l []interface{}) []*networkfirewall.State
 		if !ok {
 			continue
 		}
+
 		reference := &networkfirewall.StatefulRuleGroupReference{}
 		if v, ok := tfMap["priority"].(int); ok && v > 0 {
 			reference.Priority = aws.Int64(int64(v))
@@ -341,13 +357,14 @@ func expandStatefulRuleGroupReferences(l []interface{}) []*networkfirewall.State
 		if v, ok := tfMap["resource_arn"].(string); ok && v != "" {
 			reference.ResourceArn = aws.String(v)
 		}
-		if v, ok := tfMap["override_action"].(string); ok && v != "" {
-			override := &networkfirewall.StatefulRuleGroupOverride{}
-			override.SetAction(v)
-			reference.Override = override
+
+		if v, ok := tfMap["override"].([]interface{}); ok && len(v) > 0 {
+			reference.Override = expandStatefulRuleGroupOverride(v)
 		}
+
 		references = append(references, reference)
 	}
+
 	return references
 }
 
@@ -448,6 +465,18 @@ func flattenStatefulEngineOptions(options *networkfirewall.StatefulEngineOptions
 	return []interface{}{m}
 }
 
+func flattenStatefulRuleGroupOverride(override *networkfirewall.StatefulRuleGroupOverride) []interface{} {
+	if override == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"action": aws.StringValue(override.Action),
+	}
+
+	return []interface{}{m}
+}
+
 func flattenPolicyStatefulRuleGroupReference(l []*networkfirewall.StatefulRuleGroupReference) []interface{} {
 	references := make([]interface{}, 0, len(l))
 	for _, ref := range l {
@@ -458,7 +487,7 @@ func flattenPolicyStatefulRuleGroupReference(l []*networkfirewall.StatefulRuleGr
 			reference["priority"] = int(aws.Int64Value(ref.Priority))
 		}
 		if ref.Override != nil {
-			reference["override_action"] = aws.StringValue(ref.Override.Action)
+			reference["override"] = flattenStatefulRuleGroupOverride(ref.Override)
 		}
 
 		references = append(references, reference)
