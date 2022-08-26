@@ -31,7 +31,11 @@ type serviceData struct {
 	}
 }
 
-func (d *serviceData) DataSourceTypes(ctx context.Context) (map[string]provider.DataSourceType, error) {
+func (d *serviceData) Configure(ctx context.Context, providerData intf.ProviderData) error {
+	return nil
+}
+
+func (d *serviceData) DataSources(ctx context.Context) (map[string]provider.DataSourceType, error) {
 	dataSourceTypes := make(map[string]provider.DataSourceType)
 
 	for _, dataSourceTypeFactory := range d.dataSourceTypeFactories {
