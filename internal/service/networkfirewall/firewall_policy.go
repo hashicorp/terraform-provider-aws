@@ -80,9 +80,19 @@ func ResourceFirewallPolicy() *schema.Resource {
 										Required:     true,
 										ValidateFunc: verify.ValidARN,
 									},
-									"override_action": {
-										Type:     schema.TypeString,
+									"override": {
+										Type:     schema.TypeList,
+										MaxItems: 1,
 										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"action": {
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: validation.StringInSlice(networkfirewall.OverrideAction_Values(), false),
+												},
+											},
+										},
 									},
 								},
 							},
