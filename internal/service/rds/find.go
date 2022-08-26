@@ -247,6 +247,36 @@ func FindDBSnapshotByID(conn *rds.RDS, id string) (*rds.DBSnapshot, error) {
 	return dbSnapshot, nil
 }
 
+func FindDBSubnetGroupByName(conn *rds.RDS, name string) (*rds.DBSubnetGroup, error) {
+	input := &rds.DescribeDBSubnetGroupsInput{
+		DBSubnetGroupName: aws.String(name),
+	}
+
+	output, err := conn.DescribeDBSubnetGroups(input)
+
+	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBSubnetGroupNotFoundFault) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if output == nil || len(output.DBSubnetGroups) == 0 || output.DBSubnetGroups[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	dbSubnetGroup := output.DBSubnetGroups[0]
+
+	// Eventual consistency check.
+	if aws.StringValue(dbSubnetGroup.DBSubnetGroupName) != name {
+		return nil, &resource.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return dbSubnetGroup, nil
+}
+
 func FindEventSubscriptionByID(conn *rds.RDS, id string) (*rds.EventSubscription, error) {
 	input := &rds.DescribeEventSubscriptionsInput{
 		SubscriptionName: aws.String(id),

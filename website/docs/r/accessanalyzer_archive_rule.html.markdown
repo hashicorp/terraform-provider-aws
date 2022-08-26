@@ -16,7 +16,7 @@ Terraform resource for managing an AWS AccessAnalyzer Archive Rule.
 
 ```terraform
 resource "aws_accessanalyzer_archive_rule" "example" {
-  analyser_name = "example-analyzer"
+  analyzer_name = "example-analyzer"
   rule_name     = "example-rule"
 
   filter {

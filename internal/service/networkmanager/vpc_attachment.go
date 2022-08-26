@@ -258,8 +258,8 @@ func resourceVPCAttachmentUpdate(ctx context.Context, d *schema.ResourceData, me
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return diag.Errorf("updating VPC Attachment (%s) tags: %s", d.Id(), err)
+		if err := UpdateTagsWithContext(ctx, conn, d.Get("arn").(string), o, n); err != nil {
+			return diag.Errorf("updating Network Manager VPC Attachment (%s) tags: %s", d.Id(), err)
 		}
 	}
 

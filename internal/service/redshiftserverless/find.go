@@ -32,3 +32,28 @@ func FindNamespaceByName(conn *redshiftserverless.RedshiftServerless, name strin
 
 	return output.Namespace, nil
 }
+
+func FindWorkgroupByName(conn *redshiftserverless.RedshiftServerless, name string) (*redshiftserverless.Workgroup, error) {
+	input := &redshiftserverless.GetWorkgroupInput{
+		WorkgroupName: aws.String(name),
+	}
+
+	output, err := conn.GetWorkgroup(input)
+
+	if tfawserr.ErrCodeEquals(err, redshiftserverless.ErrCodeResourceNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.Workgroup, nil
+}

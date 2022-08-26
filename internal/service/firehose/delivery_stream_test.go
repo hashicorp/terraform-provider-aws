@@ -1106,6 +1106,45 @@ func TestAccFirehoseDeliveryStream_redshiftUpdates(t *testing.T) {
 	})
 }
 
+func TestAccFirehoseDeliveryStream_tagUpdates(t *testing.T) {
+	var stream firehose.DeliveryStreamDescription
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_kinesis_firehose_delivery_stream.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, firehose.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDeliveryStreamDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDeliveryStreamConfig_tag(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDeliveryStreamExists(resourceName, &stream),
+					testAccCheckDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil, nil),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key", "Value"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"redshift_configuration.0.password"},
+			},
+			{
+				Config: testAccDeliveryStreamConfig_tagUpdates(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDeliveryStreamExists(resourceName, &stream),
+					testAccCheckDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil, nil),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key", "Value2"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccFirehoseDeliveryStream_splunkUpdates(t *testing.T) {
 	var stream firehose.DeliveryStreamDescription
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -3095,6 +3134,63 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
         }
       }
     }
+  }
+}
+`, rName))
+}
+
+func testAccDeliveryStreamConfig_tag(rName string) string {
+	return acctest.ConfigCompose(
+		testAccDeliveryStreamRedshiftConfigBase(rName),
+		fmt.Sprintf(`
+resource "aws_kinesis_firehose_delivery_stream" "test" {
+  name        = %[1]q
+  destination = "redshift"
+
+  s3_configuration {
+    role_arn   = aws_iam_role.firehose.arn
+    bucket_arn = aws_s3_bucket.bucket.arn
+  }
+
+  redshift_configuration {
+    role_arn        = aws_iam_role.firehose.arn
+    cluster_jdbcurl = "jdbc:redshift://${aws_redshift_cluster.test.endpoint}/${aws_redshift_cluster.test.database_name}"
+    username        = "testuser"
+    password        = "T3stPass"
+    data_table_name = "test-table"
+  }
+
+  tags = {
+    "Key" = "Value"
+  }
+}
+`, rName))
+}
+
+func testAccDeliveryStreamConfig_tagUpdates(rName string) string {
+	return acctest.ConfigCompose(
+		testAccLambdaBasicConfig(rName),
+		testAccDeliveryStreamRedshiftConfigBase(rName),
+		fmt.Sprintf(`
+resource "aws_kinesis_firehose_delivery_stream" "test" {
+  name        = %[1]q
+  destination = "redshift"
+
+  s3_configuration {
+    role_arn   = aws_iam_role.firehose.arn
+    bucket_arn = aws_s3_bucket.bucket.arn
+  }
+
+  redshift_configuration {
+    role_arn        = aws_iam_role.firehose.arn
+    cluster_jdbcurl = "jdbc:redshift://${aws_redshift_cluster.test.endpoint}/${aws_redshift_cluster.test.database_name}"
+    username        = "testuser"
+    password        = "T3stPass"
+    data_table_name = "test-table"
+  }
+
+  tags = {
+    "Key" = "Value2"
   }
 }
 `, rName))

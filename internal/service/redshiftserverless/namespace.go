@@ -47,6 +47,7 @@ func ResourceNamespace() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
+				Computed: true,
 			},
 			"default_iam_role_arn": {
 				Type:         schema.TypeString,
