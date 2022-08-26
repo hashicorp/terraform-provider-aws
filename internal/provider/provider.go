@@ -2251,7 +2251,24 @@ func configure(ctx context.Context, provider *schema.Provider, d *schema.Resourc
 		}
 	}
 
-	return config.ConfigureProvider(ctx, provider.Meta().(*conns.AWSClient))
+	providerData, diags := config.ConfigureProvider(ctx, provider.Meta().(*conns.AWSClient))
+
+	if diags.HasError() {
+		return nil, diags
+	}
+
+	// Configure each service.
+	for _, v := range providerData.ServiceDataMap {
+		if err := v.Configure(ctx, providerData); err != nil {
+			diags = append(diags, diag.FromErr(err)...)
+		}
+	}
+
+	if diags.HasError() {
+		return nil, diags
+	}
+
+	return providerData, diags
 }
 
 func assumeRoleSchema() *schema.Schema {

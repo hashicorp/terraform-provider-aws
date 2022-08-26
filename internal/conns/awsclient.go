@@ -21,6 +21,6 @@ func (client *AWSClient) RegionalHostname(prefix string) string {
 	return fmt.Sprintf("%s.%s.%s", prefix, client.Region, client.DNSSuffix)
 }
 
-func (client *AWSClient) ServiceData(_ context.Context) map[string]intf.ServiceData {
+func (client *AWSClient) Services(_ context.Context) map[string]intf.ServiceData {
 	return client.ServiceDataMap
 }
