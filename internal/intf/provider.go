@@ -5,5 +5,5 @@ import (
 )
 
 type ProviderData interface {
-	ServiceData(context.Context) map[string]ServiceData
+	Services(context.Context) map[string]ServiceData
 }

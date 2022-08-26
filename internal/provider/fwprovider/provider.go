@@ -314,7 +314,7 @@ func (p *fwprovider) GetDataSources(ctx context.Context) (map[string]provider.Da
 
 	// TODO Better error messages.
 	// TODO Wrap the returned type to add standard context, logging etc.
-	for serviceID, data := range p.Primary.ServiceData(ctx) {
+	for serviceID, data := range p.Primary.Services(ctx) {
 		dsTypes, err := data.DataSourceTypes(ctx)
 
 		if err != nil {
