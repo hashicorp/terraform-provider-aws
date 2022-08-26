@@ -1,5 +1,5 @@
 ---
-subcategory: "Managed Streaming for Kafka (MSK)"
+subcategory: "Managed Streaming for Kafka"
 layout: "aws"
 page_title: "AWS: aws_msk_configuration"
 description: |-
@@ -12,7 +12,7 @@ Get information on an Amazon MSK Configuration.
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_msk_configuration" "example" {
   name = "example"
 }

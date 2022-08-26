@@ -1,0 +1,45 @@
+name: "Regressions Slack Notifier"
+on:
+  issues:
+    types:
+      - labeled
+  pull_request:
+    types:
+      - labeled
+jobs:
+  slack-notification:
+    if: ${{ github.event.label.name == 'regression' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Issues
+        if: ${{ github.event_name == 'issues' }}
+        uses: actions-ecosystem/action-slack-notifier@v1
+        with:
+          slack_token: ${{ secrets.SLACK_BOT_TOKEN }}
+          channel: ${{ secrets.SLACK_CHANNEL }}
+          color: red
+          verbose: false
+          message: |
+            :warning: The following issue has been labeled as a regression:
+            https://github.com/${{ github.repository }}/issues/${{ github.event.issue.number }}
+      - name: Pull Requests
+        if: ${{ github.event_name == 'pull_request' }}
+        uses: actions-ecosystem/action-slack-notifier@v1
+        with:
+          slack_token: ${{ secrets.SLACK_BOT_TOKEN }}
+          channel: ${{ secrets.SLACK_CHANNEL }}
+          color: red
+          verbose: false
+          message: |
+            :warning: The following pull request has been labeled as a regression:
+            https://github.com/${{ github.repository }}/pull/${{ github.event.pull_request.number }}
+  AddToWorkingBoard:
+    if: ${{ github.event.label.name == 'regression' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Add regressions to To Do column
+        uses: alex-page/github-project-automation-plus@v0.8.1
+        with:
+          project: AWS Provider Working Board
+          column: To Do
+          repo-token: ${{ secrets.ORGSCOPED_GITHUB_TOKEN }}

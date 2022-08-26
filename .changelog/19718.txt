@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_ram_resource_share_accepter: Allow destroy even where AWS API provides no way to disassociate
+```

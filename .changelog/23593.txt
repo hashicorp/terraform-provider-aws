@@ -1,0 +1,15 @@
+```release-note:bug
+resource/aws_kms_key: Increase `description` and `tags` eventual consistency timeouts from 5 minutes to 10 minutes
+```
+
+```release-note:bug
+resource/aws_kms_external_key: Increase `tags` eventual consistency timeout from 5 minutes to 10 minutes
+```
+
+```release-note:bug
+resource/aws_kms_replica_key: Increase `tags` eventual consistency timeout from 5 minutes to 10 minutes
+```
+
+```release-note:bug
+resource/aws_kms_replica_external_key: Increase `tags` eventual consistency timeout from 5 minutes to 10 minutes
+```

@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_rds_cluster: Use engine_version and engine_version_actual to set and track engine versions
+```
+
+```release-note:enhancement
+resource/aws_rds_cluster_instance: Use engine_version and engine_version_actual to set and track engine versions
+```

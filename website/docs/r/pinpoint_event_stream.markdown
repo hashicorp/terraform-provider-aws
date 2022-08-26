@@ -12,11 +12,11 @@ Provides a Pinpoint Event Stream resource.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_pinpoint_event_stream" "stream" {
-  application_id         = "${aws_pinpoint_app.app.application_id}"
-  destination_stream_arn = "${aws_kinesis_stream.test_stream.arn}"
-  role_arn               = "${aws_iam_role.test_role.arn}"
+  application_id         = aws_pinpoint_app.app.application_id
+  destination_stream_arn = aws_kinesis_stream.test_stream.arn
+  role_arn               = aws_iam_role.test_role.arn
 }
 
 resource "aws_pinpoint_app" "app" {}
@@ -46,7 +46,7 @@ EOF
 
 resource "aws_iam_role_policy" "test_role_policy" {
   name = "test_policy"
-  role = "${aws_iam_role.test_role.id}"
+  role = aws_iam_role.test_role.id
 
   policy = <<EOF
 {
@@ -75,9 +75,13 @@ The following arguments are supported:
 * `destination_stream_arn` - (Required) The Amazon Resource Name (ARN) of the Amazon Kinesis stream or Firehose delivery stream to which you want to publish events.
 * `role_arn` - (Required) The IAM role that authorizes Amazon Pinpoint to publish events to the stream in your account.
 
+## Attributes Reference
+
+No additional attributes are exported.
+
 ## Import
 
-Pinpoint Event Stream can be imported using the `application-id`, e.g.
+Pinpoint Event Stream can be imported using the `application-id`, e.g.,
 
 ```
 $ terraform import aws_pinpoint_event_stream.stream application-id

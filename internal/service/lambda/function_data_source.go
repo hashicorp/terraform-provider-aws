@@ -1,4 +1,4 @@
-package aws
+package lambda
 
 import (
 	"fmt"
@@ -6,13 +6,17 @@ import (
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/lambda"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
-func dataSourceAwsLambdaFunction() *schema.Resource {
+func DataSourceFunction() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsLambdaFunctionRead,
+		Read: dataSourceFunctionRead,
 
 		Schema: map[string]*schema.Schema{
 			"function_name": {
@@ -30,11 +34,37 @@ func dataSourceAwsLambdaFunction() *schema.Resource {
 			"dead_letter_config": {
 				Type:     schema.TypeList,
 				Computed: true,
-				MinItems: 0,
-				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"target_arn": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
+			"ephemeral_storage": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"size": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+					},
+				},
+			},
+			"file_system_config": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"arn": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"local_mount_path": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -48,7 +78,6 @@ func dataSourceAwsLambdaFunction() *schema.Resource {
 			"layers": {
 				Type:     schema.TypeList,
 				Computed: true,
-				MaxItems: 5,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
@@ -80,7 +109,6 @@ func dataSourceAwsLambdaFunction() *schema.Resource {
 			"vpc_config": {
 				Type:     schema.TypeList,
 				Computed: true,
-				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"subnet_ids": {
@@ -129,7 +157,6 @@ func dataSourceAwsLambdaFunction() *schema.Resource {
 			"environment": {
 				Type:     schema.TypeList,
 				Computed: true,
-				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"variables": {
@@ -142,7 +169,6 @@ func dataSourceAwsLambdaFunction() *schema.Resource {
 			},
 			"tracing_config": {
 				Type:     schema.TypeList,
-				MaxItems: 1,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -157,13 +183,38 @@ func dataSourceAwsLambdaFunction() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tagsSchemaComputed(),
+			"tags": tftags.TagsSchemaComputed(),
+			"signing_profile_version_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"signing_job_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"code_signing_config_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"architectures": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
+			"image_uri": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
 
-func dataSourceAwsLambdaFunctionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).lambdaconn
+func dataSourceFunctionRead(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*conns.AWSClient).LambdaConn
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+
 	functionName := d.Get("function_name").(string)
 
 	input := &lambda.GetFunctionInput{
@@ -178,7 +229,7 @@ func dataSourceAwsLambdaFunctionRead(d *schema.ResourceData, meta interface{}) e
 	output, err := conn.GetFunction(input)
 
 	if err != nil {
-		return fmt.Errorf("error getting Lambda Function (%s): %s", functionName, err)
+		return fmt.Errorf("error getting Lambda Function (%s): %w", functionName, err)
 	}
 
 	if output == nil {
@@ -209,26 +260,40 @@ func dataSourceAwsLambdaFunctionRead(d *schema.ResourceData, meta interface{}) e
 		}
 	}
 	if err := d.Set("dead_letter_config", deadLetterConfig); err != nil {
-		return fmt.Errorf("error setting dead_letter_config: %s", err)
+		return fmt.Errorf("error setting dead_letter_config: %w", err)
 	}
 
 	d.Set("description", function.Description)
 
-	if err := d.Set("environment", flattenLambdaEnvironment(function.Environment)); err != nil {
-		return fmt.Errorf("error setting environment: %s", err)
+	if err := d.Set("environment", flattenEnvironment(function.Environment)); err != nil {
+		return fmt.Errorf("error setting environment: %w", err)
 	}
 
 	d.Set("handler", function.Handler)
-	d.Set("invoke_arn", lambdaFunctionInvokeArn(aws.StringValue(function.FunctionArn), meta))
+	d.Set("invoke_arn", functionInvokeARN(aws.StringValue(function.FunctionArn), meta))
 	d.Set("kms_key_arn", function.KMSKeyArn)
 	d.Set("last_modified", function.LastModified)
 
-	if err := d.Set("layers", flattenLambdaLayers(function.Layers)); err != nil {
-		return fmt.Errorf("Error setting layers for Lambda Function (%s): %s", d.Id(), err)
+	if output.Code != nil {
+		d.Set("image_uri", output.Code.ImageUri)
+	}
+
+	if err := d.Set("layers", flattenLayers(function.Layers)); err != nil {
+		return fmt.Errorf("Error setting layers for Lambda Function (%s): %w", d.Id(), err)
 	}
 
 	d.Set("memory_size", function.MemorySize)
 	d.Set("qualified_arn", qualifiedARN)
+
+	// Add Signing Profile Version ARN
+	if err := d.Set("signing_profile_version_arn", function.SigningProfileVersionArn); err != nil {
+		return fmt.Errorf("Error setting signing profile version arn for Lambda Function: %w", err)
+	}
+
+	// Add Signing Job ARN
+	if err := d.Set("signing_job_arn", function.SigningJobArn); err != nil {
+		return fmt.Errorf("Error setting signing job arn for Lambda Function: %w", err)
+	}
 
 	reservedConcurrentExecutions := int64(-1)
 	if output.Concurrency != nil {
@@ -241,8 +306,8 @@ func dataSourceAwsLambdaFunctionRead(d *schema.ResourceData, meta interface{}) e
 	d.Set("source_code_hash", function.CodeSha256)
 	d.Set("source_code_size", function.CodeSize)
 
-	if err := d.Set("tags", tagsToMapGeneric(output.Tags)); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+	if err := d.Set("tags", KeyValueTags(output.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
 	}
 
 	tracingConfig := []map[string]interface{}{
@@ -279,11 +344,52 @@ func dataSourceAwsLambdaFunctionRead(d *schema.ResourceData, meta interface{}) e
 	}
 	d.Set("version", latestPublishedVersion) //Unpublished lambda set to "$LATEST"
 
-	if err := d.Set("vpc_config", flattenLambdaVpcConfigResponse(function.VpcConfig)); err != nil {
-		return fmt.Errorf("error setting vpc_config: %s", err)
+	if err := d.Set("vpc_config", flattenVPCConfigResponse(function.VpcConfig)); err != nil {
+		return fmt.Errorf("error setting vpc_config: %w", err)
 	}
 
+	if err := d.Set("file_system_config", flattenFileSystemConfigs(function.FileSystemConfigs)); err != nil {
+		return fmt.Errorf("error setting file_system_config: %w", err)
+	}
+
+	// Currently, this functionality is only enabled in AWS Commercial partition
+	// and other partitions return ambiguous error codes (e.g. AccessDeniedException
+	// in AWS GovCloud (US)) so we cannot just ignore the error as would typically.
+	if meta.(*conns.AWSClient).Partition != endpoints.AwsPartitionID {
+		d.SetId(aws.StringValue(function.FunctionName))
+
+		return nil
+	}
+
+	// Get Code Signing Config Output.
+	// Code Signing is only supported on zip packaged lambda functions.
+	var codeSigningConfigArn string
+
+	if aws.StringValue(function.PackageType) == lambda.PackageTypeZip {
+		codeSigningConfigInput := &lambda.GetFunctionCodeSigningConfigInput{
+			FunctionName: function.FunctionName,
+		}
+		getCodeSigningConfigOutput, err := conn.GetFunctionCodeSigningConfig(codeSigningConfigInput)
+		if err != nil {
+			return fmt.Errorf("error getting Lambda Function (%s) Code Signing Config: %w", aws.StringValue(function.FunctionName), err)
+		}
+
+		if getCodeSigningConfigOutput != nil {
+			codeSigningConfigArn = aws.StringValue(getCodeSigningConfigOutput.CodeSigningConfigArn)
+		}
+	}
+
+	d.Set("code_signing_config_arn", codeSigningConfigArn)
+
 	d.SetId(aws.StringValue(function.FunctionName))
+
+	if err := d.Set("architectures", flex.FlattenStringList(function.Architectures)); err != nil {
+		return fmt.Errorf("Error setting architectures for Lambda Function (%s): %w", d.Id(), err)
+	}
+
+	if err := d.Set("ephemeral_storage", flattenEphemeralStorage(function.EphemeralStorage)); err != nil {
+		return fmt.Errorf("error setting ephemeral_storage: (%s): %w", d.Id(), err)
+	}
 
 	return nil
 }

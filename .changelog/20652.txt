@@ -1,0 +1,11 @@
+```release-note:enhancement
+resource/aws_route53_zone: Add `arn` attribute
+```
+
+```release-note:enhancement
+resource/aws_route53_zone: Add plan time validation for `comment`
+```
+
+```release-note:enhancement
+data-source/aws_route53_zone: Add `arn` attribute
+```

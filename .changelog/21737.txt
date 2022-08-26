@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_batch_job_queue: Remove limit of 3 items from the `compute_environments` argument
+```

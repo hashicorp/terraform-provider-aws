@@ -1,0 +1,15 @@
+```release-note:enhancement
+resource/aws_route53_delegation_set: Add `arn` attribute
+```
+
+```release-note:enhancement
+resource/aws_route53_delegation_set: Add plan time validation for `reference_name`
+```
+
+```release-note:enhancement
+data-source/aws_route53_delegation_set: Add `arn` attribute
+```
+
+```release-note:bug
+resource/aws_route53_delegation_set: Properly remove from state when resource does not exist
+```
