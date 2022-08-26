@@ -369,7 +369,7 @@ func ResourceEndpoint() *schema.Resource {
 						},
 						"ssl_security_protocol": {
 							Type:         schema.TypeString,
-							Required:     true,
+							Optional:     true,
 							ValidateFunc: validation.StringInSlice(dms.SslSecurityProtocolValue_Values(), false),
 						},
 					},
