@@ -341,8 +341,9 @@ func ResourceEndpoint() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"auth_password": {
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:      schema.TypeString,
+							Optional:  true,
+							Sensitive: true,
 						},
 						"auth_type": {
 							Type:         schema.TypeString,
