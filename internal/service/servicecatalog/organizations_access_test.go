@@ -21,9 +21,9 @@ func TestAccServiceCatalogOrganizationsAccess_basic(t *testing.T) {
 			acctest.PreCheckOrganizationsEnabled(t)
 			acctest.PreCheckOrganizationManagementAccount(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, servicecatalog.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckOrganizationsAccessDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, servicecatalog.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOrganizationsAccessDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrganizationsAccessConfig_basic(),

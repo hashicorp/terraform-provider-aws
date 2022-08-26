@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -66,13 +67,13 @@ func resourceDashboardRead(d *schema.ResourceData, meta interface{}) error {
 
 	resp, err := conn.GetDashboard(&params)
 	if !d.IsNewResource() && IsDashboardNotFoundErr(err) {
-		names.LogNotFoundRemoveState(names.CloudWatch, names.ErrActionReading, ResDashboard, d.Id())
+		create.LogNotFoundRemoveState(names.CloudWatch, create.ErrActionReading, ResNameDashboard, d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return names.Error(names.CloudWatch, names.ErrActionReading, ResDashboard, d.Id(), err)
+		return create.Error(names.CloudWatch, create.ErrActionReading, ResNameDashboard, d.Id(), err)
 	}
 
 	d.Set("dashboard_arn", resp.DashboardArn)

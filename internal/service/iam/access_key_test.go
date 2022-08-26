@@ -25,10 +25,10 @@ func TestAccIAMAccessKey_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, iam.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAccessKeyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAccessKeyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccessKeyConfig_basic(rName),
@@ -59,10 +59,10 @@ func TestAccIAMAccessKey_encrypted(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, iam.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAccessKeyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAccessKeyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccessKeyConfig_encrypted(rName, testPubKey1),
@@ -93,10 +93,10 @@ func TestAccIAMAccessKey_status(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, iam.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAccessKeyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAccessKeyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccessKeyConfig_status(rName, iam.StatusTypeInactive),
@@ -137,7 +137,7 @@ func testAccCheckAccessKeyDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := tfiam.FindAccessKey(context.TODO(), conn, rs.Primary.Attributes["user"], rs.Primary.ID)
+		_, err := tfiam.FindAccessKey(context.Background(), conn, rs.Primary.Attributes["user"], rs.Primary.ID)
 		if tfresource.NotFound(err) {
 			return nil
 		}
@@ -163,7 +163,7 @@ func testAccCheckAccessKeyExists(n string, res *iam.AccessKeyMetadata) resource.
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
 
-		accessKey, err := tfiam.FindAccessKey(context.TODO(), conn, rs.Primary.Attributes["user"], rs.Primary.ID)
+		accessKey, err := tfiam.FindAccessKey(context.Background(), conn, rs.Primary.Attributes["user"], rs.Primary.ID)
 		if err != nil {
 			return err
 		}

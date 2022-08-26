@@ -32,6 +32,10 @@ func DataSourceOutpostAsset() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"rack_elevation": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
 			"rack_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -78,6 +82,7 @@ func DataSourceOutpostAssetRead(d *schema.ResourceData, meta interface{}) error 
 	d.Set("asset_id", asset.AssetId)
 	d.Set("asset_type", asset.AssetType)
 	d.Set("host_id", asset.ComputeAttributes.HostId)
+	d.Set("rack_elevation", asset.AssetLocation.RackElevation)
 	d.Set("rack_id", asset.RackId)
 	return nil
 }

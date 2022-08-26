@@ -49,3 +49,15 @@ func statusDocument(conn *ssm.SSM, name string) resource.StateRefreshFunc {
 		return output, aws.StringValue(output.Status), nil
 	}
 }
+
+func statusServiceSetting(conn *ssm.SSM, arn string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindServiceSettingByARN(conn, arn)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		return output, aws.StringValue(output.Status), nil
+	}
+}

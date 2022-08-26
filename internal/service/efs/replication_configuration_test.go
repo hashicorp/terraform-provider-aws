@@ -26,10 +26,10 @@ func TestAccEFSReplicationConfiguration_basic(t *testing.T) {
 	var providers []*schema.Provider
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, efs.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.CheckWithProviders(testAccCheckReplicationConfigurationDestroy, &providers),
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, efs.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckWithProviders(testAccCheckReplicationConfigurationDestroy, &providers),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationConfigurationConfig_basic(region),
@@ -66,7 +66,7 @@ func TestAccEFSReplicationConfiguration_disappears(t *testing.T) {
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, efs.EndpointsID),
-		ProviderFactories: acctest.FactoriesAlternate(&providers),
+		ProviderFactories: acctest.FactoriesAlternate(t, &providers),
 		CheckDestroy:      acctest.CheckWithProviders(testAccCheckReplicationConfigurationDestroy, &providers),
 		Steps: []resource.TestStep{
 			{
@@ -98,7 +98,7 @@ func TestAccEFSReplicationConfiguration_allAttributes(t *testing.T) {
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, efs.EndpointsID),
-		ProviderFactories: acctest.FactoriesAlternate(&providers),
+		ProviderFactories: acctest.FactoriesAlternate(t, &providers),
 		CheckDestroy:      acctest.CheckWithProviders(testAccCheckReplicationConfigurationDestroy, &providers),
 		Steps: []resource.TestStep{
 			{
@@ -137,11 +137,7 @@ func testAccCheckReplicationConfigurationExists(n string) resource.TestCheckFunc
 
 		_, err := tfefs.FindReplicationConfigurationByID(conn, rs.Primary.ID)
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 

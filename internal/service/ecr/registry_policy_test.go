@@ -34,10 +34,10 @@ func testAccRegistryPolicy_basic(t *testing.T) {
 	resourceName := "aws_ecr_registry_policy.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ecr.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRegistryPolicyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ecr.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRegistryPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRegistryPolicyConfig_basic(),
@@ -70,10 +70,10 @@ func testAccRegistryPolicy_disappears(t *testing.T) {
 	resourceName := "aws_ecr_registry_policy.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ecr.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRegistryPolicyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ecr.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRegistryPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRegistryPolicyConfig_basic(),

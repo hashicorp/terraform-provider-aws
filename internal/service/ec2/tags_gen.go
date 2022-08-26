@@ -140,7 +140,7 @@ func UpdateTagsWithContext(ctx context.Context, conn ec2iface.EC2API, identifier
 		_, err := conn.DeleteTagsWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
+			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -153,7 +153,7 @@ func UpdateTagsWithContext(ctx context.Context, conn ec2iface.EC2API, identifier
 		_, err := conn.CreateTagsWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
+			return fmt.Errorf("tagging resource (%s): %w", identifier, err)
 		}
 	}
 

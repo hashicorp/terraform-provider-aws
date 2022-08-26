@@ -17,7 +17,7 @@ import (
 )
 
 const (
-	ResDatabase = "Database"
+	ResNameDatabase = "Database"
 )
 
 func ResourceDatabase() *schema.Resource {

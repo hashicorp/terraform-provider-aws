@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -75,13 +76,13 @@ func resourceOriginAccessIdentityRead(d *schema.ResourceData, meta interface{}) 
 
 	resp, err := conn.GetCloudFrontOriginAccessIdentity(params)
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchCloudFrontOriginAccessIdentity) {
-		names.LogNotFoundRemoveState(names.CloudFront, names.ErrActionReading, ResOriginAccessIdentity, d.Id())
+		create.LogNotFoundRemoveState(names.CloudFront, create.ErrActionReading, ResNameOriginAccessIdentity, d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return names.Error(names.CloudFront, names.ErrActionReading, ResOriginAccessIdentity, d.Id(), err)
+		return create.Error(names.CloudFront, create.ErrActionReading, ResNameOriginAccessIdentity, d.Id(), err)
 	}
 
 	// Update attributes from DistributionConfig

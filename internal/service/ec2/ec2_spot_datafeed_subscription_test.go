@@ -33,10 +33,10 @@ func testAccSpotDatafeedSubscription_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckSpotDatafeedSubscription(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckSpotDatafeedSubscriptionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSpotDatafeedSubscription(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSpotDatafeedSubscriptionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSpotDatafeedSubscriptionConfig_basic(rName),
@@ -59,10 +59,10 @@ func testAccSpotDatafeedSubscription_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckSpotDatafeedSubscription(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckSpotDatafeedSubscriptionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSpotDatafeedSubscription(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSpotDatafeedSubscriptionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSpotDatafeedSubscriptionConfig_basic(rName),

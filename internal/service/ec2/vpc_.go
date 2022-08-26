@@ -82,14 +82,16 @@ func ResourceVPC() *schema.Resource {
 				Computed: true,
 			},
 			"enable_classiclink": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
+				Type:       schema.TypeBool,
+				Optional:   true,
+				Computed:   true,
+				Deprecated: `With the retirement of EC2-Classic the enable_classiclink attribute has been deprecated and will be removed in a future version.`,
 			},
 			"enable_classiclink_dns_support": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
+				Type:       schema.TypeBool,
+				Optional:   true,
+				Computed:   true,
+				Deprecated: `With the retirement of EC2-Classic the enable_classiclink_dns_support attribute has been deprecated and will be removed in a future version.`,
 			},
 			"enable_dns_hostnames": {
 				Type:     schema.TypeBool,
@@ -476,7 +478,15 @@ func resourceVPCDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting EC2 VPC (%s): %w", d.Id(), err)
+		return fmt.Errorf("deleting EC2 VPC (%s): %w", d.Id(), err)
+	}
+
+	_, err = tfresource.RetryUntilNotFound(vpcDeletedTimeout, func() (interface{}, error) {
+		return FindVPCByID(conn, d.Id())
+	})
+
+	if err != nil {
+		return fmt.Errorf("waiting for EC2 VPC (%s) delete: %w", d.Id(), err)
 	}
 
 	return nil

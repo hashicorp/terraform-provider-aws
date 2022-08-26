@@ -288,7 +288,7 @@ func resourceModelCreate(d *schema.ResourceData, meta interface{}) error {
 	}, "ValidationException")
 
 	if err != nil {
-		return fmt.Errorf("error creating SageMaker model: %w", err)
+		return fmt.Errorf("creating SageMaker model: %w", err)
 	}
 	d.SetId(name)
 
@@ -324,7 +324,7 @@ func resourceModelRead(d *schema.ResourceData, meta interface{}) error {
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("error reading SageMaker model %s: %w", d.Id(), err)
+		return fmt.Errorf("reading SageMaker model %s: %w", d.Id(), err)
 	}
 
 	arn := aws.StringValue(model.ModelArn)
@@ -334,35 +334,35 @@ func resourceModelRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("enable_network_isolation", model.EnableNetworkIsolation)
 
 	if err := d.Set("primary_container", flattenContainer(model.PrimaryContainer)); err != nil {
-		return fmt.Errorf("error setting primary_container: %w", err)
+		return fmt.Errorf("setting primary_container: %w", err)
 	}
 
 	if err := d.Set("container", flattenContainers(model.Containers)); err != nil {
-		return fmt.Errorf("error setting container: %w", err)
+		return fmt.Errorf("setting container: %w", err)
 	}
 
 	if err := d.Set("vpc_config", flattenVPCConfigResponse(model.VpcConfig)); err != nil {
-		return fmt.Errorf("error setting vpc_config: %w", err)
+		return fmt.Errorf("setting vpc_config: %w", err)
 	}
 
 	if err := d.Set("inference_execution_config", flattenModelInferenceExecutionConfig(model.InferenceExecutionConfig)); err != nil {
-		return fmt.Errorf("error setting inference_execution_config: %w", err)
+		return fmt.Errorf("setting inference_execution_config: %w", err)
 	}
 
 	tags, err := ListTags(conn, arn)
 	if err != nil {
-		return fmt.Errorf("error listing tags for SageMaker Model (%s): %w", d.Id(), err)
+		return fmt.Errorf("listing tags for SageMaker Model (%s): %w", d.Id(), err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return fmt.Errorf("setting tags: %w", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return fmt.Errorf("setting tags_all: %w", err)
 	}
 
 	return nil
@@ -388,7 +388,7 @@ func resourceModelUpdate(d *schema.ResourceData, meta interface{}) error {
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating SageMaker Model (%s) tags: %w", d.Id(), err)
+			return fmt.Errorf("updating SageMaker Model (%s) tags: %w", d.Id(), err)
 		}
 	}
 

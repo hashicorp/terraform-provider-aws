@@ -29,10 +29,10 @@ func TestAccLambdaFunctionURL_basic(t *testing.T) {
 	roleName := fmt.Sprintf("tf_acc_role_lambda_func_basic_%s", rString)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccFunctionURLPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, lambda.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckFunctionURLDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccFunctionURLPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFunctionURLDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFunctionURLConfig_basic(funcName, policyName, roleName),
@@ -66,10 +66,10 @@ func TestAccLambdaFunctionURL_Cors(t *testing.T) {
 	roleName := fmt.Sprintf("tf_acc_role_lambda_func_basic_%s", rString)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccFunctionURLPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, lambda.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckFunctionURLDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccFunctionURLPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFunctionURLDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFunctionURLConfig_cors(funcName, policyName, roleName),
@@ -131,10 +131,10 @@ func TestAccLambdaFunctionURL_Alias(t *testing.T) {
 	roleName := fmt.Sprintf("tf_acc_role_lambda_func_basic_%s", rString)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccFunctionURLPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, lambda.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckFunctionURLDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccFunctionURLPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFunctionURLDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFunctionURLConfig_alias(funcName, aliasName, policyName, roleName),
@@ -164,10 +164,10 @@ func TestAccLambdaFunctionURL_TwoURLs(t *testing.T) {
 	roleName := fmt.Sprintf("tf_acc_role_lambda_func_basic_%s", rString)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccFunctionURLPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, lambda.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckFunctionURLDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccFunctionURLPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFunctionURLDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFunctionURLConfig_two(funcName, aliasName, policyName, roleName),
@@ -224,7 +224,7 @@ func testAccCheckFunctionURLExists(n string, v *lambda.GetFunctionUrlConfigOutpu
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn
 
-		output, err := tflambda.FindFunctionURLByNameAndQualifier(context.TODO(), conn, name, qualifier)
+		output, err := tflambda.FindFunctionURLByNameAndQualifier(context.Background(), conn, name, qualifier)
 
 		if err != nil {
 			return err
@@ -250,7 +250,7 @@ func testAccCheckFunctionURLDestroy(s *terraform.State) error {
 			return err
 		}
 
-		_, err = tflambda.FindFunctionURLByNameAndQualifier(context.TODO(), conn, name, qualifier)
+		_, err = tflambda.FindFunctionURLByNameAndQualifier(context.Background(), conn, name, qualifier)
 
 		if tfresource.NotFound(err) {
 			continue

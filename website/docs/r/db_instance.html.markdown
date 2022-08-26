@@ -157,6 +157,7 @@ what IAM permissions are needed to allow Enhanced Monitoring for RDS Instances.
 * `name` - (Optional, **Deprecated** use `db_name` instead) The name of the database to create when the DB instance is created. If this parameter is not specified, no database is created in the DB instance. Note that this does not apply for Oracle or SQL Server engines. See the [AWS documentation](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/rds/create-db-instance.html) for more details on what applies for those engines. If you are providing an Oracle db name, it needs to be in all upper case. Cannot be specified for a replica.
 * `nchar_character_set_name` - (Optional, Forces new resource) The national character set is used in the NCHAR, NVARCHAR2, and NCLOB data types for Oracle instances. This can't be changed. See [Oracle Character Sets
 Supported in Amazon RDS](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Appendix.OracleCharacterSets.html).
+* `network_type` - (Optional) The network type of the DB instance. Valid values: `IPV4`, `DUAL`.
 * `option_group_name` - (Optional) Name of the DB option group to associate.
 * `parameter_group_name` - (Optional) Name of the DB parameter group to
 associate.
@@ -200,7 +201,7 @@ default is `false` if not specified.
 * `storage_type` - (Optional) One of "standard" (magnetic), "gp2" (general
 purpose SSD), or "io1" (provisioned IOPS SSD). The default is "io1" if `iops` is
 specified, "gp2" if not.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `timezone` - (Optional) Time zone of the DB instance. `timezone` is currently
 only supported by Microsoft SQL Server. The `timezone` can only be set on
 creation. See [MSSQL User
@@ -254,17 +255,6 @@ resource "aws_db_instance" "db" {
 
 This will not recreate the resource if the S3 object changes in some way.  It's only used to initialize the database
 
-### Timeouts
-
-`aws_db_instance` provides the following
-[Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
-
-- `create` - (Default `40 minutes`) Used for Creating Instances, Replicas, and
-restoring from Snapshots.
-- `update` - (Default `80 minutes`) Used for Database modifications.
-- `delete` - (Default `60 minutes`) Used for destroying databases. This includes
-the time required to take snapshots.
-
 [1]:
 https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Overview.Replication.html
 [2]:
@@ -300,12 +290,20 @@ in a Route 53 Alias record).
 * `resource_id` - The RDS Resource ID of this instance.
 * `status` - The RDS instance status.
 * `storage_encrypted` - Specifies whether the DB instance is encrypted.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `username` - The master username for the database.
 
 On Oracle and Microsoft SQL instances the following is exported additionally:
 
 * `character_set_name` - The character set (collation) used on Oracle and Microsoft SQL instances.
+
+## Timeouts
+
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+
+- `create` - (Default `40m`)
+- `update` - (Default `80m`)
+- `delete` - (Default `60m`)
 
 ## Import
 

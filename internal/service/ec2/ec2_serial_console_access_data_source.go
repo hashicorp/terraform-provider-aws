@@ -2,6 +2,7 @@ package ec2
 
 import (
 	"context"
+	"time"
 
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -12,6 +13,10 @@ import (
 func DataSourceSerialConsoleAccess() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceSerialConsoleAccessRead,
+
+		Timeouts: &schema.ResourceTimeout{
+			Read: schema.DefaultTimeout(20 * time.Minute),
+		},
 
 		Schema: map[string]*schema.Schema{
 			"enabled": {

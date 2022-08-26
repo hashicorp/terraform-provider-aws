@@ -18,13 +18,13 @@ func TestAccEKSAddonDataSource_basic(t *testing.T) {
 	dataSourceResourceName := "data.aws_eks_addon.test"
 	resourceName := "aws_eks_addon.test"
 	addonName := "vpc-cni"
-	ctx := context.TODO()
+	ctx := context.Background()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t); testAccPreCheckAddon(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, eks.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAddonDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t); testAccPreCheckAddon(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, eks.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAddonDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAddonDataSourceConfig_basic(rName, addonName),

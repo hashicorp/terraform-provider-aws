@@ -19,10 +19,10 @@ func TestAccNetworkManagerGlobalNetwork_basic(t *testing.T) {
 	resourceName := "aws_networkmanager_global_network.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, networkmanager.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckGlobalNetworkDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, networkmanager.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGlobalNetworkDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGlobalNetworkConfig_basic(),
@@ -46,10 +46,10 @@ func TestAccNetworkManagerGlobalNetwork_disappears(t *testing.T) {
 	resourceName := "aws_networkmanager_global_network.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, networkmanager.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckGlobalNetworkDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, networkmanager.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGlobalNetworkDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGlobalNetworkConfig_basic(),
@@ -67,10 +67,10 @@ func TestAccNetworkManagerGlobalNetwork_tags(t *testing.T) {
 	resourceName := "aws_networkmanager_global_network.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, networkmanager.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckGlobalNetworkDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, networkmanager.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGlobalNetworkDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGlobalNetworkConfig_tags1("key1", "value1"),
@@ -110,10 +110,10 @@ func TestAccNetworkManagerGlobalNetwork_description(t *testing.T) {
 	resourceName := "aws_networkmanager_global_network.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, networkmanager.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckGlobalNetworkDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, networkmanager.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGlobalNetworkDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGlobalNetworkConfig_description("description1"),
@@ -146,7 +146,7 @@ func testAccCheckGlobalNetworkDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := tfnetworkmanager.FindGlobalNetworkByID(context.TODO(), conn, rs.Primary.ID)
+		_, err := tfnetworkmanager.FindGlobalNetworkByID(context.Background(), conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -175,13 +175,9 @@ func testAccCheckGlobalNetworkExists(n string) resource.TestCheckFunc {
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerConn
 
-		_, err := tfnetworkmanager.FindGlobalNetworkByID(context.TODO(), conn, rs.Primary.ID)
+		_, err := tfnetworkmanager.FindGlobalNetworkByID(context.Background(), conn, rs.Primary.ID)
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 

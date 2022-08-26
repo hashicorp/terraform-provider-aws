@@ -62,3 +62,9 @@ In addition to all arguments above, the following attributes are exported:
 * `tags` - Key-value tags for the EC2 Transit Gateway
 * `transit_gateway_cidr_blocks` - The list of associated CIDR blocks
 * `vpn_ecmp_support` - Whether VPN Equal Cost Multipath Protocol support is enabled
+
+## Timeouts
+
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+
+- `read` - (Default `20m`)

@@ -32,4 +32,5 @@ In addition to all arguments above, the following attributes are exported:
 * `description` - Provides the description of the DB subnet group.
 * `status` - Provides the status of the DB subnet group.
 * `subnet_ids` - Contains a list of subnet identifiers.
-* `vpc_id` - Provides the VPC ID of the subnet group.
+* `supported_network_types` - The network type of the DB subnet group.
+* `vpc_id` - Provides the VPC ID of the DB subnet group.

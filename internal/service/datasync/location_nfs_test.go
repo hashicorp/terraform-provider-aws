@@ -22,10 +22,10 @@ func TestAccDataSyncLocationNFS_basic(t *testing.T) {
 	resourceName := "aws_datasync_location_nfs.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, datasync.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckLocationNFSDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, datasync.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLocationNFSDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLocationNFSConfig_basic(rName),
@@ -58,10 +58,10 @@ func TestAccDataSyncLocationNFS_mountOptions(t *testing.T) {
 	resourceName := "aws_datasync_location_nfs.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, datasync.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckLocationNFSDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, datasync.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLocationNFSDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLocationNFSConfig_mountOptions(rName, "NFS4_0"),
@@ -93,10 +93,10 @@ func TestAccDataSyncLocationNFS_disappears(t *testing.T) {
 	resourceName := "aws_datasync_location_nfs.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, datasync.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckLocationNFSDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, datasync.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLocationNFSDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLocationNFSConfig_basic(rName),
@@ -116,10 +116,10 @@ func TestAccDataSyncLocationNFS_AgentARNs_multiple(t *testing.T) {
 	resourceName := "aws_datasync_location_nfs.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, datasync.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckLocationNFSDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, datasync.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLocationNFSDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLocationNFSConfig_agentARNsMultiple(rName),
@@ -145,10 +145,10 @@ func TestAccDataSyncLocationNFS_subdirectory(t *testing.T) {
 	resourceName := "aws_datasync_location_nfs.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, datasync.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckLocationNFSDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, datasync.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLocationNFSDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLocationNFSConfig_subdirectory(rName, "/subdirectory1/"),
@@ -180,10 +180,10 @@ func TestAccDataSyncLocationNFS_tags(t *testing.T) {
 	resourceName := "aws_datasync_location_nfs.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, datasync.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckLocationNFSDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, datasync.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLocationNFSDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLocationNFSConfig_tags1(rName, "key1", "value1"),

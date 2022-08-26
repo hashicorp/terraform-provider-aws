@@ -11,9 +11,9 @@ import (
 
 func TestAccELBV2HostedZoneIDDataSource_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, elbv2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccHostedZoneIDDataSourceConfig_basic,
@@ -47,7 +47,7 @@ const testAccHostedZoneIDDataSourceConfig_basic = `
 data "aws_lb_hosted_zone_id" "main" {}
 `
 
-//lintignore:AWSAT003
+// lintignore:AWSAT003
 const testAccHostedZoneIDDataSourceConfig_explicitRegion = `
 data "aws_lb_hosted_zone_id" "regional" {
   region = "eu-west-1"
@@ -60,7 +60,7 @@ data "aws_lb_hosted_zone_id" "network" {
 }
 `
 
-//lintignore:AWSAT003
+// lintignore:AWSAT003
 const testAccHostedZoneIDDataSourceConfig_explicitNetworkRegion = `
 data "aws_lb_hosted_zone_id" "network-regional" {
   region             = "eu-west-1"

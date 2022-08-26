@@ -36,7 +36,7 @@ func sweepCertificateAuthorities(region string) error {
 			log.Printf("[WARN] Skipping ACM PCA Certificate Authorities sweep for %s: %s", region, err)
 			return nil
 		}
-		return fmt.Errorf("Error retrieving ACM PCA Certificate Authorities: %w", err)
+		return fmt.Errorf("retrieving ACM PCA Certificate Authorities: %w", err)
 	}
 	if len(certificateAuthorities) == 0 {
 		log.Print("[DEBUG] No ACM PCA Certificate Authorities to sweep")

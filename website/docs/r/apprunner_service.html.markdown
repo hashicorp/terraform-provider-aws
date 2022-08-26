@@ -67,7 +67,7 @@ resource "aws_apprunner_service" "example" {
       image_identifier      = "public.ecr.aws/aws-containers/hello-app-runner:latest"
       image_repository_type = "ECR_PUBLIC"
     }
-    auto_deployment_enabled = false
+    auto_deployments_enabled = false
   }
 
   tags = {
@@ -95,7 +95,7 @@ resource "aws_apprunner_service" "example" {
       image_identifier      = "public.ecr.aws/aws-containers/hello-app-runner:latest"
       image_repository_type = "ECR_PUBLIC"
     }
-    auto_deployment_enabled = false
+    auto_deployments_enabled = false
   }
 
   tags = {
@@ -127,7 +127,7 @@ The following arguments are optional:
 * `instance_configuration` - The runtime configuration of instances (scaling units) of the App Runner service. See [Instance Configuration](#instance-configuration) below for more details.
 * `network_configuration` - Configuration settings related to network traffic of the web application that the App Runner service runs. See [Network Configuration](#network-configuration) below for more details.
 * `observability_configuration` - The observability configuration of your service. See [Observability Configuration](#observability-configuration) below for more details.
-* `tags` - Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### Encryption Configuration
 
@@ -248,7 +248,7 @@ In addition to all arguments above, the following attributes are exported:
 * `service_id` - An alphanumeric ID that App Runner generated for this service. Unique within the AWS Region.
 * `service_url` - A subdomain URL that App Runner generated for this service. You can use this URL to access your service web application.
 * `status` - The current state of the App Runner service.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 

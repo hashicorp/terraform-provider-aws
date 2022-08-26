@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
@@ -330,8 +331,8 @@ func resourceExperienceDelete(ctx context.Context, d *schema.ResourceData, meta 
 
 func waitExperienceCreated(ctx context.Context, conn *kendra.Client, id, indexId string, timeout time.Duration) error {
 	stateConf := &resource.StateChangeConf{
-		Pending:                   []string{string(types.ExperienceStatusCreating)},
-		Target:                    []string{string(types.ExperienceStatusActive)},
+		Pending:                   enum.Slice(types.ExperienceStatusCreating),
+		Target:                    enum.Slice(types.ExperienceStatusActive),
 		Refresh:                   statusExperience(ctx, conn, id, indexId),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
@@ -351,7 +352,7 @@ func waitExperienceCreated(ctx context.Context, conn *kendra.Client, id, indexId
 func waitExperienceUpdated(ctx context.Context, conn *kendra.Client, id, indexId string, timeout time.Duration) error {
 	stateConf := &resource.StateChangeConf{
 		Pending:                   []string{},
-		Target:                    []string{string(types.ExperienceStatusActive)},
+		Target:                    enum.Slice(types.ExperienceStatusActive),
 		Refresh:                   statusExperience(ctx, conn, id, indexId),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
@@ -370,7 +371,7 @@ func waitExperienceUpdated(ctx context.Context, conn *kendra.Client, id, indexId
 
 func waitExperienceDeleted(ctx context.Context, conn *kendra.Client, id, indexId string, timeout time.Duration) error {
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{string(types.ExperienceStatusDeleting)},
+		Pending: enum.Slice(types.ExperienceStatusDeleting),
 		Target:  []string{},
 		Refresh: statusExperience(ctx, conn, id, indexId),
 		Timeout: timeout,

@@ -23,7 +23,9 @@ import (
 
 // This "should" be defined by the AWS Go SDK v2, but currently isn't.
 const (
+	ComprehendEndpointID     = "comprehend"
 	KendraEndpointID         = "kendra"
+	RolesAnywhereEndpointID  = "rolesanywhere"
 	Route53DomainsEndpointID = "route53domains"
 	TranscribeEndpointID     = "transcribe"
 )

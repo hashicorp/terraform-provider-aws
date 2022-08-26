@@ -8,7 +8,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/networkmanager"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -38,10 +37,10 @@ func testAccTransitGatewayRegistration_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, networkmanager.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTransitGatewayRegistrationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, networkmanager.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTransitGatewayRegistrationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTransitGatewayRegistrationConfig_basic(rName),
@@ -63,10 +62,10 @@ func testAccTransitGatewayRegistration_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, networkmanager.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTransitGatewayRegistrationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, networkmanager.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTransitGatewayRegistrationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTransitGatewayRegistrationConfig_basic(rName),
@@ -86,10 +85,10 @@ func testAccTransitGatewayRegistration_Disappears_transitGateway(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, networkmanager.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTransitGatewayRegistrationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, networkmanager.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTransitGatewayRegistrationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTransitGatewayRegistrationConfig_basic(rName),
@@ -106,13 +105,12 @@ func testAccTransitGatewayRegistration_Disappears_transitGateway(t *testing.T) {
 func testAccTransitGatewayRegistration_crossRegion(t *testing.T) {
 	resourceName := "aws_networkmanager_transit_gateway_registration.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	var providers []*schema.Provider
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckMultipleRegion(t, 2) },
-		ErrorCheck:        acctest.ErrorCheck(t, networkmanager.EndpointsID),
-		ProviderFactories: acctest.FactoriesAlternate(&providers),
-		CheckDestroy:      testAccCheckTransitGatewayRegistrationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckMultipleRegion(t, 2) },
+		ErrorCheck:               acctest.ErrorCheck(t, networkmanager.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
+		CheckDestroy:             testAccCheckTransitGatewayRegistrationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTransitGatewayRegistrationConfig_crossRegion(rName),
@@ -143,7 +141,7 @@ func testAccCheckTransitGatewayRegistrationDestroy(s *terraform.State) error {
 			return err
 		}
 
-		_, err = tfnetworkmanager.FindTransitGatewayRegistrationByTwoPartKey(context.TODO(), conn, globalNetworkID, transitGatewayARN)
+		_, err = tfnetworkmanager.FindTransitGatewayRegistrationByTwoPartKey(context.Background(), conn, globalNetworkID, transitGatewayARN)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -178,13 +176,9 @@ func testAccCheckTransitGatewayRegistrationExists(n string) resource.TestCheckFu
 			return err
 		}
 
-		_, err = tfnetworkmanager.FindTransitGatewayRegistrationByTwoPartKey(context.TODO(), conn, globalNetworkID, transitGatewayARN)
+		_, err = tfnetworkmanager.FindTransitGatewayRegistrationByTwoPartKey(context.Background(), conn, globalNetworkID, transitGatewayARN)
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 func testAccTransitGatewayRegistrationConfig_basic(rName string) string {

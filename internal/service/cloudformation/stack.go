@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -220,24 +221,24 @@ func resourceStackRead(d *schema.ResourceData, meta interface{}) error {
 	}
 	resp, err := conn.DescribeStacks(input)
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, "ValidationError") {
-		names.LogNotFoundRemoveState(names.CloudFormation, names.ErrActionReading, ResStack, d.Id())
+		create.LogNotFoundRemoveState(names.CloudFormation, create.ErrActionReading, ResNameStack, d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return names.Error(names.CloudFormation, names.ErrActionReading, ResStack, d.Id(), err)
+		return create.Error(names.CloudFormation, create.ErrActionReading, ResNameStack, d.Id(), err)
 	}
 
 	stacks := resp.Stacks
 	if !d.IsNewResource() && len(stacks) < 1 {
-		names.LogNotFoundRemoveState(names.CloudFormation, names.ErrActionReading, ResStack, d.Id())
+		create.LogNotFoundRemoveState(names.CloudFormation, create.ErrActionReading, ResNameStack, d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if d.IsNewResource() && len(stacks) < 1 {
-		return names.Error(names.CloudFormation, names.ErrActionReading, ResStack, d.Id(), errors.New("not found after creation"))
+		return create.Error(names.CloudFormation, create.ErrActionReading, ResNameStack, d.Id(), errors.New("not found after creation"))
 	}
 
 	stack := stacks[0]
@@ -248,7 +249,7 @@ func resourceStackRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.IsNewResource() && aws.StringValue(stack.StackStatus) == cloudformation.StackStatusDeleteComplete {
-		return names.Error(names.CloudFormation, names.ErrActionReading, ResStack, d.Id(), errors.New("status delete complete after creation"))
+		return create.Error(names.CloudFormation, create.ErrActionReading, ResNameStack, d.Id(), errors.New("status delete complete after creation"))
 	}
 
 	tInput := cloudformation.GetTemplateInput{

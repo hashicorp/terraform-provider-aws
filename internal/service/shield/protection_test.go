@@ -27,9 +27,9 @@ func TestAccShieldProtection_globalAccelerator(t *testing.T) {
 			acctest.PreCheckPartitionHasService(shield.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, shield.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckProtectionDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, shield.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProtectionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProtectionConfig_globalAccelerator(rName),
@@ -58,9 +58,9 @@ func TestAccShieldProtection_elasticIPAddress(t *testing.T) {
 			acctest.PreCheckPartitionHasService(shield.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, shield.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckProtectionDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, shield.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProtectionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProtectionConfig_elasticIPAddress(rName),
@@ -89,9 +89,9 @@ func TestAccShieldProtection_disappears(t *testing.T) {
 			acctest.PreCheckPartitionHasService(shield.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, shield.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckProtectionDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, shield.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProtectionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProtectionConfig_elasticIPAddress(rName),
@@ -115,9 +115,9 @@ func TestAccShieldProtection_alb(t *testing.T) {
 			acctest.PreCheckPartitionHasService(shield.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, shield.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckProtectionDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, shield.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProtectionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProtectionConfig_alb(rName),
@@ -146,9 +146,9 @@ func TestAccShieldProtection_elb(t *testing.T) {
 			acctest.PreCheckPartitionHasService(shield.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, shield.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckProtectionDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, shield.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProtectionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProtectionConfig_elb(rName),
@@ -178,9 +178,9 @@ func TestAccShieldProtection_cloudFront(t *testing.T) {
 			acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, shield.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckProtectionDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, shield.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProtectionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProtectionConfig_cloudFront(rName, testAccProtectionCloudFrontRetainConfig()),
@@ -210,9 +210,9 @@ func TestAccShieldProtection_CloudFront_tags(t *testing.T) {
 			acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, shield.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckProtectionDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, shield.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProtectionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProtectionConfig_cloudFrontTags1(rName, testAccProtectionCloudFrontRetainConfig(), "Key1", "value1"),
@@ -261,9 +261,9 @@ func TestAccShieldProtection_route53(t *testing.T) {
 			acctest.PreCheckPartitionHasService(shield.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, shield.EndpointsID, "route53"),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckProtectionDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, shield.EndpointsID, "route53"),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProtectionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProtectionConfig_route53HostedZone(rName),
@@ -325,11 +325,7 @@ func testAccCheckProtectionExists(name string) resource.TestCheckFunc {
 
 		_, err := conn.DescribeProtection(input)
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 

@@ -23,10 +23,10 @@ func TestAccSignerSigningProfile_basic(t *testing.T) {
 	var conf signer.GetSigningProfileOutput
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckSingerSigningProfile(t, "AWSLambda-SHA384-ECDSA") },
-		ErrorCheck:        acctest.ErrorCheck(t, signer.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckSigningProfileDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSingerSigningProfile(t, "AWSLambda-SHA384-ECDSA") },
+		ErrorCheck:               acctest.ErrorCheck(t, signer.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSigningProfileDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSigningProfileConfig_providedName(profileName),
@@ -54,10 +54,10 @@ func TestAccSignerSigningProfile_generateNameWithNamePrefix(t *testing.T) {
 	var conf signer.GetSigningProfileOutput
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckSingerSigningProfile(t, "AWSLambda-SHA384-ECDSA") },
-		ErrorCheck:        acctest.ErrorCheck(t, signer.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckSigningProfileDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSingerSigningProfile(t, "AWSLambda-SHA384-ECDSA") },
+		ErrorCheck:               acctest.ErrorCheck(t, signer.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSigningProfileDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSigningProfileConfig_basic(namePrefix),
@@ -76,10 +76,10 @@ func TestAccSignerSigningProfile_generateName(t *testing.T) {
 	var conf signer.GetSigningProfileOutput
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckSingerSigningProfile(t, "AWSLambda-SHA384-ECDSA") },
-		ErrorCheck:        acctest.ErrorCheck(t, signer.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckSigningProfileDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSingerSigningProfile(t, "AWSLambda-SHA384-ECDSA") },
+		ErrorCheck:               acctest.ErrorCheck(t, signer.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSigningProfileDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSigningProfileConfig_generateName(),
@@ -99,10 +99,10 @@ func TestAccSignerSigningProfile_tags(t *testing.T) {
 	var conf signer.GetSigningProfileOutput
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckSingerSigningProfile(t, "AWSLambda-SHA384-ECDSA") },
-		ErrorCheck:        acctest.ErrorCheck(t, signer.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckSigningProfileDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSingerSigningProfile(t, "AWSLambda-SHA384-ECDSA") },
+		ErrorCheck:               acctest.ErrorCheck(t, signer.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSigningProfileDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSigningProfileConfig_tags(namePrefix),
@@ -130,10 +130,10 @@ func TestAccSignerSigningProfile_signatureValidityPeriod(t *testing.T) {
 	var conf signer.GetSigningProfileOutput
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckSingerSigningProfile(t, "AWSLambda-SHA384-ECDSA") },
-		ErrorCheck:        acctest.ErrorCheck(t, signer.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckSigningProfileDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSingerSigningProfile(t, "AWSLambda-SHA384-ECDSA") },
+		ErrorCheck:               acctest.ErrorCheck(t, signer.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSigningProfileDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSigningProfileConfig_svp(namePrefix),

@@ -1,8 +1,8 @@
 package cloudwatch
 
 const (
-	ResDashboard   = "Dashboard"
-	ResMetricAlarm = "Metric Alarm"
+	ResNameDashboard   = "Dashboard"
+	ResNameMetricAlarm = "Metric Alarm"
 )
 
 const (

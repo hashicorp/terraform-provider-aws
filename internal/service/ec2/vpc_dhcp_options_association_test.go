@@ -19,10 +19,10 @@ func TestAccVPCDHCPOptionsAssociation_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckVPCDHCPOptionsAssociationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVPCDHCPOptionsAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCDHCPOptionsAssociationConfig_basic(rName),
@@ -45,10 +45,10 @@ func TestAccVPCDHCPOptionsAssociation_Disappears_vpc(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckVPCDHCPOptionsAssociationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVPCDHCPOptionsAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCDHCPOptionsAssociationConfig_basic(rName),
@@ -67,10 +67,10 @@ func TestAccVPCDHCPOptionsAssociation_Disappears_dhcp(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckVPCDHCPOptionsAssociationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVPCDHCPOptionsAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCDHCPOptionsAssociationConfig_basic(rName),
@@ -89,10 +89,10 @@ func TestAccVPCDHCPOptionsAssociation_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckVPCDHCPOptionsAssociationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVPCDHCPOptionsAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCDHCPOptionsAssociationConfig_basic(rName),
@@ -111,10 +111,10 @@ func TestAccVPCDHCPOptionsAssociation_default(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckVPCDHCPOptionsAssociationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVPCDHCPOptionsAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCDHCPOptionsAssociationConfig_default(rName),
@@ -192,13 +192,7 @@ func testAccCheckVPCDHCPOptionsAssociationExist(n string) resource.TestCheckFunc
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
-		err = tfec2.FindVPCDHCPOptionsAssociation(conn, vpcID, dhcpOptionsID)
-
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return tfec2.FindVPCDHCPOptionsAssociation(conn, vpcID, dhcpOptionsID)
 	}
 }
 

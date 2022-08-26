@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-//Flattens security group identifiers into a []string, where the elements returned are the GroupIDs
+// Flattens security group identifiers into a []string, where the elements returned are the GroupIDs
 func FlattenGroupIdentifiers(dtos []*ec2.GroupIdentifier) []string {
 	ids := make([]string, 0, len(dtos))
 	for _, v := range dtos {

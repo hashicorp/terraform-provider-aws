@@ -27,13 +27,35 @@ func FindDevEndpointByName(conn *glue.Glue, name string) (*glue.DevEndpoint, err
 	}
 
 	if output == nil || output.DevEndpoint == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.DevEndpoint, nil
+}
+
+func FindJobByName(conn *glue.Glue, name string) (*glue.Job, error) {
+	input := &glue.GetJobInput{
+		JobName: aws.String(name),
+	}
+
+	output, err := conn.GetJob(input)
+
+	if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
 		return nil, &resource.NotFoundError{
-			Message:     "Empty result",
+			LastError:   err,
 			LastRequest: input,
 		}
 	}
 
-	return output.DevEndpoint, nil
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.Job == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.Job, nil
 }
 
 // FindTableByName returns the Table corresponding to the specified name.

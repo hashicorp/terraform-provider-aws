@@ -3,6 +3,7 @@ package ec2
 import (
 	"fmt"
 	"sort"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
@@ -16,6 +17,10 @@ import (
 func DataSourceEBSSnapshot() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourceEBSSnapshotRead,
+
+		Timeouts: &schema.ResourceTimeout{
+			Read: schema.DefaultTimeout(20 * time.Minute),
+		},
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
