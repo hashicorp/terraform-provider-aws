@@ -16,6 +16,10 @@ func expandAdvancedSecurityOptions(m []interface{}) *opensearchservice.AdvancedS
 		config.Enabled = aws.Bool(advancedSecurityEnabled.(bool))
 
 		if advancedSecurityEnabled.(bool) {
+			if v, ok := group["anonymous_auth_enabled"].(bool); ok {
+				config.AnonymousAuthEnabled = aws.Bool(v)
+			}
+
 			if v, ok := group["internal_user_database_enabled"].(bool); ok {
 				config.InternalUserDatabaseEnabled = aws.Bool(v)
 			}
@@ -173,7 +177,12 @@ func flattenAdvancedSecurityOptions(advancedSecurityOptions *opensearchservice.A
 
 	m := map[string]interface{}{}
 	m["enabled"] = aws.BoolValue(advancedSecurityOptions.Enabled)
-	if aws.BoolValue(advancedSecurityOptions.Enabled) {
+
+	if aws.BoolValue(advancedSecurityOptions.Enabled) && advancedSecurityOptions.AnonymousAuthEnabled != nil {
+		m["anonymous_auth_enabled"] = aws.BoolValue(advancedSecurityOptions.AnonymousAuthEnabled)
+	}
+
+	if aws.BoolValue(advancedSecurityOptions.Enabled) && advancedSecurityOptions.InternalUserDatabaseEnabled != nil {
 		m["internal_user_database_enabled"] = aws.BoolValue(advancedSecurityOptions.InternalUserDatabaseEnabled)
 	}
 
