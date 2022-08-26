@@ -8,5 +8,5 @@ import (
 
 // ServiceData is data about a service.
 type ServiceData interface {
-	DataSourceTypes(context.Context) (map[string]provider.DataSourceType, error)
+	DataSources(context.Context) (map[string]provider.DataSourceType, error)
 }

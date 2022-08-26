@@ -315,7 +315,7 @@ func (p *fwprovider) GetDataSources(ctx context.Context) (map[string]provider.Da
 	// TODO Better error messages.
 	// TODO Wrap the returned type to add standard context, logging etc.
 	for serviceID, data := range p.Primary.Services(ctx) {
-		dsTypes, err := data.DataSourceTypes(ctx)
+		dsTypes, err := data.DataSources(ctx)
 
 		if err != nil {
 			diags.AddError(fmt.Sprintf("data sources for service (%s)", serviceID), err.Error())
