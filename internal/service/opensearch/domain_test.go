@@ -2952,7 +2952,7 @@ resource "aws_opensearch_domain" "test" {
 
   advanced_security_options {
     enabled                        = %[2]t
-	anonymous_auth_enabled         = true
+    anonymous_auth_enabled         = true
     internal_user_database_enabled = true
     master_user_options {
       master_user_name     = "testmasteruser"
