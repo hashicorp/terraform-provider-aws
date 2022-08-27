@@ -88,7 +88,7 @@ func ResourceFirewallPolicy() *schema.Resource {
 											Schema: map[string]*schema.Schema{
 												"action": {
 													Type:         schema.TypeString,
-													Required:     true,
+													Optional:     true,
 													ValidateFunc: validation.StringInSlice(networkfirewall.OverrideAction_Values(), false),
 												},
 											},
