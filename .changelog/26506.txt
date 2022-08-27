@@ -1,0 +1,4 @@
+```release-note:enhancement
+resource/aws_wafv2_web_acl: Add `oversize_handling` attribute as part of `body` attribute.
+resource/aws_wafv2_rule_group: Add `oversize_handling` attribute as part of `body` attribute.
+```
