@@ -502,17 +502,17 @@ func expandJSONBody(l []interface{}) *wafv2.JsonBody {
 
 	m := l[0].(map[string]interface{})
 
-	b := wafv2.JsonBody{
-		MatchPattern:     expandJSONMatchPattern(m["match_pattern"].([]interface{})),
+	jsonBody := &wafv2.JsonBody{
 		MatchScope:       aws.String(m["match_scope"].(string)),
 		OversizeHandling: aws.String(m["oversize_handling"].(string)),
+		MatchPattern:     expandJSONMatchPattern(m["match_pattern"].([]interface{})),
 	}
 
 	if v, ok := m["invalid_fallback_behavior"].(string); ok && v != "" {
-		b.InvalidFallbackBehavior = aws.String(v)
+		jsonBody.InvalidFallbackBehavior = aws.String(v)
 	}
 
-	return &b
+	return jsonBody
 }
 
 func expandJSONMatchPattern(l []interface{}) *wafv2.JsonMatchPattern {
@@ -521,17 +521,17 @@ func expandJSONMatchPattern(l []interface{}) *wafv2.JsonMatchPattern {
 	}
 
 	m := l[0].(map[string]interface{})
-	p := wafv2.JsonMatchPattern{}
+	jsonMatchPattern := &wafv2.JsonMatchPattern{}
 
 	if v, ok := m["all"]; ok && len(v.([]interface{})) > 0 {
-		p.All = &wafv2.All{}
+		jsonMatchPattern.All = &wafv2.All{}
 	}
 
 	if v, ok := m["included_paths"]; ok && len(v.([]interface{})) > 0 {
-		p.IncludedPaths = flex.ExpandStringList(v.([]interface{}))
+		jsonMatchPattern.IncludedPaths = flex.ExpandStringList(v.([]interface{}))
 	}
 
-	return &p
+	return jsonMatchPattern
 }
 
 func expandSingleHeader(l []interface{}) *wafv2.SingleHeader {
@@ -1123,14 +1123,9 @@ func flattenJSONMatchPattern(p *wafv2.JsonMatchPattern) []interface{} {
 		return []interface{}{}
 	}
 
-	m := map[string]interface{}{}
-
-	if p.All != nil {
-		m["all"] = []interface{}{map[string]interface{}{}}
-	}
-
-	if p.IncludedPaths != nil {
-		m["included_paths"] = flex.FlattenStringList(p.IncludedPaths)
+	m := map[string]interface{}{
+		"all":            p.All,
+		"included_paths": flex.FlattenStringList(p.IncludedPaths),
 	}
 
 	return []interface{}{m}
