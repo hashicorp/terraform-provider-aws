@@ -392,7 +392,7 @@ func expandFieldToMatch(l []interface{}) *wafv2.FieldToMatch {
 	}
 
 	if v, ok := m["body"]; ok && len(v.([]interface{})) > 0 {
-		f.Body = &wafv2.Body{}
+		f.Body = expandBody(m["body"].([]interface{}))
 	}
 
 	if v, ok := m["method"]; ok && len(v.([]interface{})) > 0 {
@@ -631,6 +631,18 @@ func expandXSSMatchStatement(l []interface{}) *wafv2.XssMatchStatement {
 	return &wafv2.XssMatchStatement{
 		FieldToMatch:        expandFieldToMatch(m["field_to_match"].([]interface{})),
 		TextTransformations: expandTextTransformations(m["text_transformation"].(*schema.Set).List()),
+	}
+}
+
+func expandBody(l []interface{}) *wafv2.Body {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	return &wafv2.Body{
+		OversizeHandling: aws.String(m["oversize_handling"].(string)),
 	}
 }
 
@@ -925,7 +937,7 @@ func flattenFieldToMatch(f *wafv2.FieldToMatch) interface{} {
 	}
 
 	if f.Body != nil {
-		m["body"] = make([]map[string]interface{}, 1)
+		m["body"] = flattenBody(f.Body)
 	}
 
 	if f.Method != nil {
@@ -1140,6 +1152,18 @@ func flattenVisibilityConfig(config *wafv2.VisibilityConfig) interface{} {
 		"cloudwatch_metrics_enabled": aws.BoolValue(config.CloudWatchMetricsEnabled),
 		"metric_name":                aws.StringValue(config.MetricName),
 		"sampled_requests_enabled":   aws.BoolValue(config.SampledRequestsEnabled),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenBody(s *wafv2.Body) interface{} {
+	if s == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"oversize_handling": aws.StringValue(s.OversizeHandling),
 	}
 
 	return []interface{}{m}

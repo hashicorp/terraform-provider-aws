@@ -333,7 +333,7 @@ func fieldToMatchBaseSchema() *schema.Resource {
 	return &schema.Resource{
 		Schema: map[string]*schema.Schema{
 			"all_query_arguments": emptySchema(),
-			"body":                emptySchema(),
+			"body":                bodySchema(),
 			"method":              emptySchema(),
 			"query_string":        emptySchema(),
 			"single_header": {
@@ -612,6 +612,23 @@ func customResponseBodySchema() *schema.Schema {
 					Type:         schema.TypeString,
 					Required:     true,
 					ValidateFunc: validation.StringInSlice(wafv2.ResponseContentType_Values(), false),
+				},
+			},
+		},
+	}
+}
+
+func bodySchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"oversize_handling": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringInSlice(wafv2.OversizeHandling_Values(), false),
 				},
 			},
 		},

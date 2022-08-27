@@ -145,7 +145,9 @@ resource "aws_wafv2_rule_group" "example" {
           sqli_match_statement {
 
             field_to_match {
-              body {}
+              body {
+                oversize_handling = "MATCH"
+              }
             }
 
             text_transformation {
@@ -496,7 +498,7 @@ The `field_to_match` block supports the following arguments:
 An empty configuration block `{}` should be used when specifying `all_query_arguments`, `body`, `method`, or `query_string` attributes.
 
 * `all_query_arguments` - (Optional) Inspect all query arguments.
-* `body` - (Optional) Inspect the request body, which immediately follows the request headers.
+* `body` - (Optional) Inspect the request body, which immediately follows the request headers. See [Body](#body) below for details.
 * `method` - (Optional) Inspect the HTTP method. The method indicates the type of operation that the request is asking the origin to perform.
 * `query_string` - (Optional) Inspect the query string. This is the part of a URL that appears after a `?` character, if any.
 * `single_header` - (Optional) Inspect a single header. See [Single Header](#single-header) below for details.
@@ -523,6 +525,14 @@ The `ip_set_forwarded_ip_config` block supports the following arguments:
 * `fallback_behavior` - (Required) - The match status to assign to the web request if the request doesn't have a valid IP address in the specified position. Valid values include: `MATCH` or `NO_MATCH`.
 * `header_name` - (Required) - The name of the HTTP header to use for the IP address.
 * `position` - (Required) - The position in the header to search for the IP address. Valid values include: `FIRST`, `LAST`, or `ANY`. If `ANY` is specified and the header contains more than 10 IP addresses, AWS WAFv2 inspects the last 10.
+
+### Body
+
+Inspect the request body, which immediately follows the request headers.
+
+The `body` block supports the following arguments:
+
+* `oversize_handling` - (Required) Oversize handling tells AWS WAF what to do with a web request when the request component that the rule inspects is over the limits. Valid values include the following: `CONTINUE`, `MATCH`, `NO_MATCH`. See the AWS [documentation](https://docs.aws.amazon.com/waf/latest/developerguide/waf-rule-statement-oversize-handling.html) for more information.
 
 ### Single Header
 
