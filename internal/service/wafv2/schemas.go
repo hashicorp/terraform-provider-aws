@@ -334,6 +334,7 @@ func fieldToMatchBaseSchema() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"all_query_arguments": emptySchema(),
 			"body":                bodySchema(),
+			"cookies":             cookiesSchema(),
 			"method":              emptySchema(),
 			"query_string":        emptySchema(),
 			"single_header": {
@@ -630,6 +631,95 @@ func bodySchema() *schema.Schema {
 					Optional:     true,
 					ValidateFunc: validation.StringInSlice(wafv2.OversizeHandling_Values(), false),
 				},
+			},
+		},
+	}
+}
+
+func cookiesSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"match_scope": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringInSlice(wafv2.MapMatchScope_Values(), false),
+				},
+				"match_pattern": {
+					Type:     schema.TypeList,
+					Required: true,
+					MaxItems: 1,
+					MinItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"all_match_pattern":              allMatchPatternSchema(),
+							"included_cookies_match_pattern": includedCookiesMatchPatternSchema(),
+							"excluded_cookies_match_pattern": excludedCookiesMatchPatternSchema(),
+						},
+					},
+				},
+				"oversize_handling": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringInSlice(wafv2.OversizeHandling_Values(), false),
+				},
+			},
+		},
+	}
+}
+
+func allMatchPatternSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"all": emptySchema(),
+			},
+		},
+	}
+}
+
+func cookiesMatchPatternBaseSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Required: true,
+		MinItems: 1,
+		MaxItems: 199,
+		Elem: &schema.Schema{
+			Type: schema.TypeString,
+			ValidateFunc: validation.All(
+				validation.StringLenBetween(1, 60),
+				validation.StringMatch(regexp.MustCompile(`.*\S.*`), ""),
+			),
+		},
+	}
+}
+
+func includedCookiesMatchPatternSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"included_cookies": cookiesMatchPatternBaseSchema(),
+			},
+		},
+	}
+}
+
+func excludedCookiesMatchPatternSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"excluded_cookies": cookiesMatchPatternBaseSchema(),
 			},
 		},
 	}

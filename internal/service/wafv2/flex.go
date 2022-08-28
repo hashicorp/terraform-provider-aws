@@ -395,6 +395,10 @@ func expandFieldToMatch(l []interface{}) *wafv2.FieldToMatch {
 		f.Body = expandBody(m["body"].([]interface{}))
 	}
 
+	if v, ok := m["cookies"]; ok && len(v.([]interface{})) > 0 {
+		f.Cookies = expandCookies(m["cookies"].([]interface{}))
+	}
+
 	if v, ok := m["method"]; ok && len(v.([]interface{})) > 0 {
 		f.Method = &wafv2.Method{}
 	}
@@ -644,6 +648,43 @@ func expandBody(l []interface{}) *wafv2.Body {
 	return &wafv2.Body{
 		OversizeHandling: aws.String(m["oversize_handling"].(string)),
 	}
+}
+
+func expandCookies(l []interface{}) *wafv2.Cookies {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	return &wafv2.Cookies{
+		MatchPattern:     expandCookieMatchPattern(m["match_pattern"].([]interface{})),
+		MatchScope:       aws.String(m["match_scope"].(string)),
+		OversizeHandling: aws.String(m["oversize_handling"].(string)),
+	}
+}
+
+func expandCookieMatchPattern(l []interface{}) *wafv2.CookieMatchPattern {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+	f := &wafv2.CookieMatchPattern{}
+
+	if v, ok := m["all_match_pattern"]; ok && len(v.([]interface{})) > 0 {
+		f.All = &wafv2.All{}
+	}
+
+	if v, ok := m["included_cookies_match_pattern"]; ok && len(v.([]interface{})) > 0 {
+		f.IncludedCookies = flex.ExpandStringList(m["included_cookies_match_pattern"].([]interface{}))
+	}
+
+	if v, ok := m["excluded_cookies_match_pattern"]; ok && len(v.([]interface{})) > 0 {
+		f.ExcludedCookies = flex.ExpandStringList(m["excluded_cookies_match_pattern"].([]interface{}))
+	}
+
+	return f
 }
 
 func flattenRules(r []*wafv2.Rule) interface{} {
@@ -940,6 +981,10 @@ func flattenFieldToMatch(f *wafv2.FieldToMatch) interface{} {
 		m["body"] = flattenBody(f.Body)
 	}
 
+	if f.Cookies != nil {
+		m["cookies"] = flattenCookies(f.Cookies)
+	}
+
 	if f.Method != nil {
 		m["method"] = make([]map[string]interface{}, 1)
 	}
@@ -1164,6 +1209,78 @@ func flattenBody(s *wafv2.Body) interface{} {
 
 	m := map[string]interface{}{
 		"oversize_handling": aws.StringValue(s.OversizeHandling),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenCookies(s *wafv2.Cookies) interface{} {
+	if s == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"match_scope":       aws.StringValue(s.MatchScope),
+		"match_pattern":     flattenCookieMatchPattern(s.MatchPattern),
+		"oversize_handling": aws.StringValue(s.OversizeHandling),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenCookieMatchPattern(s *wafv2.CookieMatchPattern) interface{} {
+	if s == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{}
+
+	if s.All != nil {
+		m["all_match_pattern"] = flattenAllMatchPattern(s.All)
+	}
+
+	if s.ExcludedCookies != nil {
+		m["included_cookies_match_pattern"] = flattenExcludedCookiesMatchPattern(s.ExcludedCookies)
+	}
+
+	if s.IncludedCookies != nil {
+		m["included_cookies_match_pattern"] = flattenIncludedCookiesMatchPattern(s.IncludedCookies)
+	}
+
+	return []interface{}{m}
+}
+
+func flattenAllMatchPattern(s *wafv2.All) interface{} {
+	if s == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"all": make([]map[string]interface{}, 1),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenExcludedCookiesMatchPattern(s []*string) interface{} {
+	if s == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"excluded_cookies": flex.FlattenStringList(s),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenIncludedCookiesMatchPattern(s []*string) interface{} {
+	if s == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"included_cookies": flex.FlattenStringList(s),
 	}
 
 	return []interface{}{m}
