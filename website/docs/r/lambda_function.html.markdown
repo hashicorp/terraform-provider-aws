@@ -43,6 +43,12 @@ resource "aws_iam_role" "iam_for_lambda" {
 EOF
 }
 
+data "archive_file" "lambda" {
+  type        = "zip"
+  source_file = "lambda.js"
+  output_path = "lambda.zip"
+}
+
 resource "aws_lambda_function" "test_lambda" {
   # If the file is not in the current working directory you will need to include a 
   # path.module in the filename.
@@ -52,9 +58,13 @@ resource "aws_lambda_function" "test_lambda" {
   handler       = "index.test"
 
   # The filebase64sha256() function is available in Terraform 0.11.12 and later
+  # If the file is zipped by an external tool, use the base64sha256 function:
   # For Terraform 0.11.11 and earlier, use the base64sha256() function and the file() function:
   # source_code_hash = "${base64sha256(file("lambda_function_payload.zip"))}"
-  source_code_hash = filebase64sha256("lambda_function_payload.zip")
+  # For 0.11.12 and later, use the filebase64sha256() function:
+  # source_code_hash = filebase64sha256("lambda_function_payload.zip")
+  # If using the data source above to zip the file, use:
+  source_code_hash = data.archive_file.lambda.output_base64sha256
 
   runtime = "nodejs12.x"
 
