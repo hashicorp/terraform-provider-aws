@@ -21,3 +21,7 @@ resource/aws_db_instance: With the retirement of EC2-Classic no new RDS DB Insta
 ```release-note:note
 resource/aws_redshift_cluster: With the retirement of EC2-Classic no new Redshift Clusters can be created referencing Redshift Security Groups
 ```
+
+```release-note:note
+resource/aws_elasticache_cluster: With the retirement of EC2-Classic no new ElastiCache Clusters can be created referencing ElastiCache Security Groups
+```

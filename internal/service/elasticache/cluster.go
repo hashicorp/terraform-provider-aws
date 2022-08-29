@@ -319,12 +319,15 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
+	if v, ok := d.GetOk("security_group_names"); ok && v.(*schema.Set).Len() > 0 {
+		return errors.New(`with the retirement of EC2-Classic no new ElastiCache Clusters can be created referencing ElastiCache Security Groups`)
+	}
+
 	req := &elasticache.CreateCacheClusterInput{}
 
 	if v, ok := d.GetOk("replication_group_id"); ok {
 		req.ReplicationGroupId = aws.String(v.(string))
 	} else {
-		req.CacheSecurityGroupNames = flex.ExpandStringSet(d.Get("security_group_names").(*schema.Set))
 		req.SecurityGroupIds = flex.ExpandStringSet(d.Get("security_group_ids").(*schema.Set))
 
 		if len(tags) > 0 {
