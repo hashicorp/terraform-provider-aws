@@ -43,7 +43,7 @@ const (
 	InstanceStatusConfiguringEnhancedMonitoring                = "configuring-enhanced-monitoring"
 	InstanceStatusConfiguringIAMDatabaseAuth                   = "configuring-iam-database-auth"
 	InstanceStatusConfiguringLogExports                        = "configuring-log-exports"
-	InstanceStatusConvertingToVpc                              = "converting-to-vpc"
+	InstanceStatusConvertingToVPC                              = "converting-to-vpc"
 	InstanceStatusCreating                                     = "creating"
 	InstanceStatusDeleting                                     = "deleting"
 	InstanceStatusFailed                                       = "failed"
