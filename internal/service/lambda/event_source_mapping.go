@@ -521,8 +521,9 @@ func resourceEventSourceMappingRead(d *schema.ResourceData, meta interface{}) er
 	if eventSourceMappingConfiguration.SelfManagedKafkaEventSourceConfig != nil {
 		if err := d.Set("self_managed_kafka_configuration", flattenSelfManagedKafkaConfig(eventSourceMappingConfiguration.SelfManagedKafkaEventSourceConfig)); err != nil {
 			return fmt.Errorf("error setting self_managed_kafka_configuration: %w", err)
-	}
+		}
 	} else {
+		d.Set("self_managed_kafka_configuration", nil)
 	}
 	d.Set("starting_position", eventSourceMappingConfiguration.StartingPosition)
 	if eventSourceMappingConfiguration.StartingPositionTimestamp != nil {
