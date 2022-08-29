@@ -1,6 +1,7 @@
 package ec2
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"net"
@@ -131,6 +132,10 @@ func resourceEIPCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+
+	if _, ok := d.GetOk("vpc"); !ok {
+		return errors.New(`with the retirement of EC2-Classic no new non-VPC EC2 EIPs can be created`)
+	}
 
 	// By default, we're not in a VPC
 	domainOpt := ""
