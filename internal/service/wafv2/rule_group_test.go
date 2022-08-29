@@ -415,6 +415,10 @@ func TestAccWAFV2RuleGroup_ByteMatchStatement_fieldToMatch(t *testing.T) {
 				),
 			},
 			{
+				Config:      testAccRuleGroupConfig_byteMatchStatementFieldToMatchBodyInvalidConfiguration(ruleGroupName),
+				ExpectError: regexp.MustCompile(`argument "oversize_handling" is required`),
+			},
+			{
 				Config: testAccRuleGroupConfig_byteMatchStatementFieldToMatchCookiesMatchPatternAll(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(resourceName, &v),
@@ -504,6 +508,10 @@ func TestAccWAFV2RuleGroup_ByteMatchStatement_fieldToMatch(t *testing.T) {
 						"statement.0.byte_match_statement.0.field_to_match.0.uri_path.#":                                   "0",
 					}),
 				),
+			},
+			{
+				Config:      testAccRuleGroupConfig_byteMatchStatementFieldToMatchCookiesInvalidConfiguration(ruleGroupName),
+				ExpectError: regexp.MustCompile(`argument "oversize_handling" is required`),
 			},
 			{
 				Config: testAccRuleGroupConfig_byteMatchStatementFieldToMatchHeadersMatchPatternAll(ruleGroupName),
@@ -597,6 +605,10 @@ func TestAccWAFV2RuleGroup_ByteMatchStatement_fieldToMatch(t *testing.T) {
 				),
 			},
 			{
+				Config:      testAccRuleGroupConfig_byteMatchStatementFieldToMatchHeadersInvalidConfiguration(ruleGroupName),
+				ExpectError: regexp.MustCompile(`argument "oversize_handling" is required`),
+			},
+			{
 				Config: testAccRuleGroupConfig_byteMatchStatementFieldToMatchJsonBodyMatchPatternAll(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(resourceName, &v),
@@ -681,6 +693,10 @@ func TestAccWAFV2RuleGroup_ByteMatchStatement_fieldToMatch(t *testing.T) {
 						"statement.0.byte_match_statement.0.field_to_match.0.uri_path.#":                                   "0",
 					}),
 				),
+			},
+			{
+				Config:      testAccRuleGroupConfig_byteMatchStatementFieldToMatchJsonBodyMatchInvalidConfiguration(ruleGroupName),
+				ExpectError: regexp.MustCompile(`argument "match_scope" is required`),
 			},
 			{
 				Config: testAccRuleGroupConfig_byteMatchStatementFieldToMatchMethod(ruleGroupName),
@@ -2726,6 +2742,105 @@ resource "aws_wafv2_rule_group" "test" {
 `, name)
 }
 
+func testAccRuleGroupConfig_byteMatchStatementFieldToMatchBodyInvalidConfiguration(name string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_rule_group" "test" {
+  capacity = 15
+  name     = "%s"
+  scope    = "REGIONAL"
+
+  rule {
+    name     = "rule-1"
+    priority = 1
+
+    action {
+      allow {}
+    }
+
+    statement {
+      byte_match_statement {
+        positional_constraint = "CONTAINS"
+        search_string         = "word"
+
+        field_to_match {
+          body {}
+        }
+
+        text_transformation {
+          priority = 1
+          type     = "NONE"
+        }
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = false
+      metric_name                = "friendly-rule-metric-name"
+      sampled_requests_enabled   = false
+    }
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
+  }
+}
+`, name)
+}
+
+func testAccRuleGroupConfig_byteMatchStatementFieldToMatchCookiesInvalidConfiguration(name string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_rule_group" "test" {
+  capacity = 15
+  name     = "%s"
+  scope    = "REGIONAL"
+
+  rule {
+    name     = "rule-1"
+    priority = 1
+
+    action {
+      allow {}
+    }
+
+    statement {
+      byte_match_statement {
+        positional_constraint = "CONTAINS"
+        search_string         = "word"
+
+        field_to_match {
+          cookies {
+			match_scope = "ALL"
+            match_pattern {
+				all {}
+			}
+		  }
+        }
+
+        text_transformation {
+          priority = 1
+          type     = "NONE"
+        }
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = false
+      metric_name                = "friendly-rule-metric-name"
+      sampled_requests_enabled   = false
+    }
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
+  }
+}
+`, name)
+}
+
 func testAccRuleGroupConfig_byteMatchStatementFieldToMatchCookiesMatchPatternAll(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_rule_group" "test" {
@@ -2885,6 +3000,58 @@ resource "aws_wafv2_rule_group" "test" {
 `, name)
 }
 
+func testAccRuleGroupConfig_byteMatchStatementFieldToMatchHeadersInvalidConfiguration(name string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_rule_group" "test" {
+  capacity = 50
+  name     = "%s"
+  scope    = "REGIONAL"
+
+  rule {
+    name     = "rule-1"
+    priority = 1
+
+    action {
+      allow {}
+    }
+
+    statement {
+      byte_match_statement {
+        positional_constraint = "CONTAINS"
+        search_string         = "word"
+
+        field_to_match {
+          headers {
+			match_scope = "ALL"
+            match_pattern {
+				all {}
+			}
+		  }
+        }
+
+        text_transformation {
+          priority = 1
+          type     = "NONE"
+        }
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = false
+      metric_name                = "friendly-rule-metric-name"
+      sampled_requests_enabled   = false
+    }
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
+  }
+}
+`, name)
+}
+
 func testAccRuleGroupConfig_byteMatchStatementFieldToMatchHeadersMatchPatternAll(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_rule_group" "test" {
@@ -3016,6 +3183,58 @@ resource "aws_wafv2_rule_group" "test" {
 			match_scope = "ALL"
             match_pattern {
 				excluded_headers = ["session", "session-id"]
+			}
+            oversize_handling = "MATCH"
+		  }
+        }
+
+        text_transformation {
+          priority = 1
+          type     = "NONE"
+        }
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = false
+      metric_name                = "friendly-rule-metric-name"
+      sampled_requests_enabled   = false
+    }
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
+  }
+}
+`, name)
+}
+
+func testAccRuleGroupConfig_byteMatchStatementFieldToMatchJsonBodyMatchInvalidConfiguration(name string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_rule_group" "test" {
+  capacity = 50
+  name     = "%s"
+  scope    = "REGIONAL"
+
+  rule {
+    name     = "rule-1"
+    priority = 1
+
+    action {
+      allow {}
+    }
+
+    statement {
+      byte_match_statement {
+        positional_constraint = "CONTAINS"
+        search_string         = "word"
+
+        field_to_match {
+          json_body {
+            match_pattern {
+				all {}
 			}
             oversize_handling = "MATCH"
 		  }
