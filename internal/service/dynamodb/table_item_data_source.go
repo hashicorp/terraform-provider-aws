@@ -29,8 +29,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 	"log"
+	"strings"
 )
 
 // TIP: ==== FILE STRUCTURE ====
@@ -72,18 +75,27 @@ func DataSourceTableItem() *schema.Resource {
 		// For more about schema options, visit
 		// https://pkg.go.dev/github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema#Schema
 		Schema: map[string]*schema.Schema{
-			"table_name": { // TIP: Add all your arguments and attributes.
+			"expression_attribute_names": {
+				Type:     schema.TypeMap,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"item": {
 				Type:     schema.TypeString,
-				Required: true,
+				Computed: true,
 			},
 			"key": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validateTableItem,
 			},
-			"item": {
+			"projection_expression": {
 				Type:     schema.TypeString,
-				Computed: true,
+				Optional: true,
+			},
+			"table_name": { // TIP: Add all your arguments and attributes.
+				Type:     schema.TypeString,
+				Required: true,
 			},
 		},
 	}
@@ -125,10 +137,19 @@ func dataSourceTableItemRead(ctx context.Context, d *schema.ResourceData, meta i
 		Key:            key,
 	}
 
+	if v, ok := d.GetOk("expression_attribute_names"); ok && len(v.(map[string]interface{})) > 0 {
+		in.ExpressionAttributeNames = flex.ExpandStringMap(v.(map[string]interface{}))
+	}
+	if v, ok := d.GetOk("projection_expression"); ok {
+		in.ProjectionExpression = aws.String(v.(string))
+	}
+
 	out, err := conn.GetItem(in)
 
+	id := buildTableItemDataSourceID(tableName, key)
+
 	if err != nil {
-		return create.DiagError(names.DynamoDB, create.ErrActionReading, DSNameTableItem, "todo", err)
+		return create.DiagError(names.DynamoDB, create.ErrActionReading, DSNameTableItem, id, err)
 	}
 
 	// TIP: -- 3. Set the ID
@@ -139,7 +160,8 @@ func dataSourceTableItemRead(ctx context.Context, d *schema.ResourceData, meta i
 	// If this data source is a companion to a resource, often both will use the
 	// same ID. Otherwise, the ID will be a unique identifier such as an AWS
 	// identifier, ARN, or name.
-	d.SetId("d")
+
+	d.SetId(id)
 
 	// TIP: -- 4. Set the arguments and attributes
 	//
@@ -157,11 +179,22 @@ func dataSourceTableItemRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	itemAttrs, err := flattenTableItemAttributes(out.Item)
 
-	//if err != nil {
-	//	return err
-	//}
+	if err != nil {
+		return create.DiagError(names.DynamoDB, create.ErrActionReading, DSNameTableItem, id, err)
+	}
 	d.Set("item", itemAttrs)
 
 	// TIP: -- 6. Return nil
 	return nil
+}
+
+func buildTableItemDataSourceID(tableName string, attrs map[string]*dynamodb.AttributeValue) string {
+	id := []string{tableName}
+
+	for key, element := range attrs {
+		id = append(id, key, verify.Base64Encode(element.B))
+		id = append(id, aws.StringValue(element.S))
+		id = append(id, aws.StringValue(element.N))
+	}
+	return strings.Join(id, "|")
 }

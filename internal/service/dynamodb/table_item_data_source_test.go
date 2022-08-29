@@ -30,10 +30,6 @@ import (
 	// The provider linter wants your imports to be in two groups: first,
 	// standard library (i.e., "fmt" or "strings"), second, everything else.
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	tfdynamodb "github.com/hashicorp/terraform-provider-aws/internal/service/dynamodb"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/dynamodb"
@@ -69,7 +65,6 @@ func TestAccDynamoDBTableItemDataSource_basic(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	//var tableitem dynamodb.DescribeTableItemResponse
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_dynamodb_table_item.test"
 	hashKey := "hashKey"
@@ -133,36 +128,4 @@ data "aws_dynamodb_table_item" "test" {
 KEY
 }
 `, tableName, hashKey, hashKey, item, key)
-}
-
-func testAccCheckTableItemDataSourceDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBConn
-
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_dynamodb_table_item" {
-			continue
-		}
-
-		attrs := rs.Primary.Attributes
-		attributes, err := tfdynamodb.ExpandTableItemAttributes(attrs["item"])
-		if err != nil {
-			return err
-		}
-
-		key := tfdynamodb.BuildTableItemqueryKey(attributes, attrs["hash_key"], attrs["range_key"])
-
-		_, err = tfdynamodb.FindTableItem(conn, attrs["table_name"], key)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("DynamoDB table item %s still exists.", rs.Primary.ID)
-	}
-
-	return nil
 }
