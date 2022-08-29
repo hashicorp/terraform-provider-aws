@@ -672,16 +672,16 @@ func expandCookieMatchPattern(l []interface{}) *wafv2.CookieMatchPattern {
 	m := l[0].(map[string]interface{})
 	f := &wafv2.CookieMatchPattern{}
 
-	if v, ok := m["all_match_pattern"]; ok && len(v.([]interface{})) > 0 {
+	if v, ok := m["all"]; ok && len(v.([]interface{})) > 0 {
 		f.All = &wafv2.All{}
 	}
 
-	if v, ok := m["included_cookies_match_pattern"]; ok && len(v.([]interface{})) > 0 {
-		f.IncludedCookies = flex.ExpandStringList(m["included_cookies_match_pattern"].([]interface{}))
+	if v, ok := m["included_cookies"]; ok && len(v.([]interface{})) > 0 {
+		f.IncludedCookies = flex.ExpandStringList(m["included_cookies"].([]interface{}))
 	}
 
-	if v, ok := m["excluded_cookies_match_pattern"]; ok && len(v.([]interface{})) > 0 {
-		f.ExcludedCookies = flex.ExpandStringList(m["excluded_cookies_match_pattern"].([]interface{}))
+	if v, ok := m["excluded_cookies"]; ok && len(v.([]interface{})) > 0 {
+		f.ExcludedCookies = flex.ExpandStringList(m["excluded_cookies"].([]interface{}))
 	}
 
 	return f
@@ -1236,51 +1236,15 @@ func flattenCookieMatchPattern(s *wafv2.CookieMatchPattern) interface{} {
 	m := map[string]interface{}{}
 
 	if s.All != nil {
-		m["all_match_pattern"] = flattenAllMatchPattern(s.All)
+		m["all"] = make([]map[string]interface{}, 1)
 	}
 
 	if s.ExcludedCookies != nil {
-		m["included_cookies_match_pattern"] = flattenExcludedCookiesMatchPattern(s.ExcludedCookies)
+		m["excluded_cookies"] = flex.FlattenStringList(s.ExcludedCookies)
 	}
 
 	if s.IncludedCookies != nil {
-		m["included_cookies_match_pattern"] = flattenIncludedCookiesMatchPattern(s.IncludedCookies)
-	}
-
-	return []interface{}{m}
-}
-
-func flattenAllMatchPattern(s *wafv2.All) interface{} {
-	if s == nil {
-		return []interface{}{}
-	}
-
-	m := map[string]interface{}{
-		"all": make([]map[string]interface{}, 1),
-	}
-
-	return []interface{}{m}
-}
-
-func flattenExcludedCookiesMatchPattern(s []*string) interface{} {
-	if s == nil {
-		return []interface{}{}
-	}
-
-	m := map[string]interface{}{
-		"excluded_cookies": flex.FlattenStringList(s),
-	}
-
-	return []interface{}{m}
-}
-
-func flattenIncludedCookiesMatchPattern(s []*string) interface{} {
-	if s == nil {
-		return []interface{}{}
-	}
-
-	m := map[string]interface{}{
-		"included_cookies": flex.FlattenStringList(s),
+		m["included_cookies"] = flex.FlattenStringList(s.IncludedCookies)
 	}
 
 	return []interface{}{m}

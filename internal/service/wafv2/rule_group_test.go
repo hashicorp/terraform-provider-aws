@@ -356,54 +356,6 @@ func TestAccWAFV2RuleGroup_byteMatchStatement(t *testing.T) {
 	})
 }
 
-func TestAccWAFV2RuleGroup_ByteMatchStatement_fieldToMatch2(t *testing.T) {
-	var v wafv2.RuleGroup
-	ruleGroupName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_wafv2_rule_group.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckScopeRegional(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, wafv2.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRuleGroupDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccRuleGroupConfig_byteMatchStatementFieldToMatchCookiesMatchPatternIncludedCookies(ruleGroupName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRuleGroupExists(resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"statement.#":                                         "1",
-						"statement.0.byte_match_statement.#":                  "1",
-						"statement.0.byte_match_statement.0.field_to_match.#": "1",
-						"statement.0.byte_match_statement.0.field_to_match.0.all_query_arguments.#":                                                       "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.body.#":                                                                      "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.cookies.#":                                                                   "1",
-						"statement.0.byte_match_statement.0.field_to_match.0.cookies.0.oversize_handling":                                                 "MATCH",
-						"statement.0.byte_match_statement.0.field_to_match.0.cookies.0.match_scope":                                                       "ALL",
-						"statement.0.byte_match_statement.0.field_to_match.0.cookies.0.match_pattern.#":                                                   "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.cookies.0.match_pattern.0.included_cookies_match_pattern.#":                  "1",
-						"statement.0.byte_match_statement.0.field_to_match.0.cookies.0.match_pattern.0.included_cookies_match_pattern.0.included_cookies": "session",
-						"statement.0.byte_match_statement.0.field_to_match.0.cookies.0.match_pattern.0.excluded_cookies_match_pattern.#":                  "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.method.#":                                                                    "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.query_string.#":                                                              "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.single_header.#":                                                             "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.single_query_argument.#":                                                     "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.uri_path.#":                                                                  "0",
-					}),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateIdFunc: testAccRuleGroupImportStateIdFunc(resourceName),
-			},
-		},
-	})
-}
-
 func TestAccWAFV2RuleGroup_ByteMatchStatement_fieldToMatch(t *testing.T) {
 	var v wafv2.RuleGroup
 	ruleGroupName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -445,26 +397,6 @@ func TestAccWAFV2RuleGroup_ByteMatchStatement_fieldToMatch(t *testing.T) {
 						"statement.#":                                         "1",
 						"statement.0.byte_match_statement.#":                  "1",
 						"statement.0.byte_match_statement.0.field_to_match.#": "1",
-						"statement.0.byte_match_statement.0.field_to_match.0.all_query_arguments.#":   "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.body.#":                  "1",
-						"statement.0.byte_match_statement.0.field_to_match.0.method.#":                "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.query_string.#":          "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.single_header.#":         "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.single_query_argument.#": "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.uri_path.#":              "0",
-					}),
-				),
-			},
-			{
-				Config: testAccRuleGroupConfig_byteMatchStatementFieldToMatchBodyWithOversizeHandling(ruleGroupName, "CONTINUE"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRuleGroupExists(resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"statement.#":                                         "1",
-						"statement.0.byte_match_statement.#":                  "1",
-						"statement.0.byte_match_statement.0.field_to_match.#": "1",
 						"statement.0.byte_match_statement.0.field_to_match.0.all_query_arguments.#":    "0",
 						"statement.0.byte_match_statement.0.field_to_match.0.body.#":                   "1",
 						"statement.0.byte_match_statement.0.field_to_match.0.body.0.oversize_handling": "CONTINUE",
@@ -486,21 +418,78 @@ func TestAccWAFV2RuleGroup_ByteMatchStatement_fieldToMatch(t *testing.T) {
 						"statement.#":                                         "1",
 						"statement.0.byte_match_statement.#":                  "1",
 						"statement.0.byte_match_statement.0.field_to_match.#": "1",
-						"statement.0.byte_match_statement.0.field_to_match.0.all_query_arguments.#":                                      "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.body.#":                                                     "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.cookies.#":                                                  "1",
-						"statement.0.byte_match_statement.0.field_to_match.0.cookies.0.oversize_handling":                                "MATCH",
-						"statement.0.byte_match_statement.0.field_to_match.0.cookies.0.match_scope":                                      "ALL",
-						"statement.0.byte_match_statement.0.field_to_match.0.cookies.0.match_pattern.#":                                  "1",
-						"statement.0.byte_match_statement.0.field_to_match.0.cookies.0.match_pattern.0.all_match_pattern.#":              "1",
-						"statement.0.byte_match_statement.0.field_to_match.0.cookies.0.match_pattern.0.all_match_pattern.0.all.#":        "1",
-						"statement.0.byte_match_statement.0.field_to_match.0.cookies.0.match_pattern.0.included_cookies_match_pattern.#": "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.cookies.0.match_pattern.0.excluded_cookies_match_pattern.#": "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.method.#":                                                   "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.query_string.#":                                             "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.single_header.#":                                            "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.single_query_argument.#":                                    "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.uri_path.#":                                                 "0",
+						"statement.0.byte_match_statement.0.field_to_match.0.all_query_arguments.#":                        "0",
+						"statement.0.byte_match_statement.0.field_to_match.0.body.#":                                       "0",
+						"statement.0.byte_match_statement.0.field_to_match.0.cookies.#":                                    "1",
+						"statement.0.byte_match_statement.0.field_to_match.0.cookies.0.oversize_handling":                  "MATCH",
+						"statement.0.byte_match_statement.0.field_to_match.0.cookies.0.match_scope":                        "ALL",
+						"statement.0.byte_match_statement.0.field_to_match.0.cookies.0.match_pattern.#":                    "1",
+						"statement.0.byte_match_statement.0.field_to_match.0.cookies.0.match_pattern.0.all.#":              "1",
+						"statement.0.byte_match_statement.0.field_to_match.0.cookies.0.match_pattern.0.included_cookies.#": "0",
+						"statement.0.byte_match_statement.0.field_to_match.0.cookies.0.match_pattern.0.excluded_cookies.#": "0",
+						"statement.0.byte_match_statement.0.field_to_match.0.method.#":                                     "0",
+						"statement.0.byte_match_statement.0.field_to_match.0.query_string.#":                               "0",
+						"statement.0.byte_match_statement.0.field_to_match.0.single_header.#":                              "0",
+						"statement.0.byte_match_statement.0.field_to_match.0.single_query_argument.#":                      "0",
+						"statement.0.byte_match_statement.0.field_to_match.0.uri_path.#":                                   "0",
+					}),
+				),
+			},
+			{
+				Config: testAccRuleGroupConfig_byteMatchStatementFieldToMatchCookiesMatchPatternIncludedCookies(ruleGroupName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRuleGroupExists(resourceName, &v),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						"statement.#":                                         "1",
+						"statement.0.byte_match_statement.#":                  "1",
+						"statement.0.byte_match_statement.0.field_to_match.#": "1",
+						"statement.0.byte_match_statement.0.field_to_match.0.all_query_arguments.#":                        "0",
+						"statement.0.byte_match_statement.0.field_to_match.0.body.#":                                       "0",
+						"statement.0.byte_match_statement.0.field_to_match.0.cookies.#":                                    "1",
+						"statement.0.byte_match_statement.0.field_to_match.0.cookies.0.oversize_handling":                  "MATCH",
+						"statement.0.byte_match_statement.0.field_to_match.0.cookies.0.match_scope":                        "ALL",
+						"statement.0.byte_match_statement.0.field_to_match.0.cookies.0.match_pattern.#":                    "1",
+						"statement.0.byte_match_statement.0.field_to_match.0.cookies.0.match_pattern.0.all.#":              "0",
+						"statement.0.byte_match_statement.0.field_to_match.0.cookies.0.match_pattern.0.included_cookies.#": "2",
+						"statement.0.byte_match_statement.0.field_to_match.0.cookies.0.match_pattern.0.included_cookies.0": "session",
+						"statement.0.byte_match_statement.0.field_to_match.0.cookies.0.match_pattern.0.included_cookies.1": "session-id",
+						"statement.0.byte_match_statement.0.field_to_match.0.cookies.0.match_pattern.0.excluded_cookies.#": "0",
+						"statement.0.byte_match_statement.0.field_to_match.0.method.#":                                     "0",
+						"statement.0.byte_match_statement.0.field_to_match.0.query_string.#":                               "0",
+						"statement.0.byte_match_statement.0.field_to_match.0.single_header.#":                              "0",
+						"statement.0.byte_match_statement.0.field_to_match.0.single_query_argument.#":                      "0",
+						"statement.0.byte_match_statement.0.field_to_match.0.uri_path.#":                                   "0",
+					}),
+				),
+			},
+			{
+				Config: testAccRuleGroupConfig_byteMatchStatementFieldToMatchCookiesMatchPatternExcludedCookies(ruleGroupName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRuleGroupExists(resourceName, &v),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						"statement.#":                                         "1",
+						"statement.0.byte_match_statement.#":                  "1",
+						"statement.0.byte_match_statement.0.field_to_match.#": "1",
+						"statement.0.byte_match_statement.0.field_to_match.0.all_query_arguments.#":                        "0",
+						"statement.0.byte_match_statement.0.field_to_match.0.body.#":                                       "0",
+						"statement.0.byte_match_statement.0.field_to_match.0.cookies.#":                                    "1",
+						"statement.0.byte_match_statement.0.field_to_match.0.cookies.0.oversize_handling":                  "MATCH",
+						"statement.0.byte_match_statement.0.field_to_match.0.cookies.0.match_scope":                        "ALL",
+						"statement.0.byte_match_statement.0.field_to_match.0.cookies.0.match_pattern.#":                    "1",
+						"statement.0.byte_match_statement.0.field_to_match.0.cookies.0.match_pattern.0.all.#":              "0",
+						"statement.0.byte_match_statement.0.field_to_match.0.cookies.0.match_pattern.0.excluded_cookies.#": "2",
+						"statement.0.byte_match_statement.0.field_to_match.0.cookies.0.match_pattern.0.excluded_cookies.0": "session",
+						"statement.0.byte_match_statement.0.field_to_match.0.cookies.0.match_pattern.0.excluded_cookies.1": "session-id",
+						"statement.0.byte_match_statement.0.field_to_match.0.cookies.0.match_pattern.0.included_cookies.#": "0",
+						"statement.0.byte_match_statement.0.field_to_match.0.method.#":                                     "0",
+						"statement.0.byte_match_statement.0.field_to_match.0.query_string.#":                               "0",
+						"statement.0.byte_match_statement.0.field_to_match.0.single_header.#":                              "0",
+						"statement.0.byte_match_statement.0.field_to_match.0.single_query_argument.#":                      "0",
+						"statement.0.byte_match_statement.0.field_to_match.0.uri_path.#":                                   "0",
 					}),
 				),
 			},
@@ -2505,55 +2494,8 @@ resource "aws_wafv2_rule_group" "test" {
         search_string         = "word"
 
         field_to_match {
-          body {}
-        }
-
-        text_transformation {
-          priority = 1
-          type     = "NONE"
-        }
-      }
-    }
-
-    visibility_config {
-      cloudwatch_metrics_enabled = false
-      metric_name                = "friendly-rule-metric-name"
-      sampled_requests_enabled   = false
-    }
-  }
-
-  visibility_config {
-    cloudwatch_metrics_enabled = false
-    metric_name                = "friendly-metric-name"
-    sampled_requests_enabled   = false
-  }
-}
-`, name)
-}
-
-func testAccRuleGroupConfig_byteMatchStatementFieldToMatchBodyWithOversizeHandling(name string, overSizeHandling string) string {
-	return fmt.Sprintf(`
-resource "aws_wafv2_rule_group" "test" {
-  capacity = 15
-  name     = "%[1]s"
-  scope    = "REGIONAL"
-
-  rule {
-    name     = "rule-1"
-    priority = 1
-
-    action {
-      allow {}
-    }
-
-    statement {
-      byte_match_statement {
-        positional_constraint = "CONTAINS"
-        search_string         = "word"
-
-        field_to_match {
           body {
-			oversize_handling = "%[2]s"
+			oversize_handling = "CONTINUE"
 		  }
         }
 
@@ -2577,7 +2519,7 @@ resource "aws_wafv2_rule_group" "test" {
     sampled_requests_enabled   = false
   }
 }
-`, name, overSizeHandling)
+`, name)
 }
 
 func testAccRuleGroupConfig_byteMatchStatementFieldToMatchCookiesMatchPatternAll(name string) string {
@@ -2604,9 +2546,7 @@ resource "aws_wafv2_rule_group" "test" {
           cookies {
 			match_scope = "ALL"
             match_pattern {
-				all_match_pattern {
-					all {}
-				}
+				all {}
 			}
             oversize_handling = "MATCH"
 		  }
@@ -2659,9 +2599,60 @@ resource "aws_wafv2_rule_group" "test" {
           cookies {
 			match_scope = "ALL"
             match_pattern {
-				included_cookies_match_pattern {
-					included_cookies ["session"]
-				}
+				included_cookies = ["session", "session-id"]
+			}
+            oversize_handling = "MATCH"
+		  }
+        }
+
+        text_transformation {
+          priority = 1
+          type     = "NONE"
+        }
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = false
+      metric_name                = "friendly-rule-metric-name"
+      sampled_requests_enabled   = false
+    }
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
+  }
+}
+`, name)
+}
+
+func testAccRuleGroupConfig_byteMatchStatementFieldToMatchCookiesMatchPatternExcludedCookies(name string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_rule_group" "test" {
+  capacity = 15
+  name     = "%s"
+  scope    = "REGIONAL"
+
+  rule {
+    name     = "rule-1"
+    priority = 1
+
+    action {
+      allow {}
+    }
+
+    statement {
+      byte_match_statement {
+        positional_constraint = "CONTAINS"
+        search_string         = "word"
+
+        field_to_match {
+          cookies {
+			match_scope = "ALL"
+            match_pattern {
+				excluded_cookies = ["session", "session-id"]
 			}
             oversize_handling = "MATCH"
 		  }

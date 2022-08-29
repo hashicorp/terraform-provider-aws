@@ -623,12 +623,11 @@ func bodySchema() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		Optional: true,
-		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"oversize_handling": {
 					Type:         schema.TypeString,
-					Optional:     true,
+					Required:     true,
 					ValidateFunc: validation.StringInSlice(wafv2.OversizeHandling_Values(), false),
 				},
 			},
@@ -654,9 +653,9 @@ func cookiesSchema() *schema.Schema {
 					MinItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"all_match_pattern":              allMatchPatternSchema(),
-							"included_cookies_match_pattern": includedCookiesMatchPatternSchema(),
-							"excluded_cookies_match_pattern": excludedCookiesMatchPatternSchema(),
+							"all":              emptySchema(),
+							"included_cookies": cookiesMatchPatternBaseSchema(),
+							"excluded_cookies": cookiesMatchPatternBaseSchema(),
 						},
 					},
 				},
@@ -670,23 +669,10 @@ func cookiesSchema() *schema.Schema {
 	}
 }
 
-func allMatchPatternSchema() *schema.Schema {
-	return &schema.Schema{
-		Type:     schema.TypeList,
-		Optional: true,
-		MaxItems: 1,
-		Elem: &schema.Resource{
-			Schema: map[string]*schema.Schema{
-				"all": emptySchema(),
-			},
-		},
-	}
-}
-
 func cookiesMatchPatternBaseSchema() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
-		Required: true,
+		Optional: true,
 		MinItems: 1,
 		MaxItems: 199,
 		Elem: &schema.Schema{
@@ -695,32 +681,6 @@ func cookiesMatchPatternBaseSchema() *schema.Schema {
 				validation.StringLenBetween(1, 60),
 				validation.StringMatch(regexp.MustCompile(`.*\S.*`), ""),
 			),
-		},
-	}
-}
-
-func includedCookiesMatchPatternSchema() *schema.Schema {
-	return &schema.Schema{
-		Type:     schema.TypeList,
-		Optional: true,
-		MaxItems: 1,
-		Elem: &schema.Resource{
-			Schema: map[string]*schema.Schema{
-				"included_cookies": cookiesMatchPatternBaseSchema(),
-			},
-		},
-	}
-}
-
-func excludedCookiesMatchPatternSchema() *schema.Schema {
-	return &schema.Schema{
-		Type:     schema.TypeList,
-		Optional: true,
-		MaxItems: 1,
-		Elem: &schema.Resource{
-			Schema: map[string]*schema.Schema{
-				"excluded_cookies": cookiesMatchPatternBaseSchema(),
-			},
 		},
 	}
 }
