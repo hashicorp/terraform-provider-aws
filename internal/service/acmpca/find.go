@@ -79,3 +79,44 @@ func FindPolicyByARN(conn *acmpca.ACMPCA, arn string) (string, error) {
 
 	return aws.StringValue(output.Policy), nil
 }
+
+func FindPermission(conn *acmpca.ACMPCA, certificateAuthorityARN, principal, sourceAccount string) (*acmpca.Permission, error) {
+	input := &acmpca.ListPermissionsInput{
+		CertificateAuthorityArn: aws.String(certificateAuthorityARN),
+	}
+	var output []*acmpca.Permission
+
+	err := conn.ListPermissionsPages(input, func(page *acmpca.ListPermissionsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.Permissions {
+			if v != nil {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, acmpca.ErrCodeResourceNotFoundException) ||
+		tfawserr.ErrMessageContains(err, acmpca.ErrCodeInvalidStateException, "The certificate authority is in the DELETED state") {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	for _, v := range output {
+		if aws.StringValue(v.Principal) == principal && (sourceAccount == "" || aws.StringValue(v.SourceAccount) == sourceAccount) {
+			return v, nil
+		}
+	}
+
+	return nil, &resource.NotFoundError{LastRequest: input}
+}

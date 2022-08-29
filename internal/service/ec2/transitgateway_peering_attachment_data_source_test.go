@@ -6,12 +6,10 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func testAccTransitGatewayPeeringAttachmentDataSource_Filter_sameAccount(t *testing.T) {
-	var providers []*schema.Provider
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_ec2_transit_gateway_peering_attachment.test"
 	resourceName := "aws_ec2_transit_gateway_peering_attachment.test"
@@ -22,9 +20,9 @@ func testAccTransitGatewayPeeringAttachmentDataSource_Filter_sameAccount(t *test
 			testAccPreCheckTransitGateway(t)
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.FactoriesAlternate(&providers),
-		CheckDestroy:      testAccCheckTransitGatewayDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
+		CheckDestroy:             testAccCheckTransitGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTransitGatewayPeeringAttachmentDataSourceConfig_filterSameAccount(rName),
@@ -41,7 +39,6 @@ func testAccTransitGatewayPeeringAttachmentDataSource_Filter_sameAccount(t *test
 }
 
 func testAccTransitGatewayPeeringAttachmentDataSource_Filter_differentAccount(t *testing.T) {
-	var providers []*schema.Provider
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_ec2_transit_gateway_peering_attachment.test"
 	resourceName := "aws_ec2_transit_gateway_peering_attachment.test"
@@ -54,9 +51,9 @@ func testAccTransitGatewayPeeringAttachmentDataSource_Filter_differentAccount(t 
 			acctest.PreCheckMultipleRegion(t, 2)
 			acctest.PreCheckAlternateAccount(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.FactoriesAlternate(&providers),
-		CheckDestroy:      testAccCheckTransitGatewayDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
+		CheckDestroy:             testAccCheckTransitGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTransitGatewayPeeringAttachmentDataSourceConfig_filterDifferentAccount(rName),
@@ -72,7 +69,6 @@ func testAccTransitGatewayPeeringAttachmentDataSource_Filter_differentAccount(t 
 }
 
 func testAccTransitGatewayPeeringAttachmentDataSource_ID_sameAccount(t *testing.T) {
-	var providers []*schema.Provider
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_ec2_transit_gateway_peering_attachment.test"
 	resourceName := "aws_ec2_transit_gateway_peering_attachment.test"
@@ -83,12 +79,12 @@ func testAccTransitGatewayPeeringAttachmentDataSource_ID_sameAccount(t *testing.
 			testAccPreCheckTransitGateway(t)
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.FactoriesAlternate(&providers),
-		CheckDestroy:      testAccCheckTransitGatewayDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
+		CheckDestroy:             testAccCheckTransitGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTransitGatewayPeeringAttachmentDataSourceConfig_iDSameAccount(rName),
+				Config: testAccTransitGatewayPeeringAttachmentDataSourceConfig_idSameAccount(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "peer_account_id", dataSourceName, "peer_account_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "peer_region", dataSourceName, "peer_region"),
@@ -102,7 +98,6 @@ func testAccTransitGatewayPeeringAttachmentDataSource_ID_sameAccount(t *testing.
 }
 
 func testAccTransitGatewayPeeringAttachmentDataSource_ID_differentAccount(t *testing.T) {
-	var providers []*schema.Provider
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_ec2_transit_gateway_peering_attachment.test"
 	resourceName := "aws_ec2_transit_gateway_peering_attachment.test"
@@ -115,9 +110,9 @@ func testAccTransitGatewayPeeringAttachmentDataSource_ID_differentAccount(t *tes
 			acctest.PreCheckMultipleRegion(t, 2)
 			acctest.PreCheckAlternateAccount(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.FactoriesAlternate(&providers),
-		CheckDestroy:      testAccCheckTransitGatewayDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
+		CheckDestroy:             testAccCheckTransitGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTransitGatewayPeeringAttachmentDataSourceConfig_iDDifferentAccount(rName),
@@ -133,7 +128,6 @@ func testAccTransitGatewayPeeringAttachmentDataSource_ID_differentAccount(t *tes
 }
 
 func testAccTransitGatewayPeeringAttachmentDataSource_Tags(t *testing.T) {
-	var providers []*schema.Provider
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_ec2_transit_gateway_peering_attachment.test"
 	resourceName := "aws_ec2_transit_gateway_peering_attachment.test"
@@ -144,9 +138,9 @@ func testAccTransitGatewayPeeringAttachmentDataSource_Tags(t *testing.T) {
 			testAccPreCheckTransitGateway(t)
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.FactoriesAlternate(&providers),
-		CheckDestroy:      testAccCheckTransitGatewayDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
+		CheckDestroy:             testAccCheckTransitGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTransitGatewayPeeringAttachmentDataSourceConfig_tagsSameAccount(rName),
@@ -163,9 +157,7 @@ func testAccTransitGatewayPeeringAttachmentDataSource_Tags(t *testing.T) {
 }
 
 func testAccTransitGatewayPeeringAttachmentDataSourceConfig_filterSameAccount(rName string) string {
-	return acctest.ConfigCompose(
-		testAccTransitGatewayPeeringAttachmentConfig_sameAccount(rName),
-		`
+	return acctest.ConfigCompose(testAccTransitGatewayPeeringAttachmentConfig_sameAccount(rName), `
 data "aws_ec2_transit_gateway_peering_attachment" "test" {
   filter {
     name   = "transit-gateway-attachment-id"
@@ -175,10 +167,8 @@ data "aws_ec2_transit_gateway_peering_attachment" "test" {
 `)
 }
 
-func testAccTransitGatewayPeeringAttachmentDataSourceConfig_iDSameAccount(rName string) string {
-	return acctest.ConfigCompose(
-		testAccTransitGatewayPeeringAttachmentConfig_sameAccount(rName),
-		`
+func testAccTransitGatewayPeeringAttachmentDataSourceConfig_idSameAccount(rName string) string {
+	return acctest.ConfigCompose(testAccTransitGatewayPeeringAttachmentConfig_sameAccount(rName), `
 data "aws_ec2_transit_gateway_peering_attachment" "test" {
   id = aws_ec2_transit_gateway_peering_attachment.test.id
 }
@@ -186,9 +176,7 @@ data "aws_ec2_transit_gateway_peering_attachment" "test" {
 }
 
 func testAccTransitGatewayPeeringAttachmentDataSourceConfig_tagsSameAccount(rName string) string {
-	return acctest.ConfigCompose(
-		testAccTransitGatewayPeeringAttachmentConfig_tags1SameAccount(rName, "Name", rName),
-		`
+	return acctest.ConfigCompose(testAccTransitGatewayPeeringAttachmentConfig_tags1(rName, "Name", rName), `
 data "aws_ec2_transit_gateway_peering_attachment" "test" {
   tags = {
     Name = aws_ec2_transit_gateway_peering_attachment.test.tags["Name"]
@@ -198,9 +186,7 @@ data "aws_ec2_transit_gateway_peering_attachment" "test" {
 }
 
 func testAccTransitGatewayPeeringAttachmentDataSourceConfig_filterDifferentAccount(rName string) string {
-	return acctest.ConfigCompose(
-		testAccTransitGatewayPeeringAttachmentConfig_differentAccount(rName),
-		`
+	return acctest.ConfigCompose(testAccTransitGatewayPeeringAttachmentConfig_differentAccount(rName), `
 data "aws_ec2_transit_gateway_peering_attachment" "test" {
   provider = "awsalternate"
 
@@ -213,9 +199,7 @@ data "aws_ec2_transit_gateway_peering_attachment" "test" {
 }
 
 func testAccTransitGatewayPeeringAttachmentDataSourceConfig_iDDifferentAccount(rName string) string {
-	return acctest.ConfigCompose(
-		testAccTransitGatewayPeeringAttachmentConfig_differentAccount(rName),
-		`
+	return acctest.ConfigCompose(testAccTransitGatewayPeeringAttachmentConfig_differentAccount(rName), `
 data "aws_ec2_transit_gateway_peering_attachment" "test" {
   provider = "awsalternate"
   id       = aws_ec2_transit_gateway_peering_attachment.test.id

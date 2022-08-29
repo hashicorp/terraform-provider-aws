@@ -2,7 +2,7 @@ name: team-slack-bot
 
 on:
   schedule:
-    - cron:  '0 15 * * 1-5'
+    - cron: '0 15 * * 1-5'
 
 jobs:
   open-pr-stats:
@@ -10,12 +10,12 @@ jobs:
     name: open-pr-stats
     if: github.repository_owner == 'hashicorp'
     steps:
-    - name: open-pr-stats
-      uses: breathingdust/github-team-slackbot@v17
-      with:
-        github_token: ${{ secrets.ORGSCOPED_GITHUB_TOKEN}}
-        org: hashicorp
-        repo: terraform-provider-aws
-        team_slug: terraform-aws
-        slack_token: ${{ secrets.SLACK_BOT_TOKEN }}
-        slack_channel: ${{ secrets.SLACK_CHANNEL }}
+      - name: open-pr-stats
+        uses: breathingdust/github-team-slackbot@v17
+        with:
+          github_token: ${{ secrets.ORGSCOPED_GITHUB_TOKEN}}
+          org: hashicorp
+          repo: terraform-provider-aws
+          team_slug: terraform-aws
+          slack_token: ${{ secrets.SLACK_BOT_TOKEN }}
+          slack_channel: ${{ secrets.SLACK_CHANNEL }}

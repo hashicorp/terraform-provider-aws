@@ -6,8 +6,12 @@ import (
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/feature/ec2/imds"
+	"github.com/aws/aws-sdk-go-v2/service/comprehend"
+	"github.com/aws/aws-sdk-go-v2/service/fis"
 	"github.com/aws/aws-sdk-go-v2/service/kendra"
+	"github.com/aws/aws-sdk-go-v2/service/rolesanywhere"
 	"github.com/aws/aws-sdk-go-v2/service/route53domains"
+	"github.com/aws/aws-sdk-go-v2/service/transcribe"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/aws/request"
@@ -83,6 +87,7 @@ func (c *Config) Client(ctx context.Context) (interface{}, diag.Diagnostics) {
 	awsbaseConfig := awsbase.Config{
 		AccessKey:                     c.AccessKey,
 		APNInfo:                       StdUserAgentProducts(c.TerraformVersion),
+		AssumeRoleWithWebIdentity:     c.AssumeRoleWithWebIdentity,
 		CallerDocumentationURL:        "https://registry.terraform.io/providers/hashicorp/aws",
 		CallerName:                    "Terraform AWS Provider",
 		EC2MetadataServiceEnableState: c.EC2MetadataServiceEnableState,
@@ -190,9 +195,27 @@ func (c *Config) Client(ctx context.Context) (interface{}, diag.Diagnostics) {
 	client.Session = sess
 	client.TerraformVersion = c.TerraformVersion
 
+	client.ComprehendConn = comprehend.NewFromConfig(cfg, func(o *comprehend.Options) {
+		if endpoint := c.Endpoints[names.Comprehend]; endpoint != "" {
+			o.EndpointResolver = comprehend.EndpointResolverFromURL(endpoint)
+		}
+	})
+
+	client.FISConn = fis.NewFromConfig(cfg, func(o *fis.Options) {
+		if endpoint := c.Endpoints[names.FIS]; endpoint != "" {
+			o.EndpointResolver = fis.EndpointResolverFromURL(endpoint)
+		}
+	})
+
 	client.KendraConn = kendra.NewFromConfig(cfg, func(o *kendra.Options) {
 		if endpoint := c.Endpoints[names.Kendra]; endpoint != "" {
 			o.EndpointResolver = kendra.EndpointResolverFromURL(endpoint)
+		}
+	})
+
+	client.RolesAnywhereConn = rolesanywhere.NewFromConfig(cfg, func(o *rolesanywhere.Options) {
+		if endpoint := c.Endpoints[names.RolesAnywhere]; endpoint != "" {
+			o.EndpointResolver = rolesanywhere.EndpointResolverFromURL(endpoint)
 		}
 	})
 
@@ -202,6 +225,12 @@ func (c *Config) Client(ctx context.Context) (interface{}, diag.Diagnostics) {
 		} else if partition == endpoints.AwsPartitionID {
 			// Route 53 Domains is only available in AWS Commercial us-east-1 Region.
 			o.Region = endpoints.UsEast1RegionID
+		}
+	})
+
+	client.TranscribeConn = transcribe.NewFromConfig(cfg, func(o *transcribe.Options) {
+		if endpoint := c.Endpoints[names.Transcribe]; endpoint != "" {
+			o.EndpointResolver = transcribe.EndpointResolverFromURL(endpoint)
 		}
 	})
 

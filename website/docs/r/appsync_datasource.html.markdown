@@ -3,12 +3,12 @@ subcategory: "AppSync"
 layout: "aws"
 page_title: "AWS: aws_appsync_datasource"
 description: |-
-  Provides an AppSync DataSource.
+  Provides an AppSync Data Source.
 ---
 
 # Resource: aws_appsync_datasource
 
-Provides an AppSync DataSource.
+Provides an AppSync Data Source.
 
 ## Example Usage
 
@@ -87,10 +87,10 @@ resource "aws_appsync_datasource" "example" {
 
 The following arguments are supported:
 
-* `api_id` - (Required) The API ID for the GraphQL API for the DataSource.
-* `name` - (Required) A user-supplied name for the DataSource.
-* `type` - (Required) The type of the DataSource. Valid values: `AWS_LAMBDA`, `AMAZON_DYNAMODB`, `AMAZON_ELASTICSEARCH`, `HTTP`, `NONE`, `RELATIONAL_DATABASE`.
-* `description` - (Optional) A description of the DataSource.
+* `api_id` - (Required) The API ID for the GraphQL API for the data source.
+* `name` - (Required) A user-supplied name for the data source.
+* `type` - (Required) The type of the Data Source. Valid values: `AWS_LAMBDA`, `AMAZON_DYNAMODB`, `AMAZON_ELASTICSEARCH`, `HTTP`, `NONE`, `RELATIONAL_DATABASE`.
+* `description` - (Optional) A description of the data source.
 * `service_role_arn` - (Optional) The IAM service role ARN for the data source.
 * `dynamodb_config` - (Optional) DynamoDB settings. See [below](#dynamodb_config)
 * `elasticsearch_config` - (Optional) Amazon Elasticsearch settings. See [below](#elasticsearch_config)

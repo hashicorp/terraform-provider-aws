@@ -48,3 +48,9 @@ More complex filters can be expressed using one or more `filter` sub-blocks, whi
 * `id` - AWS Region.
 * `allocation_ids` - A list of all the allocation IDs for address for use with EC2-VPC.
 * `public_ips` - A list of all the Elastic IP addresses.
+
+## Timeouts
+
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+
+- `read` - (Default `20m`)

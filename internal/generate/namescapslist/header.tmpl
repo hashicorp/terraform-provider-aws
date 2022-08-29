@@ -9,7 +9,7 @@ In Terraform AWS Provider code, we have two guiding principles for capitalizatio
 For _principle 1_, the [golang/go Go Code Review Comments](https://github.com/golang/go/wiki/CodeReviewComments#initialisms) are instructive:
 
 > Words in names that are initialisms or acronyms (e.g. "URL" or "NATO") have a consistent case. For example, "URL" should appear as "URL" or "url" (as in "urlPony", or "URLPony"), never as "Url". As an example: ServeHTTP not ServeHttp. For identifiers with multiple initialized "words", use for example "xmlHTTPRequest" or "XMLHTTPRequest".
-
+>
 > This rule also applies to "ID" when it is short for "identifier" (which is pretty much all cases when it's not the "id" as in "ego", "superego"), so write "appID" instead of "appId".
 
 For _principle 2_, take a look at the AWS website for a service to see the capitalization that AWS prefers. For example, [GameLift](https://aws.amazon.com/gamelift/) rather than "Gamelift".
@@ -18,6 +18,6 @@ To help enforce these principles, we are using [semgrep](https://semgrep.dev/) r
 
 **NOTE:** Please do NOT add "Id" to the list. Use "ID" or "id", never "Id", but we have found linter enforcement of this initialism to be too error prone because of the number of false positives for "Id" (_e.g._, "Identifier").
 
-**NOTE:** Capitalization rules are all found in the ".semgrep-service-name0.yml" configuration file are named `<Test#>-in-func-name`, `<Test#>-in-var-name`, or `<Test#>-in-const-name`, where `Test#` comes from the table below.
+**NOTE:** Capitalization rules are all found in the ".semgrep-caps-aws-ec2.yml" configuration file are named `<Test#>-in-func-name`, `<Test#>-in-var-name`, or `<Test#>-in-const-name`, where `Test#` comes from the table below.
 
 **NOTE:** The `Test#` order is _wonky_ because we need to match on longer names first. In the future, with an option to automatically correct problems, fixing the longest possible initialism first is important (_e.g._, `HTTPS` needs to be fixed before `HTTP` to avoid something like `HTTPs`).

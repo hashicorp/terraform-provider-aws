@@ -78,7 +78,7 @@ func resourceSAMLProviderCreate(ctx context.Context, d *schema.ResourceData, met
 	output, err := conn.CreateSAMLProvider(input)
 
 	// Some partitions (i.e., ISO) may not support tag-on-create
-	if input.Tags != nil && verify.CheckISOErrorTagsUnsupported(err) {
+	if input.Tags != nil && verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
 		log.Printf("[WARN] failed creating IAM SAML Provider (%s) with tags: %s. Trying create without tags.", name, err)
 		input.Tags = nil
 
@@ -96,7 +96,7 @@ func resourceSAMLProviderCreate(ctx context.Context, d *schema.ResourceData, met
 		err := samlProviderUpdateTags(conn, d.Id(), nil, tags)
 
 		// If default tags only, log and continue. Otherwise, error.
-		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.CheckISOErrorTagsUnsupported(err) {
+		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
 			log.Printf("[WARN] failed adding tags after create for IAM SAML Provider (%s): %s", d.Id(), err)
 			return resourceSAMLProviderRead(ctx, d, meta)
 		}
@@ -178,7 +178,7 @@ func resourceSAMLProviderUpdate(ctx context.Context, d *schema.ResourceData, met
 		err := samlProviderUpdateTags(conn, d.Id(), o, n)
 
 		// Some partitions (i.e., ISO) may not support tagging, giving error
-		if verify.CheckISOErrorTagsUnsupported(err) {
+		if verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
 			log.Printf("[WARN] failed updating tags for IAM SAML Provider (%s): %s", d.Id(), err)
 			return resourceSAMLProviderRead(ctx, d, meta)
 		}

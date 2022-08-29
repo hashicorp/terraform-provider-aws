@@ -69,7 +69,7 @@ func resourceRouteResponseCreate(d *schema.ResourceData, meta interface{}) error
 	log.Printf("[DEBUG] Creating API Gateway v2 route response: %s", req)
 	resp, err := conn.CreateRouteResponse(req)
 	if err != nil {
-		return fmt.Errorf("error creating API Gateway v2 route response: %s", err)
+		return fmt.Errorf("creating API Gateway v2 route response: %s", err)
 	}
 
 	d.SetId(aws.StringValue(resp.RouteResponseId))
@@ -91,12 +91,12 @@ func resourceRouteResponseRead(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 	if err != nil {
-		return fmt.Errorf("error reading API Gateway v2 route response: %s", err)
+		return fmt.Errorf("reading API Gateway v2 route response: %s", err)
 	}
 
 	d.Set("model_selection_expression", resp.ModelSelectionExpression)
 	if err := d.Set("response_models", flex.PointersMapToStringList(resp.ResponseModels)); err != nil {
-		return fmt.Errorf("error setting response_models: %s", err)
+		return fmt.Errorf("setting response_models: %s", err)
 	}
 	d.Set("route_response_key", resp.RouteResponseKey)
 
@@ -124,7 +124,7 @@ func resourceRouteResponseUpdate(d *schema.ResourceData, meta interface{}) error
 	log.Printf("[DEBUG] Updating API Gateway v2 route response: %s", req)
 	_, err := conn.UpdateRouteResponse(req)
 	if err != nil {
-		return fmt.Errorf("error updating API Gateway v2 route response: %s", err)
+		return fmt.Errorf("updating API Gateway v2 route response: %s", err)
 	}
 
 	return resourceRouteResponseRead(d, meta)
@@ -143,7 +143,7 @@ func resourceRouteResponseDelete(d *schema.ResourceData, meta interface{}) error
 		return nil
 	}
 	if err != nil {
-		return fmt.Errorf("error deleting API Gateway v2 route response: %s", err)
+		return fmt.Errorf("deleting API Gateway v2 route response: %s", err)
 	}
 
 	return nil
@@ -152,7 +152,7 @@ func resourceRouteResponseDelete(d *schema.ResourceData, meta interface{}) error
 func resourceRouteResponseImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	parts := strings.Split(d.Id(), "/")
 	if len(parts) != 3 {
-		return []*schema.ResourceData{}, fmt.Errorf("Wrong format of resource: %s. Please follow 'api-id/route-id/route-response-id'", d.Id())
+		return []*schema.ResourceData{}, fmt.Errorf("wrong format of import ID (%s), use: 'api-id/route-id/route-response-id'", d.Id())
 	}
 
 	d.SetId(parts[2])

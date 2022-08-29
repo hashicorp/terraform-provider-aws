@@ -6,7 +6,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 // BuildTagFilterList takes a []*ec2.Tag and produces a []*ec2.Filter that
@@ -26,9 +25,9 @@ import (
 // In Terraform configuration this would then look like this, to constrain
 // results by name:
 //
-// tags {
-//   Name = "my-awesome-subnet"
-// }
+//	tags {
+//	  Name = "my-awesome-subnet"
+//	}
 func BuildTagFilterList(tags []*ec2.Tag) []*ec2.Filter {
 	filters := make([]*ec2.Filter, len(tags))
 
@@ -66,25 +65,6 @@ func attributeFiltersFromMultimap(m map[string][]string) []*ec2.Filter {
 	return filters
 }
 
-// tagFiltersFromMap returns an array of EC2 Filter objects to be used when listing resources.
-//
-// The filters represent exact matches for all the resource tags in the given key/value map.
-func tagFiltersFromMap(m map[string]interface{}) []*ec2.Filter {
-	if len(m) == 0 {
-		return nil
-	}
-
-	filters := []*ec2.Filter{}
-	for _, tag := range Tags(tftags.New(m).IgnoreAWS()) {
-		filters = append(filters, &ec2.Filter{
-			Name:   aws.String(fmt.Sprintf("tag:%s", aws.StringValue(tag.Key))),
-			Values: []*string{tag.Value},
-		})
-	}
-
-	return filters
-}
-
 // CustomFiltersSchema returns a *schema.Schema that represents
 // a set of custom filtering criteria that a user can specify as input
 // to a data source that wraps one of the many "Describe..." API calls
@@ -96,10 +76,10 @@ func tagFiltersFromMap(m map[string]interface{}) []*ec2.Filter {
 // attributes or tags. In Terraform configuration, the custom filter blocks
 // then look like this:
 //
-// filter {
-//   name   = "availabilityZone"
-//   values = ["us-west-2a", "us-west-2b"]
-// }
+//	filter {
+//	  name   = "availabilityZone"
+//	  values = ["us-west-2a", "us-west-2b"]
+//	}
 func CustomFiltersSchema() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeSet,

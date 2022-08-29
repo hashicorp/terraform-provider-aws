@@ -13,6 +13,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -38,55 +40,15 @@ func ResourceRemediationConfiguration() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"automatic": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
 			"config_rule_name": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 64),
-			},
-			"resource_type": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"target_id": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringLenBetween(1, 256),
-			},
-			"target_type": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringInSlice(configservice.RemediationTargetType_Values(), false),
-			},
-			"target_version": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"parameter": {
-				Type:     schema.TypeSet,
-				MaxItems: 25,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"name": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"resource_value": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringLenBetween(0, 256),
-						},
-						"static_value": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-					},
-				},
-			},
-			"automatic": {
-				Type:     schema.TypeBool,
-				Optional: true,
 			},
 			"execution_controls": {
 				Type:     schema.TypeList,
@@ -121,173 +83,104 @@ func ResourceRemediationConfiguration() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.IntBetween(1, 25),
 			},
+			"parameter": {
+				Type:     schema.TypeSet,
+				MaxItems: 25,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"name": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"resource_value": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringLenBetween(0, 256),
+						},
+						"static_value": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"static_values": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+					},
+				},
+			},
+			"resource_type": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			"retry_attempt_seconds": {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				ValidateFunc: validation.IntBetween(1, 2678000),
 			},
+			"target_id": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringLenBetween(1, 256),
+			},
+			"target_type": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringInSlice(configservice.RemediationTargetType_Values(), false),
+			},
+			"target_version": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 		},
 	}
-}
-
-func expandRemediationConfigurationParameters(configured *schema.Set) (map[string]*configservice.RemediationParameterValue, error) {
-	results := make(map[string]*configservice.RemediationParameterValue)
-
-	for _, item := range configured.List() {
-		detail := item.(map[string]interface{})
-		rpv := configservice.RemediationParameterValue{}
-		resourceName, ok := detail["name"].(string)
-		if ok {
-			results[resourceName] = &rpv
-		} else {
-			return nil, fmt.Errorf("Could not extract name from parameter.")
-		}
-		if resourceValue, ok := detail["resource_value"].(string); ok && len(resourceValue) > 0 {
-			rpv.ResourceValue = &configservice.ResourceValue{
-				Value: &resourceValue,
-			}
-		} else if staticValue, ok := detail["static_value"].(string); ok && len(staticValue) > 0 {
-			rpv.StaticValue = &configservice.StaticValue{
-				Values: []*string{&staticValue},
-			}
-		} else {
-			return nil, fmt.Errorf("Parameter '%s' needs one of resource_value or static_value", resourceName)
-		}
-	}
-
-	return results, nil
-}
-
-func expandRemediationConfigurationExecutionControlsConfig(v map[string]interface{}) (ret *configservice.ExecutionControls, err error) {
-	if w, ok := v["ssm_controls"]; ok {
-		x := w.([]interface{})
-		if len(x) > 0 {
-			ssmControls, err := expandRemediationConfigurationSSMControlsConfig(x[0].(map[string]interface{}))
-			if err != nil {
-				return nil, err
-			}
-			ret = &configservice.ExecutionControls{
-				SsmControls: ssmControls,
-			}
-			return ret, nil
-		}
-	}
-	return nil, fmt.Errorf("expected 'ssm_controls' in execution controls configuration")
-}
-
-func expandRemediationConfigurationSSMControlsConfig(v map[string]interface{}) (ret *configservice.SsmControls, err error) {
-	ret = &configservice.SsmControls{}
-	p := false
-	if concurrentExecutionRatePercentage, ok := v["concurrent_execution_rate_percentage"]; ok {
-		p = true
-		ret.ConcurrentExecutionRatePercentage = aws.Int64(int64(concurrentExecutionRatePercentage.(int)))
-	}
-	if errorPercentage, ok := v["error_percentage"]; ok {
-		p = true
-		ret.ErrorPercentage = aws.Int64(int64(errorPercentage.(int)))
-	}
-	if !p {
-		return nil, fmt.Errorf("'concurrent_execution_rate_percentage' or 'error_percentage' must be provided in ssm_controls")
-	}
-	return ret, nil
-}
-
-func flattenRemediationConfigurationParameters(parameters map[string]*configservice.RemediationParameterValue) []interface{} {
-	var items []interface{}
-
-	for key, value := range parameters {
-		item := make(map[string]interface{})
-		item["name"] = key
-		if v := value.ResourceValue; v != nil {
-			item["resource_value"] = aws.StringValue(v.Value)
-		}
-		if v := value.StaticValue; v != nil && len(v.Values) > 0 {
-			item["static_value"] = aws.StringValue(v.Values[0])
-		}
-
-		items = append(items, item)
-	}
-
-	return items
-}
-
-func flattenRemediationConfigurationExecutionControlsConfig(controls *configservice.ExecutionControls) []interface{} {
-	if controls == nil {
-		return nil
-	}
-	return []interface{}{map[string]interface{}{
-		"ssm_controls": flattenRemediationConfigurationSSMControlsConfig(controls.SsmControls),
-	}}
-}
-
-func flattenRemediationConfigurationSSMControlsConfig(controls *configservice.SsmControls) []interface{} {
-	if controls == nil {
-		return nil
-	}
-	m := make(map[string]interface{})
-	if controls.ConcurrentExecutionRatePercentage != nil {
-		m["concurrent_execution_rate_percentage"] = controls.ConcurrentExecutionRatePercentage
-	}
-	if controls.ErrorPercentage != nil {
-		m["error_percentage"] = controls.ErrorPercentage
-	}
-	return []interface{}{m}
 }
 
 func resourceRemediationConfigurationPut(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ConfigServiceConn
 
 	name := d.Get("config_rule_name").(string)
-	remediationConfigurationInput := configservice.RemediationConfiguration{
+	input := configservice.RemediationConfiguration{
 		ConfigRuleName: aws.String(name),
 	}
 
-	if v, ok := d.GetOk("parameter"); ok {
-		params, err := expandRemediationConfigurationParameters(v.(*schema.Set))
-		if err != nil {
-			return err
-		}
-		remediationConfigurationInput.Parameters = params
+	if v, ok := d.GetOk("parameter"); ok && v.(*schema.Set).Len() > 0 {
+		input.Parameters = expandRemediationParameterValues(v.(*schema.Set).List())
 	}
 	if v, ok := d.GetOk("resource_type"); ok {
-		remediationConfigurationInput.ResourceType = aws.String(v.(string))
+		input.ResourceType = aws.String(v.(string))
 	}
 	if v, ok := d.GetOk("target_id"); ok {
-		remediationConfigurationInput.TargetId = aws.String(v.(string))
+		input.TargetId = aws.String(v.(string))
 	}
 	if v, ok := d.GetOk("target_type"); ok {
-		remediationConfigurationInput.TargetType = aws.String(v.(string))
+		input.TargetType = aws.String(v.(string))
 	}
 	if v, ok := d.GetOk("target_version"); ok {
-		remediationConfigurationInput.TargetVersion = aws.String(v.(string))
+		input.TargetVersion = aws.String(v.(string))
 	}
 	if v, ok := d.GetOk("automatic"); ok {
-		remediationConfigurationInput.Automatic = aws.Bool(v.(bool))
+		input.Automatic = aws.Bool(v.(bool))
 	}
 	if v, ok := d.GetOk("maximum_automatic_attempts"); ok {
-		remediationConfigurationInput.MaximumAutomaticAttempts = aws.Int64(int64(v.(int)))
+		input.MaximumAutomaticAttempts = aws.Int64(int64(v.(int)))
 	}
 	if v, ok := d.GetOk("retry_attempt_seconds"); ok {
-		remediationConfigurationInput.RetryAttemptSeconds = aws.Int64(int64(v.(int)))
+		input.RetryAttemptSeconds = aws.Int64(int64(v.(int)))
 	}
-	if v, ok := d.GetOk("execution_controls"); ok {
-		executionControlsConfigs := v.([]interface{})
-		if len(executionControlsConfigs) == 1 {
-			w := executionControlsConfigs[0].(map[string]interface{})
-			controls, err := expandRemediationConfigurationExecutionControlsConfig(w)
-			if err != nil {
-				return err
-			}
-			remediationConfigurationInput.ExecutionControls = controls
-		}
+	if v, ok := d.GetOk("execution_controls"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.ExecutionControls = expandExecutionControls(v.([]interface{})[0].(map[string]interface{}))
 	}
-	input := configservice.PutRemediationConfigurationsInput{
-		RemediationConfigurations: []*configservice.RemediationConfiguration{&remediationConfigurationInput},
+
+	inputs := configservice.PutRemediationConfigurationsInput{
+		RemediationConfigurations: []*configservice.RemediationConfiguration{&input},
 	}
-	log.Printf("[DEBUG] Creating AWSConfig remediation configuration: %s", input)
-	_, err := conn.PutRemediationConfigurations(&input)
+
+	log.Printf("[DEBUG] Creating AWSConfig remediation configuration: %s", inputs)
+	_, err := conn.PutRemediationConfigurations(&inputs)
 	if err != nil {
-		return fmt.Errorf("Failed to create AWSConfig remediation configuration: %w", err)
+		return create.Error(names.ConfigService, create.ErrActionCreating, ResNameRemediationConfiguration, fmt.Sprintf("%+v", inputs), err)
 	}
 
 	d.SetId(name)
@@ -310,7 +203,7 @@ func resourceRemediationConfigurationRead(d *schema.ResourceData, meta interface
 	}
 
 	if err != nil {
-		return names.Error(names.ConfigService, names.ErrActionReading, "Remediation Configuration", d.Id(), err)
+		return create.Error(names.ConfigService, create.ErrActionReading, ResNameRemediationConfiguration, d.Id(), err)
 	}
 
 	numberOfRemediationConfigurations := len(out.RemediationConfigurations)
@@ -321,7 +214,7 @@ func resourceRemediationConfigurationRead(d *schema.ResourceData, meta interface
 	}
 
 	if d.IsNewResource() && numberOfRemediationConfigurations < 1 {
-		return names.Error(names.ConfigService, names.ErrActionReading, "Remediation Configuration", d.Id(), errors.New("none found after creation"))
+		return create.Error(names.ConfigService, create.ErrActionReading, ResNameRemediationConfiguration, d.Id(), errors.New("none found after creation"))
 	}
 
 	log.Printf("[DEBUG] AWS Config remediation configurations received: %s", out)
@@ -333,13 +226,18 @@ func resourceRemediationConfigurationRead(d *schema.ResourceData, meta interface
 	d.Set("target_id", remediationConfiguration.TargetId)
 	d.Set("target_type", remediationConfiguration.TargetType)
 	d.Set("target_version", remediationConfiguration.TargetVersion)
-	d.Set("parameter", flattenRemediationConfigurationParameters(remediationConfiguration.Parameters))
 	d.Set("automatic", remediationConfiguration.Automatic)
 	d.Set("maximum_automatic_attempts", remediationConfiguration.MaximumAutomaticAttempts)
 	d.Set("retry_attempt_seconds", remediationConfiguration.RetryAttemptSeconds)
 	d.Set("maximum_automatic_attempts", remediationConfiguration.MaximumAutomaticAttempts)
-	d.Set("execution_controls", flattenRemediationConfigurationExecutionControlsConfig(remediationConfiguration.ExecutionControls))
-	d.SetId(aws.StringValue(remediationConfiguration.ConfigRuleName))
+
+	if err := d.Set("execution_controls", flattenExecutionControls(remediationConfiguration.ExecutionControls)); err != nil {
+		return create.Error(names.ConfigService, create.ErrActionReading, ResNameRemediationConfiguration, d.Id(), err)
+	}
+
+	if err := d.Set("parameter", flattenRemediationParameterValues(remediationConfiguration.Parameters)); err != nil {
+		return create.Error(names.ConfigService, create.ErrActionReading, ResNameRemediationConfiguration, d.Id(), err)
+	}
 
 	return nil
 }
@@ -377,8 +275,137 @@ func resourceRemediationConfigurationDelete(d *schema.ResourceData, meta interfa
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting Config Remediation Configuration (%s): %w", d.Id(), err)
+		return create.Error(names.ConfigService, create.ErrActionDeleting, ResNameRemediationConfiguration, d.Id(), err)
 	}
 
 	return nil
+}
+
+func expandRemediationParameterValue(tfMap map[string]interface{}) *configservice.RemediationParameterValue {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &configservice.RemediationParameterValue{}
+
+	if v, ok := tfMap["resource_value"].(string); ok && v != "" {
+		apiObject.ResourceValue = &configservice.ResourceValue{
+			Value: aws.String(v),
+		}
+	}
+
+	if v, ok := tfMap["static_value"].(string); ok && v != "" {
+		apiObject.StaticValue = &configservice.StaticValue{
+			Values: aws.StringSlice([]string{v}),
+		}
+	}
+
+	if v, ok := tfMap["static_values"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		apiObject.StaticValue = &configservice.StaticValue{
+			Values: flex.ExpandStringList(v),
+		}
+	}
+
+	return apiObject
+}
+
+func expandRemediationParameterValues(tfList []interface{}) map[string]*configservice.RemediationParameterValue {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	apiObjects := make(map[string]*configservice.RemediationParameterValue)
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
+
+		if !ok {
+			continue
+		}
+
+		if v, ok := tfMap["name"].(string); !ok || v == "" {
+			continue
+		}
+
+		apiObjects[tfMap["name"].(string)] = expandRemediationParameterValue(tfMap)
+	}
+
+	return apiObjects
+}
+
+func expandSSMControls(tfMap map[string]interface{}) *configservice.SsmControls {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &configservice.SsmControls{}
+
+	if v, ok := tfMap["concurrent_execution_rate_percentage"].(int); ok && v != 0 {
+		apiObject.ConcurrentExecutionRatePercentage = aws.Int64(int64(v))
+	}
+
+	if v, ok := tfMap["error_percentage"].(int); ok && v != 0 {
+		apiObject.ErrorPercentage = aws.Int64(int64(v))
+	}
+
+	return apiObject
+}
+
+func expandExecutionControls(tfMap map[string]interface{}) *configservice.ExecutionControls {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &configservice.ExecutionControls{}
+
+	if v, ok := tfMap["ssm_controls"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		apiObject.SsmControls = expandSSMControls(v[0].(map[string]interface{}))
+	}
+
+	return apiObject
+}
+
+func flattenRemediationParameterValues(parameters map[string]*configservice.RemediationParameterValue) []interface{} {
+	var items []interface{}
+
+	for key, value := range parameters {
+		item := make(map[string]interface{})
+		item["name"] = key
+		if v := value.ResourceValue; v != nil {
+			item["resource_value"] = aws.StringValue(v.Value)
+		}
+		if v := value.StaticValue; v != nil && len(v.Values) > 1 {
+			item["static_values"] = aws.StringValueSlice(v.Values)
+		}
+		if v := value.StaticValue; v != nil && len(v.Values) == 1 {
+			item["static_value"] = aws.StringValue(v.Values[0])
+		}
+
+		items = append(items, item)
+	}
+
+	return items
+}
+
+func flattenExecutionControls(controls *configservice.ExecutionControls) []interface{} {
+	if controls == nil {
+		return nil
+	}
+	return []interface{}{map[string]interface{}{
+		"ssm_controls": flattenSSMControls(controls.SsmControls),
+	}}
+}
+
+func flattenSSMControls(controls *configservice.SsmControls) []interface{} {
+	if controls == nil {
+		return nil
+	}
+	m := make(map[string]interface{})
+	if controls.ConcurrentExecutionRatePercentage != nil {
+		m["concurrent_execution_rate_percentage"] = controls.ConcurrentExecutionRatePercentage
+	}
+	if controls.ErrorPercentage != nil {
+		m["error_percentage"] = controls.ErrorPercentage
+	}
+	return []interface{}{m}
 }

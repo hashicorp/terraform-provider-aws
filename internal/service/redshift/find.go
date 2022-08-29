@@ -112,7 +112,7 @@ func FindScheduledActionByName(conn *redshift.Redshift, name string) (*redshift.
 func FindScheduleAssociationById(conn *redshift.Redshift, id string) (string, *redshift.ClusterAssociatedToSchedule, error) {
 	clusterIdentifier, scheduleIdentifier, err := SnapshotScheduleAssociationParseID(id)
 	if err != nil {
-		return "", nil, fmt.Errorf("error parsing Redshift Cluster Snapshot Schedule Association ID %s: %s", id, err)
+		return "", nil, fmt.Errorf("parsing Redshift Cluster Snapshot Schedule Association ID %s: %s", id, err)
 	}
 
 	input := &redshift.DescribeSnapshotSchedulesInput{

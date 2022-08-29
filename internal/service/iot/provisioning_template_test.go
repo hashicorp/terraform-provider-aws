@@ -21,10 +21,10 @@ func TestAccIoTProvisioningTemplate_basic(t *testing.T) {
 	resourceName := "aws_iot_provisioning_template.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, iot.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckProvisioningTemplateDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iot.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProvisioningTemplateDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProvisioningTemplateConfig_basic(rName),
@@ -55,10 +55,10 @@ func TestAccIoTProvisioningTemplate_disappears(t *testing.T) {
 	resourceName := "aws_iot_provisioning_template.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, iot.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckProvisioningTemplateDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iot.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProvisioningTemplateDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProvisioningTemplateConfig_basic(rName),
@@ -77,10 +77,10 @@ func TestAccIoTProvisioningTemplate_tags(t *testing.T) {
 	resourceName := "aws_iot_provisioning_template.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, iot.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckProvisioningTemplateDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iot.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProvisioningTemplateDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProvisioningTemplateConfig_tags1(rName, "key1", "value1"),
@@ -124,10 +124,10 @@ func TestAccIoTProvisioningTemplate_update(t *testing.T) {
 	resourceName := "aws_iot_provisioning_template.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, iot.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckProvisioningTemplateDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iot.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProvisioningTemplateDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProvisioningTemplateConfig_basic(rName),
@@ -181,13 +181,9 @@ func testAccCheckProvisioningTemplateExists(n string) resource.TestCheckFunc {
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn
 
-		_, err := tfiot.FindProvisioningTemplateByName(context.TODO(), conn, rs.Primary.ID)
+		_, err := tfiot.FindProvisioningTemplateByName(context.Background(), conn, rs.Primary.ID)
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 
@@ -199,7 +195,7 @@ func testAccCheckProvisioningTemplateDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := tfiot.FindProvisioningTemplateByName(context.TODO(), conn, rs.Primary.ID)
+		_, err := tfiot.FindProvisioningTemplateByName(context.Background(), conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue

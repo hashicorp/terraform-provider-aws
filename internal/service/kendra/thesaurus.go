@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -79,6 +80,10 @@ func ResourceThesaurus() *schema.Resource {
 				},
 			},
 			"status": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"thesaurus_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -185,6 +190,7 @@ func resourceThesaurusRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("name", out.Name)
 	d.Set("role_arn", out.RoleArn)
 	d.Set("status", out.Status)
+	d.Set("thesaurus_id", out.Id)
 
 	if err := d.Set("source_s3_path", flattenSourceS3Path(out.SourceS3Path)); err != nil {
 		return diag.Errorf("setting complex argument: %s", err)
@@ -325,8 +331,8 @@ func statusThesaurus(ctx context.Context, conn *kendra.Client, id, indexId strin
 
 func waitThesaurusCreated(ctx context.Context, conn *kendra.Client, id, indexId string, timeout time.Duration) (*kendra.DescribeThesaurusOutput, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending:                   []string{string(types.ThesaurusStatusCreating)},
-		Target:                    []string{string(types.ThesaurusStatusActive)},
+		Pending:                   enum.Slice(types.ThesaurusStatusCreating),
+		Target:                    enum.Slice(types.ThesaurusStatusActive),
 		Refresh:                   statusThesaurus(ctx, conn, id, indexId),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
@@ -346,8 +352,8 @@ func waitThesaurusCreated(ctx context.Context, conn *kendra.Client, id, indexId 
 
 func waitThesaurusUpdated(ctx context.Context, conn *kendra.Client, id, indexId string, timeout time.Duration) (*kendra.DescribeThesaurusOutput, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending:                   []string{string(types.QuerySuggestionsBlockListStatusUpdating)},
-		Target:                    []string{string(types.QuerySuggestionsBlockListStatusActive)},
+		Pending:                   enum.Slice(types.QuerySuggestionsBlockListStatusUpdating),
+		Target:                    enum.Slice(types.QuerySuggestionsBlockListStatusActive),
 		Refresh:                   statusThesaurus(ctx, conn, id, indexId),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
@@ -367,7 +373,7 @@ func waitThesaurusUpdated(ctx context.Context, conn *kendra.Client, id, indexId 
 
 func waitThesaurusDeleted(ctx context.Context, conn *kendra.Client, id, indexId string, timeout time.Duration) (*kendra.DescribeThesaurusOutput, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{string(types.QuerySuggestionsBlockListStatusDeleting)},
+		Pending: enum.Slice(types.QuerySuggestionsBlockListStatusDeleting),
 		Target:  []string{},
 		Refresh: statusThesaurus(ctx, conn, id, indexId),
 		Timeout: timeout,

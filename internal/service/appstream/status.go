@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-//statusStackState fetches the fleet and its state
+// statusStackState fetches the fleet and its state
 func statusStackState(ctx context.Context, conn *appstream.AppStream, name string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		stack, err := FindStackByName(ctx, conn, name)
@@ -25,7 +25,7 @@ func statusStackState(ctx context.Context, conn *appstream.AppStream, name strin
 	}
 }
 
-//statusFleetState fetches the fleet and its state
+// statusFleetState fetches the fleet and its state
 func statusFleetState(ctx context.Context, conn *appstream.AppStream, name string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		fleet, err := FindFleetByName(ctx, conn, name)
@@ -42,7 +42,7 @@ func statusFleetState(ctx context.Context, conn *appstream.AppStream, name strin
 	}
 }
 
-//statusImageBuilderState fetches the ImageBuilder and its state
+// statusImageBuilderState fetches the ImageBuilder and its state
 func statusImageBuilderState(ctx context.Context, conn *appstream.AppStream, name string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		imageBuilder, err := FindImageBuilderByName(ctx, conn, name)
@@ -59,7 +59,7 @@ func statusImageBuilderState(ctx context.Context, conn *appstream.AppStream, nam
 	}
 }
 
-//statusUserAvailable fetches the user available
+// statusUserAvailable fetches the user available
 func statusUserAvailable(ctx context.Context, conn *appstream.AppStream, username, authType string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		user, err := FindUserByUserNameAndAuthType(ctx, conn, username, authType)

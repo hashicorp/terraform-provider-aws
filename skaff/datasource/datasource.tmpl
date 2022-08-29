@@ -28,6 +28,16 @@ import (
 	// This is a common set of imports but not customized to your code since
 	// your code hasn't been written yet. Make sure you, your IDE, or
 	// goimports -w <file> fixes these imports.
+	//
+	// The provider linter wants your imports to be in two groups: first,
+	// standard library (i.e., "fmt" or "strings"), second, everything else.
+{{- end }}
+{{- if and .IncludeComments .AWSGoSDKV2 }}
+	//
+	// Also, AWS Go SDK v2 may handle nested structures differently than v1,
+	// using the services/{{ .ServicePackage }}/types package. If so, you'll
+	// need to import types and reference the nested types, e.g., as
+	// types.<Type Name>.
 {{- end }}
 	"context"
 	"errors"
@@ -38,9 +48,14 @@ import (
 	"strings"
 	"time"
 
+{{- if .AWSGoSDKV2 }}
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/{{ .ServicePackage }}"
-	"github.com/aws/aws-sdk-go-v2/service/{{ .ServicePackage }}/types" {{- if .IncludeComments }} // TIP: Some v2 packages use a separate package for types while some do not.{{- end }}
+	"github.com/aws/aws-sdk-go-v2/service/{{ .ServicePackage }}/types"
+{{- else }}
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/{{ .ServicePackage }}"
+{{- end }}
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -70,7 +85,7 @@ func DataSource{{ .DataSource }}() *schema.Resource {
 		// TIP: ==== ASSIGN CRUD FUNCTIONS ====
 		// Data sources only have a read function.
 		{{- end }}
-		ReadWithoutTimeout:   dataSource{{ .DataSource }}Read,	
+		ReadWithoutTimeout:   dataSource{{ .DataSource }}Read,
 		{{ if .IncludeComments }}
 		// TIP: ==== SCHEMA ====
 		// In the schema, add each of the arguments and attributes in snake
@@ -125,10 +140,12 @@ func DataSource{{ .DataSource }}() *schema.Resource {
 			},
 			"tags":         tftags.TagsSchemaComputed(), {{- if .IncludeComments }} // TIP: Many, but not all, data sources have `tags` attributes.{{- end }}
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
+
+const (
+	DSName{{ .DataSource }} = "{{ .HumanDataSourceName }}"
+)
 
 func dataSource{{ .DataSource }}Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	{{- if .IncludeComments }}
@@ -138,9 +155,10 @@ func dataSource{{ .DataSource }}Read(ctx context.Context, d *schema.ResourceData
 	//
 	// 1. Get a client connection to the relevant service
 	// 2. Get information about a resource from AWS
-	// 3. Set the arguments and attributes
-	// 4. Set the tags
-	// 5. Return nil
+	// 3. Set the ID
+	// 4. Set the arguments and attributes
+	// 5. Set the tags
+	// 6. Return nil
 	{{- end }}
 	{{- if .IncludeComments }}
 
@@ -149,11 +167,30 @@ func dataSource{{ .DataSource }}Read(ctx context.Context, d *schema.ResourceData
 	conn := meta.(*conns.AWSClient).{{ .Service }}Conn
 	{{ if .IncludeComments }}
 	// TIP: -- 2. Get information about a resource from AWS using an API Get,
-	// List, or Describe-type function, or, better yet, using a finder.
+	// List, or Describe-type function, or, better yet, using a finder. Data
+	// sources mostly have attributes, or, in other words, computed schema
+	// elements. However, a data source will have perhaps one or a few arguments
+	// that are key to finding the relevant information, such as 'name' below.
 	{{- end }}
-	out, err := find{{ .DataSource }}ByID(ctx, conn, d.Id())
+	name := d.Get("name").(string)
+
+	out, err := find{{ .DataSource }}ByName(ctx, conn, name)
+	if err != nil {
+		return create.DiagError(names.{{ .Service }}, create.ErrActionReading, DSName{{ .DataSource }}, name, err)
+	}
 	{{ if .IncludeComments }}
-	// TIP: -- 3. Set the arguments and attributes
+	// TIP: -- 3. Set the ID
+	//
+	// If you don't set the ID, the data source will not be stored in state. In
+	// fact, that's how a resource can be removed from state - clearing its ID.
+	// 
+	// If this data source is a companion to a resource, often both will use the
+	// same ID. Otherwise, the ID will be a unique identifier such as an AWS
+	// identifier, ARN, or name.
+	{{- end }}	
+	d.SetId(out.ID)
+	{{ if .IncludeComments }}
+	// TIP: -- 4. Set the arguments and attributes
 	//
 	// For simple data types (i.e., schema.TypeString, schema.TypeBool,
 	// schema.TypeInt, and schema.TypeFloat), a simple Set call (e.g.,
@@ -167,7 +204,7 @@ func dataSource{{ .DataSource }}Read(ctx context.Context, d *schema.ResourceData
 	//    is equivalent to what is already set. In that case, you may check if
 	//    it is equivalent before setting the different JSON.
 	{{- end }}
-	d.Set("arn", out.Arn)
+	d.Set("arn", out.ARN)
 	d.Set("name", out.Name)
 	{{ if .IncludeComments }}
 	// TIP: Setting a complex type.
@@ -177,24 +214,24 @@ func dataSource{{ .DataSource }}Read(ctx context.Context, d *schema.ResourceData
 	// https://github.com/hashicorp/terraform-provider-aws/blob/main/docs/contributing/data-handling-and-conversion.md#root-typeset-of-resource-and-aws-list-of-structure
 	{{- end }}
 	if err := d.Set("complex_argument", flattenComplexArguments(out.ComplexArguments)); err != nil {
-		return diag.Errorf("setting complex argument: %s", err)
+		return create.DiagError(names.{{ .Service }}, create.ErrActionSetting, DSName{{ .DataSource }}, d.Id(), err)
 	}
 	{{ if .IncludeComments }}
 	// TIP: Setting a JSON string to avoid errorneous diffs.
 	{{- end }}
 	p, err := verify.SecondJSONUnlessEquivalent(d.Get("policy").(string), aws.ToString(out.Policy))
 	if err != nil {
-		return diag.Errorf("while setting policy (%s), encountered: %s", p, err)
+		return create.DiagError(names.{{ .Service }}, create.ErrActionSetting, DSName{{ .DataSource }}, d.Id(), err)
 	}
 
 	p, err = structure.NormalizeJsonString(p)
 	if err != nil {
-		return diag.Errorf("policy (%s) is invalid JSON: %s", p, err)
+		return create.DiagError(names.{{ .Service }}, create.ErrActionReading, DSName{{ .DataSource }}, d.Id(), err)
 	}
 
 	d.Set("policy", p)
 	{{ if .IncludeComments }}
-	// TIP: -- 4. Set the tags
+	// TIP: -- 5. Set the tags
 	//
 	// TIP: Not all data sources support tags and tags don't always make sense. If
 	// your data source doesn't need tags, you can remove the tags lines here and
@@ -205,10 +242,10 @@ func dataSource{{ .DataSource }}Read(ctx context.Context, d *schema.ResourceData
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", KeyValueTags(out.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return diag.Errorf("listing tags for {{ .Service }} {{ .DataSource }} (%s): %s", d.Id(), err)
+		return create.DiagError(names.{{ .Service }}, create.ErrActionSetting, DSName{{ .DataSource }}, d.Id(), err)
 	}
 	{{ if .IncludeComments }}
-	// TIP: -- 5. Return nil
+	// TIP: -- 6. Return nil
 	{{- end }}
 	return nil
 }

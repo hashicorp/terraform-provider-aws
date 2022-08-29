@@ -3,6 +3,7 @@ package ses
 import (
 	"fmt"
 	"log"
+	"regexp"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -64,6 +65,20 @@ func ResourceConfigurationSet() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 64),
 			},
+			"tracking_options": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"custom_redirect_domain": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringDoesNotMatch(regexp.MustCompile(`\.$`), "cannot end with a period"),
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -81,7 +96,7 @@ func resourceConfigurationSetCreate(d *schema.ResourceData, meta interface{}) er
 
 	_, err := conn.CreateConfigurationSet(createOpts)
 	if err != nil {
-		return fmt.Errorf("error creating SES configuration set (%s): %w", configurationSetName, err)
+		return fmt.Errorf("creating SES configuration set (%s): %w", configurationSetName, err)
 	}
 
 	d.SetId(configurationSetName)
@@ -94,7 +109,7 @@ func resourceConfigurationSetCreate(d *schema.ResourceData, meta interface{}) er
 
 		_, err := conn.PutConfigurationSetDeliveryOptions(input)
 		if err != nil {
-			return fmt.Errorf("error adding SES configuration set (%s) delivery options: %w", configurationSetName, err)
+			return fmt.Errorf("adding SES configuration set (%s) delivery options: %w", configurationSetName, err)
 		}
 	}
 
@@ -106,7 +121,7 @@ func resourceConfigurationSetCreate(d *schema.ResourceData, meta interface{}) er
 
 		_, err := conn.UpdateConfigurationSetReputationMetricsEnabled(input)
 		if err != nil {
-			return fmt.Errorf("error adding SES configuration set (%s) reputation metrics enabled: %w", configurationSetName, err)
+			return fmt.Errorf("adding SES configuration set (%s) reputation metrics enabled: %w", configurationSetName, err)
 		}
 	}
 
@@ -118,7 +133,19 @@ func resourceConfigurationSetCreate(d *schema.ResourceData, meta interface{}) er
 
 		_, err := conn.UpdateConfigurationSetSendingEnabled(input)
 		if err != nil {
-			return fmt.Errorf("error adding SES configuration set (%s) sending enabled: %w", configurationSetName, err)
+			return fmt.Errorf("adding SES configuration set (%s) sending enabled: %w", configurationSetName, err)
+		}
+	}
+
+	if v, ok := d.GetOk("tracking_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input := &ses.CreateConfigurationSetTrackingOptionsInput{
+			ConfigurationSetName: aws.String(configurationSetName),
+			TrackingOptions:      expandConfigurationSetTrackingOptions(v.([]interface{})),
+		}
+
+		_, err := conn.CreateConfigurationSetTrackingOptions(input)
+		if err != nil {
+			return fmt.Errorf("error adding SES configuration set (%s) tracking options: %w", configurationSetName, err)
 		}
 	}
 
@@ -137,17 +164,22 @@ func resourceConfigurationSetRead(d *schema.ResourceData, meta interface{}) erro
 
 	response, err := conn.DescribeConfigurationSet(configSetInput)
 
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, ses.ErrCodeConfigurationSetDoesNotExistException) {
+		log.Printf("[WARN] SES Configuration Set (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, ses.ErrCodeConfigurationSetDoesNotExistException) {
-			log.Printf("[WARN] SES Configuration Set (%s) not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
 		return err
 	}
 
 	if err := d.Set("delivery_options", flattenConfigurationSetDeliveryOptions(response.DeliveryOptions)); err != nil {
-		return fmt.Errorf("error setting delivery_options: %w", err)
+		return fmt.Errorf("setting delivery_options: %w", err)
+	}
+
+	if err := d.Set("tracking_options", flattenConfigurationSetTrackingOptions(response.TrackingOptions)); err != nil {
+		return fmt.Errorf("setting tracking_options: %w", err)
 	}
 
 	d.Set("name", response.ConfigurationSet.Name)
@@ -182,7 +214,7 @@ func resourceConfigurationSetUpdate(d *schema.ResourceData, meta interface{}) er
 
 		_, err := conn.PutConfigurationSetDeliveryOptions(input)
 		if err != nil {
-			return fmt.Errorf("error updating SES configuration set (%s) delivery options: %w", d.Id(), err)
+			return fmt.Errorf("updating SES configuration set (%s) delivery options: %w", d.Id(), err)
 		}
 	}
 
@@ -194,7 +226,7 @@ func resourceConfigurationSetUpdate(d *schema.ResourceData, meta interface{}) er
 
 		_, err := conn.UpdateConfigurationSetReputationMetricsEnabled(input)
 		if err != nil {
-			return fmt.Errorf("error updating SES configuration set (%s) reputation metrics enabled: %w", d.Id(), err)
+			return fmt.Errorf("updating SES configuration set (%s) reputation metrics enabled: %w", d.Id(), err)
 		}
 	}
 
@@ -206,7 +238,19 @@ func resourceConfigurationSetUpdate(d *schema.ResourceData, meta interface{}) er
 
 		_, err := conn.UpdateConfigurationSetSendingEnabled(input)
 		if err != nil {
-			return fmt.Errorf("error updating SES configuration set (%s) reputation metrics enabled: %w", d.Id(), err)
+			return fmt.Errorf("updating SES configuration set (%s) reputation metrics enabled: %w", d.Id(), err)
+		}
+	}
+
+	if d.HasChange("tracking_options") {
+		input := &ses.UpdateConfigurationSetTrackingOptionsInput{
+			ConfigurationSetName: aws.String(d.Id()),
+			TrackingOptions:      expandConfigurationSetTrackingOptions(d.Get("tracking_options").([]interface{})),
+		}
+
+		_, err := conn.UpdateConfigurationSetTrackingOptions(input)
+		if err != nil {
+			return fmt.Errorf("error updating SES configuration set (%s) tracking options: %w", d.Id(), err)
 		}
 	}
 
@@ -223,7 +267,7 @@ func resourceConfigurationSetDelete(d *schema.ResourceData, meta interface{}) er
 
 	if _, err := conn.DeleteConfigurationSet(input); err != nil {
 		if !tfawserr.ErrCodeEquals(err, ses.ErrCodeConfigurationSetDoesNotExistException) {
-			return fmt.Errorf("error deleting SES Configuration Set (%s): %w", d.Id(), err)
+			return fmt.Errorf("deleting SES Configuration Set (%s): %w", d.Id(), err)
 		}
 	}
 
@@ -256,6 +300,37 @@ func flattenConfigurationSetDeliveryOptions(options *ses.DeliveryOptions) []inte
 
 	m := map[string]interface{}{
 		"tls_policy": aws.StringValue(options.TlsPolicy),
+	}
+
+	return []interface{}{m}
+}
+
+func expandConfigurationSetTrackingOptions(l []interface{}) *ses.TrackingOptions {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := l[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	options := &ses.TrackingOptions{}
+
+	if v, ok := tfMap["custom_redirect_domain"].(string); ok && v != "" {
+		options.CustomRedirectDomain = aws.String(v)
+	}
+
+	return options
+}
+
+func flattenConfigurationSetTrackingOptions(options *ses.TrackingOptions) []interface{} {
+	if options == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"custom_redirect_domain": aws.StringValue(options.CustomRedirectDomain),
 	}
 
 	return []interface{}{m}

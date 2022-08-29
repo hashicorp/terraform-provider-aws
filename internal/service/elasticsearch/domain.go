@@ -385,6 +385,12 @@ func ResourceDomain() *schema.Resource {
 							Type:     schema.TypeInt,
 							Optional: true,
 						},
+						"throughput": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: validation.IntBetween(125, 1000),
+						},
 						"volume_size": {
 							Type:     schema.TypeInt,
 							Optional: true,

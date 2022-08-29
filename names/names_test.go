@@ -450,7 +450,7 @@ func TestAWSGoV1ClientName(t *testing.T) {
 
 	for _, testCase := range testCases {
 		t.Run(testCase.TestName, func(t *testing.T) {
-			got, err := AWSGoV1ClientName(testCase.Input)
+			got, err := AWSGoV1ClientTypeName(testCase.Input)
 
 			if err != nil && !testCase.Error {
 				t.Errorf("got error (%s), expected no error", err)

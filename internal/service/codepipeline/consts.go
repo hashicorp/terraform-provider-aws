@@ -3,8 +3,8 @@ package codepipeline
 import "time"
 
 const (
-	ResWebhook  = "Webhook"
-	resPipeline = "Pipeline"
+	ResNameWebhook  = "Webhook"
+	ResNamePipeline = "Pipeline"
 )
 
 const (
