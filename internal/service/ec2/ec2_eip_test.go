@@ -67,6 +67,50 @@ func TestAccEC2EIP_disappears(t *testing.T) {
 	})
 }
 
+func TestAccEC2EIP_tags(t *testing.T) {
+	var conf ec2.Address
+	resourceName := "aws_eip.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckVPCOnly(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEIPDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEIPConfig_tags1("key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEIPExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccEIPConfig_tags2("key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEIPExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccEIPConfig_tags1("key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEIPExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccEC2EIP_instance(t *testing.T) {
 	var conf ec2.Address
 	resourceName := "aws_eip.test"
@@ -260,91 +304,6 @@ func TestAccEC2EIP_NetworkInterface_twoEIPsOneInterface(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"associate_with_private_ip"},
-			},
-		},
-	})
-}
-
-func TestAccEC2EIP_TagsEC2VPC_withVPCTrue(t *testing.T) {
-	var conf ec2.Address
-	resourceName := "aws_eip.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckVPCOnly(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEIPDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccEIPConfig_tagsVPC(rName, "vpc = true"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEIPExists(resourceName, &conf),
-					testAccCheckEIPAttributes(&conf),
-					resource.TestCheckResourceAttr(resourceName, "domain", ec2.DomainTypeVpc),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.RandomName", rName),
-					resource.TestCheckResourceAttr(resourceName, "tags.TestName", rName),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccEIPConfig_tagsVPC(rName2, "vpc = true"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEIPExists(resourceName, &conf),
-					testAccCheckEIPAttributes(&conf),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.RandomName", rName2),
-					resource.TestCheckResourceAttr(resourceName, "tags.TestName", rName2),
-				),
-			},
-		},
-	})
-}
-
-// Regression test for https://github.com/hashicorp/terraform-provider-aws/issues/18756
-func TestAccEC2EIP_TagsEC2VPC_withoutVPCTrue(t *testing.T) {
-	var conf ec2.Address
-	resourceName := "aws_eip.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckVPCOnly(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEIPDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccEIPConfig_tagsVPC(rName, ""),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEIPExists(resourceName, &conf),
-					testAccCheckEIPAttributes(&conf),
-					resource.TestCheckResourceAttr(resourceName, "domain", ec2.DomainTypeVpc),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.RandomName", rName),
-					resource.TestCheckResourceAttr(resourceName, "tags.TestName", rName),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccEIPConfig_tagsVPC(rName2, ""),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEIPExists(resourceName, &conf),
-					testAccCheckEIPAttributes(&conf),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.RandomName", rName2),
-					resource.TestCheckResourceAttr(resourceName, "tags.TestName", rName2),
-				),
 			},
 		},
 	})
@@ -716,17 +675,29 @@ resource "aws_eip" "test" {
 }
 `
 
-func testAccEIPConfig_tagsVPC(rName, vpcConfig string) string {
+func testAccEIPConfig_tags1(tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_eip" "test" {
-  %[1]s
+  vpc = true
 
   tags = {
-    RandomName = %[2]q
-    TestName   = %[2]q
+    %[1]q = %[2]q
   }
 }
-`, vpcConfig, rName)
+`, tagKey1, tagValue1)
+}
+
+func testAccEIPConfig_tags2(tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return fmt.Sprintf(`
+resource "aws_eip" "test" {
+  vpc = true
+
+  tags = {
+    %[1]q = %[2]q
+    %[3]q = %[4]q
+  }
+}
+`, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
 const testAccEIPConfig_publicIPv4PoolDefault = `
