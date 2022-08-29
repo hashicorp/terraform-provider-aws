@@ -6,12 +6,8 @@ import (
 	"regexp"
 	"strings"
 	"testing"
-	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -20,10 +16,6 @@ import (
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
-
-// This will currently skip EIPs with associations,
-// although we depend on aws_vpc to potentially have
-// the majority of those associations removed.
 
 func TestAccEC2EIP_basic(t *testing.T) {
 	var conf ec2.Address
@@ -39,9 +31,9 @@ func TestAccEC2EIP_basic(t *testing.T) {
 				Config: testAccEIPConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEIPExists(resourceName, &conf),
-					testAccCheckEIPAttributes(&conf),
+					resource.TestCheckResourceAttr(resourceName, "domain", "vpc"),
+					resource.TestCheckResourceAttrSet(resourceName, "public_ip"),
 					testAccCheckEIPPublicDNS(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "domain", ec2.DomainTypeVpc),
 				),
 			},
 			{
@@ -591,6 +583,38 @@ func TestAccEC2EIP_BYOIPAddress_customWithPublicIPv4Pool(t *testing.T) {
 	})
 }
 
+func testAccCheckEIPExists(n string, v *ec2.Address) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No EC2 EIP ID is set")
+		}
+
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+
+		var err error
+		var output *ec2.Address
+
+		if strings.Contains(rs.Primary.ID, "eipalloc") {
+			output, err = tfec2.FindEIPByAllocationID(conn, rs.Primary.ID)
+		} else {
+			output, err = tfec2.FindEIPByPublicIP(conn, rs.Primary.ID)
+		}
+
+		if err != nil {
+			return err
+		}
+
+		*v = *output
+
+		return nil
+	}
+}
+
 func testAccCheckEIPDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
@@ -599,39 +623,23 @@ func testAccCheckEIPDestroy(s *terraform.State) error {
 			continue
 		}
 
+		var err error
+
 		if strings.Contains(rs.Primary.ID, "eipalloc") {
-			req := &ec2.DescribeAddressesInput{
-				AllocationIds: []*string{aws.String(rs.Primary.ID)},
-			}
-			describe, err := conn.DescribeAddresses(req)
-			if err != nil {
-				// Verify the error is what we want
-				if ae, ok := err.(awserr.Error); ok && ae.Code() == "InvalidAllocationID.NotFound" || ae.Code() == "InvalidAddress.NotFound" {
-					continue
-				}
-				return err
-			}
-
-			if len(describe.Addresses) > 0 {
-				return fmt.Errorf("still exists")
-			}
+			_, err = tfec2.FindEIPByAllocationID(conn, rs.Primary.ID)
 		} else {
-			req := &ec2.DescribeAddressesInput{
-				PublicIps: []*string{aws.String(rs.Primary.ID)},
-			}
-			describe, err := conn.DescribeAddresses(req)
-			if err != nil {
-				// Verify the error is what we want
-				if ae, ok := err.(awserr.Error); ok && ae.Code() == "InvalidAllocationID.NotFound" || ae.Code() == "InvalidAddress.NotFound" {
-					continue
-				}
-				return err
-			}
-
-			if len(describe.Addresses) > 0 {
-				return fmt.Errorf("still exists")
-			}
+			_, err = tfec2.FindEIPByPublicIP(conn, rs.Primary.ID)
 		}
+
+		if tfresource.NotFound(err) {
+			continue
+		}
+
+		if err != nil {
+			return err
+		}
+
+		return fmt.Errorf("EC2 EIP %s still exists", rs.Primary.ID)
 	}
 
 	return nil
@@ -652,71 +660,6 @@ func testAccCheckEIPAssociated(conf *ec2.Address) resource.TestCheckFunc {
 		if conf.AssociationId == nil || *conf.AssociationId == "" {
 			return fmt.Errorf("empty association_id")
 		}
-
-		return nil
-	}
-}
-
-func testAccCheckEIPExists(n string, res *ec2.Address) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[n]
-		if !ok {
-			return fmt.Errorf("Not found: %s", n)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No EIP ID is set")
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
-
-		input := &ec2.DescribeAddressesInput{}
-
-		if strings.Contains(rs.Primary.ID, "eipalloc") {
-			input.AllocationIds = aws.StringSlice([]string{rs.Primary.ID})
-		} else {
-			input.PublicIps = aws.StringSlice([]string{rs.Primary.ID})
-		}
-
-		var output *ec2.DescribeAddressesOutput
-
-		err := resource.Retry(15*time.Minute, func() *resource.RetryError {
-			var err error
-
-			output, err = conn.DescribeAddresses(input)
-
-			if tfawserr.ErrCodeEquals(err, "InvalidAllocationID.NotFound") {
-				return resource.RetryableError(err)
-			}
-
-			if tfawserr.ErrCodeEquals(err, "InvalidAddress.NotFound") {
-				return resource.RetryableError(err)
-			}
-
-			if err != nil {
-				return resource.NonRetryableError(err)
-			}
-
-			return nil
-		})
-
-		if tfresource.TimedOut(err) {
-			output, err = conn.DescribeAddresses(input)
-		}
-
-		if err != nil {
-			return fmt.Errorf("while describing addresses (%s): %w", rs.Primary.ID, err)
-		}
-
-		if len(output.Addresses) != 1 {
-			return fmt.Errorf("wrong number of EIP found for (%s): %d", rs.Primary.ID, len(output.Addresses))
-		}
-
-		if aws.StringValue(output.Addresses[0].AllocationId) != rs.Primary.ID && aws.StringValue(output.Addresses[0].PublicIp) != rs.Primary.ID {
-			return fmt.Errorf("EIP (%s) not found", rs.Primary.ID)
-		}
-
-		*res = *output.Addresses[0]
 
 		return nil
 	}
