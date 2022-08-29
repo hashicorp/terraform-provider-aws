@@ -1,0 +1,3 @@
+```release-note:note
+resource/aws_default_vpc: With the retirement of EC2-Classic the`enable_classiclink` and `enable_classiclink_dns_support` attributes have been deprecated and will be removed in a future version
+```
