@@ -3,7 +3,7 @@ data-source/aws_instance: Add `host_resource_group_arn` attribute
 ```
 
 ```release-note:enhancement
-resource/aws_instance: Add `host_resource_group_arn` attribute; improve compatibility with launching instances in a host resource group using an AMI registered with License Manager.
+resource/aws_instance: Add `host_resource_group_arn` attribute; improve compatibility with launching instances in a host resource group using an AMI registered with License Manager. NOTE: Because we cannot easily test this functionality, it is best effort and we ask for community help in testing.
 ```
 
 ```release-note:note
