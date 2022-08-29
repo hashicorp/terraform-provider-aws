@@ -24,6 +24,10 @@ func DataSourceNodeGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"capacity_type": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"cluster_name": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -172,6 +176,7 @@ func dataSourceNodeGroupRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	d.Set("ami_type", nodeGroup.AmiType)
 	d.Set("arn", nodeGroup.NodegroupArn)
+	d.Set("capacity_type", nodeGroup.CapacityType)
 	d.Set("cluster_name", nodeGroup.ClusterName)
 	d.Set("disk_size", nodeGroup.DiskSize)
 	d.Set("instance_types", nodeGroup.InstanceTypes)
