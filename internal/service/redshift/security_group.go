@@ -10,7 +10,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/redshift"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -216,64 +215,6 @@ func resourceSecurityGroupIngressHash(v interface{}) int {
 	}
 
 	return create.StringHashcode(buf.String())
-}
-
-func resourceSecurityGroupAuthorizeRule(ingress interface{}, redshiftSecurityGroupName string, conn *redshift.Redshift) error {
-	ing := ingress.(map[string]interface{})
-
-	opts := redshift.AuthorizeClusterSecurityGroupIngressInput{
-		ClusterSecurityGroupName: aws.String(redshiftSecurityGroupName),
-	}
-
-	if attr, ok := ing["cidr"]; ok && attr != "" {
-		opts.CIDRIP = aws.String(attr.(string))
-	}
-
-	if attr, ok := ing["security_group_name"]; ok && attr != "" {
-		opts.EC2SecurityGroupName = aws.String(attr.(string))
-	}
-
-	if attr, ok := ing["security_group_owner_id"]; ok && attr != "" {
-		opts.EC2SecurityGroupOwnerId = aws.String(attr.(string))
-	}
-
-	log.Printf("[DEBUG] Authorize ingress rule configuration: %#v", opts)
-	_, err := conn.AuthorizeClusterSecurityGroupIngress(&opts)
-
-	if err != nil {
-		return fmt.Errorf("Error authorizing security group ingress: %s", err)
-	}
-
-	return nil
-}
-
-func resourceSecurityGroupStateRefreshFunc(
-	d *schema.ResourceData, meta interface{}) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		v, err := resourceSecurityGroupRetrieve(d, meta)
-
-		if err != nil {
-			log.Printf("Error on retrieving Redshift Security Group when waiting: %s", err)
-			return nil, "", err
-		}
-
-		statuses := make([]string, 0, len(v.EC2SecurityGroups)+len(v.IPRanges))
-		for _, ec2g := range v.EC2SecurityGroups {
-			statuses = append(statuses, *ec2g.Status)
-		}
-		for _, ips := range v.IPRanges {
-			statuses = append(statuses, *ips.Status)
-		}
-
-		for _, stat := range statuses {
-			// Not done
-			if stat != "authorized" {
-				return nil, "authorizing", nil
-			}
-		}
-
-		return v, "authorized", nil
-	}
 }
 
 func expandSGAuthorizeIngress(configured []interface{}) []redshift.AuthorizeClusterSecurityGroupIngressInput {

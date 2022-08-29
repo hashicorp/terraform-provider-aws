@@ -1836,13 +1836,3 @@ func dbSetResourceDataEngineVersionFromInstance(d *schema.ResourceData, c *rds.D
 	newVersion := aws.StringValue(c.EngineVersion)
 	compareActualEngineVersion(d, oldVersion, newVersion)
 }
-
-func flattenDBSecurityGroups(groups []*rds.DBSecurityGroupMembership) *schema.Set {
-	result := &schema.Set{
-		F: schema.HashString,
-	}
-	for _, v := range groups {
-		result.Add(aws.StringValue(v.DBSecurityGroupName))
-	}
-	return result
-}

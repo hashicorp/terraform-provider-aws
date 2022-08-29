@@ -9,7 +9,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -339,33 +338,4 @@ func resourceSecurityGroupIngressHash(v interface{}) int {
 	}
 
 	return create.StringHashcode(buf.String())
-}
-
-func resourceSecurityGroupStateRefreshFunc(
-	d *schema.ResourceData, meta interface{}) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		v, err := resourceSecurityGroupRetrieve(d, meta)
-
-		if err != nil {
-			log.Printf("Error on retrieving DB Security Group when waiting: %s", err)
-			return nil, "", err
-		}
-
-		statuses := make([]string, 0, len(v.EC2SecurityGroups)+len(v.IPRanges))
-		for _, ec2g := range v.EC2SecurityGroups {
-			statuses = append(statuses, *ec2g.Status)
-		}
-		for _, ips := range v.IPRanges {
-			statuses = append(statuses, *ips.Status)
-		}
-
-		for _, stat := range statuses {
-			// Not done
-			if stat != "authorized" {
-				return nil, "authorizing", nil
-			}
-		}
-
-		return v, "authorized", nil
-	}
 }
