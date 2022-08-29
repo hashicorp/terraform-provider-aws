@@ -2,14 +2,13 @@ package rds
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"log"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -90,63 +89,7 @@ func ResourceSecurityGroup() *schema.Resource {
 }
 
 func resourceSecurityGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RDSConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
-
-	var err error
-	var errs []error
-
-	opts := rds.CreateDBSecurityGroupInput{
-		DBSecurityGroupName:        aws.String(d.Get("name").(string)),
-		DBSecurityGroupDescription: aws.String(d.Get("description").(string)),
-		Tags:                       Tags(tags.IgnoreAWS()),
-	}
-
-	log.Printf("[DEBUG] DB Security Group create configuration: %#v", opts)
-	_, err = conn.CreateDBSecurityGroup(&opts)
-	if err != nil {
-		return fmt.Errorf("Error creating DB Security Group: %s", err)
-	}
-
-	d.SetId(d.Get("name").(string))
-
-	log.Printf("[INFO] DB Security Group ID: %s", d.Id())
-
-	sg, err := resourceSecurityGroupRetrieve(d, meta)
-	if err != nil {
-		return err
-	}
-
-	ingresses := d.Get("ingress").(*schema.Set)
-	for _, ing := range ingresses.List() {
-		err := resourceSecurityGroupAuthorizeRule(ing, *sg.DBSecurityGroupName, conn)
-		if err != nil {
-			errs = append(errs, err)
-		}
-	}
-
-	if len(errs) > 0 {
-		return &multierror.Error{Errors: errs}
-	}
-
-	log.Println(
-		"[INFO] Waiting for Ingress Authorizations to be authorized")
-
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{"authorizing"},
-		Target:  []string{"authorized"},
-		Refresh: resourceSecurityGroupStateRefreshFunc(d, meta),
-		Timeout: 10 * time.Minute,
-	}
-
-	// Wait, catching any errors
-	_, err = stateConf.WaitForState()
-	if err != nil {
-		return err
-	}
-
-	return resourceSecurityGroupRead(d, meta)
+	return errors.New(`with the retirement of EC2-Classic no new RDS DB Security Groups can be created`)
 }
 
 func resourceSecurityGroupRead(d *schema.ResourceData, meta interface{}) error {
