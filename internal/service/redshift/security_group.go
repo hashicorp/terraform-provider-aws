@@ -2,15 +2,14 @@ package redshift
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"log"
 	"regexp"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/redshift"
-	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -79,57 +78,7 @@ func ResourceSecurityGroup() *schema.Resource {
 }
 
 func resourceSecurityGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftConn
-
-	var err error
-	var errs []error
-
-	name := d.Get("name").(string)
-	desc := d.Get("description").(string)
-	sgInput := &redshift.CreateClusterSecurityGroupInput{
-		ClusterSecurityGroupName: aws.String(name),
-		Description:              aws.String(desc),
-	}
-	log.Printf("[DEBUG] Redshift security group create: name: %s, description: %s", name, desc)
-	_, err = conn.CreateClusterSecurityGroup(sgInput)
-	if err != nil {
-		return fmt.Errorf("Error creating RedshiftSecurityGroup: %s", err)
-	}
-
-	d.SetId(d.Get("name").(string))
-
-	log.Printf("[INFO] Redshift Security Group ID: %s", d.Id())
-	sg, err := resourceSecurityGroupRetrieve(d, meta)
-	if err != nil {
-		return err
-	}
-
-	ingresses := d.Get("ingress").(*schema.Set)
-	for _, ing := range ingresses.List() {
-		err := resourceSecurityGroupAuthorizeRule(ing, *sg.ClusterSecurityGroupName, conn)
-		if err != nil {
-			errs = append(errs, err)
-		}
-	}
-
-	if len(errs) > 0 {
-		return &multierror.Error{Errors: errs}
-	}
-
-	log.Println("[INFO] Waiting for Redshift Security Group Ingress Authorizations to be authorized")
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{"authorizing"},
-		Target:  []string{"authorized"},
-		Refresh: resourceSecurityGroupStateRefreshFunc(d, meta),
-		Timeout: 10 * time.Minute,
-	}
-
-	_, err = stateConf.WaitForState()
-	if err != nil {
-		return err
-	}
-
-	return resourceSecurityGroupRead(d, meta)
+	return errors.New(`with the retirement of EC2-Classic no new Redshift Security Groups can be created`)
 }
 
 func resourceSecurityGroupRead(d *schema.ResourceData, meta interface{}) error {

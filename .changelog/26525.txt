@@ -5,3 +5,7 @@ resource/aws_default_vpc: With the retirement of EC2-Classic the`enable_classicl
 ```release-note:note
 resource/aws_db_security_group: With the retirement of EC2-Classic no new RDS DB Security Groups can be created
 ```
+
+```release-note:note
+resource/aws_redshift_security_group: With the retirement of EC2-Classic no new Redshift Security Groups can be created
+```
