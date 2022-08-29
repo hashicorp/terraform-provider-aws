@@ -29,3 +29,7 @@ resource/aws_elasticache_cluster: With the retirement of EC2-Classic no new Elas
 ```release-note:note
 resource/aws_opsworks_stack: With the retirement of EC2-Classic no new OpsWorks Stacks can be created without referencing a VPC
 ```
+
+```release-note:note
+resource/aws_launch_configuration: With the retirement of EC2-Classic no new Auto Scaling Launch Configurations can be created referencing ClassicLink
+```
