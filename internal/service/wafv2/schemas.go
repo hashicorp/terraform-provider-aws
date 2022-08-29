@@ -647,7 +647,6 @@ func cookiesSchema() *schema.Schema {
 		Optional: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"match_scope": matchScopeSchema(),
 				"match_pattern": {
 					Type:     schema.TypeList,
 					Required: true,
@@ -656,11 +655,12 @@ func cookiesSchema() *schema.Schema {
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							"all":              emptySchema(),
-							"included_cookies": cookiesMatchPatternBaseSchema(),
 							"excluded_cookies": cookiesMatchPatternBaseSchema(),
+							"included_cookies": cookiesMatchPatternBaseSchema(),
 						},
 					},
 				},
+				"match_scope":       matchScopeSchema(),
 				"oversize_handling": oversizeHandlingSchema(),
 			},
 		},
@@ -697,7 +697,6 @@ func headersSchema() *schema.Schema {
 		Optional: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"match_scope": matchScopeSchema(),
 				"match_pattern": {
 					Type:     schema.TypeList,
 					Required: true,
@@ -706,11 +705,12 @@ func headersSchema() *schema.Schema {
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							"all":              emptySchema(),
-							"included_headers": headersMatchPatternBaseSchema(),
 							"excluded_headers": headersMatchPatternBaseSchema(),
+							"included_headers": headersMatchPatternBaseSchema(),
 						},
 					},
 				},
+				"match_scope":       matchScopeSchema(),
 				"oversize_handling": oversizeHandlingSchema(),
 			},
 		},
@@ -744,7 +744,6 @@ func jsonBodySchema() *schema.Schema {
 					Optional:     true,
 					ValidateFunc: validation.StringInSlice(wafv2.FallbackBehavior_Values(), false),
 				},
-				"match_scope": matchScopeSchema(),
 				"match_pattern": {
 					Type:     schema.TypeList,
 					Required: true,
@@ -768,6 +767,7 @@ func jsonBodySchema() *schema.Schema {
 						},
 					},
 				},
+				"match_scope":       matchScopeSchema(),
 				"oversize_handling": oversizeHandlingSchema(),
 			},
 		},
