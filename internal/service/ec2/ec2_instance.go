@@ -2640,19 +2640,19 @@ func buildInstanceOpts(d *schema.ResourceData, meta interface{}) (*instanceOpts,
 		AvailabilityZone: aws.String(d.Get("availability_zone").(string)),
 	}
 
-	if v, ok := d.GetOk("placement_group"); ok && v.(string) != "" && (instanceInterruptionBehavior == "" || instanceInterruptionBehavior == ec2.InstanceInterruptionBehaviorTerminate) {
+	if v, ok := d.GetOk("placement_group"); ok && (instanceInterruptionBehavior == "" || instanceInterruptionBehavior == ec2.InstanceInterruptionBehaviorTerminate) {
 		opts.Placement.GroupName = aws.String(v.(string))
 		opts.SpotPlacement.GroupName = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("tenancy"); ok && v.(string) != "" {
+	if v, ok := d.GetOk("tenancy"); ok {
 		opts.Placement.Tenancy = aws.String(v.(string))
 	}
-	if v, ok := d.GetOk("host_id"); ok && v.(string) != "" {
+	if v, ok := d.GetOk("host_id"); ok {
 		opts.Placement.HostId = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("host_resource_group_arn"); ok && v.(string) != "" {
+	if v, ok := d.GetOk("host_resource_group_arn"); ok {
 		opts.Placement.HostResourceGroupArn = aws.String(v.(string))
 	}
 
