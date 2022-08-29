@@ -1,6 +1,7 @@
 package opsworks
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"time"
@@ -197,6 +198,10 @@ func resourceStackCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).OpsWorksConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+
+	if _, ok := d.GetOk("vpc_id"); !ok {
+		return errors.New(`with the retirement of EC2-Classic no new OpsWorks Stacks can be created without referencing a VPC`)
+	}
 
 	name := d.Get("name").(string)
 	region := d.Get("region").(string)

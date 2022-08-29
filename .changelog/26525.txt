@@ -25,3 +25,7 @@ resource/aws_redshift_cluster: With the retirement of EC2-Classic no new Redshif
 ```release-note:note
 resource/aws_elasticache_cluster: With the retirement of EC2-Classic no new ElastiCache Clusters can be created referencing ElastiCache Security Groups
 ```
+
+```release-note:note
+resource/aws_opsworks_stack: With the retirement of EC2-Classic no new OpsWorks Stacks can be created without referencing a VPC
+```
