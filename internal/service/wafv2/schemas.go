@@ -336,6 +336,7 @@ func fieldToMatchBaseSchema() *schema.Resource {
 			"body":                bodySchema(),
 			"cookies":             cookiesSchema(),
 			"headers":             headersSchema(),
+			"json_body":           jsonBodySchema(),
 			"method":              emptySchema(),
 			"query_string":        emptySchema(),
 			"single_header": {
@@ -728,6 +729,47 @@ func headersMatchPatternBaseSchema() *schema.Schema {
 				validation.StringLenBetween(1, 64),
 				validation.StringMatch(regexp.MustCompile(`.*\S.*`), ""),
 			),
+		},
+	}
+}
+
+func jsonBodySchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"invalid_fallback_behavior": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringInSlice(wafv2.FallbackBehavior_Values(), false),
+				},
+				"match_scope": matchScopeSchema(),
+				"match_pattern": {
+					Type:     schema.TypeList,
+					Required: true,
+					MaxItems: 1,
+					MinItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"all": emptySchema(),
+							"included_paths": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MinItems: 1,
+								Elem: &schema.Schema{
+									Type: schema.TypeString,
+									ValidateFunc: validation.All(
+										validation.StringLenBetween(1, 512),
+										validation.StringMatch(regexp.MustCompile(`([/])|([/](([^~])|(~[01]))+)`), ""),
+									),
+								},
+							},
+						},
+					},
+				},
+				"oversize_handling": oversizeHandlingSchema(),
+			},
 		},
 	}
 }

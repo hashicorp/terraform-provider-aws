@@ -403,6 +403,10 @@ func expandFieldToMatch(l []interface{}) *wafv2.FieldToMatch {
 		f.Headers = expandHeaders(m["headers"].([]interface{}))
 	}
 
+	if v, ok := m["json_body"]; ok && len(v.([]interface{})) > 0 {
+		f.JsonBody = expandJsonBody(m["json_body"].([]interface{}))
+	}
+
 	if v, ok := m["method"]; ok && len(v.([]interface{})) > 0 {
 		f.Method = &wafv2.Method{}
 	}
@@ -662,13 +666,13 @@ func expandCookies(l []interface{}) *wafv2.Cookies {
 	m := l[0].(map[string]interface{})
 
 	return &wafv2.Cookies{
-		MatchPattern:     expandCookiesMatchPattern(m["match_pattern"].([]interface{})),
+		MatchPattern:     expandCookieMatchPattern(m["match_pattern"].([]interface{})),
 		MatchScope:       aws.String(m["match_scope"].(string)),
 		OversizeHandling: aws.String(m["oversize_handling"].(string)),
 	}
 }
 
-func expandCookiesMatchPattern(l []interface{}) *wafv2.CookieMatchPattern {
+func expandCookieMatchPattern(l []interface{}) *wafv2.CookieMatchPattern {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -699,13 +703,13 @@ func expandHeaders(l []interface{}) *wafv2.Headers {
 	m := l[0].(map[string]interface{})
 
 	return &wafv2.Headers{
-		MatchPattern:     expandHeadersMatchPattern(m["match_pattern"].([]interface{})),
+		MatchPattern:     expandHeaderMatchPattern(m["match_pattern"].([]interface{})),
 		MatchScope:       aws.String(m["match_scope"].(string)),
 		OversizeHandling: aws.String(m["oversize_handling"].(string)),
 	}
 }
 
-func expandHeadersMatchPattern(l []interface{}) *wafv2.HeaderMatchPattern {
+func expandHeaderMatchPattern(l []interface{}) *wafv2.HeaderMatchPattern {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -723,6 +727,44 @@ func expandHeadersMatchPattern(l []interface{}) *wafv2.HeaderMatchPattern {
 
 	if v, ok := m["excluded_headers"]; ok && len(v.([]interface{})) > 0 {
 		f.ExcludedHeaders = flex.ExpandStringList(m["excluded_headers"].([]interface{}))
+	}
+
+	return f
+}
+
+func expandJsonBody(l []interface{}) *wafv2.JsonBody {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+	f := &wafv2.JsonBody{
+		MatchPattern:     expandJsonMatchPattern(m["match_pattern"].([]interface{})),
+		MatchScope:       aws.String(m["match_scope"].(string)),
+		OversizeHandling: aws.String(m["oversize_handling"].(string)),
+	}
+
+	if v, ok := m["invalid_fallback_behavior"]; ok && len(v.(string)) > 0 {
+		f.InvalidFallbackBehavior = aws.String(m["invalid_fallback_behavior"].(string))
+	}
+
+	return f
+}
+
+func expandJsonMatchPattern(l []interface{}) *wafv2.JsonMatchPattern {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+	f := &wafv2.JsonMatchPattern{}
+
+	if v, ok := m["all"]; ok && len(v.([]interface{})) > 0 {
+		f.All = &wafv2.All{}
+	}
+
+	if v, ok := m["included_paths"]; ok && len(v.([]interface{})) > 0 {
+		f.IncludedPaths = flex.ExpandStringList(m["included_paths"].([]interface{}))
 	}
 
 	return f
@@ -1030,6 +1072,10 @@ func flattenFieldToMatch(f *wafv2.FieldToMatch) interface{} {
 		m["headers"] = flattenHeaders(f.Headers)
 	}
 
+	if f.JsonBody != nil {
+		m["json_body"] = flattenJsonBody(f.JsonBody)
+	}
+
 	if f.Method != nil {
 		m["method"] = make([]map[string]interface{}, 1)
 	}
@@ -1302,14 +1348,14 @@ func flattenHeaders(s *wafv2.Headers) interface{} {
 
 	m := map[string]interface{}{
 		"match_scope":       aws.StringValue(s.MatchScope),
-		"match_pattern":     flattenHeadersMatchPattern(s.MatchPattern),
+		"match_pattern":     flattenHeaderMatchPattern(s.MatchPattern),
 		"oversize_handling": aws.StringValue(s.OversizeHandling),
 	}
 
 	return []interface{}{m}
 }
 
-func flattenHeadersMatchPattern(s *wafv2.HeaderMatchPattern) interface{} {
+func flattenHeaderMatchPattern(s *wafv2.HeaderMatchPattern) interface{} {
 	if s == nil {
 		return []interface{}{}
 	}
@@ -1326,6 +1372,42 @@ func flattenHeadersMatchPattern(s *wafv2.HeaderMatchPattern) interface{} {
 
 	if s.IncludedHeaders != nil {
 		m["included_headers"] = flex.FlattenStringList(s.IncludedHeaders)
+	}
+
+	return []interface{}{m}
+}
+
+func flattenJsonBody(s *wafv2.JsonBody) interface{} {
+	if s == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"match_scope":       aws.StringValue(s.MatchScope),
+		"match_pattern":     flattenJsonMatchPattern(s.MatchPattern),
+		"oversize_handling": aws.StringValue(s.OversizeHandling),
+	}
+
+	if s.InvalidFallbackBehavior != nil {
+		m["invalid_fallback_behavior"] = aws.StringValue(s.InvalidFallbackBehavior)
+	}
+
+	return []interface{}{m}
+}
+
+func flattenJsonMatchPattern(s *wafv2.JsonMatchPattern) interface{} {
+	if s == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{}
+
+	if s.All != nil {
+		m["all"] = make([]map[string]interface{}, 1)
+	}
+
+	if s.IncludedPaths != nil {
+		m["included_paths"] = flex.FlattenStringList(s.IncludedPaths)
 	}
 
 	return []interface{}{m}
