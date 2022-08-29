@@ -334,8 +334,46 @@ func fieldToMatchBaseSchema() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"all_query_arguments": emptySchema(),
 			"body":                emptySchema(),
-			"method":              emptySchema(),
-			"query_string":        emptySchema(),
+			"cookies": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"match_scope": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringInSlice(wafv2.MapMatchScope_Values(), false),
+						},
+						"oversize_handling": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringInSlice(wafv2.OversizeHandling_Values(), false),
+						},
+						"match_pattern": {
+							Type:     schema.TypeList,
+							Required: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"all": emptySchema(),
+									"included_cookies": {
+										Type:     schema.TypeList,
+										Optional: true,
+										Elem:     &schema.Schema{Type: schema.TypeString},
+									},
+									"excluded_cookies": {
+										Type:     schema.TypeList,
+										Optional: true,
+										Elem:     &schema.Schema{Type: schema.TypeString},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			"method":       emptySchema(),
+			"query_string": emptySchema(),
 			"single_header": {
 				Type:     schema.TypeList,
 				Optional: true,
