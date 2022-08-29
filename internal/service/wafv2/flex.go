@@ -399,6 +399,10 @@ func expandFieldToMatch(l []interface{}) *wafv2.FieldToMatch {
 		f.Cookies = expandCookies(m["cookies"].([]interface{}))
 	}
 
+	if v, ok := m["headers"]; ok && len(v.([]interface{})) > 0 {
+		f.Headers = expandHeaders(m["headers"].([]interface{}))
+	}
+
 	if v, ok := m["method"]; ok && len(v.([]interface{})) > 0 {
 		f.Method = &wafv2.Method{}
 	}
@@ -658,13 +662,13 @@ func expandCookies(l []interface{}) *wafv2.Cookies {
 	m := l[0].(map[string]interface{})
 
 	return &wafv2.Cookies{
-		MatchPattern:     expandCookieMatchPattern(m["match_pattern"].([]interface{})),
+		MatchPattern:     expandCookiesMatchPattern(m["match_pattern"].([]interface{})),
 		MatchScope:       aws.String(m["match_scope"].(string)),
 		OversizeHandling: aws.String(m["oversize_handling"].(string)),
 	}
 }
 
-func expandCookieMatchPattern(l []interface{}) *wafv2.CookieMatchPattern {
+func expandCookiesMatchPattern(l []interface{}) *wafv2.CookieMatchPattern {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -682,6 +686,43 @@ func expandCookieMatchPattern(l []interface{}) *wafv2.CookieMatchPattern {
 
 	if v, ok := m["excluded_cookies"]; ok && len(v.([]interface{})) > 0 {
 		f.ExcludedCookies = flex.ExpandStringList(m["excluded_cookies"].([]interface{}))
+	}
+
+	return f
+}
+
+func expandHeaders(l []interface{}) *wafv2.Headers {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	return &wafv2.Headers{
+		MatchPattern:     expandHeadersMatchPattern(m["match_pattern"].([]interface{})),
+		MatchScope:       aws.String(m["match_scope"].(string)),
+		OversizeHandling: aws.String(m["oversize_handling"].(string)),
+	}
+}
+
+func expandHeadersMatchPattern(l []interface{}) *wafv2.HeaderMatchPattern {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+	f := &wafv2.HeaderMatchPattern{}
+
+	if v, ok := m["all"]; ok && len(v.([]interface{})) > 0 {
+		f.All = &wafv2.All{}
+	}
+
+	if v, ok := m["included_headers"]; ok && len(v.([]interface{})) > 0 {
+		f.IncludedHeaders = flex.ExpandStringList(m["included_headers"].([]interface{}))
+	}
+
+	if v, ok := m["excluded_headers"]; ok && len(v.([]interface{})) > 0 {
+		f.ExcludedHeaders = flex.ExpandStringList(m["excluded_headers"].([]interface{}))
 	}
 
 	return f
@@ -985,6 +1026,10 @@ func flattenFieldToMatch(f *wafv2.FieldToMatch) interface{} {
 		m["cookies"] = flattenCookies(f.Cookies)
 	}
 
+	if f.Headers != nil {
+		m["headers"] = flattenHeaders(f.Headers)
+	}
+
 	if f.Method != nil {
 		m["method"] = make([]map[string]interface{}, 1)
 	}
@@ -1245,6 +1290,42 @@ func flattenCookieMatchPattern(s *wafv2.CookieMatchPattern) interface{} {
 
 	if s.IncludedCookies != nil {
 		m["included_cookies"] = flex.FlattenStringList(s.IncludedCookies)
+	}
+
+	return []interface{}{m}
+}
+
+func flattenHeaders(s *wafv2.Headers) interface{} {
+	if s == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"match_scope":       aws.StringValue(s.MatchScope),
+		"match_pattern":     flattenHeadersMatchPattern(s.MatchPattern),
+		"oversize_handling": aws.StringValue(s.OversizeHandling),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenHeadersMatchPattern(s *wafv2.HeaderMatchPattern) interface{} {
+	if s == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{}
+
+	if s.All != nil {
+		m["all"] = make([]map[string]interface{}, 1)
+	}
+
+	if s.ExcludedHeaders != nil {
+		m["excluded_headers"] = flex.FlattenStringList(s.ExcludedHeaders)
+	}
+
+	if s.IncludedHeaders != nil {
+		m["included_headers"] = flex.FlattenStringList(s.IncludedHeaders)
 	}
 
 	return []interface{}{m}
