@@ -151,6 +151,31 @@ resource "aws_iam_role" "example" {
 }
 ```
 
+### EKS Cluster on AWS Outpost
+
+[Creating a local Amazon EKS cluster on an AWS Outpost](https://docs.aws.amazon.com/eks/latest/userguide/create-cluster-outpost.html) 
+
+```terraform
+resource "aws_iam_role" "example" {
+  assume_role_policy = data.aws_iam_policy_document.example_assume_role_policy.json
+  name               = "example"
+}
+
+resource "aws_eks_cluster" "example" {
+  name     = "example-cluster"
+  role_arn = aws_iam_role.example.arn
+
+  vpc_config {
+    # ... other configuration ...
+  }
+
+  outpost_config {
+    control_plane_instance_type = "m5d.large"
+    outpost_arns = [data.aws_outposts_outpost.example.arn]
+  }
+}
+```
+
 After adding inline IAM Policies (e.g., [`aws_iam_role_policy` resource](/docs/providers/aws/r/iam_role_policy.html)) or attaching IAM Policies (e.g., [`aws_iam_policy` resource](/docs/providers/aws/r/iam_policy.html) and [`aws_iam_role_policy_attachment` resource](/docs/providers/aws/r/iam_role_policy_attachment.html)) with the desired permissions to the IAM Role, annotate the Kubernetes service account (e.g., [`kubernetes_service_account` resource](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/service_account)) and recreate any pods.
 
 ## Argument Reference
@@ -166,6 +191,7 @@ The following arguments are optional:
 * `enabled_cluster_log_types` - (Optional) List of the desired control plane logging to enable. For more information, see [Amazon EKS Control Plane Logging](https://docs.aws.amazon.com/eks/latest/userguide/control-plane-logs.html).
 * `encryption_config` - (Optional) Configuration block with encryption configuration for the cluster. Only available on Kubernetes 1.13 and above clusters created after March 6, 2020. Detailed below.
 * `kubernetes_network_config` - (Optional) Configuration block with kubernetes network configuration for the cluster. Detailed below. If removed, Terraform will only perform drift detection if a configuration value is provided.
+* `outpost_config` - (Optional) Configuration block representing the configuration of your local Amazon EKS cluster on an AWS Outpost. This block isn't available for creating Amazon EKS clusters on the AWS cloud.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `version` – (Optional) Desired Kubernetes master version. If you do not specify a value, the latest available version at resource creation is used and no upgrades will occur except those automatically triggered by EKS. The value must be configured and increased to upgrade the version when desired. Downgrades are not supported by EKS.
 
@@ -202,6 +228,22 @@ The following arguments are supported in the `kubernetes_network_config` configu
 
     * Between /24 and /12.
 * `ip_family` - (Optional) The IP family used to assign Kubernetes pod and service addresses. Valid values are `ipv4` (default) and `ipv6`. You can only specify an IP family when you create a cluster, changing this value will force a new cluster to be created.
+
+### outpost_config
+
+The following arguments are supported in the `outpost_config` configuration block:
+
+* `control_plane_instance_type` - (Required) The Amazon EC2 instance type that you want to use for your local Amazon EKS cluster on Outposts. The instance type that you specify is used for all Kubernetes control plane instances. The instance type can't be changed after cluster creation. Choose an instance type based on the number of nodes that your cluster will have. If your cluster will have:
+
+    * 1–20 nodes, then we recommend specifying a large instance type.
+
+    * 21–100 nodes, then we recommend specifying an xlarge instance type.
+
+    * 101–250 nodes, then we recommend specifying a 2xlarge instance type.
+
+For a list of the available Amazon EC2 instance types, see Compute and storage in AWS Outposts rack features  The control plane is not automatically scaled by Amazon EKS.
+
+* `outpost_arns` - (Required) The ARN of the Outpost that you want to use for your local Amazon EKS cluster on Outposts. This argument is a list of arns, but only a single Outpost ARN is supported currently.
 
 ## Attributes Reference
 
