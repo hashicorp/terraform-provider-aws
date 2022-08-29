@@ -8,3 +8,8 @@ resource/aws_wafv2_rule_group: Add support for `headers` attribute as part of `f
 resource/aws_wafv2_web_acl: Add support for `json_body` attribute as part of `field_to_match` attribute.
 resource/aws_wafv2_rule_group: Add support for `json_body` attribute as part of `field_to_match` attribute.
 ```
+
+```release-note:breaking-change
+resource/aws_wafv2_rule_group: The `body` attribute on the `field_to_match` will no longer accept an empty configuration block, and now requires `oversize_handling` attribute to be provided.
+resource/aws_wafv2_web_acl: The `body` attribute on the `field_to_match` will no longer accept an empty configuration block, and now requires `oversize_handling` attribute to be provided.
+```
