@@ -1099,6 +1099,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_cloudfront_function":                       cloudfront.ResourceFunction(),
 			"aws_cloudfront_key_group":                      cloudfront.ResourceKeyGroup(),
 			"aws_cloudfront_monitoring_subscription":        cloudfront.ResourceMonitoringSubscription(),
+			"aws_cloudfront_origin_access_control":          cloudfront.ResourceOriginAccessControl(),
 			"aws_cloudfront_origin_access_identity":         cloudfront.ResourceOriginAccessIdentity(),
 			"aws_cloudfront_origin_request_policy":          cloudfront.ResourceOriginRequestPolicy(),
 			"aws_cloudfront_public_key":                     cloudfront.ResourcePublicKey(),
