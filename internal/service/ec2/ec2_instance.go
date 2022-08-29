@@ -970,7 +970,6 @@ func resourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if v := v.HostResourceGroupArn; v != nil {
-			d.Set("placement_group", "")
 			d.Set("host_resource_group_arn", instance.Placement.HostResourceGroupArn)
 		}
 
