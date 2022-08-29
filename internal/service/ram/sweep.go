@@ -38,6 +38,10 @@ func sweepResourceShares(region string) error {
 		}
 
 		for _, v := range page.ResourceShares {
+			if aws.StringValue(v.Status) == ram.ResourceShareStatusDeleted {
+				continue
+			}
+
 			r := ResourceResourceShare()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(v.ResourceShareArn))
