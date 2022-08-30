@@ -104,7 +104,6 @@ func ResourceEIP() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"public_ip": {
 				Type:     schema.TypeString,
 				Computed: true,

@@ -313,6 +313,53 @@ func TestAccEC2EIP_NetworkInterface_twoEIPsOneInterface(t *testing.T) {
 	})
 }
 
+func TestAccEC2EIP_association(t *testing.T) {
+	var conf ec2.Address
+	instanceResourceName := "aws_instance.test"
+	eniResourceName := "aws_network_interface.test"
+	resourceName := "aws_eip.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEIPDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEIPConfig_associationNone(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEIPExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "association_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "instance", ""),
+					resource.TestCheckResourceAttr(resourceName, "network_interface", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "public_ip"),
+				),
+			},
+			{
+				Config: testAccEIPConfig_associationENI(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEIPExists(resourceName, &conf),
+					resource.TestCheckResourceAttrSet(resourceName, "association_id"),
+					resource.TestCheckResourceAttr(resourceName, "instance", ""),
+					resource.TestCheckResourceAttrPair(resourceName, "network_interface", eniResourceName, "id"),
+					resource.TestCheckResourceAttrSet(resourceName, "public_ip"),
+				),
+			},
+			{
+				Config: testAccEIPConfig_associationInstance(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEIPExists(resourceName, &conf),
+					resource.TestCheckResourceAttrSet(resourceName, "association_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "instance", instanceResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "network_interface", instanceResourceName, "primary_network_interface_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "public_ip"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccEC2EIP_PublicIPv4Pool_default(t *testing.T) {
 	var conf ec2.Address
 	resourceName := "aws_eip.test"
@@ -940,6 +987,66 @@ resource "aws_eip" "test" {
   }
 
   depends_on = [aws_internet_gateway.test]
+}
+`, rName))
+}
+
+func testAccEIPConfig_baseAssociation(rName string) string {
+	return acctest.ConfigCompose(testAccEIPConfig_baseInstance(rName), fmt.Sprintf(`
+resource "aws_network_interface" "test" {
+  subnet_id       = aws_subnet.test[0].id
+  private_ips     = ["10.0.0.10"]
+  security_groups = [aws_vpc.test.default_security_group_id]
+
+  tags = {
+    Name = %[1]q
+  }
+
+  depends_on = [aws_internet_gateway.test]
+}
+`, rName))
+}
+
+func testAccEIPConfig_associationNone(rName string) string {
+	return acctest.ConfigCompose(testAccEIPConfig_baseAssociation(rName), fmt.Sprintf(`
+resource "aws_eip" "test" {
+  vpc = true
+
+  tags = {
+    Name = %[1]q
+  }
+
+  depends_on = [aws_network_interface.test]
+}
+`, rName))
+}
+
+func testAccEIPConfig_associationENI(rName string) string {
+	return acctest.ConfigCompose(testAccEIPConfig_baseAssociation(rName), fmt.Sprintf(`
+resource "aws_eip" "test" {
+  vpc = true
+
+  tags = {
+    Name = %[1]q
+  }
+
+  network_interface = aws_network_interface.test.id
+}
+`, rName))
+}
+
+func testAccEIPConfig_associationInstance(rName string) string {
+	return acctest.ConfigCompose(testAccEIPConfig_baseAssociation(rName), fmt.Sprintf(`
+resource "aws_eip" "test" {
+  vpc = true
+
+  tags = {
+    Name = %[1]q
+  }
+
+  instance = aws_instance.test.id
+
+  depends_on = [aws_network_interface.test]
 }
 `, rName))
 }
