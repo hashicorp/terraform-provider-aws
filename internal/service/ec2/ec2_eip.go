@@ -177,7 +177,21 @@ func resourceEIPCreate(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("waiting for EC2 EIP (%s) create: %w", d.Id(), err)
 	}
 
-	return resourceEIPUpdate(d, meta)
+	instanceID := d.Get("instance").(string)
+	eniID := d.Get("network_interface").(string)
+
+	if instanceID != "" || eniID != "" {
+		_, err := tfresource.RetryWhenAWSErrCodeEquals(d.Timeout(schema.TimeoutCreate),
+			func() (interface{}, error) {
+				return nil, associateEIP(conn, d.Id(), instanceID, eniID, d.Get("associate_with_private_ip").(string))
+			}, errCodeInvalidAllocationIDNotFound)
+
+		if err != nil {
+			return err
+		}
+	}
+
+	return resourceEIPRead(d, meta)
 }
 
 func resourceEIPRead(d *schema.ResourceData, meta interface{}) error {
@@ -249,94 +263,41 @@ func resourceEIPRead(d *schema.ResourceData, meta interface{}) error {
 func resourceEIPUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	domain := resourceEIPDomain(d)
+	if d.HasChanges("associate_with_private_ip", "instance", "network_interface") {
+		o, n := d.GetChange("instance")
+		oldInstanceID, newInstanceID := o.(string), n.(string)
+		associationID := d.Get("association_id").(string)
 
-	// If we are updating an EIP that is not newly created, and we are attached to
-	// an instance or interface, detach first.
-	disassociate := false
-	if !d.IsNewResource() {
-		if d.HasChange("instance") && d.Get("instance").(string) != "" {
-			disassociate = true
-		} else if (d.HasChanges("network_interface", "associate_with_private_ip")) && d.Get("association_id").(string) != "" {
-			disassociate = true
-		}
-	}
-	if disassociate {
-		if err := disassociateEIP(d, meta); err != nil {
-			return err
-		}
-	}
-
-	// Associate to instance or interface if specified
-	associate := false
-	v_instance, ok_instance := d.GetOk("instance")
-	v_interface, ok_interface := d.GetOk("network_interface")
-
-	if d.HasChange("instance") && ok_instance {
-		associate = true
-	} else if (d.HasChanges("network_interface", "associate_with_private_ip")) && ok_interface {
-		associate = true
-	}
-	if associate {
-		instanceId := v_instance.(string)
-		networkInterfaceId := v_interface.(string)
-
-		assocOpts := &ec2.AssociateAddressInput{
-			InstanceId: aws.String(instanceId),
-			PublicIp:   aws.String(d.Id()),
-		}
-
-		// more unique ID conditionals
-		if domain == ec2.DomainTypeVpc {
-			var privateIpAddress *string
-			if v := d.Get("associate_with_private_ip").(string); v != "" {
-				privateIpAddress = aws.String(v)
-			}
-			assocOpts = &ec2.AssociateAddressInput{
-				NetworkInterfaceId: aws.String(networkInterfaceId),
-				InstanceId:         aws.String(instanceId),
-				AllocationId:       aws.String(d.Id()),
-				PrivateIpAddress:   privateIpAddress,
+		if oldInstanceID != "" || associationID != "" {
+			if err := disassociateEIP(conn, d.Id(), associationID); err != nil {
+				return err
 			}
 		}
 
-		log.Printf("[DEBUG] EIP associate configuration: %s (domain: %s)", assocOpts, domain)
+		newNetworkInterfaceID := d.Get("network_interface").(string)
 
-		err := resource.Retry(d.Timeout(schema.TimeoutUpdate), func() *resource.RetryError {
-			_, err := conn.AssociateAddress(assocOpts)
-			if err != nil {
-				if tfawserr.ErrCodeEquals(err, errCodeInvalidAllocationIDNotFound) {
-					return resource.RetryableError(err)
+		if newInstanceID != "" || newNetworkInterfaceID != "" {
+			if err := associateEIP(conn, d.Id(), newInstanceID, newNetworkInterfaceID, d.Get("associate_with_private_ip").(string)); err != nil {
+				return err
+			}
+
+			if !eipID(d.Id()).IsVPC() {
+				if err := waitForAddressAssociationClassic(conn, d.Id(), newInstanceID); err != nil {
+					return fmt.Errorf("waiting for EC2 EIP (%s) to associate with EC2-Classic Instance (%s): %w", d.Id(), newInstanceID, err)
 				}
-				return resource.NonRetryableError(err)
-			}
-			return nil
-		})
-		if tfresource.TimedOut(err) {
-			_, err = conn.AssociateAddress(assocOpts)
-		}
-		if err != nil {
-			// Prevent saving instance if association failed
-			// e.g. missing internet gateway in VPC
-			d.Set("instance", "")
-			d.Set("network_interface", "")
-			return fmt.Errorf("Failure associating EIP: %s", err)
-		}
-
-		if assocOpts.AllocationId == nil {
-			if err := waitForAddressAssociationClassic(conn, aws.StringValue(assocOpts.PublicIp), aws.StringValue(assocOpts.InstanceId)); err != nil {
-				return fmt.Errorf("error waiting for EC2 Address (%s) to associate with EC2-Classic Instance (%s): %w", aws.StringValue(assocOpts.PublicIp), aws.StringValue(assocOpts.InstanceId), err)
 			}
 		}
 	}
 
-	if d.HasChange("tags_all") && !d.IsNewResource() {
+	if d.HasChange("tags_all") {
 		if d.Get("domain").(string) == ec2.DomainTypeStandard {
-			return fmt.Errorf("tags cannot be set for a standard-domain EIP - must be a VPC-domain EIP")
+			return errors.New("tags cannot be set for a standard-domain EIP - must be a VPC-domain EIP")
 		}
+
 		o, n := d.GetChange("tags_all")
+
 		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating EIP (%s) tags: %s", d.Id(), err)
+			return fmt.Errorf("updating EC2 EIP (%s) tags: %w", d.Id(), err)
 		}
 	}
 
@@ -348,7 +309,7 @@ func resourceEIPDelete(d *schema.ResourceData, meta interface{}) error {
 
 	// If we are attached to an instance or interface, detach first.
 	if associationID := d.Get("association_id").(string); associationID != "" || d.Get("instance").(string) != "" {
-		if err := gloop(conn, d.Id(), associationID); err != nil {
+		if err := disassociateEIP(conn, d.Id(), associationID); err != nil {
 			return err
 		}
 	}
@@ -378,18 +339,6 @@ func resourceEIPDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceEIPDomain(d *schema.ResourceData) string {
-	if v, ok := d.GetOk("domain"); ok {
-		return v.(string)
-	} else if strings.Contains(d.Id(), "eipalloc") {
-		// We have to do this for backwards compatibility since TF 0.1
-		// didn't have the "domain" computed attribute.
-		return ec2.DomainTypeVpc
-	}
-
-	return ec2.DomainTypeStandard
-}
-
 type eipID string
 
 // IsVPC returns whether or not the EIP is in the VPC domain.
@@ -397,7 +346,7 @@ func (id eipID) IsVPC() bool {
 	return strings.Contains(string(id), "eipalloc")
 }
 
-func floop(conn *ec2.EC2, id, instanceID, eniID, privateIPAddress string) error {
+func associateEIP(conn *ec2.EC2, id, instanceID, networkInterfaceID, privateIPAddress string) error {
 	input := &ec2.AssociateAddressInput{}
 
 	if eipID(id).IsVPC() {
@@ -410,8 +359,8 @@ func floop(conn *ec2.EC2, id, instanceID, eniID, privateIPAddress string) error 
 		input.InstanceId = aws.String(instanceID)
 	}
 
-	if eniID != "" {
-		input.NetworkInterfaceId = aws.String(eniID)
+	if networkInterfaceID != "" {
+		input.NetworkInterfaceId = aws.String(networkInterfaceID)
 	}
 
 	if privateIPAddress != "" {
@@ -427,7 +376,7 @@ func floop(conn *ec2.EC2, id, instanceID, eniID, privateIPAddress string) error 
 	return nil
 }
 
-func gloop(conn *ec2.EC2, id, associationID string) error {
+func disassociateEIP(conn *ec2.EC2, id, associationID string) error {
 	input := &ec2.DisassociateAddressInput{}
 
 	if eipID(id).IsVPC() {
@@ -453,59 +402,21 @@ func gloop(conn *ec2.EC2, id, associationID string) error {
 	return nil
 }
 
-func disassociateEIP(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
-	log.Printf("[DEBUG] Disassociating EIP: %s", d.Id())
-	var err error
-	switch resourceEIPDomain(d) {
-	case ec2.DomainTypeVpc:
-		associationID := d.Get("association_id").(string)
-		if associationID == "" {
-			// If assiciationID is empty, it means there's no association.
-			// Hence this disassociation can be skipped.
-			return nil
-		}
-		_, err = conn.DisassociateAddress(&ec2.DisassociateAddressInput{
-			AssociationId: aws.String(associationID),
-		})
-	case ec2.DomainTypeStandard:
-		_, err = conn.DisassociateAddress(&ec2.DisassociateAddressInput{
-			PublicIp: aws.String(d.Get("public_ip").(string)),
-		})
-	}
-
-	// First check if the association ID is not found. If this
-	// is the case, then it was already disassociated somehow,
-	// and that is okay. The most commmon reason for this is that
-	// the instance or ENI it was attached it was destroyed.
-	if tfawserr.ErrCodeEquals(err, errCodeInvalidAssociationIDNotFound) {
-		err = nil
-	}
-
-	return err
-}
-
 // waitForAddressAssociationClassic ensures the correct Instance is associated with an Address
 //
 // This can take a few seconds to appear correctly for EC2-Classic addresses.
-func waitForAddressAssociationClassic(conn *ec2.EC2, publicIP string, instanceID string) error {
+func waitForAddressAssociationClassic(conn *ec2.EC2, publicIP, instanceID string) error {
 	input := &ec2.DescribeAddressesInput{
-		Filters: []*ec2.Filter{
-			{
-				Name:   aws.String("public-ip"),
-				Values: []*string{aws.String(publicIP)},
-			},
-			{
-				Name:   aws.String("domain"),
-				Values: []*string{aws.String(ec2.DomainTypeStandard)},
-			},
-		},
+		Filters: BuildAttributeFilterList(map[string]string{
+			"domain":    ec2.DomainTypeStandard,
+			"public-ip": publicIP,
+		}),
 	}
 
 	err := resource.Retry(addressAssociationClassicTimeout, func() *resource.RetryError {
-		output, err := conn.DescribeAddresses(input)
+		address, err := FindEIP(conn, input)
 
-		if tfawserr.ErrCodeEquals(err, errCodeInvalidAddressNotFound) {
+		if tfresource.NotFound(err) {
 			return resource.RetryableError(err)
 		}
 
@@ -513,12 +424,8 @@ func waitForAddressAssociationClassic(conn *ec2.EC2, publicIP string, instanceID
 			return resource.NonRetryableError(err)
 		}
 
-		if len(output.Addresses) == 0 || output.Addresses[0] == nil {
-			return resource.RetryableError(fmt.Errorf("not found"))
-		}
-
-		if aws.StringValue(output.Addresses[0].InstanceId) != instanceID {
-			return resource.RetryableError(fmt.Errorf("not associated"))
+		if aws.StringValue(address.InstanceId) != instanceID {
+			return resource.RetryableError(errors.New("not associated"))
 		}
 
 		return nil
@@ -529,7 +436,7 @@ func waitForAddressAssociationClassic(conn *ec2.EC2, publicIP string, instanceID
 	}
 
 	if err != nil {
-		return fmt.Errorf("error describing EC2 Address (%s) association: %w", publicIP, err)
+		return &resource.NotFoundError{LastRequest: instanceID, LastError: err}
 	}
 
 	return nil
