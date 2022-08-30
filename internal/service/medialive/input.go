@@ -45,6 +45,11 @@ func ResourceInput() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"attached_channels": {
+				Type:     schema.TypeList,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Computed: true,
+			},
 			"destinations": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -64,6 +69,7 @@ func ResourceInput() *schema.Resource {
 			"input_devices": {
 				Type:     schema.TypeSet,
 				Optional: true,
+				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"id": {
@@ -73,15 +79,25 @@ func ResourceInput() *schema.Resource {
 					},
 				},
 			},
+			"input_partner_ids": {
+				Type:     schema.TypeList,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Computed: true,
+			},
 			"input_security_groups": {
 				Type:     schema.TypeList,
-				Required: true,
+				Optional: true,
 				MinItems: 1,
 				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"input_source_type": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"media_connect_flows": {
 				Type:     schema.TypeSet,
 				Optional: true,
+				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"flow_arn": {
@@ -104,6 +120,7 @@ func ResourceInput() *schema.Resource {
 			"sources": {
 				Type:     schema.TypeSet,
 				Optional: true,
+				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"password_param": {
@@ -163,11 +180,9 @@ func resourceInputCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	conn := meta.(*conns.AWSClient).MediaLiveConn
 
 	in := &medialive.CreateInputInput{
-		RequestId:           aws.String(resource.UniqueId()),
-		InputSecurityGroups: flex.ExpandStringValueList(d.Get("input_security_groups").([]interface{})),
-		Name:                aws.String(d.Get("name").(string)),
-		Type:                types.InputType(d.Get("type").(string)),
-		RoleArn:             aws.String(d.Get("role_arn").(string)),
+		RequestId: aws.String(resource.UniqueId()),
+		Name:      aws.String(d.Get("name").(string)),
+		Type:      types.InputType(d.Get("type").(string)),
 	}
 
 	if v, ok := d.GetOk("destinations"); ok && v.(*schema.Set).Len() > 0 {
@@ -176,6 +191,10 @@ func resourceInputCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	if v, ok := d.GetOk("input_devices"); ok && v.(*schema.Set).Len() > 0 {
 		in.InputDevices = expandInputDevices(v.([]interface{}))
+	}
+
+	if v, ok := d.GetOk("input_security_groups"); ok && len(v.([]interface{})) > 0 {
+		in.InputSecurityGroups = flex.ExpandStringValueList(d.Get("input_security_groups").([]interface{}))
 	}
 
 	if v, ok := d.GetOk("media_connect_flows"); ok && v.(*schema.Set).Len() > 0 {
@@ -235,9 +254,13 @@ func resourceInputRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	d.Set("arn", out.Arn)
+	d.Set("attached_channels", out.AttachedChannels)
+	d.Set("media_connect_flows", flattenMediaConnectFlows(out.MediaConnectFlows))
 	d.Set("name", out.Name)
 	d.Set("input_class", out.InputClass)
+	d.Set("input_partner_ids", out.InputPartnerIds)
 	d.Set("input_security_groups", out.SecurityGroups)
+	d.Set("input_source_type", out.InputSourceType)
 	d.Set("role_arn", out.RoleArn)
 	d.Set("type", out.Type)
 
@@ -457,6 +480,36 @@ func FindInputByID(ctx context.Context, conn *medialive.Client, id string) (*med
 //	return l
 //}
 
+func flattenMediaConnectFlow(apiObject types.MediaConnectFlow) map[string]interface{} {
+	if apiObject == (types.MediaConnectFlow{}) {
+		return nil
+	}
+
+	m := map[string]interface{}{}
+
+	if v := apiObject.FlowArn; v != nil {
+		m["flow_arn"] = aws.ToString(v)
+	}
+
+	return m
+}
+func flattenMediaConnectFlows(apiObjects []types.MediaConnectFlow) []interface{} {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var l []interface{}
+
+	for _, apiObject := range apiObjects {
+		if apiObject == (types.MediaConnectFlow{}) {
+			continue
+		}
+
+		l = append(l, flattenMediaConnectFlow(apiObject))
+	}
+
+	return l
+}
 func expandDestinations(tfList []interface{}) []types.InputDestinationRequest {
 	if len(tfList) == 0 {
 		return nil

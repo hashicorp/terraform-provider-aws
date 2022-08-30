@@ -41,7 +41,10 @@ func TestAccMediaLiveInput_basic(t *testing.T) {
 				Config: testAccInputConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInputExists(resourceName, &input),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttrSet(resourceName, "input_class"),
+					resource.TestCheckResourceAttr(resourceName, "type", "UDP_PUSH"),
 				),
 			},
 			{
