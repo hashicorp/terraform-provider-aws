@@ -413,56 +413,35 @@ func resourceEIPUpdate(d *schema.ResourceData, meta interface{}) error {
 func resourceEIPDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	if err := resourceEIPRead(d, meta); err != nil {
-		return err
-	}
-	if d.Id() == "" {
-		// This might happen from the read
-		return nil
-	}
-
 	// If we are attached to an instance or interface, detach first.
-	if d.Get("instance").(string) != "" || d.Get("association_id").(string) != "" {
-		if err := disassociateEIP(d, meta); err != nil {
+	if associationID := d.Get("association_id").(string); associationID != "" || d.Get("instance").(string) != "" {
+		if err := gloop(conn, d.Id(), associationID); err != nil {
 			return err
 		}
 	}
 
-	domain := resourceEIPDomain(d)
+	input := &ec2.ReleaseAddressInput{}
 
-	var input *ec2.ReleaseAddressInput
-	switch domain {
-	case ec2.DomainTypeVpc:
-		log.Printf("[DEBUG] EIP release (destroy) address allocation: %v", d.Id())
-		input = &ec2.ReleaseAddressInput{
-			AllocationId:       aws.String(d.Id()),
-			NetworkBorderGroup: aws.String(d.Get("network_border_group").(string)),
+	if eipID(d.Id()).IsVPC() {
+		input.AllocationId = aws.String(d.Id())
+
+		if v, ok := d.GetOk("network_border_group"); ok {
+			input.NetworkBorderGroup = aws.String(v.(string))
 		}
-	case ec2.DomainTypeStandard:
-		log.Printf("[DEBUG] EIP release (destroy) address: %v", d.Id())
-		input = &ec2.ReleaseAddressInput{
-			PublicIp: aws.String(d.Id()),
-		}
+	} else {
+		input.PublicIp = aws.String(d.Id())
 	}
 
-	err := resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
-		_, err := conn.ReleaseAddress(input)
+	_, err := conn.ReleaseAddress(input)
 
-		if err == nil {
-			return nil
-		}
-		if _, ok := err.(awserr.Error); !ok {
-			return resource.NonRetryableError(err)
-		}
-
-		return resource.RetryableError(err)
-	})
-	if tfresource.TimedOut(err) {
-		_, err = conn.ReleaseAddress(input)
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidAllocationIDNotFound) {
+		return nil
 	}
+
 	if err != nil {
-		return fmt.Errorf("Error releasing EIP address: %s", err)
+		return fmt.Errorf("deleting EC2 EIP (%s): %w", d.Id(), err)
 	}
+
 	return nil
 }
 
@@ -476,6 +455,69 @@ func resourceEIPDomain(d *schema.ResourceData) string {
 	}
 
 	return ec2.DomainTypeStandard
+}
+
+type eipID string
+
+// IsVPC returns whether or not the EIP is in the VPC domain.
+func (id eipID) IsVPC() bool {
+	return strings.Contains(string(id), "eipalloc")
+}
+
+func floop(conn *ec2.EC2, id, instanceID, eniID, privateIPAddress string) error {
+	input := &ec2.AssociateAddressInput{}
+
+	if eipID(id).IsVPC() {
+		input.AllocationId = aws.String(id)
+	} else {
+		input.PublicIp = aws.String(id)
+	}
+
+	if instanceID != "" {
+		input.InstanceId = aws.String(instanceID)
+	}
+
+	if eniID != "" {
+		input.NetworkInterfaceId = aws.String(eniID)
+	}
+
+	if privateIPAddress != "" {
+		input.PrivateIpAddress = aws.String(privateIPAddress)
+	}
+
+	_, err := conn.AssociateAddress(input)
+
+	if err != nil {
+		return fmt.Errorf("associating EC2 EIP (%s): %w", id, err)
+	}
+
+	return nil
+}
+
+func gloop(conn *ec2.EC2, id, associationID string) error {
+	input := &ec2.DisassociateAddressInput{}
+
+	if eipID(id).IsVPC() {
+		if associationID == "" {
+			return nil
+		}
+
+		input.AssociationId = aws.String(associationID)
+	} else {
+		input.PublicIp = aws.String(id)
+	}
+
+	_, err := conn.DisassociateAddress(input)
+
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidAssociationIDNotFound) {
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("disassociating EC2 EIP (%s): %w", id, err)
+	}
+
+	return nil
 }
 
 func disassociateEIP(d *schema.ResourceData, meta interface{}) error {
