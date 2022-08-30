@@ -857,8 +857,7 @@ resource "aws_instance" "test" {
 }
 
 func testAccEIPConfig_instanceAssociated(rName string) string {
-	return acctest.ConfigCompose(testAccEIPConfig_baseInstanceAssociated(rName),
-		fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccEIPConfig_baseInstanceAssociated(rName), fmt.Sprintf(`
 resource "aws_eip" "test" {
   vpc = true
 
@@ -873,8 +872,7 @@ resource "aws_eip" "test" {
 }
 
 func testAccEIPConfig_instanceAssociatedSwitch(rName string) string {
-	return acctest.ConfigCompose(testAccEIPConfig_baseInstanceAssociated(rName),
-		fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccEIPConfig_baseInstanceAssociated(rName), fmt.Sprintf(`
 resource "aws_eip" "test" {
   vpc = true
 
