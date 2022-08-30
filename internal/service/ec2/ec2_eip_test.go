@@ -463,9 +463,9 @@ func TestAccEC2EIP_carrierIP(t *testing.T) {
 }
 
 func TestAccEC2EIP_BYOIPAddress_default(t *testing.T) {
-	// Test case address not set
 	var conf ec2.Address
 	resourceName := "aws_eip.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
@@ -474,10 +474,10 @@ func TestAccEC2EIP_BYOIPAddress_default(t *testing.T) {
 		CheckDestroy:             testAccCheckEIPDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEIPConfig_byoipAddressCustomDefault,
+				Config: testAccEIPConfig_byoipAddressCustomDefault(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEIPExists(resourceName, &conf),
-					testAccCheckEIPAttributes(&conf),
+					resource.TestCheckResourceAttrSet(resourceName, "public_ip"),
 				),
 			},
 		},
@@ -485,16 +485,15 @@ func TestAccEC2EIP_BYOIPAddress_default(t *testing.T) {
 }
 
 func TestAccEC2EIP_BYOIPAddress_custom(t *testing.T) {
-	// Test Case for address being set
-
-	if os.Getenv("AWS_EC2_EIP_BYOIP_ADDRESS") == "" {
-		t.Skip("Environment variable AWS_EC2_EIP_BYOIP_ADDRESS is not set")
+	key := "AWS_EC2_EIP_BYOIP_ADDRESS"
+	address := os.Getenv(key)
+	if address == "" {
+		t.Skipf("Environment variable %s is not set", key)
 	}
 
 	var conf ec2.Address
 	resourceName := "aws_eip.test"
-
-	address := os.Getenv("AWS_EC2_EIP_BYOIP_ADDRESS")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
@@ -503,7 +502,7 @@ func TestAccEC2EIP_BYOIPAddress_custom(t *testing.T) {
 		CheckDestroy:             testAccCheckEIPDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEIPConfig_byoipAddressCustom(address),
+				Config: testAccEIPConfig_byoipAddressCustom(rName, address),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEIPExists(resourceName, &conf),
 					testAccCheckEIPAttributes(&conf),
@@ -515,20 +514,21 @@ func TestAccEC2EIP_BYOIPAddress_custom(t *testing.T) {
 }
 
 func TestAccEC2EIP_BYOIPAddress_customWithPublicIPv4Pool(t *testing.T) {
-	// Test Case for both address and public_ipv4_pool being set
-	if os.Getenv("AWS_EC2_EIP_BYOIP_ADDRESS") == "" {
-		t.Skip("Environment variable AWS_EC2_EIP_BYOIP_ADDRESS is not set")
+	key := "AWS_EC2_EIP_BYOIP_ADDRESS"
+	address := os.Getenv(key)
+	if address == "" {
+		t.Skipf("Environment variable %s is not set", key)
 	}
 
-	if os.Getenv("AWS_EC2_EIP_PUBLIC_IPV4_POOL") == "" {
-		t.Skip("Environment variable AWS_EC2_EIP_PUBLIC_IPV4_POOL is not set")
+	key = "AWS_EC2_EIP_PUBLIC_IPV4_POOL"
+	poolName := os.Getenv(key)
+	if poolName == "" {
+		t.Skipf("Environment variable %s is not set", key)
 	}
 
 	var conf ec2.Address
 	resourceName := "aws_eip.test"
-
-	address := os.Getenv("AWS_EC2_EIP_BYOIP_ADDRESS")
-	poolName := os.Getenv("AWS_EC2_EIP_PUBLIC_IPV4_POOL")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
@@ -537,7 +537,7 @@ func TestAccEC2EIP_BYOIPAddress_customWithPublicIPv4Pool(t *testing.T) {
 		CheckDestroy:             testAccCheckEIPDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEIPConfig_byoipAddressCustomPublicIPv4Pool(address, poolName),
+				Config: testAccEIPConfig_byoipAddressCustomPublicIPv4Pool(rName, address, poolName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEIPExists(resourceName, &conf),
 					testAccCheckEIPAttributes(&conf),
@@ -1043,27 +1043,41 @@ resource "aws_eip" "test" {
 `, rName))
 }
 
-const testAccEIPConfig_byoipAddressCustomDefault = `
+func testAccEIPConfig_byoipAddressCustomDefault(rName string) string {
+	return fmt.Sprintf(`
 resource "aws_eip" "test" {
   vpc = true
-}
-`
 
-func testAccEIPConfig_byoipAddressCustom(address string) string {
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName)
+}
+
+func testAccEIPConfig_byoipAddressCustom(rName, address string) string {
 	return fmt.Sprintf(`
 resource "aws_eip" "test" {
   vpc     = true
-  address = %[1]q
+  address = %[2]q
+
+  tags = {
+    Name = %[1]q
+  }
 }
-`, address)
+`, rName, address)
 }
 
-func testAccEIPConfig_byoipAddressCustomPublicIPv4Pool(address string, poolname string) string {
+func testAccEIPConfig_byoipAddressCustomPublicIPv4Pool(rName, address, poolName string) string {
 	return fmt.Sprintf(`
 resource "aws_eip" "test" {
   vpc              = true
-  address          = %[1]q
-  public_ipv4_pool = %[2]q
+  address          = %[2]q
+  public_ipv4_pool = %[3]q
+
+  tags = {
+    Name = %[1]q
+  }
 }
-`, address, poolname)
+`, rName, address, poolName)
 }
