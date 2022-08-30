@@ -342,7 +342,7 @@ type eipID string
 
 // IsVPC returns whether or not the EIP is in the VPC domain.
 func (id eipID) IsVPC() bool {
-	return strings.Contains(string(id), "eipalloc")
+	return strings.HasPrefix(string(id), "eipalloc-")
 }
 
 func associateEIP(conn *ec2.EC2, id, instanceID, networkInterfaceID, privateIPAddress string) error {
@@ -405,15 +405,8 @@ func disassociateEIP(conn *ec2.EC2, id, associationID string) error {
 //
 // This can take a few seconds to appear correctly for EC2-Classic addresses.
 func waitForAddressAssociationClassic(conn *ec2.EC2, publicIP, instanceID string) error {
-	input := &ec2.DescribeAddressesInput{
-		Filters: BuildAttributeFilterList(map[string]string{
-			"domain":    ec2.DomainTypeStandard,
-			"public-ip": publicIP,
-		}),
-	}
-
 	err := resource.Retry(addressAssociationClassicTimeout, func() *resource.RetryError {
-		address, err := FindEIP(conn, input)
+		address, err := FindEIPByPublicIP(conn, publicIP)
 
 		if tfresource.NotFound(err) {
 			return resource.RetryableError(err)
@@ -431,11 +424,11 @@ func waitForAddressAssociationClassic(conn *ec2.EC2, publicIP, instanceID string
 	})
 
 	if tfresource.TimedOut(err) { // nosemgrep:ci.helper-schema-TimeoutError-check-doesnt-return-output
-		_, err = conn.DescribeAddresses(input)
+		_, err = FindEIPByPublicIP(conn, publicIP)
 	}
 
 	if err != nil {
-		return &resource.NotFoundError{LastRequest: instanceID, LastError: err}
+		return err
 	}
 
 	return nil

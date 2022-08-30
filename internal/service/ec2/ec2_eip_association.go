@@ -19,6 +19,7 @@ func ResourceEIPAssociation() *schema.Resource {
 		Create: resourceEIPAssociationCreate,
 		Read:   resourceEIPAssociationRead,
 		Delete: resourceEIPAssociationDelete,
+
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -30,34 +31,29 @@ func ResourceEIPAssociation() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
-
 			"allow_reassociation": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				ForceNew: true,
 			},
-
 			"instance_id": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-
 			"network_interface_id": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-
 			"private_ip_address": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-
 			"public_ip": {
 				Type:     schema.TypeString,
 				Optional: true,

@@ -648,7 +648,8 @@ func FindEIPs(conn *ec2.EC2, input *ec2.DescribeAddressesInput) ([]*ec2.Address,
 
 	output, err := conn.DescribeAddresses(input)
 
-	if tfawserr.ErrCodeEquals(err, errCodeInvalidAddressNotFound, errCodeInvalidAllocationIDNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidAddressNotFound, errCodeInvalidAllocationIDNotFound) ||
+		tfawserr.ErrMessageContains(err, errCodeAuthFailure, "does not belong to you") {
 		return nil, &resource.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -699,6 +700,29 @@ func FindEIPByAllocationID(conn *ec2.EC2, id string) (*ec2.Address, error) {
 
 	// Eventual consistency check.
 	if aws.StringValue(output.AllocationId) != id {
+		return nil, &resource.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func FindEIPByAssociationID(conn *ec2.EC2, id string) (*ec2.Address, error) {
+	input := &ec2.DescribeAddressesInput{
+		Filters: BuildAttributeFilterList(map[string]string{
+			"association-id": id,
+		}),
+	}
+
+	output, err := FindEIP(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Eventual consistency check.
+	if aws.StringValue(output.AssociationId) != id {
 		return nil, &resource.NotFoundError{
 			LastRequest: input,
 		}

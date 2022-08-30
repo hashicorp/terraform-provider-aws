@@ -73,7 +73,7 @@ func TestAccEC2EIP_tags(t *testing.T) {
 	resourceName := "aws_eip.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckVPCOnly(t) },
+		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEIPDestroy,
@@ -648,7 +648,7 @@ func testAccCheckEIPExists(n string, v *ec2.Address) resource.TestCheckFunc {
 		var err error
 		var output *ec2.Address
 
-		if strings.Contains(rs.Primary.ID, "eipalloc") {
+		if strings.HasPrefix(rs.Primary.ID, "eipalloc-") {
 			output, err = tfec2.FindEIPByAllocationID(conn, rs.Primary.ID)
 		} else {
 			output, err = tfec2.FindEIPByPublicIP(conn, rs.Primary.ID)
@@ -674,7 +674,7 @@ func testAccCheckEIPDestroy(s *terraform.State) error {
 
 		var err error
 
-		if strings.Contains(rs.Primary.ID, "eipalloc") {
+		if strings.HasPrefix(rs.Primary.ID, "eipalloc-") {
 			_, err = tfec2.FindEIPByAllocationID(conn, rs.Primary.ID)
 		} else {
 			_, err = tfec2.FindEIPByPublicIP(conn, rs.Primary.ID)
