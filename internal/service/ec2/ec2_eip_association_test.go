@@ -96,8 +96,9 @@ func TestAccEC2EIPAssociation_instance(t *testing.T) {
 }
 
 func TestAccEC2EIPAssociation_networkInterface(t *testing.T) {
-	resourceName := "aws_eip_association.test"
 	var a ec2.Address
+	resourceName := "aws_eip_association.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
@@ -106,9 +107,8 @@ func TestAccEC2EIPAssociation_networkInterface(t *testing.T) {
 		CheckDestroy:             testAccCheckEIPAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEIPAssociationConfig_networkInterface,
+				Config: testAccEIPAssociationConfig_networkInterface(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEIPExists("aws_eip.test", &a),
 					testAccCheckEIPAssociationExists(resourceName, &a),
 				),
 			},
@@ -325,6 +325,39 @@ resource "aws_network_interface" "test" {
 `, rName))
 }
 
+func testAccEIPAssociationConfig_networkInterface(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 1), fmt.Sprintf(`
+resource "aws_internet_gateway" "test" {
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_network_interface" "test" {
+  subnet_id = aws_subnet.test[0].id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_eip" "test" {
+  vpc = true
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_eip_association" "test" {
+  allocation_id        = aws_eip.test.id
+  network_interface_id = aws_network_interface.test.id
+}
+`, rName))
+}
+
 func testAccEIPAssociationConfig_spotInstance(rName, publicKey string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
@@ -369,31 +402,3 @@ resource "aws_eip_association" "test" {
 }
 `, rName, publicKey))
 }
-
-const testAccEIPAssociationConfig_networkInterface = `
-resource "aws_vpc" "test" {
-  cidr_block = "10.1.0.0/16"
-}
-
-resource "aws_subnet" "test" {
-  vpc_id     = aws_vpc.test.id
-  cidr_block = "10.1.1.0/24"
-}
-
-resource "aws_internet_gateway" "test" {
-  vpc_id = aws_vpc.test.id
-}
-
-resource "aws_network_interface" "test" {
-  subnet_id = aws_subnet.test.id
-}
-
-resource "aws_eip" "test" {
-  vpc = true
-}
-
-resource "aws_eip_association" "test" {
-  allocation_id        = aws_eip.test.id
-  network_interface_id = aws_network_interface.test.id
-}
-`
