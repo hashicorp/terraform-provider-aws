@@ -3117,7 +3117,7 @@ resource "aws_wafv2_rule_group" "test" {
         field_to_match {
           json_body {
             invalid_fallback_behavior = "NO_MATCH"
-            match_scope       = "ALL"
+            match_scope               = "ALL"
             match_pattern {
               all {}
             }
