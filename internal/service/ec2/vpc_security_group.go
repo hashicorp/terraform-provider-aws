@@ -23,6 +23,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func ResourceSecurityGroup() *schema.Resource {
@@ -377,7 +378,7 @@ func resourceSecurityGroupDelete(d *schema.ResourceData, meta interface{}) error
 		}
 
 		if err != nil {
-			return err
+			return create.Error(names.EC2, create.ErrActionDeleting, "Security Group", d.Id(), err)
 		}
 	}
 
@@ -401,7 +402,7 @@ func resourceSecurityGroupDelete(d *schema.ResourceData, meta interface{}) error
 			}
 
 			if err != nil {
-				return err
+				return create.Error(names.EC2, create.ErrActionDeleting, "Security Group", d.Id(), err)
 			}
 		}
 
@@ -755,13 +756,13 @@ func updateSecurityGroupRules(conn *ec2.EC2, d *schema.ResourceData, ruleType st
 	del, err := ExpandIPPerms(group, SecurityGroupCollapseRules(ruleType, os.Difference(ns).List()))
 
 	if err != nil {
-		return err
+		return fmt.Errorf("updating rules: %w", err)
 	}
 
 	add, err := ExpandIPPerms(group, SecurityGroupCollapseRules(ruleType, ns.Difference(os).List()))
 
 	if err != nil {
-		return err
+		return fmt.Errorf("updating rules: %w", err)
 	}
 
 	// TODO: We need to handle partial state better in the in-between

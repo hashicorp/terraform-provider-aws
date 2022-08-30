@@ -18,8 +18,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestProtocolStateFunc(t *testing.T) {
@@ -395,12 +397,6 @@ func TestSecurityGroupIPPermGather(t *testing.T) {
 			FromPort:   aws.Int64(443),
 			ToPort:     aws.Int64(443),
 			UserIdGroupPairs: []*ec2.UserIdGroupPair{
-				// Classic
-				{
-					UserId:    aws.String("12345"),
-					GroupId:   aws.String("sg-33333"),
-					GroupName: aws.String("ec2_classic"),
-				},
 				{
 					UserId:    aws.String("amazon-elb"),
 					GroupId:   aws.String("sg-d2c979d3"),
@@ -442,15 +438,6 @@ func TestSecurityGroupIPPermGather(t *testing.T) {
 			"to_port":   int64(80),
 			"security_groups": schema.NewSet(schema.HashString, []interface{}{
 				"sg-22222",
-			}),
-		},
-		{
-			"protocol":  "tcp",
-			"from_port": int64(443),
-			"to_port":   int64(443),
-			"security_groups": schema.NewSet(schema.HashString, []interface{}{
-				"ec2_classic",
-				"amazon-elb/amazon-elb-sg",
 			}),
 		},
 		{
@@ -521,43 +508,6 @@ func TestAccVPCSecurityGroup_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
-			},
-		},
-	})
-}
-
-func TestAccVPCSecurityGroup_basicEC2Classic(t *testing.T) {
-	var group ec2.SecurityGroup
-	resourceName := "aws_security_group.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckEC2Classic(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSecurityGroupEC2ClassicDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccVPCSecurityGroupConfig_ec2Classic(rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSecurityGroupEC2ClassicExists(resourceName, &group),
-					resource.TestCheckResourceAttr(resourceName, "description", "Managed by Terraform"),
-					resource.TestCheckResourceAttr(resourceName, "egress.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", ""),
-					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
-					resource.TestCheckResourceAttr(resourceName, "revoke_rules_on_delete", "false"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "vpc_id", ""),
-				),
-			},
-			{
-				Config:                  testAccVPCSecurityGroupConfig_ec2Classic(rName),
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
@@ -1884,47 +1834,6 @@ func TestAccVPCSecurityGroup_ingressWithCIDRAndSGsVPC(t *testing.T) {
 	})
 }
 
-func TestAccVPCSecurityGroup_ingressWithCIDRAndSGsClassic(t *testing.T) {
-	var group ec2.SecurityGroup
-	resourceName := "aws_security_group.test1"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckEC2Classic(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSecurityGroupEC2ClassicDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccVPCSecurityGroupConfig_ingressWithCIDRAndSGsEC2Classic(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSecurityGroupEC2ClassicExists(resourceName, &group),
-					resource.TestCheckResourceAttr(resourceName, "egress.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.#", "2"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ingress.*", map[string]string{
-						"cidr_blocks.#":      "1",
-						"cidr_blocks.0":      "192.168.0.1/32",
-						"description":        "",
-						"from_port":          "22",
-						"ipv6_cidr_blocks.#": "0",
-						"protocol":           "tcp",
-						"security_groups.#":  "0",
-						"self":               "false",
-						"to_port":            "22",
-					}),
-				),
-			},
-			{
-				Config:                  testAccVPCSecurityGroupConfig_ingressWithCIDRAndSGsEC2Classic(rName),
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
-			},
-		},
-	})
-}
-
 func TestAccVPCSecurityGroup_egressWithPrefixList(t *testing.T) {
 	var group ec2.SecurityGroup
 	resourceName := "aws_security_group.test"
@@ -2433,34 +2342,10 @@ func testAccCheckSecurityGroupDestroy(s *terraform.State) error {
 		}
 
 		if err != nil {
-			return err
+			return create.Error(names.EC2, create.ErrActionCheckingDestroyed, "Security Group", rs.Primary.ID, err)
 		}
 
 		return fmt.Errorf("VPC Security Group (%s) still exists.", rs.Primary.ID)
-	}
-
-	return nil
-}
-
-func testAccCheckSecurityGroupEC2ClassicDestroy(s *terraform.State) error { // nosemgrep:ci.ec2-in-func-name
-	conn := acctest.ProviderEC2Classic.Meta().(*conns.AWSClient).EC2Conn
-
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_security_group" {
-			continue
-		}
-
-		_, err := tfec2.FindSecurityGroupByID(conn, rs.Primary.ID)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("EC2 Classic Security Group (%s) still exists.", rs.Primary.ID)
 	}
 
 	return nil
@@ -2482,32 +2367,7 @@ func testAccCheckSecurityGroupExists(n string, v *ec2.SecurityGroup) resource.Te
 		output, err := tfec2.FindSecurityGroupByID(conn, rs.Primary.ID)
 
 		if err != nil {
-			return err
-		}
-
-		*v = *output
-
-		return nil
-	}
-}
-
-func testAccCheckSecurityGroupEC2ClassicExists(n string, v *ec2.SecurityGroup) resource.TestCheckFunc { // nosemgrep:ci.ec2-in-func-name
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[n]
-		if !ok {
-			return fmt.Errorf("Not found: %s", n)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No EC2 Classic Security Group ID is set")
-		}
-
-		conn := acctest.ProviderEC2Classic.Meta().(*conns.AWSClient).EC2Conn
-
-		output, err := tfec2.FindSecurityGroupByID(conn, rs.Primary.ID)
-
-		if err != nil {
-			return err
+			return create.Error(names.EC2, create.ErrActionCheckingExistence, "Security Group", rs.Primary.ID, err)
 		}
 
 		*v = *output
@@ -2553,7 +2413,7 @@ func testSecurityGroupRuleCount(id string, expectedIngressCount, expectedEgressC
 		return fmt.Errorf("Security Group (%s) not found: %w", id, err)
 	}
 	if err != nil {
-		return err
+		return create.Error(names.EC2, create.ErrActionChecking, "Security Group", id, err)
 	}
 
 	if actual := len(group.IpPermissions); actual != expectedIngressCount {
@@ -2582,14 +2442,6 @@ resource "aws_security_group" "test" {
   vpc_id = aws_vpc.test.id
 }
 `, rName)
-}
-
-func testAccVPCSecurityGroupConfig_ec2Classic(rName string) string { // nosemgrep:ci.ec2-in-func-name
-	return acctest.ConfigCompose(acctest.ConfigEC2ClassicRegionProvider(), fmt.Sprintf(`
-resource "aws_security_group" "test" {
-  name = %[1]q
-}
-`, rName))
 }
 
 func testAccVPCSecurityGroupConfig_nameGenerated(rName string) string {
@@ -3513,44 +3365,6 @@ resource "aws_security_group" "test1" {
   }
 }
 `, rName)
-}
-
-func testAccVPCSecurityGroupConfig_ingressWithCIDRAndSGsEC2Classic(rName string) string { // nosemgrep:ci.ec2-in-func-name
-	return acctest.ConfigCompose(acctest.ConfigEC2ClassicRegionProvider(), fmt.Sprintf(`
-resource "aws_security_group" "test2" {
-  name = "%[1]s-2"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_security_group" "test1" {
-  name = "%[1]s-1"
-
-  ingress {
-    protocol  = "tcp"
-    from_port = "22"
-    to_port   = "22"
-
-    cidr_blocks = [
-      "192.168.0.1/32",
-    ]
-  }
-
-  ingress {
-    protocol        = "tcp"
-    from_port       = 80
-    to_port         = 8000
-    cidr_blocks     = ["10.0.0.0/8"]
-    security_groups = [aws_security_group.test2.name]
-  }
-
-  tags = {
-    Name = %[1]q
-  }
-}
-`, rName))
 }
 
 // fails to apply in one pass with the error "diffs didn't match during apply"
@@ -4797,7 +4611,6 @@ EOF
 
   depends_on = [
     aws_route_table_association.nat,
-    #aws_route_table_association.test,
     aws_iam_role_policy.iam_emr_service_policy,
     aws_iam_role_policy.iam_emr_profile_policy
   ]
