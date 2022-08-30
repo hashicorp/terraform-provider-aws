@@ -123,9 +123,8 @@ func TestAccEC2EIPAssociation_networkInterface(t *testing.T) {
 
 func TestAccEC2EIPAssociation_spotInstance(t *testing.T) {
 	var a ec2.Address
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_eip_association.test"
-
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	publicKey, _, err := sdkacctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
 	if err != nil {
 		t.Fatalf("error generating random SSH key: %s", err)
@@ -140,7 +139,6 @@ func TestAccEC2EIPAssociation_spotInstance(t *testing.T) {
 			{
 				Config: testAccEIPAssociationConfig_spotInstance(rName, publicKey),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEIPExists("aws_eip.test", &a),
 					testAccCheckEIPAssociationExists(resourceName, &a),
 					resource.TestCheckResourceAttrSet(resourceName, "allocation_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "instance_id"),
@@ -361,26 +359,24 @@ resource "aws_eip_association" "test" {
 func testAccEIPAssociationConfig_spotInstance(rName, publicKey string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
-		acctest.AvailableEC2InstanceTypeForAvailabilityZone("aws_subnet.test.availability_zone", "t3.micro", "t2.micro"),
-		acctest.ConfigAvailableAZsNoOptIn(),
+		acctest.ConfigVPCWithSubnets(rName, 1),
+		acctest.AvailableEC2InstanceTypeForAvailabilityZone("data.aws_availability_zones.available.names[0]", "t3.micro", "t2.micro"),
 		fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-}
-
-resource "aws_subnet" "test" {
-  availability_zone = data.aws_availability_zones.available.names[0]
-  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, 0)
-  vpc_id            = aws_vpc.test.id
-}
-
 resource "aws_internet_gateway" "test" {
   vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_key_pair" "test" {
   key_name   = %[1]q
   public_key = %[2]q
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_spot_instance_request" "test" {
@@ -389,11 +385,25 @@ resource "aws_spot_instance_request" "test" {
   key_name             = aws_key_pair.test.key_name
   spot_price           = "0.10"
   wait_for_fulfillment = true
-  subnet_id            = aws_subnet.test.id
+  subnet_id            = aws_subnet.test[0].id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_ec2_tag" "test" {
+  resource_id = aws_spot_instance_request.test.spot_instance_id
+  key         = "Name"
+  value       = %[1]q
 }
 
 resource "aws_eip" "test" {
   vpc = true
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_eip_association" "test" {
