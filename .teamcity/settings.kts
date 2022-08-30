@@ -1,4 +1,4 @@
-import jetbrains.buildServer.configs.kotlin.v2019_2.*
+import jetbrains.buildServer.configs.kotlin.v2019_2.* // ktlint-disable no-wildcard-imports
 import jetbrains.buildServer.configs.kotlin.v2019_2.buildFeatures.golang
 import jetbrains.buildServer.configs.kotlin.v2019_2.buildSteps.script
 import jetbrains.buildServer.configs.kotlin.v2019_2.triggers.schedule
@@ -25,10 +25,16 @@ val awsAlternateSecretAccessKey = DslContext.getParameter("aws_alternate_account
 val tfLog = DslContext.getParameter("tf_log", "")
 
 project {
-    buildType(FullBuild)
+    if (DslContext.getParameter("build_full", "true").toBoolean()) {
+        buildType(FullBuild)
+    }
 
-    if (DslContext.getParameter("pullrequest_build", "").toBoolean()) {
+    if (DslContext.getParameter("build_pullrequest", "").toBoolean() || DslContext.getParameter("pullrequest_build", "").toBoolean()) {
         buildType(PullRequest)
+    }
+
+    if (DslContext.getParameter("build_sweeperonly", "").toBoolean()) {
+        buildType(Sweeper)
     }
 
     params {
@@ -115,7 +121,7 @@ object PullRequest : BuildType({
         if (alternateAccountLockId != "") {
             feature {
                 type = "JetBrains.SharedResources"
-                param("locks-param", "${alternateAccountLockId} readLock")
+                param("locks-param", "$alternateAccountLockId readLock")
             }
         }
     }
@@ -190,7 +196,7 @@ object FullBuild : BuildType({
         if (alternateAccountLockId != "") {
             feature {
                 type = "JetBrains.SharedResources"
-                param("locks-param", "${alternateAccountLockId} readLock")
+                param("locks-param", "$alternateAccountLockId readLock")
             }
         }
     }
@@ -268,10 +274,35 @@ object CleanUp : BuildType({
 
     steps {
         script {
+            name = "Setup GOENV"
+            enabled = false
+            scriptContent = File("./scripts/setup_goenv.sh").readText()
+        }
+        script {
             name = "Post-Sweeper"
             enabled = false
-            executionMode = BuildStep.ExecutionMode.RUN_ON_FAILURE
             scriptContent = File("./scripts/sweeper.sh").readText()
+        }
+    }
+})
+
+object Sweeper : BuildType({
+    name = "Sweeper"
+
+    vcs {
+        root(AbsoluteId(DslContext.getParameter("vcs_root_id")))
+
+        cleanCheckout = true
+    }
+
+    steps {
+        script {
+            name = "Setup GOENV"
+            scriptContent = File("./scripts/setup_goenv.sh").readText()
+        }
+        script {
+            name = "Sweeper"
+            scriptContent = File("./scripts/sweeper_role.sh").readText()
         }
     }
 })
