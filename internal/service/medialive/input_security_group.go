@@ -203,13 +203,6 @@ func resourceInputSecurityGroupDelete(ctx context.Context, d *schema.ResourceDat
 	return nil
 }
 
-const (
-	statusChangePending = "Pending"
-	statusDeleting      = "Deleting"
-	statusNormal        = "Normal"
-	statusUpdated       = "Updated"
-)
-
 func waitInputSecurityGroupCreated(ctx context.Context, conn *medialive.Client, id string, timeout time.Duration) (*medialive.DescribeInputSecurityGroupOutput, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending:                   []string{},
