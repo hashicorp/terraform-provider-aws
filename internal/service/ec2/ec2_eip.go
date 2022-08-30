@@ -286,15 +286,14 @@ func resourceEIPRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("network_interface", "")
 	}
 
-	region := aws.StringValue(conn.Config.Region)
 	d.Set("private_ip", address.PrivateIpAddress)
-	if address.PrivateIpAddress != nil {
-		d.Set("private_dns", fmt.Sprintf("ip-%s.%s", ConvertIPToDashIP(*address.PrivateIpAddress), RegionalPrivateDNSSuffix(region)))
+	if v := aws.StringValue(address.PrivateIpAddress); v != "" {
+		d.Set("private_dns", PrivateDNSNameForIP(meta.(*conns.AWSClient), v))
 	}
 
 	d.Set("public_ip", address.PublicIp)
-	if address.PublicIp != nil {
-		d.Set("public_dns", meta.(*conns.AWSClient).PartitionHostname(fmt.Sprintf("ec2-%s.%s", ConvertIPToDashIP(*address.PublicIp), RegionalPublicDNSSuffix(region))))
+	if v := aws.StringValue(address.PublicIp); v != "" {
+		d.Set("public_dns", PublicDNSNameForIP(meta.(*conns.AWSClient), v))
 	}
 
 	d.Set("allocation_id", address.AllocationId)
@@ -582,4 +581,12 @@ func waitForAddressAssociationClassic(conn *ec2.EC2, publicIP string, instanceID
 
 func ConvertIPToDashIP(ip string) string {
 	return strings.Replace(ip, ".", "-", -1)
+}
+
+func PrivateDNSNameForIP(client *conns.AWSClient, ip string) string {
+	return fmt.Sprintf("ip-%s.%s", ConvertIPToDashIP(ip), RegionalPrivateDNSSuffix(client.Region))
+}
+
+func PublicDNSNameForIP(client *conns.AWSClient, ip string) string {
+	return client.PartitionHostname(fmt.Sprintf("ec2-%s.%s", ConvertIPToDashIP(ip), RegionalPublicDNSSuffix(client.Region)))
 }
