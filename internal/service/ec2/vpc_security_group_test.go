@@ -2287,6 +2287,40 @@ func TestAccVPCSecurityGroup_rulesDropOnError(t *testing.T) {
 	})
 }
 
+// TestAccVPCSecurityGroup_emrDependencyViolation is very complex but captures
+// a problem seen in EMR and other services. The main gist is that a security
+// group can have 0 rules and still have dependencies. Services, like EMR,
+// create rules in security groups. If a 0-rule SG is listed as the source of
+// a rule in another SG, it could not previously be deleted.
+func TestAccVPCSecurityGroup_emrDependencyViolation(t *testing.T) {
+	var group ec2.SecurityGroup
+	resourceName := "aws_security_group.allow_access"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSecurityGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCSecurityGroupConfig_emrLinkedRulesDestroy(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckSecurityGroupExists(resourceName, &group),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`security-group/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "egress.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ingress.#", "1"),
+					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
+					resource.TestCheckResourceAttr(resourceName, "revoke_rules_on_delete", "true"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "vpc_id"),
+				),
+				ExpectError: regexp.MustCompile("unexpected state"),
+			},
+		},
+	})
+}
+
 // cycleIPPermForGroup returns an IpPermission struct with a configured
 // UserIdGroupPair for the groupid given. Used in
 // TestAccAWSSecurityGroup_forceRevokeRules_should_fail to create a cyclic rule
@@ -4336,4 +4370,437 @@ resource "aws_security_group" "test" {
   vpc_id = aws_vpc.test.id
 }
 `, rName)
+}
+
+// testAccVPCSecurityGroupConfig_emrLinkedRulesDestroy is very involved but captures
+// a problem seen in EMR and other contexts.
+func testAccVPCSecurityGroupConfig_emrLinkedRulesDestroy(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
+		fmt.Sprintf(`
+# VPC
+resource "aws_vpc" "main" {
+  cidr_block = "10.1.0.0/16"
+  tags = {
+    Name = %[1]q
+  }
+}
+
+# subnets
+resource "aws_subnet" "private" {
+  vpc_id            = aws_vpc.main.id
+  cidr_block        = "10.1.0.0/24"
+  availability_zone = data.aws_availability_zones.available.names[0]
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_security_group" "allow_ssh" {
+  name        = "%[1]s-ssh"
+  description = "ssh"
+  vpc_id      = aws_vpc.main.id
+
+  tags = {
+    Name = "%[1]s-ssh"
+  }
+}
+
+# internet gateway
+resource "aws_internet_gateway" "gw" {
+  vpc_id = aws_vpc.main.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+# elastic ip for NAT gateway
+resource "aws_eip" "nat" {
+  vpc = true
+  tags = {
+    Name = %[1]q
+  }
+}
+
+# NAT gateway
+resource "aws_nat_gateway" "nat" {
+  allocation_id = aws_eip.nat.id
+  subnet_id     = aws_subnet.private.id
+
+  tags = {
+    Name = %[1]q
+  }
+
+  # To ensure proper ordering, it is recommended to add an explicit dependency
+  # on the Internet Gateway for the VPC.
+  depends_on = [aws_internet_gateway.gw]
+}
+
+# route tables
+# add internet gateway
+resource "aws_route_table" "test" {
+  vpc_id = aws_vpc.main.id
+
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.gw.id
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+# route table for nat
+resource "aws_route_table" "nat" {
+  vpc_id = aws_vpc.main.id
+
+  route {
+    cidr_block     = "0.0.0.0/0"
+    nat_gateway_id = aws_nat_gateway.nat.id
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+# associate nat route table with subnet
+resource "aws_route_table_association" "nat" {
+  subnet_id      = aws_subnet.private.id
+  route_table_id = aws_route_table.nat.id
+}
+
+resource "aws_security_group" "allow_access" {
+  name                   = "%[1]s-allow-access"
+  description            = "Allow inbound traffic"
+  vpc_id                 = aws_vpc.main.id
+  revoke_rules_on_delete = true
+
+  ingress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = [aws_vpc.main.cidr_block]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  lifecycle {
+    ignore_changes = [
+      ingress,
+      egress,
+    ]
+  }
+
+  tags = {
+    name = "%[1]s-allow-access"
+  }
+}
+
+resource "aws_security_group" "service_access" {
+  name                   = "%[1]s-service-access"
+  description            = "Allow inbound traffic"
+  vpc_id                 = aws_vpc.main.id
+  revoke_rules_on_delete = true
+
+  ingress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = [aws_vpc.main.cidr_block]
+  }
+
+  ingress {
+    from_port       = 8443
+    to_port         = 8443
+    protocol        = "tcp"
+    cidr_blocks     = [aws_vpc.main.cidr_block]
+    security_groups = [aws_security_group.allow_access.id]
+  }
+
+  ingress {
+    from_port       = 9443
+    to_port         = 9443
+    protocol        = "tcp"
+    cidr_blocks     = [aws_vpc.main.cidr_block]
+    security_groups = [aws_security_group.allow_access.id]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  lifecycle {
+    ignore_changes = [
+      ingress,
+      egress,
+    ]
+  }
+
+  tags = {
+    name = "%[1]s-service-access"
+  }
+}
+
+# IAM role for EMR Service
+resource "aws_iam_role" "iam_emr_service_role" {
+  name = "%[1]s-service-role"
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2008-10-17",
+  "Statement": [
+    {
+      "Sid": "",
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "elasticmapreduce.amazonaws.com"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy" "iam_emr_service_policy" {
+  name = "%[1]s-service-policy"
+  role = aws_iam_role.iam_emr_service_role.id
+
+  policy = <<EOF
+{
+    "Version": "2012-10-17",
+    "Statement": [{
+        "Effect": "Allow",
+        "Resource": "*",
+        "Action": [
+            "ec2:AuthorizeSecurityGroupEgress",
+            "ec2:AuthorizeSecurityGroupIngress",
+            "ec2:CancelSpotInstanceRequests",
+            "ec2:CreateNetworkInterface",
+            "ec2:CreateSecurityGroup",
+            "ec2:CreateTags",
+            "ec2:DeleteNetworkInterface",
+            "ec2:DeleteSecurityGroup",
+            "ec2:DeleteTags",
+            "ec2:DescribeAvailabilityZones",
+            "ec2:DescribeAccountAttributes",
+            "ec2:DescribeDhcpOptions",
+            "ec2:DescribeInstanceStatus",
+            "ec2:DescribeInstances",
+            "ec2:DescribeKeyPairs",
+            "ec2:DescribeNetworkAcls",
+            "ec2:DescribeNetworkInterfaces",
+            "ec2:DescribePrefixLists",
+            "ec2:DescribeRouteTables",
+            "ec2:DescribeSecurityGroups",
+            "ec2:DescribeSpotInstanceRequests",
+            "ec2:DescribeSpotPriceHistory",
+            "ec2:DescribeSubnets",
+            "ec2:DescribeVpcAttribute",
+            "ec2:DescribeVpcEndpoints",
+            "ec2:DescribeVpcEndpointServices",
+            "ec2:DescribeVpcs",
+            "ec2:DetachNetworkInterface",
+            "ec2:ModifyImageAttribute",
+            "ec2:ModifyInstanceAttribute",
+            "ec2:RequestSpotInstances",
+            "ec2:RevokeSecurityGroupEgress",
+            "ec2:RunInstances",
+            "ec2:TerminateInstances",
+            "ec2:DeleteVolume",
+            "ec2:DescribeVolumeStatus",
+            "ec2:DescribeVolumes",
+            "ec2:DetachVolume",
+            "iam:GetRole",
+            "iam:GetRolePolicy",
+            "iam:ListInstanceProfiles",
+            "iam:ListRolePolicies",
+            "iam:PassRole",
+            "s3:CreateBucket",
+            "s3:Get*",
+            "s3:List*",
+            "sdb:BatchPutAttributes",
+            "sdb:Select",
+            "sqs:CreateQueue",
+            "sqs:Delete*",
+            "sqs:GetQueue*",
+            "sqs:PurgeQueue",
+            "sqs:ReceiveMessage"
+        ]
+    }]
+}
+EOF
+}
+
+# IAM Role for EC2 Instance Profile
+resource "aws_iam_role" "iam_emr_profile_role" {
+  name = "%[1]s-profile-role"
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2008-10-17",
+  "Statement": [
+    {
+      "Sid": "",
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "ec2.amazonaws.com"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_instance_profile" "emr_profile" {
+  name = "%[1]s-profile"
+  role = aws_iam_role.iam_emr_profile_role.name
+}
+
+resource "aws_iam_role_policy" "iam_emr_profile_policy" {
+  name = "%[1]s-profile-policy"
+  role = aws_iam_role.iam_emr_profile_role.id
+
+  policy = <<EOF
+{
+    "Version": "2012-10-17",
+    "Statement": [{
+        "Effect": "Allow",
+        "Resource": "*",
+        "Action": [
+            "cloudwatch:*",
+            "dynamodb:*",
+            "ec2:Describe*",
+            "elasticmapreduce:Describe*",
+            "elasticmapreduce:ListBootstrapActions",
+            "elasticmapreduce:ListClusters",
+            "elasticmapreduce:ListInstanceGroups",
+            "elasticmapreduce:ListInstances",
+            "elasticmapreduce:ListSteps",
+            "kinesis:CreateStream",
+            "kinesis:DeleteStream",
+            "kinesis:DescribeStream",
+            "kinesis:GetRecords",
+            "kinesis:GetShardIterator",
+            "kinesis:MergeShards",
+            "kinesis:PutRecord",
+            "kinesis:SplitShard",
+            "rds:Describe*",
+            "s3:*",
+            "sdb:*",
+            "sns:*",
+            "sqs:*"
+        ]
+    }]
+}
+EOF
+}
+
+resource "aws_emr_cluster" "cluster" {
+  name          = %[1]q
+  release_label = "emr-6.6.0"
+  applications  = ["Spark"]
+
+  additional_info = <<EOF
+{
+  "instanceAwsClientConfiguration": {
+    "proxyPort": 8099,
+    "proxyHost": "myproxy.example.com"
+  }
+}
+EOF
+
+  termination_protection            = false
+  keep_job_flow_alive_when_no_steps = true
+
+  ec2_attributes {
+    subnet_id                         = aws_subnet.private.id
+    instance_profile                  = aws_iam_instance_profile.emr_profile.arn
+    emr_managed_master_security_group = aws_security_group.allow_access.id
+    emr_managed_slave_security_group  = aws_security_group.allow_access.id
+    additional_master_security_groups = aws_security_group.allow_ssh.id
+    additional_slave_security_groups  = aws_security_group.allow_ssh.id
+    service_access_security_group     = aws_security_group.service_access.id
+  }
+
+  master_instance_group {
+    instance_type = "c4.large"
+  }
+
+  core_instance_group {
+    instance_type  = "c4.large"
+    instance_count = 1
+
+    ebs_config {
+      size                 = "40"
+      type                 = "gp2"
+      volumes_per_instance = 1
+    }
+  }
+
+  ebs_root_volume_size = 100
+
+  tags = {
+    role = "rolename"
+    env  = "env"
+  }
+
+  bootstrap_action {
+    path = "s3://elasticmapreduce/bootstrap-actions/run-if"
+    name = "runif"
+    args = ["instance.isMaster=true", "echo running on master node"]
+  }
+
+  configurations_json = <<EOF
+  [
+    {
+      "Classification": "hadoop-env",
+      "Configurations": [
+        {
+          "Classification": "export",
+          "Properties": {
+            "JAVA_HOME": "/usr/lib/jvm/java-1.8.0"
+          }
+        }
+      ],
+      "Properties": {}
+    },
+    {
+      "Classification": "spark-env",
+      "Configurations": [
+        {
+          "Classification": "export",
+          "Properties": {
+            "JAVA_HOME": "/usr/lib/jvm/java-1.8.0"
+          }
+        }
+      ],
+      "Properties": {}
+    }
+  ]
+EOF
+
+  service_role = aws_iam_role.iam_emr_service_role.arn
+
+  depends_on = [
+    aws_route_table_association.nat,
+    #aws_route_table_association.test,
+    aws_iam_role_policy.iam_emr_service_policy,
+    aws_iam_role_policy.iam_emr_profile_policy
+  ]
+}
+`, rName))
 }
