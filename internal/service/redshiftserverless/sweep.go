@@ -115,4 +115,3 @@ func sweepWorkgroups(region string) error {
 
 	return nil
 }
-
