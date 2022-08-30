@@ -103,6 +103,7 @@ import (
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/pinpoint"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/qldb"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/quicksight"
+	_ "github.com/hashicorp/terraform-provider-aws/internal/service/ram"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/redshift"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/redshiftserverless"

@@ -552,6 +552,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_ec2_serial_console_access":                  ec2.DataSourceSerialConsoleAccess(),
 			"aws_ec2_spot_price":                             ec2.DataSourceSpotPrice(),
 			"aws_ec2_transit_gateway":                        ec2.DataSourceTransitGateway(),
+			"aws_ec2_transit_gateway_attachment":             ec2.DataSourceTransitGatewayAttachment(),
 			"aws_ec2_transit_gateway_connect":                ec2.DataSourceTransitGatewayConnect(),
 			"aws_ec2_transit_gateway_connect_peer":           ec2.DataSourceTransitGatewayConnectPeer(),
 			"aws_ec2_transit_gateway_dx_gateway_attachment":  ec2.DataSourceTransitGatewayDxGatewayAttachment(),
@@ -737,12 +738,13 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_lex_intent":    lexmodels.DataSourceIntent(),
 			"aws_lex_slot_type": lexmodels.DataSourceSlotType(),
 
-			"aws_location_geofence_collection": location.DataSourceGeofenceCollection(),
-			"aws_location_map":                 location.DataSourceMap(),
-			"aws_location_place_index":         location.DataSourcePlaceIndex(),
-			"aws_location_route_calculator":    location.DataSourceRouteCalculator(),
-			"aws_location_tracker":             location.DataSourceTracker(),
-			"aws_location_tracker_association": location.DataSourceTrackerAssociation(),
+			"aws_location_geofence_collection":  location.DataSourceGeofenceCollection(),
+			"aws_location_map":                  location.DataSourceMap(),
+			"aws_location_place_index":          location.DataSourcePlaceIndex(),
+			"aws_location_route_calculator":     location.DataSourceRouteCalculator(),
+			"aws_location_tracker":              location.DataSourceTracker(),
+			"aws_location_tracker_association":  location.DataSourceTrackerAssociation(),
+			"aws_location_tracker_associations": location.DataSourceTrackerAssociations(),
 
 			// "aws_arn":                     meta.DataSourceARN(), // Now implemented using Terraform Plugin Framework.
 			"aws_billing_service_account": meta.DataSourceBillingServiceAccount(),
@@ -1097,6 +1099,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_cloudfront_function":                       cloudfront.ResourceFunction(),
 			"aws_cloudfront_key_group":                      cloudfront.ResourceKeyGroup(),
 			"aws_cloudfront_monitoring_subscription":        cloudfront.ResourceMonitoringSubscription(),
+			"aws_cloudfront_origin_access_control":          cloudfront.ResourceOriginAccessControl(),
 			"aws_cloudfront_origin_access_identity":         cloudfront.ResourceOriginAccessIdentity(),
 			"aws_cloudfront_origin_request_policy":          cloudfront.ResourceOriginRequestPolicy(),
 			"aws_cloudfront_public_key":                     cloudfront.ResourcePublicKey(),
@@ -1344,6 +1347,8 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_ec2_transit_gateway_multicast_group_source":       ec2.ResourceTransitGatewayMulticastGroupSource(),
 			"aws_ec2_transit_gateway_peering_attachment":           ec2.ResourceTransitGatewayPeeringAttachment(),
 			"aws_ec2_transit_gateway_peering_attachment_accepter":  ec2.ResourceTransitGatewayPeeringAttachmentAccepter(),
+			"aws_ec2_transit_gateway_policy_table":                 ec2.ResourceTransitGatewayPolicyTable(),
+			"aws_ec2_transit_gateway_policy_table_association":     ec2.ResourceTransitGatewayPolicyTableAssociation(),
 			"aws_ec2_transit_gateway_prefix_list_reference":        ec2.ResourceTransitGatewayPrefixListReference(),
 			"aws_ec2_transit_gateway_route":                        ec2.ResourceTransitGatewayRoute(),
 			"aws_ec2_transit_gateway_route_table":                  ec2.ResourceTransitGatewayRouteTable(),
@@ -1756,7 +1761,9 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_networkmanager_link_association":                         networkmanager.ResourceLinkAssociation(),
 			"aws_networkmanager_site":                                     networkmanager.ResourceSite(),
 			"aws_networkmanager_transit_gateway_connect_peer_association": networkmanager.ResourceTransitGatewayConnectPeerAssociation(),
+			"aws_networkmanager_transit_gateway_peering":                  networkmanager.ResourceTransitGatewayPeering(),
 			"aws_networkmanager_transit_gateway_registration":             networkmanager.ResourceTransitGatewayRegistration(),
+			"aws_networkmanager_transit_gateway_route_table_attachment":   networkmanager.ResourceTransitGatewayRouteTableAttachment(),
 			"aws_networkmanager_vpc_attachment":                           networkmanager.ResourceVPCAttachment(),
 
 			"aws_opensearch_domain":              opensearch.ResourceDomain(),
@@ -1855,6 +1862,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_redshiftdata_statement": redshiftdata.ResourceStatement(),
 
 			"aws_redshiftserverless_namespace": redshiftserverless.ResourceNamespace(),
+			"aws_redshiftserverless_workgroup": redshiftserverless.ResourceWorkgroup(),
 
 			"aws_resourcegroups_group": resourcegroups.ResourceGroup(),
 

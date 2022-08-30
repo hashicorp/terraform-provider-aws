@@ -43,6 +43,8 @@ func ResourceSecurityGroup() *schema.Resource {
 				Set:      schema.HashString,
 			},
 		},
+
+		DeprecationMessage: `With the retirement of EC2-Classic the aws_elasticache_security_group resource has been deprecated and will be removed in a future version.`,
 	}
 }
 

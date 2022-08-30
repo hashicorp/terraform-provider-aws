@@ -316,6 +316,12 @@ func ResourceInstance() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
+			"network_type": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.StringInSlice(NetworkType_Values(), false),
+			},
 			"option_group_name": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -453,9 +459,10 @@ func ResourceInstance() *schema.Resource {
 				},
 			},
 			"security_group_names": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
+				Type:       schema.TypeSet,
+				Optional:   true,
+				Elem:       &schema.Schema{Type: schema.TypeString},
+				Deprecated: `With the retirement of EC2-Classic the security_group_names attribute has been deprecated and will be removed in a future version.`,
 			},
 			"skip_final_snapshot": {
 				Type:     schema.TypeBool,
@@ -590,6 +597,10 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 
 		if v, ok := d.GetOk("multi_az"); ok {
 			input.MultiAZ = aws.Bool(v.(bool))
+		}
+
+		if v, ok := d.GetOk("network_type"); ok {
+			input.NetworkType = aws.String(v.(string))
 		}
 
 		if v, ok := d.GetOk("option_group_name"); ok {
@@ -794,6 +805,10 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 			input.MultiAZ = aws.Bool(v.(bool))
 		}
 
+		if v, ok := d.GetOk("network_type"); ok {
+			input.NetworkType = aws.String(v.(string))
+		}
+
 		if v, ok := d.GetOk("option_group_name"); ok {
 			input.OptionGroupName = aws.String(v.(string))
 		}
@@ -990,6 +1005,10 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 			} else {
 				input.MultiAZ = aws.Bool(v.(bool))
 			}
+		}
+
+		if v, ok := d.GetOk("network_type"); ok {
+			input.NetworkType = aws.String(v.(string))
 		}
 
 		if v, ok := d.GetOk("option_group_name"); ok {
@@ -1299,6 +1318,10 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 			input.NcharCharacterSetName = aws.String(v.(string))
 		}
 
+		if v, ok := d.GetOk("network_type"); ok {
+			input.NetworkType = aws.String(v.(string))
+		}
+
 		if v, ok := d.GetOk("option_group_name"); ok {
 			input.OptionGroupName = aws.String(v.(string))
 		}
@@ -1458,6 +1481,7 @@ func resourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("multi_az", v.MultiAZ)
 	d.Set("name", v.DBName)
 	d.Set("nchar_character_set_name", v.NcharCharacterSetName)
+	d.Set("network_type", v.NetworkType)
 	if len(v.OptionGroupMemberships) > 0 && v.OptionGroupMemberships[0] != nil {
 		d.Set("option_group_name", v.OptionGroupMemberships[0].OptionGroupName)
 	}
@@ -1647,6 +1671,10 @@ func resourceInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 			input.MultiAZ = aws.Bool(d.Get("multi_az").(bool))
 		}
 
+		if d.HasChange("network_type") {
+			input.NetworkType = aws.String(d.Get("network_type").(string))
+		}
+
 		if d.HasChange("option_group_name") {
 			input.OptionGroupName = aws.String(d.Get("option_group_name").(string))
 		}
@@ -1787,7 +1815,7 @@ func resourceInstanceDelete(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	log.Printf("[DEBUG] Deleting DB Instance: %s", d.Id())
+	log.Printf("[DEBUG] Deleting RDS DB Instance: %s", d.Id())
 	_, err := conn.DeleteDBInstance(input)
 
 	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBInstanceNotFoundFault) {

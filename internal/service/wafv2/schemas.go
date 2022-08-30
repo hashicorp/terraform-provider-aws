@@ -334,11 +334,40 @@ func fieldToMatchBaseSchema() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"all_query_arguments": emptySchema(),
 			"body":                bodySchema(),
-			"cookies":             cookiesSchema(),
-			"headers":             headersSchema(),
-			"json_body":           jsonBodySchema(),
-			"method":              emptySchema(),
-			"query_string":        emptySchema(),
+			"cookies": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"match_scope":       matchScopeSchema(),
+						"oversize_handling": oversizeHandlingSchema(),
+						"match_pattern": {
+							Type:     schema.TypeList,
+							Required: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"all": emptySchema(),
+									"included_cookies": {
+										Type:     schema.TypeList,
+										Optional: true,
+										Elem:     &schema.Schema{Type: schema.TypeString},
+									},
+									"excluded_cookies": {
+										Type:     schema.TypeList,
+										Optional: true,
+										Elem:     &schema.Schema{Type: schema.TypeString},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			"headers":      headersSchema(),
+			"json_body":    jsonBodySchema(),
+			"method":       emptySchema(),
+			"query_string": emptySchema(),
 			"single_header": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -641,53 +670,11 @@ func oversizeHandlingSchema() *schema.Schema {
 	}
 }
 
-func cookiesSchema() *schema.Schema {
-	return &schema.Schema{
-		Type:     schema.TypeList,
-		Optional: true,
-		Elem: &schema.Resource{
-			Schema: map[string]*schema.Schema{
-				"match_pattern": {
-					Type:     schema.TypeList,
-					Required: true,
-					MaxItems: 1,
-					MinItems: 1,
-					Elem: &schema.Resource{
-						Schema: map[string]*schema.Schema{
-							"all":              emptySchema(),
-							"excluded_cookies": cookiesMatchPatternBaseSchema(),
-							"included_cookies": cookiesMatchPatternBaseSchema(),
-						},
-					},
-				},
-				"match_scope":       matchScopeSchema(),
-				"oversize_handling": oversizeHandlingSchema(),
-			},
-		},
-	}
-}
-
 func matchScopeSchema() *schema.Schema {
 	return &schema.Schema{
 		Type:         schema.TypeString,
 		Required:     true,
 		ValidateFunc: validation.StringInSlice(wafv2.MapMatchScope_Values(), false),
-	}
-}
-
-func cookiesMatchPatternBaseSchema() *schema.Schema {
-	return &schema.Schema{
-		Type:     schema.TypeList,
-		Optional: true,
-		MinItems: 1,
-		MaxItems: 199,
-		Elem: &schema.Schema{
-			Type: schema.TypeString,
-			ValidateFunc: validation.All(
-				validation.StringLenBetween(1, 60),
-				validation.StringMatch(regexp.MustCompile(`.*\S.*`), ""),
-			),
-		},
 	}
 }
 
