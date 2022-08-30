@@ -362,9 +362,8 @@ func TestAccEC2EIP_PublicIPv4Pool_custom(t *testing.T) {
 				Config: testAccEIPConfig_publicIPv4PoolCustom(rName, poolName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEIPExists(resourceName, &conf),
-					testAccCheckEIPAttributes(&conf),
+					resource.TestCheckResourceAttrSet(resourceName, "public_ip"),
 					resource.TestCheckResourceAttr(resourceName, "public_ipv4_pool", poolName),
-					resource.TestCheckResourceAttr(resourceName, "domain", ec2.DomainTypeStandard),
 				),
 			},
 			{
@@ -419,9 +418,9 @@ func TestAccEC2EIP_networkBorderGroup(t *testing.T) {
 				Config: testAccEIPConfig_networkBorderGroup(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEIPExists(resourceName, &conf),
-					testAccCheckEIPAttributes(&conf),
-					resource.TestCheckResourceAttr(resourceName, "public_ipv4_pool", "amazon"),
 					resource.TestCheckResourceAttr(resourceName, "network_border_group", acctest.Region()),
+					resource.TestCheckResourceAttrSet(resourceName, "public_ip"),
+					resource.TestCheckResourceAttr(resourceName, "public_ipv4_pool", "amazon"),
 				),
 			},
 			{
@@ -505,7 +504,6 @@ func TestAccEC2EIP_BYOIPAddress_custom(t *testing.T) {
 				Config: testAccEIPConfig_byoipAddressCustom(rName, address),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEIPExists(resourceName, &conf),
-					testAccCheckEIPAttributes(&conf),
 					resource.TestCheckResourceAttr(resourceName, "public_ip", address),
 				),
 			},
@@ -540,7 +538,6 @@ func TestAccEC2EIP_BYOIPAddress_customWithPublicIPv4Pool(t *testing.T) {
 				Config: testAccEIPConfig_byoipAddressCustomPublicIPv4Pool(rName, address, poolName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEIPExists(resourceName, &conf),
-					testAccCheckEIPAttributes(&conf),
 					resource.TestCheckResourceAttr(resourceName, "public_ip", address),
 					resource.TestCheckResourceAttr(resourceName, "public_ipv4_pool", poolName),
 				),
@@ -609,26 +606,6 @@ func testAccCheckEIPDestroy(s *terraform.State) error {
 	}
 
 	return nil
-}
-
-func testAccCheckEIPAttributes(conf *ec2.Address) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if *conf.PublicIp == "" {
-			return fmt.Errorf("empty public_ip")
-		}
-
-		return nil
-	}
-}
-
-func testAccCheckEIPAssociated(conf *ec2.Address) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if conf.AssociationId == nil || *conf.AssociationId == "" {
-			return fmt.Errorf("empty association_id")
-		}
-
-		return nil
-	}
 }
 
 func testAccCheckEIPPrivateDNS(resourceName string) resource.TestCheckFunc {
