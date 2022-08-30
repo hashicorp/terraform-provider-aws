@@ -316,6 +316,7 @@ func TestAccEC2EIP_NetworkInterface_twoEIPsOneInterface(t *testing.T) {
 func TestAccEC2EIP_PublicIPv4Pool_default(t *testing.T) {
 	var conf ec2.Address
 	resourceName := "aws_eip.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
@@ -324,12 +325,11 @@ func TestAccEC2EIP_PublicIPv4Pool_default(t *testing.T) {
 		CheckDestroy:             testAccCheckEIPDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEIPConfig_publicIPv4PoolDefault,
+				Config: testAccEIPConfig_publicIPv4PoolDefault(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEIPExists(resourceName, &conf),
-					testAccCheckEIPAttributes(&conf),
+					resource.TestCheckResourceAttrSet(resourceName, "public_ip"),
 					resource.TestCheckResourceAttr(resourceName, "public_ipv4_pool", "amazon"),
-					resource.TestCheckResourceAttr(resourceName, "domain", ec2.DomainTypeVpc),
 				),
 			},
 			{
@@ -342,14 +342,15 @@ func TestAccEC2EIP_PublicIPv4Pool_default(t *testing.T) {
 }
 
 func TestAccEC2EIP_PublicIPv4Pool_custom(t *testing.T) {
-	if os.Getenv("AWS_EC2_EIP_PUBLIC_IPV4_POOL") == "" {
-		t.Skip("Environment variable AWS_EC2_EIP_PUBLIC_IPV4_POOL is not set")
+	key := "AWS_EC2_EIP_PUBLIC_IPV4_POOL"
+	poolName := os.Getenv(key)
+	if poolName == "" {
+		t.Skipf("Environment variable %s is not set", key)
 	}
 
 	var conf ec2.Address
 	resourceName := "aws_eip.test"
-
-	poolName := os.Getenv("AWS_EC2_EIP_PUBLIC_IPV4_POOL")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
@@ -358,7 +359,7 @@ func TestAccEC2EIP_PublicIPv4Pool_custom(t *testing.T) {
 		CheckDestroy:             testAccCheckEIPDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEIPConfig_publicIPv4PoolCustom(poolName),
+				Config: testAccEIPConfig_publicIPv4PoolCustom(rName, poolName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEIPExists(resourceName, &conf),
 					testAccCheckEIPAttributes(&conf),
@@ -704,21 +705,6 @@ resource "aws_eip" "test" {
 `, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
-const testAccEIPConfig_publicIPv4PoolDefault = `
-resource "aws_eip" "test" {
-  vpc = true
-}
-`
-
-func testAccEIPConfig_publicIPv4PoolCustom(poolName string) string {
-	return fmt.Sprintf(`
-resource "aws_eip" "test" {
-  vpc              = true
-  public_ipv4_pool = %[1]q
-}
-`, poolName)
-}
-
 const testAccEIPConfig_byoipAddressCustomDefault = `
 resource "aws_eip" "test" {
   vpc = true
@@ -1004,6 +990,31 @@ resource "aws_eip" "test" {
   depends_on = [aws_internet_gateway.test]
 }
 `, rName))
+}
+
+func testAccEIPConfig_publicIPv4PoolDefault(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_eip" "test" {
+  vpc = true
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName)
+}
+
+func testAccEIPConfig_publicIPv4PoolCustom(rName, poolName string) string {
+	return fmt.Sprintf(`
+resource "aws_eip" "test" {
+  vpc              = true
+  public_ipv4_pool = %[2]q
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, poolName)
 }
 
 func testAccEIPConfig_customerOwnedIPv4Pool() string {
