@@ -379,6 +379,7 @@ func TestAccEC2EIP_PublicIPv4Pool_custom(t *testing.T) {
 func TestAccEC2EIP_customerOwnedIPv4Pool(t *testing.T) {
 	var conf ec2.Address
 	resourceName := "aws_eip.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
@@ -387,7 +388,7 @@ func TestAccEC2EIP_customerOwnedIPv4Pool(t *testing.T) {
 		CheckDestroy:             testAccCheckEIPDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEIPConfig_customerOwnedIPv4Pool(),
+				Config: testAccEIPConfig_customerOwnedIPv4Pool(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEIPExists(resourceName, &conf),
 					resource.TestMatchResourceAttr(resourceName, "customer_owned_ipv4_pool", regexp.MustCompile(`^ipv4pool-coip-.+$`)),
@@ -406,6 +407,7 @@ func TestAccEC2EIP_customerOwnedIPv4Pool(t *testing.T) {
 func TestAccEC2EIP_networkBorderGroup(t *testing.T) {
 	var conf ec2.Address
 	resourceName := "aws_eip.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
@@ -414,7 +416,7 @@ func TestAccEC2EIP_networkBorderGroup(t *testing.T) {
 		CheckDestroy:             testAccCheckEIPDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEIPConfig_networkBorderGroup,
+				Config: testAccEIPConfig_networkBorderGroup(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEIPExists(resourceName, &conf),
 					testAccCheckEIPAttributes(&conf),
@@ -433,8 +435,8 @@ func TestAccEC2EIP_networkBorderGroup(t *testing.T) {
 
 func TestAccEC2EIP_carrierIP(t *testing.T) {
 	var conf ec2.Address
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_eip.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckWavelengthZoneAvailable(t) },
@@ -703,31 +705,6 @@ resource "aws_eip" "test" {
   }
 }
 `, tagKey1, tagValue1, tagKey2, tagValue2)
-}
-
-const testAccEIPConfig_byoipAddressCustomDefault = `
-resource "aws_eip" "test" {
-  vpc = true
-}
-`
-
-func testAccEIPConfig_byoipAddressCustom(address string) string {
-	return fmt.Sprintf(`
-resource "aws_eip" "test" {
-  vpc     = true
-  address = %[1]q
-}
-`, address)
-}
-
-func testAccEIPConfig_byoipAddressCustomPublicIPv4Pool(address string, poolname string) string {
-	return fmt.Sprintf(`
-resource "aws_eip" "test" {
-  vpc              = true
-  address          = %[1]q
-  public_ipv4_pool = %[2]q
-}
-`, address, poolname)
 }
 
 func testAccEIPConfig_baseInstance(rName string) string {
@@ -1017,25 +994,35 @@ resource "aws_eip" "test" {
 `, rName, poolName)
 }
 
-func testAccEIPConfig_customerOwnedIPv4Pool() string {
-	return `
+func testAccEIPConfig_customerOwnedIPv4Pool(rName string) string {
+	return fmt.Sprintf(`
 data "aws_ec2_coip_pools" "test" {}
 
 resource "aws_eip" "test" {
   customer_owned_ipv4_pool = tolist(data.aws_ec2_coip_pools.test.pool_ids)[0]
   vpc                      = true
+
+  tags = {
+    Name = %[1]q
+  }
 }
-`
+`, rName)
 }
 
-const testAccEIPConfig_networkBorderGroup = `
+func testAccEIPConfig_networkBorderGroup(rName string) string {
+	return fmt.Sprintf(`
 data "aws_region" current {}
 
 resource "aws_eip" "test" {
   vpc                  = true
   network_border_group = data.aws_region.current.name
+
+  tags = {
+    Name = %[1]q
+  }
 }
-`
+`, rName)
+}
 
 func testAccEIPConfig_carrierIP(rName string) string {
 	return acctest.ConfigCompose(
@@ -1054,4 +1041,29 @@ resource "aws_eip" "test" {
   }
 }
 `, rName))
+}
+
+const testAccEIPConfig_byoipAddressCustomDefault = `
+resource "aws_eip" "test" {
+  vpc = true
+}
+`
+
+func testAccEIPConfig_byoipAddressCustom(address string) string {
+	return fmt.Sprintf(`
+resource "aws_eip" "test" {
+  vpc     = true
+  address = %[1]q
+}
+`, address)
+}
+
+func testAccEIPConfig_byoipAddressCustomPublicIPv4Pool(address string, poolname string) string {
+	return fmt.Sprintf(`
+resource "aws_eip" "test" {
+  vpc              = true
+  address          = %[1]q
+  public_ipv4_pool = %[2]q
+}
+`, address, poolname)
 }
