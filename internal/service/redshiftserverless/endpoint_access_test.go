@@ -155,7 +155,7 @@ resource "aws_subnet" "test" {
   availability_zone = data.aws_availability_zones.available.names[0]
   cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, 0)
   vpc_id            = aws_vpc.test.id
-}	
+}
 
 resource "aws_redshiftserverless_namespace" "test" {
   namespace_name = %[1]q
@@ -183,7 +183,7 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_security_group" "test" {
-  name    = %[1]q
+  name   = %[1]q
   vpc_id = aws_vpc.test.id
 }
 
@@ -191,7 +191,7 @@ resource "aws_subnet" "test" {
   availability_zone = data.aws_availability_zones.available.names[0]
   cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, 0)
   vpc_id            = aws_vpc.test.id
-}	
+}
 
 resource "aws_redshiftserverless_namespace" "test" {
   namespace_name = %[1]q
