@@ -464,12 +464,7 @@ func jsonMatchPattern() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"all": {
-					Type:     schema.TypeList,
-					Optional: true,
-					MaxItems: 1,
-					Elem:     &schema.Resource{Schema: map[string]*schema.Schema{}},
-				},
+				"all": emptySchema(),
 				"included_paths": {
 					Type:     schema.TypeList,
 					Optional: true,

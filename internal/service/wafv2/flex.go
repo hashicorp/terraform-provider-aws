@@ -523,7 +523,7 @@ func expandJSONMatchPattern(l []interface{}) *wafv2.JsonMatchPattern {
 	m := l[0].(map[string]interface{})
 	jsonMatchPattern := &wafv2.JsonMatchPattern{}
 
-	if v, ok := m["all"]; ok && len(v.([]interface{})) > 0 {
+	if v, ok := m["all"].([]interface{}); ok && len(v) > 0 {
 		jsonMatchPattern.All = &wafv2.All{}
 	}
 
