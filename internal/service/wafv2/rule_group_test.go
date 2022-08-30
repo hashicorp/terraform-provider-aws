@@ -2747,11 +2747,11 @@ resource "aws_wafv2_rule_group" "test" {
 
         field_to_match {
           headers {
-			match_scope = "ALL"
+            match_scope = "ALL"
             match_pattern {
-			  all {}
-			}
-		  }
+              all {}
+            }
+          }
         }
 
         text_transformation {
@@ -2799,12 +2799,12 @@ resource "aws_wafv2_rule_group" "test" {
 
         field_to_match {
           headers {
-			match_scope = "ALL"
+            match_scope = "ALL"
             match_pattern {
-			  all {}
-			}
+              all {}
+            }
             oversize_handling = "MATCH"
-		  }
+          }
         }
 
         text_transformation {
@@ -2852,12 +2852,12 @@ resource "aws_wafv2_rule_group" "test" {
 
         field_to_match {
           headers {
-			match_scope = "ALL"
+            match_scope = "ALL"
             match_pattern {
-			  included_headers = ["session", "session-id"]
-			}
+              included_headers = ["session", "session-id"]
+            }
             oversize_handling = "MATCH"
-		  }
+          }
         }
 
         text_transformation {
@@ -2905,12 +2905,12 @@ resource "aws_wafv2_rule_group" "test" {
 
         field_to_match {
           headers {
-			match_scope = "ALL"
+            match_scope = "ALL"
             match_pattern {
-			  excluded_headers = ["session", "session-id"]
-			}
+              excluded_headers = ["session", "session-id"]
+            }
             oversize_handling = "MATCH"
-		  }
+          }
         }
 
         text_transformation {
@@ -2959,10 +2959,10 @@ resource "aws_wafv2_rule_group" "test" {
         field_to_match {
           json_body {
             match_pattern {
-			  all {}
-			}
+              all {}
+            }
             oversize_handling = "MATCH"
-		  }
+          }
         }
 
         text_transformation {
@@ -3010,12 +3010,12 @@ resource "aws_wafv2_rule_group" "test" {
 
         field_to_match {
           json_body {
-			match_scope = "ALL"
+            match_scope = "ALL"
             match_pattern {
-			  all {}
-			}
+              all {}
+            }
             oversize_handling = "MATCH"
-		  }
+          }
         }
 
         text_transformation {
@@ -3063,12 +3063,12 @@ resource "aws_wafv2_rule_group" "test" {
 
         field_to_match {
           json_body {
-			match_scope = "ALL"
+            match_scope = "ALL"
             match_pattern {
-			  included_paths = ["/dogs/0/name", "/cats"]
-			}
+              included_paths = ["/dogs/0/name", "/cats"]
+            }
             oversize_handling = "MATCH"
-		  }
+          }
         }
 
         text_transformation {
@@ -3116,13 +3116,13 @@ resource "aws_wafv2_rule_group" "test" {
 
         field_to_match {
           json_body {
-			invalid_fallback_behavior = "NO_MATCH"
-			match_scope = "ALL"
+            invalid_fallback_behavior = "NO_MATCH"
+            match_scope = "ALL"
             match_pattern {
-			  all {}
-			}
+              all {}
+            }
             oversize_handling = "MATCH"
-		  }
+          }
         }
 
         text_transformation {
