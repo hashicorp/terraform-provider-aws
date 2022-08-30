@@ -25,6 +25,18 @@ func DataSourceEIP() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"carrier_ip": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"customer_owned_ip": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"customer_owned_ipv4_pool": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"domain": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -65,18 +77,6 @@ func DataSourceEIP() *schema.Resource {
 				Computed: true,
 			},
 			"public_ipv4_pool": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"carrier_ip": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"customer_owned_ipv4_pool": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"customer_owned_ip": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
