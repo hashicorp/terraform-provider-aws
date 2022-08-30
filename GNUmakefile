@@ -19,6 +19,11 @@ ifneq ($(origin SWEEPERS), undefined)
 	SWEEPARGS = -sweep-run='$(SWEEPERS)'
 endif
 
+ifeq ($(PKG_NAME), internal/service/vpc)
+	PKG_NAME = internal/service/ec2
+	TEST = ./$(PKG_NAME)/...
+endif
+
 default: build
 
 build: fmtcheck

@@ -2,8 +2,6 @@ package ec2_test
 
 import (
 	"fmt"
-	"log"
-	"os"
 	"reflect"
 	"regexp"
 	"strconv"
@@ -2439,28 +2437,6 @@ func testAccCheckSecurityGroupRuleLimit(n string, v *int) resource.TestCheckFunc
 
 		return nil
 	}
-}
-
-// testAccSecurityGroupRulesPerGroupLimitFromEnv returns security group rules per group limit
-// Currently this information is not available from any EC2 or Trusted Advisor API
-// Prefers the EC2_SECURITY_GROUP_RULES_PER_GROUP_LIMIT environment variable or defaults to 50
-func testAccSecurityGroupRulesPerGroupLimitFromEnv() int {
-	const defaultLimit = 50
-	const envVar = "EC2_SECURITY_GROUP_RULES_PER_GROUP_LIMIT"
-
-	envLimitStr := os.Getenv(envVar)
-	if envLimitStr == "" {
-		return defaultLimit
-	}
-	envLimitInt, err := strconv.Atoi(envLimitStr)
-	if err != nil {
-		log.Printf("[WARN] Error converting %q environment variable value %q to integer: %s", envVar, envLimitStr, err)
-		return defaultLimit
-	}
-	if envLimitInt <= 50 {
-		return defaultLimit
-	}
-	return envLimitInt
 }
 
 func testAccCheckSecurityGroupRuleCount(group *ec2.SecurityGroup, expectedIngressCount, expectedEgressCount int) resource.TestCheckFunc {
