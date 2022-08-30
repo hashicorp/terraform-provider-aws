@@ -8,6 +8,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"sync"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -1966,8 +1967,38 @@ func TestAccVPCSecurityGroup_failWithDiffMismatch(t *testing.T) {
 	})
 }
 
-func TestAccVPCSecurityGroup_ruleLimitExceededAppend(t *testing.T) {
-	ruleLimit := testAccSecurityGroupRulesPerGroupLimitFromEnv()
+var ruleLimit int
+var quotaMutex = &sync.Mutex{}
+
+// testAccSecurityGroup_ruleLimit sets the global "ruleLimit" and is only called once
+// but does not run in parallel slowing down tests. The mutex limits it to one slow down
+// instead of one per test. It cannot run in parallel since it is called by another test
+// and double paralleling is a panic.
+func testAccSecurityGroup_ruleLimit(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSecurityGroupDestroy,
+		Steps: []resource.TestStep{
+			// get limit
+			{
+				Config: testAccVPCSecurityGroupConfig_getLimit(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSecurityGroupRuleLimit("data.aws_servicequotas_service_quota.test", &ruleLimit),
+				),
+				PreventPostDestroyRefresh: true, // saves a few seconds
+			},
+		},
+	})
+}
+
+func TestAccVPCSecurityGroup_RuleLimit_exceededAppend(t *testing.T) {
+	quotaMutex.Lock()
+	if ruleLimit == 0 {
+		testAccSecurityGroup_ruleLimit(t)
+	}
+	quotaMutex.Unlock()
 
 	var group ec2.SecurityGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -2013,8 +2044,12 @@ func TestAccVPCSecurityGroup_ruleLimitExceededAppend(t *testing.T) {
 	})
 }
 
-func TestAccVPCSecurityGroup_ruleLimitCIDRBlockExceededAppend(t *testing.T) {
-	ruleLimit := testAccSecurityGroupRulesPerGroupLimitFromEnv()
+func TestAccVPCSecurityGroup_RuleLimit_cidrBlockExceededAppend(t *testing.T) {
+	quotaMutex.Lock()
+	if ruleLimit == 0 {
+		testAccSecurityGroup_ruleLimit(t)
+	}
+	quotaMutex.Unlock()
 
 	var group ec2.SecurityGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -2074,8 +2109,12 @@ func TestAccVPCSecurityGroup_ruleLimitCIDRBlockExceededAppend(t *testing.T) {
 	})
 }
 
-func TestAccVPCSecurityGroup_ruleLimitExceededPrepend(t *testing.T) {
-	ruleLimit := testAccSecurityGroupRulesPerGroupLimitFromEnv()
+func TestAccVPCSecurityGroup_RuleLimit_exceededPrepend(t *testing.T) {
+	quotaMutex.Lock()
+	if ruleLimit == 0 {
+		testAccSecurityGroup_ruleLimit(t)
+	}
+	quotaMutex.Unlock()
 
 	var group ec2.SecurityGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -2119,8 +2158,12 @@ func TestAccVPCSecurityGroup_ruleLimitExceededPrepend(t *testing.T) {
 	})
 }
 
-func TestAccVPCSecurityGroup_ruleLimitExceededAllNew(t *testing.T) {
-	ruleLimit := testAccSecurityGroupRulesPerGroupLimitFromEnv()
+func TestAccVPCSecurityGroup_RuleLimit_exceededAllNew(t *testing.T) {
+	quotaMutex.Lock()
+	if ruleLimit == 0 {
+		testAccSecurityGroup_ruleLimit(t)
+	}
+	quotaMutex.Unlock()
 
 	var group ec2.SecurityGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -2376,6 +2419,28 @@ func testAccCheckSecurityGroupExists(n string, v *ec2.SecurityGroup) resource.Te
 	}
 }
 
+func testAccCheckSecurityGroupRuleLimit(n string, v *int) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No Service Quotas ID is set")
+		}
+
+		limit, err := strconv.Atoi(rs.Primary.Attributes["value"])
+		if err != nil {
+			return fmt.Errorf("converting value to int: %s", err)
+		}
+
+		*v = limit
+
+		return nil
+	}
+}
+
 // testAccSecurityGroupRulesPerGroupLimitFromEnv returns security group rules per group limit
 // Currently this information is not available from any EC2 or Trusted Advisor API
 // Prefers the EC2_SECURITY_GROUP_RULES_PER_GROUP_LIMIT environment variable or defaults to 50
@@ -2520,6 +2585,15 @@ resource "aws_security_group" "test" {
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
+func testAccVPCSecurityGroupConfig_getLimit() string {
+	return `
+data "aws_servicequotas_service_quota" "test" {
+  quota_name   = "Inbound or outbound rules per security group"
+  service_code = "vpc"
+}
+`
+}
+
 func testAccVPCSecurityGroupConfig_ruleLimit(rName string, egressStartIndex, egressRulesCount int) string {
 	var egressRules strings.Builder
 	for i := egressStartIndex; i < egressRulesCount+egressStartIndex; i++ {
@@ -2532,7 +2606,6 @@ func testAccVPCSecurityGroupConfig_ruleLimit(rName string, egressStartIndex, egr
   }
 `, i)
 	}
-
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
