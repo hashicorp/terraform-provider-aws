@@ -270,11 +270,10 @@ func TestAccEC2EIP_networkInterface(t *testing.T) {
 				Config: testAccEIPConfig_networkInterface(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEIPExists(resourceName, &conf),
-					testAccCheckEIPAttributes(&conf),
-					testAccCheckEIPAssociated(&conf),
 					testAccCheckEIPPrivateDNS(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "allocation_id"),
-					resource.TestCheckResourceAttr(resourceName, "domain", ec2.DomainTypeVpc),
+					resource.TestCheckResourceAttrSet(resourceName, "association_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "public_ip"),
 				),
 			},
 			{
@@ -288,8 +287,8 @@ func TestAccEC2EIP_networkInterface(t *testing.T) {
 
 func TestAccEC2EIP_NetworkInterface_twoEIPsOneInterface(t *testing.T) {
 	var one, two ec2.Address
-	resourceName := "aws_eip.test"
-	resourceName2 := "aws_eip.test2"
+	resource1Name := "aws_eip.test.0"
+	resource2Name := "aws_eip.test.1"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -301,22 +300,14 @@ func TestAccEC2EIP_NetworkInterface_twoEIPsOneInterface(t *testing.T) {
 			{
 				Config: testAccEIPConfig_multiNetworkInterface(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEIPExists(resourceName, &one),
-					testAccCheckEIPAttributes(&one),
-					testAccCheckEIPAssociated(&one),
-					resource.TestCheckResourceAttr(resourceName, "domain", ec2.DomainTypeVpc),
+					testAccCheckEIPExists(resource1Name, &one),
+					resource.TestCheckResourceAttrSet(resource1Name, "association_id"),
+					resource.TestCheckResourceAttrSet(resource1Name, "public_ip"),
 
-					testAccCheckEIPExists(resourceName2, &two),
-					testAccCheckEIPAttributes(&two),
-					testAccCheckEIPAssociated(&two),
-					resource.TestCheckResourceAttr(resourceName2, "domain", ec2.DomainTypeVpc),
+					testAccCheckEIPExists(resource2Name, &two),
+					resource.TestCheckResourceAttrSet(resource2Name, "association_id"),
+					resource.TestCheckResourceAttrSet(resource2Name, "public_ip"),
 				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"associate_with_private_ip"},
 			},
 		},
 	})
@@ -947,85 +938,70 @@ resource "aws_eip" "test" {
 }
 
 func testAccEIPConfig_networkInterface(rName string) string {
-	return acctest.ConfigCompose(
-		acctest.ConfigAvailableAZsNoOptIn(),
-		fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/24"
-  tags = {
-    Name = %[1]q
-  }
-}
-
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 1), fmt.Sprintf(`
 resource "aws_internet_gateway" "test" {
   vpc_id = aws_vpc.test.id
-}
 
-resource "aws_subnet" "test" {
-  vpc_id            = aws_vpc.test.id
-  availability_zone = data.aws_availability_zones.available.names[0]
-  cidr_block        = "10.0.0.0/24"
   tags = {
     Name = %[1]q
   }
 }
 
 resource "aws_network_interface" "test" {
-  subnet_id       = aws_subnet.test.id
+  subnet_id       = aws_subnet.test[0].id
   private_ips     = ["10.0.0.10"]
   security_groups = [aws_vpc.test.default_security_group_id]
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_eip" "test" {
   vpc               = "true"
   network_interface = aws_network_interface.test.id
-  depends_on        = [aws_internet_gateway.test]
+
+  tags = {
+    Name = %[1]q
+  }
+
+  depends_on = [aws_internet_gateway.test]
 }
 `, rName))
 }
 
 func testAccEIPConfig_multiNetworkInterface(rName string) string {
-	return acctest.ConfigCompose(
-		acctest.ConfigAvailableAZsNoOptIn(),
-		fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/24"
-  tags = {
-    Name = %[1]q
-  }
-}
-
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 1), fmt.Sprintf(`
 resource "aws_internet_gateway" "test" {
   vpc_id = aws_vpc.test.id
-}
 
-resource "aws_subnet" "test" {
-  vpc_id            = aws_vpc.test.id
-  availability_zone = data.aws_availability_zones.available.names[0]
-  cidr_block        = "10.0.0.0/24"
   tags = {
     Name = %[1]q
   }
 }
 
 resource "aws_network_interface" "test" {
-  subnet_id       = aws_subnet.test.id
+  subnet_id       = aws_subnet.test[0].id
   private_ips     = ["10.0.0.10", "10.0.0.11"]
   security_groups = [aws_vpc.test.default_security_group_id]
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_eip" "test" {
-  vpc                       = "true"
-  network_interface         = aws_network_interface.test.id
-  associate_with_private_ip = "10.0.0.10"
-  depends_on                = [aws_internet_gateway.test]
-}
+  count = 2
 
-resource "aws_eip" "test2" {
   vpc                       = "true"
   network_interface         = aws_network_interface.test.id
-  associate_with_private_ip = "10.0.0.11"
-  depends_on                = [aws_internet_gateway.test]
+  associate_with_private_ip = "10.0.0.1${count.index}"
+
+  tags = {
+    Name = %[1]q
+  }
+
+  depends_on = [aws_internet_gateway.test]
 }
 `, rName))
 }
