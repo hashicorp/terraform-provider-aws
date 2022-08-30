@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -174,6 +175,8 @@ func ResourceInput() *schema.Resource {
 
 const (
 	ResNameInput = "Input"
+
+	propagationTimeout = 2 * time.Minute
 )
 
 func resourceInputCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -220,16 +223,29 @@ func resourceInputCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		in.Tags = Tags(tags.IgnoreAWS())
 	}
 
-	out, err := conn.CreateInput(ctx, in)
+	// IAM propagation
+	outputRaw, err := tfresource.RetryWhen(propagationTimeout,
+		func() (interface{}, error) {
+			return conn.CreateInput(ctx, in)
+		},
+		func(err error) (bool, error) {
+			var bre *types.BadRequestException
+			if errors.As(err, &bre) {
+				return strings.Contains(bre.ErrorMessage(), "Please make sure the role exists and medialive.amazonaws.com is a trusted service"), err
+			}
+			return false, err
+		},
+	)
+
 	if err != nil {
 		return create.DiagError(names.MediaLive, create.ErrActionCreating, ResNameInput, d.Get("name").(string), err)
 	}
 
-	if out == nil || out.Input == nil {
+	if outputRaw == nil || outputRaw.(*medialive.CreateInputOutput).Input == nil {
 		return create.DiagError(names.MediaLive, create.ErrActionCreating, ResNameInput, d.Get("name").(string), errors.New("empty output"))
 	}
 
-	d.SetId(aws.ToString(out.Input.Id))
+	d.SetId(aws.ToString(outputRaw.(*medialive.CreateInputOutput).Input.Id))
 
 	if _, err := waitInputCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return create.DiagError(names.MediaLive, create.ErrActionWaitingForCreation, ResNameInput, d.Id(), err)
@@ -258,10 +274,12 @@ func resourceInputRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("media_connect_flows", flattenMediaConnectFlows(out.MediaConnectFlows))
 	d.Set("name", out.Name)
 	d.Set("input_class", out.InputClass)
+	d.Set("input_devices", flattenInputDevices(out.InputDevices))
 	d.Set("input_partner_ids", out.InputPartnerIds)
 	d.Set("input_security_groups", out.SecurityGroups)
 	d.Set("input_source_type", out.InputSourceType)
 	d.Set("role_arn", out.RoleArn)
+	d.Set("sources", flattenSources(out.Sources))
 	d.Set("type", out.Type)
 
 	tags, err := ListTags(ctx, conn, aws.ToString(out.Arn))
@@ -444,42 +462,6 @@ func FindInputByID(ctx context.Context, conn *medialive.Client, id string) (*med
 	return out, nil
 }
 
-//func flattenComplexArgument(apiObject *medialive.ComplexArgument) map[string]interface{} {
-//	if apiObject == nil {
-//		return nil
-//	}
-//
-//	m := map[string]interface{}{}
-//
-//	if v := apiObject.SubFieldOne; v != nil {
-//		m["sub_field_one"] = aws.ToString(v)
-//	}
-//
-//	if v := apiObject.SubFieldTwo; v != nil {
-//		m["sub_field_two"] = aws.ToString(v)
-//	}
-//
-//	return m
-//}
-//
-//func flattenComplexArguments(apiObjects []*medialive.ComplexArgument) []interface{} {
-//	if len(apiObjects) == 0 {
-//		return nil
-//	}
-//
-//	var l []interface{}
-//
-//	for _, apiObject := range apiObjects {
-//		if apiObject == nil {
-//			continue
-//		}
-//
-//		l = append(l, flattenComplexArgument(apiObject))
-//	}
-//
-//	return l
-//}
-
 func flattenMediaConnectFlow(apiObject types.MediaConnectFlow) map[string]interface{} {
 	if apiObject == (types.MediaConnectFlow{}) {
 		return nil
@@ -506,6 +488,75 @@ func flattenMediaConnectFlows(apiObjects []types.MediaConnectFlow) []interface{}
 		}
 
 		l = append(l, flattenMediaConnectFlow(apiObject))
+	}
+
+	return l
+}
+
+func flattenInputDevice(apiObject types.InputDeviceSettings) map[string]interface{} {
+	if apiObject == (types.InputDeviceSettings{}) {
+		return nil
+	}
+
+	m := map[string]interface{}{}
+
+	if v := apiObject.Id; v != nil {
+		m["id"] = aws.ToString(v)
+	}
+
+	return m
+}
+
+func flattenInputDevices(apiObjects []types.InputDeviceSettings) []interface{} {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var l []interface{}
+
+	for _, apiObject := range apiObjects {
+		if apiObject == (types.InputDeviceSettings{}) {
+			continue
+		}
+
+		l = append(l, flattenInputDevice(apiObject))
+	}
+
+	return l
+}
+
+func flattenSource(apiObject types.InputSource) map[string]interface{} {
+	if apiObject == (types.InputSource{}) {
+		return nil
+	}
+
+	m := map[string]interface{}{}
+
+	if v := apiObject.Url; v != nil {
+		m["url"] = aws.ToString(v)
+	}
+	if v := apiObject.PasswordParam; v != nil {
+		m["password_param"] = aws.ToString(v)
+	}
+	if v := apiObject.Username; v != nil {
+		m["username"] = aws.ToString(v)
+	}
+	return m
+}
+
+func flattenSources(apiObjects []types.InputSource) []interface{} {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var l []interface{}
+
+	for _, apiObject := range apiObjects {
+		if apiObject == (types.InputSource{}) {
+			continue
+		}
+
+		l = append(l, flattenSource(apiObject))
 	}
 
 	return l
