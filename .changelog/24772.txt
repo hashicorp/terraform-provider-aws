@@ -1,7 +1,7 @@
-```release-notes:enhancement
-resource/aws_wafv2_web_acl: Add support for `json_body` field matching to `byte_match_statement` rule.
+```release-note:enhancement
+resource/aws_wafv2_rule_group: Add `json_body` attribute to the `field_to_match` block
 ```
 
-```release-notes:enhancement
-resource/aws_wafv2_rule_group: Add support for `json_body` field matching to `byte_match_statement` rule.
+```release-note:enhancement
+resource/aws_wafv2_web_acl: Add `json_body` attribute to the `field_to_match` block
 ```
