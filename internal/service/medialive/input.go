@@ -510,6 +510,7 @@ func flattenMediaConnectFlows(apiObjects []types.MediaConnectFlow) []interface{}
 
 	return l
 }
+
 func expandDestinations(tfList []interface{}) []types.InputDestinationRequest {
 	if len(tfList) == 0 {
 		return nil

@@ -56,6 +56,54 @@ func TestAccMediaLiveInput_basic(t *testing.T) {
 	})
 }
 
+func TestAccMediaLiveInput_updateTags(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var input medialive.DescribeInputOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_medialive_input.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(names.MediaLiveEndpointID, t)
+			testAccInputsPreCheck(t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInputDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInputConfig_tags1(rName, "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInputExists(resourceName, &input),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				Config: testAccInputConfig_tags2(rName, "key1", "value1", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInputExists(resourceName, &input),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccInputConfig_tags1(rName, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInputExists(resourceName, &input),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccMediaLiveInput_disappears(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -153,28 +201,6 @@ func testAccInputsPreCheck(t *testing.T) {
 
 func testAccInputBaseConfig(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_iam_role" "test" {
-  name = %[1]q
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Action = "sts:AssumeRole"
-        Effect = "Allow"
-        Sid    = ""
-        Principal = {
-          Service = "medialive.amazonaws.com"
-        }
-      },
-    ]
-  })
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
 resource "aws_medialive_input_security_group" "test" {
   whitelist_rules {
     cidr = "10.0.0.8/32"
@@ -201,4 +227,37 @@ resource "aws_medialive_input" "test" {
   }
 }
 `, rName))
+}
+
+func testAccInputConfig_tags1(rName, key1, value1 string) string {
+	return acctest.ConfigCompose(
+		testAccInputBaseConfig(rName),
+		fmt.Sprintf(`
+resource "aws_medialive_input" "test" {
+  name                  = %[1]q
+  input_security_groups = [aws_medialive_input_security_group.test.id]
+  type                  = "UDP_PUSH"
+
+  tags = {
+    %[2]q = %[3]q
+  }
+}
+`, rName, key1, value1))
+}
+
+func testAccInputConfig_tags2(rName, key1, value1, key2, value2 string) string {
+	return acctest.ConfigCompose(
+		testAccInputBaseConfig(rName),
+		fmt.Sprintf(`
+resource "aws_medialive_input" "test" {
+  name                  = %[1]q
+  input_security_groups = [aws_medialive_input_security_group.test.id]
+  type                  = "UDP_PUSH"
+
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+}
+`, rName, key1, value1, key2, value2))
 }
