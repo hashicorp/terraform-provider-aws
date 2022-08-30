@@ -2651,8 +2651,8 @@ resource "aws_wafv2_rule_group" "test" {
 
         field_to_match {
           body {
-			oversize_handling = "CONTINUE"
-		  }
+            oversize_handling = "CONTINUE"
+          }
         }
 
         text_transformation {
@@ -2749,7 +2749,7 @@ resource "aws_wafv2_rule_group" "test" {
           headers {
 			match_scope = "ALL"
             match_pattern {
-				all {}
+			  all {}
 			}
 		  }
         }
@@ -2801,7 +2801,7 @@ resource "aws_wafv2_rule_group" "test" {
           headers {
 			match_scope = "ALL"
             match_pattern {
-				all {}
+			  all {}
 			}
             oversize_handling = "MATCH"
 		  }
@@ -2854,7 +2854,7 @@ resource "aws_wafv2_rule_group" "test" {
           headers {
 			match_scope = "ALL"
             match_pattern {
-				included_headers = ["session", "session-id"]
+			  included_headers = ["session", "session-id"]
 			}
             oversize_handling = "MATCH"
 		  }
@@ -2907,7 +2907,7 @@ resource "aws_wafv2_rule_group" "test" {
           headers {
 			match_scope = "ALL"
             match_pattern {
-				excluded_headers = ["session", "session-id"]
+			  excluded_headers = ["session", "session-id"]
 			}
             oversize_handling = "MATCH"
 		  }
@@ -2959,7 +2959,7 @@ resource "aws_wafv2_rule_group" "test" {
         field_to_match {
           json_body {
             match_pattern {
-				all {}
+			  all {}
 			}
             oversize_handling = "MATCH"
 		  }
@@ -3012,7 +3012,7 @@ resource "aws_wafv2_rule_group" "test" {
           json_body {
 			match_scope = "ALL"
             match_pattern {
-				all {}
+			  all {}
 			}
             oversize_handling = "MATCH"
 		  }
@@ -3065,7 +3065,7 @@ resource "aws_wafv2_rule_group" "test" {
           json_body {
 			match_scope = "ALL"
             match_pattern {
-				included_paths = ["/dogs/0/name", "/cats"]
+			  included_paths = ["/dogs/0/name", "/cats"]
 			}
             oversize_handling = "MATCH"
 		  }
@@ -3119,7 +3119,7 @@ resource "aws_wafv2_rule_group" "test" {
 			invalid_fallback_behavior = "NO_MATCH"
 			match_scope = "ALL"
             match_pattern {
-				all {}
+			  all {}
 			}
             oversize_handling = "MATCH"
 		  }
