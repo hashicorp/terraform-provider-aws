@@ -137,65 +137,46 @@ func resourceEIPCreate(d *schema.ResourceData, meta interface{}) error {
 		return errors.New(`with the retirement of EC2-Classic no new non-VPC EC2 EIPs can be created`)
 	}
 
-	// By default, we're not in a VPC
-	domainOpt := ""
-	if v := d.Get("vpc"); v != nil && v.(bool) {
-		domainOpt = ec2.DomainTypeVpc
-	}
-
-	allocOpts := &ec2.AllocateAddressInput{
-		Domain: aws.String(domainOpt),
-	}
-
-	if len(tags) > 0 {
-		supportedPlatforms := meta.(*conns.AWSClient).SupportedPlatforms
-		if domainOpt != ec2.DomainTypeVpc && len(supportedPlatforms) > 0 && conns.HasEC2Classic(supportedPlatforms) {
-			return fmt.Errorf("tags cannot be set for a standard-domain EIP - must be a VPC-domain EIP")
-		}
-		allocOpts.TagSpecifications = tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeElasticIp)
+	input := &ec2.AllocateAddressInput{
+		Domain: aws.String(ec2.DomainTypeVpc),
 	}
 
 	if v, ok := d.GetOk("address"); ok {
-		supportedPlatforms := meta.(*conns.AWSClient).SupportedPlatforms
-		if domainOpt != ec2.DomainTypeVpc && len(supportedPlatforms) > 0 && conns.HasEC2Classic(supportedPlatforms) {
-			return fmt.Errorf("error, address to recover cannot be set for a standard-domain EIP - must be a VPC-domain EIP")
-		}
-		allocOpts.Address = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("public_ipv4_pool"); ok {
-		allocOpts.PublicIpv4Pool = aws.String(v.(string))
+		input.Address = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("customer_owned_ipv4_pool"); ok {
-		allocOpts.CustomerOwnedIpv4Pool = aws.String(v.(string))
+		input.CustomerOwnedIpv4Pool = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("network_border_group"); ok {
-		allocOpts.NetworkBorderGroup = aws.String(v.(string))
+		input.NetworkBorderGroup = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] EIP create configuration: %#v", allocOpts)
-	allocResp, err := conn.AllocateAddress(allocOpts)
+	if v, ok := d.GetOk("public_ipv4_pool"); ok {
+		input.PublicIpv4Pool = aws.String(v.(string))
+	}
+
+	if len(tags) > 0 {
+		input.TagSpecifications = tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeElasticIp)
+	}
+
+	log.Printf("[DEBUG] Creating EC2 EIP: %s", input)
+	output, err := conn.AllocateAddress(input)
+
 	if err != nil {
-		return fmt.Errorf("Error creating EIP: %s", err)
+		return fmt.Errorf("creating EC2 EIP: %w", err)
 	}
 
-	// The domain tells us if we're in a VPC or not
-	d.Set("domain", allocResp.Domain)
+	d.SetId(aws.StringValue(output.AllocationId))
 
-	// Assign the eips (unique) allocation id for use later
-	// the EIP api has a conditional unique ID (really), so
-	// if we're in a VPC we need to save the ID as such, otherwise
-	// it defaults to using the public IP
-	log.Printf("[DEBUG] EIP Allocate: %#v", allocResp)
-	if d.Get("domain").(string) == ec2.DomainTypeVpc {
-		d.SetId(aws.StringValue(allocResp.AllocationId))
-	} else {
-		d.SetId(aws.StringValue(allocResp.PublicIp))
+	_, err = tfresource.RetryWhenNotFound(d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
+		return FindEIPByAllocationID(conn, d.Id())
+	})
+
+	if err != nil {
+		return fmt.Errorf("waiting for EC2 EIP (%s) create: %w", d.Id(), err)
 	}
-
-	log.Printf("[INFO] EIP ID: %s (domain: %v)", d.Id(), *allocResp.Domain)
 
 	return resourceEIPUpdate(d, meta)
 }
