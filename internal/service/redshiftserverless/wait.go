@@ -92,6 +92,7 @@ func waitEndpointAccessActive(conn *redshiftserverless.RedshiftServerless, name 
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
 			"CREATING",
+			"MODIFYING",
 		},
 		Target: []string{
 			"ACTIVE",
