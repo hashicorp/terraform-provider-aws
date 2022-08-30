@@ -99,10 +99,6 @@ func ResourceEndpointAccess() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
-			"endpoint_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"endpoint_name": {
 				Type:         schema.TypeString,
 				Required:     true,
