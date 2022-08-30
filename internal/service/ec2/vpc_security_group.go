@@ -371,11 +371,7 @@ func resourceSecurityGroupDelete(d *schema.ResourceData, meta interface{}) error
 
 	// conditionally revoke rules first before attempting to delete the group
 	if v := d.Get("revoke_rules_on_delete").(bool); v {
-		err := forceRevokeSecurityGroupRules(d, meta, false)
-
-		if tfawserr.ErrCodeEquals(err, errCodeInvalidGroupNotFound) {
-			return nil
-		}
+		err := forceRevokeSecurityGroupRules(conn, d.Id(), false)
 
 		if err != nil {
 			return create.Error(names.EC2, create.ErrActionDeleting, "Security Group", d.Id(), err)
@@ -384,7 +380,7 @@ func resourceSecurityGroupDelete(d *schema.ResourceData, meta interface{}) error
 
 	log.Printf("[DEBUG] Deleting Security Group: %s", d.Id())
 	_, err := tfresource.RetryWhenAWSErrCodeEquals(
-		2*time.Minute,
+		2*time.Minute, // short initial attempt followed by full length attempt
 		func() (interface{}, error) {
 			return conn.DeleteSecurityGroup(&ec2.DeleteSecurityGroupInput{
 				GroupId: aws.String(d.Id()),
@@ -395,11 +391,7 @@ func resourceSecurityGroupDelete(d *schema.ResourceData, meta interface{}) error
 
 	if tfawserr.ErrCodeEquals(err, errCodeDependencyViolation) {
 		if v := d.Get("revoke_rules_on_delete").(bool); v {
-			err := forceRevokeSecurityGroupRules(d, meta, true)
-
-			if tfawserr.ErrCodeEquals(err, errCodeInvalidGroupNotFound) {
-				return nil
-			}
+			err := forceRevokeSecurityGroupRules(conn, d.Id(), true)
 
 			if err != nil {
 				return create.Error(names.EC2, create.ErrActionDeleting, "Security Group", d.Id(), err)
@@ -442,13 +434,11 @@ func resourceSecurityGroupDelete(d *schema.ResourceData, meta interface{}) error
 // a DepedencyViolation error. searchAll = true means to search every security group
 // looking for a rule depending on this security group. Otherwise, it will only look at
 // groups that this group knows about.
-func forceRevokeSecurityGroupRules(d *schema.ResourceData, meta interface{}, searchAll bool) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func forceRevokeSecurityGroupRules(conn *ec2.EC2, id string, searchAll bool) error {
+	conns.GlobalMutexKV.Lock(id)
+	defer conns.GlobalMutexKV.Unlock(id)
 
-	conns.GlobalMutexKV.Lock(d.Id())
-	defer conns.GlobalMutexKV.Unlock(d.Id())
-
-	rules, err := rulesInSGsTouchingThis(conn, d.Id(), searchAll)
+	rules, err := rulesInSGsTouchingThis(conn, id, searchAll)
 	if err != nil {
 		return fmt.Errorf("describing security group rules: %s", err)
 	}
@@ -468,9 +458,9 @@ func forceRevokeSecurityGroupRules(d *schema.ResourceData, meta interface{}, sea
 				// However, ec2.SecurityGroupRule doesn't include name so can't
 				// be used. If it affects anything, this would affect default
 				// VPCs.
-				sg, err := FindSecurityGroupByID(conn, d.Id())
+				sg, err := FindSecurityGroupByID(conn, id)
 				if err != nil {
-					return fmt.Errorf("reading Security Group (%s): %w", d.Id(), err)
+					return fmt.Errorf("reading Security Group (%s): %w", id, err)
 				}
 
 				input.GroupName = sg.GroupName
@@ -486,8 +476,16 @@ func forceRevokeSecurityGroupRules(d *schema.ResourceData, meta interface{}, sea
 			_, err = conn.RevokeSecurityGroupEgress(input)
 		}
 
+		if tfawserr.ErrCodeEquals(err, errCodeInvalidSecurityGroupRuleIDNotFound) {
+			continue
+		}
+
+		if tfawserr.ErrCodeEquals(err, errCodeInvalidGroupNotFound) {
+			continue
+		}
+
 		if err != nil {
-			return fmt.Errorf("revoking Security Group (%s) Rule (%s): %w", d.Id(), aws.StringValue(rule.SecurityGroupRuleId), err)
+			return fmt.Errorf("revoking Security Group (%s) Rule (%s): %w", id, aws.StringValue(rule.SecurityGroupRuleId), err)
 		}
 	}
 

@@ -2723,6 +2723,10 @@ resource "aws_security_group" "primary" {
   tags = {
     Name = %[1]q
   }
+
+  timeouts {
+    delete = "2m"
+  }
 }
 
 resource "aws_security_group" "secondary" {
@@ -2731,6 +2735,10 @@ resource "aws_security_group" "secondary" {
 
   tags = {
     Name = %[1]q
+  }
+
+  timeouts {
+    delete = "2m"
   }
 }
 `, rName)
