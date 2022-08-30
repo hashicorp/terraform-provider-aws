@@ -1095,9 +1095,12 @@ func flattenCookiesMatchPattern(c *wafv2.CookieMatchPattern) interface{} {
 	}
 
 	m := map[string]interface{}{
-		"all":              make([]map[string]interface{}, 1),
 		"included_cookies": aws.StringValueSlice(c.IncludedCookies),
 		"excluded_cookies": aws.StringValueSlice(c.ExcludedCookies),
+	}
+
+	if c.All != nil {
+		m["all"] = make([]map[string]interface{}, 1)
 	}
 
 	return []interface{}{m}
@@ -1124,8 +1127,11 @@ func flattenJSONMatchPattern(p *wafv2.JsonMatchPattern) []interface{} {
 	}
 
 	m := map[string]interface{}{
-		"all":            make([]map[string]interface{}, 1),
 		"included_paths": flex.FlattenStringList(p.IncludedPaths),
+	}
+
+	if p.All != nil {
+		m["all"] = make([]map[string]interface{}, 1)
 	}
 
 	return []interface{}{m}
