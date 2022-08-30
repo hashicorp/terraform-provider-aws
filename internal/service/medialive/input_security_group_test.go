@@ -56,7 +56,7 @@ func TestAccMediaLiveInputSecurityGroup_basic(t *testing.T) {
 	})
 }
 
-func TestAccMediaLiveInputSecurityGroup_updateCidr(t *testing.T) {
+func TestAccMediaLiveInputSecurityGroup_updateCIDR(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
