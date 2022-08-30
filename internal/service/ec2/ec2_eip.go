@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -186,86 +185,36 @@ func resourceEIPRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	domain := resourceEIPDomain(d)
-	id := d.Id()
-
-	req := &ec2.DescribeAddressesInput{}
-
-	if domain == ec2.DomainTypeVpc {
-		req.AllocationIds = []*string{aws.String(id)}
-	} else {
-		req.PublicIps = []*string{aws.String(id)}
-	}
-
-	log.Printf(
-		"[DEBUG] EIP describe configuration: %s (domain: %s)",
-		req, domain)
-
 	var err error
-	var describeAddresses *ec2.DescribeAddressesOutput
-
-	if d.IsNewResource() {
-		err := resource.Retry(d.Timeout(schema.TimeoutRead), func() *resource.RetryError {
-			describeAddresses, err = conn.DescribeAddresses(req)
-			if err != nil {
-				awsErr, ok := err.(awserr.Error)
-				if ok && (awsErr.Code() == "InvalidAllocationID.NotFound" ||
-					awsErr.Code() == "InvalidAddress.NotFound") {
-					return resource.RetryableError(err)
-				}
-
-				return resource.NonRetryableError(err)
-			}
-			return nil
-		})
-		if tfresource.TimedOut(err) {
-			describeAddresses, err = conn.DescribeAddresses(req)
-		}
-		if err != nil {
-			return fmt.Errorf("Error retrieving EIP: %s", err)
-		}
-	} else {
-		describeAddresses, err = conn.DescribeAddresses(req)
-		if err != nil {
-			awsErr, ok := err.(awserr.Error)
-			if ok && (awsErr.Code() == "InvalidAllocationID.NotFound" ||
-				awsErr.Code() == "InvalidAddress.NotFound") {
-				log.Printf("[WARN] EIP not found, removing from state: %s", req)
-				d.SetId("")
-				return nil
-			}
-			return err
-		}
-	}
-
 	var address *ec2.Address
 
-	// In the case that AWS returns more EIPs than we intend it to, we loop
-	// over the returned addresses to see if it's in the list of results
-	for _, addr := range describeAddresses.Addresses {
-		if (domain == ec2.DomainTypeVpc && aws.StringValue(addr.AllocationId) == id) || aws.StringValue(addr.PublicIp) == id {
-			address = addr
-			break
-		}
+	if eipID(d.Id()).IsVPC() {
+		address, err = FindEIPByAllocationID(conn, d.Id())
+	} else {
+		address, err = FindEIPByPublicIP(conn, d.Id())
 	}
 
-	if address == nil {
-		log.Printf("[WARN] EIP %q not found, removing from state", d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] EC2 EIP (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
+	if err != nil {
+		return fmt.Errorf("reading EC2 EIP (%s): %w", d.Id(), err)
+	}
+
+	d.Set("allocation_id", address.AllocationId)
 	d.Set("association_id", address.AssociationId)
-	if address.InstanceId != nil {
-		d.Set("instance", address.InstanceId)
-	} else {
-		d.Set("instance", "")
-	}
-	if address.NetworkInterfaceId != nil {
-		d.Set("network_interface", address.NetworkInterfaceId)
-	} else {
-		d.Set("network_interface", "")
-	}
+	d.Set("carrier_ip", address.CarrierIp)
+	d.Set("customer_owned_ip", address.CustomerOwnedIp)
+	d.Set("customer_owned_ipv4_pool", address.CustomerOwnedIpv4Pool)
+	d.Set("domain", address.Domain)
+	d.Set("instance", address.InstanceId)
+	d.Set("network_border_group", address.NetworkBorderGroup)
+	d.Set("network_interface", address.NetworkInterfaceId)
+	d.Set("public_ipv4_pool", address.PublicIpv4Pool)
+	d.Set("vpc", aws.StringValue(address.Domain) == ec2.DomainTypeVpc)
 
 	d.Set("private_ip", address.PrivateIpAddress)
 	if v := aws.StringValue(address.PrivateIpAddress); v != "" {
@@ -277,25 +226,9 @@ func resourceEIPRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("public_dns", PublicDNSNameForIP(meta.(*conns.AWSClient), v))
 	}
 
-	d.Set("allocation_id", address.AllocationId)
-	d.Set("carrier_ip", address.CarrierIp)
-	d.Set("customer_owned_ipv4_pool", address.CustomerOwnedIpv4Pool)
-	d.Set("customer_owned_ip", address.CustomerOwnedIp)
-	d.Set("network_border_group", address.NetworkBorderGroup)
-	d.Set("public_ipv4_pool", address.PublicIpv4Pool)
-
-	// On import (domain never set, which it must've been if we created),
-	// set the 'vpc' attribute depending on if we're in a VPC.
-	if address.Domain != nil {
-		d.Set("vpc", aws.StringValue(address.Domain) == ec2.DomainTypeVpc)
-	}
-
-	d.Set("domain", address.Domain)
-
-	// Force ID to be an Allocation ID if we're on a VPC
-	// This allows users to import the EIP based on the IP if they are in a VPC
-	if aws.StringValue(address.Domain) == ec2.DomainTypeVpc && net.ParseIP(id) != nil {
-		log.Printf("[DEBUG] Re-assigning EIP ID (%s) to it's Allocation ID (%s)", d.Id(), *address.AllocationId)
+	// Force ID to be an Allocation ID if we're on a VPC.
+	// This allows users to import the EIP based on the IP if they are in a VPC.
+	if aws.StringValue(address.Domain) == ec2.DomainTypeVpc && net.ParseIP(d.Id()) != nil {
 		d.SetId(aws.StringValue(address.AllocationId))
 	}
 
@@ -303,11 +236,11 @@ func resourceEIPRead(d *schema.ResourceData, meta interface{}) error {
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return fmt.Errorf("setting tags: %w", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return fmt.Errorf("setting tags_all: %w", err)
 	}
 
 	return nil
