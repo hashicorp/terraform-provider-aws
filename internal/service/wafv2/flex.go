@@ -404,7 +404,7 @@ func expandFieldToMatch(l []interface{}) *wafv2.FieldToMatch {
 	}
 
 	if v, ok := m["json_body"]; ok && len(v.([]interface{})) > 0 {
-		f.JsonBody = expandJsonBody(m["json_body"].([]interface{}))
+		f.JsonBody = expandJSONBody(m["json_body"].([]interface{}))
 	}
 
 	if v, ok := m["method"]; ok && len(v.([]interface{})) > 0 {
@@ -737,14 +737,14 @@ func expandHeaderMatchPattern(l []interface{}) *wafv2.HeaderMatchPattern {
 	return f
 }
 
-func expandJsonBody(l []interface{}) *wafv2.JsonBody {
+func expandJSONBody(l []interface{}) *wafv2.JsonBody {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
 	m := l[0].(map[string]interface{})
 	f := &wafv2.JsonBody{
-		MatchPattern:     expandJsonMatchPattern(m["match_pattern"].([]interface{})),
+		MatchPattern:     expandJSONMatchPattern(m["match_pattern"].([]interface{})),
 		MatchScope:       aws.String(m["match_scope"].(string)),
 		OversizeHandling: aws.String(m["oversize_handling"].(string)),
 	}
@@ -756,7 +756,7 @@ func expandJsonBody(l []interface{}) *wafv2.JsonBody {
 	return f
 }
 
-func expandJsonMatchPattern(l []interface{}) *wafv2.JsonMatchPattern {
+func expandJSONMatchPattern(l []interface{}) *wafv2.JsonMatchPattern {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -1078,7 +1078,7 @@ func flattenFieldToMatch(f *wafv2.FieldToMatch) interface{} {
 	}
 
 	if f.JsonBody != nil {
-		m["json_body"] = flattenJsonBody(f.JsonBody)
+		m["json_body"] = flattenJSONBody(f.JsonBody)
 	}
 
 	if f.Method != nil {
@@ -1374,14 +1374,14 @@ func flattenHeaderMatchPattern(s *wafv2.HeaderMatchPattern) interface{} {
 	return []interface{}{m}
 }
 
-func flattenJsonBody(s *wafv2.JsonBody) interface{} {
+func flattenJSONBody(s *wafv2.JsonBody) interface{} {
 	if s == nil {
 		return []interface{}{}
 	}
 
 	m := map[string]interface{}{
 		"match_scope":       aws.StringValue(s.MatchScope),
-		"match_pattern":     flattenJsonMatchPattern(s.MatchPattern),
+		"match_pattern":     flattenJSONMatchPattern(s.MatchPattern),
 		"oversize_handling": aws.StringValue(s.OversizeHandling),
 	}
 
@@ -1392,7 +1392,7 @@ func flattenJsonBody(s *wafv2.JsonBody) interface{} {
 	return []interface{}{m}
 }
 
-func flattenJsonMatchPattern(s *wafv2.JsonMatchPattern) interface{} {
+func flattenJSONMatchPattern(s *wafv2.JsonMatchPattern) interface{} {
 	if s == nil {
 		return []interface{}{}
 	}
