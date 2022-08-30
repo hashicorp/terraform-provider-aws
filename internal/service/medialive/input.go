@@ -193,7 +193,7 @@ func resourceInputCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if v, ok := d.GetOk("input_devices"); ok && v.(*schema.Set).Len() > 0 {
-		in.InputDevices = expandInputDevices(v.([]interface{}))
+		in.InputDevices = inputDevices(v.(*schema.Set).List()).expandToDeviceSettings()
 	}
 
 	if v, ok := d.GetOk("input_security_groups"); ok && len(v.([]interface{})) > 0 {
@@ -201,7 +201,7 @@ func resourceInputCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if v, ok := d.GetOk("media_connect_flows"); ok && v.(*schema.Set).Len() > 0 {
-		in.MediaConnectFlows = expandMediaConnectFlows(v.([]interface{}))
+		in.MediaConnectFlows = expandMediaConnectFlows(v.(*schema.Set).List())
 	}
 
 	if v, ok := d.GetOk("role_arn"); ok {
@@ -209,11 +209,11 @@ func resourceInputCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if v, ok := d.GetOk("sources"); ok && v.(*schema.Set).Len() > 0 {
-		in.Sources = expandSources(v.([]interface{}))
+		in.Sources = expandSources(v.(*schema.Set).List())
 	}
 
 	if v, ok := d.GetOk("vpc"); ok && len(v.([]interface{})) > 0 {
-		in.Vpc = expandVpc(v.([]interface{}))
+		in.Vpc = expandVPC(v.([]interface{}))
 	}
 
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
@@ -314,12 +314,24 @@ func resourceInputUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			in.Destinations = expandDestinations(d.Get("destinations").(*schema.Set).List())
 		}
 
+		if d.HasChange("input_devices") {
+			in.InputDevices = inputDevices(d.Get("input_devices").(*schema.Set).List()).expandToDeviceRequest()
+		}
+
+		if d.HasChange("media_connect_flows") {
+			in.MediaConnectFlows = expandMediaConnectFlows(d.Get("media_connect_flows").(*schema.Set).List())
+		}
+
 		if d.HasChange("name") {
 			in.Name = aws.String(d.Get("name").(string))
 		}
 
 		if d.HasChange("role_arn") {
 			in.RoleArn = aws.String(d.Get("role_arn").(string))
+		}
+
+		if d.HasChange("sources") {
+			in.Sources = expandSources(d.Get("sources").(*schema.Set).List())
 		}
 
 		log.Printf("[DEBUG] Updating MediaLive Input (%s): %#v", d.Id(), in)
@@ -585,14 +597,16 @@ func expandDestinations(tfList []interface{}) []types.InputDestinationRequest {
 	return s
 }
 
-func expandInputDevices(tfList []interface{}) []types.InputDeviceSettings {
-	if len(tfList) == 0 {
+type inputDevices []interface{}
+
+func (i inputDevices) expandToDeviceSettings() []types.InputDeviceSettings {
+	if len(i) == 0 {
 		return nil
 	}
 
 	var s []types.InputDeviceSettings
 
-	for _, v := range tfList {
+	for _, v := range i {
 		m, ok := v.(map[string]interface{})
 
 		if !ok {
@@ -600,6 +614,29 @@ func expandInputDevices(tfList []interface{}) []types.InputDeviceSettings {
 		}
 
 		var id types.InputDeviceSettings
+		if val, ok := m["id"]; ok {
+			id.Id = aws.String(val.(string))
+			s = append(s, id)
+		}
+	}
+	return s
+}
+
+func (i inputDevices) expandToDeviceRequest() []types.InputDeviceRequest {
+	if len(i) == 0 {
+		return nil
+	}
+
+	var s []types.InputDeviceRequest
+
+	for _, v := range i {
+		m, ok := v.(map[string]interface{})
+
+		if !ok {
+			continue
+		}
+
+		var id types.InputDeviceRequest
 		if val, ok := m["id"]; ok {
 			id.Id = aws.String(val.(string))
 			s = append(s, id)
@@ -660,7 +697,7 @@ func expandSources(tfList []interface{}) []types.InputSourceRequest {
 	return s
 }
 
-func expandVpc(tfList []interface{}) *types.InputVpcRequest {
+func expandVPC(tfList []interface{}) *types.InputVpcRequest {
 	if len(tfList) == 0 {
 		return nil
 	}

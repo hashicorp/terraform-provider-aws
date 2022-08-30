@@ -56,6 +56,50 @@ func TestAccMediaLiveInput_basic(t *testing.T) {
 	})
 }
 
+func TestAccMediaLiveInput_update(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var input medialive.DescribeInputOutput
+	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_medialive_input.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(names.MediaLiveEndpointID, t)
+			testAccInputsPreCheck(t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInputDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInputConfig_basic(rName1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInputExists(resourceName, &input),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName1),
+					resource.TestCheckResourceAttrSet(resourceName, "input_class"),
+					resource.TestCheckResourceAttr(resourceName, "type", "UDP_PUSH"),
+				),
+			},
+			{
+				Config: testAccInputConfig_basic(rName2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInputExists(resourceName, &input),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName2),
+					resource.TestCheckResourceAttrSet(resourceName, "input_class"),
+					resource.TestCheckResourceAttr(resourceName, "type", "UDP_PUSH"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccMediaLiveInput_updateTags(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
