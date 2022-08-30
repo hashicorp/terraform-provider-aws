@@ -28,6 +28,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func ResourceInstance() *schema.Resource {
@@ -316,6 +317,12 @@ func ResourceInstance() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
+			"host_resource_group_arn": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ConflictsWith: []string{"placement_group"},
+			},
 			"iam_instance_profile": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -488,10 +495,11 @@ func ResourceInstance() *schema.Resource {
 				Computed: true,
 			},
 			"placement_group": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"host_resource_group_arn"},
 			},
 			"placement_partition_number": {
 				Type:     schema.TypeInt,
@@ -961,6 +969,10 @@ func resourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 			d.Set("host_id", v)
 		}
 
+		if v := v.HostResourceGroupArn; v != nil {
+			d.Set("host_resource_group_arn", instance.Placement.HostResourceGroupArn)
+		}
+
 		if v := v.PartitionNumber; v != nil {
 			d.Set("placement_partition_number", v)
 		}
@@ -1394,9 +1406,6 @@ func resourceInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 		// HasChange() thinks there is a diff between what is set on the instance and what is set in state. We need to ensure that
 		// if a diff has occurred, it's not because it's a new instance.
 		if d.HasChange("source_dest_check") && !d.IsNewResource() || d.IsNewResource() && !sourceDestCheck {
-			// SourceDestCheck can only be set on VPC instances
-			// AWS will return an error of InvalidParameterCombination if we attempt
-			// to modify the source_dest_check of an instance in EC2 Classic
 			log.Printf("[INFO] Modifying `source_dest_check` on Instance %s", d.Id())
 			_, err := conn.ModifyInstanceAttribute(&ec2.ModifyInstanceAttributeInput{
 				InstanceId: aws.String(d.Id()),
@@ -1405,12 +1414,7 @@ func resourceInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 				},
 			})
 			if err != nil {
-				// Tolerate InvalidParameterCombination error in Classic, otherwise
-				// return the error
-				if !tfawserr.ErrCodeEquals(err, "InvalidParameterCombination") {
-					return err
-				}
-				log.Printf("[WARN] Attempted to modify SourceDestCheck on non VPC instance: %s", err)
+				return create.Error(names.EC2, create.ErrActionUpdating, "Instance", d.Id(), err)
 			}
 		}
 	}
@@ -2386,13 +2390,13 @@ func readVolumeTags(conn *ec2.EC2, instanceId string) ([]*ec2.Tag, error) {
 	return tagsFromTagDescriptions(resp.Tags), nil
 }
 
-// Determine whether we're referring to security groups with
-// IDs or names. We use a heuristic to figure this out. By default,
-// we use IDs if we're in a VPC, and names otherwise (EC2-Classic).
-// However, the default VPC accepts either, so store them both here and let the
-// config determine which one to use in Plan and Apply.
+// Determine whether we're referring to security groups with IDs or names. We
+// use a heuristic to figure this out. The default VPC can have security groups
+// with IDs or names, so store them both here and let the config determine
+// which one to use in Plan and Apply.
 func readSecurityGroups(d *schema.ResourceData, instance *ec2.Instance, conn *ec2.EC2) error {
-	// An instance with a subnet is in a VPC; an instance without a subnet is in EC2-Classic.
+	// An instance with a subnet is in a VPC, and possibly the default VPC.
+	// An instance without a subnet is in the default VPC.
 	hasSubnet := aws.StringValue(instance.SubnetId) != ""
 	useID, useName := hasSubnet, !hasSubnet
 
@@ -2499,7 +2503,7 @@ func getInstancePasswordData(instanceID string, conn *ec2.EC2) (string, error) {
 	return passwordData, nil
 }
 
-type awsInstanceOpts struct {
+type instanceOpts struct {
 	BlockDeviceMappings               []*ec2.BlockDeviceMapping
 	CapacityReservationSpecification  *ec2.CapacityReservationSpecification
 	CpuOptions                        *ec2.CpuOptionsRequest
@@ -2531,10 +2535,10 @@ type awsInstanceOpts struct {
 	UserData64                        *string
 }
 
-func buildInstanceOpts(d *schema.ResourceData, meta interface{}) (*awsInstanceOpts, error) {
+func buildInstanceOpts(d *schema.ResourceData, meta interface{}) (*instanceOpts, error) {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	opts := &awsInstanceOpts{
+	opts := &instanceOpts{
 		DisableAPIStop:        aws.Bool(d.Get("disable_api_stop").(bool)),
 		DisableAPITermination: aws.Bool(d.Get("disable_api_termination").(bool)),
 		EBSOptimized:          aws.Bool(d.Get("ebs_optimized").(bool)),
@@ -2635,16 +2639,20 @@ func buildInstanceOpts(d *schema.ResourceData, meta interface{}) (*awsInstanceOp
 		AvailabilityZone: aws.String(d.Get("availability_zone").(string)),
 	}
 
-	if v := d.Get("placement_group").(string); instanceInterruptionBehavior == "" || instanceInterruptionBehavior == ec2.InstanceInterruptionBehaviorTerminate {
-		opts.Placement.GroupName = aws.String(v)
-		opts.SpotPlacement.GroupName = aws.String(v)
+	if v, ok := d.GetOk("placement_group"); ok && (instanceInterruptionBehavior == "" || instanceInterruptionBehavior == ec2.InstanceInterruptionBehaviorTerminate) {
+		opts.Placement.GroupName = aws.String(v.(string))
+		opts.SpotPlacement.GroupName = aws.String(v.(string))
 	}
 
-	if v := d.Get("tenancy").(string); v != "" {
-		opts.Placement.Tenancy = aws.String(v)
+	if v, ok := d.GetOk("tenancy"); ok {
+		opts.Placement.Tenancy = aws.String(v.(string))
 	}
-	if v := d.Get("host_id").(string); v != "" {
-		opts.Placement.HostId = aws.String(v)
+	if v, ok := d.GetOk("host_id"); ok {
+		opts.Placement.HostId = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("host_resource_group_arn"); ok {
+		opts.Placement.HostResourceGroupArn = aws.String(v.(string))
 	}
 
 	if v := d.Get("cpu_core_count").(int); v > 0 {
