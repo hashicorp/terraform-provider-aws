@@ -42,8 +42,10 @@ project {
         text("TEST_PATTERN", "TestAcc", display = ParameterDisplay.HIDDEN)
         text("SWEEPER_REGIONS", sweeperRegions, display = ParameterDisplay.HIDDEN, allowEmpty = false)
         text("env.AWS_ACCOUNT_ID", awsAccountID, display = ParameterDisplay.HIDDEN, allowEmpty = false)
-        password("env.AWS_ACCESS_KEY_ID", awsAccessKeyID, display = ParameterDisplay.HIDDEN)
-        password("env.AWS_SECRET_ACCESS_KEY", awsSecretAccessKey, display = ParameterDisplay.HIDDEN)
+        if (awsAccessKeyID != "" || awsSecretAccessKey != "") {
+            password("env.AWS_ACCESS_KEY_ID", awsAccessKeyID, display = ParameterDisplay.HIDDEN)
+            password("env.AWS_SECRET_ACCESS_KEY", awsSecretAccessKey, display = ParameterDisplay.HIDDEN)
+        }
         text("env.AWS_DEFAULT_REGION", defaultRegion, allowEmpty = false)
         text("env.TF_LOG", tfLog)
 
