@@ -35,6 +35,7 @@ func TestAccEC2EIPDataSource_filter(t *testing.T) {
 func TestAccEC2EIPDataSource_id(t *testing.T) {
 	dataSourceName := "data.aws_eip.test"
 	resourceName := "aws_eip.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
@@ -42,28 +43,7 @@ func TestAccEC2EIPDataSource_id(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEIPDataSourceConfig_id,
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "id", resourceName, "id"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "public_dns", resourceName, "public_dns"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "public_ip", resourceName, "public_ip"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccEC2EIPDataSource_PublicIP_ec2Classic(t *testing.T) {
-	dataSourceName := "data.aws_eip.test"
-	resourceName := "aws_eip.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckEC2Classic(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccEIPDataSourceConfig_publicIPClassic(),
+				Config: testAccEIPDataSourceConfig_id(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "id", resourceName, "id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "public_dns", resourceName, "public_dns"),
@@ -203,28 +183,13 @@ func TestAccEC2EIPDataSource_customerOwnedIPv4Pool(t *testing.T) {
 	})
 }
 
-func testAccEIPDataSourceConfig_customerOwnedIPv4Pool() string {
-	return `
-data "aws_ec2_coip_pools" "test" {}
-
-resource "aws_eip" "test" {
-  customer_owned_ipv4_pool = tolist(data.aws_ec2_coip_pools.test.pool_ids)[0]
-  vpc                      = true
-}
-
-data "aws_eip" "test" {
-  id = aws_eip.test.id
-}
-`
-}
-
 func testAccEIPDataSourceConfig_filter(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_eip" "test" {
   vpc = true
 
   tags = {
-    Name = %q
+    Name = %[1]q
   }
 }
 
@@ -237,26 +202,20 @@ data "aws_eip" "test" {
 `, rName)
 }
 
-const testAccEIPDataSourceConfig_id = `
+func testAccEIPDataSourceConfig_id(rName string) string {
+	return fmt.Sprintf(`
 resource "aws_eip" "test" {
   vpc = true
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 data "aws_eip" "test" {
   id = aws_eip.test.id
 }
-`
-
-func testAccEIPDataSourceConfig_publicIPClassic() string {
-	return acctest.ConfigCompose(
-		acctest.ConfigEC2ClassicRegionProvider(),
-		`
-resource "aws_eip" "test" {}
-
-data "aws_eip" "test" {
-  public_ip = aws_eip.test.public_ip
-}
-`)
+`, rName)
 }
 
 const testAccEIPDataSourceConfig_publicIPVPC = `
@@ -383,4 +342,19 @@ data "aws_eip" "test" {
   id = aws_eip.test.id
 }
 `, rName))
+}
+
+func testAccEIPDataSourceConfig_customerOwnedIPv4Pool() string {
+	return `
+data "aws_ec2_coip_pools" "test" {}
+
+resource "aws_eip" "test" {
+  customer_owned_ipv4_pool = tolist(data.aws_ec2_coip_pools.test.pool_ids)[0]
+  vpc                      = true
+}
+
+data "aws_eip" "test" {
+  id = aws_eip.test.id
+}
+`
 }
