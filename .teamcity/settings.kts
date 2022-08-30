@@ -17,6 +17,7 @@ val sweeperRegions = DslContext.getParameter("sweeper_regions")
 val awsAccountID = DslContext.getParameter("aws_account.account_id")
 val awsAccessKeyID = DslContext.getParameter("aws_account.access_key_id", "")
 val awsSecretAccessKey = DslContext.getParameter("aws_account.secret_access_key", "")
+val accTestRoleARN = DslContext.getParameter("aws_account.role_arn", "")
 val acctestParallelism = DslContext.getParameter("acctest_parallelism", "")
 val tfAccAssumeRoleArn = DslContext.getParameter("tf_acc_assume_role_arn", "")
 val awsAlternateAccountID = DslContext.getParameter("aws_alternate_account.account_id", "")
@@ -75,6 +76,10 @@ project {
 
         if (tfAccAssumeRoleArn != "") {
             text("env.TF_ACC_ASSUME_ROLE_ARN", tfAccAssumeRoleArn)
+        }
+
+        if (accTestRoleARN != "") {
+            text("ACCTEST_ROLE_ARN", accTestRoleARN, display = ParameterDisplay.HIDDEN)
         }
 
         // Define this parameter even when not set to allow individual builds to set the value
@@ -305,6 +310,13 @@ object Sweeper : BuildType({
         script {
             name = "Sweeper"
             scriptContent = File("./scripts/sweeper_role.sh").readText()
+        }
+    }
+
+    features {
+        feature {
+            type = "JetBrains.SharedResources"
+            param("locks-param", "${DslContext.getParameter("aws_account.lock_id")} writeLock")
         }
     }
 })
