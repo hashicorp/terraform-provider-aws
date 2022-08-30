@@ -427,11 +427,7 @@ func waitForAddressAssociationClassic(conn *ec2.EC2, publicIP, instanceID string
 		_, err = FindEIPByPublicIP(conn, publicIP)
 	}
 
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }
 
 func ConvertIPToDashIP(ip string) string {
