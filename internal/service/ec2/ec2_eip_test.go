@@ -113,7 +113,9 @@ func TestAccEC2EIP_tags(t *testing.T) {
 
 func TestAccEC2EIP_instance(t *testing.T) {
 	var conf ec2.Address
+	instanceResourceName := "aws_instance.test"
 	resourceName := "aws_eip.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
@@ -122,10 +124,11 @@ func TestAccEC2EIP_instance(t *testing.T) {
 		CheckDestroy:             testAccCheckEIPDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEIPConfig_instance(),
+				Config: testAccEIPConfig_instance(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEIPExists(resourceName, &conf),
-					testAccCheckEIPAttributes(&conf),
+					resource.TestCheckResourceAttrPair(resourceName, "instance", instanceResourceName, "id"),
+					resource.TestCheckResourceAttrSet(resourceName, "public_ip"),
 				),
 			},
 			{
@@ -140,6 +143,7 @@ func TestAccEC2EIP_instance(t *testing.T) {
 // Regression test for https://github.com/hashicorp/terraform/issues/3429 (now
 // https://github.com/hashicorp/terraform-provider-aws/issues/42)
 func TestAccEC2EIP_Instance_reassociate(t *testing.T) {
+	var conf ec2.Address
 	instanceResourceName := "aws_instance.test"
 	resourceName := "aws_eip.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -153,12 +157,14 @@ func TestAccEC2EIP_Instance_reassociate(t *testing.T) {
 			{
 				Config: testAccEIPConfig_instanceReassociate(rName),
 				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEIPExists(resourceName, &conf),
 					resource.TestCheckResourceAttrPair(resourceName, "instance", instanceResourceName, "id"),
 				),
 			},
 			{
 				Config: testAccEIPConfig_instanceReassociate(rName),
 				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEIPExists(resourceName, &conf),
 					resource.TestCheckResourceAttrPair(resourceName, "instance", instanceResourceName, "id"),
 				),
 				Taint: []string{resourceName},
@@ -170,7 +176,9 @@ func TestAccEC2EIP_Instance_reassociate(t *testing.T) {
 // This test is an expansion of TestAccEC2EIP_Instance_associatedUserPrivateIP, by testing the
 // associated Private EIPs of two instances
 func TestAccEC2EIP_Instance_associatedUserPrivateIP(t *testing.T) {
-	var one ec2.Address
+	var conf ec2.Address
+	instance1ResourceName := "aws_instance.test.1"
+	instance2ResourceName := "aws_instance.test.0"
 	resourceName := "aws_eip.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -183,10 +191,10 @@ func TestAccEC2EIP_Instance_associatedUserPrivateIP(t *testing.T) {
 			{
 				Config: testAccEIPConfig_instanceAssociated(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEIPExists(resourceName, &one),
-					testAccCheckEIPAttributes(&one),
-					testAccCheckEIPAssociated(&one),
-					resource.TestCheckResourceAttr(resourceName, "domain", ec2.DomainTypeVpc),
+					testAccCheckEIPExists(resourceName, &conf),
+					resource.TestCheckResourceAttrSet(resourceName, "association_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "instance", instance1ResourceName, "id"),
+					resource.TestCheckResourceAttrSet(resourceName, "public_ip"),
 				),
 			},
 			{
@@ -198,10 +206,10 @@ func TestAccEC2EIP_Instance_associatedUserPrivateIP(t *testing.T) {
 			{
 				Config: testAccEIPConfig_instanceAssociatedSwitch(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEIPExists(resourceName, &one),
-					testAccCheckEIPAttributes(&one),
-					testAccCheckEIPAssociated(&one),
-					resource.TestCheckResourceAttr(resourceName, "domain", ec2.DomainTypeVpc),
+					testAccCheckEIPExists(resourceName, &conf),
+					resource.TestCheckResourceAttrSet(resourceName, "association_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "instance", instance2ResourceName, "id"),
+					resource.TestCheckResourceAttrSet(resourceName, "public_ip"),
 				),
 			},
 		},
@@ -210,7 +218,9 @@ func TestAccEC2EIP_Instance_associatedUserPrivateIP(t *testing.T) {
 
 func TestAccEC2EIP_Instance_notAssociated(t *testing.T) {
 	var conf ec2.Address
+	instanceResourceName := "aws_instance.test"
 	resourceName := "aws_eip.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
@@ -219,10 +229,12 @@ func TestAccEC2EIP_Instance_notAssociated(t *testing.T) {
 		CheckDestroy:             testAccCheckEIPDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEIPConfig_instanceAssociateNotAssociated(),
+				Config: testAccEIPConfig_instanceAssociateNotAssociated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEIPExists(resourceName, &conf),
-					testAccCheckEIPAttributes(&conf),
+					resource.TestCheckResourceAttr(resourceName, "association_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "instance", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "public_ip"),
 				),
 			},
 			{
@@ -231,11 +243,12 @@ func TestAccEC2EIP_Instance_notAssociated(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccEIPConfig_instanceAssociateAssociated(),
+				Config: testAccEIPConfig_instance(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEIPExists(resourceName, &conf),
-					testAccCheckEIPAttributes(&conf),
-					testAccCheckEIPAssociated(&conf),
+					resource.TestCheckResourceAttrSet(resourceName, "association_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "instance", instanceResourceName, "id"),
+					resource.TestCheckResourceAttrSet(resourceName, "public_ip"),
 				),
 			},
 		},
@@ -740,46 +753,110 @@ resource "aws_eip" "test" {
 `, address, poolname)
 }
 
-func testAccEIPConfig_instance() string {
+func testAccEIPConfig_baseInstance(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
-		acctest.AvailableEC2InstanceTypeForAvailabilityZone("aws_subnet.test.availability_zone", "t3.micro", "t2.micro"),
-		acctest.ConfigAvailableAZsNoOptIn(),
-		`
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-}
-
-resource "aws_subnet" "test" {
-  availability_zone = data.aws_availability_zones.available.names[0]
-  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, 0)
-  vpc_id            = aws_vpc.test.id
-}
-
+		acctest.ConfigVPCWithSubnets(rName, 1),
+		acctest.AvailableEC2InstanceTypeForAvailabilityZone("data.aws_availability_zones.available.names[0]", "t3.micro", "t2.micro"),
+		fmt.Sprintf(`
 resource "aws_internet_gateway" "test" {
   vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_instance" "test" {
   ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = data.aws_ec2_instance_type_offering.available.instance_type
-  subnet_id     = aws_subnet.test.id
+  subnet_id     = aws_subnet.test[0].id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName))
 }
 
+func testAccEIPConfig_instance(rName string) string {
+	return acctest.ConfigCompose(testAccEIPConfig_baseInstance(rName), fmt.Sprintf(`
 resource "aws_eip" "test" {
   instance = aws_instance.test.id
   vpc      = true
+
+  tags = {
+    Name = %[1]q
+  }
 }
-`)
+`, rName))
 }
 
-func testAccEIPConfig_instanceAssociated(rName string) string {
+func testAccEIPConfig_instanceReassociate(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
+		acctest.ConfigVPCWithSubnets(rName, 1),
+		acctest.AvailableEC2InstanceTypeForAvailabilityZone("data.aws_availability_zones.available.names[0]", "t3.micro", "t2.micro"),
+		fmt.Sprintf(`
+resource "aws_eip" "test" {
+  instance = aws_instance.test.id
+  vpc      = true
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_instance" "test" {
+  ami                         = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  associate_public_ip_address = true
+  instance_type               = data.aws_ec2_instance_type_offering.available.instance_type
+  subnet_id                   = aws_subnet.test[0].id
+
+  tags = {
+    Name = %[1]q
+  }
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+resource "aws_internet_gateway" "test" {
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_route_table" "test" {
+  vpc_id = aws_vpc.test.id
+
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.test.id
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_route_table_association" "test" {
+  subnet_id      = aws_subnet.test[0].id
+  route_table_id = aws_route_table.test.id
+}
+`, rName))
+}
+
+func testAccEIPConfig_baseInstanceAssociated(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
 		acctest.ConfigAvailableAZsNoOptIn(),
-		acctest.AvailableEC2InstanceTypeForAvailabilityZone("aws_subnet.test.availability_zone", "t3.micro", "t2.micro"),
+		acctest.AvailableEC2InstanceTypeForAvailabilityZone("data.aws_availability_zones.available.names[0]", "t3.micro", "t2.micro"),
 		fmt.Sprintf(`
-resource "aws_vpc" "default" {
+resource "aws_vpc" "test" {
   cidr_block           = "10.0.0.0/16"
   enable_dns_hostnames = true
 
@@ -788,8 +865,8 @@ resource "aws_vpc" "default" {
   }
 }
 
-resource "aws_internet_gateway" "gw" {
-  vpc_id = aws_vpc.default.id
+resource "aws_internet_gateway" "test" {
+  vpc_id = aws_vpc.test.id
 
   tags = {
     Name = %[1]q
@@ -797,12 +874,12 @@ resource "aws_internet_gateway" "gw" {
 }
 
 resource "aws_subnet" "test" {
-  vpc_id                  = aws_vpc.default.id
+  vpc_id                  = aws_vpc.test.id
   availability_zone       = data.aws_availability_zones.available.names[0]
   cidr_block              = "10.0.0.0/24"
   map_public_ip_on_launch = true
 
-  depends_on = [aws_internet_gateway.gw]
+  depends_on = [aws_internet_gateway.test]
 
   tags = {
     Name = %[1]q
@@ -810,101 +887,61 @@ resource "aws_subnet" "test" {
 }
 
 resource "aws_instance" "test" {
+  count = 2
+
   ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = data.aws_ec2_instance_type_offering.available.instance_type
 
-  private_ip = "10.0.0.12"
+  private_ip = "10.0.0.1${count.index}"
   subnet_id  = aws_subnet.test.id
 
   tags = {
     Name = %[1]q
   }
 }
-
-resource "aws_instance" "test2" {
-  ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
-  instance_type = data.aws_ec2_instance_type_offering.available.instance_type
-
-  private_ip = "10.0.0.19"
-  subnet_id  = aws_subnet.test.id
-
-  tags = {
-    Name = %[1]q
-  }
+`, rName))
 }
 
+func testAccEIPConfig_instanceAssociated(rName string) string {
+	return acctest.ConfigCompose(testAccEIPConfig_baseInstanceAssociated(rName),
+		fmt.Sprintf(`
 resource "aws_eip" "test" {
   vpc = true
 
-  instance                  = aws_instance.test2.id
-  associate_with_private_ip = "10.0.0.19"
+  instance                  = aws_instance.test[1].id
+  associate_with_private_ip = aws_instance.test[1].private_ip
+
+  tags = {
+    Name = %[1]q
+  }
 }
 `, rName))
 }
 
 func testAccEIPConfig_instanceAssociatedSwitch(rName string) string {
-	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
+	return acctest.ConfigCompose(testAccEIPConfig_baseInstanceAssociated(rName),
 		fmt.Sprintf(`
-resource "aws_vpc" "default" {
-  cidr_block           = "10.0.0.0/16"
-  enable_dns_hostnames = true
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_internet_gateway" "gw" {
-  vpc_id = aws_vpc.default.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test" {
-  vpc_id                  = aws_vpc.default.id
-  cidr_block              = "10.0.0.0/24"
-  map_public_ip_on_launch = true
-
-  depends_on = [aws_internet_gateway.gw]
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_instance" "test" {
-  ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
-  instance_type = "t2.micro"
-
-  private_ip = "10.0.0.12"
-  subnet_id  = aws_subnet.test.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_instance" "test2" {
-  ami = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
-
-  instance_type = "t2.micro"
-
-  private_ip = "10.0.0.19"
-  subnet_id  = aws_subnet.test.id
-
-  tags = {
-    Name = "%[1]s-2"
-  }
-}
-
 resource "aws_eip" "test" {
   vpc = true
 
-  instance                  = aws_instance.test.id
-  associate_with_private_ip = "10.0.0.12"
+  instance                  = aws_instance.test[0].id
+  associate_with_private_ip = aws_instance.test[0].private_ip
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName))
+}
+
+func testAccEIPConfig_instanceAssociateNotAssociated(rName string) string {
+	return acctest.ConfigCompose(testAccEIPConfig_baseInstance(rName), fmt.Sprintf(`
+resource "aws_eip" "test" {
+  vpc = true
+
+  tags = {
+    Name = %[1]q
+  }
 }
 `, rName))
 }
@@ -991,142 +1028,6 @@ resource "aws_eip" "test2" {
   depends_on                = [aws_internet_gateway.test]
 }
 `, rName))
-}
-
-func testAccEIPConfig_instanceReassociate(rName string) string {
-	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
-		acctest.AvailableEC2InstanceTypeForAvailabilityZone("aws_subnet.test.availability_zone", "t3.micro", "t2.micro"),
-		fmt.Sprintf(`
-resource "aws_eip" "test" {
-  instance = aws_instance.test.id
-  vpc      = true
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_instance" "test" {
-  ami                         = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
-  associate_public_ip_address = true
-  instance_type               = data.aws_ec2_instance_type_offering.available.instance_type
-  subnet_id                   = aws_subnet.test.id
-
-  tags = {
-    Name = %[1]q
-  }
-
-  lifecycle {
-    create_before_destroy = true
-  }
-}
-
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_internet_gateway" "test" {
-  vpc_id = aws_vpc.test.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test" {
-  cidr_block = "10.0.0.0/24"
-  vpc_id     = aws_vpc.test.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_route_table" "test" {
-  vpc_id = aws_vpc.test.id
-
-  route {
-    cidr_block = "0.0.0.0/0"
-    gateway_id = aws_internet_gateway.test.id
-  }
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_route_table_association" "test" {
-  subnet_id      = aws_subnet.test.id
-  route_table_id = aws_route_table.test.id
-}
-`, rName))
-}
-
-func testAccEIPConfig_instanceAssociateNotAssociated() string {
-	return acctest.ConfigCompose(
-		acctest.AvailableEC2InstanceTypeForAvailabilityZone("aws_subnet.test.availability_zone", "t3.micro", "t2.micro"),
-		acctest.ConfigAvailableAZsNoOptIn(),
-		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), `
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-}
-
-resource "aws_subnet" "test" {
-  availability_zone = data.aws_availability_zones.available.names[0]
-  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, 0)
-  vpc_id            = aws_vpc.test.id
-}
-
-resource "aws_internet_gateway" "test" {
-  vpc_id = aws_vpc.test.id
-}
-
-resource "aws_instance" "test" {
-  ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
-  instance_type = data.aws_ec2_instance_type_offering.available.instance_type
-  subnet_id     = aws_subnet.test.id
-}
-
-resource "aws_eip" "test" {
-}
-`)
-}
-
-func testAccEIPConfig_instanceAssociateAssociated() string {
-	return acctest.ConfigCompose(
-		acctest.AvailableEC2InstanceTypeForAvailabilityZone("aws_subnet.test.availability_zone", "t3.micro", "t2.micro"),
-		acctest.ConfigAvailableAZsNoOptIn(),
-		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), `
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-}
-
-resource "aws_subnet" "test" {
-  availability_zone = data.aws_availability_zones.available.names[0]
-  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, 0)
-  vpc_id            = aws_vpc.test.id
-}
-
-resource "aws_internet_gateway" "test" {
-  vpc_id = aws_vpc.test.id
-}
-
-resource "aws_instance" "test" {
-  ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
-  instance_type = data.aws_ec2_instance_type_offering.available.instance_type
-  subnet_id     = aws_subnet.test.id
-}
-
-resource "aws_eip" "test" {
-  instance = aws_instance.test.id
-  vpc      = true
-}
-`)
 }
 
 func testAccEIPConfig_customerOwnedIPv4Pool() string {
