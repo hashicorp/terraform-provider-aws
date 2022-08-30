@@ -127,6 +127,26 @@ func ResourceInput() *schema.Resource {
 				ForceNew:         true,
 				ValidateDiagFunc: enum.Validate[types.InputType](),
 			},
+			"vpc": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"subnet_ids": {
+							Type:     schema.TypeList,
+							Required: true,
+							MinItems: 2,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+						"security_group_ids": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+					},
+				},
+			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
 		},
@@ -168,6 +188,10 @@ func resourceInputCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	if v, ok := d.GetOk("sources"); ok && v.(*schema.Set).Len() > 0 {
 		in.Sources = expandSources(v.([]interface{}))
+	}
+
+	if v, ok := d.GetOk("vpc"); ok && len(v.([]interface{})) > 0 {
+		in.Vpc = expandVpc(v.([]interface{}))
 	}
 
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
@@ -434,7 +458,7 @@ func FindInputByID(ctx context.Context, conn *medialive.Client, id string) (*med
 //}
 
 func expandDestinations(tfList []interface{}) []types.InputDestinationRequest {
-	if tfList == nil || len(tfList) == 0 {
+	if len(tfList) == 0 {
 		return nil
 	}
 
@@ -457,7 +481,7 @@ func expandDestinations(tfList []interface{}) []types.InputDestinationRequest {
 }
 
 func expandInputDevices(tfList []interface{}) []types.InputDeviceSettings {
-	if tfList == nil || len(tfList) == 0 {
+	if len(tfList) == 0 {
 		return nil
 	}
 
@@ -480,7 +504,7 @@ func expandInputDevices(tfList []interface{}) []types.InputDeviceSettings {
 }
 
 func expandMediaConnectFlows(tfList []interface{}) []types.MediaConnectFlowRequest {
-	if tfList == nil || len(tfList) == 0 {
+	if len(tfList) == 0 {
 		return nil
 	}
 
@@ -503,7 +527,7 @@ func expandMediaConnectFlows(tfList []interface{}) []types.MediaConnectFlowReque
 }
 
 func expandSources(tfList []interface{}) []types.InputSourceRequest {
-	if tfList == nil || len(tfList) == 0 {
+	if len(tfList) == 0 {
 		return nil
 	}
 
@@ -529,4 +553,22 @@ func expandSources(tfList []interface{}) []types.InputSourceRequest {
 		s = append(s, id)
 	}
 	return s
+}
+
+func expandVpc(tfList []interface{}) *types.InputVpcRequest {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var s types.InputVpcRequest
+	vpc := tfList[0].(map[string]interface{})
+
+	if val, ok := vpc["subnet_ids"]; ok {
+		s.SubnetIds = flex.ExpandStringValueList(val.([]interface{}))
+	}
+	if val, ok := vpc["security_group_ids"]; ok {
+		s.SecurityGroupIds = flex.ExpandStringValueList(val.([]interface{}))
+	}
+
+	return &s
 }

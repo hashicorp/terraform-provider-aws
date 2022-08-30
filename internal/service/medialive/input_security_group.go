@@ -327,7 +327,7 @@ func flattenInputWhitelistRules(apiObjects []types.InputWhitelistRule) []interfa
 }
 
 func expandWhitelistRules(tfList []interface{}) []types.InputWhitelistRuleCidr {
-	if tfList == nil || len(tfList) == 0 {
+	if len(tfList) == 0 {
 		return nil
 	}
 
