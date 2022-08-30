@@ -1723,7 +1723,8 @@ func New(_ context.Context) (*schema.Provider, error) {
 
 			"aws_media_package_channel": mediapackage.ResourceChannel(),
 
-			"aws_medialive_input": medialive.ResourceInput(),
+			"aws_medialive_input":                medialive.ResourceInput(),
+			"aws_medialive_input_security_group": medialive.ResourceInputSecurityGroup(),
 
 			"aws_media_store_container":        mediastore.ResourceContainer(),
 			"aws_media_store_container_policy": mediastore.ResourceContainerPolicy(),

@@ -57,6 +57,10 @@ func ResourceInput() *schema.Resource {
 					},
 				},
 			},
+			"input_class": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"input_devices": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -93,7 +97,8 @@ func ResourceInput() *schema.Resource {
 			},
 			"role_arn": {
 				Type:             schema.TypeString,
-				Required:         true,
+				Optional:         true,
+				Computed:         true,
 				ValidateDiagFunc: validation.ToDiagFunc(verify.ValidARN),
 			},
 			"sources": {
@@ -157,6 +162,10 @@ func resourceInputCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		in.MediaConnectFlows = expandMediaConnectFlows(v.([]interface{}))
 	}
 
+	if v, ok := d.GetOk("role_arn"); ok {
+		in.RoleArn = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOk("sources"); ok && v.(*schema.Set).Len() > 0 {
 		in.Sources = expandSources(v.([]interface{}))
 	}
@@ -203,7 +212,10 @@ func resourceInputRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	d.Set("arn", out.Arn)
 	d.Set("name", out.Name)
+	d.Set("input_class", out.InputClass)
 	d.Set("input_security_groups", out.SecurityGroups)
+	d.Set("role_arn", out.RoleArn)
+	d.Set("type", out.Type)
 
 	tags, err := ListTags(ctx, conn, aws.ToString(out.Arn))
 	if err != nil {
@@ -239,6 +251,10 @@ func resourceInputUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 		if d.HasChange("name") {
 			in.Name = aws.String(d.Get("name").(string))
+		}
+
+		if d.HasChange("role_arn") {
+			in.RoleArn = aws.String(d.Get("role_arn").(string))
 		}
 
 		log.Printf("[DEBUG] Updating MediaLive Input (%s): %#v", d.Id(), in)
@@ -288,13 +304,6 @@ func resourceInputDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	return nil
 }
 
-const (
-	statusChangePending = "Pending"
-	statusDeleting      = "Deleting"
-	statusNormal        = "Normal"
-	statusUpdated       = "Updated"
-)
-
 func waitInputCreated(ctx context.Context, conn *medialive.Client, id string, timeout time.Duration) (*medialive.DescribeInputOutput, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending:                   enum.Slice(types.InputStateCreating),
@@ -303,6 +312,7 @@ func waitInputCreated(ctx context.Context, conn *medialive.Client, id string, ti
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
+		Delay:                     30 * time.Second,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -321,6 +331,7 @@ func waitInputUpdated(ctx context.Context, conn *medialive.Client, id string, ti
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
+		Delay:                     30 * time.Second,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)

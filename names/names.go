@@ -25,6 +25,7 @@ import (
 const (
 	ComprehendEndpointID     = "comprehend"
 	KendraEndpointID         = "kendra"
+	MediaLiveEndpointID      = "medialive"
 	RolesAnywhereEndpointID  = "rolesanywhere"
 	Route53DomainsEndpointID = "route53domains"
 	TranscribeEndpointID     = "transcribe"
