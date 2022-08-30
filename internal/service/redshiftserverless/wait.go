@@ -87,3 +87,43 @@ func waitWorkgroupDeleted(conn *redshiftserverless.RedshiftServerless, name stri
 
 	return nil, err
 }
+
+func waitEndpointAccessActive(conn *redshiftserverless.RedshiftServerless, name string) (*redshiftserverless.EndpointAccess, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{
+			"CREATING",
+		},
+		Target: []string{
+			"ACTIVE",
+		},
+		Refresh: statusEndpointAccess(conn, name),
+		Timeout: 10 * time.Minute,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*redshiftserverless.EndpointAccess); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitEndpointAccessDeleted(conn *redshiftserverless.RedshiftServerless, name string) (*redshiftserverless.EndpointAccess, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{
+			"DELETING",
+		},
+		Target:  []string{},
+		Refresh: statusEndpointAccess(conn, name),
+		Timeout: 10 * time.Minute,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*redshiftserverless.EndpointAccess); ok {
+		return output, err
+	}
+
+	return nil, err
+}

@@ -45,7 +45,27 @@ In addition to all arguments above, the following attributes are exported:
 * `arn` - Amazon Resource Name (ARN) of the Redshift Serverless Workgroup.
 * `id` - The Redshift Workgroup Name.
 * `workgroup_id` - The Redshift Workgroup ID.
+* `endpoint` - The endpoint that is created from the workgroup. See `Endpoint` below.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+
+### Endpoint
+
+* `address` - The DNS address of the VPC endpoint.
+* `port` - The port that Amazon Redshift Serverless listens on.
+* `vpc_endpoint` - The VPC endpoint or the Redshift Serverless workgroup. See `VPC Endpoint` below.
+
+#### VPC Endpoint
+
+* `vpc_endpoint_id` - The DNS address of the VPC endpoint.
+* `vpc_id` - The port that Amazon Redshift Serverless listens on.
+* `network_interface` - The network interfaces of the endpoint.. See `Network Interface` below.
+
+##### Network Interface
+
+* `availability_zone` - The availability Zone.
+* `network_interface_id` - The unique identifier of the network interface.
+* `private_ip_address` - The IPv4 address of the network interface within the subnet.
+* `subnet_id` - The unique identifier of the subnet.
 
 ## Import
 
