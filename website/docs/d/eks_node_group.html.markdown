@@ -29,6 +29,7 @@ data "aws_eks_node_group" "example" {
 * `id` - EKS Cluster name and EKS Node Group name separated by a colon (`:`).
 * `ami_type` - Type of Amazon Machine Image (AMI) associated with the EKS Node Group.
 * `arn` - Amazon Resource Name (ARN) of the EKS Node Group.
+* `capacity_type` - Type of capacity associated with the EKS Node Group. Valid values: `ON_DEMAND`, `SPOT`.
 * `disk_size` - Disk size in GiB for worker nodes.
 * `instance_types` - Set of instance types associated with the EKS Node Group.
 * `labels` - Key-value map of Kubernetes labels. Only labels that are applied with the EKS API are managed by this argument. Other Kubernetes labels applied to the EKS Node Group will not be managed.
