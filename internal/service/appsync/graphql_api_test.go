@@ -1203,11 +1203,8 @@ func testAccCheckTypeExists(name, typeName string) resource.TestCheckFunc {
 		}
 
 		_, err := conn.GetType(input)
-		if err != nil {
-			return err
-		}
 
-		return nil
+		return err
 	}
 }
 

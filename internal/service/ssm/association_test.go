@@ -605,11 +605,8 @@ func testAccCheckAssociationExists(n string) resource.TestCheckFunc {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn
 
 		_, err := tfssm.FindAssociationById(conn, rs.Primary.ID)
-		if err != nil {
-			return err
-		}
 
-		return nil
+		return err
 	}
 }
 

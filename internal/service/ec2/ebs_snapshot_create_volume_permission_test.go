@@ -133,11 +133,7 @@ func testAccSnapshotCreateVolumePermissionExists(n string) resource.TestCheckFun
 
 		_, err = tfec2.FindCreateSnapshotCreateVolumePermissionByTwoPartKey(conn, snapshotID, accountID)
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 

@@ -154,11 +154,7 @@ func testAccCheckCustomerGatewayAssociationExists(n string) resource.TestCheckFu
 
 		_, err = tfnetworkmanager.FindCustomerGatewayAssociationByTwoPartKey(context.Background(), conn, globalNetworkID, customerGatewayARN)
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 

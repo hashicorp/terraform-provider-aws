@@ -306,9 +306,6 @@ func waitSnapshotCopyAvailable(ctx context.Context, d *schema.ResourceData, meta
 
 	// Wait, catching any errors
 	_, err := stateConf.WaitForStateContext(ctx)
-	if err != nil {
-		return err
-	}
 
-	return nil
+	return err
 }

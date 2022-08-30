@@ -83,13 +83,7 @@ func testAccCheckAssociationExists(n string) resource.TestCheckFunc {
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).LicenseManagerConn
 
-		err = tflicensemanager.FindAssociation(context.Background(), conn, resourceARN, licenseConfigurationARN)
-
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return tflicensemanager.FindAssociation(context.Background(), conn, resourceARN, licenseConfigurationARN)
 	}
 }
 

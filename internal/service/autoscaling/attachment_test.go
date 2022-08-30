@@ -123,13 +123,7 @@ func testAccCheckAttachmentByLoadBalancerNameExists(n string) resource.TestCheck
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn
 
-		err := tfautoscaling.FindAttachmentByLoadBalancerName(conn, rs.Primary.Attributes["autoscaling_group_name"], rs.Primary.Attributes["elb"])
-
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return tfautoscaling.FindAttachmentByLoadBalancerName(conn, rs.Primary.Attributes["autoscaling_group_name"], rs.Primary.Attributes["elb"])
 	}
 }
 
@@ -147,13 +141,7 @@ func testAccCheckAttachmentByTargetGroupARNExists(n string) resource.TestCheckFu
 			targetGroupARN = rs.Primary.Attributes["alb_target_group_arn"]
 		}
 
-		err := tfautoscaling.FindAttachmentByTargetGroupARN(conn, rs.Primary.Attributes["autoscaling_group_name"], targetGroupARN)
-
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return tfautoscaling.FindAttachmentByTargetGroupARN(conn, rs.Primary.Attributes["autoscaling_group_name"], targetGroupARN)
 	}
 }
 

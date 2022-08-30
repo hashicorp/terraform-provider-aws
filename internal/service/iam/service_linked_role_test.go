@@ -337,11 +337,7 @@ func testAccCheckServiceLinkedRoleExists(n string) resource.TestCheckFunc {
 
 		_, err = tfiam.FindRoleByName(conn, roleName)
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 

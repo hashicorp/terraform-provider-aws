@@ -1460,8 +1460,8 @@ func FindNetworkInterfaceSecurityGroup(conn *ec2.EC2, networkInterfaceID string,
 	}
 }
 
-func FindNetworkInsightsPath(conn *ec2.EC2, input *ec2.DescribeNetworkInsightsPathsInput) (*ec2.NetworkInsightsPath, error) {
-	output, err := FindNetworkInsightsPaths(conn, input)
+func FindNetworkInsightsAnalysis(ctx context.Context, conn *ec2.EC2, input *ec2.DescribeNetworkInsightsAnalysesInput) (*ec2.NetworkInsightsAnalysis, error) {
+	output, err := FindNetworkInsightsAnalyses(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
@@ -1478,10 +1478,80 @@ func FindNetworkInsightsPath(conn *ec2.EC2, input *ec2.DescribeNetworkInsightsPa
 	return output[0], nil
 }
 
-func FindNetworkInsightsPaths(conn *ec2.EC2, input *ec2.DescribeNetworkInsightsPathsInput) ([]*ec2.NetworkInsightsPath, error) {
+func FindNetworkInsightsAnalyses(ctx context.Context, conn *ec2.EC2, input *ec2.DescribeNetworkInsightsAnalysesInput) ([]*ec2.NetworkInsightsAnalysis, error) {
+	var output []*ec2.NetworkInsightsAnalysis
+
+	err := conn.DescribeNetworkInsightsAnalysesPagesWithContext(ctx, input, func(page *ec2.DescribeNetworkInsightsAnalysesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.NetworkInsightsAnalyses {
+			if v != nil {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidNetworkInsightsAnalysisIdNotFound) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
+func FindNetworkInsightsAnalysisByID(ctx context.Context, conn *ec2.EC2, id string) (*ec2.NetworkInsightsAnalysis, error) {
+	input := &ec2.DescribeNetworkInsightsAnalysesInput{
+		NetworkInsightsAnalysisIds: aws.StringSlice([]string{id}),
+	}
+
+	output, err := FindNetworkInsightsAnalysis(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Eventual consistency check.
+	if aws.StringValue(output.NetworkInsightsAnalysisId) != id {
+		return nil, &resource.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func FindNetworkInsightsPath(ctx context.Context, conn *ec2.EC2, input *ec2.DescribeNetworkInsightsPathsInput) (*ec2.NetworkInsightsPath, error) {
+	output, err := FindNetworkInsightsPaths(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(output) == 0 || output[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return output[0], nil
+}
+
+func FindNetworkInsightsPaths(ctx context.Context, conn *ec2.EC2, input *ec2.DescribeNetworkInsightsPathsInput) ([]*ec2.NetworkInsightsPath, error) {
 	var output []*ec2.NetworkInsightsPath
 
-	err := conn.DescribeNetworkInsightsPathsPages(input, func(page *ec2.DescribeNetworkInsightsPathsOutput, lastPage bool) bool {
+	err := conn.DescribeNetworkInsightsPathsPagesWithContext(ctx, input, func(page *ec2.DescribeNetworkInsightsPathsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -1509,12 +1579,12 @@ func FindNetworkInsightsPaths(conn *ec2.EC2, input *ec2.DescribeNetworkInsightsP
 	return output, nil
 }
 
-func FindNetworkInsightsPathByID(conn *ec2.EC2, id string) (*ec2.NetworkInsightsPath, error) {
+func FindNetworkInsightsPathByID(ctx context.Context, conn *ec2.EC2, id string) (*ec2.NetworkInsightsPath, error) {
 	input := &ec2.DescribeNetworkInsightsPathsInput{
 		NetworkInsightsPathIds: aws.StringSlice([]string{id}),
 	}
 
-	output, err := FindNetworkInsightsPath(conn, input)
+	output, err := FindNetworkInsightsPath(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
@@ -3919,6 +3989,24 @@ func FindTransitGatewayRoute(conn *ec2.EC2, transitGatewayRouteTableID, destinat
 	return nil, &resource.NotFoundError{}
 }
 
+func FindTransitGatewayPolicyTable(conn *ec2.EC2, input *ec2.DescribeTransitGatewayPolicyTablesInput) (*ec2.TransitGatewayPolicyTable, error) {
+	output, err := FindTransitGatewayPolicyTables(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(output) == 0 || output[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return output[0], nil
+}
+
 func FindTransitGatewayRouteTable(conn *ec2.EC2, input *ec2.DescribeTransitGatewayRouteTablesInput) (*ec2.TransitGatewayRouteTable, error) {
 	output, err := FindTransitGatewayRouteTables(conn, input)
 
@@ -3935,6 +4023,37 @@ func FindTransitGatewayRouteTable(conn *ec2.EC2, input *ec2.DescribeTransitGatew
 	}
 
 	return output[0], nil
+}
+
+func FindTransitGatewayPolicyTables(conn *ec2.EC2, input *ec2.DescribeTransitGatewayPolicyTablesInput) ([]*ec2.TransitGatewayPolicyTable, error) {
+	var output []*ec2.TransitGatewayPolicyTable
+
+	err := conn.DescribeTransitGatewayPolicyTablesPages(input, func(page *ec2.DescribeTransitGatewayPolicyTablesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.TransitGatewayPolicyTables {
+			if v != nil {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidTransitGatewayPolicyTableIdNotFound) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
 }
 
 func FindTransitGatewayRouteTables(conn *ec2.EC2, input *ec2.DescribeTransitGatewayRouteTablesInput) ([]*ec2.TransitGatewayRouteTable, error) {
@@ -3968,6 +4087,27 @@ func FindTransitGatewayRouteTables(conn *ec2.EC2, input *ec2.DescribeTransitGate
 	return output, nil
 }
 
+func FindTransitGatewayPolicyTableByID(conn *ec2.EC2, id string) (*ec2.TransitGatewayPolicyTable, error) {
+	input := &ec2.DescribeTransitGatewayPolicyTablesInput{
+		TransitGatewayPolicyTableIds: aws.StringSlice([]string{id}),
+	}
+
+	output, err := FindTransitGatewayPolicyTable(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Eventual consistency check.
+	if aws.StringValue(output.TransitGatewayPolicyTableId) != id {
+		return nil, &resource.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
 func FindTransitGatewayRouteTableByID(conn *ec2.EC2, id string) (*ec2.TransitGatewayRouteTable, error) {
 	input := &ec2.DescribeTransitGatewayRouteTablesInput{
 		TransitGatewayRouteTableIds: aws.StringSlice([]string{id}),
@@ -3994,6 +4134,37 @@ func FindTransitGatewayRouteTableByID(conn *ec2.EC2, id string) (*ec2.TransitGat
 	}
 
 	return output, nil
+}
+
+func FindTransitGatewayPolicyTableAssociationByTwoPartKey(conn *ec2.EC2, transitGatewayPolicyTableID, transitGatewayAttachmentID string) (*ec2.TransitGatewayPolicyTableAssociation, error) {
+	input := &ec2.GetTransitGatewayPolicyTableAssociationsInput{
+		Filters: BuildAttributeFilterList(map[string]string{
+			"transit-gateway-attachment-id": transitGatewayAttachmentID,
+		}),
+		TransitGatewayPolicyTableId: aws.String(transitGatewayPolicyTableID),
+	}
+
+	output, err := FindTransitGatewayPolicyTableAssociation(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if state := aws.StringValue(output.State); state == ec2.TransitGatewayAssociationStateDisassociated {
+		return nil, &resource.NotFoundError{
+			Message:     state,
+			LastRequest: input,
+		}
+	}
+
+	// Eventual consistency check.
+	if aws.StringValue(output.TransitGatewayAttachmentId) != transitGatewayAttachmentID {
+		return nil, &resource.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, err
 }
 
 func FindTransitGatewayRouteTableAssociationByTwoPartKey(conn *ec2.EC2, transitGatewayRouteTableID, transitGatewayAttachmentID string) (*ec2.TransitGatewayRouteTableAssociation, error) {
@@ -4029,6 +4200,55 @@ func FindTransitGatewayRouteTableAssociationByTwoPartKey(conn *ec2.EC2, transitG
 
 func FindTransitGatewayRouteTableAssociation(conn *ec2.EC2, input *ec2.GetTransitGatewayRouteTableAssociationsInput) (*ec2.TransitGatewayRouteTableAssociation, error) {
 	output, err := FindTransitGatewayRouteTableAssociations(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(output) == 0 || output[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return output[0], nil
+}
+
+func FindTransitGatewayPolicyTableAssociations(conn *ec2.EC2, input *ec2.GetTransitGatewayPolicyTableAssociationsInput) ([]*ec2.TransitGatewayPolicyTableAssociation, error) {
+	var output []*ec2.TransitGatewayPolicyTableAssociation
+
+	err := conn.GetTransitGatewayPolicyTableAssociationsPages(input, func(page *ec2.GetTransitGatewayPolicyTableAssociationsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.Associations {
+			if v != nil {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidTransitGatewayPolicyTableIdNotFound) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
+func FindTransitGatewayPolicyTableAssociation(conn *ec2.EC2, input *ec2.GetTransitGatewayPolicyTableAssociationsInput) (*ec2.TransitGatewayPolicyTableAssociation, error) {
+	output, err := FindTransitGatewayPolicyTableAssociations(conn, input)
 
 	if err != nil {
 		return nil, err

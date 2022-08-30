@@ -192,13 +192,7 @@ func testAccCheckVPCDHCPOptionsAssociationExist(n string) resource.TestCheckFunc
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
-		err = tfec2.FindVPCDHCPOptionsAssociation(conn, vpcID, dhcpOptionsID)
-
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return tfec2.FindVPCDHCPOptionsAssociation(conn, vpcID, dhcpOptionsID)
 	}
 }
 

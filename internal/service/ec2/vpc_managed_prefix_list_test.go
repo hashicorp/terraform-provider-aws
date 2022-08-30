@@ -341,11 +341,7 @@ func testAccManagedPrefixListExists(resourceName string) resource.TestCheckFunc 
 
 		_, err := tfec2.FindManagedPrefixListByID(conn, rs.Primary.ID)
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 

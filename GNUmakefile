@@ -31,6 +31,7 @@ gen:
 	rm -f internal/conns/*_gen.go
 	rm -f internal/service/**/*_gen.go
 	rm -f internal/sweep/sweep_test.go
+	rm -f names/caps.md
 	rm -f names/*_gen.go
 	rm -f website/allowed-subcategories.txt
 	rm -f website/docs/guides/custom-service-endpoints.html.md
@@ -202,14 +203,16 @@ semgrep:
 
 semall:
 	@echo "==> Running Semgrep checks locally (must have semgrep installed)..."
-	@semgrep --error --quiet --metrics=off \
+	@semgrep --error --metrics=off \
 		--config .ci/.semgrep.yml \
 		--config .ci/.semgrep-caps-aws-ec2.yml \
 		--config .ci/.semgrep-configs.yml \
 		--config .ci/.semgrep-service-name0.yml \
 		--config .ci/.semgrep-service-name1.yml \
 		--config .ci/.semgrep-service-name2.yml \
-		--config .ci/.semgrep-service-name3.yml
+		--config .ci/.semgrep-service-name3.yml \
+		--config 'r/dgryski.semgrep-go.errnilcheck' \
+		--config 'r/dgryski.semgrep-go.nilerr'
 
 skaff:
 	cd skaff && go install github.com/hashicorp/terraform-provider-aws/skaff

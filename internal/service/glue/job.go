@@ -53,7 +53,7 @@ func ResourceJob() *schema.Resource {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Computed:     true,
-							ValidateFunc: validation.StringInSlice([]string{"2", "3"}, true),
+							ValidateFunc: validation.StringInSlice([]string{"2", "3", "3.9"}, true),
 						},
 					},
 				},

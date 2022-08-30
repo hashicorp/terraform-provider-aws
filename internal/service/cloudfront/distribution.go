@@ -588,6 +588,11 @@ func ResourceDistribution() *schema.Resource {
 								},
 							},
 						},
+						"origin_access_control_id": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.NoZeroValues,
+						},
 						"origin_id": {
 							Type:         schema.TypeString,
 							Required:     true,

@@ -162,10 +162,6 @@ func testAccCheckSAMLProviderExists(n string) resource.TestCheckFunc {
 
 		_, err := tfiam.FindSAMLProviderByARN(context.Background(), conn, rs.Primary.ID)
 
-		if err != nil {
-			return err
-		}
-
 		return err
 	}
 }
