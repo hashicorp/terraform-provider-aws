@@ -381,7 +381,7 @@ func TestAccWAFV2RuleGroup_ByteMatchStatement_fieldToMatch(t *testing.T) {
 						"statement.0.byte_match_statement.0.field_to_match.0.body.#":                  "0",
 						"statement.0.byte_match_statement.0.field_to_match.0.cookies.#":               "0",
 						"statement.0.byte_match_statement.0.field_to_match.0.headers.#":               "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.json_body.#":             "0",
+						"statement.0.byte_match_statement.0.field_to_match.0._body.#":                 "0",
 						"statement.0.byte_match_statement.0.field_to_match.0.method.#":                "0",
 						"statement.0.byte_match_statement.0.field_to_match.0.query_string.#":          "0",
 						"statement.0.byte_match_statement.0.field_to_match.0.single_header.#":         "0",
@@ -542,7 +542,7 @@ func TestAccWAFV2RuleGroup_ByteMatchStatement_fieldToMatch(t *testing.T) {
 				ExpectError: regexp.MustCompile(`argument "oversize_handling" is required`),
 			},
 			{
-				Config: testAccRuleGroupConfig_byteMatchStatementFieldToMatchJsonBodyMatchPatternAll(ruleGroupName),
+				Config: testAccRuleGroupConfig_byteMatchStatementFieldToMatchJSONBodyMatchPatternAll(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
@@ -571,7 +571,7 @@ func TestAccWAFV2RuleGroup_ByteMatchStatement_fieldToMatch(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccRuleGroupConfig_byteMatchStatementFieldToMatchJsonBodyMatchPatternIncludedPaths(ruleGroupName),
+				Config: testAccRuleGroupConfig_byteMatchStatementFieldToMatchJSONBodyMatchPatternIncludedPaths(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
@@ -602,7 +602,7 @@ func TestAccWAFV2RuleGroup_ByteMatchStatement_fieldToMatch(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccRuleGroupConfig_byteMatchStatementFieldToMatchJsonBodyInvalidFallbackBehavior(ruleGroupName),
+				Config: testAccRuleGroupConfig_byteMatchStatementFieldToMatchJSONBodyInvalidFallbackBehavior(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
@@ -631,7 +631,7 @@ func TestAccWAFV2RuleGroup_ByteMatchStatement_fieldToMatch(t *testing.T) {
 				),
 			},
 			{
-				Config:      testAccRuleGroupConfig_byteMatchStatementFieldToMatchJsonBodyMatchInvalidConfiguration(ruleGroupName),
+				Config:      testAccRuleGroupConfig_byteMatchStatementFieldToMatchJSONBodyMatchInvalidConfiguration(ruleGroupName),
 				ExpectError: regexp.MustCompile(`argument "match_scope" is required`),
 			},
 			{
@@ -2936,7 +2936,7 @@ resource "aws_wafv2_rule_group" "test" {
 `, name)
 }
 
-func testAccRuleGroupConfig_byteMatchStatementFieldToMatchJsonBodyMatchInvalidConfiguration(name string) string {
+func testAccRuleGroupConfig_byteMatchStatementFieldToMatchJSONBodyMatchInvalidConfiguration(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_rule_group" "test" {
   capacity = 50
@@ -2988,7 +2988,7 @@ resource "aws_wafv2_rule_group" "test" {
 `, name)
 }
 
-func testAccRuleGroupConfig_byteMatchStatementFieldToMatchJsonBodyMatchPatternAll(name string) string {
+func testAccRuleGroupConfig_byteMatchStatementFieldToMatchJSONBodyMatchPatternAll(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_rule_group" "test" {
   capacity = 50
@@ -3041,7 +3041,7 @@ resource "aws_wafv2_rule_group" "test" {
 `, name)
 }
 
-func testAccRuleGroupConfig_byteMatchStatementFieldToMatchJsonBodyMatchPatternIncludedPaths(name string) string {
+func testAccRuleGroupConfig_byteMatchStatementFieldToMatchJSONBodyMatchPatternIncludedPaths(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_rule_group" "test" {
   capacity = 50
@@ -3094,7 +3094,7 @@ resource "aws_wafv2_rule_group" "test" {
 `, name)
 }
 
-func testAccRuleGroupConfig_byteMatchStatementFieldToMatchJsonBodyInvalidFallbackBehavior(name string) string {
+func testAccRuleGroupConfig_byteMatchStatementFieldToMatchJSONBodyInvalidFallbackBehavior(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_rule_group" "test" {
   capacity = 50
