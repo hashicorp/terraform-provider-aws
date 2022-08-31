@@ -113,8 +113,8 @@ The following arguments are supported:
 * `client_certificate_id` - (Optional) The identifier of a client certificate for the stage.
 * `description` - (Optional) The description of the stage.
 * `documentation_version` - (Optional) The version of the associated API documentation
-* `variables` - (Optional) A map that defines the stage variables
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `variables` - (Optional) Map that defines the stage variables
+* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `xray_tracing_enabled` - (Optional) Whether active tracing with X-ray is enabled. Defaults to `false`.
 
 ### Access Log Settings
@@ -126,7 +126,7 @@ For more information on configuring the log format rules visit the AWS [document
 ### Canary Settings
 
 * `percent_traffic` - (Optional) The percent `0.0` - `100.0` of traffic to divert to the canary deployment.
-* `stage_variable_overrides` - (Optional) A map of overridden stage `variables` (including new variables) for the canary deployment.
+* `stage_variable_overrides` - (Optional) Map of overridden stage `variables` (including new variables) for the canary deployment.
 * `use_stage_cache` - (Optional) Whether the canary deployment uses the stage cache. Defaults to false.
 
 ## Attributes Reference
