@@ -29,7 +29,7 @@ The arguments of this data source act as filters for querying the available
 Internet Gateway in the current region. The given filters must match exactly one
 Internet Gateway whose data will be exported as attributes.
 
-* `internet_gateway_id` - (Optional) The id of the specific Internet Gateway to retrieve.
+* `internet_gateway_id` - (Optional) ID of the specific Internet Gateway to retrieve.
 
 * `tags` - (Optional) Map of tags, each pair of which must exactly match
   a pair on the desired Internet Gateway.
@@ -39,7 +39,7 @@ Internet Gateway whose data will be exported as attributes.
 More complex filters can be expressed using one or more `filter` sub-blocks,
 which take the following arguments:
 
-* `name` - (Required) The name of the field to filter by, as defined by
+* `name` - (Required) Name of the field to filter by, as defined by
   [the underlying AWS API](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeInternetGateways.html).
 
 * `values` - (Required) Set of values that are accepted for the given field.

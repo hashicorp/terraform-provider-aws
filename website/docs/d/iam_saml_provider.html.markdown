@@ -22,7 +22,7 @@ data "aws_iam_saml_provider" "example" {
 
 ## Argument Reference
 
-* `arn` - (Required) The ARN assigned by AWS for the provider.
+* `arn` - (Required) ARN assigned by AWS for the provider.
 
 ## Attributes Reference
 

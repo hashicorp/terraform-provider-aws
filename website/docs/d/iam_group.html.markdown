@@ -22,7 +22,7 @@ data "aws_iam_group" "example" {
 
 ## Argument Reference
 
-* `group_name` - (Required) The friendly IAM group name to match.
+* `group_name` - (Required) Friendly IAM group name to match.
 
 ## Attributes Reference
 

@@ -35,14 +35,14 @@ The following arguments are supported:
 
 * `filter` - (Required) Configuration block(s) for filtering. Currently, the AWS Identity Store API supports only 1 filter. Detailed below.
 * `group_id` - (Optional)  The identifier for a group in the Identity Store.
-* `identity_store_id` - (Required) The Identity Store ID associated with the Single Sign-On Instance.
+* `identity_store_id` - (Required) Identity Store ID associated with the Single Sign-On Instance.
 
 ### `filter` Configuration Block
 
 The following arguments are supported by the `filter` configuration block:
 
-* `attribute_path` - (Required) The attribute path that is used to specify which attribute name to search. Currently, `DisplayName` is the only valid attribute path.
-* `attribute_value` - (Required) The value for an attribute.
+* `attribute_path` - (Required) Attribute path that is used to specify which attribute name to search. Currently, `DisplayName` is the only valid attribute path.
+* `attribute_value` - (Required) Value for an attribute.
 
 ## Attributes Reference
 

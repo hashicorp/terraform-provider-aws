@@ -22,7 +22,7 @@ data "aws_iam_instance_profiles" "example" {
 
 ## Argument Reference
 
-* `role_name` - (Required) The IAM role name.
+* `role_name` - (Required) IAM role name.
 
 ## Attributes Reference
 

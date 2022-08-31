@@ -22,7 +22,7 @@ data "aws_iam_user" "example" {
 
 ## Argument Reference
 
-* `user_name` - (Required) The friendly IAM user name to match.
+* `user_name` - (Required) Friendly IAM user name to match.
 
 ## Attributes Reference
 

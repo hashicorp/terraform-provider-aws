@@ -22,7 +22,7 @@ data "aws_iam_role" "example" {
 
 ## Argument Reference
 
-* `name` - (Required) The friendly IAM role name to match.
+* `name` - (Required) Friendly IAM role name to match.
 
 ## Attributes Reference
 

@@ -22,7 +22,7 @@ data "aws_iam_instance_profile" "example" {
 
 ## Argument Reference
 
-* `name` - (Required) The friendly IAM instance profile name to match.
+* `name` - (Required) Friendly IAM instance profile name to match.
 
 ## Attributes Reference
 
