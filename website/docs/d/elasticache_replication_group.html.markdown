@@ -22,7 +22,7 @@ data "aws_elasticache_replication_group" "bar" {
 
 The following arguments are supported:
 
-* `replication_group_id` – (Required) The identifier for the replication group.
+* `replication_group_id` – (Required) Identifier for the replication group.
 
 ## Attributes Reference
 
@@ -35,11 +35,11 @@ In addition to all arguments above, the following attributes are exported:
 * `node_type` – The cluster node type.
 * `num_cache_clusters` – The number of cache clusters that the replication group has.
 * `num_node_groups` - Number of node groups (shards) for the replication group.
-* `number_cache_clusters` – (**Deprecated** use `num_cache_clusters` instead) The number of cache clusters that the replication group has.
+* `number_cache_clusters` – (**Deprecated** use `num_cache_clusters` instead) Number of cache clusters that the replication group has.
 * `member_clusters` - The identifiers of all the nodes that are part of this replication group.
 * `multi_az_enabled` - Specifies whether Multi-AZ Support is enabled for the replication group.
 * `replicas_per_node_group` - Number of replica nodes in each node group.
-* `replication_group_description` - (**Deprecated** use `description` instead) The description of the replication group.
+* `replication_group_description` - (**Deprecated** use `description` instead) Description of the replication group.
 * `log_delivery_configuration` - Redis [SLOWLOG](https://redis.io/commands/slowlog) or Redis [Engine Log](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/Log_Delivery.html#Log_contents-engine-log) delivery settings.
 * `snapshot_window` - The daily time range (in UTC) during which ElastiCache begins taking a daily snapshot of your node group (shard).
 * `snapshot_retention_limit` - The number of days for which ElastiCache retains automatic cache cluster snapshots before deleting them.

@@ -28,7 +28,7 @@ data "aws_eks_node_group" "example" {
 
 ## Argument Reference
 
-* `cluster_name` - (Required) The name of the cluster.
+* `cluster_name` - (Required) Name of the cluster.
 
 ## Attributes Reference
 

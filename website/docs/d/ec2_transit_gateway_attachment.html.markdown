@@ -31,11 +31,11 @@ data "aws_ec2_transit_gateway_attachment" "example" {
 The following arguments are supported:
 
 * `filter` - (Optional) One or more configuration blocks containing name-values filters. Detailed below.
-* `transit_gateway_attachment_id` - (Optional) The ID of the attachment.
+* `transit_gateway_attachment_id` - (Optional) ID of the attachment.
 
 ### filter Argument Reference
 
-* `name` - (Required) The name of the field to filter by, as defined by the [underlying AWS API](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeTransitGatewayAttachments.html).
+* `name` - (Required) Name of the field to filter by, as defined by the [underlying AWS API](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeTransitGatewayAttachments.html).
 * `values` - (Required) List of one or more values for the filter.
 
 ## Attribute Reference

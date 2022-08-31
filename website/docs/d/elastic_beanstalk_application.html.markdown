@@ -28,7 +28,7 @@ output "description" {
 
 ## Argument Reference
 
-* `name` - (Required) The name of the application
+* `name` - (Required) Name of the application
 
 ## Attributes Reference
 

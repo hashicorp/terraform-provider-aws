@@ -23,10 +23,10 @@ data "aws_ecr_image" "service_image" {
 
 The following arguments are supported:
 
-* `registry_id` - (Optional) The ID of the Registry where the repository resides.
-* `repository_name` - (Required) The name of the ECR Repository.
-* `image_digest` - (Optional) The sha256 digest of the image manifest. At least one of `image_digest` or `image_tag` must be specified.
-* `image_tag` - (Optional) The tag associated with this image. At least one of `image_digest` or `image_tag` must be specified.
+* `registry_id` - (Optional) ID of the Registry where the repository resides.
+* `repository_name` - (Required) Name of the ECR Repository.
+* `image_digest` - (Optional) Sha256 digest of the image manifest. At least one of `image_digest` or `image_tag` must be specified.
+* `image_tag` - (Optional) Tag associated with this image. At least one of `image_digest` or `image_tag` must be specified.
 
 ## Attributes Reference
 

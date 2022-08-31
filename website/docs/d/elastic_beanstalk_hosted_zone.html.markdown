@@ -18,7 +18,7 @@ data "aws_elastic_beanstalk_hosted_zone" "current" {}
 
 ## Argument Reference
 
-* `region` - (Optional) The region you'd like the zone for. By default, fetches the current region.
+* `region` - (Optional) Region you'd like the zone for. By default, fetches the current region.
 
 ## Attributes Reference
 

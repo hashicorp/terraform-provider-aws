@@ -28,8 +28,8 @@ data "aws_ec2_spot_price" "example" {
 
 The following arguments are supported:
 
-* `instance_type` - (Optional) The type of instance for which to query Spot Price information.
-* `availability_zone` - (Optional) The availability zone in which to query Spot price information.
+* `instance_type` - (Optional) Type of instance for which to query Spot Price information.
+* `availability_zone` - (Optional) Availability zone in which to query Spot price information.
 * `filter` - (Optional) One or more configuration blocks containing name-values filters. See the [EC2 API Reference](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeSpotPriceHistory.html) for supported filters. Detailed below.
 
 ### filter Argument Reference

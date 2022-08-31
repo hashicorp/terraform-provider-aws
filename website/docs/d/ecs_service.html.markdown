@@ -24,8 +24,8 @@ data "aws_ecs_service" "example" {
 
 The following arguments are supported:
 
-* `service_name` - (Required) The name of the ECS Service
-* `cluster_arn` - (Required) The arn of the ECS Cluster
+* `service_name` - (Required) Name of the ECS Service
+* `cluster_arn` - (Required) ARN of the ECS Cluster
 
 ## Attributes Reference
 

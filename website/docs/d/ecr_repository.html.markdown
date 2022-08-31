@@ -22,8 +22,8 @@ data "aws_ecr_repository" "service" {
 
 The following arguments are supported:
 
-* `name` - (Required) The name of the ECR Repository.
-* `registry_id` - (Optional) The registry ID where the repository was created.
+* `name` - (Required) Name of the ECR Repository.
+* `registry_id` - (Optional) Registry ID where the repository was created.
 
 ## Attributes Reference
 

@@ -22,7 +22,7 @@ data "aws_efs_access_point" "test" {
 
 The following arguments are supported:
 
-* `access_point_id` - (Required) The ID that identifies the file system.
+* `access_point_id` - (Required) ID that identifies the file system.
 
 ## Attributes Reference
 

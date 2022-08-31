@@ -28,7 +28,7 @@ output "arn" {
 
 ## Argument Reference
 
-* `virtual_cluster_id` - (Required) The ID of the cluster.
+* `virtual_cluster_id` - (Required) ID of the cluster.
 
 ## Attributes Reference
 

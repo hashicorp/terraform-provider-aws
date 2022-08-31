@@ -23,7 +23,7 @@ data "aws_ecs_cluster" "ecs-mongo" {
 
 The following arguments are supported:
 
-* `cluster_name` - (Required) The name of the ECS Cluster
+* `cluster_name` - (Required) Name of the ECS Cluster
 
 ## Attributes Reference
 

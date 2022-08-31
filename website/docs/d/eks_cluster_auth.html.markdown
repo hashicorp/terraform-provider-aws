@@ -38,7 +38,7 @@ provider "kubernetes" {
 
 ## Argument Reference
 
-* `name` - (Required) The name of the cluster
+* `name` - (Required) Name of the cluster
 
 ## Attributes Reference
 

@@ -22,7 +22,7 @@ data "aws_elasticache_user" "bar" {
 
 The following arguments are supported:
 
-* `user_id` – (Required) The identifier for the user.
+* `user_id` – (Required) Identifier for the user.
 
 ## Attributes Reference
 
