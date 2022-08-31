@@ -121,7 +121,7 @@ func resourceEIPAssociationCreate(d *schema.ResourceData, meta interface{}) erro
 		)
 
 		if err != nil {
-			return fmt.Errorf("waiting for EC2 EIP Allocation (%s) create: %w", d.Id(), err)
+			return fmt.Errorf("waiting for EC2 EIP Association (%s) create: %w", d.Id(), err)
 		}
 	} else {
 		// EC2-Classic.

@@ -279,12 +279,6 @@ func resourceEIPUpdate(d *schema.ResourceData, meta interface{}) error {
 			if err := associateEIP(conn, d.Id(), newInstanceID, newNetworkInterfaceID, d.Get("associate_with_private_ip").(string)); err != nil {
 				return err
 			}
-
-			if !eipID(d.Id()).IsVPC() {
-				if err := waitForAddressAssociationClassic(conn, d.Id(), newInstanceID); err != nil {
-					return fmt.Errorf("waiting for EC2 EIP (%s) to associate with EC2-Classic Instance (%s): %w", d.Id(), newInstanceID, err)
-				}
-			}
 		}
 	}
 
@@ -366,10 +360,38 @@ func associateEIP(conn *ec2.EC2, id, instanceID, networkInterfaceID, privateIPAd
 		input.PrivateIpAddress = aws.String(privateIPAddress)
 	}
 
-	_, err := conn.AssociateAddress(input)
+	output, err := conn.AssociateAddress(input)
 
 	if err != nil {
 		return fmt.Errorf("associating EC2 EIP (%s): %w", id, err)
+	}
+
+	if associationID := aws.StringValue(output.AssociationId); associationID != "" {
+		_, err := tfresource.RetryWhen(propagationTimeout,
+			func() (interface{}, error) {
+				return FindEIPByAssociationID(conn, associationID)
+			},
+			func(err error) (bool, error) {
+				if tfresource.NotFound(err) {
+					return true, err
+				}
+
+				// "InvalidInstanceID: The pending instance 'i-0504e5b44ea06d599' is not in a valid state for this operation."
+				if tfawserr.ErrMessageContains(err, errCodeInvalidInstanceID, "pending instance") {
+					return true, err
+				}
+
+				return false, err
+			},
+		)
+
+		if err != nil {
+			return fmt.Errorf("waiting for EC2 EIP (%s) Association (%s) create: %w", id, associationID, err)
+		}
+	} else {
+		if err := waitForAddressAssociationClassic(conn, id, instanceID); err != nil {
+			return fmt.Errorf("waiting for EC2 EIP (%s) to associate with EC2-Classic Instance (%s): %w", id, instanceID, err)
+		}
 	}
 
 	return nil
