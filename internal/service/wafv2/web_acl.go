@@ -86,15 +86,6 @@ func ResourceWebACL() *schema.Resource {
 					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9-_]+$`), "must contain only alphanumeric hyphen and underscore characters"),
 				),
 			},
-			"scope": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					wafv2.ScopeCloudfront,
-					wafv2.ScopeRegional,
-				}, false),
-			},
 			"rule": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -138,6 +129,12 @@ func ResourceWebACL() *schema.Resource {
 						"visibility_config": visibilityConfigSchema(),
 					},
 				},
+			},
+			"scope": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice(wafv2.Scope_Values(), false),
 			},
 			"tags":              tftags.TagsSchema(),
 			"tags_all":          tftags.TagsSchemaComputed(),
