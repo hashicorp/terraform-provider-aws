@@ -20,7 +20,9 @@ ENHANCEMENTS:
 * resource/aws_opensearch_domain: Add support for enabling fine-grained access control on existing domains with `advanced_security_options` `anonymous_auth_enabled` ([#26503](https://github.com/hashicorp/terraform-provider-aws/issues/26503))
 * resource/aws_spot_fleet_request: Add `target_capacity_unit_type` argument ([#26493](https://github.com/hashicorp/terraform-provider-aws/issues/26493))
 * resource/aws_wafv2_rule_group: Add `cookies` attribute to the `field_to_match` block ([#25845](https://github.com/hashicorp/terraform-provider-aws/issues/25845))
+* resource/aws_wafv2_rule_group: Add `json_body` attribute to the `field_to_match` block ([#24772](https://github.com/hashicorp/terraform-provider-aws/issues/24772))
 * resource/aws_wafv2_web_acl: Add `cookies` attribute to the `field_to_match` block ([#25845](https://github.com/hashicorp/terraform-provider-aws/issues/25845))
+* resource/aws_wafv2_web_acl: Add `json_body` attribute to the `field_to_match` block ([#24772](https://github.com/hashicorp/terraform-provider-aws/issues/24772))
 
 ## 4.28.0 (August 26, 2022)
 
