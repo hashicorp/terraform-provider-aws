@@ -88,9 +88,9 @@ resource "aws_appsync_datasource" "example" {
 The following arguments are supported:
 
 * `api_id` - (Required) The API ID for the GraphQL API for the data source.
-* `name` - (Required) A user-supplied name for the data source.
+* `name` - (Required) User-supplied name for the data source.
 * `type` - (Required) The type of the Data Source. Valid values: `AWS_LAMBDA`, `AMAZON_DYNAMODB`, `AMAZON_ELASTICSEARCH`, `HTTP`, `NONE`, `RELATIONAL_DATABASE`.
-* `description` - (Optional) A description of the data source.
+* `description` - (Optional) Description of the data source.
 * `service_role_arn` - (Optional) The IAM service role ARN for the data source.
 * `dynamodb_config` - (Optional) DynamoDB settings. See [below](#dynamodb_config)
 * `elasticsearch_config` - (Optional) Amazon Elasticsearch settings. See [below](#elasticsearch_config)

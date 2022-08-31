@@ -126,7 +126,7 @@ The following arguments are supported:
 * `scalable_dimension` - (Required) The scalable dimension of the scalable target. Documentation can be found in the `ScalableDimension` parameter at: [AWS Application Auto Scaling API Reference](http://docs.aws.amazon.com/ApplicationAutoScaling/latest/APIReference/API_RegisterScalableTarget.html#API_RegisterScalableTarget_RequestParameters)
 * `service_namespace` - (Required) The AWS service namespace of the scalable target. Documentation can be found in the `ServiceNamespace` parameter at: [AWS Application Auto Scaling API Reference](http://docs.aws.amazon.com/ApplicationAutoScaling/latest/APIReference/API_RegisterScalableTarget.html#API_RegisterScalableTarget_RequestParameters)
 * `step_scaling_policy_configuration` - (Optional) Step scaling policy configuration, requires `policy_type = "StepScaling"` (default). See supported fields below.
-* `target_tracking_scaling_policy_configuration` - (Optional) A target tracking policy, requires `policy_type = "TargetTrackingScaling"`. See supported fields below.
+* `target_tracking_scaling_policy_configuration` - (Optional) Target tracking policy, requires `policy_type = "TargetTrackingScaling"`. See supported fields below.
 
 ### step_scaling_policy_configuration
 
@@ -136,7 +136,7 @@ The `step_scaling_policy_configuration` configuration block supports the followi
 * `cooldown` - (Required) The amount of time, in seconds, after a scaling activity completes and before the next scaling activity can start.
 * `metric_aggregation_type` - (Optional) The aggregation type for the policy's metrics. Valid values are "Minimum", "Maximum", and "Average". Without a value, AWS will treat the aggregation type as "Average".
 * `min_adjustment_magnitude` - (Optional) The minimum number to adjust your scalable dimension as a result of a scaling activity. If the adjustment type is PercentChangeInCapacity, the scaling policy changes the scalable dimension of the scalable target by this amount.
-* `step_adjustment` - (Optional) A set of adjustments that manage scaling. These have the following structure:
+* `step_adjustment` - (Optional) Set of adjustments that manage scaling. These have the following structure:
 
  ```terraform
 resource "aws_appautoscaling_policy" "ecs_policy" {
@@ -172,8 +172,8 @@ The `target_tracking_scaling_policy_configuration` configuration block supports 
 * `disable_scale_in` - (Optional) Indicates whether scale in by the target tracking policy is disabled. If the value is true, scale in is disabled and the target tracking policy won't remove capacity from the scalable resource. Otherwise, scale in is enabled and the target tracking policy can remove capacity from the scalable resource. The default value is `false`.
 * `scale_in_cooldown` - (Optional) The amount of time, in seconds, after a scale in activity completes before another scale in activity can start.
 * `scale_out_cooldown` - (Optional) The amount of time, in seconds, after a scale out activity completes before another scale out activity can start.
-* `customized_metric_specification` - (Optional) A custom CloudWatch metric. Documentation can be found  at: [AWS Customized Metric Specification](https://docs.aws.amazon.com/autoscaling/ec2/APIReference/API_CustomizedMetricSpecification.html). See supported fields below.
-* `predefined_metric_specification` - (Optional) A predefined metric. See supported fields below.
+* `customized_metric_specification` - (Optional) Custom CloudWatch metric. Documentation can be found  at: [AWS Customized Metric Specification](https://docs.aws.amazon.com/autoscaling/ec2/APIReference/API_CustomizedMetricSpecification.html). See supported fields below.
+* `predefined_metric_specification` - (Optional) Predefined metric. See supported fields below.
 
 ### target_tracking_scaling_policy_configuration customized_metric_specification
 

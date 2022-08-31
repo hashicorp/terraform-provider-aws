@@ -221,7 +221,7 @@ The `code_configuration_values` blocks supports the following arguments:
 
 * `build_command` - (Optional) The command App Runner runs to build your application.
 * `port` - (Optional) The port that your application listens to in the container. Defaults to `"8080"`.
-* `runtime` - (Required) A runtime environment type for building and running an App Runner service. Represents a programming language runtime. Valid values: `PYTHON_3`, `NODEJS_12`.
+* `runtime` - (Required) Runtime environment type for building and running an App Runner service. Represents a programming language runtime. Valid values: `PYTHON_3`, `NODEJS_12`.
 * `runtime_environment_variables` - (Optional) Environment variables available to your running App Runner service. A map of key/value pairs. Keys with a prefix of `AWSAPPRUNNER` are reserved for system use and aren't valid.
 * `start_command` - (Optional) The command App Runner runs to start your application.
 
@@ -231,14 +231,14 @@ The `image_configuration` block supports the following arguments:
 
 * `port` - (Optional) The port that your application listens to in the container. Defaults to `"8080"`.
 * `runtime_environment_variables` - (Optional) Environment variables available to your running App Runner service. A map of key/value pairs. Keys with a prefix of `AWSAPPRUNNER` are reserved for system use and aren't valid.
-* `start_command` - (Optional) A command App Runner runs to start the application in the source image. If specified, this command overrides the Docker image’s default start command.
+* `start_command` - (Optional) Command App Runner runs to start the application in the source image. If specified, this command overrides the Docker image’s default start command.
 
 ### Source Code Version
 
 The `source_code_version` block supports the following arguments:
 
 * `type` - (Required) The type of version identifier. For a git-based repository, branches represent versions. Valid values: `BRANCH`.
-* `value`- (Required) A source code version. For a git-based repository, a branch name maps to a specific version. App Runner uses the most recent commit to the branch.
+* `value`- (Required) Source code version. For a git-based repository, a branch name maps to a specific version. App Runner uses the most recent commit to the branch.
 
 ## Attributes Reference
 

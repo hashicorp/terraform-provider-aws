@@ -50,7 +50,7 @@ The following arguments are optional:
 * `image_arn` - (Optional, Required if `image_name` not provided) ARN of the public, private, or shared image to use.
 * `image_name` - (Optional, Required if `image_arn` not provided) Name of the image used to create the image builder.
 * `vpc_config` - (Optional) Configuration block for the VPC configuration for the image builder. See below.
-* `tags` - (Optional) A map of tags to assign to the instance. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Map of tags to assign to the instance. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### `access_endpoint`
 

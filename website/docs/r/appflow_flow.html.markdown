@@ -137,7 +137,7 @@ The following arguments are supported:
 * `source_flow_config` - (Required) The [Source Flow Config](#source-flow-config) that controls how Amazon AppFlow retrieves data from the source connector.
 * `task` - (Required) A [Task](#task) that Amazon AppFlow performs while transferring the data in the flow run.
 * `trigger_config` - (Required) A [Trigger](#trigger-config) that determine how and when the flow runs.
-* `description` - (Optional) A description of the flow you want to create.
+* `description` - (Optional) Description of the flow you want to create.
 * `kms_arn` - (Optional) The ARN (Amazon Resource Name) of the Key Management Service (KMS) key you provide for encryption. This is required if you do not want to use the Amazon AppFlow-managed KMS key. If you don't provide anything here, Amazon AppFlow uses the Amazon AppFlow-managed KMS key.
 * `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
@@ -331,15 +331,15 @@ Amplitude, Datadog, Dynatrace, Google Analytics, Infor Nexus, Marketo, ServiceNo
 
 #### Incremental Pull Config
 
-* `datetime_type_field_name` - (Optional) A field that specifies the date time or timestamp field as the criteria to use when importing incremental records from the source.
+* `datetime_type_field_name` - (Optional) Field that specifies the date time or timestamp field as the criteria to use when importing incremental records from the source.
 
 ### Task
 
 * `source_fields` - (Required) The source fields to which a particular task is applied.
 * `task_type` - (Required) Specifies the particular task implementation that Amazon AppFlow performs. Valid values are `Arithmetic`, `Filter`, `Map`, `Map_all`, `Mask`, `Merge`, `Passthrough`, `Truncate`, and `Validate`.
 * `connector_operator` - (Optional) The operation to be performed on the provided source fields. See [Connector Operator](#connector-operator) for details.
-* `destination_field` - (Optional) A field in a destination connector, or a field value against which Amazon AppFlow validates a source field.
-* `task_properties` - (Optional) A map used to store task-related information. The execution service looks for particular information based on the `TaskType`. Valid keys are `VALUE`, `VALUES`, `DATA_TYPE`, `UPPER_BOUND`, `LOWER_BOUND`, `SOURCE_DATA_TYPE`, `DESTINATION_DATA_TYPE`, `VALIDATION_ACTION`, `MASK_VALUE`, `MASK_LENGTH`, `TRUNCATE_LENGTH`, `MATH_OPERATION_FIELDS_ORDER`, `CONCAT_FORMAT`, `SUBFIELD_CATEGORY_MAP`, and `EXCLUDE_SOURCE_FIELDS_LIST`.
+* `destination_field` - (Optional) Field in a destination connector, or a field value against which Amazon AppFlow validates a source field.
+* `task_properties` - (Optional) Map used to store task-related information. The execution service looks for particular information based on the `TaskType`. Valid keys are `VALUE`, `VALUES`, `DATA_TYPE`, `UPPER_BOUND`, `LOWER_BOUND`, `SOURCE_DATA_TYPE`, `DESTINATION_DATA_TYPE`, `VALIDATION_ACTION`, `MASK_VALUE`, `MASK_LENGTH`, `TRUNCATE_LENGTH`, `MATH_OPERATION_FIELDS_ORDER`, `CONCAT_FORMAT`, `SUBFIELD_CATEGORY_MAP`, and `EXCLUDE_SOURCE_FIELDS_LIST`.
 
 #### Connector Operator
 
