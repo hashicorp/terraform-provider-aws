@@ -230,7 +230,7 @@ The `idle` and `per_request` objects support the following:
 
 The `http2_route` and `http_route`'s `match` object supports the following:
 
-* `prefix` - (Required) Specifies the path with which to match requests.
+* `prefix` - (Required) Path with which to match requests.
 This parameter must always start with /, which by itself matches all requests to the virtual router service name.
 * `header` - (Optional) The client request headers to match on.
 * `method` - (Optional) The client request header method to match on. Valid values: `GET`, `HEAD`, `POST`, `PUT`, `DELETE`, `CONNECT`, `OPTIONS`, `TRACE`, `PATCH`.

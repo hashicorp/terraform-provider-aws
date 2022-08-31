@@ -99,7 +99,7 @@ The `grpc_route`'s `match` object supports the following:
 The `http_route` and `http2_route`'s `match` object supports the following:
 
 * `hostname` - (Optional) The host name to match on.
-* `prefix` - (Required) Specifies the path to match requests with. This parameter must always start with `/`, which by itself matches all requests to the virtual service name.
+* `prefix` - (Required) Path to match requests with. This parameter must always start with `/`, which by itself matches all requests to the virtual service name.
 
 The `hostname` object supports the following:
 

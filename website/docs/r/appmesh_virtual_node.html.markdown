@@ -189,7 +189,7 @@ The `spec` object supports the following:
 
 The `backend` object supports the following:
 
-* `virtual_service` - (Required) Specifies a virtual service to use as a backend for a virtual node.
+* `virtual_service` - (Required) Virtual service to use as a backend for a virtual node.
 
 The `virtual_service` object supports the following:
 
@@ -279,8 +279,8 @@ The `file` object supports the following:
 
 The `service_discovery` object supports the following:
 
-* `aws_cloud_map` - (Optional) Specifies any AWS Cloud Map information for the virtual node.
-* `dns` - (Optional) Specifies the DNS service name for the virtual node.
+* `aws_cloud_map` - (Optional) Any AWS Cloud Map information for the virtual node.
+* `dns` - (Optional) DNS service name for the virtual node.
 
 The `aws_cloud_map` object supports the following:
 
