@@ -15,8 +15,8 @@ val alternateRegion = DslContext.getParameter("alternate_region", "")
 val acmCertificateRootDomain = DslContext.getParameter("acm_certificate_root_domain", "")
 val sweeperRegions = DslContext.getParameter("sweeper_regions")
 val awsAccountID = DslContext.getParameter("aws_account.account_id")
-val awsAccessKeyID = DslContext.getParameter("aws_account.access_key_id", "")
-val awsSecretAccessKey = DslContext.getParameter("aws_account.secret_access_key", "")
+val awsAccessKeyID = DslContext.getParameter("aws_account.access_key_id")
+val awsSecretAccessKey = DslContext.getParameter("aws_account.secret_access_key")
 val accTestRoleARN = DslContext.getParameter("aws_account.role_arn", "")
 val acctestParallelism = DslContext.getParameter("acctest_parallelism", "")
 val tfAccAssumeRoleArn = DslContext.getParameter("tf_acc_assume_role_arn", "")
@@ -39,14 +39,14 @@ project {
     }
 
     params {
-        text("ACCTEST_PARALLELISM", acctestParallelism, allowEmpty = false)
+        if (acctestParallelism!="") {
+            text("ACCTEST_PARALLELISM", acctestParallelism, allowEmpty = false)
+        }
         text("TEST_PATTERN", "TestAcc", display = ParameterDisplay.HIDDEN)
         text("SWEEPER_REGIONS", sweeperRegions, display = ParameterDisplay.HIDDEN, allowEmpty = false)
         text("env.AWS_ACCOUNT_ID", awsAccountID, display = ParameterDisplay.HIDDEN, allowEmpty = false)
-        if (awsAccessKeyID != "" || awsSecretAccessKey != "") {
-            password("env.AWS_ACCESS_KEY_ID", awsAccessKeyID, display = ParameterDisplay.HIDDEN)
-            password("env.AWS_SECRET_ACCESS_KEY", awsSecretAccessKey, display = ParameterDisplay.HIDDEN)
-        }
+        password("env.AWS_ACCESS_KEY_ID", awsAccessKeyID, display = ParameterDisplay.HIDDEN)
+        password("env.AWS_SECRET_ACCESS_KEY", awsSecretAccessKey, display = ParameterDisplay.HIDDEN)
         text("env.AWS_DEFAULT_REGION", defaultRegion, allowEmpty = false)
         text("env.TF_LOG", tfLog)
 
