@@ -55,8 +55,8 @@ github.com/aws/aws-sdk-go-v2/service/kendra v1.33.1 h1:XOTWbVWu4wAVozPAny4v5fyWZ
 github.com/aws/aws-sdk-go-v2/service/kendra v1.33.1/go.mod h1:9rtGoAo8juNn+jcFJEV5kmmYoNqShdUUflgLtsNQ2gs=
 github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.0.5 h1:dLg8yTJ6vK9WaT/cAOtrdvZzZqqWU2PROqZ7EObk4Jg=
 github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.0.5/go.mod h1:CXsGGP64uVIXEjMuSYy/VqCRI2yvRXSuE9vGm4qQkrU=
-github.com/aws/aws-sdk-go-v2/service/route53domains v1.12.12 h1:L+36zTEzmXHEyRiPJVKbx4Lx0E3cSnB/813Hv2iZqJU=
-github.com/aws/aws-sdk-go-v2/service/route53domains v1.12.12/go.mod h1:G1cMMgiDqRlKA6oakhLQMyV4GjsmnlVCWiv3GXxoMxc=
+github.com/aws/aws-sdk-go-v2/service/route53domains v1.12.13 h1:fEQ0IqfnBLzzld1UUL5mM8sbpKezQ3lzzPRDAoadgXw=
+github.com/aws/aws-sdk-go-v2/service/route53domains v1.12.13/go.mod h1:mB6e5QTgQF7vilKFs/CFwS+zow+6d868aq32Nr/RGFM=
 github.com/aws/aws-sdk-go-v2/service/sso v1.11.4 h1:Uw5wBybFQ1UeA9ts0Y07gbv0ncZnIAyw858tDW0NP2o=
 github.com/aws/aws-sdk-go-v2/service/sso v1.11.4/go.mod h1:cPDwJwsP4Kff9mldCXAmddjJL6JGQqtA3Mzer2zyr88=
 github.com/aws/aws-sdk-go-v2/service/sts v1.16.4 h1:+xtV90n3abQmgzk1pS++FdxZTrPEDgQng6e4/56WR2A=
