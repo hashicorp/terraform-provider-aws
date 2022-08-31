@@ -1,8 +1,17 @@
 ```release-note:enhancement
-resource/aws_wafv2_web_acl: Add `oversize_handling` attribute as part of `body` attribute.
-resource/aws_wafv2_rule_group: Add `oversize_handling` attribute as part of `body` attribute
-resource/aws_wafv2_web_acl: Add support for `headers` attribute as part of `field_to_match` attribute.
-resource/aws_wafv2_rule_group: Add support for `headers` attribute as part of `field_to_match` attribute.
+resource/aws_wafv2_web_acl: Add `oversize_handling` attribute to the `field_to_match.body` block
+```
+
+```release-note:enhancement
+resource/aws_wafv2_rule_group: Add `oversize_handling` attribute to the `field_to_match.body` block
+```
+
+```release-note:enhancement
+resource/aws_wafv2_web_acl: Add `headers` attribute to the `field_to_match` block
+```
+
+```release-note:enhancement
+resource/aws_wafv2_rule_group: Add `headers` attribute to the `field_to_match` block
 ```
 
 ```release-note:breaking-change
