@@ -2,7 +2,10 @@
 
 NOTES:
 
+* resource/aws_default_security_group: With AWS's retirement of EC2-Classic, `aws_default_security_group` has been updated to remove support for EC2-Classic ([#26553](https://github.com/hashicorp/terraform-provider-aws/issues/26553))
 * resource/aws_instance: With the retirement of EC2-Classic, `aws_instance` has been updated to remove support for EC2-Classic ([#26532](https://github.com/hashicorp/terraform-provider-aws/issues/26532))
+* resource/aws_security_group: With AWS's retirement of EC2-Classic, `aws_security_group` has been updated to remove support for EC2-Classic ([#26553](https://github.com/hashicorp/terraform-provider-aws/issues/26553))
+* resource/aws_security_group_rule: With AWS's retirement of EC2-Classic, `aws_security_group_rule` has been updated to remove support for EC2-Classic ([#26553](https://github.com/hashicorp/terraform-provider-aws/issues/26553))
 
 FEATURES:
 
@@ -23,6 +26,10 @@ ENHANCEMENTS:
 * resource/aws_wafv2_rule_group: Add `json_body` attribute to the `field_to_match` block ([#24772](https://github.com/hashicorp/terraform-provider-aws/issues/24772))
 * resource/aws_wafv2_web_acl: Add `cookies` attribute to the `field_to_match` block ([#25845](https://github.com/hashicorp/terraform-provider-aws/issues/25845))
 * resource/aws_wafv2_web_acl: Add `json_body` attribute to the `field_to_match` block ([#24772](https://github.com/hashicorp/terraform-provider-aws/issues/24772))
+
+BUG FIXES:
+
+* resource/aws_security_group: Fix complex dependency violations such as using a security group with an EMR cluster ([#26553](https://github.com/hashicorp/terraform-provider-aws/issues/26553))
 
 ## 4.28.0 (August 26, 2022)
 
