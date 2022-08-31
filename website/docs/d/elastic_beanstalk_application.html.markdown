@@ -33,7 +33,7 @@ output "description" {
 ## Attributes Reference
 
 * `id` - The name of the application
-* `arn` - The Amazon Resource Name (ARN) of the application.
+* `arn` - The ARN of the application.
 * `description` - Short description of the application
 
 Application version lifecycle (`appversion_lifecycle`) supports the nested attribute containing.

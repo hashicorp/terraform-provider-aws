@@ -20,15 +20,15 @@ data "aws_directory_service_directory" "example" {
 
 ## Argument Reference
 
-* `directory_id` - (Required) The ID of the directory.
+* `directory_id` - (Required) ID of the directory.
 
 ## Attributes Reference
 
 * `type` - The directory type (`SimpleAD`, `ADConnector` or `MicrosoftAD`).
-* `edition` - (for `MicrosoftAD`) The Microsoft AD edition (`Standard` or `Enterprise`).
+* `edition` - (for `MicrosoftAD`) Microsoft AD edition (`Standard` or `Enterprise`).
 * `name` - The fully qualified name for the directory/connector.
 * `password` - The password for the directory administrator or connector user.
-* `size` - (for `SimpleAD` and `ADConnector`) The size of the directory/connector (`Small` or `Large`).
+* `size` - (for `SimpleAD` and `ADConnector`) Size of the directory/connector (`Small` or `Large`).
 * `alias` - The alias for the directory/connector, such as `d-991708b282.awsapps.com`.
 * `description` - A textual description for the directory/connector.
 * `short_name` - The short name of the directory/connector, such as `CORP`.

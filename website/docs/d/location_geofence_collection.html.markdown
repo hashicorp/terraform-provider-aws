@@ -30,7 +30,7 @@ The following arguments are required:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `collection_arn` - The Amazon Resource Name (ARN) for the geofence collection resource. Used when you need to specify a resource across all AWS.
+* `collection_arn` - The ARN for the geofence collection resource. Used when you need to specify a resource across all AWS.
 * `create_time` - The timestamp for when the geofence collection resource was created in ISO 8601 format.
 * `description` - The optional description of the geofence collection resource.
 * `kms_key_id` - A key identifier for an AWS KMS customer managed key assigned to the Amazon Location resource.

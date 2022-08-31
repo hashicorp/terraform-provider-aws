@@ -26,7 +26,7 @@ data "aws_iam_group" "example" {
 
 ## Attributes Reference
 
-* `arn` - The Amazon Resource Name (ARN) specifying the group.
+* `arn` - The ARN specifying the group.
 
 * `path` - The path to the group.
 
@@ -36,7 +36,7 @@ data "aws_iam_group" "example" {
 
 ### `users`
 
-* `arn` - The Amazon Resource Name (ARN) specifying the iam user.
+* `arn` - The ARN specifying the iam user.
 
 * `user_id` - The stable and unique string identifying the iam user.
 

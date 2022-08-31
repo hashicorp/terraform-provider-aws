@@ -56,7 +56,7 @@ the selected Local Gateway.
 
 The following attributes are additionally exported:
 
-* `outpost_arn` - Amazon Resource Name (ARN) of Outpost
+* `outpost_arn` - ARN of Outpost
 * `owner_id` - AWS account identifier that owns the Local Gateway.
 * `state` - State of the local gateway.
 

@@ -37,4 +37,4 @@ In addition to all arguments above, the following attributes are exported:
 * `client_subnet` - The client subnet to which this broker node belongs
 * `client_vpc_ip_address` - The client virtual private cloud (VPC) IP address
 * `endpoints` - Set of endpoints for accessing the broker. This does not include ports
-* `node_arn` - The Amazon Resource Name (ARN) of the node
+* `node_arn` - The ARN of the node

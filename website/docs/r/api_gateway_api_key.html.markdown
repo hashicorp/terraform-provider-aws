@@ -38,7 +38,7 @@ In addition to all arguments above, the following attributes are exported:
 * `created_date` - The creation date of the API key
 * `last_updated_date` - The last update date of the API key
 * `value` - The value of the API key
-* `arn` - Amazon Resource Name (ARN)
+* `arn` - ARN
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import

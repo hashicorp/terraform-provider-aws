@@ -33,7 +33,7 @@ output "eks_addon_outputs" {
 
 In addition to all arguments above, the following attributes are exported:
 
-* `arn` - Amazon Resource Name (ARN) of the EKS add-on.
+* `arn` - ARN of the EKS add-on.
 * `addon_version` - The version of EKS add-on.
 * `service_account_role_arn` - ARN of IAM role used for EKS add-on. If value is empty -
   then add-on uses the IAM role assigned to the EKS Cluster node.

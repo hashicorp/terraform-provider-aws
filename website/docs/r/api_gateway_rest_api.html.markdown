@@ -254,7 +254,7 @@ __Note__: If the `body` argument is provided, the OpenAPI specification will be 
 
 In addition to all arguments above, the following attributes are exported:
 
-* `arn` - Amazon Resource Name (ARN)
+* `arn` - ARN
 * `created_date` - The creation date of the REST API
 * `execution_arn` - The execution ARN part to be used in [`lambda_permission`](/docs/providers/aws/r/lambda_permission.html)'s `source_arn`
   when allowing API Gateway to invoke a Lambda function,

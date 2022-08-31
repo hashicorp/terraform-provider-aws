@@ -30,7 +30,7 @@ The following arguments are required:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `arn` - The Amazon Resource Name (ARN) of the Prometheus workspace.
+* `arn` - The ARN of the Prometheus workspace.
 * `created_date` - The creation date of the Prometheus workspace.
 * `prometheus_endpoint` - The endpoint of the Prometheus workspace.
 * `alias` - The Prometheus workspace alias.

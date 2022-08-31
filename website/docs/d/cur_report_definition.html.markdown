@@ -26,7 +26,7 @@ data "aws_cur_report_definition" "report_definition" {
 
 The following arguments are supported:
 
-* `report_name` - (Required) The name of the report definition to match.
+* `report_name` - (Required) Name of the report definition to match.
 
 ## Attributes Reference
 

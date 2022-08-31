@@ -22,7 +22,7 @@ data "aws_db_proxy" "proxy" {
 
 The following arguments are supported:
 
-* `name` - (Required) The name of the DB proxy.
+* `name` - (Required) Name of the DB proxy.
 
 ## Attributes Reference
 
@@ -35,7 +35,7 @@ In addition to all arguments above, the following attributes are exported:
 * `engine_family` - The kinds of databases that the proxy can connect to.
 * `idle_client_timeout` - The number of seconds a connection to the proxy can have no activity before the proxy drops the client connection.
 * `require_tls` - Indicates whether Transport Layer Security (TLS) encryption is required for connections to the proxy.
-* `role_arn` - The Amazon Resource Name (ARN) for the IAM role that the proxy uses to access Amazon Secrets Manager.
+* `role_arn` - The ARN for the IAM role that the proxy uses to access Amazon Secrets Manager.
 * `vpc_id` - Provides the VPC ID of the DB proxy.
 * `vpc_security_group_ids` - Provides a list of VPC security groups that the proxy belongs to.
 * `vpc_subnet_ids` - The EC2 subnet IDs for the proxy.

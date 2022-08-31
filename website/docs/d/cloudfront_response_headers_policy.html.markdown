@@ -23,7 +23,7 @@ data "aws_cloudfront_response_headers_policy" "example" {
 The following arguments are supported:
 
 * `name` - (Optional) Unique name to identify the response headers policy.
-* `id` - (Optional) The identifier for the response headers policy.
+* `id` - (Optional) Identifier for the response headers policy.
 
 ## Attributes Reference
 

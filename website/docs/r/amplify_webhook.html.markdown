@@ -41,7 +41,7 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `arn` - The Amazon Resource Name (ARN) for the webhook.
+* `arn` - The ARN for the webhook.
 * `url` - The URL of the webhook.
 
 ## Import

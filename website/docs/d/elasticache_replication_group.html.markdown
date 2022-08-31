@@ -29,7 +29,7 @@ The following arguments are supported:
 In addition to all arguments above, the following attributes are exported:
 
 * `description` - The description of the replication group.
-* `arn` - The Amazon Resource Name (ARN) of the created ElastiCache Replication Group.
+* `arn` - The ARN of the created ElastiCache Replication Group.
 * `auth_token_enabled` - Specifies whether an AuthToken (password) is enabled.
 * `automatic_failover_enabled` - A flag whether a read-only replica will be automatically promoted to read/write primary if the existing primary fails.
 * `node_type` – The cluster node type.

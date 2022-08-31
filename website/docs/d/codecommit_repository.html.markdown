@@ -22,7 +22,7 @@ data "aws_codecommit_repository" "test" {
 
 The following arguments are supported:
 
-* `repository_name` - (Required) The name for the repository. This needs to be less than 100 characters.
+* `repository_name` - (Required) Name for the repository. This needs to be less than 100 characters.
 
 ## Attributes Reference
 

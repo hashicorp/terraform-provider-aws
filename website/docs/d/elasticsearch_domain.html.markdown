@@ -34,7 +34,7 @@ The following attributes are exported:
 * `advanced_security_options` - Status of the Elasticsearch domain's advanced security options. The block consists of the following attributes:
     * `enabled` - Whether advanced security is enabled.
     * `internal_user_database_enabled` - Whether the internal user database is enabled.
-* `arn` – The Amazon Resource Name (ARN) of the domain.
+* `arn` – The ARN of the domain.
 * `auto_tune_options` - Configuration of the Auto-Tune options of the domain.
     * `desired_state` - The Auto-Tune desired state for the domain.
     * `maintenance_schedule` - A list of the nested configurations for the Auto-Tune maintenance windows of the domain.

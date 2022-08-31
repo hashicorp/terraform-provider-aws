@@ -37,7 +37,7 @@ resource "aws_vpn_connection" "transit" {
 
 The following arguments are supported:
 
-* `id` - (Optional) The ID of the gateway.
+* `id` - (Optional) ID of the gateway.
 * `filter` - (Optional) One or more [name-value pairs][dcg-filters] to filter by.
 
 [dcg-filters]: https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeCustomerGateways.html
@@ -48,7 +48,7 @@ In addition to the arguments above, the following attributes are exported:
 
 * `arn` - The ARN of the customer gateway.
 * `bgp_asn` - The gateway's Border Gateway Protocol (BGP) Autonomous System Number (ASN).
-* `certificate_arn` - The Amazon Resource Name (ARN) for the customer gateway certificate.
+* `certificate_arn` - The ARN for the customer gateway certificate.
 * `device_name` - A name for the customer gateway device.
 * `ip_address` - The IP address of the gateway's Internet-routable external interface.
 * `tags` - Map of key-value pairs assigned to the gateway.

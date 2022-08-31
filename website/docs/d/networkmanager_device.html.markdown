@@ -28,7 +28,7 @@ data "aws_networkmanager_device" "example" {
 
 In addition to all arguments above, the following attributes are exported:
 
-* `arn` - The Amazon Resource Name (ARN) of the device.
+* `arn` - The ARN of the device.
 * `aws_location` - The AWS location of the device. Documented below.
 * `description` - A description of the device.
 * `location` - The location of the device. Documented below.
@@ -41,7 +41,7 @@ In addition to all arguments above, the following attributes are exported:
 
 The `aws_location` object supports the following:
 
-* `subnet_arn` - The Amazon Resource Name (ARN) of the subnet that the device is located in.
+* `subnet_arn` - The ARN of the subnet that the device is located in.
 * `zone` - The Zone that the device is located in.
 
 The `location` object supports the following:

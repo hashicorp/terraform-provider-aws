@@ -32,7 +32,7 @@ In addition to all arguments above, the following attributes are exported:
 
 * `account_access_type` - (Required) The type of account access for the workspace. Valid values are `CURRENT_ACCOUNT` and `ORGANIZATION`. If `ORGANIZATION` is specified, then `organizational_units` must also be present.
 * `authentication_providers` - (Required) The authentication providers for the workspace. Valid values are `AWS_SSO`, `SAML`, or both.
-* `arn` - The Amazon Resource Name (ARN) of the Grafana workspace.
+* `arn` - The ARN of the Grafana workspace.
 * `created_date` - The creation date of the Grafana workspace.
 * `data_sources` - The data sources for the workspace.
 * `description` - The workspace description.

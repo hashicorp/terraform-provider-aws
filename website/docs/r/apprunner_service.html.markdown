@@ -151,7 +151,7 @@ The `health_check_configuration` block supports the following arguments:
 The `instance_configuration` block supports the following arguments:
 
 * `cpu` - (Optional) The number of CPU units reserved for each instance of your App Runner service represented as a String. Defaults to `1024`. Valid values: `1024|2048|(1|2) vCPU`.
-* `instance_role_arn` - (Optional) The Amazon Resource Name (ARN) of an IAM role that provides permissions to your App Runner service. These are permissions that your code needs when it calls any AWS APIs.
+* `instance_role_arn` - (Optional) The ARN of an IAM role that provides permissions to your App Runner service. These are permissions that your code needs when it calls any AWS APIs.
 * `memory` - (Optional) The amount of memory, in MB or GB, reserved for each instance of your App Runner service. Defaults to `2048`. Valid values: `2048|3072|4096|(2|3|4) GB`.
 
 ### Source Configuration
@@ -178,13 +178,13 @@ The `network_configuration` block supports the following arguments:
 
 * `egress_configuration` - (Optional) Network configuration settings for outbound message traffic.
 * `egress_type` - (Optional) The type of egress configuration.Set to DEFAULT for access to resources hosted on public networks.Set to VPC to associate your service to a custom VPC specified by VpcConnectorArn.
-* `vpc_connector_arn` - The Amazon Resource Name (ARN) of the App Runner VPC connector that you want to associate with your App Runner service. Only valid when EgressType = VPC.
+* `vpc_connector_arn` - The ARN of the App Runner VPC connector that you want to associate with your App Runner service. Only valid when EgressType = VPC.
 
 ### Observability Configuration
 
 The `observability_configuration` block supports the following arguments:
 
-* `observability_configuration_arn` - (Required) The Amazon Resource Name (ARN) of the observability configuration that is associated with the service.
+* `observability_configuration_arn` - (Required) The ARN of the observability configuration that is associated with the service.
 * `observability_enabled` - (Required) When `true`, an observability configuration resource is associated with the service.
 
 ### Code Repository

@@ -27,10 +27,10 @@ data "aws_kinesis_stream" "stream" {
 
 ## Attributes Reference
 
-`id` is set to the Amazon Resource Name (ARN) of the Kinesis Stream. In addition, the following attributes
+`id` is set to the ARN of the Kinesis Stream. In addition, the following attributes
 are exported:
 
-* `arn` - The Amazon Resource Name (ARN) of the Kinesis Stream (same as id).
+* `arn` - The ARN of the Kinesis Stream (same as id).
 * `name` - The name of the Kinesis Stream.
 * `creation_timestamp` - The approximate UNIX timestamp that the stream was created.
 * `status` - The current status of the stream. The stream status is one of CREATING, DELETING, ACTIVE, or UPDATING.

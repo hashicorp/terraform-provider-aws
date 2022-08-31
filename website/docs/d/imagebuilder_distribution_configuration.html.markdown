@@ -20,7 +20,7 @@ data "aws_imagebuilder_distribution_configuration" "example" {
 
 ## Argument Reference
 
-* `arn` - (Required) Amazon Resource Name (ARN) of the distribution configuration.
+* `arn` - (Required) ARN of the distribution configuration.
 
 ## Attributes Reference
 
@@ -33,7 +33,7 @@ In addition to all arguments above, the following attributes are exported:
     * `ami_distribution_configuration` - Nested list of AMI distribution configuration.
         * `ami_tags` - Key-value map of tags to apply to distributed AMI.
         * `description` - Description to apply to distributed AMI.
-        * `kms_key_id` - Amazon Resource Name (ARN) of Key Management Service (KMS) Key to encrypt AMI.
+        * `kms_key_id` - ARN of Key Management Service (KMS) Key to encrypt AMI.
         * `launch_permission` - Nested list of EC2 launch permissions.
             * `organization_arns` - Set of AWS Organization ARNs.
             * `organizational_unit_arns` - Set of AWS Organizational Unit ARNs.

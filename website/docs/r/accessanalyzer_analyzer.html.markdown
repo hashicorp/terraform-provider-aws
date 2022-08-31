@@ -50,7 +50,7 @@ The following arguments are optional:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `arn` - The Amazon Resource Name (ARN) of the Analyzer.
+* `arn` - The ARN of the Analyzer.
 * `id` - Analyzer name.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 

@@ -172,7 +172,7 @@ A `custom_rule` block supports the following arguments:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `arn` - The Amazon Resource Name (ARN) of the Amplify app.
+* `arn` - The ARN of the Amplify app.
 * `default_domain` - The default domain for the Amplify app.
 * `id` - The unique ID of the Amplify app.
 * `production_branch` - Describes the information about a production branch for an Amplify app. A `production_branch` block is documented below.

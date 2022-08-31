@@ -40,6 +40,6 @@ A `hierarchy_structure` block supports the following attributes:
 
 Each level block supports the following attributes:
 
-* `arn` -  The Amazon Resource Name (ARN) of the hierarchy level.
+* `arn` -  The ARN of the hierarchy level.
 * `id` -  The identifier of the hierarchy level.
 * `name` - The name of the user hierarchy level. Must not be more than 50 characters.

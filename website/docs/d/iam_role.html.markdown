@@ -27,7 +27,7 @@ data "aws_iam_role" "example" {
 ## Attributes Reference
 
 * `id` - The friendly IAM role name to match.
-* `arn` - The Amazon Resource Name (ARN) specifying the role.
+* `arn` - The ARN specifying the role.
 * `assume_role_policy` - The policy document associated with the role.
 * `create_date` - Creation date of the role in RFC 3339 format.
 * `description` - Description for the role.

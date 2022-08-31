@@ -22,8 +22,8 @@ data "aws_cloudhsm_v2_cluster" "cluster" {
 
 The following arguments are supported:
 
-* `cluster_id` - (Required) The id of Cloud HSM v2 cluster.
-* `cluster_state` - (Optional) The state of the cluster to be found.
+* `cluster_id` - (Required) ID of Cloud HSM v2 cluster.
+* `cluster_state` - (Optional) State of the cluster to be found.
 
 ## Attributes Reference
 

@@ -30,7 +30,7 @@ The following arguments are supported:
 
 In addition to all of the arguments above, the following attributes are exported:
 
-* `arn` - The Amazon Resource Name (ARN) of the Experience.
+* `arn` - The ARN of the Experience.
 * `configuration` - A block that specifies the configuration information for your Amazon Kendra Experience. This includes `content_source_configuration`, which specifies the data source IDs and/or FAQ IDs, and `user_identity_configuration`, which specifies the user or group information to grant access to your Amazon Kendra Experience. Documented below.
 * `created_at` - The Unix datetime that the Experience was created.
 * `description` - The description of the Experience.
@@ -38,7 +38,7 @@ In addition to all of the arguments above, the following attributes are exported
 * `error_message` - The reason your Amazon Kendra Experience could not properly process.
 * `id` - The unique identifiers of the Experience and index separated by a slash (`/`).
 * `name` - The name of the Experience.
-* `role_arn` - Shows the Amazon Resource Name (ARN) of a role with permission to access `Query` API, `QuerySuggestions` API, `SubmitFeedback` API, and AWS SSO that stores your user and group information.
+* `role_arn` - Shows the ARN of a role with permission to access `Query` API, `QuerySuggestions` API, `SubmitFeedback` API, and AWS SSO that stores your user and group information.
 * `status` - The current processing status of your Amazon Kendra Experience. When the status is `ACTIVE`, your Amazon Kendra Experience is ready to use. When the status is `FAILED`, the `error_message` field contains the reason that this failed.
 * `updated_at` - The date and time that the Experience was last updated.
 

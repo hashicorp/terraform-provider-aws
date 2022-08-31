@@ -137,7 +137,7 @@ In addition to all arguments above, the following attributes are exported:
 * `quota_settings` - The quota of the usage plan.
 * `throttle_settings` - The throttling limits of the usage plan.
 * `product_code` - The AWS Marketplace product identifier to associate with the usage plan as a SaaS product on AWS Marketplace.
-* `arn` - Amazon Resource Name (ARN)
+* `arn` - ARN
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import

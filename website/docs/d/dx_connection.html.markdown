@@ -20,7 +20,7 @@ data "aws_dx_connection" "example" {
 
 ## Argument Reference
 
-* `name` - (Required) The name of the connection to retrieve.
+* `name` - (Required) Name of the connection to retrieve.
 
 ## Attributes Reference
 

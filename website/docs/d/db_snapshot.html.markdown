@@ -58,7 +58,7 @@ recent Snapshot.
 
 * `db_snapshot_identifier` - (Optional) Returns information on a specific snapshot_id.
 
-* `snapshot_type` - (Optional) The type of snapshots to be returned. If you don't specify a SnapshotType
+* `snapshot_type` - (Optional) Type of snapshots to be returned. If you don't specify a SnapshotType
 value, then both automated and manual snapshots are returned. Shared and public DB snapshots are not
 included in the returned results by default. Possible values are, `automated`, `manual`, `shared`, `public` and `awsbackup`.
 
@@ -77,7 +77,7 @@ In addition to all arguments above, the following attributes are exported:
 * `id` - The snapshot ID.
 * `allocated_storage` - Specifies the allocated storage size in gigabytes (GB).
 * `availability_zone` - Specifies the name of the Availability Zone the DB instance was located in at the time of the DB snapshot.
-* `db_snapshot_arn` - The Amazon Resource Name (ARN) for the DB snapshot.
+* `db_snapshot_arn` - The ARN for the DB snapshot.
 * `encrypted` - Specifies whether the DB snapshot is encrypted.
 * `engine` - Specifies the name of the database engine.
 * `engine_version` - Specifies the version of the database engine.

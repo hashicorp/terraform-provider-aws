@@ -25,7 +25,7 @@ data "aws_location_tracker_association" "example" {
 
 The following arguments are required:
 
-* `consumer_arn` - (Required) The Amazon Resource Name (ARN) of the geofence collection associated to tracker resource.
+* `consumer_arn` - (Required) The ARN of the geofence collection associated to tracker resource.
 * `tracker_name` - (Required) The name of the tracker resource associated with a geofence collection.
 
 ## Attributes Reference

@@ -22,7 +22,7 @@ data "aws_backup_report_plan" "example" {
 
 The following arguments are supported:
 
-* `name` - (Required) The backup report plan name.
+* `name` - (Required) Backup report plan name.
 
 ## Attributes Reference
 

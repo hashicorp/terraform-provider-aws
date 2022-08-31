@@ -98,7 +98,7 @@ The following arguments are supported:
 
 The following arguments are supported:
 
-* `lambda_conflict_handler_arn` - (Optional) The Amazon Resource Name (ARN) for the Lambda function to use as the Conflict Handler.
+* `lambda_conflict_handler_arn` - (Optional) The ARN for the Lambda function to use as the Conflict Handler.
 
 ## Attributes Reference
 

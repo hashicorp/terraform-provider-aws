@@ -23,7 +23,7 @@ data "aws_dx_location" "example" {
 
 ## Argument Reference
 
-* `location_code` - (Required) The code for the location to retrieve.
+* `location_code` - (Required) Code for the location to retrieve.
 
 ## Attributes Reference
 

@@ -51,7 +51,7 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `arn` - Amazon Resource Name (ARN) of cluster.
+* `arn` - ARN of cluster.
 * `allow_version_upgrade` - Whether major version upgrades can be applied during maintenance period
 * `automated_snapshot_retention_period` - The backup retention period
 * `aqua_configuration_status` - The value represents how the cluster is configured to use AQUA.
@@ -67,7 +67,7 @@ In addition to all arguments above, the following attributes are exported:
 * `cluster_subnet_group_name` - The name of a cluster subnet group to be associated with this cluster
 * `cluster_type` - The cluster type
 * `database_name` - The name of the default database in the cluster
-* `default_iam_role_arn` - ∂The Amazon Resource Name (ARN) for the IAM role that was set as default for the cluster when the cluster was created.
+* `default_iam_role_arn` - ∂The ARN for the IAM role that was set as default for the cluster when the cluster was created.
 * `elastic_ip` - The Elastic IP of the cluster
 * `enable_logging` - Whether cluster logging is enabled
 * `encrypted` - Whether the cluster data is encrypted

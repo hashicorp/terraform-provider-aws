@@ -22,9 +22,9 @@ data "aws_codeartifact_authorization_token" "test" {
 
 The following arguments are supported:
 
-* `domain` - (Required) The name of the domain that is in scope for the generated authorization token.
-* `domain_owner` - (Optional) The account number of the AWS account that owns the domain.
-* `duration_seconds` - (Optional) The time, in seconds, that the generated authorization token is valid. Valid values are `0` and between `900` and `43200`.
+* `domain` - (Required) Name of the domain that is in scope for the generated authorization token.
+* `domain_owner` - (Optional) Account number of the AWS account that owns the domain.
+* `duration_seconds` - (Optional) Time, in seconds, that the generated authorization token is valid. Valid values are `0` and between `900` and `43200`.
 
 ## Attributes Reference
 

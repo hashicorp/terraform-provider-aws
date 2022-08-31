@@ -22,7 +22,7 @@ data "aws_cloudwatch_log_group" "example" {
 
 The following arguments are supported:
 
-* `name` - (Required) The name of the Cloudwatch log group
+* `name` - (Required) Name of the Cloudwatch log group
 
 ## Attributes Reference
 

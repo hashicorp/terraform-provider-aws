@@ -33,7 +33,7 @@ resource "aws_instance" "web" {
 
 The following arguments are supported:
 
-* `name` - (Required) The name of the stack
+* `name` - (Required) Name of the stack
 
 ## Attributes Reference
 

@@ -23,8 +23,8 @@ data "aws_acmpca_certificate" "example" {
 
 The following arguments are supported:
 
-* `arn` - (Required) Amazon Resource Name (ARN) of the certificate issued by the private certificate authority.
-* `certificate_authority_arn` - (Required) Amazon Resource Name (ARN) of the certificate authority.
+* `arn` - (Required) ARN of the certificate issued by the private certificate authority.
+* `certificate_authority_arn` - (Required) ARN of the certificate authority.
 
 ## Attribute Reference
 

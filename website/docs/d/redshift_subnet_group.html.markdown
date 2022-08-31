@@ -28,7 +28,7 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `arn` - Amazon Resource Name (ARN) of the Redshift Subnet Group name.
+* `arn` - ARN of the Redshift Subnet Group name.
 * `description` - The description of the Redshift Subnet group.
 * `id` - The Redshift Subnet group Name.
 * `subnet_ids` - An array of VPC subnet IDs.

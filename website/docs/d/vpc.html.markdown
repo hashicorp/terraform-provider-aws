@@ -75,7 +75,7 @@ the selected VPC.
 
 The following attribute is additionally exported:
 
-* `arn` - Amazon Resource Name (ARN) of VPC
+* `arn` - ARN of VPC
 * `enable_dns_support` - Whether or not the VPC has DNS support
 * `enable_dns_hostnames` - Whether or not the VPC has DNS hostname support
 * `instance_tenancy` - The allowed tenancy of instances launched into the

@@ -138,7 +138,7 @@ The following arguments are supported:
 
 The `application_source` object supports the following:
 
-* `cloudformation_stack_arn` - (Optional) The Amazon Resource Name (ARN) of a AWS CloudFormation stack.
+* `cloudformation_stack_arn` - (Optional) The ARN of a AWS CloudFormation stack.
 * `tag_filter` - (Optional) Set of tags.
 
 The `tag_filter` object supports the following:

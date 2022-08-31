@@ -35,7 +35,7 @@ data "aws_ec2_client_vpn_endpoint" "example" {
 
 The following arguments are supported:
 
-* `client_vpn_endpoint_id` - (Optional) The ID of the Client VPN endpoint.
+* `client_vpn_endpoint_id` - (Optional) ID of the Client VPN endpoint.
 * `filter` - (Optional) One or more configuration blocks containing name-values filters. Detailed below.
 * `tags` - (Optional) Map of tags, each pair of which must exactly match a pair on the desired endpoint.
 
@@ -45,7 +45,7 @@ This block allows for complex filters. You can use one or more `filter` blocks.
 
 The following arguments are required:
 
-* `name` - (Required) The name of the field to filter by, as defined by [the underlying AWS API](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeClientVpnEndpoints.html).
+* `name` - (Required) Name of the field to filter by, as defined by [the underlying AWS API](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeClientVpnEndpoints.html).
 * `values` - (Required) Set of values that are accepted for the given field. An endpoint will be selected if any one of the given values matches.
 
 ## Attribute Reference

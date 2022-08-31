@@ -34,7 +34,7 @@ output "arn" {
 
 * `id` - The ID of the cluster.
 * `name` - The name of the cluster.
-* `arn` - The Amazon Resource Name (ARN) of the cluster.
+* `arn` - The ARN of the cluster.
 * `container_provider` - Nested attribute containing information about the underlying container provider (EKS cluster) for your EMR Containers cluster.
     * `id` - The name of the container provider that is running your EMR Containers cluster
     * `info` - Nested list containing information about the configuration of the container provider

@@ -32,5 +32,5 @@ The following arguments are supported:
 
 In addition to all of the arguments above, the following attributes are exported:
 
-* `arn` - The Amazon Resource Name (ARN) of the Prompt.
+* `arn` - The ARN of the Prompt.
 * `prompt_id` - The identifier for the prompt.

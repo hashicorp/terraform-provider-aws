@@ -23,8 +23,8 @@ data "aws_backup_selection" "example" {
 
 The following arguments are supported:
 
-* `plan_id` - (Required) The backup plan ID associated with the selection of resources.
-* `selection_id` - (Required) The backup selection ID.
+* `plan_id` - (Required) Backup plan ID associated with the selection of resources.
+* `selection_id` - (Required) Backup selection ID.
 
 ## Attributes Reference
 

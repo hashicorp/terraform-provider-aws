@@ -52,7 +52,7 @@ The following arguments are required:
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - EC2 Transit Gateway Multicast Domain identifier.
-* `arn` - EC2 Transit Gateway Multicast Domain Amazon Resource Name (ARN).
+* `arn` - EC2 Transit Gateway Multicast Domain ARN.
 * `associations` - EC2 Transit Gateway Multicast Domain Associations
     * `subnet_id` - The ID of the subnet associated with the transit gateway multicast domain.
     * `transit_gateway_attachment_id` - The ID of the transit gateway attachment.

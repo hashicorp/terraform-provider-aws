@@ -20,7 +20,7 @@ data "aws_lakeformation_resource" "example" {
 
 ## Argument Reference
 
-* `arn` – (Required) Amazon Resource Name (ARN) of the resource, an S3 path.
+* `arn` – (Required) ARN of the resource, an S3 path.
 
 ## Attributes Reference
 

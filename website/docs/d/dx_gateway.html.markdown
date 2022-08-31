@@ -20,7 +20,7 @@ data "aws_dx_gateway" "example" {
 
 ## Argument Reference
 
-* `name` - (Required) The name of the gateway to retrieve.
+* `name` - (Required) Name of the gateway to retrieve.
 
 ## Attributes Reference
 

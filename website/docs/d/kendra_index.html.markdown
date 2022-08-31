@@ -28,7 +28,7 @@ The following arguments are supported:
 
 In addition to all of the arguments above, the following attributes are exported:
 
-* `arn` - The Amazon Resource Name (ARN) of the Index.
+* `arn` - The ARN of the Index.
 * `capacity_units` - A block that sets the number of additional document storage and query capacity units that should be used by the index. Documented below.
 * `created_at` - The Unix datetime that the index was created.
 * `description` - The description of the Index.
@@ -113,6 +113,6 @@ A `jwt_token_type_configuration` block supports the following attributes:
 * `group_attribute_field` - The group attribute field.
 * `issuer` - The issuer of the token.
 * `key_location` - The location of the key. Valid values are `URL` or `SECRET_MANAGER`
-* `secrets_manager_arn` - The Amazon Resource Name (ARN) of the secret.
+* `secrets_manager_arn` - The ARN of the secret.
 * `url` - The signing key URL.
 * `user_name_attribute_field` - The user name attribute field.

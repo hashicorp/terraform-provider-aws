@@ -30,7 +30,7 @@ The following arguments are supported:
 
 In addition to all of the arguments above, the following attributes are exported:
 
-* `arn` - The Amazon Resource Name (ARN) of the block list.
+* `arn` - The ARN of the block list.
 * `created_at` - The date-time a block list was created.
 * `description` - The description for the block list.
 * `error_message` - The error message containing details if there are issues processing the block list.
@@ -38,7 +38,7 @@ In addition to all of the arguments above, the following attributes are exported
 * `id` - The unique identifiers of the block list and index separated by a slash (`/`).
 * `item_count` - The current number of valid, non-empty words or phrases in the block list text file.
 * `name` - The name of the block list.
-* `role_arn` - The Amazon Resource Name (ARN) of a role with permission to access the S3 bucket that contains the block list. For more information, see [IAM Roles for Amazon Kendra](https://docs.aws.amazon.com/kendra/latest/dg/iam-roles.html).
+* `role_arn` - The ARN of a role with permission to access the S3 bucket that contains the block list. For more information, see [IAM Roles for Amazon Kendra](https://docs.aws.amazon.com/kendra/latest/dg/iam-roles.html).
 * `source_s3_path` - The S3 location of the block list input data. Detailed below.
 * `status` - The current status of the block list. When the value is `ACTIVE`, the block list is ready for use.
 * `updated_at` - The date and time that the block list was last updated.

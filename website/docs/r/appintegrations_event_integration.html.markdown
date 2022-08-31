@@ -46,7 +46,7 @@ A `event_filter` block supports the following arguments:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `arn` - The Amazon Resource Name (ARN) of the Event Integration.
+* `arn` - The ARN of the Event Integration.
 * `id` - The identifier of the Event Integration which is the name of the Event Integration.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 

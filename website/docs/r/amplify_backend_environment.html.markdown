@@ -39,7 +39,7 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `arn` - The Amazon Resource Name (ARN) for a backend environment that is part of an Amplify app.
+* `arn` - The ARN for a backend environment that is part of an Amplify app.
 * `id` - The unique ID of the Amplify backend environment.
 
 ## Import

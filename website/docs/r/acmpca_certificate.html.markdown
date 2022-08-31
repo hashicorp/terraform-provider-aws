@@ -56,7 +56,7 @@ resource "tls_cert_request" "csr" {
 
 The following arguments are supported:
 
-* `certificate_authority_arn` - (Required) Amazon Resource Name (ARN) of the certificate authority.
+* `certificate_authority_arn` - (Required) ARN of the certificate authority.
 * `certificate_signing_request` - (Required) Certificate Signing Request in PEM format.
 * `signing_algorithm` - (Required) Algorithm to use to sign certificate requests. Valid values: `SHA256WITHRSA`, `SHA256WITHECDSA`, `SHA384WITHRSA`, `SHA384WITHECDSA`, `SHA512WITHRSA`, `SHA512WITHECDSA`
 * `validity` - (Required) Configures end of the validity period for the certificate. See [validity block](#validity-block) below.
@@ -72,7 +72,7 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `arn` - Amazon Resource Name (ARN) of the certificate.
+* `arn` - ARN of the certificate.
 * `certificate` - The PEM-encoded certificate value.
 * `certificate_chain` - The PEM-encoded certificate chain that includes any intermediate certificates and chains up to root CA.
 

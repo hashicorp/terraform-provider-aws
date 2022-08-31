@@ -22,7 +22,7 @@ data "aws_backup_plan" "example" {
 
 The following arguments are supported:
 
-* `plan_id` - (Required) The backup plan ID.
+* `plan_id` - (Required) Backup plan ID.
 
 ## Attributes Reference
 

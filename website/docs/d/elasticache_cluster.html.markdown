@@ -46,7 +46,7 @@ begin taking a daily snapshot of the cache cluster.
 * `snapshot_retention_limit` - The number of days for which ElastiCache will
 retain automatic cache cluster snapshots before deleting them.
 * `availability_zone` - The Availability Zone for the cache cluster.
-* `notification_topic_arn` – An Amazon Resource Name (ARN) of an
+* `notification_topic_arn` – An ARN of an
 SNS topic that ElastiCache notifications get sent to.
 * `port` – The port number on which each of the cache nodes will
 accept connections.

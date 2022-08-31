@@ -44,7 +44,7 @@ The following arguments are supported:
 
 In addition to all of the arguments above, the following attributes are exported:
 
-* `arn` - The Amazon Resource Name (ARN) of the Security Profile.
+* `arn` - The ARN of the Security Profile.
 * `description` - Specifies the description of the Security Profile.
 * `id` - The identifier of the hosting Amazon Connect Instance and identifier of the Security Profile separated by a colon (`:`).
 * `organization_resource_id` - The organization resource identifier for the security profile.

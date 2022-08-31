@@ -24,7 +24,7 @@ data "aws_location_route_calculator" "example" {
 
 ## Attributes Reference
 
-* `calculator_arn` - The Amazon Resource Name (ARN) for the Route calculator resource. Use the ARN when you specify a resource across AWS.
+* `calculator_arn` - The ARN for the Route calculator resource. Use the ARN when you specify a resource across AWS.
 * `create_time` - The timestamp for when the route calculator resource was created in ISO 8601 format.
 * `data_source` - The data provider of traffic and road network data.
 * `description` - The optional description of the route calculator resource.

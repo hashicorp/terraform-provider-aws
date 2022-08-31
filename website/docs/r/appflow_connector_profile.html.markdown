@@ -278,7 +278,7 @@ Datadog, Dynatrace, Infor Nexus, Marketo, ServiceNow, Slack, Veeva, and Zendesk 
 * `bucket_name` (Required) - A name for the associated Amazon S3 bucket.
 * `bucket_prefix` (Optional) - The object key for the destination bucket in which Amazon AppFlow places the files.
 * `database_url` (Required) - The JDBC URL of the Amazon Redshift cluster.
-* `role_arn` (Required) - The Amazon Resource Name (ARN) of the IAM role.
+* `role_arn` (Required) - The ARN of the IAM role.
 
 #### Salesforce Connector Profile Properties
 
@@ -312,8 +312,8 @@ Datadog, Dynatrace, Infor Nexus, Marketo, ServiceNow, Slack, Veeva, and Zendesk 
 
 In addition to all arguments above, the following attributes are exported:
 
-* `arn` - The Amazon Resource Name (ARN) of the connector profile.
-* `credentials_arn` - The Amazon Resource Name (ARN) of the connector profile credentials.
+* `arn` - The ARN of the connector profile.
+* `credentials_arn` - The ARN of the connector profile credentials.
 
 ## Import
 

@@ -64,7 +64,7 @@ The following attribute is additionally exported:
 * `allocation_max_netmask_length` - The maximum netmask length that will be required for CIDR allocations in this pool.
 * `allocation_min_netmask_length` - The minimum netmask length that will be required for CIDR allocations in this pool.
 * `allocation_resource_tags` - Tags that are required to create resources in using this pool.
-* `arn` - Amazon Resource Name (ARN) of the pool
+* `arn` - ARN of the pool
 * `auto_import` - If enabled, IPAM will continuously look for resources within the CIDR range of this pool and automatically import them as allocations into your IPAM.
 * `aws_service` - Limits which service in AWS that the pool can be used in. "ec2", for example, allows users to use space for Elastic IP addresses and VPCs.
 * `description` - A description for the IPAM pool.

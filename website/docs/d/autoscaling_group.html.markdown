@@ -27,7 +27,7 @@ data "aws_autoscaling_group" "foo" {
 ~> **NOTE:** Some values are not always set and may not be available for
 interpolation.
 
-* `arn` - The Amazon Resource Name (ARN) of the Auto Scaling group.
+* `arn` - The ARN of the Auto Scaling group.
 * `availability_zones` - One or more Availability Zones for the group.
 * `default_cool_down` - The amount of time, in seconds, after a scaling activity completes before another scaling activity can start.
 * `desired_capacity` - The desired size of the group.
@@ -41,7 +41,7 @@ interpolation.
 * `min_size` - The minimum size of the group.
 * `name` - Name of the Auto Scaling Group.
 * `placement_group` - The name of the placement group into which to launch your instances, if any. For more information, see Placement Groups (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/placement-groups.html) in the Amazon Elastic Compute Cloud User Guide.
-* `service_linked_role_arn` - The Amazon Resource Name (ARN) of the service-linked role that the Auto Scaling group uses to call other AWS services on your behalf.
+* `service_linked_role_arn` - The ARN of the service-linked role that the Auto Scaling group uses to call other AWS services on your behalf.
 * `status` - The current state of the group when DeleteAutoScalingGroup is in progress.
 * `target_group_arns` - The Amazon Resource Names (ARN) of the target groups for your load balancer.
 * `termination_policies` - The termination policies for the group.

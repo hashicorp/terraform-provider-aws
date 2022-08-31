@@ -23,7 +23,7 @@ data "aws_batch_job_queue" "test-queue" {
 
 The following arguments are supported:
 
-* `name` - (Required) The name of the job queue.
+* `name` - (Required) Name of the job queue.
 
 ## Attributes Reference
 

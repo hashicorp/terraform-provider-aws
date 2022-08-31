@@ -44,7 +44,7 @@ The following arguments are supported:
 
 In addition to all of the arguments above, the following attributes are exported:
 
-* `arn` - The Amazon Resource Name (ARN) of the Queue.
+* `arn` - The ARN of the Queue.
 * `description` - Specifies the description of the Queue.
 * `hours_of_operation_id` - Specifies the identifier of the Hours of Operation.
 * `id` - The identifier of the hosting Amazon Connect Instance and identifier of the Queue separated by a colon (`:`).

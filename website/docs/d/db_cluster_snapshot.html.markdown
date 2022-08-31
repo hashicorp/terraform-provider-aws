@@ -50,7 +50,7 @@ The following arguments are supported:
 
 * `db_cluster_snapshot_identifier` - (Optional) Returns information on a specific snapshot_id.
 
-* `snapshot_type` - (Optional) The type of snapshots to be returned. If you don't specify a SnapshotType
+* `snapshot_type` - (Optional) Type of snapshots to be returned. If you don't specify a SnapshotType
 value, then both automated and manual DB cluster snapshots are returned. Shared and public DB Cluster Snapshots are not
 included in the returned results by default. Possible values are, `automated`, `manual`, `shared`, `public` and `awsbackup`.
 
@@ -68,7 +68,7 @@ In addition to all arguments above, the following attributes are exported:
 * `allocated_storage` - Specifies the allocated storage size in gigabytes (GB).
 * `availability_zones` - List of EC2 Availability Zones that instances in the DB cluster snapshot can be restored in.
 * `db_cluster_identifier` - Specifies the DB cluster identifier of the DB cluster that this DB cluster snapshot was created from.
-* `db_cluster_snapshot_arn` - The Amazon Resource Name (ARN) for the DB Cluster Snapshot.
+* `db_cluster_snapshot_arn` - The ARN for the DB Cluster Snapshot.
 * `engine_version` - Version of the database engine for this DB cluster snapshot.
 * `engine` - Specifies the name of the database engine.
 * `id` - The snapshot ID.

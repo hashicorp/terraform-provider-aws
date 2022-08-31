@@ -22,7 +22,7 @@ data "aws_backup_vault" "example" {
 
 The following arguments are supported:
 
-* `name` - (Required) The name of the backup vault.
+* `name` - (Required) Name of the backup vault.
 
 ## Attributes Reference
 

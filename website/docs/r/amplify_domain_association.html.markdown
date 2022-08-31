@@ -65,7 +65,7 @@ The `sub_domain` configuration block supports the following arguments:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `arn` - The Amazon Resource Name (ARN) for the domain association.
+* `arn` - The ARN for the domain association.
 * `certificate_verification_dns_record` - The DNS record for certificate verification.
 
 The `sub_domain` configuration block exports the following attributes:

@@ -33,7 +33,7 @@ In addition to all arguments above, the following attributes are exported:
 * `created_date` - The date when the client certificate was created.
 * `expiration_date` - The date when the client certificate will expire.
 * `pem_encoded_certificate` - The PEM-encoded public key of the client certificate.
-* `arn` - Amazon Resource Name (ARN)
+* `arn` - ARN
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import

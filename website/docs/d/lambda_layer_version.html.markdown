@@ -39,11 +39,11 @@ In addition to all arguments above, the following attributes are exported:
 * `license_info` - License info associated with the specific Lambda Layer version.
 * `compatible_runtimes` - A list of [Runtimes][1] the specific Lambda Layer version is compatible with.
 * `compatible_architectures` - A list of [Architectures][2] the specific Lambda Layer version is compatible with.
-* `arn` - The Amazon Resource Name (ARN) of the Lambda Layer with version.
-* `layer_arn` - The Amazon Resource Name (ARN) of the Lambda Layer without version.
+* `arn` - The ARN of the Lambda Layer with version.
+* `layer_arn` - The ARN of the Lambda Layer without version.
 * `created_date` - The date this resource was created.
-* `signing_job_arn` - The Amazon Resource Name (ARN) of a signing job.
-* `signing_profile_version_arn` - The Amazon Resource Name (ARN) for a signing profile version.
+* `signing_job_arn` - The ARN of a signing job.
+* `signing_profile_version_arn` - The ARN for a signing profile version.
 * `source_code_hash` - Base64-encoded representation of raw SHA-256 sum of the zip file.
 * `source_code_size` - The size in bytes of the function .zip file.
 * `version` - This Lamba Layer version.

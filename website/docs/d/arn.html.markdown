@@ -8,7 +8,7 @@ description: |-
 
 # Data Source: aws_arn
 
-Parses an Amazon Resource Name (ARN) into its constituent parts.
+Parses an ARN into its constituent parts.
 
 ## Example Usage
 

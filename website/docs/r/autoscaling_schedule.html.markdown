@@ -39,7 +39,7 @@ resource "aws_autoscaling_schedule" "foobar" {
 
 The following arguments are supported:
 
-* `autoscaling_group_name` - (Required) The name or Amazon Resource Name (ARN) of the Auto Scaling group.
+* `autoscaling_group_name` - (Required) The name or ARN of the Auto Scaling group.
 * `scheduled_action_name` - (Required) The name of this scaling action.
 * `start_time` - (Optional) The time for this action to start, in "YYYY-MM-DDThh:mm:ssZ" format in UTC/GMT only (for example, 2014-06-01T00:00:00Z ).
                             If you try to schedule your action in the past, Auto Scaling returns an error message.

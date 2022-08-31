@@ -22,7 +22,7 @@ data "aws_db_instance" "database" {
 
 The following arguments are supported:
 
-* `db_instance_identifier` - (Required) The name of the RDS instance
+* `db_instance_identifier` - (Required) Name of the RDS instance
 
 ## Attributes Reference
 
@@ -34,7 +34,7 @@ In addition to all arguments above, the following attributes are exported:
 * `availability_zone` - Specifies the name of the Availability Zone the DB instance is located in.
 * `backup_retention_period` - Specifies the number of days for which automatic DB snapshots are retained.
 * `db_cluster_identifier` - If the DB instance is a member of a DB cluster, contains the name of the DB cluster that the DB instance is a member of.
-* `db_instance_arn` - The Amazon Resource Name (ARN) for the DB instance.
+* `db_instance_arn` - The ARN for the DB instance.
 * `db_instance_class` - Contains the name of the compute and memory capacity class of the DB instance.
 * `db_name` - Contains the name of the initial database of this instance that was provided at create time, if one was specified when the DB instance was created. This same name is returned for the life of the DB instance.
 * `db_parameter_groups` - Provides the list of DB parameter groups applied to this DB instance.

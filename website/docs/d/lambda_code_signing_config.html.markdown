@@ -24,7 +24,7 @@ data "aws_lambda_code_signing_config" "existing_csc" {
 
 The following arguments are supported:
 
-* `arn` - (Required) The Amazon Resource Name (ARN) of the code signing configuration.
+* `arn` - (Required) The ARN of the code signing configuration.
 
 ## Attributes Reference
 
@@ -38,7 +38,7 @@ In addition to all arguments above, the following attributes are exported:
 
 `allowed_publishers` is exported with the following attribute:
 
-* `signing_profile_version_arns` - The Amazon Resource Name (ARN) for each of the signing profiles. A signing profile defines a trusted user who can sign a code package.
+* `signing_profile_version_arns` - The ARN for each of the signing profiles. A signing profile defines a trusted user who can sign a code package.
 
 `policies` is exported with the following attribute:
 

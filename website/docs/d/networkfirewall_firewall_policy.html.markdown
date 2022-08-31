@@ -20,7 +20,7 @@ data "aws_networkfirewall_firewall_policy" "example" {
 }
 ```
 
-### Find firewall policy by Amazon Resource Name (ARN)
+### Find firewall policy by ARN
 
 ```terraform
 data "aws_networkfirewall_firewall_policy" "example" {
@@ -44,7 +44,7 @@ AWS Network Firewall does not allow multiple firewall policies with the same nam
 ## Argument Reference
 One or more of the following arguments are required:
 
-* `arn` - The Amazon Resource Name (ARN) of the firewall policy.
+* `arn` - The ARN of the firewall policy.
 * `name` - The descriptive name of the firewall policy.
 
 ## Attributes Reference

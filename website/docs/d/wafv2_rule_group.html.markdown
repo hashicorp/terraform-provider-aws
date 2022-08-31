@@ -30,6 +30,6 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `arn` - The Amazon Resource Name (ARN) of the entity.
+* `arn` - The ARN of the entity.
 * `description` - The description of the rule group that helps with identification.
 * `id` - The unique identifier of the rule group.

@@ -26,7 +26,7 @@ data "aws_iam_instance_profiles" "example" {
 
 ## Attributes Reference
 
-* `arns` - Set of Amazon Resource Name (ARN) specifying the instance profile.
+* `arns` - Set of ARN specifying the instance profile.
 
 * `names` - Set of IAM instance profile names.
 

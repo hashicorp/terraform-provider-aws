@@ -43,7 +43,7 @@ The following arguments are supported:
 
 In addition to all of the arguments above, the following attributes are exported:
 
-* `arn` - The Amazon Resource Name (ARN) of the Contact Flow.
+* `arn` - The ARN of the Contact Flow.
 * `content` - Specifies the logic of the Contact Flow.
 * `description` - Specifies the description of the Contact Flow.
 * `tags` - A the map of tags to assign to the Contact Flow.

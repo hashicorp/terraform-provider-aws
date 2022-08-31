@@ -44,7 +44,7 @@ The following arguments are supported:
 
 In addition to all of the arguments above, the following attributes are exported:
 
-* `arn` - The Amazon Resource Name (ARN) of the Routing Profile.
+* `arn` - The ARN of the Routing Profile.
 * `default_outbound_queue_id` - Specifies the default outbound queue for the Routing Profile.
 * `description` - Specifies the description of the Routing Profile.
 * `id` - The identifier of the hosting Amazon Connect Instance and identifier of the Routing Profile separated by a colon (`:`).

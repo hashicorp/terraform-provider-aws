@@ -136,7 +136,7 @@ The `trust` object supports the following:
 
 The `acm` object supports the following:
 
-* `certificate_authority_arns` - (Required) One or more ACM Amazon Resource Name (ARN)s.
+* `certificate_authority_arns` - (Required) One or more ACM ARNs.
 
 The `file` object supports the following:
 
@@ -213,7 +213,7 @@ The `certificate` object supports the following:
 
 The `acm` object supports the following:
 
-* `certificate_arn` - (Required) The Amazon Resource Name (ARN) for the certificate.
+* `certificate_arn` - (Required) The ARN for the certificate.
 
 The `file` object supports the following:
 

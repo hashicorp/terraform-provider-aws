@@ -28,7 +28,7 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `arn` - The Amazon Resource Name (ARN) for the signing profile.
+* `arn` - The ARN for the signing profile.
 * `platform_display_name` - A human-readable name for the signing platform associated with the signing profile.
 * `platform_id` - The ID of the platform that is used by the target signing profile.
 * `revocation_record` - Revocation information for a signing profile.

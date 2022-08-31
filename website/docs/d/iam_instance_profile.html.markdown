@@ -26,7 +26,7 @@ data "aws_iam_instance_profile" "example" {
 
 ## Attributes Reference
 
-* `arn` - The Amazon Resource Name (ARN) specifying the instance profile.
+* `arn` - The ARN specifying the instance profile.
 
 * `create_date` - The string representation of the date the instance profile
    was created.

@@ -145,8 +145,8 @@ the custom OCSP responder endpoint. Defined below.
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - Amazon Resource Name (ARN) of the certificate authority.
-* `arn` - Amazon Resource Name (ARN) of the certificate authority.
+* `id` - ARN of the certificate authority.
+* `arn` - ARN of the certificate authority.
 * `certificate` - Base64-encoded certificate authority (CA) certificate. Only available after the certificate authority certificate has been imported.
 * `certificate_chain` - Base64-encoded certificate chain that includes any intermediate certificates and chains up to root on-premises certificate that you used to sign your private CA certificate. The chain does not include your private CA certificate. Only available after the certificate authority certificate has been imported.
 * `certificate_signing_request` - The base64 PEM-encoded certificate signing request (CSR) for your private CA certificate.
@@ -164,7 +164,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_acmpca_certificate_authority` can be imported by using the certificate authority Amazon Resource Name (ARN), e.g.,
+`aws_acmpca_certificate_authority` can be imported by using the certificate authority ARN, e.g.,
 
 ```
 $ terraform import aws_acmpca_certificate_authority.example arn:aws:acm-pca:us-east-1:123456789012:certificate-authority/12345678-1234-1234-1234-123456789012

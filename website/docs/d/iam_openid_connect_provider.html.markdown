@@ -28,7 +28,7 @@ data "aws_iam_openid_connect_provider" "example" {
 
 ## Argument Reference
 
-* `arn` - (Optional) The Amazon Resource Name (ARN) specifying the OpenID Connect provider.
+* `arn` - (Optional) The ARN specifying the OpenID Connect provider.
 
 * `url` - (Optional) The URL of the OpenID Connect provider.
 

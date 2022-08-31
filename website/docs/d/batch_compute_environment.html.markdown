@@ -23,7 +23,7 @@ data "aws_batch_compute_environment" "batch-mongo" {
 
 The following arguments are supported:
 
-* `compute_environment_name` - (Required) The name of the Batch Compute Environment
+* `compute_environment_name` - (Required) Name of the Batch Compute Environment
 
 ## Attributes Reference
 
