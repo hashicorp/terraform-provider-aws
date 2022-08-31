@@ -678,24 +678,28 @@ func cookiesSchema() *schema.Schema {
 			Schema: map[string]*schema.Schema{
 				"match_scope":       matchScopeSchema(),
 				"oversize_handling": oversizeHandlingRequiredSchema(),
-				"match_pattern": {
+				"match_pattern":     cookiesMatchPatternSchema(),
+			},
+		},
+	}
+}
+
+func cookiesMatchPatternSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Required: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"all": emptySchema(),
+				"excluded_cookies": {
 					Type:     schema.TypeList,
-					Required: true,
-					Elem: &schema.Resource{
-						Schema: map[string]*schema.Schema{
-							"all": emptySchema(),
-							"included_cookies": {
-								Type:     schema.TypeList,
-								Optional: true,
-								Elem:     &schema.Schema{Type: schema.TypeString},
-							},
-							"excluded_cookies": {
-								Type:     schema.TypeList,
-								Optional: true,
-								Elem:     &schema.Schema{Type: schema.TypeString},
-							},
-						},
-					},
+					Optional: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"included_cookies": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
 				},
 			},
 		},
