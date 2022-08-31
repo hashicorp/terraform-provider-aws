@@ -21,8 +21,8 @@ data "aws_networkmanager_link" "example" {
 
 ## Argument Reference
 
-* `global_network_id` - (Required) The ID of the Global Network of the link to retrieve.
-* `link_id` - (Required) The id of the specific link to retrieve.
+* `global_network_id` - (Required) ID of the Global Network of the link to retrieve.
+* `link_id` - (Required) ID of the specific link to retrieve.
 
 ## Attributes Reference
 

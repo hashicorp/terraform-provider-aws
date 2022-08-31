@@ -20,7 +20,7 @@ data "aws_networkmanager_global_network" "example" {
 
 ## Argument Reference
 
-* `global_network_id` - (Required) The id of the specific global network to retrieve.
+* `global_network_id` - (Required) ID of the specific global network to retrieve.
 
 ## Attributes Reference
 

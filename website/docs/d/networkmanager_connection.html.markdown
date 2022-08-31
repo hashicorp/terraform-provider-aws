@@ -21,8 +21,8 @@ data "aws_networkmanager_connection" "example" {
 
 ## Argument Reference
 
-* `global_network_id` - (Required) The ID of the Global Network of the connection to retrieve.
-* `connection_id` - (Required) The id of the specific connection to retrieve.
+* `global_network_id` - (Required) ID of the Global Network of the connection to retrieve.
+* `connection_id` - (Required) ID of the specific connection to retrieve.
 
 ## Attributes Reference
 

@@ -21,8 +21,8 @@ data "aws_networkmanager_site" "example" {
 
 ## Argument Reference
 
-* `global_network_id` - (Required) The ID of the Global Network of the site to retrieve.
-* `site_id` - (Required) The id of the specific site to retrieve.
+* `global_network_id` - (Required) ID of the Global Network of the site to retrieve.
+* `site_id` - (Required) ID of the specific site to retrieve.
 
 ## Attributes Reference
 

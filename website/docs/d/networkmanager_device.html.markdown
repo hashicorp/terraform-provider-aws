@@ -21,8 +21,8 @@ data "aws_networkmanager_device" "example" {
 
 ## Argument Reference
 
-* `device_id` - (Required) The ID of the device.
-* `global_network_id` - (Required) The ID of the global network.
+* `device_id` - (Required) ID of the device.
+* `global_network_id` - (Required) ID of the global network.
 
 ## Attributes Reference
 

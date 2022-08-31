@@ -60,7 +60,7 @@ output "example" {
 More complex filters can be expressed using one or more `filter` sub-blocks,
 which take the following arguments:
 
-* `name` - (Required) The name of the field to filter by, as defined by
+* `name` - (Required) Name of the field to filter by, as defined by
   [the underlying AWS API](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeNetworkInterfaces.html).
 
 * `values` - (Required) Set of values that are accepted for the given field.
