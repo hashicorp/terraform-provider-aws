@@ -6,7 +6,6 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
-	"sync"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -1966,7 +1965,6 @@ func TestAccVPCSecurityGroup_failWithDiffMismatch(t *testing.T) {
 }
 
 var ruleLimit int
-var quotaMutex = &sync.Mutex{}
 
 // testAccSecurityGroup_ruleLimit sets the global "ruleLimit" and is only called once
 // but does not run in parallel slowing down tests. The mutex limits it to one slow down
@@ -1992,11 +1990,9 @@ func testAccSecurityGroup_ruleLimit(t *testing.T) {
 }
 
 func TestAccVPCSecurityGroup_RuleLimit_exceededAppend(t *testing.T) {
-	quotaMutex.Lock()
 	if ruleLimit == 0 {
 		testAccSecurityGroup_ruleLimit(t)
 	}
-	quotaMutex.Unlock()
 
 	var group ec2.SecurityGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -2043,11 +2039,9 @@ func TestAccVPCSecurityGroup_RuleLimit_exceededAppend(t *testing.T) {
 }
 
 func TestAccVPCSecurityGroup_RuleLimit_cidrBlockExceededAppend(t *testing.T) {
-	quotaMutex.Lock()
 	if ruleLimit == 0 {
 		testAccSecurityGroup_ruleLimit(t)
 	}
-	quotaMutex.Unlock()
 
 	var group ec2.SecurityGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -2108,11 +2102,9 @@ func TestAccVPCSecurityGroup_RuleLimit_cidrBlockExceededAppend(t *testing.T) {
 }
 
 func TestAccVPCSecurityGroup_RuleLimit_exceededPrepend(t *testing.T) {
-	quotaMutex.Lock()
 	if ruleLimit == 0 {
 		testAccSecurityGroup_ruleLimit(t)
 	}
-	quotaMutex.Unlock()
 
 	var group ec2.SecurityGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -2157,11 +2149,9 @@ func TestAccVPCSecurityGroup_RuleLimit_exceededPrepend(t *testing.T) {
 }
 
 func TestAccVPCSecurityGroup_RuleLimit_exceededAllNew(t *testing.T) {
-	quotaMutex.Lock()
 	if ruleLimit == 0 {
 		testAccSecurityGroup_ruleLimit(t)
 	}
-	quotaMutex.Unlock()
 
 	var group ec2.SecurityGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
