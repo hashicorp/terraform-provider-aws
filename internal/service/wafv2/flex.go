@@ -734,9 +734,13 @@ func expandBody(l []interface{}) *wafv2.Body {
 
 	m := l[0].(map[string]interface{})
 
-	return &wafv2.Body{
-		OversizeHandling: aws.String(m["oversize_handling"].(string)),
+	apiObject := &wafv2.Body{}
+
+	if v, ok := m["oversize_handling"].(string); ok && v != "" {
+		apiObject.OversizeHandling = aws.String(v)
 	}
+
+	return apiObject
 }
 
 func expandHeaders(l []interface{}) *wafv2.Headers {
@@ -1366,8 +1370,10 @@ func flattenBody(s *wafv2.Body) interface{} {
 		return []interface{}{}
 	}
 
-	m := map[string]interface{}{
-		"oversize_handling": aws.StringValue(s.OversizeHandling),
+	m := map[string]interface{}{}
+
+	if v := s.OversizeHandling; v != nil {
+		m["oversize_handling"] = aws.StringValue(v)
 	}
 
 	return []interface{}{m}

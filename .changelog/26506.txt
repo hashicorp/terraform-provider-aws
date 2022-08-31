@@ -13,8 +13,3 @@ resource/aws_wafv2_web_acl: Add `headers` attribute to the `field_to_match` bloc
 ```release-note:enhancement
 resource/aws_wafv2_rule_group: Add `headers` attribute to the `field_to_match` block
 ```
-
-```release-note:breaking-change
-resource/aws_wafv2_rule_group: The `body` attribute on the `field_to_match` will no longer accept an empty configuration block, and now requires `oversize_handling` attribute to be provided.
-resource/aws_wafv2_web_acl: The `body` attribute on the `field_to_match` will no longer accept an empty configuration block, and now requires `oversize_handling` attribute to be provided.
-```
