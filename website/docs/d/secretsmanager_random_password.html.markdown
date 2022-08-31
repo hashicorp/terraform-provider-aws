@@ -21,7 +21,7 @@ data "aws_secretsmanager_random_password" "test" {
 
 ## Argument Reference
 
-* `exclude_characters` - (Optional) A string of the characters that you don't want in the password.
+* `exclude_characters` - (Optional) String of the characters that you don't want in the password.
 * `exclude_lowercase` - (Optional) Specifies whether to exclude lowercase letters from the password.
 * `exclude_numbers` - (Optional) Specifies whether to exclude numbers from the password.
 * `exclude_punctuation` - (Optional) Specifies whether to exclude the following punctuation characters from the password: ``! " # $ % & ' ( ) * + , - . / : ; < = > ? @ [ \ ] ^ _ ` { | } ~ .``

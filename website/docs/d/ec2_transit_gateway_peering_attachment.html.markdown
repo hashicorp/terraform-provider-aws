@@ -37,7 +37,7 @@ The following arguments are supported:
 
 * `filter` - (Optional) One or more configuration blocks containing name-values filters. Detailed below.
 * `id` - (Optional) Identifier of the EC2 Transit Gateway Peering Attachment.
-* `tags` - (Optional) A mapping of tags, each pair of which must exactly match
+* `tags` - (Optional) Mapping of tags, each pair of which must exactly match
   a pair on the specific EC2 Transit Gateway Peering Attachment to retrieve.
 
 More complex filters can be expressed using one or more `filter` sub-blocks,

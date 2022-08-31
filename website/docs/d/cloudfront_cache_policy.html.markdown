@@ -22,7 +22,7 @@ data "aws_cloudfront_cache_policy" "example" {
 
 The following arguments are supported:
 
-* `name` - (Optional) A unique name to identify the cache policy.
+* `name` - (Optional) Unique name to identify the cache policy.
 * `id` - (Optional) The identifier for the cache policy.
 
 ## Attributes Reference

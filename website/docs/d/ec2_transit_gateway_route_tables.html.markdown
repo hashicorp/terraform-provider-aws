@@ -28,7 +28,7 @@ The following arguments are supported:
 
 * `filter` - (Optional) Custom filter block as described below.
 
-* `tags` - (Optional) A mapping of tags, each pair of which must exactly match
+* `tags` - (Optional) Mapping of tags, each pair of which must exactly match
   a pair on the desired transit gateway route table.
 
 More complex filters can be expressed using one or more `filter` sub-blocks,

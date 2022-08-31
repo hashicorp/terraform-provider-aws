@@ -38,7 +38,7 @@ The arguments of this data source act as filters for querying the available VPC 
 
 * `filter` - (Optional) Custom filter block as described below.
 
-* `tags` - (Optional) A mapping of tags, each pair of which must exactly match
+* `tags` - (Optional) Mapping of tags, each pair of which must exactly match
   a pair on the desired VPC Peering Connection.
 
 More complex filters can be expressed using one or more `filter` sub-blocks,

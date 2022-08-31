@@ -35,7 +35,7 @@ Local Gateway whose data will be exported as attributes.
 * `state` - (Optional) The current state of the desired Local Gateway.
   Can be either `"pending"` or `"available"`.
 
-* `tags` - (Optional) A mapping of tags, each pair of which must exactly match
+* `tags` - (Optional) Mapping of tags, each pair of which must exactly match
   a pair on the desired Local Gateway.
 
 More complex filters can be expressed using one or more `filter` sub-blocks,

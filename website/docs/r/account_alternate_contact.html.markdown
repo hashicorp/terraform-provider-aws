@@ -32,8 +32,8 @@ The following arguments are supported:
 * `alternate_contact_type` - (Required) The type of the alternate contact. Allowed values are: `BILLING`, `OPERATIONS`, `SECURITY`.
 * `email_address` - (Required) An email address for the alternate contact.
 * `name` - (Required) The name of the alternate contact.
-* `phone_number` - (Required) A phone number for the alternate contact.
-* `title` - (Required) A title for the alternate contact.
+* `phone_number` - (Required) Phone number for the alternate contact.
+* `title` - (Required) Title for the alternate contact.
 
 ## Attributes Reference
 

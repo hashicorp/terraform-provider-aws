@@ -39,13 +39,13 @@ resource "aws_ami_from_instance" "example" {
 
 The following arguments are supported:
 
-* `name` - (Required) A region-unique name for the AMI.
+* `name` - (Required) Region-unique name for the AMI.
 * `source_instance_id` - (Required) The id of the instance to use as the basis of the AMI.
 * `snapshot_without_reboot` - (Optional) Boolean that overrides the behavior of stopping
   the instance before snapshotting. This is risky since it may cause a snapshot of an
   inconsistent filesystem state, but can be used to avoid downtime if the user otherwise
   guarantees that no filesystem writes will be underway at the time of snapshot.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Timeouts
 

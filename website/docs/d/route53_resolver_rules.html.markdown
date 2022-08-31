@@ -45,7 +45,7 @@ data "aws_route53_resolver_rules" "example" {
 
 The arguments of this data source act as filters for querying the available resolver rules in the current region.
 
-* `name_regex` - (Optional) A regex string to filter resolver rule names.
+* `name_regex` - (Optional) Regex string to filter resolver rule names.
   The filtering is done locally, so could have a performance impact if the result is large.
   This argument should be used along with other arguments to limit the number of results returned.
 * `owner_id` (Optional) When the desired resolver rules are shared with another AWS account, the account ID of the account that the rules are shared with.

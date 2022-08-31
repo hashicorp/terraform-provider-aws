@@ -103,7 +103,7 @@ The following argument is optional:
 The following arguments are required:
 
 * `key` – (Required) The key-name for the tag.
-* `values` - (Required) A list of possible values an attribute can take.
+* `values` - (Required) List of possible values an attribute can take.
 
 The following argument is optional:
 
@@ -114,7 +114,7 @@ The following argument is optional:
 The following arguments are required:
 
 * `resource_type` – (Required) The resource type for which the tag policy applies. Valid values are `DATABASE` and `TABLE`.
-* `expression` - (Required) A list of tag conditions that apply to the resource's tag policy. Configuration block for tag conditions that apply to the policy. See [`expression`](#expression) below.
+* `expression` - (Required) List of tag conditions that apply to the resource's tag policy. Configuration block for tag conditions that apply to the policy. See [`expression`](#expression) below.
 
 The following argument is optional:
 
@@ -123,7 +123,7 @@ The following argument is optional:
 #### expression
 
 * `key` – (Required) The key-name of an LF-Tag.
-* `values` - (Required) A list of possible values of an LF-Tag.
+* `values` - (Required) List of possible values of an LF-Tag.
 
 ### table
 

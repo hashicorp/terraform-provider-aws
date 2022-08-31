@@ -41,7 +41,7 @@ The following arguments are supported:
 * `transit_gateway_id` - (Optional) Identifier of the EC2 Transit Gateway.
 * `vpn_connection_id` - (Optional) Identifier of the EC2 VPN Connection.
 * `filter` - (Optional) Configuration block(s) for filtering. Detailed below.
-* `tags` - (Optional) A map of tags, each pair of which must exactly match a pair on the desired Transit Gateway VPN Attachment.
+* `tags` - (Optional) Map of tags, each pair of which must exactly match a pair on the desired Transit Gateway VPN Attachment.
 
 ### filter Configuration Block
 

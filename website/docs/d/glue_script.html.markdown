@@ -218,8 +218,8 @@ output "scala_code" {
 
 ## Argument Reference
 
-* `dag_edge` - (Required) A list of the edges in the DAG. Defined below.
-* `dag_node` - (Required) A list of the nodes in the DAG. Defined below.
+* `dag_edge` - (Required) List of the edges in the DAG. Defined below.
+* `dag_node` - (Required) List of the nodes in the DAG. Defined below.
 * `language` - (Optional) The programming language of the resulting code from the DAG. Defaults to `PYTHON`. Valid values are `PYTHON` and `SCALA`.
 
 ### dag_edge Argument Reference
@@ -231,7 +231,7 @@ output "scala_code" {
 ### dag_node Argument Reference
 
 * `args` - (Required) Nested configuration an argument or property of a node. Defined below.
-* `id` - (Required) A node identifier that is unique within the node's graph.
+* `id` - (Required) Node identifier that is unique within the node's graph.
 * `node_type` - (Required) The type of node this is.
 * `line_number` - (Optional) The line number of the node.
 

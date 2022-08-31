@@ -24,7 +24,7 @@ data "aws_api_gateway_export" "example" {
 * `rest_api_id` - (Required) The identifier of the associated REST API.
 * `stage_name` - (Required) The name of the Stage that will be exported.
 * `accepts` - (Optional) The content-type of the export. Valid values are `application/json` and `application/yaml` are supported for `export_type` `ofoas30` and `swagger`.
-* `parameters` - (Optional) A key-value map of query string parameters that specify properties of the export. the following parameters are supported: `extensions='integrations'` or `extensions='apigateway'` will export the API with x-amazon-apigateway-integration extensions. `extensions='authorizers'` will export the API with x-amazon-apigateway-authorizer extensions.
+* `parameters` - (Optional) Key-value map of query string parameters that specify properties of the export. the following parameters are supported: `extensions='integrations'` or `extensions='apigateway'` will export the API with x-amazon-apigateway-integration extensions. `extensions='authorizers'` will export the API with x-amazon-apigateway-authorizer extensions.
 
 ## Attributes Reference
 

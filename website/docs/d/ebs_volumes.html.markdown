@@ -40,7 +40,7 @@ output "availability_zone_to_volume_id" {
 
 * `filter` - (Optional) Custom filter block as described below.
 
-* `tags` - (Optional) A map of tags, each pair of which must exactly match
+* `tags` - (Optional) Map of tags, each pair of which must exactly match
   a pair on the desired volumes.
 
 More complex filters can be expressed using one or more `filter` sub-blocks,

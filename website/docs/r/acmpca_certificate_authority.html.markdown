@@ -116,11 +116,11 @@ Contains information about the certificate subject. Identifies the entity that o
 * `initials` - (Optional) Concatenation that typically contains the first letter of the `given_name`, the first letter of the middle name if one exists, and the first letter of the `surname`. Must be less than or equal to 5 characters in length.
 * `locality` - (Optional) The locality (such as a city or town) in which the certificate subject is located. Must be less than or equal to 128 characters in length.
 * `organization` - (Optional) Legal name of the organization with which the certificate subject is affiliated. Must be less than or equal to 64 characters in length.
-* `organizational_unit` - (Optional) A subdivision or unit of the organization (such as sales or finance) with which the certificate subject is affiliated. Must be less than or equal to 64 characters in length.
+* `organizational_unit` - (Optional) Subdivision or unit of the organization (such as sales or finance) with which the certificate subject is affiliated. Must be less than or equal to 64 characters in length.
 * `pseudonym` - (Optional) Typically a shortened version of a longer `given_name`. For example, Jonathan is often shortened to John. Elizabeth is often shortened to Beth, Liz, or Eliza. Must be less than or equal to 128 characters in length.
 * `state` - (Optional) State in which the subject of the certificate is located. Must be less than or equal to 128 characters in length.
 * `surname` - (Optional) Family name. In the US and the UK for example, the surname of an individual is ordered last. In Asian cultures the surname is typically ordered first. Must be less than or equal to 40 characters in length.
-* `title` - (Optional) A title such as Mr. or Ms. which is pre-pended to the name to refer formally to the certificate subject. Must be less than or equal to 64 characters in length.
+* `title` - (Optional) Title such as Mr. or Ms. which is pre-pended to the name to refer formally to the certificate subject. Must be less than or equal to 64 characters in length.
 
 ### revocation_configuration
 
@@ -139,7 +139,7 @@ the custom OCSP responder endpoint. Defined below.
 #### ocsp_configuration
 
 * `enabled` - (Required) Boolean value that specifies whether a custom OCSP responder is enabled.
-* `ocsp_custom_cname` - (Optional) A CNAME specifying a customized OCSP domain. Note: The value of the CNAME must not include a protocol prefix such as "http://" or "https://".
+* `ocsp_custom_cname` - (Optional) CNAME specifying a customized OCSP domain. Note: The value of the CNAME must not include a protocol prefix such as "http://" or "https://".
 
 ## Attributes Reference
 

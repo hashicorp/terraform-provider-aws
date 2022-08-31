@@ -118,7 +118,7 @@ resource "aws_route53_record" "example" {
 The following arguments are supported:
 
 * Creating an Amazon issued certificate
-    * `domain_name` - (Required) A domain name for which the certificate should be issued
+    * `domain_name` - (Required) Domain name for which the certificate should be issued
     * `subject_alternative_names` - (Optional) Set of domains that should be SANs in the issued certificate. To remove all elements of a previously configured list, set this value equal to an empty list (`[]`) or use the [`terraform taint` command](https://www.terraform.io/docs/commands/taint.html) to trigger recreation.
     * `validation_method` - (Required) Which method to use for validation. `DNS` or `EMAIL` are valid, `NONE` can be used for certificates that were imported into ACM and then into Terraform.
     * `options` - (Optional) Configuration block used to set certificate options. Detailed below.
@@ -128,10 +128,10 @@ The following arguments are supported:
     * `certificate_body` - (Required) The certificate's PEM-formatted public key
     * `certificate_chain` - (Optional) The certificate's PEM-formatted chain
 * Creating a private CA issued certificate
-    * `domain_name` - (Required) A domain name for which the certificate should be issued
+    * `domain_name` - (Required) Domain name for which the certificate should be issued
     * `certificate_authority_arn` - (Required) ARN of an ACM PCA
     * `subject_alternative_names` - (Optional) Set of domains that should be SANs in the issued certificate. To remove all elements of a previously configured list, set this value equal to an empty list (`[]`) or use the [`terraform taint` command](https://www.terraform.io/docs/commands/taint.html) to trigger recreation.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## options Configuration Block
 
@@ -143,7 +143,7 @@ Supported nested arguments for the `options` configuration block:
 
 Supported nested arguments for the `validation_option` configuration block:
 
-* `domain_name` - (Required) A fully qualified domain name (FQDN) in the certificate.
+* `domain_name` - (Required) Fully qualified domain name (FQDN) in the certificate.
 * `validation_domain` - (Required) The domain name that you want ACM to use to send you validation emails. This domain name is the suffix of the email addresses that you want ACM to use. This must be the same as the `domain_name` value or a superdomain of the `domain_name` value. For example, if you request a certificate for `"testing.example.com"`, you can specify `"example.com"` for this value.
 
 ## Attributes Reference

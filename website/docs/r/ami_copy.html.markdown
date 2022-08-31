@@ -39,7 +39,7 @@ resource "aws_ami_copy" "example" {
 
 The following arguments are supported:
 
-* `name` - (Required) A region-unique name for the AMI.
+* `name` - (Required) Region-unique name for the AMI.
 * `source_ami_id` - (Required) The id of the AMI to copy. This id must be valid in the region
   given by `source_ami_region`.
 * `source_ami_region` - (Required) The region from which the AMI will be copied. This may be the
@@ -48,7 +48,7 @@ The following arguments are supported:
   Only specify this parameter when copying an AMI from an AWS Region to an Outpost. The AMI must be in the Region of the destination Outpost.  
 * `encrypted` - (Optional) Specifies whether the destination snapshots of the copied image should be encrypted. Defaults to `false`
 * `kms_key_id` - (Optional) The full ARN of the KMS Key to use when encrypting the snapshots of an image during a copy operation. If not specified, then the default AWS KMS Key will be used
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 This resource also exposes the full set of arguments from the [`aws_ami`](ami.html) resource.
 

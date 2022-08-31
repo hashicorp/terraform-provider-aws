@@ -39,7 +39,7 @@ Local Gateway Route Table whose data will be exported as attributes.
 
 * `state` - (Optional) The state of the local gateway route table.
 
-* `tags` - (Optional) A mapping of tags, each pair of which must exactly match
+* `tags` - (Optional) Mapping of tags, each pair of which must exactly match
   a pair on the desired local gateway route table.
 
 More complex filters can be expressed using one or more `filter` sub-blocks,

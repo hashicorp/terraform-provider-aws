@@ -36,7 +36,7 @@ COIP Pool whose data will be exported as attributes.
 
 * `pool_id` - (Optional) The id of the specific COIP Pool to retrieve.
 
-* `tags` - (Optional) A mapping of tags, each pair of which must exactly match
+* `tags` - (Optional) Mapping of tags, each pair of which must exactly match
   a pair on the desired COIP Pool.
 
 More complex filters can be expressed using one or more `filter` sub-blocks,

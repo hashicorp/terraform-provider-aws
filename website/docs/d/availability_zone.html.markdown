@@ -77,7 +77,7 @@ zone whose data will be exported as attributes.
 * `all_availability_zones` - (Optional) Set to `true` to include all Availability Zones and Local Zones regardless of your opt in status.
 * `filter` - (Optional) Configuration block(s) for filtering. Detailed below.
 * `name` - (Optional) The full name of the availability zone to select.
-* `state` - (Optional) A specific availability zone state to require. May be any of `"available"`, `"information"` or `"impaired"`.
+* `state` - (Optional) Specific availability zone state to require. May be any of `"available"`, `"information"` or `"impaired"`.
 * `zone_id` - (Optional) The zone ID of the availability zone to select.
 
 ### filter Configuration Block
