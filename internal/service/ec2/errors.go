@@ -39,6 +39,7 @@ const (
 	errCodeInvalidGroupInUse                              = "InvalidGroup.InUse"
 	errCodeInvalidGroupNotFound                           = "InvalidGroup.NotFound"
 	errCodeInvalidHostIDNotFound                          = "InvalidHostID.NotFound"
+	errCodeInvalidInstanceID                              = "InvalidInstanceID"
 	errCodeInvalidInstanceIDNotFound                      = "InvalidInstanceID.NotFound"
 	errCodeInvalidInternetGatewayIDNotFound               = "InvalidInternetGatewayID.NotFound"
 	errCodeInvalidKeyPairNotFound                         = "InvalidKeyPair.NotFound"

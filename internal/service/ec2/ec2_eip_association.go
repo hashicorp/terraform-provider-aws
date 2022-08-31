@@ -3,13 +3,11 @@ package ec2
 import (
 	"fmt"
 	"log"
-	"net"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -106,10 +104,32 @@ func resourceEIPAssociationCreate(d *schema.ResourceData, meta interface{}) erro
 	} else {
 		// EC2-Classic.
 		d.SetId(aws.StringValue(input.PublicIp))
+	}
 
-		if err := waitForAddressAssociationClassic(conn, aws.StringValue(input.PublicIp), aws.StringValue(input.InstanceId)); err != nil {
-			return fmt.Errorf("waiting for EC2 EIP (%s) to associate with EC2-Classic Instance (%s): %w", aws.StringValue(input.PublicIp), aws.StringValue(input.InstanceId), err)
-		}
+	_, err = tfresource.RetryWhen(propagationTimeout,
+		func() (interface{}, error) {
+			if eipAssociationID(d.Id()).IsVPC() {
+				return FindEIPByAssociationID(conn, d.Id())
+			} else {
+				return FindEIPByPublicIP(conn, d.Id())
+			}
+		},
+		func(err error) (bool, error) {
+			if tfresource.NotFound(err) {
+				return true, err
+			}
+
+			// "InvalidInstanceID: The pending instance 'i-0504e5b44ea06d599' is not in a valid state for this operation."
+			if tfawserr.ErrMessageContains(err, errCodeInvalidInstanceID, "pending instance") {
+				return true, err
+			}
+
+			return false, err
+		},
+	)
+
+	if err != nil {
+		return fmt.Errorf("waiting for EC2 EIP Allocation (%s) create: %w", d.Id(), err)
 	}
 
 	return resourceEIPAssociationRead(d, meta)
@@ -118,52 +138,32 @@ func resourceEIPAssociationCreate(d *schema.ResourceData, meta interface{}) erro
 func resourceEIPAssociationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	request, err := DescribeAddressesByID(d.Id(), meta.(*conns.AWSClient).SupportedPlatforms)
-	if err != nil {
-		return err
+	var err error
+	var address *ec2.Address
+
+	if eipAssociationID(d.Id()).IsVPC() {
+		address, err = FindEIPByAssociationID(conn, d.Id())
+	} else {
+		address, err = FindEIPByPublicIP(conn, d.Id())
 	}
 
-	var response *ec2.DescribeAddressesOutput
-	err = resource.Retry(propagationTimeout, func() *resource.RetryError {
-		var err error
-		response, err = conn.DescribeAddresses(request)
-
-		if d.IsNewResource() && tfawserr.ErrCodeEquals(err, "InvalidAssociationID.NotFound") {
-			return resource.RetryableError(err)
-		}
-
-		if d.IsNewResource() && (response.Addresses == nil || len(response.Addresses) == 0) {
-			return resource.RetryableError(&resource.NotFoundError{})
-		}
-
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-
-		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		response, err = conn.DescribeAddresses(request)
-	}
-
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, "InvalidAssociationID.NotFound") {
-		log.Printf("[WARN] EIP Association (%s) not found, removing from state", d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] EC2 EIP Association (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("Error reading EC2 Elastic IP %s: %#v", d.Get("allocation_id").(string), err)
+		return fmt.Errorf("reading EC2 EIP Association (%s): %w", d.Id(), err)
 	}
 
-	if response.Addresses == nil || len(response.Addresses) == 0 {
-		log.Printf("[INFO] EIP Association ID Not Found. Refreshing from state")
-		d.SetId("")
-		return nil
-	}
+	d.Set("allocation_id", address.AllocationId)
+	d.Set("instance_id", address.InstanceId)
+	d.Set("network_interface_id", address.NetworkInterfaceId)
+	d.Set("private_ip_address", address.PrivateIpAddress)
+	d.Set("public_ip", address.PublicIp)
 
-	return readEIPAssociation(d, response.Addresses[0])
+	return nil
 }
 
 func resourceEIPAssociationDelete(d *schema.ResourceData, meta interface{}) error {
@@ -189,59 +189,6 @@ func resourceEIPAssociationDelete(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	return nil
-}
-
-func readEIPAssociation(d *schema.ResourceData, address *ec2.Address) error {
-	if err := d.Set("allocation_id", address.AllocationId); err != nil {
-		return err
-	}
-	if err := d.Set("instance_id", address.InstanceId); err != nil {
-		return err
-	}
-	if err := d.Set("network_interface_id", address.NetworkInterfaceId); err != nil {
-		return err
-	}
-	if err := d.Set("private_ip_address", address.PrivateIpAddress); err != nil {
-		return err
-	}
-	if err := d.Set("public_ip", address.PublicIp); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func DescribeAddressesByID(id string, supportedPlatforms []string) (*ec2.DescribeAddressesInput, error) {
-	// We assume EC2 Classic if ID is a valid IPv4 address
-	ip := net.ParseIP(id)
-	if ip != nil {
-		if len(supportedPlatforms) > 0 && !conns.HasEC2Classic(supportedPlatforms) {
-			return nil, fmt.Errorf("Received IPv4 address as ID in account that doesn't support EC2 Classic (%q)",
-				supportedPlatforms)
-		}
-
-		return &ec2.DescribeAddressesInput{
-			Filters: []*ec2.Filter{
-				{
-					Name:   aws.String("public-ip"),
-					Values: []*string{aws.String(id)},
-				},
-				{
-					Name:   aws.String("domain"),
-					Values: []*string{aws.String("standard")},
-				},
-			},
-		}, nil
-	}
-
-	return &ec2.DescribeAddressesInput{
-		Filters: []*ec2.Filter{
-			{
-				Name:   aws.String("association-id"),
-				Values: []*string{aws.String(id)},
-			},
-		},
-	}, nil
 }
 
 type eipAssociationID string
