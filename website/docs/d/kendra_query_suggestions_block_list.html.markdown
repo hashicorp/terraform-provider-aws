@@ -23,8 +23,8 @@ data "aws_kendra_query_suggestions_block_list" "example" {
 
 The following arguments are supported:
 
-* `index_id` - (Required) The identifier of the index that contains the block list.
-* `query_suggestions_block_list_id` - (Required) The identifier of the block list.
+* `index_id` - (Required) Identifier of the index that contains the block list.
+* `query_suggestions_block_list_id` - (Required) Identifier of the block list.
 
 ## Attributes Reference
 

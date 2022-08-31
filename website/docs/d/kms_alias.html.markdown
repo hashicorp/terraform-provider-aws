@@ -22,7 +22,7 @@ data "aws_kms_alias" "s3" {
 
 ## Argument Reference
 
-* `name` - (Required) The display name of the alias. The name must start with the word "alias" followed by a forward slash (alias/)
+* `name` - (Required) Display name of the alias. The name must start with the word "alias" followed by a forward slash (alias/)
 
 ## Attributes Reference
 

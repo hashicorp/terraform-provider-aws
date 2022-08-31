@@ -30,7 +30,7 @@ data "aws_outposts_asset" "example" {
 The following arguments are required:
 
 * `arn` - (Required) Outpost ARN.
-* `asset_id` - (Required) The ID of the asset.
+* `asset_id` - (Required) ID of the asset.
 
 ## Attribute Reference
 

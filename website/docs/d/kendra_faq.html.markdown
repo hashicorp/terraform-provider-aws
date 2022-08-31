@@ -23,8 +23,8 @@ data "aws_kendra_faq" "test" {
 
 The following arguments are supported:
 
-* `faq_id` - (Required) The identifier of the FAQ.
-* `index_id` - (Required) The identifier of the index that contains the FAQ.
+* `faq_id` - (Required) Identifier of the FAQ.
+* `index_id` - (Required) Identifier of the index that contains the FAQ.
 
 ## Attributes Reference
 

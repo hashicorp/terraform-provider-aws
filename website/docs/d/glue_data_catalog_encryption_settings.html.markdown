@@ -20,7 +20,7 @@ data "aws_glue_data_catalog_encryption_settings" "example" {
 
 ## Argument Reference
 
-* `catalog_id` - (Required) The ID of the Data Catalog. This is typically the AWS account ID.
+* `catalog_id` - (Required) ID of the Data Catalog. This is typically the AWS account ID.
 
 ## Attributes Reference
 

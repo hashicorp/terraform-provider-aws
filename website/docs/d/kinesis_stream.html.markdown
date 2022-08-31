@@ -23,7 +23,7 @@ data "aws_kinesis_stream" "stream" {
 
 ## Argument Reference
 
-* `name` - (Required) The name of the Kinesis Stream.
+* `name` - (Required) Name of the Kinesis Stream.
 
 ## Attributes Reference
 

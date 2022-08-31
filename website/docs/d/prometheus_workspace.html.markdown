@@ -24,7 +24,7 @@ data "aws_amp_workspace" "example" {
 
 The following arguments are required:
 
-* `workspace_id` - (Required) The Prometheus workspace ID.
+* `workspace_id` - (Required) Prometheus workspace ID.
 
 ## Attributes Reference
 

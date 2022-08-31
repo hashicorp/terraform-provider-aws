@@ -22,7 +22,7 @@ data "aws_msk_broker_nodes" "example" {
 
 The following arguments are supported:
 
-* `cluster_arn` - (Required) The ARN of the cluster the nodes belong to.
+* `cluster_arn` - (Required) ARN of the cluster the nodes belong to.
 
 ## Attribute Reference
 

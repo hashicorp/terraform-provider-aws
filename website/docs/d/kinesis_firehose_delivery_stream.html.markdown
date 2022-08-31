@@ -22,7 +22,7 @@ data "aws_kinesis_firehose_delivery_stream" "stream" {
 
 ## Argument Reference
 
-* `name` - (Required) The name of the Kinesis Stream.
+* `name` - (Required) Name of the Kinesis Stream.
 
 ## Attributes Reference
 

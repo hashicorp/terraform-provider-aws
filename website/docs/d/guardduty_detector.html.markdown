@@ -18,7 +18,7 @@ data "aws_guardduty_detector" "example" {}
 
 ## Argument Reference
 
-* `id` - (Optional) The ID of the detector.
+* `id` - (Optional) ID of the detector.
 
 ## Attributes Reference
 

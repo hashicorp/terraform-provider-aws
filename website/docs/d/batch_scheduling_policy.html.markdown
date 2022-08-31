@@ -22,7 +22,7 @@ data "aws_batch_scheduling_policy" "test" {
 
 The following arguments are supported:
 
-* `arn` - (Required) The ARN of the scheduling policy.
+* `arn` - (Required) ARN of the scheduling policy.
 
 ## Attributes Reference
 

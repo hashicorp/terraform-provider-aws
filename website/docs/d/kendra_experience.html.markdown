@@ -23,8 +23,8 @@ data "aws_kendra_experience" "example" {
 
 The following arguments are supported:
 
-* `experience_id` - (Required) The identifier of the Experience.
-* `index_id` - (Required) The identifier of the index that contains the Experience.
+* `experience_id` - (Required) Identifier of the Experience.
+* `index_id` - (Required) Identifier of the index that contains the Experience.
 
 ## Attributes Reference
 

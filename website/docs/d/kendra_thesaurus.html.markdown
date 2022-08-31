@@ -23,8 +23,8 @@ data "aws_kendra_thesaurus" "example" {
 
 The following arguments are supported:
 
-* `index_id` - (Required) The identifier of the index that contains the Thesaurus.
-* `thesaurus_id` - (Required) The identifier of the Thesaurus.
+* `index_id` - (Required) Identifier of the index that contains the Thesaurus.
+* `thesaurus_id` - (Required) Identifier of the Thesaurus.
 
 ## Attributes Reference
 

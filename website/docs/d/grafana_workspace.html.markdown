@@ -24,14 +24,14 @@ data "aws_grafana_workspace" "example" {
 
 The following arguments are required:
 
-* `workspace_id` - (Required) The Grafana workspace ID.
+* `workspace_id` - (Required) Grafana workspace ID.
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-* `account_access_type` - (Required) The type of account access for the workspace. Valid values are `CURRENT_ACCOUNT` and `ORGANIZATION`. If `ORGANIZATION` is specified, then `organizational_units` must also be present.
-* `authentication_providers` - (Required) The authentication providers for the workspace. Valid values are `AWS_SSO`, `SAML`, or both.
+* `account_access_type` - (Required) Type of account access for the workspace. Valid values are `CURRENT_ACCOUNT` and `ORGANIZATION`. If `ORGANIZATION` is specified, then `organizational_units` must also be present.
+* `authentication_providers` - (Required) Authentication providers for the workspace. Valid values are `AWS_SSO`, `SAML`, or both.
 * `arn` - The ARN of the Grafana workspace.
 * `created_date` - The creation date of the Grafana workspace.
 * `data_sources` - The data sources for the workspace.
