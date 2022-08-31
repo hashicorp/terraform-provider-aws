@@ -25,7 +25,7 @@ The given filters must match exactly one API whose data will be exported as attr
 
 The following arguments are supported:
 
-* `api_id` - (Required) The API identifier.
+* `api_id` - (Required) API identifier.
 
 ## Attributes Reference
 

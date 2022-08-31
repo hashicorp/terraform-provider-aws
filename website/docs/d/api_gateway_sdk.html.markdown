@@ -27,9 +27,9 @@ data "aws_api_gateway_sdk" "example" {
 
 ## Argument Reference
 
-* `rest_api_id` - (Required) The identifier of the associated REST API.
-* `stage_name` - (Required) The name of the Stage that will be exported.
-* `sdk_type` - (Required) The language for the generated SDK. Currently `java`, `javascript`, `android`, `objectivec` (for iOS), `swift` (for iOS), and `ruby` are supported.
+* `rest_api_id` - (Required) Identifier of the associated REST API.
+* `stage_name` - (Required) Name of the Stage that will be exported.
+* `sdk_type` - (Required) Language for the generated SDK. Currently `java`, `javascript`, `android`, `objectivec` (for iOS), `swift` (for iOS), and `ruby` are supported.
 * `parameters` - (Optional) Key-value map of query string parameters `sdk_type` properties of the SDK. For SDK Type of `objectivec` or `swift`, a parameter named `classPrefix` is required. For SDK Type of `android`, parameters named `groupId`, `artifactId`, `artifactVersion`, and `invokerPackage` are required. For SDK Type of `java`, parameters named `serviceName` and `javaPackageName` are required.
 
 ## Attributes Reference

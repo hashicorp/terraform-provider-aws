@@ -320,7 +320,7 @@ In addition to [generic `provider` arguments](https://www.terraform.io/docs/conf
   and the shared configuration parameter `max_attempts`.
 * `profile` - (Optional) AWS profile name as set in the shared configuration and credentials files.
   Can also be set using either the environment variables `AWS_PROFILE` or `AWS_DEFAULT_PROFILE`.
-* `region` - (Optional) The AWS region where the provider will operate. The region must be set.
+* `region` - (Optional) AWS region where the provider will operate. The region must be set.
   Can also be set with either the `AWS_REGION` or `AWS_DEFAULT_REGION` environment variables,
   or via a shared config file parameter `region` if `profile` is used.
   If credentials are retrieved from the EC2 Instance Metadata Service, the region can also be retrieved from the metadata.
@@ -478,7 +478,7 @@ The `assume_role_with_web_identity` configuration block supports the following a
 * `policy_arns` - (Optional) Set of Amazon Resource Names (ARNs) of IAM Policies describing further restricting permissions for the IAM Role being assumed.
 * `role_arn` - (Required) Amazon Resource Name (ARN) of the IAM Role to assume. Can also be set with the `AWS_ROLE_ARN` environment variable.
 * `session_name` - (Optional) Session name to use when assuming the role. Can also be set with the `AWS_ROLE_SESSION_NAME` environment variable.
-* `web_identity_token` - (Optional) The value of a web identity token from an OpenID Connect (OIDC) or OAuth provider.
+* `web_identity_token` - (Optional) Value of a web identity token from an OpenID Connect (OIDC) or OAuth provider.
   One of `web_identity_token` or `web_identity_token_file` is required.
 * `web_identity_token_file` - (Optional) File containing a web identity token from an OpenID Connect (OIDC) or OAuth provider.
   One of `web_identity_token_file` or `web_identity_token` is required. Can also be set with the `AWS_WEB_IDENTITY_TOKEN_FILE` environment variable.

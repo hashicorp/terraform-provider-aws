@@ -31,8 +31,8 @@ data "aws_appmesh_mesh" "simple" {
 
 The following arguments are supported:
 
-* `name` - (Required) The name of the service mesh.
-* `mesh_owner` - (Optional) The AWS account ID of the service mesh's owner.
+* `name` - (Required) Name of the service mesh.
+* `mesh_owner` - (Optional) AWS account ID of the service mesh's owner.
 
 ## Attributes Reference
 

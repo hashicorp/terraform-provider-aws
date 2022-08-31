@@ -22,7 +22,7 @@ data "aws_backup_framework" "example" {
 
 The following arguments are supported:
 
-* `name` - (Required) The backup framework name.
+* `name` - (Required) Backup framework name.
 
 ## Attributes Reference
 

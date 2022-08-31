@@ -22,7 +22,7 @@ data "aws_arn" "db_instance" {
 
 The following arguments are supported:
 
-* `arn` - (Required) The ARN to parse.
+* `arn` - (Required) ARN to parse.
 
 ## Attributes Reference
 

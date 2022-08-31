@@ -33,9 +33,9 @@ data "aws_appmesh_virtual_service" "test" {
 
 The following arguments are supported:
 
-* `name` - (Required) The name of the virtual service.
-* `mesh_name` - (Required) The name of the service mesh in which the virtual service exists.
-* `mesh_owner` - (Optional) The AWS account ID of the service mesh's owner.
+* `name` - (Required) Name of the virtual service.
+* `mesh_name` - (Required) Name of the service mesh in which the virtual service exists.
+* `mesh_owner` - (Optional) AWS account ID of the service mesh's owner.
 
 ## Attributes Reference
 

@@ -76,15 +76,15 @@ zone whose data will be exported as attributes.
 
 * `all_availability_zones` - (Optional) Set to `true` to include all Availability Zones and Local Zones regardless of your opt in status.
 * `filter` - (Optional) Configuration block(s) for filtering. Detailed below.
-* `name` - (Optional) The full name of the availability zone to select.
+* `name` - (Optional) Full name of the availability zone to select.
 * `state` - (Optional) Specific availability zone state to require. May be any of `"available"`, `"information"` or `"impaired"`.
-* `zone_id` - (Optional) The zone ID of the availability zone to select.
+* `zone_id` - (Optional) Zone ID of the availability zone to select.
 
 ### filter Configuration Block
 
 The following arguments are supported by the `filter` configuration block:
 
-* `name` - (Required) The name of the filter field. Valid values can be found in the [EC2 DescribeAvailabilityZones API Reference](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeAvailabilityZones.html).
+* `name` - (Required) Name of the filter field. Valid values can be found in the [EC2 DescribeAvailabilityZones API Reference](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeAvailabilityZones.html).
 * `values` - (Required) Set of values that are accepted for the given filter field. Results will be selected if any given value matches.
 
 ## Attributes Reference

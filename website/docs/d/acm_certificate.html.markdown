@@ -37,7 +37,7 @@ data "aws_acm_certificate" "rsa_4096" {
 
 ## Argument Reference
 
-* `domain` - (Required) The domain of the certificate to look up. If no certificate is found with this name, an error will be returned.
+* `domain` - (Required) Domain of the certificate to look up. If no certificate is found with this name, an error will be returned.
 * `key_types` - (Optional) List of key algorithms to filter certificates. By default, ACM does not return all certificate types when searching. See the [ACM API Reference](https://docs.aws.amazon.com/acm/latest/APIReference/API_CertificateDetail.html#ACM-Type-CertificateDetail-KeyAlgorithm) for supported key algorithms.
 * `statuses` - (Optional) List of statuses on which to filter the returned list. Valid values are `PENDING_VALIDATION`, `ISSUED`,
    `INACTIVE`, `EXPIRED`, `VALIDATION_TIMED_OUT`, `REVOKED` and `FAILED`. If no value is specified, only certificates in the `ISSUED` state

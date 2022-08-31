@@ -23,7 +23,7 @@ data "aws_api_gateway_rest_api" "my_rest_api" {
 
 ## Argument Reference
 
-* `name` - (Required) The name of the REST API to look up. If no REST API is found with this name, an error will be returned. If multiple REST APIs are found with this name, an error will be returned.
+* `name` - (Required) Name of the REST API to look up. If no REST API is found with this name, an error will be returned. If multiple REST APIs are found with this name, an error will be returned.
 
 ## Attributes Reference
 
