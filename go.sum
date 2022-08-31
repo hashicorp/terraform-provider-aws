@@ -34,11 +34,13 @@ github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.12.4/go.mod h1:u/s5/Z+ohUQOPXl0
 github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.12.12 h1:wgJBHO58Pc1V1QAnzdVM3JK3WbE/6eUF0JxCZ+/izz0=
 github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.12.12/go.mod h1:aZ4vZnyUuxedC7eD4JyEHpGnCz+O2sHQEx3VvAwklSE=
 github.com/aws/aws-sdk-go-v2/internal/configsources v1.1.10/go.mod h1:F+EZtuIwjlv35kRJPyBGcsA4f7bnSoz15zOQ2lJq1Z4=
-github.com/aws/aws-sdk-go-v2/internal/configsources v1.1.18 h1:OmiwoVyLKEqqD5GvB683dbSqxiOfvx4U2lDZhG2Esc4=
 github.com/aws/aws-sdk-go-v2/internal/configsources v1.1.18/go.mod h1:348MLhzV1GSlZSMusdwQpXKbhD7X2gbI/TxwAPKkYZQ=
+github.com/aws/aws-sdk-go-v2/internal/configsources v1.1.19 h1:gC5mudiFrWGhzcdoWj1iCGUfrzCpQG0MQIQf0CXFFQQ=
+github.com/aws/aws-sdk-go-v2/internal/configsources v1.1.19/go.mod h1:llxE6bwUZhuCas0K7qGiu5OgMis3N7kdWtFSxoHmJ7E=
 github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.4.4/go.mod h1:8glyUqVIM4AmeenIsPo0oVh3+NUwnsQml2OFupfQW+0=
-github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.4.12 h1:5mvQDtNWtI6H56+E4LUnLWEmATMB7oEh+Z9RurtIuC0=
 github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.4.12/go.mod h1:ckaCVTEdGAxO6KwTGzgskxR1xM+iJW4lxMyDFVda2Fc=
+github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.4.13 h1:qezY57na06d6kSE7uuB0N7XEflu914AXx/hg2L8Ykcw=
+github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.4.13/go.mod h1:lB12mkZqCSo5PsdBFLNqc2M/OOYgNAy8UtaktyuWvE8=
 github.com/aws/aws-sdk-go-v2/internal/ini v1.3.11 h1:6cZRymlLEIlDTEB0+5+An6Zj1CKt6rSE69tOmFeu1nk=
 github.com/aws/aws-sdk-go-v2/internal/ini v1.3.11/go.mod h1:0MR+sS1b/yxsfAPvAESrw8NfwUoxMinDyw6EYR9BS2U=
 github.com/aws/aws-sdk-go-v2/service/comprehend v1.18.7 h1:CcrZEoZ2DrEMzvGLgWmghfNM6SYO+6sQa8kWik8Vlno=
@@ -49,8 +51,8 @@ github.com/aws/aws-sdk-go-v2/service/iam v1.18.4 h1:E41guA79mjEbwJdh0zXz1d8+Zt4z
 github.com/aws/aws-sdk-go-v2/service/iam v1.18.4/go.mod h1:FpNvAfCZyIQ3qeNJUOw4CShKvdizHblXqAvSk0qmyL4=
 github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.9.4 h1:b16QW0XWl0jWjLABFc1A+uh145Oqv+xDcObNk0iQgUk=
 github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.9.4/go.mod h1:uKkN7qmSIsNJVyMtxNQoCEYMvFEXbOg9fwCJPdfp2u8=
-github.com/aws/aws-sdk-go-v2/service/kendra v1.33.0 h1:4wnNpNlkUwrPKEzbm14pjLCOxiXg9qhjfzhkXyggij8=
-github.com/aws/aws-sdk-go-v2/service/kendra v1.33.0/go.mod h1:irFuMCMcRyO8Y+Uy9TajvrH/KJaRLT+jLJ5kCxNBySY=
+github.com/aws/aws-sdk-go-v2/service/kendra v1.33.1 h1:XOTWbVWu4wAVozPAny4v5fyWZtjXS+KZl4OAe04vJbw=
+github.com/aws/aws-sdk-go-v2/service/kendra v1.33.1/go.mod h1:9rtGoAo8juNn+jcFJEV5kmmYoNqShdUUflgLtsNQ2gs=
 github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.0.4 h1:6FvtutMp7h3EAk2kjcLii+w9UYyvUdNAIVUG0jnbMs8=
 github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.0.4/go.mod h1:C9xxUK4FnxA9sTmpR6KeHkKLkG8/x/piCa2bffnfJ9E=
 github.com/aws/aws-sdk-go-v2/service/route53domains v1.12.12 h1:L+36zTEzmXHEyRiPJVKbx4Lx0E3cSnB/813Hv2iZqJU=
