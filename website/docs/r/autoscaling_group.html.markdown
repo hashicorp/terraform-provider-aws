@@ -386,7 +386,7 @@ The following arguments are supported:
 * `min_size` - (Required) The minimum size of the Auto Scaling Group.
     (See also [Waiting for Capacity](#waiting-for-capacity) below.)
 * `availability_zones` - (Optional) List of one or more availability zones for the group. Used for EC2-Classic, attaching a network interface via id from a launch template and default subnets when not specified with `vpc_zone_identifier` argument. Conflicts with `vpc_zone_identifier`.
-* `capacity_rebalance` - (Optional) Indicates whether capacity rebalance is enabled. Otherwise, capacity rebalance is disabled.
+* `capacity_rebalance` - (Optional) Whether capacity rebalance is enabled. Otherwise, capacity rebalance is disabled.
 * `context` - (Optional) Reserved.
 * `default_cooldown` - (Optional) The amount of time, in seconds, after a scaling activity completes before another scaling activity can start.
 * `default_instance_warmup` - (Optional) The amount of time, in seconds, until a newly launched instance can contribute to the Amazon CloudWatch metrics. This delay lets an instance finish initializing before Amazon EC2 Auto Scaling aggregates instance metrics, resulting in more reliable usage data. Set this value equal to the amount of time that it takes for resource consumption to become stable after an instance reaches the InService state. (See [Set the default instance warmup for an Auto Scaling group](https://docs.aws.amazon.com/autoscaling/ec2/userguide/ec2-auto-scaling-default-instance-warmup.html))
@@ -436,7 +436,7 @@ Note that if you suspend either the `Launch` or `Terminate` process types, it ca
   all attached load balancers on both create and update operations. (Takes
   precedence over `min_elb_capacity` behavior.)
   (See also [Waiting for Capacity](#waiting-for-capacity) below.)
-* `protect_from_scale_in` (Optional) Indicates whether newly launched instances
+* `protect_from_scale_in` (Optional) Whether newly launched instances
   are automatically protected from termination by Amazon EC2 Auto Scaling when
   scaling in. For more information about preventing instances from terminating
   on scale in, see [Using instance scale-in protection](https://docs.aws.amazon.com/autoscaling/ec2/userguide/ec2-auto-scaling-instance-protection.html)
@@ -643,15 +643,15 @@ This configuration block supports the following:
 This configuration block supports the following:
 
 * `pool_state` - (Optional) Sets the instance state to transition to after the lifecycle hooks finish. Valid values are: Stopped (default), Running or Hibernated.
-* `min_size` - (Optional) Specifies the minimum number of instances to maintain in the warm pool. This helps you to ensure that there is always a certain number of warmed instances available to handle traffic spikes. Defaults to 0 if not specified.
-* `instance_reuse_policy` - (Optional) Indicates whether instances in the Auto Scaling group can be returned to the warm pool on scale in. The default is to terminate instances in the Auto Scaling group when the group scales in.
-* `max_group_prepared_capacity` - (Optional) Specifies the total maximum number of instances that are allowed to be in the warm pool or in any state except Terminated for the Auto Scaling group.
+* `min_size` - (Optional) Minimum number of instances to maintain in the warm pool. This helps you to ensure that there is always a certain number of warmed instances available to handle traffic spikes. Defaults to 0 if not specified.
+* `instance_reuse_policy` - (Optional) Whether instances in the Auto Scaling group can be returned to the warm pool on scale in. The default is to terminate instances in the Auto Scaling group when the group scales in.
+* `max_group_prepared_capacity` - (Optional) Total maximum number of instances that are allowed to be in the warm pool or in any state except Terminated for the Auto Scaling group.
 
 ##### instance_reuse_policy
 
 This configuration block supports the following:
 
-* `reuse_on_scale_in` - (Optional) Specifies whether instances in the Auto Scaling group can be returned to the warm pool on scale in.
+* `reuse_on_scale_in` - (Optional) Whether instances in the Auto Scaling group can be returned to the warm pool on scale in.
 
 ## Attributes Reference
 

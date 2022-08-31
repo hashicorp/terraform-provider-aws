@@ -177,7 +177,7 @@ EventBridge, Honeycode, and Marketo destination properties all support the follo
 * `custom_properties` - (Optional) The custom properties that are specific to the connector when it's used as a destination in the flow. Maximum of 50 items.
 * `error_handling_config` - (Optional) The settings that determine how Amazon AppFlow handles an error when placing data in the custom connector as destination. See [Error Handling Config](#error-handling-config) for more details.
 * `id_field_names` - (Optional) The name of the field that Amazon AppFlow uses as an ID when performing a write operation such as update, delete, or upsert.
-* `write_operation_type` - (Optional) Specifies the type of write operation to be performed in the custom connector when it's used as destination. Valid values are `INSERT`, `UPSERT`, `UPDATE`, and `DELETE`.
+* `write_operation_type` - (Optional) Type of write operation to be performed in the custom connector when it's used as destination. Valid values are `INSERT`, `UPSERT`, `UPDATE`, and `DELETE`.
 
 ##### Customer Profiles Destination Properties
 
@@ -200,7 +200,7 @@ EventBridge, Honeycode, and Marketo destination properties all support the follo
 ###### S3 Output Format Config
 
 * `aggregation_config` - (Optional) The aggregation settings that you can use to customize the output format of your flow data. See [Aggregation Config](#aggregation-config) for more details.
-* `file_type` - (Optional) Indicates the file type that Amazon AppFlow places in the Amazon S3 bucket. Valid values are `CSV`, `JSON`, and `PARQUET`.
+* `file_type` - (Optional) File type that Amazon AppFlow places in the Amazon S3 bucket. Valid values are `CSV`, `JSON`, and `PARQUET`.
 * `prefix_config` - (Optional) Determines the prefix that Amazon AppFlow applies to the folder name in the Amazon S3 bucket. You can name folders according to the flow frequency and date. See [Prefix Config](#prefix-config) for more details.
 
 ##### Salesforce Destination Properties
@@ -239,12 +239,12 @@ EventBridge, Honeycode, and Marketo destination properties all support the follo
 ###### Upsolver S3 Output Format Config
 
 * `aggregation_config` - (Optional) The aggregation settings that you can use to customize the output format of your flow data. See [Aggregation Config](#aggregation-config) for more details.
-* `file_type` - (Optional) Indicates the file type that Amazon AppFlow places in the Upsolver Amazon S3 bucket. Valid values are `CSV`, `JSON`, and `PARQUET`.
+* `file_type` - (Optional) File type that Amazon AppFlow places in the Upsolver Amazon S3 bucket. Valid values are `CSV`, `JSON`, and `PARQUET`.
 * `prefix_config` - (Optional) Determines the prefix that Amazon AppFlow applies to the folder name in the Amazon S3 bucket. You can name folders according to the flow frequency and date. See [Prefix Config](#prefix-config) for more details.
 
 ###### Aggregation Config
 
-* `aggregation_type` - (Optional) Specifies whether Amazon AppFlow aggregates the flow records into a single file, or leave them unaggregated. Valid values are `None` and `SingleFile`.
+* `aggregation_type` - (Optional) Whether Amazon AppFlow aggregates the flow records into a single file, or leave them unaggregated. Valid values are `None` and `SingleFile`.
 
 ###### Prefix Config
 
@@ -260,35 +260,35 @@ EventBridge, Honeycode, and Marketo destination properties all support the follo
 
 ###### Error Handling Config
 
-* `bucket_name` - (Optional) Specifies the name of the Amazon S3 bucket.
-* `bucket_prefix` - (Optional) Specifies the Amazon S3 bucket prefix.
-* `fail_on_first_destination_error` - (Optional, boolean) Specifies if the flow should fail after the first instance of a failure when attempting to place data in the destination.
+* `bucket_name` - (Optional) Name of the Amazon S3 bucket.
+* `bucket_prefix` - (Optional) Amazon S3 bucket prefix.
+* `fail_on_first_destination_error` - (Optional, boolean) If the flow should fail after the first instance of a failure when attempting to place data in the destination.
 
 ### Source Flow Config
 
 * `connector_type` - (Required) The type of connector, such as Salesforce, Amplitude, and so on. Valid values are `Salesforce`, `Singular`, `Slack`, `Redshift`, `S3`, `Marketo`, `Googleanalytics`, `Zendesk`, `Servicenow`, `Datadog`, `Trendmicro`, `Snowflake`, `Dynatrace`, `Infornexus`, `Amplitude`, `Veeva`, `EventBridge`, `LookoutMetrics`, `Upsolver`, `Honeycode`, `CustomerProfiles`, `SAPOData`, and `CustomConnector`.
-* `source_connector_properties` - (Required) Specifies the information that is required to query a particular source connector. See [Source Connector Properties](#source-connector-properties) for details.
+* `source_connector_properties` - (Required) Information that is required to query a particular source connector. See [Source Connector Properties](#source-connector-properties) for details.
 * `api_version` - (Optional) The API version that the destination connector uses.
 * `connector_profile_name` - (Optional) The name of the connector profile. This name must be unique for each connector profile in the AWS account.
 * `incremental_pull_config` - (Optional) Defines the configuration for a scheduled incremental data pull. If a valid configuration is provided, the fields specified in the configuration are used when querying for the incremental data pull. See [Incremental Pull Config](#incremental-pull-config) for more details.
 
 #### Source Connector Properties
 
-* `amplitude` - (Optional) Specifies the information that is required for querying Amplitude. See [Generic Source Properties](#generic-source-properties) for more details.
+* `amplitude` - (Optional) Information that is required for querying Amplitude. See [Generic Source Properties](#generic-source-properties) for more details.
 * `custom_connector` - (Optional) The properties that are applied when the custom connector is being used as a source. See [Custom Connector Source Properties](#custom-connector-source-properties).
-* `datadog` - (Optional) Specifies the information that is required for querying Datadog. See [Generic Source Properties](#generic-source-properties) for more details.
-* `dynratrace` - (Optional) Specifies the information that is required for querying Dynatrace. See [Generic Source Properties](#generic-source-properties) for more details.
-* `infor_nexus` - (Optional) Specifies the information that is required for querying Infor Nexus. See [Generic Source Properties](#generic-source-properties) for more details.
-* `marketo` - (Optional) Specifies the information that is required for querying Marketo. See [Generic Source Properties](#generic-source-properties) for more details.
-* `s3` - (Optional) Specifies the information that is required for querying Amazon S3. See [S3 Source Properties](#s3-source-properties) for more details.
-* `salesforce` - (Optional) Specifies the information that is required for querying Salesforce. See [Salesforce Source Properties](#s3-source-properties) for more details.
-* `sapo_data` - (Optional) Specifies the information that is required for querying SAPOData as a flow source. See [SAPO Source Properties](#sapodata-source-properties) for more details.
-* `service_now` - (Optional) Specifies the information that is required for querying ServiceNow. See [Generic Source Properties](#generic-source-properties) for more details.
-* `singular` - (Optional) Specifies the information that is required for querying Singular. See [Generic Source Properties](#generic-source-properties) for more details.
-* `slack` - (Optional) Specifies the information that is required for querying Slack. See [Generic Source Properties](#generic-source-properties) for more details.
-* `trend_micro` - (Optional) Specifies the information that is required for querying Trend Micro. See [Generic Source Properties](#generic-source-properties) for more details.
-* `veeva` - (Optional) Specifies the information that is required for querying Veeva. See [Veeva Source Properties](#veeva-source-properties) for more details.
-* `zendesk` - (Optional) Specifies the information that is required for querying Zendesk. See [Generic Source Properties](#generic-source-properties) for more details.
+* `datadog` - (Optional) Information that is required for querying Datadog. See [Generic Source Properties](#generic-source-properties) for more details.
+* `dynratrace` - (Optional) Information that is required for querying Dynatrace. See [Generic Source Properties](#generic-source-properties) for more details.
+* `infor_nexus` - (Optional) Information that is required for querying Infor Nexus. See [Generic Source Properties](#generic-source-properties) for more details.
+* `marketo` - (Optional) Information that is required for querying Marketo. See [Generic Source Properties](#generic-source-properties) for more details.
+* `s3` - (Optional) Information that is required for querying Amazon S3. See [S3 Source Properties](#s3-source-properties) for more details.
+* `salesforce` - (Optional) Information that is required for querying Salesforce. See [Salesforce Source Properties](#s3-source-properties) for more details.
+* `sapo_data` - (Optional) Information that is required for querying SAPOData as a flow source. See [SAPO Source Properties](#sapodata-source-properties) for more details.
+* `service_now` - (Optional) Information that is required for querying ServiceNow. See [Generic Source Properties](#generic-source-properties) for more details.
+* `singular` - (Optional) Information that is required for querying Singular. See [Generic Source Properties](#generic-source-properties) for more details.
+* `slack` - (Optional) Information that is required for querying Slack. See [Generic Source Properties](#generic-source-properties) for more details.
+* `trend_micro` - (Optional) Information that is required for querying Trend Micro. See [Generic Source Properties](#generic-source-properties) for more details.
+* `veeva` - (Optional) Information that is required for querying Veeva. See [Veeva Source Properties](#veeva-source-properties) for more details.
+* `zendesk` - (Optional) Information that is required for querying Zendesk. See [Generic Source Properties](#generic-source-properties) for more details.
 
 ##### Generic Source Properties
 
@@ -315,7 +315,7 @@ Amplitude, Datadog, Dynatrace, Google Analytics, Infor Nexus, Marketo, ServiceNo
 
 * `object` - (Required) The object specified in the Salesforce flow source.
 * `enable_dynamic_field_update` - (Optional, boolean) The flag that enables dynamic fetching of new (recently added) fields in the Salesforce objects while running a flow.
-* `include_deleted_records` - (Optional, boolean) Indicates whether Amazon AppFlow includes deleted files in the flow run.
+* `include_deleted_records` - (Optional, boolean) Whether Amazon AppFlow includes deleted files in the flow run.
 
 ##### SAPOData Source Properties
 
@@ -336,7 +336,7 @@ Amplitude, Datadog, Dynatrace, Google Analytics, Infor Nexus, Marketo, ServiceNo
 ### Task
 
 * `source_fields` - (Required) The source fields to which a particular task is applied.
-* `task_type` - (Required) Specifies the particular task implementation that Amazon AppFlow performs. Valid values are `Arithmetic`, `Filter`, `Map`, `Map_all`, `Mask`, `Merge`, `Passthrough`, `Truncate`, and `Validate`.
+* `task_type` - (Required) Particular task implementation that Amazon AppFlow performs. Valid values are `Arithmetic`, `Filter`, `Map`, `Map_all`, `Mask`, `Merge`, `Passthrough`, `Truncate`, and `Validate`.
 * `connector_operator` - (Optional) The operation to be performed on the provided source fields. See [Connector Operator](#connector-operator) for details.
 * `destination_field` - (Optional) Field in a destination connector, or a field value against which Amazon AppFlow validates a source field.
 * `task_properties` - (Optional) Map used to store task-related information. The execution service looks for particular information based on the `TaskType`. Valid keys are `VALUE`, `VALUES`, `DATA_TYPE`, `UPPER_BOUND`, `LOWER_BOUND`, `SOURCE_DATA_TYPE`, `DESTINATION_DATA_TYPE`, `VALIDATION_ACTION`, `MASK_VALUE`, `MASK_LENGTH`, `TRUNCATE_LENGTH`, `MATH_OPERATION_FIELDS_ORDER`, `CONCAT_FORMAT`, `SUBFIELD_CATEGORY_MAP`, and `EXCLUDE_SOURCE_FIELDS_LIST`.
@@ -362,20 +362,20 @@ Amplitude, Datadog, Dynatrace, Google Analytics, Infor Nexus, Marketo, ServiceNo
 
 ### Trigger Config
 
-* `trigger_type` - (Required) Specifies the type of flow trigger. Valid values are `Scheduled`, `Event`, and `OnDemand`.
-* `trigger_properties` - (Optional) Specifies the configuration details of a schedule-triggered flow as defined by the user. Currently, these settings only apply to the `Scheduled` trigger type. See [Scheduled Trigger Properties](#scheduled-trigger-properties) for details.
+* `trigger_type` - (Required) Type of flow trigger. Valid values are `Scheduled`, `Event`, and `OnDemand`.
+* `trigger_properties` - (Optional) Configuration details of a schedule-triggered flow as defined by the user. Currently, these settings only apply to the `Scheduled` trigger type. See [Scheduled Trigger Properties](#scheduled-trigger-properties) for details.
 
 #### Scheduled Trigger Properties
 
 The `trigger_properties` block only supports one attribute: `scheduled`, a block which in turn supports the following:
 
 * `schedule_expression` - (Required) The scheduling expression that determines the rate at which the schedule will run, for example `rate(5minutes)`.
-* `data_pull_mode` - (Optional) Specifies whether a scheduled flow has an incremental data transfer or a complete data transfer for each flow run. Valid values are `Incremental` and `Complete`.
-* `first_execution_from` - (Optional) Specifies the date range for the records to import from the connector in the first flow run. Must be a valid RFC3339 timestamp.
-* `schedule_end_time` - (Optional) Specifies the scheduled end time for a schedule-triggered flow. Must be a valid RFC3339 timestamp.
-* `schedule_offset` - (Optional) Specifies the optional offset that is added to the time interval for a schedule-triggered flow. Maximum value of 36000.
-* `schedule_start_time` - (Optional) Specifies the scheduled start time for a schedule-triggered flow. Must be a valid RFC3339 timestamp.
-* `timezone` - (Optional) Specifies the time zone used when referring to the date and time of a scheduled-triggered flow, such as `America/New_York`.
+* `data_pull_mode` - (Optional) Whether a scheduled flow has an incremental data transfer or a complete data transfer for each flow run. Valid values are `Incremental` and `Complete`.
+* `first_execution_from` - (Optional) Date range for the records to import from the connector in the first flow run. Must be a valid RFC3339 timestamp.
+* `schedule_end_time` - (Optional) Scheduled end time for a schedule-triggered flow. Must be a valid RFC3339 timestamp.
+* `schedule_offset` - (Optional) Optional offset that is added to the time interval for a schedule-triggered flow. Maximum value of 36000.
+* `schedule_start_time` - (Optional) Scheduled start time for a schedule-triggered flow. Must be a valid RFC3339 timestamp.
+* `timezone` - (Optional) Time zone used when referring to the date and time of a scheduled-triggered flow, such as `America/New_York`.
 
 ```terraform
 resource "aws_appflow_flow" "example" {
