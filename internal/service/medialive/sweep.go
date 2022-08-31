@@ -1,0 +1,132 @@
+//go:build sweep
+// +build sweep
+
+package medialive
+
+import (
+	"context"
+	"fmt"
+	"log"
+
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/medialive"
+	"github.com/hashicorp/go-multierror"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+)
+
+func init() {
+	resource.AddTestSweepers("aws_medialive_input", &resource.Sweeper{
+		Name: "aws_medialive_input",
+		F:    sweepInputs,
+		Dependencies: []string{
+			"aws_medialive_input_security_group",
+		},
+	})
+
+	resource.AddTestSweepers("aws_medialive_input_security_group", &resource.Sweeper{
+		Name: "aws_medialive_input_security_group",
+		F:    sweepInputSecurityGroups,
+	})
+}
+
+func sweepInputs(region string) error {
+	client, err := sweep.SharedRegionalSweepClient(region)
+	if err != nil {
+		fmt.Errorf("error getting client: %s", err)
+	}
+
+	ctx := context.Background()
+	conn := client.(*conns.AWSClient).MediaLiveConn
+	sweepResources := make([]*sweep.SweepResource, 0)
+	in := &medialive.ListInputsInput{}
+	var errs *multierror.Error
+
+	pages := medialive.NewListInputsPaginator(conn, in)
+
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if sweep.SkipSweepError(err) {
+			log.Println("[WARN] Skipping MediaLive Inputs sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error retrieving MediaLive Inputs: %w", err)
+		}
+
+		for _, input := range page.Inputs {
+			id := aws.ToString(input.Id)
+			log.Printf("[INFO] Deleting MediaLive Input: %s", id)
+
+			r := ResourceInput()
+			d := r.Data(nil)
+			d.SetId(id)
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+	}
+
+	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("error sweeping MediaLive Inputs for %s: %w", region, err))
+	}
+
+	if sweep.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping MediaLive Inputs sweep for %s: %s", region, errs)
+		return nil
+	}
+
+	return errs.ErrorOrNil()
+}
+
+func sweepInputSecurityGroups(region string) error {
+	client, err := sweep.SharedRegionalSweepClient(region)
+	if err != nil {
+		fmt.Errorf("error getting client: %s", err)
+	}
+
+	ctx := context.Background()
+	conn := client.(*conns.AWSClient).MediaLiveConn
+	sweepResources := make([]*sweep.SweepResource, 0)
+	in := &medialive.ListInputSecurityGroupsInput{}
+	var errs *multierror.Error
+
+	pages := medialive.NewListInputSecurityGroupsPaginator(conn, in)
+
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if sweep.SkipSweepError(err) {
+			log.Println("[WARN] Skipping MediaLive Input Security Groups sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error retrieving MediaLive Input Security Groups: %w", err)
+		}
+
+		for _, group := range page.InputSecurityGroups {
+			id := aws.ToString(group.Id)
+			log.Printf("[INFO] Deleting MediaLive Input Security Group: %s", id)
+
+			r := ResourceInputSecurityGroup()
+			d := r.Data(nil)
+			d.SetId(id)
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+	}
+
+	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("error sweeping MediaLive Input Security Groups for %s: %w", region, err))
+	}
+
+	if sweep.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping MediaLive Input Security Groups sweep for %s: %s", region, errs)
+		return nil
+	}
+
+	return errs.ErrorOrNil()
+}
