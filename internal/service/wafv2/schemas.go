@@ -329,7 +329,7 @@ func fieldToMatchBaseSchema() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"match_scope":       matchScopeSchema(),
-						"oversize_handling": oversizeHandlingSchema(),
+						"oversize_handling": oversizeHandlingRequiredSchema(),
 						"match_pattern": {
 							Type:     schema.TypeList,
 							Required: true,
@@ -426,12 +426,7 @@ func jsonBodySchema() *schema.Schema {
 					Required:     true,
 					ValidateFunc: validation.StringInSlice(wafv2.JsonMatchScope_Values(), false),
 				},
-				"oversize_handling": {
-					Type:         schema.TypeString,
-					Optional:     true,
-					Default:      wafv2.OversizeHandlingContinue,
-					ValidateFunc: validation.StringInSlice(wafv2.OversizeHandling_Values(), false),
-				},
+				"oversize_handling": oversizeHandlingRequiredSchema(),
 			},
 		},
 	}
@@ -697,13 +692,22 @@ func bodySchema() *schema.Schema {
 		Optional: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"oversize_handling": oversizeHandlingSchema(),
+				"oversize_handling": oversizeHandlingOptionalComputedSchema(),
 			},
 		},
 	}
 }
 
-func oversizeHandlingSchema() *schema.Schema {
+func oversizeHandlingOptionalComputedSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:         schema.TypeString,
+		Optional:     true,
+		Computed:     true,
+		ValidateFunc: validation.StringInSlice(wafv2.OversizeHandling_Values(), false),
+	}
+}
+
+func oversizeHandlingRequiredSchema() *schema.Schema {
 	return &schema.Schema{
 		Type:         schema.TypeString,
 		Required:     true,
@@ -739,7 +743,7 @@ func headersSchema() *schema.Schema {
 					},
 				},
 				"match_scope":       matchScopeSchema(),
-				"oversize_handling": oversizeHandlingSchema(),
+				"oversize_handling": oversizeHandlingRequiredSchema(),
 			},
 		},
 	}
