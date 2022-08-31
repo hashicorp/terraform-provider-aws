@@ -20,7 +20,7 @@ data "aws_location_map" "example" {
 
 ## Argument Reference
 
-* `map_name` - (Required) The name of the map resource.
+* `map_name` - (Required) Name of the map resource.
 
 ## Attribute Reference
 

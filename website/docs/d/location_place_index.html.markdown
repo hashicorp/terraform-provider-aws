@@ -20,7 +20,7 @@ data "aws_location_place_index" "example" {
 
 ## Argument Reference
 
-* `index_name` - (Required) The name of the place index resource.
+* `index_name` - (Required) Name of the place index resource.
 
 ## Attribute Reference
 

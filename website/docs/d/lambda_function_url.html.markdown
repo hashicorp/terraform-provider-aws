@@ -27,7 +27,7 @@ data "aws_lambda_function_url" "existing" {
 The following arguments are supported:
 
 * `function_name` - (Required) he name (or ARN) of the Lambda function.
-* `qualifier` - (Optional) The alias name or `"$LATEST"`.
+* `qualifier` - (Optional) Alias name or `"$LATEST"`.
 
 ## Attributes Reference
 

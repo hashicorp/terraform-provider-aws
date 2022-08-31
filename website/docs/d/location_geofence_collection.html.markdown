@@ -24,7 +24,7 @@ data "aws_location_geofence_collection" "example" {
 
 The following arguments are required:
 
-* `collection_name` - (Required) The name of the geofence collection.
+* `collection_name` - (Required) Name of the geofence collection.
 
 ## Attributes Reference
 

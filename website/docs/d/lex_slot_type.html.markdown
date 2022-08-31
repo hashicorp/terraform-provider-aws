@@ -23,8 +23,8 @@ data "aws_lex_slot_type" "flower_types" {
 
 The following arguments are supported:
 
-* `name` - (Required) The name of the slot type. The name is case sensitive.
-* `version` - (Optional) The version of the slot type.
+* `name` - (Required) Name of the slot type. The name is case sensitive.
+* `version` - (Optional) Version of the slot type.
 
 ## Attributes Reference
 

@@ -23,8 +23,8 @@ data "aws_lex_intent" "order_flowers" {
 
 The following arguments are supported:
 
-* `name` - (Required) The name of the intent. The name is case sensitive.
-* `version` - (Optional) The version of the intent.
+* `name` - (Required) Name of the intent. The name is case sensitive.
+* `version` - (Optional) Version of the intent.
 
 ## Attributes Reference
 

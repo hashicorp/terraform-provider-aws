@@ -24,7 +24,7 @@ data "aws_location_tracker_associations" "example" {
 
 The following arguments are required:
 
-* `tracker_name` - (Required) The name of the tracker resource associated with a geofence collection.
+* `tracker_name` - (Required) Name of the tracker resource associated with a geofence collection.
 
 ## Attributes Reference
 

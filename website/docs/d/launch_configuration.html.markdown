@@ -22,7 +22,7 @@ data "aws_launch_configuration" "ubuntu" {
 
 The following arguments are supported:
 
-* `name` - (Required) The name of the launch configuration.
+* `name` - (Required) Name of the launch configuration.
 
 ## Attributes Reference
 
