@@ -64,9 +64,9 @@ the selected Nat Gateway.
 `addresses` are also exported with the following attributes, when they are relevant:
 Each attachment supports the following:
 
-* `allocation_id` - Id of the EIP allocated to the selected Nat Gateway.
+* `allocation_id` - ID of the EIP allocated to the selected Nat Gateway.
 * `connectivity_type` - Connectivity type of the NAT Gateway.
-* `network_interface_id` - The Id of the ENI allocated to the selected Nat Gateway.
+* `network_interface_id` - The ID of the ENI allocated to the selected Nat Gateway.
 * `private_ip` - Private Ip address of the selected Nat Gateway.
 * `public_ip` - Public Ip (EIP) address of the selected Nat Gateway.
 
