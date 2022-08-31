@@ -151,7 +151,7 @@ The following arguments are only available to "SimpleScaling" type policies:
 The following arguments are only available to "StepScaling" type policies:
 
 * `metric_aggregation_type` - (Optional) The aggregation type for the policy's metrics. Valid values are "Minimum", "Maximum", and "Average". Without a value, AWS will treat the aggregation type as "Average".
-* `step_adjustment` - (Optional) A set of adjustments that manage
+* `step_adjustment` - (Optional) Set of adjustments that manage
 group scaling. These have the following structure:
 
 ```terraform
@@ -189,7 +189,7 @@ Notice the bounds are **relative** to the alarm threshold, meaning that the star
 
 The following arguments are only available to "TargetTrackingScaling" type policies:
 
-* `target_tracking_configuration` - (Optional) A target tracking policy. These have the following structure:
+* `target_tracking_configuration` - (Optional) Target tracking policy. These have the following structure:
 
 ```terraform
 resource "aws_autoscaling_policy" "example" {
@@ -207,8 +207,8 @@ resource "aws_autoscaling_policy" "example" {
 
 The following fields are available in target tracking configuration:
 
-* `predefined_metric_specification` - (Optional) A predefined metric. Conflicts with `customized_metric_specification`.
-* `customized_metric_specification` - (Optional) A customized metric. Conflicts with `predefined_metric_specification`.
+* `predefined_metric_specification` - (Optional) Predefined metric. Conflicts with `customized_metric_specification`.
+* `customized_metric_specification` - (Optional) Customized metric. Conflicts with `predefined_metric_specification`.
 * `target_value` - (Required) The target value for the metric.
 * `disable_scale_in` - (Optional, Default: false) Indicates whether scale in by the target tracking policy is disabled.
 
@@ -262,50 +262,50 @@ The following arguments are supported:
 The following arguments are supported:
 
 * `predefined_metric_type` - (Required) The metric type. Valid values are `ASGTotalCPUUtilization`, `ASGTotalNetworkIn`, `ASGTotalNetworkOut`, or `ALBTargetGroupRequestCount`.
-* `resource_label` - (Required) A label that uniquely identifies a specific Application Load Balancer target group from which to determine the request count served by your Auto Scaling group.
+* `resource_label` - (Required) Label that uniquely identifies a specific Application Load Balancer target group from which to determine the request count served by your Auto Scaling group.
 
 ##### predefined_metric_pair_specification
 
 The following arguments are supported:
 
 * `predefined_metric_type` - (Required) Indicates which metrics to use. There are two different types of metrics for each metric type: one is a load metric and one is a scaling metric. For example, if the metric type is `ASGCPUUtilization`, the Auto Scaling group's total CPU metric is used as the load metric, and the average CPU metric is used for the scaling metric. Valid values are `ASGCPUUtilization`, `ASGNetworkIn`, `ASGNetworkOut`, or `ALBRequestCount`.
-* `resource_label` - (Required) A label that uniquely identifies a specific Application Load Balancer target group from which to determine the request count served by your Auto Scaling group.
+* `resource_label` - (Required) Label that uniquely identifies a specific Application Load Balancer target group from which to determine the request count served by your Auto Scaling group.
 
 ##### predefined_scaling_metric_specification
 
 The following arguments are supported:
 
 * `predefined_metric_type` - (Required) Describes a scaling metric for a predictive scaling policy. Valid values are `ASGAverageCPUUtilization`, `ASGAverageNetworkIn`, `ASGAverageNetworkOut`, or `ALBRequestCountPerTarget`.
-* `resource_label` - (Required) A label that uniquely identifies a specific Application Load Balancer target group from which to determine the request count served by your Auto Scaling group.
+* `resource_label` - (Required) Label that uniquely identifies a specific Application Load Balancer target group from which to determine the request count served by your Auto Scaling group.
 
 ##### customized_scaling_metric_specification
 The following arguments are supported:
 
-* `metric_data_queries` - (Required) A list of up to 10 structures that defines custom scaling metric in predictive scaling policy
+* `metric_data_queries` - (Required) List of up to 10 structures that defines custom scaling metric in predictive scaling policy
 
 ##### customized_load_metric_specification
 The following arguments are supported:
 
-* `metric_data_queries` - (Required) A list of up to 10 structures that defines custom load metric in predictive scaling policy
+* `metric_data_queries` - (Required) List of up to 10 structures that defines custom load metric in predictive scaling policy
 
 ##### customized_capacity_metric_specification
 The following arguments are supported:
 
-* `metric_data_queries` - (Required) A list of up to 10 structures that defines custom capacity metric in predictive scaling policy
+* `metric_data_queries` - (Required) List of up to 10 structures that defines custom capacity metric in predictive scaling policy
 
 ##### metric_data_queries
 The following arguments are supported:
 
 * `expression` - (Optional) The math expression used on the returned metric. You must specify either `expression` or `metric_stat`, but not both.
-* `id` - (Required) A short name for the metric used in predictive scaling policy.
-* `metric_stat` - (Optional) A structure that defines CloudWatch metric to be used in predictive scaling policy. You must specify either `expression` or `metric_stat`, but not both.
-* `label` - (Optional) A human-readable label for this metric or expression.
-* `return_data` - (Optional) A boolean that indicates whether to return the timestamps and raw data values of this metric, the default it true
+* `id` - (Required) Short name for the metric used in predictive scaling policy.
+* `metric_stat` - (Optional) Structure that defines CloudWatch metric to be used in predictive scaling policy. You must specify either `expression` or `metric_stat`, but not both.
+* `label` - (Optional) Human-readable label for this metric or expression.
+* `return_data` - (Optional) Boolean that indicates whether to return the timestamps and raw data values of this metric, the default it true
 
 ##### metric_stat
 The following arguments are supported:
 
-* `metric` - (Required) A structure that defines the CloudWatch metric to return, including the metric name, namespace, and dimensions.
+* `metric` - (Required) Structure that defines the CloudWatch metric to return, including the metric name, namespace, and dimensions.
 * `stat` - (Required) The statistic of the metrics to return.
 * `unit` - (Optional) The unit of the metrics to return.
 

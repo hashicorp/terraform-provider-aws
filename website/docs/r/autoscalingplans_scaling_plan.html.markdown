@@ -133,13 +133,13 @@ resource "aws_autoscalingplans_scaling_plan" "example" {
 The following arguments are supported:
 
 * `name` - (Required) The name of the scaling plan. Names cannot contain vertical bars, colons, or forward slashes.
-* `application_source` - (Required) A CloudFormation stack or set of tags. You can create one scaling plan per application source.
+* `application_source` - (Required) CloudFormation stack or set of tags. You can create one scaling plan per application source.
 * `scaling_instruction` - (Required) The scaling instructions. More details can be found in the [AWS Auto Scaling API Reference](https://docs.aws.amazon.com/autoscaling/plans/APIReference/API_ScalingInstruction.html).
 
 The `application_source` object supports the following:
 
 * `cloudformation_stack_arn` - (Optional) The Amazon Resource Name (ARN) of a AWS CloudFormation stack.
-* `tag_filter` - (Optional) A set of tags.
+* `tag_filter` - (Optional) Set of tags.
 
 The `tag_filter` object supports the following:
 
@@ -183,10 +183,10 @@ The `predefined_load_metric_specification` object supports the following:
 The `target_tracking_configuration` object supports the following:
 
 * `target_value` - (Required) The target value for the metric.
-* `customized_scaling_metric_specification` - (Optional) A customized metric. You can specify either `customized_scaling_metric_specification` or `predefined_scaling_metric_specification`.
+* `customized_scaling_metric_specification` - (Optional) Customized metric. You can specify either `customized_scaling_metric_specification` or `predefined_scaling_metric_specification`.
 More details can be found in the [AWS Auto Scaling API Reference](https://docs.aws.amazon.com/autoscaling/plans/APIReference/API_CustomizedScalingMetricSpecification.html).
 * `disable_scale_in` - (Optional) Boolean indicating whether scale in by the target tracking scaling policy is disabled. Defaults to `false`.
-* `predefined_scaling_metric_specification` - (Optional) A predefined metric. You can specify either `predefined_scaling_metric_specification` or `customized_scaling_metric_specification`.
+* `predefined_scaling_metric_specification` - (Optional) Predefined metric. You can specify either `predefined_scaling_metric_specification` or `customized_scaling_metric_specification`.
 More details can be found in the [AWS Auto Scaling API Reference](https://docs.aws.amazon.com/autoscaling/plans/APIReference/API_PredefinedScalingMetricSpecification.html).
 * `estimated_instance_warmup` - (Optional) The estimated time, in seconds, until a newly launched instance can contribute to the CloudWatch metrics.
 This value is used only if the resource is an Auto Scaling group.
