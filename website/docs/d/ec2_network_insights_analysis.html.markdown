@@ -41,7 +41,7 @@ In addition to all arguments above, the following attributes are exported:
 * `alternate_path_hints` - Potential intermediate components of a feasible path.
 * `arn` - ARN of the selected Network Insights Analysis.
 * `explanations` - Explanation codes for an unreachable path.
-* `filter_in_arns` - Amazon Resource Names (ARN) of the AWS resources that the path must traverse.
+* `filter_in_arns` - ARNs of the AWS resources that the path must traverse.
 * `forward_path_components` - The components in the path from source to destination.
 * `network_insights_path_id` - The ID of the path.
 * `path_found` - Set to `true` if the destination was reachable.
