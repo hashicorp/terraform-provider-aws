@@ -39,7 +39,7 @@ project {
     }
 
     params {
-        if (acctestParallelism!="") {
+        if (acctestParallelism != "") {
             text("ACCTEST_PARALLELISM", acctestParallelism, allowEmpty = false)
         }
         text("TEST_PATTERN", "TestAcc", display = ParameterDisplay.HIDDEN)
@@ -310,6 +310,27 @@ object Sweeper : BuildType({
         script {
             name = "Sweeper"
             scriptContent = File("./scripts/sweeper_role.sh").readText()
+        }
+    }
+
+    val triggerTimeRaw = DslContext.getParameter("sweeper_trigger_time", "")
+    if (triggerTimeRaw != "") {
+        val formatter = DateTimeFormatter.ofPattern("HH':'mm' 'VV")
+        val triggerTime = formatter.parse(triggerTimeRaw)
+        triggers {
+            schedule {
+                schedulingPolicy = daily {
+                    val triggerHM = LocalTime.from(triggerTime)
+                    hour = triggerHM.getHour()
+                    minute = triggerHM.getMinute()
+                    timezone = ZoneId.from(triggerTime).toString()
+                }
+                branchFilter = "+:refs/heads/main"
+                triggerBuild = always()
+                withPendingChangesOnly = false
+                enableQueueOptimization = false
+                enforceCleanCheckoutForDependencies = true
+            }
         }
     }
 
