@@ -21,8 +21,8 @@ func TestAccEC2InstancesDataSource_basic(t *testing.T) {
 			{
 				Config: testAccInstancesDataSourceConfig_ids(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.aws_instances.test", "ids.#", "3"),
-					resource.TestCheckResourceAttr("data.aws_instances.test", "private_ips.#", "3"),
+					resource.TestCheckResourceAttr("data.aws_instances.test", "ids.#", "2"),
+					resource.TestCheckResourceAttr("data.aws_instances.test", "private_ips.#", "2"),
 					// Public IP values are flakey for new EC2 instances due to eventual consistency
 					resource.TestCheckResourceAttrSet("data.aws_instances.test", "public_ips.#"),
 				),
@@ -113,7 +113,7 @@ func testAccInstancesDataSourceConfig_ids(rName string) string {
 		acctest.AvailableEC2InstanceTypeForRegion("t3.micro", "t2.micro"),
 		fmt.Sprintf(`
 resource "aws_instance" "test" {
-  count         = 3
+  count         = 2
   ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = data.aws_ec2_instance_type_offering.available.instance_type
 
