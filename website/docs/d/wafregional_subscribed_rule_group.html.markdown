@@ -43,8 +43,8 @@ resource "aws_wafregional_web_acl" "acl" {
 
 The following arguments are supported (at least one needs to be specified):
 
-* `name` - (Optional) The name of the WAF rule group.
-* `metric_name` - (Optional) The name of the WAF rule group.
+* `name` - (Optional) Name of the WAF rule group.
+* `metric_name` - (Optional) Name of the WAF rule group.
 
 ## Attributes Reference
 

@@ -23,7 +23,7 @@ data "aws_wafv2_regex_pattern_set" "example" {
 
 The following arguments are supported:
 
-* `name` - (Required) The name of the WAFv2 Regex Pattern Set.
+* `name` - (Required) Name of the WAFv2 Regex Pattern Set.
 * `scope` - (Required) Specifies whether this is for an AWS CloudFront distribution or for a regional application. Valid values are `CLOUDFRONT` or `REGIONAL`. To work with CloudFront, you must also specify the region `us-east-1` (N. Virginia) on the AWS provider.
 
 ## Attributes Reference
@@ -39,4 +39,4 @@ In addition to all arguments above, the following attributes are exported:
 
 Each `regular_expression` supports the following argument:
 
-* `regex_string` - (Required) The string representing the regular expression, see the AWS WAF [documentation](https://docs.aws.amazon.com/waf/latest/developerguide/waf-regex-pattern-set-creating.html) for more information.
+* `regex_string` - (Required) String representing the regular expression, see the AWS WAF [documentation](https://docs.aws.amazon.com/waf/latest/developerguide/waf-regex-pattern-set-creating.html) for more information.
