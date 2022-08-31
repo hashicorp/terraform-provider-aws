@@ -37,13 +37,13 @@ Supported only for WebSocket APIs.
 * `deployment_id` - (Optional) The deployment identifier of the stage. Use the [`aws_apigatewayv2_deployment`](/docs/providers/aws/r/apigatewayv2_deployment.html) resource to configure a deployment.
 * `description` - (Optional) The description for the stage. Must be less than or equal to 1024 characters in length.
 * `route_settings` - (Optional) Route settings for the stage.
-* `stage_variables` - (Optional) A map that defines the stage variables for the stage.
-* `tags` - (Optional) A map of tags to assign to the stage. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `stage_variables` - (Optional) Map that defines the stage variables for the stage.
+* `tags` - (Optional) Map of tags to assign to the stage. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 The `access_log_settings` object supports the following:
 
 * `destination_arn` - (Required) The ARN of the CloudWatch Logs log group to receive access logs. Any trailing `:*` is trimmed from the ARN.
-* `format` - (Required) A single line [format](https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-logging.html#apigateway-cloudwatch-log-formats) of the access logs of data, as specified by [selected $context variables](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-websocket-api-logging.html).
+* `format` - (Required) Single line [format](https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-logging.html#apigateway-cloudwatch-log-formats) of the access logs of data, as specified by [selected $context variables](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-websocket-api-logging.html).
 
 The `default_route_settings` object supports the following:
 
