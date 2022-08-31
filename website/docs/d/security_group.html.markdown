@@ -68,8 +68,8 @@ the selected Security Group.
 
 The following fields are also exported:
 
-* `description` - The description of the security group.
-* `arn` - The computed ARN of the security group.
+* `description` - Description of the security group.
+* `arn` - Computed ARN of the security group.
 
 ~> **Note:** The [default security group for a VPC](http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_SecurityGroups.html#DefaultSecurityGroup) has the name `default`.
 

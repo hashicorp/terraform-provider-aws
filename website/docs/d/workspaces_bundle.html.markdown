@@ -49,12 +49,12 @@ The following arguments are supported:
 
 ### `compute_type`
 
-* `name` - The name of the compute type.
+* `name` - Name of the compute type.
 
 ### `root_storage`
 
-* `capacity` - The size of the root volume.
+* `capacity` - Size of the root volume.
 
 ### `user_storage`
 
-* `capacity` - The size of the user storage.
+* `capacity` - Size of the user storage.

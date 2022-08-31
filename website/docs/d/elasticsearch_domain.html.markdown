@@ -87,7 +87,7 @@ The following attributes are exported:
 * `processing` – Status of a configuration change in the domain.
 * `snapshot_options` – Domain snapshot related options.
     * `automated_snapshot_start_hour` - Hour during which the service takes an automated daily snapshot of the indices in the domain.
-* `tags` - The tags assigned to the domain.
+* `tags` - Tags assigned to the domain.
 * `vpc_options` - VPC Options for private Elasticsearch domains.
     * `availability_zones` - The availability zones used by the domain.
     * `security_group_ids` - The security groups used by the domain.

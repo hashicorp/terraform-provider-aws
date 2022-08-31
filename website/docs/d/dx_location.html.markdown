@@ -31,5 +31,5 @@ In addition to all arguments above, the following attributes are exported:
 
 * `available_macsec_port_speeds` - The available MAC Security (MACsec) port speeds for the location.
 * `available_port_speeds` - The available port speeds for the location.
-* `available_providers` - The names of the service providers for the location.
-* `location_name` - The name of the location. This includes the name of the colocation partner and the physical site of the building.
+* `available_providers` - Names of the service providers for the location.
+* `location_name` - Name of the location. This includes the name of the colocation partner and the physical site of the building.

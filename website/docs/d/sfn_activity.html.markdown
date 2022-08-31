@@ -29,5 +29,5 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - The ARN that identifies the activity.
-* `creation_date` - The date the activity was created.
+* `id` - ARN that identifies the activity.
+* `creation_date` - Date the activity was created.

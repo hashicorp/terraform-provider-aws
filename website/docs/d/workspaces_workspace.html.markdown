@@ -55,7 +55,7 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - The workspaces ID.
-* `ip_address` - The IP address of the WorkSpace.
-* `computer_name` - The name of the WorkSpace, as seen by the operating system.
-* `state` - The operational state of the WorkSpace.
+* `id` - Workspaces ID.
+* `ip_address` - IP address of the WorkSpace.
+* `computer_name` - Name of the WorkSpace, as seen by the operating system.
+* `state` - Operational state of the WorkSpace.

@@ -38,8 +38,8 @@ exported as attributes.
 
 In addition to all arguments above, the following attributes are exported:
 
-* `name` - The name of the selected region.
+* `name` - Name of the selected region.
 
-* `endpoint` - The EC2 endpoint for the selected region.
+* `endpoint` - EC2 endpoint for the selected region.
 
-* `description` - The region's description in this format: "Location (Region name)".
+* `description` - Region's description in this format: "Location (Region name)".

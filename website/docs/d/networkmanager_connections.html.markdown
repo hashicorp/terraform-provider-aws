@@ -32,4 +32,4 @@ data "aws_networkmanager_connections" "example" {
 
 In addition to all arguments above, the following attributes are exported:
 
-* `ids` - The IDs of the connections.
+* `ids` - IDs of the connections.

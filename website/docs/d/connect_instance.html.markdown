@@ -42,7 +42,7 @@ The following arguments are supported:
 In addition to all arguments above, the following attributes are exported:
 
 * `created_time` - Specifies When the instance was created.
-* `arn` - The ARN of the instance.
+* `arn` - ARN of the instance.
 * `identity_management_type` - Specifies The identity management type attached to the instance.
 * `inbound_calls_enabled` - Specifies Whether inbound calls are enabled.
 * `outbound_calls_enabled` - Specifies Whether outbound calls are enabled.
@@ -52,4 +52,4 @@ In addition to all arguments above, the following attributes are exported:
 * `auto_resolve_best_voices` - Specifies Whether auto resolve best voices is enabled.
 * `use_custom_tts_voices` - Specifies Whether use custom tts voices is enabled.
 * `status` - Specifies The state of the instance.
-* `service_role` - The service role of the instance.
+* `service_role` - Service role of the instance.

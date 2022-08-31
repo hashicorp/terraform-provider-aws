@@ -48,5 +48,5 @@ The following arguments are supported by the `filter` configuration block:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - The identifier of the user in the Identity Store.
-* `user_name` - The user's user name value.
+* `id` - Identifier of the user in the Identity Store.
+* `user_name` - User's user name value.

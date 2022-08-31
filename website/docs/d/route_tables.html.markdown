@@ -55,7 +55,7 @@ which take the following arguments:
 ## Attributes Reference
 
 * `id` - AWS Region.
-* `ids` - A list of all the route table ids found.
+* `ids` - List of all the route table ids found.
 
 ## Timeouts
 

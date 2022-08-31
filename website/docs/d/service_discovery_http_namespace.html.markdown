@@ -27,9 +27,9 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - The ID of a namespace.
-* `arn` - The ARN that Amazon Route 53 assigns to the namespace when you create it.
-* `description` - The description that you specify for the namespace when you create it.
-* `http_name` - The name of an HTTP namespace.
-* `tags` - A map of tags for the resource.
+* `id` - ID of a namespace.
+* `arn` - ARN that Amazon Route 53 assigns to the namespace when you create it.
+* `description` - Description that you specify for the namespace when you create it.
+* `http_name` - Name of an HTTP namespace.
+* `tags` - Map of tags for the resource.
 

@@ -39,14 +39,14 @@ The following arguments are supported by the `filter` configuration block:
 In addition to all arguments above, the following attributes are exported:
 
 * `alternate_path_hints` - Potential intermediate components of a feasible path.
-* `arn` - The ARN of the selected Network Insights Analysis.
+* `arn` - ARN of the selected Network Insights Analysis.
 * `explanations` - Explanation codes for an unreachable path.
-* `filter_in_arns` - The Amazon Resource Names (ARN) of the AWS resources that the path must traverse.
+* `filter_in_arns` - Amazon Resource Names (ARN) of the AWS resources that the path must traverse.
 * `forward_path_components` - The components in the path from source to destination.
 * `network_insights_path_id` - The ID of the path.
 * `path_found` - Set to `true` if the destination was reachable.
 * `return_path_components` - The components in the path from destination to source.
-* `start_date` - The date/time the analysis was started.
-* `status` - The status of the analysis. `succeeded` means the analysis was completed, not that a path was found, for that see `path_found`.
-* `status_message` - A message to provide more context when the `status` is `failed`.
-* `warning_message` - The warning message.
+* `start_date` - Date/time the analysis was started.
+* `status` - Status of the analysis. `succeeded` means the analysis was completed, not that a path was found, for that see `path_found`.
+* `status_message` - Message to provide more context when the `status` is `failed`.
+* `warning_message` - Warning message.

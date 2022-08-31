@@ -47,6 +47,6 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `arn` - The ARN of the document. If the document is an AWS managed document, this value will be set to the name of the document instead.
-* `content` - The contents of the document.
-* `document_type` - The type of the document.
+* `arn` - ARN of the document. If the document is an AWS managed document, this value will be set to the name of the document instead.
+* `content` - Contents of the document.
+* `document_type` - Type of the document.

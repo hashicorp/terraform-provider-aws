@@ -45,7 +45,7 @@ data "aws_security_groups" "test" {
 * `arns` - ARNs of the matched security groups.
 * `id` - AWS Region.
 * `ids` - IDs of the matches security groups.
-* `vpc_ids` - The VPC IDs of the matched security groups. The data source's tag or filter *will span VPCs* unless the `vpc-id` filter is also used.
+* `vpc_ids` - VPC IDs of the matched security groups. The data source's tag or filter *will span VPCs* unless the `vpc-id` filter is also used.
 
 [1]: https://docs.aws.amazon.com/cli/latest/reference/ec2/describe-security-groups.html
 

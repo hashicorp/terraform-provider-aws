@@ -29,11 +29,11 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `etag` - The current version of the cache policy.
-* `min_ttl` - The minimum amount of time, in seconds, that you want objects to stay in the CloudFront cache before CloudFront sends another request to the origin to see if the object has been updated.
-* `max_ttl` - The maximum amount of time, in seconds, that objects stay in the CloudFront cache before CloudFront sends another request to the origin to see if the object has been updated.
-* `default_ttl` - The default amount of time, in seconds, that you want objects to stay in the CloudFront cache before CloudFront sends another request to the origin to see if the object has been updated.
-* `comment` - A comment to describe the cache policy.
+* `etag` - Current version of the cache policy.
+* `min_ttl` - Minimum amount of time, in seconds, that you want objects to stay in the CloudFront cache before CloudFront sends another request to the origin to see if the object has been updated.
+* `max_ttl` - Maximum amount of time, in seconds, that objects stay in the CloudFront cache before CloudFront sends another request to the origin to see if the object has been updated.
+* `default_ttl` - Default amount of time, in seconds, that you want objects to stay in the CloudFront cache before CloudFront sends another request to the origin to see if the object has been updated.
+* `comment` - Comment to describe the cache policy.
 * `parameters_in_cache_key_and_forwarded_to_origin` - The HTTP headers, cookies, and URL query strings to include in the cache key. See [Parameters In Cache Key And Forwarded To Origin](#parameters-in-cache-key-and-forwarded-to-origin) for more information.
 
 ### Parameters In Cache Key And Forwarded To Origin
@@ -61,4 +61,4 @@ In addition to all arguments above, the following attributes are exported:
 
 ### Items
 
-* `items` - A list of item names (`cookies`, `headers`, or `query_strings`).
+* `items` - List of item names (`cookies`, `headers`, or `query_strings`).

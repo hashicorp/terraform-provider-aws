@@ -32,4 +32,4 @@ data "aws_secretsmanager_random_password" "test" {
 
 ## Attributes Reference
 
-* `random_password` - The random password.
+* `random_password` - Random password.

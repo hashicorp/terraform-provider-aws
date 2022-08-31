@@ -29,6 +29,6 @@ data "aws_route53_delegation_set" "dset" {
 
 The following attribute is additionally exported:
 
-* `arn` - The ARN of the Delegation Set.
+* `arn` - ARN of the Delegation Set.
 * `caller_reference` - Caller Reference of the delegation set.
-* `name_servers` - The list of DNS name servers for the delegation set.
+* `name_servers` - List of DNS name servers for the delegation set.

@@ -41,26 +41,26 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `arn` - The ARN of the virtual service.
-* `created_date` - The creation date of the virtual service.
-* `last_updated_date` - The last update date of the virtual service.
-* `resource_owner` - The resource owner's AWS account ID.
-* `spec` - The virtual service specification
-* `tags` - A map of tags.
+* `arn` - ARN of the virtual service.
+* `created_date` - Creation date of the virtual service.
+* `last_updated_date` - Last update date of the virtual service.
+* `resource_owner` - Resource owner's AWS account ID.
+* `spec` - Virtual service specification
+* `tags` - Map of tags.
 
 ### Spec
 
-* `provider` - The App Mesh object that is acting as the provider for a virtual service.
+* `provider` - App Mesh object that is acting as the provider for a virtual service.
 
 ### Provider
 
-* `virtual_node` - The virtual node associated with the virtual service.
-* `virtual_router` - The virtual router associated with the virtual service.
+* `virtual_node` - Virtual node associated with the virtual service.
+* `virtual_router` - Virtual router associated with the virtual service.
 
 ### Virtual Node
 
-* `virtual_node_name` - The name of the virtual node that is acting as a service provider.
+* `virtual_node_name` - Name of the virtual node that is acting as a service provider.
 
 ### Virtual Router
 
-* `virtual_router_name` - The name of the virtual router that is acting as a service provider.
+* `virtual_router_name` - Name of the virtual router that is acting as a service provider.

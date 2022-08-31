@@ -47,7 +47,7 @@ which take the following arguments:
 
 ## Attributes Reference
 
-* `arn` - The ARN of the Internet Gateway.
+* `arn` - ARN of the Internet Gateway.
 
 All of the argument attributes except `filter` block are also exported as
 result attributes. This data source will complete the data by populating
@@ -57,9 +57,9 @@ the selected Internet Gateway.
 `attachments` are also exported with the following attributes, when there are relevants:
 Each attachment supports the following:
 
-* `owner_id` - The ID of the AWS account that owns the internet gateway.
-* `state` - The current state of the attachment between the gateway and the VPC. Present only if a VPC is attached
-* `vpc_id` - The ID of an attached VPC.
+* `owner_id` - ID of the AWS account that owns the internet gateway.
+* `state` - Current state of the attachment between the gateway and the VPC. Present only if a VPC is attached
+* `vpc_id` - ID of an attached VPC.
 
 ## Timeouts
 

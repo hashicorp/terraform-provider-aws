@@ -48,5 +48,5 @@ The following arguments are supported by the `filter` configuration block:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - The identifier of the group in the Identity Store.
-* `display_name` - The group's display name value.
+* `id` - Identifier of the group in the Identity Store.
+* `display_name` - Group's display name value.

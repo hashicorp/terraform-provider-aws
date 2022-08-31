@@ -34,5 +34,5 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `db_password` - A temporary password that authorizes the user name returned by `db_user` to log on to the database `db_name`.
-* `expiration` - The date and time the password in `db_password` expires.
+* `db_password` - Temporary password that authorizes the user name returned by `db_user` to log on to the database `db_name`.
+* `expiration` - Date and time the password in `db_password` expires.

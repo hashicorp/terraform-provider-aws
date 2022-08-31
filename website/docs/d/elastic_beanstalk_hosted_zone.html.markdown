@@ -22,6 +22,6 @@ data "aws_elastic_beanstalk_hosted_zone" "current" {}
 
 ## Attributes Reference
 
-* `id` - The ID of the hosted zone.
+* `id` - ID of the hosted zone.
 
-* `region` - The region of the hosted zone.
+* `region` - Region of the hosted zone.

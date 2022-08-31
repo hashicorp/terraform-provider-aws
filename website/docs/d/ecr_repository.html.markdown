@@ -33,12 +33,12 @@ In addition to all arguments above, the following attributes are exported:
 * `encryption_configuration` - Encryption configuration for the repository. See [Encryption Configuration](#encryption-configuration) below.
 * `image_scanning_configuration` - Configuration block that defines image scanning configuration for the repository. See [Image Scanning Configuration](#image-scanning-configuration) below.
 * `image_tag_mutability` - The tag mutability setting for the repository.
-* `repository_url` - The URL of the repository (in the form `aws_account_id.dkr.ecr.region.amazonaws.com/repositoryName`).
-* `tags` - A map of tags assigned to the resource.
+* `repository_url` - URL of the repository (in the form `aws_account_id.dkr.ecr.region.amazonaws.com/repositoryName`).
+* `tags` - Map of tags assigned to the resource.
 
 ### Encryption Configuration
 
-* `encryption_type` - The encryption type to use for the repository, either `AES256` or `KMS`.
+* `encryption_type` - Encryption type to use for the repository, either `AES256` or `KMS`.
 * `kms_key` - If `encryption_type` is `KMS`, the ARN of the KMS key used.
 
 ### Image Scanning Configuration

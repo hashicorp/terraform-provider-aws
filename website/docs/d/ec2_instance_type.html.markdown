@@ -37,9 +37,9 @@ In addition to the argument above, the following attributes are exported:
 * `burstable_performance_supported` - `true` if the instance type is a burstable performance instance type.
 * `current_generation` - `true`  if the instance type is a current generation.
 * `dedicated_hosts_supported` - `true` if Dedicated Hosts are supported on the instance type.
-* `default_cores` - The default number of cores for the instance type.
+* `default_cores` - Default number of cores for the instance type.
 * `default_threads_per_core` - The  default  number of threads per core for the instance type.
-* `default_vcpus` - The default number of vCPUs for the instance type.
+* `default_vcpus` - Default number of vCPUs for the instance type.
 * `ebs_encryption_support` - Indicates whether Amazon EBS encryption is supported.
 * `ebs_nvme_support` - Indicates whether non-volatile memory express (NVMe) is supported.
 * `ebs_optimized_support` - Indicates that the instance type is Amazon EBS-optimized.
@@ -86,8 +86,8 @@ In addition to the argument above, the following attributes are exported:
 * `supported_usages_classes` - Indicates whether the instance type is offered for spot or On-Demand.
 * `supported_virtualization_types` - The supported virtualization types.
 * `sustained_clock_speed` - The speed of the processor, in GHz.
-* `total_fpga_memory` - The total memory of all FPGA accelerators for the instance type (in MiB).
-* `total_gpu_memory` - The total size of the memory for the GPU accelerators for the instance type (in MiB).
+* `total_fpga_memory` - Total memory of all FPGA accelerators for the instance type (in MiB).
+* `total_gpu_memory` - Total size of the memory for the GPU accelerators for the instance type (in MiB).
 * `total_instance_storage` - The total size of the instance disks, in GB.
 * `valid_cores` - List of the valid number of cores that can be configured for the instance type.
 * `valid_threads_per_core` - List of the valid number of threads per core that can be configured for the instance type.

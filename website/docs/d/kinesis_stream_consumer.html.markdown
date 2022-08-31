@@ -33,6 +33,6 @@ In addition to all arguments above, the following attributes are exported:
 
 * `creation_timestamp` - Approximate timestamp in [RFC3339 format](https://tools.ietf.org/html/rfc3339#section-5.8) of when the stream consumer was created.
 * `id` - ARN of the stream consumer.
-* `status` - The current status of the stream consumer.
+* `status` - Current status of the stream consumer.
 
 [1]: https://docs.aws.amazon.com/streams/latest/dev/amazon-kinesis-consumers.html

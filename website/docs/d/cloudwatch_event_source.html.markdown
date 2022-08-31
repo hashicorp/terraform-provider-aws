@@ -30,7 +30,7 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `arn` - The ARN of the partner event source
-* `created_by` - The name of the SaaS partner that created the event source
-* `name` - The name of the event source
-* `state` - The state of the event source (`ACTIVE` or `PENDING`)
+* `arn` - ARN of the partner event source
+* `created_by` - Name of the SaaS partner that created the event source
+* `name` - Name of the event source
+* `state` - State of the event source (`ACTIVE` or `PENDING`)

@@ -58,4 +58,4 @@ The arguments of this data source act as filters for querying the available reso
 The following attributes are exported:
 
 * `id` - AWS Region.
-* `resolver_rule_ids` - The IDs of the matched resolver rules.
+* `resolver_rule_ids` - IDs of the matched resolver rules.

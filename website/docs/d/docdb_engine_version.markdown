@@ -31,8 +31,8 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `engine_description` - The description of the database engine.
+* `engine_description` - Description of the database engine.
 * `exportable_log_types` - Set of log types that the database engine has available for export to CloudWatch Logs.
 * `supports_log_exports_to_cloudwatch` - Indicates whether the engine version supports exporting the log types specified by `exportable_log_types` to CloudWatch Logs.
 * `valid_upgrade_targets` - A set of engine versions that this database engine version can be upgraded to.
-* `version_description` - The description of the database engine version.
+* `version_description` - Description of the database engine version.

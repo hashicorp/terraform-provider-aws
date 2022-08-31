@@ -31,11 +31,11 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `image` - The docker image in use, including the digest
-* `image_digest` - The digest of the docker image in use
-* `cpu` - The CPU limit for this container definition
-* `memory` - The memory limit for this container definition
-* `memory_reservation` - The soft limit (in MiB) of memory to reserve for the container. When system memory is under contention, Docker attempts to keep the container memory to this soft limit
-* `environment` - The environment in use
+* `image` - Docker image in use, including the digest
+* `image_digest` - Digest of the docker image in use
+* `cpu` - CPU limit for this container definition
+* `memory` - Memory limit for this container definition
+* `memory_reservation` - Soft limit (in MiB) of memory to reserve for the container. When system memory is under contention, Docker attempts to keep the container memory to this soft limit
+* `environment` - Environment in use
 * `disable_networking` - Indicator if networking is disabled
 * `docker_labels` - Set docker labels

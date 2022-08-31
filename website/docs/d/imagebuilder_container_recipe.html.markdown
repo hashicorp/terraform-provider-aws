@@ -63,4 +63,4 @@ In addition to all arguments above, the following attributes are exported:
     * `repository_name` - Name of the container repository where the output container image is stored. The name is prefixed by the repository location.
     * `service` - Service in which this image is registered.
 * `version` - Version of the container recipe.
-* `working_directory` - The working directory used during build and test workflows.
+* `working_directory` - Working directory used during build and test workflows.

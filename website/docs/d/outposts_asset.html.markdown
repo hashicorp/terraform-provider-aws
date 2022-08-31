@@ -36,7 +36,7 @@ The following arguments are required:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `asset_type` - The type of the asset.
-* `host_id` - The host ID of the Dedicated Hosts on the asset, if a Dedicated Host is provisioned.
-* `rack_elevation` - The position of an asset in a rack measured in rack units.
-* `rack_id` - The rack ID of the asset.
+* `asset_type` - Type of the asset.
+* `host_id` - Host ID of the Dedicated Hosts on the asset, if a Dedicated Host is provisioned.
+* `rack_elevation` - Position of an asset in a rack measured in rack units.
+* `rack_id` - Rack ID of the asset.

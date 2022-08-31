@@ -24,4 +24,4 @@ data "aws_cognito_user_pool_signing_certificate" "sc" {
 
 ## Attributes Reference
 
-* `certificate` - The certificate string
+* `certificate` - Certificate string

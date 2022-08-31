@@ -34,6 +34,6 @@ data "aws_iam_openid_connect_provider" "example" {
 
 ## Attributes Reference
 
-* `client_id_list` - A list of client IDs (also known as audiences). When a mobile or web app registers with an OpenID Connect provider, they establish a value that identifies the application. (This is the value that's sent as the client_id parameter on OAuth requests.)
-* `thumbprint_list` - A list of server certificate thumbprints for the OpenID Connect (OIDC) identity provider's server certificate(s).
+* `client_id_list` - List of client IDs (also known as audiences). When a mobile or web app registers with an OpenID Connect provider, they establish a value that identifies the application. (This is the value that's sent as the client_id parameter on OAuth requests.)
+* `thumbprint_list` - List of server certificate thumbprints for the OpenID Connect (OIDC) identity provider's server certificate(s).
 * `tags` - Map of resource tags for the IAM OIDC provider.

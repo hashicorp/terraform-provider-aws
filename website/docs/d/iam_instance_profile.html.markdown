@@ -26,15 +26,15 @@ data "aws_iam_instance_profile" "example" {
 
 ## Attributes Reference
 
-* `arn` - The ARN specifying the instance profile.
+* `arn` - ARN specifying the instance profile.
 
-* `create_date` - The string representation of the date the instance profile
+* `create_date` - String representation of the date the instance profile
    was created.
 
-* `path` - The path to the instance profile.
+* `path` - Path to the instance profile.
 
-* `role_arn` - The role arn associated with this instance profile.
+* `role_arn` - Role arn associated with this instance profile.
 
-* `role_id` - The role id associated with this instance profile.
+* `role_id` - Role id associated with this instance profile.
 
-* `role_name` - The role name associated with this instance profile.
+* `role_name` - Role name associated with this instance profile.

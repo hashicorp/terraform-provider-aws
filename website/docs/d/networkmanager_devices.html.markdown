@@ -32,4 +32,4 @@ data "aws_networkmanager_devices" "example" {
 
 In addition to all arguments above, the following attributes are exported:
 
-* `ids` - The IDs of the devices.
+* `ids` - IDs of the devices.

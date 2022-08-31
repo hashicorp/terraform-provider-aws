@@ -31,4 +31,4 @@ The following arguments are supported:
 In addition to the argument above, the following attributes are exported:
 
 * `authorization_token` - Temporary authorization token.
-* `expiration` - The time in UTC RFC3339 format when the authorization token expires.
+* `expiration` - Time in UTC RFC3339 format when the authorization token expires.

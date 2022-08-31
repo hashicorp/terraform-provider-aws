@@ -31,4 +31,4 @@ data "aws_networkmanager_sites" "example" {
 
 In addition to all arguments above, the following attributes are exported:
 
-* `ids` - The IDs of the sites.
+* `ids` - IDs of the sites.

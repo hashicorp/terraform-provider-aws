@@ -65,10 +65,10 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - The ARN of the task definition
-* `arn` - The ARN of the task definition
-* `family` - The family of this task definition
-* `network_mode` - The Docker networking mode to use for the containers in this task.
-* `revision` - The revision of this task definition
-* `status` - The status of this task definition
-* `task_role_arn` - The ARN of the IAM role that containers in this task can assume
+* `id` - ARN of the task definition
+* `arn` - ARN of the task definition
+* `family` - Family of this task definition
+* `network_mode` - Docker networking mode to use for the containers in this task.
+* `revision` - Revision of this task definition
+* `status` - Status of this task definition
+* `task_role_arn` - ARN of the IAM role that containers in this task can assume

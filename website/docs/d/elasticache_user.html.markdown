@@ -28,6 +28,6 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `user_id` - The identifier for the user.
-* `user_name` - The user name of the user.
-* `access_string` - A string for what access a user possesses within the associated ElastiCache replication groups or clusters.
+* `user_id` - Identifier for the user.
+* `user_name` - User name of the user.
+* `access_string` - String for what access a user possesses within the associated ElastiCache replication groups or clusters.

@@ -83,7 +83,7 @@ data "aws_subnets" "selected" {
 
 ## Attributes Reference
 
-* `ids` - A list of all the subnet ids found.
+* `ids` - List of all the subnet ids found.
 
 ## Timeouts
 

@@ -71,13 +71,13 @@ In addition to all arguments above, the following attributes are exported:
 * `db_cluster_snapshot_arn` - The ARN for the DB Cluster Snapshot.
 * `engine_version` - Version of the database engine for this DB cluster snapshot.
 * `engine` - Specifies the name of the database engine.
-* `id` - The snapshot ID.
+* `id` - Snapshot ID.
 * `kms_key_id` - If storage_encrypted is true, the AWS KMS key identifier for the encrypted DB cluster snapshot.
 * `license_model` - License model information for the restored DB cluster.
 * `port` - Port that the DB cluster was listening on at the time of the snapshot.
 * `snapshot_create_time` - Time when the snapshot was taken, in Universal Coordinated Time (UTC).
 * `source_db_cluster_snapshot_identifier` - The DB Cluster Snapshot Arn that the DB Cluster Snapshot was copied from. It only has value in case of cross customer or cross region copy.
-* `status` - The status of this DB Cluster Snapshot.
+* `status` - Status of this DB Cluster Snapshot.
 * `storage_encrypted` - Specifies whether the DB cluster snapshot is encrypted.
-* `vpc_id` - The VPC ID associated with the DB cluster snapshot.
-* `tags` - A map of tags for the resource.
+* `vpc_id` - VPC ID associated with the DB cluster snapshot.
+* `tags` - Map of tags for the resource.

@@ -41,11 +41,11 @@ In addition to all arguments above, the following attributes are exported:
 * `log_delivery_configuration` - Redis [SLOWLOG](https://redis.io/commands/slowlog) or Redis [Engine Log](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/Log_Delivery.html#Log_contents-engine-log) delivery settings.
 * `maintenance_window` – Specifies the weekly time range for when maintenance
 on the cache cluster is performed.
-* `snapshot_window` - The daily time range (in UTC) during which ElastiCache will
+* `snapshot_window` - Daily time range (in UTC) during which ElastiCache will
 begin taking a daily snapshot of the cache cluster.
 * `snapshot_retention_limit` - The number of days for which ElastiCache will
 retain automatic cache cluster snapshots before deleting them.
-* `availability_zone` - The Availability Zone for the cache cluster.
+* `availability_zone` - Availability Zone for the cache cluster.
 * `notification_topic_arn` – An ARN of an
 SNS topic that ElastiCache notifications get sent to.
 * `port` – The port number on which each of the cache nodes will
@@ -54,4 +54,4 @@ accept connections.
 * `cluster_address` - (Memcached only) DNS name of the cache cluster without the port appended.
 * `cache_nodes` - List of node objects including `id`, `address`, `port` and `availability_zone`.
    Referenceable e.g., as `${data.aws_elasticache_cluster.bar.cache_nodes.0.address}`
-* `tags` - The tags assigned to the resource
+* `tags` - Tags assigned to the resource

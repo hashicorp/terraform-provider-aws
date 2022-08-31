@@ -37,4 +37,4 @@ resource "aws_route53_record" "www" {
 
 ## Attributes Reference
 
-* `id` - The ID of the AWS ELB HostedZoneId in the selected region.
+* `id` - ID of the AWS ELB HostedZoneId in the selected region.

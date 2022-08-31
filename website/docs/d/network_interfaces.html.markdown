@@ -68,7 +68,7 @@ which take the following arguments:
 ## Attributes Reference
 
 * `id` - AWS Region.
-* `ids` - A list of all the network interface ids found.
+* `ids` - List of all the network interface ids found.
 
 
 ## Timeouts

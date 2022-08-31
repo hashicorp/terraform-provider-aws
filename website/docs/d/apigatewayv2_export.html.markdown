@@ -35,5 +35,5 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - The API identifier.
-* `body` - The id of the API.
+* `id` - API identifier.
+* `body` - ID of the API.

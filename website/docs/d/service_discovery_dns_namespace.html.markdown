@@ -26,8 +26,8 @@ data "aws_service_discovery_dns_namespace" "test" {
 
 ## Attributes Reference
 
-* `arn` - The ARN of the namespace.
-* `description` - A description of the namespace.
-* `id` - The namespace ID.
-* `hosted_zone` - The ID for the hosted zone that Amazon Route 53 creates when you create a namespace.
-* `tags` - A map of tags for the resource.
+* `arn` - ARN of the namespace.
+* `description` - Description of the namespace.
+* `id` - Namespace ID.
+* `hosted_zone` - ID for the hosted zone that Amazon Route 53 creates when you create a namespace.
+* `tags` - Map of tags for the resource.

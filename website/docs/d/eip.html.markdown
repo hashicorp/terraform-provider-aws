@@ -64,18 +64,18 @@ Elastic IP whose data will be exported as attributes.
 
 In addition to all arguments above, the following attributes are exported:
 
-* `association_id` - The ID representing the association of the address with an instance in a VPC.
+* `association_id` - ID representing the association of the address with an instance in a VPC.
 * `domain` - Indicates whether the address is for use in EC2-Classic (standard) or in a VPC (vpc).
 * `id` - If VPC Elastic IP, the allocation identifier. If EC2-Classic Elastic IP, the public IP address.
-* `instance_id` - The ID of the instance that the address is associated with (if any).
+* `instance_id` - ID of the instance that the address is associated with (if any).
 * `network_interface_id` - The ID of the network interface.
 * `network_interface_owner_id` - The ID of the AWS account that owns the network interface.
-* `private_ip` - The private IP address associated with the Elastic IP address.
-* `private_dns` - The Private DNS associated with the Elastic IP address.
+* `private_ip` - Private IP address associated with the Elastic IP address.
+* `private_dns` - Private DNS associated with the Elastic IP address.
 * `public_ip` - Public IP address of Elastic IP.
 * `public_dns` - Public DNS associated with the Elastic IP address.
-* `public_ipv4_pool` - The ID of an address pool.
-* `carrier_ip` - The carrier IP address.
+* `public_ipv4_pool` - ID of an address pool.
+* `carrier_ip` - Carrier IP address.
 * `customer_owned_ipv4_pool` - The ID of a Customer Owned IP Pool. For more on customer owned IP addressed check out [Customer-owned IP addresses guide](https://docs.aws.amazon.com/outposts/latest/userguide/outposts-networking-components.html#ip-addressing)
 * `customer_owned_ip` - Customer Owned IP.
 * `tags` - Key-value map of tags associated with Elastic IP.

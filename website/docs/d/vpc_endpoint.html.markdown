@@ -51,24 +51,24 @@ which take the following arguments:
 
 In addition to all arguments above except `filter`, the following attributes are exported:
 
-* `arn` - The ARN of the VPC endpoint.
-* `cidr_blocks` - The list of CIDR blocks for the exposed AWS service. Applicable for endpoints of type `Gateway`.
-* `dns_entry` - The DNS entries for the VPC Endpoint. Applicable for endpoints of type `Interface`. DNS blocks are documented below.
+* `arn` - ARN of the VPC endpoint.
+* `cidr_blocks` - List of CIDR blocks for the exposed AWS service. Applicable for endpoints of type `Gateway`.
+* `dns_entry` - DNS entries for the VPC Endpoint. Applicable for endpoints of type `Interface`. DNS blocks are documented below.
 * `network_interface_ids` - One or more network interfaces for the VPC Endpoint. Applicable for endpoints of type `Interface`.
-* `owner_id` - The ID of the AWS account that owns the VPC endpoint.
-* `policy` - The policy document associated with the VPC Endpoint. Applicable for endpoints of type `Gateway`.
-* `prefix_list_id` - The prefix list ID of the exposed AWS service. Applicable for endpoints of type `Gateway`.
+* `owner_id` - ID of the AWS account that owns the VPC endpoint.
+* `policy` - Policy document associated with the VPC Endpoint. Applicable for endpoints of type `Gateway`.
+* `prefix_list_id` - Prefix list ID of the exposed AWS service. Applicable for endpoints of type `Gateway`.
 * `private_dns_enabled` - Whether or not the VPC is associated with a private hosted zone - `true` or `false`. Applicable for endpoints of type `Interface`.
 * `requester_managed` -  Whether or not the VPC Endpoint is being managed by its service - `true` or `false`.
 * `route_table_ids` - One or more route tables associated with the VPC Endpoint. Applicable for endpoints of type `Gateway`.
 * `security_group_ids` - One or more security groups associated with the network interfaces. Applicable for endpoints of type `Interface`.
 * `subnet_ids` - One or more subnets in which the VPC Endpoint is located. Applicable for endpoints of type `Interface`.
-* `vpc_endpoint_type` - The VPC Endpoint type, `Gateway` or `Interface`.
+* `vpc_endpoint_type` - VPC Endpoint type, `Gateway` or `Interface`.
 
 DNS blocks (for `dns_entry`) support the following attributes:
 
-* `dns_name` - The DNS name.
-* `hosted_zone_id` - The ID of the private hosted zone.
+* `dns_name` - DNS name.
+* `hosted_zone_id` - ID of the private hosted zone.
 
 ## Timeouts
 

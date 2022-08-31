@@ -38,11 +38,11 @@ The following arguments are supported by the `filter` configuration block:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `arn` - The ARN of the selected Network Insights Path.
-* `destination` - The AWS resource that is the destination of the path.
-* `destination_ip` - The IP address of the AWS resource that is the destination of the path.
-* `destination_port` - The destination port.
-* `protocol` - The protocol.
-* `source` - The AWS resource that is the source of the path.
-* `source_ip` - The IP address of the AWS resource that is the source of the path.
-* `tags` - A map of tags assigned to the resource.
+* `arn` - ARN of the selected Network Insights Path.
+* `destination` - AWS resource that is the destination of the path.
+* `destination_ip` - IP address of the AWS resource that is the destination of the path.
+* `destination_port` - Destination port.
+* `protocol` - Protocol.
+* `source` - AWS resource that is the source of the path.
+* `source_ip` - IP address of the AWS resource that is the source of the path.
+* `tags` - Map of tags assigned to the resource.

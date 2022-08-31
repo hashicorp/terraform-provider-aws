@@ -27,4 +27,4 @@ The following arguments are supported:
 ## Attributes Reference
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - The ID of the WAF Regional IP set.
+* `id` - ID of the WAF Regional IP set.

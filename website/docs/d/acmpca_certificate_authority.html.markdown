@@ -46,4 +46,4 @@ In addition to all arguments above, the following attributes are exported:
 * `serial` - Serial number of the certificate authority. Only available after the certificate authority certificate has been imported.
 * `status` - Status of the certificate authority.
 * `tags` - Specifies a key-value map of user-defined tags that are attached to the certificate authority.
-* `type` - The type of the certificate authority.
+* `type` - Type of the certificate authority.

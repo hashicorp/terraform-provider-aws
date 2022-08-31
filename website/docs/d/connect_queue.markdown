@@ -44,15 +44,15 @@ The following arguments are supported:
 
 In addition to all of the arguments above, the following attributes are exported:
 
-* `arn` - The ARN of the Queue.
+* `arn` - ARN of the Queue.
 * `description` - Specifies the description of the Queue.
 * `hours_of_operation_id` - Specifies the identifier of the Hours of Operation.
-* `id` - The identifier of the hosting Amazon Connect Instance and identifier of the Queue separated by a colon (`:`).
+* `id` - Identifier of the hosting Amazon Connect Instance and identifier of the Queue separated by a colon (`:`).
 * `max_contacts` - Specifies the maximum number of contacts that can be in the queue before it is considered full. Minimum value of 0.
 * `outbound_caller_config` - A block that defines the outbound caller ID name, number, and outbound whisper flow. The Outbound Caller Config block is documented below.
-* `queue_id` - The identifier for the Queue.
+* `queue_id` - Identifier for the Queue.
 * `status` - Specifies the description of the Queue. Values are `ENABLED` or `DISABLED`.
-* `tags` - A map of tags assigned to the Queue.
+* `tags` - Map of tags assigned to the Queue.
 
 A `outbound_caller_config` block supports the following arguments:
 

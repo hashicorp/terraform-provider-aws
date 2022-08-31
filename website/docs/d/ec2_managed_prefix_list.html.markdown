@@ -55,14 +55,14 @@ The following arguments are supported by the `filter` configuration block:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - The ID of the selected prefix list.
-* `arn` - The ARN of the selected prefix list.
-* `name` - The name of the selected prefix list.
-* `entries` - The set of entries in this prefix list. Each entry is an object with `cidr` and `description`.
-* `owner_id` - The Account ID of the owner of a customer-managed prefix list, or `AWS` otherwise.
-* `address_family` - The address family of the prefix list. Valid values are `IPv4` and `IPv6`.
+* `id` - ID of the selected prefix list.
+* `arn` - ARN of the selected prefix list.
+* `name` - Name of the selected prefix list.
+* `entries` - Set of entries in this prefix list. Each entry is an object with `cidr` and `description`.
+* `owner_id` - Account ID of the owner of a customer-managed prefix list, or `AWS` otherwise.
+* `address_family` - Address family of the prefix list. Valid values are `IPv4` and `IPv6`.
 * `max_entries` - When then prefix list is managed, the maximum number of entries it supports, or null otherwise.
-* `tags` - A map of tags assigned to the resource.
+* `tags` - Map of tags assigned to the resource.
 
 ## Timeouts
 

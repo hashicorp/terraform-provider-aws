@@ -48,8 +48,8 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `cidr` - The previewed CIDR from the pool.
-* `id` - The ID of the preview.
+* `cidr` - Previewed CIDR from the pool.
+* `id` - ID of the preview.
 
 ## Timeouts
 

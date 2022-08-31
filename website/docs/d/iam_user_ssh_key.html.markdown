@@ -30,6 +30,6 @@ data "aws_iam_user_ssh_key" "example" {
 
 In addition to all arguments above, the following attributes are exported:
 
-* `fingerprint` - The MD5 message digest of the SSH public key.
-* `public_key` - The SSH public key.
-* `status` - The status of the SSH public key. Active means that the key can be used for authentication with an CodeCommit repository. Inactive means that the key cannot be used.
+* `fingerprint` - MD5 message digest of the SSH public key.
+* `public_key` - SSH public key.
+* `status` - Status of the SSH public key. Active means that the key can be used for authentication with an CodeCommit repository. Inactive means that the key cannot be used.

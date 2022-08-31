@@ -48,7 +48,7 @@ which take the following arguments:
 ## Attributes Reference
 
 * `id` - AWS Region.
-* `ids` - A list of all the NAT gateway ids found.
+* `ids` - List of all the NAT gateway ids found.
 
 ## Timeouts
 

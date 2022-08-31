@@ -50,6 +50,6 @@ data "aws_acm_certificate" "rsa_4096" {
 * `arn` - ARN of the found certificate, suitable for referencing in other resources that support ACM certificates.
 * `id` - ARN of the found certificate, suitable for referencing in other resources that support ACM certificates.
 * `status` - Status of the found certificate.
-* `certificate` - The ACM-issued certificate.
+* `certificate` - ACM-issued certificate.
 * `certificate_chain` - Certificates forming the requested ACM-issued certificate's chain of trust. The chain consists of the certificate of the issuing CA and the intermediate certificates of any other subordinate CAs.
-* `tags` - A mapping of tags for the resource.
+* `tags` - Mapping of tags for the resource.

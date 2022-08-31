@@ -30,7 +30,7 @@ The following arguments are supported:
 
 ## Attributes Reference
 
-* `time_unit` - The frequency on which report data are measured and displayed.
+* `time_unit` - Frequency on which report data are measured and displayed.
 * `format` - Preferred compression format for report.
 * `compression` - Preferred format for report.
 * `additional_schema_elements` - A list of schema elements.

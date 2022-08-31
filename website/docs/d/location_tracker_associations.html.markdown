@@ -30,4 +30,4 @@ The following arguments are required:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `consumer_arns` - The list of geofence collection ARNs associated to the tracker resource.
+* `consumer_arns` - List of geofence collection ARNs associated to the tracker resource.

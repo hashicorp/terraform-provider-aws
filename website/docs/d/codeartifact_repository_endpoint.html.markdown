@@ -33,4 +33,4 @@ The following arguments are supported:
 
 In addition to the argument above, the following attributes are exported:
 
-* `repository_endpoint` - The URL of the returned endpoint.
+* `repository_endpoint` - URL of the returned endpoint.

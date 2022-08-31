@@ -30,11 +30,11 @@ The following arguments are supported:
 * `repository_name` - (Required) Name of the repository, which is generally the algorithm or library. Values include `blazingtext`, `factorization-machines`, `forecasting-deepar`, `image-classification`, `ipinsights`, `kmeans`, `knn`, `lda`, `linear-learner`, `mxnet-inference-eia`, `mxnet-inference`, `mxnet-training`, `ntm`, `object-detection`, `object2vec`, `pca`, `pytorch-inference-eia`, `pytorch-inference`, `pytorch-training`, `randomcutforest`, `sagemaker-scikit-learn`, `sagemaker-sparkml-serving`, `sagemaker-xgboost`, `semantic-segmentation`, `seq2seq`, `tensorflow-inference-eia`, `tensorflow-inference`, `tensorflow-training`, `huggingface-tensorflow-training`, `huggingface-tensorflow-inference`, `huggingface-pytorch-training`, and `huggingface-pytorch-inference`.
 * `dns_suffix` - (Optional) DNS suffix to use in the registry path. If not specified, the AWS provider sets it to the DNS suffix for the current region.
 * `image_tag` - (Optional) Image tag for the Docker image. If not specified, the AWS provider sets the value to `1`, which for many repositories indicates the latest version. Some repositories, such as XGBoost, do not support `1` or `latest` and specific version must be used.
-* `region` (Optional) - The region to use in the registry path. If not specified, the AWS provider sets it to the current region.
+* `region` (Optional) - Region to use in the registry path. If not specified, the AWS provider sets it to the current region.
 
 ## Attributes Reference
 
 The following attributes are exported:
 
-* `registry_id` - The account ID containing the image. For example, `469771592824`.
-* `registry_path` - The Docker image URL. For example, `341280168497.dkr.ecr.ca-central-1.amazonaws.com/sagemaker-sparkml-serving:2.4`.
+* `registry_id` - Account ID containing the image. For example, `469771592824`.
+* `registry_path` - Docker image URL. For example, `341280168497.dkr.ecr.ca-central-1.amazonaws.com/sagemaker-sparkml-serving:2.4`.

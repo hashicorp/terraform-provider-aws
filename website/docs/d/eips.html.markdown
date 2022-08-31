@@ -46,8 +46,8 @@ More complex filters can be expressed using one or more `filter` sub-blocks, whi
 ## Attributes Reference
 
 * `id` - AWS Region.
-* `allocation_ids` - A list of all the allocation IDs for address for use with EC2-VPC.
-* `public_ips` - A list of all the Elastic IP addresses.
+* `allocation_ids` - List of all the allocation IDs for address for use with EC2-VPC.
+* `public_ips` - List of all the Elastic IP addresses.
 
 ## Timeouts
 

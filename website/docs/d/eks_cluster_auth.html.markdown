@@ -43,4 +43,4 @@ provider "kubernetes" {
 ## Attributes Reference
 
 * `id` - Name of the cluster.
-* `token` - The token to use to authenticate with the cluster.
+* `token` - Token to use to authenticate with the cluster.

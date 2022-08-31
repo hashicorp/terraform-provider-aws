@@ -30,15 +30,15 @@ The following arguments are supported:
 
 The following attributes are exported.
 
-* `arn` - The ARN of the Lex intent.
+* `arn` - ARN of the Lex intent.
 * `checksum` - Checksum identifying the version of the intent that was created. The checksum is not
 included as an argument because the resource will add it automatically when updating the intent.
-* `created_date` - The date when the intent version was created.
-* `description` - A description of the intent.
-* `last_updated_date` - The date when the $LATEST version of this intent was updated.
-* `name` - The name of the intent, not case sensitive.
+* `created_date` - Date when the intent version was created.
+* `description` - Description of the intent.
+* `last_updated_date` - Date when the $LATEST version of this intent was updated.
+* `name` - Name of the intent, not case sensitive.
 * `parent_intent_signature` - A unique identifier for the built-in intent to base this
 intent on. To find the signature for an intent, see
 [Standard Built-in Intents](https://developer.amazon.com/public/solutions/alexa/alexa-skills-kit/docs/built-in-intent-ref/standard-intents)
 in the Alexa Skills Kit.
-* `version` - The version of the bot.
+* `version` - Version of the bot.

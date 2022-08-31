@@ -30,6 +30,6 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `arn` - The ARN of the entity.
-* `description` - The description of the rule group that helps with identification.
-* `id` - The unique identifier of the rule group.
+* `arn` - ARN of the entity.
+* `description` - Description of the rule group that helps with identification.
+* `id` - Unique identifier of the rule group.

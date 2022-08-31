@@ -26,4 +26,4 @@ data "aws_cloudwatch_event_bus" "example" {
 
 ## Attributes Reference
 
-* `arn` - The ARN specifying the role.
+* `arn` - ARN specifying the role.

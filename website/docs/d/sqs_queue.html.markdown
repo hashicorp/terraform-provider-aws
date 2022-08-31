@@ -26,6 +26,6 @@ data "aws_sqs_queue" "example" {
 
 ## Attributes Reference
 
-* `arn` - The ARN of the queue.
-* `url` - The URL of the queue.
-* `tags` - A map of tags for the resource.
+* `arn` - ARN of the queue.
+* `url` - URL of the queue.
+* `tags` - Map of tags for the resource.

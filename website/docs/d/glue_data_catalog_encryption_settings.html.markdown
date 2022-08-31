@@ -35,9 +35,9 @@ data "aws_glue_data_catalog_encryption_settings" "example" {
 ### connection_password_encryption
 
 * `return_connection_password_encrypted` - When set to `true`, passwords remain encrypted in the responses of GetConnection and GetConnections. This encryption takes effect independently of the catalog encryption.
-* `aws_kms_key_id` - A KMS key ARN that is used to encrypt the connection password.
+* `aws_kms_key_id` - KMS key ARN that is used to encrypt the connection password.
 
 ### encryption_at_rest
 
 * `catalog_encryption_mode` - The encryption-at-rest mode for encrypting Data Catalog data.
-* `sse_aws_kms_key_id` - The ARN of the AWS KMS key to use for encryption at rest.
+* `sse_aws_kms_key_id` - ARN of the AWS KMS key to use for encryption at rest.

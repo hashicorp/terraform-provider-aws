@@ -36,9 +36,9 @@ The given filters must match exactly one resolver rule whose data will be export
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - The ID of the resolver rule.
-* `arn` - The ARN (Amazon Resource Name) for the resolver rule.
+* `id` - ID of the resolver rule.
+* `arn` - ARN (Amazon Resource Name) for the resolver rule.
 * `owner_id` - When a rule is shared with another AWS account, the account ID of the account that the rule is shared with.
 * `share_status` - Whether the rules is shared and, if so, whether the current account is sharing the rule with another account, or another account is sharing the rule with the current account.
 Values are `NOT_SHARED`, `SHARED_BY_ME` or `SHARED_WITH_ME`
-* `tags` - A map of tags assigned to the resolver rule.
+* `tags` - Map of tags assigned to the resolver rule.

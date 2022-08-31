@@ -84,7 +84,7 @@ data "aws_subnet_ids" "selected" {
 
 ## Attributes Reference
 
-* `ids` - A set of all the subnet ids found. This data source will fail if none are found.
+* `ids` - Set of all the subnet ids found. This data source will fail if none are found.
 
 ## Timeouts
 

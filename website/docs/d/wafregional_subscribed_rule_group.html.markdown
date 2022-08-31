@@ -50,4 +50,4 @@ The following arguments are supported (at least one needs to be specified):
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - The ID of the WAF rule group.
+* `id` - ID of the WAF rule group.

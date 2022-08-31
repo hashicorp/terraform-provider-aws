@@ -33,9 +33,9 @@ The following arguments are supported:
 In addition to all arguments above, the following attributes are exported:
 
 * `default_character_set` - The default character set for new instances of this engine version.
-* `engine_description` - The description of the database engine.
+* `engine_description` - Description of the database engine.
 * `exportable_log_types` - Set of log types that the database engine has available for export to CloudWatch Logs.
-* `status` - The status of the DB engine version, either available or deprecated.
+* `status` - Status of the DB engine version, either available or deprecated.
 * `supported_character_sets` - Set of the character sets supported by this engine.
 * `supported_feature_names` - Set of features supported by the DB engine.
 * `supported_modes` - Set of the supported DB engine modes.
@@ -45,4 +45,4 @@ In addition to all arguments above, the following attributes are exported:
 * `supports_parallel_query` - Indicates whether you can use Aurora parallel query with a specific DB engine version.
 * `supports_read_replica` - Indicates whether the database engine version supports read replicas.
 * `valid_upgrade_targets` - Set of engine versions that this database engine version can be upgraded to.
-* `version_description` - The description of the database engine version.
+* `version_description` - Description of the database engine version.

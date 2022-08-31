@@ -34,4 +34,4 @@ data "aws_networkmanager_links" "example" {
 
 In addition to all arguments above, the following attributes are exported:
 
-* `ids` - The IDs of the links.
+* `ids` - IDs of the links.

@@ -78,15 +78,15 @@ The following arguments are supported by the `filter` configuration block:
 In addition to all arguments above, the following attributes are exported:
 
 * `acceptance_required` - Whether or not VPC endpoint connection requests to the service must be accepted by the service owner - `true` or `false`.
-* `arn` - The ARN of the VPC endpoint service.
-* `availability_zones` - The Availability Zones in which the service is available.
+* `arn` - ARN of the VPC endpoint service.
+* `availability_zones` - Availability Zones in which the service is available.
 * `base_endpoint_dns_names` - The DNS names for the service.
 * `manages_vpc_endpoints` - Whether or not the service manages its VPC endpoints - `true` or `false`.
-* `owner` - The AWS account ID of the service owner or `amazon`.
-* `private_dns_name` - The private DNS name for the service.
-* `service_id` - The ID of the endpoint service.
+* `owner` - AWS account ID of the service owner or `amazon`.
+* `private_dns_name` - Private DNS name for the service.
+* `service_id` - ID of the endpoint service.
 * `supported_ip_address_types` - The supported IP address types.
-* `tags` - A map of tags assigned to the resource.
+* `tags` - Map of tags assigned to the resource.
 * `vpc_endpoint_policy_supported` - Whether or not the service supports endpoint policies - `true` or `false`.
 
 ## Timeouts

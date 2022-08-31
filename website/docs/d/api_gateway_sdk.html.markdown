@@ -35,6 +35,6 @@ data "aws_api_gateway_sdk" "example" {
 ## Attributes Reference
 
 * `id` - The `REST-API-ID:STAGE-NAME`
-* `body` - The SDK as a string.
-* `content_type` - The content-type header value in the HTTP response.
-* `content_disposition` - The content-disposition header value in the HTTP response.
+* `body` - SDK as a string.
+* `content_type` - Content-type header value in the HTTP response.
+* `content_disposition` - Content-disposition header value in the HTTP response.

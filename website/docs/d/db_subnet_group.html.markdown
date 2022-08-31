@@ -28,7 +28,7 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `arn` - The ARN for the DB subnet group.
+* `arn` - ARN for the DB subnet group.
 * `description` - Provides the description of the DB subnet group.
 * `status` - Provides the status of the DB subnet group.
 * `subnet_ids` - Contains a list of subnet identifiers.

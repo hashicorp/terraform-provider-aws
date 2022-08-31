@@ -42,11 +42,11 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `arn` - The ARN of the attachment.
-* `resource_id` - The ID of the resource.
-* `resource_owner_id` - The ID of the AWS account that owns the resource.
-* `resource_type` - The resource type.
-* `state` - The attachment state.
+* `arn` - ARN of the attachment.
+* `resource_id` - ID of the resource.
+* `resource_owner_id` - ID of the AWS account that owns the resource.
+* `resource_type` - Resource type.
+* `state` - Attachment state.
 * `tags` - Key-value tags for the attachment.
-* `transit_gateway_id` - The ID of the transit gateway.
+* `transit_gateway_id` - ID of the transit gateway.
 * `transit_gateway_owner_id` - The ID of the AWS account that owns the transit gateway.

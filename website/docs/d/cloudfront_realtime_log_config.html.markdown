@@ -28,7 +28,7 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `arn` - The ARN (Amazon Resource Name) of the CloudFront real-time log configuration.
+* `arn` - ARN (Amazon Resource Name) of the CloudFront real-time log configuration.
 * `endpoint` - (Required) Amazon Kinesis data streams where real-time log data is sent.
 * `fields` - (Required) Fields that are included in each real-time log record. See the [AWS documentation](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/real-time-logs.html#understand-real-time-log-config-fields) for supported values.
 * `sampling_rate` - (Required) Sampling rate for this real-time log configuration. The sampling rate determines the percentage of viewer requests that are represented in the real-time log data. An integer between `1` and `100`, inclusive.

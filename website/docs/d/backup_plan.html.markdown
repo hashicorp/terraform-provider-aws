@@ -28,7 +28,7 @@ The following arguments are supported:
 
 In addition to the arguments above, the following attributes are exported:
 
-* `arn` - The ARN of the backup plan.
-* `name` - The display name of a backup plan.
+* `arn` - ARN of the backup plan.
+* `name` - Display name of a backup plan.
 * `tags` - Metadata that you can assign to help organize the plans you create.
 * `version` - Unique, randomly generated, Unicode, UTF-8 encoded string that serves as the version ID of the backup plan.

@@ -33,4 +33,4 @@ data "aws_eks_node_group" "example" {
 ## Attributes Reference
 
 * `id` - Cluster name.
-* `names` - A set of all node group names in an EKS Cluster.
+* `names` - Set of all node group names in an EKS Cluster.

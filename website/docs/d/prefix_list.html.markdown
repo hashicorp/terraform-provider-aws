@@ -78,9 +78,9 @@ The following arguments are supported by the `filter` configuration block:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - The ID of the selected prefix list.
-* `name` - The name of the selected prefix list.
-* `cidr_blocks` - The list of CIDR blocks for the AWS service associated with the prefix list.
+* `id` - ID of the selected prefix list.
+* `name` - Name of the selected prefix list.
+* `cidr_blocks` - List of CIDR blocks for the AWS service associated with the prefix list.
 
 ## Timeouts
 

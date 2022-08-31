@@ -244,5 +244,5 @@ output "scala_code" {
 ## Attributes Reference
 
 * `id` - AWS Region.
-* `python_script` - The Python script generated from the DAG when the `language` argument is set to `PYTHON`.
-* `scala_code` - The Scala code generated from the DAG when the `language` argument is set to `SCALA`.
+* `python_script` - Python script generated from the DAG when the `language` argument is set to `PYTHON`.
+* `scala_code` - Scala code generated from the DAG when the `language` argument is set to `SCALA`.
