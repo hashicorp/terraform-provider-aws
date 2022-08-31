@@ -84,7 +84,7 @@ The following arguments are optional:
 ### `user_settings`
 
 * `action` - (Required) Action that is enabled or disabled. Valid values are: `CLIPBOARD_COPY_FROM_LOCAL_DEVICE`,  `CLIPBOARD_COPY_TO_LOCAL_DEVICE`, `FILE_UPLOAD`, `FILE_DOWNLOAD`, `PRINTING_TO_LOCAL_DEVICE`, `DOMAIN_PASSWORD_SIGNIN`, `DOMAIN_SMART_CARD_SIGNIN`.
-* `permission` - (Required) Indicates whether the action is enabled or disabled. Valid values are: `ENABLED`, `DISABLED`.
+* `permission` - (Required) Whether the action is enabled or disabled. Valid values are: `ENABLED`, `DISABLED`.
 
 ## Attributes Reference
 
