@@ -740,6 +740,8 @@ func TestAccLambdaEventSourceMapping_msk(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "batch_size", "100"),
 					resource.TestCheckResourceAttrPair(resourceName, "event_source_arn", eventSourceResourceName, "arn"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "last_modified"),
+					resource.TestCheckResourceAttr(resourceName, "amazon_managed_kafka_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "amazon_managed_kafka_config.0.consumer_group_id", "amazon-managed-test-group-id"),
 					resource.TestCheckResourceAttr(resourceName, "topics.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "topics.*", "test"),
 				),
@@ -764,6 +766,8 @@ func TestAccLambdaEventSourceMapping_msk(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "batch_size", "9999"),
 					resource.TestCheckResourceAttrPair(resourceName, "event_source_arn", eventSourceResourceName, "arn"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "last_modified"),
+					resource.TestCheckResourceAttr(resourceName, "amazon_managed_kafka_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "amazon_managed_kafka_config.0.consumer_group_id", "amazon-managed-test-group-id"),
 					resource.TestCheckResourceAttr(resourceName, "topics.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "topics.*", "test"),
 				),
@@ -792,7 +796,7 @@ func TestAccLambdaEventSourceMapping_selfManagedKafka(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "self_managed_event_source.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "self_managed_event_source.0.endpoints.KAFKA_BOOTSTRAP_SERVERS", "test1:9092,test2:9092"),
 					resource.TestCheckResourceAttr(resourceName, "self_managed_kafka_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "self_managed_kafka_config.0.consumer_group_id", "test-group-id"),
+					resource.TestCheckResourceAttr(resourceName, "self_managed_kafka_config.0.consumer_group_id", "self-managed-test-group-id"),
 					resource.TestCheckResourceAttr(resourceName, "source_access_configuration.#", "3"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "last_modified"),
 					resource.TestCheckResourceAttr(resourceName, "topics.#", "1"),
@@ -1749,6 +1753,10 @@ resource "aws_lambda_event_source_mapping" "test" {
   topics            = ["test"]
   starting_position = "TRIM_HORIZON"
 
+	amazon_managed_kafka_config {
+		consumer_group_id = "amazon-managed-test-group-id"
+	}
+
   depends_on = [aws_iam_policy_attachment.test]
 }
 `, rName, batchSize))
@@ -1768,7 +1776,7 @@ resource "aws_lambda_event_source_mapping" "test" {
   starting_position = "TRIM_HORIZON"
 
 	self_managed_kafka_config {
-		consumer_group_id = "test-group-id"
+		consumer_group_id = "self-managed-test-group-id"
 	}
 
   self_managed_event_source {
