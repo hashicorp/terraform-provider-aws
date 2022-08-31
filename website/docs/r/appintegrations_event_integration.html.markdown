@@ -40,7 +40,7 @@ The following arguments are supported:
 
 A `event_filter` block supports the following arguments:
 
-* `source` - (Required) The source of the events.
+* `source` - (Required) Source of the events.
 
 ## Attributes Reference
 

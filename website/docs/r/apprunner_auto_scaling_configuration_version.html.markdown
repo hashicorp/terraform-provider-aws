@@ -31,9 +31,9 @@ resource "aws_apprunner_auto_scaling_configuration_version" "example" {
 The following arguments supported:
 
 * `auto_scaling_configuration_name` - (Required, Forces new resource) Name of the auto scaling configuration.
-* `max_concurrency` - (Optional, Forces new resource) The maximal number of concurrent requests that you want an instance to process. When the number of concurrent requests goes over this limit, App Runner scales up your service.
-* `max_size` - (Optional, Forces new resource) The maximal number of instances that App Runner provisions for your service.
-* `min_size` - (Optional, Forces new resource) The minimal number of instances that App Runner provisions for your service.
+* `max_concurrency` - (Optional, Forces new resource) Maximal number of concurrent requests that you want an instance to process. When the number of concurrent requests goes over this limit, App Runner scales up your service.
+* `max_size` - (Optional, Forces new resource) Maximal number of instances that App Runner provisions for your service.
+* `min_size` - (Optional, Forces new resource) Minimal number of instances that App Runner provisions for your service.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attributes Reference

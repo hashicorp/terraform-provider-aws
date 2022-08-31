@@ -29,9 +29,9 @@ resource "aws_api_gateway_resource" "MyDemoResource" {
 
 The following arguments are supported:
 
-* `rest_api_id` - (Required) The ID of the associated REST API
-* `parent_id` - (Required) The ID of the parent API resource
-* `path_part` - (Required) The last path segment of this API resource.
+* `rest_api_id` - (Required) ID of the associated REST API
+* `parent_id` - (Required) ID of the parent API resource
+* `path_part` - (Required) Last path segment of this API resource.
 
 ## Attributes Reference
 

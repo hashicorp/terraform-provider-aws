@@ -72,8 +72,8 @@ The following arguments are optional:
 
 ### `access_endpoints`
 
-* `endpoint_type` - (Required) The type of the interface endpoint. See the [`AccessEndpoint` AWS API documentation](https://docs.aws.amazon.com/appstream2/latest/APIReference/API_AccessEndpoint.html) for valid values.
-* `vpce_id` - (Optional) The ID of the VPC in which the interface endpoint is used.
+* `endpoint_type` - (Required) Type of the interface endpoint. See the [`AccessEndpoint` AWS API documentation](https://docs.aws.amazon.com/appstream2/latest/APIReference/API_AccessEndpoint.html) for valid values.
+* `vpce_id` - (Optional) ID of the VPC in which the interface endpoint is used.
 
 ### `storage_connectors`
 

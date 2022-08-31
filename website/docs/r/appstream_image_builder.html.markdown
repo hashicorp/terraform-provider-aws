@@ -35,13 +35,13 @@ resource "aws_appstream_image_builder" "test_fleet" {
 
 The following arguments are required:
 
-* `instance_type` - (Required) The instance type to use when launching the image builder.
+* `instance_type` - (Required) Instance type to use when launching the image builder.
 * `name` - (Required) Unique name for the image builder.
 
 The following arguments are optional:
 
 * `access_endpoint` - (Optional) Set of interface VPC endpoint (interface endpoint) objects. Maximum of 4. See below.
-* `appstream_agent_version` - (Optional) The version of the AppStream 2.0 agent to use for this image builder.
+* `appstream_agent_version` - (Optional) Version of the AppStream 2.0 agent to use for this image builder.
 * `description` - (Optional) Description to display.
 * `display_name` - (Optional) Human-readable friendly name for the AppStream image builder.
 * `domain_join_info` - (Optional) Configuration block for the name of the directory and organizational unit (OU) to use to join the image builder to a Microsoft Active Directory domain. See below.

@@ -95,12 +95,12 @@ The API Gateway Usage Plan argument layout is a structure composed of several su
 
 ### Top-Level Arguments
 
-* `name` - (Required) The name of the usage plan.
-* `description` - (Optional) The description of a usage plan.
-* `api_stages` - (Optional) The associated [API stages](#api-stages-arguments) of the usage plan.
+* `name` - (Required) Name of the usage plan.
+* `description` - (Optional) Description of a usage plan.
+* `api_stages` - (Optional) Associated [API stages](#api-stages-arguments) of the usage plan.
 * `quota_settings` - (Optional) The [quota settings](#quota-settings-arguments) of the usage plan.
 * `throttle_settings` - (Optional) The [throttling limits](#throttling-settings-arguments) of the usage plan.
-* `product_code` - (Optional) The AWS Marketplace product identifier to associate with the usage plan as a SaaS product on AWS Marketplace.
+* `product_code` - (Optional) AWS Marketplace product identifier to associate with the usage plan as a SaaS product on AWS Marketplace.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 #### Api Stages arguments

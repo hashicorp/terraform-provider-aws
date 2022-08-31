@@ -40,7 +40,7 @@ resource "aws_ami_from_instance" "example" {
 The following arguments are supported:
 
 * `name` - (Required) Region-unique name for the AMI.
-* `source_instance_id` - (Required) The id of the instance to use as the basis of the AMI.
+* `source_instance_id` - (Required) ID of the instance to use as the basis of the AMI.
 * `snapshot_without_reboot` - (Optional) Boolean that overrides the behavior of stopping
   the instance before snapshotting. This is risky since it may cause a snapshot of an
   inconsistent filesystem state, but can be used to avoid downtime if the user otherwise

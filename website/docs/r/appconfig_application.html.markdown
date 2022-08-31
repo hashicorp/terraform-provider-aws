@@ -27,8 +27,8 @@ resource "aws_appconfig_application" "example" {
 
 The following arguments are supported:
 
-* `name` - (Required) The name for the application. Must be between 1 and 64 characters in length.
-* `description` - (Optional) The description of the application. Can be at most 1024 characters.
+* `name` - (Required) Name for the application. Must be between 1 and 64 characters in length.
+* `description` - (Optional) Description of the application. Can be at most 1024 characters.
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attributes Reference

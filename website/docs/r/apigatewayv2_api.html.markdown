@@ -37,14 +37,14 @@ resource "aws_apigatewayv2_api" "example" {
 
 The following arguments are supported:
 
-* `name` - (Required) The name of the API. Must be less than or equal to 128 characters in length.
-* `protocol_type` - (Required) The API protocol. Valid values: `HTTP`, `WEBSOCKET`.
+* `name` - (Required) Name of the API. Must be less than or equal to 128 characters in length.
+* `protocol_type` - (Required) API protocol. Valid values: `HTTP`, `WEBSOCKET`.
 * `api_key_selection_expression` - (Optional) An [API key selection expression](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-websocket-api-selection-expressions.html#apigateway-websocket-api-apikey-selection-expressions).
 Valid values: `$context.authorizer.usageIdentifierKey`, `$request.header.x-api-key`. Defaults to `$request.header.x-api-key`.
 Applicable for WebSocket APIs.
-* `cors_configuration` - (Optional) The cross-origin resource sharing (CORS) [configuration](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-cors.html). Applicable for HTTP APIs.
+* `cors_configuration` - (Optional) Cross-origin resource sharing (CORS) [configuration](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-cors.html). Applicable for HTTP APIs.
 * `credentials_arn` - (Optional) Part of _quick create_. Specifies any credentials required for the integration. Applicable for HTTP APIs.
-* `description` - (Optional) The description of the API. Must be less than or equal to 1024 characters in length.
+* `description` - (Optional) Description of the API. Must be less than or equal to 1024 characters in length.
 * `disable_execute_api_endpoint` - (Optional) Whether clients can invoke the API by using the default `execute-api` endpoint.
 By default, clients can invoke the API with the default `{api_id}.execute-api.{region}.amazonaws.com endpoint`.
 To require that clients use a custom domain name to invoke the API, disable the default endpoint.
@@ -69,11 +69,11 @@ Further more, the `name`, `description`, `cors_configuration`, `tags` and `versi
 The `cors_configuration` object supports the following:
 
 * `allow_credentials` - (Optional) Whether credentials are included in the CORS request.
-* `allow_headers` - (Optional) The set of allowed HTTP headers.
-* `allow_methods` - (Optional) The set of allowed HTTP methods.
-* `allow_origins` - (Optional) The set of allowed origins.
-* `expose_headers` - (Optional) The set of exposed HTTP headers.
-* `max_age` - (Optional) The number of seconds that the browser should cache preflight request results.
+* `allow_headers` - (Optional) Set of allowed HTTP headers.
+* `allow_methods` - (Optional) Set of allowed HTTP methods.
+* `allow_origins` - (Optional) Set of allowed origins.
+* `expose_headers` - (Optional) Set of exposed HTTP headers.
+* `max_age` - (Optional) Number of seconds that the browser should cache preflight request results.
 
 ## Attributes Reference
 

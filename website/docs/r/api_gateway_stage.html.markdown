@@ -103,29 +103,29 @@ resource "aws_cloudwatch_log_group" "example" {
 
 The following arguments are supported:
 
-* `rest_api_id` - (Required) The ID of the associated REST API
-* `stage_name` - (Required) The name of the stage
-* `deployment_id` - (Required) The ID of the deployment that the stage points to
+* `rest_api_id` - (Required) ID of the associated REST API
+* `stage_name` - (Required) Name of the stage
+* `deployment_id` - (Required) ID of the deployment that the stage points to
 * `access_log_settings` - (Optional) Enables access logs for the API stage. See [Access Log Settings](#access-log-settings) below.
 * `cache_cluster_enabled` - (Optional) Whether a cache cluster is enabled for the stage
-* `cache_cluster_size` - (Optional) The size of the cache cluster for the stage, if enabled. Allowed values include `0.5`, `1.6`, `6.1`, `13.5`, `28.4`, `58.2`, `118` and `237`.
+* `cache_cluster_size` - (Optional) Size of the cache cluster for the stage, if enabled. Allowed values include `0.5`, `1.6`, `6.1`, `13.5`, `28.4`, `58.2`, `118` and `237`.
 * `canary_settings` - (Optional) Configuration settings of a canary deployment. See [Canary Settings](#canary-settings) below.
-* `client_certificate_id` - (Optional) The identifier of a client certificate for the stage.
-* `description` - (Optional) The description of the stage.
-* `documentation_version` - (Optional) The version of the associated API documentation
+* `client_certificate_id` - (Optional) Identifier of a client certificate for the stage.
+* `description` - (Optional) Description of the stage.
+* `documentation_version` - (Optional) Version of the associated API documentation
 * `variables` - (Optional) Map that defines the stage variables
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `xray_tracing_enabled` - (Optional) Whether active tracing with X-ray is enabled. Defaults to `false`.
 
 ### Access Log Settings
 
-* `destination_arn` - (Required) The ARN of the CloudWatch Logs log group or Kinesis Data Firehose delivery stream to receive access logs. If you specify a Kinesis Data Firehose delivery stream, the stream name must begin with `amazon-apigateway-`. Automatically removes trailing `:*` if present.
-* `format` - (Required) The formatting and values recorded in the logs.
+* `destination_arn` - (Required) ARN of the CloudWatch Logs log group or Kinesis Data Firehose delivery stream to receive access logs. If you specify a Kinesis Data Firehose delivery stream, the stream name must begin with `amazon-apigateway-`. Automatically removes trailing `:*` if present.
+* `format` - (Required) Formatting and values recorded in the logs.
 For more information on configuring the log format rules visit the AWS [documentation](https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-logging.html)
 
 ### Canary Settings
 
-* `percent_traffic` - (Optional) The percent `0.0` - `100.0` of traffic to divert to the canary deployment.
+* `percent_traffic` - (Optional) Percent `0.0` - `100.0` of traffic to divert to the canary deployment.
 * `stage_variable_overrides` - (Optional) Map of overridden stage `variables` (including new variables) for the canary deployment.
 * `use_stage_cache` - (Optional) Whether the canary deployment uses the stage cache. Defaults to false.
 

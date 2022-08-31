@@ -124,9 +124,9 @@ The following arguments are supported:
     * `options` - (Optional) Configuration block used to set certificate options. Detailed below.
     * `validation_option` - (Optional) Configuration block used to specify information about the initial validation of each domain name. Detailed below.
 * Importing an existing certificate
-    * `private_key` - (Required) The certificate's PEM-formatted private key
-    * `certificate_body` - (Required) The certificate's PEM-formatted public key
-    * `certificate_chain` - (Optional) The certificate's PEM-formatted chain
+    * `private_key` - (Required) Certificate's PEM-formatted private key
+    * `certificate_body` - (Required) Certificate's PEM-formatted public key
+    * `certificate_chain` - (Optional) Certificate's PEM-formatted chain
 * Creating a private CA issued certificate
     * `domain_name` - (Required) Domain name for which the certificate should be issued
     * `certificate_authority_arn` - (Required) ARN of an ACM PCA
@@ -144,7 +144,7 @@ Supported nested arguments for the `options` configuration block:
 Supported nested arguments for the `validation_option` configuration block:
 
 * `domain_name` - (Required) Fully qualified domain name (FQDN) in the certificate.
-* `validation_domain` - (Required) The domain name that you want ACM to use to send you validation emails. This domain name is the suffix of the email addresses that you want ACM to use. This must be the same as the `domain_name` value or a superdomain of the `domain_name` value. For example, if you request a certificate for `"testing.example.com"`, you can specify `"example.com"` for this value.
+* `validation_domain` - (Required) Domain name that you want ACM to use to send you validation emails. This domain name is the suffix of the email addresses that you want ACM to use. This must be the same as the `domain_name` value or a superdomain of the `domain_name` value. For example, if you request a certificate for `"testing.example.com"`, you can specify `"example.com"` for this value.
 
 ## Attributes Reference
 

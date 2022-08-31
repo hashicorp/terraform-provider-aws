@@ -25,9 +25,9 @@ resource "aws_apprunner_custom_domain_association" "example" {
 
 The following arguments supported:
 
-* `domain_name` - (Required) The custom domain endpoint to association. Specify a base domain e.g., `example.com` or a subdomain e.g., `subdomain.example.com`.
+* `domain_name` - (Required) Custom domain endpoint to association. Specify a base domain e.g., `example.com` or a subdomain e.g., `subdomain.example.com`.
 * `enable_www_subdomain` (Optional) Whether to associate the subdomain with the App Runner service in addition to the base domain. Defaults to `true`.
-* `service_arn` - (Required) The ARN of the App Runner service.
+* `service_arn` - (Required) ARN of the App Runner service.
 
 ## Attributes Reference
 

@@ -36,9 +36,9 @@ resource "aws_api_gateway_gateway_response" "test" {
 
 The following arguments are supported:
 
-* `rest_api_id` - (Required) The string identifier of the associated REST API.
-* `response_type` - (Required) The response type of the associated GatewayResponse.
-* `status_code` - (Optional) The HTTP status code of the Gateway Response.
+* `rest_api_id` - (Required) String identifier of the associated REST API.
+* `response_type` - (Required) Response type of the associated GatewayResponse.
+* `status_code` - (Optional) HTTP status code of the Gateway Response.
 * `response_templates` - (Optional) Map specifying the templates used to transform the response body.
 * `response_parameters` - (Optional) Map specifying the parameters (paths, query strings and headers) of the Gateway Response.
 

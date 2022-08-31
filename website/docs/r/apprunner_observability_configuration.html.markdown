@@ -31,14 +31,14 @@ resource "aws_apprunner_observability_configuration" "example" {
 The following arguments supported:
 
 * `observability_configuration_name` - (Required, Forces new resource) Name of the observability configuration.
-* `trace_configuration` - (Optional) The configuration of the tracing feature within this observability configuration. If you don't specify it, App Runner doesn't enable tracing. See [Trace Configuration](#trace-configuration) below for more details.
+* `trace_configuration` - (Optional) Configuration of the tracing feature within this observability configuration. If you don't specify it, App Runner doesn't enable tracing. See [Trace Configuration](#trace-configuration) below for more details.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### Trace Configuration
 
 The `trace_configuration` block supports the following argument:
 
-* `vendor` - (Required) The implementation provider chosen for tracing App Runner services. Valid values: `AWSXRAY`.
+* `vendor` - (Required) Implementation provider chosen for tracing App Runner services. Valid values: `AWSXRAY`.
 
 ## Attributes Reference
 

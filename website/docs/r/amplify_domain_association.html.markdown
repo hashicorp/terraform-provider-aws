@@ -51,15 +51,15 @@ resource "aws_amplify_domain_association" "example" {
 
 The following arguments are supported:
 
-* `app_id` - (Required) The unique ID for an Amplify app.
-* `domain_name` - (Required) The domain name for the domain association.
-* `sub_domain` - (Required) The setting for the subdomain. Documented below.
+* `app_id` - (Required) Unique ID for an Amplify app.
+* `domain_name` - (Required) Domain name for the domain association.
+* `sub_domain` - (Required) Setting for the subdomain. Documented below.
 * `wait_for_verification` - (Optional) If enabled, the resource will wait for the domain association status to change to `PENDING_DEPLOYMENT` or `AVAILABLE`. Setting this to `false` will skip the process. Default: `true`.
 
 The `sub_domain` configuration block supports the following arguments:
 
-* `branch_name` - (Required) The branch name setting for the subdomain.
-* `prefix` - (Required) The prefix setting for the subdomain.
+* `branch_name` - (Required) Branch name setting for the subdomain.
+* `prefix` - (Required) Prefix setting for the subdomain.
 
 ## Attributes Reference
 

@@ -71,10 +71,10 @@ EOF
 
 The following arguments are supported:
 
-* `rest_api_id` - (Required) The ID of the associated REST API
-* `resource_id` - (Required) The API resource ID
-* `http_method` - (Required) The HTTP method (`GET`, `POST`, `PUT`, `DELETE`, `HEAD`, `OPTIONS`, `ANY`)
-* `status_code` - (Required) The HTTP status code
+* `rest_api_id` - (Required) ID of the associated REST API
+* `resource_id` - (Required) API resource ID
+* `http_method` - (Required) HTTP method (`GET`, `POST`, `PUT`, `DELETE`, `HEAD`, `OPTIONS`, `ANY`)
+* `status_code` - (Required) HTTP status code
 * `selection_pattern` - (Optional) Regular expression pattern used to choose
   an integration response based on the response from the backend. Omit configuring this to make the integration the default one.
   If the backend is an `AWS` Lambda function, the AWS Lambda function error header is matched.

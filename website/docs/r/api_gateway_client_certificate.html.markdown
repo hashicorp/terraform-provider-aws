@@ -22,7 +22,7 @@ resource "aws_api_gateway_client_certificate" "demo" {
 
 The following arguments are supported:
 
-* `description` - (Optional) The description of the client certificate.
+* `description` - (Optional) Description of the client certificate.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attributes Reference

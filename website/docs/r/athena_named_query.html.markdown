@@ -52,10 +52,10 @@ resource "aws_athena_named_query" "foo" {
 
 The following arguments are supported:
 
-* `name` - (Required) The plain language name for the query. Maximum length of 128.
-* `workgroup` - (Optional) The workgroup to which the query belongs. Defaults to `primary`
-* `database` - (Required) The database to which the query belongs.
-* `query` - (Required) The text of the query itself. In other words, all query statements. Maximum length of 262144.
+* `name` - (Required) Plain language name for the query. Maximum length of 128.
+* `workgroup` - (Optional) Workgroup to which the query belongs. Defaults to `primary`
+* `database` - (Required) Database to which the query belongs.
+* `query` - (Required) Text of the query itself. In other words, all query statements. Maximum length of 262144.
 * `description` - (Optional) Brief explanation of the query. Maximum length of 1024.
 
 ## Attributes Reference

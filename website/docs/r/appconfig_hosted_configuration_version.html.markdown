@@ -83,9 +83,9 @@ resource "aws_appconfig_hosted_configuration_version" "example" {
 
 The following arguments are supported:
 
-* `application_id` - (Required, Forces new resource) The application ID.
-* `configuration_profile_id` - (Required, Forces new resource) The configuration profile ID.
-* `content` - (Required, Forces new resource) The content of the configuration or the configuration data.
+* `application_id` - (Required, Forces new resource) Application ID.
+* `configuration_profile_id` - (Required, Forces new resource) Configuration profile ID.
+* `content` - (Required, Forces new resource) Content of the configuration or the configuration data.
 * `content_type` - (Required, Forces new resource) Standard MIME type describing the format of the configuration content. For more information, see [Content-Type](https://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.17).
 * `description` - (Optional, Forces new resource) Description of the configuration.
 

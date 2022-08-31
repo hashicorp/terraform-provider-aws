@@ -33,9 +33,9 @@ resource "aws_amplify_webhook" "master" {
 
 The following arguments are supported:
 
-* `app_id` - (Required) The unique ID for an Amplify app.
-* `branch_name` - (Required) The name for a branch that is part of the Amplify app.
-* `description` - (Optional) The description for a webhook.
+* `app_id` - (Required) Unique ID for an Amplify app.
+* `branch_name` - (Required) Name for a branch that is part of the Amplify app.
+* `description` - (Optional) Description for a webhook.
 
 ## Attributes Reference
 

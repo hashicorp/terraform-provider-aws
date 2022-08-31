@@ -41,7 +41,7 @@ The following arguments are supported:
 * `description` - (Optional) Description of the workgroup.
 * `state` - (Optional) State of the workgroup. Valid values are `DISABLED` or `ENABLED`. Defaults to `ENABLED`.
 * `tags` - (Optional) Key-value map of resource tags for the workgroup. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `force_destroy` - (Optional) The option to delete the workgroup and its contents even if the workgroup contains any named queries.
+* `force_destroy` - (Optional) Option to delete the workgroup and its contents even if the workgroup contains any named queries.
 
 ### Configuration
 
@@ -54,18 +54,18 @@ The following arguments are supported:
 
 #### Engine Version
 
-* `selected_engine_version` - (Optional) The requested engine version. Defaults to `AUTO`.
+* `selected_engine_version` - (Optional) Requested engine version. Defaults to `AUTO`.
 
 #### Result Configuration
 
 * `encryption_configuration` - (Optional) Configuration block with encryption settings. See [Encryption Configuration](#encryption-configuration) below.
 * `acl_configuration` - (Optional) That an Amazon S3 canned ACL should be set to control ownership of stored query results. See [ACL Configuration](#acl-configuration) below.
-* `expected_bucket_owner` - (Optional) The AWS account ID that you expect to be the owner of the Amazon S3 bucket.
-* `output_location` - (Optional) The location in Amazon S3 where your query results are stored, such as `s3://path/to/query/bucket/`. For more information, see [Queries and Query Result Files](https://docs.aws.amazon.com/athena/latest/ug/querying.html).
+* `expected_bucket_owner` - (Optional) AWS account ID that you expect to be the owner of the Amazon S3 bucket.
+* `output_location` - (Optional) Location in Amazon S3 where your query results are stored, such as `s3://path/to/query/bucket/`. For more information, see [Queries and Query Result Files](https://docs.aws.amazon.com/athena/latest/ug/querying.html).
 
 ##### ACL Configuration
 
-* `s3_acl_option` - (Required) The Amazon S3 canned ACL that Athena should specify when storing query results. Valid value is `BUCKET_OWNER_FULL_CONTROL`.
+* `s3_acl_option` - (Required) Amazon S3 canned ACL that Athena should specify when storing query results. Valid value is `BUCKET_OWNER_FULL_CONTROL`.
 
 ##### Encryption Configuration
 

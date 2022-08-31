@@ -37,13 +37,13 @@ resource "aws_app_cookie_stickiness_policy" "foo" {
 
 The following arguments are supported:
 
-* `name` - (Required) The name of the stickiness policy.
-* `load_balancer` - (Required) The name of load balancer to which the policy
+* `name` - (Required) Name of the stickiness policy.
+* `load_balancer` - (Required) Name of load balancer to which the policy
   should be attached.
-* `lb_port` - (Required) The load balancer port to which the policy
+* `lb_port` - (Required) Load balancer port to which the policy
   should be applied. This must be an active listener on the load
 balancer.
-* `cookie_name` - (Required) The application cookie whose lifetime the ELB's cookie should follow.
+* `cookie_name` - (Required) Application cookie whose lifetime the ELB's cookie should follow.
 
 ## Attributes Reference
 

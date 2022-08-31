@@ -95,8 +95,8 @@ The following arguments are supported:
 * `enabled` - (Optional) Whether the certificate authority is enabled or disabled. Defaults to `true`.
 * `revocation_configuration` - (Optional) Nested argument containing revocation configuration. Defined below.
 * `tags` - (Optional) Key-value map of user-defined tags that are attached to the certificate authority. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `type` - (Optional) The type of the certificate authority. Defaults to `SUBORDINATE`. Valid values: `ROOT` and `SUBORDINATE`.
-* `permanent_deletion_time_in_days` - (Optional) The number of days to make a CA restorable after it has been deleted, must be between 7 to 30 days, with default to 30 days.
+* `type` - (Optional) Type of the certificate authority. Defaults to `SUBORDINATE`. Valid values: `ROOT` and `SUBORDINATE`.
+* `permanent_deletion_time_in_days` - (Optional) Number of days to make a CA restorable after it has been deleted, must be between 7 to 30 days, with default to 30 days.
 
 ### certificate_authority_configuration
 
@@ -114,7 +114,7 @@ Contains information about the certificate subject. Identifies the entity that o
 * `generation_qualifier` - (Optional) Typically a qualifier appended to the name of an individual. Examples include Jr. for junior, Sr. for senior, and III for third. Must be less than or equal to 3 characters in length.
 * `given_name` - (Optional) First name. Must be less than or equal to 16 characters in length.
 * `initials` - (Optional) Concatenation that typically contains the first letter of the `given_name`, the first letter of the middle name if one exists, and the first letter of the `surname`. Must be less than or equal to 5 characters in length.
-* `locality` - (Optional) The locality (such as a city or town) in which the certificate subject is located. Must be less than or equal to 128 characters in length.
+* `locality` - (Optional) Locality (such as a city or town) in which the certificate subject is located. Must be less than or equal to 128 characters in length.
 * `organization` - (Optional) Legal name of the organization with which the certificate subject is affiliated. Must be less than or equal to 64 characters in length.
 * `organizational_unit` - (Optional) Subdivision or unit of the organization (such as sales or finance) with which the certificate subject is affiliated. Must be less than or equal to 64 characters in length.
 * `pseudonym` - (Optional) Typically a shortened version of a longer `given_name`. For example, Jonathan is often shortened to John. Elizabeth is often shortened to Beth, Liz, or Eliza. Must be less than or equal to 128 characters in length.

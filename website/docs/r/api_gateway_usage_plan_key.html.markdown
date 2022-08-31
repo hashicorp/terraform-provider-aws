@@ -43,9 +43,9 @@ resource "aws_api_gateway_usage_plan_key" "main" {
 
 The following arguments are supported:
 
-* `key_id` - (Required) The identifier of the API key resource.
-* `key_type` - (Required) The type of the API key resource. Currently, the valid key type is API_KEY.
-* `usage_plan_id` - (Required) The Id of the usage plan resource representing to associate the key to.
+* `key_id` - (Required) Identifier of the API key resource.
+* `key_type` - (Required) Type of the API key resource. Currently, the valid key type is API_KEY.
+* `usage_plan_id` - (Required) Id of the usage plan resource representing to associate the key to.
 
 ## Attributes Reference
 

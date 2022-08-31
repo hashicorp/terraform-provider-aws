@@ -86,10 +86,10 @@ resource "aws_api_gateway_method_settings" "path_specific" {
 
 The following arguments are supported:
 
-* `rest_api_id` - (Required) The ID of the REST API
-* `stage_name` - (Required) The name of the stage
+* `rest_api_id` - (Required) ID of the REST API
+* `stage_name` - (Required) Name of the stage
 * `method_path` - (Required) Method path defined as `{resource_path}/{http_method}` for an individual method override, or `*/*` for overriding all methods in the stage. Ensure to trim any leading forward slashes in the path (e.g., `trimprefix(aws_api_gateway_resource.example.path, "/")`).
-* `settings` - (Required) The settings block, see below.
+* `settings` - (Required) Settings block, see below.
 
 ### `settings`
 
