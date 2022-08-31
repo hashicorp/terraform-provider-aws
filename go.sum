@@ -50,8 +50,8 @@ github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.9.4 h1:b16QW0XWl0
 github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.9.4/go.mod h1:uKkN7qmSIsNJVyMtxNQoCEYMvFEXbOg9fwCJPdfp2u8=
 github.com/aws/aws-sdk-go-v2/service/kendra v1.33.1 h1:XOTWbVWu4wAVozPAny4v5fyWZtjXS+KZl4OAe04vJbw=
 github.com/aws/aws-sdk-go-v2/service/kendra v1.33.1/go.mod h1:9rtGoAo8juNn+jcFJEV5kmmYoNqShdUUflgLtsNQ2gs=
-github.com/aws/aws-sdk-go-v2/service/medialive v1.22.4 h1:TTJ1kkSZ5M+EdIx9wCvDXnFXaNQJtaAoMG7F0QuMsm4=
-github.com/aws/aws-sdk-go-v2/service/medialive v1.22.4/go.mod h1:La/whcDxm/jlco9ygey/B4US277blnBX6/PnaxcvkoI=
+github.com/aws/aws-sdk-go-v2/service/medialive v1.22.5 h1:D9Nvj5dN2AIeTqy15CDL3Gadg2ZZSj1+V+yLov8LP0g=
+github.com/aws/aws-sdk-go-v2/service/medialive v1.22.5/go.mod h1:DTtR6zJza0SqrUXLV6m8bGQKJeRyPBw/nECMFli6zEw=
 github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.0.5 h1:dLg8yTJ6vK9WaT/cAOtrdvZzZqqWU2PROqZ7EObk4Jg=
 github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.0.5/go.mod h1:CXsGGP64uVIXEjMuSYy/VqCRI2yvRXSuE9vGm4qQkrU=
 github.com/aws/aws-sdk-go-v2/service/route53domains v1.12.13 h1:fEQ0IqfnBLzzld1UUL5mM8sbpKezQ3lzzPRDAoadgXw=
