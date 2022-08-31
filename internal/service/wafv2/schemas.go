@@ -661,6 +661,7 @@ func bodySchema() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		Optional: true,
+		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"oversize_handling": oversizeHandlingOptionalSchema(),
