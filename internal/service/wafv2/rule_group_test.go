@@ -2609,7 +2609,7 @@ resource "aws_wafv2_rule_group" "test" {
 func testAccRuleGroupConfig_byteMatchStatementFieldToMatchJSONBody(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_rule_group" "test" {
-  capacity = 15
+  capacity = 20
   name     = "%s"
   scope    = "REGIONAL"
 
