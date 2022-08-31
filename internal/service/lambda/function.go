@@ -293,6 +293,10 @@ func ResourceFunction() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"qualified_invoke_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"last_modified": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -383,6 +387,7 @@ func updateComputedAttributesOnPublish(_ context.Context, d *schema.ResourceDiff
 	if publish && (configChanged || functionCodeUpdated || publishChanged) {
 		d.SetNewComputed("version")
 		d.SetNewComputed("qualified_arn")
+		d.SetNewComputed("qualified_invoke_arn")
 	}
 	return nil
 }
@@ -858,6 +863,8 @@ func resourceFunctionRead(d *schema.ResourceData, meta interface{}) error {
 	if qualifierExistance {
 		d.Set("version", function.Version)
 		d.Set("qualified_arn", function.FunctionArn)
+		qualifiedInvokeArn := functionInvokeARN(*function.FunctionArn, meta)
+		d.Set("qualified_invoke_arn", qualifiedInvokeArn)
 	} else {
 
 		// List is sorted from oldest to latest
@@ -881,6 +888,8 @@ func resourceFunctionRead(d *schema.ResourceData, meta interface{}) error {
 
 		d.Set("version", lastVersion)
 		d.Set("qualified_arn", lastQualifiedArn)
+		qualifiedInvokeArn := functionInvokeARN(lastQualifiedArn, meta)
+		d.Set("qualified_invoke_arn", qualifiedInvokeArn)
 	}
 
 	invokeArn := functionInvokeARN(*function.FunctionArn, meta)
