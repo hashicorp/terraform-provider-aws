@@ -56,7 +56,7 @@ The following arguments are supported:
 * `workgroup` - (Optional) The workgroup to which the query belongs. Defaults to `primary`
 * `database` - (Required) The database to which the query belongs.
 * `query` - (Required) The text of the query itself. In other words, all query statements. Maximum length of 262144.
-* `description` - (Optional) A brief explanation of the query. Maximum length of 1024.
+* `description` - (Optional) Brief explanation of the query. Maximum length of 1024.
 
 ## Attributes Reference
 

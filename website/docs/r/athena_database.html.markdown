@@ -33,8 +33,8 @@ The following arguments are supported:
 * `comment` - (Optional) Description of the database.
 * `encryption_configuration` - (Optional) The encryption key block AWS Athena uses to decrypt the data in S3, such as an AWS Key Management Service (AWS KMS) key. See [Encryption Configuration](#encryption-configuration) below.
 * `expected_bucket_owner` - (Optional) The AWS account ID that you expect to be the owner of the Amazon S3 bucket.
-* `force_destroy` - (Optional, Default: false) A boolean that indicates all tables should be deleted from the database so that the database can be destroyed without error. The tables are *not* recoverable.
-* `properties` - (Optional) A key-value map of custom metadata properties for the database definition.
+* `force_destroy` - (Optional, Default: false) Boolean that indicates all tables should be deleted from the database so that the database can be destroyed without error. The tables are *not* recoverable.
+* `properties` - (Optional) Key-value map of custom metadata properties for the database definition.
 
 ### ACL Configuration
 
