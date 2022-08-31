@@ -101,35 +101,37 @@ func resourceEIPAssociationCreate(d *schema.ResourceData, meta interface{}) erro
 
 	if output.AssociationId != nil {
 		d.SetId(aws.StringValue(output.AssociationId))
+
+		_, err = tfresource.RetryWhen(propagationTimeout,
+			func() (interface{}, error) {
+				return FindEIPByAssociationID(conn, d.Id())
+			},
+			func(err error) (bool, error) {
+				if tfresource.NotFound(err) {
+					return true, err
+				}
+
+				// "InvalidInstanceID: The pending instance 'i-0504e5b44ea06d599' is not in a valid state for this operation."
+				if tfawserr.ErrMessageContains(err, errCodeInvalidInstanceID, "pending instance") {
+					return true, err
+				}
+
+				return false, err
+			},
+		)
+
+		if err != nil {
+			return fmt.Errorf("waiting for EC2 EIP Allocation (%s) create: %w", d.Id(), err)
+		}
 	} else {
 		// EC2-Classic.
-		d.SetId(aws.StringValue(input.PublicIp))
-	}
+		publicIP := aws.StringValue(input.PublicIp)
+		d.SetId(publicIP)
 
-	_, err = tfresource.RetryWhen(propagationTimeout,
-		func() (interface{}, error) {
-			if eipAssociationID(d.Id()).IsVPC() {
-				return FindEIPByAssociationID(conn, d.Id())
-			} else {
-				return FindEIPByPublicIP(conn, d.Id())
-			}
-		},
-		func(err error) (bool, error) {
-			if tfresource.NotFound(err) {
-				return true, err
-			}
-
-			// "InvalidInstanceID: The pending instance 'i-0504e5b44ea06d599' is not in a valid state for this operation."
-			if tfawserr.ErrMessageContains(err, errCodeInvalidInstanceID, "pending instance") {
-				return true, err
-			}
-
-			return false, err
-		},
-	)
-
-	if err != nil {
-		return fmt.Errorf("waiting for EC2 EIP Allocation (%s) create: %w", d.Id(), err)
+		instanceID := aws.StringValue(input.InstanceId)
+		if err := waitForAddressAssociationClassic(conn, publicIP, instanceID); err != nil {
+			return fmt.Errorf("waiting for EC2 EIP (%s) to associate with EC2-Classic Instance (%s): %w", publicIP, instanceID, err)
+		}
 	}
 
 	return resourceEIPAssociationRead(d, meta)
