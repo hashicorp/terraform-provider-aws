@@ -86,8 +86,8 @@ The following arguments are supported:
 * `application_id` - (Required, Forces new resource) The application ID.
 * `configuration_profile_id` - (Required, Forces new resource) The configuration profile ID.
 * `content` - (Required, Forces new resource) The content of the configuration or the configuration data.
-* `content_type` - (Required, Forces new resource) A standard MIME type describing the format of the configuration content. For more information, see [Content-Type](https://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.17).
-* `description` - (Optional, Forces new resource) A description of the configuration.
+* `content_type` - (Required, Forces new resource) Standard MIME type describing the format of the configuration content. For more information, see [Content-Type](https://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.17).
+* `description` - (Optional, Forces new resource) Description of the configuration.
 
 ## Attributes Reference
 
