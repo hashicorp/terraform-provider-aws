@@ -41,8 +41,8 @@ resource "aws_vpc_ipam_pool_cidr_allocation" "test" {
 The following arguments are supported:
 
 * `disallowed_cidrs` - (Optional) Exclude a particular CIDR range from being returned by the pool.
-* `ipam_pool_id` - (Required) The ID of the pool to which you want to assign a CIDR.
-* `netmask_length` - (Optional) The netmask length of the CIDR you would like to preview from the IPAM pool.
+* `ipam_pool_id` - (Required) ID of the pool to which you want to assign a CIDR.
+* `netmask_length` - (Optional) Netmask length of the CIDR you would like to preview from the IPAM pool.
 
 ## Attributes Reference
 
