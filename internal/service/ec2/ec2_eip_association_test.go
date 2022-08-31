@@ -146,7 +146,7 @@ func TestAccEC2EIPAssociation_spotInstance(t *testing.T) {
 	})
 }
 
-func TestAccEC2EIPAssociation_ec2Classic(t *testing.T) {
+func TestAccEC2EIPAssociation_classic(t *testing.T) {
 	var a ec2.Address
 	resourceName := "aws_eip_association.test"
 
@@ -168,11 +168,11 @@ func TestAccEC2EIPAssociation_ec2Classic(t *testing.T) {
 						VersionConstraint: "4.28.0",
 					},
 				},
-				Config: testAccEIPAssociationConfig_ec2ClassicNoAssociation(),
+				Config: testAccEIPAssociationConfig_classicNoAssociation(),
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				Config:                   testAccEIPAssociationConfig_ec2ClassicWithAssociation(),
+				Config:                   testAccEIPAssociationConfig_classicWithAssociation(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEIPAssociationExists(resourceName, &a),
 					resource.TestCheckResourceAttr(resourceName, "allocation_id", ""),
@@ -422,7 +422,7 @@ resource "aws_eip_association" "test" {
 `, rName, publicKey))
 }
 
-func testAccEIPAssociationConfig_ec2ClassicNoAssociation() string {
+func testAccEIPAssociationConfig_classicNoAssociation() string {
 	return acctest.ConfigCompose(
 		testAccLatestAmazonLinuxPVEBSAMIConfig(),
 		acctest.AvailableEC2InstanceTypeForRegion("t1.micro", "m3.medium", "m3.large", "c3.large", "r3.large"),
@@ -436,8 +436,8 @@ resource "aws_eip" "test" {}
 `)
 }
 
-func testAccEIPAssociationConfig_ec2ClassicWithAssociation() string {
-	return acctest.ConfigCompose(testAccEIPAssociationConfig_ec2ClassicNoAssociation(), `
+func testAccEIPAssociationConfig_classicWithAssociation() string {
+	return acctest.ConfigCompose(testAccEIPAssociationConfig_classicNoAssociation(), `
 resource "aws_eip_association" "test" {
   public_ip   = aws_eip.test.id
   instance_id = aws_instance.test.id
