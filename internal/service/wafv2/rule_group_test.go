@@ -381,7 +381,7 @@ func TestAccWAFV2RuleGroup_ByteMatchStatement_fieldToMatch(t *testing.T) {
 						"statement.0.byte_match_statement.0.field_to_match.0.body.#":                  "0",
 						"statement.0.byte_match_statement.0.field_to_match.0.cookies.#":               "0",
 						"statement.0.byte_match_statement.0.field_to_match.0.headers.#":               "0",
-						"statement.0.byte_match_statement.0.field_to_match.0._body.#":                 "0",
+						"statement.0.byte_match_statement.0.field_to_match.0.json_body.#":             "0",
 						"statement.0.byte_match_statement.0.field_to_match.0.method.#":                "0",
 						"statement.0.byte_match_statement.0.field_to_match.0.query_string.#":          "0",
 						"statement.0.byte_match_statement.0.field_to_match.0.single_header.#":         "0",
@@ -443,6 +443,27 @@ func TestAccWAFV2RuleGroup_ByteMatchStatement_fieldToMatch(t *testing.T) {
 						"statement.0.byte_match_statement.0.field_to_match.0.single_header.#":                              "0",
 						"statement.0.byte_match_statement.0.field_to_match.0.single_query_argument.#":                      "0",
 						"statement.0.byte_match_statement.0.field_to_match.0.uri_path.#":                                   "0",
+					}),
+				),
+			},
+			{
+				Config: testAccRuleGroupConfig_byteMatchStatementFieldToMatchJSONBody(ruleGroupName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRuleGroupExists(resourceName, &v),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						"statement.#":                                                                                      "1",
+						"statement.0.byte_match_statement.#":                                                               "1",
+						"statement.0.byte_match_statement.0.field_to_match.#":                                              "1",
+						"statement.0.byte_match_statement.0.field_to_match.0.json_body.#":                                  "1",
+						"statement.0.byte_match_statement.0.field_to_match.0.json_body.0.match_scope":                      "VALUE",
+						"statement.0.byte_match_statement.0.field_to_match.0.json_body.0.invalid_fallback_behavior":        "MATCH",
+						"statement.0.byte_match_statement.0.field_to_match.0.json_body.0.oversize_handling":                "CONTINUE",
+						"statement.0.byte_match_statement.0.field_to_match.0.json_body.0.match_pattern.#":                  "1",
+						"statement.0.byte_match_statement.0.field_to_match.0.json_body.0.match_pattern.0.included_paths.#": "2",
+						"statement.0.byte_match_statement.0.field_to_match.0.json_body.0.match_pattern.0.included_paths.0": "/dogs/0/name",
+						"statement.0.byte_match_statement.0.field_to_match.0.json_body.0.match_pattern.0.included_paths.1": "/dogs/1/name",
 					}),
 				),
 			},
@@ -540,99 +561,6 @@ func TestAccWAFV2RuleGroup_ByteMatchStatement_fieldToMatch(t *testing.T) {
 			{
 				Config:      testAccRuleGroupConfig_byteMatchStatementFieldToMatchHeadersInvalidConfiguration(ruleGroupName),
 				ExpectError: regexp.MustCompile(`argument "oversize_handling" is required`),
-			},
-			{
-				Config: testAccRuleGroupConfig_byteMatchStatementFieldToMatchJSONBodyMatchPatternAll(ruleGroupName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRuleGroupExists(resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"statement.#":                                         "1",
-						"statement.0.byte_match_statement.#":                  "1",
-						"statement.0.byte_match_statement.0.field_to_match.#": "1",
-						"statement.0.byte_match_statement.0.field_to_match.0.all_query_arguments.#":                        "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.body.#":                                       "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.cookies.#":                                    "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.headers.#":                                    "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.json_body.#":                                  "1",
-						"statement.0.byte_match_statement.0.field_to_match.0.json_body.0.oversize_handling":                "MATCH",
-						"statement.0.byte_match_statement.0.field_to_match.0.json_body.0.match_scope":                      "ALL",
-						"statement.0.byte_match_statement.0.field_to_match.0.json_body.0.match_pattern.#":                  "1",
-						"statement.0.byte_match_statement.0.field_to_match.0.json_body.0.match_pattern.0.all.#":            "1",
-						"statement.0.byte_match_statement.0.field_to_match.0.json_body.0.match_pattern.0.included_paths.#": "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.json_body.0.invalid_fallback_behavior":        "",
-						"statement.0.byte_match_statement.0.field_to_match.0.method.#":                                     "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.query_string.#":                               "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.single_header.#":                              "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.single_query_argument.#":                      "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.uri_path.#":                                   "0",
-					}),
-				),
-			},
-			{
-				Config: testAccRuleGroupConfig_byteMatchStatementFieldToMatchJSONBodyMatchPatternIncludedPaths(ruleGroupName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRuleGroupExists(resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"statement.#":                                         "1",
-						"statement.0.byte_match_statement.#":                  "1",
-						"statement.0.byte_match_statement.0.field_to_match.#": "1",
-						"statement.0.byte_match_statement.0.field_to_match.0.all_query_arguments.#":                        "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.body.#":                                       "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.cookies.#":                                    "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.headers.#":                                    "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.json_body.#":                                  "1",
-						"statement.0.byte_match_statement.0.field_to_match.0.json_body.0.oversize_handling":                "MATCH",
-						"statement.0.byte_match_statement.0.field_to_match.0.json_body.0.match_scope":                      "ALL",
-						"statement.0.byte_match_statement.0.field_to_match.0.json_body.0.match_pattern.#":                  "1",
-						"statement.0.byte_match_statement.0.field_to_match.0.json_body.0.match_pattern.0.all.#":            "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.json_body.0.match_pattern.0.included_paths.#": "2",
-						"statement.0.byte_match_statement.0.field_to_match.0.json_body.0.match_pattern.0.included_paths.0": "/dogs/0/name",
-						"statement.0.byte_match_statement.0.field_to_match.0.json_body.0.match_pattern.0.included_paths.1": "/cats",
-						"statement.0.byte_match_statement.0.field_to_match.0.json_body.0.invalid_fallback_behavior":        "",
-						"statement.0.byte_match_statement.0.field_to_match.0.method.#":                                     "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.query_string.#":                               "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.single_header.#":                              "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.single_query_argument.#":                      "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.uri_path.#":                                   "0",
-					}),
-				),
-			},
-			{
-				Config: testAccRuleGroupConfig_byteMatchStatementFieldToMatchJSONBodyInvalidFallbackBehavior(ruleGroupName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRuleGroupExists(resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"statement.#":                                         "1",
-						"statement.0.byte_match_statement.#":                  "1",
-						"statement.0.byte_match_statement.0.field_to_match.#": "1",
-						"statement.0.byte_match_statement.0.field_to_match.0.all_query_arguments.#":                        "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.body.#":                                       "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.cookies.#":                                    "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.headers.#":                                    "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.json_body.#":                                  "1",
-						"statement.0.byte_match_statement.0.field_to_match.0.json_body.0.oversize_handling":                "MATCH",
-						"statement.0.byte_match_statement.0.field_to_match.0.json_body.0.match_scope":                      "ALL",
-						"statement.0.byte_match_statement.0.field_to_match.0.json_body.0.match_pattern.#":                  "1",
-						"statement.0.byte_match_statement.0.field_to_match.0.json_body.0.match_pattern.0.all.#":            "1",
-						"statement.0.byte_match_statement.0.field_to_match.0.json_body.0.match_pattern.0.included_paths.#": "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.json_body.0.invalid_fallback_behavior":        "NO_MATCH",
-						"statement.0.byte_match_statement.0.field_to_match.0.method.#":                                     "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.query_string.#":                               "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.single_header.#":                              "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.single_query_argument.#":                      "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.uri_path.#":                                   "0",
-					}),
-				),
-			},
-			{
-				Config:      testAccRuleGroupConfig_byteMatchStatementFieldToMatchJSONBodyMatchInvalidConfiguration(ruleGroupName),
-				ExpectError: regexp.MustCompile(`argument "match_scope" is required`),
 			},
 			{
 				Config: testAccRuleGroupConfig_byteMatchStatementFieldToMatchMethod(ruleGroupName),
@@ -2678,6 +2606,60 @@ resource "aws_wafv2_rule_group" "test" {
 `, name)
 }
 
+func testAccRuleGroupConfig_byteMatchStatementFieldToMatchJSONBody(name string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_rule_group" "test" {
+  capacity = 15
+  name     = "%s"
+  scope    = "REGIONAL"
+
+  rule {
+    name     = "rule-1"
+    priority = 1
+
+    action {
+      allow {}
+    }
+
+    statement {
+      byte_match_statement {
+        positional_constraint = "CONTAINS"
+        search_string         = "Clifford"
+
+        field_to_match {
+          json_body {
+            match_scope               = "VALUE"
+            invalid_fallback_behavior = "MATCH"
+            oversize_handling         = "CONTINUE"
+            match_pattern {
+              included_paths = ["/dogs/0/name", "/dogs/1/name"]
+            }
+          }
+        }
+
+        text_transformation {
+          priority = 1
+          type     = "NONE"
+        }
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = false
+      metric_name                = "friendly-rule-metric-name"
+      sampled_requests_enabled   = false
+    }
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
+  }
+}
+`, name)
+}
+
 func testAccRuleGroupConfig_byteMatchStatementFieldToMatchBodyInvalidConfiguration(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_rule_group" "test" {
@@ -2908,218 +2890,6 @@ resource "aws_wafv2_rule_group" "test" {
             match_scope = "ALL"
             match_pattern {
               excluded_headers = ["session", "session-id"]
-            }
-            oversize_handling = "MATCH"
-          }
-        }
-
-        text_transformation {
-          priority = 1
-          type     = "NONE"
-        }
-      }
-    }
-
-    visibility_config {
-      cloudwatch_metrics_enabled = false
-      metric_name                = "friendly-rule-metric-name"
-      sampled_requests_enabled   = false
-    }
-  }
-
-  visibility_config {
-    cloudwatch_metrics_enabled = false
-    metric_name                = "friendly-metric-name"
-    sampled_requests_enabled   = false
-  }
-}
-`, name)
-}
-
-func testAccRuleGroupConfig_byteMatchStatementFieldToMatchJSONBodyMatchInvalidConfiguration(name string) string {
-	return fmt.Sprintf(`
-resource "aws_wafv2_rule_group" "test" {
-  capacity = 50
-  name     = "%s"
-  scope    = "REGIONAL"
-
-  rule {
-    name     = "rule-1"
-    priority = 1
-
-    action {
-      allow {}
-    }
-
-    statement {
-      byte_match_statement {
-        positional_constraint = "CONTAINS"
-        search_string         = "word"
-
-        field_to_match {
-          json_body {
-            match_pattern {
-              all {}
-            }
-            oversize_handling = "MATCH"
-          }
-        }
-
-        text_transformation {
-          priority = 1
-          type     = "NONE"
-        }
-      }
-    }
-
-    visibility_config {
-      cloudwatch_metrics_enabled = false
-      metric_name                = "friendly-rule-metric-name"
-      sampled_requests_enabled   = false
-    }
-  }
-
-  visibility_config {
-    cloudwatch_metrics_enabled = false
-    metric_name                = "friendly-metric-name"
-    sampled_requests_enabled   = false
-  }
-}
-`, name)
-}
-
-func testAccRuleGroupConfig_byteMatchStatementFieldToMatchJSONBodyMatchPatternAll(name string) string {
-	return fmt.Sprintf(`
-resource "aws_wafv2_rule_group" "test" {
-  capacity = 50
-  name     = "%s"
-  scope    = "REGIONAL"
-
-  rule {
-    name     = "rule-1"
-    priority = 1
-
-    action {
-      allow {}
-    }
-
-    statement {
-      byte_match_statement {
-        positional_constraint = "CONTAINS"
-        search_string         = "word"
-
-        field_to_match {
-          json_body {
-            match_scope = "ALL"
-            match_pattern {
-              all {}
-            }
-            oversize_handling = "MATCH"
-          }
-        }
-
-        text_transformation {
-          priority = 1
-          type     = "NONE"
-        }
-      }
-    }
-
-    visibility_config {
-      cloudwatch_metrics_enabled = false
-      metric_name                = "friendly-rule-metric-name"
-      sampled_requests_enabled   = false
-    }
-  }
-
-  visibility_config {
-    cloudwatch_metrics_enabled = false
-    metric_name                = "friendly-metric-name"
-    sampled_requests_enabled   = false
-  }
-}
-`, name)
-}
-
-func testAccRuleGroupConfig_byteMatchStatementFieldToMatchJSONBodyMatchPatternIncludedPaths(name string) string {
-	return fmt.Sprintf(`
-resource "aws_wafv2_rule_group" "test" {
-  capacity = 50
-  name     = "%s"
-  scope    = "REGIONAL"
-
-  rule {
-    name     = "rule-1"
-    priority = 1
-
-    action {
-      allow {}
-    }
-
-    statement {
-      byte_match_statement {
-        positional_constraint = "CONTAINS"
-        search_string         = "word"
-
-        field_to_match {
-          json_body {
-            match_scope = "ALL"
-            match_pattern {
-              included_paths = ["/dogs/0/name", "/cats"]
-            }
-            oversize_handling = "MATCH"
-          }
-        }
-
-        text_transformation {
-          priority = 1
-          type     = "NONE"
-        }
-      }
-    }
-
-    visibility_config {
-      cloudwatch_metrics_enabled = false
-      metric_name                = "friendly-rule-metric-name"
-      sampled_requests_enabled   = false
-    }
-  }
-
-  visibility_config {
-    cloudwatch_metrics_enabled = false
-    metric_name                = "friendly-metric-name"
-    sampled_requests_enabled   = false
-  }
-}
-`, name)
-}
-
-func testAccRuleGroupConfig_byteMatchStatementFieldToMatchJSONBodyInvalidFallbackBehavior(name string) string {
-	return fmt.Sprintf(`
-resource "aws_wafv2_rule_group" "test" {
-  capacity = 50
-  name     = "%s"
-  scope    = "REGIONAL"
-
-  rule {
-    name     = "rule-1"
-    priority = 1
-
-    action {
-      allow {}
-    }
-
-    statement {
-      byte_match_statement {
-        positional_constraint = "CONTAINS"
-        search_string         = "word"
-
-        field_to_match {
-          json_body {
-            invalid_fallback_behavior = "NO_MATCH"
-            match_scope               = "ALL"
-            match_pattern {
-              all {}
             }
             oversize_handling = "MATCH"
           }

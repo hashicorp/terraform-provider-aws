@@ -501,7 +501,7 @@ An empty configuration block `{}` should be used when specifying `all_query_argu
 * `body` - (Optional) Inspect the request body, which immediately follows the request headers. See [Body](#body) below for details.
 * `cookies` - (Optional) Inspect the cookies in the web request. See [Cookies](#cookies) below for details.
 * `headers` - (Optional) Inspect the request headers. See [Headers](#headers) below for details.
-* `json_body` - (Optional) Inspect the request body as JSON, which immediately follows the request headers. See [JsonBody](#json-body) below for details.
+* `json_body` - (Optional) Inspect the request body as JSON. See [JSON Body](#json-body) for details.
 * `method` - (Optional) Inspect the HTTP method. The method indicates the type of operation that the request is asking the origin to perform.
 * `query_string` - (Optional) Inspect the query string. This is the part of a URL that appears after a `?` character, if any.
 * `single_header` - (Optional) Inspect a single header. See [Single Header](#single-header) below for details.
@@ -537,19 +537,6 @@ The `body` block supports the following arguments:
 
 * `oversize_handling` - (Required) Oversize handling tells AWS WAF what to do with a web request when the request component that the rule inspects is over the limits. Valid values include the following: `CONTINUE`, `MATCH`, `NO_MATCH`. See the AWS [documentation](https://docs.aws.amazon.com/waf/latest/developerguide/waf-rule-statement-oversize-handling.html) for more information.
 
-### Cookies
-
-Inspect the cookies in the web request.
-
-The `cookies` block supports the following arguments:
-
-* `match_pattern` - (Required) The filter to use to identify the subset of cookies to inspect in a web request. The `match_pattern` block supports only one of the following arguments:
-    * `all` - An empty configuration block that is used for inspecting all cookies.
-    * `included_cookies` - An array of strings that will be used for inspecting cookies that have a key that matches one of the provided values.
-    * `excluded_cookies` - An array of strings that will be used for inspecting cookies that do not have a key that matches one of the provided values.
-* `match_scope` - (Required) The parts of the cookies to inspect with the rule inspection criteria. If you specify `All`, AWS WAF inspects both keys and values. Valid values include the following: `ALL`, `Key`, `Value`.
-* `oversize_handling` - (Required) Oversize handling tells AWS WAF what to do with a web request when the request component that the rule inspects is over the limits. Valid values include the following: `CONTINUE`, `MATCH`, `NO_MATCH`. See the AWS [documentation](https://docs.aws.amazon.com/waf/latest/developerguide/waf-rule-statement-oversize-handling.html) for more information.
-
 ### Headers
 
 Inspect the request headers.
@@ -563,18 +550,14 @@ The `headers` block supports the following arguments:
 * `match_scope` - (Required) The parts of the headers to inspect with the rule inspection criteria. If you specify `All`, AWS WAF inspects both keys and values. Valid values include the following: `ALL`, `Key`, `Value`.
 * `oversize_handling` - (Required) Oversize handling tells AWS WAF what to do with a web request when the request component that the rule inspects is over the limits. Valid values include the following: `CONTINUE`, `MATCH`, `NO_MATCH`. See the AWS [documentation](https://docs.aws.amazon.com/waf/latest/developerguide/waf-rule-statement-oversize-handling.html) for more information.
 
-### Json Body
-
-Inspect the request body as JSON, which immediately follows the request headers.
+### JSON Body
 
 The `json_body` block supports the following arguments:
 
-* `invalid_fallback_behavior` - (Optional) What AWS WAF should do if it fails to completely parse the JSON body. Valid values include the following: `EVALUATE_AS_STRING`, `MATCH`, `NO_MATCH`. See the AWS [documentation](https://docs.aws.amazon.com/waf/latest/APIReference/API_JsonBody.html) for more information.
-* `match_pattern` - (Required) The patterns to look for in the JSON body. AWS WAF inspects the results of these pattern matches against the rule inspection criteria. The `match_pattern` block supports only one of the following arguments:
-    * `all` - An empty configuration block that is used for inspecting all of the elements.
-    * `included_paths` - An array of strings that will be used for inspecting the specified paths. Provide the include paths using JSON Pointer syntax. See the AWS [documentation](https://docs.aws.amazon.com/waf/latest/APIReference/API_JsonMatchPattern.html) for more information.
-* `match_scope` - (Required) The parts of the headers to inspect with the rule inspection criteria. If you specify `All`, AWS WAF inspects both keys and values. Valid values include the following: `ALL`, `Key`, `Value`.
-* `oversize_handling` - (Required) Oversize handling tells AWS WAF what to do with a web request when the request component that the rule inspects is over the limits. Valid values include the following: `CONTINUE`, `MATCH`, `NO_MATCH`. See the AWS [documentation](https://docs.aws.amazon.com/waf/latest/developerguide/waf-rule-statement-oversize-handling.html) for more information.
+* `invalid_fallback_behavior` - (Optional) What to do when JSON parsing fails. Defaults to evaluating up to the first parsing failure. Valid values are `EVALUATE_AS_STRING`, `MATCH` and `NO_MATCH`.
+* `match_pattern` - (Required) The patterns to look for in the JSON body. You must specify exactly one setting: either `all` or `included_paths`. See [JsonMatchPattern](https://docs.aws.amazon.com/waf/latest/APIReference/API_JsonMatchPattern.html) for details.
+* `match_scope` - (Required) The parts of the JSON to match against using the `match_pattern`. Valid values are `ALL`, `KEY` and `VALUE`.
+* `oversize_handling` - (Optional) What to do if the body is larger than can be inspected. Valid values are `CONTINUE` (default), `MATCH` and `NO_MATCH`.
 
 ### Single Header
 
