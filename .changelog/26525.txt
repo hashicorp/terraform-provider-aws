@@ -35,5 +35,9 @@ resource/aws_launch_configuration: With the retirement of EC2-Classic no new Aut
 ```
 
 ```release-note:note
-resource/aws_eip: With the retirement of EC2-Classic no new no new non-VPC EC2 EIPs can be created
+resource/aws_eip: With the retirement of EC2-Classic no new non-VPC EC2 EIPs can be created
+```
+
+```release-note:note
+resource/aws_vpc: With the retirement of EC2-Classic no new VPCs can be created with ClassicLink enabled
 ```
