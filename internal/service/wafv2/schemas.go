@@ -391,7 +391,7 @@ func jsonBodySchema() *schema.Schema {
 					Optional:     true,
 					ValidateFunc: validation.StringInSlice(wafv2.BodyParsingFallbackBehavior_Values(), false),
 				},
-				"match_pattern": jsonMatchPatternSchema(),
+				"match_pattern": jsonBodyMatchPatternSchema(),
 				"match_scope": {
 					Type:         schema.TypeString,
 					Required:     true,
@@ -403,7 +403,7 @@ func jsonBodySchema() *schema.Schema {
 	}
 }
 
-func jsonMatchPatternSchema() *schema.Schema {
+func jsonBodyMatchPatternSchema() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		Required: true,
