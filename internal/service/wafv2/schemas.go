@@ -171,7 +171,7 @@ func geoMatchStatementSchema() *schema.Schema {
 					MinItems: 1,
 					Elem:     &schema.Schema{Type: schema.TypeString},
 				},
-				"forwarded_ip_config": forwardedIPConfig(),
+				"forwarded_ip_config": forwardedIPConfigSchema(),
 			},
 		},
 	}
@@ -420,7 +420,7 @@ func jsonBodySchema() *schema.Schema {
 					Optional:     true,
 					ValidateFunc: validation.StringInSlice(wafv2.BodyParsingFallbackBehavior_Values(), false),
 				},
-				"match_pattern": jsonMatchPattern(),
+				"match_pattern": jsonMatchPatternSchema(),
 				"match_scope": {
 					Type:         schema.TypeString,
 					Required:     true,
@@ -437,7 +437,7 @@ func jsonBodySchema() *schema.Schema {
 	}
 }
 
-func jsonMatchPattern() *schema.Schema {
+func jsonMatchPatternSchema() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		Required: true,
@@ -461,7 +461,7 @@ func jsonMatchPattern() *schema.Schema {
 	}
 }
 
-func forwardedIPConfig() *schema.Schema {
+func forwardedIPConfigSchema() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		Optional: true,
