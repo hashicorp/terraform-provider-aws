@@ -88,7 +88,7 @@ func waitWorkgroupDeleted(conn *redshiftserverless.RedshiftServerless, name stri
 	return nil, err
 }
 
-func waitEndpointAccessActive(conn *redshiftserverless.RedshiftServerless, name string) (*redshiftserverless.EndpointAccess, error) {
+func waitEndpointAccessActive(conn *redshiftserverless.RedshiftServerless, name string) (*redshiftserverless.EndpointAccess, error) { //nolint:unparam
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
 			"CREATING",
