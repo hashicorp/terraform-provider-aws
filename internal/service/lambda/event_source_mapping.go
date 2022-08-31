@@ -249,7 +249,9 @@ func ResourceEventSourceMapping() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"consumer_group_id": {
-							Type: schema.TypeString,
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringLenBetween(1, 200),
 						},
 					},
 				},
