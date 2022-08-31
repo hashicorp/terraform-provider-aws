@@ -66,7 +66,8 @@ func TestAccEC2EIPAssociation_disappears(t *testing.T) {
 
 func TestAccEC2EIPAssociation_instance(t *testing.T) {
 	var a ec2.Address
-	resourceName := "aws_eip_association.by_allocation_id"
+	resource1Name := "aws_eip_association.test1"
+	resource2Name := "aws_eip_association.test2"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -78,18 +79,9 @@ func TestAccEC2EIPAssociation_instance(t *testing.T) {
 			{
 				Config: testAccEIPAssociationConfig_instance(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEIPExists("aws_eip.test.0", &a),
-					testAccCheckEIPAssociationExists("aws_eip_association.by_allocation_id", &a),
-					testAccCheckEIPExists("aws_eip.test.1", &a),
-					testAccCheckEIPAssociationExists("aws_eip_association.by_public_ip", &a),
-					testAccCheckEIPExists("aws_eip.test.2", &a),
-					testAccCheckEIPAssociationExists("aws_eip_association.to_eni", &a),
+					testAccCheckEIPAssociationExists(resource1Name, &a),
+					testAccCheckEIPAssociationExists(resource2Name, &a),
 				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
 			},
 		},
 	})
@@ -256,69 +248,48 @@ resource "aws_eip_association" "test" {
 
 func testAccEIPAssociationConfig_instance(rName string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigAvailableAZsNoOptIn(),
 		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
+		acctest.ConfigVPCWithSubnets(rName, 1),
+		acctest.AvailableEC2InstanceTypeForAvailabilityZone("data.aws_availability_zones.available.names[0]", "t3.micro", "t2.micro"),
 		fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block = "192.168.0.0/24"
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test" {
-  vpc_id            = aws_vpc.test.id
-  cidr_block        = "192.168.0.0/25"
-  availability_zone = data.aws_availability_zones.available.names[0]
-  tags = {
-    Name = %[1]q
-  }
-}
-
 resource "aws_internet_gateway" "test" {
   vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_instance" "test" {
-  count             = 2
-  ami               = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
-  availability_zone = data.aws_availability_zones.available.names[0]
-  instance_type     = "t2.small"
-  subnet_id         = aws_subnet.test.id
-  private_ip        = "192.168.0.${count.index + 10}"
+  count = 2
+
+  ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type = data.aws_ec2_instance_type_offering.available.instance_type
+  subnet_id     = aws_subnet.test[0].id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_eip" "test" {
-  count = 3
-  vpc   = true
+  count = 2
+
+  vpc = true
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
-resource "aws_eip_association" "by_allocation_id" {
+resource "aws_eip_association" "test1" {
   allocation_id = aws_eip.test[0].id
   instance_id   = aws_instance.test[0].id
-  depends_on    = [aws_instance.test]
 }
 
-resource "aws_eip_association" "by_public_ip" {
+resource "aws_eip_association" "test2" {
   public_ip   = aws_eip.test[1].public_ip
   instance_id = aws_instance.test[1].id
-  depends_on  = [aws_instance.test]
-}
-
-resource "aws_eip_association" "to_eni" {
-  allocation_id        = aws_eip.test[2].id
-  network_interface_id = aws_network_interface.test.id
-}
-
-resource "aws_network_interface" "test" {
-  subnet_id   = aws_subnet.test.id
-  private_ips = ["192.168.0.50"]
-  depends_on  = [aws_instance.test]
-
-  attachment {
-    instance     = aws_instance.test[0].id
-    device_index = 1
-  }
 }
 `, rName))
 }
