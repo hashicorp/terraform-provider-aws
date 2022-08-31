@@ -29,7 +29,7 @@ data "aws_ssm_parameter" "foo" {
 
 The following arguments are supported:
 
-* `name` - (Required) The name of the parameter.
+* `name` - (Required) Name of the parameter.
 * `with_decryption` - (Optional) Whether to return decrypted `SecureString` value. Defaults to `true`.
 
 

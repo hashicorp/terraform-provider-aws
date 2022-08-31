@@ -39,9 +39,9 @@ data "aws_ssm_document" "test" {
 
 The following arguments are supported:
 
-* `name` - (Required) The name of the Systems Manager document.
+* `name` - (Required) Name of the Systems Manager document.
 * `document_format` - (Optional) Returns the document in the specified format. The document format can be either `JSON`, `YAML` and `TEXT`. JSON is the default format.
-* `document_version` - (Optional) The document version for which you want information.
+* `document_version` - (Optional) Document version for which you want information.
 
 ## Attributes Reference
 

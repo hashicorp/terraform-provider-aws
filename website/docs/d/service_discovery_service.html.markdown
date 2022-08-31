@@ -23,8 +23,8 @@ data "aws_service_discovery_service" "test" {
 
 The following arguments are supported:
 
-* `name` - (Required) The name of the service.
-* `namespace_id` - (Required) The ID of the namespace that the service belongs to.
+* `name` - (Required) Name of the service.
+* `namespace_id` - (Required) ID of the namespace that the service belongs to.
 
 ## Attributes Reference
 

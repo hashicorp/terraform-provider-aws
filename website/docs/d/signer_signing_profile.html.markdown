@@ -22,7 +22,7 @@ data "aws_signer_signing_profile" "production_signing_profile" {
 
 The following arguments are supported:
 
-* `name` - (Required) The name of the target signing profile.
+* `name` - (Required) Name of the target signing profile.
 
 ## Attributes Reference
 

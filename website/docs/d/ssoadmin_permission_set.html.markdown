@@ -31,9 +31,9 @@ The following arguments are supported:
 
 ~> **NOTE:** Either `arn` or `name` must be configured.
 
-* `arn` - (Optional) The ARN of the permission set.
-* `instance_arn` - (Required) The ARN of the SSO Instance associated with the permission set.
-* `name` - (Optional) The name of the SSO Permission Set.
+* `arn` - (Optional) ARN of the permission set.
+* `instance_arn` - (Required) ARN of the SSO Instance associated with the permission set.
+* `name` - (Optional) Name of the SSO Permission Set.
 
 ## Attributes Reference
 

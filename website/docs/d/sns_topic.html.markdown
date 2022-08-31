@@ -22,7 +22,7 @@ data "aws_sns_topic" "example" {
 
 ## Argument Reference
 
-* `name` - (Required) The friendly name of the topic to match.
+* `name` - (Required) Friendly name of the topic to match.
 
 ## Attributes Reference
 

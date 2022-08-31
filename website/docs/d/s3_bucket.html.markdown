@@ -57,7 +57,7 @@ resource "aws_cloudfront_distribution" "test" {
 
 The following arguments are supported:
 
-* `bucket` - (Required) The name of the bucket
+* `bucket` - (Required) Name of the bucket
 
 ## Attribute Reference
 

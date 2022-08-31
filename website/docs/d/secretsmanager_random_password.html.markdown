@@ -27,7 +27,7 @@ data "aws_secretsmanager_random_password" "test" {
 * `exclude_punctuation` - (Optional) Specifies whether to exclude the following punctuation characters from the password: ``! " # $ % & ' ( ) * + , - . / : ; < = > ? @ [ \ ] ^ _ ` { | } ~ .``
 * `exclude_uppercase` - (Optional) Specifies whether to exclude uppercase letters from the password.
 * `include_space` - (Optional) Specifies whether to include the space character.
-* `password_length` - (Optional) The length of the password.
+* `password_length` - (Optional) Length of the password.
 * `require_each_included_type` - (Optional) Specifies whether to include at least one upper and lowercase letter, one number, and one punctuation.
 
 ## Attributes Reference

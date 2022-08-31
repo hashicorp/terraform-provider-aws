@@ -21,8 +21,8 @@ data "aws_service_discovery_dns_namespace" "test" {
 
 ## Argument Reference
 
-* `name` - (Required) The name of the namespace.
-* `type` - (Required) The type of the namespace. Allowed values are `DNS_PUBLIC` or `DNS_PRIVATE`.
+* `name` - (Required) Name of the namespace.
+* `type` - (Required) Type of the namespace. Allowed values are `DNS_PUBLIC` or `DNS_PRIVATE`.
 
 ## Attributes Reference
 

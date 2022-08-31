@@ -37,10 +37,10 @@ data "aws_ssm_patch_baseline" "default_custom" {
 
 The following arguments are supported:
 
-* `owner` - (Required) The owner of the baseline. Valid values: `All`, `AWS`, `Self` (the current account).
+* `owner` - (Required) Owner of the baseline. Valid values: `All`, `AWS`, `Self` (the current account).
 * `name_prefix` - (Optional) Filter results by the baseline name prefix.
 * `default_baseline` - (Optional) Filters the results against the baselines default_baseline field.
-* `operating_system` - (Optional) The specified OS for the baseline.
+* `operating_system` - (Optional) Specified OS for the baseline.
 
 ## Attributes Reference
 

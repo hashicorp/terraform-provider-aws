@@ -56,7 +56,7 @@ resource "aws_instance" "app" {
 
 ## Argument Reference
 
-* `vpc_id` - (Required) The VPC ID that you want to filter from.
+* `vpc_id` - (Required) VPC ID that you want to filter from.
 
 * `filter` - (Optional) Custom filter block as described below.
 
@@ -66,7 +66,7 @@ resource "aws_instance" "app" {
 More complex filters can be expressed using one or more `filter` sub-blocks,
 which take the following arguments:
 
-* `name` - (Required) The name of the field to filter by, as defined by
+* `name` - (Required) Name of the field to filter by, as defined by
   [the underlying AWS API](http://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeSubnets.html).
   For example, if matching against tag `Name`, use:
 

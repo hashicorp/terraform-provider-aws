@@ -22,7 +22,7 @@ data "aws_signer_signing_job" "build_signing_job" {
 
 The following arguments are supported:
 
-* `job_id` - (Required) The ID of the signing job on output.
+* `job_id` - (Required) ID of the signing job on output.
 
 ## Attributes Reference
 

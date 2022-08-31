@@ -22,7 +22,7 @@ data "aws_sfn_state_machine" "example" {
 
 ## Argument Reference
 
-* `name` - (Required) The friendly name of the state machine to match.
+* `name` - (Required) Friendly name of the state machine to match.
 
 ## Attributes Reference
 

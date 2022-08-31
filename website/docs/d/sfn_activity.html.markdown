@@ -22,8 +22,8 @@ data "aws_sfn_activity" "sfn_activity" {
 
 The following arguments are supported:
 
-* `name` - (Optional) The name that identifies the activity.
-* `arn` - (Optional) The ARN that identifies the activity.
+* `name` - (Optional) Name that identifies the activity.
+* `arn` - (Optional) ARN that identifies the activity.
 
 ## Attributes Reference
 

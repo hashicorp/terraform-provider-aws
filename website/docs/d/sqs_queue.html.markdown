@@ -22,7 +22,7 @@ data "aws_sqs_queue" "example" {
 
 ## Argument Reference
 
-* `name` - (Required) The name of the queue to match.
+* `name` - (Required) Name of the queue to match.
 
 ## Attributes Reference
 

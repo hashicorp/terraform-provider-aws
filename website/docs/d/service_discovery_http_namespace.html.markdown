@@ -21,7 +21,7 @@ data "aws_service_discovery_http_namespace" "example" {
 
 The following arguments are supported:
 
-* `name` - (Required) The name of the http namespace.
+* `name` - (Required) Name of the http namespace.
 
 ## Attributes Reference
 
