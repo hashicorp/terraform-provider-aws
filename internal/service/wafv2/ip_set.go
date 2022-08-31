@@ -79,13 +79,10 @@ func ResourceIPSet() *schema.Resource {
 				ValidateFunc: validation.StringLenBetween(1, 256),
 			},
 			"ip_address_version": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					wafv2.IPAddressVersionIpv4,
-					wafv2.IPAddressVersionIpv6,
-				}, false),
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice(wafv2.IPAddressVersion_Values(), false),
 			},
 			"lock_token": {
 				Type:     schema.TypeString,
