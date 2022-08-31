@@ -791,6 +791,8 @@ func TestAccLambdaEventSourceMapping_selfManagedKafka(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "self_managed_event_source.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "self_managed_event_source.0.endpoints.KAFKA_BOOTSTRAP_SERVERS", "test1:9092,test2:9092"),
+					resource.TestCheckResourceAttr(resourceName, "self_managed_kafka_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "self_managed_kafka_config.0.consumer_group_id", "test-group-id"),
 					resource.TestCheckResourceAttr(resourceName, "source_access_configuration.#", "3"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "last_modified"),
 					resource.TestCheckResourceAttr(resourceName, "topics.#", "1"),
@@ -1764,6 +1766,10 @@ resource "aws_lambda_event_source_mapping" "test" {
   function_name     = aws_lambda_function.test.arn
   topics            = ["test"]
   starting_position = "TRIM_HORIZON"
+
+	self_managed_kafka_config {
+		consumer_group_id = "test-group-id"
+	}
 
   self_managed_event_source {
     endpoints = {
