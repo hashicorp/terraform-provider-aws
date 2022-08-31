@@ -663,7 +663,7 @@ func bodySchema() *schema.Schema {
 		Optional: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"oversize_handling": oversizeHandlingOptionalComputedSchema(),
+				"oversize_handling": oversizeHandlingOptionalSchema(),
 			},
 		},
 	}
@@ -706,11 +706,10 @@ func cookiesMatchPatternSchema() *schema.Schema {
 	}
 }
 
-func oversizeHandlingOptionalComputedSchema() *schema.Schema {
+func oversizeHandlingOptionalSchema() *schema.Schema {
 	return &schema.Schema{
 		Type:         schema.TypeString,
 		Optional:     true,
-		Computed:     true,
 		ValidateFunc: validation.StringInSlice(wafv2.OversizeHandling_Values(), false),
 	}
 }
