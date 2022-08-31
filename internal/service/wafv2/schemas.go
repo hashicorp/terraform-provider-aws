@@ -322,40 +322,11 @@ func fieldToMatchBaseSchema() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"all_query_arguments": emptySchema(),
 			"body":                bodySchema(),
-			"cookies": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"match_scope":       matchScopeSchema(),
-						"oversize_handling": oversizeHandlingRequiredSchema(),
-						"match_pattern": {
-							Type:     schema.TypeList,
-							Required: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"all": emptySchema(),
-									"included_cookies": {
-										Type:     schema.TypeList,
-										Optional: true,
-										Elem:     &schema.Schema{Type: schema.TypeString},
-									},
-									"excluded_cookies": {
-										Type:     schema.TypeList,
-										Optional: true,
-										Elem:     &schema.Schema{Type: schema.TypeString},
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-			"headers":      headersSchema(),
-			"json_body":    jsonBodySchema(),
-			"method":       emptySchema(),
-			"query_string": emptySchema(),
+			"cookies":             cookiesSchema(),
+			"headers":             headersSchema(),
+			"json_body":           jsonBodySchema(),
+			"method":              emptySchema(),
+			"query_string":        emptySchema(),
 			"single_header": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -693,6 +664,39 @@ func bodySchema() *schema.Schema {
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"oversize_handling": oversizeHandlingOptionalComputedSchema(),
+			},
+		},
+	}
+}
+
+func cookiesSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"match_scope":       matchScopeSchema(),
+				"oversize_handling": oversizeHandlingRequiredSchema(),
+				"match_pattern": {
+					Type:     schema.TypeList,
+					Required: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"all": emptySchema(),
+							"included_cookies": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							"excluded_cookies": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+						},
+					},
+				},
 			},
 		},
 	}
