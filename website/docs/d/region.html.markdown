@@ -30,9 +30,9 @@ The arguments of this data source act as filters for querying the available
 regions. The given filters must match exactly one region whose data will be
 exported as attributes.
 
-* `name` - (Optional) The full name of the region to select.
+* `name` - (Optional) Full name of the region to select.
 
-* `endpoint` - (Optional) The EC2 endpoint of the region to select.
+* `endpoint` - (Optional) EC2 endpoint of the region to select.
 
 ## Attributes Reference
 

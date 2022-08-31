@@ -25,7 +25,7 @@ data "aws_route53_delegation_set" "dset" {
 ## Argument Reference
 
 
-* `id` - (Required) The Hosted Zone id of the desired delegation set.
+* `id` - (Required) Hosted Zone id of the desired delegation set.
 
 The following attribute is additionally exported:
 

@@ -26,11 +26,11 @@ data "aws_route53_resolver_rule" "example" {
 The arguments of this data source act as filters for querying the available resolver rules in the current region.
 The given filters must match exactly one resolver rule whose data will be exported as attributes.
 
-* `domain_name` - (Optional) The domain name the desired resolver rule forwards DNS queries for. Conflicts with `resolver_rule_id`.
-* `name` - (Optional) The friendly name of the desired resolver rule. Conflicts with `resolver_rule_id`.
-* `resolver_endpoint_id` (Optional) The ID of the outbound resolver endpoint of the desired resolver rule. Conflicts with `resolver_rule_id`.
-* `resolver_rule_id` (Optional) The ID of the desired resolver rule. Conflicts with `domain_name`, `name`, `resolver_endpoint_id` and `rule_type`.
-* `rule_type` - (Optional) The rule type of the desired resolver rule. Valid values are `FORWARD`, `SYSTEM` and `RECURSIVE`. Conflicts with `resolver_rule_id`.
+* `domain_name` - (Optional) Domain name the desired resolver rule forwards DNS queries for. Conflicts with `resolver_rule_id`.
+* `name` - (Optional) Friendly name of the desired resolver rule. Conflicts with `resolver_rule_id`.
+* `resolver_endpoint_id` (Optional) ID of the outbound resolver endpoint of the desired resolver rule. Conflicts with `resolver_rule_id`.
+* `resolver_rule_id` (Optional) ID of the desired resolver rule. Conflicts with `domain_name`, `name`, `resolver_endpoint_id` and `rule_type`.
+* `rule_type` - (Optional) Rule type of the desired resolver rule. Valid values are `FORWARD`, `SYSTEM` and `RECURSIVE`. Conflicts with `resolver_rule_id`.
 
 ## Attributes Reference
 

@@ -22,7 +22,7 @@ data "aws_redshift_subnet_group" "example" {
 
 The following arguments are supported:
 
-* `name` - (Required) The name of the cluster subnet group for which information is requested.
+* `name` - (Required) Name of the cluster subnet group for which information is requested.
 
 ## Attribute Reference
 
