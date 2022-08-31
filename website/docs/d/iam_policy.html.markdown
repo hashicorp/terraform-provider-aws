@@ -43,6 +43,7 @@ data "aws_iam_policy" "example" {
 
 In addition to all arguments above, the following attributes are exported:
 
+* `arn` - The ARN of the policy.
 * `path` - The path to the policy.
 * `description` - The description of the policy.
 * `policy` - The policy document of the policy.

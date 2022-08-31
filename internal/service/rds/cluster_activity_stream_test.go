@@ -31,9 +31,9 @@ func TestAccRDSClusterActivityStream_basic(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartition(t, endpoints.AwsPartitionID)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckClusterActivityStreamDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterActivityStreamDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterActivityStreamConfig_basic(clusterName, instanceName),
@@ -68,9 +68,9 @@ func TestAccRDSClusterActivityStream_disappears(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartition(t, endpoints.AwsPartitionID)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckClusterActivityStreamDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterActivityStreamDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterActivityStreamConfig_basic(clusterName, instanceName),
@@ -177,7 +177,7 @@ resource "aws_kms_key" "test" {
 
 resource "aws_rds_cluster" "test" {
   cluster_identifier  = "%[1]s"
-  availability_zones  = ["${data.aws_availability_zones.available.names[0]}", "${data.aws_availability_zones.available.names[1]}", "${data.aws_availability_zones.available.names[2]}"]
+  availability_zones  = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1], data.aws_availability_zones.available.names[2]]
   master_username     = "foo"
   master_password     = "mustbeeightcharaters"
   skip_final_snapshot = true

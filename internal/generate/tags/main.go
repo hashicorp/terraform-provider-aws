@@ -61,7 +61,9 @@ var (
 	parentNotFoundErrCode = flag.String("ParentNotFoundErrCode", "", "Parent 'NotFound' Error Code")
 	parentNotFoundErrMsg  = flag.String("ParentNotFoundErrMsg", "", "Parent 'NotFound' Error Message")
 
-	sdkVersion = flag.Int("AwsSdkVersion", sdkV1, "Version of the AWS SDK Go to use i.e. 1 or 2")
+	sdkVersion   = flag.Int("AWSSDKVersion", sdkV1, "Version of the AWS SDK Go to use i.e. 1 or 2")
+	kvtValues    = flag.Bool("KVTValues", false, "Whether KVT string map is of string pointers")
+	skipTypesImp = flag.Bool("SkipTypesImp", false, "Whether to skip importing types")
 )
 
 func usage() {
@@ -80,7 +82,7 @@ type TemplateBody struct {
 	updateTags       string
 }
 
-func NewTemplateBody(version int) *TemplateBody {
+func NewTemplateBody(version int, kvtValues bool) *TemplateBody {
 	switch version {
 	case sdkV1:
 		return &TemplateBody{
@@ -92,6 +94,16 @@ func NewTemplateBody(version int) *TemplateBody {
 			"\n" + v1.UpdateTagsBody,
 		}
 	case sdkV2:
+		if kvtValues {
+			return &TemplateBody{
+				"\n" + v2.GetTagBody,
+				v2.HeaderBody,
+				"\n" + v2.ListTagsBody,
+				"\n" + v2.ServiceTagsValueMapBody,
+				"\n" + v2.ServiceTagsSliceBody,
+				"\n" + v2.UpdateTagsBody,
+			}
+		}
 		return &TemplateBody{
 			"\n" + v2.GetTagBody,
 			v2.HeaderBody,
@@ -146,10 +158,9 @@ type TemplateData struct {
 	ContextPkg      bool
 	FmtPkg          bool
 	HelperSchemaPkg bool
+	SkipTypesImp    bool
 	StrConvPkg      bool
 	TfResourcePkg   bool
-
-	AwsSdkVersion int
 }
 
 func main() {
@@ -204,6 +215,7 @@ func main() {
 		ContextPkg:      *sdkVersion == sdkV2 || (*getTag || *listTags || *updateTags),
 		FmtPkg:          *updateTags,
 		HelperSchemaPkg: awsPkg == "autoscaling",
+		SkipTypesImp:    *skipTypesImp,
 		StrConvPkg:      awsPkg == "autoscaling",
 		TfResourcePkg:   *getTag,
 
@@ -237,7 +249,7 @@ func main() {
 		UntagOp:                 *untagOp,
 	}
 
-	templateBody := NewTemplateBody(*sdkVersion)
+	templateBody := NewTemplateBody(*sdkVersion, *kvtValues)
 
 	if *getTag || *listTags || *serviceTagsMap || *serviceTagsSlice || *updateTags {
 		// If you intend to only generate Tags and KeyValueTags helper methods,

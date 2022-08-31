@@ -156,6 +156,12 @@ func ResourceOpenzfsFileSystem() *schema.Resource {
 							Optional: true,
 							Computed: true,
 						},
+						"record_size_kib": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							Default:      128,
+							ValidateFunc: validation.IntInSlice([]int{4, 8, 16, 32, 64, 128, 256, 512, 1024}),
+						},
 						"user_and_group_quotas": {
 							Type:     schema.TypeSet,
 							Optional: true,
@@ -218,7 +224,6 @@ func ResourceOpenzfsFileSystem() *schema.Resource {
 			"storage_capacity": {
 				Type:         schema.TypeInt,
 				Optional:     true,
-				ForceNew:     true,
 				ValidateFunc: validation.IntBetween(64, 512*1024),
 			},
 			"storage_type": {
@@ -479,6 +484,10 @@ func resourceOpenzfsFileSystemUpdate(d *schema.ResourceData, meta interface{}) e
 			OpenZFSConfiguration: &fsx.UpdateFileSystemOpenZFSConfiguration{},
 		}
 
+		if d.HasChange("storage_capacity") {
+			input.StorageCapacity = aws.Int64(int64(d.Get("storage_capacity").(int)))
+		}
+
 		if d.HasChange("automatic_backup_retention_days") {
 			input.OpenZFSConfiguration.AutomaticBackupRetentionDays = aws.Int64(int64(d.Get("automatic_backup_retention_days").(int)))
 		}
@@ -499,6 +508,10 @@ func resourceOpenzfsFileSystemUpdate(d *schema.ResourceData, meta interface{}) e
 			input.OpenZFSConfiguration.ThroughputCapacity = aws.Int64(int64(d.Get("throughput_capacity").(int)))
 		}
 
+		if d.HasChange("disk_iops_configuration") {
+			input.OpenZFSConfiguration.DiskIopsConfiguration = expandOpenzfsFileDiskIopsConfiguration(d.Get("disk_iops_configuration").([]interface{}))
+		}
+
 		if d.HasChange("weekly_maintenance_start_time") {
 			input.OpenZFSConfiguration.WeeklyMaintenanceStartTime = aws.String(d.Get("weekly_maintenance_start_time").(string))
 		}
@@ -510,6 +523,10 @@ func resourceOpenzfsFileSystemUpdate(d *schema.ResourceData, meta interface{}) e
 		}
 
 		if _, err := waitFileSystemUpdated(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return fmt.Errorf("error waiting for FSx OpenZFS File System (%s) update: %w", d.Id(), err)
+		}
+
+		if _, err := waitAdministrativeActionCompleted(conn, d.Id(), fsx.AdministrativeActionTypeFileSystemUpdate, d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return fmt.Errorf("error waiting for FSx OpenZFS File System (%s) update: %w", d.Id(), err)
 		}
 
@@ -602,6 +619,10 @@ func expandOpenzfsRootVolumeConfiguration(cfg []interface{}) *fsx.OpenZFSCreateR
 		out.ReadOnly = aws.Bool(v)
 	}
 
+	if v, ok := conf["record_size_kib"].(int); ok {
+		out.RecordSizeKiB = aws.Int64(int64(v))
+	}
+
 	if v, ok := conf["user_and_group_quotas"]; ok {
 		out.UserAndGroupQuotas = expandOpenzfsUserAndGroupQuotas(v.(*schema.Set).List())
 	}
@@ -628,6 +649,10 @@ func expandOpenzfsUpdateRootVolumeConfiguration(cfg []interface{}) *fsx.UpdateOp
 
 	if v, ok := conf["read_only"].(bool); ok {
 		out.ReadOnly = aws.Bool(v)
+	}
+
+	if v, ok := conf["record_size_kib"].(int); ok {
+		out.RecordSizeKiB = aws.Int64(int64(v))
 	}
 
 	if v, ok := conf["user_and_group_quotas"]; ok {
@@ -763,6 +788,9 @@ func flattenOpenzfsRootVolumeConfiguration(rs *fsx.Volume) []interface{} {
 	}
 	if rs.OpenZFSConfiguration.ReadOnly != nil {
 		m["read_only"] = aws.BoolValue(rs.OpenZFSConfiguration.ReadOnly)
+	}
+	if rs.OpenZFSConfiguration.RecordSizeKiB != nil {
+		m["record_size_kib"] = aws.Int64Value(rs.OpenZFSConfiguration.RecordSizeKiB)
 	}
 	if rs.OpenZFSConfiguration.UserAndGroupQuotas != nil {
 		m["user_and_group_quotas"] = flattenOpenzfsFileUserAndGroupQuotas(rs.OpenZFSConfiguration.UserAndGroupQuotas)

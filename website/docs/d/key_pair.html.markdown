@@ -67,3 +67,9 @@ In addition to all arguments above, the following attributes are exported:
 * `key_type` - The type of key pair.
 * `public_key` - The public key material.
 * `tags` - Any tags assigned to the Key Pair.
+
+## Timeouts
+
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+
+- `read` - (Default `20m`)

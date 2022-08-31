@@ -96,7 +96,7 @@ func ResourceIPAMScopeCreate(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[INFO] IPAM Scope ID: %s", d.Id())
 
 	if _, err = waitIPAMScopeAvailable(conn, d.Id(), ipamScopeCreateTimeout); err != nil {
-		return fmt.Errorf("error waiting for IPAM Scope (%s) to be Available: %w", d.Id(), err)
+		return fmt.Errorf("waiting for IPAM Scope (%s) to be Available: %w", d.Id(), err)
 	}
 
 	return ResourceIPAMScopeRead(d, meta)
@@ -116,7 +116,7 @@ func ResourceIPAMScopeRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading IPAM Scope (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading IPAM Scope (%s): %w", d.Id(), err)
 	}
 
 	ipamId := strings.Split(aws.StringValue(scope.IpamArn), "/")[1]
@@ -133,11 +133,11 @@ func ResourceIPAMScopeRead(d *schema.ResourceData, meta interface{}) error {
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return fmt.Errorf("setting tags: %w", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return fmt.Errorf("setting tags_all: %w", err)
 	}
 
 	return nil
@@ -149,7 +149,7 @@ func ResourceIPAMScopeUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating tags: %w", err)
+			return fmt.Errorf("updating tags: %w", err)
 		}
 	}
 
@@ -165,7 +165,7 @@ func ResourceIPAMScopeUpdate(d *schema.ResourceData, meta interface{}) error {
 		log.Printf("[DEBUG] Updating IPAM scope: %s", input)
 		_, err := conn.ModifyIpamScope(input)
 		if err != nil {
-			return fmt.Errorf("error updating IPAM Scope (%s): %w", d.Id(), err)
+			return fmt.Errorf("updating IPAM Scope (%s): %w", d.Id(), err)
 		}
 	}
 
@@ -181,14 +181,14 @@ func ResourceIPAMScopeDelete(d *schema.ResourceData, meta interface{}) error {
 	})
 
 	if err != nil {
-		return fmt.Errorf("error deleting IPAM Scope: (%s): %w", d.Id(), err)
+		return fmt.Errorf("deleting IPAM Scope: (%s): %w", d.Id(), err)
 	}
 
 	if _, err = WaitIPAMScopeDeleted(conn, d.Id(), IPAMScopeDeleteTimeout); err != nil {
 		if tfresource.NotFound(err) {
 			return nil
 		}
-		return fmt.Errorf("error waiting for IPAM Scope (%s) to be deleted: %w", d.Id(), err)
+		return fmt.Errorf("waiting for IPAM Scope (%s) to be deleted: %w", d.Id(), err)
 	}
 
 	return nil

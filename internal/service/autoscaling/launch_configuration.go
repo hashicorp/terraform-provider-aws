@@ -1,6 +1,6 @@
 package autoscaling
 
-import ( // nosemgrep: aws-sdk-go-multiple-service-imports
+import ( // nosemgrep:ci.aws-sdk-go-multiple-service-imports
 
 	"crypto/sha1"
 	"encoding/base64"
@@ -306,15 +306,17 @@ func ResourceLaunchConfiguration() *schema.Resource {
 				},
 			},
 			"vpc_classic_link_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
+				Type:       schema.TypeString,
+				Optional:   true,
+				ForceNew:   true,
+				Deprecated: `With the retirement of EC2-Classic the vpc_classic_link_id attribute has been deprecated and will be removed in a future version.`,
 			},
 			"vpc_classic_link_security_groups": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				ForceNew: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
+				Type:       schema.TypeSet,
+				Optional:   true,
+				ForceNew:   true,
+				Elem:       &schema.Schema{Type: schema.TypeString},
+				Deprecated: `With the retirement of EC2-Classic the vpc_classic_link_security_groups attribute has been deprecated and will be removed in a future version.`,
 			},
 		},
 	}

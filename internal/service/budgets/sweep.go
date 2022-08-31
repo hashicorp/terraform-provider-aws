@@ -78,7 +78,7 @@ func sweepBudgetActions(region string) error {
 	return sweeperErrs.ErrorOrNil()
 }
 
-func sweepBudgets(region string) error { // nosemgrep:budgets-in-func-name
+func sweepBudgets(region string) error { // nosemgrep:ci.budgets-in-func-name
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)

@@ -15,10 +15,10 @@ func TestAccImageBuilderComponentsDataSource_filter(t *testing.T) {
 	dataSourceName := "data.aws_imagebuilder_components.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, imagebuilder.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckComponentDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, imagebuilder.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckComponentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccComponentsDataSourceConfig_component(rName),

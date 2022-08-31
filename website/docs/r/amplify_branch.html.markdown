@@ -41,13 +41,8 @@ resource "aws_amplify_branch" "master" {
   app_id      = aws_amplify_app.example.id
   branch_name = "master"
 
-  basic_auth_config {
-    # Enable basic authentication.
-    enable_basic_auth = true
-
-    username = "username"
-    password = "password"
-  }
+  enable_basic_auth      = true
+  basic_auth_credentials = base64encode("username:password")
 }
 ```
 
@@ -169,7 +164,7 @@ The following arguments are supported:
 * `framework` - (Optional) The framework for the branch.
 * `pull_request_environment_name` - (Optional) The Amplify environment name for the pull request.
 * `stage` - (Optional) Describes the current stage for the branch. Valid values: `PRODUCTION`, `BETA`, `DEVELOPMENT`, `EXPERIMENTAL`, `PULL_REQUEST`.
-* `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `ttl` - (Optional) The content Time To Live (TTL) for the website in seconds.
 
 ## Attributes Reference
@@ -181,7 +176,7 @@ In addition to all arguments above, the following attributes are exported:
 * `custom_domains` - The custom domains for the branch.
 * `destination_branch` - The destination branch if the branch is a pull request branch.
 * `source_branch` - The source branch if the branch is a pull request branch.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 

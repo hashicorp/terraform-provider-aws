@@ -51,7 +51,7 @@ resource "aws_ecs_service" "mongo" {
   desired_count = 2
 
   # Track the latest ACTIVE revision
-  task_definition = aws_ecs_task_definition.mongo.arn
+  task_definition = data.aws_ecs_task_definition.mongo.arn
 }
 ```
 
@@ -65,6 +65,7 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
+* `id` - The ARN of the task definition
 * `arn` - The ARN of the task definition
 * `family` - The family of this task definition
 * `network_mode` - The Docker networking mode to use for the containers in this task.

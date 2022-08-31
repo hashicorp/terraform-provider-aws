@@ -69,3 +69,9 @@ In addition to all arguments above, the following attributes are exported:
 * `transport_protocol` - The transport protocol used by the Client VPN endpoint.
 * `vpc_id` - The ID of the VPC associated with the Client VPN endpoint.
 * `vpn_port` - The port number for the Client VPN endpoint.
+
+## Timeouts
+
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+
+- `read` - (Default `20m`)

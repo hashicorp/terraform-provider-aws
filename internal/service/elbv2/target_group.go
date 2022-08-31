@@ -256,6 +256,13 @@ func ResourceTargetGroup() *schema.Resource {
 					},
 				},
 			},
+			"ip_address_type": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice(elbv2.TargetGroupIpAddressTypeEnum_Values(), false),
+			},
 			"target_type": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -318,6 +325,12 @@ func resourceTargetGroupCreate(d *schema.ResourceData, meta interface{}) error {
 			params.ProtocolVersion = aws.String(d.Get("protocol_version").(string))
 		}
 		params.VpcId = aws.String(d.Get("vpc_id").(string))
+
+		if d.Get("target_type").(string) == elbv2.TargetTypeEnumIp {
+			if _, ok := d.GetOk("ip_address_type"); ok {
+				params.IpAddressType = aws.String(d.Get("ip_address_type").(string))
+			}
+		}
 	}
 
 	if healthChecks := d.Get("health_check").([]interface{}); len(healthChecks) == 1 {
@@ -374,8 +387,16 @@ func resourceTargetGroupCreate(d *schema.ResourceData, meta interface{}) error {
 		resp, err = conn.CreateTargetGroup(params)
 	}
 
+	// Tags are not supported on creation with some protocol types(i.e. GENEVE)
+	// Retry creation without tags
+	if params.Tags != nil && tfawserr.ErrMessageContains(err, ErrValidationError, TagsOnCreationErrMessage) {
+		log.Printf("[WARN] ELBv2 Target Group (%s) create failed (%s) with tags. Trying create without tags.", groupName, err)
+		params.Tags = nil
+		resp, err = conn.CreateTargetGroup(params)
+	}
+
 	if err != nil {
-		return fmt.Errorf("error creating LB Target Group: %w", err)
+		return fmt.Errorf("creating LB Target Group: %w", err)
 	}
 
 	if len(resp.TargetGroups) == 0 {
@@ -405,7 +426,7 @@ func resourceTargetGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error waiting for ELBv2 Target Group to create before setting attributes (%s): %w", d.Id(), err)
+		return fmt.Errorf("waiting for ELBv2 Target Group to create before setting attributes (%s): %w", d.Id(), err)
 	}
 
 	var attrs []*elbv2.TargetGroupAttribute
@@ -512,7 +533,7 @@ func resourceTargetGroupCreate(d *schema.ResourceData, meta interface{}) error {
 		_, err := conn.ModifyTargetGroupAttributes(params)
 
 		if err != nil {
-			return fmt.Errorf("error modifying Target Group Attributes: %w", err)
+			return fmt.Errorf("modifying Target Group Attributes: %w", err)
 		}
 	}
 
@@ -527,7 +548,7 @@ func resourceTargetGroupCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if err != nil {
-			return fmt.Errorf("error creating ELBv2 Target Group (%s) tags: %w", d.Id(), err)
+			return fmt.Errorf("creating ELBv2 Target Group (%s) tags: %w", d.Id(), err)
 		}
 	}
 
@@ -572,12 +593,12 @@ func resourceTargetGroupRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading ELBv2 Target Group (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading ELBv2 Target Group (%s): %w", d.Id(), err)
 	}
 
 	if targetGroup == nil {
 		if d.IsNewResource() {
-			return fmt.Errorf("error reading ELBv2 Target Group (%s): not found after creation", d.Id())
+			return fmt.Errorf("reading ELBv2 Target Group (%s): not found after creation", d.Id())
 		}
 
 		log.Printf("[WARN] ELBv2 Target Group (%s) not found, removing from state", d.Id())
@@ -633,7 +654,7 @@ func resourceTargetGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 		if params != nil {
 			_, err := conn.ModifyTargetGroup(params)
 			if err != nil {
-				return fmt.Errorf("error modifying Target Group: %w", err)
+				return fmt.Errorf("modifying Target Group: %w", err)
 			}
 		}
 	}
@@ -751,7 +772,7 @@ func resourceTargetGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		_, err := conn.ModifyTargetGroupAttributes(params)
 		if err != nil {
-			return fmt.Errorf("error modifying Target Group Attributes: %w", err)
+			return fmt.Errorf("modifying Target Group Attributes: %w", err)
 		}
 	}
 
@@ -784,7 +805,7 @@ func resourceTargetGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if err != nil {
-			return fmt.Errorf("error updating LB Target Group (%s) tags: %w", d.Id(), err)
+			return fmt.Errorf("updating LB Target Group (%s) tags: %w", d.Id(), err)
 		}
 	}
 
@@ -818,7 +839,7 @@ func resourceTargetGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting Target Group: %w", err)
+		return fmt.Errorf("deleting Target Group: %w", err)
 	}
 
 	return nil
@@ -895,7 +916,7 @@ func flattenTargetGroupResource(d *schema.ResourceData, meta interface{}, target
 	d.Set("target_type", targetGroup.TargetType)
 
 	if err := d.Set("health_check", flattenLbTargetGroupHealthCheck(targetGroup)); err != nil {
-		return fmt.Errorf("error setting health_check: %w", err)
+		return fmt.Errorf("setting health_check: %w", err)
 	}
 
 	if v, _ := d.Get("target_type").(string); v != elbv2.TargetTypeEnumLambda {
@@ -913,7 +934,7 @@ func flattenTargetGroupResource(d *schema.ResourceData, meta interface{}, target
 		TargetGroupArn: aws.String(d.Id()),
 	})
 	if err != nil {
-		return fmt.Errorf("error retrieving Target Group Attributes: %w", err)
+		return fmt.Errorf("retrieving Target Group Attributes: %w", err)
 	}
 
 	for _, attr := range attrResp.Attributes {
@@ -923,25 +944,25 @@ func flattenTargetGroupResource(d *schema.ResourceData, meta interface{}, target
 		case "lambda.multi_value_headers.enabled":
 			enabled, err := strconv.ParseBool(aws.StringValue(attr.Value))
 			if err != nil {
-				return fmt.Errorf("error converting lambda.multi_value_headers.enabled to bool: %s", aws.StringValue(attr.Value))
+				return fmt.Errorf("converting lambda.multi_value_headers.enabled to bool: %s", aws.StringValue(attr.Value))
 			}
 			d.Set("lambda_multi_value_headers_enabled", enabled)
 		case "proxy_protocol_v2.enabled":
 			enabled, err := strconv.ParseBool(aws.StringValue(attr.Value))
 			if err != nil {
-				return fmt.Errorf("error converting proxy_protocol_v2.enabled to bool: %s", aws.StringValue(attr.Value))
+				return fmt.Errorf("converting proxy_protocol_v2.enabled to bool: %s", aws.StringValue(attr.Value))
 			}
 			d.Set("proxy_protocol_v2", enabled)
 		case "deregistration_delay.connection_termination.enabled":
 			enabled, err := strconv.ParseBool(aws.StringValue(attr.Value))
 			if err != nil {
-				return fmt.Errorf("error converting deregistration_delay.connection_termination.enabled to bool: %s", aws.StringValue(attr.Value))
+				return fmt.Errorf("converting deregistration_delay.connection_termination.enabled to bool: %s", aws.StringValue(attr.Value))
 			}
 			d.Set("connection_termination", enabled)
 		case "slow_start.duration_seconds":
 			slowStart, err := strconv.Atoi(aws.StringValue(attr.Value))
 			if err != nil {
-				return fmt.Errorf("error converting slow_start.duration_seconds to int: %s", aws.StringValue(attr.Value))
+				return fmt.Errorf("converting slow_start.duration_seconds to int: %s", aws.StringValue(attr.Value))
 			}
 			d.Set("slow_start", slowStart)
 		case "load_balancing.algorithm.type":
@@ -950,7 +971,7 @@ func flattenTargetGroupResource(d *schema.ResourceData, meta interface{}, target
 		case "preserve_client_ip.enabled":
 			_, err := strconv.ParseBool(aws.StringValue(attr.Value))
 			if err != nil {
-				return fmt.Errorf("error converting preserve_client_ip.enabled to bool: %s", aws.StringValue(attr.Value))
+				return fmt.Errorf("converting preserve_client_ip.enabled to bool: %s", aws.StringValue(attr.Value))
 			}
 			d.Set("preserve_client_ip", attr.Value)
 		}
@@ -958,11 +979,11 @@ func flattenTargetGroupResource(d *schema.ResourceData, meta interface{}, target
 
 	stickinessAttr, err := flattenTargetGroupStickiness(attrResp.Attributes)
 	if err != nil {
-		return fmt.Errorf("error flattening stickiness: %w", err)
+		return fmt.Errorf("flattening stickiness: %w", err)
 	}
 
 	if err := d.Set("stickiness", stickinessAttr); err != nil {
-		return fmt.Errorf("error setting stickiness: %w", err)
+		return fmt.Errorf("setting stickiness: %w", err)
 	}
 
 	tags, err := ListTags(conn, d.Id())
@@ -973,18 +994,18 @@ func flattenTargetGroupResource(d *schema.ResourceData, meta interface{}, target
 	}
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for LB Target Group (%s): %w", d.Id(), err)
+		return fmt.Errorf("listing tags for LB Target Group (%s): %w", d.Id(), err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return fmt.Errorf("setting tags: %w", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return fmt.Errorf("setting tags_all: %w", err)
 	}
 
 	return nil
@@ -1002,7 +1023,7 @@ func flattenTargetGroupStickiness(attributes []*elbv2.TargetGroupAttribute) ([]i
 		case "stickiness.enabled":
 			enabled, err := strconv.ParseBool(aws.StringValue(attr.Value))
 			if err != nil {
-				return nil, fmt.Errorf("error converting stickiness.enabled to bool: %s", aws.StringValue(attr.Value))
+				return nil, fmt.Errorf("converting stickiness.enabled to bool: %s", aws.StringValue(attr.Value))
 			}
 			m["enabled"] = enabled
 		case "stickiness.type":
@@ -1011,7 +1032,7 @@ func flattenTargetGroupStickiness(attributes []*elbv2.TargetGroupAttribute) ([]i
 			if sType, ok := m["type"].(string); !ok || sType == "lb_cookie" {
 				duration, err := strconv.Atoi(aws.StringValue(attr.Value))
 				if err != nil {
-					return nil, fmt.Errorf("error converting stickiness.lb_cookie.duration_seconds to int: %s", aws.StringValue(attr.Value))
+					return nil, fmt.Errorf("converting stickiness.lb_cookie.duration_seconds to int: %s", aws.StringValue(attr.Value))
 				}
 				m["cookie_duration"] = duration
 			}

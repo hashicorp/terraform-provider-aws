@@ -3,6 +3,7 @@ package ec2
 import (
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -14,6 +15,10 @@ import (
 func DataSourceCoIPPool() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourceCoIPPoolRead,
+
+		Timeouts: &schema.ResourceTimeout{
+			Read: schema.DefaultTimeout(20 * time.Minute),
+		},
 
 		Schema: map[string]*schema.Schema{
 			"local_gateway_route_table_id": {
@@ -82,7 +87,7 @@ func dataSourceCoIPPoolRead(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] Reading AWS COIP Pool: %s", req)
 	resp, err := conn.DescribeCoipPools(req)
 	if err != nil {
-		return fmt.Errorf("error describing EC2 COIP Pools: %w", err)
+		return fmt.Errorf("describing EC2 COIP Pools: %w", err)
 	}
 	if resp == nil || len(resp.CoipPools) == 0 {
 		return fmt.Errorf("no matching COIP Pool found")
@@ -99,13 +104,13 @@ func dataSourceCoIPPoolRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("arn", coip.PoolArn)
 
 	if err := d.Set("pool_cidrs", aws.StringValueSlice(coip.PoolCidrs)); err != nil {
-		return fmt.Errorf("error setting pool_cidrs: %w", err)
+		return fmt.Errorf("setting pool_cidrs: %w", err)
 	}
 
 	d.Set("pool_id", coip.PoolId)
 
 	if err := d.Set("tags", KeyValueTags(coip.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return fmt.Errorf("setting tags: %w", err)
 	}
 
 	return nil

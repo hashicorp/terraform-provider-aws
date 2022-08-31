@@ -1,20 +1,24 @@
 package ec2
 
 import (
-	"errors"
 	"fmt"
-	"log"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func DataSourceTransitGateway() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourceTransitGatewayRead,
+
+		Timeouts: &schema.ResourceTimeout{
+			Read: schema.DefaultTimeout(20 * time.Minute),
+		},
 
 		Schema: map[string]*schema.Schema{
 			"amazon_side_asn": {
@@ -49,7 +53,7 @@ func DataSourceTransitGateway() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"filter": DataSourceFiltersSchema(),
+			"filter": CustomFiltersSchema(),
 			"id": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -87,37 +91,23 @@ func dataSourceTransitGatewayRead(d *schema.ResourceData, meta interface{}) erro
 
 	input := &ec2.DescribeTransitGatewaysInput{}
 
-	if v, ok := d.GetOk("filter"); ok {
-		input.Filters = BuildFiltersDataSource(v.(*schema.Set))
+	input.Filters = append(input.Filters, BuildCustomFilterList(
+		d.Get("filter").(*schema.Set),
+	)...)
+
+	if len(input.Filters) == 0 {
+		// Don't send an empty filters list; the EC2 API won't accept it.
+		input.Filters = nil
 	}
 
 	if v, ok := d.GetOk("id"); ok {
-		input.TransitGatewayIds = []*string{aws.String(v.(string))}
+		input.TransitGatewayIds = aws.StringSlice([]string{v.(string)})
 	}
 
-	log.Printf("[DEBUG] Reading EC2 Transit Gateways: %s", input)
-	output, err := conn.DescribeTransitGateways(input)
+	transitGateway, err := FindTransitGateway(conn, input)
 
 	if err != nil {
-		return fmt.Errorf("error reading EC2 Transit Gateway: %w", err)
-	}
-
-	if output == nil || len(output.TransitGateways) == 0 {
-		return errors.New("error reading EC2 Transit Gateway: no results found")
-	}
-
-	if len(output.TransitGateways) > 1 {
-		return errors.New("error reading EC2 Transit Gateway: multiple results found, try adjusting search criteria")
-	}
-
-	transitGateway := output.TransitGateways[0]
-
-	if transitGateway == nil {
-		return errors.New("error reading EC2 Transit Gateway: empty result")
-	}
-
-	if transitGateway.Options == nil {
-		return errors.New("error reading EC2 Transit Gateway: missing options")
+		return tfresource.SingularDataSourceFindError("EC2 Transit Gateway", err)
 	}
 
 	d.SetId(aws.StringValue(transitGateway.TransitGatewayId))
@@ -136,7 +126,7 @@ func dataSourceTransitGatewayRead(d *schema.ResourceData, meta interface{}) erro
 	d.Set("vpn_ecmp_support", transitGateway.Options.VpnEcmpSupport)
 
 	if err := d.Set("tags", KeyValueTags(transitGateway.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return fmt.Errorf("setting tags: %w", err)
 	}
 
 	return nil

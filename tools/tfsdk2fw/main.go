@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"context"
 	_ "embed"
 	"flag"
 	"fmt"
@@ -25,7 +26,7 @@ var (
 
 func usage() {
 	fmt.Fprintf(os.Stderr, "Usage:\n")
-	fmt.Fprintf(os.Stderr, "\ttfsdk2fx [-resource <resource-type>|-data-source <data-source-type>] <name> <generated-file>\n\n")
+	fmt.Fprintf(os.Stderr, "\ttfsdk2fw [-resource <resource-type>|-data-source <data-source-type>] <package-name> <name> <generated-file>\n\n")
 }
 
 func main() {
@@ -34,13 +35,14 @@ func main() {
 
 	args := flag.Args()
 
-	if len(args) < 2 || (*dataSourceType == "" && *resourceType == "") {
+	if len(args) < 3 || (*dataSourceType == "" && *resourceType == "") {
 		flag.Usage()
 		os.Exit(2)
 	}
 
-	name := args[0]
-	outputFilename := args[1]
+	packageName := args[0]
+	name := args[1]
+	outputFilename := args[2]
 
 	ui := &cli.BasicUi{
 		Reader:      os.Stdin,
@@ -48,11 +50,17 @@ func main() {
 		ErrorWriter: os.Stderr,
 	}
 	migrator := &migrator{
-		Name: name,
-		Ui:   ui,
+		Name:        name,
+		PackageName: packageName,
+		Ui:          ui,
 	}
 
-	p := provider.Provider()
+	p, err := provider.New(context.Background())
+
+	if err != nil {
+		ui.Error(err.Error())
+		os.Exit(1)
+	}
 
 	if v := *dataSourceType; v != "" {
 		resource, ok := p.DataSourcesMap[v]
@@ -64,6 +72,7 @@ func main() {
 
 		migrator.Resource = resource
 		migrator.Template = datasourceImpl
+		migrator.TFTypeName = v
 	} else if v := *resourceType; v != "" {
 		resource, ok := p.ResourcesMap[v]
 
@@ -74,6 +83,7 @@ func main() {
 
 		migrator.Resource = resource
 		migrator.Template = resourceImpl
+		migrator.TFTypeName = v
 	}
 
 	if err := migrator.migrate(outputFilename); err != nil {
@@ -83,10 +93,12 @@ func main() {
 }
 
 type migrator struct {
-	Name     string
-	Resource *schema.Resource
-	Template string
-	Ui       cli.Ui
+	Name        string
+	PackageName string
+	Resource    *schema.Resource
+	Template    string
+	TFTypeName  string
+	Ui          cli.Ui
 }
 
 // migrate generates an identical schema into the specified output file.
@@ -107,13 +119,7 @@ func (m *migrator) migrate(outputFilename string) error {
 		return err
 	}
 
-	err = m.applyTemplate(outputFilename, templateData)
-
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return m.applyTemplate(outputFilename, templateData)
 }
 
 func (m *migrator) applyTemplate(filename string, templateData *templateData) error {
@@ -169,8 +175,10 @@ func (m *migrator) generateTemplateData() (*templateData, error) {
 
 	schema := sb.String()
 	templateData := &templateData{
-		Name:   m.Name,
-		Schema: schema,
+		Name:        m.Name,
+		PackageName: m.PackageName,
+		Schema:      schema,
+		TFTypeName:  m.TFTypeName,
 	}
 
 	return templateData, nil
@@ -407,6 +415,10 @@ func (e emitter) emitAttribute(path []string, property *schema.Schema) error {
 		}
 	}
 
+	if property.ValidateFunc != nil || property.ValidateDiagFunc != nil {
+		fprintf(e.SchemaWriter, "// TODO Validate,\n")
+	}
+
 	fprintf(e.SchemaWriter, "}")
 
 	return nil
@@ -539,8 +551,10 @@ func unsupportedTypeError(path []string, typ string) error {
 }
 
 type templateData struct {
-	Name   string
-	Schema string
+	Name        string // e.g. Instance
+	PackageName string // e.g. ec2
+	Schema      string
+	TFTypeName  string // e.g. aws_instance
 }
 
 //go:embed datasource.tmpl

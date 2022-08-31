@@ -2,6 +2,7 @@ package ec2
 
 import (
 	"context"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -13,6 +14,10 @@ import (
 func DataSourceTransitGatewayVPCAttachments() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceTransitGatewayVPCAttachmentsRead,
+
+		Timeouts: &schema.ResourceTimeout{
+			Read: schema.DefaultTimeout(20 * time.Minute),
+		},
 
 		Schema: map[string]*schema.Schema{
 			"filter": DataSourceFiltersSchema(),
@@ -41,7 +46,7 @@ func dataSourceTransitGatewayVPCAttachmentsRead(ctx context.Context, d *schema.R
 	output, err := FindTransitGatewayVPCAttachments(conn, input)
 
 	if err != nil {
-		return diag.Errorf("error reading EC2 Transit Gateway VPC Attachments: %s", err)
+		return diag.Errorf("reading EC2 Transit Gateway VPC Attachments: %s", err)
 	}
 
 	var attachmentIDs []string

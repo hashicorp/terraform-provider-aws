@@ -56,7 +56,7 @@ several valid keys, for a full reference, check out
 * `name_regex` - (Optional) A regex string to apply to the AMI list returned
 by AWS. This allows more advanced filtering not supported from the AWS API. This
 filtering is done locally on what AWS returns, and could have a performance
-impact if the result is large. It is recommended to combine this with other
+impact if the result is large. Combine this with other
 options to narrow down the list AWS returns.
 
 ~> **NOTE:** If more or less than a single match is returned by the search,
@@ -127,5 +127,11 @@ interpolation.
 * `usage_operation` - The operation of the Amazon EC2 instance and the billing code that is associated with the AMI.
 * `platform_details` - The platform details associated with the billing code of the AMI.
 * `ena_support` - Specifies whether enhanced networking with ENA is enabled.
+
+## Timeouts
+
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+
+- `read` - (Default `20m`)
 
 [1]: http://docs.aws.amazon.com/cli/latest/reference/ec2/describe-images.html

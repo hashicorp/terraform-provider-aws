@@ -27,6 +27,9 @@ func TestAccGrafana_serial(t *testing.T) {
 			"notificationDestinations": testAccWorkspace_notificationDestinations,
 			"tags":                     testAccWorkspace_tags,
 		},
+		"ApiKey": {
+			"basic": testAccWorkspaceAPIKey_basic,
+		},
 		"DataSource": {
 			"basic": testAccWorkspaceDataSource_basic,
 		},
@@ -67,10 +70,10 @@ func testAccWorkspace_saml(t *testing.T) {
 	iamRoleResourceName := "aws_iam_role.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(managedgrafana.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, managedgrafana.EndpointsID),
-		CheckDestroy:      testAccCheckWorkspaceDestroy,
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(managedgrafana.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, managedgrafana.EndpointsID),
+		CheckDestroy:             testAccCheckWorkspaceDestroy,
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWorkspaceConfig_authenticationProvider(rName, "SAML"),
@@ -115,9 +118,9 @@ func testAccWorkspace_sso(t *testing.T) {
 			acctest.PreCheckPartitionHasService(managedgrafana.EndpointsID, t)
 			acctest.PreCheckSSOAdminInstances(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, managedgrafana.EndpointsID),
-		CheckDestroy:      testAccCheckWorkspaceDestroy,
-		ProviderFactories: acctest.ProviderFactories,
+		ErrorCheck:               acctest.ErrorCheck(t, managedgrafana.EndpointsID),
+		CheckDestroy:             testAccCheckWorkspaceDestroy,
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWorkspaceConfig_authenticationProvider(rName, "AWS_SSO"),
@@ -156,10 +159,10 @@ func testAccWorkspace_disappears(t *testing.T) {
 	resourceName := "aws_grafana_workspace.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(managedgrafana.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, managedgrafana.EndpointsID),
-		CheckDestroy:      testAccCheckWorkspaceDestroy,
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(managedgrafana.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, managedgrafana.EndpointsID),
+		CheckDestroy:             testAccCheckWorkspaceDestroy,
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWorkspaceConfig_authenticationProvider(rName, "SAML"),
@@ -184,9 +187,9 @@ func testAccWorkspace_organization(t *testing.T) {
 			acctest.PreCheckOrganizationsEnabled(t)
 			acctest.PreCheckOrganizationManagementAccount(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, managedgrafana.EndpointsID),
-		CheckDestroy:      testAccCheckWorkspaceDestroy,
-		ProviderFactories: acctest.ProviderFactories,
+		ErrorCheck:               acctest.ErrorCheck(t, managedgrafana.EndpointsID),
+		CheckDestroy:             testAccCheckWorkspaceDestroy,
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWorkspaceConfig_organization(rName),
@@ -213,10 +216,10 @@ func testAccWorkspace_tags(t *testing.T) {
 	resourceName := "aws_grafana_workspace.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(managedgrafana.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, managedgrafana.EndpointsID),
-		CheckDestroy:      testAccCheckWorkspaceDestroy,
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(managedgrafana.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, managedgrafana.EndpointsID),
+		CheckDestroy:             testAccCheckWorkspaceDestroy,
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWorkspaceConfig_tags1(rName, "key1", "value1"),
@@ -258,10 +261,10 @@ func testAccWorkspace_dataSources(t *testing.T) {
 	iamRoleResourceName := "aws_iam_role.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(managedgrafana.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, managedgrafana.EndpointsID),
-		CheckDestroy:      testAccCheckWorkspaceDestroy,
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(managedgrafana.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, managedgrafana.EndpointsID),
+		CheckDestroy:             testAccCheckWorkspaceDestroy,
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWorkspaceConfig_dataSources(rName),
@@ -302,10 +305,10 @@ func testAccWorkspace_permissionType(t *testing.T) {
 	resourceName := "aws_grafana_workspace.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(managedgrafana.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, managedgrafana.EndpointsID),
-		CheckDestroy:      testAccCheckWorkspaceDestroy,
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(managedgrafana.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, managedgrafana.EndpointsID),
+		CheckDestroy:             testAccCheckWorkspaceDestroy,
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWorkspaceConfig_permissionType(rName, "CUSTOMER_MANAGED"),
@@ -335,10 +338,10 @@ func testAccWorkspace_notificationDestinations(t *testing.T) {
 	resourceName := "aws_grafana_workspace.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(managedgrafana.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, managedgrafana.EndpointsID),
-		CheckDestroy:      testAccCheckWorkspaceDestroy,
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(managedgrafana.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, managedgrafana.EndpointsID),
+		CheckDestroy:             testAccCheckWorkspaceDestroy,
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWorkspaceConfig_authenticationProvider(rName, "SAML"),
@@ -509,11 +512,7 @@ func testAccCheckWorkspaceExists(name string) resource.TestCheckFunc {
 
 		_, err := tfgrafana.FindWorkspaceByID(conn, rs.Primary.ID)
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 

@@ -56,9 +56,10 @@ func ResourceRolePolicy() *schema.Resource {
 				ValidateFunc:  validResourceName(rolePolicyNamePrefixMaxLen),
 			},
 			"role": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validRolePolicyRole,
 			},
 		},
 	}

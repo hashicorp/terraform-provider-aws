@@ -26,9 +26,9 @@ func TestAccServiceDiscoveryHTTPNamespace_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService(servicediscovery.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, servicediscovery.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckHTTPNamespaceDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, servicediscovery.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckHTTPNamespaceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccHTTPNamespaceConfig_basic(rName),
@@ -61,9 +61,9 @@ func TestAccServiceDiscoveryHTTPNamespace_disappears(t *testing.T) {
 			acctest.PreCheckPartitionHasService(servicediscovery.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, servicediscovery.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckHTTPNamespaceDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, servicediscovery.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckHTTPNamespaceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccHTTPNamespaceConfig_basic(rName),
@@ -87,9 +87,9 @@ func TestAccServiceDiscoveryHTTPNamespace_description(t *testing.T) {
 			acctest.PreCheckPartitionHasService(servicediscovery.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, servicediscovery.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckHTTPNamespaceDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, servicediscovery.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckHTTPNamespaceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccHTTPNamespaceConfig_description(rName, "test"),
@@ -117,9 +117,9 @@ func TestAccServiceDiscoveryHTTPNamespace_tags(t *testing.T) {
 			acctest.PreCheckPartitionHasService(servicediscovery.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, servicediscovery.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckHTTPNamespaceDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, servicediscovery.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckHTTPNamespaceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccHTTPNamespaceConfig_tags1(rName, "key1", "value1"),
@@ -163,7 +163,7 @@ func testAccCheckHTTPNamespaceDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := tfservicediscovery.FindNamespaceByID(context.TODO(), conn, rs.Primary.ID)
+		_, err := tfservicediscovery.FindNamespaceByID(context.Background(), conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -192,7 +192,7 @@ func testAccCheckHTTPNamespaceExists(n string) resource.TestCheckFunc {
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceDiscoveryConn
 
-		_, err := tfservicediscovery.FindNamespaceByID(context.TODO(), conn, rs.Primary.ID)
+		_, err := tfservicediscovery.FindNamespaceByID(context.Background(), conn, rs.Primary.ID)
 
 		return err
 	}

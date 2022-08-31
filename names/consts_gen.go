@@ -232,6 +232,7 @@ const (
 	RUM                          = "rum"
 	Redshift                     = "redshift"
 	RedshiftData                 = "redshiftdata"
+	RedshiftServerless           = "redshiftserverless"
 	Rekognition                  = "rekognition"
 	ResilienceHub                = "resiliencehub"
 	ResourceGroups               = "resourcegroups"

@@ -5,6 +5,16 @@ import (
 	"strings"
 )
 
+func DataSourceParseResourceID(id string) (string, string, error) {
+	parts := strings.Split(id, "/")
+
+	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
+		return "", "", fmt.Errorf("please make sure ID is in format DATA_SOURCE_ID/INDEX_ID")
+	}
+
+	return parts[0], parts[1], nil
+}
+
 func ExperienceParseResourceID(id string) (string, string, error) {
 	parts := strings.Split(id, "/")
 

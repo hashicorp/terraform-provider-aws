@@ -110,7 +110,7 @@ The following arguments are supported:
 * `field` - (Required) The field name from the schema defined in the GraphQL API.
 * `request_template` - (Optional) The request mapping template for UNIT resolver or 'before mapping template' for PIPELINE resolver. Required for non-Lambda resolvers.
 * `response_template` - (Optional) The response mapping template for UNIT resolver or 'after mapping template' for PIPELINE resolver. Required for non-Lambda resolvers.
-* `data_source` - (Optional) The DataSource name.
+* `data_source` - (Optional) The data source name.
 * `max_batch_size` - (Optional) The maximum batching size for a resolver. Valid values are between `0` and `2000`.
 * `kind`  - (Optional) The resolver type. Valid values are `UNIT` and `PIPELINE`.
 * `sync_config` - (Optional) Describes a Sync configuration for a resolver. See [Sync Config](#sync-config).

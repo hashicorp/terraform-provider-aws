@@ -11,13 +11,13 @@ func ResourceJavaAppLayer() *schema.Resource {
 		DefaultLayerName: "Java App Server",
 
 		Attributes: map[string]*opsworksLayerTypeAttribute{
-			"jvm_type": {
-				AttrName: opsworks.LayerAttributesKeysJvm,
+			"app_server": {
+				AttrName: opsworks.LayerAttributesKeysJavaAppServer,
 				Type:     schema.TypeString,
-				Default:  "openjdk",
+				Default:  "tomcat",
 			},
-			"jvm_version": {
-				AttrName: opsworks.LayerAttributesKeysJvmVersion,
+			"app_server_version": {
+				AttrName: opsworks.LayerAttributesKeysJavaAppServerVersion,
 				Type:     schema.TypeString,
 				Default:  "7",
 			},
@@ -26,13 +26,13 @@ func ResourceJavaAppLayer() *schema.Resource {
 				Type:     schema.TypeString,
 				Default:  "",
 			},
-			"app_server": {
-				AttrName: opsworks.LayerAttributesKeysJavaAppServer,
+			"jvm_type": {
+				AttrName: opsworks.LayerAttributesKeysJvm,
 				Type:     schema.TypeString,
-				Default:  "tomcat",
+				Default:  "openjdk",
 			},
-			"app_server_version": {
-				AttrName: opsworks.LayerAttributesKeysJavaAppServerVersion,
+			"jvm_version": {
+				AttrName: opsworks.LayerAttributesKeysJvmVersion,
 				Type:     schema.TypeString,
 				Default:  "7",
 			},

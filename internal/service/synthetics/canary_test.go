@@ -21,10 +21,10 @@ func TestAccSyntheticsCanary_basic(t *testing.T) {
 	resourceName := "aws_synthetics_canary.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, synthetics.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckCanaryDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, synthetics.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCanaryDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCanaryConfig_basic(rName),
@@ -95,10 +95,10 @@ func TestAccSyntheticsCanary_artifactEncryption(t *testing.T) {
 	resourceName := "aws_synthetics_canary.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, synthetics.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckCanaryDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, synthetics.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCanaryDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCanaryConfig_artifactEncryption(rName),
@@ -135,10 +135,10 @@ func TestAccSyntheticsCanary_runtimeVersion(t *testing.T) {
 	resourceName := "aws_synthetics_canary.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, synthetics.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckCanaryDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, synthetics.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCanaryDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCanaryConfig_runtimeVersion(rName, "syn-nodejs-puppeteer-3.1"),
@@ -170,10 +170,10 @@ func TestAccSyntheticsCanary_startCanary(t *testing.T) {
 	resourceName := "aws_synthetics_canary.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, synthetics.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckCanaryDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, synthetics.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCanaryDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCanaryConfig_start(rName, true),
@@ -218,10 +218,10 @@ func TestAccSyntheticsCanary_StartCanary_codeChanges(t *testing.T) {
 	resourceName := "aws_synthetics_canary.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, synthetics.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckCanaryDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, synthetics.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCanaryDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCanaryConfig_start(rName, true),
@@ -259,10 +259,10 @@ func TestAccSyntheticsCanary_s3(t *testing.T) {
 	resourceName := "aws_synthetics_canary.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, synthetics.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckCanaryDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, synthetics.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCanaryDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCanaryConfig_basicS3Code(rName),
@@ -303,10 +303,10 @@ func TestAccSyntheticsCanary_run(t *testing.T) {
 	resourceName := "aws_synthetics_canary.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, synthetics.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckCanaryDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, synthetics.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCanaryDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCanaryConfig_run1(rName),
@@ -349,10 +349,10 @@ func TestAccSyntheticsCanary_runTracing(t *testing.T) {
 	resourceName := "aws_synthetics_canary.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, synthetics.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckCanaryDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, synthetics.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCanaryDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCanaryConfig_runTracing(rName, true),
@@ -391,10 +391,10 @@ func TestAccSyntheticsCanary_runEnvironmentVariables(t *testing.T) {
 	resourceName := "aws_synthetics_canary.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, synthetics.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckCanaryDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, synthetics.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCanaryDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCanaryConfig_runEnvVariables1(rName),
@@ -433,10 +433,10 @@ func TestAccSyntheticsCanary_vpc(t *testing.T) {
 	resourceName := "aws_synthetics_canary.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, synthetics.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckCanaryDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, synthetics.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCanaryDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCanaryConfig_vpc1(rName),
@@ -481,10 +481,10 @@ func TestAccSyntheticsCanary_tags(t *testing.T) {
 	resourceName := "aws_synthetics_canary.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, synthetics.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckCanaryDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, synthetics.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCanaryDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCanaryConfig_tags1(rName, "key1", "value1"),
@@ -527,10 +527,10 @@ func TestAccSyntheticsCanary_disappears(t *testing.T) {
 	resourceName := "aws_synthetics_canary.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, synthetics.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckCanaryDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, synthetics.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCanaryDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCanaryConfig_basic(rName),

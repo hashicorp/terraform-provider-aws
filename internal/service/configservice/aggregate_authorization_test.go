@@ -8,7 +8,7 @@ package configservice_test
 // 	resource.ParallelTest(t, resource.TestCase{
 // 		PreCheck:     func() { acctest.PreCheck(t) },
 // 		ErrorCheck:   acctest.ErrorCheck(t, configservice.EndpointsID),
-// 		ProviderFactories:acctest.ProviderFactories,
+// 		ProtoV5ProviderFactories:acctest.ProtoV5ProviderFactories,
 // 		CheckDestroy: testAccCheckAggregateAuthorizationDestroy,
 // 		Steps: []resource.TestStep{
 // 			{
@@ -35,7 +35,7 @@ package configservice_test
 // 	resource.ParallelTest(t, resource.TestCase{
 // 		PreCheck:     func() { acctest.PreCheck(t) },
 // 		ErrorCheck:   acctest.ErrorCheck(t, configservice.EndpointsID),
-// 		ProviderFactories:acctest.ProviderFactories,
+// 		ProtoV5ProviderFactories:acctest.ProtoV5ProviderFactories,
 // 		CheckDestroy: testAccCheckAggregateAuthorizationDestroy,
 // 		Steps: []resource.TestStep{
 // 			{

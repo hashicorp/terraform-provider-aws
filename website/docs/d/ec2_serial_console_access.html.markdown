@@ -22,3 +22,9 @@ The following attributes are exported:
 
 * `enabled` - Whether or not serial console access is enabled. Returns as `true` or `false`.
 * `id` - Region of serial console access.
+
+## Timeouts
+
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+
+- `read` - (Default `20m`)

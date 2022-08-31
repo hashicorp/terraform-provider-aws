@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
@@ -19,6 +20,10 @@ import (
 func DataSourceInstance() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourceInstanceRead,
+
+		Timeouts: &schema.ResourceTimeout{
+			Read: schema.DefaultTimeout(20 * time.Minute),
+		},
 
 		Schema: map[string]*schema.Schema{
 			"ami": {
@@ -162,6 +167,10 @@ func DataSourceInstance() *schema.Resource {
 				Default:  false,
 			},
 			"host_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"host_resource_group_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -461,6 +470,9 @@ func instanceDescriptionAttributes(d *schema.ResourceData, instance *ec2.Instanc
 	}
 	if instance.Placement.HostId != nil {
 		d.Set("host_id", instance.Placement.HostId)
+	}
+	if instance.Placement.HostResourceGroupArn != nil {
+		d.Set("host_resource_group_arn", instance.Placement.HostResourceGroupArn)
 	}
 
 	d.Set("ami", instance.ImageId)

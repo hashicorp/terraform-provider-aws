@@ -21,10 +21,10 @@ func testAccWorkteam_cognitoConfig(t *testing.T) {
 	resourceName := "aws_sagemaker_workteam.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckWorkteamDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWorkteamDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWorkteamConfig_cognito(rName),
@@ -92,10 +92,10 @@ func testAccWorkteam_oidcConfig(t *testing.T) {
 	resourceName := "aws_sagemaker_workteam.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckWorkteamDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWorkteamDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWorkteamConfig_oidc(rName),
@@ -149,10 +149,10 @@ func testAccWorkteam_tags(t *testing.T) {
 	resourceName := "aws_sagemaker_workteam.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckWorkteamDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWorkteamDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWorkteamConfig_tags1(rName, "key1", "value1"),
@@ -195,10 +195,10 @@ func testAccWorkteam_notificationConfig(t *testing.T) {
 	resourceName := "aws_sagemaker_workteam.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckWorkteamDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWorkteamDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWorkteamConfig_notification(rName),
@@ -248,10 +248,10 @@ func testAccWorkteam_disappears(t *testing.T) {
 	resourceName := "aws_sagemaker_workteam.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckWorkteamDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWorkteamDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWorkteamConfig_oidc(rName),
@@ -469,7 +469,7 @@ resource "aws_sns_topic_policy" "test" {
         "Action" : [
           "sns:Publish"
         ],
-        "Resource" : "${aws_sns_topic.test.arn}"
+        "Resource" : aws_sns_topic.test.arn
       }
     ]
   })

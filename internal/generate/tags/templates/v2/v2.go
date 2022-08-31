@@ -19,6 +19,9 @@ var ListTagsBody string
 //go:embed service_tags_map_body.tmpl
 var ServiceTagsMapBody string
 
+//go:embed service_tags_value_map_body.tmpl
+var ServiceTagsValueMapBody string
+
 //go:embed service_tags_slice_body.tmpl
 var ServiceTagsSliceBody string
 

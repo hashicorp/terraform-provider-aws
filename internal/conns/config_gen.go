@@ -69,7 +69,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/cognitoidentity"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/aws/aws-sdk-go/service/cognitosync"
-	"github.com/aws/aws-sdk-go/service/comprehend"
 	"github.com/aws/aws-sdk-go/service/comprehendmedical"
 	"github.com/aws/aws-sdk-go/service/computeoptimizer"
 	"github.com/aws/aws-sdk-go/service/configservice"
@@ -117,7 +116,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/finspace"
 	"github.com/aws/aws-sdk-go/service/finspacedata"
 	"github.com/aws/aws-sdk-go/service/firehose"
-	"github.com/aws/aws-sdk-go/service/fis"
 	"github.com/aws/aws-sdk-go/service/fms"
 	"github.com/aws/aws-sdk-go/service/forecastqueryservice"
 	"github.com/aws/aws-sdk-go/service/forecastservice"
@@ -235,6 +233,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/recyclebin"
 	"github.com/aws/aws-sdk-go/service/redshift"
 	"github.com/aws/aws-sdk-go/service/redshiftdataapiservice"
+	"github.com/aws/aws-sdk-go/service/redshiftserverless"
 	"github.com/aws/aws-sdk-go/service/rekognition"
 	"github.com/aws/aws-sdk-go/service/resiliencehub"
 	"github.com/aws/aws-sdk-go/service/resourcegroups"
@@ -360,7 +359,6 @@ func (c *Config) clientConns(sess *session.Session) *AWSClient {
 		CognitoIDPConn:                   cognitoidentityprovider.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.CognitoIDP])})),
 		CognitoIdentityConn:              cognitoidentity.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.CognitoIdentity])})),
 		CognitoSyncConn:                  cognitosync.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.CognitoSync])})),
-		ComprehendConn:                   comprehend.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.Comprehend])})),
 		ComprehendMedicalConn:            comprehendmedical.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.ComprehendMedical])})),
 		ComputeOptimizerConn:             computeoptimizer.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.ComputeOptimizer])})),
 		ConfigServiceConn:                configservice.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.ConfigService])})),
@@ -406,7 +404,6 @@ func (c *Config) clientConns(sess *session.Session) *AWSClient {
 		ElasticsearchConn:                elasticsearchservice.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.Elasticsearch])})),
 		EventsConn:                       eventbridge.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.Events])})),
 		EvidentlyConn:                    cloudwatchevidently.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.Evidently])})),
-		FISConn:                          fis.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.FIS])})),
 		FMSConn:                          fms.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.FMS])})),
 		FSxConn:                          fsx.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.FSx])})),
 		FinSpaceConn:                     finspace.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.FinSpace])})),
@@ -527,6 +524,7 @@ func (c *Config) clientConns(sess *session.Session) *AWSClient {
 		RUMConn:                          cloudwatchrum.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.RUM])})),
 		RedshiftConn:                     redshift.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.Redshift])})),
 		RedshiftDataConn:                 redshiftdataapiservice.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.RedshiftData])})),
+		RedshiftServerlessConn:           redshiftserverless.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.RedshiftServerless])})),
 		RekognitionConn:                  rekognition.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.Rekognition])})),
 		ResilienceHubConn:                resiliencehub.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.ResilienceHub])})),
 		ResourceGroupsConn:               resourcegroups.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.ResourceGroups])})),

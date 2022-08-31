@@ -1,3 +1,4 @@
+// TODO: Move this to a shared 'types' package.
 package fwprovider_test
 
 import (
@@ -7,6 +8,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/fwprovider"
 )
@@ -40,7 +42,7 @@ func TestDurationTypeValueFromTerraform(t *testing.T) {
 	for name, test := range tests {
 		name, test := name, test
 		t.Run(name, func(t *testing.T) {
-			ctx := context.TODO()
+			ctx := context.Background()
 			val, err := fwprovider.DurationType.ValueFromTerraform(ctx, test.val)
 
 			if err == nil && test.expectError {
@@ -87,10 +89,9 @@ func TestDurationTypeValidate(t *testing.T) {
 	for name, test := range tests {
 		name, test := name, test
 		t.Run(name, func(t *testing.T) {
-			ctx := context.TODO()
+			ctx := context.Background()
 
-			attributePath := tftypes.NewAttributePath().WithAttributeName("test")
-			diags := fwprovider.DurationType.Validate(ctx, test.val, attributePath)
+			diags := fwprovider.DurationType.Validate(ctx, test.val, path.Root("test"))
 
 			if !diags.HasError() && test.expectError {
 				t.Fatal("expected error, got no error")
