@@ -280,7 +280,6 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 		Name:               aws.String(name),
 		OutpostConfig:      expandEksOutpostConfigRequest(d.Get("outpost_config").([]interface{})),
 		ResourcesVpcConfig: testAccClusterConfig_expandVPCRequest(d.Get("vpc_config").([]interface{})),
-		ResourcesVpcConfig: expandEksVpcConfigRequest(d.Get("vpc_config").([]interface{})),
 		RoleArn:            aws.String(d.Get("role_arn").(string)),
 	}
 
