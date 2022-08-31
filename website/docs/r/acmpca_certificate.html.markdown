@@ -73,8 +73,8 @@ The following arguments are supported:
 In addition to all arguments above, the following attributes are exported:
 
 * `arn` - ARN of the certificate.
-* `certificate` - The PEM-encoded certificate value.
-* `certificate_chain` - The PEM-encoded certificate chain that includes any intermediate certificates and chains up to root CA.
+* `certificate` - PEM-encoded certificate value.
+* `certificate_chain` - PEM-encoded certificate chain that includes any intermediate certificates and chains up to root CA.
 
 ## Import
 

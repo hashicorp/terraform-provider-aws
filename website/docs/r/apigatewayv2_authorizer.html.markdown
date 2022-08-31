@@ -77,7 +77,7 @@ The `jwt_configuration` object supports the following:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - The authorizer identifier.
+* `id` - Authorizer identifier.
 
 ## Import
 

@@ -54,10 +54,10 @@ The `validator` block supports the following:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `arn` - The ARN of the AppConfig Configuration Profile.
+* `arn` - ARN of the AppConfig Configuration Profile.
 * `configuration_profile_id` - The configuration profile ID.
-* `id` - The AppConfig configuration profile ID and application ID separated by a colon (`:`).
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `id` - AppConfig configuration profile ID and application ID separated by a colon (`:`).
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 

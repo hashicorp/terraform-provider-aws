@@ -34,12 +34,12 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - The ID of the API key
-* `created_date` - The creation date of the API key
-* `last_updated_date` - The last update date of the API key
-* `value` - The value of the API key
+* `id` - ID of the API key
+* `created_date` - Creation date of the API key
+* `last_updated_date` - Last update date of the API key
+* `value` - Value of the API key
 * `arn` - ARN
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 

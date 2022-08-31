@@ -59,7 +59,7 @@ Set to -1 if you don't want to change the maximum size at the scheduled time.
 
 In addition to all arguments above, the following attributes are exported:
 
-* `arn` - The ARN assigned by AWS to the autoscaling schedule.
+* `arn` - ARN assigned by AWS to the autoscaling schedule.
 
 ## Import
 

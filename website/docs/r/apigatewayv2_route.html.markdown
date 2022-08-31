@@ -81,7 +81,7 @@ The `request_parameter` object supports the following:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - The route identifier.
+* `id` - Route identifier.
 
 ## Import
 

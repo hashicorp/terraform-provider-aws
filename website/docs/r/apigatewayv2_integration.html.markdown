@@ -147,7 +147,7 @@ The `tls_config` object supports the following:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - The integration identifier.
+* `id` - Integration identifier.
 * `integration_response_selection_expression` - The [integration response selection expression](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-websocket-api-selection-expressions.html#apigateway-websocket-api-integration-response-selection-expressions) for the integration.
 
 ## Import

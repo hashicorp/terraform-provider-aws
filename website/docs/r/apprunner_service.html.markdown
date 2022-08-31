@@ -178,7 +178,7 @@ The `network_configuration` block supports the following arguments:
 
 * `egress_configuration` - (Optional) Network configuration settings for outbound message traffic.
 * `egress_type` - (Optional) Type of egress configuration.Set to DEFAULT for access to resources hosted on public networks.Set to VPC to associate your service to a custom VPC specified by VpcConnectorArn.
-* `vpc_connector_arn` - The ARN of the App Runner VPC connector that you want to associate with your App Runner service. Only valid when EgressType = VPC.
+* `vpc_connector_arn` - ARN of the App Runner VPC connector that you want to associate with your App Runner service. Only valid when EgressType = VPC.
 
 ### Observability Configuration
 
@@ -246,9 +246,9 @@ In addition to all arguments above, the following attributes are exported:
 
 * `arn` - ARN of the App Runner service.
 * `service_id` - An alphanumeric ID that App Runner generated for this service. Unique within the AWS Region.
-* `service_url` - A subdomain URL that App Runner generated for this service. You can use this URL to access your service web application.
-* `status` - The current state of the App Runner service.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `service_url` - Subdomain URL that App Runner generated for this service. You can use this URL to access your service web application.
+* `status` - Current state of the App Runner service.
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 

@@ -326,11 +326,11 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `arn` - The ARN assigned by AWS to the scaling policy.
-* `name` - The scaling policy's name.
+* `arn` - ARN assigned by AWS to the scaling policy.
+* `name` - Scaling policy's name.
 * `autoscaling_group_name` - The scaling policy's assigned autoscaling group.
-* `adjustment_type` - The scaling policy's adjustment type.
-* `policy_type` - The scaling policy's type.
+* `adjustment_type` - Scaling policy's adjustment type.
+* `policy_type` - Scaling policy's type.
 
 ## Import
 

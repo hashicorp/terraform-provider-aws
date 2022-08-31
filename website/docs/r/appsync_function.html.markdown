@@ -105,8 +105,8 @@ The following arguments are supported:
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - API Function ID (Formatted as ApiId-FunctionId)
-* `arn` - The ARN of the Function object.
-* `function_id` - A unique ID representing the Function object.
+* `arn` - ARN of the Function object.
+* `function_id` - Unique ID representing the Function object.
 
 ## Import
 

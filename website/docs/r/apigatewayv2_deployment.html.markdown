@@ -64,7 +64,7 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - The deployment identifier.
+* `id` - Deployment identifier.
 * `auto_deployed` - Whether the deployment was automatically released.
 
 ## Import

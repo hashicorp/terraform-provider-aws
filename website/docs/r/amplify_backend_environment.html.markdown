@@ -39,8 +39,8 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `arn` - The ARN for a backend environment that is part of an Amplify app.
-* `id` - The unique ID of the Amplify backend environment.
+* `arn` - ARN for a backend environment that is part of an Amplify app.
+* `id` - Unique ID of the Amplify backend environment.
 
 ## Import
 

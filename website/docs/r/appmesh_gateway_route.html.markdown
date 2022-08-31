@@ -110,12 +110,12 @@ The `hostname` object supports the following:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - The ID of the gateway route.
-* `arn` - The ARN of the gateway route.
-* `created_date` - The creation date of the gateway route.
-* `last_updated_date` - The last update date of the gateway route.
-* `resource_owner` - The resource owner's AWS account ID.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `id` - ID of the gateway route.
+* `arn` - ARN of the gateway route.
+* `created_date` - Creation date of the gateway route.
+* `last_updated_date` - Last update date of the gateway route.
+* `resource_owner` - Resource owner's AWS account ID.
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 

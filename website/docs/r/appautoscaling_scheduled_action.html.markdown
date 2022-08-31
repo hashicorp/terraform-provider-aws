@@ -85,4 +85,4 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `arn` - The ARN of the scheduled action.
+* `arn` - ARN of the scheduled action.

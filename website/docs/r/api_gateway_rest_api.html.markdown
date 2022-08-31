@@ -255,13 +255,13 @@ __Note__: If the `body` argument is provided, the OpenAPI specification will be 
 In addition to all arguments above, the following attributes are exported:
 
 * `arn` - ARN
-* `created_date` - The creation date of the REST API
-* `execution_arn` - The execution ARN part to be used in [`lambda_permission`](/docs/providers/aws/r/lambda_permission.html)'s `source_arn`
+* `created_date` - Creation date of the REST API
+* `execution_arn` - Execution ARN part to be used in [`lambda_permission`](/docs/providers/aws/r/lambda_permission.html)'s `source_arn`
   when allowing API Gateway to invoke a Lambda function,
   e.g., `arn:aws:execute-api:eu-west-2:123456789012:z4675bid1j`, which can be concatenated with allowed stage, method and resource path.
-* `id` - The ID of the REST API
-* `root_resource_id` - The resource ID of the REST API's root
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `id` - ID of the REST API
+* `root_resource_id` - Resource ID of the REST API's root
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 

@@ -657,14 +657,14 @@ This configuration block supports the following:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - The Auto Scaling Group id.
-* `arn` - The ARN for this Auto Scaling Group
-* `availability_zones` - The availability zones of the Auto Scaling Group.
-* `min_size` - The minimum size of the Auto Scaling Group
-* `max_size` - The maximum size of the Auto Scaling Group
+* `id` - Auto Scaling Group id.
+* `arn` - ARN for this Auto Scaling Group
+* `availability_zones` - Availability zones of the Auto Scaling Group.
+* `min_size` - Minimum size of the Auto Scaling Group
+* `max_size` - Maximum size of the Auto Scaling Group
 * `default_cooldown` - Time between a scaling activity and the succeeding scaling activity.
 * `default_instance_warmup` - The duration of the default instance warmup, in seconds.
-* `name` - The name of the Auto Scaling Group
+* `name` - Name of the Auto Scaling Group
 * `health_check_grace_period` - Time after instance comes into service before checking health.
 * `health_check_type` - "EC2" or "ELB". Controls how health checking is done.
 * `desired_capacity` -The number of Amazon EC2 instances that should be running in the group.

@@ -104,19 +104,19 @@ Nested `ephemeral_block_device` blocks have the following structure:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `arn` - The ARN of the AMI.
-* `id` - The ID of the created AMI.
-* `owner_id` - The AWS account ID of the image owner.
-* `root_snapshot_id` - The Snapshot ID for the root volume (for EBS-backed AMIs)
-* `usage_operation` - The operation of the Amazon EC2 instance and the billing code that is associated with the AMI.
-* `platform_details` - The platform details associated with the billing code of the AMI.
-* `image_owner_alias` - The AWS account alias (for example, amazon, self) or the AWS account ID of the AMI owner.
-* `image_type` - The type of image.
-* `hypervisor` - The hypervisor type of the image.
-* `owner_id` - The AWS account ID of the image owner.
+* `arn` - ARN of the AMI.
+* `id` - ID of the created AMI.
+* `owner_id` - AWS account ID of the image owner.
+* `root_snapshot_id` - Snapshot ID for the root volume (for EBS-backed AMIs)
+* `usage_operation` - Operation of the Amazon EC2 instance and the billing code that is associated with the AMI.
+* `platform_details` - Platform details associated with the billing code of the AMI.
+* `image_owner_alias` - AWS account alias (for example, amazon, self) or the AWS account ID of the AMI owner.
+* `image_type` - Type of image.
+* `hypervisor` - Hypervisor type of the image.
+* `owner_id` - AWS account ID of the image owner.
 * `platform` - This value is set to windows for Windows AMIs; otherwise, it is blank.
 * `public` - Indicates whether the image has public launch permissions.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 

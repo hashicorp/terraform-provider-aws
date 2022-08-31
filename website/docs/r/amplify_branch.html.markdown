@@ -171,12 +171,12 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `arn` - The ARN for the branch.
+* `arn` - ARN for the branch.
 * `associated_resources` - A list of custom resources that are linked to this branch.
-* `custom_domains` - The custom domains for the branch.
-* `destination_branch` - The destination branch if the branch is a pull request branch.
-* `source_branch` - The source branch if the branch is a pull request branch.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `custom_domains` - Custom domains for the branch.
+* `destination_branch` - Destination branch if the branch is a pull request branch.
+* `source_branch` - Source branch if the branch is a pull request branch.
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 

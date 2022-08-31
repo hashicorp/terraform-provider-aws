@@ -172,18 +172,18 @@ A `custom_rule` block supports the following arguments:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `arn` - The ARN of the Amplify app.
-* `default_domain` - The default domain for the Amplify app.
-* `id` - The unique ID of the Amplify app.
+* `arn` - ARN of the Amplify app.
+* `default_domain` - Default domain for the Amplify app.
+* `id` - Unique ID of the Amplify app.
 * `production_branch` - Describes the information about a production branch for an Amplify app. A `production_branch` block is documented below.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 A `production_branch` block supports the following attributes:
 
-* `branch_name` - The branch name for the production branch.
-* `last_deploy_time` - The last deploy time of the production branch.
-* `status` - The status of the production branch.
-* `thumbnail_url` - The thumbnail URL for the production branch.
+* `branch_name` - Branch name for the production branch.
+* `last_deploy_time` - Last deploy time of the production branch.
+* `status` - Status of the production branch.
+* `thumbnail_url` - Thumbnail URL for the production branch.
 
 ## Import
 

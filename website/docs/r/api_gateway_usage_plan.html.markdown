@@ -111,15 +111,15 @@ The API Gateway Usage Plan argument layout is a structure composed of several su
 
 ##### Throttle
 
-* `path` (Required) - The method to apply the throttle settings for. Specfiy the path and method, for example `/test/GET`.
+* `path` (Required) - Method to apply the throttle settings for. Specfiy the path and method, for example `/test/GET`.
 * `burst_limit` (Optional) - The API request burst limit, the maximum rate limit over a time ranging from one to a few seconds, depending upon whether the underlying token bucket is at its full capacity.
 * `rate_limit` (Optional) - The API request steady-state rate limit.
 
 #### Quota Settings Arguments
 
-* `limit` (Optional) - The maximum number of requests that can be made in a given time period.
-* `offset` (Optional) - The number of requests subtracted from the given limit in the initial time period.
-* `period` (Optional) - The time period in which the limit applies. Valid values are "DAY", "WEEK" or "MONTH".
+* `limit` (Optional) - Maximum number of requests that can be made in a given time period.
+* `offset` (Optional) - Number of requests subtracted from the given limit in the initial time period.
+* `period` (Optional) - Time period in which the limit applies. Valid values are "DAY", "WEEK" or "MONTH".
 
 #### Throttling Settings Arguments
 
@@ -130,15 +130,15 @@ The API Gateway Usage Plan argument layout is a structure composed of several su
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - The ID of the API resource
-* `name` - The name of the usage plan.
-* `description` - The description of a usage plan.
-* `api_stages` - The associated API stages of the usage plan.
-* `quota_settings` - The quota of the usage plan.
-* `throttle_settings` - The throttling limits of the usage plan.
-* `product_code` - The AWS Marketplace product identifier to associate with the usage plan as a SaaS product on AWS Marketplace.
+* `id` - ID of the API resource
+* `name` - Name of the usage plan.
+* `description` - Description of a usage plan.
+* `api_stages` - Associated API stages of the usage plan.
+* `quota_settings` - Quota of the usage plan.
+* `throttle_settings` - Throttling limits of the usage plan.
+* `product_code` - AWS Marketplace product identifier to associate with the usage plan as a SaaS product on AWS Marketplace.
 * `arn` - ARN
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 

@@ -80,8 +80,8 @@ In addition to all arguments above, the following attributes are exported:
 * `configuration` - Configuration block with various settings for the workgroup
     * `engine_version` - Configuration block for the Athena Engine Versioning
         * `effective_engine_version` -  The engine version on which the query runs. If `selected_engine_version` is set to `AUTO`, the effective engine version is chosen by Athena.
-* `id` - The workgroup name
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `id` - Workgroup name
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 

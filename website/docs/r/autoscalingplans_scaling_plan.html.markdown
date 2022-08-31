@@ -212,7 +212,7 @@ The `predefined_scaling_metric_specification` object supports the following:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - The scaling plan identifier.
+* `id` - Scaling plan identifier.
 * `scaling_plan_version` - The version number of the scaling plan. This value is always 1.
 
 ## Import

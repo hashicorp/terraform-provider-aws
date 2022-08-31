@@ -254,12 +254,12 @@ The `sds` object supports the following:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - The ID of the virtual gateway.
-* `arn` - The ARN of the virtual gateway.
-* `created_date` - The creation date of the virtual gateway.
-* `last_updated_date` - The last update date of the virtual gateway.
-* `resource_owner` - The resource owner's AWS account ID.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `id` - ID of the virtual gateway.
+* `arn` - ARN of the virtual gateway.
+* `created_date` - Creation date of the virtual gateway.
+* `last_updated_date` - Last update date of the virtual gateway.
+* `resource_owner` - Resource owner's AWS account ID.
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 

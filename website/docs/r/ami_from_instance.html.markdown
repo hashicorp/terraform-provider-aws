@@ -59,8 +59,8 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `arn` - The ARN of the AMI.
-* `id` - The ID of the created AMI.
+* `arn` - ARN of the AMI.
+* `id` - ID of the created AMI.
 
 This resource also exports a full set of attributes corresponding to the arguments of the
 [`aws_ami`](/docs/providers/aws/r/ami.html) resource, allowing the properties of the created AMI to be used elsewhere in the

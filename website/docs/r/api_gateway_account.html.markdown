@@ -80,8 +80,8 @@ The following attribute is exported:
 
 `throttle_settings` block exports the following:
 
-* `burst_limit` - The absolute maximum number of times API Gateway allows the API to be called per second (RPS).
-* `rate_limit` - The number of times API Gateway allows the API to be called per second on average (RPS).
+* `burst_limit` - Absolute maximum number of times API Gateway allows the API to be called per second (RPS).
+* `rate_limit` - Number of times API Gateway allows the API to be called per second on average (RPS).
 
 
 ## Import

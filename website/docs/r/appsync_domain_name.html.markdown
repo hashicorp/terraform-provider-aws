@@ -31,9 +31,9 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - The Appsync Domain Name.
-* `appsync_domain_name` - The domain name that AppSync provides.
-* `hosted_zone_id` - The ID of your Amazon Route 53 hosted zone.
+* `id` - Appsync Domain Name.
+* `appsync_domain_name` - Domain name that AppSync provides.
+* `hosted_zone_id` - ID of your Amazon Route 53 hosted zone.
 
 ## Import
 

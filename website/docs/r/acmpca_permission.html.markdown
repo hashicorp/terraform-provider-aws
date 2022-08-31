@@ -45,4 +45,4 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `policy` - The IAM policy that is associated with the permission.
+* `policy` - IAM policy that is associated with the permission.

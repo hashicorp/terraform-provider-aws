@@ -36,7 +36,7 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - The API mapping identifier.
+* `id` - API mapping identifier.
 
 ## Import
 

@@ -79,9 +79,9 @@ In addition to all arguments above, the following attributes are exported:
 
 * `arn` - ARN of the appstream image builder.
 * `created_time` -  Date and time, in UTC and extended RFC 3339 format, when the image builder was created.
-* `id` - The name of the image builder.
+* `id` - Name of the image builder.
 * `state` - State of the image builder. Can be: `PENDING`, `UPDATING_AGENT`, `RUNNING`, `STOPPING`, `STOPPED`, `REBOOTING`, `SNAPSHOTTING`, `DELETING`, `FAILED`, `UPDATING`, `PENDING_QUALIFICATION`
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 

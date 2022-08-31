@@ -34,7 +34,7 @@ The following argument is supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - The unique ID of the request validator
+* `id` - Unique ID of the request validator
 
 ## Import
 

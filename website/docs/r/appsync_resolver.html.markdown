@@ -138,7 +138,7 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `arn` - The ARN
+* `arn` - ARN
 
 ## Import
 

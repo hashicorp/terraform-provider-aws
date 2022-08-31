@@ -49,11 +49,11 @@ balancer.
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - The ID of the policy.
-* `name` - The name of the stickiness policy.
-* `load_balancer` - The name of load balancer to which the policy is attached.
-* `lb_port` - The load balancer port to which the policy is applied.
-* `cookie_name` - The application cookie whose lifetime the ELB's cookie should follow.
+* `id` - ID of the policy.
+* `name` - Name of the stickiness policy.
+* `load_balancer` - Name of load balancer to which the policy is attached.
+* `lb_port` - Load balancer port to which the policy is applied.
+* `cookie_name` - Application cookie whose lifetime the ELB's cookie should follow.
 
 ## Import
 

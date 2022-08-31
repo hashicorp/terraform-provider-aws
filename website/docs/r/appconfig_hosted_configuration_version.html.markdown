@@ -93,9 +93,9 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `arn` - The ARN of the AppConfig  hosted configuration version.
-* `id` - The AppConfig application ID, configuration profile ID, and version number separated by a slash (`/`).
-* `version_number` - The version number of the hosted configuration.
+* `arn` - ARN of the AppConfig  hosted configuration version.
+* `id` - AppConfig application ID, configuration profile ID, and version number separated by a slash (`/`).
+* `version_number` - Version number of the hosted configuration.
 
 ## Import
 
