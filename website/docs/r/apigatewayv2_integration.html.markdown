@@ -115,7 +115,7 @@ Valid values: `AWS` (supported only for WebSocket APIs), `AWS_PROXY`, `HTTP` (su
 * `credentials_arn` - (Optional) The credentials required for the integration, if any.
 * `description` - (Optional) The description of the integration.
 * `integration_method` - (Optional) The integration's HTTP method. Must be specified if `integration_type` is not `MOCK`.
-* `integration_subtype` - (Optional) Specifies the AWS service action to invoke. Supported only for HTTP APIs when `integration_type` is `AWS_PROXY`. See the [AWS service integration reference](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-develop-integrations-aws-services-reference.html) documentation for supported values. Must be between 1 and 128 characters in length.
+* `integration_subtype` - (Optional) AWS service action to invoke. Supported only for HTTP APIs when `integration_type` is `AWS_PROXY`. See the [AWS service integration reference](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-develop-integrations-aws-services-reference.html) documentation for supported values. Must be between 1 and 128 characters in length.
 * `integration_uri` - (Optional) The URI of the Lambda function for a Lambda proxy integration, when `integration_type` is `AWS_PROXY`.
 For an `HTTP` integration, specify a fully-qualified URL. For an HTTP API private integration, specify the ARN of an Application Load Balancer listener, Network Load Balancer listener, or AWS Cloud Map service.
 * `passthrough_behavior` - (Optional) The pass-through behavior for incoming requests based on the Content-Type header in the request, and the available mapping templates specified as the `request_templates` attribute.

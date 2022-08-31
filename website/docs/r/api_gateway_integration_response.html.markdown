@@ -75,14 +75,14 @@ The following arguments are supported:
 * `resource_id` - (Required) The API resource ID
 * `http_method` - (Required) The HTTP method (`GET`, `POST`, `PUT`, `DELETE`, `HEAD`, `OPTIONS`, `ANY`)
 * `status_code` - (Required) The HTTP status code
-* `selection_pattern` - (Optional) Specifies the regular expression pattern used to choose
+* `selection_pattern` - (Optional) Regular expression pattern used to choose
   an integration response based on the response from the backend. Omit configuring this to make the integration the default one.
   If the backend is an `AWS` Lambda function, the AWS Lambda function error header is matched.
   For all other `HTTP` and `AWS` backends, the HTTP status code is matched.
 * `response_templates` - (Optional) Map specifying the templates used to transform the integration response body
 * `response_parameters` - (Optional) Map of response parameters that can be read from the backend response.
   For example: `response_parameters = { "method.response.header.X-Some-Header" = "integration.response.header.X-Some-Other-Header" }`
-* `content_handling` - (Optional) Specifies how to handle request payload content type conversions. Supported values are `CONVERT_TO_BINARY` and `CONVERT_TO_TEXT`. If this property is not defined, the response payload will be passed through from the integration response to the method response without modification.
+* `content_handling` - (Optional) How to handle request payload content type conversions. Supported values are `CONVERT_TO_BINARY` and `CONVERT_TO_TEXT`. If this property is not defined, the response payload will be passed through from the integration response to the method response without modification.
 
 ## Attributes Reference
 
