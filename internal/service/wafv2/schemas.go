@@ -21,7 +21,7 @@ func emptySchema() *schema.Schema {
 	}
 }
 
-func emptySchemaDeprecated() *schema.Schema {
+func emptyDeprecatedSchema() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		Optional: true,

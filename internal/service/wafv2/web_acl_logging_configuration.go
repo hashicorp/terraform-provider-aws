@@ -126,8 +126,8 @@ func ResourceWebACLLoggingConfiguration() *schema.Resource {
 						// TODO: remove attributes marked as Deprecated
 						// as they are not supported by the WAFv2 API
 						// in the context of WebACL Logging Configurations
-						"all_query_arguments": emptySchemaDeprecated(),
-						"body":                emptySchemaDeprecated(),
+						"all_query_arguments": emptyDeprecatedSchema(),
+						"body":                emptyDeprecatedSchema(),
 						"method":              emptySchema(),
 						"query_string":        emptySchema(),
 						"single_header": {
