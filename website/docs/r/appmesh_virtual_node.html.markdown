@@ -177,7 +177,7 @@ The following arguments are supported:
 * `mesh_name` - (Required) The name of the service mesh in which to create the virtual node. Must be between 1 and 255 characters in length.
 * `mesh_owner` - (Optional) The AWS account ID of the service mesh's owner. Defaults to the account ID the [AWS provider][1] is currently connected to.
 * `spec` - (Required) The virtual node specification to apply.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 The `spec` object supports the following:
 
@@ -209,7 +209,7 @@ The `tls` object supports the following:
 
 The `certificate` object supports the following:
 
-* `file` - (Optional) A local file certificate.
+* `file` - (Optional) Local file certificate.
 * `sds` - (Optional) A [Secret Discovery Service](https://www.envoyproxy.io/docs/envoy/latest/configuration/security/secret#secret-discovery-service-sds) certificate.
 
 The `file` object supports the following:
@@ -284,7 +284,7 @@ The `service_discovery` object supports the following:
 
 The `aws_cloud_map` object supports the following:
 
-* `attributes` - (Optional) A string map that contains attributes with values that you can use to filter instances by any custom attribute that you specified when you registered the instance. Only instances that match all of the specified key/value pairs will be returned.
+* `attributes` - (Optional) String map that contains attributes with values that you can use to filter instances by any custom attribute that you specified when you registered the instance. Only instances that match all of the specified key/value pairs will be returned.
 * `namespace_name` - (Required) The name of the AWS Cloud Map namespace to use.
 Use the [`aws_service_discovery_http_namespace`](/docs/providers/aws/r/service_discovery_http_namespace.html) resource to configure a Cloud Map namespace. Must be between 1 and 1024 characters in length.
 * `service_name` - (Required) The name of the AWS Cloud Map service to use. Use the [`aws_service_discovery_service`](/docs/providers/aws/r/service_discovery_service.html) resource to configure a Cloud Map service. Must be between 1 and 1024 characters in length.
@@ -390,7 +390,7 @@ The `tls` object supports the following:
 The `certificate` object supports the following:
 
 * `acm` - (Optional) An AWS Certificate Manager (ACM) certificate.
-* `file` - (optional) A local file certificate.
+* `file` - (optional) Local file certificate.
 * `sds` - (Optional) A [Secret Discovery Service](https://www.envoyproxy.io/docs/envoy/latest/configuration/security/secret#secret-discovery-service-sds) certificate.
 
 The `acm` object supports the following:

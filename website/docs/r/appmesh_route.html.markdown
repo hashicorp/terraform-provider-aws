@@ -144,7 +144,7 @@ The following arguments are supported:
 * `mesh_owner` - (Optional) The AWS account ID of the service mesh's owner. Defaults to the account ID the [AWS provider][1] is currently connected to.
 * `virtual_router_name` - (Required) The name of the virtual router in which to create the route. Must be between 1 and 255 characters in length.
 * `spec` - (Required) The route specification to apply.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 The `spec` object supports the following:
 
@@ -268,7 +268,7 @@ The `weighted_target` object supports the following:
 
 The `header` object supports the following:
 
-* `name` - (Required) A name for the HTTP header in the client request that will be matched on.
+* `name` - (Required) Name for the HTTP header in the client request that will be matched on.
 * `invert` - (Optional) If `true`, the match is on the opposite of the `match` method and value. Default is `false`.
 * `match` - (Optional) The method and value to match the header value sent with a request. Specify one match method.
 
