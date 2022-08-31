@@ -143,15 +143,9 @@ func byteMatchStatementSchema() *schema.Schema {
 			Schema: map[string]*schema.Schema{
 				"field_to_match": fieldToMatchSchema(),
 				"positional_constraint": {
-					Type:     schema.TypeString,
-					Required: true,
-					ValidateFunc: validation.StringInSlice([]string{
-						wafv2.PositionalConstraintContains,
-						wafv2.PositionalConstraintContainsWord,
-						wafv2.PositionalConstraintEndsWith,
-						wafv2.PositionalConstraintExactly,
-						wafv2.PositionalConstraintStartsWith,
-					}, false),
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringInSlice(wafv2.PositionalConstraint_Values(), false),
 				},
 				"search_string": {
 					Type:         schema.TypeString,
@@ -279,16 +273,9 @@ func sizeConstraintSchema() *schema.Schema {
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"comparison_operator": {
-					Type:     schema.TypeString,
-					Required: true,
-					ValidateFunc: validation.StringInSlice([]string{
-						wafv2.ComparisonOperatorEq,
-						wafv2.ComparisonOperatorGe,
-						wafv2.ComparisonOperatorGt,
-						wafv2.ComparisonOperatorLe,
-						wafv2.ComparisonOperatorLt,
-						wafv2.ComparisonOperatorNe,
-					}, false),
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringInSlice(wafv2.ComparisonOperator_Values(), false),
 				},
 				"field_to_match": fieldToMatchSchema(),
 				"size": {
