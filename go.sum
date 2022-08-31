@@ -53,8 +53,8 @@ github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.9.4 h1:b16QW0XWl0
 github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.9.4/go.mod h1:uKkN7qmSIsNJVyMtxNQoCEYMvFEXbOg9fwCJPdfp2u8=
 github.com/aws/aws-sdk-go-v2/service/kendra v1.33.1 h1:XOTWbVWu4wAVozPAny4v5fyWZtjXS+KZl4OAe04vJbw=
 github.com/aws/aws-sdk-go-v2/service/kendra v1.33.1/go.mod h1:9rtGoAo8juNn+jcFJEV5kmmYoNqShdUUflgLtsNQ2gs=
-github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.0.4 h1:6FvtutMp7h3EAk2kjcLii+w9UYyvUdNAIVUG0jnbMs8=
-github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.0.4/go.mod h1:C9xxUK4FnxA9sTmpR6KeHkKLkG8/x/piCa2bffnfJ9E=
+github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.0.5 h1:dLg8yTJ6vK9WaT/cAOtrdvZzZqqWU2PROqZ7EObk4Jg=
+github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.0.5/go.mod h1:CXsGGP64uVIXEjMuSYy/VqCRI2yvRXSuE9vGm4qQkrU=
 github.com/aws/aws-sdk-go-v2/service/route53domains v1.12.12 h1:L+36zTEzmXHEyRiPJVKbx4Lx0E3cSnB/813Hv2iZqJU=
 github.com/aws/aws-sdk-go-v2/service/route53domains v1.12.12/go.mod h1:G1cMMgiDqRlKA6oakhLQMyV4GjsmnlVCWiv3GXxoMxc=
 github.com/aws/aws-sdk-go-v2/service/sso v1.11.4 h1:Uw5wBybFQ1UeA9ts0Y07gbv0ncZnIAyw858tDW0NP2o=

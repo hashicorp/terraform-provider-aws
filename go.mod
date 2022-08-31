@@ -10,7 +10,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/comprehend v1.18.7
 	github.com/aws/aws-sdk-go-v2/service/fis v1.12.12
 	github.com/aws/aws-sdk-go-v2/service/kendra v1.33.1
-	github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.0.4
+	github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.0.5
 	github.com/aws/aws-sdk-go-v2/service/route53domains v1.12.12
 	github.com/aws/aws-sdk-go-v2/service/transcribe v1.21.4
 	github.com/beevik/etree v1.1.0
