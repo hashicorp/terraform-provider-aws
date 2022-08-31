@@ -7,7 +7,7 @@ require (
 	github.com/aws/aws-sdk-go v1.44.86
 	github.com/aws/aws-sdk-go-v2 v1.16.12
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.12.12
-	github.com/aws/aws-sdk-go-v2/service/comprehend v1.18.7
+	github.com/aws/aws-sdk-go-v2/service/comprehend v1.18.8
 	github.com/aws/aws-sdk-go-v2/service/fis v1.12.12
 	github.com/aws/aws-sdk-go-v2/service/kendra v1.33.1
 	github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.0.5
