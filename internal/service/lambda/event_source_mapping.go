@@ -37,7 +37,7 @@ func ResourceEventSourceMapping() *schema.Resource {
 				Type:          schema.TypeList,
 				Optional:      true,
 				MaxItems:      1,
-				ConflictsWith: []string{"self_managed_event_source", "self_managed_kafka_config"},
+				ConflictsWith: []string{"self_managed_event_source", "self_managed_kafka_event_source_config"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"consumer_group_id": {
@@ -258,7 +258,7 @@ func ResourceEventSourceMapping() *schema.Resource {
 				ExactlyOneOf: []string{"event_source_arn", "self_managed_event_source"},
 			},
 
-			"self_managed_kafka_config": {
+			"self_managed_kafka_event_source_config": {
 				Type:          schema.TypeList,
 				Optional:      true,
 				MaxItems:      1,
@@ -409,8 +409,8 @@ func resourceEventSourceMappingCreate(d *schema.ResourceData, meta interface{}) 
 		target = "Self-Managed Apache Kafka"
 	}
 
-	if v, ok := d.GetOk("self_managed_kafka_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.SelfManagedKafkaEventSourceConfig = expandSelfManagedKafkaConfig(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("self_managed_kafka_event_source_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.SelfManagedKafkaEventSourceConfig = expandSelfManagedKafkaEventSourceConfig(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("source_access_configuration"); ok && v.(*schema.Set).Len() > 0 {
@@ -546,11 +546,11 @@ func resourceEventSourceMappingRead(d *schema.ResourceData, meta interface{}) er
 		d.Set("self_managed_event_source", nil)
 	}
 	if eventSourceMappingConfiguration.SelfManagedKafkaEventSourceConfig != nil {
-		if err := d.Set("self_managed_kafka_config", []interface{}{flattenSelfManagedKafkaConfig(eventSourceMappingConfiguration.SelfManagedKafkaEventSourceConfig)}); err != nil {
-			return fmt.Errorf("error setting self_managed_kafka_config: %w", err)
+		if err := d.Set("self_managed_kafka_event_source_config", []interface{}{flattenSelfManagedKafkaEventSourceConfig(eventSourceMappingConfiguration.SelfManagedKafkaEventSourceConfig)}); err != nil {
+			return fmt.Errorf("error setting self_managed_kafka_event_source_config: %w", err)
 		}
 	} else {
-		d.Set("self_managed_kafka_config", nil)
+		d.Set("self_managed_kafka_event_source_config", nil)
 	}
 	if err := d.Set("source_access_configuration", flattenSourceAccessConfigurations(eventSourceMappingConfiguration.SourceAccessConfigurations)); err != nil {
 		return fmt.Errorf("error setting source_access_configuration: %w", err)
@@ -845,7 +845,7 @@ func flattenAmazonManagedKafkaEventSourceConfig(apiObject *lambda.AmazonManagedK
 	return tfMap
 }
 
-func expandSelfManagedKafkaConfig(tfMap map[string]interface{}) *lambda.SelfManagedKafkaEventSourceConfig {
+func expandSelfManagedKafkaEventSourceConfig(tfMap map[string]interface{}) *lambda.SelfManagedKafkaEventSourceConfig {
 	if tfMap == nil {
 		return nil
 	}
@@ -859,7 +859,7 @@ func expandSelfManagedKafkaConfig(tfMap map[string]interface{}) *lambda.SelfMana
 	return apiObject
 }
 
-func flattenSelfManagedKafkaConfig(apiObject *lambda.SelfManagedKafkaEventSourceConfig) map[string]interface{} {
+func flattenSelfManagedKafkaEventSourceConfig(apiObject *lambda.SelfManagedKafkaEventSourceConfig) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
