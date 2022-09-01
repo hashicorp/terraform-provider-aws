@@ -60,6 +60,6 @@ A `hierarchy_path` block supports the following attributes:
 
 A level block supports the following attributes:
 
-* `arn` -  The ARN of the hierarchy group.
+* `arn` -  ARN of the hierarchy group.
 * `id` -  The identifier of the hierarchy group.
 * `name` - Name of the hierarchy group.

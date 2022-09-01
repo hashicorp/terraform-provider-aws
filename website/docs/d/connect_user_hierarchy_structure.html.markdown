@@ -40,6 +40,6 @@ A `hierarchy_structure` block supports the following attributes:
 
 Each level block supports the following attributes:
 
-* `arn` -  The ARN of the hierarchy level.
+* `arn` -  ARN of the hierarchy level.
 * `id` -  The identifier of the hierarchy level.
 * `name` - Name of the user hierarchy level. Must not be more than 50 characters.
