@@ -49,3 +49,7 @@ resource/aws_vpc_peering_connection: With the retirement of EC2-Classic no new V
 ```release-note:note
 resource/aws_vpc_peering_connection_options: With the retirement of EC2-Classic no new VPC Peering Connection Options can be created with ClassicLink options enabled
 ```
+
+```release-note:note
+resource/aws_vpc_peering_connection_accepter: With the retirement of EC2-Classic no VPC Peering Connections can be accepted with ClassicLink options enabled
+```
