@@ -1753,9 +1753,9 @@ resource "aws_lambda_event_source_mapping" "test" {
   topics            = ["test"]
   starting_position = "TRIM_HORIZON"
 
-	amazon_managed_kafka_config {
-		consumer_group_id = "amazon-managed-test-group-id"
-	}
+  amazon_managed_kafka_config {
+    consumer_group_id = "amazon-managed-test-group-id"
+  }
 
   depends_on = [aws_iam_policy_attachment.test]
 }
@@ -1775,9 +1775,9 @@ resource "aws_lambda_event_source_mapping" "test" {
   topics            = ["test"]
   starting_position = "TRIM_HORIZON"
 
-	self_managed_kafka_config {
-		consumer_group_id = "self-managed-test-group-id"
-	}
+  self_managed_kafka_config {
+    consumer_group_id = "self-managed-test-group-id"
+  }
 
   self_managed_event_source {
     endpoints = {
