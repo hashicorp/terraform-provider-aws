@@ -1,15 +1,3 @@
 ```release-note:bug
 resource/aws_security_group: Fix complex dependency violations such as using a security group with an EMR cluster
 ```
-
-```release-note:note
-resource/aws_security_group: With AWS's retirement of EC2-Classic, `aws_security_group` has been updated to remove support for EC2-Classic
-```
-
-```release-note:note
-resource/aws_default_security_group: With AWS's retirement of EC2-Classic, `aws_default_security_group` has been updated to remove support for EC2-Classic
-```
-
-```release-note:note
-resource/aws_security_group_rule: With AWS's retirement of EC2-Classic, `aws_security_group_rule` has been updated to remove support for EC2-Classic
-```
