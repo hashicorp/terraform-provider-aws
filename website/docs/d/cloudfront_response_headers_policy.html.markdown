@@ -95,5 +95,5 @@ In addition to all arguments above, the following attributes are exported:
 
 ### Server Timing Headers Config
 
-* `enabled` - Boolean that determines whether CloudFront adds the `Server-Timing` header to HTTP responses that it sends in response to requests that match a cache behavior that's associated with this response headers policy.
+* `enabled` - Whether CloudFront adds the `Server-Timing` header to HTTP responses that it sends in response to requests that match a cache behavior that's associated with this response headers policy.
 * `sampling_rate` - Number 0–100 (inclusive) that specifies the percentage of responses that you want CloudFront to add the Server-Timing header to.
