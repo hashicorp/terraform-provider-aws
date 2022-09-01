@@ -1594,60 +1594,6 @@ func TestAccVPCSecurityGroup_defaultEgressVPC(t *testing.T) {
 }
 
 // Testing drift detection with groups containing the same port and types
-func TestAccVPCSecurityGroup_drift(t *testing.T) {
-	var group ec2.SecurityGroup
-	resourceName := "aws_security_group.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSecurityGroupDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccVPCSecurityGroupConfig_drift(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSecurityGroupExists(resourceName, &group),
-					resource.TestCheckResourceAttr(resourceName, "egress.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.#", "2"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ingress.*", map[string]string{
-						"cidr_blocks.#":      "1",
-						"cidr_blocks.0":      "10.0.0.0/8",
-						"description":        "",
-						"from_port":          "80",
-						"ipv6_cidr_blocks.#": "0",
-						"protocol":           "tcp",
-						"security_groups.#":  "0",
-						"self":               "false",
-						"to_port":            "8000",
-					}),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ingress.*", map[string]string{
-						"cidr_blocks.#":      "1",
-						"cidr_blocks.0":      "206.0.0.0/8",
-						"description":        "",
-						"from_port":          "80",
-						"ipv6_cidr_blocks.#": "0",
-						"protocol":           "tcp",
-						"security_groups.#":  "0",
-						"self":               "false",
-						"to_port":            "8000",
-					}),
-				),
-			},
-			{
-				ResourceName: resourceName,
-				ImportState:  true,
-				// In rules with cidr_block drift, import only creates a single ingress
-				// rule with the cidr_blocks de-normalized. During subsequent apply, its
-				// normalized to create the 2 ingress rules seen in checks above.
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"revoke_rules_on_delete", "ingress", "egress"},
-			},
-		},
-	})
-}
-
 func TestAccVPCSecurityGroup_driftComplex(t *testing.T) {
 	var group ec2.SecurityGroup
 	resourceName := "aws_security_group.test1"
@@ -3146,32 +3092,6 @@ resource "aws_security_group" "test" {
     from_port   = 80
     to_port     = 8000
     cidr_blocks = ["10.0.0.0/8"]
-  }
-
-  tags = {
-    Name = %[1]q
-  }
-}
-`, rName)
-}
-
-func testAccVPCSecurityGroupConfig_drift(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_security_group" "test" {
-  name = %[1]q
-
-  ingress {
-    protocol    = "tcp"
-    from_port   = 80
-    to_port     = 8000
-    cidr_blocks = ["10.0.0.0/8"]
-  }
-
-  ingress {
-    protocol    = "tcp"
-    from_port   = 80
-    to_port     = 8000
-    cidr_blocks = ["206.0.0.0/8"]
   }
 
   tags = {

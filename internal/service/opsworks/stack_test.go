@@ -10,7 +10,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/opsworks"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -143,41 +142,6 @@ func TestAccOpsWorksStack_tags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
-			},
-		},
-	})
-}
-
-func TestAccOpsWorksStack_classic(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_opsworks_stack.test"
-	var v opsworks.Stack
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckEC2Classic(t)
-			acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t)
-			testAccPreCheckStacks(t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, opsworks.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckStackClassicDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccStackConfig_classic(rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckStackClassicExists(resourceName, &v),
-					resource.TestCheckResourceAttrPair(resourceName, "default_availability_zone", "data.aws_availability_zones.available", "names.0"),
-					resource.TestCheckResourceAttr(resourceName, "default_subnet_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "vpc_id", ""),
-				),
-			},
-			{
-				Config:            testAccStackConfig_classic(rName),
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
 			},
 		},
 	})
@@ -449,14 +413,6 @@ func testAccPreCheckStacks(t *testing.T) {
 }
 
 func testAccCheckStackExists(n string, v *opsworks.Stack) resource.TestCheckFunc {
-	return testAccCheckStackExistsWithProvider(n, v, func() *schema.Provider { return acctest.Provider })
-}
-
-func testAccCheckStackClassicExists(n string, v *opsworks.Stack) resource.TestCheckFunc {
-	return testAccCheckStackExistsWithProvider(n, v, func() *schema.Provider { return acctest.ProviderEC2Classic })
-}
-
-func testAccCheckStackExistsWithProvider(n string, v *opsworks.Stack, providerF func() *schema.Provider) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -467,7 +423,7 @@ func testAccCheckStackExistsWithProvider(n string, v *opsworks.Stack, providerF 
 			return fmt.Errorf("No OpsWorks Stack ID is set")
 		}
 
-		conn := providerF().Meta().(*conns.AWSClient).OpsWorksConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksConn
 
 		output, err := tfopsworks.FindStackByID(conn, rs.Primary.ID)
 
@@ -482,15 +438,7 @@ func testAccCheckStackExistsWithProvider(n string, v *opsworks.Stack, providerF 
 }
 
 func testAccCheckStackDestroy(s *terraform.State) error {
-	return testAccCheckStackDestroyWithProvider(s, func() *schema.Provider { return acctest.Provider })
-}
-
-func testAccCheckStackClassicDestroy(s *terraform.State) error {
-	return testAccCheckStackDestroyWithProvider(s, func() *schema.Provider { return acctest.ProviderEC2Classic })
-}
-
-func testAccCheckStackDestroyWithProvider(s *terraform.State, providerF func() *schema.Provider) error {
-	conn := providerF().Meta().(*conns.AWSClient).OpsWorksConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksConn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_opsworks_stack" {
@@ -674,23 +622,6 @@ resource "aws_opsworks_stack" "test" {
   }
 }
 `, rName, acctest.Region(), tagKey1, tagValue1, tagKey2, tagValue2))
-}
-
-func testAccStackConfig_classic(rName string) string {
-	return acctest.ConfigCompose(
-		acctest.ConfigEC2ClassicRegionProvider(),
-		acctest.ConfigAvailableAZsNoOptIn(),
-		testAccStackConfig_base(rName),
-		fmt.Sprintf(`
-resource "aws_opsworks_stack" "test" {
-  name                         = %[1]q
-  region                       = %[2]q
-  service_role_arn             = aws_iam_role.opsworks_service.arn
-  default_instance_profile_arn = aws_iam_instance_profile.opsworks_instance.arn
-  default_availability_zone    = data.aws_availability_zones.available.names[0]
-  use_opsworks_security_groups = false
-}
-`, rName, acctest.EC2ClassicRegion()))
 }
 
 func testAccStackConfig_tags1AlternateRegion(rName, tagKey1, tagValue1 string) string {
