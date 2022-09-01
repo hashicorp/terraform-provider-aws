@@ -18,6 +18,7 @@ ENHANCEMENTS:
 
 * data-source/aws_eks_node_group: Add `capacity_type` attribute ([#26521](https://github.com/hashicorp/terraform-provider-aws/issues/26521))
 * data-source/aws_instance: Add `host_resource_group_arn` attribute ([#26532](https://github.com/hashicorp/terraform-provider-aws/issues/26532))
+* provider: Support `me-central-1` as a valid AWS Region ([#26590](https://github.com/hashicorp/terraform-provider-aws/issues/26590))
 * resource/aws_cloudfront_distribution: Add `origin_access_control_id` to the `origin` configuration block ([#26510](https://github.com/hashicorp/terraform-provider-aws/issues/26510))
 * resource/aws_dms_endpoint: Add `redis_settings` configuration block ([#26411](https://github.com/hashicorp/terraform-provider-aws/issues/26411))
 * resource/aws_ec2_fleet: Add `target_capacity_unit_type` attribute to the `target_capacity_specification` configuration block ([#26493](https://github.com/hashicorp/terraform-provider-aws/issues/26493))
@@ -31,6 +32,7 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* provider: No longer silently ignores `assume_role` block when `role_arn` has unknown value. ([#26590](https://github.com/hashicorp/terraform-provider-aws/issues/26590))
 * resource/aws_security_group: Fix complex dependency violations such as using a security group with an EMR cluster ([#26553](https://github.com/hashicorp/terraform-provider-aws/issues/26553))
 
 ## 4.28.0 (August 26, 2022)
