@@ -2212,7 +2212,7 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData, terraformVer
 
 	if l, ok := d.Get("assume_role").([]interface{}); ok && len(l) > 0 && l[0] != nil {
 		config.AssumeRole = expandAssumeRole(l[0].(map[string]interface{}))
-		log.Printf("[INFO] assume_role configuration set: (ARN: %q, SessionID: %q, ExternalID: %q)", config.AssumeRole.RoleARN, config.AssumeRole.SessionName, config.AssumeRole.ExternalID)
+		log.Printf("[INFO] assume_role configuration set: (ARN: %q, SessionID: %q, ExternalID: %q, SourceIdentity: %q)", config.AssumeRole.RoleARN, config.AssumeRole.SessionName, config.AssumeRole.ExternalID, config.AssumeRole.SourceIdentity)
 	}
 
 	if l, ok := d.Get("assume_role_with_web_identity").([]interface{}); ok && len(l) > 0 && l[0] != nil {
@@ -2304,6 +2304,12 @@ func assumeRoleSchema() *schema.Schema {
 					Optional:     true,
 					Description:  "An identifier for the assumed role session.",
 					ValidateFunc: validAssumeRoleSessionName,
+				},
+				"source_identity": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Description:  "Source identity specified by the principal assuming the role.",
+					ValidateFunc: validAssumeRoleSourceIdentity,
 				},
 				"tags": {
 					Type:        schema.TypeMap,
@@ -2437,6 +2443,10 @@ func expandAssumeRole(m map[string]interface{}) *awsbase.AssumeRole {
 
 	if v, ok := m["session_name"].(string); ok && v != "" {
 		assumeRole.SessionName = v
+	}
+
+	if v, ok := m["source_identity"].(string); ok && v != "" {
+		assumeRole.SourceIdentity = v
 	}
 
 	if tagMapRaw, ok := m["tags"].(map[string]interface{}); ok && len(tagMapRaw) > 0 {

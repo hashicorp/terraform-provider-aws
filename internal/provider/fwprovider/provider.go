@@ -200,6 +200,11 @@ func (p *fwprovider) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnost
 						Optional:    true,
 						Description: "An identifier for the assumed role session.",
 					},
+					"source_identity": {
+						Type:        types.StringType,
+						Optional:    true,
+						Description: "Source identity specified by the principal assuming the role.",
+					},
 					"tags": {
 						Type:        types.MapType{ElemType: types.StringType},
 						Optional:    true,
