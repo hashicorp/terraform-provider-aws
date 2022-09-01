@@ -2945,7 +2945,7 @@ resource "aws_default_vpc" "default" {
 
 ## Plural Data Source Behavior
 
-The following plural data sources are now consistent with [Provider Design](https://github.com/hashicorp/terraform-provider-aws/blob/main/docs/contributing/provider-design.md#data-sources)
+The following plural data sources are now consistent with [Provider Design](https://hashicorp.github.io/terraform-provider-aws/provider-design/#plural-data-sources)
 such that they no longer return an error if zero results are found.
 
 * [aws_cognito_user_pools](/docs/providers/aws/d/cognito_user_pools.html)
