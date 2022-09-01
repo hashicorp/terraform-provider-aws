@@ -33,7 +33,7 @@ In addition to the arguments above, the following attributes are exported:
 * `creation_time` - Date and time that a framework is created, in Unix format and Coordinated Universal Time (UTC).
 * `deployment_status` - Deployment status of a framework. The statuses are: `CREATE_IN_PROGRESS` | `UPDATE_IN_PROGRESS` | `DELETE_IN_PROGRESS` | `COMPLETED`| `FAILED`.
 * `description` - Description of the framework.
-* `id` - Id of the framework.
+* `id` - ID of the framework.
 * `status` - Framework consists of one or more controls. Each control governs a resource, such as backup plans, backup selections, backup vaults, or recovery points. You can also turn AWS Config recording on or off for each resource. The statuses are: `ACTIVE`, `PARTIALLY_ACTIVE`, `INACTIVE`, `UNAVAILABLE`. For more information refer to the [AWS documentation for Framework Status](https://docs.aws.amazon.com/aws-backup/latest/devguide/API_DescribeFramework.html#Backup-DescribeFramework-response-FrameworkStatus)
 * `tags` - Metadata that helps organize the frameworks you create.
 

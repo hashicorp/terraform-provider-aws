@@ -32,7 +32,7 @@ In addition to the arguments above, the following attributes are exported:
 * `creation_time` - Date and time that a report plan is created, in Unix format and Coordinated Universal Time (UTC).
 * `deployment_status` - Deployment status of a report plan. The statuses are: `CREATE_IN_PROGRESS` | `UPDATE_IN_PROGRESS` | `DELETE_IN_PROGRESS` | `COMPLETED`.
 * `description` - Description of the report plan.
-* `id` - Id of the report plan.
+* `id` - ID of the report plan.
 * `report_delivery_channel` - An object that contains information about where and how to deliver your reports, specifically your Amazon S3 bucket name, S3 key prefix, and the formats of your reports. Detailed below.
 * `report_setting` - An object that identifies the report template for the report. Reports are built using a report template. Detailed below.
 * `tags` - Metadata that you can assign to help organize the report plans you create.

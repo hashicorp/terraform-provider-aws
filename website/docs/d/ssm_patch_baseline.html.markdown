@@ -60,7 +60,7 @@ In addition to all arguments above, the following attributes are exported:
 * `global_filter` - Set of global filters used to exclude patches from the baseline.
     * `key` - The key for the filter.
     * `values` - The value for the filter.
-* `id` - Id of the baseline.
+* `id` - ID of the baseline.
 * `name` - Name of the baseline.
 * `description` - Description of the baseline.
 * `rejected_patches` - List of rejected patches.

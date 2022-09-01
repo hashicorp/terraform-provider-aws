@@ -51,7 +51,7 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - Id of a usage plan key.
+* `id` - ID of a usage plan key.
 * `key_id` - Identifier of the API gateway key resource.
 * `key_type` - Type of a usage plan key. Currently, the valid key type is API_KEY.
 * `usage_plan_id` - ID of the API resource

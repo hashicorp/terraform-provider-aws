@@ -29,7 +29,7 @@ The following arguments are supported:
 
 The following attributes are exported:
 
-* `vpc_id` - Id of the VPC that the CloudHSM cluster resides in.
+* `vpc_id` - ID of the VPC that the CloudHSM cluster resides in.
 * `security_group_id` - ID of the security group associated with the CloudHSM cluster.
 * `subnet_ids` - IDs of subnets in which cluster operates.
 * `cluster_certificates` - The list of cluster certificates.
