@@ -52,11 +52,11 @@ In addition to all of the arguments above, the following attributes are exported
 
 A `hierarchy_path` block supports the following attributes:
 
-* `level_one` - Block that defines the details of level one. The level block is documented below.
-* `level_two` - Block that defines the details of level two. The level block is documented below.
-* `level_three` - Block that defines the details of level three. The level block is documented below.
-* `level_four` - Block that defines the details of level four. The level block is documented below.
-* `level_five` - Block that defines the details of level five. The level block is documented below.
+* `level_one` - Details of level one. See below.
+* `level_two` - Details of level two. See below.
+* `level_three` - Details of level three. See below.
+* `level_four` - Details of level four. See below.
+* `level_five` - Details of level five. See below.
 
 A level block supports the following attributes:
 
