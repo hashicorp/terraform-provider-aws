@@ -139,8 +139,8 @@ github.com/google/uuid v1.1.2/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+
 github.com/grpc-ecosystem/grpc-gateway v1.16.0/go.mod h1:BDjrQk3hbvj6Nolgz8mAMFbcEtjT1g+wF4CSlocrBnw=
 github.com/hashicorp/aws-cloudformation-resource-schema-sdk-go v0.18.0 h1:xLC69dv/kjABMXVXvS2AdLFF85hoX51xE+HeOS6Zj6I=
 github.com/hashicorp/aws-cloudformation-resource-schema-sdk-go v0.18.0/go.mod h1:C6GVuO9RWOrt6QCGTmLCOYuSHpkfQSBDuRqTteOlo0g=
-github.com/hashicorp/aws-sdk-go-base/v2 v2.0.0-beta.16 h1:Ac/qv9kXBBeyIAGkZdy+Idmw4Avb3mdxPVdT0rI/+aY=
-github.com/hashicorp/aws-sdk-go-base/v2 v2.0.0-beta.16/go.mod h1:xySJRdcDB8hVSmboo3X+evGhZPzBYwPmZbQxLgfGfBw=
+github.com/hashicorp/aws-sdk-go-base/v2 v2.0.0-beta.17 h1:GGRw8tPwRwlvWcvgfZvmh7sj0Lyx7XNoITH6fmCLI2E=
+github.com/hashicorp/aws-sdk-go-base/v2 v2.0.0-beta.17/go.mod h1:xySJRdcDB8hVSmboo3X+evGhZPzBYwPmZbQxLgfGfBw=
 github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2 v2.0.0-beta.17 h1:hUG69tIA35oNI2hoeURCnShSViDNCmcQdLSngP89124=
 github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2 v2.0.0-beta.17/go.mod h1:MS242y2IOhTXoT0nhbJt/Z1p/6hlisZunHwvrWAcJyY=
 github.com/hashicorp/awspolicyequivalence v1.6.0 h1:7aadmkalbc5ewStC6g3rljx1iNvP4QyAhg2KsHx8bU8=
