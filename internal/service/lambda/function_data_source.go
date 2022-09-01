@@ -234,7 +234,7 @@ func dataSourceFunctionRead(d *schema.ResourceData, meta interface{}) error {
 		errVersions := listVersionsByFunctionPages(conn, versionsInput, func(p *lambda.ListVersionsByFunctionOutput, lastPage bool) bool {
 			if lastPage {
 				last := p.Versions[len(p.Versions)-1]
-				latestVersion = *last.Version
+				latestVersion = aws.StringValue(last.Version)
 				return false
 			}
 			return true
