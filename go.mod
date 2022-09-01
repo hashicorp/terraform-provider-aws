@@ -10,14 +10,15 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/comprehend v1.18.8
 	github.com/aws/aws-sdk-go-v2/service/fis v1.12.13
 	github.com/aws/aws-sdk-go-v2/service/kendra v1.33.1
+	github.com/aws/aws-sdk-go-v2/service/medialive v1.22.5
 	github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.0.5
 	github.com/aws/aws-sdk-go-v2/service/route53domains v1.12.13
 	github.com/aws/aws-sdk-go-v2/service/transcribe v1.21.5
 	github.com/beevik/etree v1.1.0
 	github.com/google/go-cmp v0.5.8
 	github.com/hashicorp/aws-cloudformation-resource-schema-sdk-go v0.18.0
-	github.com/hashicorp/aws-sdk-go-base/v2 v2.0.0-beta.16
-	github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2 v2.0.0-beta.17
+	github.com/hashicorp/aws-sdk-go-base/v2 v2.0.0-beta.17
+	github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2 v2.0.0-beta.18
 	github.com/hashicorp/awspolicyequivalence v1.6.0
 	github.com/hashicorp/go-cleanhttp v0.5.2
 	github.com/hashicorp/go-cty v1.4.1-0.20200414143053-d3edf31b6320

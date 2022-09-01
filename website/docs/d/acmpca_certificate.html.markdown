@@ -23,12 +23,12 @@ data "aws_acmpca_certificate" "example" {
 
 The following arguments are supported:
 
-* `arn` - (Required) Amazon Resource Name (ARN) of the certificate issued by the private certificate authority.
-* `certificate_authority_arn` - (Required) Amazon Resource Name (ARN) of the certificate authority.
+* `arn` - (Required) ARN of the certificate issued by the private certificate authority.
+* `certificate_authority_arn` - (Required) ARN of the certificate authority.
 
 ## Attribute Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-* `certificate` - The PEM-encoded certificate value.
-* `certificate_chain` - The PEM-encoded certificate chain that includes any intermediate certificates and chains up to root CA.
+* `certificate` - PEM-encoded certificate value.
+* `certificate_chain` - PEM-encoded certificate chain that includes any intermediate certificates and chains up to root CA.

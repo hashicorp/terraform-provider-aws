@@ -22,7 +22,7 @@ data "aws_outposts_outpost_instance_types" "example" {
 
 The following arguments are required:
 
-* `arn` - (Required) Outpost Amazon Resource Name (ARN).
+* `arn` - (Required) Outpost ARN.
 
 ## Attribute Reference
 

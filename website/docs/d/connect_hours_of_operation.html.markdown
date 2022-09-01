@@ -43,28 +43,28 @@ The following arguments are supported:
 
 In addition to all of the arguments above, the following attributes are exported:
 
-* `arn` - The Amazon Resource Name (ARN) of the Hours of Operation.
-* `config` - Specifies configuration information for the hours of operation: day, start time, and end time . Config blocks are documented below. Config blocks are documented below.
-* `description` - Specifies the description of the Hours of Operation.
-* `hours_of_operation_arn` - (**Deprecated**) The Amazon Resource Name (ARN) of the Hours of Operation.
+* `arn` - ARN of the Hours of Operation.
+* `config` - Configuration information for the hours of operation: day, start time, and end time . Config blocks are documented below. Config blocks are documented below.
+* `description` - Description of the Hours of Operation.
+* `hours_of_operation_arn` - (**Deprecated**) ARN of the Hours of Operation.
 * `hours_of_operation_id` - The identifier for the hours of operation.
-* `instance_id` - Specifies the identifier of the hosting Amazon Connect Instance.
-* `name` - Specifies the name of the Hours of Operation.
-* `tags` - A map of tags to assign to the Hours of Operation.
-* `time_zone` - Specifies the time zone of the Hours of Operation.
+* `instance_id` - Identifier of the hosting Amazon Connect Instance.
+* `name` - Name of the Hours of Operation.
+* `tags` - Map of tags to assign to the Hours of Operation.
+* `time_zone` - Time zone of the Hours of Operation.
 
 A `config` block supports the following arguments:
 
-* `day` - Specifies the day that the hours of operation applies to.
-* `end_time` - A end time block specifies the time that your contact center closes. The `end_time` is documented below.
-* `start_time` - A start time block specifies the time that your contact center opens. The `start_time` is documented below.
+* `day` - Day that the hours of operation applies to.
+* `end_time` - End time block specifies the time that your contact center closes. The `end_time` is documented below.
+* `start_time` - Start time block specifies the time that your contact center opens. The `start_time` is documented below.
 
 A `end_time` block supports the following arguments:
 
-* `hours` - Specifies the hour of closing.
-* `minutes` - Specifies the minute of closing.
+* `hours` - Hour of closing.
+* `minutes` - Minute of closing.
 
 A `start_time` block supports the following arguments:
 
-* `hours` - Specifies the hour of opening.
-* `minutes` - Specifies the minute of opening.
+* `hours` - Hour of opening.
+* `minutes` - Minute of opening.

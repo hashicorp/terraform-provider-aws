@@ -21,13 +21,13 @@ data "aws_service_discovery_dns_namespace" "test" {
 
 ## Argument Reference
 
-* `name` - (Required) The name of the namespace.
-* `type` - (Required) The type of the namespace. Allowed values are `DNS_PUBLIC` or `DNS_PRIVATE`.
+* `name` - (Required) Name of the namespace.
+* `type` - (Required) Type of the namespace. Allowed values are `DNS_PUBLIC` or `DNS_PRIVATE`.
 
 ## Attributes Reference
 
-* `arn` - The Amazon Resource Name (ARN) of the namespace.
-* `description` - A description of the namespace.
-* `id` - The namespace ID.
-* `hosted_zone` - The ID for the hosted zone that Amazon Route 53 creates when you create a namespace.
-* `tags` - A map of tags for the resource.
+* `arn` - ARN of the namespace.
+* `description` - Description of the namespace.
+* `id` - Namespace ID.
+* `hosted_zone` - ID for the hosted zone that Amazon Route 53 creates when you create a namespace.
+* `tags` - Map of tags for the resource.

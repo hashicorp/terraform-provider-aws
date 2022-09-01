@@ -12,7 +12,7 @@ Retrieve information about a firewall.
 
 ## Example Usage
 
-### Find firewall policy by Amazon Resource Name (ARN)
+### Find firewall policy by ARN
 
 ```hcl
 data "aws_networkfirewall_firewall" "example" {
@@ -28,7 +28,7 @@ data "aws_networkfirewall_firewall" "example" {
 }
 ```
 
-### Find firewall policy by Amazon Resource Name (ARN) and Name
+### Find firewall policy by ARN and Name
 
 ```hcl
 data "aws_networkfirewall_firewall" "example" {
@@ -41,20 +41,20 @@ data "aws_networkfirewall_firewall" "example" {
 
 One or more of the following arguments are required:
 
-* `arn` - The Amazon Resource Name (ARN) of the firewall.
-* `name` - The descriptive name of the firewall.
+* `arn` - ARN of the firewall.
+* `name` - Descriptive name of the firewall.
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-* `arn` - The Amazon Resource Name (ARN) of the firewall.
-* `delete_protection` - A boolean flag indicating whether it is possible to delete the firewall.
-* `description` - A description of the firewall.
+* `arn` - ARN of the firewall.
+* `delete_protection` - Boolean flag indicating whether it is possible to delete the firewall.
+* `description` - Description of the firewall.
 * `encryption_configuration` - AWS Key Management Service (AWS KMS) encryption settings for the firewall.
     * `key_id` - The ID of the AWS Key Management Service (AWS KMS) customer managed key.
     * `type` - The type of the AWS Key Management Service (AWS KMS) key use by the firewall.
-* `firewall_policy_arn` - The Amazon Resource Name (ARN) of the VPC Firewall policy.
+* `firewall_policy_arn` - ARN of the VPC Firewall policy.
 * `firewall_policy_change_protection` - A boolean flag indicating whether it is possible to change the associated firewall policy.
 * `firewall_status` - Nested list of information about the current status of the firewall.
     * `sync_states` - Set of subnets configured for use by the firewall.
@@ -69,11 +69,11 @@ In addition to all arguments above, the following attributes are exported:
                 * `resolved_cidr_count` - Total number of CIDR blocks used by the IP set references in a firewall.
             * `utilized_cidr_count` - Number of CIDR blocks used by the IP set references in a firewall.
     * `configuration_sync_state_summary` - Summary of sync states for all availability zones in which the firewall is configured.
-* `id` - The Amazon Resource Name (ARN) that identifies the firewall.
-* `name` - The descriptive name of the firewall.
+* `id` - ARN that identifies the firewall.
+* `name` - Descriptive name of the firewall.
 * `subnet_change_protection` - A boolean flag indicating whether it is possible to change the associated subnet(s).
 * `subnet_mapping` - Set of configuration blocks describing the public subnets. Each subnet must belong to a different Availability Zone in the VPC. AWS Network Firewall creates a firewall endpoint in each subnet.
     * `subnet_id` - The unique identifier for the subnet.
 * `tags` - Map of resource tags to associate with the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `update_token` - A string token used when updating a firewall.
-* `vpc_id` - The unique identifier of the VPC where AWS Network Firewall should create the firewall.
+* `update_token` - String token used when updating a firewall.
+* `vpc_id` - Unique identifier of the VPC where AWS Network Firewall should create the firewall.

@@ -41,14 +41,14 @@ resource "aws_accessanalyzer_archive_rule" "example" {
 The following arguments are required:
 
 * `analyzer_name` - (Required) Analyzer name.
-* `filter` - (Required) The filter criteria for the archive rule. See [Filter](#filter) for more details.
+* `filter` - (Required) Filter criteria for the archive rule. See [Filter](#filter) for more details.
 * `rule_name` - (Required) Rule name.
 
 ### Filter
 
 **Note** One comparator must be included with each filter.
 
-* `criteria` - (Required) The filter criteria.
+* `criteria` - (Required) Filter criteria.
 * `contains` - (Optional) Contains comparator.
 * `eq` - (Optional) Equals comparator.
 * `exists` - (Optional) Boolean comparator.

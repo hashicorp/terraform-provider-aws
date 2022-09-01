@@ -30,7 +30,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `enabled` - (Optional) Specifies whether the user in the user pool is enabled.
+* `enabled` - (Optional) Whether the user in the user pool is enabled.
 * `first_name` - (Optional) First name, or given name, of the user.
 * `last_name` - (Optional) Last name, or surname, of the user.
 * `send_email_notification` - (Optional) Send an email notification.
