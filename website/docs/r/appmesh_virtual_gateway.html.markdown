@@ -208,7 +208,7 @@ The `tls` object supports the following:
 The `certificate` object supports the following:
 
 * `acm` - (Optional) An AWS Certificate Manager (ACM) certificate.
-* `file` - (optional) Local file certificate.
+* `file` - (Optional) Local file certificate.
 * `sds` - (Optional) A [Secret Discovery Service](https://www.envoyproxy.io/docs/envoy/latest/configuration/security/secret#secret-discovery-service-sds) certificate.
 
 The `acm` object supports the following:
