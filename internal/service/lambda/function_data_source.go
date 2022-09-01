@@ -225,7 +225,6 @@ func dataSourceFunctionRead(d *schema.ResourceData, meta interface{}) error {
 		input.Qualifier = aws.String(v.(string))
 	} else {
 		// If no qualifier provided, set version to latest published version
-		// If no published version exists, AWS returns '$LATEST' for latestVersion
 		versionsInput := &lambda.ListVersionsByFunctionInput{
 			FunctionName: aws.String(functionName),
 		}
@@ -244,8 +243,10 @@ func dataSourceFunctionRead(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("error getting List of Lambda Versions for Function (%s): %s", functionName, errVersions)
 		}
 
-		input.Qualifier = aws.String(latestVersion)
-		d.Set("qualifier", input.Qualifier)
+		// If no published version exists, AWS returns '$LATEST' for latestVersion
+		if latestVersion != "$LATEST" {
+			input.Qualifier = aws.String(latestVersion)
+		}
 	}
 
 	log.Printf("[DEBUG] Getting Lambda Function: %s", input)
@@ -262,7 +263,7 @@ func dataSourceFunctionRead(d *schema.ResourceData, meta interface{}) error {
 	function := output.Configuration
 
 	functionARN := aws.StringValue(function.FunctionArn)
-	qualifierSuffix := fmt.Sprintf(":%s", d.Get("qualifier").(string))
+	qualifierSuffix := fmt.Sprintf(":%s", aws.StringValue(input.Qualifier))
 	versionSuffix := fmt.Sprintf(":%s", aws.StringValue(function.Version))
 
 	d.Set("version", function.Version)
