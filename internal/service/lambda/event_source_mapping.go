@@ -36,6 +36,7 @@ func ResourceEventSourceMapping() *schema.Resource {
 			"amazon_managed_kafka_event_source_config": {
 				Type:          schema.TypeList,
 				Optional:      true,
+				ForceNew:      true,
 				MaxItems:      1,
 				ConflictsWith: []string{"self_managed_event_source", "self_managed_kafka_event_source_config"},
 				Elem: &schema.Resource{
@@ -43,6 +44,7 @@ func ResourceEventSourceMapping() *schema.Resource {
 						"consumer_group_id": {
 							Type:         schema.TypeString,
 							Optional:     true,
+							ForceNew:     true,
 							ValidateFunc: validation.StringLenBetween(1, 200),
 						},
 					},
@@ -243,6 +245,7 @@ func ResourceEventSourceMapping() *schema.Resource {
 			"self_managed_kafka_event_source_config": {
 				Type:          schema.TypeList,
 				Optional:      true,
+				ForceNew:      true,
 				MaxItems:      1,
 				ConflictsWith: []string{"event_source_arn", "amazon_managed_kafka_event_source_config"},
 				Elem: &schema.Resource{
@@ -250,6 +253,7 @@ func ResourceEventSourceMapping() *schema.Resource {
 						"consumer_group_id": {
 							Type:         schema.TypeString,
 							Optional:     true,
+							ForceNew:     true,
 							ValidateFunc: validation.StringLenBetween(1, 200),
 						},
 					},
