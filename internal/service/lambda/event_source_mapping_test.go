@@ -740,8 +740,8 @@ func TestAccLambdaEventSourceMapping_msk(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "batch_size", "100"),
 					resource.TestCheckResourceAttrPair(resourceName, "event_source_arn", eventSourceResourceName, "arn"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "last_modified"),
-					resource.TestCheckResourceAttr(resourceName, "amazon_managed_kafka_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "amazon_managed_kafka_config.0.consumer_group_id", "amazon-managed-test-group-id"),
+					resource.TestCheckResourceAttr(resourceName, "amazon_managed_kafka_event_source_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "amazon_managed_kafka_event_source_config.0.consumer_group_id", "amazon-managed-test-group-id"),
 					resource.TestCheckResourceAttr(resourceName, "topics.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "topics.*", "test"),
 				),
@@ -766,8 +766,8 @@ func TestAccLambdaEventSourceMapping_msk(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "batch_size", "9999"),
 					resource.TestCheckResourceAttrPair(resourceName, "event_source_arn", eventSourceResourceName, "arn"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "last_modified"),
-					resource.TestCheckResourceAttr(resourceName, "amazon_managed_kafka_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "amazon_managed_kafka_config.0.consumer_group_id", "amazon-managed-test-group-id"),
+					resource.TestCheckResourceAttr(resourceName, "amazon_managed_kafka_event_source_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "amazon_managed_kafka_event_source_config.0.consumer_group_id", "amazon-managed-test-group-id"),
 					resource.TestCheckResourceAttr(resourceName, "topics.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "topics.*", "test"),
 				),
@@ -1753,7 +1753,7 @@ resource "aws_lambda_event_source_mapping" "test" {
   topics            = ["test"]
   starting_position = "TRIM_HORIZON"
 
-  amazon_managed_kafka_config {
+  amazon_managed_kafka_event_source_config {
     consumer_group_id = "amazon-managed-test-group-id"
   }
 

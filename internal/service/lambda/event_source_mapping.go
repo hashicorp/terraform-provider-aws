@@ -33,7 +33,7 @@ func ResourceEventSourceMapping() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"amazon_managed_kafka_config": {
+			"amazon_managed_kafka_event_source_config": {
 				Type:          schema.TypeList,
 				Optional:      true,
 				MaxItems:      1,
@@ -262,7 +262,7 @@ func ResourceEventSourceMapping() *schema.Resource {
 				Type:          schema.TypeList,
 				Optional:      true,
 				MaxItems:      1,
-				ConflictsWith: []string{"event_source_arn", "amazon_managed_kafka_config"},
+				ConflictsWith: []string{"event_source_arn", "amazon_managed_kafka_event_source_config"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"consumer_group_id": {
@@ -352,8 +352,8 @@ func resourceEventSourceMappingCreate(d *schema.ResourceData, meta interface{}) 
 
 	var target string
 
-	if v, ok := d.GetOk("amazon_managed_kafka_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.AmazonManagedKafkaEventSourceConfig = expandAmazonManagedKafkaConfig(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("amazon_managed_kafka_event_source_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.AmazonManagedKafkaEventSourceConfig = expandAmazonManagedKafkaEventSourceConfig(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("batch_size"); ok {
@@ -501,11 +501,11 @@ func resourceEventSourceMappingRead(d *schema.ResourceData, meta interface{}) er
 	}
 
 	if eventSourceMappingConfiguration.AmazonManagedKafkaEventSourceConfig != nil {
-		if err := d.Set("amazon_managed_kafka_config", []interface{}{flattenAmazonManagedKafkaConfig(eventSourceMappingConfiguration.AmazonManagedKafkaEventSourceConfig)}); err != nil {
-			return fmt.Errorf("error setting amazon_managed_kafka_config: %w", err)
+		if err := d.Set("amazon_managed_kafka_event_source_config", []interface{}{flattenAmazonManagedKafkaEventSourceConfig(eventSourceMappingConfiguration.AmazonManagedKafkaEventSourceConfig)}); err != nil {
+			return fmt.Errorf("error setting amazon_managed_kafka_event_source_config: %w", err)
 		}
 	} else {
-		d.Set("amazon_managed_kafka_config", nil)
+		d.Set("amazon_managed_kafka_event_source_config", nil)
 	}
 	d.Set("batch_size", eventSourceMappingConfiguration.BatchSize)
 	d.Set("bisect_batch_on_function_error", eventSourceMappingConfiguration.BisectBatchOnFunctionError)
@@ -817,7 +817,7 @@ func flattenSelfManagedEventSource(apiObject *lambda.SelfManagedEventSource) map
 	return tfMap
 }
 
-func expandAmazonManagedKafkaConfig(tfMap map[string]interface{}) *lambda.AmazonManagedKafkaEventSourceConfig {
+func expandAmazonManagedKafkaEventSourceConfig(tfMap map[string]interface{}) *lambda.AmazonManagedKafkaEventSourceConfig {
 	if tfMap == nil {
 		return nil
 	}
@@ -831,7 +831,7 @@ func expandAmazonManagedKafkaConfig(tfMap map[string]interface{}) *lambda.Amazon
 	return apiObject
 }
 
-func flattenAmazonManagedKafkaConfig(apiObject *lambda.AmazonManagedKafkaEventSourceConfig) map[string]interface{} {
+func flattenAmazonManagedKafkaEventSourceConfig(apiObject *lambda.AmazonManagedKafkaEventSourceConfig) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
