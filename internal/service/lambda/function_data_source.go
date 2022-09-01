@@ -223,6 +223,29 @@ func dataSourceFunctionRead(d *schema.ResourceData, meta interface{}) error {
 
 	if v, ok := d.GetOk("qualifier"); ok {
 		input.Qualifier = aws.String(v.(string))
+	} else {
+		// If no qualifier provided, set version to latest published version
+		// If no published version exists, AWS returns '$LATEST' for latestVersion
+		versionsInput := &lambda.ListVersionsByFunctionInput{
+			FunctionName: aws.String(functionName),
+		}
+		var latestVersion string
+		log.Printf("[DEBUG] Getting List of Lambda Versions : %s", versionsInput)
+		errVersions := listVersionsByFunctionPages(conn, versionsInput, func(p *lambda.ListVersionsByFunctionOutput, lastPage bool) bool {
+			if lastPage {
+				last := p.Versions[len(p.Versions)-1]
+				latestVersion = *last.Version
+				return false
+			}
+			return true
+		})
+
+		if errVersions != nil {
+			return fmt.Errorf("error getting List of Lambda Versions for Function (%s): %s", functionName, errVersions)
+		}
+
+		input.Qualifier = aws.String(latestVersion)
+		d.Set("qualifier", input.Qualifier)
 	}
 
 	log.Printf("[DEBUG] Getting Lambda Function: %s", input)
@@ -241,6 +264,8 @@ func dataSourceFunctionRead(d *schema.ResourceData, meta interface{}) error {
 	functionARN := aws.StringValue(function.FunctionArn)
 	qualifierSuffix := fmt.Sprintf(":%s", d.Get("qualifier").(string))
 	versionSuffix := fmt.Sprintf(":%s", aws.StringValue(function.Version))
+
+	d.Set("version", function.Version)
 
 	qualifiedARN := functionARN
 	if !strings.HasSuffix(functionARN, qualifierSuffix) && !strings.HasSuffix(functionARN, versionSuffix) {
@@ -323,26 +348,6 @@ func dataSourceFunctionRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.Set("timeout", function.Timeout)
-
-	versionsInput := &lambda.ListVersionsByFunctionInput{
-		FunctionName: aws.String(functionName),
-		MaxItems:     aws.Int64(10000),
-	}
-	var latestPublishedVersion string
-	log.Printf("[DEBUG] Getting List of Lambda Versions : %s", versionsInput)
-	errVersions := listVersionsByFunctionPages(conn, versionsInput, func(p *lambda.ListVersionsByFunctionOutput, lastPage bool) bool {
-		if lastPage {
-			last := p.Versions[len(p.Versions)-1]
-			latestPublishedVersion = *last.Version
-			return false
-		}
-		return true
-	})
-
-	if errVersions != nil {
-		return fmt.Errorf("error getting List of Lambda Versions for Function (%s): %s", functionName, errVersions)
-	}
-	d.Set("version", latestPublishedVersion) //Unpublished lambda set to "$LATEST"
 
 	if err := d.Set("vpc_config", flattenVPCConfigResponse(function.VpcConfig)); err != nil {
 		return fmt.Errorf("error setting vpc_config: %w", err)
