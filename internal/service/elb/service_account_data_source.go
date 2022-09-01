@@ -31,14 +31,15 @@ var AccountIdPerRegionMap = map[string]string{
 	endpoints.EuWest1RegionID:      "156460612806",
 	endpoints.EuWest2RegionID:      "652711504416",
 	endpoints.EuWest3RegionID:      "009996457667",
-	endpoints.MeSouth1RegionID:     "076674570225",
-	endpoints.SaEast1RegionID:      "507241528517",
-	endpoints.UsEast1RegionID:      "127311923021",
-	endpoints.UsEast2RegionID:      "033677994240",
-	endpoints.UsGovEast1RegionID:   "190560391635",
-	endpoints.UsGovWest1RegionID:   "048591011584",
-	endpoints.UsWest1RegionID:      "027434742980",
-	endpoints.UsWest2RegionID:      "797873946194",
+	// endpoints.MeCentral1RegionID:   "",
+	endpoints.MeSouth1RegionID:   "076674570225",
+	endpoints.SaEast1RegionID:    "507241528517",
+	endpoints.UsEast1RegionID:    "127311923021",
+	endpoints.UsEast2RegionID:    "033677994240",
+	endpoints.UsGovEast1RegionID: "190560391635",
+	endpoints.UsGovWest1RegionID: "048591011584",
+	endpoints.UsWest1RegionID:    "027434742980",
+	endpoints.UsWest2RegionID:    "797873946194",
 }
 
 func DataSourceServiceAccount() *schema.Resource {

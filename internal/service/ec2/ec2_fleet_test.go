@@ -2515,6 +2515,36 @@ func TestAccEC2Fleet_TargetCapacitySpecification_totalTargetCapacity(t *testing.
 	})
 }
 
+func TestAccEC2Fleet_TargetCapacitySpecification_targetCapacityUnitType(t *testing.T) {
+	var fleet1 ec2.FleetData
+	resourceName := "aws_ec2_fleet.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	targetCapacityUnitType := "vcpu"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckFleet(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFleetDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFleetConfig_targetCapacitySpecificationTargetCapacityUnitType(rName, 1, targetCapacityUnitType),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFleetExists(resourceName, &fleet1),
+					resource.TestCheckResourceAttr(resourceName, "target_capacity_specification.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_capacity_specification.0.target_capacity_unit_type", targetCapacityUnitType),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"terminate_instances"},
+			},
+		},
+	})
+}
+
 func TestAccEC2Fleet_terminateInstancesWithExpiration(t *testing.T) {
 	var fleet1, fleet2 ec2.FleetData
 	resourceName := "aws_ec2_fleet.test"
@@ -3563,6 +3593,43 @@ resource "aws_ec2_fleet" "test" {
   }
 }
 `, rName, totalTargetCapacity))
+}
+
+func testAccFleetConfig_targetCapacitySpecificationTargetCapacityUnitType(rName string, totalTargetCapacity int, targetCapacityUnitType string) string {
+	return acctest.ConfigCompose(testAccFleetConfig_BaseLaunchTemplate(rName), fmt.Sprintf(`
+resource "aws_ec2_fleet" "test" {
+  terminate_instances = true
+
+  launch_template_config {
+    launch_template_specification {
+      launch_template_id = aws_launch_template.test.id
+      version            = aws_launch_template.test.latest_version
+    }
+
+    override {
+      instance_requirements {
+        accelerator_manufacturers = ["amd"]
+        memory_mib {
+          min = 500
+        }
+        vcpu_count {
+          min = 1
+        }
+      }
+    }
+  }
+
+  target_capacity_specification {
+    default_target_capacity_type = "spot"
+    total_target_capacity        = %[2]d
+    target_capacity_unit_type    = %[3]q
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, totalTargetCapacity, targetCapacityUnitType))
 }
 
 func testAccFleetConfig_terminateInstancesExpiration(rName string, terminateInstancesWithExpiration bool) string {

@@ -30,17 +30,17 @@ resource "aws_amplify_backend_environment" "example" {
 
 The following arguments are supported:
 
-* `app_id` - (Required) The unique ID for an Amplify app.
-* `environment_name` - (Required) The name for the backend environment.
-* `deployment_artifacts` - (Optional) The name of deployment artifacts.
-* `stack_name` - (Optional) The AWS CloudFormation stack name of a backend environment.
+* `app_id` - (Required) Unique ID for an Amplify app.
+* `environment_name` - (Required) Name for the backend environment.
+* `deployment_artifacts` - (Optional) Name of deployment artifacts.
+* `stack_name` - (Optional) AWS CloudFormation stack name of a backend environment.
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-* `arn` - The Amazon Resource Name (ARN) for a backend environment that is part of an Amplify app.
-* `id` - The unique ID of the Amplify backend environment.
+* `arn` - ARN for a backend environment that is part of an Amplify app.
+* `id` - Unique ID of the Amplify backend environment.
 
 ## Import
 

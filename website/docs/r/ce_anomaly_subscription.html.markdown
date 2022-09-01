@@ -16,9 +16,9 @@ Provides a CE Anomaly Subscription.
 
 ```terraform
 resource "aws_ce_anomaly_monitor" "test" {
-  name      = "AWSServiceMonitor"
-  type      = "DIMENSIONAL"
-  dimension = "SERVICE"
+  name              = "AWSServiceMonitor"
+  monitor_type      = "DIMENSIONAL"
+  monitor_dimension = "SERVICE"
 }
 
 resource "aws_ce_anomaly_subscription" "test" {
@@ -110,9 +110,9 @@ resource "aws_sns_topic_policy" "default" {
 }
 
 resource "aws_ce_anomaly_monitor" "anomaly_monitor" {
-  name      = "AWSServiceMonitor"
-  type      = "DIMENSIONAL"
-  dimension = "SERVICE"
+  name              = "AWSServiceMonitor"
+  monitor_type      = "DIMENSIONAL"
+  monitor_dimension = "SERVICE"
 }
 
 resource "aws_ce_anomaly_subscription" "realtime_subscription" {

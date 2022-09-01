@@ -29,7 +29,7 @@ resource "aws_ec2_instance" "example" {
 
 The following arguments are required:
 
-* `arn` - (Required) Outpost Amazon Resource Name (ARN).
+* `arn` - (Required) Outpost ARN.
 
 The following arguments are optional:
 

@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -2515,6 +2516,25 @@ func WaitSpotFleetRequestFulfilled(conn *ec2.EC2, id string, timeout time.Durati
 	outputRaw, err := stateConf.WaitForState()
 
 	if output, ok := outputRaw.(*ec2.SpotFleetRequestConfig); ok {
+		if activityStatus := aws.StringValue(output.ActivityStatus); activityStatus == ec2.ActivityStatusError {
+			var errs *multierror.Error
+
+			input := &ec2.DescribeSpotFleetRequestHistoryInput{
+				SpotFleetRequestId: aws.String(id),
+				StartTime:          aws.Time(time.UnixMilli(0)),
+			}
+
+			if output, err := FindSpotFleetRequestHistoryRecords(conn, input); err == nil {
+				for _, v := range output {
+					if eventType := aws.StringValue(v.EventType); eventType == ec2.EventTypeError || eventType == ec2.EventTypeInformation {
+						errs = multierror.Append(errs, errors.New(v.String()))
+					}
+				}
+			}
+
+			tfresource.SetLastError(err, errs.ErrorOrNil())
+		}
+
 		return output, err
 	}
 

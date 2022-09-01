@@ -123,6 +123,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/macie"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/macie2"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/mediaconvert"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/medialive"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/mediapackage"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/mediastore"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/memorydb"
@@ -738,12 +739,13 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_lex_intent":    lexmodels.DataSourceIntent(),
 			"aws_lex_slot_type": lexmodels.DataSourceSlotType(),
 
-			"aws_location_geofence_collection": location.DataSourceGeofenceCollection(),
-			"aws_location_map":                 location.DataSourceMap(),
-			"aws_location_place_index":         location.DataSourcePlaceIndex(),
-			"aws_location_route_calculator":    location.DataSourceRouteCalculator(),
-			"aws_location_tracker":             location.DataSourceTracker(),
-			"aws_location_tracker_association": location.DataSourceTrackerAssociation(),
+			"aws_location_geofence_collection":  location.DataSourceGeofenceCollection(),
+			"aws_location_map":                  location.DataSourceMap(),
+			"aws_location_place_index":          location.DataSourcePlaceIndex(),
+			"aws_location_route_calculator":     location.DataSourceRouteCalculator(),
+			"aws_location_tracker":              location.DataSourceTracker(),
+			"aws_location_tracker_association":  location.DataSourceTrackerAssociation(),
+			"aws_location_tracker_associations": location.DataSourceTrackerAssociations(),
 
 			// "aws_arn":                     meta.DataSourceARN(), // Now implemented using Terraform Plugin Framework.
 			"aws_billing_service_account": meta.DataSourceBillingServiceAccount(),
@@ -1098,6 +1100,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_cloudfront_function":                       cloudfront.ResourceFunction(),
 			"aws_cloudfront_key_group":                      cloudfront.ResourceKeyGroup(),
 			"aws_cloudfront_monitoring_subscription":        cloudfront.ResourceMonitoringSubscription(),
+			"aws_cloudfront_origin_access_control":          cloudfront.ResourceOriginAccessControl(),
 			"aws_cloudfront_origin_access_identity":         cloudfront.ResourceOriginAccessIdentity(),
 			"aws_cloudfront_origin_request_policy":          cloudfront.ResourceOriginRequestPolicy(),
 			"aws_cloudfront_public_key":                     cloudfront.ResourcePublicKey(),
@@ -1719,6 +1722,9 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_media_convert_queue": mediaconvert.ResourceQueue(),
 
 			"aws_media_package_channel": mediapackage.ResourceChannel(),
+
+			"aws_medialive_input":                medialive.ResourceInput(),
+			"aws_medialive_input_security_group": medialive.ResourceInputSecurityGroup(),
 
 			"aws_media_store_container":        mediastore.ResourceContainer(),
 			"aws_media_store_container_policy": mediastore.ResourceContainerPolicy(),

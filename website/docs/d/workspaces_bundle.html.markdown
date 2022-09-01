@@ -33,9 +33,9 @@ data "aws_workspaces_bundle" "example" {
 
 The following arguments are supported:
 
-* `bundle_id` – (Optional) The ID of the bundle.
-* `owner` – (Optional) The owner of the bundles. You have to leave it blank for own bundles. You cannot combine this parameter with `bundle_id`.
-* `name` – (Optional) The name of the bundle. You cannot combine this parameter with `bundle_id`.
+* `bundle_id` – (Optional) ID of the bundle.
+* `owner` – (Optional) Owner of the bundles. You have to leave it blank for own bundles. You cannot combine this parameter with `bundle_id`.
+* `name` – (Optional) Name of the bundle. You cannot combine this parameter with `bundle_id`.
 
 ## Attributes Reference
 
@@ -49,12 +49,12 @@ The following arguments are supported:
 
 ### `compute_type`
 
-* `name` - The name of the compute type.
+* `name` - Name of the compute type.
 
 ### `root_storage`
 
-* `capacity` - The size of the root volume.
+* `capacity` - Size of the root volume.
 
 ### `user_storage`
 
-* `capacity` - The size of the user storage.
+* `capacity` - Size of the user storage.

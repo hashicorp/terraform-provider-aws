@@ -177,10 +177,10 @@ func TestAccEC2Instance_basic(t *testing.T) {
 	resourceName := "aws_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		// No subnet_id specified requires default VPC with default subnets or EC2-Classic.
+		// No subnet_id specified requires default VPC with default subnets.
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			testAccPreCheckClassicOrHasDefaultVPCDefaultSubnets(t)
+			testAccPreCheckHasDefaultVPCDefaultSubnets(t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -195,11 +195,10 @@ func TestAccEC2Instance_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				// Required for EC2-Classic.
-				ImportStateVerifyIgnore: []string{"source_dest_check", "user_data_replace_on_change"},
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"user_data_replace_on_change"},
 			},
 		},
 	})
@@ -210,10 +209,10 @@ func TestAccEC2Instance_disappears(t *testing.T) {
 	resourceName := "aws_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		// No subnet_id specified requires default VPC with default subnets or EC2-Classic.
+		// No subnet_id specified requires default VPC with default subnets.
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			testAccPreCheckClassicOrHasDefaultVPCDefaultSubnets(t)
+			testAccPreCheckHasDefaultVPCDefaultSubnets(t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -236,10 +235,10 @@ func TestAccEC2Instance_tags(t *testing.T) {
 	resourceName := "aws_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		// No subnet_id specified requires default VPC with default subnets or EC2-Classic.
+		// No subnet_id specified requires default VPC with default subnets.
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			testAccPreCheckClassicOrHasDefaultVPCDefaultSubnets(t)
+			testAccPreCheckHasDefaultVPCDefaultSubnets(t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -329,37 +328,6 @@ func TestAccEC2Instance_inDefaultVPCBySgID(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"user_data_replace_on_change"},
-			},
-		},
-	})
-}
-
-func TestAccEC2Instance_inEC2Classic(t *testing.T) {
-	resourceName := "aws_instance.test"
-	var v ec2.Instance
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckEC2Classic(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstanceDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccInstanceConfig_classic(),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceClassicExists(resourceName, &v),
-				),
-			},
-			{
-				Config:            testAccInstanceConfig_classic(),
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"network_interface",
-					"source_dest_check",
-					"user_data_replace_on_change",
-				},
 			},
 		},
 	})
@@ -4752,10 +4720,6 @@ func testAccCheckInstanceExists(n string, v *ec2.Instance) resource.TestCheckFun
 	return testAccCheckInstanceExistsWithProvider(n, v, func() *schema.Provider { return acctest.Provider })
 }
 
-func testAccCheckInstanceClassicExists(n string, v *ec2.Instance) resource.TestCheckFunc {
-	return testAccCheckInstanceExistsWithProvider(n, v, func() *schema.Provider { return acctest.ProviderEC2Classic })
-}
-
 func testAccCheckInstanceExistsWithProvider(n string, v *ec2.Instance, providerF func() *schema.Provider) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -4885,15 +4849,14 @@ func driftTags(instance *ec2.Instance) resource.TestCheckFunc {
 	}
 }
 
-// testAccPreCheckClassicOrHasDefaultVPCDefaultSubnets checks that the test region has either
-// - The EC2-Classic platform available, or
+// testAccPreCheckHasDefaultVPCDefaultSubnets checks that the test region has
 // - A default VPC with default subnets.
 // This check is useful to ensure that an instance can be launched without specifying a subnet.
-func testAccPreCheckClassicOrHasDefaultVPCDefaultSubnets(t *testing.T) {
+func testAccPreCheckHasDefaultVPCDefaultSubnets(t *testing.T) {
 	client := acctest.Provider.Meta().(*conns.AWSClient)
 
-	if !conns.HasEC2Classic(client.SupportedPlatforms) && !(hasDefaultVPC(t) && defaultSubnetCount(t) > 0) {
-		t.Skipf("skipping tests; %s does not have EC2-Classic or a default VPC with default subnets", client.Region)
+	if !(hasDefaultVPC(t) && defaultSubnetCount(t) > 0) {
+		t.Skipf("skipping tests; %s does not have a default VPC with default subnets", client.Region)
 	}
 }
 
@@ -5109,7 +5072,6 @@ resource "aws_subnet" "test" {
 func testAccInstanceConfig_basic() string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
-		// https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-classic-platform.html#ec2-classic-instance-types
 		acctest.AvailableEC2InstanceTypeForRegion("t3.micro", "t2.micro", "t1.micro", "m1.small"),
 		`
 resource "aws_instance" "test" {
@@ -5201,19 +5163,6 @@ resource "aws_instance" "test" {
   }
 }
 `, rName))
-}
-
-func testAccInstanceConfig_classic() string { // nosempgrep:ec2-in-func-name
-	return acctest.ConfigCompose(
-		acctest.ConfigEC2ClassicRegionProvider(),
-		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
-		acctest.AvailableEC2InstanceTypeForRegion("t1.micro", "m3.medium", "m3.large", "c3.large", "r3.large"),
-		`
-resource "aws_instance" "test" {
-  ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
-  instance_type = data.aws_ec2_instance_type_offering.available.instance_type
-}
-`)
 }
 
 func testAccInstanceConfig_atLeastOneOtherEBSVolume(rName string) string {
@@ -5757,15 +5706,14 @@ resource "aws_instance" "test" {
 func testAccInstanceConfig_dedicated(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
+		testAccInstanceVPCConfig(rName, false, 1),
 		// Prevent frequent errors like
 		//	"InsufficientInstanceCapacity: We currently do not have sufficient m1.small capacity in the Availability Zone you requested (us-west-2a)."
-		testAccInstanceVPCConfig(rName, false, 1),
+		acctest.AvailableEC2InstanceTypeForAvailabilityZone("data.aws_availability_zones.available.names[1]", "t3.small", "t3.micro", "m1.small", "a1.medium"),
 		fmt.Sprintf(`
 resource "aws_instance" "test" {
-  ami = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
-
-  # tflint-ignore: aws_instance_previous_type
-  instance_type               = "m1.small"
+  ami                         = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type               = data.aws_ec2_instance_type_offering.available.instance_type
   subnet_id                   = aws_subnet.test.id
   associate_public_ip_address = true
   tenancy                     = "dedicated"

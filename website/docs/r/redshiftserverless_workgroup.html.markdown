@@ -29,7 +29,6 @@ The following arguments are supported:
 * `publicly_accessible` - (Optional) A value that specifies whether the workgroup can be accessed from a public network.
 * `security_group_ids` - (Optional) An array of security group IDs to associate with the workgroup.
 * `subnet_ids` - (Optional) An array of VPC subnet IDs to associate with the workgroup.
-* `security_group_ids` - (Optional) An array of security group IDs to associate with the workgroup.
 * `workgroup_name` - (Required) The name of the workgroup.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
