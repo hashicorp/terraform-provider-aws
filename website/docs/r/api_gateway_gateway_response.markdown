@@ -39,8 +39,8 @@ The following arguments are supported:
 * `rest_api_id` - (Required) String identifier of the associated REST API.
 * `response_type` - (Required) Response type of the associated GatewayResponse.
 * `status_code` - (Optional) HTTP status code of the Gateway Response.
-* `response_templates` - (Optional) Map specifying the templates used to transform the response body.
-* `response_parameters` - (Optional) Map specifying the parameters (paths, query strings and headers) of the Gateway Response.
+* `response_templates` - (Optional) Map of templates used to transform the response body.
+* `response_parameters` - (Optional) Map of parameters (paths, query strings and headers) of the Gateway Response.
 
 ## Attributes Reference
 

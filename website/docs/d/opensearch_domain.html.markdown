@@ -40,9 +40,9 @@ The following attributes are exported:
     * `maintenance_schedule` - A list of the nested configurations for the Auto-Tune maintenance windows of the domain.
         * `start_at` - Date and time at which the Auto-Tune maintenance schedule starts in [RFC3339 format](https://tools.ietf.org/html/rfc3339#section-5.8).
         * `duration` - Configuration block for the duration of the Auto-Tune maintenance window.
-            * `value` - An integer specifying the value of the duration of an Auto-Tune maintenance window.
-            * `unit` - Unit of time specifying the duration of an Auto-Tune maintenance window.
-        * `cron_expression_for_recurrence` - A cron expression specifying the recurrence pattern for an Auto-Tune maintenance schedule.
+            * `value` - Duration of an Auto-Tune maintenance window.
+            * `unit` - Unit of time.
+        * `cron_expression_for_recurrence` - Cron expression for an Auto-Tune maintenance schedule.
     * `rollback_on_disable` - Whether the domain is set to roll back to default Auto-Tune settings when disabling Auto-Tune.
 * `cluster_config` - Cluster configuration of the domain.
     * `cold_storage_options` - Configuration block containing cold storage configuration.

@@ -28,8 +28,7 @@ data "aws_iam_openid_connect_provider" "example" {
 
 ## Argument Reference
 
-* `arn` - (Optional) ARN specifying the OpenID Connect provider.
-
+* `arn` - (Optional) ARN of the OpenID Connect provider.
 * `url` - (Optional) URL of the OpenID Connect provider.
 
 ## Attributes Reference

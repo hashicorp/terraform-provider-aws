@@ -26,20 +26,14 @@ data "aws_iam_group" "example" {
 
 ## Attributes Reference
 
-* `arn` - ARN specifying the group.
-
-* `path` - Path to the group.
-
+* `arn` - Group ARN.
 * `group_id` - Stable and unique string identifying the group.
-
-* `users` - List of objects containing group member information. See supported fields below.
+* `path` - Path to the group.
+* `users` - List of objects containing group member information. See below.
 
 ### `users`
 
-* `arn` - ARN specifying the iam user.
-
-* `user_id` - Stable and unique string identifying the iam user.
-
-* `user_name` - Name of the iam user.
-
-* `path` - Path to the iam user.
+* `arn` - User ARN.
+* `path` - Path to the IAM user.
+* `user_id` - Stable and unique string identifying the IAM user.
+* `user_name` - Name of the IAM user.
