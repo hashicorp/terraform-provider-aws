@@ -245,6 +245,7 @@ func ResourceEventSourceMapping() *schema.Resource {
 			"self_managed_kafka_event_source_config": {
 				Type:          schema.TypeList,
 				Optional:      true,
+				Computed:      true,
 				ForceNew:      true,
 				MaxItems:      1,
 				ConflictsWith: []string{"event_source_arn", "amazon_managed_kafka_event_source_config"},
@@ -253,6 +254,7 @@ func ResourceEventSourceMapping() *schema.Resource {
 						"consumer_group_id": {
 							Type:         schema.TypeString,
 							Optional:     true,
+							Computed:     true,
 							ForceNew:     true,
 							ValidateFunc: validation.StringLenBetween(1, 200),
 						},
