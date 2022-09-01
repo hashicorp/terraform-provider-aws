@@ -41,3 +41,7 @@ resource/aws_eip: With the retirement of EC2-Classic no new non-VPC EC2 EIPs can
 ```release-note:note
 resource/aws_vpc: With the retirement of EC2-Classic no new VPCs can be created with ClassicLink enabled
 ```
+
+```release-note:note
+resource/aws_vpc_peering_connection: With the retirement of EC2-Classic no new VPC Peering Connections can be created with ClassicLink options enabled
+```
