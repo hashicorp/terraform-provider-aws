@@ -44,7 +44,7 @@ This block allows for complex filters. You can use one or more `filter` blocks.
 
 The following arguments are required:
 
-* `name` - (Required) The name of the field to filter by, as defined by [the underlying AWS API](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeTransitGatewayMulticastDomains.html).
+* `name` - (Required) Name of the field to filter by, as defined by [the underlying AWS API](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeTransitGatewayMulticastDomains.html).
 * `values` - (Required) Set of values that are accepted for the given field. A multicast domain will be selected if any one of the given values matches.
 
 ## Attribute Reference
@@ -52,7 +52,7 @@ The following arguments are required:
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - EC2 Transit Gateway Multicast Domain identifier.
-* `arn` - EC2 Transit Gateway Multicast Domain Amazon Resource Name (ARN).
+* `arn` - EC2 Transit Gateway Multicast Domain ARN.
 * `associations` - EC2 Transit Gateway Multicast Domain Associations
     * `subnet_id` - The ID of the subnet associated with the transit gateway multicast domain.
     * `transit_gateway_attachment_id` - The ID of the transit gateway attachment.

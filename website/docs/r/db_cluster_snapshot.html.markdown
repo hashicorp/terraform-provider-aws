@@ -31,16 +31,16 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `allocated_storage` - Specifies the allocated storage size in gigabytes (GB).
+* `allocated_storage` - Allocated storage size in gigabytes (GB).
 * `availability_zones` - List of EC2 Availability Zones that instances in the DB cluster snapshot can be restored in.
 * `db_cluster_snapshot_arn` - The Amazon Resource Name (ARN) for the DB Cluster Snapshot.
-* `engine` - Specifies the name of the database engine.
+* `engine` - Name of the database engine.
 * `engine_version` - Version of the database engine for this DB cluster snapshot.
 * `kms_key_id` - If storage_encrypted is true, the AWS KMS key identifier for the encrypted DB cluster snapshot.
 * `license_model` - License model information for the restored DB cluster.
 * `port` - Port that the DB cluster was listening on at the time of the snapshot.
-* `source_db_cluster_snapshot_identifier` - The DB Cluster Snapshot Arn that the DB Cluster Snapshot was copied from. It only has value in case of cross customer or cross region copy.
-* `storage_encrypted` - Specifies whether the DB cluster snapshot is encrypted.
+* `source_db_cluster_snapshot_identifier` - DB Cluster Snapshot ARN that the DB Cluster Snapshot was copied from. It only has value in case of cross customer or cross region copy.
+* `storage_encrypted` - Whether the DB cluster snapshot is encrypted.
 * `status` - The status of this DB Cluster Snapshot.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `vpc_id` - The VPC ID associated with the DB cluster snapshot.

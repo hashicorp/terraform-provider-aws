@@ -135,7 +135,7 @@ Access Logs (`access_logs`) support the following:
 
 Subnet Mapping (`subnet_mapping`) blocks support the following:
 
-* `subnet_id` - (Required) The id of the subnet of which to attach to the load balancer. You can specify only one subnet per Availability Zone.
+* `subnet_id` - (Required) ID of the subnet of which to attach to the load balancer. You can specify only one subnet per Availability Zone.
 * `allocation_id` - (Optional) The allocation ID of the Elastic IP address.
 * `private_ipv4_address` - (Optional) A private ipv4 address within the subnet to assign to the internal-facing load balancer.
 * `ipv6_address` - (Optional) An ipv6 address within the subnet to assign to the internet-facing load balancer.

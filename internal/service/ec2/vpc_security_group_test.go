@@ -1967,9 +1967,8 @@ func TestAccVPCSecurityGroup_failWithDiffMismatch(t *testing.T) {
 var ruleLimit int
 
 // testAccSecurityGroup_ruleLimit sets the global "ruleLimit" and is only called once
-// but does not run in parallel slowing down tests. The mutex limits it to one slow down
-// instead of one per test. It cannot run in parallel since it is called by another test
-// and double paralleling is a panic.
+// but does not run in parallel slowing down tests. It cannot run in parallel since
+// it is called by another test and double paralleling is a panic.
 func testAccSecurityGroup_ruleLimit(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },

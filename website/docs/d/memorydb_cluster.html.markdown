@@ -29,8 +29,8 @@ The following arguments are required:
 In addition, the following attributes are exported:
 
 * `id` - Same as `name`.
-* `arn` - The ARN of the cluster.
-* `acl_name` - The name of the Access Control List associated with the cluster.
+* `arn` - ARN of the cluster.
+* `acl_name` - Name of the Access Control List associated with the cluster.
 * `auto_minor_version_upgrade` - True when the cluster allows automatic minor version upgrades.
 * `cluster_endpoint`
     * `address` - DNS hostname of the cluster configuration endpoint.
@@ -40,12 +40,12 @@ In addition, the following attributes are exported:
 * `engine_version` - Version number of the Redis engine used by the cluster.
 * `final_snapshot_name` - Name of the final cluster snapshot to be created when this resource is deleted. If omitted, no final snapshot will be made.
 * `kms_key_arn` - ARN of the KMS key used to encrypt the cluster at rest.
-* `maintenance_window` - The weekly time range during which maintenance on the cluster is performed. Specify as a range in the format `ddd:hh24:mi-ddd:hh24:mi` (24H Clock UTC). Example: `sun:23:00-mon:01:30`.
-* `node_type` - The compute and memory capacity of the nodes in the cluster.
+* `maintenance_window` - Weekly time range during which maintenance on the cluster is performed. Specify as a range in the format `ddd:hh24:mi-ddd:hh24:mi` (24H Clock UTC). Example: `sun:23:00-mon:01:30`.
+* `node_type` - Compute and memory capacity of the nodes in the cluster.
 * `num_replicas_per_shard` - The number of replicas to apply to each shard.
-* `num_shards` - The number of shards in the cluster.
+* `num_shards` - Number of shards in the cluster.
 * `parameter_group_name` - The name of the parameter group associated with the cluster.
-* `port` - The port number on which each of the nodes accepts connections.
+* `port` - Port number on which each of the nodes accepts connections.
 * `security_group_ids` - Set of VPC Security Group ID-s associated with this cluster.
 * `shards` - Set of shards in this cluster.
     * `name` - Name of this shard.
@@ -59,8 +59,8 @@ In addition, the following attributes are exported:
             * `address` - DNS hostname of the node.
             * `port` - Port number that this node is listening on.
 * `snapshot_retention_limit` - The number of days for which MemoryDB retains automatic snapshots before deleting them. When set to `0`, automatic backups are disabled.
-* `snapshot_window` - The daily time range (in UTC) during which MemoryDB begins taking a daily snapshot of your shard. Example: `05:00-09:00`.
+* `snapshot_window` - Daily time range (in UTC) during which MemoryDB begins taking a daily snapshot of your shard. Example: `05:00-09:00`.
 * `sns_topic_arn` - ARN of the SNS topic to which cluster notifications are sent.
 * `subnet_group_name` -The name of the subnet group used for the cluster.
 * `tls_enabled` - When true, in-transit encryption is enabled for the cluster.
-* `tags` - A map of tags assigned to the cluster.
+* `tags` - Map of tags assigned to the cluster.

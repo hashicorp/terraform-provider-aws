@@ -48,9 +48,9 @@ The following arguments are supported:
 In addition to all arguments above, the following attributes are exported:
 
 * `arn` - EC2 Transit Gateway Connect Peer ARN
-* `bgp_asn` - The BGP ASN number assigned customer device
-* `inside_cidr_blocks` - The CIDR blocks that will be used for addressing within the tunnel.
-* `peer_address` - The IP addressed assigned to customer device, which is used as tunnel endpoint
+* `bgp_asn` - BGP ASN number assigned customer device
+* `inside_cidr_blocks` - CIDR blocks that will be used for addressing within the tunnel.
+* `peer_address` - IP addressed assigned to customer device, which is used as tunnel endpoint
 * `tags` - Key-value tags for the EC2 Transit Gateway Connect Peer
 * `transit_gateway_address` - The IP address assigned to Transit Gateway, which is used as tunnel endpoint.
 * `transit_gateway_attachment_id` - The Transit Gateway Connect
