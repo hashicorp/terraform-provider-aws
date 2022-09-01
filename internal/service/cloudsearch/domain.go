@@ -401,10 +401,14 @@ func resourceDomainUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("index_field") {
 		o, n := d.GetChange("index_field")
-		old := o.(*schema.Set)
-		new := n.(*schema.Set)
+		oldSet := o.(*schema.Set)
+		newSet := n.(*schema.Set)
 
-		for _, tfMapRaw := range old.Difference(new).List() {
+		oldNameMap := indexFieldNameMap(oldSet)
+		newNameMap := indexFieldNameMap(newSet)
+		var inxFieldsToDefine []interface{}
+
+		for _, tfMapRaw := range oldSet.Difference(newSet).List() {
 			tfMap, ok := tfMapRaw.(map[string]interface{})
 
 			if !ok {
@@ -417,26 +421,45 @@ func resourceDomainUpdate(d *schema.ResourceData, meta interface{}) error {
 				continue
 			}
 
-			input := &cloudsearch.DeleteIndexFieldInput{
-				DomainName:     aws.String(d.Id()),
-				IndexFieldName: aws.String(fieldName),
-			}
+			existingField, ok := newNameMap[fieldName]
+			if ok {
+				inxFieldsToDefine = append(inxFieldsToDefine, existingField)
+			} else {
+				input := &cloudsearch.DeleteIndexFieldInput{
+					DomainName:     aws.String(d.Id()),
+					IndexFieldName: aws.String(fieldName),
+				}
 
-			log.Printf("[DEBUG] Deleting CloudSearch Domain index field: %s", input)
-			_, err := conn.DeleteIndexField(input)
-
-			if err != nil {
-				return fmt.Errorf("error deleting CloudSearch Domain (%s) index field (%s): %w", d.Id(), fieldName, err)
+				log.Printf("[DEBUG] Deleting CloudSearch Domain index field: %s", input)
+				_, err := conn.DeleteIndexField(input)
+				if err != nil {
+					return fmt.Errorf("error deleting CloudSearch Domain (%s) index field (%s): %w", d.Id(), fieldName, err)
+				}
 			}
 
 			requiresIndexDocuments = true
 		}
 
-		if v := new.Difference(old); v.Len() > 0 {
-			if err := defineIndexFields(conn, d.Id(), v.List()); err != nil {
-				return err
+		for _, tfMapRaw := range newSet.Difference(oldSet).List() {
+			tfMap, ok := tfMapRaw.(map[string]interface{})
+
+			if !ok {
+				continue
 			}
 
+			fieldName, _ := tfMap["name"].(string)
+
+			_, ok = oldNameMap[fieldName]
+
+			if !ok {
+				inxFieldsToDefine = append(inxFieldsToDefine, tfMap)
+			}
+		}
+
+		if len(inxFieldsToDefine) > 0 {
+			if err := defineIndexFields(conn, d.Id(), inxFieldsToDefine); err != nil {
+				return err
+			}
 			requiresIndexDocuments = true
 		}
 	}
@@ -485,9 +508,9 @@ func resourceDomainDelete(d *schema.ResourceData, meta interface{}) error {
 func validateIndexName(v interface{}, k string) (ws []string, es []error) {
 	value := v.(string)
 
-	if !regexp.MustCompile(`^(\*?[a-z][a-z0-9_]{2,63}|[a-z][a-z0-9_]{2,63}\*?)$`).MatchString(value) {
+	if !regexp.MustCompile(`^(\*?[a-z][a-z0-9_]{0,63}|[a-z][a-z0-9_]{0,63}\*?)$`).MatchString(value) {
 		es = append(es, fmt.Errorf(
-			"%q must begin with a letter and be at least 3 and no more than 64 characters long", k))
+			"%q must begin with a letter and be at least 1 and no more than 64 characters long: %s", k, value))
 	}
 
 	if value == "score" {
@@ -1411,7 +1434,6 @@ func flattenIndexFieldStatuses(apiObjects []*cloudsearch.IndexFieldStatus) ([]in
 
 		tfList = append(tfList, tfMap)
 	}
-
 	return tfList, nil
 }
 
@@ -1457,4 +1479,25 @@ func flattenScalingParameters(apiObject *cloudsearch.ScalingParameters) map[stri
 	}
 
 	return tfMap
+}
+
+func indexFieldNameMap(indexFields *schema.Set) map[string]interface{} {
+	ifnMap := make(map[string]interface{})
+	for _, tfMapRaw := range indexFields.List() {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
+
+		if !ok {
+			continue
+		}
+
+		fieldName, _ := tfMap["name"].(string)
+
+		if fieldName == "" {
+			continue
+		}
+
+		ifnMap[fieldName] = tfMapRaw
+	}
+
+	return ifnMap
 }
