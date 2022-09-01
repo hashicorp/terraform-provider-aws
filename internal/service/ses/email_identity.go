@@ -1,24 +1,30 @@
 package ses
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/ses"
+	"github.com/aws/aws-sdk-go/service/sesv2"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func ResourceEmailIdentity() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceEmailIdentityCreate,
-		Read:   resourceEmailIdentityRead,
-		Delete: resourceEmailIdentityDelete,
+		CreateContext: resourceEmailIdentityCreate,
+		ReadContext:   resourceEmailIdentityRead,
+		DeleteContext: resourceEmailIdentityDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -38,49 +44,42 @@ func ResourceEmailIdentity() *schema.Resource {
 	}
 }
 
-func resourceEmailIdentityCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SESConn
+func resourceEmailIdentityCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).SESV2Conn
 
 	email := d.Get("email").(string)
 	email = strings.TrimSuffix(email, ".")
 
-	createOpts := &ses.VerifyEmailIdentityInput{
-		EmailAddress: aws.String(email),
+	createOpts := &sesv2.CreateEmailIdentityInput{
+		EmailIdentity: aws.String(email),
 	}
 
-	_, err := conn.VerifyEmailIdentity(createOpts)
+	_, err := conn.CreateEmailIdentityWithContext(ctx, createOpts)
 	if err != nil {
-		return fmt.Errorf("Error requesting SES email identity verification: %s", err)
+		return create.DiagError(names.SESV2, create.ErrActionCreating, ResEmailIdentity, d.Id(), err)
 	}
 
 	d.SetId(email)
 
-	return resourceEmailIdentityRead(d, meta)
+	return resourceEmailIdentityRead(ctx, d, meta)
 }
 
-func resourceEmailIdentityRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SESConn
+func resourceEmailIdentityRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).SESV2Conn
 
 	email := d.Id()
 	d.Set("email", email)
+	getOpts := &sesv2.GetEmailIdentityInput{EmailIdentity: aws.String(email)}
+	_, err := conn.GetEmailIdentityWithContext(ctx, getOpts)
 
-	readOpts := &ses.GetIdentityVerificationAttributesInput{
-		Identities: []*string{
-			aws.String(email),
-		},
-	}
-
-	response, err := conn.GetIdentityVerificationAttributes(readOpts)
-	if err != nil {
-		log.Printf("[WARN] Error fetching identity verification attributes for %s: %s", d.Id(), err)
-		return err
-	}
-
-	_, ok := response.VerificationAttributes[email]
-	if !ok {
-		log.Printf("[WARN] Email not listed in response when fetching verification attributes for %s", d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] Email Identity (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
+	}
+
+	if err != nil {
+		return create.DiagError(names.SESV2, create.ErrActionReading, ResEmailIdentity, d.Id(), err)
 	}
 
 	arn := arn.ARN{
@@ -91,21 +90,24 @@ func resourceEmailIdentityRead(d *schema.ResourceData, meta interface{}) error {
 		Service:   "ses",
 	}.String()
 	d.Set("arn", arn)
+
 	return nil
 }
 
-func resourceEmailIdentityDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SESConn
+func resourceEmailIdentityDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).SESV2Conn
 
 	email := d.Get("email").(string)
 
-	deleteOpts := &ses.DeleteIdentityInput{
-		Identity: aws.String(email),
+	deleteOps := &sesv2.DeleteEmailIdentityInput{EmailIdentity: aws.String(email)}
+	_, err := conn.DeleteEmailIdentityWithContext(ctx, deleteOps)
+
+	if tfawserr.ErrCodeEquals(err, sesv2.ErrCodeNotFoundException) {
+		return nil
 	}
 
-	_, err := conn.DeleteIdentity(deleteOpts)
 	if err != nil {
-		return fmt.Errorf("Error deleting SES email identity: %s", err)
+		return create.DiagError(names.SESV2, create.ErrActionDeleting, ResEmailIdentity, d.Id(), err)
 	}
 
 	return nil
