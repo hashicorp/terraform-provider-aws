@@ -29,7 +29,7 @@ The following arguments are supported:
 In addition to all the arguments above, the following attributes are exported:
 
 * `fairshare_policy` - Fairshare policy block specifies the `compute_reservation`, `share_delay_seconds`, and `share_distribution` of the scheduling policy. The `fairshare_policy` block is documented below.
-* `name` - Specifies the name of the scheduling policy.
+* `name` - Name of the scheduling policy.
 * `tags` - Key-value map of resource tags
 
 A `fairshare_policy` block supports the following arguments:

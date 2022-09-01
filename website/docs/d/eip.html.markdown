@@ -65,7 +65,7 @@ Elastic IP whose data will be exported as attributes.
 In addition to all arguments above, the following attributes are exported:
 
 * `association_id` - ID representing the association of the address with an instance in a VPC.
-* `domain` - Indicates whether the address is for use in EC2-Classic (standard) or in a VPC (vpc).
+* `domain` - Whether the address is for use in EC2-Classic (standard) or in a VPC (vpc).
 * `id` - If VPC Elastic IP, the allocation identifier. If EC2-Classic Elastic IP, the public IP address.
 * `instance_id` - ID of the instance that the address is associated with (if any).
 * `network_interface_id` - The ID of the network interface.

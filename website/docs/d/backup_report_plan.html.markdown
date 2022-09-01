@@ -47,6 +47,6 @@ For **report_delivery_channel** the following attributes are supported:
 ### Report Setting Attributes
 For **report_setting** the following attributes are supported:
 
-* `framework_arns` - Specifies the Amazon Resource Names (ARNs) of the frameworks a report covers.
+* `framework_arns` - ARNs of the frameworks a report covers.
 * `number_of_frameworks` - Specifies the number of frameworks a report covers.
 * `report_template` - Identifies the report template for the report. Reports are built using a report template.

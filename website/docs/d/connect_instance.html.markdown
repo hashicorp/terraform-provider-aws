@@ -41,15 +41,15 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `created_time` - Specifies When the instance was created.
+* `created_time` - When the instance was created.
 * `arn` - ARN of the instance.
 * `identity_management_type` - Specifies The identity management type attached to the instance.
 * `inbound_calls_enabled` - Specifies Whether inbound calls are enabled.
 * `outbound_calls_enabled` - Specifies Whether outbound calls are enabled.
-* `early_media_enabled` - Specifies Whether early media for outbound calls is enabled .
+* `early_media_enabled` - Whether early media for outbound calls is enabled .
 * `contact_flow_logs_enabled` - Specifies Whether contact flow logs are enabled.
 * `contact_lens_enabled` - Specifies Whether contact lens is enabled.
 * `auto_resolve_best_voices` - Specifies Whether auto resolve best voices is enabled.
 * `use_custom_tts_voices` - Specifies Whether use custom tts voices is enabled.
-* `status` - Specifies The state of the instance.
+* `status` - The state of the instance.
 * `service_role` - Service role of the instance.

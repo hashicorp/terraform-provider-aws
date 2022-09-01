@@ -45,8 +45,8 @@ The following arguments are supported:
 In addition to all of the arguments above, the following attributes are exported:
 
 * `arn` - ARN of the Security Profile.
-* `description` - Specifies the description of the Security Profile.
+* `description` - Description of the Security Profile.
 * `id` - Identifier of the hosting Amazon Connect Instance and identifier of the Security Profile separated by a colon (`:`).
 * `organization_resource_id` - The organization resource identifier for the security profile.
-* `permissions` - Specifies a list of permissions assigned to the security profile.
+* `permissions` - List of permissions assigned to the security profile.
 * `tags` - Map of tags to assign to the Security Profile.

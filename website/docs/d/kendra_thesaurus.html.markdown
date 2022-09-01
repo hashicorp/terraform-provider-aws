@@ -36,7 +36,7 @@ In addition to all of the arguments above, the following attributes are exported
 * `error_message` - When the `status` field value is `FAILED`, this contains a message that explains why.
 * `file_size_bytes` - Size of the Thesaurus file in bytes.
 * `id` - Unique identifiers of the Thesaurus and index separated by a slash (`/`).
-* `name` - Specifies the name of the Thesaurus.
+* `name` - Name of the Thesaurus.
 * `role_arn` - ARN of a role with permission to access the S3 bucket that contains the Thesaurus. For more information, see [IAM Roles for Amazon Kendra](https://docs.aws.amazon.com/kendra/latest/dg/iam-roles.html).
 * `source_s3_path` - S3 location of the Thesaurus input data. Detailed below.
 * `status` - Status of the Thesaurus. It is ready to use when the status is `ACTIVE`.

@@ -67,9 +67,9 @@ In addition to all arguments above, the following attributes are exported:
 
 * `body` - Object data (see **limitations above** to understand cases in which this field is actually available)
 * `bucket_key_enabled` - (Optional) Whether or not to use [Amazon S3 Bucket Keys](https://docs.aws.amazon.com/AmazonS3/latest/dev/bucket-key.html) for SSE-KMS.
-* `cache_control` - Specifies caching behavior along the request/reply chain.
-* `content_disposition` - Specifies presentational information for the object.
-* `content_encoding` - Specifies what content encodings have been applied to the object and thus what decoding mechanisms must be applied to obtain the media-type referenced by the Content-Type header field.
+* `cache_control` - Caching behavior along the request/reply chain.
+* `content_disposition` - Presentational information for the object.
+* `content_encoding` - What content encodings have been applied to the object and thus what decoding mechanisms must be applied to obtain the media-type referenced by the Content-Type header field.
 * `content_language` - Language the content is in.
 * `content_length` - Size of the body in bytes.
 * `content_type` - Standard MIME type describing the format of the object data.

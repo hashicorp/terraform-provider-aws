@@ -30,7 +30,7 @@ data "aws_glue_data_catalog_encryption_settings" "example" {
 ### data_catalog_encryption_settings
 
 * `connection_password_encryption` - When connection password protection is enabled, the Data Catalog uses a customer-provided key to encrypt the password as part of CreateConnection or UpdateConnection and store it in the ENCRYPTED_PASSWORD field in the connection properties. You can enable catalog encryption or only password encryption. see [Connection Password Encryption](#connection_password_encryption).
-* `encryption_at_rest` - Specifies the encryption-at-rest configuration for the Data Catalog. see [Encryption At Rest](#encryption_at_rest).
+* `encryption_at_rest` - Encryption-at-rest configuration for the Data Catalog. see [Encryption At Rest](#encryption_at_rest).
 
 ### connection_password_encryption
 

@@ -37,7 +37,7 @@ In addition to all of the arguments above, the following attributes are exported
 * `file_format` - File format used by the input files for the FAQ. Valid Values are `CSV`, `CSV_WITH_HEADER`, `JSON`.
 * `id` - Unique identifiers of the FAQ and index separated by a slash (`/`).
 * `language_code` - Code for a language. This shows a supported language for the FAQ document. For more information on supported languages, including their codes, see [Adding documents in languages other than English](https://docs.aws.amazon.com/kendra/latest/dg/in-adding-languages.html).
-* `name` - Specifies the name of the FAQ.
+* `name` - Name of the FAQ.
 * `role_arn` - ARN of a role with permission to access the S3 bucket that contains the FAQs. For more information, see [IAM Roles for Amazon Kendra](https://docs.aws.amazon.com/kendra/latest/dg/iam-roles.html).
 * `s3_path` - S3 location of the FAQ input data. Detailed below.
 * `status` - Status of the FAQ. It is ready to use when the status is ACTIVE.

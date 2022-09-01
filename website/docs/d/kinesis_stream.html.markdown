@@ -38,7 +38,7 @@ are exported:
 * `open_shards` - List of shard ids in the OPEN state. See [Shard State][2] for more.
 * `closed_shards` - List of shard ids in the CLOSED state. See [Shard State][2] for more.
 * `shard_level_metrics` - List of shard-level CloudWatch metrics which are enabled for the stream. See [Monitoring with CloudWatch][3] for more.
-* `stream_mode_details` - Indicates the [capacity mode][4] of the data stream. Detailed below.
+* `stream_mode_details` - [Capacity mode][4] of the data stream. Detailed below.
 * `tags` - Map of tags to assigned to the stream.
 
 ### stream_mode_details Configuration Block

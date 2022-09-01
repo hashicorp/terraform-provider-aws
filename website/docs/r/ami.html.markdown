@@ -115,7 +115,7 @@ In addition to all arguments above, the following attributes are exported:
 * `hypervisor` - Hypervisor type of the image.
 * `owner_id` - AWS account ID of the image owner.
 * `platform` - This value is set to windows for Windows AMIs; otherwise, it is blank.
-* `public` - Indicates whether the image has public launch permissions.
+* `public` - Whether the image has public launch permissions.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts

@@ -75,19 +75,19 @@ copied or restored by any AWS account, otherwise set this value to false. The de
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - Snapshot ID.
-* `allocated_storage` - Specifies the allocated storage size in gigabytes (GB).
-* `availability_zone` - Specifies the name of the Availability Zone the DB instance was located in at the time of the DB snapshot.
+* `allocated_storage` - Allocated storage size in gigabytes (GB).
+* `availability_zone` - Name of the Availability Zone the DB instance was located in at the time of the DB snapshot.
 * `db_snapshot_arn` - ARN for the DB snapshot.
-* `encrypted` - Specifies whether the DB snapshot is encrypted.
-* `engine` - Specifies the name of the database engine.
-* `engine_version` - Specifies the version of the database engine.
-* `iops` - Specifies the Provisioned IOPS (I/O operations per second) value of the DB instance at the time of the snapshot.
+* `encrypted` - Whether the DB snapshot is encrypted.
+* `engine` - Name of the database engine.
+* `engine_version` - Version of the database engine.
+* `iops` - Provisioned IOPS (I/O operations per second) value of the DB instance at the time of the snapshot.
 * `kms_key_id` - ARN for the KMS encryption key.
 * `license_model` - License model information for the restored DB instance.
 * `option_group_name` - Provides the option group name for the DB snapshot.
-* `source_db_snapshot_identifier` - The DB snapshot Arn that the DB snapshot was copied from. It only has value in case of cross customer or cross region copy.
+* `source_db_snapshot_identifier` - DB snapshot ARN that the DB snapshot was copied from. It only has value in case of cross customer or cross region copy.
 * `source_region` - Region that the DB snapshot was created in or copied from.
-* `status` - Specifies the status of this DB snapshot.
-* `storage_type` - Specifies the storage type associated with DB snapshot.
-* `vpc_id` - Specifies the ID of the VPC associated with the DB snapshot.
+* `status` - Status of this DB snapshot.
+* `storage_type` - Storage type associated with DB snapshot.
+* `vpc_id` - ID of the VPC associated with the DB snapshot.
 * `snapshot_create_time` - Provides the time when the snapshot was taken, in Universal Coordinated Time (UTC).

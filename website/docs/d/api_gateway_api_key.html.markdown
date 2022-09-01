@@ -31,5 +31,5 @@ data "aws_api_gateway_api_key" "my_api_key" {
 * `created_date` - Date and time when the API Key was created.
 * `last_updated_date` - Date and time when the API Key was last updated.
 * `description` - Description of the API Key.
-* `enabled` - Specifies whether the API Key is enabled.
+* `enabled` - Whether the API Key is enabled.
 * `tags` - Map of tags for the resource.

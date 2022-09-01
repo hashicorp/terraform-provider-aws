@@ -45,8 +45,8 @@ The following arguments are supported:
 In addition to all of the arguments above, the following attributes are exported:
 
 * `arn` - ARN of the Contact Flow Module.
-* `content` - Specifies the logic of the Contact Flow Module.
-* `description` - Specifies the description of the Contact Flow Module.
+* `content` - Logic of the Contact Flow Module.
+* `description` - Description of the Contact Flow Module.
 * `tags` - Map of tags to assign to the Contact Flow Module.
-* `state` - Specifies the type of Contact Flow Module Module. Values are either `ACTIVE` or `ARCHIVED`.
+* `state` - Type of Contact Flow Module Module. Values are either `ACTIVE` or `ARCHIVED`.
 * `status` - Status of the Contact Flow Module Module. Values are either `PUBLISHED` or `SAVED`.

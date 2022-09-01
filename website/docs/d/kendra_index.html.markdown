@@ -37,7 +37,7 @@ In addition to all of the arguments above, the following attributes are exported
 * `error_message` - When the Status field value is `FAILED`, this contains a message that explains why.
 * `id` - Identifier of the Index.
 * `index_statistics` - Block that provides information about the number of FAQ questions and answers and the number of text documents indexed. Documented below.
-* `name` - Specifies the name of the Index.
+* `name` - Name of the Index.
 * `role_arn` - An AWS Identity and Access Management (IAM) role that gives Amazon Kendra permissions to access your Amazon CloudWatch logs and metrics. This is also the role you use when you call the `BatchPutDocument` API to index documents from an Amazon S3 bucket.
 * `server_side_encryption_configuration` - A block that specifies the identifier of the AWS KMS customer managed key (CMK) that's used to encrypt data indexed by Amazon Kendra. Amazon Kendra doesn't support asymmetric CMKs. Documented below.
 * `status` - Current status of the index. When the value is `ACTIVE`, the index is ready for use. If the Status field value is `FAILED`, the `error_message` field contains a message that explains why.
@@ -62,8 +62,8 @@ A `document_metadata_configuration_updates` block supports the following attribu
 
 A `relevance` block supports the following attributes:
 
-* `duration` - Specifies the time period that the boost applies to. For more information, refer to [Duration](https://docs.aws.amazon.com/kendra/latest/dg/API_Relevance.html#Kendra-Type-Relevance-Duration).
-* `freshness` - Indicates that this field determines how "fresh" a document is. For more information, refer to [Freshness](https://docs.aws.amazon.com/kendra/latest/dg/API_Relevance.html#Kendra-Type-Relevance-Freshness).
+* `duration` - Time period that the boost applies to. For more information, refer to [Duration](https://docs.aws.amazon.com/kendra/latest/dg/API_Relevance.html#Kendra-Type-Relevance-Duration).
+* `freshness` - How "fresh" a document is. For more information, refer to [Freshness](https://docs.aws.amazon.com/kendra/latest/dg/API_Relevance.html#Kendra-Type-Relevance-Freshness).
 * `importance` - Relative importance of the field in the search. Larger numbers provide more of a boost than smaller numbers. Minimum value of 1. Maximum value of 10.
 * `rank_order` - Determines how values should be interpreted. For more information, refer to [RankOrder](https://docs.aws.amazon.com/kendra/latest/dg/API_Relevance.html#Kendra-Type-Relevance-RankOrder).
 * `values_importance_map` - A list of values that should be given a different boost when they appear in the result list. For more information, refer to [ValueImportanceMap](https://docs.aws.amazon.com/kendra/latest/dg/API_Relevance.html#Kendra-Type-Relevance-ValueImportanceMap).
@@ -71,7 +71,7 @@ A `relevance` block supports the following attributes:
 A `search` block supports the following attributes:
 
 * `displayable` - Determines whether the field is returned in the query response. The default is `true`.
-* `facetable` - Indicates that the field can be used to create search facets, a count of results for each value in the field. The default is `false`.
+* `facetable` - Whether the field can be used to create search facets, a count of results for each value in the field. The default is `false`.
 * `searchable` - Determines whether the field is used in the search. If the Searchable field is true, you can use relevance tuning to manually tune how Amazon Kendra weights the field in the search. The default is `true` for `string` fields and `false` for `number` and `date` fields.
 * `sortable` - Determines whether the field can be used to sort the results of a query. If you specify sorting on a field that does not have Sortable set to true, Amazon Kendra returns an exception. The default is `false`.
 

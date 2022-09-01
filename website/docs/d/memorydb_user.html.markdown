@@ -33,6 +33,6 @@ In addition, the following attributes are exported:
 * `arn` - ARN of the user.
 * `authentication_mode` - Denotes the user's authentication properties.
     * `password_count` - The number of passwords belonging to the user.
-    * `type` - Indicates whether the user requires a password to authenticate.
+    * `type` - Whether the user requires a password to authenticate.
 * `minimum_engine_version` - The minimum engine version supported for the user.
 * `tags` - Map of tags assigned to the subnet group.

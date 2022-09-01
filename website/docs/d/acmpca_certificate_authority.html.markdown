@@ -45,5 +45,5 @@ In addition to all arguments above, the following attributes are exported:
         * `revocation_configuration.0.ocsp_configuration.0.ocsp_custom_cname` - A CNAME specifying a customized OCSP domain.
 * `serial` - Serial number of the certificate authority. Only available after the certificate authority certificate has been imported.
 * `status` - Status of the certificate authority.
-* `tags` - Specifies a key-value map of user-defined tags that are attached to the certificate authority.
+* `tags` - Key-value map of user-defined tags that are attached to the certificate authority.
 * `type` - Type of the certificate authority.

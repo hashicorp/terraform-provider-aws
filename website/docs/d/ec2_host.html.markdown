@@ -60,7 +60,7 @@ In addition to the attributes above, the following attributes are exported:
 * `auto_placement` - Whether auto-placement is on or off.
 * `availability_zone` - Availability Zone of the Dedicated Host.
 * `cores` - Number of cores on the Dedicated Host.
-* `host_recovery` - Indicates whether host recovery is enabled or disabled for the Dedicated Host.
+* `host_recovery` - Whether host recovery is enabled or disabled for the Dedicated Host.
 * `instance_family` - Instance family supported by the Dedicated Host. For example, "m5".
 * `instance_type` - Instance type supported by the Dedicated Host. For example, "m5.large". If the host supports multiple instance types, no instanceType is returned.
 * `outpost_arn` - ARN of the AWS Outpost on which the Dedicated Host is allocated.

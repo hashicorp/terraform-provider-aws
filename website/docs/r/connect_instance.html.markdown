@@ -68,7 +68,7 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - The identifier of the instance.
 * `arn` - Amazon Resource Name (ARN) of the instance.
-* `created_time` - Specifies when the instance was created.
+* `created_time` - When the instance was created.
 * `service_role` - The service role of the instance.
 * `status` - The state of the instance.
 
