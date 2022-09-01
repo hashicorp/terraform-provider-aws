@@ -3,6 +3,7 @@ package ec2
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"regexp"
@@ -179,6 +180,10 @@ func resourceSecurityGroupCreate(d *schema.ResourceData, meta interface{}) error
 	conn := meta.(*conns.AWSClient).EC2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+
+	if _, ok := d.GetOk("vpc_id"); !ok {
+		return errors.New(`with the retirement of EC2-Classic no new Security Groups can be created without referencing a VPC`)
+	}
 
 	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
 	input := &ec2.CreateSecurityGroupInput{
