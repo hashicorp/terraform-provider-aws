@@ -48,7 +48,6 @@ func ResourceEventSourceMapping() *schema.Resource {
 					},
 				},
 			},
-
 			"batch_size": {
 				Type:     schema.TypeInt,
 				Optional: true,
@@ -84,12 +83,10 @@ func ResourceEventSourceMapping() *schema.Resource {
 					return old == new
 				},
 			},
-
 			"bisect_batch_on_function_error": {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
-
 			"destination_config": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -114,20 +111,17 @@ func ResourceEventSourceMapping() *schema.Resource {
 				},
 				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 			},
-
 			"enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  true,
 			},
-
 			"event_source_arn": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
 				ExactlyOneOf: []string{"event_source_arn", "self_managed_event_source"},
 			},
-
 			"filter_criteria": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -151,12 +145,10 @@ func ResourceEventSourceMapping() *schema.Resource {
 					},
 				},
 			},
-
 			"function_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"function_name": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -168,7 +160,6 @@ func ResourceEventSourceMapping() *schema.Resource {
 					return (oldFunctionName == new && oldFunctionNameErr == nil) || (newFunctionName == old && newFunctionNameErr == nil)
 				},
 			},
-
 			"function_response_types": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -177,22 +168,18 @@ func ResourceEventSourceMapping() *schema.Resource {
 					ValidateFunc: validation.StringInSlice(lambda.FunctionResponseType_Values(), false),
 				},
 			},
-
 			"last_modified": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"last_processing_result": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"maximum_batching_window_in_seconds": {
 				Type:     schema.TypeInt,
 				Optional: true,
 			},
-
 			"maximum_record_age_in_seconds": {
 				Type:     schema.TypeInt,
 				Optional: true,
@@ -202,21 +189,18 @@ func ResourceEventSourceMapping() *schema.Resource {
 					validation.IntBetween(60, 604_800),
 				),
 			},
-
 			"maximum_retry_attempts": {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				Computed:     true,
 				ValidateFunc: validation.IntBetween(-1, 10_000),
 			},
-
 			"parallelization_factor": {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				ValidateFunc: validation.IntBetween(1, 10),
 				Computed:     true,
 			},
-
 			"queues": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -226,7 +210,6 @@ func ResourceEventSourceMapping() *schema.Resource {
 					ValidateFunc: validation.StringLenBetween(1, 1000),
 				},
 			},
-
 			"self_managed_event_source": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -257,7 +240,6 @@ func ResourceEventSourceMapping() *schema.Resource {
 				},
 				ExactlyOneOf: []string{"event_source_arn", "self_managed_event_source"},
 			},
-
 			"self_managed_kafka_event_source_config": {
 				Type:          schema.TypeList,
 				Optional:      true,
@@ -273,7 +255,6 @@ func ResourceEventSourceMapping() *schema.Resource {
 					},
 				},
 			},
-
 			"source_access_configuration": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -292,31 +273,26 @@ func ResourceEventSourceMapping() *schema.Resource {
 					},
 				},
 			},
-
 			"starting_position": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice(lambda.EventSourcePosition_Values(), false),
 			},
-
 			"starting_position_timestamp": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.IsRFC3339Time,
 			},
-
 			"state": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"state_transition_reason": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"topics": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -326,13 +302,11 @@ func ResourceEventSourceMapping() *schema.Resource {
 					ValidateFunc: validation.StringLenBetween(1, 249),
 				},
 			},
-
 			"tumbling_window_in_seconds": {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				ValidateFunc: validation.IntBetween(0, 900),
 			},
-
 			"uuid": {
 				Type:     schema.TypeString,
 				Computed: true,
