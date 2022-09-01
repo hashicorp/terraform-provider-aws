@@ -36,6 +36,11 @@ func TestAccDirectConnectMacSecKey_withCkn(t *testing.T) {
 					resource.TestMatchResourceAttr(resourceName, "ckn", regexp.MustCompile(ckn)),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -68,6 +73,11 @@ func TestAccDirectConnectMacSecKey_withSecret(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "connection_id", connectionId),
 					resource.TestCheckResourceAttr(resourceName, "secret_arn", secretArn),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})

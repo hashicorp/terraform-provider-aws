@@ -16,9 +16,9 @@ import (
 
 func ResourceMacSecKey() *schema.Resource {
 	return &schema.Resource{
-		// MacSecKey resource only supports create (Associate) and delete (Disassociate)
+		// MacSecKey resource only supports create (Associate), read (Describe) and delete (Disassociate)
 		Create: resourceMacSecKeyCreate,
-		Read:   schema.Noop,
+		Read:   resourceMacSecKeyRead,
 		// You cannot modify a MACsec secret key after you associate it with a connection.
 		// To modify the key, disassociate the key from the connection, and then associate
 		// a new key with the connection
@@ -94,6 +94,34 @@ func resourceMacSecKeyCreate(d *schema.ResourceData, meta interface{}) error {
 	d.SetId(fmt.Sprintf("%s/%s", secret_arn, aws.StringValue(output.ConnectionId)))
 
 	d.Set("secret_arn", secret_arn)
+
+	return nil
+}
+
+func resourceMacSecKeyRead(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*conns.AWSClient).DirectConnectConn
+
+	secretArn, connId, err := MacSecKeyParseID(d.Id())
+
+	connection, err := FindConnectionByID(conn, connId)
+
+	if err != nil {
+		return fmt.Errorf("error reading Direct Connect Connection (%s): %w", d.Id(), err)
+	}
+
+	if connection.MacSecKeys != nil {
+		for _, key := range connection.MacSecKeys {
+			if key.SecretARN == &secretArn {
+				d.Set("ckn", key.Ckn)
+				d.Set("connection_id", connId)
+				d.Set("secret_arn", key.SecretARN)
+				d.Set("start_on", key.StartOn)
+				d.Set("state", key.State)
+			}
+		}
+	} else {
+		return fmt.Errorf("No MACSec keys found on Direct Connect Connection (%s)", d.Id())
+	}
 
 	return nil
 }

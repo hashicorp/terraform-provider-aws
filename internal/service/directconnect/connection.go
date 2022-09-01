@@ -194,7 +194,6 @@ func resourceConnectionRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("jumbo_frame_capable", connection.JumboFrameCapable)
 	d.Set("location", connection.Location)
 	d.Set("macsec_capable", connection.MacSecCapable)
-	// d.Set("macsec_keys", connection.MacSecKeys)
 	d.Set("name", connection.ConnectionName)
 	d.Set("owner_account_id", connection.OwnerAccount)
 	d.Set("port_encryption_status", connection.PortEncryptionStatus)
