@@ -96,7 +96,6 @@ func TestAccLambdaFunctionDataSource_latestVersion(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "qualified_arn", resourceName, "qualified_arn"),
-					resource.TestCheckResourceAttr(dataSourceName, "qualifier", "1"),
 					resource.TestCheckResourceAttr(dataSourceName, "version", "1"),
 				),
 			},
@@ -119,7 +118,6 @@ func TestAccLambdaFunctionDataSource_unpublishedVersion(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "qualified_arn", resourceName, "qualified_arn"),
-					resource.TestCheckResourceAttr(dataSourceName, "qualifier", "$LATEST"),
 					resource.TestCheckResourceAttr(dataSourceName, "version", "$LATEST"),
 				),
 			},
