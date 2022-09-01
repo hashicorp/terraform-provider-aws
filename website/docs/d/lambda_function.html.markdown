@@ -27,7 +27,7 @@ data "aws_lambda_function" "existing" {
 The following arguments are supported:
 
 * `function_name` - (Required) Name of the lambda function.
-* `qualifier` - (Optional) Alias name or version number of the lambda functionE.g., `$LATEST`, `my-alias`, or `1`
+* `qualifier` - (Optional) Alias name or version number of the lambda functionE.g., `$LATEST`, `my-alias`, or `1`. When not included: the data source resolves to the most recent published version; if no published version exists: it resolves to the most recent unpublished version.
 
 ## Attributes Reference
 
@@ -58,5 +58,5 @@ In addition to all arguments above, the following attributes are exported:
 * `source_code_size` - Size in bytes of the function .zip file.
 * `timeout` - Function execution time at which Lambda should terminate the function.
 * `tracing_config` - Tracing settings of the function.
-* `version` - The latest published version of the Lambda function. For unpublished lambda function, version is set to `$LATEST`.
+* `version` - The version of the Lambda function returned. If `qualifier` is not set, this will resolve to the most recent published version. If no published version of the function exists, `version` will resolve to `$LATEST`.
 * `vpc_config` - VPC configuration associated with your Lambda function.
