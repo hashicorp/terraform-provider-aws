@@ -60,7 +60,7 @@ The following arguments are supported:
 * `inbound_calls_enabled` - (Required) Specifies whether inbound calls are enabled.
 * `instance_alias` - (Optional) Specifies the name of the instance. Required if `directory_id` not specified.
 * `outbound_calls_enabled` - (Required) Specifies whether outbound calls are enabled.
-<!-- * `use_custom_tts_voices` - (Optional) Specifies Whether use custom tts voices is enabled. Defaults to `false` -->
+<!-- * `use_custom_tts_voices` - (Optional) Whether use custom tts voices is enabled. Defaults to `false` -->
 
 ## Attributes Reference
 

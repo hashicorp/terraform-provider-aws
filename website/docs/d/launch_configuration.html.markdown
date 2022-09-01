@@ -36,7 +36,7 @@ In addition to all arguments above, the following attributes are exported:
 * `iam_instance_profile` - The IAM Instance Profile to associate with launched instances.
 * `key_name` - Key Name that should be used for the instance.
 * `metadata_options` - Metadata options for the instance.
-    * `http_endpoint` - The state of the metadata service: `enabled`, `disabled`.
+    * `http_endpoint` - State of the metadata service: `enabled`, `disabled`.
     * `http_tokens` - If session tokens are required: `optional`, `required`.
     * `http_put_response_hop_limit` - The desired HTTP PUT response hop limit for instance metadata requests.
 * `security_groups` - List of associated Security Group IDS.
