@@ -31,7 +31,7 @@ func TestAccDirectConnectMacSecKey_withCkn(t *testing.T) {
 		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDirectConnectMacSecConfig_withCkn(ckn, cak, connectionId),
+				Config: testAccMacSecConfig_withCkn(ckn, cak, connectionId),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "connection_id", connectionId),
 					resource.TestMatchResourceAttr(resourceName, "ckn", regexp.MustCompile(ckn)),
@@ -71,7 +71,7 @@ func TestAccDirectConnectMacSecKey_withSecret(t *testing.T) {
 		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDirectConnectMacSecConfig_withSecret(secretArn, connectionId),
+				Config: testAccMacSecConfig_withSecret(secretArn, connectionId),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "connection_id", connectionId),
 					resource.TestCheckResourceAttr(resourceName, "secret_arn", secretArn),
@@ -96,7 +96,7 @@ func testAccDirecConnectMacSecGenerateHex() string {
 	return hex.EncodeToString(s)
 }
 
-func testAccDirectConnectMacSecConfig_withCkn(ckn, cak, connectionId string) string {
+func testAccMacSecConfig_withCkn(ckn, cak, connectionId string) string {
 	return fmt.Sprintf(`
 resource "aws_dx_macsec_key" "test" {
   connection_id = %[3]q
@@ -109,7 +109,7 @@ resource "aws_dx_macsec_key" "test" {
 }
 
 // Can only be used with an EXISTING secrets created by previous association - cannot create secrets from scratch
-func testAccDirectConnectMacSecConfig_withSecret(secretArn, connectionId string) string {
+func testAccMacSecConfig_withSecret(secretArn, connectionId string) string {
 	return fmt.Sprintf(`
 data "aws_secretsmanager_secret" "test" {
   arn = %[1]q

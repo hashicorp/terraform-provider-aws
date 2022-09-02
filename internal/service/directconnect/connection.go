@@ -275,33 +275,3 @@ func deleteConnection(conn *directconnect.DirectConnect, connectionID string, wa
 
 	return nil
 }
-
-// ValidateMacSecAvailability checks for MAC Security availability given a
-// location `l` and desired port speed `p`
-func ValidateMacSecAvailability(l string, p string, meta interface{}) bool {
-	conn := meta.(*conns.AWSClient).DirectConnectConn
-	input := &directconnect.DescribeLocationsInput{}
-
-	response, err := conn.DescribeLocations(input)
-
-	if err != nil {
-		fmt.Printf("error checking MACSec availability: %s", err)
-		return false
-	}
-
-	var available bool
-
-	for _, location := range response.Locations {
-		if l == *location.LocationCode {
-			for _, port_speed := range location.AvailableMacSecPortSpeeds {
-				if *port_speed == p {
-					available = true
-				} else {
-					fmt.Printf("MACSec not available for location %s and desired port speed %s", l, p)
-					available = false
-				}
-			}
-		}
-	}
-	return available
-}
