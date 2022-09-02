@@ -232,10 +232,11 @@ func (e *emitter) emitSchemaForResource(resource *schema.Resource) error {
 	return nil
 }
 
-// emitAttributesAndBlocks generates the Plugin Framework code for a set of Plugin SDK Attribute and Block properties
+// emitAttributesAndBlocks generates the Plugin Framework code for a set of Plugin SDK Attributes and Blocks
 // and emits the generated code to the emitter's Writer.
 // Property names are sorted prior to code generation to reduce diffs.
 func (e *emitter) emitAttributesAndBlocks(path []string, schema map[string]*schema.Schema) error {
+	// At this point we are emitting code for a tfsdk.Block or Schema.
 	names := make([]string, 0)
 	for name := range schema {
 		names = append(names, name)
@@ -257,7 +258,7 @@ func (e *emitter) emitAttributesAndBlocks(path []string, schema map[string]*sche
 
 		fprintf(e.SchemaWriter, "%q:", name)
 
-		err := e.emitAttribute(append(path, name), property)
+		err := e.emitAttributeProperty(append(path, name), property)
 
 		if err != nil {
 			return err
@@ -284,7 +285,7 @@ func (e *emitter) emitAttributesAndBlocks(path []string, schema map[string]*sche
 
 		fprintf(e.SchemaWriter, "%q:", name)
 
-		err := e.emitBlock(append(path, name), property)
+		err := e.emitBlockProperty(append(path, name), property)
 
 		if err != nil {
 			return err
@@ -299,9 +300,10 @@ func (e *emitter) emitAttributesAndBlocks(path []string, schema map[string]*sche
 	return nil
 }
 
-// emitAttribute generates the Plugin Framework code for a Plugin SDK Attribute property
+// emitAttributeProperty generates the Plugin Framework code for a Plugin SDK Attribute's property
 // and emits the generated code to the emitter's Writer.
-func (e *emitter) emitAttribute(path []string, property *schema.Schema) error {
+func (e *emitter) emitAttributeProperty(path []string, property *schema.Schema) error {
+	// At this point we are emitting code for the values of a tfsdk.Schema's Attributes (map[string]tfsdk.Attribute).
 	fprintf(e.SchemaWriter, "{\n")
 
 	switch v := property.Type; v {
@@ -432,9 +434,10 @@ func (e *emitter) emitAttribute(path []string, property *schema.Schema) error {
 	return nil
 }
 
-// emitBlock generates the Plugin Framework code for a Plugin SDK Block property
+// emitBlockProperty generates the Plugin Framework code for a Plugin SDK Block's property
 // and emits the generated code to the emitter's Writer.
-func (e *emitter) emitBlock(path []string, property *schema.Schema) error {
+func (e *emitter) emitBlockProperty(path []string, property *schema.Schema) error {
+	// At this point we are emitting code for the values of a tfsdk.Block or Schema's Blocks (map[string]tfsdk.Block).
 	fprintf(e.SchemaWriter, "{\n")
 
 	switch v := property.Type; v {
@@ -516,6 +519,7 @@ func (e *emitter) emitBlock(path []string, property *schema.Schema) error {
 // emitComputedOnlyBlock generates the Plugin Framework code for a Plugin SDK Computed-only nested block
 // and emits the generated code to the emitter's Writer.
 // See https://github.com/hashicorp/terraform-plugin-sdk/blob/6ffc92796f0716c07502e4d36aaafa5fd85e94cf/internal/configs/configschema/implied_type.go#L12.
+// Property names are sorted prior to code generation to reduce diffs.
 func (e *emitter) emitComputedOnlyBlock(path []string, schema map[string]*schema.Schema) error {
 	names := make([]string, 0)
 	for name := range schema {
