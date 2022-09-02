@@ -59,6 +59,92 @@ func TestAccMediaLiveMultiplex_basic(t *testing.T) {
 	})
 }
 
+func TestAccMediaLiveMultiplex_start(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var multiplex medialive.DescribeMultiplexOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_medialive_multiplex.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(names.MediaLiveEndpointID, t)
+			testAccMultiplexesPreCheck(t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMultiplexDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccMultiplexConfig_basic(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMultiplexExists(resourceName, &multiplex),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+				),
+			},
+			{
+				Config: testAccMultiplexConfig_basic(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMultiplexExists(resourceName, &multiplex),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccMediaLiveMultiplex_update(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var multiplex medialive.DescribeMultiplexOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_medialive_multiplex.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(names.MediaLiveEndpointID, t)
+			testAccMultiplexesPreCheck(t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMultiplexDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccMultiplexConfig_basic(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMultiplexExists(resourceName, &multiplex),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "multiplex_settings.0.transport_stream_bitrate", "1000000"),
+					resource.TestCheckResourceAttr(resourceName, "multiplex_settings.0.transport_stream_reserved_bitrate", "1"),
+					resource.TestCheckResourceAttr(resourceName, "multiplex_settings.0.transport_stream_id", "1"),
+					resource.TestCheckResourceAttr(resourceName, "multiplex_settings.0.maximum_video_buffer_delay_milliseconds", "1000"),
+				),
+			},
+			{
+				Config: testAccMultiplexConfig_update(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMultiplexExists(resourceName, &multiplex),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "multiplex_settings.0.transport_stream_bitrate", "1000001"),
+					resource.TestCheckResourceAttr(resourceName, "multiplex_settings.0.transport_stream_reserved_bitrate", "1"),
+					resource.TestCheckResourceAttr(resourceName, "multiplex_settings.0.transport_stream_id", "2"),
+					resource.TestCheckResourceAttr(resourceName, "multiplex_settings.0.maximum_video_buffer_delay_milliseconds", "1000"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccMediaLiveMultiplex_updateTags(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -221,6 +307,30 @@ resource "aws_medialive_multiplex" "test" {
   multiplex_settings {
     transport_stream_bitrate                = 1000000
     transport_stream_id                     = 1
+    transport_stream_reserved_bitrate       = 1
+    maximum_video_buffer_delay_milliseconds = 1000
+  }
+
+  start_multiplex = %[2]t
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, start))
+}
+
+func testAccMultiplexConfig_update(rName string, start bool) string {
+	return acctest.ConfigCompose(
+		testAccMultiplexBaseConfig(rName),
+		fmt.Sprintf(`
+resource "aws_medialive_multiplex" "test" {
+  name               = %[1]q
+  availability_zones = [data.aws_availability_zones.test.names[0], data.aws_availability_zones.test.names[1]]
+
+  multiplex_settings {
+    transport_stream_bitrate                = 1000001
+    transport_stream_id                     = 2
     transport_stream_reserved_bitrate       = 1
     maximum_video_buffer_delay_milliseconds = 1000
   }
