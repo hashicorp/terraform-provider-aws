@@ -288,17 +288,17 @@ func testAccMultiplexesPreCheck(t *testing.T) {
 	}
 }
 
-func testAccMultiplexBaseConfig(rName string) string {
-	return fmt.Sprintf(`
+func testAccMultiplexBaseConfig() string {
+	return `
 data "aws_availability_zones" "test" {
   state = "available"
 }
-`)
+`
 }
 
 func testAccMultiplexConfig_basic(rName string, start bool) string {
 	return acctest.ConfigCompose(
-		testAccMultiplexBaseConfig(rName),
+		testAccMultiplexBaseConfig(),
 		fmt.Sprintf(`
 resource "aws_medialive_multiplex" "test" {
   name               = %[1]q
@@ -322,7 +322,7 @@ resource "aws_medialive_multiplex" "test" {
 
 func testAccMultiplexConfig_update(rName string, start bool) string {
 	return acctest.ConfigCompose(
-		testAccMultiplexBaseConfig(rName),
+		testAccMultiplexBaseConfig(),
 		fmt.Sprintf(`
 resource "aws_medialive_multiplex" "test" {
   name               = %[1]q
@@ -346,7 +346,7 @@ resource "aws_medialive_multiplex" "test" {
 
 func testAccMultiplexConfig_tags1(rName, key1, value1 string) string {
 	return acctest.ConfigCompose(
-		testAccMultiplexBaseConfig(rName),
+		testAccMultiplexBaseConfig(),
 		fmt.Sprintf(`
 resource "aws_medialive_multiplex" "test" {
   name               = %[1]q
@@ -368,7 +368,7 @@ resource "aws_medialive_multiplex" "test" {
 
 func testAccMultiplexConfig_tags2(rName, key1, value1, key2, value2 string) string {
 	return acctest.ConfigCompose(
-		testAccMultiplexBaseConfig(rName),
+		testAccMultiplexBaseConfig(),
 		fmt.Sprintf(`
 resource "aws_medialive_multiplex" "test" {
   name               = %[1]q
