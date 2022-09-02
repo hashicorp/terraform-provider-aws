@@ -49,6 +49,8 @@ func ResourceMultiplex() *schema.Resource {
 				Type:     schema.TypeList,
 				Required: true,
 				ForceNew: true,
+				MinItems: 2,
+				MaxItems: 2,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"multiplex_settings": {
@@ -184,6 +186,9 @@ func resourceMultiplexUpdate(ctx context.Context, d *schema.ResourceData, meta i
 			MultiplexId: aws.String(d.Id()),
 		}
 
+		if d.HasChange("name") {
+			in.Name = aws.String(d.Get("name").(string))
+		}
 		if d.HasChange("multiplex_settings") {
 			in.MultiplexSettings = expandMultiplexSettings(d.Get("multiplex_settings").([]interface{}))
 		}
@@ -348,21 +353,21 @@ func expandMultiplexSettings(tfList []interface{}) *types.MultiplexSettings {
 		return nil
 	}
 
-	var s types.MultiplexSettings
-
 	m := tfList[0].(map[string]interface{})
 
-	if val, ok := m["transport_stream_bitrate"]; ok {
-		s.TransportStreamBitrate = val.(int32)
+	s := types.MultiplexSettings{}
+
+	if v, ok := m["transport_stream_bitrate"]; ok {
+		s.TransportStreamBitrate = int32(v.(int))
 	}
-	if val, ok := m["transport_stream_id"]; ok {
-		s.TransportStreamBitrate = val.(int32)
+	if v, ok := m["transport_stream_id"]; ok {
+		s.TransportStreamId = int32(v.(int))
 	}
 	if val, ok := m["maximum_video_buffer_delay_milliseconds"]; ok {
-		s.TransportStreamBitrate = val.(int32)
+		s.MaximumVideoBufferDelayMilliseconds = int32(val.(int))
 	}
 	if val, ok := m["transport_stream_reserved_bitrate"]; ok {
-		s.TransportStreamBitrate = val.(int32)
+		s.TransportStreamReservedBitrate = int32(val.(int))
 	}
 
 	return &s

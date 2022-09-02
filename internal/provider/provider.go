@@ -1725,6 +1725,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 
 			"aws_medialive_input":                medialive.ResourceInput(),
 			"aws_medialive_input_security_group": medialive.ResourceInputSecurityGroup(),
+			"aws_medialive_multiplex":            medialive.ResourceMultiplex(),
 
 			"aws_media_store_container":        mediastore.ResourceContainer(),
 			"aws_media_store_container_policy": mediastore.ResourceContainerPolicy(),
