@@ -3408,7 +3408,7 @@ func flattenTasks(tasks []*appflow.Task) []interface{} {
 }
 
 func flattenTask(task *appflow.Task) map[string]interface{} {
-	if task == nil || task == (appflow.Task{}) {
+	if task == nil || (task == (&appflow.Task{})) {
 		return nil
 	}
 
