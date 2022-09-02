@@ -263,7 +263,7 @@ func resourceMultiplexDelete(ctx context.Context, d *schema.ResourceData, meta i
 		create.DiagError(names.MediaLive, create.ErrActionDeleting, ResNameMultiplex, d.Id(), err)
 	}
 
-	if out.State != types.MultiplexStateRunning {
+	if out.State == types.MultiplexStateRunning {
 		if err := stopMultiplex(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 			return create.DiagError(names.MediaLive, create.ErrActionDeleting, ResNameMultiplex, d.Id(), err)
 		}
