@@ -8,6 +8,7 @@ import (
 	"regexp"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/service/directconnect"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
@@ -24,8 +25,8 @@ func TestAccDirectConnectMacSecKey_withCkn(t *testing.T) {
 	cak := testAccDirecConnectMacSecGenerateHex()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() { acctest.PreCheck(t) },
-		// ErrorCheck:        acctest.ErrorCheck(t, directconnect.EndpointsID),
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, directconnect.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
@@ -40,6 +41,8 @@ func TestAccDirectConnectMacSecKey_withCkn(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				// Ignore the "cak" attribute as isn't returned by the API during read/refresh
+				ImportStateVerifyIgnore: []string{"cak"},
 			},
 		},
 	})
@@ -62,8 +65,8 @@ func TestAccDirectConnectMacSecKey_withSecret(t *testing.T) {
 	resourceName := "aws_dx_macsec_key.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() { acctest.PreCheck(t) },
-		// ErrorCheck:        acctest.ErrorCheck(t, directconnect.EndpointsID),
+		PreCheck:          func() { acctest.PreCheck(t) },
+		ErrorCheck:        acctest.ErrorCheck(t, directconnect.EndpointsID),
 		ProviderFactories: acctest.ProviderFactories,
 		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
@@ -105,7 +108,7 @@ resource "aws_dx_macsec_key" "test" {
 `, ckn, cak, connectionId)
 }
 
-// Can only be used with an EXISTING secrets - cannot create secrets from scratch
+// Can only be used with an EXISTING secrets created by previous association - cannot create secrets from scratch
 func testAccDirectConnectMacSecConfig_withSecret(secretArn, connectionId string) string {
 	return fmt.Sprintf(`
 data "aws_secretsmanager_secret" "test" {

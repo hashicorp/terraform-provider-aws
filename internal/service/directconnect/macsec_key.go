@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/directconnect"
 	"github.com/aws/aws-sdk-go/service/secretsmanager"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -91,36 +92,38 @@ func resourceMacSecKeyCreate(d *schema.ResourceData, meta interface{}) error {
 	secret_arn := MacSecKeyParseSecretARN(output)
 
 	// Create a composite ID based on connection ID and secret ARN
-	d.SetId(fmt.Sprintf("%s/%s", secret_arn, aws.StringValue(output.ConnectionId)))
+	d.SetId(fmt.Sprintf("%s_%s", secret_arn, aws.StringValue(output.ConnectionId)))
 
 	d.Set("secret_arn", secret_arn)
 
-	return nil
+	return resourceMacSecKeyRead(d, meta)
 }
 
 func resourceMacSecKeyRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DirectConnectConn
 
 	secretArn, connId, err := MacSecKeyParseID(d.Id())
+	if err != nil {
+		return fmt.Errorf("unexpected format of ID (%s), expected secretArn_connectionId", d.Id())
+	}
 
 	connection, err := FindConnectionByID(conn, connId)
-
 	if err != nil {
 		return fmt.Errorf("error reading Direct Connect Connection (%s): %w", d.Id(), err)
 	}
 
-	if connection.MacSecKeys != nil {
-		for _, key := range connection.MacSecKeys {
-			if key.SecretARN == &secretArn {
-				d.Set("ckn", key.Ckn)
-				d.Set("connection_id", connId)
-				d.Set("secret_arn", key.SecretARN)
-				d.Set("start_on", key.StartOn)
-				d.Set("state", key.State)
-			}
-		}
-	} else {
+	if connection.MacSecKeys == nil {
 		return fmt.Errorf("No MACSec keys found on Direct Connect Connection (%s)", d.Id())
+	}
+
+	for _, key := range connection.MacSecKeys {
+		if aws.StringValue(key.SecretARN) == aws.StringValue(&secretArn) {
+			d.Set("ckn", key.Ckn)
+			d.Set("connection_id", connId)
+			d.Set("secret_arn", key.SecretARN)
+			d.Set("start_on", key.StartOn)
+			d.Set("state", key.State)
+		}
 	}
 
 	return nil
@@ -144,7 +147,7 @@ func resourceMacSecKeyDelete(d *schema.ResourceData, meta interface{}) error {
 	// Disassociating the key does not delete it from Secrets Manager, do that here
 	err = resourceMacSecKeySecretDelete(*input.SecretARN, meta)
 	if err != nil {
-		return fmt.Errorf("Unable to delete MACSec secret key %s: %w", *input.SecretARN, err)
+		return err
 	}
 
 	return nil
@@ -183,10 +186,10 @@ func MacSecKeyParseSecretARN(output *directconnect.AssociateMacSecKeyOutput) str
 
 // MacSecKeyParseID parses the resource ID and returns the secret ARN and connection ID
 func MacSecKeyParseID(id string) (string, string, error) {
-	parts := strings.SplitN(id, "/", 2)
+	parts := strings.SplitN(id, "_", 2)
 
 	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
-		return "", "", fmt.Errorf("unexpected format of ID (%s), expected secretArn:connectionId", id)
+		return "", "", &resource.NotFoundError{}
 	}
 
 	return parts[0], parts[1], nil

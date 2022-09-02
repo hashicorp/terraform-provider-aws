@@ -199,27 +199,6 @@ func resourceConnectionRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("port_encryption_status", connection.PortEncryptionStatus)
 	d.Set("provider_name", connection.ProviderName)
 
-	// if connection.MacSecKeys != nil {
-	// 	keys := make([]interface{}, len(connection.MacSecKeys))
-	// 	for i, key := range connection.MacSecKeys {
-	// 		k := map[string]interface{}{
-	// 			"Ckn":       aws.StringValue(key.Ckn),
-	// 			"SecretARN": aws.StringValue(key.SecretARN),
-	// 			"StartOn":   aws.StringValue(key.StartOn),
-	// 			"State":     aws.StringValue(key.State),
-	// 		}
-	// 		fmt.Println(k)
-	// 		keys[i] = k
-	// 	}
-	// 	d.Set("macsec_keys", keys)
-	// }
-
-	// fmt.Println("MACSec keys:", connection.MacSecKeys)
-
-	// if err := d.Set("macsec_keys", flattenMacSecKeys(connection.MacSecKeys)); err != nil {
-	// 	return fmt.Errorf("error setting macsec_keys: %s", err)
-	// }
-
 	tags, err := ListTags(conn, arn)
 
 	if err != nil {
@@ -325,56 +304,4 @@ func ValidateMacSecAvailability(l string, p string, meta interface{}) bool {
 		}
 	}
 	return available
-}
-
-// Expand and flatten structures for MACSec keys
-// Ref: https://github.com/hashicorp/terraform-provider-aws/blob/main/docs/contributing/data-handling-and-conversion.md#flatten-functions-for-blocks
-
-func flattenMacSecKey(macSecKey *directconnect.MacSecKey) map[string]interface{} {
-	if macSecKey == nil {
-		return nil
-	}
-
-	keyMap := map[string]interface{}{}
-
-	// nested attribute handling
-
-	return keyMap
-}
-
-func flattenMacSecKeyStructures(macSecKeys []*directconnect.MacSecKey) []interface{} {
-	if len(macSecKeys) == 0 {
-		return nil
-	}
-
-	var keyList []interface{}
-
-	for _, key := range macSecKeys {
-		if key == nil {
-			continue
-		}
-
-		keyList = append(keyList, flattenMacSecKey(key))
-	}
-	return keyList
-
-	// if macSecKeys == nil {
-	// 	return []interface{}{}
-	// }
-
-	// // fmt.Println("Length of MACSeckeys:", len(macSecKeys))
-
-	// keys := make([]interface{}, len(macSecKeys))
-	// for i, key := range macSecKeys {
-	// 	k := map[string]interface{}{
-	// 		"Ckn":       aws.StringValue(key.Ckn),
-	// 		"SecretARN": aws.StringValue(key.SecretARN),
-	// 		"StartOn":   aws.StringValue(key.StartOn),
-	// 		"State":     aws.StringValue(key.State),
-	// 	}
-	// 	fmt.Println(k)
-	// 	keys[i] = k
-	// }
-
-	// return []interface{}{keys}
 }
