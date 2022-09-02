@@ -269,6 +269,9 @@ of several sub-resources - these resources are laid out below.
 
 #### Cache Behavior Arguments
 
+~> **NOTE:** To achieve the setting of 'Use origin cache headers', use the following
+ttl values: min_ttl = 0, max_ttl = 31536000, default_ttl = 86400. (https://github.com/hashicorp/terraform-provider-aws/issues/19382)
+
 * `allowed_methods` (Required) - Controls which HTTP methods CloudFront
     processes and forwards to your Amazon S3 bucket or your custom origin.
 
