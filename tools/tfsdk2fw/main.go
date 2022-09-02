@@ -16,6 +16,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
+	"github.com/hashicorp/terraform-provider-aws/tools/tfsdk2fw/naming"
 	"github.com/mitchellh/cli"
 )
 
@@ -268,6 +269,9 @@ func (e *emitter) emitAttributesAndBlocks(path []string, schema map[string]*sche
 		}
 
 		fprintf(e.SchemaWriter, ",\n")
+
+		fprintf(e.StructWriter, "%s *string ", naming.ToCamelCase(name))
+		fprintf(e.StructWriter, "`tfsdk:%q`\n", name)
 	}
 	if emittedFieldName {
 		fprintf(e.SchemaWriter, "},\n")
