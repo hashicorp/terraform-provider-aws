@@ -193,7 +193,7 @@ func resourceMultiplexRead(ctx context.Context, d *schema.ResourceData, meta int
 func resourceMultiplexUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).MediaLiveConn
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept("tags", "tags_all", "start_multiplex") {
 		in := &medialive.UpdateMultiplexInput{
 			MultiplexId: aws.String(d.Id()),
 		}
@@ -214,6 +214,27 @@ func resourceMultiplexUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		if _, err := waitMultiplexUpdated(ctx, conn, aws.ToString(out.Multiplex.Id), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return create.DiagError(names.MediaLive, create.ErrActionWaitingForUpdate, ResNameMultiplex, d.Id(), err)
 		}
+	}
+
+	if d.HasChange("start_multiplex") {
+		out, err := FindMultiplexByID(ctx, conn, d.Id())
+		if err != nil {
+			return create.DiagError(names.MediaLive, create.ErrActionUpdating, ResNameMultiplex, d.Id(), err)
+		}
+		if d.Get("start_multiplex").(bool) {
+			if out.State != types.MultiplexStateRunning {
+				if err := startMultiplex(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+					return create.DiagError(names.MediaLive, create.ErrActionUpdating, ResNameMultiplex, d.Id(), err)
+				}
+			}
+		} else {
+			if out.State == types.MultiplexStateRunning {
+				if err := stopMultiplex(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+					return create.DiagError(names.MediaLive, create.ErrActionUpdating, ResNameMultiplex, d.Id(), err)
+				}
+			}
+		}
+
 	}
 
 	if d.HasChange("tags_all") {
@@ -242,7 +263,7 @@ func resourceMultiplexDelete(ctx context.Context, d *schema.ResourceData, meta i
 		create.DiagError(names.MediaLive, create.ErrActionDeleting, ResNameMultiplex, d.Id(), err)
 	}
 
-	if out.State != types.MultiplexStateIdle {
+	if out.State != types.MultiplexStateRunning {
 		if err := stopMultiplex(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 			return create.DiagError(names.MediaLive, create.ErrActionDeleting, ResNameMultiplex, d.Id(), err)
 		}
