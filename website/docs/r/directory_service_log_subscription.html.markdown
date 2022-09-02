@@ -51,7 +51,7 @@ resource "aws_directory_service_log_subscription" "example" {
 
 The following arguments are supported:
 
-* `directory_id` - (Required) The id of directory.
+* `directory_id` - (Required) ID of directory.
 * `log_group_name` - (Required) Name of the cloudwatch log group to which the logs should be published. The log group should be already created and the directory service principal should be provided with required permission to create stream and publish logs. Changing this value would delete the current subscription and create a new one. A directory can only have one log subscription at a time.
 
 ## Attributes Reference

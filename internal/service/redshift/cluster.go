@@ -389,6 +389,10 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
+	if v, ok := d.GetOk("cluster_security_groups"); ok && v.(*schema.Set).Len() > 0 {
+		return errors.New(`with the retirement of EC2-Classic no new Redshift Clusters can be created referencing Redshift Security Groups`)
+	}
+
 	clusterID := d.Get("cluster_identifier").(string)
 	backupInput := &redshift.RestoreFromClusterSnapshotInput{
 		AllowVersionUpgrade:              aws.Bool(d.Get("allow_version_upgrade").(bool)),
@@ -431,11 +435,6 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 	if v, ok := d.GetOk("cluster_parameter_group_name"); ok {
 		backupInput.ClusterParameterGroupName = aws.String(v.(string))
 		input.ClusterParameterGroupName = aws.String(v.(string))
-	}
-
-	if v := d.Get("cluster_security_groups").(*schema.Set); v.Len() > 0 {
-		backupInput.ClusterSecurityGroups = flex.ExpandStringSet(v)
-		input.ClusterSecurityGroups = flex.ExpandStringSet(v)
 	}
 
 	if v, ok := d.GetOk("cluster_subnet_group_name"); ok {

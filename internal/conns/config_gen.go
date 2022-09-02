@@ -187,7 +187,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/marketplacemetering"
 	"github.com/aws/aws-sdk-go/service/mediaconnect"
 	"github.com/aws/aws-sdk-go/service/mediaconvert"
-	"github.com/aws/aws-sdk-go/service/medialive"
 	"github.com/aws/aws-sdk-go/service/mediapackage"
 	"github.com/aws/aws-sdk-go/service/mediapackagevod"
 	"github.com/aws/aws-sdk-go/service/mediastore"
@@ -480,7 +479,6 @@ func (c *Config) clientConns(client *AWSClient, sess *session.Session) {
 	client.MarketplaceMeteringConn = marketplacemetering.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.MarketplaceMetering])}))
 	client.MediaConnectConn = mediaconnect.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.MediaConnect])}))
 	client.MediaConvertConn = mediaconvert.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.MediaConvert])}))
-	client.MediaLiveConn = medialive.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.MediaLive])}))
 	client.MediaPackageConn = mediapackage.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.MediaPackage])}))
 	client.MediaPackageVODConn = mediapackagevod.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.MediaPackageVOD])}))
 	client.MediaStoreConn = mediastore.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.MediaStore])}))

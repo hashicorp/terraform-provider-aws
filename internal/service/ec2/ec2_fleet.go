@@ -530,6 +530,12 @@ func ResourceFleet() *schema.Resource {
 								return oldInt == totalTargetCapacityO.(int)
 							},
 						},
+						"target_capacity_unit_type": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ForceNew:     true,
+							ValidateFunc: validation.StringInSlice(ec2.TargetCapacityUnitType_Values(), false),
+						},
 						"total_target_capacity": {
 							Type:     schema.TypeInt,
 							Required: true,
@@ -992,6 +998,10 @@ func expandTargetCapacitySpecificationRequest(tfMap map[string]interface{}) *ec2
 		apiObject.TotalTargetCapacity = aws.Int64(int64(v))
 	}
 
+	if v, ok := tfMap["target_capacity_unit_type"].(string); ok && v != "" {
+		apiObject.TargetCapacityUnitType = aws.String(v)
+	}
+
 	return apiObject
 }
 
@@ -1202,6 +1212,10 @@ func flattenTargetCapacitySpecification(apiObject *ec2.TargetCapacitySpecificati
 
 	if v := apiObject.TotalTargetCapacity; v != nil {
 		tfMap["total_target_capacity"] = aws.Int64Value(v)
+	}
+
+	if v := apiObject.TargetCapacityUnitType; v != nil {
+		tfMap["target_capacity_unit_type"] = aws.StringValue(v)
 	}
 
 	return tfMap

@@ -261,6 +261,7 @@ See the [assume role documentation](https://docs.aws.amazon.com/cli/latest/userg
 |Policy|`policy`|N/A|
 |Policy ARNs|`policy_arns`|N/A|
 |Session Name|`session_name`|`role_session_name`|
+|Source Identity|`source_identity`|N/A|
 |Tags|`tags`|N/A|
 |Transitive Tag Keys|`transitive_tag_keys`|N/A|
 
@@ -320,7 +321,7 @@ In addition to [generic `provider` arguments](https://www.terraform.io/docs/conf
   and the shared configuration parameter `max_attempts`.
 * `profile` - (Optional) AWS profile name as set in the shared configuration and credentials files.
   Can also be set using either the environment variables `AWS_PROFILE` or `AWS_DEFAULT_PROFILE`.
-* `region` - (Optional) The AWS region where the provider will operate. The region must be set.
+* `region` - (Optional) AWS region where the provider will operate. The region must be set.
   Can also be set with either the `AWS_REGION` or `AWS_DEFAULT_REGION` environment variables,
   or via a shared config file parameter `region` if `profile` is used.
   If credentials are retrieved from the EC2 Instance Metadata Service, the region can also be retrieved from the metadata.
@@ -459,13 +460,17 @@ In addition to [generic `provider` arguments](https://www.terraform.io/docs/conf
 
 The `assume_role` configuration block supports the following arguments:
 
-* `duration` - (Optional, Conflicts with `duration_seconds`) Duration of the assume role session. You can provide a value from 15 minutes up to the maximum session duration setting for the role. Represented by a string such as `1h`, `2h45m`, or `30m15s`.
-* `duration_seconds` - (Optional, **Deprecated** use `duration` instead) Number of seconds to restrict the assume role session duration. You can provide a value from 900 seconds (15 minutes) up to the maximum session duration setting for the role.
+* `duration` - (Optional, Conflicts with `duration_seconds`) Duration of the assume role session.
+  You can provide a value from 15 minutes up to the maximum session duration setting for the role.
+  Represented by a string such as `1h`, `2h45m`, or `30m15s`.
+* `duration_seconds` - (Optional, **Deprecated** use `duration` instead) Number of seconds to restrict the assume role session duration.
+  You can provide a value from 900 seconds (15 minutes) up to the maximum session duration setting for the role.
 * `external_id` - (Optional) External identifier to use when assuming the role.
 * `policy` - (Optional) IAM Policy JSON describing further restricting permissions for the IAM Role being assumed.
 * `policy_arns` - (Optional) Set of Amazon Resource Names (ARNs) of IAM Policies describing further restricting permissions for the IAM Role being assumed.
-* `role_arn` - (Required) Amazon Resource Name (ARN) of the IAM Role to assume.
+* `role_arn` - (Required) ARN of the IAM Role to assume.
 * `session_name` - (Optional) Session name to use when assuming the role.
+* `source_identity` - (Optional) Source identity specified by the principal assuming the role.
 * `tags` - (Optional) Map of assume role session tags.
 * `transitive_tag_keys` - (Optional) Set of assume role session tag keys to pass to any subsequent sessions.
 
@@ -473,15 +478,20 @@ The `assume_role` configuration block supports the following arguments:
 
 The `assume_role_with_web_identity` configuration block supports the following arguments:
 
-* `duration` - (Optional) Duration of the assume role session. You can provide a value from 15 minutes up to the maximum session duration setting for the role. Represented by a string such as `1h`, `2h45m`, or `30m15s`.
+* `duration` - (Optional) Duration of the assume role session.
+  You can provide a value from 15 minutes up to the maximum session duration setting for the role.
+  Represented by a string such as `1h`, `2h45m`, or `30m15s`.
 * `policy` - (Optional) IAM Policy JSON describing further restricting permissions for the IAM Role being assumed.
 * `policy_arns` - (Optional) Set of Amazon Resource Names (ARNs) of IAM Policies describing further restricting permissions for the IAM Role being assumed.
-* `role_arn` - (Required) Amazon Resource Name (ARN) of the IAM Role to assume. Can also be set with the `AWS_ROLE_ARN` environment variable.
-* `session_name` - (Optional) Session name to use when assuming the role. Can also be set with the `AWS_ROLE_SESSION_NAME` environment variable.
-* `web_identity_token` - (Optional) The value of a web identity token from an OpenID Connect (OIDC) or OAuth provider.
+* `role_arn` - (Required) ARN of the IAM Role to assume.
+  Can also be set with the `AWS_ROLE_ARN` environment variable.
+* `session_name` - (Optional) Session name to use when assuming the role.
+  Can also be set with the `AWS_ROLE_SESSION_NAME` environment variable.
+* `web_identity_token` - (Optional) Value of a web identity token from an OpenID Connect (OIDC) or OAuth provider.
   One of `web_identity_token` or `web_identity_token_file` is required.
 * `web_identity_token_file` - (Optional) File containing a web identity token from an OpenID Connect (OIDC) or OAuth provider.
-  One of `web_identity_token_file` or `web_identity_token` is required. Can also be set with the `AWS_WEB_IDENTITY_TOKEN_FILE` environment variable.
+  One of `web_identity_token_file` or `web_identity_token` is required.
+  Can also be set with the `AWS_WEB_IDENTITY_TOKEN_FILE` environment variable.
 
 ### default_tags Configuration Block
 

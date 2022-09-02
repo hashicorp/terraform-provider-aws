@@ -648,7 +648,8 @@ func FindEIPs(conn *ec2.EC2, input *ec2.DescribeAddressesInput) ([]*ec2.Address,
 
 	output, err := conn.DescribeAddresses(input)
 
-	if tfawserr.ErrCodeEquals(err, errCodeInvalidAddressNotFound, errCodeInvalidAllocationIDNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidAddressNotFound, errCodeInvalidAllocationIDNotFound) ||
+		tfawserr.ErrMessageContains(err, errCodeAuthFailure, "does not belong to you") {
 		return nil, &resource.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -666,6 +667,89 @@ func FindEIPs(conn *ec2.EC2, input *ec2.DescribeAddressesInput) ([]*ec2.Address,
 	}
 
 	return addresses, nil
+}
+
+func FindEIP(conn *ec2.EC2, input *ec2.DescribeAddressesInput) (*ec2.Address, error) {
+	output, err := FindEIPs(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(output) == 0 || output[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return output[0], nil
+}
+
+func FindEIPByAllocationID(conn *ec2.EC2, id string) (*ec2.Address, error) {
+	input := &ec2.DescribeAddressesInput{
+		AllocationIds: aws.StringSlice([]string{id}),
+	}
+
+	output, err := FindEIP(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Eventual consistency check.
+	if aws.StringValue(output.AllocationId) != id {
+		return nil, &resource.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func FindEIPByAssociationID(conn *ec2.EC2, id string) (*ec2.Address, error) {
+	input := &ec2.DescribeAddressesInput{
+		Filters: BuildAttributeFilterList(map[string]string{
+			"association-id": id,
+		}),
+	}
+
+	output, err := FindEIP(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Eventual consistency check.
+	if aws.StringValue(output.AssociationId) != id {
+		return nil, &resource.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func FindEIPByPublicIP(conn *ec2.EC2, ip string) (*ec2.Address, error) {
+	input := &ec2.DescribeAddressesInput{
+		PublicIps: aws.StringSlice([]string{ip}),
+	}
+
+	output, err := FindEIP(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Eventual consistency check.
+	if aws.StringValue(output.PublicIp) != ip {
+		return nil, &resource.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
 }
 
 func FindHostByID(conn *ec2.EC2, id string) (*ec2.Host, error) {

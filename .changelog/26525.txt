@@ -1,0 +1,59 @@
+```release-note:note
+resource/aws_default_vpc: With AWS's retirement of EC2-Classic the`enable_classiclink` and `enable_classiclink_dns_support` attributes have been deprecated and will be removed in a future version
+```
+
+```release-note:note
+resource/aws_db_security_group: With AWS's retirement of EC2-Classic no new RDS DB Security Groups can be created
+```
+
+```release-note:note
+resource/aws_redshift_security_group: With AWS's retirement of EC2-Classic no new Redshift Security Groups can be created
+```
+
+```release-note:note
+resource/aws_elasticache_security_group: With AWS's retirement of EC2-Classic no new ElastiCache Security Groups can be created
+```
+
+```release-note:note
+resource/aws_db_instance: With AWS's retirement of EC2-Classic no new RDS DB Instances can be created referencing RDS DB Security Groups
+```
+
+```release-note:note
+resource/aws_redshift_cluster: With AWS's retirement of EC2-Classic no new Redshift Clusters can be created referencing Redshift Security Groups
+```
+
+```release-note:note
+resource/aws_elasticache_cluster: With AWS's retirement of EC2-Classic no new ElastiCache Clusters can be created referencing ElastiCache Security Groups
+```
+
+```release-note:note
+resource/aws_opsworks_stack: With AWS's retirement of EC2-Classic no new OpsWorks Stacks can be created without referencing a VPC
+```
+
+```release-note:note
+resource/aws_launch_configuration: With AWS's retirement of EC2-Classic no new Auto Scaling Launch Configurations can be created referencing ClassicLink
+```
+
+```release-note:note
+resource/aws_eip: With AWS's retirement of EC2-Classic no new non-VPC EC2 EIPs can be created
+```
+
+```release-note:note
+resource/aws_vpc: With AWS's retirement of EC2-Classic no new VPCs can be created with ClassicLink enabled
+```
+
+```release-note:note
+resource/aws_vpc_peering_connection: With AWS's retirement of EC2-Classic no new VPC Peering Connections can be created with ClassicLink options enabled
+```
+
+```release-note:note
+resource/aws_vpc_peering_connection_options: With AWS's retirement of EC2-Classic no new VPC Peering Connection Options can be created with ClassicLink options enabled
+```
+
+```release-note:note
+resource/aws_vpc_peering_connection_accepter: With AWS's retirement of EC2-Classic no VPC Peering Connections can be accepted with ClassicLink options enabled
+```
+
+```release-note:note
+resource/aws_security_group: With AWS's retirement of EC2-Classic no new Security Groups can be created without referencing a VPC
+```

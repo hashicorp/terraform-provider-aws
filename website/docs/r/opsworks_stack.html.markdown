@@ -65,7 +65,7 @@ The following arguments are supported:
   enabled.
 * `use_opsworks_security_groups` - (Optional) Boolean value controlling whether the standard OpsWorks
   security groups apply to created instances.
-* `vpc_id` - (Optional) The id of the VPC that this stack belongs to.
+* `vpc_id` - (Optional) ID of the VPC that this stack belongs to.
 * `custom_json` - (Optional) Custom JSON attributes to apply to the entire stack.
 
 The `custom_cookbooks_source` block supports the following arguments:

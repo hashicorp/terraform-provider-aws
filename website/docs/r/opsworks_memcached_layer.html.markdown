@@ -22,7 +22,7 @@ resource "aws_opsworks_memcached_layer" "cache" {
 
 The following arguments are supported:
 
-* `stack_id` - (Required) The id of the stack the layer will belong to.
+* `stack_id` - (Required) ID of the stack the layer will belong to.
 * `name` - (Optional) A human-readable name for the layer.
 * `allocated_memory` - (Optional) Amount of memory to allocate for the cache on each instance, in megabytes. Defaults to 512MB.
 * `auto_assign_elastic_ips` - (Optional) Whether to automatically assign an elastic IP address to the layer's instances.

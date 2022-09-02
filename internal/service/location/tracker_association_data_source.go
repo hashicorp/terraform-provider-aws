@@ -21,13 +21,11 @@ func DataSourceTrackerAssociation() *schema.Resource {
 			"consumer_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
 			"tracker_name": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 100),
 			},
 		},

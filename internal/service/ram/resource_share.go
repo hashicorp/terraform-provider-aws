@@ -187,7 +187,7 @@ func resourceResourceShareUpdate(d *schema.ResourceData, meta interface{}) error
 func resourceResourceShareDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RAMConn
 
-	log.Printf("[DEBUG] Delete RAM Resource Share: %s", d.Id())
+	log.Printf("[DEBUG] Deleting RAM Resource Share: %s", d.Id())
 	_, err := conn.DeleteResourceShare(&ram.DeleteResourceShareInput{
 		ResourceShareArn: aws.String(d.Id()),
 	})
