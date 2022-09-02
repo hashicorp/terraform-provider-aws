@@ -74,9 +74,10 @@ func ResourceMultiplex() *schema.Resource {
 							Required: true,
 						},
 						"maximum_video_buffer_delay_milliseconds": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							Computed: true,
+							Type:             schema.TypeInt,
+							Optional:         true,
+							Computed:         true,
+							ValidateDiagFunc: validation.ToDiagFunc(validation.IntBetween(1000, 3000)),
 						},
 					},
 				},
@@ -84,6 +85,11 @@ func ResourceMultiplex() *schema.Resource {
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
+			},
+			"start_multiplex": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
 			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
@@ -130,6 +136,12 @@ func resourceMultiplexCreate(ctx context.Context, d *schema.ResourceData, meta i
 
 	if _, err := waitMultiplexCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return create.DiagError(names.MediaLive, create.ErrActionWaitingForCreation, ResNameMultiplex, d.Id(), err)
+	}
+
+	if d.Get("start_multiplex").(bool) {
+		if err := startMultiplex(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+			return create.DiagError(names.MediaLive, create.ErrActionCreating, ResNameMultiplex, d.Id(), err)
+		}
 	}
 
 	return resourceMultiplexRead(ctx, d, meta)
@@ -220,7 +232,23 @@ func resourceMultiplexDelete(ctx context.Context, d *schema.ResourceData, meta i
 
 	log.Printf("[INFO] Deleting MediaLive Multiplex %s", d.Id())
 
-	_, err := conn.DeleteMultiplex(ctx, &medialive.DeleteMultiplexInput{
+	out, err := FindMultiplexByID(ctx, conn, d.Id())
+
+	if tfresource.NotFound(err) {
+		return nil
+	}
+
+	if err != nil {
+		create.DiagError(names.MediaLive, create.ErrActionDeleting, ResNameMultiplex, d.Id(), err)
+	}
+
+	if out.State != types.MultiplexStateIdle {
+		if err := stopMultiplex(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+			return create.DiagError(names.MediaLive, create.ErrActionDeleting, ResNameMultiplex, d.Id(), err)
+		}
+	}
+
+	_, err = conn.DeleteMultiplex(ctx, &medialive.DeleteMultiplexInput{
 		MultiplexId: aws.String(d.Id()),
 	})
 
@@ -282,6 +310,38 @@ func waitMultiplexDeleted(ctx context.Context, conn *medialive.Client, id string
 	stateConf := &resource.StateChangeConf{
 		Pending: enum.Slice(types.MultiplexStateDeleting),
 		Target:  enum.Slice(types.MultiplexStateDeleted),
+		Refresh: statusMultiplex(ctx, conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if out, ok := outputRaw.(*medialive.DescribeMultiplexOutput); ok {
+		return out, err
+	}
+
+	return nil, err
+}
+
+func waitMultiplexRunning(ctx context.Context, conn *medialive.Client, id string, timeout time.Duration) (*medialive.DescribeMultiplexOutput, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: enum.Slice(types.MultiplexStateStarting),
+		Target:  enum.Slice(types.MultiplexStateRunning),
+		Refresh: statusMultiplex(ctx, conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if out, ok := outputRaw.(*medialive.DescribeMultiplexOutput); ok {
+		return out, err
+	}
+
+	return nil, err
+}
+
+func waitMultiplexStopped(ctx context.Context, conn *medialive.Client, id string, timeout time.Duration) (*medialive.DescribeMultiplexOutput, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: enum.Slice(types.MultiplexStateStopping),
+		Target:  enum.Slice(types.MultiplexStateIdle),
 		Refresh: statusMultiplex(ctx, conn, id),
 		Timeout: timeout,
 	}
@@ -371,4 +431,40 @@ func expandMultiplexSettings(tfList []interface{}) *types.MultiplexSettings {
 	}
 
 	return &s
+}
+
+func startMultiplex(ctx context.Context, conn *medialive.Client, id string, timeout time.Duration) error {
+	log.Printf("[DEBUG] Starting Medialive Multiplex: (%s)", id)
+	_, err := conn.StartMultiplex(ctx, &medialive.StartMultiplexInput{
+		MultiplexId: aws.String(id),
+	})
+
+	if err != nil {
+		return err
+	}
+
+	_, err = waitMultiplexRunning(ctx, conn, id, timeout)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func stopMultiplex(ctx context.Context, conn *medialive.Client, id string, timeout time.Duration) error {
+	log.Printf("[DEBUG] Starting Medialive Multiplex: (%s)", id)
+	_, err := conn.StopMultiplex(ctx, &medialive.StopMultiplexInput{
+		MultiplexId: aws.String(id),
+	})
+
+	if err != nil {
+		return err
+	}
+
+	_, err = waitMultiplexStopped(ctx, conn, id, timeout)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
