@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"github.com/hashicorp/terraform-provider-aws/internal/fwtypes"
 )
 
 // TODO: Remove
@@ -36,7 +37,7 @@ func (t *dataSourceARNType) GetSchema(context.Context) (tfsdk.Schema, diag.Diagn
 				Computed: true,
 			},
 			"arn": {
-				Type:     ARNType,
+				Type:     fwtypes.ARNType,
 				Required: true,
 			},
 			"id": {
@@ -102,11 +103,11 @@ func (d *dataSourceARN) Read(ctx context.Context, request datasource.ReadRequest
 
 // TODO: Generate this structure definition.
 type dataSourceARNData struct {
-	Account   *string `tfsdk:"account"`
-	ARN       ARN     `tfsdk:"arn"`
-	ID        *string `tfsdk:"id"`
-	Partition *string `tfsdk:"partition"`
-	Region    *string `tfsdk:"region"`
-	Resource  *string `tfsdk:"resource"`
-	Service   *string `tfsdk:"service"`
+	Account   *string     `tfsdk:"account"`
+	ARN       fwtypes.ARN `tfsdk:"arn"`
+	ID        *string     `tfsdk:"id"`
+	Partition *string     `tfsdk:"partition"`
+	Region    *string     `tfsdk:"region"`
+	Resource  *string     `tfsdk:"resource"`
+	Service   *string     `tfsdk:"service"`
 }

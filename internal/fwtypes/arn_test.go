@@ -1,5 +1,4 @@
-// TODO: Move this to a shared 'types' package.
-package meta_test
+package fwtypes_test
 
 import (
 	"context"
@@ -10,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
-	"github.com/hashicorp/terraform-provider-aws/internal/service/meta"
+	"github.com/hashicorp/terraform-provider-aws/internal/fwtypes"
 )
 
 func TestARNTypeValueFromTerraform(t *testing.T) {
@@ -23,15 +22,15 @@ func TestARNTypeValueFromTerraform(t *testing.T) {
 	}{
 		"null value": {
 			val:      tftypes.NewValue(tftypes.String, nil),
-			expected: meta.ARN{Null: true},
+			expected: fwtypes.ARN{Null: true},
 		},
 		"unknown value": {
 			val:      tftypes.NewValue(tftypes.String, tftypes.UnknownValue),
-			expected: meta.ARN{Unknown: true},
+			expected: fwtypes.ARN{Unknown: true},
 		},
 		"valid ARN": {
 			val: tftypes.NewValue(tftypes.String, "arn:aws:rds:us-east-1:123456789012:db:test"), // lintignore:AWSAT003,AWSAT005
-			expected: meta.ARN{Value: arn.ARN{
+			expected: fwtypes.ARN{Value: arn.ARN{
 				Partition: "aws",
 				Service:   "rds",
 				Region:    "us-east-1", // lintignore:AWSAT003
@@ -49,7 +48,7 @@ func TestARNTypeValueFromTerraform(t *testing.T) {
 		name, test := name, test
 		t.Run(name, func(t *testing.T) {
 			ctx := context.Background()
-			val, err := meta.ARNType.ValueFromTerraform(ctx, test.val)
+			val, err := fwtypes.ARNType.ValueFromTerraform(ctx, test.val)
 
 			if err == nil && test.expectError {
 				t.Fatal("expected error, got no error")
@@ -97,7 +96,7 @@ func TestARNTypeValidate(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			ctx := context.Background()
 
-			diags := meta.ARNType.Validate(ctx, test.val, path.Root("test"))
+			diags := fwtypes.ARNType.Validate(ctx, test.val, path.Root("test"))
 
 			if !diags.HasError() && test.expectError {
 				t.Fatal("expected error, got no error")
