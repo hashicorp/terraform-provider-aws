@@ -44,3 +44,7 @@ type dataSource{{ .Name }} struct {}
 func (d *dataSource{{ .Name }}) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
     tflog.Trace(ctx, "dataSource{{ .Name }}.Read enter")
 }
+
+type dataSource{{ .Name }}Data struct {
+    {{ .Struct }}
+}

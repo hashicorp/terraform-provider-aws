@@ -161,10 +161,12 @@ func (m *migrator) applyTemplate(filename string, templateData *templateData) er
 }
 
 func (m *migrator) generateTemplateData() (*templateData, error) {
-	sb := strings.Builder{}
+	sbSchema := strings.Builder{}
+	sbStruct := strings.Builder{}
 	emitter := &emitter{
 		Ui:           m.Ui,
-		SchemaWriter: &sb,
+		SchemaWriter: &sbSchema,
+		StructWriter: &sbStruct,
 	}
 
 	err := emitter.emitSchemaForResource(m.Resource)
@@ -173,12 +175,12 @@ func (m *migrator) generateTemplateData() (*templateData, error) {
 		return nil, fmt.Errorf("emitting schema code: %w", err)
 	}
 
-	schema := sb.String()
 	templateData := &templateData{
 		ImportFrameworkAttr: emitter.ImportFrameworkAttr,
 		Name:                m.Name,
 		PackageName:         m.PackageName,
-		Schema:              schema,
+		Schema:              sbSchema.String(),
+		Struct:              sbStruct.String(),
 		TFTypeName:          m.TFTypeName,
 	}
 
@@ -192,6 +194,7 @@ func (m *migrator) infof(format string, a ...interface{}) {
 type emitter struct {
 	Ui                  cli.Ui
 	SchemaWriter        io.Writer
+	StructWriter        io.Writer
 	ImportFrameworkAttr bool
 }
 
@@ -691,6 +694,7 @@ type templateData struct {
 	Name                string // e.g. Instance
 	PackageName         string // e.g. ec2
 	Schema              string
+	Struct              string
 	TFTypeName          string // e.g. aws_instance
 }
 
