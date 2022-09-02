@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/feature/ec2/imds"
 	"github.com/aws/aws-sdk-go-v2/service/comprehend"
 	"github.com/aws/aws-sdk-go-v2/service/fis"
+	"github.com/aws/aws-sdk-go-v2/service/identitystore"
 	"github.com/aws/aws-sdk-go-v2/service/kendra"
 	"github.com/aws/aws-sdk-go-v2/service/medialive"
 	"github.com/aws/aws-sdk-go-v2/service/rolesanywhere"
@@ -205,6 +206,12 @@ func (c *Config) Client(ctx context.Context) (interface{}, diag.Diagnostics) {
 	client.FISConn = fis.NewFromConfig(cfg, func(o *fis.Options) {
 		if endpoint := c.Endpoints[names.FIS]; endpoint != "" {
 			o.EndpointResolver = fis.EndpointResolverFromURL(endpoint)
+		}
+	})
+
+	client.IdentityStoreConn = identitystore.NewFromConfig(cfg, func(o *identitystore.Options) {
+		if endpoint := c.Endpoints[names.IdentityStore]; endpoint != "" {
+			o.EndpointResolver = identitystore.EndpointResolverFromURL(endpoint)
 		}
 	})
 

@@ -6,6 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/comprehend"
 	"github.com/aws/aws-sdk-go-v2/service/fis"
+	"github.com/aws/aws-sdk-go-v2/service/identitystore"
 	"github.com/aws/aws-sdk-go-v2/service/kendra"
 	"github.com/aws/aws-sdk-go-v2/service/medialive"
 	"github.com/aws/aws-sdk-go-v2/service/rolesanywhere"
@@ -142,7 +143,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/healthlake"
 	"github.com/aws/aws-sdk-go/service/honeycode"
 	"github.com/aws/aws-sdk-go/service/iam"
-	"github.com/aws/aws-sdk-go/service/identitystore"
 	"github.com/aws/aws-sdk-go/service/imagebuilder"
 	"github.com/aws/aws-sdk-go/service/inspector"
 	"github.com/aws/aws-sdk-go/service/inspector2"
@@ -454,7 +454,7 @@ type AWSClient struct {
 	HoneycodeConn                    *honeycode.Honeycode
 	IAMConn                          *iam.IAM
 	IVSConn                          *ivs.IVS
-	IdentityStoreConn                *identitystore.IdentityStore
+	IdentityStoreConn                *identitystore.Client
 	ImageBuilderConn                 *imagebuilder.Imagebuilder
 	InspectorConn                    *inspector.Inspector
 	Inspector2Conn                   *inspector2.Inspector2

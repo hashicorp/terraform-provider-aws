@@ -34,11 +34,13 @@ github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.12.4/go.mod h1:u/s5/Z+ohUQOPXl0
 github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.12.13 h1:+uferi8SUDZtMloCDt24Zenyy/i71C/ua5mjUCpbpN0=
 github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.12.13/go.mod h1:y0eXmsNBFIVjUE8ZBjES8myOHlMsXDz7qGT93+MVdjk=
 github.com/aws/aws-sdk-go-v2/internal/configsources v1.1.10/go.mod h1:F+EZtuIwjlv35kRJPyBGcsA4f7bnSoz15zOQ2lJq1Z4=
-github.com/aws/aws-sdk-go-v2/internal/configsources v1.1.19 h1:gC5mudiFrWGhzcdoWj1iCGUfrzCpQG0MQIQf0CXFFQQ=
 github.com/aws/aws-sdk-go-v2/internal/configsources v1.1.19/go.mod h1:llxE6bwUZhuCas0K7qGiu5OgMis3N7kdWtFSxoHmJ7E=
+github.com/aws/aws-sdk-go-v2/internal/configsources v1.1.20 h1:Rk8eqZSdFovt8Id+O+i2qT0c3CY13DPn2SfGOEVlxNs=
+github.com/aws/aws-sdk-go-v2/internal/configsources v1.1.20/go.mod h1:gdZ5gRUaxThXIZyZQ8MTtgYBk2jbHgp05BO3GcD9Cwc=
 github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.4.4/go.mod h1:8glyUqVIM4AmeenIsPo0oVh3+NUwnsQml2OFupfQW+0=
-github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.4.13 h1:qezY57na06d6kSE7uuB0N7XEflu914AXx/hg2L8Ykcw=
 github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.4.13/go.mod h1:lB12mkZqCSo5PsdBFLNqc2M/OOYgNAy8UtaktyuWvE8=
+github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.4.14 h1:6Yxuq9yrkoLYab5JXqJnto9tdRuIcYVdR+eiKjsJYWU=
+github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.4.14/go.mod h1:GEV9jaDPIgayiU+uevxwozcvUOjc+P4aHE2BeSjm2vE=
 github.com/aws/aws-sdk-go-v2/internal/ini v1.3.11 h1:6cZRymlLEIlDTEB0+5+An6Zj1CKt6rSE69tOmFeu1nk=
 github.com/aws/aws-sdk-go-v2/internal/ini v1.3.11/go.mod h1:0MR+sS1b/yxsfAPvAESrw8NfwUoxMinDyw6EYR9BS2U=
 github.com/aws/aws-sdk-go-v2/service/comprehend v1.18.8 h1:0GNYWmqqR9KfwcYKyUOG9k0V6Mq9jZy2e9pwABsxQmM=
@@ -47,6 +49,8 @@ github.com/aws/aws-sdk-go-v2/service/fis v1.12.13 h1:tDH0KAjglMY+n8Gr+lmDI5icSWD
 github.com/aws/aws-sdk-go-v2/service/fis v1.12.13/go.mod h1:hPItFatx4DLydS1AqZ7N/rWaTi8ASGd3lGQrzfSc0Uk=
 github.com/aws/aws-sdk-go-v2/service/iam v1.18.4 h1:E41guA79mjEbwJdh0zXz1d8+Zt4zxRr+b1ipiVbKXzs=
 github.com/aws/aws-sdk-go-v2/service/iam v1.18.4/go.mod h1:FpNvAfCZyIQ3qeNJUOw4CShKvdizHblXqAvSk0qmyL4=
+github.com/aws/aws-sdk-go-v2/service/identitystore v1.15.0 h1:RkSEzzGoabfnnVXF9Mon9+/KYYVw2hLjK1i47ka/Tyg=
+github.com/aws/aws-sdk-go-v2/service/identitystore v1.15.0/go.mod h1:7dp7wVJ+ldmxHAD1Zo6Q65duUXCtNNoFk10Eu8uSCco=
 github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.9.4 h1:b16QW0XWl0jWjLABFc1A+uh145Oqv+xDcObNk0iQgUk=
 github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.9.4/go.mod h1:uKkN7qmSIsNJVyMtxNQoCEYMvFEXbOg9fwCJPdfp2u8=
 github.com/aws/aws-sdk-go-v2/service/kendra v1.33.1 h1:XOTWbVWu4wAVozPAny4v5fyWZtjXS+KZl4OAe04vJbw=
