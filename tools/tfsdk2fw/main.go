@@ -361,7 +361,13 @@ func (e emitter) emitAttribute(path []string, property *schema.Schema) error {
 
 		case *schema.Resource:
 			// We get here for Computed-only nested blocks or when ConfigMode is SchemaConfigModeBlock.
-			return unsupportedTypeError(path, fmt.Sprintf("(Attribute) %s of %T", typeName, v))
+			fprintf(e.SchemaWriter, "Type:%s{ElemType:", aggregateType)
+
+			if err := e.emitImpliedType(path, v.Schema); err != nil {
+				return err
+			}
+
+			fprintf(e.SchemaWriter, "},\n")
 
 		default:
 			return unsupportedTypeError(path, fmt.Sprintf("(Attribute) %s of %T", typeName, v))
@@ -505,6 +511,17 @@ func (e emitter) emitBlock(path []string, property *schema.Schema) error {
 	return nil
 }
 
+// emitImpliedType generates the Plugin Framework code for a Plugin SDK Computed-only nested Block
+// and emits the generated code to the emitter's Writer.
+// See https://github.com/hashicorp/terraform-plugin-sdk/blob/6ffc92796f0716c07502e4d36aaafa5fd85e94cf/internal/configs/configschema/implied_type.go#L12.
+func (e emitter) emitImpliedType(path []string, schema map[string]*schema.Schema) error {
+	fprintf(e.SchemaWriter, "types.ObjectType{")
+
+	fprintf(e.SchemaWriter, "}")
+
+	return nil
+}
+
 // warnf emits a formatted warning message to the UI.
 func (e emitter) warnf(format string, a ...interface{}) {
 	e.Ui.Warn(fmt.Sprintf(format, a...))
@@ -515,7 +532,8 @@ func fprintf(w io.Writer, format string, a ...interface{}) (int, error) {
 	return io.WriteString(w, fmt.Sprintf(format, a...))
 }
 
-// isAttribute returns whether or not the specified property should be emitted as an Attribute.
+// isAttribute returns whether or not the specified property should be emitted as an Attribute (vs. a Block).
+// See https://github.com/hashicorp/terraform-plugin-sdk/blob/6ffc92796f0716c07502e4d36aaafa5fd85e94cf/helper/schema/core_schema.go#L57.
 func isAttribute(property *schema.Schema) bool {
 	if property.Elem == nil {
 		return true
@@ -534,6 +552,7 @@ func isAttribute(property *schema.Schema) bool {
 
 	default:
 		if property.Computed && !property.Optional {
+			// Computed-only schemas are always handled as attributes because they never appear in configuration.
 			return true
 		}
 
