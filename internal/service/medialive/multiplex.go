@@ -465,11 +465,8 @@ func startMultiplex(ctx context.Context, conn *medialive.Client, id string, time
 	}
 
 	_, err = waitMultiplexRunning(ctx, conn, id, timeout)
-	if err != nil {
-		return err
-	}
 
-	return nil
+	return err
 }
 
 func stopMultiplex(ctx context.Context, conn *medialive.Client, id string, timeout time.Duration) error {
@@ -483,9 +480,6 @@ func stopMultiplex(ctx context.Context, conn *medialive.Client, id string, timeo
 	}
 
 	_, err = waitMultiplexStopped(ctx, conn, id, timeout)
-	if err != nil {
-		return err
-	}
 
-	return nil
+	return err
 }
