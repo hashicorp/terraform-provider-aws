@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/fwtypes"
 	"github.com/hashicorp/terraform-provider-aws/internal/intf"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -166,7 +167,7 @@ func (p *fwprovider) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnost
 			"assume_role": {
 				Attributes: map[string]tfsdk.Attribute{
 					"duration": {
-						Type:        DurationType,
+						Type:        fwtypes.DurationType,
 						Optional:    true,
 						Description: "The duration, between 15 minutes and 12 hours, of the role session. Valid time units are ns, us (or µs), ms, s, h, or m.",
 					},
@@ -223,7 +224,7 @@ func (p *fwprovider) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnost
 			"assume_role_with_web_identity": {
 				Attributes: map[string]tfsdk.Attribute{
 					"duration": {
-						Type:        DurationType,
+						Type:        fwtypes.DurationType,
 						Optional:    true,
 						Description: "The duration, between 15 minutes and 12 hours, of the role session. Valid time units are ns, us (or µs), ms, s, h, or m.",
 					},
