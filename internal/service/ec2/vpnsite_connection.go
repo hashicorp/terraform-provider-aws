@@ -192,6 +192,7 @@ func ResourceVPNConnection() *schema.Resource {
 			"tunnel1_log_options": {
 				Type:     schema.TypeSet,
 				Optional: true,
+				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"cloudwatch_log_options": {
@@ -403,6 +404,7 @@ func ResourceVPNConnection() *schema.Resource {
 			"tunnel2_log_options": {
 				Type:     schema.TypeSet,
 				Optional: true,
+				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"cloudwatch_log_options": {
@@ -1346,7 +1348,7 @@ func flattenTunnelOption(d *schema.ResourceData, prefix string, apiObject *ec2.T
 
 	d.Set(prefix+"dpd_timeout_action", apiObject.DpdTimeoutAction)
 	d.Set(prefix+"dpd_timeout_seconds", apiObject.DpdTimeoutSeconds)
-	d.Set(prefix+"log_options", flattenVPNTunnelLogOptions(apiObject.LogOptions))
+	d.Set(prefix+"log_options", []interface{}{flattenVPNTunnelLogOptions(apiObject.LogOptions)})
 
 	for _, v := range apiObject.IkeVersions {
 		s = append(s, v.Value)
@@ -1448,7 +1450,7 @@ func flattenVPNTunnelLogOptions(apiObject *ec2.VpnTunnelLogOptions) map[string]i
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.CloudWatchLogOptions; v != nil {
-		tfMap["cloudwatch_log_options"] = flattenCloudWatchLogOptions(v)
+		tfMap["cloudwatch_log_options"] = []interface{}{flattenCloudWatchLogOptions(v)}
 	}
 
 	return tfMap
