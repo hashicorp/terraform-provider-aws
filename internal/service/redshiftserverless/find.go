@@ -90,7 +90,7 @@ func FindUsageLimitByName(conn *redshiftserverless.RedshiftServerless, id string
 
 	output, err := conn.GetUsageLimit(input)
 
-	if tfawserr.ErrCodeEquals(err, redshiftserverless.ErrCodeResourceNotFoundException) {
+	if tfawserr.ErrMessageContains(err, redshiftserverless.ErrCodeValidationException, "does not exist") {
 		return nil, &resource.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
