@@ -1448,7 +1448,7 @@ func flattenVPNTunnelLogOptions(apiObject *ec2.VpnTunnelLogOptions) map[string]i
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.CloudWatchLogOptions; v != nil {
-		tfMap["log_enabled"] = flattenCloudWatchLogOptions(v)
+		tfMap["cloudwatch_log_options"] = flattenCloudWatchLogOptions(v)
 	}
 
 	return tfMap
