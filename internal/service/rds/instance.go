@@ -1,6 +1,7 @@
 package rds
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"regexp"
@@ -522,6 +523,10 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
+	if v, ok := d.GetOk("security_group_names"); ok && v.(*schema.Set).Len() > 0 {
+		return errors.New(`with the retirement of EC2-Classic no new RDS DB Instances can be created referencing RDS DB Security Groups`)
+	}
+
 	// Some API calls (e.g. CreateDBInstanceReadReplica and
 	// RestoreDBInstanceFromDBSnapshot do not support all parameters to
 	// correctly apply all settings in one pass. For missing parameters or
@@ -704,13 +709,6 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 			modifyDbInstanceInput.MasterUserPassword = aws.String(v.(string))
 			requiresModifyDbInstance = true
 		}
-
-		if v := d.Get("security_group_names").(*schema.Set); v.Len() > 0 {
-			if current, desired := flattenDBSecurityGroups(output.DBInstance.DBSecurityGroups), v; !desired.Equal(current) {
-				modifyDbInstanceInput.DBSecurityGroups = flex.ExpandStringSet(v)
-				requiresModifyDbInstance = true
-			}
-		}
 	} else if v, ok := d.GetOk("s3_import"); ok {
 		dbName := d.Get("db_name").(string)
 		if dbName == "" {
@@ -831,10 +829,6 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 
 		if v, ok := d.GetOk("port"); ok {
 			input.Port = aws.Int64(int64(v.(int)))
-		}
-
-		if v, ok := d.GetOk("security_group_names"); ok && v.(*schema.Set).Len() > 0 {
-			input.DBSecurityGroups = flex.ExpandStringSet(v.(*schema.Set))
 		}
 
 		if v, ok := d.GetOk("storage_type"); ok {
@@ -1039,11 +1033,6 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 
 		if v, ok := d.GetOk("port"); ok {
 			input.Port = aws.Int64(int64(v.(int)))
-		}
-
-		if v := d.Get("security_group_names").(*schema.Set); v.Len() > 0 {
-			modifyDbInstanceInput.DBSecurityGroups = flex.ExpandStringSet(v)
-			requiresModifyDbInstance = true
 		}
 
 		if v, ok := d.GetOk("storage_type"); ok {
@@ -1846,14 +1835,4 @@ func dbSetResourceDataEngineVersionFromInstance(d *schema.ResourceData, c *rds.D
 	oldVersion := d.Get("engine_version").(string)
 	newVersion := aws.StringValue(c.EngineVersion)
 	compareActualEngineVersion(d, oldVersion, newVersion)
-}
-
-func flattenDBSecurityGroups(groups []*rds.DBSecurityGroupMembership) *schema.Set {
-	result := &schema.Set{
-		F: schema.HashString,
-	}
-	for _, v := range groups {
-		result.Add(aws.StringValue(v.DBSecurityGroupName))
-	}
-	return result
 }

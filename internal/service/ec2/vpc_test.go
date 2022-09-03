@@ -709,60 +709,6 @@ func TestAccVPC_disabledDNSSupport(t *testing.T) {
 	})
 }
 
-func TestAccVPC_classicLinkOptionSet(t *testing.T) {
-	var vpc ec2.Vpc
-	resourceName := "aws_vpc.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVPCDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccVPCConfig_classicLinkOption(rName),
-				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckVPCExists(resourceName, &vpc),
-					resource.TestCheckResourceAttr(resourceName, "enable_classiclink", "true"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
-func TestAccVPC_classicLinkDNSSupportOptionSet(t *testing.T) {
-	var vpc ec2.Vpc
-	resourceName := "aws_vpc.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVPCDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccVPCConfig_classicLinkDNSSupportOption(rName),
-				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckVPCExists(resourceName, &vpc),
-					resource.TestCheckResourceAttr(resourceName, "enable_classiclink_dns_support", "true"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
 func TestAccVPC_assignGeneratedIPv6CIDRBlock(t *testing.T) {
 	var vpc ec2.Vpc
 	resourceName := "aws_vpc.test"
@@ -1150,33 +1096,6 @@ func testAccVPCConfig_disabledDNSSupport(rName string) string {
 resource "aws_vpc" "test" {
   cidr_block         = "10.2.0.0/16"
   enable_dns_support = false
-
-  tags = {
-    Name = %[1]q
-  }
-}
-`, rName)
-}
-
-func testAccVPCConfig_classicLinkOption(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block         = "172.2.0.0/16"
-  enable_classiclink = true
-
-  tags = {
-    Name = %[1]q
-  }
-}
-`, rName)
-}
-
-func testAccVPCConfig_classicLinkDNSSupportOption(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block                     = "172.2.0.0/16"
-  enable_classiclink             = true
-  enable_classiclink_dns_support = true
 
   tags = {
     Name = %[1]q

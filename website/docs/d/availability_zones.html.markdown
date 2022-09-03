@@ -85,7 +85,7 @@ to which the underlying AWS account has access, regardless of their state.
 
 The following arguments are supported by the `filter` configuration block:
 
-* `name` - (Required) The name of the filter field. Valid values can be found in the [EC2 DescribeAvailabilityZones API Reference](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeAvailabilityZones.html).
+* `name` - (Required) Name of the filter field. Valid values can be found in the [EC2 DescribeAvailabilityZones API Reference](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeAvailabilityZones.html).
 * `values` - (Required) Set of values that are accepted for the given filter field. Results will be selected if any given value matches.
 
 ## Attributes Reference
@@ -94,8 +94,8 @@ In addition to all arguments above, the following attributes are exported:
 
 * `group_names` A set of the Availability Zone Group names. For Availability Zones, this is the same value as the Region name. For Local Zones, the name of the associated group, for example `us-west-2-lax-1`.
 * `id` - Region of the Availability Zones.
-* `names` - A list of the Availability Zone names available to the account.
-* `zone_ids` - A list of the Availability Zone IDs available to the account.
+* `names` - List of the Availability Zone names available to the account.
+* `zone_ids` - List of the Availability Zone IDs available to the account.
 
 Note that the indexes of Availability Zone names and IDs correspond.
 

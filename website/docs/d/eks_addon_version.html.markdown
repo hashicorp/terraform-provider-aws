@@ -50,5 +50,5 @@ output "latest" {
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - The name of the add-on
-* `version` - The version of the EKS add-on.
+* `id` - Name of the add-on
+* `version` - Version of the EKS add-on.

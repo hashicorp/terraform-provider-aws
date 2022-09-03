@@ -19,7 +19,7 @@ data "aws_organizations_resource_tags" "account" {
 
 ## Argument Reference
 
-* `resource_id` - (Required) The ID of the resource with the tags to list. See details below.
+* `resource_id` - (Required) ID of the resource with the tags to list. See details below.
 
 ### resource_id
 

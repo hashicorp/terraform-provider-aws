@@ -510,6 +510,27 @@ func TestAccLambdaFunction_encryptedEnvVariables(t *testing.T) {
 	})
 }
 
+func TestAccLambdaFunction_nameValidation(t *testing.T) {
+	rString := sdkacctest.RandString(8)
+	badFuncName := "prefix.viewer_request_lambda"
+	policyName := fmt.Sprintf("tf_acc_policy_lambda_func_basic_%s", rString)
+	roleName := fmt.Sprintf("tf_acc_role_lambda_func_basic_%s", rString)
+	sgName := fmt.Sprintf("tf_acc_sg_lambda_func_basic_%s", rString)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFunctionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccFunctionConfig_basic(badFuncName, policyName, roleName, sgName),
+				ExpectError: regexp.MustCompile(`invalid value for function_name \(must be valid function name or function ARN\)`),
+			},
+		},
+	})
+}
+
 func TestAccLambdaFunction_versioned(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")

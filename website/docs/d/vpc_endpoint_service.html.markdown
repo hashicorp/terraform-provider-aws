@@ -59,10 +59,10 @@ The arguments of this data source act as filters for querying the available VPC 
 The given filters must match exactly one VPC endpoint service whose data will be exported as attributes.
 
 * `filter` - (Optional) Configuration block(s) for filtering. Detailed below.
-* `service` - (Optional) The common name of an AWS service (e.g., `s3`).
-* `service_name` - (Optional) The service name that is specified when creating a VPC endpoint. For AWS services the service name is usually in the form `com.amazonaws.<region>.<service>` (the SageMaker Notebook service is an exception to this rule, the service name is in the form `aws.sagemaker.<region>.notebook`).
-* `service_type` - (Optional) The service type, `Gateway` or `Interface`.
-* `tags` - (Optional) A map of tags, each pair of which must exactly match a pair on the desired VPC Endpoint Service.
+* `service` - (Optional) Common name of an AWS service (e.g., `s3`).
+* `service_name` - (Optional) Service name that is specified when creating a VPC endpoint. For AWS services the service name is usually in the form `com.amazonaws.<region>.<service>` (the SageMaker Notebook service is an exception to this rule, the service name is in the form `aws.sagemaker.<region>.notebook`).
+* `service_type` - (Optional) Service type, `Gateway` or `Interface`.
+* `tags` - (Optional) Map of tags, each pair of which must exactly match a pair on the desired VPC Endpoint Service.
 
 ~> **NOTE:** Specifying `service` will not work for non-AWS services or AWS services that don't follow the standard `service_name` pattern of `com.amazonaws.<region>.<service>`.
 
@@ -70,7 +70,7 @@ The given filters must match exactly one VPC endpoint service whose data will be
 
 The following arguments are supported by the `filter` configuration block:
 
-* `name` - (Required) The name of the filter field. Valid values can be found in the [EC2 DescribeVpcEndpointServices API Reference](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeVpcEndpointServices.html).
+* `name` - (Required) Name of the filter field. Valid values can be found in the [EC2 DescribeVpcEndpointServices API Reference](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeVpcEndpointServices.html).
 * `values` - (Required) Set of values that are accepted for the given filter field. Results will be selected if any given value matches.
 
 ## Attributes Reference
@@ -78,15 +78,15 @@ The following arguments are supported by the `filter` configuration block:
 In addition to all arguments above, the following attributes are exported:
 
 * `acceptance_required` - Whether or not VPC endpoint connection requests to the service must be accepted by the service owner - `true` or `false`.
-* `arn` - The Amazon Resource Name (ARN) of the VPC endpoint service.
-* `availability_zones` - The Availability Zones in which the service is available.
+* `arn` - ARN of the VPC endpoint service.
+* `availability_zones` - Availability Zones in which the service is available.
 * `base_endpoint_dns_names` - The DNS names for the service.
 * `manages_vpc_endpoints` - Whether or not the service manages its VPC endpoints - `true` or `false`.
-* `owner` - The AWS account ID of the service owner or `amazon`.
-* `private_dns_name` - The private DNS name for the service.
-* `service_id` - The ID of the endpoint service.
+* `owner` - AWS account ID of the service owner or `amazon`.
+* `private_dns_name` - Private DNS name for the service.
+* `service_id` - ID of the endpoint service.
 * `supported_ip_address_types` - The supported IP address types.
-* `tags` - A map of tags assigned to the resource.
+* `tags` - Map of tags assigned to the resource.
 * `vpc_endpoint_policy_supported` - Whether or not the service supports endpoint policies - `true` or `false`.
 
 ## Timeouts
