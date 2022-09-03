@@ -473,6 +473,8 @@ argument should not be specified.
     `value` parameters that specify header data that will be sent to the origin
     (multiples allowed).
 
+* `origin_access_control_id` (Optional) - The unique identifier of an origin access control for this origin.
+
 * `origin_id` (Required) - A unique identifier for the origin.
 
 * `origin_path` (Optional) - An optional element that causes CloudFront to

@@ -79,6 +79,14 @@ func ResourceDomain() *schema.Resource {
 
 				return !inPlaceEncryptionEnableVersion(d.Get("engine_version").(string))
 			}),
+			customdiff.ForceNewIf("advanced_security_options.0.enabled", func(_ context.Context, d *schema.ResourceDiff, meta interface{}) bool {
+				o, n := d.GetChange("advanced_security_options.0.enabled")
+				if o.(bool) && !n.(bool) {
+					return true
+				}
+
+				return false
+			}),
 			verify.SetTagsDiff,
 		),
 
@@ -107,10 +115,14 @@ func ResourceDomain() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"anonymous_auth_enabled": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Computed: true,
+						},
 						"enabled": {
 							Type:     schema.TypeBool,
 							Required: true,
-							ForceNew: true,
 						},
 						"internal_user_database_enabled": {
 							Type:     schema.TypeBool,
@@ -383,6 +395,7 @@ func ResourceDomain() *schema.Resource {
 						"iops": {
 							Type:     schema.TypeInt,
 							Optional: true,
+							Computed: true,
 						},
 						"throughput": {
 							Type:         schema.TypeInt,
@@ -805,13 +818,9 @@ func resourceDomainRead(d *schema.ResourceData, meta interface{}) error {
 	// DescribeDomainConfig, if enabled, else use
 	// values from resource; additionally, append MasterUserOptions
 	// from resource as they are not returned from the API
-	if ds.AdvancedSecurityOptions != nil {
+	if ds.AdvancedSecurityOptions != nil && aws.BoolValue(ds.AdvancedSecurityOptions.Enabled) {
 		advSecOpts := flattenAdvancedSecurityOptions(ds.AdvancedSecurityOptions)
-		if !aws.BoolValue(ds.AdvancedSecurityOptions.Enabled) {
-			advSecOpts[0]["internal_user_database_enabled"] = getUserDBEnabled(d)
-		}
 		advSecOpts[0]["master_user_options"] = getMasterUserOptions(d)
-
 		if err := d.Set("advanced_security_options", advSecOpts); err != nil {
 			return fmt.Errorf("error setting advanced_security_options: %w", err)
 		}

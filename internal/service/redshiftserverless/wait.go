@@ -46,3 +46,44 @@ func waitNamespaceUpdated(conn *redshiftserverless.RedshiftServerless, name stri
 
 	return nil, err
 }
+
+func waitWorkgroupAvailable(conn *redshiftserverless.RedshiftServerless, name string) (*redshiftserverless.Workgroup, error) { //nolint:unparam
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{
+			redshiftserverless.WorkgroupStatusCreating,
+			redshiftserverless.WorkgroupStatusModifying,
+		},
+		Target: []string{
+			redshiftserverless.WorkgroupStatusAvailable,
+		},
+		Refresh: statusWorkgroup(conn, name),
+		Timeout: 10 * time.Minute,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*redshiftserverless.Workgroup); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitWorkgroupDeleted(conn *redshiftserverless.RedshiftServerless, name string) (*redshiftserverless.Workgroup, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{
+			redshiftserverless.WorkgroupStatusDeleting,
+		},
+		Target:  []string{},
+		Refresh: statusWorkgroup(conn, name),
+		Timeout: 10 * time.Minute,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*redshiftserverless.Workgroup); ok {
+		return output, err
+	}
+
+	return nil, err
+}

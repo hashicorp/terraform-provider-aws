@@ -20,8 +20,8 @@ github.com/apparentlymart/go-textseg/v12 v12.0.0/go.mod h1:S/4uRK2UtaQttw1GenVJE
 github.com/apparentlymart/go-textseg/v13 v13.0.0 h1:Y+KvPE1NYz0xl601PVImeQfFyEy6iT90AvPUL1NNfNw=
 github.com/apparentlymart/go-textseg/v13 v13.0.0/go.mod h1:ZK2fH7c4NqDTLtiYLvIkEghdlcqw7yxLeM89kiTRPUo=
 github.com/armon/go-socks5 v0.0.0-20160902184237-e75332964ef5/go.mod h1:wHh0iHkYZB8zMSxRWpUBQtwG5a7fFgvEO+odwuTv2gs=
-github.com/aws/aws-sdk-go v1.44.80 h1:jEXGecSgPdvM5KnyDsSgFhZSm7WwaTp4h544Im4SfhI=
-github.com/aws/aws-sdk-go v1.44.80/go.mod h1:y4AeaBuwd2Lk+GepC1E9v0qOiTws0MIWAX4oIKwKHZo=
+github.com/aws/aws-sdk-go v1.44.86 h1:Zls97WY9N2c2H85//B88CmSlYYNxS3Zf3k4ds5zAf5A=
+github.com/aws/aws-sdk-go v1.44.86/go.mod h1:y4AeaBuwd2Lk+GepC1E9v0qOiTws0MIWAX4oIKwKHZo=
 github.com/aws/aws-sdk-go-v2 v1.16.3/go.mod h1:ytwTPBG6fXTZLxxeeCCWj2/EMYp/xDUgX+OET6TLNNU=
 github.com/aws/aws-sdk-go-v2 v1.16.11 h1:xM1ZPSvty3xVmdxiGr7ay/wlqv+MWhH0rMlyLdbC0YQ=
 github.com/aws/aws-sdk-go-v2 v1.16.11/go.mod h1:WTACcleLz6VZTp7fak4EO5b9Q4foxbn+8PIz3PmyKlo=
@@ -48,8 +48,8 @@ github.com/aws/aws-sdk-go-v2/service/iam v1.18.4 h1:E41guA79mjEbwJdh0zXz1d8+Zt4z
 github.com/aws/aws-sdk-go-v2/service/iam v1.18.4/go.mod h1:FpNvAfCZyIQ3qeNJUOw4CShKvdizHblXqAvSk0qmyL4=
 github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.9.4 h1:b16QW0XWl0jWjLABFc1A+uh145Oqv+xDcObNk0iQgUk=
 github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.9.4/go.mod h1:uKkN7qmSIsNJVyMtxNQoCEYMvFEXbOg9fwCJPdfp2u8=
-github.com/aws/aws-sdk-go-v2/service/kendra v1.32.0 h1:7ainqZqR7URWLnbMWRRt2yGL+Di1VueEK0IryXDUw90=
-github.com/aws/aws-sdk-go-v2/service/kendra v1.32.0/go.mod h1:irFuMCMcRyO8Y+Uy9TajvrH/KJaRLT+jLJ5kCxNBySY=
+github.com/aws/aws-sdk-go-v2/service/kendra v1.33.0 h1:4wnNpNlkUwrPKEzbm14pjLCOxiXg9qhjfzhkXyggij8=
+github.com/aws/aws-sdk-go-v2/service/kendra v1.33.0/go.mod h1:irFuMCMcRyO8Y+Uy9TajvrH/KJaRLT+jLJ5kCxNBySY=
 github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.0.4 h1:6FvtutMp7h3EAk2kjcLii+w9UYyvUdNAIVUG0jnbMs8=
 github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.0.4/go.mod h1:C9xxUK4FnxA9sTmpR6KeHkKLkG8/x/piCa2bffnfJ9E=
 github.com/aws/aws-sdk-go-v2/service/route53domains v1.12.12 h1:L+36zTEzmXHEyRiPJVKbx4Lx0E3cSnB/813Hv2iZqJU=

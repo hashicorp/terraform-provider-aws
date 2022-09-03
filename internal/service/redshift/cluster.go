@@ -122,10 +122,11 @@ func ResourceCluster() *schema.Resource {
 				Computed: true,
 			},
 			"cluster_security_groups": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
+				Type:       schema.TypeSet,
+				Optional:   true,
+				Computed:   true,
+				Elem:       &schema.Schema{Type: schema.TypeString},
+				Deprecated: `With the retirement of EC2-Classic the cluster_security_groups attribute has been deprecated and will be removed in a future version.`,
 			},
 			"cluster_subnet_group_name": {
 				Type:     schema.TypeString,

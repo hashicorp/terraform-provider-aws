@@ -142,7 +142,7 @@ func resourceEIPCreate(d *schema.ResourceData, meta interface{}) error {
 		Domain: aws.String(domainOpt),
 	}
 
-	if v := d.Get("tags").(map[string]interface{}); len(v) > 0 {
+	if len(tags) > 0 {
 		supportedPlatforms := meta.(*conns.AWSClient).SupportedPlatforms
 		if domainOpt != ec2.DomainTypeVpc && len(supportedPlatforms) > 0 && conns.HasEC2Classic(supportedPlatforms) {
 			return fmt.Errorf("tags cannot be set for a standard-domain EIP - must be a VPC-domain EIP")

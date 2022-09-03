@@ -84,6 +84,8 @@ func ResourceSecurityGroup() *schema.Resource {
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
+
+		DeprecationMessage: `With the retirement of EC2-Classic the aws_db_security_group resource has been deprecated and will be removed in a future version.`,
 	}
 }
 
