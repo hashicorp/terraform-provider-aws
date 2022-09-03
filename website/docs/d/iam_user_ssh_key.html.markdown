@@ -23,13 +23,13 @@ data "aws_iam_user_ssh_key" "example" {
 ## Argument Reference
 
 * `encoding` - (Required) Specifies the public key encoding format to use in the response. To retrieve the public key in ssh-rsa format, use `SSH`. To retrieve the public key in PEM format, use `PEM`.
-* `ssh_public_key_id` - (Required) The unique identifier for the SSH public key.
-* `username` - (Required) The name of the IAM user associated with the SSH public key.
+* `ssh_public_key_id` - (Required) Unique identifier for the SSH public key.
+* `username` - (Required) Name of the IAM user associated with the SSH public key.
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-* `fingerprint` - The MD5 message digest of the SSH public key.
-* `public_key` - The SSH public key.
-* `status` - The status of the SSH public key. Active means that the key can be used for authentication with an CodeCommit repository. Inactive means that the key cannot be used.
+* `fingerprint` - MD5 message digest of the SSH public key.
+* `public_key` - SSH public key.
+* `status` - Status of the SSH public key. Active means that the key can be used for authentication with an CodeCommit repository. Inactive means that the key cannot be used.

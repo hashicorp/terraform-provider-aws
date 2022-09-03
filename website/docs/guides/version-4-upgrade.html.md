@@ -2945,7 +2945,7 @@ resource "aws_default_vpc" "default" {
 
 ## Plural Data Source Behavior
 
-The following plural data sources are now consistent with [Provider Design](https://github.com/hashicorp/terraform-provider-aws/blob/main/docs/contributing/provider-design.md#data-sources)
+The following plural data sources are now consistent with [Provider Design](https://hashicorp.github.io/terraform-provider-aws/provider-design/#plural-data-sources)
 such that they no longer return an error if zero results are found.
 
 * [aws_cognito_user_pools](/docs/providers/aws/d/cognito_user_pools.html)
@@ -3243,7 +3243,7 @@ Previously, `ipv6_cidr_block` could be set to `""`. However, the value `""` is n
 
 ### Removal of arn Wildcard Suffix
 
-Previously, the data source returned the Amazon Resource Name (ARN) directly from the API, which included a `:*` suffix to denote all CloudWatch Log Streams under the CloudWatch Log Group. Most other AWS resources that return ARNs and many other AWS services do not use the `:*` suffix. The suffix is now automatically removed. For example, the data source previously returned an ARN such as `arn:aws:logs:us-east-1:123456789012:log-group:/example:*` but will now return `arn:aws:logs:us-east-1:123456789012:log-group:/example`.
+Previously, the data source returned the ARN directly from the API, which included a `:*` suffix to denote all CloudWatch Log Streams under the CloudWatch Log Group. Most other AWS resources that return ARNs and many other AWS services do not use the `:*` suffix. The suffix is now automatically removed. For example, the data source previously returned an ARN such as `arn:aws:logs:us-east-1:123456789012:log-group:/example:*` but will now return `arn:aws:logs:us-east-1:123456789012:log-group:/example`.
 
 Workarounds, such as using `replace()` as shown below, should be removed:
 

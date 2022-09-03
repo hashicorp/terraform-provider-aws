@@ -71,7 +71,7 @@ The following arguments are supported:
 ### Cognito Config
 
 * `client_id` - (Required) The client ID for your Amazon Cognito user pool.
-* `user_pool` - (Required) The id for your Amazon Cognito user pool.
+* `user_pool` - (Required) ID for your Amazon Cognito user pool.
 
 ### Oidc Config
 

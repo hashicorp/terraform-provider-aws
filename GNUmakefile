@@ -19,6 +19,41 @@ ifneq ($(origin SWEEPERS), undefined)
 	SWEEPARGS = -sweep-run='$(SWEEPERS)'
 endif
 
+ifeq ($(PKG_NAME), internal/service/ebs)
+	PKG_NAME = internal/service/ec2
+	TEST = ./$(PKG_NAME)/...
+endif
+
+ifeq ($(PKG_NAME), internal/service/ipam)
+	PKG_NAME = internal/service/ec2
+	TEST = ./$(PKG_NAME)/...
+endif
+
+ifeq ($(PKG_NAME), internal/service/transitgateway)
+	PKG_NAME = internal/service/ec2
+	TEST = ./$(PKG_NAME)/...
+endif
+
+ifeq ($(PKG_NAME), internal/service/vpc)
+	PKG_NAME = internal/service/ec2
+	TEST = ./$(PKG_NAME)/...
+endif
+
+ifeq ($(PKG_NAME), internal/service/vpnclient)
+	PKG_NAME = internal/service/ec2
+	TEST = ./$(PKG_NAME)/...
+endif
+
+ifeq ($(PKG_NAME), internal/service/vpnsite)
+	PKG_NAME = internal/service/ec2
+	TEST = ./$(PKG_NAME)/...
+endif
+
+ifeq ($(PKG_NAME), internal/service/wavelength)
+	PKG_NAME = internal/service/ec2
+	TEST = ./$(PKG_NAME)/...
+endif
+
 default: build
 
 build: fmtcheck

@@ -270,7 +270,7 @@ In addition to all arguments above, the following attributes are exported:
 * `availability_zone` - The availability zone of the instance.
 * `backup_retention_period` - The backup retention period.
 * `backup_window` - The backup window.
-* `ca_cert_identifier` - Specifies the identifier of the CA certificate for the
+* `ca_cert_identifier` - Identifier of the CA certificate for the
 DB instance.
 * `db_name` - The database name.
 * `domain` - The ID of the Directory Service Active Directory domain the instance is joined to
@@ -289,7 +289,7 @@ in a Route 53 Alias record).
 * `port` - The database port.
 * `resource_id` - The RDS Resource ID of this instance.
 * `status` - The RDS instance status.
-* `storage_encrypted` - Specifies whether the DB instance is encrypted.
+* `storage_encrypted` - Whether the DB instance is encrypted.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `username` - The master username for the database.
 

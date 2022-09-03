@@ -33,9 +33,9 @@ In addition to all arguments above, the following attributes are exported:
 * `cloudfront_access_identity_path` - A shortcut to the full path for the
    origin access identity to use in CloudFront, see below.
 * `comment` - An optional comment for the origin access identity.
-* `etag` - The current version of the origin access identity's information.
+* `etag` - Current version of the origin access identity's information.
    For example: `E2QWRUHAPOMQZL`.
-* `iam_arn` - A pre-generated ARN for use in S3 bucket policies (see below).
+* `iam_arn` - Pre-generated ARN for use in S3 bucket policies (see below).
    Example: `arn:aws:iam::cloudfront:user/CloudFront Origin Access Identity
    E2QWRUHAPOMQZL`.
 * `s3_canonical_user_id` - The Amazon S3 canonical user ID for the origin
