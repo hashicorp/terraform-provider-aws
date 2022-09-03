@@ -82,6 +82,7 @@ what IAM permissions are needed to allow Enhanced Monitoring for RDS Instances.
 * `performance_insights_enabled` - (Optional) Specifies whether Performance Insights is enabled or not.
 * `performance_insights_kms_key_id` - (Optional) ARN for the KMS key to encrypt Performance Insights data. When specifying `performance_insights_kms_key_id`, `performance_insights_enabled` needs to be set to true.
 * `performance_insights_retention_period` - (Optional) Amount of time in days to retain Performance Insights data. Valida values are `7`, `731` (2 years) or a multiple of `31`. When specifying `performance_insights_retention_period`, `performance_insights_enabled` needs to be set to true. Defaults to '7'.
+* `network_type` - (Optional) The network type of the DB instance. Valid values: `IPV4`, `DUAL`.
 * `copy_tags_to_snapshot` – (Optional, boolean) Indicates whether to copy all of the user-defined tags from the DB instance to snapshots of the DB instance. Default `false`.
 * `ca_cert_identifier` - (Optional) The identifier of the CA certificate for the DB instance.
 * `tags` - (Optional) A map of tags to assign to the instance. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
