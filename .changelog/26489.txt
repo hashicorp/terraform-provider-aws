@@ -1,7 +1,7 @@
 ```release-note:enhancement
-resource/aws_rds_cluster: Add `network_type` attribute
+resource/aws_rds_cluster: Add `network_type` argument
 ```
 
 ```release-note:enhancement
-resource/aws_rds_cluster_instance: Add `network_type` attribute
+resource/aws_rds_cluster_instance: Add `network_type` attribute reference
 ```
