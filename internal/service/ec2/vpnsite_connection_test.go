@@ -1637,19 +1637,19 @@ resource "aws_vpn_connection" "test" {
   type                = "ipsec.1"
 
   tunnel1_log_options {
-	cloudwatch_log_options {
-	  log_enabled       = true
-	  log_group_arn     = aws_cloudwatch_log_group.default.arn
-	  log_output_format = "json"
-	}
+    cloudwatch_log_options {
+      log_enabled       = true
+      log_group_arn     = aws_cloudwatch_log_group.default.arn
+      log_output_format = "json"
+    }
   }
 
   tunnel2_log_options {
-	cloudwatch_log_options {
-	  log_enabled       = true
-	  log_group_arn     = aws_cloudwatch_log_group.default.arn
-	  log_output_format = "json"
-	}
+    cloudwatch_log_options {
+      log_enabled       = true
+      log_group_arn     = aws_cloudwatch_log_group.default.arn
+      log_output_format = "json"
+    }
   }
 }
 `, rName, rBgpAsn)
