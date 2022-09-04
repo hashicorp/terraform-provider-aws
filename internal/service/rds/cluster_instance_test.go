@@ -516,39 +516,6 @@ func TestAccRDSClusterInstance_monitoringInterval(t *testing.T) {
 	})
 }
 
-func TestAccRDSClusterInstance_networkType(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	var v rds.DBInstance
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_rds_cluster_instance.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterInstanceDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccClusterInstanceConfig_networkType(rName, "IPV4"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterInstanceExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "network_type", "IPV4"),
-				),
-			},
-			{
-				Config: testAccClusterInstanceConfig_networkType(rName, "DUAL"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterInstanceExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "network_type", "DUAL"),
-				),
-			},
-		},
-	})
-}
-
 func TestAccRDSClusterInstance_MonitoringRoleARN_enabledToDisabled(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -1579,45 +1546,6 @@ resource "aws_rds_cluster_instance" "test" {
   monitoring_role_arn = aws_iam_role.test.arn
 }
 `, rName))
-}
-
-func testAccClusterInstanceConfig_networkType(rName string, networkType string) string {
-	return acctest.ConfigCompose(
-		acctest.ConfigVPCWithSubnetsIPv6(rName, 2),
-		fmt.Sprintf(`
-resource "aws_db_subnet_group" "test" {
-  name       = %[1]q
-  subnet_ids = aws_subnet.test[*].id
-}
-
-resource "aws_rds_cluster" "test" {
-  cluster_identifier   = %[1]q
-  db_subnet_group_name = aws_db_subnet_group.test.name
-  engine               = "aurora-postgresql"
-  engine_version       = "14.3"
-  network_type         = %[2]q
-  master_password      = "barbarbarbar"
-  master_username      = "foo"
-  skip_final_snapshot  = true
-  apply_immediately    = true
-}
-
-data "aws_rds_orderable_db_instance" "test" {
-  engine                        = aws_rds_cluster.test.engine
-  engine_version                = aws_rds_cluster.test.engine_version
-  supports_performance_insights = true
-  preferred_instance_classes    = ["db.t3.medium", "db.r5.large", "db.r4.large"]
-}
-  
-resource "aws_rds_cluster_instance" "test" {
-  cluster_identifier           = aws_rds_cluster.test.id
-  engine                       = aws_rds_cluster.test.engine
-  identifier                   = %[1]q
-  instance_class               = data.aws_rds_orderable_db_instance.test.instance_class
-  performance_insights_enabled = true
-  apply_immediately            = true
-}
-`, rName, networkType))
 }
 
 func testAccClusterInstanceConfig_performanceInsightsEnabledAuroraMySQL1(rName, engine string) string {
