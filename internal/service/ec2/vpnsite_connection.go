@@ -1024,7 +1024,7 @@ func expandVPNTunnelOptionsSpecification(d *schema.ResourceData, prefix string) 
 		}
 	}
 
-	if v, ok := d.GetOk(prefix + "log_options"); ok {
+	if v, ok := d.GetOk(prefix + "log_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{}) != nil {
 		apiObject.LogOptions = expandVPNTunnelLogOptionsSpecification(v.([]interface{}))
 	}
 
@@ -1108,8 +1108,8 @@ func expandVPNTunnelLogOptionsSpecification(config []interface{}) *ec2.VpnTunnel
 
 	for _, c := range config {
 		param := c.(map[string]interface{})
-		if v, ok := param["cloudwatch_log_options"]; ok {
-			apiObject.CloudWatchLogOptions = expandCloudWatchLogOptionsSpecification(v.([]interface{}))
+		if v, ok := param["cloudwatch_log_options"].([]interface{}); ok && len(v) > 0 {
+			apiObject.CloudWatchLogOptions = expandCloudWatchLogOptionsSpecification(v)
 		}
 	}
 
@@ -1174,7 +1174,7 @@ func expandModifyVPNTunnelOptionsSpecification(d *schema.ResourceData, prefix st
 	}
 
 	if key := prefix + "log_options"; d.HasChange(key) {
-		if v, ok := d.GetOk(key); ok {
+		if v, ok := d.GetOk(key); ok && len(v.([]interface{})) > 0 && v.([]interface{}) != nil {
 			apiObject.LogOptions = expandVPNTunnelLogOptionsSpecification(v.([]interface{}))
 		}
 
