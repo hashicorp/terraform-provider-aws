@@ -1116,15 +1116,15 @@ func expandVPNTunnelLogOptionsSpecification(d *schema.ResourceData) *ec2.VpnTunn
 func expandCloudWatchLogOptionsSpecification(d *schema.ResourceData) *ec2.CloudWatchLogOptionsSpecification {
 	apiObject := &ec2.CloudWatchLogOptionsSpecification{}
 
-	if v, ok := d.GetOk("log_enabled"); ok && v.(*schema.Set).Len() > 0 {
+	if v, ok := d.GetOk("log_enabled"); ok {
 		apiObject.LogEnabled = aws.Bool(v.(bool))
 	}
 
-	if v, ok := d.GetOk("log_group_arn"); ok && v.(*schema.Set).Len() > 0 {
+	if v, ok := d.GetOk("log_group_arn"); ok {
 		apiObject.LogGroupArn = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("log_output_format"); ok && v.(*schema.Set).Len() > 0 {
+	if v, ok := d.GetOk("log_output_format"); ok {
 		apiObject.LogOutputFormat = aws.String(v.(string))
 	}
 
