@@ -795,14 +795,14 @@ func TestAccRDSCluster_networkType(t *testing.T) {
 		CheckDestroy:             testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig__networkType(rName, "IPV4"),
+				Config: testAccClusterConfig_networkType(rName, "IPV4"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, "network_type", "IPV4"),
 				),
 			},
 			{
-				Config: testAccClusterConfig__networkType(rName, "DUAL"),
+				Config: testAccClusterConfig_networkType(rName, "DUAL"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, "network_type", "DUAL"),
@@ -3386,7 +3386,7 @@ resource "aws_rds_cluster" "alternate" {
 `, rName))
 }
 
-func testAccClusterConfig__networkType(rName string, networkType string) string {
+func testAccClusterConfig_networkType(rName string, networkType string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigVPCWithSubnetsIPv6(rName, 2),
 		fmt.Sprintf(`
