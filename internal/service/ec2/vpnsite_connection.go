@@ -1024,8 +1024,8 @@ func expandVPNTunnelOptionsSpecification(d *schema.ResourceData, prefix string) 
 		}
 	}
 
-	if v, ok := d.GetOk(prefix + "log_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{}) != nil {
-		apiObject.LogOptions = expandVPNTunnelLogOptionsSpecification(v.([]interface{}))
+	if v, ok := d.GetOk(prefix + "log_options"); ok && v.(*schema.Set).Len() > 0 {
+		apiObject.LogOptions = expandVPNTunnelLogOptionsSpecification(d)
 	}
 
 	if v, ok := d.GetOk(prefix + "phase1_dh_group_numbers"); ok {
@@ -1103,33 +1103,29 @@ func expandVPNTunnelOptionsSpecification(d *schema.ResourceData, prefix string) 
 	return apiObject
 }
 
-func expandVPNTunnelLogOptionsSpecification(config []interface{}) *ec2.VpnTunnelLogOptionsSpecification {
+func expandVPNTunnelLogOptionsSpecification(d *schema.ResourceData) *ec2.VpnTunnelLogOptionsSpecification {
 	apiObject := &ec2.VpnTunnelLogOptionsSpecification{}
 
-	for _, c := range config {
-		param := c.(map[string]interface{})
-		if v, ok := param["cloudwatch_log_options"].([]interface{}); ok && len(v) > 0 {
-			apiObject.CloudWatchLogOptions = expandCloudWatchLogOptionsSpecification(v)
-		}
+	if v, ok := d.GetOk("cloudwatch_log_options"); ok && v.(*schema.Set).Len() > 0 {
+		apiObject.CloudWatchLogOptions = expandCloudWatchLogOptionsSpecification(d)
 	}
 
 	return apiObject
 }
 
-func expandCloudWatchLogOptionsSpecification(config []interface{}) *ec2.CloudWatchLogOptionsSpecification {
+func expandCloudWatchLogOptionsSpecification(d *schema.ResourceData) *ec2.CloudWatchLogOptionsSpecification {
 	apiObject := &ec2.CloudWatchLogOptionsSpecification{}
 
-	for _, c := range config {
-		param := c.(map[string]interface{})
-		if v, ok := param["log_enabled"]; ok {
-			apiObject.LogEnabled = aws.Bool(v.(bool))
-		}
-		if v, ok := param["log_group_arn"]; ok {
-			apiObject.LogGroupArn = aws.String(v.(string))
-		}
-		if v, ok := param["log_output_format"]; ok {
-			apiObject.LogOutputFormat = aws.String(v.(string))
-		}
+	if v, ok := d.GetOk("log_enabled"); ok && v.(*schema.Set).Len() > 0 {
+		apiObject.LogEnabled = aws.Bool(v.(bool))
+	}
+
+	if v, ok := d.GetOk("log_group_arn"); ok && v.(*schema.Set).Len() > 0 {
+		apiObject.LogGroupArn = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("log_output_format"); ok && v.(*schema.Set).Len() > 0 {
+		apiObject.LogOutputFormat = aws.String(v.(string))
 	}
 
 	return apiObject
@@ -1174,8 +1170,8 @@ func expandModifyVPNTunnelOptionsSpecification(d *schema.ResourceData, prefix st
 	}
 
 	if key := prefix + "log_options"; d.HasChange(key) {
-		if v, ok := d.GetOk(key); ok && len(v.([]interface{})) > 0 && v.([]interface{}) != nil {
-			apiObject.LogOptions = expandVPNTunnelLogOptionsSpecification(v.([]interface{}))
+		if v, ok := d.GetOk(key); ok && v.(*schema.Set).Len() > 0 {
+			apiObject.LogOptions = expandVPNTunnelLogOptionsSpecification(d)
 		}
 
 		hasChange = true
