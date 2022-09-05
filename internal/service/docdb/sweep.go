@@ -204,41 +204,40 @@ func sweepDBInstances(region string) error {
 	}
 
 	conn := client.(*conns.AWSClient).DocDBConn
+	sweepResources := make([]*sweep.SweepResource, 0)
+	var errs *multierror.Error
 	input := &docdb.DescribeDBInstancesInput{}
 
-	err = conn.DescribeDBInstancesPages(input, func(out *docdb.DescribeDBInstancesOutput, lastPage bool) bool {
-		for _, dBInstance := range out.DBInstances {
-			id := aws.StringValue(dBInstance.DBInstanceIdentifier)
-			input := &docdb.DeleteDBInstanceInput{
-				DBInstanceIdentifier: dBInstance.DBInstanceIdentifier,
-			}
-
-			log.Printf("[INFO] Deleting DocDB Instance: %s", id)
-
-			_, err := conn.DeleteDBInstance(input)
-
-			if err != nil {
-				log.Printf("[ERROR] Failed to delete DocDB Instance (%s): %s", id, err)
-				continue
-			}
-
-			if err := WaitForDBInstanceDeletion(context.TODO(), conn, id, DBInstanceDeleteTimeout); err != nil {
-				log.Printf("[ERROR] Failure while waiting for DocDB Instance (%s) to be deleted: %s", id, err)
-			}
+	err = conn.DescribeDBInstancesPages(input, func(page *docdb.DescribeDBInstancesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
 		}
+
+		for _, dBInstance := range page.DBInstances {
+			r := ResourceClusterInstance()
+			d := r.Data(nil)
+			d.SetId(aws.StringValue(dBInstance.DBInstanceIdentifier))
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping DocDB Instance sweep for %s: %s", region, err)
+	if err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("error listing DocDB Instances for %s: %w", region, err))
+	}
+
+	if err = sweep.SweepOrchestrator(sweepResources); err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("error sweeping DocDB Instances for %s: %w", region, err))
+	}
+
+	if sweep.SkipSweepError(errs.ErrorOrNil()) {
+		log.Printf("[WARN] Skipping DocDB Instance sweep for %s: %s", region, errs)
 		return nil
 	}
 
-	if err != nil {
-		return fmt.Errorf("error retrieving DocDB Instances: %w", err)
-	}
-
-	return nil
+	return errs.ErrorOrNil()
 }
 
 func sweepGlobalClusters(region string) error {
@@ -295,6 +294,7 @@ func sweepDBSubnetGroups(region string) error {
 
 	conn := client.(*conns.AWSClient).DocDBConn
 	input := &docdb.DescribeDBSubnetGroupsInput{}
+	sweepResources := make([]*sweep.SweepResource, 0)
 
 	err = conn.DescribeDBSubnetGroupsPages(input, func(out *docdb.DescribeDBSubnetGroupsOutput, lastPage bool) bool {
 		for _, dBSubnetGroup := range out.DBSubnetGroups {
