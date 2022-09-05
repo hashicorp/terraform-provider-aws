@@ -120,6 +120,7 @@ func ResourcePermissions() *schema.Resource {
 				Type:     schema.TypeList,
 				Optional: true,
 				Computed: true,
+				ForceNew: true,
 				MaxItems: 1,
 				ExactlyOneOf: []string{
 					"catalog_resource",
@@ -141,6 +142,7 @@ func ResourcePermissions() *schema.Resource {
 						"values": {
 							Type:     schema.TypeSet,
 							Required: true,
+							ForceNew: true,
 							MinItems: 1,
 							MaxItems: 15,
 							Elem: &schema.Schema{
