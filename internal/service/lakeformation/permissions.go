@@ -164,6 +164,7 @@ func ResourcePermissions() *schema.Resource {
 				Type:     schema.TypeList,
 				Optional: true,
 				Computed: true,
+				ForceNew: true,
 				MaxItems: 1,
 				ExactlyOneOf: []string{
 					"catalog_resource",
@@ -192,11 +193,13 @@ func ResourcePermissions() *schema.Resource {
 									"key": {
 										Type:         schema.TypeString,
 										Required:     true,
+										ForceNew:     true,
 										ValidateFunc: validation.StringLenBetween(1, 128),
 									},
 									"values": {
 										Type:     schema.TypeSet,
 										Required: true,
+										ForceNew: true,
 										MinItems: 1,
 										MaxItems: 15,
 										Elem: &schema.Schema{
@@ -211,6 +214,7 @@ func ResourcePermissions() *schema.Resource {
 						"resource_type": {
 							Type:         schema.TypeString,
 							Required:     true,
+							ForceNew:     true,
 							ValidateFunc: validation.StringInSlice(lakeformation.ResourceType_Values(), false),
 						},
 					},
