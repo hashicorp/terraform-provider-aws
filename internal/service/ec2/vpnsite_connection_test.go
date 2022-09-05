@@ -1628,7 +1628,7 @@ resource "aws_customer_gateway" "test" {
 }
 
 resource "aws_cloudwatch_log_group" "default" {
-	name = %[1]q
+  name = %[1]q
 }
 
 resource "aws_vpn_connection" "test" {
