@@ -6,6 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -74,7 +75,23 @@ func resourceAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
 			TargetGroupARNs:      aws.StringSlice([]string{targetGroupARN}),
 		}
 
-		if _, err := conn.AttachLoadBalancerTargetGroups(input); err != nil {
+		err := resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
+			_, err := conn.AttachLoadBalancerTargetGroups(input)
+
+			if tfawserr.ErrCodeContains(err, ErrCodeValidationError) {
+				return resource.RetryableError(err)
+			}
+
+			if err != nil {
+				return resource.NonRetryableError(err)
+			}
+
+			return nil
+		})
+		if tfresource.TimedOut(err) {
+			_, err = conn.AttachLoadBalancerTargetGroups(input)
+		}
+		if err != nil {
 			return fmt.Errorf("attaching Auto Scaling Group (%s) target group (%s): %w", asgName, targetGroupARN, err)
 		}
 	}
@@ -144,7 +161,23 @@ func resourceAttachmentDelete(d *schema.ResourceData, meta interface{}) error {
 			TargetGroupARNs:      aws.StringSlice([]string{targetGroupARN}),
 		}
 
-		if _, err := conn.DetachLoadBalancerTargetGroups(input); err != nil {
+		err := resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
+			_, err := conn.DetachLoadBalancerTargetGroups(input)
+
+			if tfawserr.ErrCodeContains(err, ErrCodeValidationError) {
+				return resource.RetryableError(err)
+			}
+
+			if err != nil {
+				return resource.NonRetryableError(err)
+			}
+
+			return nil
+		})
+		if tfresource.TimedOut(err) {
+			_, err = conn.DetachLoadBalancerTargetGroups(input)
+		}
+		if err != nil {
 			return fmt.Errorf("detaching Auto Scaling Group (%s) target group (%s): %w", asgName, targetGroupARN, err)
 		}
 	}
