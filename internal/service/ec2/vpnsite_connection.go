@@ -209,11 +209,9 @@ func ResourceVPNConnection() *schema.Resource {
 										Optional: true,
 									},
 									"log_output_format": {
-										Type:     schema.TypeString,
-										Optional: true,
-										ValidateFunc: validation.StringInSlice([]string{
-											"json", "text",
-										}, false),
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validation.StringInSlice(vpnTunnelCloudWatchLogOutputFormat_Values(), false),
 									},
 								},
 							},
