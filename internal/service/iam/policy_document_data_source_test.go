@@ -223,6 +223,24 @@ func TestAccIAMPolicyDocumentDataSource_duplicateSid(t *testing.T) {
 	})
 }
 
+func TestAccIAMPolicyDocumentDataSource_sourcePolicyValidJson(t *testing.T) {
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccPolicyDocumentDataSourceConfig_invalidJson,
+				ExpectError: regexp.MustCompile(`"source_policy_documents.0" contains an invalid JSON: unexpected end of JSON input`),
+			},
+			{
+				Config:      testAccPolicyDocumentDataSourceConfig_emptyString,
+				ExpectError: regexp.MustCompile(`expected "source_policy_documents.0" to not be an empty string, got`),
+			},
+		},
+	})
+}
+
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/10777
 func TestAccIAMPolicyDocumentDataSource_StatementPrincipalIdentifiers_stringAndSlice(t *testing.T) {
 	dataSourceName := "data.aws_iam_policy_document.test"
@@ -1274,6 +1292,18 @@ data "aws_iam_policy_document" "test" {
       type = "AWS"
     }
   }
+}
+`
+
+var testAccPolicyDocumentDataSourceConfig_emptyString = `
+data "aws_iam_policy_document" "test" {
+	source_policy_documents = [""]
+}
+`
+
+var testAccPolicyDocumentDataSourceConfig_invalidJson = `
+data "aws_iam_policy_document" "test" {
+	source_policy_documents = ["{"]
 }
 `
 

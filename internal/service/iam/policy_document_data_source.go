@@ -54,7 +54,10 @@ func DataSourcePolicyDocument() *schema.Resource {
 			"source_policy_documents": {
 				Type:     schema.TypeList,
 				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: validation.All(validation.StringIsNotEmpty, validation.StringIsJSON),
+				},
 			},
 			"statement": {
 				Type:     schema.TypeList,
