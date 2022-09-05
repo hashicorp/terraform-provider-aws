@@ -24,8 +24,8 @@ func init() {
 		},
 	})
 	resource.AddTestSweepers("aws_docdb_subnet_group", &resource.Sweeper{
-		Name:         "aws_docdb_subnet_group",
-		F:            sweepDBSubnetGroups,
+		Name: "aws_docdb_subnet_group",
+		F:    sweepDBSubnetGroups,
 		Dependencies: []string{
 			"aws_docdb_cluster_instance",
 		},
@@ -51,8 +51,8 @@ func init() {
 		Dependencies: []string{},
 	})
 	resource.AddTestSweepers("aws_docdb_cluster_parameter_group", &resource.Sweeper{
-		Name:         "aws_docdb_cluster_parameter_group",
-		F:            sweepDBClusterParameterGroups,
+		Name: "aws_docdb_cluster_parameter_group",
+		F:    sweepDBClusterParameterGroups,
 		Dependencies: []string{
 			"aws_docdb_cluster_instance",
 		},
@@ -74,7 +74,7 @@ func sweepDBClusters(region string) error {
 			id := aws.StringValue(dBCluster.DBClusterIdentifier)
 			input := &docdb.DeleteDBClusterInput{
 				DBClusterIdentifier: dBCluster.DBClusterIdentifier,
-				SkipFinalSnapshot: true,
+				SkipFinalSnapshot:   true,
 			}
 
 			log.Printf("[INFO] Deleting DocDB Cluster: %s", id)
@@ -165,6 +165,11 @@ func sweepDBClusterParameterGroups(region string) error {
 			name := aws.StringValue(dBClusterParameterGroup.DBClusterParameterGroupName)
 			input := &docdb.DeleteDBClusterParameterGroupInput{
 				DBClusterParameterGroupName: dBClusterParameterGroup.DBClusterParameterGroupName,
+			}
+
+			if strings.HasPrefix(name, "default.") {
+				log.Printf("[INFO] Skipping Document DB Parameter Group: %s", name)
+				continue
 			}
 
 			log.Printf("[INFO] Deleting DocDB Cluster Parameter Group: %s", name)
