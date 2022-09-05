@@ -50,6 +50,24 @@ func TestAccIAMPolicyDocumentDataSource_singleConditionValue(t *testing.T) {
 	})
 }
 
+func TestAccIAMPolicyDocumentDataSource_conditionWithBoolValue(t *testing.T) {
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPolicyDocumentConfig_conditionWithBoolValue,
+				Check: resource.ComposeTestCheckFunc(
+					acctest.CheckResourceAttrEquivalentJSON("data.aws_iam_policy_document.test", "json",
+						testAccPolicyDocumentConfig_conditionWithBoolValue_expectedJson,
+					),
+				),
+			},
+		},
+	})
+}
+
 func TestAccIAMPolicyDocumentDataSource_source(t *testing.T) {
 	// This really ought to be able to be a unit test rather than an
 	// acceptance test, but just instantiating the AWS provider requires
@@ -1219,6 +1237,69 @@ data "aws_iam_policy_document" "test" {
       type        = "AWS"
     }
   }
+}
+`
+
+const testAccPolicyDocumentConfig_conditionWithBoolValue = `
+data "aws_iam_policy_document" "test" {
+  source_policy_documents = [<<EOF
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "RestrictAccessToSpecialTag",
+            "Effect": "Deny",
+            "Action": [
+                "ec2:CreateTags",
+                "ec2:DeleteTags"
+            ],
+            "Resource": "arn:aws:ec2:*:*:vpc/*",
+            "Condition": {
+                "Null": {
+                    "aws:ResourceTag/SpecialTag": false
+                },
+                "StringLike": {
+                    "aws:ResourceAccount": [
+                        "123456"
+                    ],
+                    "aws:PrincipalArn": "arn:aws:iam::*:role/AWSAFTExecution"
+                }
+            }
+        }
+    ]
+}
+EOF
+  ]
+}
+`
+
+const testAccPolicyDocumentConfig_conditionWithBoolValue_expectedJson = `
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "RestrictAccessToSpecialTag",
+            "Effect": "Deny",
+            "Action": [
+                "ec2:CreateTags",
+                "ec2:DeleteTags"
+            ],
+            "Resource": "arn:aws:ec2:*:*:vpc/*",
+            "Condition": {
+                "Null": {
+                    "aws:ResourceTag/SpecialTag": "false"
+                },
+                "StringLike": {
+                    "aws:ResourceAccount": [
+                        "123456"
+                    ],
+                    "aws:PrincipalArn": [
+						"arn:aws:iam::*:role/AWSAFTExecution"
+					]
+                }
+            }
+        }
+    ]
 }
 `
 
