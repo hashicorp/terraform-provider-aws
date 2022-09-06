@@ -18,7 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccMediaLiveMultiplex_basic(t *testing.T) {
+func testAccMediaLiveMultiplex_basic(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -27,7 +27,7 @@ func TestAccMediaLiveMultiplex_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_medialive_multiplex.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(names.MediaLiveEndpointID, t)
@@ -59,7 +59,7 @@ func TestAccMediaLiveMultiplex_basic(t *testing.T) {
 	})
 }
 
-func TestAccMediaLiveMultiplex_start(t *testing.T) {
+func testAccMediaLiveMultiplex_start(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -68,7 +68,7 @@ func TestAccMediaLiveMultiplex_start(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_medialive_multiplex.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(names.MediaLiveEndpointID, t)
@@ -98,7 +98,7 @@ func TestAccMediaLiveMultiplex_start(t *testing.T) {
 	})
 }
 
-func TestAccMediaLiveMultiplex_update(t *testing.T) {
+func testAccMediaLiveMultiplex_update(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -107,7 +107,7 @@ func TestAccMediaLiveMultiplex_update(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_medialive_multiplex.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(names.MediaLiveEndpointID, t)
@@ -145,7 +145,7 @@ func TestAccMediaLiveMultiplex_update(t *testing.T) {
 	})
 }
 
-func TestAccMediaLiveMultiplex_updateTags(t *testing.T) {
+func testAccMediaLiveMultiplex_updateTags(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -154,7 +154,7 @@ func TestAccMediaLiveMultiplex_updateTags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_medialive_multiplex.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(names.MediaLiveEndpointID, t)
@@ -193,7 +193,7 @@ func TestAccMediaLiveMultiplex_updateTags(t *testing.T) {
 	})
 }
 
-func TestAccMediaLiveMultiplex_disappears(t *testing.T) {
+func testAccMediaLiveMultiplex_disappears(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -202,7 +202,7 @@ func TestAccMediaLiveMultiplex_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_medialive_multiplex.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(names.MediaLiveEndpointID, t)
