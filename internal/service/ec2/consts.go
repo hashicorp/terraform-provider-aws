@@ -112,13 +112,13 @@ func vpnTunnelOptionsIKEVersion_Values() []string {
 }
 
 const (
-	vpnTunnelCloudWatchLogOutputFormatJson = "json"
+	vpnTunnelCloudWatchLogOutputFormatJSON = "json"
 	vpnTunnelCloudWatchLogOutputFormatText = "text"
 )
 
 func vpnTunnelCloudWatchLogOutputFormat_Values() []string {
 	return []string{
-		vpnTunnelCloudWatchLogOutputFormatJson,
+		vpnTunnelCloudWatchLogOutputFormatJSON,
 		vpnTunnelCloudWatchLogOutputFormatText,
 	}
 }
