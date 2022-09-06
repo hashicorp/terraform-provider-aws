@@ -176,7 +176,7 @@ func TestAccRDSInstance_disappears(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_basic(rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
+				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
 					acctest.CheckResourceDisappears(acctest.Provider, tfrds.ResourceInstance(), resourceName),
 				),
@@ -203,7 +203,7 @@ func TestAccRDSInstance_tags(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_tags1(rName, "key1", "value1"),
-				Check: resource.ComposeAggregateTestCheckFunc(
+				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
@@ -223,7 +223,7 @@ func TestAccRDSInstance_tags(t *testing.T) {
 			},
 			{
 				Config: testAccInstanceConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
-				Check: resource.ComposeAggregateTestCheckFunc(
+				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
@@ -232,7 +232,7 @@ func TestAccRDSInstance_tags(t *testing.T) {
 			},
 			{
 				Config: testAccInstanceConfig_tags1(rName, "key2", "value2"),
-				Check: resource.ComposeAggregateTestCheckFunc(
+				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),

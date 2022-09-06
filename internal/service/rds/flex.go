@@ -9,25 +9,34 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
-func ExpandClusterScalingConfiguration(l []interface{}) *rds.ScalingConfiguration {
-	if len(l) == 0 || l[0] == nil {
+func expandScalingConfiguration(tfMap map[string]interface{}) *rds.ScalingConfiguration {
+	if tfMap == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	apiObject := &rds.ScalingConfiguration{}
 
-	scalingConfiguration := &rds.ScalingConfiguration{
-		AutoPause:             aws.Bool(m["auto_pause"].(bool)),
-		MaxCapacity:           aws.Int64(int64(m["max_capacity"].(int))),
-		MinCapacity:           aws.Int64(int64(m["min_capacity"].(int))),
-		SecondsUntilAutoPause: aws.Int64(int64(m["seconds_until_auto_pause"].(int))),
+	if v, ok := tfMap["auto_pause"].(bool); ok {
+		apiObject.AutoPause = aws.Bool(v)
 	}
 
-	if vTimeoutAction, ok := m["timeout_action"].(string); ok && vTimeoutAction != "" {
-		scalingConfiguration.TimeoutAction = aws.String(vTimeoutAction)
+	if v, ok := tfMap["max_capacity"].(int); ok {
+		apiObject.MaxCapacity = aws.Int64(int64(v))
 	}
 
-	return scalingConfiguration
+	if v, ok := tfMap["min_capacity"].(int); ok {
+		apiObject.MinCapacity = aws.Int64(int64(v))
+	}
+
+	if v, ok := tfMap["seconds_until_auto_pause"].(int); ok {
+		apiObject.SecondsUntilAutoPause = aws.Int64(int64(v))
+	}
+
+	if v, ok := tfMap["timeout_action"].(string); ok && v != "" {
+		apiObject.TimeoutAction = aws.String(v)
+	}
+
+	return apiObject
 }
 
 func flattenScalingConfigurationInfo(apiObject *rds.ScalingConfigurationInfo) map[string]interface{} {

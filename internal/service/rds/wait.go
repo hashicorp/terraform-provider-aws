@@ -116,6 +116,33 @@ func waitDBProxyEndpointDeleted(conn *rds.RDS, id string, timeout time.Duration)
 	return nil, err
 }
 
+func waitDBClusterCreated(conn *rds.RDS, id string, timeout time.Duration) (*rds.DBCluster, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{
+			ClusterStatusBackingUp,
+			ClusterStatusCreating,
+			ClusterStatusMigrating,
+			ClusterStatusModifying,
+			ClusterStatusPreparingDataMigration,
+			ClusterStatusRebooting,
+			ClusterStatusResettingMasterCredentials,
+		},
+		Target:     []string{ClusterStatusAvailable},
+		Refresh:    statusDBCluster(conn, id),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
+		Delay:      30 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*rds.DBCluster); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
 func waitDBClusterDeleted(conn *rds.RDS, id string, timeout time.Duration) (*rds.DBCluster, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
@@ -124,12 +151,37 @@ func waitDBClusterDeleted(conn *rds.RDS, id string, timeout time.Duration) (*rds
 			ClusterStatusDeleting,
 			ClusterStatusModifying,
 		},
-		Target:                    []string{},
-		Refresh:                   statusDBCluster(conn, id),
-		Timeout:                   timeout,
-		MinTimeout:                10 * time.Second,
-		Delay:                     30 * time.Second,
-		ContinuousTargetOccurence: 3,
+		Target:     []string{},
+		Refresh:    statusDBCluster(conn, id),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
+		Delay:      30 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*rds.DBCluster); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitDBClusterUpdated(conn *rds.RDS, id string, timeout time.Duration) (*rds.DBCluster, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{
+			ClusterStatusBackingUp,
+			ClusterStatusConfiguringIAMDatabaseAuth,
+			ClusterStatusModifying,
+			ClusterStatusRenaming,
+			ClusterStatusResettingMasterCredentials,
+			ClusterStatusUpgrading,
+		},
+		Target:     []string{ClusterStatusAvailable},
+		Refresh:    statusDBCluster(conn, id),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
+		Delay:      30 * time.Second,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
