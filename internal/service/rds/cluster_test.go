@@ -611,11 +611,10 @@ func TestAccRDSCluster_PointInTimeRestore_enabledCloudWatchLogsExports(t *testin
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var v rds.DBCluster
-	var c rds.DBCluster
-
-	parentId := sdkacctest.RandomWithPrefix("tf-acc-point-in-time-restore-seed-test")
-	restoredId := sdkacctest.RandomWithPrefix("tf-acc-point-in-time-restored-test")
+	var sourceDBCluster, dbCluster rds.DBCluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	sourceResourceName := "aws_rds_cluster.test"
+	resourceName := "aws_rds_cluster.restore"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
@@ -624,14 +623,12 @@ func TestAccRDSCluster_PointInTimeRestore_enabledCloudWatchLogsExports(t *testin
 		CheckDestroy:             testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_pointInTimeRestoreSource_enabled_cloudWatch_logs_exports(parentId, restoredId, "audit"),
+				Config: testAccClusterConfig_pointInTimeRestoreSource_enabledCloudWatchLogsExports(rName, "audit"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists("aws_rds_cluster.test", &v),
-					testAccCheckClusterExists("aws_rds_cluster.restored_pit", &c),
-					resource.TestCheckResourceAttr("aws_rds_cluster.restored_pit", "cluster_identifier", restoredId),
-					resource.TestCheckResourceAttrPair("aws_rds_cluster.restored_pit", "engine", "aws_rds_cluster.test", "engine"),
-					resource.TestCheckResourceAttr("aws_rds_cluster.restored_pit", "enabled_cloudwatch_logs_exports.#", "1"),
-					resource.TestCheckTypeSetElemAttr("aws_rds_cluster.restored_pit", "enabled_cloudwatch_logs_exports.*", "audit"),
+					testAccCheckClusterExists(sourceResourceName, &sourceDBCluster),
+					testAccCheckClusterExists(resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "enabled_cloudwatch_logs_exports.*", "audit"),
 				),
 			},
 		},
@@ -2692,51 +2689,20 @@ resource "aws_rds_cluster" "restore" {
 `, rName))
 }
 
-func testAccClusterConfig_pointInTimeRestoreSource_enabled_cloudWatch_logs_exports(parentId, childId, enabledCloudwatchLogExports string) string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
-resource "aws_rds_cluster" "test" {
-  cluster_identifier   = "%[1]s"
-  master_username      = "root"
-  master_password      = "password"
-  db_subnet_group_name = aws_db_subnet_group.test.name
-  skip_final_snapshot  = true
-  engine               = "aurora-mysql"
-}
-
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-  tags = {
-    Name = "%[1]s-vpc"
-  }
-}
-
-resource "aws_subnet" "subnets" {
-  count             = length(data.aws_availability_zones.available.names)
-  vpc_id            = aws_vpc.test.id
-  cidr_block        = "10.0.${count.index}.0/24"
-  availability_zone = data.aws_availability_zones.available.names[count.index]
-  tags = {
-    Name = "%[1]s-subnet-${count.index}"
-  }
-}
-
-resource "aws_db_subnet_group" "test" {
-  name       = "%[1]s-db-subnet-group"
-  subnet_ids = aws_subnet.subnets[*].id
-}
-
-resource "aws_rds_cluster" "restored_pit" {
-  cluster_identifier              = "%s"
+func testAccClusterConfig_pointInTimeRestoreSource_enabledCloudWatchLogsExports(rName, enabledCloudwatchLogExports string) string {
+	return acctest.ConfigCompose(testAccClusterConfig_baseForPITR(rName), fmt.Sprintf(`
+resource "aws_rds_cluster" "restore" {
+  cluster_identifier  = "%[1]s-restore"
   skip_final_snapshot             = true
   engine                          = aws_rds_cluster.test.engine
-  enabled_cloudwatch_logs_exports = [%q]
+  enabled_cloudwatch_logs_exports = [%[2]q]
   restore_to_point_in_time {
     source_cluster_identifier  = aws_rds_cluster.test.cluster_identifier
     restore_type               = "full-copy"
     use_latest_restorable_time = true
   }
 }
-`, parentId, childId, enabledCloudwatchLogExports))
+`, rName, enabledCloudwatchLogExports))
 }
 
 func testAccClusterConfig_enabledCloudWatchLogsExports1(rName, enabledCloudwatchLogExports1 string) string {
@@ -3322,9 +3288,7 @@ resource "aws_rds_cluster" "alternate" {
 }
 
 func testAccClusterConfig_networkType(rName string, networkType string) string {
-	return acctest.ConfigCompose(
-		acctest.ConfigVPCWithSubnetsIPv6(rName, 2),
-		fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnetsIPv6(rName, 2), fmt.Sprintf(`
 resource "aws_db_subnet_group" "test" {
   name       = %[1]q
   subnet_ids = aws_subnet.test[*].id
@@ -3336,8 +3300,8 @@ resource "aws_rds_cluster" "test" {
   network_type         = %[2]q
   engine               = "aurora-postgresql"
   engine_version       = "14.3"
-  master_password      = "barbarbarbar"
-  master_username      = "foo"
+  master_password      = "avoid-plaintext-passwords"
+  master_username      = "tfacctest"
   skip_final_snapshot  = true
   apply_immediately    = true
 }
@@ -3386,59 +3350,20 @@ resource "aws_rds_cluster" "test" {
 }
 
 func testAccClusterConfig_EngineMode_multimaster(rName string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = "tf-acc-test-rds-cluster-multimaster"
-  }
-}
-
-resource "aws_subnet" "test1" {
-  vpc_id            = aws_vpc.test.id
-  cidr_block        = "10.0.0.0/24"
-  availability_zone = data.aws_availability_zones.available.names[0]
-
-  tags = {
-    Name = "tf-acc-test-rds-cluster-multimaster"
-  }
-}
-
-resource "aws_subnet" "test2" {
-  vpc_id            = aws_vpc.test.id
-  cidr_block        = "10.0.1.0/24"
-  availability_zone = data.aws_availability_zones.available.names[1]
-
-  tags = {
-    Name = "tf-acc-test-rds-cluster-multimaster"
-  }
-}
-
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 3), fmt.Sprintf(`
 resource "aws_db_subnet_group" "test" {
   name       = %[1]q
-  subnet_ids = [aws_subnet.test1.id, aws_subnet.test2.id]
+  subnet_ids = aws_subnet.test[*].id
 }
-
-# multimaster requires db_subnet_group_name
 resource "aws_rds_cluster" "test" {
   cluster_identifier   = %[1]q
   db_subnet_group_name = aws_db_subnet_group.test.name
   engine_mode          = "multimaster"
-  master_password      = "barbarbarbar"
-  master_username      = "foo"
+  master_password      = "avoid-plaintext-passwords"
+  master_username      = "tfacctest"
   skip_final_snapshot  = true
 }
-`, rName)
+`, rName))
 }
 
 func testAccClusterConfig_GlobalClusterID_EngineMode_global(rName string) string {
