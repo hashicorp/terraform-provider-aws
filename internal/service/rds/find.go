@@ -395,6 +395,27 @@ func FindGlobalClusterByDBClusterARN(conn *rds.RDS, dbClusterARN string) (*rds.G
 	return nil, &resource.NotFoundError{LastRequest: dbClusterARN}
 }
 
+func FindGlobalClusterByID(conn *rds.RDS, id string) (*rds.GlobalCluster, error) {
+	input := &rds.DescribeGlobalClustersInput{
+		GlobalClusterIdentifier: aws.String(id),
+	}
+
+	output, err := findGlobalCluster(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Eventual consistency check.
+	if aws.StringValue(output.GlobalClusterIdentifier) != id {
+		return nil, &resource.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
 func findGlobalCluster(conn *rds.RDS, input *rds.DescribeGlobalClustersInput) (*rds.GlobalCluster, error) {
 	output, err := findGlobalClusters(conn, input)
 
