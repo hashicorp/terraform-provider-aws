@@ -3173,10 +3173,8 @@ resource "aws_rds_cluster" "test" {
 }
 
 func testAccClusterConfig_replicationSourceIDKMSKeyID(rName string) string {
-	return acctest.ConfigCompose(
-		acctest.ConfigMultipleRegionProvider(2),
-		fmt.Sprintf(`
-data "aws_availability_zones" "alternate" {
+	return acctest.ConfigCompose(acctest.ConfigMultipleRegionProvider(2), fmt.Sprintf(`
+data "aws_availability_zones" "available" {
   provider = "awsalternate"
 
   state = "available"
@@ -3206,9 +3204,9 @@ resource "aws_rds_cluster_parameter_group" "test" {
 resource "aws_rds_cluster" "test" {
   cluster_identifier              = "%[1]s-primary"
   db_cluster_parameter_group_name = aws_rds_cluster_parameter_group.test.name
-  database_name                   = "mydb"
-  master_username                 = "foo"
-  master_password                 = "mustbeeightcharaters"
+  database_name                   = "test"
+  master_username                 = "tfacctest"
+  master_password                 = "avoid-plaintext-passwords"
   storage_encrypted               = true
   skip_final_snapshot             = true
 }
@@ -3219,8 +3217,9 @@ resource "aws_rds_cluster_instance" "test" {
   instance_class     = "db.t2.small"
 }
 
-resource "aws_kms_key" "alternate" {
-  provider    = "awsalternate"
+resource "aws_kms_key" "test" {
+  provider = "awsalternate"
+
   description = %[1]q
 
   policy = <<POLICY
@@ -3240,41 +3239,45 @@ resource "aws_kms_key" "alternate" {
   ]
 }
   POLICY
-
 }
 
-resource "aws_vpc" "alternate" {
-  provider   = "awsalternate"
+resource "aws_vpc" "test" {
+  provider = "awsalternate"
+
   cidr_block = "10.0.0.0/16"
 
   tags = {
-    Name = "terraform-acctest-rds-cluster-encrypted-cross-region-replica"
+    Name = %[1]q
   }
 }
 
-resource "aws_subnet" "alternate" {
-  provider          = "awsalternate"
-  count             = 3
-  vpc_id            = aws_vpc.alternate.id
-  availability_zone = data.aws_availability_zones.alternate.names[count.index]
+resource "aws_subnet" "test" {
+  provider = "awsalternate"
+
+  count = 3
+
+  vpc_id            = aws_vpc.test.id
+  availability_zone = data.aws_availability_zones.available.names[count.index]
   cidr_block        = "10.0.${count.index}.0/24"
 
   tags = {
-    Name = "tf-acc-rds-cluster-encrypted-cross-region-replica-${count.index}"
+    Name = %[1]q
   }
 }
 
-resource "aws_db_subnet_group" "alternate" {
-  provider   = "awsalternate"
+resource "aws_db_subnet_group" "test" {
+  provider = "awsalternate"
+
   name       = %[1]q
-  subnet_ids = aws_subnet.alternate[*].id
+  subnet_ids = aws_subnet.test[*].id
 }
 
 resource "aws_rds_cluster" "alternate" {
-  provider                      = "awsalternate"
+  provider = "awsalternate"
+
   cluster_identifier            = "%[1]s-replica"
-  db_subnet_group_name          = aws_db_subnet_group.alternate.name
-  kms_key_id                    = aws_kms_key.alternate.arn
+  db_subnet_group_name          = aws_db_subnet_group.test.name
+  kms_key_id                    = aws_kms_key.test.arn
   storage_encrypted             = true
   skip_final_snapshot           = true
   replication_source_identifier = aws_rds_cluster.test.arn
