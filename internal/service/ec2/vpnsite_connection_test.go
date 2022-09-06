@@ -185,6 +185,9 @@ func TestAccSiteVPNConnection_basic(t *testing.T) {
 					resource.TestCheckNoResourceAttr(resourceName, "tunnel1_ike_versions"),
 					resource.TestCheckResourceAttrSet(resourceName, "tunnel1_inside_cidr"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel1_inside_ipv6_cidr", ""),
+					resource.TestCheckResourceAttr(resourceName, "tunnel1_log_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel1_log_options.0.cloudwatch_log_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel1_log_options.0.cloudwatch_log_options.0.log_enabled", "false"),
 					resource.TestCheckNoResourceAttr(resourceName, "tunnel1_phase1_dh_group_numbers"),
 					resource.TestCheckNoResourceAttr(resourceName, "tunnel1_phase1_encryption_algorithms"),
 					resource.TestCheckNoResourceAttr(resourceName, "tunnel1_phase1_integrity_algorithms"),
@@ -208,6 +211,9 @@ func TestAccSiteVPNConnection_basic(t *testing.T) {
 					resource.TestCheckNoResourceAttr(resourceName, "tunnel2_ike_versions"),
 					resource.TestCheckResourceAttrSet(resourceName, "tunnel2_inside_cidr"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel2_inside_ipv6_cidr", ""),
+					resource.TestCheckResourceAttr(resourceName, "tunnel2_log_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel2_log_options.0.cloudwatch_log_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel2_log_options.0.cloudwatch_log_options.0.log_enabled", "false"),
 					resource.TestCheckNoResourceAttr(resourceName, "tunnel2_phase1_dh_group_numbers"),
 					resource.TestCheckNoResourceAttr(resourceName, "tunnel2_phase1_encryption_algorithms"),
 					resource.TestCheckNoResourceAttr(resourceName, "tunnel2_phase1_integrity_algorithms"),
@@ -251,16 +257,16 @@ func TestAccSiteVPNConnection_cloudWatchLogOptions(t *testing.T) {
 				Config: testAccSiteVPNConnectionConfig_cloudWatchLogOptions(rName, rBgpAsn),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccVPNConnectionExists(resourceName, &vpn),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`vpn-connection/vpn-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "tunnel1_log_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel1_log_options.0.cloudwatch_log_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel1_log_options.0.cloudwatch_log_options.0.log_enabled", "true"),
-					resource.TestCheckResourceAttrPair(resourceName, "tunnel1_log_options.0.cloudwatch_log_options.0.log_group_arn", "aws_cloudwatch_log_group.default", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "tunnel1_log_options.0.cloudwatch_log_options.0.log_group_arn", "aws_cloudwatch_log_group.test", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel1_log_options.0.cloudwatch_log_options.0.log_output_format", "json"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel2_log_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel2_log_options.0.cloudwatch_log_options.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tunnel2_log_options.0.cloudwatch_log_options.0.log_enabled", "true"),
-					resource.TestCheckResourceAttrPair(resourceName, "tunnel2_log_options.0.cloudwatch_log_options.0.log_group_arn", "aws_cloudwatch_log_group.default", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel2_log_options.0.cloudwatch_log_options.0.log_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel2_log_options.0.cloudwatch_log_options.0.log_group_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, "tunnel2_log_options.0.cloudwatch_log_options.0.log_output_format", ""),
 				),
 			},
 			{
@@ -1627,7 +1633,7 @@ resource "aws_customer_gateway" "test" {
   }
 }
 
-resource "aws_cloudwatch_log_group" "default" {
+resource "aws_cloudwatch_log_group" "test" {
   name = %[1]q
 }
 
@@ -1639,16 +1645,14 @@ resource "aws_vpn_connection" "test" {
   tunnel1_log_options {
     cloudwatch_log_options {
       log_enabled       = true
-      log_group_arn     = aws_cloudwatch_log_group.default.arn
+      log_group_arn     = aws_cloudwatch_log_group.test.arn
       log_output_format = "json"
     }
   }
 
   tunnel2_log_options {
     cloudwatch_log_options {
-      log_enabled       = true
-      log_group_arn     = aws_cloudwatch_log_group.default.arn
-      log_output_format = "json"
+      log_enabled = false
     }
   }
 }
