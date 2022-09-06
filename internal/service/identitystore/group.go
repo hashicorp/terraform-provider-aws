@@ -25,7 +25,8 @@ func ResourceGroup() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"identity_store_id": {
-				Type: schema.TypeString,
+				Type:     schema.TypeString,
+				Required: true,
 			},
 			"group_id": {
 				Type:     schema.TypeString,
