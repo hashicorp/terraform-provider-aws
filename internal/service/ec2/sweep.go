@@ -145,6 +145,7 @@ func init() {
 		F:    sweepNetworkInterfaces,
 		Dependencies: []string{
 			"aws_instance",
+			"aws_nat_gateway",
 		},
 	})
 
