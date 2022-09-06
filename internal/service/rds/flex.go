@@ -30,20 +30,38 @@ func ExpandClusterScalingConfiguration(l []interface{}) *rds.ScalingConfiguratio
 	return scalingConfiguration
 }
 
-func flattenScalingConfigurationInfo(scalingConfigurationInfo *rds.ScalingConfigurationInfo) []interface{} {
-	if scalingConfigurationInfo == nil {
-		return []interface{}{}
+func flattenScalingConfigurationInfo(apiObject *rds.ScalingConfigurationInfo) map[string]interface{} {
+	if apiObject == nil {
+		return nil
 	}
 
-	m := map[string]interface{}{
-		"auto_pause":               aws.BoolValue(scalingConfigurationInfo.AutoPause),
-		"max_capacity":             aws.Int64Value(scalingConfigurationInfo.MaxCapacity),
-		"min_capacity":             aws.Int64Value(scalingConfigurationInfo.MinCapacity),
-		"seconds_until_auto_pause": aws.Int64Value(scalingConfigurationInfo.SecondsUntilAutoPause),
-		"timeout_action":           aws.StringValue(scalingConfigurationInfo.TimeoutAction),
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.AutoPause; v != nil {
+		tfMap["auto_pause"] = aws.BoolValue(v)
 	}
 
-	return []interface{}{m}
+	if v := apiObject.MaxCapacity; v != nil {
+		tfMap["max_capacity"] = aws.Int64Value(v)
+	}
+
+	if v := apiObject.MaxCapacity; v != nil {
+		tfMap["max_capacity"] = aws.Int64Value(v)
+	}
+
+	if v := apiObject.MinCapacity; v != nil {
+		tfMap["min_capacity"] = aws.Int64Value(v)
+	}
+
+	if v := apiObject.SecondsUntilAutoPause; v != nil {
+		tfMap["seconds_until_auto_pause"] = aws.Int64Value(v)
+	}
+
+	if v := apiObject.TimeoutAction; v != nil {
+		tfMap["timeout_action"] = aws.StringValue(v)
+	}
+
+	return tfMap
 }
 
 func expandServerlessV2ScalingConfiguration(tfMap map[string]interface{}) *rds.ServerlessV2ScalingConfiguration {

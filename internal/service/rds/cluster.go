@@ -1022,29 +1022,23 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading RDS Cluster (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading RDS Cluster (%s): %w", d.Id(), err)
 	}
 
-	if err := d.Set("availability_zones", aws.StringValueSlice(dbc.AvailabilityZones)); err != nil {
-		return fmt.Errorf("error setting availability_zones: %s", err)
-	}
-
-	d.Set("arn", dbc.DBClusterArn)
+	d.Set("allocated_storage", dbc.AllocatedStorage)
+	clusterARN := aws.StringValue(dbc.DBClusterArn)
+	d.Set("arn", clusterARN)
+	d.Set("availability_zones", aws.StringValueSlice(dbc.AvailabilityZones))
 	d.Set("backtrack_window", dbc.BacktrackWindow)
 	d.Set("backup_retention_period", dbc.BackupRetentionPeriod)
 	d.Set("cluster_identifier", dbc.DBClusterIdentifier)
-	d.Set("copy_tags_to_snapshot", dbc.CopyTagsToSnapshot)
-
-	var cm []string
-	for _, m := range dbc.DBClusterMembers {
-		cm = append(cm, aws.StringValue(m.DBInstanceIdentifier))
+	var clusterMembers []string
+	for _, v := range dbc.DBClusterMembers {
+		clusterMembers = append(clusterMembers, aws.StringValue(v.DBInstanceIdentifier))
 	}
-	if err := d.Set("cluster_members", cm); err != nil {
-		return fmt.Errorf("error setting cluster_members: %s", err)
-	}
-
+	d.Set("cluster_members", clusterMembers)
 	d.Set("cluster_resource_id", dbc.DbClusterResourceId)
-
+	d.Set("copy_tags_to_snapshot", dbc.CopyTagsToSnapshot)
 	// Only set the DatabaseName if it is not nil. There is a known API bug where
 	// RDS accepts a DatabaseName but does not return it, causing a perpetual
 	// diff.
@@ -1052,97 +1046,84 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	if dbc.DatabaseName != nil {
 		d.Set("database_name", dbc.DatabaseName)
 	}
-
+	d.Set("db_cluster_instance_class", dbc.DBClusterInstanceClass)
 	d.Set("db_cluster_parameter_group_name", dbc.DBClusterParameterGroup)
 	d.Set("db_subnet_group_name", dbc.DBSubnetGroup)
 	d.Set("deletion_protection", dbc.DeletionProtection)
-
-	if err := d.Set("enabled_cloudwatch_logs_exports", aws.StringValueSlice(dbc.EnabledCloudwatchLogsExports)); err != nil {
-		return fmt.Errorf("error setting enabled_cloudwatch_logs_exports: %s", err)
-	}
-
+	d.Set("enabled_cloudwatch_logs_exports", aws.StringValueSlice(dbc.EnabledCloudwatchLogsExports))
+	d.Set("enable_http_endpoint", dbc.HttpEndpointEnabled)
 	d.Set("endpoint", dbc.Endpoint)
-	d.Set("db_cluster_instance_class", dbc.DBClusterInstanceClass)
-	d.Set("engine_mode", dbc.EngineMode)
-	d.Set("network_type", dbc.NetworkType)
 	d.Set("engine", dbc.Engine)
+	d.Set("engine_mode", dbc.EngineMode)
+	clusterSetResourceDataEngineVersionFromCluster(d, dbc)
 	d.Set("hosted_zone_id", dbc.HostedZoneId)
 	d.Set("iam_database_authentication_enabled", dbc.IAMDatabaseAuthenticationEnabled)
-
-	clusterSetResourceDataEngineVersionFromCluster(d, dbc)
-
-	var roles []string
-	for _, r := range dbc.AssociatedRoles {
-		roles = append(roles, aws.StringValue(r.RoleArn))
+	var iamRoleARNs []string
+	for _, v := range dbc.AssociatedRoles {
+		iamRoleARNs = append(iamRoleARNs, aws.StringValue(v.RoleArn))
 	}
-	if err := d.Set("iam_roles", roles); err != nil {
-		return fmt.Errorf("error setting iam_roles: %s", err)
-	}
-
+	d.Set("iam_roles", iamRoleARNs)
+	d.Set("iops", dbc.Iops)
 	d.Set("kms_key_id", dbc.KmsKeyId)
 	d.Set("master_username", dbc.MasterUsername)
+	d.Set("network_type", dbc.NetworkType)
 	d.Set("port", dbc.Port)
 	d.Set("preferred_backup_window", dbc.PreferredBackupWindow)
 	d.Set("preferred_maintenance_window", dbc.PreferredMaintenanceWindow)
 	d.Set("reader_endpoint", dbc.ReaderEndpoint)
 	d.Set("replication_source_identifier", dbc.ReplicationSourceIdentifier)
-
-	if err := d.Set("scaling_configuration", flattenScalingConfigurationInfo(dbc.ScalingConfigurationInfo)); err != nil {
-		return fmt.Errorf("error setting scaling_configuration: %s", err)
+	if dbc.ScalingConfigurationInfo != nil {
+		if err := d.Set("scaling_configuration", []interface{}{flattenScalingConfigurationInfo(dbc.ScalingConfigurationInfo)}); err != nil {
+			return fmt.Errorf("setting scaling_configuration: %w", err)
+		}
+	} else {
+		d.Set("scaling_configuration", nil)
 	}
-
-	d.Set("allocated_storage", dbc.AllocatedStorage)
-	d.Set("storage_type", dbc.StorageType)
-	d.Set("iops", dbc.Iops)
-	d.Set("storage_encrypted", dbc.StorageEncrypted)
-
 	if dbc.ServerlessV2ScalingConfiguration != nil {
 		if err := d.Set("serverlessv2_scaling_configuration", []interface{}{flattenServerlessV2ScalingConfigurationInfo(dbc.ServerlessV2ScalingConfiguration)}); err != nil {
-			return fmt.Errorf("error setting serverlessv2_scaling_configuration: %w", err)
+			return fmt.Errorf("setting serverlessv2_scaling_configuration: %w", err)
 		}
 	} else {
 		d.Set("serverlessv2_scaling_configuration", nil)
 	}
-
-	d.Set("enable_http_endpoint", dbc.HttpEndpointEnabled)
-
-	var vpcg []string
-	for _, g := range dbc.VpcSecurityGroups {
-		vpcg = append(vpcg, aws.StringValue(g.VpcSecurityGroupId))
+	d.Set("storage_encrypted", dbc.StorageEncrypted)
+	d.Set("storage_type", dbc.StorageType)
+	var securityGroupIDs []string
+	for _, v := range dbc.VpcSecurityGroups {
+		securityGroupIDs = append(securityGroupIDs, aws.StringValue(v.VpcSecurityGroupId))
 	}
-	if err := d.Set("vpc_security_group_ids", vpcg); err != nil {
-		return fmt.Errorf("error setting vpc_security_group_ids: %s", err)
-	}
+	d.Set("vpc_security_group_ids", securityGroupIDs)
 
-	tags, err := ListTags(conn, aws.StringValue(dbc.DBClusterArn))
+	tags, err := ListTags(conn, clusterARN)
+
 	if err != nil {
-		return fmt.Errorf("error listing tags for RDS Cluster (%s): %s", aws.StringValue(dbc.DBClusterArn), err)
+		return fmt.Errorf("listing tags for RDS Cluster (%s): %w", d.Id(), err)
 	}
+
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return fmt.Errorf("setting tags: %w", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return fmt.Errorf("setting tags_all: %w", err)
 	}
 
 	// Fetch and save Global Cluster if engine mode global
 	d.Set("global_cluster_identifier", "")
 
-	if aws.StringValue(dbc.EngineMode) == "global" || aws.StringValue(dbc.EngineMode) == "provisioned" {
-		globalCluster, err := DescribeGlobalClusterFromClusterARN(conn, aws.StringValue(dbc.DBClusterArn))
+	if aws.StringValue(dbc.EngineMode) == EngineModeGlobal || aws.StringValue(dbc.EngineMode) == EngineModeProvisioned {
+		globalCluster, err := FindGlobalClusterByDBClusterARN(conn, aws.StringValue(dbc.DBClusterArn))
 
-		// Ignore the following API error for regions/partitions that do not support RDS Global Clusters:
-		// InvalidParameterValue: Access Denied to API Version: APIGlobalDatabases
-		if err != nil && !tfawserr.ErrMessageContains(err, "InvalidParameterValue", "Access Denied to API Version: APIGlobalDatabases") {
-			return fmt.Errorf("error reading RDS Global Cluster information for DB Cluster (%s): %s", d.Id(), err)
-		}
-
-		if globalCluster != nil {
+		if err == nil {
 			d.Set("global_cluster_identifier", globalCluster.GlobalClusterIdentifier)
+		} else if tfresource.NotFound(err) || tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "Access Denied to API Version: APIGlobalDatabases") {
+			// Ignore the following API error for regions/partitions that do not support RDS Global Clusters:
+			// InvalidParameterValue: Access Denied to API Version: APIGlobalDatabases
+		} else {
+			return fmt.Errorf("reading RDS Global Cluster for RDS Cluster (%s): %w", d.Id(), err)
 		}
 	}
 
