@@ -1,4 +1,13 @@
 ## 4.30.0 (Unreleased)
+
+FEATURES:
+
+* **New Resource:** `aws_redshiftserverless_usage_limit` ([#26636](https://github.com/hashicorp/terraform-provider-aws/issues/26636))
+
+ENHANCEMENTS:
+
+* resource/aws_eks_addon: Support configurable timeouts for addon create, update, and delete ([#26629](https://github.com/hashicorp/terraform-provider-aws/issues/26629))
+
 ## 4.29.0 (September  1, 2022)
 
 NOTES:
