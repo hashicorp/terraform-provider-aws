@@ -583,11 +583,10 @@ func TestAccRDSCluster_pointInTimeRestore(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var v rds.DBCluster
-	var c rds.DBCluster
-
-	parentId := sdkacctest.RandomWithPrefix("tf-acc-point-in-time-restore-seed-test")
-	restoredId := sdkacctest.RandomWithPrefix("tf-acc-point-in-time-restored-test")
+	var sourceDBCluster, dbCluster rds.DBCluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	sourceResourceName := "aws_rds_cluster.test"
+	resourceName := "aws_rds_cluster.restore"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
@@ -596,12 +595,11 @@ func TestAccRDSCluster_pointInTimeRestore(t *testing.T) {
 		CheckDestroy:             testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_pointInTimeRestoreSource(parentId, restoredId),
+				Config: testAccClusterConfig_pointInTimeRestoreSource(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists("aws_rds_cluster.test", &v),
-					testAccCheckClusterExists("aws_rds_cluster.restored_pit", &c),
-					resource.TestCheckResourceAttr("aws_rds_cluster.restored_pit", "cluster_identifier", restoredId),
-					resource.TestCheckResourceAttrPair("aws_rds_cluster.restored_pit", "engine", "aws_rds_cluster.test", "engine"),
+					testAccCheckClusterExists(sourceResourceName, &sourceDBCluster),
+					testAccCheckClusterExists(resourceName, &dbCluster),
+					resource.TestCheckResourceAttrPair(resourceName, "engine", sourceResourceName, "engine"),
 				),
 			},
 		},
@@ -2435,25 +2433,16 @@ resource "aws_rds_cluster_instance" "test" {
 }
 
 func testAccClusterConfig_availabilityZones(rName string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_rds_cluster" "test" {
   apply_immediately   = true
   availability_zones  = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1], data.aws_availability_zones.available.names[2]]
-  cluster_identifier  = %q
-  master_password     = "mustbeeightcharaters"
-  master_username     = "test"
+  cluster_identifier  = %[1]q
+  master_password     = "avoid-plaintext-passwords"
+  master_username     = "tfacctest"
   skip_final_snapshot = true
 }
-`, rName)
+`, rName))
 }
 
 func testAccClusterConfig_storageType(rName string) string {
@@ -2538,57 +2527,20 @@ resource "aws_rds_cluster" "test" {
 }
 
 func testAccClusterConfig_subnetGroupName(rName string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 3), fmt.Sprintf(`
+resource "aws_db_subnet_group" "test" {
+  name       = %[1]q
+  subnet_ids = aws_subnet.test[*].id
 }
 
 resource "aws_rds_cluster" "test" {
   cluster_identifier   = %[1]q
-  master_username      = "root"
-  master_password      = "password"
+  master_username      = "tfacctest"
+  master_password      = "avoid-plaintext-passwords"
   db_subnet_group_name = aws_db_subnet_group.test.name
   skip_final_snapshot  = true
 }
-
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = "terraform-testacc-rds-cluster-name-prefix"
-  }
-}
-
-resource "aws_subnet" "a" {
-  vpc_id            = aws_vpc.test.id
-  cidr_block        = "10.0.0.0/24"
-  availability_zone = data.aws_availability_zones.available.names[0]
-
-  tags = {
-    Name = "tf-acc-rds-cluster-name-prefix-a"
-  }
-}
-
-resource "aws_subnet" "b" {
-  vpc_id            = aws_vpc.test.id
-  cidr_block        = "10.0.1.0/24"
-  availability_zone = data.aws_availability_zones.available.names[1]
-
-  tags = {
-    Name = "tf-acc-rds-cluster-name-prefix-b"
-  }
-}
-
-resource "aws_db_subnet_group" "test" {
-  name       = %[1]q
-  subnet_ids = [aws_subnet.a.id, aws_subnet.b.id]
-}
-`, rName)
+`, rName))
 }
 
 func testAccClusterConfig_s3Restore(bucketName string, bucketPrefix string, uniqueId string) string {
@@ -2706,50 +2658,38 @@ resource "aws_rds_cluster" "default" {
 `, n)
 }
 
-func testAccClusterConfig_pointInTimeRestoreSource(parentId, childId string) string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
+func testAccClusterConfig_baseForPITR(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 3), fmt.Sprintf(`
+resource "aws_db_subnet_group" "test" {
+  name       = %[1]q
+  subnet_ids = aws_subnet.test[*].id
+}
+
 resource "aws_rds_cluster" "test" {
-  cluster_identifier   = "%[1]s"
-  master_username      = "root"
-  master_password      = "password"
+  cluster_identifier   = %[1]q
+  master_username      = "tfacctest"
+  master_password      = "avoid-plaintext-passwords"
   db_subnet_group_name = aws_db_subnet_group.test.name
   skip_final_snapshot  = true
   engine               = "aurora-mysql"
 }
-
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-  tags = {
-    Name = "%[1]s-vpc"
-  }
+`, rName))
 }
 
-resource "aws_subnet" "subnets" {
-  count             = length(data.aws_availability_zones.available.names)
-  vpc_id            = aws_vpc.test.id
-  cidr_block        = "10.0.${count.index}.0/24"
-  availability_zone = data.aws_availability_zones.available.names[count.index]
-  tags = {
-    Name = "%[1]s-subnet-${count.index}"
-  }
-}
-
-resource "aws_db_subnet_group" "test" {
-  name       = "%[1]s-db-subnet-group"
-  subnet_ids = aws_subnet.subnets[*].id
-}
-
-resource "aws_rds_cluster" "restored_pit" {
-  cluster_identifier  = "%s"
+func testAccClusterConfig_pointInTimeRestoreSource(rName string) string {
+	return acctest.ConfigCompose(testAccClusterConfig_baseForPITR(rName), fmt.Sprintf(`
+resource "aws_rds_cluster" "restore" {
+  cluster_identifier  = "%[1]s-restore"
   skip_final_snapshot = true
   engine              = aws_rds_cluster.test.engine
+
   restore_to_point_in_time {
     source_cluster_identifier  = aws_rds_cluster.test.cluster_identifier
     restore_type               = "full-copy"
     use_latest_restorable_time = true
   }
 }
-`, parentId, childId))
+`, rName))
 }
 
 func testAccClusterConfig_pointInTimeRestoreSource_enabled_cloudWatch_logs_exports(parentId, childId, enabledCloudwatchLogExports string) string {
