@@ -157,6 +157,36 @@ func FindDBClusterWithActivityStream(conn *rds.RDS, dbClusterArn string) (*rds.D
 	return dbCluster, nil
 }
 
+func FindDBClusterSnapshotByID(conn *rds.RDS, id string) (*rds.DBClusterSnapshot, error) {
+	input := &rds.DescribeDBClusterSnapshotsInput{
+		DBClusterSnapshotIdentifier: aws.String(id),
+	}
+
+	output, err := conn.DescribeDBClusterSnapshots(input)
+
+	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBClusterSnapshotNotFoundFault) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if output == nil || len(output.DBClusterSnapshots) == 0 || output.DBClusterSnapshots[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	dbClusterSnapshot := output.DBClusterSnapshots[0]
+
+	// Eventual consistency check.
+	if aws.StringValue(dbClusterSnapshot.DBClusterSnapshotIdentifier) != id {
+		return nil, &resource.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return dbClusterSnapshot, nil
+}
+
 func FindDBInstanceByID(conn *rds.RDS, id string) (*rds.DBInstance, error) {
 	input := &rds.DescribeDBInstancesInput{
 		DBInstanceIdentifier: aws.String(id),

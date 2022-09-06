@@ -4435,7 +4435,7 @@ func testAccCheckInstanceDestroyWithFinalSnapshot(s *terraform.State) error {
 			return err
 		}
 
-		return fmt.Errorf("DB Instance %s still exists", rs.Primary.ID)
+		return fmt.Errorf("RDS DB Instance %s still exists", rs.Primary.ID)
 	}
 
 	return nil
@@ -4460,7 +4460,7 @@ func testAccCheckInstanceDestroyWithoutFinalSnapshot(s *terraform.State) error {
 				return err
 			}
 		} else {
-			return fmt.Errorf("DB Snapshot %s exists", finalSnapshotID)
+			return fmt.Errorf("RDS DB Snapshot %s exists", finalSnapshotID)
 		}
 
 		_, err = tfrds.FindDBInstanceByID(conn, rs.Primary.ID)
@@ -4473,7 +4473,7 @@ func testAccCheckInstanceDestroyWithoutFinalSnapshot(s *terraform.State) error {
 			return err
 		}
 
-		return fmt.Errorf("DB Instance %s still exists", rs.Primary.ID)
+		return fmt.Errorf("RDS DB Instance %s still exists", rs.Primary.ID)
 	}
 
 	return nil

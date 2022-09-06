@@ -3,14 +3,12 @@ package rds_test
 import (
 	"errors"
 	"fmt"
-	"log"
 	"regexp"
 	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -646,17 +644,17 @@ func TestAccRDSCluster_generatedName(t *testing.T) {
 
 func TestAccRDSCluster_takeFinalSnapshot(t *testing.T) {
 	var v rds.DBCluster
-	rInt := sdkacctest.RandInt()
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterSnapshot(rInt),
+		CheckDestroy:             testAccCheckClusterDestroyWithFinalSnapshot,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_finalSnapshot(rInt),
+				Config: testAccClusterConfig_finalSnapshot(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &v),
 				),
@@ -2181,51 +2179,43 @@ func testAccCheckClusterDestroyWithProvider(s *terraform.State, provider *schema
 	return nil
 }
 
-func testAccCheckClusterSnapshot(rInt int) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		for _, rs := range s.RootModule().Resources {
-			if rs.Type != "aws_rds_cluster" {
-				continue
-			}
+func testAccCheckClusterDestroyWithFinalSnapshot(s *terraform.State) error {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
 
-			// Try and delete the snapshot before we check for the cluster not found
-			snapshot_identifier := fmt.Sprintf("tf-acctest-rdscluster-snapshot-%d", rInt)
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != "aws_rds_cluster" {
+			continue
+		}
 
-			awsClient := acctest.Provider.Meta().(*conns.AWSClient)
-			conn := awsClient.RDSConn
+		finalSnapshotID := rs.Primary.Attributes["final_snapshot_identifier"]
+		_, err := tfrds.FindDBClusterSnapshotByID(conn, finalSnapshotID)
 
-			log.Printf("[INFO] Deleting the Snapshot %s", snapshot_identifier)
-			_, snapDeleteErr := conn.DeleteDBClusterSnapshot(
-				&rds.DeleteDBClusterSnapshotInput{
-					DBClusterSnapshotIdentifier: aws.String(snapshot_identifier),
-				})
-			if snapDeleteErr != nil {
-				return snapDeleteErr
-			}
-
-			// Try to find the Group
-			var err error
-			resp, err := conn.DescribeDBClusters(
-				&rds.DescribeDBClustersInput{
-					DBClusterIdentifier: aws.String(rs.Primary.ID),
-				})
-
-			if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBClusterNotFoundFault) {
-				continue
-			}
-
-			if err == nil {
-				if len(resp.DBClusters) != 0 &&
-					*resp.DBClusters[0].DBClusterIdentifier == rs.Primary.ID {
-					return fmt.Errorf("DB Cluster %s still exists", rs.Primary.ID)
-				}
-			}
-
+		if err != nil {
 			return err
 		}
 
-		return nil
+		_, err = conn.DeleteDBClusterSnapshot(&rds.DeleteDBClusterSnapshotInput{
+			DBClusterSnapshotIdentifier: aws.String(finalSnapshotID),
+		})
+
+		if err != nil {
+			return err
+		}
+
+		_, err = tfrds.FindDBClusterByID(conn, rs.Primary.ID)
+
+		if tfresource.NotFound(err) {
+			continue
+		}
+
+		if err != nil {
+			return err
+		}
+
+		return fmt.Errorf("RDS Cluster %s still exists", rs.Primary.ID)
 	}
+
+	return nil
 }
 
 func testAccCheckClusterExists(n string, v *rds.DBCluster) resource.TestCheckFunc {
@@ -2288,8 +2278,8 @@ resource "aws_rds_cluster" "test" {
   cluster_identifier          = %[2]q
   engine                      = %[3]q
   engine_version              = %[4]q
-  master_password             = "mustbeeightcharaters"
-  master_username             = "test"
+  master_password             = "avoid-plaintext-passwords"
+  master_username             = "tfacctest"
   skip_final_snapshot         = true
 }
 
@@ -2664,21 +2654,17 @@ resource "aws_rds_cluster" "test" {
 `
 }
 
-func testAccClusterConfig_finalSnapshot(n int) string {
+func testAccClusterConfig_finalSnapshot(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_rds_cluster" "test" {
-  cluster_identifier              = "tf-aurora-cluster-%[1]d"
-  database_name                   = "mydb"
-  master_username                 = "foo"
-  master_password                 = "mustbeeightcharaters"
+  cluster_identifier              = %[1]q
+  database_name                   = "test"
+  master_username                 = "tfacctest"
+  master_password                 = "avoid-plaintext-passwords"
   db_cluster_parameter_group_name = "default.aurora5.6"
-  final_snapshot_identifier       = "tf-acctest-rdscluster-snapshot-%[1]d"
-
-  tags = {
-    Environment = "production"
-  }
+  final_snapshot_identifier       = %[1]q
 }
-`, n)
+`, rName)
 }
 
 func testAccClusterConfig_withoutUserNameAndPassword(n int) string {
