@@ -67,6 +67,34 @@ func TestAccSESEmailIdentity_trailingPeriod(t *testing.T) {
 	})
 }
 
+func TestAccSESEmailIdentity_complete(t *testing.T) {
+	email := fmt.Sprintf("res-complete%s", acctest.DefaultEmailAddress)
+	resourceName := "aws_ses_email_identity.test"
+	configSetName := "default-config-set-name"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sesv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEmailIdentityDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEmailIdentityConfig_complete(email, configSetName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEmailIdentityExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "default_configuration_set", configSetName),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ses", regexp.MustCompile(fmt.Sprintf("identity/%s$", regexp.QuoteMeta(email)))),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckEmailIdentityDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).SESV2Conn
 
@@ -131,4 +159,17 @@ resource "aws_ses_email_identity" "test" {
   email = %q
 }
 `, email)
+}
+
+func testAccEmailIdentityConfig_complete(email string, configSet string) string {
+	return fmt.Sprintf(`
+resource "aws_ses_configuration_set" "test" {
+  name = %q
+}
+
+resource "aws_ses_email_identity" "test" {
+  email = %q
+  default_configuration_set = aws_ses_configuration_set.test.name
+}
+`, configSet, email)
 }

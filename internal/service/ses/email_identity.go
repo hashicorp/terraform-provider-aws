@@ -22,6 +22,7 @@ func ResourceEmailIdentity() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: resourceEmailIdentityCreate,
 		ReadContext:   resourceEmailIdentityRead,
+		UpdateContext: resourceEmailIdentityUpdate,
 		DeleteContext: resourceEmailIdentityDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -40,6 +41,10 @@ func ResourceEmailIdentity() *schema.Resource {
 					return strings.TrimSuffix(v.(string), ".")
 				},
 			},
+			"default_configuration_set": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 		},
 	}
 }
@@ -52,6 +57,10 @@ func resourceEmailIdentityCreate(ctx context.Context, d *schema.ResourceData, me
 
 	createOpts := &sesv2.CreateEmailIdentityInput{
 		EmailIdentity: aws.String(email),
+	}
+
+	if v, ok := d.GetOk("default_configuration_set"); ok {
+		createOpts.ConfigurationSetName = aws.String(v.(string))
 	}
 
 	_, err := conn.CreateEmailIdentityWithContext(ctx, createOpts)
@@ -70,7 +79,7 @@ func resourceEmailIdentityRead(ctx context.Context, d *schema.ResourceData, meta
 	email := d.Id()
 	d.Set("email", email)
 	getOpts := &sesv2.GetEmailIdentityInput{EmailIdentity: aws.String(email)}
-	_, err := conn.GetEmailIdentityWithContext(ctx, getOpts)
+	response, err := conn.GetEmailIdentityWithContext(ctx, getOpts)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Email Identity (%s) not found, removing from state", d.Id())
@@ -89,9 +98,33 @@ func resourceEmailIdentityRead(ctx context.Context, d *schema.ResourceData, meta
 		Resource:  fmt.Sprintf("identity/%s", d.Id()),
 		Service:   "ses",
 	}.String()
-	d.Set("arn", arn)
+
+	if err := d.Set("arn", arn); err != nil {
+		return create.DiagError(names.SESV2, create.ErrActionReading, ResEmailIdentity, d.Id(), err)
+	}
+
+	if err := d.Set("default_configuration_set", response.ConfigurationSetName); err != nil {
+		return create.DiagError(names.SESV2, create.ErrActionReading, ResEmailIdentity, d.Id(), err)
+	}
 
 	return nil
+}
+
+func resourceEmailIdentityUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).SESV2Conn
+
+	email := d.Get("email").(string)
+
+	if d.HasChange("ConfigurationSetName") {
+		input := &sesv2.PutEmailIdentityConfigurationSetAttributesInput{EmailIdentity: aws.String(email)}
+
+		_, err := conn.PutEmailIdentityConfigurationSetAttributesWithContext(ctx, input)
+		if err != nil {
+			return create.DiagError(names.SESV2, create.ErrActionUpdating, ResEmailIdentity, d.Id(), err)
+		}
+	}
+
+	return resourceEmailIdentityRead(ctx, d, meta)
 }
 
 func resourceEmailIdentityDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
