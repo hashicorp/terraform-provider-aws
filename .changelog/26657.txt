@@ -1,3 +1,3 @@
 ```release-note:bug
- data-source/aws_iam_policy_document: Correctly handle unquoted Boolean value in `Condition`
+ data-source/aws_iam_policy_document: Correctly handle unquoted Boolean values in `Condition`
 ```

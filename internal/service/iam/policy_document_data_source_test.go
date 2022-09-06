@@ -1241,6 +1241,8 @@ data "aws_iam_policy_document" "test" {
 `
 
 const testAccPolicyDocumentConfig_conditionWithBoolValue = `
+data "aws_partition" "current" {}
+
 data "aws_iam_policy_document" "test" {
   source_policy_documents = [<<EOF
 {
@@ -1253,7 +1255,7 @@ data "aws_iam_policy_document" "test" {
                 "ec2:CreateTags",
                 "ec2:DeleteTags"
             ],
-            "Resource": "arn:aws:ec2:*:*:vpc/*",
+            "Resource": "arn:${data.aws_partition.current.partition}:ec2:*:*:vpc/*",
             "Condition": {
                 "Null": {
                     "aws:ResourceTag/SpecialTag": false
@@ -1262,7 +1264,7 @@ data "aws_iam_policy_document" "test" {
                     "aws:ResourceAccount": [
                         "123456"
                     ],
-                    "aws:PrincipalArn": "arn:aws:iam::*:role/AWSAFTExecution"
+                    "aws:PrincipalArn": "arn:${data.aws_partition.current.partition}:iam::*:role/AWSAFTExecution"
                 }
             }
         }
