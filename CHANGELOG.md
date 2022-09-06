@@ -2,11 +2,16 @@
 
 FEATURES:
 
+* **New Resource:** `aws_medialive_multiplex` ([#26608](https://github.com/hashicorp/terraform-provider-aws/issues/26608))
 * **New Resource:** `aws_redshiftserverless_usage_limit` ([#26636](https://github.com/hashicorp/terraform-provider-aws/issues/26636))
 
 ENHANCEMENTS:
 
 * resource/aws_eks_addon: Support configurable timeouts for addon create, update, and delete ([#26629](https://github.com/hashicorp/terraform-provider-aws/issues/26629))
+
+BUG FIXES:
+
+* resource/aws_instance: No longer fails when setting `metadata_options.instance_metadata_tags` ([#26631](https://github.com/hashicorp/terraform-provider-aws/issues/26631))
 
 ## 4.29.0 (September  1, 2022)
 
