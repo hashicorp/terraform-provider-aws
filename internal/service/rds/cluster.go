@@ -235,12 +235,6 @@ func ResourceCluster() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"network_type": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.StringInSlice(NetworkType_Values(), false),
-			},
 			"master_password": {
 				Type:      schema.TypeString,
 				Optional:  true,
@@ -251,6 +245,12 @@ func ResourceCluster() *schema.Resource {
 				Computed: true,
 				Optional: true,
 				ForceNew: true,
+			},
+			"network_type": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.StringInSlice(NetworkType_Values(), false),
 			},
 			"port": {
 				Type:     schema.TypeInt,
