@@ -406,6 +406,7 @@ func resourceClusterInstanceRead(d *schema.ResourceData, meta interface{}) error
 	d.Set("kms_key_id", db.KmsKeyId)
 	d.Set("monitoring_interval", db.MonitoringInterval)
 	d.Set("monitoring_role_arn", db.MonitoringRoleArn)
+	d.Set("network_type", db.NetworkType)
 	d.Set("performance_insights_enabled", db.PerformanceInsightsEnabled)
 	d.Set("performance_insights_kms_key_id", db.PerformanceInsightsKMSKeyId)
 	d.Set("performance_insights_retention_period", db.PerformanceInsightsRetentionPeriod)
@@ -413,7 +414,6 @@ func resourceClusterInstanceRead(d *schema.ResourceData, meta interface{}) error
 	d.Set("preferred_maintenance_window", db.PreferredMaintenanceWindow)
 	d.Set("promotion_tier", db.PromotionTier)
 	d.Set("publicly_accessible", db.PubliclyAccessible)
-	d.Set("network_type", db.NetworkType)
 	d.Set("storage_encrypted", db.StorageEncrypted)
 
 	clusterSetResourceDataEngineVersionFromClusterInstance(d, db)
