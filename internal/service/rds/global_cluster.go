@@ -739,3 +739,60 @@ func globalClusterUpgradeEngineVersion(d *schema.ResourceData, meta interface{},
 
 	return nil
 }
+
+var resourceClusterUpdatePendingStates = []string{
+	"backing-up",
+	"configuring-iam-database-auth",
+	"modifying",
+	"renaming",
+	"resetting-master-credentials",
+	"upgrading",
+}
+
+func waitForClusterUpdate(conn *rds.RDS, id string, timeout time.Duration) error {
+	stateConf := &resource.StateChangeConf{
+		Pending:    resourceClusterUpdatePendingStates,
+		Target:     []string{"available"},
+		Refresh:    resourceClusterStateRefreshFunc(conn, id),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
+		Delay:      30 * time.Second, // Wait 30 secs before starting
+	}
+
+	_, err := stateConf.WaitForState()
+	return err
+}
+
+func resourceClusterStateRefreshFunc(conn *rds.RDS, dbClusterIdentifier string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		resp, err := conn.DescribeDBClusters(&rds.DescribeDBClustersInput{
+			DBClusterIdentifier: aws.String(dbClusterIdentifier),
+		})
+
+		if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBClusterNotFoundFault) {
+			return 42, "destroyed", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		var dbc *rds.DBCluster
+
+		for _, c := range resp.DBClusters {
+			if aws.StringValue(c.DBClusterIdentifier) == dbClusterIdentifier {
+				dbc = c
+			}
+		}
+
+		if dbc == nil {
+			return 42, "destroyed", nil
+		}
+
+		if dbc.Status != nil {
+			log.Printf("[DEBUG] DB Cluster status (%s): %s", dbClusterIdentifier, *dbc.Status)
+		}
+
+		return dbc, aws.StringValue(dbc.Status), nil
+	}
+}

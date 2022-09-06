@@ -1096,180 +1096,155 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 
 func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RDSConn
-	requestUpdate := false
 
-	req := &rds.ModifyDBClusterInput{
-		ApplyImmediately:    aws.Bool(d.Get("apply_immediately").(bool)),
-		DBClusterIdentifier: aws.String(d.Id()),
-	}
-
-	if v, ok := d.GetOk("allow_major_version_upgrade"); ok {
-		req.AllowMajorVersionUpgrade = aws.Bool(v.(bool))
-	}
-
-	if d.HasChange("backtrack_window") {
-		req.BacktrackWindow = aws.Int64(int64(d.Get("backtrack_window").(int)))
-		requestUpdate = true
-	}
-
-	if d.HasChange("copy_tags_to_snapshot") {
-		req.CopyTagsToSnapshot = aws.Bool(d.Get("copy_tags_to_snapshot").(bool))
-		requestUpdate = true
-	}
-
-	if d.HasChange("db_instance_parameter_group_name") {
-		req.DBInstanceParameterGroupName = aws.String(d.Get("db_instance_parameter_group_name").(string))
-		requestUpdate = true
-	}
-
-	if d.HasChange("master_password") {
-		req.MasterUserPassword = aws.String(d.Get("master_password").(string))
-		requestUpdate = true
-	}
-
-	if d.HasChange("db_cluster_instance_class") {
-		req.EngineVersion = aws.String(d.Get("db_cluster_instance_class").(string))
-		requestUpdate = true
-	}
-
-	if d.HasChange("engine_version") {
-		req.EngineVersion = aws.String(d.Get("engine_version").(string))
-		requestUpdate = true
-	}
-
-	if d.HasChange("vpc_security_group_ids") {
-		if attr := d.Get("vpc_security_group_ids").(*schema.Set); attr.Len() > 0 {
-			req.VpcSecurityGroupIds = flex.ExpandStringSet(attr)
-		} else {
-			req.VpcSecurityGroupIds = []*string{}
+	if d.HasChangesExcept(
+		"allow_major_version_upgrade",
+		"final_snapshot_identifier",
+		"global_cluster_identifier",
+		"iam_roles",
+		"replication_source_identifier",
+		"skip_final_snapshot",
+		"tags", "tags_all") {
+		input := &rds.ModifyDBClusterInput{
+			ApplyImmediately:    aws.Bool(d.Get("apply_immediately").(bool)),
+			DBClusterIdentifier: aws.String(d.Id()),
 		}
-		requestUpdate = true
-	}
 
-	if d.HasChange("port") {
-		req.Port = aws.Int64(int64(d.Get("port").(int)))
-		requestUpdate = true
-	}
-
-	if d.HasChange("storage_type") {
-		req.StorageType = aws.String(d.Get("storage_type").(string))
-		requestUpdate = true
-	}
-
-	if d.HasChange("allocated_storage") {
-		req.AllocatedStorage = aws.Int64(int64(d.Get("allocated_storage").(int)))
-		requestUpdate = true
-	}
-
-	if d.HasChange("iops") {
-		req.Iops = aws.Int64(int64(d.Get("iops").(int)))
-		requestUpdate = true
-	}
-
-	if d.HasChange("preferred_backup_window") {
-		req.PreferredBackupWindow = aws.String(d.Get("preferred_backup_window").(string))
-		requestUpdate = true
-	}
-
-	if d.HasChange("preferred_maintenance_window") {
-		req.PreferredMaintenanceWindow = aws.String(d.Get("preferred_maintenance_window").(string))
-		requestUpdate = true
-	}
-
-	if d.HasChange("backup_retention_period") {
-		req.BackupRetentionPeriod = aws.Int64(int64(d.Get("backup_retention_period").(int)))
-		requestUpdate = true
-	}
-
-	if d.HasChange("db_cluster_parameter_group_name") {
-		req.DBClusterParameterGroupName = aws.String(d.Get("db_cluster_parameter_group_name").(string))
-		requestUpdate = true
-	}
-
-	if d.HasChange("deletion_protection") {
-		req.DeletionProtection = aws.Bool(d.Get("deletion_protection").(bool))
-		requestUpdate = true
-	}
-
-	if d.HasChange("iam_database_authentication_enabled") {
-		req.EnableIAMDatabaseAuthentication = aws.Bool(d.Get("iam_database_authentication_enabled").(bool))
-		requestUpdate = true
-	}
-
-	if d.HasChange("network_type") {
-		req.NetworkType = aws.String(d.Get("network_type").(string))
-		requestUpdate = true
-	}
-
-	if d.HasChange("enabled_cloudwatch_logs_exports") {
-		oraw, nraw := d.GetChange("enabled_cloudwatch_logs_exports")
-		o := oraw.(*schema.Set)
-		n := nraw.(*schema.Set)
-
-		enable := n.Difference(o)
-		disable := o.Difference(n)
-
-		req.CloudwatchLogsExportConfiguration = &rds.CloudwatchLogsExportConfiguration{
-			EnableLogTypes:  flex.ExpandStringSet(enable),
-			DisableLogTypes: flex.ExpandStringSet(disable),
+		if d.HasChange("allocated_storage") {
+			input.AllocatedStorage = aws.Int64(int64(d.Get("allocated_storage").(int)))
 		}
-		requestUpdate = true
-	}
 
-	if d.HasChange("scaling_configuration") {
-		if v, ok := d.GetOk("scaling_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			req.ScalingConfiguration = expandScalingConfiguration(v.([]interface{})[0].(map[string]interface{}))
+		if v, ok := d.GetOk("allow_major_version_upgrade"); ok {
+			input.AllowMajorVersionUpgrade = aws.Bool(v.(bool))
 		}
-		requestUpdate = true
-	}
 
-	if d.HasChange("serverlessv2_scaling_configuration") {
-		if v, ok := d.GetOk("serverlessv2_scaling_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			req.ServerlessV2ScalingConfiguration = expandServerlessV2ScalingConfiguration(v.([]interface{})[0].(map[string]interface{}))
-			requestUpdate = true
+		if d.HasChange("backtrack_window") {
+			input.BacktrackWindow = aws.Int64(int64(d.Get("backtrack_window").(int)))
 		}
-	}
 
-	if d.HasChange("enable_http_endpoint") {
-		req.EnableHttpEndpoint = aws.Bool(d.Get("enable_http_endpoint").(bool))
-		requestUpdate = true
-	}
+		if d.HasChange("backup_retention_period") {
+			input.BackupRetentionPeriod = aws.Int64(int64(d.Get("backup_retention_period").(int)))
+		}
 
-	if d.HasChange("enable_global_write_forwarding") {
-		req.EnableGlobalWriteForwarding = aws.Bool(d.Get("enable_global_write_forwarding").(bool))
-		requestUpdate = true
-	}
+		if d.HasChange("copy_tags_to_snapshot") {
+			input.CopyTagsToSnapshot = aws.Bool(d.Get("copy_tags_to_snapshot").(bool))
+		}
 
-	if requestUpdate {
-		err := resource.Retry(5*time.Minute, func() *resource.RetryError {
-			_, err := conn.ModifyDBCluster(req)
-			if err != nil {
-				if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "IAM role ARN value is invalid or does not include the required permissions") {
-					return resource.RetryableError(err)
-				}
+		if d.HasChange("db_cluster_instance_class") {
+			input.EngineVersion = aws.String(d.Get("db_cluster_instance_class").(string))
+		}
 
-				if tfawserr.ErrMessageContains(err, rds.ErrCodeInvalidDBClusterStateFault, "Cannot modify engine version without a primary instance in DB cluster") {
-					return resource.NonRetryableError(err)
+		if d.HasChange("db_cluster_parameter_group_name") {
+			input.DBClusterParameterGroupName = aws.String(d.Get("db_cluster_parameter_group_name").(string))
+		}
+
+		if d.HasChange("db_instance_parameter_group_name") {
+			input.DBInstanceParameterGroupName = aws.String(d.Get("db_instance_parameter_group_name").(string))
+		}
+
+		if d.HasChange("deletion_protection") {
+			input.DeletionProtection = aws.Bool(d.Get("deletion_protection").(bool))
+		}
+
+		if d.HasChange("enable_global_write_forwarding") {
+			input.EnableGlobalWriteForwarding = aws.Bool(d.Get("enable_global_write_forwarding").(bool))
+		}
+
+		if d.HasChange("enable_http_endpoint") {
+			input.EnableHttpEndpoint = aws.Bool(d.Get("enable_http_endpoint").(bool))
+		}
+
+		if d.HasChange("enabled_cloudwatch_logs_exports") {
+			oraw, nraw := d.GetChange("enabled_cloudwatch_logs_exports")
+			o := oraw.(*schema.Set)
+			n := nraw.(*schema.Set)
+
+			input.CloudwatchLogsExportConfiguration = &rds.CloudwatchLogsExportConfiguration{
+				DisableLogTypes: flex.ExpandStringSet(o.Difference(n)),
+				EnableLogTypes:  flex.ExpandStringSet(n.Difference(o)),
+			}
+		}
+
+		if d.HasChange("engine_version") {
+			input.EngineVersion = aws.String(d.Get("engine_version").(string))
+		}
+
+		if d.HasChange("iam_database_authentication_enabled") {
+			input.EnableIAMDatabaseAuthentication = aws.Bool(d.Get("iam_database_authentication_enabled").(bool))
+		}
+
+		if d.HasChange("iops") {
+			input.Iops = aws.Int64(int64(d.Get("iops").(int)))
+		}
+
+		if d.HasChange("master_password") {
+			input.MasterUserPassword = aws.String(d.Get("master_password").(string))
+		}
+
+		if d.HasChange("network_type") {
+			input.NetworkType = aws.String(d.Get("network_type").(string))
+		}
+
+		if d.HasChange("port") {
+			input.Port = aws.Int64(int64(d.Get("port").(int)))
+		}
+
+		if d.HasChange("preferred_backup_window") {
+			input.PreferredBackupWindow = aws.String(d.Get("preferred_backup_window").(string))
+		}
+
+		if d.HasChange("preferred_maintenance_window") {
+			input.PreferredMaintenanceWindow = aws.String(d.Get("preferred_maintenance_window").(string))
+		}
+
+		if d.HasChange("scaling_configuration") {
+			if v, ok := d.GetOk("scaling_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+				input.ScalingConfiguration = expandScalingConfiguration(v.([]interface{})[0].(map[string]interface{}))
+			}
+		}
+
+		if d.HasChange("serverlessv2_scaling_configuration") {
+			if v, ok := d.GetOk("serverlessv2_scaling_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+				input.ServerlessV2ScalingConfiguration = expandServerlessV2ScalingConfiguration(v.([]interface{})[0].(map[string]interface{}))
+			}
+		}
+
+		if d.HasChange("storage_type") {
+			input.StorageType = aws.String(d.Get("storage_type").(string))
+		}
+
+		if d.HasChange("vpc_security_group_ids") {
+			if v, ok := d.GetOk("vpc_security_group_ids"); ok && v.(*schema.Set).Len() > 0 {
+				input.VpcSecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
+			} else {
+				input.VpcSecurityGroupIds = aws.StringSlice(nil)
+			}
+		}
+
+		log.Printf("[DEBUG] Modifying RDS Cluster: %s", input)
+		_, err := tfresource.RetryWhen(5*time.Minute,
+			func() (interface{}, error) {
+				return conn.ModifyDBCluster(input)
+			},
+			func(err error) (bool, error) {
+				if tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "IAM role ARN value is invalid or does not include the required permissions") {
+					return true, err
 				}
 
 				if tfawserr.ErrCodeEquals(err, rds.ErrCodeInvalidDBClusterStateFault) {
-					return resource.RetryableError(err)
+					return true, err
 				}
-				return resource.NonRetryableError(err)
-			}
-			return nil
-		})
-		if tfresource.TimedOut(err) {
-			_, err = conn.ModifyDBCluster(req)
-		}
+
+				return false, err
+			},
+		)
+
 		if err != nil {
-			return fmt.Errorf("Failed to modify RDS Cluster (%s): %s", d.Id(), err)
+			return fmt.Errorf("updating RDS Cluster (%s): %w", d.Id(), err)
 		}
 
-		log.Printf("[INFO] Waiting for RDS Cluster (%s) to be available", d.Id())
-		err = waitForClusterUpdate(conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
-		if err != nil {
-			return fmt.Errorf("error waiting for RDS Cluster (%s) to be available: %s", d.Id(), err)
+		if _, err := waitDBClusterUpdated(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return fmt.Errorf("waiting for RDS Cluster (%s) update: %w", d.Id(), err)
 		}
 	}
 
@@ -1295,7 +1270,7 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 		_, err := conn.RemoveFromGlobalCluster(input)
 
 		if err != nil && !tfawserr.ErrCodeEquals(err, rds.ErrCodeGlobalClusterNotFoundFault) && !tfawserr.ErrMessageContains(err, "InvalidParameterValue", "is not found in global cluster") {
-			return fmt.Errorf("error removing RDS Cluster (%s) from RDS Global Cluster: %s", d.Id(), err)
+			return fmt.Errorf("removing RDS Cluster (%s) from RDS Global Cluster: %w", d.Id(), err)
 		}
 	}
 
@@ -1409,40 +1384,6 @@ func resourceClusterImport(d *schema.ResourceData, meta interface{}) ([]*schema.
 	return []*schema.ResourceData{d}, nil
 }
 
-func resourceClusterStateRefreshFunc(conn *rds.RDS, dbClusterIdentifier string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		resp, err := conn.DescribeDBClusters(&rds.DescribeDBClustersInput{
-			DBClusterIdentifier: aws.String(dbClusterIdentifier),
-		})
-
-		if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBClusterNotFoundFault) {
-			return 42, "destroyed", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		var dbc *rds.DBCluster
-
-		for _, c := range resp.DBClusters {
-			if aws.StringValue(c.DBClusterIdentifier) == dbClusterIdentifier {
-				dbc = c
-			}
-		}
-
-		if dbc == nil {
-			return 42, "destroyed", nil
-		}
-
-		if dbc.Status != nil {
-			log.Printf("[DEBUG] DB Cluster status (%s): %s", dbClusterIdentifier, *dbc.Status)
-		}
-
-		return dbc, aws.StringValue(dbc.Status), nil
-	}
-}
-
 func addIAMRoleToCluster(conn *rds.RDS, clusterID, roleARN string) error {
 	input := &rds.AddRoleToDBClusterInput{
 		DBClusterIdentifier: aws.String(clusterID),
@@ -1470,29 +1411,6 @@ func removeIAMRoleFromCluster(conn *rds.RDS, clusterID, roleARN string) error {
 		return fmt.Errorf("removing IAM Role (%s) from RDS Cluster (%s): %w", roleARN, clusterID, err)
 	}
 
-	return err
-}
-
-var resourceClusterUpdatePendingStates = []string{
-	"backing-up",
-	"configuring-iam-database-auth",
-	"modifying",
-	"renaming",
-	"resetting-master-credentials",
-	"upgrading",
-}
-
-func waitForClusterUpdate(conn *rds.RDS, id string, timeout time.Duration) error {
-	stateConf := &resource.StateChangeConf{
-		Pending:    resourceClusterUpdatePendingStates,
-		Target:     []string{"available"},
-		Refresh:    resourceClusterStateRefreshFunc(conn, id),
-		Timeout:    timeout,
-		MinTimeout: 10 * time.Second,
-		Delay:      30 * time.Second, // Wait 30 secs before starting
-	}
-
-	_, err := stateConf.WaitForState()
 	return err
 }
 
