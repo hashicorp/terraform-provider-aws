@@ -187,7 +187,7 @@ Other arguments:
 
 The `tunnel1_log_options` and `tunnel2_log_options` block supports the following arguments:
 
-* `cloudwatch_log_options` - (Required) Options for sending VPN tunnel logs to CloudWatch. See [CloudWatch Log Options](#cloudwatch-log-options) below for more details.
+* `cloudwatch_log_options` - (Optional) Options for sending VPN tunnel logs to CloudWatch. See [CloudWatch Log Options](#cloudwatch-log-options) below for more details.
 
 ### CloudWatch Log Options
 
