@@ -1433,7 +1433,7 @@ func resourceClusterDelete(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("deleting RDS Cluster (%s): %w", d.Id(), err)
 	}
 
-	if err := WaitForClusterDeletion(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+	if _, err := waitDBClusterDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return fmt.Errorf("waiting for RDS Cluster (%s) delete: %w", d.Id(), err)
 	}
 
@@ -1510,13 +1510,6 @@ var resourceClusterCreatePendingStates = []string{
 	"rebooting",
 }
 
-var resourceClusterDeletePendingStates = []string{
-	"available",
-	"deleting",
-	"backing-up",
-	"modifying",
-}
-
 var resourceClusterUpdatePendingStates = []string{
 	"backing-up",
 	"configuring-iam-database-auth",
@@ -1537,21 +1530,6 @@ func waitForClusterUpdate(conn *rds.RDS, id string, timeout time.Duration) error
 	}
 
 	_, err := stateConf.WaitForState()
-	return err
-}
-
-func WaitForClusterDeletion(conn *rds.RDS, id string, timeout time.Duration) error {
-	stateConf := &resource.StateChangeConf{
-		Pending:    resourceClusterDeletePendingStates,
-		Target:     []string{"destroyed"},
-		Refresh:    resourceClusterStateRefreshFunc(conn, id),
-		Timeout:    timeout,
-		MinTimeout: 10 * time.Second,
-		Delay:      30 * time.Second,
-	}
-
-	_, err := stateConf.WaitForState()
-
 	return err
 }
 

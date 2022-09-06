@@ -116,6 +116,31 @@ func waitDBProxyEndpointDeleted(conn *rds.RDS, id string, timeout time.Duration)
 	return nil, err
 }
 
+func waitDBClusterDeleted(conn *rds.RDS, id string, timeout time.Duration) (*rds.DBCluster, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{
+			ClusterStatusAvailable,
+			ClusterStatusBackingUp,
+			ClusterStatusDeleting,
+			ClusterStatusModifying,
+		},
+		Target:                    []string{},
+		Refresh:                   statusDBCluster(conn, id),
+		Timeout:                   timeout,
+		MinTimeout:                10 * time.Second,
+		Delay:                     30 * time.Second,
+		ContinuousTargetOccurence: 3,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*rds.DBCluster); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
 func waitDBClusterRoleAssociationCreated(conn *rds.RDS, dbClusterID, roleARN string) (*rds.DBClusterRole, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{ClusterRoleStatusPending},
