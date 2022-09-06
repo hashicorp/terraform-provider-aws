@@ -3,6 +3,7 @@ package redshiftserverless
 import (
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/redshiftserverless"
@@ -322,12 +323,14 @@ func resourceWorkgroupUpdate(d *schema.ResourceData, meta interface{}) error {
 func resourceWorkgroupDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RedshiftServerlessConn
 
-	deleteInput := redshiftserverless.DeleteWorkgroupInput{
-		WorkgroupName: aws.String(d.Id()),
-	}
-
-	log.Printf("[DEBUG] Deleting Redshift Serverless Workgroup: %s", d.Id())
-	_, err := conn.DeleteWorkgroup(&deleteInput)
+	_, err := tfresource.RetryWhenAWSErrMessageContains(10*time.Minute,
+		func() (interface{}, error) {
+			return conn.DeleteWorkgroup(&redshiftserverless.DeleteWorkgroupInput{
+				WorkgroupName: aws.String(d.Id()),
+			})
+		},
+		// "ConflictException: There is an operation running on the workgroup. Try deleting the workgroup again later."
+		redshiftserverless.ErrCodeConflictException, "operation running")
 
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, redshiftserverless.ErrCodeResourceNotFoundException) {
