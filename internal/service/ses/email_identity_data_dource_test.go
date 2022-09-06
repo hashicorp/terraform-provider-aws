@@ -12,7 +12,7 @@ import (
 )
 
 func TestAccSESEmailIdentityDataSource_basic(t *testing.T) {
-	email := acctest.DefaultEmailAddress
+	email := fmt.Sprintf("data-basic%s", acctest.DefaultEmailAddress)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
@@ -32,7 +32,7 @@ func TestAccSESEmailIdentityDataSource_basic(t *testing.T) {
 }
 
 func TestAccSESEmailIdentityDataSource_trailingPeriod(t *testing.T) {
-	email := fmt.Sprintf("%s.", acctest.DefaultEmailAddress)
+	email := fmt.Sprintf("data-trailing%s.", acctest.DefaultEmailAddress)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
