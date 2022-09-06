@@ -56,8 +56,8 @@ github.com/aws/aws-sdk-go-v2/service/identitystore v1.15.0 h1:RkSEzzGoabfnnVXF9M
 github.com/aws/aws-sdk-go-v2/service/identitystore v1.15.0/go.mod h1:7dp7wVJ+ldmxHAD1Zo6Q65duUXCtNNoFk10Eu8uSCco=
 github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.9.4 h1:b16QW0XWl0jWjLABFc1A+uh145Oqv+xDcObNk0iQgUk=
 github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.9.4/go.mod h1:uKkN7qmSIsNJVyMtxNQoCEYMvFEXbOg9fwCJPdfp2u8=
-github.com/aws/aws-sdk-go-v2/service/kendra v1.33.1 h1:XOTWbVWu4wAVozPAny4v5fyWZtjXS+KZl4OAe04vJbw=
-github.com/aws/aws-sdk-go-v2/service/kendra v1.33.1/go.mod h1:9rtGoAo8juNn+jcFJEV5kmmYoNqShdUUflgLtsNQ2gs=
+github.com/aws/aws-sdk-go-v2/service/kendra v1.33.3 h1:TE6o6iq+Z5MVA96FO6lo1PmZcJKmvveVmo8DlpDScyw=
+github.com/aws/aws-sdk-go-v2/service/kendra v1.33.3/go.mod h1:J545bAE/F7oqy+TKiAv5Wx0jZRo+dTI6kjgIzNPACNQ=
 github.com/aws/aws-sdk-go-v2/service/medialive v1.22.7 h1:5QBzIECmuTdW4Qi7i98AEP2fsZI8+Ha5+ykKXc9bEBU=
 github.com/aws/aws-sdk-go-v2/service/medialive v1.22.7/go.mod h1:DZUZ8V+XrvhQwMoermXuOzLg/AC7bMKOOATiHcC3lJU=
 github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.0.5 h1:dLg8yTJ6vK9WaT/cAOtrdvZzZqqWU2PROqZ7EObk4Jg=
