@@ -308,7 +308,7 @@ func (p *fwprovider) GetResources(ctx context.Context) (map[string]provider.Reso
 	var diags diag.Diagnostics
 	resources := make(map[string]provider.ResourceType)
 
-	resources["aws_medialive_multiplex_program"] = medialive.NewResourceMultiplexProgramType(ctx, p.Primary.Meta())
+	resources["aws_medialive_multiplex_program"] = medialive.NewResourceMultiplexProgramType(ctx, p.Primary)
 
 	return resources, diags
 }

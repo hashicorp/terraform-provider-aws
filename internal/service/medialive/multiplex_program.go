@@ -2,7 +2,7 @@ package medialive
 
 import (
 	"context"
-	"log"
+	"errors"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/medialive"
@@ -14,16 +14,17 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	resourceHelper "github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func NewResourceMultiplexProgramType(_ context.Context, meta interface{}) provider.ResourceType {
+func NewResourceMultiplexProgramType(_ context.Context, meta interface{ Meta() interface{} }) provider.ResourceType {
 	return &resourceMultiplexProgramType{
 		meta: meta,
 	}
 }
 
 type resourceMultiplexProgramType struct {
-	meta interface{}
+	meta interface{ Meta() interface{} }
 }
 
 func (t *resourceMultiplexProgramType) GetSchema(context.Context) (tfsdk.Schema, diag.Diagnostics) {
@@ -118,12 +119,11 @@ func (t *resourceMultiplexProgramType) NewResource(ctx context.Context, provider
 }
 
 type multiplexProgram struct {
-	meta interface{}
+	meta interface{ Meta() interface{} }
 }
 
 func (m *multiplexProgram) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	log.Printf("[INFO] meta: %v", m.meta)
-	conn := m.meta.(conns.AWSClient).MediaLiveConn
+	conn := m.meta.Meta().(*conns.AWSClient).MediaLiveConn
 
 	var plan resourceMultiplexProgramData
 	diags := req.Plan.Get(ctx, &plan)
@@ -134,10 +134,17 @@ func (m *multiplexProgram) Create(ctx context.Context, req resource.CreateReques
 
 	in := &medialive.CreateMultiplexProgramInput{
 		MultiplexId: aws.String(plan.MultiplexID.Value),
+		ProgramName: aws.String(plan.ProgramName.Value),
 		RequestId:   aws.String(resourceHelper.UniqueId()),
 	}
 
+	in.MultiplexProgramSettings = &mltypes.MultiplexProgramSettings{
+		ProgramNumber:            plan.MultiplexProgramSettings[0].ProgramNumber,
+		PreferredChannelPipeline: mltypes.PreferredChannelPipeline(plan.MultiplexProgramSettings[0].PreferredChannelPipeline.Value),
+	}
+
 	out, err := conn.CreateMultiplexProgram(ctx, in)
+
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error creating MediaLive Multiplex Program",
@@ -147,8 +154,14 @@ func (m *multiplexProgram) Create(ctx context.Context, req resource.CreateReques
 	}
 
 	result := resourceMultiplexProgramData{
-		ID:          types.String{Value: aws.ToString(out.MultiplexProgram.ProgramName)},
 		ProgramName: types.String{Value: aws.ToString(out.MultiplexProgram.ProgramName)},
+		MultiplexID: types.String{Value: plan.MultiplexID.Value},
+		MultiplexProgramSettings: []multiplexProgramSettings{
+			{
+				ProgramNumber:            out.MultiplexProgram.MultiplexProgramSettings.ProgramNumber,
+				PreferredChannelPipeline: types.String{Value: string(out.MultiplexProgram.MultiplexProgramSettings.PreferredChannelPipeline)},
+			},
+		},
 	}
 
 	diags = resp.State.Set(ctx, result)
@@ -160,6 +173,41 @@ func (m *multiplexProgram) Create(ctx context.Context, req resource.CreateReques
 }
 
 func (m *multiplexProgram) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	conn := m.meta.Meta().(*conns.AWSClient).MediaLiveConn
+
+	var state resourceMultiplexProgramData
+	diags := req.State.Get(ctx, &state)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	multiplexId := state.MultiplexID.Value
+	programName := state.ProgramName.Value
+
+	out, err := FindMultipleProgramByID(ctx, conn, multiplexId, programName)
+
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error reading MediaLive Multiplex Program",
+			err.Error(),
+		)
+		return
+	}
+
+	state.ProgramName = types.String{Value: aws.ToString(out.ProgramName)}
+	state.MultiplexProgramSettings = []multiplexProgramSettings{
+		{
+			ProgramNumber:            out.MultiplexProgramSettings.ProgramNumber,
+			PreferredChannelPipeline: types.String{Value: string(out.MultiplexProgramSettings.PreferredChannelPipeline)},
+		},
+	}
+
+	diags = resp.State.Set(ctx, &state)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 }
 
 func (m *multiplexProgram) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
@@ -178,13 +226,55 @@ func preferredChannelPipelineToSlice(p []mltypes.PreferredChannelPipeline) []str
 }
 
 type resourceMultiplexProgramData struct {
-	ID                       types.String `tfsdk:"id"`
-	MultiplexID              types.String `tfsdk:"multiplex_id"`
-	MultiplexProgramSettings *multiplexProgramSettings
-	ProgramName              types.String `tfsdk:"program_name"`
+	MultiplexID              types.String               `tfsdk:"multiplex_id"`
+	MultiplexProgramSettings []multiplexProgramSettings `tfsdk:"multiplex_program_settings"`
+	ProgramName              types.String               `tfsdk:"program_name"`
+	VideoSettings            []videoSettings            `tfsdk:"video_settings"`
 }
 
 type multiplexProgramSettings struct {
-	ProgramNumber            types.Number `tfsdk:"program_number"`
-	PreferredChannelPipeline types.String `tfsdk:"preferred_channel_pipeline"`
+	ProgramNumber            int32               `tfsdk:"program_number"`
+	PreferredChannelPipeline types.String        `tfsdk:"preferred_channel_pipeline"`
+	ServiceDescriptor        []serviceDescriptor `tfsdk:"service_descriptor"`
+}
+
+type serviceDescriptor struct {
+	ProviderName types.String `tfsdk:"provider_name"`
+	ServiceName  types.String `tfsdk:"service_name"`
+}
+
+type videoSettings struct {
+	ConstantBitrate  types.Number       `tfsdk:"constant_bitrate"`
+	statemuxSettings []statemuxSettings `tfsdk:"statemux_settings"`
+}
+
+type statemuxSettings struct {
+	MaximumBitrate types.Number `tfsdk:"maximum_bitrate"`
+	MinimimBitrate types.Number `tfsdk:"minimum_bitrate"`
+	Priority       types.Number `tfsdk:"priority"`
+}
+
+func FindMultipleProgramByID(ctx context.Context, conn *medialive.Client, multiplexId, programName string) (*medialive.DescribeMultiplexProgramOutput, error) {
+	in := &medialive.DescribeMultiplexProgramInput{
+		MultiplexId: aws.String(multiplexId),
+		ProgramName: aws.String(programName),
+	}
+	out, err := conn.DescribeMultiplexProgram(ctx, in)
+	if err != nil {
+		var nfe *mltypes.NotFoundException
+		if errors.As(err, &nfe) {
+			return nil, &resourceHelper.NotFoundError{
+				LastError:   err,
+				LastRequest: in,
+			}
+		}
+
+		return nil, err
+	}
+
+	if out == nil {
+		return nil, tfresource.NewEmptyResultError(in)
+	}
+
+	return out, nil
 }
