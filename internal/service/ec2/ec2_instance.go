@@ -443,7 +443,7 @@ func ResourceInstance() *schema.Resource {
 						"instance_metadata_tags": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							Default:      ec2.InstanceMetadataTagsStateDisabled,
+							Computed:     true,
 							ValidateFunc: validation.StringInSlice(ec2.InstanceMetadataTagsState_Values(), false),
 						},
 					},
@@ -1672,9 +1672,13 @@ func resourceInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 					input.InstanceMetadataTags = aws.String(tfMap["instance_metadata_tags"].(string))
 				}
 
-				log.Printf("[DEBUG] Modifying EC2 Instance metadata options: %s", input)
 				_, err := conn.ModifyInstanceMetadataOptions(input)
+				if tfawserr.ErrMessageContains(err, errCodeUnsupportedOperation, "InstanceMetadataTags") {
+					log.Printf("[WARN] updating EC2 Instance (%s) metadata options: %s. Retrying without instance metadata tags.", d.Id(), err)
+					input.InstanceMetadataTags = nil
 
+					_, err = conn.ModifyInstanceMetadataOptions(input)
+				}
 				if err != nil {
 					return fmt.Errorf("updating EC2 Instance (%s) metadata options: %w", d.Id(), err)
 				}
