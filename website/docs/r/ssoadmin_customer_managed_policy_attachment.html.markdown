@@ -46,7 +46,6 @@ resource "aws_ssoadmin_customer_managed_policy_attachment" "example" {
     name = aws_iam_policy.example.name
     path = "/"
   }
-
 }
 ```
 

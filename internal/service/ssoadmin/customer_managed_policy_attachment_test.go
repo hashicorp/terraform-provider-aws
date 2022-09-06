@@ -2,7 +2,6 @@ package ssoadmin_test
 
 import (
 	"fmt"
-	// "regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/ssoadmin"

@@ -110,7 +110,7 @@ func resourceCustomerManagedPolicyAttachmentCreate(d *schema.ResourceData, meta 
 
 	d.SetId(fmt.Sprintf("%s,%s,%s,%s", policyName, policyPath, permissionSetArn, instanceArn))
 
-	// Provision ALL accounts after attaching the managed policy
+	// After the policy has been attached to the permission set, provision in all accounts that use this permission set
 	if err := provisionPermissionSet(conn, permissionSetArn, instanceArn); err != nil {
 		return err
 	}
@@ -167,6 +167,7 @@ func resourceCustomerManagedPolicyAttachmentDelete(d *schema.ResourceData, meta 
 			Path: aws.String(policyPath),
 		},
 	}
+	// A retry might be required whilst changes propagate, particularly if updating multiple attachments
 	err = resource.Retry(customerPolicyAttachmentTimeout, func() *resource.RetryError {
 		var err error
 		_, err = conn.DetachCustomerManagedPolicyReferenceFromPermissionSet(input)
@@ -195,7 +196,7 @@ func resourceCustomerManagedPolicyAttachmentDelete(d *schema.ResourceData, meta 
 		return fmt.Errorf("error detaching Customer Managed Policy (%s) from SSO Permission Set (%s): %w", policyName, permissionSetArn, err)
 	}
 
-	// Provision ALL accounts after detaching the managed policy
+	// After the policy has been detached from the permission set, provision in all accounts that use this permission set
 	if err := provisionPermissionSet(conn, permissionSetArn, instanceArn); err != nil {
 		return err
 	}
