@@ -7,11 +7,11 @@ import (
 func TestAccMediaLive_serial(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
 		"Multiplex": {
-			"basic":      testAccMediaLiveMultiplex_basic,
-			"disappears": testAccMediaLiveMultiplex_disappears,
-			"update":     testAccMediaLiveMultiplex_update,
-			"updateTags": testAccMediaLiveMultiplex_updateTags,
-			"start":      testAccMediaLiveMultiplex_start,
+			"basic":      testAccMultiplex_basic,
+			"disappears": testAccMultiplex_disappears,
+			"update":     testAccMultiplex_update,
+			"updateTags": testAccMultiplex_updateTags,
+			"start":      testAccMultiplex_start,
 		},
 	}
 

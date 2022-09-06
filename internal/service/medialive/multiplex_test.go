@@ -18,7 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func testAccMediaLiveMultiplex_basic(t *testing.T) {
+func testAccMultiplex_basic(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -59,7 +59,7 @@ func testAccMediaLiveMultiplex_basic(t *testing.T) {
 	})
 }
 
-func testAccMediaLiveMultiplex_start(t *testing.T) {
+func testAccMultiplex_start(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -98,7 +98,7 @@ func testAccMediaLiveMultiplex_start(t *testing.T) {
 	})
 }
 
-func testAccMediaLiveMultiplex_update(t *testing.T) {
+func testAccMultiplex_update(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -145,7 +145,7 @@ func testAccMediaLiveMultiplex_update(t *testing.T) {
 	})
 }
 
-func testAccMediaLiveMultiplex_updateTags(t *testing.T) {
+func testAccMultiplex_updateTags(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -193,7 +193,7 @@ func testAccMediaLiveMultiplex_updateTags(t *testing.T) {
 	})
 }
 
-func testAccMediaLiveMultiplex_disappears(t *testing.T) {
+func testAccMultiplex_disappears(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
