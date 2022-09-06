@@ -459,15 +459,6 @@ func ResourceCluster() *schema.Resource {
 	}
 }
 
-func resourceClusterImport(
-	d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	// Neither skip_final_snapshot nor final_snapshot_identifier can be fetched
-	// from any API call, so we need to default skip_final_snapshot to true so
-	// that final_snapshot_identifier is not required
-	d.Set("skip_final_snapshot", true)
-	return []*schema.ResourceData{d}, nil
-}
-
 func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RDSConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
@@ -1403,71 +1394,77 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 
 func resourceClusterDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RDSConn
-	log.Printf("[DEBUG] Destroying RDS Cluster (%s)", d.Id())
 
 	// Automatically remove from global cluster to bypass this error on deletion:
 	// InvalidDBClusterStateFault: This cluster is a part of a global cluster, please remove it from globalcluster first
 	if d.Get("global_cluster_identifier").(string) != "" {
+		globalClusterID := d.Get("global_cluster_identifier").(string)
 		input := &rds.RemoveFromGlobalClusterInput{
 			DbClusterIdentifier:     aws.String(d.Get("arn").(string)),
-			GlobalClusterIdentifier: aws.String(d.Get("global_cluster_identifier").(string)),
+			GlobalClusterIdentifier: aws.String(globalClusterID),
 		}
 
 		log.Printf("[DEBUG] Removing RDS Cluster from RDS Global Cluster: %s", input)
 		_, err := conn.RemoveFromGlobalCluster(input)
 
 		if err != nil && !tfawserr.ErrCodeEquals(err, rds.ErrCodeGlobalClusterNotFoundFault) && !tfawserr.ErrMessageContains(err, "InvalidParameterValue", "is not found in global cluster") {
-			return fmt.Errorf("error removing RDS Cluster (%s) from RDS Global Cluster: %s", d.Id(), err)
+			return fmt.Errorf("removing RDS Cluster (%s) from RDS Global Cluster (%s): %w", d.Id(), globalClusterID, err)
 		}
-	}
-
-	deleteOpts := rds.DeleteDBClusterInput{
-		DBClusterIdentifier: aws.String(d.Id()),
 	}
 
 	skipFinalSnapshot := d.Get("skip_final_snapshot").(bool)
-	deleteOpts.SkipFinalSnapshot = aws.Bool(skipFinalSnapshot)
+	input := &rds.DeleteDBClusterInput{
+		DBClusterIdentifier: aws.String(d.Id()),
+		SkipFinalSnapshot:   aws.Bool(skipFinalSnapshot),
+	}
 
 	if !skipFinalSnapshot {
-		if name, present := d.GetOk("final_snapshot_identifier"); present {
-			deleteOpts.FinalDBSnapshotIdentifier = aws.String(name.(string))
+		if v, ok := d.GetOk("final_snapshot_identifier"); ok {
+			input.FinalDBSnapshotIdentifier = aws.String(v.(string))
 		} else {
-			return fmt.Errorf("RDS Cluster FinalSnapshotIdentifier is required when a final snapshot is required")
+			return fmt.Errorf("RDS Cluster final_snapshot_identifier is required when skip_final_snapshot is false")
 		}
 	}
 
-	log.Printf("[DEBUG] RDS Cluster delete options: %s", deleteOpts)
-
-	err := resource.Retry(clusterTimeoutDelete, func() *resource.RetryError {
-		_, err := conn.DeleteDBCluster(&deleteOpts)
-		if err != nil {
+	log.Printf("[DEBUG] Deleting RDS Cluster: %s", d.Id())
+	_, err := tfresource.RetryWhen(clusterTimeoutDelete,
+		func() (interface{}, error) {
+			return conn.DeleteDBCluster(input)
+		},
+		func(err error) (bool, error) {
 			if tfawserr.ErrMessageContains(err, rds.ErrCodeInvalidDBClusterStateFault, "is not currently in the available state") {
-				return resource.RetryableError(err)
+				return true, err
 			}
-			if tfawserr.ErrMessageContains(err, rds.ErrCodeInvalidDBClusterStateFault, "cluster is a part of a global cluster") {
-				return resource.RetryableError(err)
-			}
-			if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBClusterNotFoundFault) {
-				return nil
-			}
-			return resource.NonRetryableError(err)
-		}
-		return nil
-	})
 
-	if tfresource.TimedOut(err) {
-		_, err = conn.DeleteDBCluster(&deleteOpts)
+			if tfawserr.ErrMessageContains(err, rds.ErrCodeInvalidDBClusterStateFault, "cluster is a part of a global cluster") {
+				return true, err
+			}
+
+			return false, err
+		},
+	)
+
+	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBClusterNotFoundFault) {
+		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting RDS Cluster (%s): %s", d.Id(), err)
+		return fmt.Errorf("deleting RDS Cluster (%s): %w", d.Id(), err)
 	}
 
 	if err := WaitForClusterDeletion(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return fmt.Errorf("error waiting for RDS Cluster (%s) deletion: %s", d.Id(), err)
+		return fmt.Errorf("waiting for RDS Cluster (%s) delete: %w", d.Id(), err)
 	}
 
 	return nil
+}
+
+func resourceClusterImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	// Neither skip_final_snapshot nor final_snapshot_identifier can be fetched
+	// from any API call, so we need to default skip_final_snapshot to true so
+	// that final_snapshot_identifier is not required
+	d.Set("skip_final_snapshot", true)
+	return []*schema.ResourceData{d}, nil
 }
 
 func resourceClusterStateRefreshFunc(conn *rds.RDS, dbClusterIdentifier string) resource.StateRefreshFunc {

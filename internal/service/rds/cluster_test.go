@@ -17,6 +17,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func init() {
@@ -35,7 +37,7 @@ func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
 
 func TestAccRDSCluster_basic(t *testing.T) {
 	var dbCluster rds.DBCluster
-	clusterName := sdkacctest.RandomWithPrefix("tf-aurora-cluster")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -45,22 +47,23 @@ func TestAccRDSCluster_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_basic(clusterName),
-				Check: resource.ComposeTestCheckFunc(
+				Config: testAccClusterConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &dbCluster),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "rds", fmt.Sprintf("cluster:%s", clusterName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "rds", fmt.Sprintf("cluster:%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "backtrack_window", "0"),
-					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_snapshot", "false"),
-					resource.TestCheckResourceAttr(resourceName, "storage_encrypted", "false"),
-					resource.TestCheckResourceAttr(resourceName, "db_cluster_parameter_group_name", "default.aurora5.6"),
-					resource.TestCheckResourceAttrSet(resourceName, "reader_endpoint"),
 					resource.TestCheckResourceAttrSet(resourceName, "cluster_resource_id"),
+					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_snapshot", "false"),
+					resource.TestCheckResourceAttr(resourceName, "db_cluster_parameter_group_name", "default.aurora5.6"),
+					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "engine", "aurora"),
 					resource.TestCheckResourceAttrSet(resourceName, "engine_version"),
 					resource.TestCheckResourceAttr(resourceName, "global_cluster_identifier", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "hosted_zone_id"),
-					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "network_type", "IPV4"),
+					resource.TestCheckResourceAttrSet(resourceName, "reader_endpoint"),
 					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "storage_encrypted", "false"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -2139,25 +2142,17 @@ func testAccCheckClusterDestroyWithProvider(s *terraform.State, provider *schema
 			continue
 		}
 
-		// Try to find the Group
-		var err error
-		resp, err := conn.DescribeDBClusters(
-			&rds.DescribeDBClustersInput{
-				DBClusterIdentifier: aws.String(rs.Primary.ID),
-			})
+		_, err := tfrds.FindDBClusterByID(conn, rs.Primary.ID)
 
-		if err == nil {
-			if len(resp.DBClusters) != 0 &&
-				*resp.DBClusters[0].DBClusterIdentifier == rs.Primary.ID {
-				return fmt.Errorf("DB Cluster %s still exists", rs.Primary.ID)
-			}
-		}
-
-		if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBClusterNotFoundFault) {
+		if tfresource.NotFound(err) {
 			continue
 		}
 
-		return err
+		if err != nil {
+			return err
+		}
+
+		return fmt.Errorf("RDS Cluster %s still exists", rs.Primary.ID)
 	}
 
 	return nil
@@ -2222,27 +2217,20 @@ func testAccCheckClusterExistsWithProvider(n string, v *rds.DBCluster, providerF
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No DB Instance ID is set")
+			return fmt.Errorf("No RDS Cluster ID is set")
 		}
 
-		provider := providerF()
-		conn := provider.Meta().(*conns.AWSClient).RDSConn
-		resp, err := conn.DescribeDBClusters(&rds.DescribeDBClustersInput{
-			DBClusterIdentifier: aws.String(rs.Primary.ID),
-		})
+		conn := providerF().Meta().(*conns.AWSClient).RDSConn
+
+		output, err := tfrds.FindDBClusterByID(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		for _, c := range resp.DBClusters {
-			if *c.DBClusterIdentifier == rs.Primary.ID {
-				*v = *c
-				return nil
-			}
-		}
+		*v = *output
 
-		return fmt.Errorf("DB Cluster (%s) not found", rs.Primary.ID)
+		return nil
 	}
 }
 
@@ -2259,10 +2247,10 @@ func testAccCheckClusterRecreated(i, j *rds.DBCluster) resource.TestCheckFunc {
 func testAccClusterConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_rds_cluster" "test" {
-  cluster_identifier              = %q
-  database_name                   = "mydb"
-  master_username                 = "foo"
-  master_password                 = "mustbeeightcharaters"
+  cluster_identifier              = %[1]q
+  database_name                   = "test"
+  master_username                 = "tfacctest"
+  master_password                 = "avoid-plaintext-passwords"
   db_cluster_parameter_group_name = "default.aurora5.6"
   skip_final_snapshot             = true
 }
