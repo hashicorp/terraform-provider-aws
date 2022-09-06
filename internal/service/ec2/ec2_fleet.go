@@ -618,12 +618,10 @@ func resourceFleetCreate(d *schema.ResourceData, meta interface{}) error {
 	// Instead of an error here, allow the Read function to trigger recreation.
 	targetStates := []string{ec2.FleetStateCodeActive}
 	if fleetType == ec2.FleetTypeRequest {
-		targetStates = append(targetStates, ec2.FleetStateCodeDeleted)
-		targetStates = append(targetStates, ec2.FleetStateCodeDeletedRunning)
-		targetStates = append(targetStates, ec2.FleetStateCodeDeletedTerminating)
+		targetStates = append(targetStates, ec2.FleetStateCodeDeleted, ec2.FleetStateCodeDeletedRunning, ec2.FleetStateCodeDeletedTerminating)
 	}
 
-	if _, err := WaitFleet(conn, d.Id(), []string{ec2.FleetStateCodeSubmitted}, targetStates, d.Timeout(schema.TimeoutCreate)); err != nil {
+	if _, err := WaitFleet(conn, d.Id(), []string{ec2.FleetStateCodeSubmitted}, targetStates, d.Timeout(schema.TimeoutCreate), 0); err != nil {
 		return fmt.Errorf("waiting for EC2 Fleet (%s) create: %w", d.Id(), err)
 	}
 
@@ -722,7 +720,7 @@ func resourceFleetUpdate(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("modifying EC2 Fleet (%s): %w", d.Id(), err)
 		}
 
-		if _, err := WaitFleet(conn, d.Id(), []string{ec2.FleetStateCodeModifying}, []string{ec2.FleetStateCodeActive}, d.Timeout(schema.TimeoutUpdate)); err != nil {
+		if _, err := WaitFleet(conn, d.Id(), []string{ec2.FleetStateCodeModifying}, []string{ec2.FleetStateCodeActive}, d.Timeout(schema.TimeoutUpdate), 0); err != nil {
 			return fmt.Errorf("waiting for EC2 Fleet (%s) update: %w", d.Id(), err)
 		}
 	}
@@ -759,15 +757,17 @@ func resourceFleetDelete(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("deleting EC2 Fleet (%s): %w", d.Id(), err)
 	}
 
+	delay := 0 * time.Second
 	pendingStates := []string{ec2.FleetStateCodeActive}
 	targetStates := []string{ec2.FleetStateCodeDeleted}
 	if d.Get("terminate_instances").(bool) {
 		pendingStates = append(pendingStates, ec2.FleetStateCodeDeletedTerminating)
+		delay = 5 * time.Minute
 	} else {
 		targetStates = append(targetStates, ec2.FleetStateCodeDeletedRunning)
 	}
 
-	if _, err := WaitFleet(conn, d.Id(), pendingStates, targetStates, d.Timeout(schema.TimeoutDelete)); err != nil {
+	if _, err := WaitFleet(conn, d.Id(), pendingStates, targetStates, d.Timeout(schema.TimeoutDelete), delay); err != nil {
 		return fmt.Errorf("waiting for EC2 Fleet (%s) delete: %w", d.Id(), err)
 	}
 

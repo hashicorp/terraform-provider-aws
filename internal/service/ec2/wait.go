@@ -371,12 +371,14 @@ func WaitClientVPNRouteDeleted(conn *ec2.EC2, endpointID, targetSubnetID, destin
 	return nil, err
 }
 
-func WaitFleet(conn *ec2.EC2, id string, pending, target []string, timeout time.Duration) (*ec2.FleetData, error) {
+func WaitFleet(conn *ec2.EC2, id string, pending, target []string, timeout, delay time.Duration) (*ec2.FleetData, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending: pending,
-		Target:  target,
-		Refresh: StatusFleetState(conn, id),
-		Timeout: timeout,
+		Pending:    pending,
+		Target:     target,
+		Refresh:    StatusFleetState(conn, id),
+		Timeout:    timeout,
+		Delay:      delay,
+		MinTimeout: 1 * time.Second,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
