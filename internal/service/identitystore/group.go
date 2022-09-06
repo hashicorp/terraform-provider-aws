@@ -24,22 +24,16 @@ func ResourceGroup() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"identity_store_id": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"group_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"description": {
 				Type:         schema.TypeString,
 				Optional:     true,
+				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 1024),
 			},
 			"display_name": {
 				Type:         schema.TypeString,
 				Optional:     true,
+				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 1024),
 			},
 			"external_ids": {
@@ -57,6 +51,15 @@ func ResourceGroup() *schema.Resource {
 						},
 					},
 				},
+			},
+			"group_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"identity_store_id": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
 			},
 		},
 	}
