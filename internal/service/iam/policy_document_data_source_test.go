@@ -60,7 +60,7 @@ func TestAccIAMPolicyDocumentDataSource_conditionWithBoolValue(t *testing.T) {
 				Config: testAccPolicyDocumentConfig_conditionWithBoolValue,
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckResourceAttrEquivalentJSON("data.aws_iam_policy_document.test", "json",
-						testAccPolicyDocumentConfig_conditionWithBoolValue_expectedJson,
+						testAccPolicyDocumentConditionWithBoolValueExpectedJSON(),
 					),
 				),
 			},
@@ -1275,8 +1275,8 @@ EOF
 }
 `
 
-const testAccPolicyDocumentConfig_conditionWithBoolValue_expectedJson = `
-{
+func testAccPolicyDocumentConditionWithBoolValueExpectedJSON() string {
+	return fmt.Sprintf(`{
     "Version": "2012-10-17",
     "Statement": [
         {
@@ -1286,7 +1286,7 @@ const testAccPolicyDocumentConfig_conditionWithBoolValue_expectedJson = `
                 "ec2:CreateTags",
                 "ec2:DeleteTags"
             ],
-            "Resource": "arn:aws:ec2:*:*:vpc/*",
+            "Resource": "arn:%[1]s:ec2:*:*:vpc/*",
             "Condition": {
                 "Null": {
                     "aws:ResourceTag/SpecialTag": "false"
@@ -1296,14 +1296,14 @@ const testAccPolicyDocumentConfig_conditionWithBoolValue_expectedJson = `
                         "123456"
                     ],
                     "aws:PrincipalArn": [
-						"arn:aws:iam::*:role/AWSAFTExecution"
+						"arn:%[1]s:iam::*:role/AWSAFTExecution"
 					]
                 }
             }
         }
     ]
+  }`, acctest.Partition())
 }
-`
 
 func testAccPolicyDocumentExpectedJSONStatementPrincipalIdentifiersStringAndSlice() string {
 	return fmt.Sprintf(`{
