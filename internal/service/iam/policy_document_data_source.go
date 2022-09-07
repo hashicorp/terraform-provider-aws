@@ -56,7 +56,7 @@ func DataSourcePolicyDocument() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
-					ValidateFunc: validation.All(validation.StringIsNotEmpty, validation.StringIsJSON),
+					ValidateFunc: validation.StringIsJSON,
 				},
 			},
 			"statement": {
@@ -139,6 +139,10 @@ func dataSourcePolicyDocumentRead(d *schema.ResourceData, meta interface{}) erro
 
 		// merge sourceDocs in order specified
 		for sourceJSONIndex, sourceJSON := range v.([]interface{}) {
+			if sourceJSON == nil {
+				continue
+			}
+
 			sourceDoc := &IAMPolicyDoc{}
 			if err := json.Unmarshal([]byte(sourceJSON.(string)), sourceDoc); err != nil {
 				return err
