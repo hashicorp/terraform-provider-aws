@@ -5057,10 +5057,10 @@ func FindManagedPrefixListByID(ctx context.Context, conn *ec2.EC2, id string) (*
 	return output, nil
 }
 
-func FindManagedPrefixListEntries(conn *ec2.EC2, input *ec2.GetManagedPrefixListEntriesInput) ([]*ec2.PrefixListEntry, error) {
+func FindManagedPrefixListEntries(ctx context.Context, conn *ec2.EC2, input *ec2.GetManagedPrefixListEntriesInput) ([]*ec2.PrefixListEntry, error) {
 	var output []*ec2.PrefixListEntry
 
-	err := conn.GetManagedPrefixListEntriesPages(input, func(page *ec2.GetManagedPrefixListEntriesOutput, lastPage bool) bool {
+	err := conn.GetManagedPrefixListEntriesPagesWithContext(ctx, input, func(page *ec2.GetManagedPrefixListEntriesOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -5088,16 +5088,16 @@ func FindManagedPrefixListEntries(conn *ec2.EC2, input *ec2.GetManagedPrefixList
 	return output, nil
 }
 
-func FindManagedPrefixListEntriesByID(conn *ec2.EC2, id string) ([]*ec2.PrefixListEntry, error) {
+func FindManagedPrefixListEntriesByID(ctx context.Context, conn *ec2.EC2, id string) ([]*ec2.PrefixListEntry, error) {
 	input := &ec2.GetManagedPrefixListEntriesInput{
 		PrefixListId: aws.String(id),
 	}
 
-	return FindManagedPrefixListEntries(conn, input)
+	return FindManagedPrefixListEntries(ctx, conn, input)
 }
 
-func FindManagedPrefixListEntryByIDAndCIDR(conn *ec2.EC2, id, cidr string) (*ec2.PrefixListEntry, error) {
-	prefixListEntries, err := FindManagedPrefixListEntriesByID(conn, id)
+func FindManagedPrefixListEntryByIDAndCIDR(ctx context.Context, conn *ec2.EC2, id, cidr string) (*ec2.PrefixListEntry, error) {
+	prefixListEntries, err := FindManagedPrefixListEntriesByID(ctx, conn, id)
 
 	if err != nil {
 		return nil, err

@@ -151,7 +151,7 @@ func resourceManagedPrefixListRead(d *schema.ResourceData, meta interface{}) err
 		return fmt.Errorf("error reading EC2 Managed Prefix List (%s): %w", d.Id(), err)
 	}
 
-	prefixListEntries, err := FindManagedPrefixListEntriesByID(conn, d.Id())
+	prefixListEntries, err := FindManagedPrefixListEntriesByID(context.TODO(), conn, d.Id())
 
 	if err != nil {
 		return fmt.Errorf("error reading EC2 Managed Prefix List (%s) Entries: %w", d.Id(), err)

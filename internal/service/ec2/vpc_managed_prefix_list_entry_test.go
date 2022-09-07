@@ -1,6 +1,7 @@
 package ec2_test
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"testing"
@@ -211,7 +212,7 @@ func testAccCheckManagedPrefixListEntryDestroy(s *terraform.State) error {
 			return err
 		}
 
-		_, err = tfec2.FindManagedPrefixListEntryByIDAndCIDR(conn, plID, cidr)
+		_, err = tfec2.FindManagedPrefixListEntryByIDAndCIDR(context.Background(), conn, plID, cidr)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -246,7 +247,7 @@ func testAccCheckManagedPrefixListEntryExists(n string, v *ec2.PrefixListEntry) 
 			return err
 		}
 
-		output, err := tfec2.FindManagedPrefixListEntryByIDAndCIDR(conn, plID, cidr)
+		output, err := tfec2.FindManagedPrefixListEntryByIDAndCIDR(context.Background(), conn, plID, cidr)
 
 		if err != nil {
 			return err
