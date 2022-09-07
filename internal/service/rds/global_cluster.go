@@ -583,7 +583,7 @@ func globalClusterUpgradeMajorEngineVersion(meta interface{}, clusterID string, 
 			useConn = rds.New(meta.(*conns.AWSClient).Session, aws.NewConfig().WithRegion(clusterRegion))
 		}
 
-		if err := waitForClusterUpdate(useConn, dbi, timeout); err != nil {
+		if err := WaitForClusterUpdate(useConn, dbi, timeout); err != nil {
 			return fmt.Errorf("failed to update engine_version, waiting for RDS Global Cluster (%s) to update: %s", dbi, err)
 		}
 	}
@@ -691,7 +691,7 @@ func globalClusterUpgradeMinorEngineVersion(meta interface{}, clusterMembers *sc
 		}
 
 		log.Printf("[INFO] Waiting for RDS Global Cluster (%s) Cluster (%s) minor version (%s) upgrade", clusterID, dbi, engineVersion)
-		if err := waitForClusterUpdate(useConn, dbi, timeout); err != nil {
+		if err := WaitForClusterUpdate(useConn, dbi, timeout); err != nil {
 			return fmt.Errorf("failed to update engine_version, waiting for RDS Global Cluster Cluster (%s) to update: %s", dbi, err)
 		}
 	}

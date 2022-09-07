@@ -986,7 +986,7 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		log.Printf("[INFO] Waiting for RDS Cluster (%s) to be available", d.Id())
-		err = waitForClusterUpdate(conn, d.Id(), d.Timeout(schema.TimeoutCreate))
+		err = WaitForClusterUpdate(conn, d.Id(), d.Timeout(schema.TimeoutCreate))
 		if err != nil {
 			return fmt.Errorf("error waiting for RDS Cluster (%s) to be available: %s", d.Id(), err)
 		}
@@ -1301,7 +1301,7 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		log.Printf("[INFO] Waiting for RDS Cluster (%s) to be available", d.Id())
-		err = waitForClusterUpdate(conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
+		err = WaitForClusterUpdate(conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
 		if err != nil {
 			return fmt.Errorf("error waiting for RDS Cluster (%s) to be available: %s", d.Id(), err)
 		}
@@ -1413,6 +1413,41 @@ func resourceClusterDelete(d *schema.ResourceData, meta interface{}) error {
 	err := resource.Retry(clusterTimeoutDelete, func() *resource.RetryError {
 		_, err := conn.DeleteDBCluster(&deleteOpts)
 		if err != nil {
+			if tfawserr.ErrMessageContains(err, "InvalidParameterCombination", "disable deletion pro") {
+				if v, ok := d.GetOk("deletion_protection"); (!ok || !v.(bool)) && d.Get("apply_immediately").(bool) {
+					_, err := tfresource.RetryWhen(d.Timeout(schema.TimeoutUpdate),
+						func() (interface{}, error) {
+							return conn.ModifyDBCluster(&rds.ModifyDBClusterInput{
+								ApplyImmediately:    aws.Bool(true),
+								DBClusterIdentifier: aws.String(d.Id()),
+								DeletionProtection:  aws.Bool(false),
+							})
+						},
+						func(err error) (bool, error) {
+							if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "IAM role ARN value is invalid or does not include the required permissions") {
+								return true, err
+							}
+
+							if tfawserr.ErrCodeEquals(err, rds.ErrCodeInvalidDBClusterStateFault) {
+								return true, err
+							}
+
+							return false, err
+						},
+					)
+
+					if err != nil {
+						resource.NonRetryableError(err)
+					}
+
+					if _, err := waitDBInstanceUpdated(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+						return resource.NonRetryableError(err)
+					}
+				}
+
+				return resource.RetryableError(err)
+			}
+
 			if tfawserr.ErrMessageContains(err, rds.ErrCodeInvalidDBClusterStateFault, "is not currently in the available state") {
 				return resource.RetryableError(err)
 			}
@@ -1520,7 +1555,7 @@ var resourceClusterUpdatePendingStates = []string{
 	"upgrading",
 }
 
-func waitForClusterUpdate(conn *rds.RDS, id string, timeout time.Duration) error {
+func WaitForClusterUpdate(conn *rds.RDS, id string, timeout time.Duration) error {
 	stateConf := &resource.StateChangeConf{
 		Pending:    resourceClusterUpdatePendingStates,
 		Target:     []string{"available"},
