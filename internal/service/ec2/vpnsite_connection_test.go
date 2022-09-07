@@ -265,14 +265,25 @@ func TestAccSiteVPNConnection_cloudWatchLogOptions(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tunnel2_log_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel2_log_options.0.cloudwatch_log_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel2_log_options.0.cloudwatch_log_options.0.log_enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "tunnel2_log_options.0.cloudwatch_log_options.0.log_group_arn", ""),
-					resource.TestCheckResourceAttr(resourceName, "tunnel2_log_options.0.cloudwatch_log_options.0.log_output_format", ""),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+			{
+				Config: testAccSiteVPNConnectionConfig_cloudWatchLogOptionsUpdated(rName, rBgpAsn),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccVPNConnectionExists(resourceName, &vpn),
+					resource.TestCheckResourceAttr(resourceName, "tunnel1_log_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel1_log_options.0.cloudwatch_log_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel1_log_options.0.cloudwatch_log_options.0.log_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel2_log_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel2_log_options.0.cloudwatch_log_options.0.log_enabled", "true"),
+					resource.TestCheckResourceAttrPair(resourceName, "tunnel2_log_options.0.cloudwatch_log_options.0.log_group_arn", "aws_cloudwatch_log_group.test", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel2_log_options.0.cloudwatch_log_options.0.log_output_format", "text"),
+				),
 			},
 		},
 	})
@@ -1649,10 +1660,48 @@ resource "aws_vpn_connection" "test" {
       log_output_format = "json"
     }
   }
+}
+`, rName, rBgpAsn)
+}
+
+func testAccSiteVPNConnectionConfig_cloudWatchLogOptionsUpdated(rName string, rBgpAsn int) string {
+	return fmt.Sprintf(`
+resource "aws_vpn_gateway" "test" {
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_customer_gateway" "test" {
+  bgp_asn    = %[2]d
+  ip_address = "178.0.0.1"
+  type       = "ipsec.1"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_cloudwatch_log_group" "test" {
+  name = %[1]q
+}
+
+resource "aws_vpn_connection" "test" {
+  vpn_gateway_id      = aws_vpn_gateway.test.id
+  customer_gateway_id = aws_customer_gateway.test.id
+  type                = "ipsec.1"
+
+  tunnel1_log_options {
+    cloudwatch_log_options {
+      log_enabled = false
+    }
+  }
 
   tunnel2_log_options {
     cloudwatch_log_options {
-      log_enabled = false
+      log_enabled       = true
+      log_group_arn     = aws_cloudwatch_log_group.test.arn
+      log_output_format = "text"
     }
   }
 }

@@ -1132,12 +1132,15 @@ func expandCloudWatchLogOptionsSpecification(tfMap map[string]interface{}) *ec2.
 		apiObject.LogEnabled = aws.Bool(v)
 	}
 
-	if v, ok := tfMap["log_group_arn"].(string); ok && v != "" {
-		apiObject.LogGroupArn = aws.String(v)
-	}
+	// No ARN or format if not enabled.
+	if aws.BoolValue(apiObject.LogEnabled) {
+		if v, ok := tfMap["log_group_arn"].(string); ok && v != "" {
+			apiObject.LogGroupArn = aws.String(v)
+		}
 
-	if v, ok := tfMap["log_output_format"].(string); ok && v != "" {
-		apiObject.LogOutputFormat = aws.String(v)
+		if v, ok := tfMap["log_output_format"].(string); ok && v != "" {
+			apiObject.LogOutputFormat = aws.String(v)
+		}
 	}
 
 	return apiObject
@@ -1481,15 +1484,19 @@ func flattenCloudWatchLogOptions(apiObject *ec2.CloudWatchLogOptions) map[string
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.LogEnabled; v != nil {
-		tfMap["log_enabled"] = aws.BoolValue(v)
-	}
+		enabled := aws.BoolValue(v)
+		tfMap["log_enabled"] = enabled
 
-	if v := apiObject.LogGroupArn; v != nil {
-		tfMap["log_group_arn"] = aws.StringValue(v)
-	}
+		// No ARN or format if not enabled.
+		if enabled {
+			if v := apiObject.LogGroupArn; v != nil {
+				tfMap["log_group_arn"] = aws.StringValue(v)
+			}
 
-	if v := apiObject.LogOutputFormat; v != nil {
-		tfMap["log_output_format"] = aws.StringValue(v)
+			if v := apiObject.LogOutputFormat; v != nil {
+				tfMap["log_output_format"] = aws.StringValue(v)
+			}
+		}
 	}
 
 	return tfMap
