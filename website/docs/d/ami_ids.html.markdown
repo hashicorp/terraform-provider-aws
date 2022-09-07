@@ -34,7 +34,7 @@ permission on  the image. Valid items are the numeric account ID or `self`.
 are several valid keys, for a full reference, check out
 [describe-images in the AWS CLI reference][1].
 
-* `name_regex` - (Optional) A regex string to apply to the AMI list returned
+* `name_regex` - (Optional) Regex string to apply to the AMI list returned
 by AWS. This allows more advanced filtering not supported from the AWS API.
 This filtering is done locally on what AWS returns, and could have a performance
 impact if the result is large. Combine this with other

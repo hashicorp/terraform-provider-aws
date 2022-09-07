@@ -123,6 +123,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/macie"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/macie2"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/mediaconvert"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/medialive"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/mediapackage"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/mediastore"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/memorydb"
@@ -738,12 +739,13 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_lex_intent":    lexmodels.DataSourceIntent(),
 			"aws_lex_slot_type": lexmodels.DataSourceSlotType(),
 
-			"aws_location_geofence_collection": location.DataSourceGeofenceCollection(),
-			"aws_location_map":                 location.DataSourceMap(),
-			"aws_location_place_index":         location.DataSourcePlaceIndex(),
-			"aws_location_route_calculator":    location.DataSourceRouteCalculator(),
-			"aws_location_tracker":             location.DataSourceTracker(),
-			"aws_location_tracker_association": location.DataSourceTrackerAssociation(),
+			"aws_location_geofence_collection":  location.DataSourceGeofenceCollection(),
+			"aws_location_map":                  location.DataSourceMap(),
+			"aws_location_place_index":          location.DataSourcePlaceIndex(),
+			"aws_location_route_calculator":     location.DataSourceRouteCalculator(),
+			"aws_location_tracker":              location.DataSourceTracker(),
+			"aws_location_tracker_association":  location.DataSourceTrackerAssociation(),
+			"aws_location_tracker_associations": location.DataSourceTrackerAssociations(),
 
 			// "aws_arn":                     meta.DataSourceARN(), // Now implemented using Terraform Plugin Framework.
 			"aws_billing_service_account": meta.DataSourceBillingServiceAccount(),
@@ -1098,6 +1100,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_cloudfront_function":                       cloudfront.ResourceFunction(),
 			"aws_cloudfront_key_group":                      cloudfront.ResourceKeyGroup(),
 			"aws_cloudfront_monitoring_subscription":        cloudfront.ResourceMonitoringSubscription(),
+			"aws_cloudfront_origin_access_control":          cloudfront.ResourceOriginAccessControl(),
 			"aws_cloudfront_origin_access_identity":         cloudfront.ResourceOriginAccessIdentity(),
 			"aws_cloudfront_origin_request_policy":          cloudfront.ResourceOriginRequestPolicy(),
 			"aws_cloudfront_public_key":                     cloudfront.ResourcePublicKey(),
@@ -1720,6 +1723,10 @@ func New(_ context.Context) (*schema.Provider, error) {
 
 			"aws_media_package_channel": mediapackage.ResourceChannel(),
 
+			"aws_medialive_input":                medialive.ResourceInput(),
+			"aws_medialive_input_security_group": medialive.ResourceInputSecurityGroup(),
+			"aws_medialive_multiplex":            medialive.ResourceMultiplex(),
+
 			"aws_media_store_container":        mediastore.ResourceContainer(),
 			"aws_media_store_container_policy": mediastore.ResourceContainerPolicy(),
 
@@ -1859,8 +1866,10 @@ func New(_ context.Context) (*schema.Provider, error) {
 
 			"aws_redshiftdata_statement": redshiftdata.ResourceStatement(),
 
-			"aws_redshiftserverless_namespace": redshiftserverless.ResourceNamespace(),
-			"aws_redshiftserverless_workgroup": redshiftserverless.ResourceWorkgroup(),
+			"aws_redshiftserverless_endpoint_access": redshiftserverless.ResourceEndpointAccess(),
+			"aws_redshiftserverless_namespace":       redshiftserverless.ResourceNamespace(),
+			"aws_redshiftserverless_usage_limit":     redshiftserverless.ResourceUsageLimit(),
+			"aws_redshiftserverless_workgroup":       redshiftserverless.ResourceWorkgroup(),
 
 			"aws_resourcegroups_group": resourcegroups.ResourceGroup(),
 
@@ -2205,7 +2214,7 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData, terraformVer
 
 	if l, ok := d.Get("assume_role").([]interface{}); ok && len(l) > 0 && l[0] != nil {
 		config.AssumeRole = expandAssumeRole(l[0].(map[string]interface{}))
-		log.Printf("[INFO] assume_role configuration set: (ARN: %q, SessionID: %q, ExternalID: %q)", config.AssumeRole.RoleARN, config.AssumeRole.SessionName, config.AssumeRole.ExternalID)
+		log.Printf("[INFO] assume_role configuration set: (ARN: %q, SessionID: %q, ExternalID: %q, SourceIdentity: %q)", config.AssumeRole.RoleARN, config.AssumeRole.SessionName, config.AssumeRole.ExternalID, config.AssumeRole.SourceIdentity)
 	}
 
 	if l, ok := d.Get("assume_role_with_web_identity").([]interface{}); ok && len(l) > 0 && l[0] != nil {
@@ -2297,6 +2306,12 @@ func assumeRoleSchema() *schema.Schema {
 					Optional:     true,
 					Description:  "An identifier for the assumed role session.",
 					ValidateFunc: validAssumeRoleSessionName,
+				},
+				"source_identity": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Description:  "Source identity specified by the principal assuming the role.",
+					ValidateFunc: validAssumeRoleSourceIdentity,
 				},
 				"tags": {
 					Type:        schema.TypeMap,
@@ -2430,6 +2445,10 @@ func expandAssumeRole(m map[string]interface{}) *awsbase.AssumeRole {
 
 	if v, ok := m["session_name"].(string); ok && v != "" {
 		assumeRole.SessionName = v
+	}
+
+	if v, ok := m["source_identity"].(string); ok && v != "" {
+		assumeRole.SourceIdentity = v
 	}
 
 	if tagMapRaw, ok := m["tags"].(map[string]interface{}); ok && len(tagMapRaw) > 0 {

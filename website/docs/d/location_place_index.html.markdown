@@ -20,14 +20,14 @@ data "aws_location_place_index" "example" {
 
 ## Argument Reference
 
-* `index_name` - (Required) The name of the place index resource.
+* `index_name` - (Required) Name of the place index resource.
 
 ## Attribute Reference
 
-* `create_time` - The timestamp for when the place index resource was created in ISO 8601 format.
-* `data_source` - The data provider of geospatial data.
+* `create_time` - Timestamp for when the place index resource was created in ISO 8601 format.
+* `data_source` - Data provider of geospatial data.
 * `data_source_configuration` - List of configurations that specify data storage option for requesting Places.
-* `description` - The optional description for the place index resource.
-* `index_arn` - The Amazon Resource Name (ARN) for the place index resource.
+* `description` - Optional description for the place index resource.
+* `index_arn` - ARN for the place index resource.
 * `tags` - Key-value map of resource tags for the place index.
-* `update_time` - The timestamp for when the place index resource was last updated in ISO 8601 format.
+* `update_time` - Timestamp for when the place index resource was last updated in ISO 8601 format.

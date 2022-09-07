@@ -43,11 +43,11 @@ resource "aws_waf_web_acl" "acl" {
 
 The following arguments are supported (at least one needs to be specified):
 
-* `name` - (Optional) The name of the WAF rule group.
-* `metric_name` - (Optional) The name of the WAF rule group.
+* `name` - (Optional) Name of the WAF rule group.
+* `metric_name` - (Optional) Name of the WAF rule group.
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - The ID of the WAF rule group.
+* `id` - ID of the WAF rule group.

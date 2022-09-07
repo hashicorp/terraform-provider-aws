@@ -41,9 +41,9 @@ supported names are file-system-id or volume-id.
 In addition to all arguments above, the following attributes are exported:
 
 * `arn` - Amazon Resource Name of the snapshot.
-* `creation_time` - The time that the resource was created.
+* `creation_time` - Time that the resource was created.
 * `id` - Identifier of the snapshot, e.g., `fsvolsnap-12345678`
-* `name` - The name of the snapshot.
-* `snapshot_id` - The ID of the snapshot.
-* `tags` - A list of Tag values, with a maximum of 50 elements.
-* `volume_id` - The ID of the volume that the snapshot is of.
+* `name` - Name of the snapshot.
+* `snapshot_id` - ID of the snapshot.
+* `tags` - List of Tag values, with a maximum of 50 elements.
+* `volume_id` - ID of the volume that the snapshot is of.

@@ -112,6 +112,18 @@ func vpnTunnelOptionsIKEVersion_Values() []string {
 }
 
 const (
+	vpnTunnelCloudWatchLogOutputFormatJSON = "json"
+	vpnTunnelCloudWatchLogOutputFormatText = "text"
+)
+
+func vpnTunnelCloudWatchLogOutputFormat_Values() []string {
+	return []string{
+		vpnTunnelCloudWatchLogOutputFormatJSON,
+		vpnTunnelCloudWatchLogOutputFormatText,
+	}
+}
+
+const (
 	vpnTunnelOptionsPhase1EncryptionAlgorithmAES128        = "AES128"
 	vpnTunnelOptionsPhase1EncryptionAlgorithmAES256        = "AES256"
 	vpnTunnelOptionsPhase1EncryptionAlgorithmAES128_GCM_16 = "AES128-GCM-16"

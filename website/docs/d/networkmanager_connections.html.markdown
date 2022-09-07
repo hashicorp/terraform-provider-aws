@@ -24,12 +24,12 @@ data "aws_networkmanager_connections" "example" {
 
 ## Argument Reference
 
-* `device_id` - (Optional) The ID of the device of the connections to retrieve.
-* `global_network_id` - (Required) The ID of the Global Network of the connections to retrieve.
+* `device_id` - (Optional) ID of the device of the connections to retrieve.
+* `global_network_id` - (Required) ID of the Global Network of the connections to retrieve.
 * `tags` - (Optional) Restricts the list to the connections with these tags.
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-* `ids` - The IDs of the connections.
+* `ids` - IDs of the connections.

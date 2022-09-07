@@ -1349,6 +1349,41 @@ func resourceClusterDelete(d *schema.ResourceData, meta interface{}) error {
 			return conn.DeleteDBCluster(input)
 		},
 		func(err error) (bool, error) {
+			if tfawserr.ErrMessageContains(err, "InvalidParameterCombination", "disable deletion pro") {
+				if v, ok := d.GetOk("deletion_protection"); (!ok || !v.(bool)) && d.Get("apply_immediately").(bool) {
+					_, err := tfresource.RetryWhen(d.Timeout(schema.TimeoutDelete),
+						func() (interface{}, error) {
+							return conn.ModifyDBCluster(&rds.ModifyDBClusterInput{
+								ApplyImmediately:    aws.Bool(true),
+								DBClusterIdentifier: aws.String(d.Id()),
+								DeletionProtection:  aws.Bool(false),
+							})
+						},
+						func(err error) (bool, error) {
+							if tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "IAM role ARN value is invalid or does not include the required permissions") {
+								return true, err
+							}
+
+							if tfawserr.ErrCodeEquals(err, rds.ErrCodeInvalidDBClusterStateFault) {
+								return true, err
+							}
+
+							return false, err
+						},
+					)
+
+					if err != nil {
+						return false, fmt.Errorf("modifying RDS Cluster (%s) DeletionProtection=false: %w", d.Id(), err)
+					}
+
+					if _, err := waitDBClusterUpdated(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+						return false, fmt.Errorf("waiting for RDS Cluster (%s) update: %w", d.Id(), err)
+					}
+				}
+
+				return true, err
+			}
+
 			if tfawserr.ErrMessageContains(err, rds.ErrCodeInvalidDBClusterStateFault, "is not currently in the available state") {
 				return true, err
 			}
