@@ -642,7 +642,7 @@ func sweepInstanceAutomatedBackupsReplication(region string) error {
 			d := r.Data(nil)
 			backupARNs = append(backupARNs, aws.StringValue(backup.DBInstanceAutomatedBackupsArn))
 			d.SetId(aws.StringValue(backup.DBInstanceAutomatedBackupsArn))
-			d.Set("source_db_instance_arn", abackup.DBInstanceArn)
+			d.Set("source_db_instance_arn", backup.DBInstanceArn)
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 		return !lastPage
