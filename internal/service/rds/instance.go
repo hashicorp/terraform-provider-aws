@@ -1809,7 +1809,7 @@ func resourceInstanceDelete(d *schema.ResourceData, meta interface{}) error {
 
 	if tfawserr.ErrMessageContains(err, "InvalidParameterCombination", "disable deletion pro") {
 		if v, ok := d.GetOk("deletion_protection"); (!ok || !v.(bool)) && d.Get("apply_immediately").(bool) {
-			_, err := tfresource.RetryWhen(d.Timeout(schema.TimeoutUpdate),
+			_, ierr := tfresource.RetryWhen(d.Timeout(schema.TimeoutUpdate),
 				func() (interface{}, error) {
 					return conn.ModifyDBInstance(&rds.ModifyDBInstanceInput{
 						ApplyImmediately:     aws.Bool(true),
@@ -1832,12 +1832,12 @@ func resourceInstanceDelete(d *schema.ResourceData, meta interface{}) error {
 				},
 			)
 
-			if err != nil {
+			if ierr != nil {
 				return fmt.Errorf("updating RDS DB Instance (%s): %w", d.Id(), err)
 			}
 
-			if _, err := waitDBInstanceUpdated(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-				return fmt.Errorf("waiting for RDS DB Instance (%s) update: %w", d.Id(), err)
+			if _, ierr := waitDBInstanceUpdated(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); ierr != nil {
+				return fmt.Errorf("waiting for RDS DB Instance (%s) update: %w", d.Id(), ierr)
 			}
 
 			_, err = conn.DeleteDBInstance(input)
