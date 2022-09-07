@@ -41,7 +41,7 @@ resource "aws_medialive_multiplex_program" "example" {
   program_name = "example_program"
   multiplex_id = aws_medialive_multiplex.example.id
 
- multiplex_program_settings {
+  multiplex_program_settings {
     program_number             = 1
     preferred_channel_pipeline = "CURRENTLY_ACTIVE"
 
@@ -92,14 +92,6 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - ID of the MultiplexProgram.
 * `example_attribute` - Concise description.
-
-## Timeouts
-
-[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
-
-* `create` - (Default `60m`)
-* `update` - (Default `180m`)
-* `delete` - (Default `90m`)
 
 ## Import
 

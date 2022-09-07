@@ -192,8 +192,6 @@ resource "aws_medialive_multiplex" "test" {
     maximum_video_buffer_delay_milliseconds = 1000
   }
 
-  #   start_multiplex = true
-
   tags = {
     Name = %[1]q
   }
