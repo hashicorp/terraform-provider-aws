@@ -91,6 +91,7 @@ const (
 	errCodeInvalidVPNGatewayAttachmentNotFound            = "InvalidVpnGatewayAttachment.NotFound"
 	errCodeInvalidVPNGatewayIDNotFound                    = "InvalidVpnGatewayID.NotFound"
 	errCodeNatGatewayNotFound                             = "NatGatewayNotFound"
+	errCodePrefixListVersionMismatch                      = "PrefixListVersionMismatch"
 	errCodeResourceNotReady                               = "ResourceNotReady"
 	errCodeSnapshotCreationPerVolumeRateExceeded          = "SnapshotCreationPerVolumeRateExceeded"
 	errCodeUnsupportedOperation                           = "UnsupportedOperation"
