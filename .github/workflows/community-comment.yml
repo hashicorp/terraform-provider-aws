@@ -19,16 +19,16 @@ jobs:
             # Community Note
 
             **Voting for Prioritization**
-          
+
             * Please vote on this issue by adding a 👍 [reaction](https://blog.github.com/2016-03-10-add-reactions-to-pull-requests-issues-and-comments/) to the original post to help the community and maintainers prioritize this request.
             * Please see our [prioritization guide](https://hashicorp.github.io/terraform-provider-aws/prioritization/) for information on how we prioritize.
             * Please **do not** leave "+1" or other comments that do not add relevant new information or questions, they generate extra noise for issue followers and do not help prioritize the request.
-          
+
             **Volunteering to Work on This Issue**
-          
+
             * If you are interested in working on this issue, please leave a comment.
             * If this would be your first contribution, please review the [contribution guide](https://hashicorp.github.io/terraform-provider-aws/).
-  
+
       - name: Add community note to new Pull Requests
         uses: peter-evans/create-or-update-comment@v1
         if: github.event_name == 'pull_request_target'
@@ -38,7 +38,7 @@ jobs:
             # Community Note
 
             **Voting for Prioritization**
-          
+
             * Please vote on this pull request by adding a 👍 [reaction](https://blog.github.com/2016-03-10-add-reactions-to-pull-requests-issues-and-comments/) to the original post to help the community and maintainers prioritize this pull request.
             * Please see our [prioritization guide](https://hashicorp.github.io/terraform-provider-aws/prioritization/) for information on how we prioritize.
             * Please **do not** leave "+1" or other comments that do not add relevant new information or questions, they generate extra noise for issue followers and do not help prioritize the request.
