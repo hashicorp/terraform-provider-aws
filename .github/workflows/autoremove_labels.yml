@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Remove needs-triage label from member's Issues
-        if: env.IN_MAINTAINER_LIST == 'true'
+        if: fromJSON(env.IN_MAINTAINER_LIST)
         uses: actions-ecosystem/action-remove-labels@v1
         with:
           labels: |
