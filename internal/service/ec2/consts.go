@@ -86,6 +86,18 @@ const (
 )
 
 const (
+	managedPrefixListAddressFamilyIPv4 = "IPv4"
+	managedPrefixListAddressFamilyIPv6 = "IPv6"
+)
+
+func managedPrefixListAddressFamily_Values() []string {
+	return []string{
+		managedPrefixListAddressFamilyIPv4,
+		managedPrefixListAddressFamilyIPv6,
+	}
+}
+
+const (
 	vpnTunnelOptionsDPDTimeoutActionClear   = "clear"
 	vpnTunnelOptionsDPDTimeoutActionNone    = "none"
 	vpnTunnelOptionsDPDTimeoutActionRestart = "restart"

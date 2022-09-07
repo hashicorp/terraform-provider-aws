@@ -37,12 +37,10 @@ func ResourceManagedPrefixList() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"address_family": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.StringInSlice(
-					[]string{"IPv4", "IPv6"},
-					false),
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice(managedPrefixListAddressFamily_Values(), false),
 			},
 			"arn": {
 				Type:     schema.TypeString,
