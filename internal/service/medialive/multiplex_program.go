@@ -61,6 +61,7 @@ func (t *resourceMultiplexProgramType) GetSchema(context.Context) (tfsdk.Schema,
 		Blocks: map[string]tfsdk.Block{
 			"multiplex_program_settings": {
 				NestingMode: tfsdk.BlockNestingModeList,
+				MinItems:    1,
 				MaxItems:    1,
 				PlanModifiers: tfsdk.AttributePlanModifiers{
 					resource.RequiresReplace(),
@@ -107,11 +108,11 @@ func (t *resourceMultiplexProgramType) GetSchema(context.Context) (tfsdk.Schema,
 								NestingMode: tfsdk.BlockNestingModeList,
 								MaxItems:    1,
 								Attributes: map[string]tfsdk.Attribute{
-									"maximum_bitrate": {
+									"minimum_bitrate": {
 										Type:     types.NumberType,
 										Optional: true,
 									},
-									"minimum_bitrate": {
+									"maximum_bitrate": {
 										Type:     types.NumberType,
 										Optional: true,
 									},
