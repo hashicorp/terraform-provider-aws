@@ -2572,10 +2572,11 @@ resource "aws_rds_cluster" "restore" {
 func testAccClusterConfig_pointInTimeRestoreSource_enabledCloudWatchLogsExports(rName, enabledCloudwatchLogExports string) string {
 	return acctest.ConfigCompose(testAccClusterConfig_baseForPITR(rName), fmt.Sprintf(`
 resource "aws_rds_cluster" "restore" {
-  cluster_identifier  = "%[1]s-restore"
+  cluster_identifier              = "%[1]s-restore"
   skip_final_snapshot             = true
   engine                          = aws_rds_cluster.test.engine
   enabled_cloudwatch_logs_exports = [%[2]q]
+
   restore_to_point_in_time {
     source_cluster_identifier  = aws_rds_cluster.test.cluster_identifier
     restore_type               = "full-copy"
