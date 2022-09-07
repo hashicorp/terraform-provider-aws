@@ -64,7 +64,7 @@ const (
 	errCodeInvalidRouteTableIDNotFound                    = "InvalidRouteTableID.NotFound"
 	errCodeInvalidRouteTableIdNotFound                    = "InvalidRouteTableId.NotFound"
 	errCodeInvalidSecurityGroupIDNotFound                 = "InvalidSecurityGroupID.NotFound"
-	errCodeInvalidSecurityGroupRuleIDNotFound             = "InvalidSecurityGroupRuleId.NotFound"
+	errCodeInvalidSecurityGroupRuleIdNotFound             = "InvalidSecurityGroupRuleId.NotFound"
 	errCodeInvalidServiceName                             = "InvalidServiceName"
 	errCodeInvalidSnapshotInUse                           = "InvalidSnapshot.InUse"
 	errCodeInvalidSnapshotNotFound                        = "InvalidSnapshot.NotFound"
