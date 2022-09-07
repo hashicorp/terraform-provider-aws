@@ -1,6 +1,7 @@
 package cloudwatch
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"regexp"
@@ -11,9 +12,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func ResourceMetricAlarm() *schema.Resource {
@@ -304,7 +308,7 @@ func resourceMetricAlarmCreate(d *schema.ResourceData, meta interface{}) error {
 	_, err = conn.PutMetricAlarm(&params)
 
 	// Some partitions (i.e., ISO) may not support tag-on-create
-	if params.Tags != nil && verify.CheckISOErrorTagsUnsupported(err) {
+	if params.Tags != nil && verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
 		log.Printf("[WARN] failed creating CloudWatch Metric Alarm (%s) with tags: %s. Trying create without tags.", d.Get("alarm_name").(string), err)
 		params.Tags = nil
 
@@ -332,7 +336,7 @@ func resourceMetricAlarmCreate(d *schema.ResourceData, meta interface{}) error {
 		err = UpdateTags(conn, aws.StringValue(resp.AlarmArn), nil, tags)
 
 		// If default tags only, log and continue. Otherwise, error.
-		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.CheckISOErrorTagsUnsupported(err) {
+		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
 			log.Printf("[WARN] failed adding tags after create for CloudWatch Metric Alarm (%s): %s", d.Id(), err)
 			return resourceMetricAlarmRead(d, meta)
 		}
@@ -351,12 +355,24 @@ func resourceMetricAlarmRead(d *schema.ResourceData, meta interface{}) error {
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	resp, err := FindMetricAlarmByName(conn, d.Id())
-	if err != nil {
-		return err
-	}
-	if resp == nil {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		create.LogNotFoundRemoveState(names.CloudWatch, create.ErrActionReading, ResNameMetricAlarm, d.Id())
 		d.SetId("")
 		return nil
+	}
+
+	if err != nil {
+		return create.Error(names.CloudWatch, create.ErrActionReading, ResNameMetricAlarm, d.Id(), err)
+	}
+
+	if !d.IsNewResource() && resp == nil {
+		create.LogNotFoundRemoveState(names.CloudWatch, create.ErrActionReading, ResNameMetricAlarm, d.Id())
+		d.SetId("")
+		return nil
+	}
+
+	if resp == nil {
+		return create.Error(names.CloudWatch, create.ErrActionReading, ResNameMetricAlarm, d.Id(), errors.New("not found after create"))
 	}
 
 	log.Printf("[DEBUG] Reading CloudWatch Metric Alarm: %s", d.Id())
@@ -415,7 +431,7 @@ func resourceMetricAlarmRead(d *schema.ResourceData, meta interface{}) error {
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	// Some partitions (i.e., ISO) may not support tagging, giving error
-	if verify.CheckISOErrorTagsUnsupported(err) {
+	if verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
 		log.Printf("[WARN] failed listing tags for CloudWatch Metric Alarm (%s): %s", d.Id(), err)
 		return nil
 	}
@@ -450,7 +466,7 @@ func resourceMetricAlarmUpdate(d *schema.ResourceData, meta interface{}) error {
 		err := UpdateTags(conn, arn, o, n)
 
 		// Some partitions (i.e., ISO) may not support tagging, giving error
-		if verify.CheckISOErrorTagsUnsupported(err) {
+		if verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
 			log.Printf("[WARN] failed updating tags for CloudWatch Metric Alarm (%s): %s", d.Id(), err)
 			return resourceMetricAlarmRead(d, meta)
 		}
@@ -551,7 +567,7 @@ func getPutMetricAlarmInput(d *schema.ResourceData, meta interface{}) cloudwatch
 	}
 
 	if v := d.Get("metric_query"); v != nil {
-		params.Metrics = expandCloudWatchMetricAlarmMetrics(v.(*schema.Set))
+		params.Metrics = expandMetricAlarmMetrics(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("ok_actions"); ok {
@@ -607,7 +623,7 @@ func flattenMetricAlarmMetricsMetricStat(ms *cloudwatch.MetricStat) map[string]i
 	return metric
 }
 
-func expandCloudWatchMetricAlarmMetrics(v *schema.Set) []*cloudwatch.MetricDataQuery {
+func expandMetricAlarmMetrics(v *schema.Set) []*cloudwatch.MetricDataQuery {
 	var metrics []*cloudwatch.MetricDataQuery
 
 	for _, v := range v.List() {
@@ -629,7 +645,7 @@ func expandCloudWatchMetricAlarmMetrics(v *schema.Set) []*cloudwatch.MetricDataQ
 			metricQuery.ReturnData = aws.Bool(v.(bool))
 		}
 		if v := metricQueryResource["metric"]; v != nil && len(v.([]interface{})) > 0 {
-			metricQuery.MetricStat = expandCloudWatchMetricAlarmMetricsMetric(v.([]interface{}))
+			metricQuery.MetricStat = expandMetricAlarmMetricsMetric(v.([]interface{}))
 		}
 		if v, ok := metricQueryResource["account_id"]; ok && v.(string) != "" {
 			metricQuery.AccountId = aws.String(v.(string))
@@ -639,7 +655,7 @@ func expandCloudWatchMetricAlarmMetrics(v *schema.Set) []*cloudwatch.MetricDataQ
 	return metrics
 }
 
-func expandCloudWatchMetricAlarmMetricsMetric(v []interface{}) *cloudwatch.MetricStat {
+func expandMetricAlarmMetricsMetric(v []interface{}) *cloudwatch.MetricStat {
 	metricResource := v[0].(map[string]interface{})
 	metric := cloudwatch.Metric{
 		MetricName: aws.String(metricResource["metric_name"].(string)),

@@ -58,7 +58,7 @@ resource "aws_connect_queue" "test" {
   description           = "Example Description"
   hours_of_operation_id = "12345678-1234-1234-1234-123456789012"
 
-  outbound_caller_config = {
+  outbound_caller_config {
     outbound_caller_id_name      = "example"
     outbound_caller_id_number_id = "12345678-abcd-1234-abcd-123456789012"
     outbound_flow_id             = "87654321-defg-1234-defg-987654321234"
@@ -82,7 +82,7 @@ The following arguments are supported:
 * `outbound_caller_config` - (Required) A block that defines the outbound caller ID name, number, and outbound whisper flow. The Outbound Caller Config block is documented below.
 * `quick_connect_ids` - (Optional) Specifies a list of quick connects ids that determine the quick connects available to agents who are working the queue.
 * `status` - (Optional) Specifies the description of the Queue. Valid values are `ENABLED`, `DISABLED`.
-* `tags` - (Optional) Tags to apply to the Queue. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Tags to apply to the Queue. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 A `outbound_caller_config` block supports the following arguments:
 
@@ -97,7 +97,7 @@ In addition to all arguments above, the following attributes are exported:
 * `arn` - The Amazon Resource Name (ARN) of the Queue.
 * `queue_id` - The identifier for the Queue.
 * `id` - The identifier of the hosting Amazon Connect Instance and identifier of the Queue separated by a colon (`:`).
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 

@@ -13,8 +13,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func dxVirtualInterfaceRead(id string, conn *directconnect.DirectConnect) (*directconnect.VirtualInterface, error) {
-	resp, state, err := dxVirtualInterfaceStateRefresh(conn, id)()
+func virtualInterfaceRead(id string, conn *directconnect.DirectConnect) (*directconnect.VirtualInterface, error) {
+	resp, state, err := virtualInterfaceStateRefresh(conn, id)()
 	if err != nil {
 		return nil, fmt.Errorf("error reading Direct Connect virtual interface (%s): %s", id, err)
 	}
@@ -25,7 +25,7 @@ func dxVirtualInterfaceRead(id string, conn *directconnect.DirectConnect) (*dire
 	return resp.(*directconnect.VirtualInterface), nil
 }
 
-func dxVirtualInterfaceUpdate(d *schema.ResourceData, meta interface{}) error {
+func virtualInterfaceUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DirectConnectConn
 
 	if d.HasChange("mtu") {
@@ -63,7 +63,7 @@ func dxVirtualInterfaceUpdate(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func dxVirtualInterfaceDelete(d *schema.ResourceData, meta interface{}) error {
+func virtualInterfaceDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DirectConnectConn
 
 	log.Printf("[DEBUG] Deleting Direct Connect virtual interface: %s", d.Id())
@@ -90,7 +90,7 @@ func dxVirtualInterfaceDelete(d *schema.ResourceData, meta interface{}) error {
 		Target: []string{
 			directconnect.VirtualInterfaceStateDeleted,
 		},
-		Refresh:    dxVirtualInterfaceStateRefresh(conn, d.Id()),
+		Refresh:    virtualInterfaceStateRefresh(conn, d.Id()),
 		Timeout:    d.Timeout(schema.TimeoutDelete),
 		Delay:      10 * time.Second,
 		MinTimeout: 5 * time.Second,
@@ -103,7 +103,7 @@ func dxVirtualInterfaceDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func dxVirtualInterfaceStateRefresh(conn *directconnect.DirectConnect, vifId string) resource.StateRefreshFunc {
+func virtualInterfaceStateRefresh(conn *directconnect.DirectConnect, vifId string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		resp, err := conn.DescribeVirtualInterfaces(&directconnect.DescribeVirtualInterfacesInput{
 			VirtualInterfaceId: aws.String(vifId),
@@ -127,11 +127,11 @@ func dxVirtualInterfaceStateRefresh(conn *directconnect.DirectConnect, vifId str
 	}
 }
 
-func dxVirtualInterfaceWaitUntilAvailable(conn *directconnect.DirectConnect, vifId string, timeout time.Duration, pending, target []string) error {
+func virtualInterfaceWaitUntilAvailable(conn *directconnect.DirectConnect, vifId string, timeout time.Duration, pending, target []string) error {
 	stateConf := &resource.StateChangeConf{
 		Pending:    pending,
 		Target:     target,
-		Refresh:    dxVirtualInterfaceStateRefresh(conn, vifId),
+		Refresh:    virtualInterfaceStateRefresh(conn, vifId),
 		Timeout:    timeout,
 		Delay:      10 * time.Second,
 		MinTimeout: 5 * time.Second,

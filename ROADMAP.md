@@ -1,122 +1,91 @@
-# Roadmap:  February 2022 - April 2022
+# Roadmap:  August 2022 - October 2022
 
 Every few months, the team will highlight areas of focus for our work and upcoming research.
 
-We select items for inclusion in the roadmap from the Top Community Issues, [Core Services](docs/contributing/core-services.md), and internal priorities. Where community sourced contributions exist we will work with the authors to review and merge their work. Where this does not exist or the original contributors are not available we will create the resources and implementation ourselves.
+We select items for inclusion in the roadmap from the Top Community Issues, [Core Services](https://hashicorp.github.io/terraform-provider-aws/core-services/), and internal priorities. Where community sourced contributions exist we will work with the authors to review and merge their work. Where this does not exist or the original contributors are not available we will create the resources and implementation ourselves.
 
 Each weekly release will include necessary tasks that lead to the completion of the stated goals as well as community pull requests, enhancements, and features that are not highlighted in the roadmap. To view all the items we've prioritized for this quarter, please see the [Roadmap milestone](https://github.com/hashicorp/terraform-provider-aws/milestone/138).
 
 This roadmap does not describe all the work that will be included within this timeframe, but it does describe our focus. We will include other work as events occur.
 
-In the period spanning November 2021 to Janury 2022, 668 Pull Requests were opened in the provider and 730 were closed/merged, adding support for:
+In the period spanning May to July 2022, 991 Pull Requests were opened in the provider and 865 were closed/merged, adding support for the following (among many others):
 
-- Managing Amazon CloudSearch Domains
-- ECS Task Sets
-- S3 Intelligent Tiering Archive Configuration 
-- IoT Thing Group 
-- Lambda Access Points for S3
-- ECR Public Repositories
+- Kendra
+- Transcribe
+- Comprehend
+- Cost Explorer
+- CloudWAN
 
-From February ‘22 - April ‘22, we will be prioritizing the following areas of work:
+From August ‘22 - October ‘22, we will be prioritizing the following areas of work:
 
 ## New Services  
 
-### AWS AppFlow
+### AWS Elemental MediaLive
 
-Issue: [#16253](https://github.com/hashicorp/terraform-provider-aws/issues/16253)
+Issue: [#4936](https://github.com/hashicorp/terraform-provider-aws/issues/4936)
 
-_[Amazon AppFlow](https://aws.amazon.com/appflow/) is a fully managed integration service that enables you to securely transfer data between Software-as-a-Service (SaaS) applications_
+_[AWS Elemental MediaLive](https://aws.amazon.com/medialive/) is a broadcast-grade live video processing service. It lets you create high-quality video streams for delivery to broadcast televisions and internet-connected multiscreen devices, like connected TVs, tablets, smart phones, and set-top boxes._
 
-Support for Amazon AppFlow will include:
-
-New Resource(s):
-
-- `aws_appflow_flow`
-- `aws_appflow_connector_profile`
-
-
-### Amazon Global Networks
-
-Issue: [#11132](https://github.com/hashicorp/terraform-provider-aws/issues/11132)
-
-_A [Global Network](https://docs.aws.amazon.com/vpc/latest/tgwnm/global-networks.html) is a container for your network objects. After you create it, you can register your transit gateways and define your on-premises networks in the global network._
-
-Support for Global Networks will include:
+Support for AWS Elemental MediaLive may include:
 
 New Resource(s):
 
-- `aws_networkmanager_global_network`
-- `aws_networkmanager_site`
-- `aws_networkmanager_link`
-- `aws_networkmanager_device`
-- `aws_networkmanager_transit_gateway_registration`
+- `aws_medialive_channel`
+- `aws_medialive_input`
+- `aws_medialive_input_security_group`
+- `aws_medialive_multiplex`
+- `aws_medialive_multiplex_program`
 
-### Amazon OpenSearch Service
+### AWS Audit Manager
 
-Issue: [#20853](https://github.com/hashicorp/terraform-provider-aws/issues/20853)
+Issue: [#4936](https://github.com/hashicorp/terraform-provider-aws/issues/17981)
 
-_[Amazon OpenSearch Service](https://aws.amazon.com/opensearch-service/) is a distributed, open-source search and analytics suite used for a broad set of use cases like real-time application monitoring, log analytics, and website search_
+_[AWS Audit Manager](https://aws.amazon.com/audit-manager/) helps you continuously audit your AWS usage to simplify how you assess risk and compliance with regulations and industry standards. Audit Manager automates evidence collection to reduce the “all hands on deck” manual effort that often happens for audits and enable you to scale your audit capability in the cloud as your business grows. With Audit Manager, it is easy to assess if your policies, procedures, and activities – also known as controls – are operating effectively. When it is time for an audit, AWS Audit Manager helps you manage stakeholder reviews of your controls and enables you to build audit-ready reports with much less manual effort._
 
-Affected Resource(s):
-
-- `aws_elasticsearch_domain`
-
-### Amazon Managed Grafana
-
-Issue: [#16789](https://github.com/hashicorp/terraform-provider-aws/issues/16789)
-
-_[Amazon Managed Grafana](https://aws.amazon.com/grafana) is a fully managed service for open source Grafana that enables you to query, visualize, alert on and understand your metrics._
-
-Support for Amazon Managed Grafana will include:
+Support for AWS Audit Manager may include:
 
 New Resource(s):
 
-- `aws_grafana_workspace`
-- `aws_grafana_license_association`
+- `aws_auditmanager_assessment`
+- `aws_auditmanager_assessment_framework`
+- `aws_auditmanager_assessment_report`
+- `aws_auditmanager_control`
 
 ## Enhancements to Existing Services
 
-- [changing identifier in RDS (aws_db_instance) will destroy/create the db](https://github.com/hashicorp/terraform-provider-aws/issues/507)
-- [Terraform fails to destroy autoscaling group if scale in protection is enabled](https://github.com/hashicorp/terraform-provider-aws/issues/5278)
-- [Implement support for time based retention policies in DLM](https://github.com/hashicorp/terraform-provider-aws/issues/11456)
-- [Cannot destroy attached security groups](https://github.com/hashicorp/terraform-provider-aws/issues/13593)
-- [default_tags always shows an update](https://github.com/hashicorp/terraform-provider-aws/issues/18311)
-- [AWS Synthetics Canary Missing support for Environment Variables](https://github.com/hashicorp/terraform-provider-aws/issues/17948)
-- [Add retry handling when a request's connection is reset by peer](https://github.com/hashicorp/terraform-provider-aws/issues/10715)
-- [resource/aws_db_instance: Should support enabling cross-region automated backups](https://github.com/hashicorp/terraform-provider-aws/issues/16708)
-- [Feature Request: Support Route53 Domains](https://github.com/hashicorp/terraform-provider-aws/issues/88)
-- [import aws_s3_bucket does not store important attributes like acl](https://github.com/hashicorp/terraform-provider-aws/issues/6193)
-- [Add user_group argument to aws_elasticache_replication_group](https://github.com/hashicorp/terraform-provider-aws/issues/20328)
-- [aws_lb_listener_certificate not destroyed upon "force new resource"](https://github.com/hashicorp/terraform-provider-aws/issues/7761)
-- [AWS ACM Expected certificate to be issued but was in state PENDING_VALIDATION](https://github.com/hashicorp/terraform-provider-aws/issues/9338)
-- [Feature Request: Dynamic Security Group Association for VPC Endpoint Interface](https://github.com/hashicorp/terraform-provider-aws/issues/10429)
-- [Inconsistency in AWS Terraform provider with aws_lambda_function](https://github.com/hashicorp/terraform-provider-aws/issues/11787)
-- [aws_wafv2_web_acl: managed-rule-group-statement is missing Version option](https://github.com/hashicorp/terraform-provider-aws/issues/21546)
-- [Transit Gateway multicast support](https://github.com/hashicorp/terraform-provider-aws/issues/11120)
-- [S3 bucket slow to delete when destroyed during an apply](https://github.com/hashicorp/terraform-provider-aws/issues/12146)
-- [aws_elasticsearch_domain cognito_options cause Cycle Error](https://github.com/hashicorp/terraform-provider-aws/issues/5557)
-- [data source for aws_iam_saml_provider](https://github.com/hashicorp/terraform-provider-aws/issues/7283)
-- [Amazon MSK multiple authentication modes and updates to TLS encryption settings](https://github.com/hashicorp/terraform-provider-aws/issues/20956)
-- [Support cold storage option for aws_elasticsearch_domain config](https://github.com/hashicorp/terraform-provider-aws/issues/19593)
-- [aws_sns_topic_subscription doesn't support unconfirmed endpoints](https://github.com/hashicorp/terraform-provider-aws/issues/7782)
-- [Add Radius support for aws_directory_service_directory](https://github.com/hashicorp/terraform-provider-aws/issues/12639)
-- [New resource `aws_kafkaconnect_connector`](https://github.com/hashicorp/terraform-provider-aws/issues/20942)
-- [aws_rds_cluster_activity_stream](https://github.com/hashicorp/terraform-provider-aws/pull/22097)
-- [Amazon EMR on Amazon EKS](https://github.com/hashicorp/terraform-provider-aws/issues/16717)
-- [Add destination metrics for Replication rule](https://github.com/hashicorp/terraform-provider-aws/issues/16347)
-- [add domain validation options parameter to aws_acm_certificate](https://github.com/hashicorp/terraform-provider-aws/issues/3851)
-- [Support Starting AWS Database Migration Service Replication Task](https://github.com/hashicorp/terraform-provider-aws/issues/2083)
-- [Feature Request: DynamoDB CloudWatch Contributor Insights](https://github.com/hashicorp/terraform-provider-aws/issues/13933)
-- [Feature request: Support Api Gateway Canary release](https://github.com/hashicorp/terraform-provider-aws/issues/2727)
-- [DMS task modification lifecycle](https://github.com/hashicorp/terraform-provider-aws/issues/2236)
+This quarter most of our efforts will be focused on enhancements and stability improvements of our core services, rather than adding brand new services to the provider. The following list comprises the items most important to the community.
+
+- [Add support for AWS MSK Serverless cluster type](https://github.com/hashicorp/terraform-provider-aws/issues/22058)
+- [VPC Reachability Analyzer / EC2 Network Insights](https://github.com/hashicorp/terraform-provider-aws/issues/16715)
+- [Amazon S3 Storage Lens configuration](https://github.com/hashicorp/terraform-provider-aws/issues/16310)
+- [CodePipeline: ECR as Source Action](https://github.com/hashicorp/terraform-provider-aws/issues/7012)
+- [Resource Identifiers and Tags for VPC Security Group Rules](https://github.com/hashicorp/terraform-provider-aws/issues/20104)
+- [Add support for regex_match_statement to AWS WAF v2 ACL rules](https://github.com/hashicorp/terraform-provider-aws/issues/22452)
+- [Redact Sensitive Variables from Logging](https://github.com/hashicorp/terraform-provider-aws/issues/26029)
+- [Support for RDS Reserved Instances](https://github.com/hashicorp/terraform-provider-aws/issues/8521)
+- [New Feature: Launch AWS Marketplace produccts (AMIs, containers) in linked AWS accounts](https://github.com/hashicorp/terraform-provider-aws/issues/17146)
+- [AWS Inspector2 Enable Service Feature](https://github.com/hashicorp/terraform-provider-aws/issues/22330)
+- [aws_sns_platform_application: support APNS with token-based authentication](https://github.com/hashicorp/terraform-provider-aws/issues/23147)
+- [Cannot use SQS redrive_allow_policy correctly without creating a cycle](https://github.com/hashicorp/terraform-provider-aws/issues/22577)
+- [aws_sns_platform_application: support APNS with token-based authentication](https://github.com/hashicorp/terraform-provider-aws/issues/23147)
+- [dms-vpc-role is not configured properly when creating aws_dms_replication_instance](https://github.com/hashicorp/terraform-provider-aws/issues/11025)
+- [Modify aws_db_instance and delete aws_db_parameter_group breaks](https://github.com/hashicorp/terraform-provider-aws/issues/6448)
+- [Add support for setting default SSM patch baseline](https://github.com/hashicorp/terraform-provider-aws/issues/3342)
+- [Add force_delete to aws_backup_vault resource](https://github.com/hashicorp/terraform-provider-aws/issues/13247)
+- [Support of dedicated IP pool in AWS SES](https://github.com/hashicorp/terraform-provider-aws/issues/10703)
+- [Do not try to delete lambda@edge functions with replicas](https://github.com/hashicorp/terraform-provider-aws/issues/1721)
+- [Terraform seems to ignore "skip_final_snapshot" for rds cluster](https://github.com/hashicorp/terraform-provider-aws/issues/2588)
+- [Cognito User Pool: cannot modify or remove schema items](https://github.com/hashicorp/terraform-provider-aws/issues/21654)
+- [Support for SES domain and email identity default configuration set](https://github.com/hashicorp/terraform-provider-aws/issues/21129)
+
 
 ## Research Topics
 
 Research topics include features, architectural changes, and ideas that we are pursuing in the longer term that may significantly impact the core user experience of the AWS provider. Research topics are discovery only and are not guaranteed to be included in a future release.
 
-### Scaffolding for new resources, datasources and associated tests. 
+### Expanding Framework based Resources
 
-Adding resources, datasources and test files to the provider is a repetitive task which should be automated to ensure consistency and speed up contributor and maintainer workflow. A simple cli tool should be able to generate these files in place, and ensure that any code reference additions required (ie adding to `provider.go`) are performed as part of the process.
+[#25606](https://github.com/hashicorp/terraform-provider-aws/pull/25606) and [#25715](https://github.com/hashicorp/terraform-provider-aws/pull/25715) added the ability for provider contributors/maintainers to implement resources and data sources based on the next generation of the provider SDK, the [terraform-plugin-framework](https://github.com/hashicorp/terraform-plugin-framework). Over the next quarter we will increase our footprint of resources based on the framework, either by adding them as new resources or migrating existing ones. We will also ensure that resources based on the framework have parity with with provider level features, such as default tags. Beginning this migration will give us access to new features and functionality in the framework, enabling an improved experience in the framework based resources.
 
 ## Disclosures
 

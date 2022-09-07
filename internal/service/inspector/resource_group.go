@@ -35,7 +35,7 @@ func resourceResourceGroupCreate(d *schema.ResourceData, meta interface{}) error
 	conn := meta.(*conns.AWSClient).InspectorConn
 
 	req := &inspector.CreateResourceGroupInput{
-		ResourceGroupTags: expandInspectorResourceGroupTags(d.Get("tags").(map[string]interface{})),
+		ResourceGroupTags: expandResourceGroupTags(d.Get("tags").(map[string]interface{})),
 	}
 	log.Printf("[DEBUG] Creating Inspector resource group: %#v", req)
 	resp, err := conn.CreateResourceGroup(req)
@@ -79,7 +79,7 @@ func resourceResourceGroupRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("arn", resourceGroup.Arn)
 
 	//lintignore:AWSR002
-	if err := d.Set("tags", flattenInspectorResourceGroupTags(resourceGroup.Tags)); err != nil {
+	if err := d.Set("tags", flattenResourceGroupTags(resourceGroup.Tags)); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 
@@ -90,7 +90,7 @@ func resourceResourceGroupDelete(d *schema.ResourceData, meta interface{}) error
 	return nil
 }
 
-func expandInspectorResourceGroupTags(m map[string]interface{}) []*inspector.ResourceGroupTag {
+func expandResourceGroupTags(m map[string]interface{}) []*inspector.ResourceGroupTag {
 	var result []*inspector.ResourceGroupTag
 
 	for k, v := range m {
@@ -103,7 +103,7 @@ func expandInspectorResourceGroupTags(m map[string]interface{}) []*inspector.Res
 	return result
 }
 
-func flattenInspectorResourceGroupTags(tags []*inspector.ResourceGroupTag) map[string]interface{} {
+func flattenResourceGroupTags(tags []*inspector.ResourceGroupTag) map[string]interface{} {
 	m := map[string]interface{}{}
 
 	for _, tag := range tags {

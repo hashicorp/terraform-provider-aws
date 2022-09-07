@@ -213,7 +213,7 @@ func resourceIntegrationCreate(d *schema.ResourceData, meta interface{}) error {
 		req.RequestTemplates = flex.ExpandStringMap(v.(map[string]interface{}))
 	}
 	if v, ok := d.GetOk("response_parameters"); ok && v.(*schema.Set).Len() > 0 {
-		req.ResponseParameters = expandApiGateway2IntegrationResponseParameters(v.(*schema.Set).List())
+		req.ResponseParameters = expandIntegrationResponseParameters(v.(*schema.Set).List())
 	}
 	if v, ok := d.GetOk("template_selection_expression"); ok {
 		req.TemplateSelectionExpression = aws.String(v.(string))
@@ -222,13 +222,13 @@ func resourceIntegrationCreate(d *schema.ResourceData, meta interface{}) error {
 		req.TimeoutInMillis = aws.Int64(int64(v.(int)))
 	}
 	if v, ok := d.GetOk("tls_config"); ok {
-		req.TlsConfig = expandApiGateway2TlsConfig(v.([]interface{}))
+		req.TlsConfig = expandTLSConfig(v.([]interface{}))
 	}
 
 	log.Printf("[DEBUG] Creating API Gateway v2 integration: %s", req)
 	resp, err := conn.CreateIntegration(req)
 	if err != nil {
-		return fmt.Errorf("error creating API Gateway v2 integration: %s", err)
+		return fmt.Errorf("creating API Gateway v2 integration: %s", err)
 	}
 
 	d.SetId(aws.StringValue(resp.IntegrationId))
@@ -249,7 +249,7 @@ func resourceIntegrationRead(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 	if err != nil {
-		return fmt.Errorf("error reading API Gateway v2 integration: %s", err)
+		return fmt.Errorf("reading API Gateway v2 integration: %s", err)
 	}
 
 	d.Set("connection_id", resp.ConnectionId)
@@ -266,20 +266,20 @@ func resourceIntegrationRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("payload_format_version", resp.PayloadFormatVersion)
 	err = d.Set("request_parameters", flex.PointersMapToStringList(resp.RequestParameters))
 	if err != nil {
-		return fmt.Errorf("error setting request_parameters: %s", err)
+		return fmt.Errorf("setting request_parameters: %s", err)
 	}
 	err = d.Set("request_templates", flex.PointersMapToStringList(resp.RequestTemplates))
 	if err != nil {
-		return fmt.Errorf("error setting request_templates: %s", err)
+		return fmt.Errorf("setting request_templates: %s", err)
 	}
-	err = d.Set("response_parameters", flattenApiGateway2IntegrationResponseParameters(resp.ResponseParameters))
+	err = d.Set("response_parameters", flattenIntegrationResponseParameters(resp.ResponseParameters))
 	if err != nil {
-		return fmt.Errorf("error setting response_parameters: %s", err)
+		return fmt.Errorf("setting response_parameters: %s", err)
 	}
 	d.Set("template_selection_expression", resp.TemplateSelectionExpression)
 	d.Set("timeout_milliseconds", resp.TimeoutInMillis)
-	if err := d.Set("tls_config", flattenApiGateway2TlsConfig(resp.TlsConfig)); err != nil {
-		return fmt.Errorf("error setting tls_config: %s", err)
+	if err := d.Set("tls_config", flattenTLSConfig(resp.TlsConfig)); err != nil {
+		return fmt.Errorf("setting tls_config: %s", err)
 	}
 
 	return nil
@@ -354,7 +354,7 @@ func resourceIntegrationUpdate(d *schema.ResourceData, meta interface{}) error {
 		ns := n.(*schema.Set)
 		del := os.Difference(ns).List()
 
-		req.ResponseParameters = expandApiGateway2IntegrationResponseParameters(ns.List())
+		req.ResponseParameters = expandIntegrationResponseParameters(ns.List())
 
 		// Parameters are removed by setting the associated value to {}.
 		for _, tfMapRaw := range del {
@@ -379,13 +379,13 @@ func resourceIntegrationUpdate(d *schema.ResourceData, meta interface{}) error {
 		req.TimeoutInMillis = aws.Int64(int64(d.Get("timeout_milliseconds").(int)))
 	}
 	if d.HasChange("tls_config") {
-		req.TlsConfig = expandApiGateway2TlsConfig(d.Get("tls_config").([]interface{}))
+		req.TlsConfig = expandTLSConfig(d.Get("tls_config").([]interface{}))
 	}
 
 	log.Printf("[DEBUG] Updating API Gateway v2 integration: %s", req)
 	_, err := conn.UpdateIntegration(req)
 	if err != nil {
-		return fmt.Errorf("error updating API Gateway v2 integration: %s", err)
+		return fmt.Errorf("updating API Gateway v2 integration: %s", err)
 	}
 
 	return resourceIntegrationRead(d, meta)
@@ -403,7 +403,7 @@ func resourceIntegrationDelete(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 	if err != nil {
-		return fmt.Errorf("error deleting API Gateway v2 integration: %s", err)
+		return fmt.Errorf("deleting API Gateway v2 integration: %s", err)
 	}
 
 	return nil
@@ -412,7 +412,7 @@ func resourceIntegrationDelete(d *schema.ResourceData, meta interface{}) error {
 func resourceIntegrationImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	parts := strings.Split(d.Id(), "/")
 	if len(parts) != 2 {
-		return []*schema.ResourceData{}, fmt.Errorf("Wrong format of resource: %s. Please follow 'api-id/integration-id'", d.Id())
+		return []*schema.ResourceData{}, fmt.Errorf("wrong format of import ID (%s), use: 'api-id/integration-id'", d.Id())
 	}
 
 	apiId := parts[0]
@@ -438,7 +438,7 @@ func resourceIntegrationImport(d *schema.ResourceData, meta interface{}) ([]*sch
 	return []*schema.ResourceData{d}, nil
 }
 
-func expandApiGateway2TlsConfig(vConfig []interface{}) *apigatewayv2.TlsConfigInput {
+func expandTLSConfig(vConfig []interface{}) *apigatewayv2.TlsConfigInput {
 	config := &apigatewayv2.TlsConfigInput{}
 
 	if len(vConfig) == 0 || vConfig[0] == nil {
@@ -453,7 +453,7 @@ func expandApiGateway2TlsConfig(vConfig []interface{}) *apigatewayv2.TlsConfigIn
 	return config
 }
 
-func flattenApiGateway2TlsConfig(config *apigatewayv2.TlsConfig) []interface{} {
+func flattenTLSConfig(config *apigatewayv2.TlsConfig) []interface{} {
 	if config == nil {
 		return []interface{}{}
 	}
@@ -463,7 +463,7 @@ func flattenApiGateway2TlsConfig(config *apigatewayv2.TlsConfig) []interface{} {
 	}}
 }
 
-func expandApiGateway2IntegrationResponseParameters(tfList []interface{}) map[string]map[string]*string {
+func expandIntegrationResponseParameters(tfList []interface{}) map[string]map[string]*string {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -487,7 +487,7 @@ func expandApiGateway2IntegrationResponseParameters(tfList []interface{}) map[st
 	return responseParameters
 }
 
-func flattenApiGateway2IntegrationResponseParameters(responseParameters map[string]map[string]*string) []interface{} {
+func flattenIntegrationResponseParameters(responseParameters map[string]map[string]*string) []interface{} {
 	if len(responseParameters) == 0 {
 		return nil
 	}

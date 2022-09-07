@@ -1,5 +1,5 @@
 ---
-subcategory: "EC2"
+subcategory: "Transit Gateway"
 layout: "aws"
 page_title: "AWS: aws_ec2_transit_gateway_route_table"
 description: |-
@@ -52,9 +52,15 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `arn` - EC2 Transit Gateway Route Table Amazon Resource Name (ARN).
+* `arn` - EC2 Transit Gateway Route Table ARN.
 * `default_association_route_table` - Boolean whether this is the default association route table for the EC2 Transit Gateway
 * `default_propagation_route_table` - Boolean whether this is the default propagation route table for the EC2 Transit Gateway
 * `id` - EC2 Transit Gateway Route Table identifier
 * `transit_gateway_id` - EC2 Transit Gateway identifier
 * `tags` - Key-value tags for the EC2 Transit Gateway Route Table
+
+## Timeouts
+
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+
+- `read` - (Default `20m`)

@@ -106,9 +106,10 @@ func ResourceWebACL() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"allow": allowConfigSchema(),
-									"block": blockConfigSchema(),
-									"count": countConfigSchema(),
+									"allow":   allowConfigSchema(),
+									"block":   blockConfigSchema(),
+									"captcha": captchaConfigSchema(),
+									"count":   countConfigSchema(),
 								},
 							},
 						},
@@ -377,12 +378,12 @@ func webACLRootStatementSchema(level int) *schema.Schema {
 				"geo_match_statement":                   geoMatchStatementSchema(),
 				"ip_set_reference_statement":            ipSetReferenceStatementSchema(),
 				"label_match_statement":                 labelMatchStatementSchema(),
-				"managed_rule_group_statement":          wafv2ManagedRuleGroupStatementSchema(level),
+				"managed_rule_group_statement":          managedRuleGroupStatementSchema(level),
 				"not_statement":                         statementSchema(level),
 				"or_statement":                          statementSchema(level),
-				"rate_based_statement":                  wafv2RateBasedStatementSchema(level),
+				"rate_based_statement":                  rateBasedStatementSchema(level),
 				"regex_pattern_set_reference_statement": regexPatternSetReferenceStatementSchema(),
-				"rule_group_reference_statement":        wafv2RuleGroupReferenceStatementSchema(),
+				"rule_group_reference_statement":        ruleGroupReferenceStatementSchema(),
 				"size_constraint_statement":             sizeConstraintSchema(),
 				"sqli_match_statement":                  sqliMatchStatementSchema(),
 				"xss_match_statement":                   xssMatchStatementSchema(),
@@ -391,20 +392,20 @@ func webACLRootStatementSchema(level int) *schema.Schema {
 	}
 }
 
-func wafv2ManagedRuleGroupStatementSchema(level int) *schema.Schema {
+func managedRuleGroupStatementSchema(level int) *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		Optional: true,
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"excluded_rule": wafv2ExcludedRuleSchema(),
+				"excluded_rule": excludedRuleSchema(),
 				"name": {
 					Type:         schema.TypeString,
 					Required:     true,
 					ValidateFunc: validation.StringLenBetween(1, 128),
 				},
-				"scope_down_statement": wafv2ScopeDownStatementSchema(level - 1),
+				"scope_down_statement": scopeDownStatementSchema(level - 1),
 				"vendor_name": {
 					Type:         schema.TypeString,
 					Required:     true,
@@ -420,7 +421,7 @@ func wafv2ManagedRuleGroupStatementSchema(level int) *schema.Schema {
 	}
 }
 
-func wafv2ExcludedRuleSchema() *schema.Schema {
+func excludedRuleSchema() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		Optional: true,
@@ -436,7 +437,7 @@ func wafv2ExcludedRuleSchema() *schema.Schema {
 	}
 }
 
-func wafv2RateBasedStatementSchema(level int) *schema.Schema {
+func rateBasedStatementSchema(level int) *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		Optional: true,
@@ -456,13 +457,13 @@ func wafv2RateBasedStatementSchema(level int) *schema.Schema {
 					Required:     true,
 					ValidateFunc: validation.IntBetween(100, 2000000000),
 				},
-				"scope_down_statement": wafv2ScopeDownStatementSchema(level - 1),
+				"scope_down_statement": scopeDownStatementSchema(level - 1),
 			},
 		},
 	}
 }
 
-func wafv2ScopeDownStatementSchema(level int) *schema.Schema {
+func scopeDownStatementSchema(level int) *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		Optional: true,
@@ -485,7 +486,7 @@ func wafv2ScopeDownStatementSchema(level int) *schema.Schema {
 	}
 }
 
-func wafv2RuleGroupReferenceStatementSchema() *schema.Schema {
+func ruleGroupReferenceStatementSchema() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		Optional: true,
@@ -497,7 +498,7 @@ func wafv2RuleGroupReferenceStatementSchema() *schema.Schema {
 					Required:     true,
 					ValidateFunc: verify.ValidARN,
 				},
-				"excluded_rule": wafv2ExcludedRuleSchema(),
+				"excluded_rule": excludedRuleSchema(),
 			},
 		},
 	}
@@ -605,7 +606,7 @@ func expandWebACLStatement(m map[string]interface{}) *wafv2.Statement {
 	}
 
 	if v, ok := m["ip_set_reference_statement"]; ok {
-		statement.IPSetReferenceStatement = expandIpSetReferenceStatement(v.([]interface{}))
+		statement.IPSetReferenceStatement = expandIPSetReferenceStatement(v.([]interface{}))
 	}
 
 	if v, ok := m["geo_match_statement"]; ok {
@@ -645,11 +646,11 @@ func expandWebACLStatement(m map[string]interface{}) *wafv2.Statement {
 	}
 
 	if v, ok := m["sqli_match_statement"]; ok {
-		statement.SqliMatchStatement = expandSqliMatchStatement(v.([]interface{}))
+		statement.SqliMatchStatement = expandSQLiMatchStatement(v.([]interface{}))
 	}
 
 	if v, ok := m["xss_match_statement"]; ok {
-		statement.XssMatchStatement = expandXssMatchStatement(v.([]interface{}))
+		statement.XssMatchStatement = expandXSSMatchStatement(v.([]interface{}))
 	}
 
 	return statement
@@ -765,7 +766,7 @@ func flattenWebACLStatement(s *wafv2.Statement) map[string]interface{} {
 	}
 
 	if s.IPSetReferenceStatement != nil {
-		m["ip_set_reference_statement"] = flattenIpSetReferenceStatement(s.IPSetReferenceStatement)
+		m["ip_set_reference_statement"] = flattenIPSetReferenceStatement(s.IPSetReferenceStatement)
 	}
 
 	if s.GeoMatchStatement != nil {
@@ -805,11 +806,11 @@ func flattenWebACLStatement(s *wafv2.Statement) map[string]interface{} {
 	}
 
 	if s.SqliMatchStatement != nil {
-		m["sqli_match_statement"] = flattenSqliMatchStatement(s.SqliMatchStatement)
+		m["sqli_match_statement"] = flattenSQLiMatchStatement(s.SqliMatchStatement)
 	}
 
 	if s.XssMatchStatement != nil {
-		m["xss_match_statement"] = flattenXssMatchStatement(s.XssMatchStatement)
+		m["xss_match_statement"] = flattenXSSMatchStatement(s.XssMatchStatement)
 	}
 
 	return m

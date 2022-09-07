@@ -11,6 +11,12 @@ func ResourceGangliaLayer() *schema.Resource {
 		DefaultLayerName: "Ganglia",
 
 		Attributes: map[string]*opsworksLayerTypeAttribute{
+			"password": {
+				AttrName:  opsworks.LayerAttributesKeysGangliaPassword,
+				Type:      schema.TypeString,
+				Required:  true,
+				WriteOnly: true,
+			},
 			"url": {
 				AttrName: opsworks.LayerAttributesKeysGangliaUrl,
 				Type:     schema.TypeString,
@@ -20,12 +26,6 @@ func ResourceGangliaLayer() *schema.Resource {
 				AttrName: opsworks.LayerAttributesKeysGangliaUser,
 				Type:     schema.TypeString,
 				Default:  "opsworks",
-			},
-			"password": {
-				AttrName:  opsworks.LayerAttributesKeysGangliaPassword,
-				Type:      schema.TypeString,
-				Required:  true,
-				WriteOnly: true,
 			},
 		},
 	}

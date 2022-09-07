@@ -1,6 +1,7 @@
 package ec2
 
 import (
+	"errors"
 	"fmt"
 	"log"
 
@@ -33,6 +34,10 @@ func ResourceVPCPeeringConnectionOptions() *schema.Resource {
 
 func resourceVPCPeeringConnectionOptionsCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
+
+	if peeringConnectionOptionsAllowsClassicLink(d) {
+		return errors.New(`with the retirement of EC2-Classic no new VPC Peering Connection Options can be created with ClassicLink options enabled`)
+	}
 
 	vpcPeeringConnectionID := d.Get("vpc_peering_connection_id").(string)
 	vpcPeeringConnection, err := FindVPCPeeringConnectionByID(conn, vpcPeeringConnectionID)
@@ -68,7 +73,7 @@ func resourceVPCPeeringConnectionOptionsRead(d *schema.ResourceData, meta interf
 	d.Set("vpc_peering_connection_id", vpcPeeringConnection.VpcPeeringConnectionId)
 
 	if vpcPeeringConnection.AccepterVpcInfo.PeeringOptions != nil {
-		if err := d.Set("accepter", []interface{}{flattenVpcPeeringConnectionOptionsDescription(vpcPeeringConnection.AccepterVpcInfo.PeeringOptions)}); err != nil {
+		if err := d.Set("accepter", []interface{}{flattenVPCPeeringConnectionOptionsDescription(vpcPeeringConnection.AccepterVpcInfo.PeeringOptions)}); err != nil {
 			return fmt.Errorf("error setting accepter: %w", err)
 		}
 	} else {
@@ -76,7 +81,7 @@ func resourceVPCPeeringConnectionOptionsRead(d *schema.ResourceData, meta interf
 	}
 
 	if vpcPeeringConnection.RequesterVpcInfo.PeeringOptions != nil {
-		if err := d.Set("requester", []interface{}{flattenVpcPeeringConnectionOptionsDescription(vpcPeeringConnection.RequesterVpcInfo.PeeringOptions)}); err != nil {
+		if err := d.Set("requester", []interface{}{flattenVPCPeeringConnectionOptionsDescription(vpcPeeringConnection.RequesterVpcInfo.PeeringOptions)}); err != nil {
 			return fmt.Errorf("error setting requester: %w", err)
 		}
 	} else {

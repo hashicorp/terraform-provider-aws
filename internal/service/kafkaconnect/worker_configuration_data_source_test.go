@@ -12,20 +12,17 @@ import (
 
 func TestAccKafkaConnectWorkerConfigurationDataSource_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	propertiesFileContent := "key.converter=hello\nvalue.converter=world"
-
 	resourceName := "aws_mskconnect_worker_configuration.test"
 	dataSourceName := "data.aws_mskconnect_worker_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(kafkaconnect.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, kafkaconnect.EndpointsID),
-		CheckDestroy: nil,
-		Providers:    acctest.Providers,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(kafkaconnect.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, kafkaconnect.EndpointsID),
+		CheckDestroy:             nil,
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWorkerConfigurationDataSourceConfigBasic(rName, propertiesFileContent),
+				Config: testAccWorkerConfigurationDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "description", dataSourceName, "description"),
@@ -38,15 +35,19 @@ func TestAccKafkaConnectWorkerConfigurationDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccWorkerConfigurationDataSourceConfigBasic(name, content string) string {
+func testAccWorkerConfigurationDataSourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_mskconnect_worker_configuration" "test" {
-  name                    = %[1]q
-  properties_file_content = %[2]q
+  name = %[1]q
+
+  properties_file_content = <<EOF
+key.converter=org.apache.kafka.connect.storage.StringConverter
+value.converter=org.apache.kafka.connect.storage.StringConverter
+EOF
 }
 
 data "aws_mskconnect_worker_configuration" "test" {
   name = aws_mskconnect_worker_configuration.test.name
 }
-`, name, content)
+`, rName)
 }

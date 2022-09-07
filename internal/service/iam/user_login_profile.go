@@ -151,12 +151,12 @@ func resourceUserLoginProfileCreate(d *schema.ResourceData, meta interface{}) er
 	d.SetId(aws.StringValue(createResp.LoginProfile.UserName))
 
 	if v, ok := d.GetOk("pgp_key"); ok {
-		encryptionKey, err := RetrieveGPGKey(v.(string))
+		encryptionKey, err := retrieveGPGKey(v.(string))
 		if err != nil {
 			return fmt.Errorf("error retrieving GPG Key during IAM User Login Profile (%s) creation: %w", username, err)
 		}
 
-		fingerprint, encrypted, err := EncryptValue(encryptionKey, initialPassword, "Password")
+		fingerprint, encrypted, err := encryptValue(encryptionKey, initialPassword, "Password")
 		if err != nil {
 			return fmt.Errorf("error encrypting password during IAM User Login Profile (%s) creation: %w", username, err)
 		}
@@ -179,7 +179,7 @@ func resourceUserLoginProfileRead(d *schema.ResourceData, meta interface{}) erro
 
 	var output *iam.GetLoginProfileOutput
 
-	err := resource.Retry(PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
 		var err error
 
 		output, err = conn.GetLoginProfile(input)
@@ -230,7 +230,7 @@ func resourceUserLoginProfileDelete(d *schema.ResourceData, meta interface{}) er
 
 	log.Printf("[DEBUG] Deleting IAM User Login Profile (%s): %s", d.Id(), input)
 	// Handle IAM eventual consistency
-	err := resource.Retry(PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
 		_, err := conn.DeleteLoginProfile(input)
 
 		if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {

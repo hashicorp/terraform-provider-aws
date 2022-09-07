@@ -94,17 +94,15 @@ func resourceArchiveRead(d *schema.ResourceData, meta interface{}) error {
 
 	out, err := conn.DescribeArchive(input)
 
-	if tfawserr.ErrCodeEquals(err, eventbridge.ErrCodeResourceNotFoundException) {
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, eventbridge.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] EventBridge archive (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("Error reading EventBridge archive: %w", err)
+		return fmt.Errorf("Error reading EventBridge archive (%s): %w", d.Id(), err)
 	}
-
-	log.Printf("[DEBUG] Found Archive: #{*out}")
 
 	d.Set("name", out.ArchiveName)
 	d.Set("description", out.Description)

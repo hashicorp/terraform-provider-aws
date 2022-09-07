@@ -1,5 +1,5 @@
 ---
-subcategory: "Route53"
+subcategory: "Route 53"
 layout: "aws"
 page_title: "AWS: aws_route53_key_signing_key"
 description: |-

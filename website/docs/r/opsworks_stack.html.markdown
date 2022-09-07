@@ -60,12 +60,12 @@ The following arguments are supported:
 * `hostname_theme` - (Optional) Keyword representing the naming scheme that will be used for instance hostnames
   within this stack.
 * `manage_berkshelf` - (Optional) Boolean value controlling whether Opsworks will run Berkshelf for this stack.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `use_custom_cookbooks` - (Optional) Boolean value controlling whether the custom cookbook settings are
   enabled.
 * `use_opsworks_security_groups` - (Optional) Boolean value controlling whether the standard OpsWorks
   security groups apply to created instances.
-* `vpc_id` - (Optional) The id of the VPC that this stack belongs to.
+* `vpc_id` - (Optional) ID of the VPC that this stack belongs to.
 * `custom_json` - (Optional) Custom JSON attributes to apply to the entire stack.
 
 The `custom_cookbooks_source` block supports the following arguments:
@@ -82,7 +82,7 @@ The `custom_cookbooks_source` block supports the following arguments:
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - The id of the stack.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 

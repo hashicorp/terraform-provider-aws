@@ -1,5 +1,5 @@
 ---
-subcategory: "Cognito"
+subcategory: "Cognito IDP (Identity Provider)"
 layout: "aws"
 page_title: "AWS: aws_cognito_user_pool_signing_certificate"
 description: |-
@@ -20,8 +20,8 @@ data "aws_cognito_user_pool_signing_certificate" "sc" {
 
 ## Argument Reference
 
-* `user_pool_id` - (required) The Cognito user pool ID.
+* `user_pool_id` - (Required) Cognito user pool ID.
 
 ## Attributes Reference
 
-* `certificate` - The certificate string
+* `certificate` - Certificate string

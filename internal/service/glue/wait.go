@@ -154,11 +154,11 @@ func waitTriggerDeleted(conn *glue.Glue, triggerName string) (*glue.GetTriggerOu
 	return nil, err
 }
 
-func waitGlueDevEndpointCreated(conn *glue.Glue, name string) (*glue.DevEndpoint, error) {
+func waitDevEndpointCreated(conn *glue.Glue, name string) (*glue.DevEndpoint, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{devEndpointStatusProvisioning},
 		Target:  []string{devEndpointStatusReady},
-		Refresh: statusGlueDevEndpoint(conn, name),
+		Refresh: statusDevEndpoint(conn, name),
 		Timeout: 15 * time.Minute,
 	}
 
@@ -175,11 +175,11 @@ func waitGlueDevEndpointCreated(conn *glue.Glue, name string) (*glue.DevEndpoint
 	return nil, err
 }
 
-func waitGlueDevEndpointDeleted(conn *glue.Glue, name string) (*glue.DevEndpoint, error) {
+func waitDevEndpointDeleted(conn *glue.Glue, name string) (*glue.DevEndpoint, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{devEndpointStatusTerminating},
 		Target:  []string{},
-		Refresh: statusGlueDevEndpoint(conn, name),
+		Refresh: statusDevEndpoint(conn, name),
 		Timeout: 15 * time.Minute,
 	}
 
@@ -196,11 +196,11 @@ func waitGlueDevEndpointDeleted(conn *glue.Glue, name string) (*glue.DevEndpoint
 	return nil, err
 }
 
-func waitGluePartitionIndexCreated(conn *glue.Glue, id string, timeout time.Duration) (*glue.PartitionIndexDescriptor, error) {
+func waitPartitionIndexCreated(conn *glue.Glue, id string, timeout time.Duration) (*glue.PartitionIndexDescriptor, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{glue.PartitionIndexStatusCreating},
 		Target:  []string{glue.PartitionIndexStatusActive},
-		Refresh: statusGluePartitionIndex(conn, id),
+		Refresh: statusPartitionIndex(conn, id),
 		Timeout: timeout,
 	}
 
@@ -213,11 +213,11 @@ func waitGluePartitionIndexCreated(conn *glue.Glue, id string, timeout time.Dura
 	return nil, err
 }
 
-func waitGluePartitionIndexDeleted(conn *glue.Glue, id string, timeout time.Duration) (*glue.PartitionIndexDescriptor, error) {
+func waitPartitionIndexDeleted(conn *glue.Glue, id string, timeout time.Duration) (*glue.PartitionIndexDescriptor, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{glue.PartitionIndexStatusDeleting},
 		Target:  []string{},
-		Refresh: statusGluePartitionIndex(conn, id),
+		Refresh: statusPartitionIndex(conn, id),
 		Timeout: timeout,
 	}
 

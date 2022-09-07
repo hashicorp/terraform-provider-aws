@@ -5,8 +5,8 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/connect"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -15,22 +15,6 @@ import (
 	tfconnect "github.com/hashicorp/terraform-provider-aws/internal/service/connect"
 )
 
-//Serialized acceptance tests due to Connect account limits (max 2 parallel tests)
-func TestAccConnectContactFlow_serial(t *testing.T) {
-	testCases := map[string]func(t *testing.T){
-		"basic":      testAccContactFlow_basic,
-		"filename":   testAccContactFlow_filename,
-		"disappears": testAccContactFlow_disappears,
-	}
-
-	for name, tc := range testCases {
-		tc := tc
-		t.Run(name, func(t *testing.T) {
-			tc(t)
-		})
-	}
-}
-
 func testAccContactFlow_basic(t *testing.T) {
 	var v connect.DescribeContactFlowOutput
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
@@ -38,13 +22,13 @@ func testAccContactFlow_basic(t *testing.T) {
 	resourceName := "aws_connect_contact_flow.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, connect.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckContactFlowDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckContactFlowDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccContactFlowBasicConfig(rName, rName2, "Created"),
+				Config: testAccContactFlowConfig_basic(rName, rName2, "Created"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContactFlowExists(resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
@@ -63,7 +47,7 @@ func testAccContactFlow_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccContactFlowBasicConfig(rName, rName2, "Updated"),
+				Config: testAccContactFlowConfig_basic(rName, rName2, "Updated"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckContactFlowExists(resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
@@ -87,10 +71,10 @@ func testAccContactFlow_filename(t *testing.T) {
 	resourceName := "aws_connect_contact_flow.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, connect.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckContactFlowDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckContactFlowDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccContactFlowConfig_filename(rName, rName2, "Created", "test-fixtures/connect_contact_flow.json"),
@@ -139,13 +123,13 @@ func testAccContactFlow_disappears(t *testing.T) {
 	resourceName := "aws_connect_contact_flow.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, connect.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckContactFlowDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckContactFlowDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccContactFlowBasicConfig(rName, rName2, "Disappear"),
+				Config: testAccContactFlowConfig_basic(rName, rName2, "Disappear"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContactFlowExists(resourceName, &v),
 					acctest.CheckResourceDisappears(acctest.Provider, tfconnect.ResourceContactFlow(), resourceName),
@@ -209,19 +193,21 @@ func testAccCheckContactFlowDestroy(s *terraform.State) error {
 			InstanceId:    aws.String(instanceID),
 		}
 
-		_, experr := conn.DescribeContactFlow(params)
-		// Verify the error is what we want
-		if experr != nil {
-			if awsErr, ok := experr.(awserr.Error); ok && awsErr.Code() == "ResourceNotFoundException" {
-				continue
-			}
-			return experr
+		_, err = conn.DescribeContactFlow(params)
+
+		if tfawserr.ErrCodeEquals(err, connect.ErrCodeResourceNotFoundException) {
+			continue
+		}
+
+		if err != nil {
+			return err
 		}
 	}
+
 	return nil
 }
 
-func testAccContactFlowBaseConfig(rName string) string {
+func testAccContactFlowConfig_base(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_connect_instance" "test" {
   identity_management_type = "CONNECT_MANAGED"
@@ -232,9 +218,9 @@ resource "aws_connect_instance" "test" {
 `, rName)
 }
 
-func testAccContactFlowBasicConfig(rName, rName2, label string) string {
+func testAccContactFlowConfig_basic(rName, rName2, label string) string {
 	return acctest.ConfigCompose(
-		testAccContactFlowBaseConfig(rName),
+		testAccContactFlowConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_connect_contact_flow" "test" {
   instance_id = aws_connect_instance.test.id
@@ -245,7 +231,7 @@ resource "aws_connect_contact_flow" "test" {
     {
 		"Version": "2019-10-30",
 		"StartAction": "12345678-1234-1234-1234-123456789012",
-		"Actions": [ 
+		"Actions": [
 			{
 				"Identifier": "12345678-1234-1234-1234-123456789012",
 				"Type": "MessageParticipant",
@@ -277,7 +263,7 @@ resource "aws_connect_contact_flow" "test" {
 
 func testAccContactFlowConfig_filename(rName, rName2 string, label string, filepath string) string {
 	return acctest.ConfigCompose(
-		testAccContactFlowBaseConfig(rName),
+		testAccContactFlowConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_connect_contact_flow" "test" {
   instance_id  = aws_connect_instance.test.id

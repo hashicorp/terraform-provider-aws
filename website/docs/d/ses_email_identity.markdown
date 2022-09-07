@@ -1,5 +1,5 @@
 ---
-subcategory: "SES"
+subcategory: "SES (Simple Email)"
 layout: "aws"
 page_title: "AWS: aws_ses_email_identity"
 description: |-
@@ -23,4 +23,4 @@ data "aws_ses_email_identity" "example" {
 The following attributes are exported:
 
 * `arn` -  The ARN of the email identity.
-* `email` - The email identity.
+* `email` - Email identity.

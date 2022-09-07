@@ -79,7 +79,7 @@ func resourceGroupRead(d *schema.ResourceData, meta interface{}) error {
 
 	var getResp *iam.GetGroupOutput
 
-	err := resource.Retry(PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
 		var err error
 
 		getResp, err = conn.GetGroup(request)

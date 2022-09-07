@@ -84,3 +84,28 @@ func FindUserByServerIDAndUserName(conn *transfer.Transfer, serverID, userName s
 
 	return output.User, nil
 }
+
+func FindWorkflowByID(conn *transfer.Transfer, id string) (*transfer.DescribedWorkflow, error) {
+	input := &transfer.DescribeWorkflowInput{
+		WorkflowId: aws.String(id),
+	}
+
+	output, err := conn.DescribeWorkflow(input)
+
+	if tfawserr.ErrCodeEquals(err, transfer.ErrCodeResourceNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.Workflow == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.Workflow, nil
+}

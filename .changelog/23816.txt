@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_s3_bucket: Update `acceleration_status` parameter to be configurable. Please refer to the documentation for details on drift detection and potential conflicts when configuring this parameter with the standalone `aws_s3_bucket_accelerate_configuration` resource.
+```

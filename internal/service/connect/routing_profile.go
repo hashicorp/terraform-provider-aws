@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceRoutingProfile() *schema.Resource {
@@ -27,6 +28,7 @@ func ResourceRoutingProfile() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
+		CustomizeDiff: verify.SetTagsDiff,
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
@@ -235,7 +237,7 @@ func resourceRoutingProfileRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("routing_profile_id", routingProfile.RoutingProfileId)
 
 	// getting the routing profile queues uses a separate API: ListRoutingProfileQueues
-	queueConfigs, err := getConnectRoutingProfileQueueConfigs(ctx, conn, instanceID, routingProfileID)
+	queueConfigs, err := getRoutingProfileQueueConfigs(ctx, conn, instanceID, routingProfileID)
 
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("error finding Connect Routing Profile Queue Configs Summary by Routing Profile ID (%s): %w", routingProfileID, err))
@@ -360,7 +362,7 @@ func resourceRoutingProfileUpdate(ctx context.Context, d *schema.ResourceData, m
 	// updates to tags
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return diag.FromErr(fmt.Errorf("error updating tags: %w", err))
 		}
 	}
@@ -468,7 +470,7 @@ func expandRoutingProfileQueueReferences(queueConfigs []interface{}) []*connect.
 	return queueReferencesExpanded
 }
 
-func getConnectRoutingProfileQueueConfigs(ctx context.Context, conn *connect.Connect, instanceID, routingProfileID string) ([]interface{}, error) {
+func getRoutingProfileQueueConfigs(ctx context.Context, conn *connect.Connect, instanceID, routingProfileID string) ([]interface{}, error) {
 	queueConfigsList := []interface{}{}
 
 	input := &connect.ListRoutingProfileQueuesInput{

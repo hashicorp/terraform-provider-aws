@@ -1,5 +1,5 @@
 ---
-subcategory: "Transfer"
+subcategory: "Transfer Family"
 layout: "aws"
 page_title: "AWS: aws_transfer_access"
 description: |-

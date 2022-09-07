@@ -142,7 +142,7 @@ func resourceGlobalNetworkUpdate(ctx context.Context, d *schema.ResourceData, me
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTagsWithContext(ctx, conn, d.Get("arn").(string), o, n); err != nil {
 			return diag.Errorf("error updating Network Manager Global Network (%s) tags: %s", d.Id(), err)
 		}
 	}

@@ -24,12 +24,12 @@ func TestAccAppStreamFleetStackAssociation_basic(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckHasIAMRole(t, "AmazonAppStreamServiceAccess")
 		},
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckFleetStackAssociationDestroy,
-		ErrorCheck:        acctest.ErrorCheck(t, appstream.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFleetStackAssociationDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, appstream.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFleetStackAssociationConfig(rName),
+				Config: testAccFleetStackAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetStackAssociationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "fleet_name", rName),
@@ -54,12 +54,12 @@ func TestAccAppStreamFleetStackAssociation_disappears(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckHasIAMRole(t, "AmazonAppStreamServiceAccess")
 		},
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckFleetStackAssociationDestroy,
-		ErrorCheck:        acctest.ErrorCheck(t, appstream.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFleetStackAssociationDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, appstream.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFleetStackAssociationConfig(rName),
+				Config: testAccFleetStackAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetStackAssociationExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfappstream.ResourceFleetStackAssociation(), resourceName),
@@ -84,17 +84,13 @@ func testAccCheckFleetStackAssociationExists(resourceName string) resource.TestC
 			return fmt.Errorf("error decoding AppStream Fleet Stack Association ID (%s): %w", rs.Primary.ID, err)
 		}
 
-		err = tfappstream.FindFleetStackAssociation(context.TODO(), conn, fleetName, stackName)
+		err = tfappstream.FindFleetStackAssociation(context.Background(), conn, fleetName, stackName)
 
 		if tfresource.NotFound(err) {
 			return fmt.Errorf("AppStream Fleet Stack Association %q does not exist", rs.Primary.ID)
 		}
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 
@@ -111,7 +107,7 @@ func testAccCheckFleetStackAssociationDestroy(s *terraform.State) error {
 			return fmt.Errorf("error decoding AppStream Fleet Stack Association ID (%s): %w", rs.Primary.ID, err)
 		}
 
-		err = tfappstream.FindFleetStackAssociation(context.TODO(), conn, fleetName, stackName)
+		err = tfappstream.FindFleetStackAssociation(context.Background(), conn, fleetName, stackName)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -127,7 +123,7 @@ func testAccCheckFleetStackAssociationDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccFleetStackAssociationConfig(name string) string {
+func testAccFleetStackAssociationConfig_basic(name string) string {
 	// "Amazon-AppStream2-Sample-Image-02-04-2019" is not available in GovCloud
 	return fmt.Sprintf(`
 resource "aws_appstream_fleet" "test" {

@@ -80,6 +80,10 @@ func expandRuleAction(l []interface{}) *wafv2.RuleAction {
 		action.Block = expandBlockAction(v.([]interface{}))
 	}
 
+	if v, ok := m["captcha"]; ok && len(v.([]interface{})) > 0 {
+		action.Captcha = expandCaptchaAction(v.([]interface{}))
+	}
+
 	if v, ok := m["count"]; ok && len(v.([]interface{})) > 0 {
 		action.Count = expandCountAction(v.([]interface{}))
 	}
@@ -89,25 +93,6 @@ func expandRuleAction(l []interface{}) *wafv2.RuleAction {
 
 func expandAllowAction(l []interface{}) *wafv2.AllowAction {
 	action := &wafv2.AllowAction{}
-
-	if len(l) == 0 || l[0] == nil {
-		return action
-	}
-
-	m, ok := l[0].(map[string]interface{})
-	if !ok {
-		return action
-	}
-
-	if v, ok := m["custom_request_handling"].([]interface{}); ok && len(v) > 0 {
-		action.CustomRequestHandling = expandCustomRequestHandling(v)
-	}
-
-	return action
-}
-
-func expandCountAction(l []interface{}) *wafv2.CountAction {
-	action := &wafv2.CountAction{}
 
 	if len(l) == 0 || l[0] == nil {
 		return action
@@ -139,6 +124,44 @@ func expandBlockAction(l []interface{}) *wafv2.BlockAction {
 
 	if v, ok := m["custom_response"].([]interface{}); ok && len(v) > 0 {
 		action.CustomResponse = expandCustomResponse(v)
+	}
+
+	return action
+}
+
+func expandCaptchaAction(l []interface{}) *wafv2.CaptchaAction {
+	action := &wafv2.CaptchaAction{}
+
+	if len(l) == 0 || l[0] == nil {
+		return action
+	}
+
+	m, ok := l[0].(map[string]interface{})
+	if !ok {
+		return action
+	}
+
+	if v, ok := m["custom_request_handling"].([]interface{}); ok && len(v) > 0 {
+		action.CustomRequestHandling = expandCustomRequestHandling(v)
+	}
+
+	return action
+}
+
+func expandCountAction(l []interface{}) *wafv2.CountAction {
+	action := &wafv2.CountAction{}
+
+	if len(l) == 0 || l[0] == nil {
+		return action
+	}
+
+	m, ok := l[0].(map[string]interface{})
+	if !ok {
+		return action
+	}
+
+	if v, ok := m["custom_request_handling"].([]interface{}); ok && len(v) > 0 {
+		action.CustomRequestHandling = expandCustomRequestHandling(v)
 	}
 
 	return action
@@ -291,7 +314,7 @@ func expandStatement(m map[string]interface{}) *wafv2.Statement {
 	}
 
 	if v, ok := m["ip_set_reference_statement"]; ok {
-		statement.IPSetReferenceStatement = expandIpSetReferenceStatement(v.([]interface{}))
+		statement.IPSetReferenceStatement = expandIPSetReferenceStatement(v.([]interface{}))
 	}
 
 	if v, ok := m["geo_match_statement"]; ok {
@@ -319,11 +342,11 @@ func expandStatement(m map[string]interface{}) *wafv2.Statement {
 	}
 
 	if v, ok := m["sqli_match_statement"]; ok {
-		statement.SqliMatchStatement = expandSqliMatchStatement(v.([]interface{}))
+		statement.SqliMatchStatement = expandSQLiMatchStatement(v.([]interface{}))
 	}
 
 	if v, ok := m["xss_match_statement"]; ok {
-		statement.XssMatchStatement = expandXssMatchStatement(v.([]interface{}))
+		statement.XssMatchStatement = expandXSSMatchStatement(v.([]interface{}))
 	}
 
 	return statement
@@ -370,6 +393,14 @@ func expandFieldToMatch(l []interface{}) *wafv2.FieldToMatch {
 
 	if v, ok := m["body"]; ok && len(v.([]interface{})) > 0 {
 		f.Body = &wafv2.Body{}
+	}
+
+	if v, ok := m["cookies"]; ok && len(v.([]interface{})) > 0 {
+		f.Cookies = expandCookies(m["cookies"].([]interface{}))
+	}
+
+	if v, ok := m["json_body"]; ok && len(v.([]interface{})) > 0 {
+		f.JsonBody = expandJSONBody(v.([]interface{}))
 	}
 
 	if v, ok := m["method"]; ok && len(v.([]interface{})) > 0 {
@@ -420,6 +451,87 @@ func expandIPSetForwardedIPConfig(l []interface{}) *wafv2.IPSetForwardedIPConfig
 		HeaderName:       aws.String(m["header_name"].(string)),
 		Position:         aws.String(m["position"].(string)),
 	}
+}
+
+func expandCookies(l []interface{}) *wafv2.Cookies {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	cookies := &wafv2.Cookies{
+		MatchScope:       aws.String(m["match_scope"].(string)),
+		OversizeHandling: aws.String(m["oversize_handling"].(string)),
+	}
+
+	if v, ok := m["match_pattern"]; ok && len(v.([]interface{})) > 0 {
+		cookies.MatchPattern = expandCookieMatchPattern(v.([]interface{}))
+	}
+
+	return cookies
+}
+
+func expandCookieMatchPattern(l []interface{}) *wafv2.CookieMatchPattern {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+	CookieMatchPattern := &wafv2.CookieMatchPattern{}
+
+	if v, ok := m["included_cookies"]; ok && len(v.([]interface{})) > 0 {
+		CookieMatchPattern.IncludedCookies = flex.ExpandStringList(v.([]interface{}))
+	}
+
+	if v, ok := m["excluded_cookies"]; ok && len(v.([]interface{})) > 0 {
+		CookieMatchPattern.ExcludedCookies = flex.ExpandStringList(v.([]interface{}))
+	}
+
+	if v, ok := m["all"].([]interface{}); ok && len(v) > 0 {
+		CookieMatchPattern.All = &wafv2.All{}
+	}
+
+	return CookieMatchPattern
+}
+
+func expandJSONBody(l []interface{}) *wafv2.JsonBody {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	jsonBody := &wafv2.JsonBody{
+		MatchScope:       aws.String(m["match_scope"].(string)),
+		OversizeHandling: aws.String(m["oversize_handling"].(string)),
+		MatchPattern:     expandJSONMatchPattern(m["match_pattern"].([]interface{})),
+	}
+
+	if v, ok := m["invalid_fallback_behavior"].(string); ok && v != "" {
+		jsonBody.InvalidFallbackBehavior = aws.String(v)
+	}
+
+	return jsonBody
+}
+
+func expandJSONMatchPattern(l []interface{}) *wafv2.JsonMatchPattern {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+	jsonMatchPattern := &wafv2.JsonMatchPattern{}
+
+	if v, ok := m["all"].([]interface{}); ok && len(v) > 0 {
+		jsonMatchPattern.All = &wafv2.All{}
+	}
+
+	if v, ok := m["included_paths"]; ok && len(v.([]interface{})) > 0 {
+		jsonMatchPattern.IncludedPaths = flex.ExpandStringList(v.([]interface{}))
+	}
+
+	return jsonMatchPattern
 }
 
 func expandSingleHeader(l []interface{}) *wafv2.SingleHeader {
@@ -474,7 +586,7 @@ func expandTextTransformation(m map[string]interface{}) *wafv2.TextTransformatio
 	}
 }
 
-func expandIpSetReferenceStatement(l []interface{}) *wafv2.IPSetReferenceStatement {
+func expandIPSetReferenceStatement(l []interface{}) *wafv2.IPSetReferenceStatement {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -585,7 +697,7 @@ func expandSizeConstraintStatement(l []interface{}) *wafv2.SizeConstraintStateme
 	}
 }
 
-func expandSqliMatchStatement(l []interface{}) *wafv2.SqliMatchStatement {
+func expandSQLiMatchStatement(l []interface{}) *wafv2.SqliMatchStatement {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -598,7 +710,7 @@ func expandSqliMatchStatement(l []interface{}) *wafv2.SqliMatchStatement {
 	}
 }
 
-func expandXssMatchStatement(l []interface{}) *wafv2.XssMatchStatement {
+func expandXSSMatchStatement(l []interface{}) *wafv2.XssMatchStatement {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -642,6 +754,10 @@ func flattenRuleAction(a *wafv2.RuleAction) interface{} {
 		m["block"] = flattenBlock(a.Block)
 	}
 
+	if a.Captcha != nil {
+		m["captcha"] = flattenCaptcha(a.Captcha)
+	}
+
 	if a.Count != nil {
 		m["count"] = flattenCount(a.Count)
 	}
@@ -671,6 +787,20 @@ func flattenBlock(a *wafv2.BlockAction) []interface{} {
 
 	if a.CustomResponse != nil {
 		m["custom_response"] = flattenCustomResponse(a.CustomResponse)
+	}
+
+	return []interface{}{m}
+}
+
+func flattenCaptcha(a *wafv2.CaptchaAction) []interface{} {
+	if a == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{}
+
+	if a.CustomRequestHandling != nil {
+		m["custom_request_handling"] = flattenCustomRequestHandling(a.CustomRequestHandling)
 	}
 
 	return []interface{}{m}
@@ -807,7 +937,7 @@ func flattenStatement(s *wafv2.Statement) map[string]interface{} {
 	}
 
 	if s.IPSetReferenceStatement != nil {
-		m["ip_set_reference_statement"] = flattenIpSetReferenceStatement(s.IPSetReferenceStatement)
+		m["ip_set_reference_statement"] = flattenIPSetReferenceStatement(s.IPSetReferenceStatement)
 	}
 
 	if s.GeoMatchStatement != nil {
@@ -835,11 +965,11 @@ func flattenStatement(s *wafv2.Statement) map[string]interface{} {
 	}
 
 	if s.SqliMatchStatement != nil {
-		m["sqli_match_statement"] = flattenSqliMatchStatement(s.SqliMatchStatement)
+		m["sqli_match_statement"] = flattenSQLiMatchStatement(s.SqliMatchStatement)
 	}
 
 	if s.XssMatchStatement != nil {
-		m["xss_match_statement"] = flattenXssMatchStatement(s.XssMatchStatement)
+		m["xss_match_statement"] = flattenXSSMatchStatement(s.XssMatchStatement)
 	}
 
 	return m
@@ -885,6 +1015,14 @@ func flattenFieldToMatch(f *wafv2.FieldToMatch) interface{} {
 
 	if f.Body != nil {
 		m["body"] = make([]map[string]interface{}, 1)
+	}
+
+	if f.Cookies != nil {
+		m["cookies"] = flattenCookies(f.Cookies)
+	}
+
+	if f.JsonBody != nil {
+		m["json_body"] = flattenJSONBody(f.JsonBody)
 	}
 
 	if f.Method != nil {
@@ -937,6 +1075,68 @@ func flattenIPSetForwardedIPConfig(i *wafv2.IPSetForwardedIPConfig) interface{} 
 	return []interface{}{m}
 }
 
+func flattenCookies(c *wafv2.Cookies) interface{} {
+	if c == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"match_scope":       aws.StringValue(c.MatchScope),
+		"oversize_handling": aws.StringValue(c.OversizeHandling),
+		"match_pattern":     flattenCookiesMatchPattern(c.MatchPattern),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenCookiesMatchPattern(c *wafv2.CookieMatchPattern) interface{} {
+	if c == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"included_cookies": aws.StringValueSlice(c.IncludedCookies),
+		"excluded_cookies": aws.StringValueSlice(c.ExcludedCookies),
+	}
+
+	if c.All != nil {
+		m["all"] = make([]map[string]interface{}, 1)
+	}
+
+	return []interface{}{m}
+}
+
+func flattenJSONBody(b *wafv2.JsonBody) interface{} {
+	if b == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"invalid_fallback_behavior": aws.StringValue(b.InvalidFallbackBehavior),
+		"match_pattern":             flattenJSONMatchPattern(b.MatchPattern),
+		"match_scope":               aws.StringValue(b.MatchScope),
+		"oversize_handling":         aws.StringValue(b.OversizeHandling),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenJSONMatchPattern(p *wafv2.JsonMatchPattern) []interface{} {
+	if p == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"included_paths": flex.FlattenStringList(p.IncludedPaths),
+	}
+
+	if p.All != nil {
+		m["all"] = make([]map[string]interface{}, 1)
+	}
+
+	return []interface{}{m}
+}
+
 func flattenSingleHeader(s *wafv2.SingleHeader) interface{} {
 	if s == nil {
 		return []interface{}{}
@@ -972,7 +1172,7 @@ func flattenTextTransformations(l []*wafv2.TextTransformation) []interface{} {
 	return out
 }
 
-func flattenIpSetReferenceStatement(i *wafv2.IPSetReferenceStatement) interface{} {
+func flattenIPSetReferenceStatement(i *wafv2.IPSetReferenceStatement) interface{} {
 	if i == nil {
 		return []interface{}{}
 	}
@@ -1064,7 +1264,7 @@ func flattenSizeConstraintStatement(s *wafv2.SizeConstraintStatement) interface{
 	return []interface{}{m}
 }
 
-func flattenSqliMatchStatement(s *wafv2.SqliMatchStatement) interface{} {
+func flattenSQLiMatchStatement(s *wafv2.SqliMatchStatement) interface{} {
 	if s == nil {
 		return []interface{}{}
 	}
@@ -1077,7 +1277,7 @@ func flattenSqliMatchStatement(s *wafv2.SqliMatchStatement) interface{} {
 	return []interface{}{m}
 }
 
-func flattenXssMatchStatement(s *wafv2.XssMatchStatement) interface{} {
+func flattenXSSMatchStatement(s *wafv2.XssMatchStatement) interface{} {
 	if s == nil {
 		return []interface{}{}
 	}

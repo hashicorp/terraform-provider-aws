@@ -43,6 +43,18 @@ func DataSourceFunction() *schema.Resource {
 					},
 				},
 			},
+			"ephemeral_storage": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"size": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+					},
+				},
+			},
 			"file_system_config": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -211,6 +223,30 @@ func dataSourceFunctionRead(d *schema.ResourceData, meta interface{}) error {
 
 	if v, ok := d.GetOk("qualifier"); ok {
 		input.Qualifier = aws.String(v.(string))
+	} else {
+		// If no qualifier provided, set version to latest published version
+		versionsInput := &lambda.ListVersionsByFunctionInput{
+			FunctionName: aws.String(functionName),
+		}
+		var latestVersion string
+		log.Printf("[DEBUG] Getting List of Lambda Versions : %s", versionsInput)
+		errVersions := listVersionsByFunctionPages(conn, versionsInput, func(p *lambda.ListVersionsByFunctionOutput, lastPage bool) bool {
+			if lastPage {
+				last := p.Versions[len(p.Versions)-1]
+				latestVersion = aws.StringValue(last.Version)
+				return false
+			}
+			return true
+		})
+
+		if errVersions != nil {
+			return fmt.Errorf("error getting List of Lambda Versions for Function (%s): %s", functionName, errVersions)
+		}
+
+		// If no published version exists, AWS returns '$LATEST' for latestVersion
+		if latestVersion != "$LATEST" {
+			input.Qualifier = aws.String(latestVersion)
+		}
 	}
 
 	log.Printf("[DEBUG] Getting Lambda Function: %s", input)
@@ -227,8 +263,10 @@ func dataSourceFunctionRead(d *schema.ResourceData, meta interface{}) error {
 	function := output.Configuration
 
 	functionARN := aws.StringValue(function.FunctionArn)
-	qualifierSuffix := fmt.Sprintf(":%s", d.Get("qualifier").(string))
+	qualifierSuffix := fmt.Sprintf(":%s", aws.StringValue(input.Qualifier))
 	versionSuffix := fmt.Sprintf(":%s", aws.StringValue(function.Version))
+
+	d.Set("version", function.Version)
 
 	qualifiedARN := functionARN
 	if !strings.HasSuffix(functionARN, qualifierSuffix) && !strings.HasSuffix(functionARN, versionSuffix) {
@@ -258,7 +296,7 @@ func dataSourceFunctionRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.Set("handler", function.Handler)
-	d.Set("invoke_arn", functionInvokeArn(aws.StringValue(function.FunctionArn), meta))
+	d.Set("invoke_arn", functionInvokeARN(aws.StringValue(function.FunctionArn), meta))
 	d.Set("kms_key_arn", function.KMSKeyArn)
 	d.Set("last_modified", function.LastModified)
 
@@ -311,7 +349,6 @@ func dataSourceFunctionRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.Set("timeout", function.Timeout)
-	d.Set("version", function.Version)
 
 	if err := d.Set("vpc_config", flattenVPCConfigResponse(function.VpcConfig)); err != nil {
 		return fmt.Errorf("error setting vpc_config: %w", err)
@@ -354,6 +391,10 @@ func dataSourceFunctionRead(d *schema.ResourceData, meta interface{}) error {
 
 	if err := d.Set("architectures", flex.FlattenStringList(function.Architectures)); err != nil {
 		return fmt.Errorf("Error setting architectures for Lambda Function (%s): %w", d.Id(), err)
+	}
+
+	if err := d.Set("ephemeral_storage", flattenEphemeralStorage(function.EphemeralStorage)); err != nil {
+		return fmt.Errorf("error setting ephemeral_storage: (%s): %w", d.Id(), err)
 	}
 
 	return nil

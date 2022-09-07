@@ -19,13 +19,13 @@ func TestAccELBAppCookieStickinessPolicy_basic(t *testing.T) {
 	lbName := fmt.Sprintf("tf-test-lb-%s", sdkacctest.RandString(5))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, elb.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAppCookieStickinessPolicyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elb.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAppCookieStickinessPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppCookieStickinessPolicyConfig(lbName),
+				Config: testAccAppCookieStickinessPolicyConfig_basic(lbName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppCookieStickinessPolicy(
 						"aws_elb.lb",
@@ -39,7 +39,7 @@ func TestAccELBAppCookieStickinessPolicy_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAppCookieStickinessPolicyConfigUpdate(lbName),
+				Config: testAccAppCookieStickinessPolicyConfig_update(lbName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppCookieStickinessPolicy(
 						"aws_elb.lb",
@@ -57,13 +57,13 @@ func TestAccELBAppCookieStickinessPolicy_Disappears_elb(t *testing.T) {
 	resourceName := "aws_app_cookie_stickiness_policy.foo"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, elb.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAppCookieStickinessPolicyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elb.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAppCookieStickinessPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppCookieStickinessPolicyConfig(lbName),
+				Config: testAccAppCookieStickinessPolicyConfig_basic(lbName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppCookieStickinessPolicy(elbResourceName, resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfelb.ResourceLoadBalancer(), elbResourceName),
@@ -136,13 +136,13 @@ func TestAccELBAppCookieStickinessPolicy_disappears(t *testing.T) {
 	resourceName := "aws_app_cookie_stickiness_policy.foo"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, elb.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAppCookieStickinessPolicyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elb.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAppCookieStickinessPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppCookieStickinessPolicyConfig(lbName),
+				Config: testAccAppCookieStickinessPolicyConfig_basic(lbName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppCookieStickinessPolicy(elbResourceName, resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfelb.ResourceAppCookieStickinessPolicy(), resourceName),
@@ -153,7 +153,7 @@ func TestAccELBAppCookieStickinessPolicy_disappears(t *testing.T) {
 	})
 }
 
-func testAccAppCookieStickinessPolicyConfig(rName string) string {
+func testAccAppCookieStickinessPolicyConfig_basic(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_elb" "lb" {
   name               = "%s"
@@ -177,7 +177,7 @@ resource "aws_app_cookie_stickiness_policy" "foo" {
 }
 
 // Change the cookie_name to "MyOtherAppCookie".
-func testAccAppCookieStickinessPolicyConfigUpdate(rName string) string {
+func testAccAppCookieStickinessPolicyConfig_update(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_elb" "lb" {
   name               = "%s"

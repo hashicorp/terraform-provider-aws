@@ -16,12 +16,12 @@ func TestAccELBLoadBalancerDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_elb.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, elb.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elb.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBasicDataSourceConfig(rName, t.Name()),
+				Config: testAccLoadBalancerDataSourceConfig_basic(rName, t.Name()),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "name", rName),
 					resource.TestCheckResourceAttr(dataSourceName, "cross_zone_load_balancing", "true"),
@@ -42,7 +42,7 @@ func TestAccELBLoadBalancerDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccBasicDataSourceConfig(rName, testName string) string {
+func testAccLoadBalancerDataSourceConfig_basic(rName, testName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_elb" "test" {
   name            = %[1]q

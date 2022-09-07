@@ -126,7 +126,7 @@ func resourceCapacityProviderCreate(d *schema.ResourceData, meta interface{}) er
 	output, err := conn.CreateCapacityProvider(&input)
 
 	// Some partitions (i.e., ISO) may not support tag-on-create
-	if input.Tags != nil && verify.CheckISOErrorTagsUnsupported(err) {
+	if input.Tags != nil && verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
 		log.Printf("[WARN] ECS tagging failed creating Capacity Provider (%s) with tags: %s. Trying create without tags.", name, err)
 		input.Tags = nil
 
@@ -143,7 +143,7 @@ func resourceCapacityProviderCreate(d *schema.ResourceData, meta interface{}) er
 	if input.Tags == nil && len(tags) > 0 {
 		err := UpdateTags(conn, d.Id(), nil, tags)
 
-		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.CheckISOErrorTagsUnsupported(err) {
+		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
 			// If default tags only, log and continue. Otherwise, error.
 			log.Printf("[WARN] ECS tagging failed adding tags after create for Capacity Provider (%s): %s", d.Id(), err)
 			return resourceCapacityProviderRead(d, meta)
@@ -239,7 +239,7 @@ func resourceCapacityProviderUpdate(d *schema.ResourceData, meta interface{}) er
 		err := UpdateTags(conn, d.Id(), o, n)
 
 		// Some partitions (i.e., ISO) may not support tagging, giving error
-		if verify.CheckISOErrorTagsUnsupported(err) {
+		if verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
 			log.Printf("[WARN] ECS tagging failed updating tags for Capacity Provider (%s): %s", d.Id(), err)
 			return resourceCapacityProviderRead(d, meta)
 		}

@@ -227,7 +227,7 @@ func resourceVirtualServiceRead(d *schema.ResourceData, meta interface{}) error 
 	d.Set("created_date", resp.VirtualService.Metadata.CreatedAt.Format(time.RFC3339))
 	d.Set("last_updated_date", resp.VirtualService.Metadata.LastUpdatedAt.Format(time.RFC3339))
 	d.Set("resource_owner", resp.VirtualService.Metadata.ResourceOwner)
-	err = d.Set("spec", flattenAppMeshVirtualServiceSpec(resp.VirtualService.Spec))
+	err = d.Set("spec", flattenVirtualServiceSpec(resp.VirtualService.Spec))
 	if err != nil {
 		return fmt.Errorf("error setting spec: %s", err)
 	}
@@ -306,7 +306,7 @@ func resourceVirtualServiceDelete(d *schema.ResourceData, meta interface{}) erro
 func resourceVirtualServiceImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	parts := strings.Split(d.Id(), "/")
 	if len(parts) != 2 {
-		return []*schema.ResourceData{}, fmt.Errorf("Wrong format of resource: %s. Please follow 'mesh-name/virtual-service-name'", d.Id())
+		return []*schema.ResourceData{}, fmt.Errorf("wrong format of import ID (%s), use: 'mesh-name/virtual-service-name'", d.Id())
 	}
 
 	mesh := parts[0]

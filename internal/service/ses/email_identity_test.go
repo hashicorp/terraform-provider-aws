@@ -19,13 +19,13 @@ func TestAccSESEmailIdentity_basic(t *testing.T) {
 	resourceName := "aws_ses_email_identity.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEmailIdentityDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ses.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEmailIdentityDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEmailIdentityConfig(email),
+				Config: testAccEmailIdentityConfig_basic(email),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEmailIdentityExists(resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ses", regexp.MustCompile(fmt.Sprintf("identity/%s$", regexp.QuoteMeta(email)))),
@@ -45,13 +45,13 @@ func TestAccSESEmailIdentity_trailingPeriod(t *testing.T) {
 	resourceName := "aws_ses_email_identity.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEmailIdentityDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ses.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEmailIdentityDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEmailIdentityConfig(email),
+				Config: testAccEmailIdentityConfig_basic(email),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEmailIdentityExists(resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ses", regexp.MustCompile(fmt.Sprintf("identity/%s$", regexp.QuoteMeta(strings.TrimSuffix(email, "."))))),
@@ -127,7 +127,7 @@ func testAccCheckEmailIdentityExists(n string) resource.TestCheckFunc {
 	}
 }
 
-func testAccEmailIdentityConfig(email string) string {
+func testAccEmailIdentityConfig_basic(email string) string {
 	return fmt.Sprintf(`
 resource "aws_ses_email_identity" "test" {
   email = %q

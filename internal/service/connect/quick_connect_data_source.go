@@ -117,7 +117,7 @@ func dataSourceQuickConnectRead(ctx context.Context, d *schema.ResourceData, met
 		input.QuickConnectId = aws.String(v.(string))
 	} else if v, ok := d.GetOk("name"); ok {
 		name := v.(string)
-		quickConnectSummary, err := dataSourceGetConnectQuickConnectSummaryByName(ctx, conn, instanceID, name)
+		quickConnectSummary, err := dataSourceGetQuickConnectSummaryByName(ctx, conn, instanceID, name)
 
 		if err != nil {
 			return diag.FromErr(fmt.Errorf("error finding Connect Quick Connect Summary by name (%s): %w", name, err))
@@ -160,7 +160,7 @@ func dataSourceQuickConnectRead(ctx context.Context, d *schema.ResourceData, met
 	return nil
 }
 
-func dataSourceGetConnectQuickConnectSummaryByName(ctx context.Context, conn *connect.Connect, instanceID, name string) (*connect.QuickConnectSummary, error) {
+func dataSourceGetQuickConnectSummaryByName(ctx context.Context, conn *connect.Connect, instanceID, name string) (*connect.QuickConnectSummary, error) {
 	var result *connect.QuickConnectSummary
 
 	input := &connect.ListQuickConnectsInput{

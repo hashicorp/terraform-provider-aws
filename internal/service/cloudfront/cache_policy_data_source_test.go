@@ -17,13 +17,13 @@ func TestAccCloudFrontCachePolicyDataSource_basic(t *testing.T) {
 	resourceName := "aws_cloudfront_cache_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, cloudfront.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckCloudFrontPublicKeyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudfront.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPublicKeyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCachePolicyDataSourceConfig(rName),
+				Config: testAccCachePolicyDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSource1Name, "comment", resourceName, "comment"),
 					resource.TestCheckResourceAttrPair(dataSource1Name, "default_ttl", resourceName, "default_ttl"),
@@ -64,7 +64,7 @@ func TestAccCloudFrontCachePolicyDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccCachePolicyDataSourceConfig(rName string) string {
+func testAccCachePolicyDataSourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 data "aws_cloudfront_cache_policy" "by_name" {
   name = aws_cloudfront_cache_policy.test.name

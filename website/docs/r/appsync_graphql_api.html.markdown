@@ -203,15 +203,15 @@ resource "aws_wafv2_web_acl" "example" {
 
 The following arguments are supported:
 
-* `authentication_type` - (Required) The authentication type. Valid values: `API_KEY`, `AWS_IAM`, `AMAZON_COGNITO_USER_POOLS`, `OPENID_CONNECT`, `AWS_LAMBDA`
-* `name` - (Required) A user-supplied name for the GraphqlApi.
+* `authentication_type` - (Required) Authentication type. Valid values: `API_KEY`, `AWS_IAM`, `AMAZON_COGNITO_USER_POOLS`, `OPENID_CONNECT`, `AWS_LAMBDA`
+* `name` - (Required) User-supplied name for the GraphqlApi.
 * `log_config` - (Optional) Nested argument containing logging configuration. Defined below.
 * `openid_connect_config` - (Optional) Nested argument containing OpenID Connect configuration. Defined below.
-* `user_pool_config` - (Optional) The Amazon Cognito User Pool configuration. Defined below.
+* `user_pool_config` - (Optional) Amazon Cognito User Pool configuration. Defined below.
 * `lambda_authorizer_config` - (Optional) Nested argument containing Lambda authorizer configuration. Defined below.
-* `schema` - (Optional) The schema definition, in GraphQL schema language format. Terraform cannot perform drift detection of this configuration.
+* `schema` - (Optional) Schema definition, in GraphQL schema language format. Terraform cannot perform drift detection of this configuration.
 * `additional_authentication_provider` - (Optional) One or more additional authentication providers for the GraphqlApi. Defined below.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `xray_enabled` - (Optional) Whether tracing with X-ray is enabled. Defaults to false.
 
 ### log_config
@@ -226,9 +226,9 @@ The following arguments are supported:
 
 The following arguments are supported:
 
-* `authentication_type` - (Required) The authentication type. Valid values: `API_KEY`, `AWS_IAM`, `AMAZON_COGNITO_USER_POOLS`, `OPENID_CONNECT`, `AWS_LAMBDA`
+* `authentication_type` - (Required) Authentication type. Valid values: `API_KEY`, `AWS_IAM`, `AMAZON_COGNITO_USER_POOLS`, `OPENID_CONNECT`, `AWS_LAMBDA`
 * `openid_connect_config` - (Optional) Nested argument containing OpenID Connect configuration. Defined below.
-* `user_pool_config` - (Optional) The Amazon Cognito User Pool configuration. Defined below.
+* `user_pool_config` - (Optional) Amazon Cognito User Pool configuration. Defined below.
 
 ### openid_connect_config
 
@@ -243,26 +243,26 @@ The following arguments are supported:
 
 The following arguments are supported:
 
-* `default_action` - (Required only if Cognito is used as the default auth provider) The action that you want your GraphQL API to take when a request that uses Amazon Cognito User Pool authentication doesn't match the Amazon Cognito User Pool configuration. Valid: `ALLOW` and `DENY`
-* `user_pool_id` - (Required) The user pool ID.
-* `app_id_client_regex` - (Optional) A regular expression for validating the incoming Amazon Cognito User Pool app client ID.
-* `aws_region` - (Optional) The AWS region in which the user pool was created.
+* `default_action` - (Required only if Cognito is used as the default auth provider) Action that you want your GraphQL API to take when a request that uses Amazon Cognito User Pool authentication doesn't match the Amazon Cognito User Pool configuration. Valid: `ALLOW` and `DENY`
+* `user_pool_id` - (Required) User pool ID.
+* `app_id_client_regex` - (Optional) Regular expression for validating the incoming Amazon Cognito User Pool app client ID.
+* `aws_region` - (Optional) AWS region in which the user pool was created.
 
 ### lambda_authorizer_config
 
 The following arguments are supported:
 
-* `authorizer_uri` - (Required) The ARN of the Lambda function to be called for authorization. Note: This Lambda function must have a resource-based policy assigned to it, to allow `lambda:InvokeFunction` from service principal `appsync.amazonaws.com`.
-* `authorizer_result_ttl_in_seconds` - (Optional) The number of seconds a response should be cached for. The default is 5 minutes (300 seconds). The Lambda function can override this by returning a `ttlOverride` key in its response. A value of 0 disables caching of responses. Minimum value of 0. Maximum value of 3600.
-* `identity_validation_expression` - (Optional) A regular expression for validation of tokens before the Lambda function is called.
+* `authorizer_uri` - (Required) ARN of the Lambda function to be called for authorization. Note: This Lambda function must have a resource-based policy assigned to it, to allow `lambda:InvokeFunction` from service principal `appsync.amazonaws.com`.
+* `authorizer_result_ttl_in_seconds` - (Optional) Number of seconds a response should be cached for. The default is 5 minutes (300 seconds). The Lambda function can override this by returning a `ttlOverride` key in its response. A value of 0 disables caching of responses. Minimum value of 0. Maximum value of 3600.
+* `identity_validation_expression` - (Optional) Regular expression for validation of tokens before the Lambda function is called.
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - API ID
-* `arn` - The ARN
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `arn` - ARN
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `uris` - Map of URIs associated with the APIE.g., `uris["GRAPHQL"] = https://ID.appsync-api.REGION.amazonaws.com/graphql`
 
 ## Import

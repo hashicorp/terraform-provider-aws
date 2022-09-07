@@ -105,40 +105,40 @@ resource "aws_appsync_resolver" "Mutation_pipelineTest" {
 
 The following arguments are supported:
 
-* `api_id` - (Required) The API ID for the GraphQL API.
-* `type` - (Required) The type name from the schema defined in the GraphQL API.
-* `field` - (Required) The field name from the schema defined in the GraphQL API.
-* `request_template` - (Optional) The request mapping template for UNIT resolver or 'before mapping template' for PIPELINE resolver. Required for non-Lambda resolvers.
-* `response_template` - (Optional) The response mapping template for UNIT resolver or 'after mapping template' for PIPELINE resolver. Required for non-Lambda resolvers.
-* `data_source` - (Optional) The DataSource name.
-* `max_batch_size` - (Optional) The maximum batching size for a resolver. Valid values are between `0` and `2000`.
-* `kind`  - (Optional) The resolver type. Valid values are `UNIT` and `PIPELINE`.
+* `api_id` - (Required) API ID for the GraphQL API.
+* `type` - (Required) Type name from the schema defined in the GraphQL API.
+* `field` - (Required) Field name from the schema defined in the GraphQL API.
+* `request_template` - (Optional) Request mapping template for UNIT resolver or 'before mapping template' for PIPELINE resolver. Required for non-Lambda resolvers.
+* `response_template` - (Optional) Response mapping template for UNIT resolver or 'after mapping template' for PIPELINE resolver. Required for non-Lambda resolvers.
+* `data_source` - (Optional) Data source name.
+* `max_batch_size` - (Optional) Maximum batching size for a resolver. Valid values are between `0` and `2000`.
+* `kind`  - (Optional) Resolver type. Valid values are `UNIT` and `PIPELINE`.
 * `sync_config` - (Optional) Describes a Sync configuration for a resolver. See [Sync Config](#sync-config).
-* `pipeline_config` - (Optional) The PipelineConfig.
-    * `functions` - (Required) The list of Function ID.
-* `caching_config` - (Optional) The CachingConfig.
-    * `caching_keys` - (Optional) The list of caching key.
-    * `ttl` - (Optional) The TTL in seconds.
+* `pipeline_config` - (Optional) PipelineConfig.
+    * `functions` - (Required) List of Function ID.
+* `caching_config` - (Optional) CachingConfig.
+    * `caching_keys` - (Optional) List of caching key.
+    * `ttl` - (Optional) TTL in seconds.
 
 ### Sync Config
 
 The following arguments are supported:
 
-* `conflict_detection` - (Optional) The Conflict Detection strategy to use. Valid values are `NONE` and `VERSION`.
-* `conflict_handler` - (Optional) The Conflict Resolution strategy to perform in the event of a conflict. Valid values are `NONE`, `OPTIMISTIC_CONCURRENCY`, `AUTOMERGE`, and `LAMBDA`.
-* `lambda_conflict_handler_config` - (Optional) The Lambda Conflict Handler Config when configuring `LAMBDA` as the Conflict Handler. See [Lambda Conflict Handler Config](#lambda-conflict-handler-config).
+* `conflict_detection` - (Optional) Conflict Detection strategy to use. Valid values are `NONE` and `VERSION`.
+* `conflict_handler` - (Optional) Conflict Resolution strategy to perform in the event of a conflict. Valid values are `NONE`, `OPTIMISTIC_CONCURRENCY`, `AUTOMERGE`, and `LAMBDA`.
+* `lambda_conflict_handler_config` - (Optional) Lambda Conflict Handler Config when configuring `LAMBDA` as the Conflict Handler. See [Lambda Conflict Handler Config](#lambda-conflict-handler-config).
 
 #### Lambda Conflict Handler Config
 
 The following arguments are supported:
 
-* `lambda_conflict_handler_arn` - (Optional) The Amazon Resource Name (ARN) for the Lambda function to use as the Conflict Handler.
+* `lambda_conflict_handler_arn` - (Optional) ARN for the Lambda function to use as the Conflict Handler.
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-* `arn` - The ARN
+* `arn` - ARN
 
 ## Import
 

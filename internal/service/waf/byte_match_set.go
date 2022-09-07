@@ -44,17 +44,9 @@ func ResourceByteMatchSet() *schema.Resource {
 										Optional: true,
 									},
 									"type": {
-										Type:     schema.TypeString,
-										Required: true,
-										ValidateFunc: validation.StringInSlice([]string{
-											waf.MatchFieldTypeUri,
-											waf.MatchFieldTypeQueryString,
-											waf.MatchFieldTypeHeader,
-											waf.MatchFieldTypeMethod,
-											waf.MatchFieldTypeBody,
-											waf.MatchFieldTypeSingleQueryArg,
-											waf.MatchFieldTypeAllQueryArgs,
-										}, false),
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.StringInSlice(waf.MatchFieldType_Values(), false),
 									},
 								},
 							},
@@ -120,7 +112,7 @@ func resourceByteMatchSetRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.Set("name", resp.ByteMatchSet.Name)
-	d.Set("byte_match_tuples", flattenWafByteMatchTuples(resp.ByteMatchSet.ByteMatchTuples))
+	d.Set("byte_match_tuples", flattenByteMatchTuples(resp.ByteMatchSet.ByteMatchTuples))
 
 	return nil
 }
@@ -176,7 +168,7 @@ func updateByteMatchSetResource(id string, oldT, newT []interface{}, conn *waf.W
 		req := &waf.UpdateByteMatchSetInput{
 			ChangeToken:    token,
 			ByteMatchSetId: aws.String(id),
-			Updates:        diffWafByteMatchSetTuples(oldT, newT),
+			Updates:        diffByteMatchSetTuples(oldT, newT),
 		}
 
 		return conn.UpdateByteMatchSet(req)
@@ -188,7 +180,7 @@ func updateByteMatchSetResource(id string, oldT, newT []interface{}, conn *waf.W
 	return nil
 }
 
-func flattenWafByteMatchTuples(bmt []*waf.ByteMatchTuple) []interface{} {
+func flattenByteMatchTuples(bmt []*waf.ByteMatchTuple) []interface{} {
 	out := make([]interface{}, len(bmt))
 	for i, t := range bmt {
 		m := make(map[string]interface{})
@@ -205,7 +197,7 @@ func flattenWafByteMatchTuples(bmt []*waf.ByteMatchTuple) []interface{} {
 	return out
 }
 
-func diffWafByteMatchSetTuples(oldT, newT []interface{}) []*waf.ByteMatchSetUpdate {
+func diffByteMatchSetTuples(oldT, newT []interface{}) []*waf.ByteMatchSetUpdate {
 	updates := make([]*waf.ByteMatchSetUpdate, 0)
 
 	for _, ot := range oldT {

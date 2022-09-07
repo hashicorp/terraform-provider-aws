@@ -146,7 +146,7 @@ func resourceMemberRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return diag.Errorf("error decoding ID Detective Member (%s): %s", d.Id(), err)
 	}
 
-	resp, err := FindMemberByGraphArnAndAccountID(ctx, conn, graphArn, accountId)
+	resp, err := FindMemberByGraphARNAndAccountID(ctx, conn, graphArn, accountId)
 
 	if err != nil {
 		if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, detective.ErrCodeResourceNotFoundException) ||

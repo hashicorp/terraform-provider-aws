@@ -1,5 +1,5 @@
 ---
-subcategory: "IAM"
+subcategory: "IAM (Identity & Access Management)"
 layout: "aws"
 page_title: "AWS: aws_iam_policy"
 description: |-
@@ -31,16 +31,21 @@ data "aws_iam_policy" "example" {
 
 ## Argument Reference
 
-* `arn` - (Optional) The ARN of the IAM policy.
-* `name` - (Optional) The name of the IAM policy.
-* `path_prefix` - (Optional) The prefix of the path to the IAM policy. Defaults to a slash (`/`).
+* `arn` - (Optional) ARN of the IAM policy.
+  Conflicts with `name` and `path_prefix`.
+* `name` - (Optional) Name of the IAM policy.
+  Conflicts with `arn`.
+* `path_prefix` - (Optional) Prefix of the path to the IAM policy.
+  Defaults to a slash (`/`).
+  Conflicts with `arn`.
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-* `path` - The path to the policy.
-* `description` - The description of the policy.
-* `policy` - The policy document of the policy.
-* `policy_id` - The policy's ID.
+* `arn` - ARN of the policy.
+* `path` - Path to the policy.
+* `description` - Description of the policy.
+* `policy` - Policy document of the policy.
+* `policy_id` - Policy's ID.
 * `tags` - Key-value mapping of tags for the IAM Policy.

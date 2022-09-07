@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/managedgrafana"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func DataSourceWorkspace() *schema.Resource {
@@ -91,6 +92,7 @@ func DataSourceWorkspace() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"tags": tftags.TagsSchemaComputed(),
 			"workspace_id": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -101,6 +103,7 @@ func DataSourceWorkspace() *schema.Resource {
 
 func dataSourceWorkspaceRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GrafanaConn
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	workspaceID := d.Get("workspace_id").(string)
 	workspace, err := FindWorkspaceByID(conn, workspaceID)
@@ -136,6 +139,10 @@ func dataSourceWorkspaceRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("saml_configuration_status", workspace.Authentication.SamlConfigurationStatus)
 	d.Set("stack_set_name", workspace.StackSetName)
 	d.Set("status", workspace.Status)
+
+	if err := d.Set("tags", KeyValueTags(workspace.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
 
 	return nil
 }

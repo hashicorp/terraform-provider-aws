@@ -213,7 +213,7 @@ func resourceFileSystemCreate(d *schema.ResourceData, meta interface{}) error {
 	if hasLifecyclePolicy {
 		_, err := conn.PutLifecycleConfiguration(&efs.PutLifecycleConfigurationInput{
 			FileSystemId:      aws.String(d.Id()),
-			LifecyclePolicies: expandEfsFileSystemLifecyclePolicies(d.Get("lifecycle_policy").([]interface{})),
+			LifecyclePolicies: expandFileSystemLifecyclePolicies(d.Get("lifecycle_policy").([]interface{})),
 		})
 
 		if err != nil {
@@ -253,7 +253,7 @@ func resourceFileSystemUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("lifecycle_policy") {
 		input := &efs.PutLifecycleConfigurationInput{
 			FileSystemId:      aws.String(d.Id()),
-			LifecyclePolicies: expandEfsFileSystemLifecyclePolicies(d.Get("lifecycle_policy").([]interface{})),
+			LifecyclePolicies: expandFileSystemLifecyclePolicies(d.Get("lifecycle_policy").([]interface{})),
 		}
 
 		// Prevent the following error during removal:
@@ -321,7 +321,7 @@ func resourceFileSystemRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
-	if err := d.Set("size_in_bytes", flattenEfsFileSystemSizeInBytes(fs.SizeInBytes)); err != nil {
+	if err := d.Set("size_in_bytes", flattenFileSystemSizeInBytes(fs.SizeInBytes)); err != nil {
 		return fmt.Errorf("error setting size_in_bytes: %w", err)
 	}
 
@@ -335,7 +335,7 @@ func resourceFileSystemRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error reading EFS file system (%s) lifecycle configuration: %w", d.Id(), err)
 	}
 
-	if err := d.Set("lifecycle_policy", flattenEfsFileSystemLifecyclePolicies(res.LifecyclePolicies)); err != nil {
+	if err := d.Set("lifecycle_policy", flattenFileSystemLifecyclePolicies(res.LifecyclePolicies)); err != nil {
 		return fmt.Errorf("error setting lifecycle_policy: %w", err)
 	}
 
@@ -368,7 +368,7 @@ func resourceFileSystemDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func flattenEfsFileSystemLifecyclePolicies(apiObjects []*efs.LifecyclePolicy) []interface{} {
+func flattenFileSystemLifecyclePolicies(apiObjects []*efs.LifecyclePolicy) []interface{} {
 	var tfList []interface{}
 
 	for _, apiObject := range apiObjects {
@@ -392,7 +392,7 @@ func flattenEfsFileSystemLifecyclePolicies(apiObjects []*efs.LifecyclePolicy) []
 	return tfList
 }
 
-func expandEfsFileSystemLifecyclePolicies(tfList []interface{}) []*efs.LifecyclePolicy {
+func expandFileSystemLifecyclePolicies(tfList []interface{}) []*efs.LifecyclePolicy {
 	var apiObjects []*efs.LifecyclePolicy
 
 	for _, tfMapRaw := range tfList {
@@ -418,7 +418,7 @@ func expandEfsFileSystemLifecyclePolicies(tfList []interface{}) []*efs.Lifecycle
 	return apiObjects
 }
 
-func flattenEfsFileSystemSizeInBytes(sizeInBytes *efs.FileSystemSize) []interface{} {
+func flattenFileSystemSizeInBytes(sizeInBytes *efs.FileSystemSize) []interface{} {
 	if sizeInBytes == nil {
 		return []interface{}{}
 	}

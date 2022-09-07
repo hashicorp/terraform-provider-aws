@@ -6,12 +6,10 @@ package mq
 import (
 	"fmt"
 	"log"
-	"math/rand"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/mq"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
@@ -30,52 +28,47 @@ func sweepBrokers(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 	conn := client.(*conns.AWSClient).MQConn
+	sweepResources := make([]*sweep.SweepResource, 0)
+	var errs *multierror.Error
 
-	resp, err := conn.ListBrokers(&mq.ListBrokersInput{
-		MaxResults: aws.Int64(100),
-	})
-	if err != nil {
-		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping MQ Broker sweep for %s: %s", region, err)
-			return nil
+	input := &mq.ListBrokersInput{MaxResults: aws.Int64(100)}
+
+	err = conn.ListBrokersPages(input, func(page *mq.ListBrokersResponse, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
 		}
-		return fmt.Errorf("Error listing MQ brokers: %s", err)
-	}
 
-	if len(resp.BrokerSummaries) == 0 {
-		log.Print("[DEBUG] No MQ brokers found to sweep")
-		return nil
-	}
-	log.Printf("[DEBUG] %d MQ brokers found", len(resp.BrokerSummaries))
+		for _, bs := range page.BrokerSummaries {
+			r := ResourceBroker()
+			d := r.Data(nil)
 
-	rand.Seed(time.Now().UnixNano())
-	rand.Shuffle(len(resp.BrokerSummaries), func(i, j int) {
-		resp.BrokerSummaries[i], resp.BrokerSummaries[j] = resp.BrokerSummaries[j], resp.BrokerSummaries[i]
-	})
+			id := aws.StringValue(bs.BrokerId)
+			d.SetId(id)
 
-	for _, bs := range resp.BrokerSummaries {
-		log.Printf("[INFO] Deleting MQ broker %s", aws.StringValue(bs.BrokerId))
-		_, err := conn.DeleteBroker(&mq.DeleteBrokerInput{
-			BrokerId: bs.BrokerId,
-		})
-		if tfawserr.ErrMessageContains(err, mq.ErrCodeBadRequestException, "while in state [CREATION_IN_PROGRESS") {
-			log.Printf("[WARN] Broker in state CREATION_IN_PROGRESS and must complete creation before deletion")
-			if _, err = WaitBrokerCreated(conn, aws.StringValue(bs.BrokerId)); err != nil {
-				return err
+			if err != nil {
+				err := fmt.Errorf("error reading MQ Broker (%s): %w", id, err)
+				log.Printf("[ERROR] %s", err)
+				errs = multierror.Append(errs, err)
+				continue
 			}
 
-			log.Printf("[WARN] Retrying deletion of broker %s", aws.StringValue(bs.BrokerId))
-			_, err = conn.DeleteBroker(&mq.DeleteBrokerInput{
-				BrokerId: bs.BrokerId,
-			})
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-		if err != nil {
-			return err
-		}
-		if _, err = WaitBrokerDeleted(conn, aws.StringValue(bs.BrokerId)); err != nil {
-			return err
-		}
+		return !lastPage
+	})
+
+	if err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("error listing MQ Broker for %s: %w", region, err))
 	}
 
-	return nil
+	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("error sweeping MQ Broker for %s: %w", region, err))
+	}
+
+	if sweep.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping MQ Broker sweep for %s: %s", region, errs)
+		return nil
+	}
+
+	return errs.ErrorOrNil()
 }

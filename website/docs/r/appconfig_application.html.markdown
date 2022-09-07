@@ -27,17 +27,17 @@ resource "aws_appconfig_application" "example" {
 
 The following arguments are supported:
 
-* `name` - (Required) The name for the application. Must be between 1 and 64 characters in length.
-* `description` - (Optional) The description of the application. Can be at most 1024 characters.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `name` - (Required) Name for the application. Must be between 1 and 64 characters in length.
+* `description` - (Optional) Description of the application. Can be at most 1024 characters.
+* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-* `arn` - The Amazon Resource Name (ARN) of the AppConfig Application.
-* `id` - The AppConfig application ID.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `arn` - ARN of the AppConfig Application.
+* `id` - AppConfig application ID.
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 

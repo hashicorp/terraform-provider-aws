@@ -53,12 +53,13 @@ func ResourceRolePolicy() *schema.Resource {
 				Optional:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name"},
-				ValidateFunc:  validIamResourceName(rolePolicyNamePrefixMaxLen),
+				ValidateFunc:  validResourceName(rolePolicyNamePrefixMaxLen),
 			},
 			"role": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validRolePolicyRole,
 			},
 		},
 	}
@@ -105,7 +106,7 @@ func resourceRolePolicyRead(d *schema.ResourceData, meta interface{}) error {
 
 	var getResp *iam.GetRolePolicyOutput
 
-	err = resource.Retry(PropagationTimeout, func() *resource.RetryError {
+	err = resource.Retry(propagationTimeout, func() *resource.RetryError {
 		var err error
 
 		getResp, err = conn.GetRolePolicy(request)

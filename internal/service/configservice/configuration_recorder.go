@@ -1,8 +1,8 @@
 package configservice
 
 import (
+	"errors"
 	"fmt"
-	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/configservice"
@@ -10,7 +10,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func ResourceConfigurationRecorder() *schema.Resource {
@@ -99,20 +101,25 @@ func resourceConfigurationRecorderRead(d *schema.ResourceData, meta interface{})
 		ConfigurationRecorderNames: []*string{aws.String(d.Id())},
 	}
 	out, err := conn.DescribeConfigurationRecorders(&input)
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, configservice.ErrCodeNoSuchConfigurationRecorderException) {
+		create.LogNotFoundRemoveState(names.ConfigService, create.ErrActionReading, ResNameConfigurationRecorder, d.Id())
+		d.SetId("")
+		return nil
+	}
+
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, configservice.ErrCodeNoSuchConfigurationRecorderException) {
-			log.Printf("[WARN] Configuration Recorder %q is gone (NoSuchConfigurationRecorderException)", d.Id())
-			d.SetId("")
-			return nil
-		}
-		return fmt.Errorf("Getting Configuration Recorder failed: %s", err)
+		return create.Error(names.ConfigService, create.ErrActionReading, ResNameConfigurationRecorder, d.Id(), err)
 	}
 
 	numberOfRecorders := len(out.ConfigurationRecorders)
-	if numberOfRecorders < 1 {
-		log.Printf("[WARN] Configuration Recorder %q is gone (no recorders found)", d.Id())
+	if !d.IsNewResource() && numberOfRecorders < 1 {
+		create.LogNotFoundRemoveState(names.ConfigService, create.ErrActionReading, ResNameConfigurationRecorder, d.Id())
 		d.SetId("")
 		return nil
+	}
+
+	if d.IsNewResource() && numberOfRecorders < 1 {
+		return create.Error(names.ConfigService, create.ErrActionReading, ResNameConfigurationRecorder, d.Id(), errors.New("none found"))
 	}
 
 	if numberOfRecorders > 1 {

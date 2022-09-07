@@ -62,7 +62,7 @@ func resourceKinesisStreamingDestinationCreate(ctx context.Context, d *schema.Re
 		return diag.FromErr(fmt.Errorf("error enabling DynamoDB Kinesis streaming destination (stream: %s, table: %s): empty output", streamArn, tableName))
 	}
 
-	if err := waitDynamoDBKinesisStreamingDestinationActive(ctx, conn, streamArn, tableName); err != nil {
+	if err := waitKinesisStreamingDestinationActive(ctx, conn, streamArn, tableName); err != nil {
 		return diag.FromErr(fmt.Errorf("error waiting for DynamoDB Kinesis streaming destination (stream: %s, table: %s) to be active: %w", streamArn, tableName, err))
 	}
 
@@ -80,7 +80,7 @@ func resourceKinesisStreamingDestinationRead(ctx context.Context, d *schema.Reso
 		return diag.FromErr(err)
 	}
 
-	output, err := FindDynamoDBKinesisDataStreamDestination(ctx, conn, streamArn, tableName)
+	output, err := FindKinesisDataStreamDestination(ctx, conn, streamArn, tableName)
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, dynamodb.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] DynamoDB Kinesis Streaming Destination (stream: %s, table: %s) not found, removing from state", streamArn, tableName)
@@ -127,7 +127,7 @@ func resourceKinesisStreamingDestinationDelete(ctx context.Context, d *schema.Re
 		return diag.FromErr(fmt.Errorf("error disabling DynamoDB Kinesis streaming destination (stream: %s, table: %s): %w", streamArn, tableName, err))
 	}
 
-	if err := waitDynamoDBKinesisStreamingDestinationDisabled(ctx, conn, streamArn, tableName); err != nil {
+	if err := waitKinesisStreamingDestinationDisabled(ctx, conn, streamArn, tableName); err != nil {
 		return diag.FromErr(fmt.Errorf("error waiting for DynamoDB Kinesis streaming destination (stream: %s, table: %s) to be disabled: %w", streamArn, tableName, err))
 	}
 

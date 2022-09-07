@@ -5,6 +5,9 @@ import (
 	"sync"
 )
 
+// GlobalMutexKV is a global MutexKV for use within this plugin.
+var GlobalMutexKV = NewMutexKV()
+
 // MutexKV is a simple key/value store for arbitrary mutexes. It can be used to
 // serialize changes across arbitrary collaborators that share knowledge of the
 // keys they must serialize on.

@@ -1,17 +1,19 @@
 package kafkaconnect
 
 import (
-	"fmt"
+	"context"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kafkaconnect"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func DataSourceCustomPlugin() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceCustomPluginRead,
+		ReadWithoutTimeout: dataSourceCustomPluginRead,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -38,25 +40,20 @@ func DataSourceCustomPlugin() *schema.Resource {
 	}
 }
 
-func dataSourceCustomPluginRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceCustomPluginRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).KafkaConnectConn
 
-	pluginName := d.Get("name")
+	name := d.Get("name")
+	var output []*kafkaconnect.CustomPluginSummary
 
-	input := &kafkaconnect.ListCustomPluginsInput{}
-
-	var plugin *kafkaconnect.CustomPluginSummary
-
-	err := conn.ListCustomPluginsPages(input, func(page *kafkaconnect.ListCustomPluginsOutput, lastPage bool) bool {
+	err := conn.ListCustomPluginsPagesWithContext(ctx, &kafkaconnect.ListCustomPluginsInput{}, func(page *kafkaconnect.ListCustomPluginsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
 
-		for _, pluginSummary := range page.CustomPlugins {
-			if aws.StringValue(pluginSummary.Name) == pluginName {
-				plugin = pluginSummary
-
-				return false
+		for _, v := range page.CustomPlugins {
+			if aws.StringValue(v.Name) == name {
+				output = append(output, v)
 			}
 		}
 
@@ -64,18 +61,28 @@ func dataSourceCustomPluginRead(d *schema.ResourceData, meta interface{}) error 
 	})
 
 	if err != nil {
-		return fmt.Errorf("error listing MSK Connect Custom Plugins: %w", err)
+		return diag.Errorf("error listing MSK Connect Custom Plugins: %s", err)
 	}
 
-	if plugin == nil {
-		return fmt.Errorf("error reading MSK Connect Custom Plugin (%s): no results found", pluginName)
+	if len(output) == 0 || output[0] == nil {
+		err = tfresource.NewEmptyResultError(name)
+	} else if count := len(output); count > 1 {
+		err = tfresource.NewTooManyResultsError(count, name)
 	}
+
+	if err != nil {
+		return diag.FromErr(tfresource.SingularDataSourceFindError("MSK Connect Custom Plugin", err))
+	}
+
+	plugin := output[0]
 
 	d.SetId(aws.StringValue(plugin.CustomPluginArn))
+
 	d.Set("arn", plugin.CustomPluginArn)
 	d.Set("description", plugin.Description)
 	d.Set("name", plugin.Name)
 	d.Set("state", plugin.CustomPluginState)
+
 	if plugin.LatestRevision != nil {
 		d.Set("latest_revision", plugin.LatestRevision.Revision)
 	} else {

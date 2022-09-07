@@ -365,8 +365,8 @@ func resourceCatalogTableCreate(d *schema.ResourceData, meta interface{}) error 
 	input := &glue.CreateTableInput{
 		CatalogId:        aws.String(catalogID),
 		DatabaseName:     aws.String(dbName),
-		TableInput:       expandGlueTableInput(d),
-		PartitionIndexes: expandGlueTablePartitionIndexes(d.Get("partition_index").([]interface{})),
+		TableInput:       expandTableInput(d),
+		PartitionIndexes: expandTablePartitionIndexes(d.Get("partition_index").([]interface{})),
 	}
 
 	log.Printf("[DEBUG] Glue catalog table input: %#v", input)
@@ -417,11 +417,11 @@ func resourceCatalogTableRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("owner", table.Owner)
 	d.Set("retention", table.Retention)
 
-	if err := d.Set("storage_descriptor", flattenGlueStorageDescriptor(table.StorageDescriptor)); err != nil {
+	if err := d.Set("storage_descriptor", flattenStorageDescriptor(table.StorageDescriptor)); err != nil {
 		return fmt.Errorf("error setting storage_descriptor: %w", err)
 	}
 
-	if err := d.Set("partition_keys", flattenGlueColumns(table.PartitionKeys)); err != nil {
+	if err := d.Set("partition_keys", flattenColumns(table.PartitionKeys)); err != nil {
 		return fmt.Errorf("error setting partition_keys: %w", err)
 	}
 
@@ -434,7 +434,7 @@ func resourceCatalogTableRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if table.TargetTable != nil {
-		if err := d.Set("target_table", []interface{}{flattenGlueTableTargetTable(table.TargetTable)}); err != nil {
+		if err := d.Set("target_table", []interface{}{flattenTableTargetTable(table.TargetTable)}); err != nil {
 			return fmt.Errorf("error setting target_table: %w", err)
 		}
 	} else {
@@ -452,7 +452,7 @@ func resourceCatalogTableRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if partOut != nil && len(partOut.PartitionIndexDescriptorList) > 0 {
-		if err := d.Set("partition_index", flattenGluePartitionIndexes(partOut.PartitionIndexDescriptorList)); err != nil {
+		if err := d.Set("partition_index", flattenPartitionIndexes(partOut.PartitionIndexDescriptorList)); err != nil {
 			return fmt.Errorf("error setting partition_index: %w", err)
 		}
 	}
@@ -471,7 +471,7 @@ func resourceCatalogTableUpdate(d *schema.ResourceData, meta interface{}) error 
 	updateTableInput := &glue.UpdateTableInput{
 		CatalogId:    aws.String(catalogID),
 		DatabaseName: aws.String(dbName),
-		TableInput:   expandGlueTableInput(d),
+		TableInput:   expandTableInput(d),
 	}
 
 	if _, err := conn.UpdateTable(updateTableInput); err != nil {
@@ -504,7 +504,7 @@ func resourceCatalogTableDelete(d *schema.ResourceData, meta interface{}) error 
 	return nil
 }
 
-func expandGlueTableInput(d *schema.ResourceData) *glue.TableInput {
+func expandTableInput(d *schema.ResourceData) *glue.TableInput {
 	tableInput := &glue.TableInput{
 		Name: aws.String(d.Get("name").(string)),
 	}
@@ -522,11 +522,11 @@ func expandGlueTableInput(d *schema.ResourceData) *glue.TableInput {
 	}
 
 	if v, ok := d.GetOk("storage_descriptor"); ok {
-		tableInput.StorageDescriptor = expandGlueStorageDescriptor(v.([]interface{}))
+		tableInput.StorageDescriptor = expandStorageDescriptor(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("partition_keys"); ok {
-		tableInput.PartitionKeys = expandGlueColumns(v.([]interface{}))
+		tableInput.PartitionKeys = expandColumns(v.([]interface{}))
 	} else {
 		tableInput.PartitionKeys = []*glue.Column{}
 	}
@@ -548,23 +548,23 @@ func expandGlueTableInput(d *schema.ResourceData) *glue.TableInput {
 	}
 
 	if v, ok := d.GetOk("target_table"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		tableInput.TargetTable = expandGlueTableTargetTable(v.([]interface{})[0].(map[string]interface{}))
+		tableInput.TargetTable = expandTableTargetTable(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	return tableInput
 }
 
-func expandGlueTablePartitionIndexes(a []interface{}) []*glue.PartitionIndex {
+func expandTablePartitionIndexes(a []interface{}) []*glue.PartitionIndex {
 	partitionIndexes := make([]*glue.PartitionIndex, 0, len(a))
 
 	for _, m := range a {
-		partitionIndexes = append(partitionIndexes, expandGlueTablePartitionIndex(m.(map[string]interface{})))
+		partitionIndexes = append(partitionIndexes, expandTablePartitionIndex(m.(map[string]interface{})))
 	}
 
 	return partitionIndexes
 }
 
-func expandGlueTablePartitionIndex(m map[string]interface{}) *glue.PartitionIndex {
+func expandTablePartitionIndex(m map[string]interface{}) *glue.PartitionIndex {
 	partitionIndex := &glue.PartitionIndex{
 		IndexName: aws.String(m["index_name"].(string)),
 		Keys:      flex.ExpandStringList(m["keys"].([]interface{})),
@@ -573,7 +573,7 @@ func expandGlueTablePartitionIndex(m map[string]interface{}) *glue.PartitionInde
 	return partitionIndex
 }
 
-func expandGlueStorageDescriptor(l []interface{}) *glue.StorageDescriptor {
+func expandStorageDescriptor(l []interface{}) *glue.StorageDescriptor {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -582,7 +582,7 @@ func expandGlueStorageDescriptor(l []interface{}) *glue.StorageDescriptor {
 	storageDescriptor := &glue.StorageDescriptor{}
 
 	if v, ok := s["columns"]; ok {
-		storageDescriptor.Columns = expandGlueColumns(v.([]interface{}))
+		storageDescriptor.Columns = expandColumns(v.([]interface{}))
 	}
 
 	if v, ok := s["location"]; ok {
@@ -606,7 +606,7 @@ func expandGlueStorageDescriptor(l []interface{}) *glue.StorageDescriptor {
 	}
 
 	if v, ok := s["ser_de_info"]; ok {
-		storageDescriptor.SerdeInfo = expandGlueSerDeInfo(v.([]interface{}))
+		storageDescriptor.SerdeInfo = expandSerDeInfo(v.([]interface{}))
 	}
 
 	if v, ok := s["bucket_columns"]; ok {
@@ -614,11 +614,11 @@ func expandGlueStorageDescriptor(l []interface{}) *glue.StorageDescriptor {
 	}
 
 	if v, ok := s["sort_columns"]; ok {
-		storageDescriptor.SortColumns = expandGlueSortColumns(v.([]interface{}))
+		storageDescriptor.SortColumns = expandSortColumns(v.([]interface{}))
 	}
 
 	if v, ok := s["skewed_info"]; ok {
-		storageDescriptor.SkewedInfo = expandGlueSkewedInfo(v.([]interface{}))
+		storageDescriptor.SkewedInfo = expandSkewedInfo(v.([]interface{}))
 	}
 
 	if v, ok := s["parameters"]; ok {
@@ -631,13 +631,13 @@ func expandGlueStorageDescriptor(l []interface{}) *glue.StorageDescriptor {
 
 	if v, ok := s["schema_reference"]; ok && len(v.([]interface{})) > 0 {
 		storageDescriptor.Columns = nil
-		storageDescriptor.SchemaReference = expandGlueTableSchemaReference(v.([]interface{}))
+		storageDescriptor.SchemaReference = expandTableSchemaReference(v.([]interface{}))
 	}
 
 	return storageDescriptor
 }
 
-func expandGlueColumns(columns []interface{}) []*glue.Column {
+func expandColumns(columns []interface{}) []*glue.Column {
 	columnSlice := []*glue.Column{}
 	for _, element := range columns {
 		elementMap := element.(map[string]interface{})
@@ -664,7 +664,7 @@ func expandGlueColumns(columns []interface{}) []*glue.Column {
 	return columnSlice
 }
 
-func expandGlueSerDeInfo(l []interface{}) *glue.SerDeInfo {
+func expandSerDeInfo(l []interface{}) *glue.SerDeInfo {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -687,7 +687,7 @@ func expandGlueSerDeInfo(l []interface{}) *glue.SerDeInfo {
 	return serDeInfo
 }
 
-func expandGlueSortColumns(columns []interface{}) []*glue.Order {
+func expandSortColumns(columns []interface{}) []*glue.Order {
 	orderSlice := make([]*glue.Order, len(columns))
 
 	for i, element := range columns {
@@ -707,7 +707,7 @@ func expandGlueSortColumns(columns []interface{}) []*glue.Order {
 	return orderSlice
 }
 
-func expandGlueSkewedInfo(l []interface{}) *glue.SkewedInfo {
+func expandSkewedInfo(l []interface{}) *glue.SkewedInfo {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -730,7 +730,7 @@ func expandGlueSkewedInfo(l []interface{}) *glue.SkewedInfo {
 	return skewedInfo
 }
 
-func expandGlueTableSchemaReference(l []interface{}) *glue.SchemaReference {
+func expandTableSchemaReference(l []interface{}) *glue.SchemaReference {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -743,7 +743,7 @@ func expandGlueTableSchemaReference(l []interface{}) *glue.SchemaReference {
 	}
 
 	if v, ok := s["schema_id"]; ok {
-		schemaRef.SchemaId = expandGlueTableSchemaReferenceSchemaID(v.([]interface{}))
+		schemaRef.SchemaId = expandTableSchemaReferenceSchemaID(v.([]interface{}))
 	}
 
 	if v, ok := s["schema_version_number"].(int); ok {
@@ -753,7 +753,7 @@ func expandGlueTableSchemaReference(l []interface{}) *glue.SchemaReference {
 	return schemaRef
 }
 
-func expandGlueTableSchemaReferenceSchemaID(l []interface{}) *glue.SchemaId {
+func expandTableSchemaReferenceSchemaID(l []interface{}) *glue.SchemaId {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -776,7 +776,7 @@ func expandGlueTableSchemaReferenceSchemaID(l []interface{}) *glue.SchemaId {
 	return schemaID
 }
 
-func flattenGlueStorageDescriptor(s *glue.StorageDescriptor) []map[string]interface{} {
+func flattenStorageDescriptor(s *glue.StorageDescriptor) []map[string]interface{} {
 	if s == nil {
 		storageDescriptors := make([]map[string]interface{}, 0)
 		return storageDescriptors
@@ -786,21 +786,21 @@ func flattenGlueStorageDescriptor(s *glue.StorageDescriptor) []map[string]interf
 
 	storageDescriptor := make(map[string]interface{})
 
-	storageDescriptor["columns"] = flattenGlueColumns(s.Columns)
+	storageDescriptor["columns"] = flattenColumns(s.Columns)
 	storageDescriptor["location"] = aws.StringValue(s.Location)
 	storageDescriptor["input_format"] = aws.StringValue(s.InputFormat)
 	storageDescriptor["output_format"] = aws.StringValue(s.OutputFormat)
 	storageDescriptor["compressed"] = aws.BoolValue(s.Compressed)
 	storageDescriptor["number_of_buckets"] = aws.Int64Value(s.NumberOfBuckets)
-	storageDescriptor["ser_de_info"] = flattenGlueSerDeInfo(s.SerdeInfo)
+	storageDescriptor["ser_de_info"] = flattenSerDeInfo(s.SerdeInfo)
 	storageDescriptor["bucket_columns"] = flex.FlattenStringList(s.BucketColumns)
-	storageDescriptor["sort_columns"] = flattenGlueOrders(s.SortColumns)
+	storageDescriptor["sort_columns"] = flattenOrders(s.SortColumns)
 	storageDescriptor["parameters"] = aws.StringValueMap(s.Parameters)
-	storageDescriptor["skewed_info"] = flattenGlueSkewedInfo(s.SkewedInfo)
+	storageDescriptor["skewed_info"] = flattenSkewedInfo(s.SkewedInfo)
 	storageDescriptor["stored_as_sub_directories"] = aws.BoolValue(s.StoredAsSubDirectories)
 
 	if s.SchemaReference != nil {
-		storageDescriptor["schema_reference"] = flattenGlueTableSchemaReference(s.SchemaReference)
+		storageDescriptor["schema_reference"] = flattenTableSchemaReference(s.SchemaReference)
 	}
 
 	storageDescriptors[0] = storageDescriptor
@@ -808,18 +808,18 @@ func flattenGlueStorageDescriptor(s *glue.StorageDescriptor) []map[string]interf
 	return storageDescriptors
 }
 
-func flattenGlueColumns(cs []*glue.Column) []map[string]interface{} {
+func flattenColumns(cs []*glue.Column) []map[string]interface{} {
 	columnsSlice := make([]map[string]interface{}, len(cs))
 	if len(cs) > 0 {
 		for i, v := range cs {
-			columnsSlice[i] = flattenGlueColumn(v)
+			columnsSlice[i] = flattenColumn(v)
 		}
 	}
 
 	return columnsSlice
 }
 
-func flattenGlueColumn(c *glue.Column) map[string]interface{} {
+func flattenColumn(c *glue.Column) map[string]interface{} {
 	column := make(map[string]interface{})
 
 	if c == nil {
@@ -845,18 +845,18 @@ func flattenGlueColumn(c *glue.Column) map[string]interface{} {
 	return column
 }
 
-func flattenGluePartitionIndexes(cs []*glue.PartitionIndexDescriptor) []map[string]interface{} {
+func flattenPartitionIndexes(cs []*glue.PartitionIndexDescriptor) []map[string]interface{} {
 	partitionIndexSlice := make([]map[string]interface{}, len(cs))
 	if len(cs) > 0 {
 		for i, v := range cs {
-			partitionIndexSlice[i] = flattenGluePartitionIndex(v)
+			partitionIndexSlice[i] = flattenPartitionIndex(v)
 		}
 	}
 
 	return partitionIndexSlice
 }
 
-func flattenGluePartitionIndex(c *glue.PartitionIndexDescriptor) map[string]interface{} {
+func flattenPartitionIndex(c *glue.PartitionIndexDescriptor) map[string]interface{} {
 	partitionIndex := make(map[string]interface{})
 
 	if c == nil {
@@ -882,7 +882,7 @@ func flattenGluePartitionIndex(c *glue.PartitionIndexDescriptor) map[string]inte
 	return partitionIndex
 }
 
-func flattenGlueSerDeInfo(s *glue.SerDeInfo) []map[string]interface{} {
+func flattenSerDeInfo(s *glue.SerDeInfo) []map[string]interface{} {
 	if s == nil {
 		serDeInfos := make([]map[string]interface{}, 0)
 		return serDeInfos
@@ -905,7 +905,7 @@ func flattenGlueSerDeInfo(s *glue.SerDeInfo) []map[string]interface{} {
 	return serDeInfos
 }
 
-func flattenGlueOrders(os []*glue.Order) []map[string]interface{} {
+func flattenOrders(os []*glue.Order) []map[string]interface{} {
 	orders := make([]map[string]interface{}, len(os))
 	for i, v := range os {
 		order := make(map[string]interface{})
@@ -917,7 +917,7 @@ func flattenGlueOrders(os []*glue.Order) []map[string]interface{} {
 	return orders
 }
 
-func flattenGlueSkewedInfo(s *glue.SkewedInfo) []map[string]interface{} {
+func flattenSkewedInfo(s *glue.SkewedInfo) []map[string]interface{} {
 	if s == nil {
 		skewedInfoSlice := make([]map[string]interface{}, 0)
 		return skewedInfoSlice
@@ -934,7 +934,7 @@ func flattenGlueSkewedInfo(s *glue.SkewedInfo) []map[string]interface{} {
 	return skewedInfoSlice
 }
 
-func flattenGlueTableSchemaReference(s *glue.SchemaReference) []map[string]interface{} {
+func flattenTableSchemaReference(s *glue.SchemaReference) []map[string]interface{} {
 	if s == nil {
 		schemaReferenceInfoSlice := make([]map[string]interface{}, 0)
 		return schemaReferenceInfoSlice
@@ -953,7 +953,7 @@ func flattenGlueTableSchemaReference(s *glue.SchemaReference) []map[string]inter
 	}
 
 	if s.SchemaId != nil {
-		schemaReferenceInfo["schema_id"] = flattenGlueTableSchemaReferenceSchemaID(s.SchemaId)
+		schemaReferenceInfo["schema_id"] = flattenTableSchemaReferenceSchemaID(s.SchemaId)
 	}
 
 	schemaReferenceInfoSlice[0] = schemaReferenceInfo
@@ -961,7 +961,7 @@ func flattenGlueTableSchemaReference(s *glue.SchemaReference) []map[string]inter
 	return schemaReferenceInfoSlice
 }
 
-func flattenGlueTableSchemaReferenceSchemaID(s *glue.SchemaId) []map[string]interface{} {
+func flattenTableSchemaReferenceSchemaID(s *glue.SchemaId) []map[string]interface{} {
 	if s == nil {
 		schemaIDInfoSlice := make([]map[string]interface{}, 0)
 		return schemaIDInfoSlice
@@ -988,7 +988,7 @@ func flattenGlueTableSchemaReferenceSchemaID(s *glue.SchemaId) []map[string]inte
 	return schemaIDInfoSlice
 }
 
-func expandGlueTableTargetTable(tfMap map[string]interface{}) *glue.TableIdentifier {
+func expandTableTargetTable(tfMap map[string]interface{}) *glue.TableIdentifier {
 	if tfMap == nil {
 		return nil
 	}
@@ -1010,7 +1010,7 @@ func expandGlueTableTargetTable(tfMap map[string]interface{}) *glue.TableIdentif
 	return apiObject
 }
 
-func flattenGlueTableTargetTable(apiObject *glue.TableIdentifier) map[string]interface{} {
+func flattenTableTargetTable(apiObject *glue.TableIdentifier) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}

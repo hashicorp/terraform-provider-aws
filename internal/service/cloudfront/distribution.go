@@ -13,9 +13,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func ResourceDistribution() *schema.Resource {
@@ -586,6 +588,11 @@ func ResourceDistribution() *schema.Resource {
 								},
 							},
 						},
+						"origin_access_control_id": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.NoZeroValues,
+						},
 						"origin_id": {
 							Type:         schema.TypeString,
 							Required:     true,
@@ -594,6 +601,7 @@ func ResourceDistribution() *schema.Resource {
 						"origin_path": {
 							Type:     schema.TypeString,
 							Optional: true,
+							Default:  "",
 						},
 						"origin_shield": {
 							Type:     schema.TypeList,
@@ -879,14 +887,14 @@ func resourceDistributionRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	resp, err := conn.GetDistribution(params)
-	if err != nil {
-		if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchDistribution) {
-			log.Printf("[WARN] No Distribution found: %s", d.Id())
-			d.SetId("")
-			return nil
-		}
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchDistribution) {
+		create.LogNotFoundRemoveState(names.CloudFront, create.ErrActionReading, ResNameDistribution, d.Id())
+		d.SetId("")
+		return nil
+	}
 
-		return err
+	if err != nil {
+		return create.Error(names.CloudFront, create.ErrActionReading, ResNameDistribution, d.Id(), err)
 	}
 
 	// Update attributes from DistributionConfig
@@ -896,10 +904,10 @@ func resourceDistributionRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// Update other attributes outside of DistributionConfig
-	if err := d.Set("trusted_key_groups", flattenCloudfrontActiveTrustedKeyGroups(resp.Distribution.ActiveTrustedKeyGroups)); err != nil {
+	if err := d.Set("trusted_key_groups", flattenActiveTrustedKeyGroups(resp.Distribution.ActiveTrustedKeyGroups)); err != nil {
 		return fmt.Errorf("error setting trusted_key_groups: %w", err)
 	}
-	if err := d.Set("trusted_signers", flattenCloudfrontActiveTrustedSigners(resp.Distribution.ActiveTrustedSigners)); err != nil {
+	if err := d.Set("trusted_signers", flattenActiveTrustedSigners(resp.Distribution.ActiveTrustedSigners)); err != nil {
 		return fmt.Errorf("error setting trusted_signers: %w", err)
 	}
 	d.Set("status", resp.Distribution.Status)
@@ -912,9 +920,9 @@ func resourceDistributionRead(d *schema.ResourceData, meta interface{}) error {
 	// override hosted_zone_id from flattenDistributionConfig
 	region := meta.(*conns.AWSClient).Region
 	if v, ok := endpoints.PartitionForRegion(endpoints.DefaultPartitions(), region); ok && v.ID() == endpoints.AwsCnPartitionID {
-		d.Set("hosted_zone_id", cloudFrontCNRoute53ZoneID)
+		d.Set("hosted_zone_id", cnRoute53ZoneID)
 	} else {
-		d.Set("hosted_zone_id", cloudFrontRoute53ZoneID)
+		d.Set("hosted_zone_id", route53ZoneID)
 	}
 
 	tags, err := ListTags(conn, d.Get("arn").(string))
@@ -959,6 +967,29 @@ func resourceDistributionUpdate(d *schema.ResourceData, meta interface{}) error 
 
 		return nil
 	})
+
+	// Refresh our ETag if it is out of date and attempt update again
+	if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodePreconditionFailed) {
+		getDistributionInput := &cloudfront.GetDistributionInput{
+			Id: aws.String(d.Id()),
+		}
+		var getDistributionOutput *cloudfront.GetDistributionOutput
+
+		log.Printf("[DEBUG] Refreshing CloudFront Distribution (%s) ETag", d.Id())
+		getDistributionOutput, err = conn.GetDistribution(getDistributionInput)
+
+		if err != nil {
+			return fmt.Errorf("error refreshing CloudFront Distribution (%s) ETag: %s", d.Id(), err)
+		}
+
+		if getDistributionOutput == nil {
+			return fmt.Errorf("error refreshing CloudFront Distribution (%s) ETag: empty response", d.Id())
+		}
+
+		params.IfMatch = getDistributionOutput.ETag
+
+		_, err = conn.UpdateDistribution(params)
+	}
 
 	// Propagate AWS Go SDK retried error, if any
 	if tfresource.TimedOut(err) {

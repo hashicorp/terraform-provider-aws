@@ -304,7 +304,7 @@ func resourceDeviceUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTagsWithContext(ctx, conn, d.Get("arn").(string), o, n); err != nil {
 			return diag.Errorf("error updating Network Manager Device (%s) tags: %s", d.Id(), err)
 		}
 	}
@@ -478,7 +478,7 @@ func waitDeviceUpdated(ctx context.Context, conn *networkmanager.NetworkManager,
 	return nil, err
 }
 
-func expandAWSLocation(tfMap map[string]interface{}) *networkmanager.AWSLocation {
+func expandAWSLocation(tfMap map[string]interface{}) *networkmanager.AWSLocation { // nosemgrep:ci.aws-in-func-name
 	if tfMap == nil {
 		return nil
 	}
@@ -496,7 +496,7 @@ func expandAWSLocation(tfMap map[string]interface{}) *networkmanager.AWSLocation
 	return apiObject
 }
 
-func flattenAWSLocation(apiObject *networkmanager.AWSLocation) map[string]interface{} {
+func flattenAWSLocation(apiObject *networkmanager.AWSLocation) map[string]interface{} { // nosemgrep:ci.aws-in-func-name
 	if apiObject == nil {
 		return nil
 	}

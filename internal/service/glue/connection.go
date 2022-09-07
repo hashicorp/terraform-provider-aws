@@ -117,7 +117,7 @@ func resourceConnectionCreate(d *schema.ResourceData, meta interface{}) error {
 
 	input := &glue.CreateConnectionInput{
 		CatalogId:       aws.String(catalogID),
-		ConnectionInput: expandGlueConnectionInput(d),
+		ConnectionInput: expandConnectionInput(d),
 		Tags:            Tags(tags.IgnoreAWS()),
 	}
 
@@ -172,7 +172,7 @@ func resourceConnectionRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting match_criteria: %w", err)
 	}
 	d.Set("name", connection.Name)
-	if err := d.Set("physical_connection_requirements", flattenGluePhysicalConnectionRequirements(connection.PhysicalConnectionRequirements)); err != nil {
+	if err := d.Set("physical_connection_requirements", flattenPhysicalConnectionRequirements(connection.PhysicalConnectionRequirements)); err != nil {
 		return fmt.Errorf("error setting physical_connection_requirements: %w", err)
 	}
 
@@ -207,7 +207,7 @@ func resourceConnectionUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		input := &glue.UpdateConnectionInput{
 			CatalogId:       aws.String(catalogID),
-			ConnectionInput: expandGlueConnectionInput(d),
+			ConnectionInput: expandConnectionInput(d),
 			Name:            aws.String(connectionName),
 		}
 
@@ -270,7 +270,7 @@ func DeleteConnection(conn *glue.Glue, catalogID, connectionName string) error {
 	return nil
 }
 
-func expandGlueConnectionInput(d *schema.ResourceData) *glue.ConnectionInput {
+func expandConnectionInput(d *schema.ResourceData) *glue.ConnectionInput {
 	connectionProperties := make(map[string]string)
 	if val, ok := d.GetOkExists("connection_properties"); ok {
 		for k, v := range val.(map[string]interface{}) {
@@ -295,13 +295,13 @@ func expandGlueConnectionInput(d *schema.ResourceData) *glue.ConnectionInput {
 	if v, ok := d.GetOk("physical_connection_requirements"); ok {
 		physicalConnectionRequirementsList := v.([]interface{})
 		physicalConnectionRequirementsMap := physicalConnectionRequirementsList[0].(map[string]interface{})
-		connectionInput.PhysicalConnectionRequirements = expandGluePhysicalConnectionRequirements(physicalConnectionRequirementsMap)
+		connectionInput.PhysicalConnectionRequirements = expandPhysicalConnectionRequirements(physicalConnectionRequirementsMap)
 	}
 
 	return connectionInput
 }
 
-func expandGluePhysicalConnectionRequirements(m map[string]interface{}) *glue.PhysicalConnectionRequirements {
+func expandPhysicalConnectionRequirements(m map[string]interface{}) *glue.PhysicalConnectionRequirements {
 	physicalConnectionRequirements := &glue.PhysicalConnectionRequirements{}
 
 	if v, ok := m["availability_zone"]; ok {
@@ -319,7 +319,7 @@ func expandGluePhysicalConnectionRequirements(m map[string]interface{}) *glue.Ph
 	return physicalConnectionRequirements
 }
 
-func flattenGluePhysicalConnectionRequirements(physicalConnectionRequirements *glue.PhysicalConnectionRequirements) []map[string]interface{} {
+func flattenPhysicalConnectionRequirements(physicalConnectionRequirements *glue.PhysicalConnectionRequirements) []map[string]interface{} {
 	if physicalConnectionRequirements == nil {
 		return []map[string]interface{}{}
 	}

@@ -63,7 +63,7 @@ Upgrade topics:
 
 -> Before upgrading to version 3.0.0, it is recommended to upgrade to the most recent 2.X version of the provider and ensure that your environment successfully runs [`terraform plan`](https://www.terraform.io/docs/commands/plan.html) without unexpected changes or deprecation notices.
 
-It is recommended to use [version constraints when configuring Terraform providers](https://www.terraform.io/docs/configuration/providers.html#provider-versions). If you are following that recommendation, update the version constraints in your Terraform configuration and run [`terraform init`](https://www.terraform.io/docs/commands/init.html) to download the new version.
+We recommend using [version constraints when configuring Terraform providers](https://www.terraform.io/docs/configuration/providers.html#provider-versions). If you are following that recommendation, update the version constraints in your Terraform configuration and run [`terraform init`](https://www.terraform.io/docs/commands/init.html) to download the new version.
 
 For example, given this previous configuration:
 
@@ -479,7 +479,7 @@ Terraform will perform the following actions:
 Plan: 5 to add, 0 to change, 5 to destroy.
 ```
 
-Due to the type of configuration change, Terraform does not know that the previous `aws_route53_record` resources (indexed by number in the existing state) and the new resources (indexed by domain names in the updated configuration) are equivalent. Typically in this situation, the [`terraform state mv` command](https://www.terraform.io/docs/commands/state/mv.html) can be used to reduce the plan to show no changes. This is done by associating the count index (e.g., `[1]`) with the equivalent domain name index (e.g., `["existing2.example.com"]`), making one of the four commands to fix the above example: `terraform state mv 'aws_route53_record.existing[1]' 'aws_route53_record.existing["existing2.example.com"]'`. It is recommended to use this `terraform state mv` update process where possible to reduce chances of unexpected behaviors or changes in an environment.
+Due to the type of configuration change, Terraform does not know that the previous `aws_route53_record` resources (indexed by number in the existing state) and the new resources (indexed by domain names in the updated configuration) are equivalent. Typically in this situation, the [`terraform state mv` command](https://www.terraform.io/docs/commands/state/mv.html) can be used to reduce the plan to show no changes. This is done by associating the count index (e.g., `[1]`) with the equivalent domain name index (e.g., `["existing2.example.com"]`), making one of the four commands to fix the above example: `terraform state mv 'aws_route53_record.existing[1]' 'aws_route53_record.existing["existing2.example.com"]'`. We recommend using this `terraform state mv` update process where possible to reduce chances of unexpected behaviors or changes in an environment.
 
 If using `terraform state mv` to reduce the plan to show no changes, no additional steps are required.
 
@@ -771,7 +771,7 @@ aws_cloudfront_distribution.example.trusted_signers[0].items
 
 ### Removal of arn Wildcard Suffix
 
-Previously, the resource returned the Amazon Resource Name (ARN) directly from the API, which included a `:*` suffix to denote all CloudWatch Log Streams under the CloudWatch Log Group. Most other AWS resources that return ARNs and many other AWS services do not use the `:*` suffix. The suffix is now automatically removed. For example, the resource previously returned an ARN such as `arn:aws:logs:us-east-1:123456789012:log-group:/example:*` but will now return `arn:aws:logs:us-east-1:123456789012:log-group:/example`.
+Previously, the resource returned the ARN directly from the API, which included a `:*` suffix to denote all CloudWatch Log Streams under the CloudWatch Log Group. Most other AWS resources that return ARNs and many other AWS services do not use the `:*` suffix. The suffix is now automatically removed. For example, the resource previously returned an ARN such as `arn:aws:logs:us-east-1:123456789012:log-group:/example:*` but will now return `arn:aws:logs:us-east-1:123456789012:log-group:/example`.
 
 Workarounds, such as using `replace()` as shown below, should be removed:
 
@@ -831,7 +831,7 @@ Switch your Terraform configuration to the `OAuthToken` element in the `action` 
 
 For example, given this previous configuration:
 
-```bash
+```console
 $ GITHUB_TOKEN=<token> terraform apply
 ```
 
@@ -862,7 +862,7 @@ resource "aws_codepipeline" "example" {
 
 The configuration could be updated as follows:
 
-```bash
+```console
 $ TF_VAR_github_token=<token> terraform apply
 ```
 

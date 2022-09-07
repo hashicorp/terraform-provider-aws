@@ -114,11 +114,11 @@ func resourceParameterGroupRead(d *schema.ResourceData, meta interface{}) error 
 	d.Set("name", pg.ParameterGroupName)
 	desc := pg.Description
 	// default description is " "
-	if desc != nil && *desc == " " {
+	if desc != nil && aws.StringValue(desc) == " " {
 		*desc = ""
 	}
 	d.Set("description", desc)
-	d.Set("parameters", flattenDAXParameterGroupParameters(paramresp.Parameters))
+	d.Set("parameters", flattenParameterGroupParameters(paramresp.Parameters))
 	return nil
 }
 

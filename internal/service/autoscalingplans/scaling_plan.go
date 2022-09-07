@@ -323,8 +323,8 @@ func resourceScalingPlanCreate(d *schema.ResourceData, meta interface{}) error {
 
 	scalingPlanName := d.Get("name").(string)
 	input := &autoscalingplans.CreateScalingPlanInput{
-		ApplicationSource:   expandAutoScalingPlansApplicationSource(d.Get("application_source").([]interface{})),
-		ScalingInstructions: expandAutoScalingPlansScalingInstructions(d.Get("scaling_instruction").(*schema.Set)),
+		ApplicationSource:   expandApplicationSource(d.Get("application_source").([]interface{})),
+		ScalingInstructions: expandScalingInstructions(d.Get("scaling_instruction").(*schema.Set)),
 		ScalingPlanName:     aws.String(scalingPlanName),
 	}
 
@@ -369,12 +369,12 @@ func resourceScalingPlanRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error reading Auto Scaling Scaling Plan (%s): %w", d.Id(), err)
 	}
 
-	err = d.Set("application_source", flattenAutoScalingPlansApplicationSource(scalingPlan.ApplicationSource))
+	err = d.Set("application_source", flattenApplicationSource(scalingPlan.ApplicationSource))
 	if err != nil {
 		return fmt.Errorf("error setting application_source: %w", err)
 	}
 	d.Set("name", scalingPlan.ScalingPlanName)
-	err = d.Set("scaling_instruction", flattenAutoScalingPlansScalingInstructions(scalingPlan.ScalingInstructions))
+	err = d.Set("scaling_instruction", flattenScalingInstructions(scalingPlan.ScalingInstructions))
 	if err != nil {
 		return fmt.Errorf("error setting scaling_instruction: %w", err)
 	}
@@ -393,8 +393,8 @@ func resourceScalingPlanUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	input := &autoscalingplans.UpdateScalingPlanInput{
-		ApplicationSource:   expandAutoScalingPlansApplicationSource(d.Get("application_source").([]interface{})),
-		ScalingInstructions: expandAutoScalingPlansScalingInstructions(d.Get("scaling_instruction").(*schema.Set)),
+		ApplicationSource:   expandApplicationSource(d.Get("application_source").([]interface{})),
+		ScalingInstructions: expandScalingInstructions(d.Get("scaling_instruction").(*schema.Set)),
 		ScalingPlanName:     aws.String(scalingPlanName),
 		ScalingPlanVersion:  aws.Int64(int64(scalingPlanVersion)),
 	}
@@ -462,7 +462,7 @@ func resourceScalingPlanImport(d *schema.ResourceData, meta interface{}) ([]*sch
 // ApplicationSource functions.
 //
 
-func expandAutoScalingPlansApplicationSource(vApplicationSource []interface{}) *autoscalingplans.ApplicationSource {
+func expandApplicationSource(vApplicationSource []interface{}) *autoscalingplans.ApplicationSource {
 	if len(vApplicationSource) == 0 || vApplicationSource[0] == nil {
 		return nil
 	}
@@ -499,7 +499,7 @@ func expandAutoScalingPlansApplicationSource(vApplicationSource []interface{}) *
 	return applicationSource
 }
 
-func flattenAutoScalingPlansApplicationSource(applicationSource *autoscalingplans.ApplicationSource) []interface{} {
+func flattenApplicationSource(applicationSource *autoscalingplans.ApplicationSource) []interface{} {
 	if applicationSource == nil {
 		return []interface{}{}
 	}
@@ -530,7 +530,7 @@ func flattenAutoScalingPlansApplicationSource(applicationSource *autoscalingplan
 // ScalingInstruction functions.
 //
 
-func expandAutoScalingPlansScalingInstructions(vScalingInstructions *schema.Set) []*autoscalingplans.ScalingInstruction {
+func expandScalingInstructions(vScalingInstructions *schema.Set) []*autoscalingplans.ScalingInstruction {
 	scalingInstructions := []*autoscalingplans.ScalingInstruction{}
 
 	for _, vScalingInstruction := range vScalingInstructions.List() {
@@ -713,7 +713,7 @@ func expandAutoScalingPlansScalingInstructions(vScalingInstructions *schema.Set)
 	return scalingInstructions
 }
 
-func flattenAutoScalingPlansScalingInstructions(scalingInstructions []*autoscalingplans.ScalingInstruction) []interface{} {
+func flattenScalingInstructions(scalingInstructions []*autoscalingplans.ScalingInstruction) []interface{} {
 	vScalingInstructions := []interface{}{}
 
 	for _, scalingInstruction := range scalingInstructions {

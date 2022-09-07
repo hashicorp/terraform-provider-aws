@@ -8,10 +8,50 @@ ACCTEST_PARALLELISM ?= 20
 
 ifneq ($(origin PKG), undefined)
 	PKG_NAME = internal/service/$(PKG)
+	TEST = ./$(PKG_NAME)/...
 endif
 
 ifneq ($(origin TESTS), undefined)
 	RUNARGS = -run='$(TESTS)'
+endif
+
+ifneq ($(origin SWEEPERS), undefined)
+	SWEEPARGS = -sweep-run='$(SWEEPERS)'
+endif
+
+ifeq ($(PKG_NAME), internal/service/ebs)
+	PKG_NAME = internal/service/ec2
+	TEST = ./$(PKG_NAME)/...
+endif
+
+ifeq ($(PKG_NAME), internal/service/ipam)
+	PKG_NAME = internal/service/ec2
+	TEST = ./$(PKG_NAME)/...
+endif
+
+ifeq ($(PKG_NAME), internal/service/transitgateway)
+	PKG_NAME = internal/service/ec2
+	TEST = ./$(PKG_NAME)/...
+endif
+
+ifeq ($(PKG_NAME), internal/service/vpc)
+	PKG_NAME = internal/service/ec2
+	TEST = ./$(PKG_NAME)/...
+endif
+
+ifeq ($(PKG_NAME), internal/service/vpnclient)
+	PKG_NAME = internal/service/ec2
+	TEST = ./$(PKG_NAME)/...
+endif
+
+ifeq ($(PKG_NAME), internal/service/vpnsite)
+	PKG_NAME = internal/service/ec2
+	TEST = ./$(PKG_NAME)/...
+endif
+
+ifeq ($(PKG_NAME), internal/service/wavelength)
+	PKG_NAME = internal/service/ec2
+	TEST = ./$(PKG_NAME)/...
 endif
 
 default: build
@@ -20,7 +60,19 @@ build: fmtcheck
 	go install
 
 gen:
+	rm -f .github/labeler-issue-triage.yml
+	rm -f .github/labeler-pr-triage.yml
+	rm -f infrastructure/repository/labels-service.tf
+	rm -f internal/conns/*_gen.go
 	rm -f internal/service/**/*_gen.go
+	rm -f internal/sweep/sweep_test.go
+	rm -f names/caps.md
+	rm -f names/*_gen.go
+	rm -f website/allowed-subcategories.txt
+	rm -f website/docs/guides/custom-service-endpoints.html.md
+	rm -f .ci/.semgrep-caps-aws-ec2.yml
+	rm -f .ci/.semgrep-configs.yml
+	rm -f .ci/.semgrep-service-name*.yml
 	go generate ./...
 
 sweep:
@@ -34,10 +86,10 @@ test: fmtcheck
 testacc: fmtcheck
 	@if [ "$(TESTARGS)" = "-run=TestAccXXX" ]; then \
 		echo ""; \
-		echo "Error: Skipping example acceptance testing pattern. Update TESTARGS to match the test naming in the relevant *_test.go file."; \
+		echo "Error: Skipping example acceptance testing pattern. Update PKG and TESTS for the relevant *_test.go file."; \
 		echo ""; \
-		echo "For example if updating aws/resource_aws_acm_certificate.go, use the test names in aws/resource_aws_acm_certificate_test.go starting with TestAcc and up to the underscore:"; \
-		echo "make testacc TESTARGS='-run=TestAccAWSAcmCertificate_'"; \
+		echo "For example if updating internal/service/acm/certificate.go, use the test names in internal/service/acm/certificate_test.go starting with TestAcc and up to the underscore:"; \
+		echo "make testacc TESTS=TestAccACMCertificate_ PKG=acm"; \
 		echo ""; \
 		echo "See the contributing guide for more information: https://github.com/hashicorp/terraform-provider-aws/blob/main/docs/contributing/running-and-writing-acceptance-tests.md"; \
 		exit 1; \
@@ -46,11 +98,11 @@ testacc: fmtcheck
 
 fmt:
 	@echo "==> Fixing source code with gofmt..."
-	gofmt -s -w ./$(PKG_NAME) $(filter-out ./providerlint/go% ./providerlint/README.md ./providerlint/vendor, $(wildcard ./providerlint/*))
+	gofmt -s -w ./$(PKG_NAME) ./names $(filter-out ./.ci/providerlint/go% ./.ci/providerlint/README.md ./.ci/providerlint/vendor, $(wildcard ./.ci/providerlint/*))
 
 # Currently required by tf-deploy compile
 fmtcheck:
-	@sh -c "'$(CURDIR)/scripts/gofmtcheck.sh'"
+	@sh -c "'$(CURDIR)/.ci/scripts/gofmtcheck.sh'"
 
 gencheck:
 	@echo "==> Checking generated source code..."
@@ -60,7 +112,7 @@ gencheck:
 
 generate-changelog:
 	@echo "==> Generating changelog..."
-	@sh -c "'$(CURDIR)/scripts/generate-changelog.sh'"
+	@sh -c "'$(CURDIR)/.ci/scripts/generate-changelog.sh'"
 
 depscheck:
 	@echo "==> Checking source code with go mod tidy..."
@@ -93,9 +145,14 @@ docscheck:
 
 lint: golangci-lint providerlint importlint
 
+gh-workflows-lint:
+	@echo "==> Checking github workflows with actionlint..."
+	@actionlint
+
 golangci-lint:
 	@echo "==> Checking source code with golangci-lint..."
-	@golangci-lint run ./$(PKG_NAME)/...
+	@golangci-lint -c .ci/.golangci.yml run ./$(PKG_NAME)/...
+	@golangci-lint -c .ci/.golangci2.yml run ./$(PKG_NAME)/...
 
 providerlint:
 	@echo "==> Checking source code with providerlint..."
@@ -129,14 +186,15 @@ importlint:
 	@impi --local . --scheme stdThirdPartyLocal ./$(PKG_NAME)/...
 
 tools:
-	cd providerlint && go install .
-	cd tools && go install github.com/bflad/tfproviderdocs
-	cd tools && go install github.com/client9/misspell/cmd/misspell
-	cd tools && go install github.com/golangci/golangci-lint/cmd/golangci-lint
-	cd tools && go install github.com/katbyte/terrafmt
-	cd tools && go install github.com/terraform-linters/tflint
-	cd tools && go install github.com/pavius/impi/cmd/impi
-	cd tools && go install github.com/hashicorp/go-changelog/cmd/changelog-build
+	cd .ci/providerlint && go install .
+	cd .ci/tools && go install github.com/bflad/tfproviderdocs
+	cd .ci/tools && go install github.com/client9/misspell/cmd/misspell
+	cd .ci/tools && go install github.com/golangci/golangci-lint/cmd/golangci-lint
+	cd .ci/tools && go install github.com/katbyte/terrafmt
+	cd .ci/tools && go install github.com/terraform-linters/tflint
+	cd .ci/tools && go install github.com/pavius/impi/cmd/impi
+	cd .ci/tools && go install github.com/hashicorp/go-changelog/cmd/changelog-build
+	cd .ci/tools && go install github.com/rhysd/actionlint/cmd/actionlint
 
 test-compile:
 	@if [ "$(TEST)" = "./..." ]; then \
@@ -147,7 +205,10 @@ test-compile:
 	go test -c $(TEST) $(TESTARGS)
 
 website-link-check:
-	@scripts/markdown-link-check.sh
+	@.ci/scripts/markdown-link-check.sh
+
+website-link-check-ghrc:
+	@LINK_CHECK_CONTAINER="ghcr.io/tcort/markdown-link-check:stable" .ci/scripts/markdown-link-check.sh
 
 website-lint:
 	@echo "==> Checking website against linters..."
@@ -173,6 +234,28 @@ website-lint-fix:
 
 semgrep:
 	@echo "==> Running Semgrep static analysis..."
-	@docker run --rm --volume "${PWD}:/src" returntocorp/semgrep --config .semgrep.yml
+	@docker run --rm --volume "${PWD}:/src" returntocorp/semgrep --config .ci/.semgrep.yml
 
-.PHONY: providerlint build gen generate-changelog golangci-lint sweep test testacc fmt fmtcheck lint tools test-compile website-link-check website-lint website-lint-fix depscheck docscheck semgrep
+semall:
+	@echo "==> Running Semgrep checks locally (must have semgrep installed)..."
+	@semgrep --error --metrics=off \
+		--config .ci/.semgrep.yml \
+		--config .ci/.semgrep-caps-aws-ec2.yml \
+		--config .ci/.semgrep-configs.yml \
+		--config .ci/.semgrep-service-name0.yml \
+		--config .ci/.semgrep-service-name1.yml \
+		--config .ci/.semgrep-service-name2.yml \
+		--config .ci/.semgrep-service-name3.yml \
+		--config 'r/dgryski.semgrep-go.errnilcheck' \
+		--config 'r/dgryski.semgrep-go.nilerr'
+
+skaff:
+	cd skaff && go install github.com/hashicorp/terraform-provider-aws/skaff
+
+tfsdk2fw:
+	cd tools/tfsdk2fw && go install github.com/hashicorp/terraform-provider-aws/tools/tfsdk2fw
+
+yamllint:
+	@yamllint .
+
+.PHONY: providerlint build gen generate-changelog gh-workflows-lint golangci-lint sweep test testacc fmt fmtcheck lint tools test-compile website-link-check website-lint website-lint-fix depscheck docscheck semgrep skaff tfsdk2fw

@@ -1,5 +1,5 @@
 ---
-subcategory: "Kafka Connect (MSK Connect)"
+subcategory: "Managed Streaming for Kafka Connect"
 layout: "aws"
 page_title: "AWS: aws_mskconnect_custom_plugin"
 description: |-
@@ -28,7 +28,7 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `arn` - the Amazon Resource Name (ARN) of the custom plugin.
+* `arn` - the ARN of the custom plugin.
 * `description` - a summary description of the custom plugin.
 * `latest_revision` - an ID of the latest successfully created revision of the custom plugin.
 * `state` - the state of the custom plugin.

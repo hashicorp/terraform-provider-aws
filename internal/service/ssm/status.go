@@ -23,7 +23,13 @@ func statusAssociation(conn *ssm.SSM, id string) resource.StateRefreshFunc {
 			return nil, "", err
 		}
 
-		return output, aws.StringValue(output.Status.Name), nil
+		// Use the Overview.Status field instead of the root-level Status as DescribeAssociation
+		// does not appear to return the root-level Status in the API response at this time.
+		if output.Overview == nil {
+			return nil, "", nil
+		}
+
+		return output, aws.StringValue(output.Overview.Status), nil
 	}
 }
 
@@ -38,6 +44,18 @@ func statusDocument(conn *ssm.SSM, name string) resource.StateRefreshFunc {
 
 		if output == nil {
 			return output, documentStatusUnknown, nil
+		}
+
+		return output, aws.StringValue(output.Status), nil
+	}
+}
+
+func statusServiceSetting(conn *ssm.SSM, arn string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindServiceSettingByARN(conn, arn)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
 		}
 
 		return output, aws.StringValue(output.Status), nil

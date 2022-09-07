@@ -1,5 +1,5 @@
 ---
-subcategory: "S3"
+subcategory: "S3 (Simple Storage)"
 layout: "aws"
 page_title: "AWS: aws_s3_bucket_cors_configuration"
 description: |-
@@ -20,7 +20,7 @@ resource "aws_s3_bucket" "example" {
 }
 
 resource "aws_s3_bucket_cors_configuration" "example" {
-  bucket = aws_s3_bucket.example.bucket
+  bucket = aws_s3_bucket.example.id
 
   cors_rule {
     allowed_headers = ["*"]

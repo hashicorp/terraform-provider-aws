@@ -17,13 +17,13 @@ func TestAccSimpleDBDomain_basic(t *testing.T) {
 	resourceName := "aws_simpledb_domain.test_domain"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(simpledb.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, simpledb.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDomainDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(simpledb.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, simpledb.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDomainDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainConfig,
+				Config: testAccDomainConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName),
 				),
@@ -83,7 +83,7 @@ func testAccCheckDomainExists(n string) resource.TestCheckFunc {
 	}
 }
 
-var testAccDomainConfig = `
+var testAccDomainConfig_basic = `
 resource "aws_simpledb_domain" "test_domain" {
   name = "terraform-test-domain"
 }

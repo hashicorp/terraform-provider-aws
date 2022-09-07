@@ -142,7 +142,7 @@ func resourceIdentityProviderConfigCreate(ctx context.Context, d *schema.Resourc
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	clusterName := d.Get("cluster_name").(string)
-	configName, oidc := expandEksOidcIdentityProviderConfigRequest(d.Get("oidc").([]interface{})[0].(map[string]interface{}))
+	configName, oidc := expandOIDCIdentityProviderConfigRequest(d.Get("oidc").([]interface{})[0].(map[string]interface{}))
 	id := IdentityProviderConfigCreateResourceID(clusterName, configName)
 
 	input := &eks.AssociateIdentityProviderConfigInput{
@@ -198,7 +198,7 @@ func resourceIdentityProviderConfigRead(ctx context.Context, d *schema.ResourceD
 	d.Set("arn", oidc.IdentityProviderConfigArn)
 	d.Set("cluster_name", oidc.ClusterName)
 
-	if err := d.Set("oidc", []interface{}{flattenEksOidcIdentityProviderConfig(oidc)}); err != nil {
+	if err := d.Set("oidc", []interface{}{flattenOIDCIdentityProviderConfig(oidc)}); err != nil {
 		return diag.Errorf("error setting oidc: %s", err)
 	}
 
@@ -270,7 +270,7 @@ func resourceIdentityProviderConfigDelete(ctx context.Context, d *schema.Resourc
 	return nil
 }
 
-func expandEksOidcIdentityProviderConfigRequest(tfMap map[string]interface{}) (string, *eks.OidcIdentityProviderConfigRequest) {
+func expandOIDCIdentityProviderConfigRequest(tfMap map[string]interface{}) (string, *eks.OidcIdentityProviderConfigRequest) {
 	if tfMap == nil {
 		return "", nil
 	}
@@ -314,7 +314,7 @@ func expandEksOidcIdentityProviderConfigRequest(tfMap map[string]interface{}) (s
 	return identityProviderConfigName, apiObject
 }
 
-func flattenEksOidcIdentityProviderConfig(apiObject *eks.OidcIdentityProviderConfig) map[string]interface{} {
+func flattenOIDCIdentityProviderConfig(apiObject *eks.OidcIdentityProviderConfig) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
