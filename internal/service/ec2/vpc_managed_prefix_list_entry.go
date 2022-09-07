@@ -1,6 +1,7 @@
 package ec2
 
 import (
+	"context"
 	"fmt"
 	"log"
 
@@ -62,7 +63,7 @@ func resourceManagedPrefixListEntryCreate(d *schema.ResourceData, meta interface
 		conns.GlobalMutexKV.Lock(mutexKey)
 		defer conns.GlobalMutexKV.Unlock(mutexKey)
 
-		pl, err := FindManagedPrefixListByID(conn, plID)
+		pl, err := FindManagedPrefixListByID(context.TODO(), conn, plID)
 
 		if err != nil {
 			return nil, fmt.Errorf("error reading VPC Managed Prefix List (%s): %w", plID, err)
@@ -83,7 +84,7 @@ func resourceManagedPrefixListEntryCreate(d *schema.ResourceData, meta interface
 
 	d.SetId(id)
 
-	if _, err := WaitManagedPrefixListModified(conn, plID); err != nil {
+	if _, err := WaitManagedPrefixListModified(context.TODO(), conn, plID); err != nil {
 		return fmt.Errorf("error waiting for VPC Managed Prefix List Entry (%s) create: %w", d.Id(), err)
 	}
 
@@ -135,7 +136,7 @@ func resourceManagedPrefixListEntryDelete(d *schema.ResourceData, meta interface
 		conns.GlobalMutexKV.Lock(mutexKey)
 		defer conns.GlobalMutexKV.Unlock(mutexKey)
 
-		pl, err := FindManagedPrefixListByID(conn, plID)
+		pl, err := FindManagedPrefixListByID(context.TODO(), conn, plID)
 
 		if err != nil {
 			return nil, fmt.Errorf("error reading VPC Managed Prefix List (%s): %w", plID, err)
@@ -154,7 +155,7 @@ func resourceManagedPrefixListEntryDelete(d *schema.ResourceData, meta interface
 		return fmt.Errorf("error deleting VPC Managed Prefix List Entry (%s): %w", d.Id(), err)
 	}
 
-	_, err = WaitManagedPrefixListModified(conn, plID)
+	_, err = WaitManagedPrefixListModified(context.TODO(), conn, plID)
 
 	if err != nil {
 		return fmt.Errorf("error waiting for VPC Managed Prefix List Entry (%s) delete: %w", d.Id(), err)

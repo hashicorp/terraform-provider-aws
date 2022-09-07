@@ -4980,8 +4980,8 @@ func FindLaunchTemplateVersionByTwoPartKey(conn *ec2.EC2, launchTemplateID, vers
 	return output, nil
 }
 
-func FindManagedPrefixList(conn *ec2.EC2, input *ec2.DescribeManagedPrefixListsInput) (*ec2.ManagedPrefixList, error) {
-	output, err := FindManagedPrefixLists(conn, input)
+func FindManagedPrefixList(ctx context.Context, conn *ec2.EC2, input *ec2.DescribeManagedPrefixListsInput) (*ec2.ManagedPrefixList, error) {
+	output, err := FindManagedPrefixLists(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
@@ -4998,10 +4998,10 @@ func FindManagedPrefixList(conn *ec2.EC2, input *ec2.DescribeManagedPrefixListsI
 	return output[0], nil
 }
 
-func FindManagedPrefixLists(conn *ec2.EC2, input *ec2.DescribeManagedPrefixListsInput) ([]*ec2.ManagedPrefixList, error) {
+func FindManagedPrefixLists(ctx context.Context, conn *ec2.EC2, input *ec2.DescribeManagedPrefixListsInput) ([]*ec2.ManagedPrefixList, error) {
 	var output []*ec2.ManagedPrefixList
 
-	err := conn.DescribeManagedPrefixListsPages(input, func(page *ec2.DescribeManagedPrefixListsOutput, lastPage bool) bool {
+	err := conn.DescribeManagedPrefixListsPagesWithContext(ctx, input, func(page *ec2.DescribeManagedPrefixListsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -5029,12 +5029,12 @@ func FindManagedPrefixLists(conn *ec2.EC2, input *ec2.DescribeManagedPrefixLists
 	return output, nil
 }
 
-func FindManagedPrefixListByID(conn *ec2.EC2, id string) (*ec2.ManagedPrefixList, error) {
+func FindManagedPrefixListByID(ctx context.Context, conn *ec2.EC2, id string) (*ec2.ManagedPrefixList, error) {
 	input := &ec2.DescribeManagedPrefixListsInput{
 		PrefixListIds: aws.StringSlice([]string{id}),
 	}
 
-	output, err := FindManagedPrefixList(conn, input)
+	output, err := FindManagedPrefixList(ctx, conn, input)
 
 	if err != nil {
 		return nil, err

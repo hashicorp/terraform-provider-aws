@@ -127,7 +127,7 @@ func resourceManagedPrefixListCreate(d *schema.ResourceData, meta interface{}) e
 
 	d.SetId(aws.StringValue(output.PrefixList.PrefixListId))
 
-	if _, err := WaitManagedPrefixListCreated(conn, d.Id()); err != nil {
+	if _, err := WaitManagedPrefixListCreated(context.TODO(), conn, d.Id()); err != nil {
 		return fmt.Errorf("error waiting for EC2 Managed Prefix List (%s) create: %w", d.Id(), err)
 	}
 
@@ -139,7 +139,7 @@ func resourceManagedPrefixListRead(d *schema.ResourceData, meta interface{}) err
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	pl, err := FindManagedPrefixListByID(conn, d.Id())
+	pl, err := FindManagedPrefixListByID(context.TODO(), conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EC2 Managed Prefix List %s not found, removing from state", d.Id())
@@ -251,7 +251,7 @@ func resourceManagedPrefixListUpdate(d *schema.ResourceData, meta interface{}) e
 					return fmt.Errorf("error updating EC2 Managed Prefix List (%s): %w", d.Id(), err)
 				}
 
-				managedPrefixList, err := WaitManagedPrefixListModified(conn, d.Id())
+				managedPrefixList, err := WaitManagedPrefixListModified(context.TODO(), conn, d.Id())
 
 				if err != nil {
 					return fmt.Errorf("error waiting for EC2 Managed Prefix List (%s) update: %w", d.Id(), err)
@@ -285,7 +285,7 @@ func resourceManagedPrefixListUpdate(d *schema.ResourceData, meta interface{}) e
 		}
 
 		if wait {
-			if _, err := WaitManagedPrefixListModified(conn, d.Id()); err != nil {
+			if _, err := WaitManagedPrefixListModified(context.TODO(), conn, d.Id()); err != nil {
 				return fmt.Errorf("error waiting for EC2 Managed Prefix List (%s) update: %w", d.Id(), err)
 			}
 		}
@@ -317,7 +317,7 @@ func resourceManagedPrefixListDelete(d *schema.ResourceData, meta interface{}) e
 		return fmt.Errorf("error deleting EC2 Managed Prefix List (%s): %w", d.Id(), err)
 	}
 
-	if _, err := WaitManagedPrefixListDeleted(conn, d.Id()); err != nil {
+	if _, err := WaitManagedPrefixListDeleted(context.TODO(), conn, d.Id()); err != nil {
 		return fmt.Errorf("error waiting for EC2 Managed Prefix List (%s) delete: %w", d.Id(), err)
 	}
 
