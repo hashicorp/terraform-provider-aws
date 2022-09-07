@@ -1,6 +1,14 @@
-<!--- See what makes a good Pull Request at : https://github.com/hashicorp/terraform-provider-aws/blob/main/docs/contributing --->
+<!---
+See what makes a good Pull Request at: https://hashicorp.github.io/terraform-provider-aws/raising-a-pull-request/
 
-<!--- If your PR fully resolves and should automatically close the linked issue, use Closes. Otherwise, use Relates --->
+If your PR fully resolves and should automatically close the linked issue, use Closes. Otherwise, use Relates 
+
+For Example:
+
+Relates #0000
+or 
+Closes #0000
+--->
 Relates OR Closes #0000
 
 Output from acceptance testing:
