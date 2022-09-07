@@ -72,6 +72,10 @@ func ResourceGlobalCluster() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"engine_version_actual": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"force_destroy": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -202,15 +206,28 @@ func resourceGlobalClusterRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("database_name", globalCluster.DatabaseName)
 	d.Set("deletion_protection", globalCluster.DeletionProtection)
 	d.Set("engine", globalCluster.Engine)
-	d.Set("engine_version", globalCluster.EngineVersion)
 	d.Set("global_cluster_identifier", globalCluster.GlobalClusterIdentifier)
-
 	if err := d.Set("global_cluster_members", flattenGlobalClusterMembers(globalCluster.GlobalClusterMembers)); err != nil {
 		return fmt.Errorf("error setting global_cluster_members: %w", err)
 	}
-
 	d.Set("global_cluster_resource_id", globalCluster.GlobalClusterResourceId)
 	d.Set("storage_encrypted", globalCluster.StorageEncrypted)
+
+	oldEngineVersion := d.Get("engine_version").(string)
+	newEngineVersion := aws.StringValue(globalCluster.EngineVersion)
+
+	// For example a configured engine_version of "5.6.10a" and a returned engine_version of "5.6.global_10a".
+	if oldParts, newParts := strings.Split(oldEngineVersion, "."), strings.Split(newEngineVersion, "."); len(oldParts) == 3 &&
+		len(oldParts) == len(newParts) &&
+		oldParts[0] == newParts[0] &&
+		oldParts[1] == newParts[1] &&
+		strings.HasSuffix(newParts[2], oldParts[2]) {
+		d.Set("engine_version", oldEngineVersion)
+		d.Set("engine_version_actual", newEngineVersion)
+	} else {
+		d.Set("engine_version", newEngineVersion)
+		d.Set("engine_version_actual", newEngineVersion)
+	}
 
 	return nil
 }

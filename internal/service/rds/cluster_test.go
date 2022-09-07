@@ -1100,7 +1100,7 @@ func TestAccRDSCluster_engineVersion(t *testing.T) {
 	}
 
 	var dbCluster rds.DBCluster
-	rInt := sdkacctest.RandInt()
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_cluster.test"
 	dataSourceName := "data.aws_rds_engine_version.test"
 
@@ -1111,7 +1111,7 @@ func TestAccRDSCluster_engineVersion(t *testing.T) {
 		CheckDestroy:             testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_engineVersion(false, rInt),
+				Config: testAccClusterConfig_engineVersion(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, "engine", "aurora-postgresql"),
@@ -1119,7 +1119,7 @@ func TestAccRDSCluster_engineVersion(t *testing.T) {
 				),
 			},
 			{
-				Config:      testAccClusterConfig_engineVersion(true, rInt),
+				Config:      testAccClusterConfig_engineVersion(rName, true),
 				ExpectError: regexp.MustCompile(`Cannot modify engine version without a healthy primary instance in DB cluster`),
 			},
 		},
@@ -1132,7 +1132,7 @@ func TestAccRDSCluster_engineVersionWithPrimaryInstance(t *testing.T) {
 	}
 
 	var dbCluster rds.DBCluster
-	rInt := sdkacctest.RandInt()
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_cluster.test"
 	dataSourceName := "data.aws_rds_engine_version.test"
 	dataSourceNameUpgrade := "data.aws_rds_engine_version.upgrade"
@@ -1144,7 +1144,7 @@ func TestAccRDSCluster_engineVersionWithPrimaryInstance(t *testing.T) {
 		CheckDestroy:             testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_engineVersionPrimaryInstance(false, rInt),
+				Config: testAccClusterConfig_engineVersionPrimaryInstance(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &dbCluster),
 					resource.TestCheckResourceAttrPair(resourceName, "engine", dataSourceName, "engine"),
@@ -1152,7 +1152,7 @@ func TestAccRDSCluster_engineVersionWithPrimaryInstance(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccClusterConfig_engineVersionPrimaryInstance(true, rInt),
+				Config: testAccClusterConfig_engineVersionPrimaryInstance(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &dbCluster),
 					resource.TestCheckResourceAttrPair(resourceName, "engine", dataSourceNameUpgrade, "engine"),
@@ -2718,7 +2718,7 @@ resource "aws_rds_cluster" "test" {
 `, n)
 }
 
-func testAccClusterConfig_engineVersion(upgrade bool, rInt int) string {
+func testAccClusterConfig_engineVersion(rName string, upgrade bool) string {
 	return fmt.Sprintf(`
 data "aws_rds_engine_version" "test" {
   engine             = "aurora-postgresql"
@@ -2731,29 +2731,29 @@ data "aws_rds_engine_version" "upgrade" {
 }
 
 locals {
-  parameter_group_name = %[1]t ? data.aws_rds_engine_version.upgrade.parameter_group_family : data.aws_rds_engine_version.test.parameter_group_family
-  engine_version       = %[1]t ? data.aws_rds_engine_version.upgrade.version : data.aws_rds_engine_version.test.version
+  parameter_group_name = %[2]t ? data.aws_rds_engine_version.upgrade.parameter_group_family : data.aws_rds_engine_version.test.parameter_group_family
+  engine_version       = %[2]t ? data.aws_rds_engine_version.upgrade.version : data.aws_rds_engine_version.test.version
 }
 
 resource "aws_rds_cluster" "test" {
-  cluster_identifier              = "tf-acc-test-%[2]d"
-  database_name                   = "mydb"
+  cluster_identifier              = %[1]q
+  database_name                   = "test"
   db_cluster_parameter_group_name = "default.${local.parameter_group_name}"
   engine                          = data.aws_rds_engine_version.test.engine
   engine_version                  = local.engine_version
-  master_password                 = "mustbeeightcharaters"
-  master_username                 = "foo"
+  master_password                 = "avoid-plaintext-passwords"
+  master_username                 = "tfacctest"
   skip_final_snapshot             = true
   apply_immediately               = true
 }
-`, upgrade, rInt)
+`, rName, upgrade)
 }
 
-func testAccClusterConfig_engineVersionPrimaryInstance(upgrade bool, rInt int) string {
+func testAccClusterConfig_engineVersionPrimaryInstance(rName string, upgrade bool) string {
 	return fmt.Sprintf(`
 data "aws_rds_engine_version" "test" {
   engine             = "aurora-postgresql"
-  preferred_versions = ["10.7", "10.13", "11.6"]
+  preferred_versions = ["10.17", "11.13", "12.8"]
 }
 
 data "aws_rds_engine_version" "upgrade" {
@@ -2762,18 +2762,18 @@ data "aws_rds_engine_version" "upgrade" {
 }
 
 locals {
-  parameter_group_name = %[1]t ? data.aws_rds_engine_version.upgrade.parameter_group_family : data.aws_rds_engine_version.test.parameter_group_family
-  engine_version       = %[1]t ? data.aws_rds_engine_version.upgrade.version : data.aws_rds_engine_version.test.version
+  parameter_group_name = %[2]t ? data.aws_rds_engine_version.upgrade.parameter_group_family : data.aws_rds_engine_version.test.parameter_group_family
+  engine_version       = %[2]t ? data.aws_rds_engine_version.upgrade.version : data.aws_rds_engine_version.test.version
 }
 
 resource "aws_rds_cluster" "test" {
-  cluster_identifier              = "tf-acc-test-%[2]d"
-  database_name                   = "mydb"
+  cluster_identifier              = %[1]q
+  database_name                   = "test"
   db_cluster_parameter_group_name = "default.${local.parameter_group_name}"
   engine                          = data.aws_rds_engine_version.test.engine
   engine_version                  = local.engine_version
-  master_password                 = "mustbeeightcharaters"
-  master_username                 = "foo"
+  master_password                 = "avoid-plaintext-passwords"
+  master_username                 = "tfacctest"
   skip_final_snapshot             = true
   apply_immediately               = true
 }
@@ -2785,12 +2785,12 @@ data "aws_rds_orderable_db_instance" "test" {
 }
 
 resource "aws_rds_cluster_instance" "test" {
-  identifier         = "tf-acc-test-%[2]d"
+  identifier         = %[1]q
   cluster_identifier = aws_rds_cluster.test.cluster_identifier
   engine             = aws_rds_cluster.test.engine
   instance_class     = data.aws_rds_orderable_db_instance.test.instance_class
 }
-`, upgrade, rInt)
+`, rName, upgrade)
 }
 
 func testAccClusterConfig_port(rName string, port int) string {
@@ -3222,11 +3222,11 @@ resource "aws_rds_cluster" "test" {
 func testAccClusterConfig_EngineMode_global(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_rds_cluster" "test" {
-  cluster_identifier  = %q
+  cluster_identifier  = %[1]q
   engine_mode         = "global"
   engine_version      = "5.6.10a" # version compatible with engine_mode = "global"
-  master_password     = "barbarbarbar"
-  master_username     = "foo"
+  master_password     = "avoid-plaintext-passwords"
+  master_username     = "tfacctest"
   skip_final_snapshot = true
 }
 `, rName)
@@ -3238,6 +3238,7 @@ resource "aws_db_subnet_group" "test" {
   name       = %[1]q
   subnet_ids = aws_subnet.test[*].id
 }
+
 resource "aws_rds_cluster" "test" {
   cluster_identifier   = %[1]q
   db_subnet_group_name = aws_db_subnet_group.test.name
@@ -3262,8 +3263,8 @@ resource "aws_rds_cluster" "test" {
   global_cluster_identifier = aws_rds_global_cluster.test.id
   engine_mode               = "global"
   engine_version            = aws_rds_global_cluster.test.engine_version
-  master_password           = "barbarbarbar"
-  master_username           = "foo"
+  master_password           = "avoid-plaintext-passwords"
+  master_username           = "tfacctest"
   skip_final_snapshot       = true
 }
 `, rName)
@@ -3283,8 +3284,8 @@ resource "aws_rds_cluster" "test" {
   global_cluster_identifier = %[2]s.id
   engine_mode               = "global"
   engine_version            = %[2]s.engine_version
-  master_password           = "barbarbarbar"
-  master_username           = "foo"
+  master_password           = "avoid-plaintext-passwords"
+  master_username           = "tfacctest"
   skip_final_snapshot       = true
 }
 `, rName, globalClusterIdentifierResourceName)
