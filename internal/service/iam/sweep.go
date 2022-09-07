@@ -871,6 +871,7 @@ func roleNameFilter(name string) bool {
 		"tf_acc",
 		"tf_ecs",
 		"tf_test",
+		"tf-acc",
 		"tf-opsworks-acc",
 		"tf-test",
 	}
