@@ -1099,7 +1099,7 @@ func resourceFunctionUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("runtime") {
 		configReq.Runtime = aws.String(d.Get("runtime").(string))
 	}
-	if d.HasChange("environment") {
+	if d.HasChange("environment") || d.HasChange("kms_key_arn") {
 		if v, ok := d.GetOk("environment"); ok {
 			environments := v.([]interface{})
 			environment, ok := environments[0].(map[string]interface{})
