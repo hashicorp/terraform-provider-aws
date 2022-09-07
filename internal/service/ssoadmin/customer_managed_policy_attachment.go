@@ -26,23 +26,12 @@ func ResourceCustomerManagedPolicyAttachment() *schema.Resource {
 		Create: resourceCustomerManagedPolicyAttachmentCreate,
 		Read:   resourceCustomerManagedPolicyAttachmentRead,
 		Delete: resourceCustomerManagedPolicyAttachmentDelete,
+
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
-		Schema: map[string]*schema.Schema{
 
-			"instance_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"permission_set_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
+		Schema: map[string]*schema.Schema{
 			"customer_managed_policy_reference": {
 				Type:     schema.TypeList,
 				Required: true,
@@ -65,6 +54,18 @@ func ResourceCustomerManagedPolicyAttachment() *schema.Resource {
 						},
 					},
 				},
+			},
+			"instance_arn": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: verify.ValidARN,
+			},
+			"permission_set_arn": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: verify.ValidARN,
 			},
 		},
 	}
