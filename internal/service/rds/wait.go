@@ -167,7 +167,7 @@ func waitDBClusterDeleted(conn *rds.RDS, id string, timeout time.Duration) (*rds
 	return nil, err
 }
 
-func waitDBClusterUpdated(conn *rds.RDS, id string, timeout time.Duration) (*rds.DBCluster, error) {
+func waitDBClusterUpdated(conn *rds.RDS, id string, timeout time.Duration) (*rds.DBCluster, error) { //nolint:unparam
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
 			ClusterStatusBackingUp,
