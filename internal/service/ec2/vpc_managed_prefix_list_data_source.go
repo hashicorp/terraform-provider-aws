@@ -100,10 +100,7 @@ func dataSourceManagedPrefixListRead(ctx context.Context, d *schema.ResourceData
 		ctx,
 		&input,
 		func(output *ec2.DescribeManagedPrefixListsOutput, lastPage bool) bool {
-			for _, prefixList := range output.PrefixLists {
-				prefixLists = append(prefixLists, prefixList)
-			}
-
+			prefixLists = append(prefixLists, output.PrefixLists...)
 			return !lastPage
 		})
 
