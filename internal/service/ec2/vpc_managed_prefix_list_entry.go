@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -52,7 +53,7 @@ func resourceManagedPrefixListEntryCreate(ctx context.Context, d *schema.Resourc
 
 	cidr := d.Get("cidr").(string)
 	plID := d.Get("prefix_list_id").(string)
-	id := ManagedPrefixListEntryCreateID(plID, cidr)
+	id := ManagedPrefixListEntryCreateResourceID(plID, cidr)
 
 	addPrefixListEntry := &ec2.AddPrefixListEntry{Cidr: aws.String(cidr)}
 
@@ -96,7 +97,7 @@ func resourceManagedPrefixListEntryCreate(ctx context.Context, d *schema.Resourc
 func resourceManagedPrefixListEntryRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	plID, cidr, err := ManagedPrefixListEntryParseID(d.Id())
+	plID, cidr, err := ManagedPrefixListEntryParseResourceID(d.Id())
 
 	if err != nil {
 		return diag.FromErr(err)
@@ -127,7 +128,7 @@ func resourceManagedPrefixListEntryRead(ctx context.Context, d *schema.ResourceD
 func resourceManagedPrefixListEntryDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	plID, cidr, err := ManagedPrefixListEntryParseID(d.Id())
+	plID, cidr, err := ManagedPrefixListEntryParseResourceID(d.Id())
 
 	if err != nil {
 		return diag.FromErr(err)
@@ -167,7 +168,7 @@ func resourceManagedPrefixListEntryDelete(ctx context.Context, d *schema.Resourc
 }
 
 func resourceManagedPrefixListEntryImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	plID, cidr, err := ManagedPrefixListEntryParseID(d.Id())
+	plID, cidr, err := ManagedPrefixListEntryParseResourceID(d.Id())
 
 	if err != nil {
 		return nil, err
@@ -177,4 +178,23 @@ func resourceManagedPrefixListEntryImport(d *schema.ResourceData, meta interface
 	d.Set("prefix_list_id", plID)
 
 	return []*schema.ResourceData{d}, nil
+}
+
+const managedPrefixListEntryIDSeparator = ","
+
+func ManagedPrefixListEntryCreateResourceID(prefixListID, cidrBlock string) string {
+	parts := []string{prefixListID, cidrBlock}
+	id := strings.Join(parts, managedPrefixListEntryIDSeparator)
+
+	return id
+}
+
+func ManagedPrefixListEntryParseResourceID(id string) (string, string, error) {
+	parts := strings.Split(id, managedPrefixListEntryIDSeparator)
+
+	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
+		return parts[0], parts[1], nil
+	}
+
+	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected prefix-list-id%[2]scidr-block", id, managedPrefixListEntryIDSeparator)
 }
