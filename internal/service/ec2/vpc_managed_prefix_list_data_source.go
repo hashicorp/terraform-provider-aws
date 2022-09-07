@@ -94,21 +94,32 @@ func dataSourceManagedPrefixListRead(ctx context.Context, d *schema.ResourceData
 		})
 	}
 
-	out, err := conn.DescribeManagedPrefixListsWithContext(ctx, &input)
+	var prefixLists []*ec2.ManagedPrefixList
+
+	err := conn.DescribeManagedPrefixListsPagesWithContext(
+		ctx,
+		&input,
+		func(output *ec2.DescribeManagedPrefixListsOutput, lastPage bool) bool {
+			for _, prefixList := range output.PrefixLists {
+				prefixLists = append(prefixLists, prefixList)
+			}
+
+			return !lastPage
+		})
 
 	if err != nil {
 		return diag.Errorf("error describing EC2 Managed Prefix Lists: %s", err)
 	}
 
-	if out == nil || len(out.PrefixLists) < 1 || out.PrefixLists[0] == nil {
+	if len(prefixLists) < 1 || prefixLists[0] == nil {
 		return diag.Errorf("no managed prefix lists matched the given criteria")
 	}
 
-	if len(out.PrefixLists) > 1 {
+	if len(prefixLists) > 1 {
 		return diag.Errorf("more than 1 prefix list matched the given criteria")
 	}
 
-	pl := out.PrefixLists[0]
+	pl := prefixLists[0]
 
 	d.SetId(aws.StringValue(pl.PrefixListId))
 	d.Set("name", pl.PrefixListName)
