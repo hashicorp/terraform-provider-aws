@@ -1,4 +1,4 @@
-package ses
+package sesv2
 
 import (
 	"fmt"

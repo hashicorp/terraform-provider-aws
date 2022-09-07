@@ -115,7 +115,7 @@ The vast majority of the Terraform AWS Provider is implemented using [version 1 
 For new services, however, we have started to use [version 2 of the SDK](https://github.com/aws/aws-sdk-go-v2).
 
 By default, the generated code uses the AWS SDK for Go v1.
-To generate code using the AWS SDK for Go v2, pass the flag `-AwsSdkVersion=2`.
+To generate code using the AWS SDK for Go v2, pass the flag `-AWSSDKVersion=2`.
 
 For more information, see the [documentation on AWS SDK versions](./aws-go-sdk-versions.md).
 

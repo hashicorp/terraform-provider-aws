@@ -1,14 +1,17 @@
-package ses
+package sesv2
 
 import (
 	"context"
 	"fmt"
+	"github.com/aws/aws-sdk-go-v2/service/sesv2/types"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"log"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/sesv2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/sesv2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -45,25 +48,31 @@ func ResourceEmailIdentity() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 		},
+		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
 func resourceEmailIdentityCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).SESV2Conn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	email := d.Get("email").(string)
 	email = strings.TrimSuffix(email, ".")
 
 	createOpts := &sesv2.CreateEmailIdentityInput{
 		EmailIdentity: aws.String(email),
+		Tags:          Tags(tags.IgnoreAWS()),
 	}
 
 	if v, ok := d.GetOk("default_configuration_set"); ok {
 		createOpts.ConfigurationSetName = aws.String(v.(string))
 	}
 
-	_, err := conn.CreateEmailIdentityWithContext(ctx, createOpts)
+	_, err := conn.CreateEmailIdentity(ctx, createOpts)
 	if err != nil {
 		return create.DiagError(names.SESV2, create.ErrActionCreating, ResEmailIdentity, d.Id(), err)
 	}
@@ -75,11 +84,13 @@ func resourceEmailIdentityCreate(ctx context.Context, d *schema.ResourceData, me
 
 func resourceEmailIdentityRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).SESV2Conn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	email := d.Id()
 	d.Set("email", email)
 	getOpts := &sesv2.GetEmailIdentityInput{EmailIdentity: aws.String(email)}
-	response, err := conn.GetEmailIdentityWithContext(ctx, getOpts)
+	response, err := conn.GetEmailIdentity(ctx, getOpts)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Email Identity (%s) not found, removing from state", d.Id())
@@ -107,6 +118,15 @@ func resourceEmailIdentityRead(ctx context.Context, d *schema.ResourceData, meta
 		return create.DiagError(names.SESV2, create.ErrActionReading, ResEmailIdentity, d.Id(), err)
 	}
 
+	tags := KeyValueTags(response.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return create.DiagError(names.SESV2, create.ErrActionSetting, ResEmailIdentity, d.Id(), err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return create.DiagError(names.SESV2, create.ErrActionSetting, ResEmailIdentity, d.Id(), err)
+	}
+
 	return nil
 }
 
@@ -118,7 +138,7 @@ func resourceEmailIdentityUpdate(ctx context.Context, d *schema.ResourceData, me
 	if d.HasChange("ConfigurationSetName") {
 		input := &sesv2.PutEmailIdentityConfigurationSetAttributesInput{EmailIdentity: aws.String(email)}
 
-		_, err := conn.PutEmailIdentityConfigurationSetAttributesWithContext(ctx, input)
+		_, err := conn.PutEmailIdentityConfigurationSetAttributes(ctx, input)
 		if err != nil {
 			return create.DiagError(names.SESV2, create.ErrActionUpdating, ResEmailIdentity, d.Id(), err)
 		}
@@ -133,9 +153,9 @@ func resourceEmailIdentityDelete(ctx context.Context, d *schema.ResourceData, me
 	email := d.Get("email").(string)
 
 	deleteOps := &sesv2.DeleteEmailIdentityInput{EmailIdentity: aws.String(email)}
-	_, err := conn.DeleteEmailIdentityWithContext(ctx, deleteOps)
+	_, err := conn.DeleteEmailIdentity(ctx, deleteOps)
 
-	if tfawserr.ErrCodeEquals(err, sesv2.ErrCodeNotFoundException) {
+	if tfawserr.ErrCodeEquals(err, (&types.NotFoundException{}).ErrorMessage()) {
 		return nil
 	}
 

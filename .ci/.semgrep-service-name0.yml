@@ -2998,3 +2998,17 @@ rules:
           patterns:
             - pattern-regex: "(?i)ConfigService"
     severity: WARNING
+  - id: configservice-in-var-name
+    languages:
+      - go
+    message: Do not use "ConfigService" in var name inside configservice package
+    paths:
+      include:
+        - internal/service/configservice
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)ConfigService"
+    severity: WARNING

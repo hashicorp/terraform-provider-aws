@@ -1,4 +1,4 @@
-package ses_test
+package sesv2_test
 
 import (
 	"fmt"

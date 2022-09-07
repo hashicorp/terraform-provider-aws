@@ -1,14 +1,18 @@
-package ses_test
+package sesv2_test
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-provider-aws/names"
 	"regexp"
 	"strings"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/sesv2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/sesv2"
+	"github.com/aws/aws-sdk-go-v2/service/sesv2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -21,7 +25,7 @@ func TestAccSESEmailIdentity_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sesv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2EndpointId),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEmailIdentityDestroy,
 		Steps: []resource.TestStep{
@@ -47,7 +51,7 @@ func TestAccSESEmailIdentity_trailingPeriod(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sesv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2EndpointId),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEmailIdentityDestroy,
 		Steps: []resource.TestStep{
@@ -74,7 +78,7 @@ func TestAccSESEmailIdentity_complete(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sesv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2EndpointId),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEmailIdentityDestroy,
 		Steps: []resource.TestStep{
@@ -105,18 +109,19 @@ func testAccCheckEmailIdentityDestroy(s *terraform.State) error {
 
 		email := rs.Primary.ID
 		params := &sesv2.GetEmailIdentityInput{EmailIdentity: aws.String(email)}
-
-		response, err := conn.GetEmailIdentity(params)
+		ctx := context.Background()
+		response, err := conn.GetEmailIdentity(ctx, params)
 
 		if err != nil {
-			if tfawserr.ErrCodeEquals(err, sesv2.ErrCodeNotFoundException) {
+			var nfe *types.NotFoundException
+			if errors.As(err, &nfe) {
 				// Destroy succeeded - Email not found
 				return nil
 			}
 			return err
 		}
 
-		if response.VerifiedForSendingStatus != nil && err == nil {
+		if response != nil && err == nil {
 			return fmt.Errorf("SES Email Identity %s still exists. Failing!", email)
 		}
 	}
@@ -139,11 +144,11 @@ func testAccCheckEmailIdentityExists(n string) resource.TestCheckFunc {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SESV2Conn
 
 		params := &sesv2.GetEmailIdentityInput{EmailIdentity: aws.String(email)}
-
-		_, err := conn.GetEmailIdentity(params)
+		ctx := context.Background()
+		_, err := conn.GetEmailIdentity(ctx, params)
 
 		if err != nil {
-			if tfawserr.ErrCodeEquals(err, sesv2.ErrCodeNotFoundException) {
+			if tfawserr.ErrCodeEquals(err, (&types.NotFoundException{}).ErrorMessage()) {
 				return fmt.Errorf("SES Email Identity %s not found in AWS", email)
 			}
 			return err

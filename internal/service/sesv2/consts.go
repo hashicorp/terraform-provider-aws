@@ -1,6 +1,5 @@
-package ses
+package sesv2
 
 const (
 	ResEmailIdentity = "Email Identity"
-	ResTags          = "Tags"
 )

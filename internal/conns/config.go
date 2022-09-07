@@ -13,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/medialive"
 	"github.com/aws/aws-sdk-go-v2/service/rolesanywhere"
 	"github.com/aws/aws-sdk-go-v2/service/route53domains"
+	"github.com/aws/aws-sdk-go-v2/service/sesv2"
 	"github.com/aws/aws-sdk-go-v2/service/transcribe"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
@@ -245,6 +246,12 @@ func (c *Config) Client(ctx context.Context) (interface{}, diag.Diagnostics) {
 	client.TranscribeConn = transcribe.NewFromConfig(cfg, func(o *transcribe.Options) {
 		if endpoint := c.Endpoints[names.Transcribe]; endpoint != "" {
 			o.EndpointResolver = transcribe.EndpointResolverFromURL(endpoint)
+		}
+	})
+
+	client.SESV2Conn = sesv2.NewFromConfig(cfg, func(o *sesv2.Options) {
+		if endpoint := c.Endpoints[names.SESV2]; endpoint != "" {
+			o.EndpointResolver = sesv2.EndpointResolverFromURL(endpoint)
 		}
 	})
 

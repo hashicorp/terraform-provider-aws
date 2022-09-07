@@ -3,6 +3,7 @@ package provider
 import (
 	"context"
 	"fmt"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/sesv2"
 	"log"
 	"os"
 	"regexp"
@@ -811,7 +812,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 
 			"aws_ses_active_receipt_rule_set": ses.DataSourceActiveReceiptRuleSet(),
 			"aws_ses_domain_identity":         ses.DataSourceDomainIdentity(),
-			"aws_ses_email_identity":          ses.DataSourceEmailIdentity(),
+			"aws_ses_email_identity":          sesv2.DataSourceEmailIdentity(),
 
 			"aws_db_cluster_snapshot":       rds.DataSourceClusterSnapshot(),
 			"aws_db_event_categories":       rds.DataSourceEventCategories(),
@@ -2024,7 +2025,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_ses_domain_identity":              ses.ResourceDomainIdentity(),
 			"aws_ses_domain_identity_verification": ses.ResourceDomainIdentityVerification(),
 			"aws_ses_domain_mail_from":             ses.ResourceDomainMailFrom(),
-			"aws_ses_email_identity":               ses.ResourceEmailIdentity(),
+			"aws_ses_email_identity":               sesv2.ResourceEmailIdentity(),
 			"aws_ses_event_destination":            ses.ResourceEventDestination(),
 			"aws_ses_identity_notification_topic":  ses.ResourceIdentityNotificationTopic(),
 			"aws_ses_identity_policy":              ses.ResourceIdentityPolicy(),

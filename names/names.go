@@ -30,6 +30,7 @@ const (
 	RolesAnywhereEndpointID  = "rolesanywhere"
 	Route53DomainsEndpointID = "route53domains"
 	TranscribeEndpointID     = "transcribe"
+	SESV2EndpointId          = "email"
 )
 
 // Type ServiceDatum corresponds closely to columns in `names_data.csv` and are
