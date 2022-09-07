@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/medialive"
 	mltypes "github.com/aws/aws-sdk-go-v2/service/medialive/types"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -54,9 +55,9 @@ func (t *resourceMultiplexProgramType) GetSchema(context.Context) (tfsdk.Schema,
 					"preferred_channel_pipeline": {
 						Type:     types.StringType,
 						Optional: true,
-						//Validators: []tfsdk.AttributeValidator{
-						//	stringvalidator.OneOf(preferredChannelPipelineToSlice(mltypes.PreferredChannelPipeline("").Values())...),
-						//},
+						Validators: []tfsdk.AttributeValidator{
+							stringvalidator.OneOf(preferredChannelPipelineToSlice(mltypes.PreferredChannelPipeline("").Values())...),
+						},
 					},
 				},
 				Blocks: map[string]tfsdk.Block{
@@ -143,6 +144,10 @@ func (m *multiplexProgram) Create(ctx context.Context, req resource.CreateReques
 		PreferredChannelPipeline: mltypes.PreferredChannelPipeline(plan.MultiplexProgramSettings[0].PreferredChannelPipeline.Value),
 	}
 
+	if len(plan.MultiplexProgramSettings[0].ServiceDescriptor) > 0 {
+		in.MultiplexProgramSettings.ServiceDescriptor.ServiceName = aws.String(plan.MultiplexProgramSettings[0].ServiceDescriptor[0].ServiceName.Value)
+	}
+
 	out, err := conn.CreateMultiplexProgram(ctx, in)
 
 	if err != nil {
@@ -214,6 +219,57 @@ func (m *multiplexProgram) Update(ctx context.Context, req resource.UpdateReques
 }
 
 func (m *multiplexProgram) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	conn := m.meta.Meta().(*conns.AWSClient).MediaLiveConn
+
+	var state resourceMultiplexProgramData
+	diags := req.State.Get(ctx, &state)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	multiplexId := state.MultiplexID.Value
+	programName := state.ProgramName.Value
+
+	_, err := conn.DeleteMultiplexProgram(ctx, &medialive.DeleteMultiplexProgramInput{
+		MultiplexId: aws.String(multiplexId),
+		ProgramName: aws.String(programName),
+	})
+
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error deleting MediaLive Multiplex Program",
+			err.Error(),
+		)
+		return
+	}
+
+	resp.State.RemoveResource(ctx)
+}
+
+func FindMultipleProgramByID(ctx context.Context, conn *medialive.Client, multiplexId, programName string) (*medialive.DescribeMultiplexProgramOutput, error) {
+	in := &medialive.DescribeMultiplexProgramInput{
+		MultiplexId: aws.String(multiplexId),
+		ProgramName: aws.String(programName),
+	}
+	out, err := conn.DescribeMultiplexProgram(ctx, in)
+	if err != nil {
+		var nfe *mltypes.NotFoundException
+		if errors.As(err, &nfe) {
+			return nil, &resourceHelper.NotFoundError{
+				LastError:   err,
+				LastRequest: in,
+			}
+		}
+
+		return nil, err
+	}
+
+	if out == nil {
+		return nil, tfresource.NewEmptyResultError(in)
+	}
+
+	return out, nil
 }
 
 func preferredChannelPipelineToSlice(p []mltypes.PreferredChannelPipeline) []string {
@@ -244,37 +300,12 @@ type serviceDescriptor struct {
 }
 
 type videoSettings struct {
-	ConstantBitrate  types.Number       `tfsdk:"constant_bitrate"`
+	ConstantBitrate  int32              `tfsdk:"constant_bitrate"`
 	statemuxSettings []statemuxSettings `tfsdk:"statemux_settings"`
 }
 
 type statemuxSettings struct {
-	MaximumBitrate types.Number `tfsdk:"maximum_bitrate"`
-	MinimimBitrate types.Number `tfsdk:"minimum_bitrate"`
-	Priority       types.Number `tfsdk:"priority"`
-}
-
-func FindMultipleProgramByID(ctx context.Context, conn *medialive.Client, multiplexId, programName string) (*medialive.DescribeMultiplexProgramOutput, error) {
-	in := &medialive.DescribeMultiplexProgramInput{
-		MultiplexId: aws.String(multiplexId),
-		ProgramName: aws.String(programName),
-	}
-	out, err := conn.DescribeMultiplexProgram(ctx, in)
-	if err != nil {
-		var nfe *mltypes.NotFoundException
-		if errors.As(err, &nfe) {
-			return nil, &resourceHelper.NotFoundError{
-				LastError:   err,
-				LastRequest: in,
-			}
-		}
-
-		return nil, err
-	}
-
-	if out == nil {
-		return nil, tfresource.NewEmptyResultError(in)
-	}
-
-	return out, nil
+	MaximumBitrate int32 `tfsdk:"maximum_bitrate"`
+	MinimumBitrate int32 `tfsdk:"minimum_bitrate"`
+	Priority       int32 `tfsdk:"priority"`
 }
