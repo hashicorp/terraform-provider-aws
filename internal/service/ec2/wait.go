@@ -2281,15 +2281,15 @@ const (
 	ManagedPrefixListTimeout = 15 * time.Minute
 )
 
-func WaitManagedPrefixListCreated(conn *ec2.EC2, id string) (*ec2.ManagedPrefixList, error) {
+func WaitManagedPrefixListCreated(ctx context.Context, conn *ec2.EC2, id string) (*ec2.ManagedPrefixList, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{ec2.PrefixListStateCreateInProgress},
 		Target:  []string{ec2.PrefixListStateCreateComplete},
 		Timeout: ManagedPrefixListTimeout,
-		Refresh: StatusManagedPrefixListState(conn, id),
+		Refresh: StatusManagedPrefixListState(ctx, conn, id),
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*ec2.ManagedPrefixList); ok {
 		if state := aws.StringValue(output.State); state == ec2.PrefixListStateCreateFailed {
@@ -2302,15 +2302,15 @@ func WaitManagedPrefixListCreated(conn *ec2.EC2, id string) (*ec2.ManagedPrefixL
 	return nil, err
 }
 
-func WaitManagedPrefixListModified(conn *ec2.EC2, id string) (*ec2.ManagedPrefixList, error) {
+func WaitManagedPrefixListModified(ctx context.Context, conn *ec2.EC2, id string) (*ec2.ManagedPrefixList, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{ec2.PrefixListStateModifyInProgress},
 		Target:  []string{ec2.PrefixListStateModifyComplete},
 		Timeout: ManagedPrefixListTimeout,
-		Refresh: StatusManagedPrefixListState(conn, id),
+		Refresh: StatusManagedPrefixListState(ctx, conn, id),
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*ec2.ManagedPrefixList); ok {
 		if state := aws.StringValue(output.State); state == ec2.PrefixListStateModifyFailed {
@@ -2323,15 +2323,15 @@ func WaitManagedPrefixListModified(conn *ec2.EC2, id string) (*ec2.ManagedPrefix
 	return nil, err
 }
 
-func WaitManagedPrefixListDeleted(conn *ec2.EC2, id string) (*ec2.ManagedPrefixList, error) {
+func WaitManagedPrefixListDeleted(ctx context.Context, conn *ec2.EC2, id string) (*ec2.ManagedPrefixList, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{ec2.PrefixListStateDeleteInProgress},
 		Target:  []string{},
 		Timeout: ManagedPrefixListTimeout,
-		Refresh: StatusManagedPrefixListState(conn, id),
+		Refresh: StatusManagedPrefixListState(ctx, conn, id),
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*ec2.ManagedPrefixList); ok {
 		if state := aws.StringValue(output.State); state == ec2.PrefixListStateDeleteFailed {

@@ -481,7 +481,7 @@ func forceRevokeSecurityGroupRules(conn *ec2.EC2, id string, searchAll bool) err
 			_, err = conn.RevokeSecurityGroupEgress(input)
 		}
 
-		if tfawserr.ErrCodeEquals(err, errCodeInvalidSecurityGroupRuleIDNotFound) {
+		if tfawserr.ErrCodeEquals(err, errCodeInvalidSecurityGroupRuleIdNotFound) {
 			continue
 		}
 
