@@ -550,34 +550,6 @@ func TestAccRDSCluster_dbSubnetGroupName(t *testing.T) {
 	})
 }
 
-func TestAccRDSCluster_s3Restore(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	var v rds.DBCluster
-	resourceName := "aws_rds_cluster.test"
-	bucket := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	uniqueId := sdkacctest.RandomWithPrefix("tf-acc-s3-import-test")
-	bucketPrefix := sdkacctest.RandString(5)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccClusterConfig_s3Restore(bucket, bucketPrefix, uniqueId),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "engine", "aurora"),
-				),
-			},
-		},
-	})
-}
-
 func TestAccRDSCluster_pointInTimeRestore(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -2538,98 +2510,6 @@ resource "aws_rds_cluster" "test" {
   skip_final_snapshot  = true
 }
 `, rName))
-}
-
-func testAccClusterConfig_s3Restore(bucketName string, bucketPrefix string, uniqueId string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
-resource "aws_s3_bucket" "xtrabackup" {
-  bucket = %[1]q
-}
-
-resource "aws_s3_object" "xtrabackup_db" {
-  bucket = aws_s3_bucket.xtrabackup.id
-  key    = "%[2]s/mysql-5-6-xtrabackup.tar.gz"
-  source = "./testdata/mysql-5-6-xtrabackup.tar.gz"
-  etag   = filemd5("./testdata/mysql-5-6-xtrabackup.tar.gz")
-}
-
-resource "aws_iam_role" "rds_s3_access_role" {
-  name = "%[3]s-role"
-
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Sid": "",
-      "Effect": "Allow",
-      "Principal": {
-        "Service": "rds.amazonaws.com"
-      },
-      "Action": "sts:AssumeRole"
-    }
-  ]
-}
-EOF
-}
-
-resource "aws_iam_policy" "test" {
-  name = "%[3]s-policy"
-
-  policy = <<POLICY
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Action": [
-        "s3:*"
-      ],
-      "Resource": [
-        "${aws_s3_bucket.xtrabackup.arn}",
-        "${aws_s3_bucket.xtrabackup.arn}/*"
-      ]
-    }
-  ]
-}
-POLICY
-}
-
-resource "aws_iam_policy_attachment" "test-attach" {
-  name = "%[3]s-policy-attachment"
-
-  roles = [
-    aws_iam_role.rds_s3_access_role.name,
-  ]
-
-  policy_arn = aws_iam_policy.test.arn
-}
-
-resource "aws_rds_cluster" "test" {
-  cluster_identifier_prefix = "tf-test-"
-  master_username           = "root"
-  master_password           = "password"
-  skip_final_snapshot       = true
-
-  s3_import {
-    source_engine         = "mysql"
-    source_engine_version = "5.6"
-
-    bucket_name    = aws_s3_bucket.xtrabackup.bucket
-    bucket_prefix  = "%[2]s"
-    ingestion_role = aws_iam_role.rds_s3_access_role.arn
-  }
-}
-`, bucketName, bucketPrefix, uniqueId)
 }
 
 func testAccClusterConfig_finalSnapshot(rName string) string {
