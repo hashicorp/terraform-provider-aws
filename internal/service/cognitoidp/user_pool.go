@@ -463,6 +463,11 @@ func ResourceUserPool() *schema.Resource {
 							Required:     true,
 							ValidateFunc: verify.ValidARN,
 						},
+						"sns_region": {
+							Type:         schema.TypeString,
+							Required:     false,
+							ValidateFunc: verify.ValidRegionName,
+						},
 					},
 				},
 			},
@@ -1230,6 +1235,10 @@ func expandSMSConfiguration(tfList []interface{}) *cognitoidentityprovider.SmsCo
 		apiObject.SnsCallerArn = aws.String(v)
 	}
 
+	if v, ok := tfMap["sns_region"].(string); ok && v != "" {
+		apiObject.SnsRegion = aws.String(v)
+	}
+
 	return apiObject
 }
 
@@ -1262,6 +1271,10 @@ func flattenSMSConfiguration(apiObject *cognitoidentityprovider.SmsConfiguration
 
 	if v := apiObject.SnsCallerArn; v != nil {
 		tfMap["sns_caller_arn"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.SnsRegion; v != nil {
+		tfMap["sns_region"] = aws.StringValue(v)
 	}
 
 	return []interface{}{tfMap}
