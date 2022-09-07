@@ -62,7 +62,7 @@ body:
       placeholder: "* aws_xxx"
     validations:
       required: false
-  
+
   - type: textarea
     id: expected
     attributes:
@@ -70,7 +70,7 @@ body:
       description: What should have happened?
     validations:
       required: true
-  
+
   - type: textarea
     id: actual
     attributes:
@@ -78,24 +78,24 @@ body:
       description: What actually happened?
     validations:
       required: true
-    
+
   - type: textarea
     id: log_snippet
     attributes:
       label: Relevant Error/Panic Output Snippet
-      description: | 
+      description: |
         If applicable, provide a relevant snippet from the error or panic output. This will be rendered as `shell`, so there is no need to add a [code fence](https://docs.github.com/en/get-started/writing-on-github/working-with-advanced-formatting/creating-and-highlighting-code-blocks).
       render: shell
     validations:
       required: false
-  
+
   - type: markdown
     attributes:
       value: |
         # Configuration and Logging
 
-        Here, we ask that you provide the Terraform configuration and, when possible, the debug logs. For configurations or logs of more than just a few lines, it's preferred to either share a Gist link or zip the files and upload them. 
-        
+        Here, we ask that you provide the Terraform configuration and, when possible, the debug logs. For configurations or logs of more than just a few lines, it's preferred to either share a Gist link or zip the files and upload them.
+
         Terraform configurations or debug logs under 25MB may be [attached directly in the field](https://docs.github.com/en/get-started/writing-on-github/working-with-advanced-formatting/attaching-files). Files larger than this should be uploaded to a file hosting service and a link shared.
 
         For your security you can also encrypt the files using our [GPG public key](https://keybase.io/hashicorp).
@@ -108,7 +108,7 @@ body:
       label: Terraform Configuration Files
       description: |
         Please paste, upload, or link to a file or Gist containing all Terraform configurations required to reproduce the bug. See note above for additional information on file size restrictions and encrypting.
-        
+
         Bug reports without a functional reproduction may be closed without investigation.
     validations:
       required: true
@@ -120,18 +120,18 @@ body:
       description: Please list the steps required to reproduce the issue.
     validations:
       required: true
-  
+
   - type: textarea
     id: debug_logs
     attributes:
       label: Debug Output
       description: |
         If possible, please paste, upload, or link to a file or Gist containing debug logs. See note above for additional information on file size restrictions and encrypting.
-        
+
         To obtain the debug output, see the [Terraform documentation on debugging](https://www.terraform.io/docs/internals/debugging.html).
     validations:
       required: false
-  
+
   - type: textarea
     id: panic_logs
     attributes:
@@ -139,7 +139,7 @@ body:
       description: If Terraform produced a panic, please paste, upload, or link to a file or Gist containing the output of the `crash.log`.
     validations:
       required: false
-  
+
   - type: markdown
     attributes:
       value: |
@@ -153,7 +153,7 @@ body:
       description: Are there anything atypical about your configuration or environment that we should know about?
     validations:
       required: false
-  
+
   - type: textarea
     id: references
     attributes:
@@ -169,7 +169,7 @@ body:
     id: will_contribute
     attributes:
       label: Would you like to implement a fix?
-      description: | 
+      description: |
         If you plan to implement a fix for this, check this box to let the maintainers and community know (you can update this later if you change your mind). If this would be your first contribution, refer to the [contribution guide](https://hashicorp.github.io/terraform-provider-aws/) for tips on getting started.
       options:
         - "No"

@@ -25,14 +25,14 @@ body:
       description: Please leave a brief description of what you're requesting.
     validations:
       required: true
-  
+
   - type: textarea
     id: resources
     attributes:
       label: Requested Resource(s) and/or Data Source(s)
       description: |
-        Please list any new resource(s) and/or data source(s). The naming format is `aws_<service>_<resource_name>`, e.g., `aws_lambda_function`. 
-        
+        Please list any new resource(s) and/or data source(s). The naming format is `aws_<service>_<resource_name>`, e.g., `aws_lambda_function`.
+
         A best guess is helpful, even if you're unsure of exactly what the end result will look like. This helps maintainers and the community better understand how you (someone who is in need of this request) envisions it.
       placeholder: "* aws_xxx_yyy"
     validations:
@@ -49,7 +49,7 @@ body:
       render: terraform
     validations:
       required: false
- 
+
   - type: textarea
     id: references
     attributes:
@@ -65,7 +65,7 @@ body:
     id: will_contribute
     attributes:
       label: Would you like to implement a fix?
-      description: | 
+      description: |
         If you plan to implement a fix for this, check this box to let the maintainers and community know (you can update this later if you change your mind). If this would be your first contribution, refer to the [contribution guide](https://hashicorp.github.io/terraform-provider-aws/) for tips on getting started.
       options:
         - "No"
