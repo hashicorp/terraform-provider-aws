@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_ses_email_identity: Add `default_configuration_set` argument to support setting a default configuration set
+```

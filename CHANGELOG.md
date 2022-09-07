@@ -8,8 +8,6 @@ FEATURES:
 ENHANCEMENTS:
 
 * resource/aws_eks_addon: Support configurable timeouts for addon create, update, and delete ([#26629](https://github.com/hashicorp/terraform-provider-aws/issues/26629))
-* resource/aws_ses_email_identity: Add `default_configuration_set` argument to support setting a default configuration set ([#21129](https://github.com/hashicorp/terraform-provider-aws/issues/21129) & [#19363](https://github.com/hashicorp/terraform-provider-aws/issues/19363))
-* resource/aws_ses_email_identity: Add `tags` argument to support setting tags on an identity ([#23955](https://github.com/hashicorp/terraform-provider-aws/issues/23955))
 
 
 BUG FIXES:
