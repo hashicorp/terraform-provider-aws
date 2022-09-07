@@ -182,7 +182,7 @@ func testAccCheckCustomerManagedPolicyAttachmentDestroy(s *terraform.State) erro
 			continue
 		}
 
-		policyName, policyPath, permissionSetArn, instanceArn, err := tfssoadmin.ParseCustomerManagedPolicyAttachmentID(rs.Primary.ID)
+		policyName, policyPath, permissionSetArn, instanceArn, err := tfssoadmin.CustomerManagedPolicyAttachmentParseResourceID(rs.Primary.ID)
 		if err != nil {
 			return fmt.Errorf("error parsing SSO Customer Managed Policy Attachment ID (%s): %w", rs.Primary.ID, err)
 		}
@@ -219,7 +219,7 @@ func testAccCheckCustomerManagedPolicyAttachmentExists(resourceName string) reso
 			return fmt.Errorf("Resource (%s) ID not set", resourceName)
 		}
 
-		policyName, policyPath, permissionSetArn, instanceArn, err := tfssoadmin.ParseCustomerManagedPolicyAttachmentID(rs.Primary.ID)
+		policyName, policyPath, permissionSetArn, instanceArn, err := tfssoadmin.CustomerManagedPolicyAttachmentParseResourceID(rs.Primary.ID)
 
 		if err != nil {
 			return fmt.Errorf("error parsing SSO Managed Policy Attachment ID (%s): %w", rs.Primary.ID, err)
