@@ -603,6 +603,35 @@ func TestAccCognitoIDPUserPool_sms(t *testing.T) {
 	})
 }
 
+func TestAccCognitoIDPUserPool_SMS_snsRegion(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	iamRoleResourceName := "aws_iam_role.test"
+	resourceName := "aws_cognito_user_pool.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserPoolDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccUserPoolConfig_smsConfigurationSnsRegion(rName, "us-east-1"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "mfa_configuration", "OFF"),
+					resource.TestCheckResourceAttr(resourceName, "sms_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "sms_configuration.0.sns_region", "foobar"),
+					resource.TestCheckResourceAttrPair(resourceName, "sms_configuration.0.sns_caller_arn", iamRoleResourceName, "arn"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccCognitoIDPUserPool_SMS_externalID(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	iamRoleResourceName := "aws_iam_role.test"
@@ -1691,6 +1720,7 @@ resource "aws_cognito_user_pool" "test" {
   sms_configuration {
     external_id    = "test"
     sns_caller_arn = aws_iam_role.test.arn
+		sns_region     = "us-east-1"
   }
 }
 `, rName)
@@ -1705,6 +1735,7 @@ resource "aws_cognito_user_pool" "test" {
   sms_configuration {
     external_id    = "test"
     sns_caller_arn = aws_iam_role.test.arn
+		sns_region     = "us-east-1"
   }
 
   software_token_mfa_configuration {
@@ -1744,9 +1775,24 @@ resource "aws_cognito_user_pool" "test" {
   sms_configuration {
     external_id    = %[2]q
     sns_caller_arn = aws_iam_role.test.arn
+		sns_region     = "us-east-1"
   }
 }
 `, rName, externalID)
+}
+
+func testAccUserPoolConfig_smsConfigurationSnsRegion(rName string, snsRegion string) string {
+	return testAccUserPoolSMSConfigurationBaseConfig(rName, snsRegion) + fmt.Sprintf(`
+resource "aws_cognito_user_pool" "test" {
+  name = %[1]q
+
+  sms_configuration {
+    external_id    = "test"
+    sns_caller_arn = aws_iam_role.test.arn
+		sns_region     = %[2]q
+  }
+}
+`, rName, snsRegion)
 }
 
 func testAccUserPoolConfig_smsConfigurationSNSCallerARN2(rName string) string {
@@ -1757,6 +1803,7 @@ resource "aws_cognito_user_pool" "test" {
   sms_configuration {
     external_id    = "test"
     sns_caller_arn = aws_iam_role.test.arn
+		sns_region     = "us-east-1"
   }
 }
 `, rName)
@@ -2335,6 +2382,7 @@ resource "aws_cognito_user_pool" "test" {
   sms_configuration {
     external_id    = data.aws_caller_identity.current.account_id
     sns_caller_arn = aws_iam_role.test.arn
+		sns_region     = "us-east-1"
   }
 }
 `, name, mfaconfig, smsAuthMsg)
