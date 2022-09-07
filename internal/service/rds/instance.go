@@ -1807,6 +1807,43 @@ func resourceInstanceDelete(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] Deleting RDS DB Instance: %s", d.Id())
 	_, err := conn.DeleteDBInstance(input)
 
+	if tfawserr.ErrMessageContains(err, "InvalidParameterCombination", "disable deletion pro") {
+		if v, ok := d.GetOk("deletion_protection"); (!ok || !v.(bool)) && d.Get("apply_immediately").(bool) {
+			_, ierr := tfresource.RetryWhen(d.Timeout(schema.TimeoutUpdate),
+				func() (interface{}, error) {
+					return conn.ModifyDBInstance(&rds.ModifyDBInstanceInput{
+						ApplyImmediately:     aws.Bool(true),
+						DBInstanceIdentifier: aws.String(d.Id()),
+						DeletionProtection:   aws.Bool(false),
+					})
+				},
+				func(err error) (bool, error) {
+					// Retry for IAM eventual consistency.
+					if tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "IAM role ARN value is invalid or") {
+						return true, err
+					}
+
+					// "InvalidDBInstanceState: RDS is configuring Enhanced Monitoring or Performance Insights for this DB instance. Try your request later."
+					if tfawserr.ErrMessageContains(err, rds.ErrCodeInvalidDBInstanceStateFault, "your request later") {
+						return true, err
+					}
+
+					return false, err
+				},
+			)
+
+			if ierr != nil {
+				return fmt.Errorf("updating RDS DB Instance (%s): %w", d.Id(), err)
+			}
+
+			if _, ierr := waitDBInstanceUpdated(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); ierr != nil {
+				return fmt.Errorf("waiting for RDS DB Instance (%s) update: %w", d.Id(), ierr)
+			}
+
+			_, err = conn.DeleteDBInstance(input)
+		}
+	}
+
 	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBInstanceNotFoundFault) {
 		return nil
 	}
