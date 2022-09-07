@@ -502,7 +502,7 @@ func TestAccVPCSecurityGroup_basic(t *testing.T) {
 					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
 					resource.TestCheckResourceAttr(resourceName, "revoke_rules_on_delete", "false"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttrSet(resourceName, "vpc_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "vpc_id", "aws_vpc.test", "id"),
 				),
 			},
 			{
@@ -1339,7 +1339,7 @@ func TestAccVPCSecurityGroup_vpc(t *testing.T) {
 						"cidr_blocks.#": "1",
 						"cidr_blocks.0": "10.0.0.0/8",
 					}),
-					resource.TestCheckResourceAttrSet(resourceName, "vpc_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "vpc_id", "aws_vpc.test", "id"),
 				),
 			},
 			{
@@ -1375,7 +1375,7 @@ func TestAccVPCSecurityGroup_vpcNegOneIngress(t *testing.T) {
 						"cidr_blocks.#": "1",
 						"cidr_blocks.0": "10.0.0.0/8",
 					}),
-					resource.TestCheckResourceAttrSet(resourceName, "vpc_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "vpc_id", "aws_vpc.test", "id"),
 				),
 			},
 			{
@@ -1411,7 +1411,7 @@ func TestAccVPCSecurityGroup_vpcProtoNumIngress(t *testing.T) {
 						"cidr_blocks.#": "1",
 						"cidr_blocks.0": "10.0.0.0/8",
 					}),
-					resource.TestCheckResourceAttrSet(resourceName, "vpc_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "vpc_id", "aws_vpc.test", "id"),
 				),
 			},
 			{
@@ -2198,7 +2198,7 @@ func TestAccVPCSecurityGroup_emrDependencyViolation(t *testing.T) {
 					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
 					resource.TestCheckResourceAttr(resourceName, "revoke_rules_on_delete", "true"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttrSet(resourceName, "vpc_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "vpc_id", "aws_vpc.test", "id"),
 				),
 				ExpectError: regexp.MustCompile("unexpected state"),
 			},
