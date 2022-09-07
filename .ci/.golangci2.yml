@@ -9,7 +9,6 @@ issues:
 linters:
   disable-all: true
   enable:
-    - deadcode
     - errcheck
     - exportloopref
     - gofmt
@@ -22,11 +21,10 @@ linters:
     - nilerr
     - nolintlint
     - staticcheck
-    - structcheck
     - stylecheck
     - unconvert
+    - unused
     - unparam
-    - varcheck
     - vet
 
 linters-settings:
