@@ -102,6 +102,7 @@ In addition to all arguments above, the following attributes are exported:
 * `port` - The database port
 * `storage_encrypted` - Specifies whether the DB cluster is encrypted.
 * `kms_key_id` - The ARN for the KMS encryption key if one is set to the cluster.
+* `network_type` - The network type of the DB instance.
 * `dbi_resource_id` - The region-unique, immutable identifier for the DB instance.
 * `performance_insights_enabled` - Specifies whether Performance Insights is enabled or not.
 * `performance_insights_kms_key_id` - The ARN for the KMS encryption key used by Performance Insights.
