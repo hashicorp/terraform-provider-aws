@@ -635,7 +635,7 @@ func testAccCheckLoggingConfigurationExists(n string) resource.TestCheckFunc {
 		if err != nil {
 			return err
 		}
-		if output == nil && output.LoggingConfiguration == nil {
+		if output == nil || output.LoggingConfiguration == nil {
 			return fmt.Errorf("NetworkFirewall Logging Configuration for firewall (%s) not found", rs.Primary.ID)
 		}
 

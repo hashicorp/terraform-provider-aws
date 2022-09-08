@@ -3,7 +3,9 @@ package datasource
 import (
 	"bytes"
 	_ "embed"
+	"errors"
 	"fmt"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"strings"
@@ -100,7 +102,7 @@ func Create(dsName, snakeName string, comments, force, v2 bool) error {
 }
 
 func writeTemplate(templateName, filename, tmpl string, force bool, td TemplateData) error {
-	if _, err := os.Stat(filename); !os.IsNotExist(err) && !force {
+	if _, err := os.Stat(filename); !errors.Is(err, fs.ErrNotExist) && !force {
 		return fmt.Errorf("file (%s) already exists and force is not set", filename)
 	}
 

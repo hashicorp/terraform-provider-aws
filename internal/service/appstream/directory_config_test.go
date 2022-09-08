@@ -159,7 +159,7 @@ func testAccCheckDirectoryConfigExists(resourceName string, appStreamDirectoryCo
 			return err
 		}
 
-		if resp == nil && len(resp.DirectoryConfigs) == 0 {
+		if resp == nil || len(resp.DirectoryConfigs) == 0 {
 			return fmt.Errorf("AppStream Directory Config %q does not exist", rs.Primary.ID)
 		}
 

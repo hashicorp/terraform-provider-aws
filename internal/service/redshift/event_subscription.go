@@ -163,10 +163,6 @@ func resourceEventSubscriptionRead(d *schema.ResourceData, meta interface{}) err
 		return nil
 	}
 	if err != nil {
-		return fmt.Errorf("retrieving Redshift Event Subscription %s: %w", d.Id(), err)
-	}
-
-	if err != nil {
 		return fmt.Errorf("reading Redshift Event Subscription (%s): %w", d.Id(), err)
 	}
 
