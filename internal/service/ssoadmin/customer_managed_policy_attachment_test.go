@@ -222,11 +222,7 @@ func testAccCheckCustomerManagedPolicyAttachmentExists(n string) resource.TestCh
 
 		_, err = tfssoadmin.FindCustomerManagedPolicy(conn, policyName, policyPath, permissionSetARN, instanceARN)
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 
