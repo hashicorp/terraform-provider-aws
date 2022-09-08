@@ -68,6 +68,34 @@ func TestAccEC2EIP_disappears(t *testing.T) {
 	})
 }
 
+func TestAccEC2EIP_noVPC(t *testing.T) {
+	var conf ec2.Address
+	resourceName := "aws_eip.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEIPDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEIPConfig_noVPC,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEIPExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "domain", "vpc"),
+					resource.TestCheckResourceAttrSet(resourceName, "public_ip"),
+					testAccCheckEIPPublicDNS(resourceName),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccEC2EIP_tags(t *testing.T) {
 	var conf ec2.Address
 	resourceName := "aws_eip.test"
@@ -742,6 +770,11 @@ func testAccCheckEIPPublicDNS(resourceName string) resource.TestCheckFunc {
 const testAccEIPConfig_basic = `
 resource "aws_eip" "test" {
   vpc = true
+}
+`
+
+const testAccEIPConfig_noVPC = `
+resource "aws_eip" "test" {
 }
 `
 
