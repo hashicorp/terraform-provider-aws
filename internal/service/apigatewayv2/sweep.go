@@ -202,7 +202,7 @@ func sweepAPIMappings(region string) error {
 		}
 
 		for _, domainName := range page.Items {
-			err = getApiMappingsPages(conn, &apigatewayv2.GetApiMappingsInput{
+			err = getAPIMappingsPages(conn, &apigatewayv2.GetApiMappingsInput{
 				DomainName: domainName.DomainName,
 			}, func(page *apigatewayv2.GetApiMappingsOutput, lastPage bool) bool {
 				if page == nil {
