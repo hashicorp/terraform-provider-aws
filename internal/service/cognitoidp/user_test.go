@@ -211,6 +211,8 @@ func TestAccCognitoIDPUser_attributes(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "attributes.one", "1"),
 					resource.TestCheckResourceAttr(resourceName, "attributes.two", "2"),
 					resource.TestCheckResourceAttr(resourceName, "attributes.three", "3"),
+					resource.TestCheckResourceAttr(resourceName, "attributes[\"custom:five\"]", "5"),
+					resource.TestCheckResourceAttr(resourceName, "attributes[\"dev:custom:six\"]", "6"),
 				),
 			},
 			{
@@ -234,6 +236,8 @@ func TestAccCognitoIDPUser_attributes(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "attributes.two", "2"),
 					resource.TestCheckResourceAttr(resourceName, "attributes.three", "three"),
 					resource.TestCheckResourceAttr(resourceName, "attributes.four", "4"),
+					resource.TestCheckResourceAttr(resourceName, "attributes[\"custom:five\"]", "five"),
+					resource.TestCheckResourceAttr(resourceName, "attributes[\"dev:custom:six\"]", "six"),
 				),
 			},
 		},
@@ -553,6 +557,22 @@ resource "aws_cognito_user_pool" "test" {
     developer_only_attribute = false
     string_attribute_constraints {}
   }
+  schema {
+    name                     = "five"
+    attribute_data_type      = "String"
+    mutable                  = true
+    required                 = false
+    developer_only_attribute = false
+    string_attribute_constraints {}
+  }
+	schema {
+    name                     = "six"
+    attribute_data_type      = "String"
+    mutable                  = true
+    required                 = false
+    developer_only_attribute = true
+    string_attribute_constraints {}
+  }
 }
 
 resource "aws_cognito_user" "test" {
@@ -563,6 +583,8 @@ resource "aws_cognito_user" "test" {
     one   = "1"
     two   = "2"
     three = "3"
+		"custom:five" = "5"
+		"dev:custom:six" = "6"
   }
 }
 `, userPoolName, userName)
@@ -605,6 +627,22 @@ resource "aws_cognito_user_pool" "test" {
     developer_only_attribute = false
     string_attribute_constraints {}
   }
+  schema {
+    name                     = "five"
+    attribute_data_type      = "String"
+    mutable                  = true
+    required                 = false
+    developer_only_attribute = false
+    string_attribute_constraints {}
+  }
+	schema {
+    name                     = "six"
+    attribute_data_type      = "String"
+    mutable                  = true
+    required                 = false
+    developer_only_attribute = true
+    string_attribute_constraints {}
+  }
 }
 
 resource "aws_cognito_user" "test" {
@@ -615,6 +653,8 @@ resource "aws_cognito_user" "test" {
     two   = "2"
     three = "three"
     four  = "4"
+		"custom:five" = "five"
+		"dev:custom:six" = "six"
   }
 }
 `, userPoolName, userName)
