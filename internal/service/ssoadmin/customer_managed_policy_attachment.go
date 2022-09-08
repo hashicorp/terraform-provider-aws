@@ -9,7 +9,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ssoadmin"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -138,50 +137,36 @@ func resourceCustomerManagedPolicyAttachmentRead(d *schema.ResourceData, meta in
 func resourceCustomerManagedPolicyAttachmentDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SSOAdminConn
 
-	policyName, policyPath, permissionSetArn, instanceArn, err := CustomerManagedPolicyAttachmentParseResourceID(d.Id())
+	policyName, policyPath, permissionSetARN, instanceARN, err := CustomerManagedPolicyAttachmentParseResourceID(d.Id())
+
 	if err != nil {
-		return fmt.Errorf("error parsing SSO Customer Managed Policy Attachment ID: %w", err)
+		return err
 	}
 
 	input := &ssoadmin.DetachCustomerManagedPolicyReferenceFromPermissionSetInput{
-		InstanceArn:      aws.String(instanceArn),
-		PermissionSetArn: aws.String(permissionSetArn),
 		CustomerManagedPolicyReference: &ssoadmin.CustomerManagedPolicyReference{
 			Name: aws.String(policyName),
 			Path: aws.String(policyPath),
 		},
+		InstanceArn:      aws.String(instanceARN),
+		PermissionSetArn: aws.String(permissionSetARN),
 	}
-	// A retry might be required whilst changes propagate, particularly if updating multiple attachments
-	err = resource.Retry(customerPolicyAttachmentTimeout, func() *resource.RetryError {
-		var err error
-		_, err = conn.DetachCustomerManagedPolicyReferenceFromPermissionSet(input)
 
-		if err != nil {
-			if tfawserr.ErrCodeEquals(err, ssoadmin.ErrCodeConflictException) {
-				return resource.RetryableError(err)
-			}
-			if tfawserr.ErrCodeEquals(err, ssoadmin.ErrCodeThrottlingException) {
-				return resource.RetryableError(err)
-			}
-			return resource.NonRetryableError(err)
-		}
+	log.Printf("[INFO] Detaching customer managed policy reference from permission set: %s", input)
+	_, err = tfresource.RetryWhenAWSErrCodeEquals(customerPolicyAttachmentTimeout, func() (interface{}, error) {
+		return conn.DetachCustomerManagedPolicyReferenceFromPermissionSet(input)
+	}, ssoadmin.ErrCodeConflictException, ssoadmin.ErrCodeThrottlingException)
+
+	if tfawserr.ErrCodeEquals(err, ssoadmin.ErrCodeResourceNotFoundException) {
 		return nil
-
-	})
-
-	if tfresource.TimedOut(err) {
-		_, err = conn.DetachCustomerManagedPolicyReferenceFromPermissionSet(input)
 	}
 
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, ssoadmin.ErrCodeResourceNotFoundException) {
-			return nil
-		}
-		return fmt.Errorf("error detaching Customer Managed Policy (%s) from SSO Permission Set (%s): %w", policyName, permissionSetArn, err)
+		return fmt.Errorf("deleting SSO Customer Managed Policy Attachment (%s): %w", d.Id(), err)
 	}
 
-	// After the policy has been detached from the permission set, provision in all accounts that use this permission set
-	if err := provisionPermissionSet(conn, permissionSetArn, instanceArn); err != nil {
+	// After the policy has been detached from the permission set, provision in all accounts that use this permission set.
+	if err := provisionPermissionSet(conn, permissionSetARN, instanceARN); err != nil {
 		return err
 	}
 
