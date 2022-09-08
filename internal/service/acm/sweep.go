@@ -72,7 +72,7 @@ func sweepCertificates(region string) error {
 				for _, iub := range output.Certificate.InUseBy {
 					m[aws.StringValue(iub)[:77]] = ""
 				}
-				for k, _ := range m {
+				for k := range m {
 					log.Printf("[INFO]  %s...", k)
 				}
 				continue
