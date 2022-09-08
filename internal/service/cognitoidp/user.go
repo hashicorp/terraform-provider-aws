@@ -401,7 +401,7 @@ func expandAttribute(tfMap map[string]interface{}) []*cognitoidentityprovider.At
 	apiList := make([]*cognitoidentityprovider.AttributeType, 0, len(tfMap))
 
 	for k, v := range tfMap {
-		if !UserAttributeKeyMatchesStandardAttribute(k) && !strings.HasPrefix(k, "custom:") {
+		if !UserAttributeKeyMatchesStandardAttribute(k) && (!strings.HasPrefix(k, "custom:") || !strings.HasPrefix(k, "dev:custom:")) {
 			k = fmt.Sprintf("custom:%v", k)
 		}
 		apiList = append(apiList, &cognitoidentityprovider.AttributeType{
