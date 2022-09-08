@@ -465,14 +465,10 @@ func TestAccLambdaFunction_encryptedEnvVariables(t *testing.T) {
 	}
 
 	var conf lambda.GetFunctionOutput
-
-	rString := sdkacctest.RandString(8)
-	keyDesc := fmt.Sprintf("tf_acc_key_lambda_func_encrypted_env_%s", rString)
-	funcName := fmt.Sprintf("tf_acc_lambda_func_encrypted_env_%s", rString)
-	policyName := fmt.Sprintf("tf_acc_policy_lambda_func_encrypted_env_%s", rString)
-	roleName := fmt.Sprintf("tf_acc_role_lambda_func_encrypted_env_%s", rString)
-	sgName := fmt.Sprintf("tf_acc_sg_lambda_func_encrypted_env_%s", rString)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lambda_function.test"
+	kmsKey1ResourceName := "aws_kms_key.test.0"
+	kmsKey2ResourceName := "aws_kms_key.test.1"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
@@ -481,13 +477,11 @@ func TestAccLambdaFunction_encryptedEnvVariables(t *testing.T) {
 		CheckDestroy:             testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFunctionConfig_encryptedEnvVariables(keyDesc, funcName, policyName, roleName, sgName),
+				Config: testAccFunctionConfig_encryptedEnvVariables(rName, 0),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFunctionExists(resourceName, funcName, &conf),
-					testAccCheckFunctionName(&conf, funcName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
+					testAccCheckFunctionExists(resourceName, rName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "environment.0.variables.foo", "bar"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "kms_key_arn", "kms", regexp.MustCompile(`key/.+`)),
+					resource.TestCheckResourceAttrPair(resourceName, "kms_key_arn", kmsKey1ResourceName, "arn"),
 				),
 			},
 			{
@@ -497,11 +491,17 @@ func TestAccLambdaFunction_encryptedEnvVariables(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"filename", "publish"},
 			},
 			{
-				Config: testAccFunctionConfig_encryptedEnvVariablesModified(keyDesc, funcName, policyName, roleName, sgName),
+				Config: testAccFunctionConfig_encryptedEnvVariables(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFunctionExists(resourceName, funcName, &conf),
-					testAccCheckFunctionName(&conf, funcName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
+					testAccCheckFunctionExists(resourceName, rName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "environment.0.variables.foo", "bar"),
+					resource.TestCheckResourceAttrPair(resourceName, "kms_key_arn", kmsKey2ResourceName, "arn"),
+				),
+			},
+			{
+				Config: testAccFunctionConfig_encryptedEnvVariablesNoKey(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFunctionExists(resourceName, rName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "environment.0.variables.foo", "bar"),
 					resource.TestCheckResourceAttr(resourceName, "kms_key_arn", ""),
 				),
@@ -2566,7 +2566,7 @@ resource "aws_lambda_function" "test" {
 func testAccFunctionConfig_noFilenameAndS3Attributes(funcName, policyName, roleName, sgName string) string {
 	return fmt.Sprintf(acctest.ConfigLambdaBase(policyName, roleName, sgName)+`
 resource "aws_lambda_function" "test" {
-  function_name = "%s"
+  function_name = %[1]q
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
   runtime       = "nodejs12.x"
@@ -2578,7 +2578,7 @@ func testAccFunctionConfig_envVariables(funcName, policyName, roleName, sgName s
 	return fmt.Sprintf(acctest.ConfigLambdaBase(policyName, roleName, sgName)+`
 resource "aws_lambda_function" "test" {
   filename      = "test-fixtures/lambdatest.zip"
-  function_name = "%s"
+  function_name = %[1]q
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
   runtime       = "nodejs12.x"
@@ -2596,7 +2596,7 @@ func testAccFunctionConfig_envVariablesModified(funcName, policyName, roleName, 
 	return fmt.Sprintf(acctest.ConfigLambdaBase(policyName, roleName, sgName)+`
 resource "aws_lambda_function" "test" {
   filename      = "test-fixtures/lambdatest.zip"
-  function_name = "%s"
+  function_name = %[1]q
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
   runtime       = "nodejs12.x"
@@ -2615,7 +2615,7 @@ func testAccFunctionConfig_envVariablesModifiedNoEnvironment(funcName, policyNam
 	return fmt.Sprintf(acctest.ConfigLambdaBase(policyName, roleName, sgName)+`
 resource "aws_lambda_function" "test" {
   filename      = "test-fixtures/lambdatest.zip"
-  function_name = "%s"
+  function_name = %[1]q
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
   runtime       = "nodejs12.x"
@@ -2643,10 +2643,14 @@ resource "aws_lambda_function" "test" {
 `, rName))
 }
 
-func testAccFunctionConfig_encryptedEnvVariables(keyDesc, funcName, policyName, roleName, sgName string) string {
-	return fmt.Sprintf(acctest.ConfigLambdaBase(policyName, roleName, sgName)+`
-resource "aws_kms_key" "foo" {
-  description = "%s"
+func testAccFunctionConfig_encryptedEnvVariables(rName string, idx int) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLambdaBase(rName, rName, rName),
+		fmt.Sprintf(`
+resource "aws_kms_key" "test" {
+  count = 2
+
+  description = "%[1]s-${count.index}"
 
   policy = <<POLICY
 {
@@ -2669,10 +2673,10 @@ POLICY
 
 resource "aws_lambda_function" "test" {
   filename      = "test-fixtures/lambdatest.zip"
-  function_name = "%s"
+  function_name = %[1]q
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
-  kms_key_arn   = aws_kms_key.foo.arn
+  kms_key_arn   = aws_kms_key.test[%[2]d].arn
   runtime       = "nodejs12.x"
 
   environment {
@@ -2681,13 +2685,17 @@ resource "aws_lambda_function" "test" {
     }
   }
 }
-`, keyDesc, funcName)
+`, rName, idx))
 }
 
-func testAccFunctionConfig_encryptedEnvVariablesModified(keyDesc, funcName, policyName, roleName, sgName string) string {
-	return fmt.Sprintf(acctest.ConfigLambdaBase(policyName, roleName, sgName)+`
-resource "aws_kms_key" "foo" {
-  description = "%s"
+func testAccFunctionConfig_encryptedEnvVariablesNoKey(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLambdaBase(rName, rName, rName),
+		fmt.Sprintf(`
+resource "aws_kms_key" "test" {
+  count = 2
+
+  description = "%[1]s-${count.index}"
 
   policy = <<POLICY
 {
@@ -2710,7 +2718,7 @@ POLICY
 
 resource "aws_lambda_function" "test" {
   filename      = "test-fixtures/lambdatest.zip"
-  function_name = "%s"
+  function_name = %[1]q
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
   runtime       = "nodejs12.x"
@@ -2721,7 +2729,7 @@ resource "aws_lambda_function" "test" {
     }
   }
 }
-`, keyDesc, funcName)
+`, rName))
 }
 
 func testAccFunctionConfig_filename(fileName, funcName, policyName, roleName, sgName string) string {
