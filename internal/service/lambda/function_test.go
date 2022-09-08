@@ -1207,11 +1207,7 @@ func TestAccLambdaFunction_architecturesWithLayer(t *testing.T) {
 
 func TestAccLambdaFunction_ephemeralStorage(t *testing.T) {
 	var conf lambda.GetFunctionOutput
-	rString := sdkacctest.RandString(8)
-	funcName := fmt.Sprintf("tf_acc_lambda_func_ephemeral_storage_%s", rString)
-	policyName := fmt.Sprintf("tf_acc_policy_lambda_func_ephemeral_storage_%s", rString)
-	roleName := fmt.Sprintf("tf_acc_role_lambda_func_ephemeral_storage_%s", rString)
-	sgName := fmt.Sprintf("tf_acc_sg_lambda_func_ephemeral_storage_%s", rString)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lambda_function.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -1224,9 +1220,9 @@ func TestAccLambdaFunction_ephemeralStorage(t *testing.T) {
 
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFunctionConfig_ephemeralStorage(funcName, policyName, roleName, sgName),
+				Config: testAccFunctionConfig_ephemeralStorage(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFunctionExists(resourceName, funcName, &conf),
+					testAccCheckFunctionExists(resourceName, rName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "ephemeral_storage.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "ephemeral_storage.0.size", "1024"),
 				),
@@ -1238,11 +1234,10 @@ func TestAccLambdaFunction_ephemeralStorage(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"filename", "publish"},
 			},
 			{
-				Config: testAccFunctionConfig_updateEphemeralStorage(funcName, policyName, roleName, sgName),
+				Config: testAccFunctionConfig_updateEphemeralStorage(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFunctionExists(resourceName, funcName, &conf),
-					testAccCheckFunctionName(&conf, funcName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
+					testAccCheckFunctionExists(resourceName, rName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "ephemeral_storage.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "ephemeral_storage.0.size", "2048"),
 				),
 			},
@@ -1311,7 +1306,6 @@ func TestAccLambdaFunction_KMSKeyARN_noEnvironmentVariables(t *testing.T) {
 	}
 
 	var function1 lambda.GetFunctionOutput
-
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lambda_function.test"
 
@@ -3655,6 +3649,42 @@ resource "aws_lambda_function" "test" {
 `, funcName)
 }
 
+func testAccFunctionConfig_ephemeralStorage(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLambdaBase(rName, rName, rName),
+		fmt.Sprintf(`
+resource "aws_lambda_function" "test" {
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = %[1]q
+  role          = aws_iam_role.iam_for_lambda.arn
+  handler       = "exports.example"
+  runtime       = "nodejs12.x"
+
+  ephemeral_storage {
+    size = 1024
+  }
+}
+`, rName))
+}
+
+func testAccFunctionConfig_updateEphemeralStorage(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLambdaBase(rName, rName, rName),
+		fmt.Sprintf(`
+resource "aws_lambda_function" "test" {
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = %[1]q
+  role          = aws_iam_role.iam_for_lambda.arn
+  handler       = "exports.example"
+  runtime       = "nodejs12.x"
+
+  ephemeral_storage {
+    size = 2048
+  }
+}
+`, rName))
+}
+
 func TestFlattenImageConfigShouldNotFailWithEmptyImageConfig(t *testing.T) {
 	t.Parallel()
 	response := lambda.ImageConfigResponse{}
@@ -3696,36 +3726,4 @@ func testAccPreCheckSignerSigningProfile(t *testing.T, platformID string) {
 	if !foundPlatform {
 		t.Skipf("skipping acceptance testing: Signing Platform (%s) not found", platformID)
 	}
-}
-
-func testAccFunctionConfig_ephemeralStorage(funcName, policyName, roleName, sgName string) string {
-	return fmt.Sprintf(acctest.ConfigLambdaBase(policyName, roleName, sgName)+`
-resource "aws_lambda_function" "test" {
-  filename      = "test-fixtures/lambdatest.zip"
-  function_name = "%s"
-  role          = aws_iam_role.iam_for_lambda.arn
-  handler       = "exports.example"
-  runtime       = "nodejs12.x"
-
-  ephemeral_storage {
-    size = 1024
-  }
-}
-`, funcName)
-}
-
-func testAccFunctionConfig_updateEphemeralStorage(funcName, policyName, roleName, sgName string) string {
-	return fmt.Sprintf(acctest.ConfigLambdaBase(policyName, roleName, sgName)+`
-resource "aws_lambda_function" "test" {
-  filename      = "test-fixtures/lambdatest.zip"
-  function_name = "%s"
-  role          = aws_iam_role.iam_for_lambda.arn
-  handler       = "exports.example"
-  runtime       = "nodejs12.x"
-
-  ephemeral_storage {
-    size = 2048
-  }
-}
-`, funcName)
 }
