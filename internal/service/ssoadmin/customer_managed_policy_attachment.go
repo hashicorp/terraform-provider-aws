@@ -115,7 +115,7 @@ func resourceCustomerManagedPolicyAttachmentRead(d *schema.ResourceData, meta in
 
 	policy, err := FindCustomerManagedPolicy(conn, policyName, policyPath, permissionSetARN, instanceARN)
 
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, ssoadmin.ErrCodeResourceNotFoundException) {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] SSO Customer Managed Policy Attachment (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
