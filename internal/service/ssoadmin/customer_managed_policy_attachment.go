@@ -108,32 +108,29 @@ func resourceCustomerManagedPolicyAttachmentCreate(d *schema.ResourceData, meta 
 func resourceCustomerManagedPolicyAttachmentRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SSOAdminConn
 
-	policyName, policyPath, permissionSetArn, instanceArn, err := CustomerManagedPolicyAttachmentParseResourceID(d.Id())
+	policyName, policyPath, permissionSetARN, instanceARN, err := CustomerManagedPolicyAttachmentParseResourceID(d.Id())
+
 	if err != nil {
-		return fmt.Errorf("error parsing SSO Customer Managed Policy Attachment ID: %w", err)
+		return err
 	}
 
-	policy, err := FindCustomerManagedPolicy(conn, policyName, policyPath, permissionSetArn, instanceArn)
+	policy, err := FindCustomerManagedPolicy(conn, policyName, policyPath, permissionSetARN, instanceARN)
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, ssoadmin.ErrCodeResourceNotFoundException) {
-		log.Printf("[WARN] Customer Managed Policy (%s) for SSO Permission Set (%s) not found, removing from state", policyName, permissionSetArn)
+		log.Printf("[WARN] SSO Customer Managed Policy Attachment (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading Customer Managed Policy (%s) for SSO Permission Set (%s): %w", policyName, permissionSetArn, err)
+		return fmt.Errorf("reading SSO Customer Managed Policy Attachment (%s): %w", d.Id(), err)
 	}
 
-	if policy == nil {
-		log.Printf("[WARN] Customer Managed Policy (%s) for SSO Permission Set (%s) not found, removing from state", policyName, permissionSetArn)
-		d.SetId("")
-		return nil
+	if err := d.Set("customer_managed_policy_reference", []interface{}{flattenCustomerManagedPolicyReference(policy)}); err != nil {
+		return fmt.Errorf("setting customer_managed_policy_reference: %w", err)
 	}
-
-	d.Set("instance_arn", instanceArn)
-	d.Set("permission_set_arn", permissionSetArn)
-	d.Set("customer_managed_policy_reference", flattenPolicyReference(policy))
+	d.Set("instance_arn", instanceARN)
+	d.Set("permission_set_arn", permissionSetARN)
 
 	return nil
 }
@@ -244,22 +241,4 @@ func flattenCustomerManagedPolicyReference(apiObject *ssoadmin.CustomerManagedPo
 	}
 
 	return tfMap
-}
-
-func flattenPolicyReference(l *ssoadmin.CustomerManagedPolicyReference) []interface{} {
-	if l == nil {
-		return []interface{}{}
-	}
-
-	m := make(map[string]interface{})
-
-	if v := l.Name; v != nil {
-		m["name"] = aws.StringValue(v)
-	}
-
-	if v := l.Path; v != nil {
-		m["path"] = aws.StringValue(v)
-	}
-
-	return []interface{}{m}
 }

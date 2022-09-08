@@ -3,6 +3,9 @@ package ssoadmin
 import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ssoadmin"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 // FindAccountAssignment returns the account assigned to a permission set within a specified SSO instance.
@@ -97,5 +100,20 @@ func FindCustomerManagedPolicy(conn *ssoadmin.SSOAdmin, policyName, policyPath, 
 		return !lastPage
 	})
 
-	return attachedPolicy, err
+	if tfawserr.ErrCodeEquals(err, ssoadmin.ErrCodeResourceNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if attachedPolicy == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return attachedPolicy, nil
 }
