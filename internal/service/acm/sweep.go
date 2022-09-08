@@ -19,6 +19,24 @@ func init() {
 	resource.AddTestSweepers("aws_acm_certificate", &resource.Sweeper{
 		Name: "aws_acm_certificate",
 		F:    sweepCertificates,
+		Dependencies: []string{
+			"aws_api_gateway_api_key",
+			"aws_api_gateway_client_certificate",
+			"aws_api_gateway_domain_name",
+			"aws_api_gateway_rest_api",
+			"aws_api_gateway_usage_plan",
+			"aws_api_gateway_vpc_link",
+			"aws_apigatewayv2_api",
+			"aws_apigatewayv2_api_mapping",
+			"aws_apigatewayv2_domain_name",
+			"aws_apigatewayv2_stage",
+			"aws_apigatewayv2_vpc_link",
+			"aws_elb",
+			"aws_iam_server_certificate",
+			"aws_iam_signing_certificate",
+			"aws_lb",
+			"aws_lb_listener",
+		},
 	})
 }
 

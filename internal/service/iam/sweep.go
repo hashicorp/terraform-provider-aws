@@ -839,7 +839,7 @@ func roleNameFilter(name string) bool {
 		return true
 	}
 
-	randTF := regexp.MustCompile(`^tf-[a-zA-Z0-9]{16}$`)
+	randTF := regexp.MustCompile(`^tf-[0-9]{16}`)
 	if randTF.MatchString(name) {
 		return true
 	}
@@ -868,11 +868,13 @@ func roleNameFilter(name string) bool {
 		"terraform-2021",
 		"terraform-2022",
 		"test",
-		"tf_acc",
+		"tf_ecs_target",
 		"tf_ecs",
 		"tf_test",
 		"tf-acc",
+		"tf-iam-role-replication",
 		"tf-opsworks-acc",
+		"tf-test-iam",
 		"tf-test",
 	}
 	for _, prefix := range prefixes {

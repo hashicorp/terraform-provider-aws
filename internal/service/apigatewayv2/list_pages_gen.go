@@ -49,3 +49,43 @@ func getDomainNamesPagesWithContext(ctx context.Context, conn *apigatewayv2.ApiG
 	}
 	return nil
 }
+func getApiMappingsPages(conn *apigatewayv2.ApiGatewayV2, input *apigatewayv2.GetApiMappingsInput, fn func(*apigatewayv2.GetApiMappingsOutput, bool) bool) error {
+	return getApiMappingsPagesWithContext(context.Background(), conn, input, fn)
+}
+
+func getApiMappingsPagesWithContext(ctx context.Context, conn *apigatewayv2.ApiGatewayV2, input *apigatewayv2.GetApiMappingsInput, fn func(*apigatewayv2.GetApiMappingsOutput, bool) bool) error {
+	for {
+		output, err := conn.GetApiMappingsWithContext(ctx, input)
+		if err != nil {
+			return err
+		}
+
+		lastPage := aws.StringValue(output.NextToken) == ""
+		if !fn(output, lastPage) || lastPage {
+			break
+		}
+
+		input.NextToken = output.NextToken
+	}
+	return nil
+}
+func getStagesPages(conn *apigatewayv2.ApiGatewayV2, input *apigatewayv2.GetStagesInput, fn func(*apigatewayv2.GetStagesOutput, bool) bool) error {
+	return getStagesPagesWithContext(context.Background(), conn, input, fn)
+}
+
+func getStagesPagesWithContext(ctx context.Context, conn *apigatewayv2.ApiGatewayV2, input *apigatewayv2.GetStagesInput, fn func(*apigatewayv2.GetStagesOutput, bool) bool) error {
+	for {
+		output, err := conn.GetStagesWithContext(ctx, input)
+		if err != nil {
+			return err
+		}
+
+		lastPage := aws.StringValue(output.NextToken) == ""
+		if !fn(output, lastPage) || lastPage {
+			break
+		}
+
+		input.NextToken = output.NextToken
+	}
+	return nil
+}
