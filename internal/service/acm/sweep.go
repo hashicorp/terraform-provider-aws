@@ -67,7 +67,14 @@ func sweepCertificates(region string) error {
 			}
 
 			if len(output.Certificate.InUseBy) > 0 {
-				log.Printf("[INFO] ACM certificate (%s) is in-use, skipping", arn)
+				log.Printf("[INFO] ACM Certificate (%s) skipped, in use by, e.g., (%d tot):", arn, len(output.Certificate.InUseBy))
+				m := make(map[string]string)
+				for _, iub := range output.Certificate.InUseBy {
+					m[aws.StringValue(iub)[:77]] = ""
+				}
+				for k, _ := range m {
+					log.Printf("[INFO]  %s...", k)
+				}
 				continue
 			}
 
