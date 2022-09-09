@@ -16,8 +16,7 @@ import (
 
 func TestAccAutoScalingAttachment_elb(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resource1Name := "aws_autoscaling_attachment.test1"
-	resource2Name := "aws_autoscaling_attachment.test2"
+	resourceName := "aws_autoscaling_attachment.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
@@ -26,22 +25,9 @@ func TestAccAutoScalingAttachment_elb(t *testing.T) {
 		CheckDestroy:             testAccCheckAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAttachmentConfig_elbOneAssociation(rName),
+				Config: testAccAttachmentConfig_elb(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAttachmentByLoadBalancerNameExists(resource1Name),
-				),
-			},
-			{
-				Config: testAccAttachmentConfig_elbTwoAssociations(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAttachmentByLoadBalancerNameExists(resource1Name),
-					testAccCheckAttachmentByLoadBalancerNameExists(resource2Name),
-				),
-			},
-			{
-				Config: testAccAttachmentConfig_elbOneAssociation(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAttachmentByLoadBalancerNameExists(resource1Name),
+					testAccCheckAttachmentByLoadBalancerNameExists(resourceName),
 				),
 			},
 		},
@@ -76,6 +62,32 @@ func TestAccAutoScalingAttachment_albTargetGroup(t *testing.T) {
 				Config: testAccAttachmentConfig_targetGroupOneAssociation(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAttachmentByTargetGroupARNExists(resource1Name),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAutoScalingAttachment_multipleELBs(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resource1Name := "aws_autoscaling_attachment.test.0"
+	resource11Name := "aws_autoscaling_attachment.test.10"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAttachmentDestroy,
+		Steps: []resource.TestStep{
+			// Create all the ELBs first.
+			{
+				Config: testAccAttachmentConfig_elbBase(rName, 11),
+			},
+			{
+				Config: testAccAttachmentConfig_multipleELBs(rName, 11),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAttachmentByLoadBalancerNameExists(resource1Name),
+					testAccCheckAttachmentByLoadBalancerNameExists(resource11Name),
 				),
 			},
 		},
@@ -145,10 +157,10 @@ func testAccCheckAttachmentByTargetGroupARNExists(n string) resource.TestCheckFu
 	}
 }
 
-func testAccAttachmentConfig_elbBase(rName string) string {
+func testAccAttachmentConfig_elbBase(rName string, elbCount int) string {
 	return acctest.ConfigCompose(testAccGroupConfig_launchConfigurationBase(rName, "t2.micro"), fmt.Sprintf(`
 resource "aws_elb" "test" {
-  count = 2
+  count = %[2]d
 
   # "name" cannot be longer than 32 characters.
   name               = format("%%s-%%d", substr(%[1]q, 0, 28), count.index)
@@ -182,7 +194,7 @@ resource "aws_autoscaling_group" "test" {
     ignore_changes = [load_balancers]
   }
 }
-`, rName))
+`, rName, elbCount))
 }
 
 func testAccAttachmentConfig_targetGroupBase(rName string) string {
@@ -229,22 +241,24 @@ resource "aws_autoscaling_group" "test" {
 `, rName))
 }
 
-func testAccAttachmentConfig_elbOneAssociation(rName string) string {
-	return acctest.ConfigCompose(testAccAttachmentConfig_elbBase(rName), `
-resource "aws_autoscaling_attachment" "test1" {
+func testAccAttachmentConfig_elb(rName string) string {
+	return acctest.ConfigCompose(testAccAttachmentConfig_elbBase(rName, 1), `
+resource "aws_autoscaling_attachment" "test" {
   autoscaling_group_name = aws_autoscaling_group.test.id
   elb                    = aws_elb.test[0].id
 }
 `)
 }
 
-func testAccAttachmentConfig_elbTwoAssociations(rName string) string {
-	return acctest.ConfigCompose(testAccAttachmentConfig_elbOneAssociation(rName), `
-resource "aws_autoscaling_attachment" "test2" {
+func testAccAttachmentConfig_multipleELBs(rName string, n int) string {
+	return acctest.ConfigCompose(testAccAttachmentConfig_elbBase(rName, n), fmt.Sprintf(`
+resource "aws_autoscaling_attachment" "test" {
+  count = %[1]d
+
   autoscaling_group_name = aws_autoscaling_group.test.id
-  elb                    = aws_elb.test[1].id
+  elb                    = aws_elb.test[count.index].id
 }
-`)
+`, n))
 }
 
 func testAccAttachmentConfig_targetGroupOneAssociation(rName string) string {
