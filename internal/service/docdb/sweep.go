@@ -7,9 +7,11 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/docdb"
+	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
@@ -17,12 +19,13 @@ import (
 
 func init() {
 	resource.AddTestSweepers("aws_docdb_global_cluster", &resource.Sweeper{
-		Name:         "aws_docdb_global_cluster",
-		F:            sweepGlobalClusters,
+		Name: "aws_docdb_global_cluster",
+		F:    sweepGlobalClusters,
 		Dependencies: []string{
-			// "aws_docdb_cluster",
+			"aws_docdb_cluster",
 		},
 	})
+
 	resource.AddTestSweepers("aws_docdb_subnet_group", &resource.Sweeper{
 		Name: "aws_docdb_subnet_group",
 		F:    sweepDBSubnetGroups,
@@ -30,26 +33,34 @@ func init() {
 			"aws_docdb_cluster_instance",
 		},
 	})
+
 	resource.AddTestSweepers("aws_docdb_event_subscription", &resource.Sweeper{
-		Name:         "aws_docdb_event_subscription",
-		F:            sweepEventSubscriptions,
-		Dependencies: []string{},
+		Name: "aws_docdb_event_subscription",
+		F:    sweepEventSubscriptions,
 	})
+
 	resource.AddTestSweepers("aws_docdb_cluster", &resource.Sweeper{
-		Name:         "aws_docdb_cluster",
-		F:            sweepDBClusters,
-		Dependencies: []string{},
+		Name: "aws_docdb_cluster",
+		F:    sweepDBClusters,
+		Dependencies: []string{
+			"aws_docdb_cluster_instance",
+			"aws_docdb_cluster_snapshot",
+		},
 	})
+
 	resource.AddTestSweepers("aws_docdb_cluster_snapshot", &resource.Sweeper{
-		Name:         "aws_docdb_cluster_snapshot",
-		F:            sweepDBClusterSnapshots,
-		Dependencies: []string{},
+		Name: "aws_docdb_cluster_snapshot",
+		F:    sweepDBClusterSnapshots,
+		Dependencies: []string{
+			"aws_docdb_cluster_instance",
+		},
 	})
+
 	resource.AddTestSweepers("aws_docdb_cluster_instance", &resource.Sweeper{
-		Name:         "aws_docdb_cluster_instance",
-		F:            sweepDBInstances,
-		Dependencies: []string{},
+		Name: "aws_docdb_cluster_instance",
+		F:    sweepDBInstances,
 	})
+
 	resource.AddTestSweepers("aws_docdb_cluster_parameter_group", &resource.Sweeper{
 		Name: "aws_docdb_cluster_parameter_group",
 		F:    sweepDBClusterParameterGroups,
@@ -294,7 +305,6 @@ func sweepDBSubnetGroups(region string) error {
 
 	conn := client.(*conns.AWSClient).DocDBConn
 	input := &docdb.DescribeDBSubnetGroupsInput{}
-	sweepResources := make([]*sweep.SweepResource, 0)
 
 	err = conn.DescribeDBSubnetGroupsPages(input, func(out *docdb.DescribeDBSubnetGroupsOutput, lastPage bool) bool {
 		for _, dBSubnetGroup := range out.DBSubnetGroups {
