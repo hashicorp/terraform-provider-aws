@@ -76,6 +76,9 @@ func TestAccAutoScalingAttachment_multipleELBs(t *testing.T) {
 					testAccCheckAttachmentByLoadBalancerNameExists(resource11Name),
 				),
 			},
+			{
+				Config: testAccAttachmentConfig_elbBase(rName, 11),
+			},
 		},
 	})
 }
@@ -101,6 +104,9 @@ func TestAccAutoScalingAttachment_multipleALBTargetGroups(t *testing.T) {
 					testAccCheckAttachmentByTargetGroupARNExists(resource1Name),
 					testAccCheckAttachmentByTargetGroupARNExists(resource11Name),
 				),
+			},
+			{
+				Config: testAccAttachmentConfig_targetGroupBase(rName, 11),
 			},
 		},
 	})
