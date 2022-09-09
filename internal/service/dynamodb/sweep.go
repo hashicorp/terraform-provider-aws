@@ -50,13 +50,11 @@ func sweepTables(region string) error {
 
 			// read concurrently and gather errors
 			g.Go(func() error {
-				// Need to Read first to fill in byte_match_tuples attribute
+				// Need to Read first to fill in `replica` attribute
 				err := r.Read(d, client)
 
 				if err != nil {
-					sweeperErr := fmt.Errorf("error reading DynamoDB Table (%s): %w", id, err)
-					log.Printf("[ERROR] %s", sweeperErr)
-					return sweeperErr
+					return err
 				}
 
 				// In case it was already deleted
