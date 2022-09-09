@@ -777,6 +777,8 @@ github.com/tenntenn/text/transform v0.0.0-20200319021203-7eef512accb3 h1:f+jULpR
 github.com/tenntenn/text/transform v0.0.0-20200319021203-7eef512accb3/go.mod h1:ON8b8w4BN/kE1EOhwT0o+d62W65a6aPw1nouo9LMgyY=
 github.com/terraform-linters/tflint v0.39.3 h1:VitlqdLQ59rG3N/nZA94U3UvpMO//T0wDcCK6im1nCU=
 github.com/terraform-linters/tflint v0.39.3/go.mod h1:Ock5wnYhBJxas49B5iSx4ujNyfaKB5nlA24/kmqfMiw=
+github.com/terraform-linters/tflint-plugin-sdk v0.11.0 h1:SXgx5GVTLuPolMLbhH7/U8YDp26vIrF7bFpDalyYk8g=
+github.com/terraform-linters/tflint-plugin-sdk v0.11.0/go.mod h1:51sL8jOhqlNwCCzd5K2s88HiHRYjL4Rf+qPcZ/cApdc=
 github.com/terraform-linters/tflint-plugin-sdk v0.12.0 h1:M++ZPQXIbcGKnI6KyQz3AblCkodoKIY/glheL43LTOU=
 github.com/terraform-linters/tflint-plugin-sdk v0.12.0/go.mod h1:/lXvT/LfKOWdjoQgtRbA8VSHtGr8RFwarPIDf20lXbc=
 github.com/tetafro/godot v1.4.11 h1:BVoBIqAf/2QdbFmSwAWnaIqDivZdOV0ZRwEm6jivLKw=
