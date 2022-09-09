@@ -31,6 +31,10 @@ func DataSourceDomain() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"anonymous_auth_enabled": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
 						"enabled": {
 							Type:     schema.TypeBool,
 							Computed: true,
