@@ -1202,10 +1202,10 @@ func resourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 			Attribute:  aws.String(ec2.InstanceAttributeNameDisableApiStop),
 			InstanceId: aws.String(d.Id()),
 		})
-		if err != nil && !verify.CheckISOErrorTagsUnsupported(meta.(*conns.AWSClient).Partition, err) {
+		if err != nil && !verify.ErrorISOUnsupported(meta.(*conns.AWSClient).Partition, err) {
 			return fmt.Errorf("reading EC2 Instance (%s) attribute: %w ", d.Id(), err)
 		}
-		if !verify.CheckISOErrorTagsUnsupported(meta.(*conns.AWSClient).Partition, err) {
+		if !verify.ErrorISOUnsupported(meta.(*conns.AWSClient).Partition, err) {
 			d.Set("disable_api_stop", attr.DisableApiStop.Value)
 		}
 	}
