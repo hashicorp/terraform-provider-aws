@@ -9,7 +9,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.12.15
 	github.com/aws/aws-sdk-go-v2/service/comprehend v1.18.10
 	github.com/aws/aws-sdk-go-v2/service/fis v1.12.15
-	github.com/aws/aws-sdk-go-v2/service/identitystore v1.15.0
+	github.com/aws/aws-sdk-go-v2/service/identitystore v1.15.2
 	github.com/aws/aws-sdk-go-v2/service/kendra v1.33.3
 	github.com/aws/aws-sdk-go-v2/service/medialive v1.22.7
 	github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.0.7
