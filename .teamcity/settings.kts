@@ -160,7 +160,7 @@ object FullBuild : BuildType({
         val formatter = DateTimeFormatter.ofPattern("HH':'mm' 'VV")
         val triggerTime = formatter.parse(triggerTimeRaw)
         val triggerDay = if (DslContext.getParameter("trigger_day", "") != "")
-            DslContext.getParameter("trigger_day", "")
+            "Mon-Wed"
         else
             "Sun-Thu"
         triggers {
