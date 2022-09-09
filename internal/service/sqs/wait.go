@@ -1,6 +1,7 @@
 package sqs
 
 import (
+	"context"
 	"time"
 
 	"github.com/aws/aws-sdk-go/service/sqs"
@@ -22,18 +23,34 @@ const (
 	queueDeletedTimeout = 3 * time.Minute
 	queueTagsTimeout    = 60 * time.Second
 
-	queuePolicyReadTimeout = 20 * time.Second
+	queueAttributeReadTimeout = 20 * time.Second
 
 	queueStateExists = "exists"
 
-	queuePolicyStateNotEqual = "notequal"
-	queuePolicyStateEqual    = "equal"
+	queueAttributeStateNotEqual = "notequal"
+	queueAttributeStateEqual    = "equal"
 )
+
+func waitQueueAttributesPropagatedWithContext(ctx context.Context, conn *sqs.SQS, url string, expected map[string]string) error {
+	stateConf := &resource.StateChangeConf{
+		Pending:                   []string{queueAttributeStateNotEqual},
+		Target:                    []string{queueAttributeStateEqual},
+		Refresh:                   statusQueueAttributeState(conn, url, expected),
+		Timeout:                   queueAttributePropagationTimeout,
+		ContinuousTargetOccurence: 6,               // set to accommodate GovCloud, commercial, China, etc. - avoid lowering
+		MinTimeout:                5 * time.Second, // set to accommodate GovCloud, commercial, China, etc. - avoid lowering
+		NotFoundChecks:            10,              // set to accommodate GovCloud, commercial, China, etc. - avoid lowering
+	}
+
+	_, err := stateConf.WaitForStateContext(ctx)
+
+	return err
+}
 
 func waitQueueAttributesPropagated(conn *sqs.SQS, url string, expected map[string]string) error {
 	stateConf := &resource.StateChangeConf{
-		Pending:                   []string{queuePolicyStateNotEqual},
-		Target:                    []string{queuePolicyStateEqual},
+		Pending:                   []string{queueAttributeStateNotEqual},
+		Target:                    []string{queueAttributeStateEqual},
 		Refresh:                   statusQueueAttributeState(conn, url, expected),
 		Timeout:                   queueAttributePropagationTimeout,
 		ContinuousTargetOccurence: 6,               // set to accommodate GovCloud, commercial, China, etc. - avoid lowering

@@ -121,6 +121,7 @@ var (
 		"redrive_policy": {
 			Type:         schema.TypeString,
 			Optional:     true,
+			Computed:     true,
 			ValidateFunc: validation.StringIsJSON,
 			StateFunc: func(v interface{}) string {
 				json, _ := structure.NormalizeJsonString(v)

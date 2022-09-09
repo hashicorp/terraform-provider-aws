@@ -42,7 +42,7 @@ func statusQueueAttributeState(conn *sqs.SQS, url string, expected map[string]st
 						continue
 					}
 
-					return queuePolicyStateNotEqual
+					return queueAttributeStateNotEqual
 				}
 
 				switch k {
@@ -50,24 +50,24 @@ func statusQueueAttributeState(conn *sqs.SQS, url string, expected map[string]st
 					equivalent, err := awspolicy.PoliciesAreEquivalent(g, e)
 
 					if err != nil {
-						return queuePolicyStateNotEqual
+						return queueAttributeStateNotEqual
 					}
 
 					if !equivalent {
-						return queuePolicyStateNotEqual
+						return queueAttributeStateNotEqual
 					}
 				case sqs.QueueAttributeNameRedriveAllowPolicy, sqs.QueueAttributeNameRedrivePolicy:
 					if !StringsEquivalent(g, e) {
-						return queuePolicyStateNotEqual
+						return queueAttributeStateNotEqual
 					}
 				default:
 					if g != e {
-						return queuePolicyStateNotEqual
+						return queueAttributeStateNotEqual
 					}
 				}
 			}
 
-			return queuePolicyStateEqual
+			return queueAttributeStateEqual
 		}
 
 		got, err := FindQueueAttributesByURL(conn, url)

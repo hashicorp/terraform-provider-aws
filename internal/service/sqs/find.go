@@ -1,6 +1,7 @@
 package sqs
 
 import (
+	"context"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -36,13 +37,13 @@ func FindQueueAttributesByURL(conn *sqs.SQS, url string) (map[string]string, err
 	return aws.StringValueMap(output.Attributes), nil
 }
 
-func FindQueuePolicyByURL(conn *sqs.SQS, url string) (string, error) {
+func FindQueueAttributeByURL(ctx context.Context, conn *sqs.SQS, url string, attributeName string) (string, error) {
 	input := &sqs.GetQueueAttributesInput{
-		AttributeNames: aws.StringSlice([]string{sqs.QueueAttributeNamePolicy}),
+		AttributeNames: aws.StringSlice([]string{attributeName}),
 		QueueUrl:       aws.String(url),
 	}
 
-	output, err := conn.GetQueueAttributes(input)
+	output, err := conn.GetQueueAttributesWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, sqs.ErrCodeQueueDoesNotExist) {
 		return "", &resource.NotFoundError{
@@ -62,7 +63,7 @@ func FindQueuePolicyByURL(conn *sqs.SQS, url string) (string, error) {
 		}
 	}
 
-	v, ok := output.Attributes[sqs.QueueAttributeNamePolicy]
+	v, ok := output.Attributes[attributeName]
 
 	if !ok || aws.StringValue(v) == "" {
 		return "", &resource.NotFoundError{
