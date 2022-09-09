@@ -1,4 +1,9 @@
 ## 4.31.0 (Unreleased)
+
+BUG FIXES:
+
+* resource/aws_autoscaling_attachment: Retry errors like `ValidationError: Trying to update too many Load Balancers/Target Groups at once. The limit is 10` when creating or deleting resource ([#26654](https://github.com/hashicorp/terraform-provider-aws/issues/26654))
+
 ## 4.30.0 (September  9, 2022)
 
 FEATURES:
