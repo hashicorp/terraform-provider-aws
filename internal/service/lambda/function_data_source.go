@@ -230,7 +230,7 @@ func dataSourceFunctionRead(d *schema.ResourceData, meta interface{}) error {
 		}
 		var latestVersion string
 		log.Printf("[DEBUG] Getting List of Lambda Versions : %s", versionsInput)
-		errVersions := listVersionsByFunctionPages(conn, versionsInput, func(p *lambda.ListVersionsByFunctionOutput, lastPage bool) bool {
+		errVersions := conn.ListVersionsByFunctionPages(versionsInput, func(p *lambda.ListVersionsByFunctionOutput, lastPage bool) bool {
 			if lastPage {
 				last := p.Versions[len(p.Versions)-1]
 				latestVersion = aws.StringValue(last.Version)

@@ -133,7 +133,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/healthlake"
 	"github.com/aws/aws-sdk-go/service/honeycode"
 	"github.com/aws/aws-sdk-go/service/iam"
-	"github.com/aws/aws-sdk-go/service/identitystore"
 	"github.com/aws/aws-sdk-go/service/imagebuilder"
 	"github.com/aws/aws-sdk-go/service/inspector"
 	"github.com/aws/aws-sdk-go/service/inspector2"
@@ -423,7 +422,6 @@ func (c *Config) clientConns(client *AWSClient, sess *session.Session) {
 	client.HoneycodeConn = honeycode.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.Honeycode])}))
 	client.IAMConn = iam.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.IAM])}))
 	client.IVSConn = ivs.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.IVS])}))
-	client.IdentityStoreConn = identitystore.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.IdentityStore])}))
 	client.ImageBuilderConn = imagebuilder.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.ImageBuilder])}))
 	client.InspectorConn = inspector.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.Inspector])}))
 	client.Inspector2Conn = inspector2.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.Inspector2])}))

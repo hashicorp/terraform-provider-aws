@@ -40,7 +40,7 @@ func sweepKeyspaces(region string) error { // nosemgrep:ci.keyspaces-in-func-nam
 			id := aws.StringValue(v.KeyspaceName)
 
 			switch id {
-			case "system_schema", "system_schema_mcs", "system":
+			case "system_schema", "system_schema_mcs", "system", "system_multiregion_info":
 				// The default keyspaces cannot be deleted.
 				continue
 			}

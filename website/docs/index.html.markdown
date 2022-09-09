@@ -14,7 +14,7 @@ with the proper credentials before you can use it.
 Use the navigation to the left to read about the available resources.
 
 To learn the basics of Terraform using this provider, follow the
-hands-on [get started tutorials](https://learn.hashicorp.com/tutorials/terraform/infrastructure-as-code?in=terraform/aws-get-started&utm_source=WEBSITE&utm_medium=WEB_IO&utm_offer=ARTICLE_PAGE&utm_content=DOCS) on HashiCorp's Learn platform. Interact with AWS services,
+hands-on [get started tutorials](https://learn.hashicorp.com/tutorials/terraform/infrastructure-as-code?in=terraform/aws-get-started&utm_source=WEBSITE&utm_medium=WEB_IO&utm_offer=ARTICLE_PAGE&utm_content=DOCS). Interact with AWS services,
 including Lambda, RDS, and IAM by following the [AWS services
 tutorials](https://learn.hashicorp.com/collections/terraform/aws?utm_source=WEBSITE&utm_medium=WEB_IO&utm_offer=ARTICLE_PAGE&utm_content=DOCS).
 
@@ -186,7 +186,7 @@ provider "aws" {
 }
 ```
 
-> **Hands-on:** Try the [Use AssumeRole to Provision AWS Resources Across Accounts](https://learn.hashicorp.com/tutorials/terraform/aws-assumerole) tutorial on HashiCorp Learn.
+> **Hands-on:** Try the [Use AssumeRole to Provision AWS Resources Across Accounts](https://learn.hashicorp.com/tutorials/terraform/aws-assumerole) tutorial.
 
 ### Assuming an IAM Role Using A Web Identity
 
@@ -495,7 +495,7 @@ The `assume_role_with_web_identity` configuration block supports the following a
 
 ### default_tags Configuration Block
 
-> **Hands-on:** Try the [Configure Default Tags for AWS Resources](https://learn.hashicorp.com/tutorials/terraform/aws-default-tags?in=terraform/aws) tutorial on HashiCorp Learn.
+> **Hands-on:** Try the [Configure Default Tags for AWS Resources](https://learn.hashicorp.com/tutorials/terraform/aws-default-tags?in=terraform/aws) tutorial.
 
 Example: Resource with provider default tags
 

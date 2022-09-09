@@ -326,7 +326,7 @@ ssm-contacts,ssmcontacts,ssmcontacts,ssmcontacts,,ssmcontacts,,,SSMContacts,SSMC
 ssm-incidents,ssmincidents,ssmincidents,ssmincidents,,ssmincidents,,,SSMIncidents,SSMIncidents,,1,,aws_ssmincidents_,,ssmincidents_,SSM Incident Manager Incidents,AWS,,,,,
 sso,sso,sso,sso,,sso,,,SSO,SSO,,1,,aws_sso_,,sso_,SSO (Single Sign-On),AWS,,,,,
 sso-admin,ssoadmin,ssoadmin,ssoadmin,,ssoadmin,,,SSOAdmin,SSOAdmin,,1,,aws_ssoadmin_,,ssoadmin_,SSO Admin,AWS,,,,,
-identitystore,identitystore,identitystore,identitystore,,identitystore,,,IdentityStore,IdentityStore,,1,,aws_identitystore_,,identitystore_,SSO Identity Store,AWS,,,,,
+identitystore,identitystore,identitystore,identitystore,,identitystore,,,IdentityStore,IdentityStore,x,2,,aws_identitystore_,,identitystore_,SSO Identity Store,AWS,,,,,
 sso-oidc,ssooidc,ssooidc,ssooidc,,ssooidc,,,SSOOIDC,SSOOIDC,,1,,aws_ssooidc_,,ssooidc_,SSO OIDC,AWS,,,,,
 storagegateway,storagegateway,storagegateway,storagegateway,,storagegateway,,,StorageGateway,StorageGateway,,1,,aws_storagegateway_,,storagegateway_,Storage Gateway,AWS,,,,,
 sts,sts,sts,sts,,sts,,,STS,STS,x,1,aws_caller_identity,aws_sts_,,caller_identity,STS (Security Token),AWS,,,AWS_STS_ENDPOINT,TF_AWS_STS_ENDPOINT,

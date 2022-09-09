@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/fwtypes"
 	"github.com/hashicorp/terraform-provider-aws/internal/intf"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/medialive"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -17,12 +18,12 @@ import (
 // The provider instance is fully configured once the `Configure` method has been called.
 func New(primary interface{ Meta() interface{} }) provider.Provider {
 	return &fwprovider{
-		Primary: primary.Meta().(intf.ProviderData),
+		Primary: primary,
 	}
 }
 
 type fwprovider struct {
-	Primary intf.ProviderData
+	Primary interface{ Meta() interface{} }
 }
 
 // GetSchema returns the schema for this provider's configuration.
@@ -309,6 +310,8 @@ func (p *fwprovider) GetResources(ctx context.Context) (map[string]provider.Reso
 	var diags diag.Diagnostics
 	resources := make(map[string]provider.ResourceType)
 
+	resources["aws_medialive_multiplex_program"] = medialive.NewResourceMultiplexProgramType(ctx, p.Primary)
+
 	return resources, diags
 }
 
@@ -320,7 +323,8 @@ func (p *fwprovider) GetDataSources(ctx context.Context) (map[string]provider.Da
 
 	// TODO Better error messages.
 	// TODO Wrap the returned type to add standard context, logging etc.
-	for serviceID, data := range p.Primary.Services(ctx) {
+	providerData := p.Primary.Meta().(intf.ProviderData)
+	for serviceID, data := range providerData.Services(ctx) {
 		dsTypes, err := data.DataSources(ctx)
 
 		if err != nil {

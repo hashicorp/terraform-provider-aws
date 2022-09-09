@@ -133,9 +133,7 @@ func resourceBasePathMappingUpdate(d *schema.ResourceData, meta interface{}) err
 	_, err := conn.UpdateBasePathMapping(&input)
 
 	if err != nil {
-		if err != nil {
-			return fmt.Errorf("Updating API Gateway base path mapping failed: %s", err)
-		}
+		return fmt.Errorf("Updating API Gateway base path mapping failed: %w", err)
 	}
 
 	if d.HasChange("base_path") {

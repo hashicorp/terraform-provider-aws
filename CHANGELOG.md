@@ -1,4 +1,38 @@
-## 4.30.0 (Unreleased)
+## 4.31.0 (Unreleased)
+
+BUG FIXES:
+
+* resource/aws_autoscaling_attachment: Retry errors like `ValidationError: Trying to update too many Load Balancers/Target Groups at once. The limit is 10` when creating or deleting resource ([#26654](https://github.com/hashicorp/terraform-provider-aws/issues/26654))
+
+## 4.30.0 (September  9, 2022)
+
+FEATURES:
+
+* **New Resource:** `aws_medialive_multiplex` ([#26608](https://github.com/hashicorp/terraform-provider-aws/issues/26608))
+* **New Resource:** `aws_medialive_multiplex_program` ([#26694](https://github.com/hashicorp/terraform-provider-aws/issues/26694))
+* **New Resource:** `aws_redshiftserverless_usage_limit` ([#26636](https://github.com/hashicorp/terraform-provider-aws/issues/26636))
+* **New Resource:** `aws_ssoadmin_customer_managed_policy_attachment` ([#25915](https://github.com/hashicorp/terraform-provider-aws/issues/25915))
+
+ENHANCEMENTS:
+
+* data-source/aws_rds_cluster: Add `network_type` attribute ([#26489](https://github.com/hashicorp/terraform-provider-aws/issues/26489))
+* resource/aws_eks_addon: Support configurable timeouts for addon create, update, and delete ([#26629](https://github.com/hashicorp/terraform-provider-aws/issues/26629))
+* resource/aws_rds_cluster: Add `network_type` argument ([#26489](https://github.com/hashicorp/terraform-provider-aws/issues/26489))
+* resource/aws_rds_cluster_instance: Add `network_type` attribute ([#26489](https://github.com/hashicorp/terraform-provider-aws/issues/26489))
+* resource/aws_s3_bucket_object_lock_configuration: Update `rule` argument to be Optional ([#26520](https://github.com/hashicorp/terraform-provider-aws/issues/26520))
+* resource/aws_vpn_connection: Add `tunnel1_log_options` and `tunnel2_log_options` arguments ([#26637](https://github.com/hashicorp/terraform-provider-aws/issues/26637))
+
+BUG FIXES:
+
+* data-source/aws_ec2_managed_prefix_list: Fixes bug where an error is returned for regions with more than 100 managed prefix lists ([#26683](https://github.com/hashicorp/terraform-provider-aws/issues/26683))
+* data-source/aws_iam_policy_document: Correctly handle unquoted Boolean values in `Condition` ([#26657](https://github.com/hashicorp/terraform-provider-aws/issues/26657))
+* data-source/aws_iam_policy_document: Prevent crash when `source_policy_documents` contains empty or invalid JSON documents ([#26640](https://github.com/hashicorp/terraform-provider-aws/issues/26640))
+* resource/aws_eip: Defaults to default regional `domain` when `vpc` not set ([#26716](https://github.com/hashicorp/terraform-provider-aws/issues/26716))
+* resource/aws_instance: No longer fails when setting `metadata_options.instance_metadata_tags` ([#26631](https://github.com/hashicorp/terraform-provider-aws/issues/26631))
+* resource/aws_lambda_function: Update the environment variables if the `kms_key_arn` has changed ([#26696](https://github.com/hashicorp/terraform-provider-aws/issues/26696))
+* resource/aws_opsworks_stack: Defaults to default VPC when not supplied ([#26711](https://github.com/hashicorp/terraform-provider-aws/issues/26711))
+* resource/aws_security_group: Defaults to default VPC when not supplied ([#26697](https://github.com/hashicorp/terraform-provider-aws/issues/26697))
+
 ## 4.29.0 (September  1, 2022)
 
 NOTES:
