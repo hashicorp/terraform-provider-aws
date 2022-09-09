@@ -4,16 +4,17 @@ go 1.18
 
 require (
 	github.com/ProtonMail/go-crypto v0.0.0-20210428141323-04723f9f07d7
-	github.com/aws/aws-sdk-go v1.44.88
-	github.com/aws/aws-sdk-go-v2 v1.16.12
-	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.12.13
-	github.com/aws/aws-sdk-go-v2/service/comprehend v1.18.8
-	github.com/aws/aws-sdk-go-v2/service/fis v1.12.13
-	github.com/aws/aws-sdk-go-v2/service/kendra v1.33.1
-	github.com/aws/aws-sdk-go-v2/service/medialive v1.22.5
-	github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.0.5
-	github.com/aws/aws-sdk-go-v2/service/route53domains v1.12.13
-	github.com/aws/aws-sdk-go-v2/service/transcribe v1.21.5
+	github.com/aws/aws-sdk-go v1.44.91
+	github.com/aws/aws-sdk-go-v2 v1.16.14
+	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.12.15
+	github.com/aws/aws-sdk-go-v2/service/comprehend v1.18.10
+	github.com/aws/aws-sdk-go-v2/service/fis v1.12.15
+	github.com/aws/aws-sdk-go-v2/service/identitystore v1.15.0
+	github.com/aws/aws-sdk-go-v2/service/kendra v1.33.3
+	github.com/aws/aws-sdk-go-v2/service/medialive v1.22.7
+	github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.0.7
+	github.com/aws/aws-sdk-go-v2/service/route53domains v1.12.15
+	github.com/aws/aws-sdk-go-v2/service/transcribe v1.21.7
 	github.com/beevik/etree v1.1.0
 	github.com/google/go-cmp v0.5.8
 	github.com/hashicorp/aws-cloudformation-resource-schema-sdk-go v0.18.0
@@ -26,6 +27,7 @@ require (
 	github.com/hashicorp/go-version v1.6.0
 	github.com/hashicorp/hcl/v2 v2.13.0
 	github.com/hashicorp/terraform-plugin-framework v0.11.1
+	github.com/hashicorp/terraform-plugin-framework-validators v0.5.0
 	github.com/hashicorp/terraform-plugin-go v0.14.0
 	github.com/hashicorp/terraform-plugin-log v0.7.0
 	github.com/hashicorp/terraform-plugin-mux v0.7.0
@@ -48,14 +50,14 @@ require (
 	github.com/apparentlymart/go-textseg/v13 v13.0.0 // indirect
 	github.com/aws/aws-sdk-go-v2/config v1.15.4 // indirect
 	github.com/aws/aws-sdk-go-v2/credentials v1.12.0 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/configsources v1.1.19 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.4.13 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/configsources v1.1.21 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.4.15 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/ini v1.3.11 // indirect
 	github.com/aws/aws-sdk-go-v2/service/iam v1.18.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.9.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sso v1.11.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sts v1.16.4 // indirect
-	github.com/aws/smithy-go v1.13.0 // indirect
+	github.com/aws/smithy-go v1.13.2 // indirect
 	github.com/boombuler/barcode v1.0.1-0.20190219062509-6c824513bacc // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/evanphx/json-patch v0.5.2 // indirect
@@ -82,7 +84,7 @@ require (
 	github.com/oklog/run v1.0.0 // indirect
 	github.com/vmihailenco/msgpack v4.0.4+incompatible // indirect
 	github.com/vmihailenco/msgpack/v4 v4.3.12 // indirect
-	github.com/vmihailenco/tagparser v0.1.1 // indirect
+	github.com/vmihailenco/tagparser v0.1.2 // indirect
 	github.com/xeipuuv/gojsonpointer v0.0.0-20180127040702-4e3ac2762d5f // indirect
 	github.com/xeipuuv/gojsonreference v0.0.0-20180127040603-bd5ef7bd5415 // indirect
 	github.com/xeipuuv/gojsonschema v1.2.0 // indirect
@@ -91,7 +93,7 @@ require (
 	golang.org/x/net v0.0.0-20220722155237-a158d28d115b // indirect
 	golang.org/x/sys v0.0.0-20220722155257-8c9f86f7a55f // indirect
 	golang.org/x/text v0.3.7 // indirect
-	google.golang.org/appengine v1.6.6 // indirect
+	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/genproto v0.0.0-20200711021454-869866162049 // indirect
 	google.golang.org/grpc v1.48.0 // indirect
 	google.golang.org/protobuf v1.28.1 // indirect

@@ -5064,62 +5064,36 @@ func FindLaunchTemplateVersionByTwoPartKey(conn *ec2.EC2, launchTemplateID, vers
 	return output, nil
 }
 
-func FindManagedPrefixListByID(conn *ec2.EC2, id string) (*ec2.ManagedPrefixList, error) {
-	input := &ec2.DescribeManagedPrefixListsInput{
-		PrefixListIds: aws.StringSlice([]string{id}),
-	}
-
-	output, err := conn.DescribeManagedPrefixLists(input)
-
-	if tfawserr.ErrCodeEquals(err, errCodeInvalidPrefixListIDNotFound) {
-		return nil, &resource.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
+func FindManagedPrefixList(ctx context.Context, conn *ec2.EC2, input *ec2.DescribeManagedPrefixListsInput) (*ec2.ManagedPrefixList, error) {
+	output, err := FindManagedPrefixLists(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
 	}
 
-	if output == nil || len(output.PrefixLists) == 0 || output.PrefixLists[0] == nil {
+	if len(output) == 0 || output[0] == nil {
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	if count := len(output.PrefixLists); count > 1 {
+	if count := len(output); count > 1 {
 		return nil, tfresource.NewTooManyResultsError(count, input)
 	}
 
-	prefixList := output.PrefixLists[0]
-
-	if state := aws.StringValue(prefixList.State); state == ec2.PrefixListStateDeleteComplete {
-		return nil, &resource.NotFoundError{
-			Message:     state,
-			LastRequest: input,
-		}
-	}
-
-	return prefixList, nil
+	return output[0], nil
 }
 
-func FindManagedPrefixListEntriesByID(conn *ec2.EC2, id string) ([]*ec2.PrefixListEntry, error) {
-	input := &ec2.GetManagedPrefixListEntriesInput{
-		PrefixListId: aws.String(id),
-	}
+func FindManagedPrefixLists(ctx context.Context, conn *ec2.EC2, input *ec2.DescribeManagedPrefixListsInput) ([]*ec2.ManagedPrefixList, error) {
+	var output []*ec2.ManagedPrefixList
 
-	var prefixListEntries []*ec2.PrefixListEntry
-
-	err := conn.GetManagedPrefixListEntriesPages(input, func(page *ec2.GetManagedPrefixListEntriesOutput, lastPage bool) bool {
+	err := conn.DescribeManagedPrefixListsPagesWithContext(ctx, input, func(page *ec2.DescribeManagedPrefixListsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
 
-		for _, entry := range page.Entries {
-			if entry == nil {
-				continue
+		for _, v := range page.PrefixLists {
+			if v != nil {
+				output = append(output, v)
 			}
-
-			prefixListEntries = append(prefixListEntries, entry)
 		}
 
 		return !lastPage
@@ -5136,19 +5110,86 @@ func FindManagedPrefixListEntriesByID(conn *ec2.EC2, id string) ([]*ec2.PrefixLi
 		return nil, err
 	}
 
-	return prefixListEntries, nil
+	return output, nil
 }
 
-func FindManagedPrefixListEntryByIDAndCIDR(conn *ec2.EC2, id, cidr string) (*ec2.PrefixListEntry, error) {
-	prefixListEntries, err := FindManagedPrefixListEntriesByID(conn, id)
+func FindManagedPrefixListByID(ctx context.Context, conn *ec2.EC2, id string) (*ec2.ManagedPrefixList, error) {
+	input := &ec2.DescribeManagedPrefixListsInput{
+		PrefixListIds: aws.StringSlice([]string{id}),
+	}
+
+	output, err := FindManagedPrefixList(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
 	}
 
-	for _, entry := range prefixListEntries {
-		if aws.StringValue(entry.Cidr) == cidr {
-			return entry, nil
+	if state := aws.StringValue(output.State); state == ec2.PrefixListStateDeleteComplete {
+		return nil, &resource.NotFoundError{
+			Message:     state,
+			LastRequest: input,
+		}
+	}
+
+	// Eventual consistency check.
+	if aws.StringValue(output.PrefixListId) != id {
+		return nil, &resource.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func FindManagedPrefixListEntries(ctx context.Context, conn *ec2.EC2, input *ec2.GetManagedPrefixListEntriesInput) ([]*ec2.PrefixListEntry, error) {
+	var output []*ec2.PrefixListEntry
+
+	err := conn.GetManagedPrefixListEntriesPagesWithContext(ctx, input, func(page *ec2.GetManagedPrefixListEntriesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.Entries {
+			if v != nil {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidPrefixListIDNotFound) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
+func FindManagedPrefixListEntriesByID(ctx context.Context, conn *ec2.EC2, id string) ([]*ec2.PrefixListEntry, error) {
+	input := &ec2.GetManagedPrefixListEntriesInput{
+		PrefixListId: aws.String(id),
+	}
+
+	return FindManagedPrefixListEntries(ctx, conn, input)
+}
+
+func FindManagedPrefixListEntryByIDAndCIDR(ctx context.Context, conn *ec2.EC2, id, cidr string) (*ec2.PrefixListEntry, error) {
+	prefixListEntries, err := FindManagedPrefixListEntriesByID(ctx, conn, id)
+
+	if err != nil {
+		return nil, err
+	}
+
+	for _, v := range prefixListEntries {
+		if aws.StringValue(v.Cidr) == cidr {
+			return v, nil
 		}
 	}
 

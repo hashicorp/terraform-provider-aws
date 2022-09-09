@@ -21,20 +21,24 @@ jobs:
     name: Code Quality Scan
     runs-on: ubuntu-latest
     container:
-      image: returntocorp/semgrep
+      image: "returntocorp/semgrep:0.111.1"
     steps:
       - uses: actions/checkout@v3
       - run: |
           semgrep $COMMON_PARAMS \
             --config .ci/.semgrep.yml \
+            --config 'r/dgryski.semgrep-go.badnilguard' \
             --config 'r/dgryski.semgrep-go.errnilcheck' \
-            --config 'r/dgryski.semgrep-go.nilerr'
+            --config 'r/dgryski.semgrep-go.marshaljson' \
+            --config 'r/dgryski.semgrep-go.nilerr' \
+            --config 'r/dgryski.semgrep-go.oddifsequence' \
+            --config 'r/dgryski.semgrep-go.oserrors'
 
   naming_cae:
     name: Naming Scan Caps/AWS/EC2
     runs-on: ubuntu-latest
     container:
-      image: returntocorp/semgrep
+      image: "returntocorp/semgrep:0.111.1"
     if: (github.action != 'dependabot[bot]')
     steps:
       - uses: actions/checkout@v3
@@ -44,7 +48,7 @@ jobs:
     name: Test Configs Scan
     runs-on: ubuntu-latest
     container:
-      image: returntocorp/semgrep
+      image: "returntocorp/semgrep:0.111.1"
     if: (github.action != 'dependabot[bot]')
     steps:
       - uses: actions/checkout@v3
@@ -54,7 +58,7 @@ jobs:
     name: Service Name Scan A-C
     runs-on: ubuntu-latest
     container:
-      image: returntocorp/semgrep
+      image: "returntocorp/semgrep:0.111.1"
     if: (github.action != 'dependabot[bot]')
     steps:
       - uses: actions/checkout@v3
@@ -64,7 +68,7 @@ jobs:
     name: Service Name Scan C-I
     runs-on: ubuntu-latest
     container:
-      image: returntocorp/semgrep
+      image: "returntocorp/semgrep:0.111.1"
     if: (github.action != 'dependabot[bot]')
     steps:
       - uses: actions/checkout@v3
@@ -74,7 +78,7 @@ jobs:
     name: Service Name Scan I-Q
     runs-on: ubuntu-latest
     container:
-      image: returntocorp/semgrep
+      image: "returntocorp/semgrep:0.111.1"
     if: (github.action != 'dependabot[bot]')
     steps:
       - uses: actions/checkout@v3
@@ -84,7 +88,7 @@ jobs:
     name: Service Name Scan Q-Z
     runs-on: ubuntu-latest
     container:
-      image: returntocorp/semgrep
+      image: "returntocorp/semgrep:0.111.1"
     if: (github.action != 'dependabot[bot]')
     steps:
       - uses: actions/checkout@v3

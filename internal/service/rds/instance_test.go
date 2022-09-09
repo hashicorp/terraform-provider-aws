@@ -176,7 +176,7 @@ func TestAccRDSInstance_disappears(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_basic(rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
+				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
 					acctest.CheckResourceDisappears(acctest.Provider, tfrds.ResourceInstance(), resourceName),
 				),
@@ -203,7 +203,7 @@ func TestAccRDSInstance_tags(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_tags1(rName, "key1", "value1"),
-				Check: resource.ComposeAggregateTestCheckFunc(
+				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
@@ -223,7 +223,7 @@ func TestAccRDSInstance_tags(t *testing.T) {
 			},
 			{
 				Config: testAccInstanceConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
-				Check: resource.ComposeAggregateTestCheckFunc(
+				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
@@ -232,7 +232,7 @@ func TestAccRDSInstance_tags(t *testing.T) {
 			},
 			{
 				Config: testAccInstanceConfig_tags1(rName, "key2", "value2"),
-				Check: resource.ComposeAggregateTestCheckFunc(
+				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -3732,6 +3732,14 @@ func TestAccRDSInstance_performanceInsightsRetentionPeriod(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "performance_insights_retention_period", "7"),
 				),
 			},
+			{
+				Config: testAccInstanceConfig_performanceInsightsRetentionPeriod(rName, 155),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, "performance_insights_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "performance_insights_retention_period", "155"),
+				),
+			},
 		},
 	})
 }
@@ -4414,7 +4422,7 @@ func testAccCheckInstanceDestroyWithFinalSnapshot(s *terraform.State) error {
 			return err
 		}
 
-		return fmt.Errorf("DB Instance %s still exists", rs.Primary.ID)
+		return fmt.Errorf("RDS DB Instance %s still exists", rs.Primary.ID)
 	}
 
 	return nil
@@ -4439,7 +4447,7 @@ func testAccCheckInstanceDestroyWithoutFinalSnapshot(s *terraform.State) error {
 				return err
 			}
 		} else {
-			return fmt.Errorf("DB Snapshot %s exists", finalSnapshotID)
+			return fmt.Errorf("RDS DB Snapshot %s exists", finalSnapshotID)
 		}
 
 		_, err = tfrds.FindDBInstanceByID(conn, rs.Primary.ID)
@@ -4452,7 +4460,7 @@ func testAccCheckInstanceDestroyWithoutFinalSnapshot(s *terraform.State) error {
 			return err
 		}
 
-		return fmt.Errorf("DB Instance %s still exists", rs.Primary.ID)
+		return fmt.Errorf("RDS DB Instance %s still exists", rs.Primary.ID)
 	}
 
 	return nil

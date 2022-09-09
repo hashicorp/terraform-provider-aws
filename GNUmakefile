@@ -246,8 +246,12 @@ semall:
 		--config .ci/.semgrep-service-name1.yml \
 		--config .ci/.semgrep-service-name2.yml \
 		--config .ci/.semgrep-service-name3.yml \
+		--config 'r/dgryski.semgrep-go.badnilguard' \
 		--config 'r/dgryski.semgrep-go.errnilcheck' \
-		--config 'r/dgryski.semgrep-go.nilerr'
+    	--config 'r/dgryski.semgrep-go.marshaljson' \
+		--config 'r/dgryski.semgrep-go.nilerr' \
+        --config 'r/dgryski.semgrep-go.oddifsequence' \
+		--config 'r/dgryski.semgrep-go.oserrors'
 
 skaff:
 	cd skaff && go install github.com/hashicorp/terraform-provider-aws/skaff

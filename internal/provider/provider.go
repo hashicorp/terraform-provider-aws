@@ -1725,6 +1725,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 
 			"aws_medialive_input":                medialive.ResourceInput(),
 			"aws_medialive_input_security_group": medialive.ResourceInputSecurityGroup(),
+			"aws_medialive_multiplex":            medialive.ResourceMultiplex(),
 
 			"aws_media_store_container":        mediastore.ResourceContainer(),
 			"aws_media_store_container_policy": mediastore.ResourceContainerPolicy(),
@@ -1867,6 +1868,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 
 			"aws_redshiftserverless_endpoint_access": redshiftserverless.ResourceEndpointAccess(),
 			"aws_redshiftserverless_namespace":       redshiftserverless.ResourceNamespace(),
+			"aws_redshiftserverless_usage_limit":     redshiftserverless.ResourceUsageLimit(),
 			"aws_redshiftserverless_workgroup":       redshiftserverless.ResourceWorkgroup(),
 
 			"aws_resourcegroups_group": resourcegroups.ResourceGroup(),
@@ -2065,10 +2067,11 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_ssm_resource_data_sync":        ssm.ResourceResourceDataSync(),
 			"aws_ssm_service_setting":           ssm.ResourceServiceSetting(),
 
-			"aws_ssoadmin_account_assignment":           ssoadmin.ResourceAccountAssignment(),
-			"aws_ssoadmin_managed_policy_attachment":    ssoadmin.ResourceManagedPolicyAttachment(),
-			"aws_ssoadmin_permission_set":               ssoadmin.ResourcePermissionSet(),
-			"aws_ssoadmin_permission_set_inline_policy": ssoadmin.ResourcePermissionSetInlinePolicy(),
+			"aws_ssoadmin_account_assignment":                 ssoadmin.ResourceAccountAssignment(),
+			"aws_ssoadmin_customer_managed_policy_attachment": ssoadmin.ResourceCustomerManagedPolicyAttachment(),
+			"aws_ssoadmin_managed_policy_attachment":          ssoadmin.ResourceManagedPolicyAttachment(),
+			"aws_ssoadmin_permission_set":                     ssoadmin.ResourcePermissionSet(),
+			"aws_ssoadmin_permission_set_inline_policy":       ssoadmin.ResourcePermissionSetInlinePolicy(),
 
 			"aws_storagegateway_cache":                   storagegateway.ResourceCache(),
 			"aws_storagegateway_cached_iscsi_volume":     storagegateway.ResourceCachediSCSIVolume(),
