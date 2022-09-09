@@ -47,7 +47,7 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `protocol` - The tunnel protocol
+* `protocol` - Tunnel protocol
 * `tags` - Key-value tags for the EC2 Transit Gateway Connect
 * `transit_gateway_id` - EC2 Transit Gateway identifier
 * `transport_attachment_id` - The underlaying VPC attachment

@@ -1,6 +1,7 @@
 package elasticache
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"time"
@@ -43,49 +44,13 @@ func ResourceSecurityGroup() *schema.Resource {
 				Set:      schema.HashString,
 			},
 		},
+
+		DeprecationMessage: `With the retirement of EC2-Classic the aws_elasticache_security_group resource has been deprecated and will be removed in a future version.`,
 	}
 }
 
 func resourceSecurityGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElastiCacheConn
-
-	name := d.Get("name").(string)
-	desc := d.Get("description").(string)
-	nameSet := d.Get("security_group_names").(*schema.Set)
-
-	names := make([]string, nameSet.Len())
-	for i, name := range nameSet.List() {
-		names[i] = name.(string)
-	}
-
-	log.Printf("[DEBUG] Cache security group create: name: %s, description: %s, security_group_names: %v", name, desc, names)
-	res, err := conn.CreateCacheSecurityGroup(&elasticache.CreateCacheSecurityGroupInput{
-		Description:            aws.String(desc),
-		CacheSecurityGroupName: aws.String(name),
-	})
-	if err != nil {
-		return fmt.Errorf("Error creating CacheSecurityGroup: %s", err)
-	}
-
-	for _, n := range names {
-		log.Printf("[DEBUG] Authorize cache security group ingress name: %v, ec2 security group name: %v", name, n)
-		_, err = conn.AuthorizeCacheSecurityGroupIngress(&elasticache.AuthorizeCacheSecurityGroupIngressInput{
-			CacheSecurityGroupName:  aws.String(name),
-			EC2SecurityGroupName:    aws.String(n),
-			EC2SecurityGroupOwnerId: aws.String(*res.CacheSecurityGroup.OwnerId),
-		})
-		if err != nil {
-			log.Printf("[ERROR] Failed to authorize: %v", err)
-			_, err := conn.DeleteCacheSecurityGroup(&elasticache.DeleteCacheSecurityGroupInput{
-				CacheSecurityGroupName: aws.String(d.Id()),
-			})
-			log.Printf("[ERROR] Revert cache security group: %v", err)
-		}
-	}
-
-	d.SetId(name)
-
-	return nil
+	return errors.New(`with the retirement of EC2-Classic no new ElastiCache Security Groups can be created`)
 }
 
 func resourceSecurityGroupRead(d *schema.ResourceData, meta interface{}) error {

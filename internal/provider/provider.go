@@ -123,6 +123,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/macie"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/macie2"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/mediaconvert"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/medialive"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/mediapackage"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/mediastore"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/memorydb"
@@ -547,9 +548,12 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_ec2_local_gateway":                          ec2.DataSourceLocalGateway(),
 			"aws_ec2_local_gateways":                         ec2.DataSourceLocalGateways(),
 			"aws_ec2_managed_prefix_list":                    ec2.DataSourceManagedPrefixList(),
+			"aws_ec2_network_insights_analysis":              ec2.DataSourceNetworkInsightsAnalysis(),
+			"aws_ec2_network_insights_path":                  ec2.DataSourceNetworkInsightsPath(),
 			"aws_ec2_serial_console_access":                  ec2.DataSourceSerialConsoleAccess(),
 			"aws_ec2_spot_price":                             ec2.DataSourceSpotPrice(),
 			"aws_ec2_transit_gateway":                        ec2.DataSourceTransitGateway(),
+			"aws_ec2_transit_gateway_attachment":             ec2.DataSourceTransitGatewayAttachment(),
 			"aws_ec2_transit_gateway_connect":                ec2.DataSourceTransitGatewayConnect(),
 			"aws_ec2_transit_gateway_connect_peer":           ec2.DataSourceTransitGatewayConnectPeer(),
 			"aws_ec2_transit_gateway_dx_gateway_attachment":  ec2.DataSourceTransitGatewayDxGatewayAttachment(),
@@ -735,11 +739,13 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_lex_intent":    lexmodels.DataSourceIntent(),
 			"aws_lex_slot_type": lexmodels.DataSourceSlotType(),
 
-			"aws_location_geofence_collection": location.DataSourceGeofenceCollection(),
-			"aws_location_map":                 location.DataSourceMap(),
-			"aws_location_place_index":         location.DataSourcePlaceIndex(),
-			"aws_location_route_calculator":    location.DataSourceRouteCalculator(),
-			"aws_location_tracker":             location.DataSourceTracker(),
+			"aws_location_geofence_collection":  location.DataSourceGeofenceCollection(),
+			"aws_location_map":                  location.DataSourceMap(),
+			"aws_location_place_index":          location.DataSourcePlaceIndex(),
+			"aws_location_route_calculator":     location.DataSourceRouteCalculator(),
+			"aws_location_tracker":              location.DataSourceTracker(),
+			"aws_location_tracker_association":  location.DataSourceTrackerAssociation(),
+			"aws_location_tracker_associations": location.DataSourceTrackerAssociations(),
 
 			// "aws_arn":                     meta.DataSourceARN(), // Now implemented using Terraform Plugin Framework.
 			"aws_billing_service_account": meta.DataSourceBillingServiceAccount(),
@@ -1094,6 +1100,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_cloudfront_function":                       cloudfront.ResourceFunction(),
 			"aws_cloudfront_key_group":                      cloudfront.ResourceKeyGroup(),
 			"aws_cloudfront_monitoring_subscription":        cloudfront.ResourceMonitoringSubscription(),
+			"aws_cloudfront_origin_access_control":          cloudfront.ResourceOriginAccessControl(),
 			"aws_cloudfront_origin_access_identity":         cloudfront.ResourceOriginAccessIdentity(),
 			"aws_cloudfront_origin_request_policy":          cloudfront.ResourceOriginRequestPolicy(),
 			"aws_cloudfront_public_key":                     cloudfront.ResourcePublicKey(),
@@ -1323,6 +1330,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_ec2_local_gateway_route_table_vpc_association":    ec2.ResourceLocalGatewayRouteTableVPCAssociation(),
 			"aws_ec2_managed_prefix_list":                          ec2.ResourceManagedPrefixList(),
 			"aws_ec2_managed_prefix_list_entry":                    ec2.ResourceManagedPrefixListEntry(),
+			"aws_ec2_network_insights_analysis":                    ec2.ResourceNetworkInsightsAnalysis(),
 			"aws_ec2_network_insights_path":                        ec2.ResourceNetworkInsightsPath(),
 			"aws_ec2_serial_console_access":                        ec2.ResourceSerialConsoleAccess(),
 			"aws_ec2_subnet_cidr_reservation":                      ec2.ResourceSubnetCIDRReservation(),
@@ -1340,6 +1348,8 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_ec2_transit_gateway_multicast_group_source":       ec2.ResourceTransitGatewayMulticastGroupSource(),
 			"aws_ec2_transit_gateway_peering_attachment":           ec2.ResourceTransitGatewayPeeringAttachment(),
 			"aws_ec2_transit_gateway_peering_attachment_accepter":  ec2.ResourceTransitGatewayPeeringAttachmentAccepter(),
+			"aws_ec2_transit_gateway_policy_table":                 ec2.ResourceTransitGatewayPolicyTable(),
+			"aws_ec2_transit_gateway_policy_table_association":     ec2.ResourceTransitGatewayPolicyTableAssociation(),
 			"aws_ec2_transit_gateway_prefix_list_reference":        ec2.ResourceTransitGatewayPrefixListReference(),
 			"aws_ec2_transit_gateway_route":                        ec2.ResourceTransitGatewayRoute(),
 			"aws_ec2_transit_gateway_route_table":                  ec2.ResourceTransitGatewayRouteTable(),
@@ -1550,6 +1560,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_grafana_license_association":          grafana.ResourceLicenseAssociation(),
 			"aws_grafana_role_association":             grafana.ResourceRoleAssociation(),
 			"aws_grafana_workspace":                    grafana.ResourceWorkspace(),
+			"aws_grafana_workspace_api_key":            grafana.ResourceWorkspaceAPIKey(),
 			"aws_grafana_workspace_saml_configuration": grafana.ResourceWorkspaceSAMLConfiguration(),
 
 			"aws_guardduty_detector":                   guardduty.ResourceDetector(),
@@ -1620,6 +1631,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_msk_cluster":                  kafka.ResourceCluster(),
 			"aws_msk_configuration":            kafka.ResourceConfiguration(),
 			"aws_msk_scram_secret_association": kafka.ResourceScramSecretAssociation(),
+			"aws_msk_serverless_cluster":       kafka.ResourceServerlessCluster(),
 
 			"aws_mskconnect_connector":            kafkaconnect.ResourceConnector(),
 			"aws_mskconnect_custom_plugin":        kafkaconnect.ResourceCustomPlugin(),
@@ -1711,6 +1723,10 @@ func New(_ context.Context) (*schema.Provider, error) {
 
 			"aws_media_package_channel": mediapackage.ResourceChannel(),
 
+			"aws_medialive_input":                medialive.ResourceInput(),
+			"aws_medialive_input_security_group": medialive.ResourceInputSecurityGroup(),
+			"aws_medialive_multiplex":            medialive.ResourceMultiplex(),
+
 			"aws_media_store_container":        mediastore.ResourceContainer(),
 			"aws_media_store_container_policy": mediastore.ResourceContainerPolicy(),
 
@@ -1741,6 +1757,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_networkfirewall_resource_policy":       networkfirewall.ResourceResourcePolicy(),
 			"aws_networkfirewall_rule_group":            networkfirewall.ResourceRuleGroup(),
 
+			"aws_networkmanager_attachment_accepter":                      networkmanager.ResourceAttachmentAccepter(),
 			"aws_networkmanager_connection":                               networkmanager.ResourceConnection(),
 			"aws_networkmanager_customer_gateway_association":             networkmanager.ResourceCustomerGatewayAssociation(),
 			"aws_networkmanager_device":                                   networkmanager.ResourceDevice(),
@@ -1749,7 +1766,10 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_networkmanager_link_association":                         networkmanager.ResourceLinkAssociation(),
 			"aws_networkmanager_site":                                     networkmanager.ResourceSite(),
 			"aws_networkmanager_transit_gateway_connect_peer_association": networkmanager.ResourceTransitGatewayConnectPeerAssociation(),
+			"aws_networkmanager_transit_gateway_peering":                  networkmanager.ResourceTransitGatewayPeering(),
 			"aws_networkmanager_transit_gateway_registration":             networkmanager.ResourceTransitGatewayRegistration(),
+			"aws_networkmanager_transit_gateway_route_table_attachment":   networkmanager.ResourceTransitGatewayRouteTableAttachment(),
+			"aws_networkmanager_vpc_attachment":                           networkmanager.ResourceVPCAttachment(),
 
 			"aws_opensearch_domain":              opensearch.ResourceDomain(),
 			"aws_opensearch_domain_policy":       opensearch.ResourceDomainPolicy(),
@@ -1846,7 +1866,10 @@ func New(_ context.Context) (*schema.Provider, error) {
 
 			"aws_redshiftdata_statement": redshiftdata.ResourceStatement(),
 
-			"aws_redshiftserverless_namespace": redshiftserverless.ResourceNamespace(),
+			"aws_redshiftserverless_endpoint_access": redshiftserverless.ResourceEndpointAccess(),
+			"aws_redshiftserverless_namespace":       redshiftserverless.ResourceNamespace(),
+			"aws_redshiftserverless_usage_limit":     redshiftserverless.ResourceUsageLimit(),
+			"aws_redshiftserverless_workgroup":       redshiftserverless.ResourceWorkgroup(),
 
 			"aws_resourcegroups_group": resourcegroups.ResourceGroup(),
 
@@ -2044,10 +2067,11 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_ssm_resource_data_sync":        ssm.ResourceResourceDataSync(),
 			"aws_ssm_service_setting":           ssm.ResourceServiceSetting(),
 
-			"aws_ssoadmin_account_assignment":           ssoadmin.ResourceAccountAssignment(),
-			"aws_ssoadmin_managed_policy_attachment":    ssoadmin.ResourceManagedPolicyAttachment(),
-			"aws_ssoadmin_permission_set":               ssoadmin.ResourcePermissionSet(),
-			"aws_ssoadmin_permission_set_inline_policy": ssoadmin.ResourcePermissionSetInlinePolicy(),
+			"aws_ssoadmin_account_assignment":                 ssoadmin.ResourceAccountAssignment(),
+			"aws_ssoadmin_customer_managed_policy_attachment": ssoadmin.ResourceCustomerManagedPolicyAttachment(),
+			"aws_ssoadmin_managed_policy_attachment":          ssoadmin.ResourceManagedPolicyAttachment(),
+			"aws_ssoadmin_permission_set":                     ssoadmin.ResourcePermissionSet(),
+			"aws_ssoadmin_permission_set_inline_policy":       ssoadmin.ResourcePermissionSetInlinePolicy(),
 
 			"aws_storagegateway_cache":                   storagegateway.ResourceCache(),
 			"aws_storagegateway_cached_iscsi_volume":     storagegateway.ResourceCachediSCSIVolume(),
@@ -2191,7 +2215,7 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData, terraformVer
 
 	if l, ok := d.Get("assume_role").([]interface{}); ok && len(l) > 0 && l[0] != nil {
 		config.AssumeRole = expandAssumeRole(l[0].(map[string]interface{}))
-		log.Printf("[INFO] assume_role configuration set: (ARN: %q, SessionID: %q, ExternalID: %q)", config.AssumeRole.RoleARN, config.AssumeRole.SessionName, config.AssumeRole.ExternalID)
+		log.Printf("[INFO] assume_role configuration set: (ARN: %q, SessionID: %q, ExternalID: %q, SourceIdentity: %q)", config.AssumeRole.RoleARN, config.AssumeRole.SessionName, config.AssumeRole.ExternalID, config.AssumeRole.SourceIdentity)
 	}
 
 	if l, ok := d.Get("assume_role_with_web_identity").([]interface{}); ok && len(l) > 0 && l[0] != nil {
@@ -2283,6 +2307,12 @@ func assumeRoleSchema() *schema.Schema {
 					Optional:     true,
 					Description:  "An identifier for the assumed role session.",
 					ValidateFunc: validAssumeRoleSessionName,
+				},
+				"source_identity": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Description:  "Source identity specified by the principal assuming the role.",
+					ValidateFunc: validAssumeRoleSourceIdentity,
 				},
 				"tags": {
 					Type:        schema.TypeMap,
@@ -2416,6 +2446,10 @@ func expandAssumeRole(m map[string]interface{}) *awsbase.AssumeRole {
 
 	if v, ok := m["session_name"].(string); ok && v != "" {
 		assumeRole.SessionName = v
+	}
+
+	if v, ok := m["source_identity"].(string); ok && v != "" {
+		assumeRole.SourceIdentity = v
 	}
 
 	if tagMapRaw, ok := m["tags"].(map[string]interface{}); ok && len(tagMapRaw) > 0 {

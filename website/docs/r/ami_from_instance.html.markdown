@@ -39,13 +39,13 @@ resource "aws_ami_from_instance" "example" {
 
 The following arguments are supported:
 
-* `name` - (Required) A region-unique name for the AMI.
-* `source_instance_id` - (Required) The id of the instance to use as the basis of the AMI.
+* `name` - (Required) Region-unique name for the AMI.
+* `source_instance_id` - (Required) ID of the instance to use as the basis of the AMI.
 * `snapshot_without_reboot` - (Optional) Boolean that overrides the behavior of stopping
   the instance before snapshotting. This is risky since it may cause a snapshot of an
   inconsistent filesystem state, but can be used to avoid downtime if the user otherwise
   guarantees that no filesystem writes will be underway at the time of snapshot.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Timeouts
 
@@ -59,8 +59,8 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `arn` - The ARN of the AMI.
-* `id` - The ID of the created AMI.
+* `arn` - ARN of the AMI.
+* `id` - ID of the created AMI.
 
 This resource also exports a full set of attributes corresponding to the arguments of the
 [`aws_ami`](/docs/providers/aws/r/ami.html) resource, allowing the properties of the created AMI to be used elsewhere in the

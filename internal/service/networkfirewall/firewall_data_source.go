@@ -65,6 +65,50 @@ func DataSourceFirewall() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"capacity_usage_summary": {
+							Type:     schema.TypeSet,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"cidrs": {
+										Type:     schema.TypeSet,
+										Computed: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"available_cidr_count": {
+													Type:     schema.TypeInt,
+													Computed: true,
+												},
+												"ip_set_references": {
+													Type:     schema.TypeSet,
+													Computed: true,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"resolved_cidr_count": {
+																Type:     schema.TypeInt,
+																Computed: true,
+															},
+														},
+													},
+												},
+												"utilized_cidr_count": {
+													Type:     schema.TypeInt,
+													Computed: true,
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+						"configuration_sync_state_summary": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"status": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 						"sync_states": {
 							Type:     schema.TypeSet,
 							Computed: true,
@@ -80,6 +124,10 @@ func DataSourceFirewall() *schema.Resource {
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"endpoint_id": {
+													Type:     schema.TypeString,
+													Computed: true,
+												},
+												"status": {
 													Type:     schema.TypeString,
 													Computed: true,
 												},
@@ -197,12 +245,63 @@ func flattenDataSourceFirewallStatus(status *networkfirewall.FirewallStatus) []i
 	if status == nil {
 		return nil
 	}
-
-	m := map[string]interface{}{
-		"sync_states": flattenDataSourceSyncStates(status.SyncStates),
+	m := map[string]interface{}{}
+	if status.CapacityUsageSummary != nil {
+		m["capacity_usage_summary"] = flattenDataSourceCapacityUsageSummary(status.CapacityUsageSummary)
+	}
+	if status.ConfigurationSyncStateSummary != nil {
+		m["configuration_sync_state_summary"] = aws.StringValue(status.ConfigurationSyncStateSummary)
+	}
+	if status.Status != nil {
+		m["status"] = aws.StringValue(status.Status)
+	}
+	if status.SyncStates != nil {
+		m["sync_states"] = flattenDataSourceSyncStates(status.SyncStates)
 	}
 
 	return []interface{}{m}
+}
+
+func flattenDataSourceCapacityUsageSummary(state *networkfirewall.CapacityUsageSummary) []interface{} {
+	if state == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"cidrs": flattenDataSourceCIDRSummary(state.CIDRs),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenDataSourceCIDRSummary(state *networkfirewall.CIDRSummary) []interface{} {
+	if state == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"available_cidr_count": int(aws.Int64Value(state.AvailableCIDRCount)),
+		"ip_set_references":    flattenDataSourceIPSetReferences(state.IPSetReferences),
+		"utilized_cidr_count":  int(aws.Int64Value(state.UtilizedCIDRCount)),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenDataSourceIPSetReferences(state map[string]*networkfirewall.IPSetMetadata) []interface{} {
+	if state == nil {
+		return nil
+	}
+
+	ipSetReferences := make([]interface{}, 0, len(state))
+	for _, v := range state {
+		m := map[string]interface{}{
+			"resolved_cidr_count": int(aws.Int64Value(v.ResolvedCIDRCount)),
+		}
+		ipSetReferences = append(ipSetReferences, m)
+	}
+
+	return ipSetReferences
 }
 
 func flattenDataSourceSyncStates(state map[string]*networkfirewall.SyncState) []interface{} {
@@ -229,6 +328,7 @@ func flattenDataSourceSyncStateAttachment(attach *networkfirewall.Attachment) []
 
 	m := map[string]interface{}{
 		"endpoint_id": aws.StringValue(attach.EndpointId),
+		"status":      aws.StringValue(attach.Status),
 		"subnet_id":   aws.StringValue(attach.SubnetId),
 	}
 

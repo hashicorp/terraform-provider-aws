@@ -8,7 +8,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/feature/ec2/imds"
 	"github.com/aws/aws-sdk-go-v2/service/comprehend"
 	"github.com/aws/aws-sdk-go-v2/service/fis"
+	"github.com/aws/aws-sdk-go-v2/service/identitystore"
 	"github.com/aws/aws-sdk-go-v2/service/kendra"
+	"github.com/aws/aws-sdk-go-v2/service/medialive"
 	"github.com/aws/aws-sdk-go-v2/service/rolesanywhere"
 	"github.com/aws/aws-sdk-go-v2/service/route53domains"
 	"github.com/aws/aws-sdk-go-v2/service/transcribe"
@@ -207,9 +209,21 @@ func (c *Config) Client(ctx context.Context) (interface{}, diag.Diagnostics) {
 		}
 	})
 
+	client.IdentityStoreConn = identitystore.NewFromConfig(cfg, func(o *identitystore.Options) {
+		if endpoint := c.Endpoints[names.IdentityStore]; endpoint != "" {
+			o.EndpointResolver = identitystore.EndpointResolverFromURL(endpoint)
+		}
+	})
+
 	client.KendraConn = kendra.NewFromConfig(cfg, func(o *kendra.Options) {
 		if endpoint := c.Endpoints[names.Kendra]; endpoint != "" {
 			o.EndpointResolver = kendra.EndpointResolverFromURL(endpoint)
+		}
+	})
+
+	client.MediaLiveConn = medialive.NewFromConfig(cfg, func(o *medialive.Options) {
+		if endpoint := c.Endpoints[names.MediaLive]; endpoint != "" {
+			o.EndpointResolver = medialive.EndpointResolverFromURL(endpoint)
 		}
 	})
 

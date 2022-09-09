@@ -3,6 +3,7 @@ package redshiftserverless
 import (
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/redshiftserverless"
@@ -47,6 +48,7 @@ func ResourceNamespace() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
+				Computed: true,
 			},
 			"default_iam_role_arn": {
 				Type:         schema.TypeString,
@@ -250,18 +252,22 @@ func resourceNamespaceUpdate(d *schema.ResourceData, meta interface{}) error {
 func resourceNamespaceDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RedshiftServerlessConn
 
-	deleteInput := redshiftserverless.DeleteNamespaceInput{
-		NamespaceName: aws.String(d.Id()),
+	log.Printf("[DEBUG] Deleting Redshift Serverless Namespace: %s", d.Id())
+	_, err := tfresource.RetryWhenAWSErrMessageContains(10*time.Minute,
+		func() (interface{}, error) {
+			return conn.DeleteNamespace(&redshiftserverless.DeleteNamespaceInput{
+				NamespaceName: aws.String(d.Id()),
+			})
+		},
+		// "ConflictException: There is an operation running on the namespace. Try deleting the namespace again later."
+		redshiftserverless.ErrCodeConflictException, "operation running")
+
+	if tfawserr.ErrCodeEquals(err, redshiftserverless.ErrCodeResourceNotFoundException) {
+		return nil
 	}
 
-	log.Printf("[DEBUG] Deleting Redshift Serverless Namespace: %s", d.Id())
-	_, err := conn.DeleteNamespace(&deleteInput)
-
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, redshiftserverless.ErrCodeResourceNotFoundException) {
-			return nil
-		}
-		return err
+		return fmt.Errorf("error deleting Redshift Serverless Namespace (%s): %w", d.Id(), err)
 	}
 
 	if _, err := waitNamespaceDeleted(conn, d.Id()); err != nil {

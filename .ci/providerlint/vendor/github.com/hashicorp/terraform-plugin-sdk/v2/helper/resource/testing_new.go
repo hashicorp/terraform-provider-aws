@@ -8,7 +8,7 @@ import (
 
 	"github.com/davecgh/go-spew/spew"
 	tfjson "github.com/hashicorp/terraform-json"
-	testing "github.com/mitchellh/go-testing-interface"
+	"github.com/mitchellh/go-testing-interface"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/internal/logging"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/internal/plugintest"
@@ -152,29 +152,7 @@ func runNewTest(ctx context.Context, t testing.T, c TestCase, helper *plugintest
 		}
 
 		if step.Config != "" && !step.Destroy && len(step.Taint) > 0 {
-			var state *terraform.State
-
-			err := runProviderCommand(ctx, t, func() error {
-				var err error
-
-				state, err = getState(ctx, t, wd)
-
-				if err != nil {
-					return err
-				}
-
-				return nil
-			}, wd, providers)
-
-			if err != nil {
-				logging.HelperResourceError(ctx,
-					"TestStep error reading prior state before tainting resources",
-					map[string]interface{}{logging.KeyError: err},
-				)
-				t.Fatalf("TestStep %d/%d error reading prior state before tainting resources: %s", stepNumber, len(c.Steps), err)
-			}
-
-			err = testStepTaint(ctx, state, step)
+			err := testStepTaint(ctx, step, wd)
 
 			if err != nil {
 				logging.HelperResourceError(ctx,

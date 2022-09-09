@@ -1,19 +1,23 @@
 package identitystore
 
 import (
-	"fmt"
+	"context"
 	"regexp"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/identitystore"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/identitystore"
+	"github.com/aws/aws-sdk-go-v2/service/identitystore/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func DataSourceUser() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceUserRead,
+		ReadContext: dataSourceUserRead,
 
 		Schema: map[string]*schema.Schema{
 			"filter": {
@@ -60,51 +64,55 @@ func DataSourceUser() *schema.Resource {
 	}
 }
 
-func dataSourceUserRead(d *schema.ResourceData, meta interface{}) error {
+const (
+	DSNameUser = "User Data Source"
+)
+
+func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).IdentityStoreConn
 
+	identityStoreId := d.Get("identity_store_id").(string)
+
+	// Filters has been marked as deprecated in favour of GetUserId, which
+	// allows only a single filter. Keep using it to maintain backwards
+	// compatibility of the data source.
+
 	input := &identitystore.ListUsersInput{
-		IdentityStoreId: aws.String(d.Get("identity_store_id").(string)),
+		IdentityStoreId: aws.String(identityStoreId),
 		Filters:         expandFilters(d.Get("filter").(*schema.Set).List()),
 	}
 
-	var results []*identitystore.User
+	var results []types.User
 
-	err := conn.ListUsersPages(input, func(page *identitystore.ListUsersOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	paginator := identitystore.NewListUsersPaginator(conn, input)
+
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+
+		if err != nil {
+			return create.DiagError(names.IdentityStore, create.ErrActionReading, DSNameUser, identityStoreId, err)
 		}
 
 		for _, user := range page.Users {
-			if user == nil {
-				continue
-			}
-
-			if v, ok := d.GetOk("user_id"); ok && v.(string) != aws.StringValue(user.UserId) {
+			if v, ok := d.GetOk("user_id"); ok && v.(string) != aws.ToString(user.UserId) {
 				continue
 			}
 
 			results = append(results, user)
 		}
-
-		return !lastPage
-	})
-
-	if err != nil {
-		return fmt.Errorf("error listing Identity Store Users: %w", err)
 	}
 
 	if len(results) == 0 {
-		return fmt.Errorf("no Identity Store User found matching criteria\n%v; try different search", input.Filters)
+		return diag.Errorf("no Identity Store User found matching criteria\n%v; try different search", input.Filters)
 	}
 
 	if len(results) > 1 {
-		return fmt.Errorf("multiple Identity Store Users found matching criteria\n%v; try different search", input.Filters)
+		return diag.Errorf("multiple Identity Store Users found matching criteria\n%v; try different search", input.Filters)
 	}
 
 	user := results[0]
 
-	d.SetId(aws.StringValue(user.UserId))
+	d.SetId(aws.ToString(user.UserId))
 	d.Set("user_id", user.UserId)
 	d.Set("user_name", user.UserName)
 

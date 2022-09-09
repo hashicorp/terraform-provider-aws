@@ -293,7 +293,6 @@ func sweepVaults(region string) error {
 		}
 
 		for _, vault := range page.BackupVaultList {
-			failedToDeleteRecoveryPoint := false
 			name := aws.StringValue(vault.BackupVaultName)
 
 			// Ignore Default and Automatic EFS Backup Vaults in region (cannot be deleted)
@@ -301,45 +300,11 @@ func sweepVaults(region string) error {
 				log.Printf("[INFO] Skipping Backup Vault: %s", name)
 				continue
 			}
-			input := &backup.ListRecoveryPointsByBackupVaultInput{
-				BackupVaultName: vault.BackupVaultName,
-			}
-
-			err := conn.ListRecoveryPointsByBackupVaultPages(input, func(page *backup.ListRecoveryPointsByBackupVaultOutput, lastPage bool) bool {
-				if page == nil {
-					return !lastPage
-				}
-
-				for _, recoveryPoint := range page.RecoveryPoints {
-					_, err := conn.DeleteRecoveryPoint(&backup.DeleteRecoveryPointInput{
-						BackupVaultName:  vault.BackupVaultName,
-						RecoveryPointArn: recoveryPoint.RecoveryPointArn,
-					})
-
-					if err != nil {
-						log.Printf("[WARN] Failed to delete Recovery Point (%s) in Backup Vault (%s): %s", aws.StringValue(recoveryPoint.RecoveryPointArn), name, err)
-						failedToDeleteRecoveryPoint = true
-						return true
-					}
-				}
-
-				return !lastPage
-			})
-
-			if err != nil {
-				sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing Reovery Points in Backup Vault (%s) for %s: %w", name, region, err))
-			}
-
-			// Backup Vault deletion only supported when empty
-			// Reference: https://docs.aws.amazon.com/aws-backup/latest/devguide/API_DeleteBackupVault.html
-			if failedToDeleteRecoveryPoint {
-				log.Printf("[INFO] Skipping Backup Vault (%s): not empty", name)
-				continue
-			}
 
 			r := ResourceVault()
 			d := r.Data(nil)
 			d.SetId(name)
+			d.Set("force_destroy", true)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}

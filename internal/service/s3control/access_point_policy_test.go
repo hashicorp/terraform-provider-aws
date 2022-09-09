@@ -186,11 +186,7 @@ func testAccCheckAccessPointPolicyExists(n string) resource.TestCheckFunc {
 
 		_, _, err = tfs3control.FindAccessPointPolicyAndStatusByAccountIDAndName(conn, accountID, name)
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 

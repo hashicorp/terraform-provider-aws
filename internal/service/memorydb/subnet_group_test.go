@@ -330,11 +330,7 @@ func testAccCheckSubnetGroupExists(n string) resource.TestCheckFunc {
 
 		_, err := tfmemorydb.FindSubnetGroupByName(context.Background(), conn, rs.Primary.Attributes["name"])
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 

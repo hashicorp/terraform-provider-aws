@@ -10,7 +10,7 @@ func ResourceCustomLayer() *schema.Resource {
 		TypeName:        opsworks.LayerTypeCustom,
 		CustomShortName: true,
 
-		// The "custom" layer type has no additional attributes
+		// The "custom" layer type has no additional attributes.
 		Attributes: map[string]*opsworksLayerTypeAttribute{},
 	}
 

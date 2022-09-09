@@ -23,17 +23,17 @@ resource "aws_appsync_domain_name" "example" {
 
 The following arguments are supported:
 
-* `certificate_arn` - (Required) The Amazon Resource Name (ARN) of the certificate. This can be an Certificate Manager (ACM) certificate or an Identity and Access Management (IAM) server certificate. The certifiacte must reside in us-east-1.
+* `certificate_arn` - (Required) ARN of the certificate. This can be an Certificate Manager (ACM) certificate or an Identity and Access Management (IAM) server certificate. The certifiacte must reside in us-east-1.
 * `description` - (Optional)  A description of the Domain Name.
-* `domain_name` - (Required) The domain name.
+* `domain_name` - (Required) Domain name.
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - The Appsync Domain Name.
-* `appsync_domain_name` - The domain name that AppSync provides.
-* `hosted_zone_id` - The ID of your Amazon Route 53 hosted zone.
+* `id` - Appsync Domain Name.
+* `appsync_domain_name` - Domain name that AppSync provides.
+* `hosted_zone_id` - ID of your Amazon Route 53 hosted zone.
 
 ## Import
 

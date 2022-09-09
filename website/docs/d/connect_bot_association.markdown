@@ -27,12 +27,12 @@ data "aws_connect_bot_association" "example" {
 
 The following arguments are supported:
 
-* `instance_id` - (Required) The identifier of the Amazon Connect instance. You can find the instanceId in the ARN of the instance.
+* `instance_id` - (Required) Identifier of the Amazon Connect instance. You can find the instanceId in the ARN of the instance.
 * `lex_bot` - (Required) Configuration information of an Amazon Lex (V1) bot. Detailed below.
 
 ### lex_bot
 
 The `lex_bot` configuration block supports the following:
 
-* `name` - (Required) The name of the Amazon Lex (V1) bot.
-* `lex_region` - (Optional) The Region that the Amazon Lex (V1) bot was created in.
+* `name` - (Required) Name of the Amazon Lex (V1) bot.
+* `lex_region` - (Optional) Region that the Amazon Lex (V1) bot was created in.

@@ -204,6 +204,39 @@ func ResourceVPNConnection() *schema.Resource {
 				ValidateFunc: validVPNConnectionTunnelInsideIPv6CIDR(),
 				RequiredWith: []string{"transit_gateway_id"},
 			},
+			"tunnel1_log_options": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"cloudwatch_log_options": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Computed: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"log_enabled": {
+										Type:     schema.TypeBool,
+										Optional: true,
+									},
+									"log_group_arn": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"log_output_format": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validation.StringInSlice(vpnTunnelCloudWatchLogOutputFormat_Values(), false),
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 			"tunnel1_phase1_dh_group_numbers": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -383,6 +416,39 @@ func ResourceVPNConnection() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validVPNConnectionTunnelInsideIPv6CIDR(),
 				RequiredWith: []string{"transit_gateway_id"},
+			},
+			"tunnel2_log_options": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"cloudwatch_log_options": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Computed: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"log_enabled": {
+										Type:     schema.TypeBool,
+										Optional: true,
+									},
+									"log_group_arn": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"log_output_format": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validation.StringInSlice(vpnTunnelCloudWatchLogOutputFormat_Values(), false),
+									},
+								},
+							},
+						},
+					},
+				},
 			},
 			"tunnel2_phase1_dh_group_numbers": {
 				Type:     schema.TypeSet,
@@ -716,7 +782,9 @@ func resourceVPNConnectionRead(d *schema.ResourceData, meta interface{}) error {
 
 		for i, prefix := range []string{"tunnel1_", "tunnel2_"} {
 			if len(v.TunnelOptions) > i {
-				flattenTunnelOption(d, prefix, v.TunnelOptions[i])
+				if err := flattenTunnelOption(d, prefix, v.TunnelOptions[i]); err != nil {
+					return err
+				}
 			}
 		}
 	} else {
@@ -960,6 +1028,10 @@ func expandVPNTunnelOptionsSpecification(d *schema.ResourceData, prefix string) 
 		}
 	}
 
+	if v, ok := d.GetOk(prefix + "log_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		apiObject.LogOptions = expandVPNTunnelLogOptionsSpecification(v.([]interface{})[0].(map[string]interface{}))
+	}
+
 	if v, ok := d.GetOk(prefix + "phase1_dh_group_numbers"); ok {
 		for _, v := range v.(*schema.Set).List() {
 			apiObject.Phase1DHGroupNumbers = append(apiObject.Phase1DHGroupNumbers, &ec2.Phase1DHGroupNumbersRequestListValue{Value: aws.Int64(int64(v.(int)))})
@@ -1035,6 +1107,45 @@ func expandVPNTunnelOptionsSpecification(d *schema.ResourceData, prefix string) 
 	return apiObject
 }
 
+func expandVPNTunnelLogOptionsSpecification(tfMap map[string]interface{}) *ec2.VpnTunnelLogOptionsSpecification {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &ec2.VpnTunnelLogOptionsSpecification{}
+
+	if v, ok := tfMap["cloudwatch_log_options"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		apiObject.CloudWatchLogOptions = expandCloudWatchLogOptionsSpecification(v[0].(map[string]interface{}))
+	}
+
+	return apiObject
+}
+
+func expandCloudWatchLogOptionsSpecification(tfMap map[string]interface{}) *ec2.CloudWatchLogOptionsSpecification {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &ec2.CloudWatchLogOptionsSpecification{}
+
+	if v, ok := tfMap["log_enabled"].(bool); ok {
+		apiObject.LogEnabled = aws.Bool(v)
+	}
+
+	// No ARN or format if not enabled.
+	if aws.BoolValue(apiObject.LogEnabled) {
+		if v, ok := tfMap["log_group_arn"].(string); ok && v != "" {
+			apiObject.LogGroupArn = aws.String(v)
+		}
+
+		if v, ok := tfMap["log_output_format"].(string); ok && v != "" {
+			apiObject.LogOutputFormat = aws.String(v)
+		}
+	}
+
+	return apiObject
+}
+
 func expandModifyVPNTunnelOptionsSpecification(d *schema.ResourceData, prefix string) *ec2.ModifyVpnTunnelOptionsSpecification {
 	apiObject := &ec2.ModifyVpnTunnelOptionsSpecification{}
 	hasChange := false
@@ -1068,6 +1179,14 @@ func expandModifyVPNTunnelOptionsSpecification(d *schema.ResourceData, prefix st
 			for _, v := range defaultVPNTunnelOptionsIKEVersions {
 				apiObject.IKEVersions = append(apiObject.IKEVersions, &ec2.IKEVersionsRequestListValue{Value: aws.String(v)})
 			}
+		}
+
+		hasChange = true
+	}
+
+	if key := prefix + "log_options"; d.HasChange(key) {
+		if v, ok := d.GetOk(key); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			apiObject.LogOptions = expandVPNTunnelLogOptionsSpecification(v.([]interface{})[0].(map[string]interface{}))
 		}
 
 		hasChange = true
@@ -1230,9 +1349,9 @@ func expandModifyVPNTunnelOptionsSpecification(d *schema.ResourceData, prefix st
 	return apiObject
 }
 
-func flattenTunnelOption(d *schema.ResourceData, prefix string, apiObject *ec2.TunnelOption) {
+func flattenTunnelOption(d *schema.ResourceData, prefix string, apiObject *ec2.TunnelOption) error {
 	if apiObject == nil {
-		return
+		return nil
 	}
 
 	var s []*string
@@ -1246,6 +1365,14 @@ func flattenTunnelOption(d *schema.ResourceData, prefix string, apiObject *ec2.T
 	}
 	d.Set(prefix+"ike_versions", aws.StringValueSlice(s))
 	s = nil
+
+	if apiObject.LogOptions != nil {
+		if err := d.Set(prefix+"log_options", []interface{}{flattenVPNTunnelLogOptions(apiObject.LogOptions)}); err != nil {
+			return fmt.Errorf("setting %s: %w", prefix+"log_options", err)
+		}
+	} else {
+		d.Set(prefix+"log_options", nil)
+	}
 
 	for _, v := range apiObject.Phase1DHGroupNumbers {
 		i = append(i, v.Value)
@@ -1291,6 +1418,8 @@ func flattenTunnelOption(d *schema.ResourceData, prefix string, apiObject *ec2.T
 	d.Set(prefix+"startup_action", apiObject.StartupAction)
 	d.Set(prefix+"inside_cidr", apiObject.TunnelInsideCidr)
 	d.Set(prefix+"inside_ipv6_cidr", apiObject.TunnelInsideIpv6Cidr)
+
+	return nil
 }
 
 func flattenVPNStaticRoute(apiObject *ec2.VpnStaticRoute) map[string]interface{} {
@@ -1331,6 +1460,46 @@ func flattenVPNStaticRoutes(apiObjects []*ec2.VpnStaticRoute) []interface{} {
 	}
 
 	return tfList
+}
+
+func flattenVPNTunnelLogOptions(apiObject *ec2.VpnTunnelLogOptions) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.CloudWatchLogOptions; v != nil {
+		tfMap["cloudwatch_log_options"] = []interface{}{flattenCloudWatchLogOptions(v)}
+	}
+
+	return tfMap
+}
+
+func flattenCloudWatchLogOptions(apiObject *ec2.CloudWatchLogOptions) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.LogEnabled; v != nil {
+		enabled := aws.BoolValue(v)
+		tfMap["log_enabled"] = enabled
+
+		// No ARN or format if not enabled.
+		if enabled {
+			if v := apiObject.LogGroupArn; v != nil {
+				tfMap["log_group_arn"] = aws.StringValue(v)
+			}
+
+			if v := apiObject.LogOutputFormat; v != nil {
+				tfMap["log_output_format"] = aws.StringValue(v)
+			}
+		}
+	}
+
+	return tfMap
 }
 
 func flattenVGWTelemetry(apiObject *ec2.VgwTelemetry) map[string]interface{} {

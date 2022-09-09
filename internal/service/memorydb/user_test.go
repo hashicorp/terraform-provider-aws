@@ -275,11 +275,7 @@ func testAccCheckUserExists(n string) resource.TestCheckFunc {
 
 		_, err := tfmemorydb.FindUserByName(context.Background(), conn, rs.Primary.Attributes["user_name"])
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 
