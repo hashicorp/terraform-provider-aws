@@ -167,7 +167,7 @@ func testAccCheckStackExists(resourceName string, appStreamStack *appstream.Stac
 			return fmt.Errorf("problem checking for AppStream Stack existence: %w", err)
 		}
 
-		if resp == nil && len(resp.Stacks) == 0 {
+		if resp == nil || len(resp.Stacks) == 0 {
 			return fmt.Errorf("appstream stack %q does not exist", rs.Primary.ID)
 		}
 

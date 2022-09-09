@@ -111,10 +111,10 @@ func ResourceStack() *schema.Resource {
 				DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
 			},
 			"default_availability_zone": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ExactlyOneOf: []string{"default_availability_zone", "vpc_id"},
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ConflictsWith: []string{"vpc_id"},
 			},
 			"default_instance_profile_arn": {
 				Type:     schema.TypeString,
@@ -181,11 +181,11 @@ func ResourceStack() *schema.Resource {
 				Default:  true,
 			},
 			"vpc_id": {
-				Type:         schema.TypeString,
-				ForceNew:     true,
-				Computed:     true,
-				Optional:     true,
-				ExactlyOneOf: []string{"default_availability_zone", "vpc_id"},
+				Type:          schema.TypeString,
+				ForceNew:      true,
+				Computed:      true,
+				Optional:      true,
+				ConflictsWith: []string{"default_availability_zone"},
 			},
 		},
 

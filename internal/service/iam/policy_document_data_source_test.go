@@ -50,6 +50,24 @@ func TestAccIAMPolicyDocumentDataSource_singleConditionValue(t *testing.T) {
 	})
 }
 
+func TestAccIAMPolicyDocumentDataSource_conditionWithBoolValue(t *testing.T) {
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPolicyDocumentConfig_conditionWithBoolValue,
+				Check: resource.ComposeTestCheckFunc(
+					acctest.CheckResourceAttrEquivalentJSON("data.aws_iam_policy_document.test", "json",
+						testAccPolicyDocumentConditionWithBoolValueExpectedJSON(),
+					),
+				),
+			},
+		},
+	})
+}
+
 func TestAccIAMPolicyDocumentDataSource_source(t *testing.T) {
 	// This really ought to be able to be a unit test rather than an
 	// acceptance test, but just instantiating the AWS provider requires
@@ -216,6 +234,28 @@ func TestAccIAMPolicyDocumentDataSource_duplicateSid(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.aws_iam_policy_document.test", "json",
 						testAccPolicyDocumentDuplicateBlankSidExpectedJSON,
+					),
+				),
+			},
+		},
+	})
+}
+
+func TestAccIAMPolicyDocumentDataSource_sourcePolicyValidJSON(t *testing.T) {
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccPolicyDocumentDataSourceConfig_invalidJSON,
+				ExpectError: regexp.MustCompile(`"source_policy_documents.0" contains an invalid JSON: unexpected end of JSON input`),
+			},
+			{
+				Config: testAccPolicyDocumentDataSourceConfig_emptyString,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.aws_iam_policy_document.test", "json",
+						testAccPolicyDocumentExpectedJSONNoStatement,
 					),
 				),
 			},
@@ -1222,6 +1262,71 @@ data "aws_iam_policy_document" "test" {
 }
 `
 
+const testAccPolicyDocumentConfig_conditionWithBoolValue = `
+data "aws_partition" "current" {}
+
+data "aws_iam_policy_document" "test" {
+  source_policy_documents = [<<EOF
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "RestrictAccessToSpecialTag",
+            "Effect": "Deny",
+            "Action": [
+                "ec2:CreateTags",
+                "ec2:DeleteTags"
+            ],
+            "Resource": "arn:${data.aws_partition.current.partition}:ec2:*:*:vpc/*",
+            "Condition": {
+                "Null": {
+                    "aws:ResourceTag/SpecialTag": false
+                },
+                "StringLike": {
+                    "aws:ResourceAccount": [
+                        "123456"
+                    ],
+                    "aws:PrincipalArn": "arn:${data.aws_partition.current.partition}:iam::*:role/AWSAFTExecution"
+                }
+            }
+        }
+    ]
+}
+EOF
+  ]
+}
+`
+
+func testAccPolicyDocumentConditionWithBoolValueExpectedJSON() string {
+	return fmt.Sprintf(`{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "RestrictAccessToSpecialTag",
+            "Effect": "Deny",
+            "Action": [
+                "ec2:CreateTags",
+                "ec2:DeleteTags"
+            ],
+            "Resource": "arn:%[1]s:ec2:*:*:vpc/*",
+            "Condition": {
+                "Null": {
+                    "aws:ResourceTag/SpecialTag": "false"
+                },
+                "StringLike": {
+                    "aws:ResourceAccount": [
+                        "123456"
+                    ],
+                    "aws:PrincipalArn": [
+						"arn:%[1]s:iam::*:role/AWSAFTExecution"
+					]
+                }
+            }
+        }
+    ]
+  }`, acctest.Partition())
+}
+
 func testAccPolicyDocumentExpectedJSONStatementPrincipalIdentifiersStringAndSlice() string {
 	return fmt.Sprintf(`{
   "Version": "2012-10-17",
@@ -1276,6 +1381,22 @@ data "aws_iam_policy_document" "test" {
   }
 }
 `
+
+var testAccPolicyDocumentDataSourceConfig_emptyString = `
+data "aws_iam_policy_document" "test" {
+  source_policy_documents = [""]
+}
+`
+
+var testAccPolicyDocumentDataSourceConfig_invalidJSON = `
+data "aws_iam_policy_document" "test" {
+  source_policy_documents = ["{"]
+}
+`
+
+var testAccPolicyDocumentExpectedJSONNoStatement = `{
+  "Version": "2012-10-17"
+}`
 
 func testAccPolicyDocumentExpectedJSONStatementPrincipalIdentifiersMultiplePrincipals() string {
 	return fmt.Sprintf(`{

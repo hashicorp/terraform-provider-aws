@@ -103,7 +103,7 @@ The following arguments are supported:
 ### Default User Settings
 
 * `execution_role` - (Required) The execution role ARN for the user.
-* `security_groups` - (Optional) The security groups.
+* `security_groups` - (Optional) A list of security group IDs that will be attached to the user.
 * `sharing_settings` - (Optional) The sharing settings. See [Sharing Settings](#sharing-settings) below.
 * `tensor_board_app_settings` - (Optional) The TensorBoard app settings. See [TensorBoard App Settings](#tensorboard-app-settings) below.
 * `jupyter_server_app_settings` - (Optional) The Jupyter server's app settings. See [Jupyter Server App Settings](#jupyter-server-app-settings) below.

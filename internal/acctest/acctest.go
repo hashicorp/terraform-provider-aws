@@ -709,7 +709,7 @@ func PreCheckRegionNot(t *testing.T, regions ...string) {
 // PreCheckAlternateRegionIs checks that the alternate test region is the specified region.
 func PreCheckAlternateRegionIs(t *testing.T, region string) {
 	if curr := AlternateRegion(); curr != region {
-		t.Skipf("skipping tests; %s (%s) does not equal %s", conns.EnvVarDefaultRegion, curr, region)
+		t.Skipf("skipping tests; %s (%s) does not equal %s", conns.EnvVarAlternateRegion, curr, region)
 	}
 }
 

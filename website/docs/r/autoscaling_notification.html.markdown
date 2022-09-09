@@ -56,10 +56,10 @@ resource "aws_autoscaling_group" "foo" {
 
 The following arguments are supported:
 
-* `group_names` - (Required) A list of AutoScaling Group Names
-* `notifications` - (Required) A list of Notification Types that trigger
+* `group_names` - (Required) List of AutoScaling Group Names
+* `notifications` - (Required) List of Notification Types that trigger
 notifications. Acceptable values are documented [in the AWS documentation here][1]
-* `topic_arn` - (Required) The Topic ARN for notifications to be sent through
+* `topic_arn` - (Required) Topic ARN for notifications to be sent through
 
 ## Attributes Reference
 

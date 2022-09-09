@@ -24,16 +24,16 @@ data "aws_apigatewayv2_export" "test" {
 
 The following arguments are supported:
 
-* `api_id` - (Required) The API identifier.
-* `specification` - (Required) The version of the API specification to use. `OAS30`, for OpenAPI 3.0, is the only supported value.
-* `output_type` - (Required) The output type of the exported definition file. Valid values are `JSON` and `YAML`.
-* `export_version` - (Optional) The version of the API Gateway export algorithm. API Gateway uses the latest version by default. Currently, the only supported version is `1.0`.
-* `include_extensions` - (Optional) Specifies whether to include API Gateway extensions in the exported API definition. API Gateway extensions are included by default.
-* `stage_name` - (Optional) The name of the API stage to export. If you don't specify this property, a representation of the latest API configuration is exported.
+* `api_id` - (Required) API identifier.
+* `specification` - (Required) Version of the API specification to use. `OAS30`, for OpenAPI 3.0, is the only supported value.
+* `output_type` - (Required) Output type of the exported definition file. Valid values are `JSON` and `YAML`.
+* `export_version` - (Optional) Version of the API Gateway export algorithm. API Gateway uses the latest version by default. Currently, the only supported version is `1.0`.
+* `include_extensions` - (Optional) Whether to include API Gateway extensions in the exported API definition. API Gateway extensions are included by default.
+* `stage_name` - (Optional) Name of the API stage to export. If you don't specify this property, a representation of the latest API configuration is exported.
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - The API identifier.
-* `body` - The id of the API.
+* `id` - API identifier.
+* `body` - ID of the API.

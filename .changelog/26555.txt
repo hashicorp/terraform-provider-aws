@@ -1,0 +1,7 @@
+```release-note:new-resource
+aws_redshiftserverless_endpoint_access
+```
+
+```release-note:enhancement
+resource/aws_redshiftserverless_endpoint_workgroup: Add `endpoint` attribute
+```

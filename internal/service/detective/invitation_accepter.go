@@ -67,10 +67,6 @@ func resourceInvitationAccepterRead(ctx context.Context, d *schema.ResourceData,
 		return diag.Errorf("error listing Detective InvitationAccepter (%s): %s", d.Id(), err)
 	}
 
-	if err != nil {
-		return diag.Errorf("error reading Detective InvitationAccepter (%s): %s", d.Id(), err)
-	}
-
 	d.Set("graph_arn", graphArn)
 	return nil
 }

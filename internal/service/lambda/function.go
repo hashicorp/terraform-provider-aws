@@ -186,9 +186,10 @@ func ResourceFunction() *schema.Resource {
 				},
 			},
 			"function_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validFunctionName(),
 			},
 			"handler": {
 				Type:         schema.TypeString,
@@ -863,7 +864,7 @@ func resourceFunctionRead(d *schema.ResourceData, meta interface{}) error {
 		// List is sorted from oldest to latest
 		// so this may get costly over time :'(
 		var lastVersion, lastQualifiedArn string
-		err = listVersionsByFunctionPages(conn, &lambda.ListVersionsByFunctionInput{
+		err = conn.ListVersionsByFunctionPages(&lambda.ListVersionsByFunctionInput{
 			FunctionName: function.FunctionName,
 			MaxItems:     aws.Int64(10000),
 		}, func(p *lambda.ListVersionsByFunctionOutput, lastPage bool) bool {
@@ -893,12 +894,12 @@ func resourceFunctionRead(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 
-	// Currently, this functionality is not enabled in ap-northeast-3 (Osaka) and ap-southeast-3 (Jakarta) region
+	// Currently, this functionality is not enabled in ap-northeast-3 (Osaka), me-central-1 (UAE) and ap-southeast-3 (Jakarta) region
 	// and returns ambiguous error codes (e.g. AccessDeniedException)
 	// so we cannot just ignore the error as would typically.
 	// We are hardcoding the region here, because go aws sdk endpoints
 	// package does not support Signer service
-	if region := meta.(*conns.AWSClient).Region; region == endpoints.ApNortheast3RegionID || region == endpoints.ApSoutheast3RegionID {
+	if region := meta.(*conns.AWSClient).Region; region == endpoints.ApNortheast3RegionID || region == endpoints.MeCentral1RegionID || region == endpoints.ApSoutheast3RegionID {
 		return nil
 	}
 
@@ -921,24 +922,6 @@ func resourceFunctionRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("code_signing_config_arn", codeSigningConfigArn)
 
-	return nil
-}
-
-func listVersionsByFunctionPages(c *lambda.Lambda, input *lambda.ListVersionsByFunctionInput,
-	fn func(p *lambda.ListVersionsByFunctionOutput, lastPage bool) bool) error {
-	for {
-		page, err := c.ListVersionsByFunction(input)
-		if err != nil {
-			return err
-		}
-		lastPage := page.NextMarker == nil
-
-		shouldContinue := fn(page, lastPage)
-		if !shouldContinue || lastPage {
-			break
-		}
-		input.Marker = page.NextMarker
-	}
 	return nil
 }
 
@@ -1098,7 +1081,8 @@ func resourceFunctionUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("runtime") {
 		configReq.Runtime = aws.String(d.Get("runtime").(string))
 	}
-	if d.HasChange("environment") {
+
+	if d.HasChanges("environment", "kms_key_arn") {
 		if v, ok := d.GetOk("environment"); ok {
 			environments := v.([]interface{})
 			environment, ok := environments[0].(map[string]interface{})

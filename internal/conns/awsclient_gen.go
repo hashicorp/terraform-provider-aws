@@ -6,7 +6,9 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/comprehend"
 	"github.com/aws/aws-sdk-go-v2/service/fis"
+	"github.com/aws/aws-sdk-go-v2/service/identitystore"
 	"github.com/aws/aws-sdk-go-v2/service/kendra"
+	"github.com/aws/aws-sdk-go-v2/service/medialive"
 	"github.com/aws/aws-sdk-go-v2/service/rolesanywhere"
 	"github.com/aws/aws-sdk-go-v2/service/route53domains"
 	"github.com/aws/aws-sdk-go-v2/service/transcribe"
@@ -141,7 +143,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/healthlake"
 	"github.com/aws/aws-sdk-go/service/honeycode"
 	"github.com/aws/aws-sdk-go/service/iam"
-	"github.com/aws/aws-sdk-go/service/identitystore"
 	"github.com/aws/aws-sdk-go/service/imagebuilder"
 	"github.com/aws/aws-sdk-go/service/inspector"
 	"github.com/aws/aws-sdk-go/service/inspector2"
@@ -195,7 +196,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/marketplacemetering"
 	"github.com/aws/aws-sdk-go/service/mediaconnect"
 	"github.com/aws/aws-sdk-go/service/mediaconvert"
-	"github.com/aws/aws-sdk-go/service/medialive"
 	"github.com/aws/aws-sdk-go/service/mediapackage"
 	"github.com/aws/aws-sdk-go/service/mediapackagevod"
 	"github.com/aws/aws-sdk-go/service/mediastore"
@@ -454,7 +454,7 @@ type AWSClient struct {
 	HoneycodeConn                    *honeycode.Honeycode
 	IAMConn                          *iam.IAM
 	IVSConn                          *ivs.IVS
-	IdentityStoreConn                *identitystore.IdentityStore
+	IdentityStoreConn                *identitystore.Client
 	ImageBuilderConn                 *imagebuilder.Imagebuilder
 	InspectorConn                    *inspector.Inspector
 	Inspector2Conn                   *inspector2.Inspector2
@@ -511,7 +511,7 @@ type AWSClient struct {
 	MarketplaceMeteringConn          *marketplacemetering.MarketplaceMetering
 	MediaConnectConn                 *mediaconnect.MediaConnect
 	MediaConvertConn                 *mediaconvert.MediaConvert
-	MediaLiveConn                    *medialive.MediaLive
+	MediaLiveConn                    *medialive.Client
 	MediaPackageConn                 *mediapackage.MediaPackage
 	MediaPackageVODConn              *mediapackagevod.MediaPackageVod
 	MediaStoreConn                   *mediastore.MediaStore

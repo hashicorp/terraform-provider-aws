@@ -1101,9 +1101,9 @@ func StatusInternetGatewayAttachmentState(conn *ec2.EC2, internetGatewayID, vpcI
 	}
 }
 
-func StatusManagedPrefixListState(conn *ec2.EC2, id string) resource.StateRefreshFunc {
+func StatusManagedPrefixListState(ctx context.Context, conn *ec2.EC2, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindManagedPrefixListByID(conn, id)
+		output, err := FindManagedPrefixListByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

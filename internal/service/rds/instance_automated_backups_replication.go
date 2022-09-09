@@ -143,7 +143,7 @@ func resourceInstanceAutomatedBackupsReplicationDelete(d *schema.ResourceData, m
 	})
 
 	if err != nil {
-		return fmt.Errorf("error stopping RDS instance automated backups replication (%s): %w", d.Id(), err)
+		return fmt.Errorf("stopping RDS instance automated backups replication (%s): %w", d.Id(), err)
 	}
 
 	// Create a new client to the source region.
