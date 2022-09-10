@@ -287,12 +287,7 @@ func TestAccLambdaFunction_concurrency(t *testing.T) {
 	}
 
 	var conf lambda.GetFunctionOutput
-
-	rString := sdkacctest.RandString(8)
-	funcName := fmt.Sprintf("tf_acc_lambda_func_concurrency_%s", rString)
-	policyName := fmt.Sprintf("tf_acc_policy_lambda_func_concurrency_%s", rString)
-	roleName := fmt.Sprintf("tf_acc_role_lambda_func_concurrency_%s", rString)
-	sgName := fmt.Sprintf("tf_acc_sg_lambda_func_concurrency_%s", rString)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lambda_function.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -302,11 +297,9 @@ func TestAccLambdaFunction_concurrency(t *testing.T) {
 		CheckDestroy:             testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFunctionConfig_basicConcurrency(funcName, policyName, roleName, sgName),
+				Config: testAccFunctionConfig_basicConcurrency(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, &conf),
-					testAccCheckFunctionName(&conf, funcName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
 					resource.TestCheckResourceAttr(resourceName, "reserved_concurrent_executions", "111"),
 				),
 			},
@@ -317,11 +310,9 @@ func TestAccLambdaFunction_concurrency(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"filename", "publish"},
 			},
 			{
-				Config: testAccFunctionConfig_concurrencyUpdate(funcName, policyName, roleName, sgName),
+				Config: testAccFunctionConfig_concurrencyUpdate(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, &conf),
-					testAccCheckFunctionName(&conf, funcName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
 					resource.TestCheckResourceAttr(resourceName, "reserved_concurrent_executions", "222"),
 				),
 			},
@@ -335,12 +326,7 @@ func TestAccLambdaFunction_concurrencyCycle(t *testing.T) {
 	}
 
 	var conf lambda.GetFunctionOutput
-
-	rString := sdkacctest.RandString(8)
-	funcName := fmt.Sprintf("tf_acc_lambda_func_concurrency_cycle_%s", rString)
-	policyName := fmt.Sprintf("tf_acc_policy_lambda_func_concurrency_cycle_%s", rString)
-	roleName := fmt.Sprintf("tf_acc_role_lambda_func_concurrency_cycle_%s", rString)
-	sgName := fmt.Sprintf("tf_acc_sg_lambda_func_concurrency_cycle_%s", rString)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lambda_function.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -350,11 +336,9 @@ func TestAccLambdaFunction_concurrencyCycle(t *testing.T) {
 		CheckDestroy:             testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFunctionConfig_basic(funcName, policyName, roleName, sgName),
+				Config: testAccFunctionConfig_basic(rName, rName, rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, &conf),
-					testAccCheckFunctionName(&conf, funcName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
 					resource.TestCheckResourceAttr(resourceName, "reserved_concurrent_executions", "-1"),
 				),
 			},
@@ -365,20 +349,16 @@ func TestAccLambdaFunction_concurrencyCycle(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"filename", "publish"},
 			},
 			{
-				Config: testAccFunctionConfig_concurrencyUpdate(funcName, policyName, roleName, sgName),
+				Config: testAccFunctionConfig_concurrencyUpdate(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, &conf),
-					testAccCheckFunctionName(&conf, funcName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
 					resource.TestCheckResourceAttr(resourceName, "reserved_concurrent_executions", "222"),
 				),
 			},
 			{
-				Config: testAccFunctionConfig_basic(funcName, policyName, roleName, sgName),
+				Config: testAccFunctionConfig_basic(rName, rName, rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, &conf),
-					testAccCheckFunctionName(&conf, funcName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
 					resource.TestCheckResourceAttr(resourceName, "reserved_concurrent_executions", "-1"),
 				),
 			},
@@ -2544,30 +2524,34 @@ resource "aws_lambda_function" "test" {
 `, funcName)
 }
 
-func testAccFunctionConfig_basicConcurrency(funcName, policyName, roleName, sgName string) string {
-	return fmt.Sprintf(acctest.ConfigLambdaBase(policyName, roleName, sgName)+`
+func testAccFunctionConfig_basicConcurrency(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLambdaBase(rName, rName, rName),
+		fmt.Sprintf(`
 resource "aws_lambda_function" "test" {
   filename                       = "test-fixtures/lambdatest.zip"
-  function_name                  = "%s"
+  function_name                  = %[1]q
   role                           = aws_iam_role.iam_for_lambda.arn
   handler                        = "exports.example"
   runtime                        = "nodejs12.x"
   reserved_concurrent_executions = 111
 }
-`, funcName)
+`, rName))
 }
 
-func testAccFunctionConfig_concurrencyUpdate(funcName, policyName, roleName, sgName string) string {
-	return fmt.Sprintf(acctest.ConfigLambdaBase(policyName, roleName, sgName)+`
+func testAccFunctionConfig_concurrencyUpdate(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLambdaBase(rName, rName, rName),
+		fmt.Sprintf(`
 resource "aws_lambda_function" "test" {
   filename                       = "test-fixtures/lambdatest.zip"
-  function_name                  = "%s"
+  function_name                  = %[1]q
   role                           = aws_iam_role.iam_for_lambda.arn
   handler                        = "exports.example"
   runtime                        = "nodejs12.x"
   reserved_concurrent_executions = 222
 }
-`, funcName)
+`, rName))
 }
 
 func testAccFunctionConfig_noFilenameAndS3Attributes(funcName, policyName, roleName, sgName string) string {
