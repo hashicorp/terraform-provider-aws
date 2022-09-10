@@ -152,8 +152,6 @@ func TestAccLambdaFunction_unpublishedCodeUpdate(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var conf1, conf2 lambda.GetFunctionOutput
-
 	initialFilename := "test-fixtures/lambdatest.zip"
 	updatedFilename, zipFile, err := createTempFile("lambda_localUpdate")
 	if err != nil {
@@ -161,11 +159,8 @@ func TestAccLambdaFunction_unpublishedCodeUpdate(t *testing.T) {
 	}
 	defer os.Remove(updatedFilename)
 
-	rString := sdkacctest.RandString(8)
-	funcName := fmt.Sprintf("tf_acc_lambda_func_versioned_%s", rString)
-	policyName := fmt.Sprintf("tf_acc_policy_lambda_func_versioned_%s", rString)
-	roleName := fmt.Sprintf("tf_acc_role_lambda_func_versioned_%s", rString)
-	sgName := fmt.Sprintf("tf_acc_sg_lambda_func_versioned_%s", rString)
+	var conf1, conf2 lambda.GetFunctionOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lambda_function.test"
 
 	var timeBeforeUpdate time.Time
@@ -177,11 +172,11 @@ func TestAccLambdaFunction_unpublishedCodeUpdate(t *testing.T) {
 		CheckDestroy:             testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFunctionConfig_filename(initialFilename, funcName, policyName, roleName, sgName),
+				Config: testAccFunctionConfig_filename(initialFilename, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, &conf1),
 					resource.TestCheckResourceAttr(resourceName, "version", tflambda.FunctionVersionLatest),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "qualified_arn", "lambda", fmt.Sprintf("function:%s:%s", funcName, tflambda.FunctionVersionLatest)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "qualified_arn", "lambda", fmt.Sprintf("function:%s:%s", rName, tflambda.FunctionVersionLatest)),
 				),
 			},
 			{
@@ -191,11 +186,11 @@ func TestAccLambdaFunction_unpublishedCodeUpdate(t *testing.T) {
 					}
 					timeBeforeUpdate = time.Now()
 				},
-				Config: testAccFunctionConfig_filename(updatedFilename, funcName, policyName, roleName, sgName),
+				Config: testAccFunctionConfig_filename(updatedFilename, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, &conf2),
 					resource.TestCheckResourceAttr(resourceName, "version", tflambda.FunctionVersionLatest),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "qualified_arn", "lambda", fmt.Sprintf("function:%s:%s", funcName, tflambda.FunctionVersionLatest)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "qualified_arn", "lambda", fmt.Sprintf("function:%s:%s", rName, tflambda.FunctionVersionLatest)),
 					func(s *terraform.State) error {
 						return testAccCheckAttributeIsDateAfter(s, resourceName, "last_modified", timeBeforeUpdate)
 					},
@@ -225,9 +220,7 @@ func TestAccLambdaFunction_codeSigning(t *testing.T) {
 	}
 
 	var conf lambda.GetFunctionOutput
-	rString := sdkacctest.RandString(8)
-	funcName := fmt.Sprintf("tf_acc_lambda_func_csc_%s", rString)
-	roleName := fmt.Sprintf("tf_acc_role_lambda_func_csc_%s", rString)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lambda_function.test"
 	cscResourceName := "aws_lambda_code_signing_config.code_signing_config_1"
 	cscUpdateResourceName := "aws_lambda_code_signing_config.code_signing_config_2"
@@ -239,11 +232,9 @@ func TestAccLambdaFunction_codeSigning(t *testing.T) {
 		CheckDestroy:             testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFunctionConfig_cscCreate(roleName, funcName),
+				Config: testAccFunctionConfig_cscCreate(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, &conf),
-					testAccCheckFunctionName(&conf, funcName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
 					resource.TestCheckResourceAttrPair(resourceName, "code_signing_config_arn", cscResourceName, "arn"),
 				),
 			},
@@ -254,11 +245,9 @@ func TestAccLambdaFunction_codeSigning(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"filename", "publish"},
 			},
 			{
-				Config: testAccFunctionConfig_cscUpdate(roleName, funcName),
+				Config: testAccFunctionConfig_cscUpdate(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, &conf),
-					testAccCheckFunctionName(&conf, funcName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
 					resource.TestCheckResourceAttrPair(resourceName, "code_signing_config_arn", cscUpdateResourceName, "arn"),
 				),
 			},
@@ -269,11 +258,9 @@ func TestAccLambdaFunction_codeSigning(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"filename", "publish"},
 			},
 			{
-				Config: testAccFunctionConfig_cscDelete(roleName, funcName),
+				Config: testAccFunctionConfig_cscDelete(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, &conf),
-					testAccCheckFunctionName(&conf, funcName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
 					resource.TestCheckResourceAttr(resourceName, "code_signing_config_arn", ""),
 				),
 			},
@@ -2417,7 +2404,22 @@ resource "aws_lambda_function" "test" {
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }
 
-func testAccCSCBasicConfig(roleName string) string {
+func testAccFunctionConfig_filename(fileName, rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLambdaBase(rName, rName, rName),
+		fmt.Sprintf(`
+resource "aws_lambda_function" "test" {
+  filename      = %[1]q
+  function_name = %[2]q
+  publish       = false
+  role          = aws_iam_role.iam_for_lambda.arn
+  handler       = "exports.example"
+  runtime       = "nodejs12.x"
+}
+`, fileName, rName))
+}
+
+func testAccFunctionConfig_cscBase(rName string) string {
 	return fmt.Sprintf(`
 data "aws_iam_policy_document" "policy" {
   statement {
@@ -2434,7 +2436,7 @@ data "aws_iam_policy_document" "policy" {
 }
 
 resource "aws_iam_role" "iam_for_lambda" {
-  name               = "%s"
+  name               = %[1]q
   assume_role_policy = data.aws_iam_policy_document.policy.json
 }
 
@@ -2483,37 +2485,43 @@ resource "aws_lambda_code_signing_config" "code_signing_config_2" {
 
   description = "Code Signing Config for test account update"
 }
-`, roleName)
+`, rName)
 }
 
-func testAccFunctionConfig_cscCreate(roleName, funcName string) string {
-	return fmt.Sprintf(testAccCSCBasicConfig(roleName)+`
+func testAccFunctionConfig_cscCreate(rName string) string {
+	return acctest.ConfigCompose(
+		testAccFunctionConfig_cscBase(rName),
+		fmt.Sprintf(`
 resource "aws_lambda_function" "test" {
   filename                = "test-fixtures/lambdatest.zip"
-  function_name           = "%s"
+  function_name           = %[1]q
   role                    = aws_iam_role.iam_for_lambda.arn
   handler                 = "exports.example"
   runtime                 = "nodejs12.x"
   code_signing_config_arn = aws_lambda_code_signing_config.code_signing_config_1.arn
 }
-`, funcName)
+`, rName))
 }
 
-func testAccFunctionConfig_cscUpdate(roleName, funcName string) string {
-	return fmt.Sprintf(testAccCSCBasicConfig(roleName)+`
+func testAccFunctionConfig_cscUpdate(rName string) string {
+	return acctest.ConfigCompose(
+		testAccFunctionConfig_cscBase(rName),
+		fmt.Sprintf(`
 resource "aws_lambda_function" "test" {
   filename                = "test-fixtures/lambdatest.zip"
-  function_name           = "%s"
+  function_name           = %[1]q
   role                    = aws_iam_role.iam_for_lambda.arn
   handler                 = "exports.example"
   runtime                 = "nodejs12.x"
   code_signing_config_arn = aws_lambda_code_signing_config.code_signing_config_2.arn
 }
-`, funcName)
+`, rName))
 }
 
-func testAccFunctionConfig_cscDelete(roleName, funcName string) string {
-	return fmt.Sprintf(testAccCSCBasicConfig(roleName)+`
+func testAccFunctionConfig_cscDelete(rName string) string {
+	return acctest.ConfigCompose(
+		testAccFunctionConfig_cscBase(rName),
+		fmt.Sprintf(`
 resource "aws_lambda_function" "test" {
   filename      = "test-fixtures/lambdatest.zip"
   function_name = "%s"
@@ -2521,7 +2529,7 @@ resource "aws_lambda_function" "test" {
   handler       = "exports.example"
   runtime       = "nodejs12.x"
 }
-`, funcName)
+`, rName))
 }
 
 func testAccFunctionConfig_basicConcurrency(rName string) string {
@@ -2748,19 +2756,6 @@ resource "aws_lambda_function" "test" {
   }
 }
 `, rName))
-}
-
-func testAccFunctionConfig_filename(fileName, funcName, policyName, roleName, sgName string) string {
-	return fmt.Sprintf(acctest.ConfigLambdaBase(policyName, roleName, sgName)+`
-resource "aws_lambda_function" "test" {
-  filename      = %[1]q
-  function_name = %[2]q
-  publish       = false
-  role          = aws_iam_role.iam_for_lambda.arn
-  handler       = "exports.example"
-  runtime       = "nodejs12.x"
-}
-`, fileName, funcName)
 }
 
 func testAccFunctionConfig_publishable(fileName, funcName, policyName, roleName, sgName string, publish bool) string {
