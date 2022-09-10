@@ -109,6 +109,10 @@ func resourceVPCPeeringConnectionCreate(d *schema.ResourceData, meta interface{}
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
+	if peeringConnectionOptionsAllowsClassicLink(d) {
+		return errors.New(`with the retirement of EC2-Classic no new VPC Peering Connections can be created with ClassicLink options enabled`)
+	}
+
 	input := &ec2.CreateVpcPeeringConnectionInput{
 		PeerVpcId:         aws.String(d.Get("peer_vpc_id").(string)),
 		TagSpecifications: tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeVpcPeeringConnection),
@@ -424,4 +428,24 @@ func flattenVPCPeeringConnectionOptionsDescription(apiObject *ec2.VpcPeeringConn
 	}
 
 	return tfMap
+}
+
+func peeringConnectionOptionsAllowsClassicLink(d *schema.ResourceData) bool {
+	fn := func(key string) bool {
+		if v, ok := d.GetOk(key); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			tfMap := v.([]interface{})[0].(map[string]interface{})
+
+			if v, ok := tfMap["allow_classic_link_to_remote_vpc"].(bool); ok && v {
+				return true
+			}
+
+			if v, ok := tfMap["allow_vpc_to_remote_classic_link"].(bool); ok && v {
+				return true
+			}
+		}
+
+		return false
+	}
+
+	return fn("accepter") || fn("requester")
 }

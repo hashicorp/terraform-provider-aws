@@ -313,7 +313,7 @@ func testAccCheckFleetExists(resourceName string, appStreamFleet *appstream.Flee
 			return err
 		}
 
-		if resp == nil && len(resp.Fleets) == 0 {
+		if resp == nil || len(resp.Fleets) == 0 {
 			return fmt.Errorf("appstream fleet %q does not exist", rs.Primary.ID)
 		}
 

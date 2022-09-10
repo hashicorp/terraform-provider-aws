@@ -3,6 +3,7 @@ package redshiftserverless
 import (
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/redshiftserverless"
@@ -51,6 +52,62 @@ func ResourceWorkgroup() *schema.Resource {
 						"parameter_value": {
 							Type:     schema.TypeString,
 							Required: true,
+						},
+					},
+				},
+			},
+			"endpoint": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"address": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"port": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"vpc_endpoint": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"vpc_endpoint_id": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"vpc_id": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"network_interface": {
+										Type:     schema.TypeList,
+										Computed: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"availability_zone": {
+													Type:     schema.TypeString,
+													Computed: true,
+												},
+												"network_interface_id": {
+													Type:     schema.TypeString,
+													Computed: true,
+												},
+												"private_ip_address": {
+													Type:     schema.TypeString,
+													Computed: true,
+												},
+												"subnet_id": {
+													Type:     schema.TypeString,
+													Computed: true,
+												},
+											},
+										},
+									},
+								},
+							},
 						},
 					},
 				},
@@ -182,6 +239,10 @@ func resourceWorkgroupRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("setting config_parameter: %w", err)
 	}
 
+	if err := d.Set("endpoint", []interface{}{flattenEndpoint(out.Endpoint)}); err != nil {
+		return fmt.Errorf("setting endpoint: %w", err)
+	}
+
 	tags, err := ListTags(conn, arn)
 
 	if err != nil {
@@ -262,12 +323,14 @@ func resourceWorkgroupUpdate(d *schema.ResourceData, meta interface{}) error {
 func resourceWorkgroupDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RedshiftServerlessConn
 
-	deleteInput := redshiftserverless.DeleteWorkgroupInput{
-		WorkgroupName: aws.String(d.Id()),
-	}
-
-	log.Printf("[DEBUG] Deleting Redshift Serverless Workgroup: %s", d.Id())
-	_, err := conn.DeleteWorkgroup(&deleteInput)
+	_, err := tfresource.RetryWhenAWSErrMessageContains(10*time.Minute,
+		func() (interface{}, error) {
+			return conn.DeleteWorkgroup(&redshiftserverless.DeleteWorkgroupInput{
+				WorkgroupName: aws.String(d.Id()),
+			})
+		},
+		// "ConflictException: There is an operation running on the workgroup. Try deleting the workgroup again later."
+		redshiftserverless.ErrCodeConflictException, "operation running")
 
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, redshiftserverless.ErrCodeResourceNotFoundException) {
@@ -360,4 +423,107 @@ func flattenConfigParameters(apiObjects []*redshiftserverless.ConfigParameter) [
 	}
 
 	return tfList
+}
+
+func flattenEndpoint(apiObject *redshiftserverless.Endpoint) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if v := apiObject.Address; v != nil {
+		tfMap["address"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.Port; v != nil {
+		tfMap["port"] = aws.Int64Value(v)
+	}
+
+	if v := apiObject.VpcEndpoints; v != nil {
+		tfMap["vpc_endpoint"] = flattenVPCEndpoints(v)
+	}
+
+	return tfMap
+}
+
+func flattenVPCEndpoints(apiObjects []*redshiftserverless.VpcEndpoint) []interface{} {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+
+	for _, apiObject := range apiObjects {
+		if apiObject == nil {
+			continue
+		}
+
+		tfList = append(tfList, flattenVPCEndpoint(apiObject))
+	}
+
+	return tfList
+}
+
+func flattenVPCEndpoint(apiObject *redshiftserverless.VpcEndpoint) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.VpcEndpointId; v != nil {
+		tfMap["vpc_endpoint_id"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.VpcId; v != nil {
+		tfMap["vpc_id"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.NetworkInterfaces; v != nil {
+		tfMap["network_interface"] = flattenNetworkInterfaces(v)
+	}
+	return tfMap
+}
+
+func flattenNetworkInterfaces(apiObjects []*redshiftserverless.NetworkInterface) []interface{} {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+
+	for _, apiObject := range apiObjects {
+		if apiObject == nil {
+			continue
+		}
+
+		tfList = append(tfList, flattenNetworkInterface(apiObject))
+	}
+
+	return tfList
+}
+
+func flattenNetworkInterface(apiObject *redshiftserverless.NetworkInterface) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.AvailabilityZone; v != nil {
+		tfMap["availability_zone"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.NetworkInterfaceId; v != nil {
+		tfMap["network_interface_id"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.PrivateIpAddress; v != nil {
+		tfMap["private_ip_address"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.SubnetId; v != nil {
+		tfMap["subnet_id"] = aws.StringValue(v)
+	}
+	return tfMap
 }

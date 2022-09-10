@@ -53,7 +53,7 @@ recent AMI.
 several valid keys, for a full reference, check out
 [describe-images in the AWS CLI reference][1].
 
-* `name_regex` - (Optional) A regex string to apply to the AMI list returned
+* `name_regex` - (Optional) Regex string to apply to the AMI list returned
 by AWS. This allows more advanced filtering not supported from the AWS API. This
 filtering is done locally on what AWS returns, and could have a performance
 impact if the result is large. Combine this with other
@@ -72,11 +72,11 @@ are exported:
 ~> **NOTE:** Some values are not always set and may not be available for
 interpolation.
 
-* `arn` - The ARN of the AMI.
-* `architecture` - The OS architecture of the AMI (ie: `i386` or `x86_64`).
-* `boot_mode` - The boot mode of the image.
+* `arn` - ARN of the AMI.
+* `architecture` - OS architecture of the AMI (ie: `i386` or `x86_64`).
+* `boot_mode` - Boot mode of the image.
 * `block_device_mappings` - Set of objects with block device mappings of the AMI.
-    * `device_name` - The physical name of the device.
+    * `device_name` - Physical name of the device.
     * `ebs` - Map containing EBS information, if the device is EBS based. Unlike most object attributes, these are accessed directly (e.g., `ebs.volume_size` or `ebs["volume_size"]`) rather than accessed through the first element of a list (e.g., `ebs[0].volume_size`).
         * `delete_on_termination` - `true` if the EBS volume will be deleted on termination.
         * `encrypted` - `true` if the EBS volume is encrypted.
@@ -86,47 +86,47 @@ interpolation.
         * `throughput` - The throughput that the EBS volume supports, in MiB/s.
         * `volume_type` - The volume type.
     * `no_device` - Suppresses the specified device included in the block device mapping of the AMI.
-    * `virtual_name` - The virtual device name (for instance stores).
-* `creation_date` - The date and time the image was created.
-* `deprecation_time` - The date and time when the image will be deprecated.
-* `description` - The description of the AMI that was provided during image
+    * `virtual_name` - Virtual device name (for instance stores).
+* `creation_date` - Date and time the image was created.
+* `deprecation_time` - Date and time when the image will be deprecated.
+* `description` - Description of the AMI that was provided during image
   creation.
-* `hypervisor` - The hypervisor type of the image.
-* `image_id` - The ID of the AMI. Should be the same as the resource `id`.
-* `image_location` - The location of the AMI.
-* `image_owner_alias` - The AWS account alias (for example, `amazon`, `self`) or
+* `hypervisor` - Hypervisor type of the image.
+* `image_id` - ID of the AMI. Should be the same as the resource `id`.
+* `image_location` - Location of the AMI.
+* `image_owner_alias` - AWS account alias (for example, `amazon`, `self`) or
   the AWS account ID of the AMI owner.
-* `image_type` - The type of image.
-* `kernel_id` - The kernel associated with the image, if any. Only applicable
+* `image_type` - Type of image.
+* `kernel_id` - Kernel associated with the image, if any. Only applicable
   for machine images.
-* `name` - The name of the AMI that was provided during image creation.
-* `owner_id` - The AWS account ID of the image owner.
-* `platform` - The value is Windows for `Windows` AMIs; otherwise blank.
+* `name` - Name of the AMI that was provided during image creation.
+* `owner_id` - AWS account ID of the image owner.
+* `platform` - Value is Windows for `Windows` AMIs; otherwise blank.
 * `product_codes` - Any product codes associated with the AMI.
     * `product_codes.#.product_code_id` - The product code.
     * `product_codes.#.product_code_type` - The type of product code.
 * `public` - `true` if the image has public launch permissions.
-* `ramdisk_id` - The RAM disk associated with the image, if any. Only applicable
+* `ramdisk_id` - RAM disk associated with the image, if any. Only applicable
   for machine images.
-* `root_device_name` - The device name of the root device.
-* `root_device_type` - The type of root device (ie: `ebs` or `instance-store`).
-* `root_snapshot_id` - The snapshot id associated with the root device, if any
+* `root_device_name` - Device name of the root device.
+* `root_device_type` - Type of root device (ie: `ebs` or `instance-store`).
+* `root_snapshot_id` - Snapshot id associated with the root device, if any
   (only applies to `ebs` root devices).
-* `sriov_net_support` - Specifies whether enhanced networking is enabled.
-* `state` - The current state of the AMI. If the state is `available`, the image
+* `sriov_net_support` - Whether enhanced networking is enabled.
+* `state` - Current state of the AMI. If the state is `available`, the image
   is successfully registered and can be used to launch an instance.
 * `state_reason` - Describes a state change. Fields are `UNSET` if not available.
     * `state_reason.code` - The reason code for the state change.
     * `state_reason.message` - The message for the state change.
 * `tags` - Any tags assigned to the image.
-    * `tags.#.key` - The key name of the tag.
-    * `tags.#.value` - The value of the tag.
+    * `tags.#.key` - Key name of the tag.
+    * `tags.#.value` - Value of the tag.
 * `tpm_support` - If the image is configured for NitroTPM support, the value is `v2.0`.
-* `virtualization_type` - The type of virtualization of the AMI (ie: `hvm` or
+* `virtualization_type` - Type of virtualization of the AMI (ie: `hvm` or
   `paravirtual`).
-* `usage_operation` - The operation of the Amazon EC2 instance and the billing code that is associated with the AMI.
-* `platform_details` - The platform details associated with the billing code of the AMI.
-* `ena_support` - Specifies whether enhanced networking with ENA is enabled.
+* `usage_operation` - Operation of the Amazon EC2 instance and the billing code that is associated with the AMI.
+* `platform_details` - Platform details associated with the billing code of the AMI.
+* `ena_support` - Whether enhanced networking with ENA is enabled.
 
 ## Timeouts
 

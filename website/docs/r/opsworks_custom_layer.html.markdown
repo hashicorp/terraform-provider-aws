@@ -26,7 +26,7 @@ The following arguments are supported:
 
 * `name` - (Required) A human-readable name for the layer.
 * `short_name` - (Required) A short, machine-readable name for the layer, which will be used to identify it in the Chef node JSON.
-* `stack_id` - (Required) The id of the stack the layer will belong to.
+* `stack_id` - (Required) ID of the stack the layer will belong to.
 * `auto_assign_elastic_ips` - (Optional) Whether to automatically assign an elastic IP address to the layer's instances.
 * `auto_assign_public_ips` - (Optional) For stacks belonging to a VPC, whether to automatically assign a public IP address to each of the layer's instances.
 * `cloudwatch_configuration` - (Optional) Will create an EBS volume and connect it to the layer's instances. See [Cloudwatch Configuration](#cloudwatch-configuration).

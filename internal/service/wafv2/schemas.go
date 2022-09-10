@@ -329,6 +329,7 @@ func xssMatchStatementSchema() *schema.Schema {
 		},
 	}
 }
+
 func fieldToMatchBaseSchema() *schema.Resource {
 	return &schema.Resource{
 		Schema: map[string]*schema.Schema{
@@ -372,6 +373,7 @@ func fieldToMatchBaseSchema() *schema.Resource {
 					},
 				},
 			},
+			"json_body":    jsonBodySchema(),
 			"method":       emptySchema(),
 			"query_string": emptySchema(),
 			"single_header": {
@@ -423,6 +425,59 @@ func fieldToMatchSchema() *schema.Schema {
 		Optional: true,
 		MaxItems: 1,
 		Elem:     fieldToMatchBaseSchema(),
+	}
+}
+
+func jsonBodySchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"invalid_fallback_behavior": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringInSlice(wafv2.BodyParsingFallbackBehavior_Values(), false),
+				},
+				"match_pattern": jsonMatchPattern(),
+				"match_scope": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringInSlice(wafv2.JsonMatchScope_Values(), false),
+				},
+				"oversize_handling": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Default:      wafv2.OversizeHandlingContinue,
+					ValidateFunc: validation.StringInSlice(wafv2.OversizeHandling_Values(), false),
+				},
+			},
+		},
+	}
+}
+
+func jsonMatchPattern() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Required: true,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"all": emptySchema(),
+				"included_paths": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MinItems: 1,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+						ValidateFunc: validation.All(
+							validation.StringLenBetween(1, 512),
+							validation.StringMatch(regexp.MustCompile(`(/)|(/(([^~])|(~[01]))+)`), "must be a valid JSON pointer")),
+					},
+				},
+			},
+		},
 	}
 }
 

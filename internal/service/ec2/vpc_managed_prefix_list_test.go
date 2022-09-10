@@ -1,6 +1,7 @@
 package ec2_test
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"testing"
@@ -310,7 +311,7 @@ func testAccCheckManagedPrefixListDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := tfec2.FindManagedPrefixListByID(conn, rs.Primary.ID)
+		_, err := tfec2.FindManagedPrefixListByID(context.Background(), conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -339,7 +340,7 @@ func testAccManagedPrefixListExists(resourceName string) resource.TestCheckFunc 
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
-		_, err := tfec2.FindManagedPrefixListByID(conn, rs.Primary.ID)
+		_, err := tfec2.FindManagedPrefixListByID(context.Background(), conn, rs.Primary.ID)
 
 		return err
 	}
