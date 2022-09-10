@@ -160,13 +160,14 @@ object FullBuild : BuildType({
         val formatter = DateTimeFormatter.ofPattern("HH':'mm' 'VV")
         val triggerTime = formatter.parse(triggerTimeRaw)
         val triggerDay = if (DslContext.getParameter("trigger_day", "") != "")
-            "Mon-Wed"
+            DslContext.getParameter("trigger_day", "")
         else
             "Sun-Thu"
         triggers {
             schedule {
                 schedulingPolicy = cron {
-                    dayOfWeek = triggerDay
+                    //dayOfWeek = triggerDay
+                    dayOfWeek = "1,4"
                     val triggerHM = LocalTime.from(triggerTime)
                     hours = triggerHM.getHour().toString()
                     minutes = triggerHM.getMinute().toString()
