@@ -166,8 +166,7 @@ object FullBuild : BuildType({
         triggers {
             schedule {
                 schedulingPolicy = cron {
-                    //dayOfWeek = triggerDay
-                    dayOfWeek = "1,4"
+                    dayOfWeek = triggerDay
                     val triggerHM = LocalTime.from(triggerTime)
                     hours = triggerHM.getHour().toString()
                     minutes = triggerHM.getMinute().toString()
