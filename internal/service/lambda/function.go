@@ -1312,6 +1312,35 @@ func resourceFunctionUpdate(d *schema.ResourceData, meta interface{}) error {
 	return resourceFunctionRead(d, meta)
 }
 
+func FindFunctionByName(conn *lambda.Lambda, name string) (*lambda.GetFunctionOutput, error) {
+	input := &lambda.GetFunctionInput{
+		FunctionName: aws.String(name),
+	}
+
+	return findFunction(conn, input)
+}
+
+func findFunction(conn *lambda.Lambda, input *lambda.GetFunctionInput) (*lambda.GetFunctionOutput, error) {
+	output, err := conn.GetFunction(input)
+
+	if tfawserr.ErrCodeEquals(err, lambda.ErrCodeResourceNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.Code == nil || output.Configuration == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
 // loadFileContent returns contents of a file in a given path
 func loadFileContent(v string) ([]byte, error) {
 	filename, err := homedir.Expand(v)
