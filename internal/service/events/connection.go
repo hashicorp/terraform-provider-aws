@@ -14,77 +14,55 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func ResourceConnection() *schema.Resource {
-	connectionHttpParameters := &schema.Resource{
+func connectionHttpParameterSchema(parent string) *schema.Resource {
+	atLeastOneOf := []string{
+		fmt.Sprintf("%s.body", parent),
+		fmt.Sprintf("%s.header", parent),
+		fmt.Sprintf("%s.query_string", parent),
+	}
+	elem := &schema.Resource{
 		Schema: map[string]*schema.Schema{
-			"body": {
-				Type:     schema.TypeList,
+			"key": {
+				Type:     schema.TypeString,
 				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"key": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"value": {
-							Type:      schema.TypeString,
-							Optional:  true,
-							Sensitive: true,
-						},
-						"is_value_secret": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-					},
-				},
 			},
-			"header": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"key": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"value": {
-							Type:      schema.TypeString,
-							Optional:  true,
-							Sensitive: true,
-						},
-						"is_value_secret": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-					},
-				},
+			"value": {
+				Type:      schema.TypeString,
+				Optional:  true,
+				Sensitive: true,
 			},
-			"query_string": {
-				Type:     schema.TypeList,
+			"is_value_secret": {
+				Type:     schema.TypeBool,
 				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"key": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"value": {
-							Type:      schema.TypeString,
-							Optional:  true,
-							Sensitive: true,
-						},
-						"is_value_secret": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-					},
-				},
+				Default:  false,
 			},
 		},
 	}
+	return &schema.Resource{
+		Schema: map[string]*schema.Schema{
+			"body": {
+				Type:         schema.TypeList,
+				Optional:     true,
+				AtLeastOneOf: atLeastOneOf,
+				Elem:         elem,
+			},
+			"header": {
+				Type:         schema.TypeList,
+				Optional:     true,
+				AtLeastOneOf: atLeastOneOf,
+				Elem:         elem,
+			},
+			"query_string": {
+				Type:         schema.TypeList,
+				Optional:     true,
+				AtLeastOneOf: atLeastOneOf,
+				Elem:         elem,
+			},
+		},
+	}
+}
+
+func ResourceConnection() *schema.Resource {
 
 	return &schema.Resource{
 		Create: resourceConnectionCreate,
@@ -206,7 +184,7 @@ func ResourceConnection() *schema.Resource {
 										Type:     schema.TypeList,
 										Required: true,
 										MaxItems: 1,
-										Elem:     connectionHttpParameters,
+										Elem:     connectionHttpParameterSchema("auth_parameters.0.oauth.0.oauth_http_parameters.0"),
 									},
 									"client_parameters": {
 										Type:     schema.TypeList,
@@ -239,7 +217,7 @@ func ResourceConnection() *schema.Resource {
 							Type:     schema.TypeList,
 							Optional: true,
 							MaxItems: 1,
-							Elem:     connectionHttpParameters,
+							Elem:     connectionHttpParameterSchema("auth_parameters.0.invocation_http_parameters.0"),
 						},
 					},
 				},
