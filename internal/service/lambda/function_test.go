@@ -6,7 +6,6 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
-	"strings"
 	"testing"
 	"time"
 
@@ -748,13 +747,7 @@ func TestAccLambdaFunction_deadLetter(t *testing.T) {
 	}
 
 	var conf lambda.GetFunctionOutput
-
-	rString := sdkacctest.RandString(8)
-	funcName := fmt.Sprintf("tf_acc_lambda_func_dlconfig_%s", rString)
-	topicName := fmt.Sprintf("tf_acc_topic_lambda_func_dlconfig_%s", rString)
-	policyName := fmt.Sprintf("tf_acc_policy_lambda_func_dlconfig_%s", rString)
-	roleName := fmt.Sprintf("tf_acc_role_lambda_func_dlconfig_%s", rString)
-	sgName := fmt.Sprintf("tf_acc_sg_lambda_func_dlconfig_%s", rString)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lambda_function.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -764,19 +757,11 @@ func TestAccLambdaFunction_deadLetter(t *testing.T) {
 		CheckDestroy:             testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFunctionConfig_deadLetter(funcName, topicName, policyName, roleName, sgName),
+				Config: testAccFunctionConfig_deadLetter(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, &conf),
-					testAccCheckFunctionName(&conf, funcName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
-					func(s *terraform.State) error {
-						if !strings.HasSuffix(*conf.Configuration.DeadLetterConfig.TargetArn, ":"+topicName) {
-							return fmt.Errorf(
-								"Expected DeadLetterConfig.TargetArn %s to have suffix %s", *conf.Configuration.DeadLetterConfig.TargetArn, ":"+topicName,
-							)
-						}
-						return nil
-					},
+					resource.TestCheckResourceAttr(resourceName, "dead_letter_config.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "dead_letter_config.0.target_arn", "aws_sns_topic.test.0", "arn"),
 				),
 			},
 			// Ensure configuration can be imported
@@ -788,9 +773,10 @@ func TestAccLambdaFunction_deadLetter(t *testing.T) {
 			},
 			// Ensure configuration can be removed
 			{
-				Config: testAccFunctionConfig_basic(funcName, policyName, roleName, sgName),
+				Config: testAccFunctionConfig_basic(rName, rName, rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "dead_letter_config.#", "0"),
 				),
 			},
 		},
@@ -803,14 +789,7 @@ func TestAccLambdaFunction_deadLetterUpdated(t *testing.T) {
 	}
 
 	var conf lambda.GetFunctionOutput
-
-	rString := sdkacctest.RandString(8)
-	funcName := fmt.Sprintf("tf_acc_lambda_func_dlcfg_upd_%s", rString)
-	policyName := fmt.Sprintf("tf_acc_policy_lambda_func_dlcfg_upd_%s", rString)
-	roleName := fmt.Sprintf("tf_acc_role_lambda_func_dlcfg_upd_%s", rString)
-	sgName := fmt.Sprintf("tf_acc_sg_lambda_func_dlcfg_upd_%s", rString)
-	topic1Name := fmt.Sprintf("tf_acc_topic_lambda_func_dlcfg_upd_%s", rString)
-	topic2Name := fmt.Sprintf("tf_acc_topic_lambda_func_dlcfg_upd_2_%s", rString)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lambda_function.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -820,20 +799,19 @@ func TestAccLambdaFunction_deadLetterUpdated(t *testing.T) {
 		CheckDestroy:             testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFunctionConfig_deadLetter(funcName, topic1Name, policyName, roleName, sgName),
-			},
-			{
-				Config: testAccFunctionConfig_deadLetterUpdated(funcName, topic1Name, topic2Name, policyName, roleName, sgName),
+				Config: testAccFunctionConfig_deadLetter(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, &conf),
-					func(s *terraform.State) error {
-						if !strings.HasSuffix(*conf.Configuration.DeadLetterConfig.TargetArn, ":"+topic2Name) {
-							return fmt.Errorf(
-								"Expected DeadLetterConfig.TargetArn %s to have suffix %s", *conf.Configuration.DeadLetterConfig.TargetArn, ":"+topic2Name,
-							)
-						}
-						return nil
-					},
+					resource.TestCheckResourceAttr(resourceName, "dead_letter_config.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "dead_letter_config.0.target_arn", "aws_sns_topic.test.0", "arn"),
+				),
+			},
+			{
+				Config: testAccFunctionConfig_deadLetterUpdated(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFunctionExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "dead_letter_config.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "dead_letter_config.0.target_arn", "aws_sns_topic.test.1", "arn"),
 				),
 			},
 			{
@@ -851,11 +829,7 @@ func TestAccLambdaFunction_nilDeadLetter(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	rString := sdkacctest.RandString(8)
-	funcName := fmt.Sprintf("tf_acc_lambda_func_nil_dlcfg_%s", rString)
-	policyName := fmt.Sprintf("tf_acc_policy_lambda_func_nil_dlcfg_%s", rString)
-	roleName := fmt.Sprintf("tf_acc_role_lambda_func_nil_dlcfg_%s", rString)
-	sgName := fmt.Sprintf("tf_acc_sg_lambda_func_nil_dlcfg_%s", rString)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
@@ -864,9 +838,9 @@ func TestAccLambdaFunction_nilDeadLetter(t *testing.T) {
 		CheckDestroy:             testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFunctionConfig_nilDeadLetter(funcName, policyName, roleName, sgName),
+				Config: testAccFunctionConfig_nilDeadLetter(rName),
 				ExpectError: regexp.MustCompile(
-					fmt.Sprintf("nil dead_letter_config supplied for function: %s", funcName)),
+					fmt.Sprintf("nil dead_letter_config supplied for function: %s", rName)),
 			},
 		},
 	})
@@ -2747,6 +2721,72 @@ resource "aws_lambda_function" "test" {
 `, fileName, rName))
 }
 
+func testAccFunctionConfig_deadLetter(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLambdaBase(rName, rName, rName),
+		fmt.Sprintf(`
+resource "aws_lambda_function" "test" {
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = %[1]q
+  role          = aws_iam_role.iam_for_lambda.arn
+  handler       = "exports.example"
+  runtime       = "nodejs12.x"
+
+  dead_letter_config {
+    target_arn = aws_sns_topic.test[0].arn
+  }
+}
+
+resource "aws_sns_topic" "test" {
+  count = 2
+
+  name = "%[1]s-${count.index}"
+}
+`, rName))
+}
+
+func testAccFunctionConfig_deadLetterUpdated(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLambdaBase(rName, rName, rName),
+		fmt.Sprintf(`
+resource "aws_lambda_function" "test" {
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = %[1]q
+  role          = aws_iam_role.iam_for_lambda.arn
+  handler       = "exports.example"
+  runtime       = "nodejs12.x"
+
+  dead_letter_config {
+    target_arn = aws_sns_topic.test[1].arn
+  }
+}
+
+resource "aws_sns_topic" "test" {
+  count = 2
+
+  name = "%[1]s-${count.index}"
+}
+`, rName))
+}
+
+func testAccFunctionConfig_nilDeadLetter(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLambdaBase(rName, rName, rName),
+		fmt.Sprintf(`
+resource "aws_lambda_function" "test" {
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = %[1]q
+  role          = aws_iam_role.iam_for_lambda.arn
+  handler       = "exports.example"
+  runtime       = "nodejs12.x"
+
+  dead_letter_config {
+    target_arn = ""
+  }
+}
+`, rName))
+}
+
 func testAccFunctionConfig_fileSystem(funcName, policyName, roleName, sgName string) string {
 	return fmt.Sprintf(acctest.ConfigLambdaBase(policyName, roleName, sgName)+`
 resource "aws_efs_file_system" "efs_for_lambda" {
@@ -3071,67 +3111,6 @@ resource "aws_lambda_function" "test" {
 
   tracing_config {
     mode = "PassThrough"
-  }
-}
-`, funcName)
-}
-
-func testAccFunctionConfig_deadLetter(funcName, topicName, policyName, roleName, sgName string) string {
-	return fmt.Sprintf(acctest.ConfigLambdaBase(policyName, roleName, sgName)+`
-resource "aws_lambda_function" "test" {
-  filename      = "test-fixtures/lambdatest.zip"
-  function_name = "%s"
-  role          = aws_iam_role.iam_for_lambda.arn
-  handler       = "exports.example"
-  runtime       = "nodejs12.x"
-
-  dead_letter_config {
-    target_arn = aws_sns_topic.test.arn
-  }
-}
-
-resource "aws_sns_topic" "test" {
-  name = "%s"
-}
-`, funcName, topicName)
-}
-
-func testAccFunctionConfig_deadLetterUpdated(funcName, topic1Name, topic2Name, policyName,
-	roleName, sgName string) string {
-	return fmt.Sprintf(acctest.ConfigLambdaBase(policyName, roleName, sgName)+`
-resource "aws_lambda_function" "test" {
-  filename      = "test-fixtures/lambdatest.zip"
-  function_name = "%s"
-  role          = aws_iam_role.iam_for_lambda.arn
-  handler       = "exports.example"
-  runtime       = "nodejs12.x"
-
-  dead_letter_config {
-    target_arn = aws_sns_topic.test_2.arn
-  }
-}
-
-resource "aws_sns_topic" "test" {
-  name = "%s"
-}
-
-resource "aws_sns_topic" "test_2" {
-  name = "%s"
-}
-`, funcName, topic1Name, topic2Name)
-}
-
-func testAccFunctionConfig_nilDeadLetter(funcName, policyName, roleName, sgName string) string {
-	return fmt.Sprintf(acctest.ConfigLambdaBase(policyName, roleName, sgName)+`
-resource "aws_lambda_function" "test" {
-  filename      = "test-fixtures/lambdatest.zip"
-  function_name = "%s"
-  role          = aws_iam_role.iam_for_lambda.arn
-  handler       = "exports.example"
-  runtime       = "nodejs12.x"
-
-  dead_letter_config {
-    target_arn = ""
   }
 }
 `, funcName)
