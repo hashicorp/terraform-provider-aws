@@ -531,12 +531,7 @@ func TestAccLambdaFunction_versioned(t *testing.T) {
 	}
 
 	var conf lambda.GetFunctionOutput
-
-	rString := sdkacctest.RandString(8)
-	funcName := fmt.Sprintf("tf_acc_lambda_func_versioned_%s", rString)
-	policyName := fmt.Sprintf("tf_acc_policy_lambda_func_versioned_%s", rString)
-	roleName := fmt.Sprintf("tf_acc_role_lambda_func_versioned_%s", rString)
-	sgName := fmt.Sprintf("tf_acc_sg_lambda_func_versioned_%s", rString)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lambda_function.test"
 
 	version := "1"
@@ -548,13 +543,11 @@ func TestAccLambdaFunction_versioned(t *testing.T) {
 		CheckDestroy:             testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFunctionConfig_publishable("test-fixtures/lambdatest.zip", funcName, policyName, roleName, sgName, true),
+				Config: testAccFunctionConfig_publishable("test-fixtures/lambdatest.zip", rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, &conf),
-					testAccCheckFunctionName(&conf, funcName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
 					resource.TestCheckResourceAttr(resourceName, "version", version),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "qualified_arn", "lambda", fmt.Sprintf("function:%s:%s", funcName, version)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "qualified_arn", "lambda", fmt.Sprintf("function:%s:%s", rName, version)),
 				),
 			},
 			{
@@ -572,19 +565,14 @@ func TestAccLambdaFunction_versionedUpdate(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var conf lambda.GetFunctionOutput
-
 	path, zipFile, err := createTempFile("lambda_localUpdate")
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer os.Remove(path)
 
-	rString := sdkacctest.RandString(8)
-	funcName := fmt.Sprintf("tf_acc_lambda_func_versioned_%s", rString)
-	policyName := fmt.Sprintf("tf_acc_policy_lambda_func_versioned_%s", rString)
-	roleName := fmt.Sprintf("tf_acc_role_lambda_func_versioned_%s", rString)
-	sgName := fmt.Sprintf("tf_acc_sg_lambda_func_versioned_%s", rString)
+	var conf lambda.GetFunctionOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lambda_function.test"
 
 	var timeBeforeUpdate time.Time
@@ -599,10 +587,10 @@ func TestAccLambdaFunction_versionedUpdate(t *testing.T) {
 		CheckDestroy:             testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFunctionConfig_publishable("test-fixtures/lambdatest.zip", funcName, policyName, roleName, sgName, true),
+				Config: testAccFunctionConfig_publishable("test-fixtures/lambdatest.zip", rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "version", "1"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "qualified_arn", "lambda", fmt.Sprintf("function:%s:%s", funcName, "1")),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "qualified_arn", "lambda", fmt.Sprintf("function:%s:%s", rName, "1")),
 				),
 			},
 			{
@@ -613,13 +601,11 @@ func TestAccLambdaFunction_versionedUpdate(t *testing.T) {
 					}
 					timeBeforeUpdate = time.Now()
 				},
-				Config: testAccFunctionConfig_publishable(path, funcName, policyName, roleName, sgName, true),
+				Config: testAccFunctionConfig_publishable(path, rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, &conf),
-					testAccCheckFunctionName(&conf, funcName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
 					resource.TestCheckResourceAttr(resourceName, "version", version),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "qualified_arn", "lambda", fmt.Sprintf("function:%s:%s", funcName, version)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "qualified_arn", "lambda", fmt.Sprintf("function:%s:%s", rName, version)),
 					func(s *terraform.State) error {
 						return testAccCheckAttributeIsDateAfter(s, resourceName, "last_modified", timeBeforeUpdate)
 					},
@@ -630,13 +616,11 @@ func TestAccLambdaFunction_versionedUpdate(t *testing.T) {
 				PreConfig: func() {
 					timeBeforeUpdate = time.Now()
 				},
-				Config: testAccFunctionConfig_versionedNodeJs14xRuntime(path, funcName, policyName, roleName, sgName),
+				Config: testAccFunctionConfig_versionedNodeJs14xRuntime(path, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, &conf),
-					testAccCheckFunctionName(&conf, funcName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
 					resource.TestCheckResourceAttr(resourceName, "version", versionUpdated),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "qualified_arn", "lambda", fmt.Sprintf("function:%s:%s", funcName, versionUpdated)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "qualified_arn", "lambda", fmt.Sprintf("function:%s:%s", rName, versionUpdated)),
 					resource.TestCheckResourceAttr(resourceName, "runtime", lambda.RuntimeNodejs14X),
 					func(s *terraform.State) error {
 						return testAccCheckAttributeIsDateAfter(s, resourceName, "last_modified", timeBeforeUpdate)
@@ -659,12 +643,7 @@ func TestAccLambdaFunction_enablePublish(t *testing.T) {
 	}
 
 	var conf1, conf2, conf3 lambda.GetFunctionOutput
-
-	rString := sdkacctest.RandString(8)
-	funcName := fmt.Sprintf("tf_acc_lambda_func_enable_publish_%s", rString)
-	policyName := fmt.Sprintf("tf_acc_policy_lambda_func_enable_publish_%s", rString)
-	roleName := fmt.Sprintf("tf_acc_role_lambda_func_enable_publish_%s", rString)
-	sgName := fmt.Sprintf("tf_acc_sg_lambda_func_enable_publish_%s", rString)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lambda_function.test"
 	fileName := "test-fixtures/lambdatest.zip"
 
@@ -678,26 +657,22 @@ func TestAccLambdaFunction_enablePublish(t *testing.T) {
 		CheckDestroy:             testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFunctionConfig_publishable(fileName, funcName, policyName, roleName, sgName, false),
+				Config: testAccFunctionConfig_publishable(fileName, rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, &conf1),
-					testAccCheckFunctionName(&conf1, funcName),
 					resource.TestCheckResourceAttr(resourceName, "publish", "false"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
 					resource.TestCheckResourceAttr(resourceName, "version", unpublishedVersion),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "qualified_arn", "lambda", fmt.Sprintf("function:%s:%s", funcName, unpublishedVersion)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "qualified_arn", "lambda", fmt.Sprintf("function:%s:%s", rName, unpublishedVersion)),
 				),
 			},
 			{
 				// No changes, except to `publish`. This should publish a new version.
-				Config: testAccFunctionConfig_publishable(fileName, funcName, policyName, roleName, sgName, true),
+				Config: testAccFunctionConfig_publishable(fileName, rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, &conf2),
-					testAccCheckFunctionName(&conf2, funcName),
 					resource.TestCheckResourceAttr(resourceName, "publish", "true"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
 					resource.TestCheckResourceAttr(resourceName, "version", publishedVersion),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "qualified_arn", "lambda", fmt.Sprintf("function:%s:%s", funcName, publishedVersion)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "qualified_arn", "lambda", fmt.Sprintf("function:%s:%s", rName, publishedVersion)),
 				),
 			},
 			{
@@ -708,13 +683,11 @@ func TestAccLambdaFunction_enablePublish(t *testing.T) {
 			},
 			{
 				// No changes, `publish` is true. This should not publish a new version.
-				Config: testAccFunctionConfig_publishable(fileName, funcName, policyName, roleName, sgName, true),
+				Config: testAccFunctionConfig_publishable(fileName, rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, &conf3),
-					testAccCheckFunctionName(&conf3, funcName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
 					resource.TestCheckResourceAttr(resourceName, "version", publishedVersion),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "qualified_arn", "lambda", fmt.Sprintf("function:%s:%s", funcName, publishedVersion)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "qualified_arn", "lambda", fmt.Sprintf("function:%s:%s", rName, publishedVersion)),
 				),
 			},
 		},
@@ -727,12 +700,7 @@ func TestAccLambdaFunction_disablePublish(t *testing.T) {
 	}
 
 	var conf1, conf2 lambda.GetFunctionOutput
-
-	rString := sdkacctest.RandString(8)
-	funcName := fmt.Sprintf("tf_acc_lambda_func_disable_publish_%s", rString)
-	policyName := fmt.Sprintf("tf_acc_policy_lambda_func_disable_publish_%s", rString)
-	roleName := fmt.Sprintf("tf_acc_role_lambda_func_disable_publish_%s", rString)
-	sgName := fmt.Sprintf("tf_acc_sg_lambda_func_disable_publish_%s", rString)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lambda_function.test"
 	fileName := "test-fixtures/lambdatest.zip"
 
@@ -746,26 +714,22 @@ func TestAccLambdaFunction_disablePublish(t *testing.T) {
 		CheckDestroy:             testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFunctionConfig_publishable(fileName, funcName, policyName, roleName, sgName, true),
+				Config: testAccFunctionConfig_publishable(fileName, rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, &conf1),
-					testAccCheckFunctionName(&conf1, funcName),
 					resource.TestCheckResourceAttr(resourceName, "publish", "true"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
 					resource.TestCheckResourceAttr(resourceName, "version", publishedVersion),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "qualified_arn", "lambda", fmt.Sprintf("function:%s:%s", funcName, publishedVersion)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "qualified_arn", "lambda", fmt.Sprintf("function:%s:%s", rName, publishedVersion)),
 				),
 			},
 			{
 				// No changes, except to `publish`. This should not update the current version.
-				Config: testAccFunctionConfig_publishable(fileName, funcName, policyName, roleName, sgName, false),
+				Config: testAccFunctionConfig_publishable(fileName, rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, &conf2),
-					testAccCheckFunctionName(&conf2, funcName),
 					resource.TestCheckResourceAttr(resourceName, "publish", "false"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
 					resource.TestCheckResourceAttr(resourceName, "version", unpublishedVersion),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "qualified_arn", "lambda", fmt.Sprintf("function:%s:%s", funcName, unpublishedVersion)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "qualified_arn", "lambda", fmt.Sprintf("function:%s:%s", rName, unpublishedVersion)),
 				),
 			},
 			{
@@ -2753,17 +2717,34 @@ resource "aws_lambda_function" "test" {
 `, rName))
 }
 
-func testAccFunctionConfig_publishable(fileName, funcName, policyName, roleName, sgName string, publish bool) string {
-	return fmt.Sprintf(acctest.ConfigLambdaBase(policyName, roleName, sgName)+`
+func testAccFunctionConfig_publishable(fileName, rName string, publish bool) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLambdaBase(rName, rName, rName),
+		fmt.Sprintf(`
 resource "aws_lambda_function" "test" {
-  filename      = "%s"
-  function_name = "%s"
-  publish       = %t
+  filename      = %[1]q
+  function_name = %[2]q
+  publish       = %[3]t
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
   runtime       = "nodejs12.x"
 }
-`, fileName, funcName, publish)
+`, fileName, rName, publish))
+}
+
+func testAccFunctionConfig_versionedNodeJs14xRuntime(fileName, rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLambdaBase(rName, rName, rName),
+		fmt.Sprintf(`
+resource "aws_lambda_function" "test" {
+  filename      = %[1]q
+  function_name = %[2]q
+  publish       = true
+  role          = aws_iam_role.iam_for_lambda.arn
+  handler       = "exports.example"
+  runtime       = "nodejs14.x"
+}
+`, fileName, rName))
 }
 
 func testAccFunctionConfig_fileSystem(funcName, policyName, roleName, sgName string) string {
@@ -2984,19 +2965,6 @@ resource "aws_lambda_function" "test" {
   layers        = [aws_lambda_layer_version.test.arn]
 }
 `, layerName, funcName)
-}
-
-func testAccFunctionConfig_versionedNodeJs14xRuntime(fileName, funcName, policyName, roleName, sgName string) string {
-	return fmt.Sprintf(acctest.ConfigLambdaBase(policyName, roleName, sgName)+`
-resource "aws_lambda_function" "test" {
-  filename      = "%s"
-  function_name = "%s"
-  publish       = true
-  role          = aws_iam_role.iam_for_lambda.arn
-  handler       = "exports.example"
-  runtime       = "nodejs14.x"
-}
-`, fileName, funcName)
 }
 
 func testAccFunctionConfig_vpcProperIAMDependencies(rName string) string {
