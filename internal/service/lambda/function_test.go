@@ -852,13 +852,8 @@ func TestAccLambdaFunction_fileSystem(t *testing.T) {
 	}
 
 	var conf lambda.GetFunctionOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lambda_function.test"
-
-	rString := sdkacctest.RandString(8)
-	funcName := fmt.Sprintf("tf_acc_lambda_func_basic_%s", rString)
-	policyName := fmt.Sprintf("tf_acc_policy_lambda_func_basic_%s", rString)
-	roleName := fmt.Sprintf("tf_acc_role_lambda_func_basic_%s", rString)
-	sgName := fmt.Sprintf("tf_acc_sg_lambda_func_basic_%s", rString)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
@@ -868,14 +863,13 @@ func TestAccLambdaFunction_fileSystem(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Ensure a function with lambda file system configuration can be created
 			{
-				Config: testAccFunctionConfig_fileSystem(funcName, policyName, roleName, sgName),
+				Config: testAccFunctionConfig_fileSystem(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, &conf),
-					testAccCheckFunctionName(&conf, funcName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
 					testAccCheckFunctionInvokeARN(resourceName, &conf),
 					testAccCheckFunctionQualifiedInvokeARN(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "file_system_config.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "file_system_config.0.arn", "aws_efs_access_point.test1", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "file_system_config.0.local_mount_path", "/mnt/efs"),
 				),
 			},
@@ -888,16 +882,17 @@ func TestAccLambdaFunction_fileSystem(t *testing.T) {
 			},
 			// Ensure lambda file system configuration can be updated
 			{
-				Config: testAccFunctionConfig_fileSystemUpdate(funcName, policyName, roleName, sgName),
+				Config: testAccFunctionConfig_fileSystemUpdate(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "file_system_config.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "file_system_config.0.arn", "aws_efs_access_point.test2", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "file_system_config.0.local_mount_path", "/mnt/lambda"),
 				),
 			},
 			// Ensure lambda file system configuration can be removed
 			{
-				Config: testAccFunctionConfig_basic(funcName, policyName, roleName, sgName),
+				Config: testAccFunctionConfig_basic(rName, rName, rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "file_system_config.#", "0"),
@@ -907,42 +902,40 @@ func TestAccLambdaFunction_fileSystem(t *testing.T) {
 	})
 }
 
-func testAccImageLatestV1V2PreCheck(t *testing.T) {
-	if (os.Getenv("AWS_LAMBDA_IMAGE_LATEST_ID") == "") || (os.Getenv("AWS_LAMBDA_IMAGE_V1_ID") == "") || (os.Getenv("AWS_LAMBDA_IMAGE_V2_ID") == "") {
-		t.Skip("AWS_LAMBDA_IMAGE_LATEST_ID, AWS_LAMBDA_IMAGE_V1_ID and AWS_LAMBDA_IMAGE_V2_ID env vars must be set for Lambda Container Image Support acceptance tests. ")
-	}
-}
-
 func TestAccLambdaFunction_image(t *testing.T) {
+	key := "AWS_LAMBDA_IMAGE_LATEST_ID"
+	imageLatestID := os.Getenv(key)
+	if imageLatestID == "" {
+		t.Skipf("Environment variable %s is not set", key)
+	}
+
+	key = "AWS_LAMBDA_IMAGE_V1_ID"
+	imageV1ID := os.Getenv(key)
+	if imageV1ID == "" {
+		t.Skipf("Environment variable %s is not set", key)
+	}
+
+	key = "AWS_LAMBDA_IMAGE_V2_ID"
+	imageV2ID := os.Getenv(key)
+	if imageV2ID == "" {
+		t.Skipf("Environment variable %s is not set", key)
+	}
+
 	var conf lambda.GetFunctionOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lambda_function.test"
 
-	imageLatestID := os.Getenv("AWS_LAMBDA_IMAGE_LATEST_ID")
-	imageV1ID := os.Getenv("AWS_LAMBDA_IMAGE_V1_ID")
-	imageV2ID := os.Getenv("AWS_LAMBDA_IMAGE_V2_ID")
-
-	rString := sdkacctest.RandString(8)
-	funcName := fmt.Sprintf("tf_acc_lambda_func_basic_%s", rString)
-	policyName := fmt.Sprintf("tf_acc_policy_lambda_func_basic_%s", rString)
-	roleName := fmt.Sprintf("tf_acc_role_lambda_func_basic_%s", rString)
-	sgName := fmt.Sprintf("tf_acc_sg_lambda_func_basic_%s", rString)
-
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(t)
-			testAccImageLatestV1V2PreCheck(t)
-		},
+		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			// Ensure a function with lambda image configuration can be created
 			{
-				Config: testAccFunctionConfig_image(funcName, policyName, roleName, sgName, imageLatestID),
+				Config: testAccFunctionConfig_image(rName, imageLatestID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, &conf),
-					testAccCheckFunctionName(&conf, funcName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
 					testAccCheckFunctionInvokeARN(resourceName, &conf),
 					testAccCheckFunctionQualifiedInvokeARN(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "package_type", lambda.PackageTypeImage),
@@ -961,7 +954,7 @@ func TestAccLambdaFunction_image(t *testing.T) {
 			},
 			// Ensure lambda image code can be updated
 			{
-				Config: testAccFunctionConfig_imageUpdateCode(funcName, policyName, roleName, sgName, imageV1ID),
+				Config: testAccFunctionConfig_imageUpdateCode(rName, imageV1ID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "image_uri", imageV1ID),
@@ -969,7 +962,7 @@ func TestAccLambdaFunction_image(t *testing.T) {
 			},
 			// Ensure lambda image config can be updated
 			{
-				Config: testAccFunctionConfig_imageUpdate(funcName, policyName, roleName, sgName, imageV2ID),
+				Config: testAccFunctionConfig_imageUpdate(rName, imageV2ID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "image_uri", imageV2ID),
@@ -2787,22 +2780,24 @@ resource "aws_lambda_function" "test" {
 `, rName))
 }
 
-func testAccFunctionConfig_fileSystem(funcName, policyName, roleName, sgName string) string {
-	return fmt.Sprintf(acctest.ConfigLambdaBase(policyName, roleName, sgName)+`
-resource "aws_efs_file_system" "efs_for_lambda" {
+func testAccFunctionConfig_fileSystem(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLambdaBase(rName, rName, rName),
+		fmt.Sprintf(`
+resource "aws_efs_file_system" "test" {
   tags = {
-    Name = "efs_for_lambda"
+    Name = %[1]q
   }
 }
 
-resource "aws_efs_mount_target" "mount_target_az1" {
-  file_system_id  = aws_efs_file_system.efs_for_lambda.id
+resource "aws_efs_mount_target" "test1" {
+  file_system_id  = aws_efs_file_system.test.id
   subnet_id       = aws_subnet.subnet_for_lambda.id
   security_groups = [aws_security_group.sg_for_lambda.id]
 }
 
-resource "aws_efs_access_point" "access_point_1" {
-  file_system_id = aws_efs_file_system.efs_for_lambda.id
+resource "aws_efs_access_point" "test1" {
+  file_system_id = aws_efs_file_system.test.id
 
   root_directory {
     path = "/lambda1"
@@ -2822,7 +2817,7 @@ resource "aws_efs_access_point" "access_point_1" {
 
 resource "aws_lambda_function" "test" {
   filename      = "test-fixtures/lambdatest.zip"
-  function_name = "%s"
+  function_name = %[1]q
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
   runtime       = "nodejs12.x"
@@ -2833,31 +2828,33 @@ resource "aws_lambda_function" "test" {
   }
 
   file_system_config {
-    arn              = aws_efs_access_point.access_point_1.arn
+    arn              = aws_efs_access_point.test1.arn
     local_mount_path = "/mnt/efs"
   }
 
-  depends_on = [aws_efs_mount_target.mount_target_az1]
+  depends_on = [aws_efs_mount_target.test1]
 }
-`, funcName)
+`, rName))
 }
 
-func testAccFunctionConfig_fileSystemUpdate(funcName, policyName, roleName, sgName string) string {
-	return fmt.Sprintf(acctest.ConfigLambdaBase(policyName, roleName, sgName)+`
-resource "aws_efs_file_system" "efs_for_lambda" {
+func testAccFunctionConfig_fileSystemUpdate(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLambdaBase(rName, rName, rName),
+		fmt.Sprintf(`
+resource "aws_efs_file_system" "test" {
   tags = {
-    Name = "efs_for_lambda"
+    Name = %[1]q
   }
 }
 
-resource "aws_efs_mount_target" "mount_target_az2" {
-  file_system_id  = aws_efs_file_system.efs_for_lambda.id
+resource "aws_efs_mount_target" "test2" {
+  file_system_id  = aws_efs_file_system.test.id
   subnet_id       = aws_subnet.subnet_for_lambda_az2.id
   security_groups = [aws_security_group.sg_for_lambda.id]
 }
 
-resource "aws_efs_access_point" "access_point_2" {
-  file_system_id = aws_efs_file_system.efs_for_lambda.id
+resource "aws_efs_access_point" "test2" {
+  file_system_id = aws_efs_file_system.test.id
 
   root_directory {
     path = "/lambda2"
@@ -2877,7 +2874,7 @@ resource "aws_efs_access_point" "access_point_2" {
 
 resource "aws_lambda_function" "test" {
   filename      = "test-fixtures/lambdatest.zip"
-  function_name = "%s"
+  function_name = %[1]q
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
   runtime       = "nodejs12.x"
@@ -2888,20 +2885,22 @@ resource "aws_lambda_function" "test" {
   }
 
   file_system_config {
-    arn              = aws_efs_access_point.access_point_2.arn
+    arn              = aws_efs_access_point.test2.arn
     local_mount_path = "/mnt/lambda"
   }
 
-  depends_on = [aws_efs_mount_target.mount_target_az2]
+  depends_on = [aws_efs_mount_target.test2]
 }
-`, funcName)
+`, rName))
 }
 
-func testAccFunctionConfig_image(funcName, policyName, roleName, sgName, imageID string) string {
-	return fmt.Sprintf(acctest.ConfigLambdaBase(policyName, roleName, sgName)+`
+func testAccFunctionConfig_image(rName, imageID string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLambdaBase(rName, rName, rName),
+		fmt.Sprintf(`
 resource "aws_lambda_function" "test" {
-  image_uri     = "%s"
-  function_name = "%s"
+  image_uri     = %[1]q
+  function_name = %[2]q
   role          = aws_iam_role.iam_for_lambda.arn
   package_type  = "Image"
   image_config {
@@ -2910,33 +2909,37 @@ resource "aws_lambda_function" "test" {
     working_directory = "/var/task"
   }
 }
-`, imageID, funcName)
+`, imageID, rName))
 }
 
-func testAccFunctionConfig_imageUpdateCode(funcName, policyName, roleName, sgName, imageID string) string {
-	return fmt.Sprintf(acctest.ConfigLambdaBase(policyName, roleName, sgName)+`
+func testAccFunctionConfig_imageUpdateCode(rName, imageID string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLambdaBase(rName, rName, rName),
+		fmt.Sprintf(`
 resource "aws_lambda_function" "test" {
-  image_uri     = "%s"
-  function_name = "%s"
+  image_uri     = %[1]q
+  function_name = %[2]q
   role          = aws_iam_role.iam_for_lambda.arn
   package_type  = "Image"
   publish       = true
 }
-`, imageID, funcName)
+`, imageID, rName))
 }
 
-func testAccFunctionConfig_imageUpdate(funcName, policyName, roleName, sgName, imageID string) string {
-	return fmt.Sprintf(acctest.ConfigLambdaBase(policyName, roleName, sgName)+`
+func testAccFunctionConfig_imageUpdate(rName, imageID string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLambdaBase(rName, rName, rName),
+		fmt.Sprintf(`
 resource "aws_lambda_function" "test" {
-  image_uri     = "%s"
-  function_name = "%s"
+  image_uri     = %[1]q
+  function_name = %[2]q
   role          = aws_iam_role.iam_for_lambda.arn
   package_type  = "Image"
   image_config {
     command = ["app.another_handler"]
   }
 }
-`, imageID, funcName)
+`, imageID, rName))
 }
 
 func testAccFunctionConfig_architecturesARM64(funcName, policyName, roleName, sgName string) string {
