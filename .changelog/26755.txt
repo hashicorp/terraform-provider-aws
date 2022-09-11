@@ -1,0 +1,4 @@
+```release-note:bug
+resource/aws_cloudwatch_event_connection: Add validation to prevent empty `oauth_http_parameters` or `invocation_http_parameters`
+elements.
+```
