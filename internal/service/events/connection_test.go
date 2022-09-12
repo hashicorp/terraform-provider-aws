@@ -840,8 +840,8 @@ resource "aws_cloudwatch_event_connection" "invocation_http_parameters" {
 func testAccConnectionConfig_invocationHTTPParametersEmpty(name, description string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_event_connection" "invocation_http_parameters" {
-  name               = %[1]q
-  description        = %[2]q
+  name        = %[1]q
+  description = %[2]q
   auth_parameters {
     invocation_http_parameters {
     }
@@ -850,7 +850,7 @@ resource "aws_cloudwatch_event_connection" "invocation_http_parameters" {
 `, name, description)
 }
 
-func testAccConnectionConfig_oauthHttpParametersEmpty(
+func testAccConnectionConfig_oauthHTTPParametersEmpty(
 	name,
 	description,
 	authorizationType,
