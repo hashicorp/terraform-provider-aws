@@ -7,12 +7,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
-var (
-	queueEmptyRedrivePolicyAttributes = map[string]string{
-		sqs.QueueAttributeNameRedrivePolicy: "",
-	}
-)
-
 func ResourceQueueRedrivePolicy() *schema.Resource {
 	return &schema.Resource{
 		Schema: map[string]*schema.Schema{

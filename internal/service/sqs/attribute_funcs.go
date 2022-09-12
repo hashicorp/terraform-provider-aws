@@ -3,6 +3,8 @@ package sqs
 import (
 	"context"
 	"fmt"
+	"log"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -12,8 +14,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	"log"
 )
+
+type queueAttributeHandler struct{}
 
 func generateQueueAttributeUpsertFunc(attributeName string) func(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	return func(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -25,61 +28,48 @@ func generateQueueAttributeUpsertFunc(attributeName string) func(ctx context.Con
 			return diag.FromErr(fmt.Errorf("%s (%s) is invalid JSON: %w", attributeName, d.Get(getSchemaKey(attributeName)).(string), err))
 		}
 
-		var attributes map[string]string
-
-		switch attributeName {
-		case sqs.QueueAttributeNamePolicy:
-			attributes = map[string]string{
-				sqs.QueueAttributeNamePolicy: attrValue,
-			}
-		case sqs.QueueAttributeNameRedrivePolicy:
-			attributes = map[string]string{
-				sqs.QueueAttributeNameRedrivePolicy: attrValue,
-			}
-		default:
-			return diag.FromErr(fmt.Errorf("%s is an invalid SQS Queue attribute name", attributeName))
+		attributes := map[string]string{
+			attributeName: attrValue,
 		}
-
 		url := d.Get("queue_url").(string)
 		input := &sqs.SetQueueAttributesInput{
 			Attributes: aws.StringMap(attributes),
 			QueueUrl:   aws.String(url),
 		}
 
-		log.Printf("[DEBUG] Setting SQS Queue Attribute '%s': %s", attributeName, input)
+		log.Printf("[DEBUG] Setting SQS Queue attributes: %s", input)
 		_, err = conn.SetQueueAttributesWithContext(ctx, input)
 
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("error setting SQS Queue Attribute '%s' (%s): %w", attributeName, url, err))
+			return diag.Errorf("setting SQS Queue (%s) attribute (%s): %s", url, attributeName, err)
 		}
 
 		d.SetId(url)
 
-		err = waitQueueAttributesPropagatedWithContext(ctx, conn, d.Id(), attributes)
-
-		if err != nil {
-			return diag.FromErr(fmt.Errorf("error waiting for SQS Queue Attribute '%s' (%s) to be set: %w", attributeName, d.Id(), err))
+		if err := waitQueueAttributesPropagatedWithContext(ctx, conn, d.Id(), attributes); err != nil {
+			return diag.Errorf("waiting for SQS Queue (%s) attribute (%s) create: %s", d.Id(), attributeName, err)
 		}
 
 		return generateQueueAttributeReadFunc(attributeName)(ctx, d, meta)
 	}
 }
+
 func generateQueueAttributeReadFunc(attributeName string) func(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	return func(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 		conn := meta.(*conns.AWSClient).SQSConn
 
-		outputRaw, err := tfresource.RetryWhenNotFound(queueAttributeReadTimeout, func() (interface{}, error) {
+		outputRaw, err := tfresource.RetryWhenNotFoundContext(ctx, queueAttributeReadTimeout, func() (interface{}, error) {
 			return FindQueueAttributeByURL(ctx, conn, d.Id(), attributeName)
 		})
 
 		if !d.IsNewResource() && tfresource.NotFound(err) {
-			log.Printf("[WARN] SQS Queue Policy (%s) not found, removing from state", d.Id())
+			log.Printf("[WARN] SQS Queue (%s) attribute (%s) not found, removing from state", d.Id(), attributeName)
 			d.SetId("")
 			return nil
 		}
 
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("error reading SQS Queue Attribute '%s' (%s): %w", attributeName, d.Id(), err))
+			return diag.Errorf("reading SQS Queue (%s) attribute (%s): %s", d.Id(), attributeName, err)
 		}
 
 		var attributeToSet string
@@ -111,20 +101,12 @@ func generateQueueAttributeDeleteFunc(attributeName string) func(ctx context.Con
 	return func(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 		conn := meta.(*conns.AWSClient).SQSConn
 
-		log.Printf("[DEBUG] Deleting SQS Queue Attribute '%s': %s", attributeName, d.Id())
-
-		var emptyAttributes map[string]string
-		switch attributeName {
-		case sqs.QueueAttributeNamePolicy:
-			emptyAttributes = queueEmptyPolicyAttributes
-		case sqs.QueueAttributeNameRedrivePolicy:
-			emptyAttributes = queueEmptyRedrivePolicyAttributes
-		default:
-			return diag.FromErr(fmt.Errorf("%s is an invalid SQS Queue attribute name", attributeName))
+		log.Printf("[DEBUG] Deleting SQS Queue (%s) attribute: %s", d.Id(), attributeName)
+		attributes := map[string]string{
+			attributeName: "",
 		}
-
 		_, err := conn.SetQueueAttributes(&sqs.SetQueueAttributesInput{
-			Attributes: aws.StringMap(emptyAttributes),
+			Attributes: aws.StringMap(attributes),
 			QueueUrl:   aws.String(d.Id()),
 		})
 
@@ -133,13 +115,11 @@ func generateQueueAttributeDeleteFunc(attributeName string) func(ctx context.Con
 		}
 
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("error deleting SQS Queue Attribute '%s' (%s): %w", attributeName, d.Id(), err))
+			return diag.Errorf("deleting SQS Queue (%s) attribute (%s): %s", d.Id(), attributeName, err)
 		}
 
-		err = waitQueueAttributesPropagatedWithContext(ctx, conn, d.Id(), emptyAttributes)
-
-		if err != nil {
-			return diag.FromErr(fmt.Errorf("error waiting for SQS Queue Attribute '%s' (%s) to delete: %w", attributeName, d.Id(), err))
+		if err := waitQueueAttributesPropagatedWithContext(ctx, conn, d.Id(), attributes); err != nil {
+			return diag.Errorf("waiting for SQS Queue (%s) attribute (%s) delete: %s", d.Id(), attributeName, err)
 		}
 
 		return nil

@@ -8,12 +8,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-var (
-	queueEmptyPolicyAttributes = map[string]string{
-		sqs.QueueAttributeNamePolicy: "",
-	}
-)
-
 func ResourceQueuePolicy() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
