@@ -37,6 +37,7 @@ func ResourceFunction() *schema.Resource {
 		Read:   resourceFunctionRead,
 		Update: resourceFunctionUpdate,
 		Delete: resourceFunctionDelete,
+
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(10 * time.Minute),
 		},
@@ -59,77 +60,14 @@ func ResourceFunction() *schema.Resource {
 					ValidateFunc: validation.StringInSlice(lambda.Architecture_Values(), false),
 				},
 			},
-			"filename": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ConflictsWith: []string{"s3_bucket", "s3_key", "s3_object_version", "image_uri"},
-			},
-			"s3_bucket": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ConflictsWith: []string{"filename", "image_uri"},
-			},
-			"s3_key": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ConflictsWith: []string{"filename", "image_uri"},
-			},
-			"s3_object_version": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ConflictsWith: []string{"filename", "image_uri"},
-			},
-			"image_uri": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ConflictsWith: []string{"filename", "s3_bucket", "s3_key", "s3_object_version"},
-			},
-			"package_type": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				Default:      lambda.PackageTypeZip,
-				ValidateFunc: validation.StringInSlice(lambda.PackageType_Values(), false),
-			},
-			"image_config": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"entry_point": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"command": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"working_directory": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-					},
-				},
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"code_signing_config_arn": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: verify.ValidARN,
-			},
-			"signing_profile_version_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"signing_job_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"description": {
-				Type:     schema.TypeString,
-				Optional: true,
 			},
 			"dead_letter_config": {
 				Type:     schema.TypeList,
@@ -142,6 +80,24 @@ func ResourceFunction() *schema.Resource {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: verify.ValidARN,
+						},
+					},
+				},
+			},
+			"description": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"environment": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"variables": {
+							Type:     schema.TypeMap,
+							Optional: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 					},
 				},
@@ -185,6 +141,11 @@ func ResourceFunction() *schema.Resource {
 					},
 				},
 			},
+			"filename": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ConflictsWith: []string{"s3_bucket", "s3_key", "s3_object_version", "image_uri"},
+			},
 			"function_name": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -195,6 +156,47 @@ func ResourceFunction() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(1, 128),
+			},
+			"image_config": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"command": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+						"entry_point": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+						"working_directory": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+					},
+				},
+			},
+			"image_uri": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ConflictsWith: []string{"filename", "s3_bucket", "s3_key", "s3_object_version"},
+			},
+			"invoke_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"kms_key_arn": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: verify.ValidARN,
+			},
+			"last_modified": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"layers": {
 				Type:     schema.TypeList,
@@ -209,6 +211,26 @@ func ResourceFunction() *schema.Resource {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Default:  128,
+			},
+			"package_type": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				Default:      lambda.PackageTypeZip,
+				ValidateFunc: validation.StringInSlice(lambda.PackageType_Values(), false),
+			},
+			"publish": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+			"qualified_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"qualified_invoke_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"reserved_concurrent_executions": {
 				Type:         schema.TypeInt,
@@ -225,15 +247,59 @@ func ResourceFunction() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.StringInSlice(lambda.Runtime_Values(), false),
 			},
+			"s3_bucket": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ConflictsWith: []string{"filename", "image_uri"},
+			},
+			"s3_key": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ConflictsWith: []string{"filename", "image_uri"},
+			},
+			"s3_object_version": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ConflictsWith: []string{"filename", "image_uri"},
+			},
+			"signing_job_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"signing_profile_version_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"source_code_hash": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"source_code_size": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 			"timeout": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Default:  3,
 			},
-			"publish": {
-				Type:     schema.TypeBool,
+			"tracing_config": {
+				Type:     schema.TypeList,
+				MaxItems: 1,
 				Optional: true,
-				Default:  false,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"mode": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringInSlice(lambda.TracingMode_Values(), true),
+						},
+					},
+				},
 			},
 			"version": {
 				Type:     schema.TypeString,
@@ -245,17 +311,15 @@ func ResourceFunction() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"subnet_ids": {
-							Type:     schema.TypeSet,
-							Required: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-							Set:      schema.HashString,
-						},
 						"security_group_ids": {
 							Type:     schema.TypeSet,
 							Required: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
-							Set:      schema.HashString,
+						},
+						"subnet_ids": {
+							Type:     schema.TypeSet,
+							Required: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 						"vpc_id": {
 							Type:     schema.TypeString,
@@ -282,74 +346,6 @@ func ResourceFunction() *schema.Resource {
 					return true
 				},
 			},
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"qualified_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"invoke_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"qualified_invoke_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"last_modified": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"source_code_hash": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"source_code_size": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"environment": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"variables": {
-							Type:     schema.TypeMap,
-							Optional: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-					},
-				},
-			},
-			"tracing_config": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"mode": {
-							Type:     schema.TypeString,
-							Required: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								lambda.TracingModeActive,
-								lambda.TracingModePassThrough},
-								true),
-						},
-					},
-				},
-			},
-			"kms_key_arn": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: customdiff.Sequence(
