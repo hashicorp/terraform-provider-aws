@@ -1764,18 +1764,14 @@ func TestAccLambdaFunction_LocalUpdate_nameOnly(t *testing.T) {
 }
 
 func TestAccLambdaFunction_S3Update_basic(t *testing.T) {
-	var conf lambda.GetFunctionOutput
-
 	path, zipFile, err := createTempFile("lambda_s3Update")
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer os.Remove(path)
 
-	rString := sdkacctest.RandString(8)
-	bucketName := fmt.Sprintf("tf-acc-bucket-lambda-func-s3-upd-basic-%s", rString)
-	funcName := fmt.Sprintf("tf_acc_lambda_func_s3_upd_basic_%s", rString)
-	roleName := fmt.Sprintf("tf_acc_role_lambda_func_s3_upd_basic_%s", rString)
+	var conf lambda.GetFunctionOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lambda_function.test"
 
 	key := "lambda-func.zip"
@@ -1793,11 +1789,9 @@ func TestAccLambdaFunction_S3Update_basic(t *testing.T) {
 						t.Fatalf("error creating zip from files: %s", err)
 					}
 				},
-				Config: testAccFunctionConfig_s3(bucketName, key, path, roleName, funcName),
+				Config: testAccFunctionConfig_s3(key, path, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, &conf),
-					testAccCheckFunctionName(&conf, funcName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
 					testAccCheckSourceCodeHash(&conf, "8DPiX+G1l2LQ8hjBkwRchQFf1TSCEvPrYGRKlM9UoyY="),
 				),
 			},
@@ -1814,11 +1808,9 @@ func TestAccLambdaFunction_S3Update_basic(t *testing.T) {
 						t.Fatalf("error creating zip from files: %s", err)
 					}
 				},
-				Config: testAccFunctionConfig_s3(bucketName, key, path, roleName, funcName),
+				Config: testAccFunctionConfig_s3(key, path, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, &conf),
-					testAccCheckFunctionName(&conf, funcName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
 					testAccCheckSourceCodeHash(&conf, "0tdaP9H9hsk9c2CycSwOG/sa/x5JyAmSYunA/ce99Pg="),
 				),
 			},
@@ -1827,18 +1819,14 @@ func TestAccLambdaFunction_S3Update_basic(t *testing.T) {
 }
 
 func TestAccLambdaFunction_S3Update_unversioned(t *testing.T) {
-	var conf lambda.GetFunctionOutput
-
 	path, zipFile, err := createTempFile("lambda_s3Update")
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer os.Remove(path)
 
-	rString := sdkacctest.RandString(8)
-	bucketName := fmt.Sprintf("tf-acc-bucket-lambda-func-s3-upd-unver-%s", rString)
-	funcName := fmt.Sprintf("tf_acc_lambda_func_s3_upd_unver_%s", rString)
-	roleName := fmt.Sprintf("tf_acc_role_lambda_func_s3_upd_unver_%s", rString)
+	var conf lambda.GetFunctionOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lambda_function.test"
 	key := "lambda-func.zip"
 	key2 := "lambda-func-modified.zip"
@@ -1856,11 +1844,9 @@ func TestAccLambdaFunction_S3Update_unversioned(t *testing.T) {
 						t.Fatalf("error creating zip from files: %s", err)
 					}
 				},
-				Config: testAccFunctionConfig_s3UnversionedTPL(bucketName, roleName, funcName, key, path),
+				Config: testAccFunctionConfig_s3UnversionedTPL(rName, key, path),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, &conf),
-					testAccCheckFunctionName(&conf, funcName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
 					testAccCheckSourceCodeHash(&conf, "8DPiX+G1l2LQ8hjBkwRchQFf1TSCEvPrYGRKlM9UoyY="),
 				),
 			},
@@ -1877,11 +1863,9 @@ func TestAccLambdaFunction_S3Update_unversioned(t *testing.T) {
 						t.Fatalf("error creating zip from files: %s", err)
 					}
 				},
-				Config: testAccFunctionConfig_s3UnversionedTPL(bucketName, roleName, funcName, key2, path),
+				Config: testAccFunctionConfig_s3UnversionedTPL(rName, key2, path),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, &conf),
-					testAccCheckFunctionName(&conf, funcName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
 					testAccCheckSourceCodeHash(&conf, "0tdaP9H9hsk9c2CycSwOG/sa/x5JyAmSYunA/ce99Pg="),
 				),
 			},
@@ -1895,8 +1879,8 @@ func TestAccLambdaFunction_runtimes(t *testing.T) {
 	}
 
 	var v lambda.GetFunctionOutput
-	resourceName := "aws_lambda_function.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_lambda_function.test"
 
 	steps := []resource.TestStep{
 		{
@@ -1960,11 +1944,7 @@ func TestAccLambdaFunction_runtimes(t *testing.T) {
 }
 
 func TestAccLambdaFunction_Zip_validation(t *testing.T) {
-	rString := sdkacctest.RandString(8)
-	funcName := fmt.Sprintf("tf_acc_lambda_func_expect_%s", rString)
-	policyName := fmt.Sprintf("tf_acc_policy_lambda_func_expect_%s", rString)
-	roleName := fmt.Sprintf("tf_acc_role_lambda_func_expect_%s", rString)
-	sgName := fmt.Sprintf("tf_acc_sg_lambda_func_expect_%s", rString)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
@@ -1973,11 +1953,11 @@ func TestAccLambdaFunction_Zip_validation(t *testing.T) {
 		CheckDestroy:             testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccFunctionConfig_zipNoHandler(funcName, policyName, roleName, sgName),
+				Config:      testAccFunctionConfig_zipNoHandler(rName),
 				ExpectError: regexp.MustCompile("handler and runtime must be set when PackageType is Zip"),
 			},
 			{
-				Config:      testAccFunctionConfig_zipNoRuntime(funcName, policyName, roleName, sgName),
+				Config:      testAccFunctionConfig_zipNoRuntime(rName),
 				ExpectError: regexp.MustCompile("handler and runtime must be set when PackageType is Zip"),
 			},
 		},
@@ -3361,10 +3341,10 @@ resource "aws_lambda_function" "test" {
 `, filePath, rName)
 }
 
-func testAccFunctionConfig_s3(bucketName, key, path, roleName, funcName string) string {
+func testAccFunctionConfig_s3(key, path, rName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "artifacts" {
-  bucket        = "%s"
+  bucket        = %[3]q
   force_destroy = true
 }
 
@@ -3385,13 +3365,13 @@ resource "aws_s3_object" "o" {
   depends_on = [aws_s3_bucket_versioning.artifacts]
 
   bucket = aws_s3_bucket.artifacts.bucket
-  key    = "%s"
-  source = "%s"
-  etag   = filemd5("%s")
+  key    = %[1]q
+  source = %[2]q
+  etag   = filemd5(%[2]q)
 }
 
 resource "aws_iam_role" "iam_for_lambda" {
-  name = "%s"
+  name = %[3]q
 
   assume_role_policy = <<EOF
 {
@@ -3414,18 +3394,18 @@ resource "aws_lambda_function" "test" {
   s3_bucket         = aws_s3_object.o.bucket
   s3_key            = aws_s3_object.o.key
   s3_object_version = aws_s3_object.o.version_id
-  function_name     = "%s"
+  function_name     = %[3]q
   role              = aws_iam_role.iam_for_lambda.arn
   handler           = "exports.example"
   runtime           = "nodejs12.x"
 }
-`, bucketName, key, path, path, roleName, funcName)
+`, key, path, rName)
 }
 
-func testAccFunctionConfig_s3UnversionedTPL(bucketName, roleName, funcName, key, path string) string {
+func testAccFunctionConfig_s3UnversionedTPL(rName, key, path string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "artifacts" {
-  bucket        = "%s"
+  bucket        = %[1]q
   force_destroy = true
 }
 
@@ -3436,13 +3416,13 @@ resource "aws_s3_bucket_acl" "artifacts" {
 
 resource "aws_s3_object" "o" {
   bucket = aws_s3_bucket.artifacts.bucket
-  key    = "%s"
-  source = "%s"
-  etag   = filemd5("%s")
+  key    = %[2]q
+  source = %[3]q
+  etag   = filemd5(%[3]q)
 }
 
 resource "aws_iam_role" "iam_for_lambda" {
-  name = "%s"
+  name = %[1]q
 
   assume_role_policy = <<EOF
 {
@@ -3464,12 +3444,12 @@ EOF
 resource "aws_lambda_function" "test" {
   s3_bucket     = aws_s3_object.o.bucket
   s3_key        = aws_s3_object.o.key
-  function_name = "%s"
+  function_name = %[1]q
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
   runtime       = "nodejs12.x"
 }
-`, bucketName, key, path, path, roleName, funcName)
+`, rName, key, path)
 }
 
 func testAccFunctionConfig_runtime(rName, runtime string) string {
@@ -3486,24 +3466,28 @@ resource "aws_lambda_function" "test" {
 `, rName, runtime))
 }
 
-func testAccFunctionConfig_zipNoHandler(funcName, policyName, roleName, sgName string) string {
-	return fmt.Sprintf(acctest.ConfigLambdaBase(policyName, roleName, sgName)+`
+func testAccFunctionConfig_zipNoHandler(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLambdaBase(rName, rName, rName),
+		fmt.Sprintf(`
 resource "aws_lambda_function" "test" {
-  function_name = "%s"
+  function_name = %[1]q
   role          = aws_iam_role.iam_for_lambda.arn
   runtime       = "nodejs12.x"
 }
-`, funcName)
+`, rName))
 }
 
-func testAccFunctionConfig_zipNoRuntime(funcName, policyName, roleName, sgName string) string {
-	return fmt.Sprintf(acctest.ConfigLambdaBase(policyName, roleName, sgName)+`
+func testAccFunctionConfig_zipNoRuntime(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLambdaBase(rName, rName, rName),
+		fmt.Sprintf(`
 resource "aws_lambda_function" "test" {
-  function_name = "%s"
+  function_name = %[1]q
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
 }
-`, funcName)
+`, rName))
 }
 
 func TestFlattenImageConfigShouldNotFailWithEmptyImageConfig(t *testing.T) {
