@@ -2498,7 +2498,6 @@ resource "aws_security_group" "test" {
 data "aws_vpc" "default" {
   default = true
 }
-
 `, rName)
 }
 
@@ -2512,7 +2511,6 @@ resource "aws_security_group" "test" {
 data "aws_vpc" "default" {
   default = true
 }
-
 `, rName)
 }
 

@@ -15,6 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/experimental/nullable"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/intf"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/accessanalyzer"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/account"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/acm"
@@ -196,7 +198,6 @@ import (
 // New returns a new, initialized Terraform Plugin SDK v2-style provider instance.
 // The provider instance is fully configured once the `ConfigureContextFunc` has been called.
 func New(_ context.Context) (*schema.Provider, error) {
-	// The actual provider
 	provider := &schema.Provider{
 		// This schema must match exactly the Terraform Protocol v6 (Terraform Plugin Framework) provider's schema.
 		// Notably the attributes can have no Default values.
@@ -548,6 +549,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_ec2_local_gateway":                          ec2.DataSourceLocalGateway(),
 			"aws_ec2_local_gateways":                         ec2.DataSourceLocalGateways(),
 			"aws_ec2_managed_prefix_list":                    ec2.DataSourceManagedPrefixList(),
+			"aws_ec2_managed_prefix_lists":                   ec2.DataSourceManagedPrefixLists(),
 			"aws_ec2_network_insights_analysis":              ec2.DataSourceNetworkInsightsAnalysis(),
 			"aws_ec2_network_insights_path":                  ec2.DataSourceNetworkInsightsPath(),
 			"aws_ec2_serial_console_access":                  ec2.DataSourceSerialConsoleAccess(),
@@ -2151,28 +2153,41 @@ func New(_ context.Context) (*schema.Provider, error) {
 	}
 
 	provider.ConfigureContextFunc = func(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
-		terraformVersion := provider.TerraformVersion
-		if terraformVersion == "" {
-			// Terraform 0.12 introduced this field to the protocol
-			// We can therefore assume that if it's missing it's 0.10 or 0.11
-			terraformVersion = "0.11+compatible"
-		}
-		return providerConfigure(ctx, d, terraformVersion)
+		return configure(ctx, provider, d)
 	}
+
+	providerData := &conns.AWSClient{
+		// TODO: This should be generated.
+
+		// ServiceData is used before configuration to determine the provider's exported resources and data sources.
+		ServiceMap: map[string]intf.ServiceData{
+			"meta": meta.ServiceData,
+		},
+	}
+
+	// Set the provider Meta (instance data) here.
+	// It will be overwritten by the result of the call to ConfigureContextFunc.
+	provider.SetMeta(providerData)
 
 	return provider, nil
 }
 
-func providerConfigure(ctx context.Context, d *schema.ResourceData, terraformVersion string) (interface{}, diag.Diagnostics) {
+// configure ensures that the provider is fully configured.
+func configure(ctx context.Context, provider *schema.Provider, d *schema.ResourceData) (*conns.AWSClient, diag.Diagnostics) {
+	terraformVersion := provider.TerraformVersion
+	if terraformVersion == "" {
+		// Terraform 0.12 introduced this field to the protocol
+		// We can therefore assume that if it's missing it's 0.10 or 0.11
+		terraformVersion = "0.11+compatible"
+	}
+
 	config := conns.Config{
 		AccessKey:                      d.Get("access_key").(string),
-		DefaultTagsConfig:              expandProviderDefaultTags(d.Get("default_tags").([]interface{})),
 		CustomCABundle:                 d.Get("custom_ca_bundle").(string),
 		EC2MetadataServiceEndpoint:     d.Get("ec2_metadata_service_endpoint").(string),
 		EC2MetadataServiceEndpointMode: d.Get("ec2_metadata_service_endpoint_mode").(string),
 		Endpoints:                      make(map[string]string),
 		HTTPProxy:                      d.Get("http_proxy").(string),
-		IgnoreTagsConfig:               expandProviderIgnoreTags(d.Get("ignore_tags").([]interface{})),
 		Insecure:                       d.Get("insecure").(bool),
 		MaxRetries:                     25, // Set default here, not in schema (muxing with v6 provider).
 		Profile:                        d.Get("profile").(string),
@@ -2190,54 +2205,54 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData, terraformVer
 		UseFIPSEndpoint:                d.Get("use_fips_endpoint").(bool),
 	}
 
+	if v, ok := d.GetOk("allowed_account_ids"); ok && v.(*schema.Set).Len() > 0 {
+		config.AllowedAccountIds = flex.ExpandStringValueSet(v.(*schema.Set))
+	}
+
+	if v, ok := d.GetOk("assume_role"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		config.AssumeRole = expandAssumeRole(v.([]interface{})[0].(map[string]interface{}))
+		log.Printf("[INFO] assume_role configuration set: (ARN: %q, SessionID: %q, ExternalID: %q, SourceIdentity: %q)", config.AssumeRole.RoleARN, config.AssumeRole.SessionName, config.AssumeRole.ExternalID, config.AssumeRole.SourceIdentity)
+	}
+
+	if v, ok := d.GetOk("assume_role_with_web_identity"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		config.AssumeRoleWithWebIdentity = expandAssumeRoleWithWebIdentity(v.([]interface{})[0].(map[string]interface{}))
+		log.Printf("[INFO] assume_role_with_web_identity configuration set: (ARN: %q, SessionID: %q)", config.AssumeRoleWithWebIdentity.RoleARN, config.AssumeRoleWithWebIdentity.SessionName)
+	}
+
+	if v, ok := d.GetOk("default_tags"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		config.DefaultTagsConfig = expandDefaultTags(v.([]interface{})[0].(map[string]interface{}))
+	}
+
+	if v, ok := d.GetOk("endpoints"); ok && v.(*schema.Set).Len() > 0 {
+		endpoints, err := expandEndpoints(v.(*schema.Set).List())
+
+		if err != nil {
+			return nil, diag.FromErr(err)
+		}
+
+		config.Endpoints = endpoints
+	}
+
+	if v, ok := d.GetOk("forbidden_account_ids"); ok && v.(*schema.Set).Len() > 0 {
+		config.ForbiddenAccountIds = flex.ExpandStringValueSet(v.(*schema.Set))
+	}
+
+	if v, ok := d.GetOk("ignore_tags"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		config.IgnoreTagsConfig = expandIgnoreTags(v.([]interface{})[0].(map[string]interface{}))
+	}
+
 	if v, ok := d.GetOk("max_retries"); ok {
 		config.MaxRetries = v.(int)
 	}
 
-	if raw := d.Get("shared_config_files").([]interface{}); len(raw) != 0 {
-		l := make([]string, len(raw))
-		for i, v := range raw {
-			l[i] = v.(string)
-		}
-		config.SharedConfigFiles = l
+	if v, ok := d.GetOk("shared_credentials_file"); ok {
+		config.SharedCredentialsFiles = []string{v.(string)}
+	} else if v, ok := d.GetOk("shared_credentials_files"); ok && len(v.([]interface{})) > 0 {
+		config.SharedCredentialsFiles = flex.ExpandStringValueList(v.([]interface{}))
 	}
 
-	if v := d.Get("shared_credentials_file").(string); v != "" {
-		config.SharedCredentialsFiles = []string{v}
-	}
-
-	if raw := d.Get("shared_credentials_files").([]interface{}); len(raw) != 0 {
-		l := make([]string, len(raw))
-		for i, v := range raw {
-			l[i] = v.(string)
-		}
-		config.SharedCredentialsFiles = l
-	}
-
-	if l, ok := d.Get("assume_role").([]interface{}); ok && len(l) > 0 && l[0] != nil {
-		config.AssumeRole = expandAssumeRole(l[0].(map[string]interface{}))
-		log.Printf("[INFO] assume_role configuration set: (ARN: %q, SessionID: %q, ExternalID: %q, SourceIdentity: %q)", config.AssumeRole.RoleARN, config.AssumeRole.SessionName, config.AssumeRole.ExternalID, config.AssumeRole.SourceIdentity)
-	}
-
-	if l, ok := d.Get("assume_role_with_web_identity").([]interface{}); ok && len(l) > 0 && l[0] != nil {
-		config.AssumeRoleWithWebIdentity = expandAssumeRoleWithWebIdentity(l[0].(map[string]interface{}))
-		log.Printf("[INFO] assume_role_with_web_identity configuration set: (ARN: %q, SessionID: %q)", config.AssumeRoleWithWebIdentity.RoleARN, config.AssumeRoleWithWebIdentity.SessionName)
-	}
-
-	if err := expandEndpoints(d.Get("endpoints").(*schema.Set).List(), config.Endpoints); err != nil {
-		return nil, diag.FromErr(err)
-	}
-
-	if v, ok := d.GetOk("allowed_account_ids"); ok {
-		for _, accountIDRaw := range v.(*schema.Set).List() {
-			config.AllowedAccountIds = append(config.AllowedAccountIds, accountIDRaw.(string))
-		}
-	}
-
-	if v, ok := d.GetOk("forbidden_account_ids"); ok {
-		for _, accountIDRaw := range v.(*schema.Set).List() {
-			config.ForbiddenAccountIds = append(config.ForbiddenAccountIds, accountIDRaw.(string))
-		}
+	if v, ok := d.GetOk("shared_config_files"); ok && len(v.([]interface{})) > 0 {
+		config.SharedConfigFiles = flex.ExpandStringValueList(v.([]interface{}))
 	}
 
 	if v, null, _ := nullable.Bool(d.Get("skip_metadata_api_check").(string)).Value(); !null {
@@ -2248,7 +2263,24 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData, terraformVer
 		}
 	}
 
-	return config.Client(ctx)
+	providerData, diags := config.ConfigureProvider(ctx, provider.Meta().(*conns.AWSClient))
+
+	if diags.HasError() {
+		return nil, diags
+	}
+
+	// Configure each service.
+	for _, v := range providerData.ServiceMap {
+		if err := v.Configure(ctx, providerData); err != nil {
+			diags = append(diags, diag.FromErr(err)...)
+		}
+	}
+
+	if diags.HasError() {
+		return nil, diags
+	}
+
+	return providerData, diags
 }
 
 func assumeRoleSchema() *schema.Schema {
@@ -2409,195 +2441,177 @@ func endpointsSchema() *schema.Schema {
 	}
 }
 
-func expandAssumeRole(m map[string]interface{}) *awsbase.AssumeRole {
-	assumeRole := awsbase.AssumeRole{}
-
-	if v, ok := m["duration"].(string); ok && v != "" {
-		duration, _ := time.ParseDuration(v)
-		assumeRole.Duration = duration
+func expandAssumeRole(tfMap map[string]interface{}) *awsbase.AssumeRole {
+	if tfMap == nil {
+		return nil
 	}
 
-	if v, ok := m["duration_seconds"].(int); ok && v != 0 {
+	assumeRole := awsbase.AssumeRole{}
+
+	if v, ok := tfMap["duration"].(string); ok && v != "" {
+		duration, _ := time.ParseDuration(v)
+		assumeRole.Duration = duration
+	} else if v, ok := tfMap["duration_seconds"].(int); ok && v != 0 {
 		assumeRole.Duration = time.Duration(v) * time.Second
 	}
 
-	if v, ok := m["external_id"].(string); ok && v != "" {
+	if v, ok := tfMap["external_id"].(string); ok && v != "" {
 		assumeRole.ExternalID = v
 	}
 
-	if v, ok := m["policy"].(string); ok && v != "" {
+	if v, ok := tfMap["policy"].(string); ok && v != "" {
 		assumeRole.Policy = v
 	}
 
-	if policyARNSet, ok := m["policy_arns"].(*schema.Set); ok && policyARNSet.Len() > 0 {
-		for _, policyARNRaw := range policyARNSet.List() {
-			policyARN, ok := policyARNRaw.(string)
-
-			if !ok {
-				continue
-			}
-
-			assumeRole.PolicyARNs = append(assumeRole.PolicyARNs, policyARN)
-		}
+	if v, ok := tfMap["policy_arns"].(*schema.Set); ok && v.Len() > 0 {
+		assumeRole.PolicyARNs = flex.ExpandStringValueSet(v)
 	}
 
-	if v, ok := m["role_arn"].(string); ok && v != "" {
+	if v, ok := tfMap["role_arn"].(string); ok && v != "" {
 		assumeRole.RoleARN = v
 	}
 
-	if v, ok := m["session_name"].(string); ok && v != "" {
+	if v, ok := tfMap["session_name"].(string); ok && v != "" {
 		assumeRole.SessionName = v
 	}
 
-	if v, ok := m["source_identity"].(string); ok && v != "" {
+	if v, ok := tfMap["source_identity"].(string); ok && v != "" {
 		assumeRole.SourceIdentity = v
 	}
 
-	if tagMapRaw, ok := m["tags"].(map[string]interface{}); ok && len(tagMapRaw) > 0 {
-		assumeRole.Tags = make(map[string]string)
-
-		for k, vRaw := range tagMapRaw {
-			v, ok := vRaw.(string)
-
-			if !ok {
-				continue
-			}
-
-			assumeRole.Tags[k] = v
-		}
+	if v, ok := tfMap["tags"].(map[string]interface{}); ok && len(v) > 0 {
+		assumeRole.Tags = flex.ExpandStringValueMap(v)
 	}
 
-	if transitiveTagKeySet, ok := m["transitive_tag_keys"].(*schema.Set); ok && transitiveTagKeySet.Len() > 0 {
-		for _, transitiveTagKeyRaw := range transitiveTagKeySet.List() {
-			transitiveTagKey, ok := transitiveTagKeyRaw.(string)
-
-			if !ok {
-				continue
-			}
-
-			assumeRole.TransitiveTagKeys = append(assumeRole.TransitiveTagKeys, transitiveTagKey)
-		}
+	if v, ok := tfMap["transitive_tag_keys"].(*schema.Set); ok && v.Len() > 0 {
+		assumeRole.TransitiveTagKeys = flex.ExpandStringValueSet(v)
 	}
 
 	return &assumeRole
 }
 
-func expandAssumeRoleWithWebIdentity(m map[string]interface{}) *awsbase.AssumeRoleWithWebIdentity {
-	assumeRole := awsbase.AssumeRoleWithWebIdentity{}
-
-	if v, ok := m["duration"].(string); ok && v != "" {
-		duration, _ := time.ParseDuration(v)
-		assumeRole.Duration = duration
+func expandAssumeRoleWithWebIdentity(tfMap map[string]interface{}) *awsbase.AssumeRoleWithWebIdentity {
+	if tfMap == nil {
+		return nil
 	}
 
-	if v, ok := m["duration_seconds"].(int); ok && v != 0 {
+	assumeRole := awsbase.AssumeRoleWithWebIdentity{}
+
+	if v, ok := tfMap["duration"].(string); ok && v != "" {
+		duration, _ := time.ParseDuration(v)
+		assumeRole.Duration = duration
+	} else if v, ok := tfMap["duration_seconds"].(int); ok && v != 0 {
 		assumeRole.Duration = time.Duration(v) * time.Second
 	}
 
-	if v, ok := m["policy"].(string); ok && v != "" {
+	if v, ok := tfMap["policy"].(string); ok && v != "" {
 		assumeRole.Policy = v
 	}
 
-	if policyARNSet, ok := m["policy_arns"].(*schema.Set); ok && policyARNSet.Len() > 0 {
-		for _, policyARNRaw := range policyARNSet.List() {
-			policyARN, ok := policyARNRaw.(string)
-
-			if !ok {
-				continue
-			}
-
-			assumeRole.PolicyARNs = append(assumeRole.PolicyARNs, policyARN)
-		}
+	if v, ok := tfMap["policy_arns"].(*schema.Set); ok && v.Len() > 0 {
+		assumeRole.PolicyARNs = flex.ExpandStringValueSet(v)
 	}
 
-	if v, ok := m["role_arn"].(string); ok && v != "" {
+	if v, ok := tfMap["role_arn"].(string); ok && v != "" {
 		assumeRole.RoleARN = v
 	}
 
-	if v, ok := m["session_name"].(string); ok && v != "" {
+	if v, ok := tfMap["session_name"].(string); ok && v != "" {
 		assumeRole.SessionName = v
 	}
 
-	if v, ok := m["web_identity_token"].(string); ok && v != "" {
+	if v, ok := tfMap["web_identity_token"].(string); ok && v != "" {
 		assumeRole.WebIdentityToken = v
 	}
 
-	if v, ok := m["web_identity_token_file"].(string); ok && v != "" {
+	if v, ok := tfMap["web_identity_token_file"].(string); ok && v != "" {
 		assumeRole.WebIdentityTokenFile = v
 	}
 
 	return &assumeRole
 }
 
-func expandProviderDefaultTags(l []interface{}) *tftags.DefaultConfig {
-	if len(l) == 0 || l[0] == nil {
+func expandDefaultTags(tfMap map[string]interface{}) *tftags.DefaultConfig {
+	if tfMap == nil {
 		return nil
 	}
 
 	defaultConfig := &tftags.DefaultConfig{}
-	m := l[0].(map[string]interface{})
 
-	if v, ok := m["tags"].(map[string]interface{}); ok {
+	if v, ok := tfMap["tags"].(map[string]interface{}); ok {
 		defaultConfig.Tags = tftags.New(v)
 	}
+
 	return defaultConfig
 }
 
-func expandProviderIgnoreTags(l []interface{}) *tftags.IgnoreConfig {
-	if len(l) == 0 || l[0] == nil {
+func expandIgnoreTags(tfMap map[string]interface{}) *tftags.IgnoreConfig {
+	if tfMap == nil {
 		return nil
 	}
 
 	ignoreConfig := &tftags.IgnoreConfig{}
-	m := l[0].(map[string]interface{})
 
-	if v, ok := m["keys"].(*schema.Set); ok {
+	if v, ok := tfMap["keys"].(*schema.Set); ok {
 		ignoreConfig.Keys = tftags.New(v.List())
 	}
 
-	if v, ok := m["key_prefixes"].(*schema.Set); ok {
+	if v, ok := tfMap["key_prefixes"].(*schema.Set); ok {
 		ignoreConfig.KeyPrefixes = tftags.New(v.List())
 	}
 
 	return ignoreConfig
 }
 
-func expandEndpoints(endpointsSetList []interface{}, out map[string]string) error {
-	for _, endpointsSetI := range endpointsSetList {
-		endpoints := endpointsSetI.(map[string]interface{})
-
-		for _, hclKey := range names.Aliases() {
-			var serviceKey string
-			var err error
-			if serviceKey, err = names.ProviderPackageForAlias(hclKey); err != nil {
-				return fmt.Errorf("failed to assign endpoint (%s): %w", hclKey, err)
-			}
-
-			if out[serviceKey] == "" && endpoints[hclKey].(string) != "" {
-				out[serviceKey] = endpoints[hclKey].(string)
-			}
-		}
+func expandEndpoints(tfList []interface{}) (map[string]string, error) {
+	if len(tfList) == 0 {
+		return nil, nil
 	}
 
-	for _, service := range names.ProviderPackages() {
-		if out[service] != "" {
+	endpoints := make(map[string]string)
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
+
+		if !ok {
 			continue
 		}
 
-		envvar := names.EnvVar(service)
-		if envvar != "" {
-			if v := os.Getenv(envvar); v != "" {
-				out[service] = v
-				continue
+		for _, alias := range names.Aliases() {
+			pkg, err := names.ProviderPackageForAlias(alias)
+
+			if err != nil {
+				return nil, fmt.Errorf("failed to assign endpoint (%s): %w", alias, err)
 			}
-		}
-		if envvarDeprecated := names.DeprecatedEnvVar(service); envvarDeprecated != "" {
-			if v := os.Getenv(envvarDeprecated); v != "" {
-				log.Printf("[WARN] The environment variable %q is deprecated. Use %q instead.", envvarDeprecated, envvar)
-				out[service] = v
+
+			if endpoints[pkg] == "" {
+				if v := tfMap[alias].(string); v != "" {
+					endpoints[pkg] = v
+				}
 			}
 		}
 	}
 
-	return nil
+	for _, pkg := range names.ProviderPackages() {
+		if endpoints[pkg] != "" {
+			continue
+		}
+
+		envVar := names.EnvVar(pkg)
+		if envVar != "" {
+			if v := os.Getenv(envVar); v != "" {
+				endpoints[pkg] = v
+				continue
+			}
+		}
+
+		if deprecatedEnvVar := names.DeprecatedEnvVar(pkg); deprecatedEnvVar != "" {
+			if v := os.Getenv(deprecatedEnvVar); v != "" {
+				log.Printf("[WARN] The environment variable %q is deprecated. Use %q instead.", deprecatedEnvVar, envVar)
+				endpoints[pkg] = v
+			}
+		}
+	}
+
+	return endpoints, nil
 }

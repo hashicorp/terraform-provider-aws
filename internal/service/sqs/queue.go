@@ -220,7 +220,7 @@ func resourceQueueCreate(d *schema.ResourceData, meta interface{}) error {
 	}, sqs.ErrCodeQueueDeletedRecently)
 
 	// Some partitions may not support tag-on-create
-	if input.Tags != nil && verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
+	if input.Tags != nil && verify.ErrorISOUnsupported(conn.PartitionID, err) {
 		log.Printf("[WARN] failed creating SQS Queue (%s) with tags: %s. Trying create without tags.", name, err)
 
 		input.Tags = nil
@@ -245,7 +245,7 @@ func resourceQueueCreate(d *schema.ResourceData, meta interface{}) error {
 	if input.Tags == nil && len(tags) > 0 {
 		err := UpdateTags(conn, d.Id(), nil, tags)
 
-		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
+		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.ErrorISOUnsupported(conn.PartitionID, err) {
 			// if default tags only, log and continue (i.e., should error if explicitly setting tags and they can't be)
 			log.Printf("[WARN] failed adding tags after create for SQS Queue (%s): %s", d.Id(), err)
 			return resourceQueueRead(d, meta)
@@ -309,7 +309,7 @@ func resourceQueueRead(d *schema.ResourceData, meta interface{}) error {
 		return ListTags(conn, d.Id())
 	}, sqs.ErrCodeQueueDoesNotExist)
 
-	if verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
+	if verify.ErrorISOUnsupported(conn.PartitionID, err) {
 		// Some partitions may not support tagging, giving error
 		log.Printf("[WARN] failed listing tags for SQS Queue (%s): %s", d.Id(), err)
 		return nil
@@ -366,7 +366,7 @@ func resourceQueueUpdate(d *schema.ResourceData, meta interface{}) error {
 		o, n := d.GetChange("tags_all")
 		err := UpdateTags(conn, d.Id(), o, n)
 
-		if verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
+		if verify.ErrorISOUnsupported(conn.PartitionID, err) {
 			// Some partitions may not support tagging, giving error
 			log.Printf("[WARN] failed updating tags for SQS Queue (%s): %s", d.Id(), err)
 			return resourceQueueRead(d, meta)
