@@ -2,24 +2,18 @@ package ec2
 
 import (
 	"context"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"time"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func DataSourceManagedPrefixLists() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceManagedPrefixListsRead,
-
-		Timeouts: &schema.ResourceTimeout{
-			Read: schema.DefaultTimeout(20 * time.Minute),
-		},
+		ReadWithoutTimeout: dataSourceManagedPrefixListsRead,
 
 		Schema: map[string]*schema.Schema{
 			"filter": DataSourceFiltersSchema(),
@@ -54,7 +48,7 @@ func dataSourceManagedPrefixListsRead(ctx context.Context, d *schema.ResourceDat
 	prefixLists, err := FindManagedPrefixLists(ctx, conn, input)
 
 	if err != nil {
-		return diag.FromErr(tfresource.SingularDataSourceFindError("EC2 Managed Prefix List", err))
+		return diag.Errorf("reading EC2 Managed Prefix Lists: %s", err)
 	}
 
 	var prefixListIDs []string

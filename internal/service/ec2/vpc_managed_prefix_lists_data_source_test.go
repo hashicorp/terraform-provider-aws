@@ -2,10 +2,10 @@ package ec2_test
 
 import (
 	"fmt"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/ec2"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
@@ -19,52 +19,29 @@ func TestAccVPCManagedPrefixListsDataSource_basic(t *testing.T) {
 			{
 				Config: testAccVPCManagedPrefixListsDataSourceConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.aws_ec2_managed_prefix_lists.aws", "ids.#", "4"),
+					acctest.CheckResourceAttrGreaterThanValue("data.aws_ec2_managed_prefix_lists.test", "ids.#", "0"),
 				),
 			},
 		},
 	})
 }
 
-const testAccVPCManagedPrefixListsDataSourceConfig_basic = `
-data "aws_ec2_managed_prefix_lists" "aws" {
-  filter {
-    name   = "prefix-list-name"
-    values = ["com.amazonaws.*"]
-  }
-}
-`
-
-func TestAccVPCManagedPrefixListsDataSource_filter_tags(t *testing.T) {
+func TestAccVPCManagedPrefixListsDataSource_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	tagKey := "key1"
-	tagValue := "value1"
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCManagedPrefixListConfig_tags1(rName, tagKey, tagValue),
-			},
-			{
-				Config: testAccVPCManagedPrefixListsDataSourceConfig_filter_tags(tagKey, tagValue),
+				Config: testAccVPCManagedPrefixListsDataSourceConfig_tags(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.aws_ec2_managed_prefix_lists.test", "ids.#", "1"),
 				),
 			},
 		},
 	})
-}
-
-func testAccVPCManagedPrefixListsDataSourceConfig_filter_tags(tagKey string, tagValue string) string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
-data "aws_ec2_managed_prefix_lists" "test" {
-  	tags = {
-		%[1]q = %[2]q
-	}
-}
-`, tagKey, tagValue))
 }
 
 func TestAccVPCManagedPrefixListsDataSource_noMatches(t *testing.T) {
@@ -76,15 +53,39 @@ func TestAccVPCManagedPrefixListsDataSource_noMatches(t *testing.T) {
 			{
 				Config: testAccVPCManagedPrefixListsDataSourceConfig_noMatches,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.aws_ec2_managed_prefix_lists.empty", "ids.#", "0"),
+					resource.TestCheckResourceAttr("data.aws_ec2_managed_prefix_lists.test", "ids.#", "0"),
 				),
 			},
 		},
 	})
 }
 
+const testAccVPCManagedPrefixListsDataSourceConfig_basic = `
+data "aws_ec2_managed_prefix_lists" "test" {}
+`
+
+func testAccVPCManagedPrefixListsDataSourceConfig_tags(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_ec2_managed_prefix_list" "test" {
+  address_family = "IPv4"
+  max_entries    = 1
+  name           = %[1]q
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+data "aws_ec2_managed_prefix_lists" "test" {
+  tags = {
+    Name = aws_ec2_managed_prefix_list.test.tags["Name"]
+  }
+}
+`, rName)
+}
+
 const testAccVPCManagedPrefixListsDataSourceConfig_noMatches = `
-data "aws_ec2_managed_prefix_lists" "empty" {
+data "aws_ec2_managed_prefix_lists" "test" {
   filter {
     name   = "prefix-list-name"
     values = ["no-match"]
