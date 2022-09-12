@@ -58,7 +58,14 @@ func resourceAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
 			LoadBalancerNames:    aws.StringSlice([]string{lbName}),
 		}
 
-		if _, err := conn.AttachLoadBalancers(input); err != nil {
+		_, err := tfresource.RetryWhenAWSErrMessageContains(d.Timeout(schema.TimeoutCreate),
+			func() (interface{}, error) {
+				return conn.AttachLoadBalancers(input)
+			},
+			// ValidationError: Trying to update too many Load Balancers/Target Groups at once. The limit is 10
+			ErrCodeValidationError, "update too many")
+
+		if err != nil {
 			return fmt.Errorf("attaching Auto Scaling Group (%s) load balancer (%s): %w", asgName, lbName, err)
 		}
 	} else {
@@ -74,7 +81,13 @@ func resourceAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
 			TargetGroupARNs:      aws.StringSlice([]string{targetGroupARN}),
 		}
 
-		if _, err := conn.AttachLoadBalancerTargetGroups(input); err != nil {
+		_, err := tfresource.RetryWhenAWSErrMessageContains(d.Timeout(schema.TimeoutCreate),
+			func() (interface{}, error) {
+				return conn.AttachLoadBalancerTargetGroups(input)
+			},
+			ErrCodeValidationError, "update too many")
+
+		if err != nil {
 			return fmt.Errorf("attaching Auto Scaling Group (%s) target group (%s): %w", asgName, targetGroupARN, err)
 		}
 	}
@@ -128,7 +141,13 @@ func resourceAttachmentDelete(d *schema.ResourceData, meta interface{}) error {
 			LoadBalancerNames:    aws.StringSlice([]string{lbName}),
 		}
 
-		if _, err := conn.DetachLoadBalancers(input); err != nil {
+		_, err := tfresource.RetryWhenAWSErrMessageContains(d.Timeout(schema.TimeoutCreate),
+			func() (interface{}, error) {
+				return conn.DetachLoadBalancers(input)
+			},
+			ErrCodeValidationError, "update too many")
+
+		if err != nil {
 			return fmt.Errorf("detaching Auto Scaling Group (%s) load balancer (%s): %w", asgName, lbName, err)
 		}
 	} else {
@@ -144,7 +163,13 @@ func resourceAttachmentDelete(d *schema.ResourceData, meta interface{}) error {
 			TargetGroupARNs:      aws.StringSlice([]string{targetGroupARN}),
 		}
 
-		if _, err := conn.DetachLoadBalancerTargetGroups(input); err != nil {
+		_, err := tfresource.RetryWhenAWSErrMessageContains(d.Timeout(schema.TimeoutCreate),
+			func() (interface{}, error) {
+				return conn.DetachLoadBalancerTargetGroups(input)
+			},
+			ErrCodeValidationError, "update too many")
+
+		if err != nil {
 			return fmt.Errorf("detaching Auto Scaling Group (%s) target group (%s): %w", asgName, targetGroupARN, err)
 		}
 	}

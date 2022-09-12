@@ -2,13 +2,15 @@ package fwprovider
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/fwtypes"
+	"github.com/hashicorp/terraform-provider-aws/internal/intf"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/medialive"
-	"github.com/hashicorp/terraform-provider-aws/internal/service/meta"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -166,7 +168,7 @@ func (p *fwprovider) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnost
 			"assume_role": {
 				Attributes: map[string]tfsdk.Attribute{
 					"duration": {
-						Type:        DurationType,
+						Type:        fwtypes.DurationType,
 						Optional:    true,
 						Description: "The duration, between 15 minutes and 12 hours, of the role session. Valid time units are ns, us (or µs), ms, s, h, or m.",
 					},
@@ -223,7 +225,7 @@ func (p *fwprovider) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnost
 			"assume_role_with_web_identity": {
 				Attributes: map[string]tfsdk.Attribute{
 					"duration": {
-						Type:        DurationType,
+						Type:        fwtypes.DurationType,
 						Optional:    true,
 						Description: "The duration, between 15 minutes and 12 hours, of the role session. Valid time units are ns, us (or µs), ms, s, h, or m.",
 					},
@@ -319,15 +321,25 @@ func (p *fwprovider) GetDataSources(ctx context.Context) (map[string]provider.Da
 	var diags diag.Diagnostics
 	dataSources := make(map[string]provider.DataSourceType)
 
-	// TODO: This should be done via service-level self-registration and initializatin in the primary provider.
-	t, err := meta.NewDataSourceARNType(ctx)
+	// TODO Better error messages.
+	// TODO Wrap the returned type to add standard context, logging etc.
+	providerData := p.Primary.Meta().(intf.ProviderData)
+	for serviceID, data := range providerData.Services(ctx) {
+		dsTypes, err := data.DataSources(ctx)
 
-	if err != nil {
-		diags.AddError("UhOh", err.Error())
-		return nil, diags
+		if err != nil {
+			diags.AddError(fmt.Sprintf("data sources for service (%s)", serviceID), err.Error())
+			return nil, diags
+		}
+
+		for name, dsType := range dsTypes {
+			if _, ok := dataSources[name]; ok {
+				diags.AddError(fmt.Sprintf("service (%s) data source (%s) already registered", serviceID, name), "")
+			} else {
+				dataSources[name] = dsType
+			}
+		}
 	}
-
-	dataSources["aws_arn"] = t
 
 	return dataSources, diags
 }

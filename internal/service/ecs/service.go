@@ -534,7 +534,7 @@ func resourceServiceCreate(d *schema.ResourceData, meta interface{}) error {
 	output, err := serviceCreateWithRetry(conn, input)
 
 	// Some partitions (i.e., ISO) may not support tag-on-create
-	if input.Tags != nil && verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
+	if input.Tags != nil && verify.ErrorISOUnsupported(conn.PartitionID, err) {
 		log.Printf("[WARN] failed creating ECS Service (%s) with tags: %s. Trying create without tags.", d.Get("name").(string), err)
 		input.Tags = nil
 
@@ -569,7 +569,7 @@ func resourceServiceCreate(d *schema.ResourceData, meta interface{}) error {
 		err := UpdateTags(conn, d.Id(), nil, tags)
 
 		// If default tags only, log and continue. Otherwise, error.
-		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
+		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.ErrorISOUnsupported(conn.PartitionID, err) {
 			log.Printf("[WARN] failed adding tags after create for ECS Service (%s): %s", d.Id(), err)
 			return resourceServiceRead(d, meta)
 		}
@@ -1101,7 +1101,7 @@ func resourceServiceUpdate(d *schema.ResourceData, meta interface{}) error {
 		err := UpdateTags(conn, d.Id(), o, n)
 
 		// Some partitions (i.e., ISO) may not support tagging, giving error
-		if verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
+		if verify.ErrorISOUnsupported(conn.PartitionID, err) {
 			log.Printf("[WARN] failed updating tags for ECS Service (%s): %s", d.Id(), err)
 			return resourceServiceRead(d, meta)
 		}

@@ -565,7 +565,7 @@ func resourceReplicationGroupCreate(d *schema.ResourceData, meta interface{}) er
 
 	resp, err := conn.CreateReplicationGroup(params)
 
-	if params.Tags != nil && verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
+	if params.Tags != nil && verify.ErrorISOUnsupported(conn.PartitionID, err) {
 		log.Printf("[WARN] failed creating ElastiCache Replication Group with tags: %s. Trying create without tags.", err)
 
 		params.Tags = nil
@@ -598,7 +598,7 @@ func resourceReplicationGroupCreate(d *schema.ResourceData, meta interface{}) er
 		err := UpdateTags(conn, aws.StringValue(resp.ReplicationGroup.ARN), nil, tags)
 
 		if err != nil {
-			if v, ok := d.GetOk("tags"); (ok && len(v.(map[string]interface{})) > 0) || !verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
+			if v, ok := d.GetOk("tags"); (ok && len(v.(map[string]interface{})) > 0) || !verify.ErrorISOUnsupported(conn.PartitionID, err) {
 				// explicitly setting tags or not an iso-unsupported error
 				return fmt.Errorf("failed adding tags after create for ElastiCache Replication Group (%s): %w", d.Id(), err)
 			}
@@ -717,7 +717,7 @@ func resourceReplicationGroupRead(d *schema.ResourceData, meta interface{}) erro
 
 	tags, err := ListTags(conn, aws.StringValue(rgp.ARN))
 
-	if err != nil && !verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
+	if err != nil && !verify.ErrorISOUnsupported(conn.PartitionID, err) {
 		return fmt.Errorf("listing tags for ElastiCache Replication Group (%s): %w", aws.StringValue(rgp.ARN), err)
 	}
 
@@ -970,7 +970,7 @@ func resourceReplicationGroupUpdate(d *schema.ResourceData, meta interface{}) er
 		err := UpdateTags(conn, d.Get("arn").(string), o, n)
 
 		if err != nil {
-			if v, ok := d.GetOk("tags"); (ok && len(v.(map[string]interface{})) > 0) || !verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
+			if v, ok := d.GetOk("tags"); (ok && len(v.(map[string]interface{})) > 0) || !verify.ErrorISOUnsupported(conn.PartitionID, err) {
 				// explicitly setting tags or not an iso-unsupported error
 				return fmt.Errorf("failed updating ElastiCache Replication Group (%s) tags: %w", d.Id(), err)
 			}
