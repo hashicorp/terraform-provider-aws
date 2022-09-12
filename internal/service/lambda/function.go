@@ -858,9 +858,10 @@ func resourceFunctionRead(d *schema.ResourceData, meta interface{}) error {
 
 	// Get latest version and ARN unless qualifier is specified via data source
 	if qualifierExistance {
+		functionARN := aws.StringValue(function.FunctionArn)
 		d.Set("version", function.Version)
-		d.Set("qualified_arn", function.FunctionArn)
-		qualifiedInvokeArn := functionInvokeARN(*function.FunctionArn, meta)
+		d.Set("qualified_arn", functionARN)
+		qualifiedInvokeArn := functionInvokeARN(functionARN, meta)
 		d.Set("qualified_invoke_arn", qualifiedInvokeArn)
 	} else {
 
