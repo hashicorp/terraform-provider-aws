@@ -549,6 +549,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_ec2_local_gateway":                          ec2.DataSourceLocalGateway(),
 			"aws_ec2_local_gateways":                         ec2.DataSourceLocalGateways(),
 			"aws_ec2_managed_prefix_list":                    ec2.DataSourceManagedPrefixList(),
+			"aws_ec2_managed_prefix_lists":                   ec2.DataSourceManagedPrefixLists(),
 			"aws_ec2_network_insights_analysis":              ec2.DataSourceNetworkInsightsAnalysis(),
 			"aws_ec2_network_insights_path":                  ec2.DataSourceNetworkInsightsPath(),
 			"aws_ec2_serial_console_access":                  ec2.DataSourceSerialConsoleAccess(),
