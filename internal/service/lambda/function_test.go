@@ -1615,11 +1615,7 @@ func TestAccLambdaFunction_emptyVPC(t *testing.T) {
 
 func TestAccLambdaFunction_s3(t *testing.T) {
 	var conf lambda.GetFunctionOutput
-
-	rString := sdkacctest.RandString(8)
-	bucketName := fmt.Sprintf("tf-acc-bucket-lambda-func-s3-%s", rString)
-	roleName := fmt.Sprintf("tf_acc_role_lambda_func_s3_%s", rString)
-	funcName := fmt.Sprintf("tf_acc_lambda_func_s3_%s", rString)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lambda_function.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -1629,11 +1625,9 @@ func TestAccLambdaFunction_s3(t *testing.T) {
 		CheckDestroy:             testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFunctionConfig_s3Simple(bucketName, roleName, funcName),
+				Config: testAccFunctionConfig_s3Simple(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, &conf),
-					testAccCheckFunctionName(&conf, funcName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
 					testAccCheckFunctionVersion(&conf, tflambda.FunctionVersionLatest),
 				),
 			},
@@ -1652,17 +1646,14 @@ func TestAccLambdaFunction_localUpdate(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var conf lambda.GetFunctionOutput
-
 	path, zipFile, err := createTempFile("lambda_localUpdate")
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer os.Remove(path)
 
-	rString := sdkacctest.RandString(8)
-	funcName := fmt.Sprintf("tf_acc_lambda_func_local_upd_%s", rString)
-	roleName := fmt.Sprintf("tf_acc_role_lambda_func_local_upd_%s", rString)
+	var conf lambda.GetFunctionOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lambda_function.test"
 
 	var timeBeforeUpdate time.Time
@@ -1679,11 +1670,9 @@ func TestAccLambdaFunction_localUpdate(t *testing.T) {
 						t.Fatalf("error creating zip from files: %s", err)
 					}
 				},
-				Config: testAccFunctionConfig_local(path, roleName, funcName),
+				Config: testAccFunctionConfig_local(path, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, &conf),
-					testAccCheckFunctionName(&conf, funcName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
 					testAccCheckSourceCodeHash(&conf, "8DPiX+G1l2LQ8hjBkwRchQFf1TSCEvPrYGRKlM9UoyY="),
 				),
 			},
@@ -1700,11 +1689,9 @@ func TestAccLambdaFunction_localUpdate(t *testing.T) {
 					}
 					timeBeforeUpdate = time.Now()
 				},
-				Config: testAccFunctionConfig_local(path, roleName, funcName),
+				Config: testAccFunctionConfig_local(path, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, &conf),
-					testAccCheckFunctionName(&conf, funcName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
 					testAccCheckSourceCodeHash(&conf, "0tdaP9H9hsk9c2CycSwOG/sa/x5JyAmSYunA/ce99Pg="),
 					func(s *terraform.State) error {
 						return testAccCheckAttributeIsDateAfter(s, resourceName, "last_modified", timeBeforeUpdate)
@@ -1721,10 +1708,7 @@ func TestAccLambdaFunction_LocalUpdate_nameOnly(t *testing.T) {
 	}
 
 	var conf lambda.GetFunctionOutput
-
-	rString := sdkacctest.RandString(8)
-	funcName := fmt.Sprintf("tf_acc_lambda_func_local_upd_name_%s", rString)
-	roleName := fmt.Sprintf("tf_acc_role_lambda_func_local_upd_name_%s", rString)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lambda_function.test"
 
 	path, zipFile, err := createTempFile("lambda_localUpdate")
@@ -1751,11 +1735,9 @@ func TestAccLambdaFunction_LocalUpdate_nameOnly(t *testing.T) {
 						t.Fatalf("error creating zip from files: %s", err)
 					}
 				},
-				Config: testAccFunctionConfig_localNameOnly(path, roleName, funcName),
+				Config: testAccFunctionConfig_localNameOnly(path, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, &conf),
-					testAccCheckFunctionName(&conf, funcName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
 					testAccCheckSourceCodeHash(&conf, "8DPiX+G1l2LQ8hjBkwRchQFf1TSCEvPrYGRKlM9UoyY="),
 				),
 			},
@@ -1771,11 +1753,9 @@ func TestAccLambdaFunction_LocalUpdate_nameOnly(t *testing.T) {
 						t.Fatalf("error creating zip from files: %s", err)
 					}
 				},
-				Config: testAccFunctionConfig_localNameOnly(updatedPath, roleName, funcName),
+				Config: testAccFunctionConfig_localNameOnly(updatedPath, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, &conf),
-					testAccCheckFunctionName(&conf, funcName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
 					testAccCheckSourceCodeHash(&conf, "0tdaP9H9hsk9c2CycSwOG/sa/x5JyAmSYunA/ce99Pg="),
 				),
 			},
@@ -3273,10 +3253,10 @@ resource "aws_lambda_function" "test" {
 `, rName))
 }
 
-func testAccFunctionConfig_s3Simple(bucketName, roleName, funcName string) string {
+func testAccFunctionConfig_s3Simple(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "lambda_bucket" {
-  bucket = "%s"
+  bucket = %[1]q
 }
 
 resource "aws_s3_object" "lambda_code" {
@@ -3286,7 +3266,7 @@ resource "aws_s3_object" "lambda_code" {
 }
 
 resource "aws_iam_role" "iam_for_lambda" {
-  name = "%s"
+  name = %[1]q
 
   assume_role_policy = <<EOF
 {
@@ -3308,18 +3288,18 @@ EOF
 resource "aws_lambda_function" "test" {
   s3_bucket     = aws_s3_bucket.lambda_bucket.id
   s3_key        = aws_s3_object.lambda_code.id
-  function_name = "%s"
+  function_name = %[1]q
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
   runtime       = "nodejs12.x"
 }
-`, bucketName, roleName, funcName)
+`, rName)
 }
 
-func testAccFunctionConfig_local(filePath, roleName, funcName string) string {
+func testAccFunctionConfig_local(filePath, rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "iam_for_lambda" {
-  name = "%s"
+  name = %[2]q
 
   assume_role_policy = <<EOF
 {
@@ -3339,24 +3319,20 @@ EOF
 }
 
 resource "aws_lambda_function" "test" {
-  filename         = "%s"
-  source_code_hash = filebase64sha256("%s")
-  function_name    = "%s"
+  filename         = %[1]q
+  source_code_hash = filebase64sha256(%[1]q)
+  function_name    = %[2]q
   role             = aws_iam_role.iam_for_lambda.arn
   handler          = "exports.example"
   runtime          = "nodejs12.x"
 }
-`, roleName, filePath, filePath, funcName)
+`, filePath, rName)
 }
 
-func testAccFunctionConfig_localNameOnly(filePath, roleName, funcName string) string {
-	return testAccFunctionConfig_local_name_only_tpl(filePath, roleName, funcName)
-}
-
-func testAccFunctionConfig_local_name_only_tpl(filePath, roleName, funcName string) string {
+func testAccFunctionConfig_localNameOnly(filePath, rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "iam_for_lambda" {
-  name = "%s"
+  name = %[2]q
 
   assume_role_policy = <<EOF
 {
@@ -3376,13 +3352,13 @@ EOF
 }
 
 resource "aws_lambda_function" "test" {
-  filename      = "%s"
-  function_name = "%s"
+  filename      = %[1]q
+  function_name = %[2]q
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
   runtime       = "nodejs12.x"
 }
-`, roleName, filePath, funcName)
+`, filePath, rName)
 }
 
 func testAccFunctionConfig_s3(bucketName, key, path, roleName, funcName string) string {
