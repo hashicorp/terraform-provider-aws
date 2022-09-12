@@ -70,7 +70,7 @@ func sweepHealthChecks(region string) error {
 	}
 
 	conn := client.(*conns.AWSClient).Route53Conn
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
 	input := &route53.ListHealthChecksInput{}
@@ -121,7 +121,7 @@ func sweepKeySigningKeys(region string) error {
 	}
 
 	conn := client.(*conns.AWSClient).Route53Conn
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
 	input := &route53.ListHostedZonesInput{}
@@ -242,7 +242,7 @@ func sweepTrafficPolicies(region string) error {
 	}
 	conn := client.(*conns.AWSClient).Route53Conn
 	input := &route53.ListTrafficPoliciesInput{}
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = listTrafficPoliciesPages(conn, input, func(page *route53.ListTrafficPoliciesOutput, lastPage bool) bool {
 		if page == nil {
@@ -285,7 +285,7 @@ func sweepTrafficPolicyInstances(region string) error {
 	}
 	conn := client.(*conns.AWSClient).Route53Conn
 	input := &route53.ListTrafficPolicyInstancesInput{}
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = listTrafficPolicyInstancesPages(conn, input, func(page *route53.ListTrafficPolicyInstancesOutput, lastPage bool) bool {
 		if page == nil {
@@ -329,7 +329,7 @@ func sweepZones(region string) error {
 	}
 
 	conn := client.(*conns.AWSClient).Route53Conn
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
 	input := &route53.ListHostedZonesInput{}

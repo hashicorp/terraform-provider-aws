@@ -31,7 +31,7 @@ func sweepTables(region string) error {
 	}
 
 	conn := client.(*conns.AWSClient).DynamoDBConn
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 	var g multierror.Group
 	var mutex = &sync.Mutex{}

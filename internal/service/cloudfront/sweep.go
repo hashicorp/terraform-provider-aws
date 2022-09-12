@@ -98,7 +98,7 @@ func sweepCachePolicies(region string) error {
 	input := &cloudfront.ListCachePoliciesInput{
 		Type: aws.String(cloudfront.ResponseHeadersPolicyTypeCustom),
 	}
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = ListCachePoliciesPages(conn, input, func(page *cloudfront.ListCachePoliciesOutput, lastPage bool) bool {
 		if page == nil {
@@ -155,7 +155,7 @@ func sweepDistributions(region string) error {
 	}
 	conn := client.(*conns.AWSClient).CloudFrontConn
 	input := &cloudfront.ListDistributionsInput{}
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = conn.ListDistributionsPages(input, func(page *cloudfront.ListDistributionsOutput, lastPage bool) bool {
 		if page == nil {
@@ -425,7 +425,7 @@ func sweepFieldLevelEncryptionConfigs(region string) error {
 	}
 	conn := client.(*conns.AWSClient).CloudFrontConn
 	input := &cloudfront.ListFieldLevelEncryptionConfigsInput{}
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = ListFieldLevelEncryptionConfigsPages(conn, input, func(page *cloudfront.ListFieldLevelEncryptionConfigsOutput, lastPage bool) bool {
 		if page == nil {
@@ -482,7 +482,7 @@ func sweepFieldLevelEncryptionProfiles(region string) error {
 	}
 	conn := client.(*conns.AWSClient).CloudFrontConn
 	input := &cloudfront.ListFieldLevelEncryptionProfilesInput{}
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = ListFieldLevelEncryptionProfilesPages(conn, input, func(page *cloudfront.ListFieldLevelEncryptionProfilesOutput, lastPage bool) bool {
 		if page == nil {
@@ -541,7 +541,7 @@ func sweepOriginRequestPolicies(region string) error {
 	input := &cloudfront.ListOriginRequestPoliciesInput{
 		Type: aws.String(cloudfront.ResponseHeadersPolicyTypeCustom),
 	}
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = ListOriginRequestPoliciesPages(conn, input, func(page *cloudfront.ListOriginRequestPoliciesOutput, lastPage bool) bool {
 		if page == nil {
@@ -600,7 +600,7 @@ func sweepResponseHeadersPolicies(region string) error {
 	input := &cloudfront.ListResponseHeadersPoliciesInput{
 		Type: aws.String(cloudfront.ResponseHeadersPolicyTypeCustom),
 	}
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = ListResponseHeadersPoliciesPages(conn, input, func(page *cloudfront.ListResponseHeadersPoliciesOutput, lastPage bool) bool {
 		if page == nil {
@@ -657,7 +657,7 @@ func sweepOriginAccessControls(region string) error {
 	}
 	conn := client.(*conns.AWSClient).CloudFrontConn
 	input := &cloudfront.ListOriginAccessControlsInput{}
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = ListOriginAccessControlsPages(conn, input, func(page *cloudfront.ListOriginAccessControlsOutput, lastPage bool) bool {
 		if page == nil {
