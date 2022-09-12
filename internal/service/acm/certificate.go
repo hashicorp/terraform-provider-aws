@@ -309,7 +309,7 @@ func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta
 		}
 
 		log.Printf("[DEBUG] Requesting ACM Certificate: %s", input)
-		output, err := conn.RequestCertificate(input)
+		output, err := conn.RequestCertificateWithContext(ctx, input)
 
 		if err != nil {
 			return diag.Errorf("requesting ACM Certificate (%s): %s", domainName, err)
@@ -330,7 +330,7 @@ func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta
 			input.Tags = Tags(tags.IgnoreAWS())
 		}
 
-		output, err := conn.ImportCertificate(input)
+		output, err := conn.ImportCertificateWithContext(ctx, input)
 
 		if err != nil {
 			return diag.Errorf("importing ACM Certificate: %s", err)
@@ -339,7 +339,7 @@ func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta
 		d.SetId(aws.StringValue(output.CertificateArn))
 	}
 
-	if _, err := waitCertificateDomainValidationsAvailable(conn, d.Id(), certificateDNSValidationAssignmentTimeout); err != nil {
+	if _, err := waitCertificateDomainValidationsAvailable(ctx, conn, d.Id(), certificateDNSValidationAssignmentTimeout); err != nil {
 		return diag.Errorf("waiting for ACM Certificate (%s) to be issued: %s", d.Id(), err)
 	}
 
@@ -351,7 +351,7 @@ func resourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta i
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	certificate, err := FindCertificateByARN(conn, d.Id())
+	certificate, err := FindCertificateByARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] ACM Certificate %s not found, removing from state", d.Id())
@@ -393,7 +393,7 @@ func resourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("validation_emails", validationEmails)
 	d.Set("validation_method", certificateValidationMethod(certificate))
 
-	tags, err := ListTags(conn, d.Id())
+	tags, err := ListTagsWithContext(ctx, conn, d.Id())
 
 	if err != nil {
 		return diag.Errorf("listing tags for ACM Certificate (%s): %s", d.Id(), err)
@@ -434,7 +434,7 @@ func resourceCertificateUpdate(ctx context.Context, d *schema.ResourceData, meta
 				input.CertificateChain = []byte(chain.(string))
 			}
 
-			_, err := conn.ImportCertificate(input)
+			_, err := conn.ImportCertificateWithContext(ctx, input)
 
 			if err != nil {
 				return diag.Errorf("re-importing ACM Certificate (%s): %s", d.Id(), err)
@@ -445,7 +445,7 @@ func resourceCertificateUpdate(ctx context.Context, d *schema.ResourceData, meta
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
+		if err := UpdateTagsWithContext(ctx, conn, d.Id(), o, n); err != nil {
 			return diag.Errorf("updating ACM Certificate (%s) tags: %s", d.Id(), err)
 		}
 	}
@@ -457,9 +457,9 @@ func resourceCertificateDelete(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).ACMConn
 
 	log.Printf("[INFO] Deleting ACM Certificate: %s", d.Id())
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(certificateCrossServicePropagationTimeout,
+	_, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, certificateCrossServicePropagationTimeout,
 		func() (interface{}, error) {
-			return conn.DeleteCertificate(&acm.DeleteCertificateInput{
+			return conn.DeleteCertificateWithContext(ctx, &acm.DeleteCertificateInput{
 				CertificateArn: aws.String(d.Id()),
 			})
 		}, acm.ErrCodeResourceInUseException)
@@ -661,8 +661,8 @@ func isChangeNormalizeCertRemoval(oldRaw, newRaw interface{}) bool {
 	return hex.EncodeToString(newCleanVal[:]) == old
 }
 
-func findCertificate(conn *acm.ACM, input *acm.DescribeCertificateInput) (*acm.CertificateDetail, error) {
-	output, err := conn.DescribeCertificate(input)
+func findCertificate(ctx context.Context, conn *acm.ACM, input *acm.DescribeCertificateInput) (*acm.CertificateDetail, error) {
+	output, err := conn.DescribeCertificateWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, acm.ErrCodeResourceNotFoundException) {
 		return nil, &resource.NotFoundError{
@@ -682,12 +682,12 @@ func findCertificate(conn *acm.ACM, input *acm.DescribeCertificateInput) (*acm.C
 	return output.Certificate, nil
 }
 
-func FindCertificateByARN(conn *acm.ACM, arn string) (*acm.CertificateDetail, error) {
+func FindCertificateByARN(ctx context.Context, conn *acm.ACM, arn string) (*acm.CertificateDetail, error) {
 	input := &acm.DescribeCertificateInput{
 		CertificateArn: aws.String(arn),
 	}
 
-	output, err := findCertificate(conn, input)
+	output, err := findCertificate(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
@@ -703,9 +703,9 @@ func FindCertificateByARN(conn *acm.ACM, arn string) (*acm.CertificateDetail, er
 	return output, nil
 }
 
-func statusCertificateDomainValidationsAvailable(conn *acm.ACM, arn string) resource.StateRefreshFunc {
+func statusCertificateDomainValidationsAvailable(ctx context.Context, conn *acm.ACM, arn string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		certificate, err := FindCertificateByARN(conn, arn)
+		certificate, err := FindCertificateByARN(ctx, conn, arn)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -741,14 +741,14 @@ func statusCertificateDomainValidationsAvailable(conn *acm.ACM, arn string) reso
 	}
 }
 
-func waitCertificateDomainValidationsAvailable(conn *acm.ACM, arn string, timeout time.Duration) (*acm.CertificateDetail, error) {
+func waitCertificateDomainValidationsAvailable(ctx context.Context, conn *acm.ACM, arn string, timeout time.Duration) (*acm.CertificateDetail, error) {
 	stateConf := &resource.StateChangeConf{
 		Target:  []string{strconv.FormatBool(true)},
-		Refresh: statusCertificateDomainValidationsAvailable(conn, arn),
+		Refresh: statusCertificateDomainValidationsAvailable(ctx, conn, arn),
 		Timeout: timeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*acm.CertificateDetail); ok {
 		return output, err

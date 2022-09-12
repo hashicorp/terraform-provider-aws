@@ -1,6 +1,7 @@
 package acm_test
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"strconv"
@@ -791,7 +792,7 @@ func testAccCheckCertificateExists(n string, v *acm.CertificateDetail) resource.
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ACMConn
 
-		output, err := tfacm.FindCertificateByARN(conn, rs.Primary.ID)
+		output, err := tfacm.FindCertificateByARN(context.Background(), conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -811,7 +812,7 @@ func testAccCheckCertificateDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := tfacm.FindCertificateByARN(conn, rs.Primary.ID)
+		_, err := tfacm.FindCertificateByARN(context.Background(), conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
