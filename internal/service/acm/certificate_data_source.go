@@ -16,11 +16,8 @@ import (
 func DataSourceCertificate() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourceCertificateRead,
+
 		Schema: map[string]*schema.Schema{
-			"domain": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -33,36 +30,38 @@ func DataSourceCertificate() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"statuses": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"status": {
+			"domain": {
 				Type:     schema.TypeString,
-				Computed: true,
+				Required: true,
 			},
 			"key_types": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Schema{
-					Type: schema.TypeString,
-					ValidateFunc: validation.StringInSlice(
-						acm.KeyAlgorithm_Values(), false,
-					),
+					Type:         schema.TypeString,
+					ValidateFunc: validation.StringInSlice(acm.KeyAlgorithm_Values(), false),
 				},
-			},
-			"types": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"most_recent": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
 			},
+			"status": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"statuses": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
 			"tags": tftags.TagsSchemaComputed(),
+			"types": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
 		},
 	}
 }
