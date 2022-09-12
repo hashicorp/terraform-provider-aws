@@ -9,17 +9,22 @@ import (
 )
 
 func ResourceQueuePolicy() *schema.Resource {
+	h := &queueAttributeHandler{AttributeName: sqs.QueueAttributeNamePolicy, SchemaKey: "policy"}
+
 	//lintignore:R011
 	return &schema.Resource{
-		CreateContext: generateQueueAttributeUpsertFunc(sqs.QueueAttributeNamePolicy),
-		ReadContext:   generateQueueAttributeReadFunc(sqs.QueueAttributeNamePolicy),
-		UpdateContext: generateQueueAttributeUpsertFunc(sqs.QueueAttributeNamePolicy),
-		DeleteContext: generateQueueAttributeDeleteFunc(sqs.QueueAttributeNamePolicy),
+		CreateWithoutTimeout: h.Create(),
+		ReadWithoutTimeout:   h.Read(),
+		UpdateWithoutTimeout: h.Update(),
+		DeleteWithoutTimeout: h.Delete(),
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
+
 		MigrateState:  QueuePolicyMigrateState,
 		SchemaVersion: 1,
+
 		Schema: map[string]*schema.Schema{
 			"policy": {
 				Type:             schema.TypeString,
@@ -31,7 +36,6 @@ func ResourceQueuePolicy() *schema.Resource {
 					return json
 				},
 			},
-
 			"queue_url": {
 				Type:     schema.TypeString,
 				Required: true,
