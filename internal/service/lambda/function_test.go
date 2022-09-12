@@ -1323,12 +1323,7 @@ func TestAccLambdaFunction_vpc(t *testing.T) {
 	}
 
 	var conf lambda.GetFunctionOutput
-
-	rString := sdkacctest.RandString(8)
-	funcName := fmt.Sprintf("tf_acc_lambda_func_vpc_%s", rString)
-	policyName := fmt.Sprintf("tf_acc_policy_lambda_func_vpc_%s", rString)
-	roleName := fmt.Sprintf("tf_acc_role_lambda_func_vpc_%s", rString)
-	sgName := fmt.Sprintf("tf_acc_sg_lambda_func_vpc_%s", rString)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lambda_function.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -1338,16 +1333,13 @@ func TestAccLambdaFunction_vpc(t *testing.T) {
 		CheckDestroy:             testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFunctionConfig_vpc(funcName, policyName, roleName, sgName),
+				Config: testAccFunctionConfig_vpc(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, &conf),
-					testAccCheckFunctionName(&conf, funcName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
-					testAccCheckFunctionVersion(&conf, tflambda.FunctionVersionLatest),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.subnet_ids.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.security_group_ids.#", "1"),
-					resource.TestMatchResourceAttr(resourceName, "vpc_config.0.vpc_id", regexp.MustCompile("^vpc-")),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.subnet_ids.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "vpc_config.0.vpc_id"),
 				),
 			},
 			{
@@ -1366,7 +1358,6 @@ func TestAccLambdaFunction_vpcRemoval(t *testing.T) {
 	}
 
 	var conf lambda.GetFunctionOutput
-
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lambda_function.test"
 
@@ -1377,7 +1368,7 @@ func TestAccLambdaFunction_vpcRemoval(t *testing.T) {
 		CheckDestroy:             testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFunctionConfig_vpc(rName, rName, rName, rName),
+				Config: testAccFunctionConfig_vpc(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "1"),
@@ -1406,13 +1397,7 @@ func TestAccLambdaFunction_vpcUpdate(t *testing.T) {
 	}
 
 	var conf lambda.GetFunctionOutput
-
-	rString := sdkacctest.RandString(8)
-	funcName := fmt.Sprintf("tf_acc_lambda_func_vpc_upd_%s", rString)
-	policyName := fmt.Sprintf("tf_acc_policy_lambda_func_vpc_upd_%s", rString)
-	roleName := fmt.Sprintf("tf_acc_role_lambda_func_vpc_upd_%s", rString)
-	sgName := fmt.Sprintf("tf_acc_sg_lambda_func_vpc_upd_%s", rString)
-	sgName2 := fmt.Sprintf("tf_acc_sg_lambda_func_2nd_vpc_upd_%s", rString)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lambda_function.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -1422,15 +1407,13 @@ func TestAccLambdaFunction_vpcUpdate(t *testing.T) {
 		CheckDestroy:             testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFunctionConfig_vpc(funcName, policyName, roleName, sgName),
+				Config: testAccFunctionConfig_vpc(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, &conf),
-					testAccCheckFunctionName(&conf, funcName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
-					testAccCheckFunctionVersion(&conf, tflambda.FunctionVersionLatest),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.subnet_ids.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.security_group_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.subnet_ids.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "vpc_config.0.vpc_id"),
 				),
 			},
 			{
@@ -1440,15 +1423,14 @@ func TestAccLambdaFunction_vpcUpdate(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"filename", "publish"},
 			},
 			{
-				Config: testAccFunctionConfig_vpcUpdated(funcName, policyName, roleName, sgName, sgName2),
+				Config: testAccFunctionConfig_vpcUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, &conf),
-					testAccCheckFunctionName(&conf, funcName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
 					testAccCheckFunctionVersion(&conf, tflambda.FunctionVersionLatest),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.subnet_ids.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.security_group_ids.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.subnet_ids.#", "2"),
+					resource.TestCheckResourceAttrSet(resourceName, "vpc_config.0.vpc_id"),
 				),
 			},
 		},
@@ -1463,12 +1445,7 @@ func TestAccLambdaFunction_VPC_withInvocation(t *testing.T) {
 	}
 
 	var conf lambda.GetFunctionOutput
-
-	rString := sdkacctest.RandString(8)
-	funcName := fmt.Sprintf("tf_acc_lambda_func_vpc_w_invc_%s", rString)
-	policyName := fmt.Sprintf("tf_acc_policy_lambda_func_vpc_w_invc_%s", rString)
-	roleName := fmt.Sprintf("tf_acc_role_lambda_func_vpc_w_invc_%s", rString)
-	sgName := fmt.Sprintf("tf_acc_sg_lambda_func_vpc_w_invc_%s", rString)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lambda_function.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -1478,7 +1455,7 @@ func TestAccLambdaFunction_VPC_withInvocation(t *testing.T) {
 		CheckDestroy:             testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFunctionConfig_vpc(funcName, policyName, roleName, sgName),
+				Config: testAccFunctionConfig_vpc(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, &conf),
 					testAccInvokeFunction(&conf),
@@ -1502,13 +1479,9 @@ func TestAccLambdaFunction_VPCPublishNo_changes(t *testing.T) {
 	}
 
 	var conf lambda.GetFunctionOutput
-
-	rString := sdkacctest.RandString(8)
-	funcName := fmt.Sprintf("tf_acc_lambda_func_vpc_w_invc_%s", rString)
-	policyName := fmt.Sprintf("tf_acc_policy_lambda_func_vpc_w_invc_%s", rString)
-	roleName := fmt.Sprintf("tf_acc_role_lambda_func_vpc_w_invc_%s", rString)
-	sgName := fmt.Sprintf("tf_acc_sg_lambda_func_vpc_w_invc_%s", rString)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lambda_function.test"
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
@@ -1516,7 +1489,7 @@ func TestAccLambdaFunction_VPCPublishNo_changes(t *testing.T) {
 		CheckDestroy:             testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFunctionConfig_vpcPublish(funcName, policyName, roleName, sgName),
+				Config: testAccFunctionConfig_vpcPublish(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "version", "1"),
@@ -1529,7 +1502,7 @@ func TestAccLambdaFunction_VPCPublishNo_changes(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"filename", "publish"},
 			},
 			{
-				Config: testAccFunctionConfig_vpcPublish(funcName, policyName, roleName, sgName),
+				Config: testAccFunctionConfig_vpcPublish(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "version", "1"),
@@ -1547,12 +1520,7 @@ func TestAccLambdaFunction_VPCPublishHas_changes(t *testing.T) {
 	}
 
 	var conf lambda.GetFunctionOutput
-
-	rString := sdkacctest.RandString(8)
-	funcName := fmt.Sprintf("tf_acc_lambda_func_vpc_w_invc_%s", rString)
-	policyName := fmt.Sprintf("tf_acc_policy_lambda_func_vpc_w_invc_%s", rString)
-	roleName := fmt.Sprintf("tf_acc_role_lambda_func_vpc_w_invc_%s", rString)
-	sgName := fmt.Sprintf("tf_acc_sg_lambda_func_vpc_w_invc_%s", rString)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lambda_function.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -1563,7 +1531,7 @@ func TestAccLambdaFunction_VPCPublishHas_changes(t *testing.T) {
 
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFunctionConfig_vpcPublish(funcName, policyName, roleName, sgName),
+				Config: testAccFunctionConfig_vpcPublish(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "version", "1"),
@@ -1576,7 +1544,7 @@ func TestAccLambdaFunction_VPCPublishHas_changes(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"filename", "publish"},
 			},
 			{
-				Config: testAccFunctionConfig_vpcUpdatedPublish(funcName, policyName, roleName, sgName),
+				Config: testAccFunctionConfig_vpcUpdatedPublish(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "version", "2"),
@@ -1593,7 +1561,6 @@ func TestAccLambdaFunction_VPC_properIAMDependencies(t *testing.T) {
 	}
 
 	var function lambda.GetFunctionOutput
-
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lambda_function.test"
 	vpcResourceName := "aws_vpc.test"
@@ -1620,12 +1587,7 @@ func TestAccLambdaFunction_VPC_properIAMDependencies(t *testing.T) {
 
 func TestAccLambdaFunction_emptyVPC(t *testing.T) {
 	var conf lambda.GetFunctionOutput
-
-	rString := sdkacctest.RandString(8)
-	funcName := fmt.Sprintf("tf_acc_lambda_func_empty_vpc_config_%s", rString)
-	policyName := fmt.Sprintf("tf_acc_policy_lambda_func_empty_vpc_config_%s", rString)
-	roleName := fmt.Sprintf("tf_acc_role_lambda_func_empty_vpc_config_%s", rString)
-	sgName := fmt.Sprintf("tf_acc_sg_lambda_func_empty_vpc_config_%s", rString)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lambda_function.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -1635,7 +1597,7 @@ func TestAccLambdaFunction_emptyVPC(t *testing.T) {
 		CheckDestroy:             testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFunctionConfig_emptyVPC(funcName, policyName, roleName, sgName),
+				Config: testAccFunctionConfig_emptyVPC(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "0"),
@@ -3119,6 +3081,102 @@ resource "aws_lambda_function" "test" {
 `, rName))
 }
 
+func testAccFunctionConfig_vpc(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLambdaBase(rName, rName, rName),
+		fmt.Sprintf(`
+resource "aws_lambda_function" "test" {
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = %[1]q
+  role          = aws_iam_role.iam_for_lambda.arn
+  handler       = "exports.example"
+  runtime       = "nodejs12.x"
+
+  vpc_config {
+    subnet_ids         = [aws_subnet.subnet_for_lambda.id]
+    security_group_ids = [aws_security_group.sg_for_lambda.id]
+  }
+}
+`, rName))
+}
+
+func testAccFunctionConfig_vpcUpdated(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLambdaBase(rName, rName, rName),
+		fmt.Sprintf(`
+resource "aws_lambda_function" "test" {
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = %[1]q
+  role          = aws_iam_role.iam_for_lambda.arn
+  handler       = "exports.example"
+  runtime       = "nodejs12.x"
+
+  vpc_config {
+    subnet_ids         = [aws_subnet.subnet_for_lambda.id, aws_subnet.subnet_for_lambda_az2.id]
+    security_group_ids = [aws_security_group.sg_for_lambda.id, aws_security_group.sg_for_lambda_2.id]
+  }
+}
+
+resource "aws_security_group" "sg_for_lambda_2" {
+  name        = "%[1]s-2"
+  description = "Allow all inbound traffic for lambda test"
+  vpc_id      = aws_vpc.vpc_for_lambda.id
+
+  ingress {
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+`, rName))
+}
+
+func testAccFunctionConfig_vpcPublish(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLambdaBase(rName, rName, rName),
+		fmt.Sprintf(`
+resource "aws_lambda_function" "test" {
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = %[1]q
+  role          = aws_iam_role.iam_for_lambda.arn
+  handler       = "exports.example"
+  runtime       = "nodejs12.x"
+  publish       = true
+  vpc_config {
+    subnet_ids         = [aws_subnet.subnet_for_lambda.id]
+    security_group_ids = [aws_security_group.sg_for_lambda.id]
+  }
+}
+`, rName))
+}
+
+func testAccFunctionConfig_vpcUpdatedPublish(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLambdaBase(rName, rName, rName),
+		fmt.Sprintf(`
+resource "aws_lambda_function" "test" {
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = %[1]q
+  role          = aws_iam_role.iam_for_lambda.arn
+  handler       = "exports.example"
+  runtime       = "nodejs12.x"
+  publish       = true
+  vpc_config {
+    security_group_ids = []
+    subnet_ids         = []
+  }
+}
+`, rName))
+}
+
 func testAccFunctionConfig_vpcProperIAMDependencies(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
@@ -3196,99 +3254,13 @@ resource "aws_lambda_function" "test" {
 `, rName)
 }
 
-func testAccFunctionConfig_vpc(funcName, policyName, roleName, sgName string) string {
-	return fmt.Sprintf(acctest.ConfigLambdaBase(policyName, roleName, sgName)+`
+func testAccFunctionConfig_emptyVPC(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLambdaBase(rName, rName, rName),
+		fmt.Sprintf(`
 resource "aws_lambda_function" "test" {
   filename      = "test-fixtures/lambdatest.zip"
-  function_name = "%s"
-  role          = aws_iam_role.iam_for_lambda.arn
-  handler       = "exports.example"
-  runtime       = "nodejs12.x"
-
-  vpc_config {
-    subnet_ids         = [aws_subnet.subnet_for_lambda.id]
-    security_group_ids = [aws_security_group.sg_for_lambda.id]
-  }
-}
-`, funcName)
-}
-
-func testAccFunctionConfig_vpcPublish(funcName, policyName, roleName, sgName string) string {
-	return fmt.Sprintf(acctest.ConfigLambdaBase(policyName, roleName, sgName)+`
-resource "aws_lambda_function" "test" {
-  filename      = "test-fixtures/lambdatest.zip"
-  function_name = "%s"
-  role          = aws_iam_role.iam_for_lambda.arn
-  handler       = "exports.example"
-  runtime       = "nodejs12.x"
-  publish       = true
-  vpc_config {
-    subnet_ids         = [aws_subnet.subnet_for_lambda.id]
-    security_group_ids = [aws_security_group.sg_for_lambda.id]
-  }
-}
-`, funcName)
-}
-
-func testAccFunctionConfig_vpcUpdatedPublish(funcName, policyName, roleName, sgName string) string {
-	return fmt.Sprintf(acctest.ConfigLambdaBase(policyName, roleName, sgName)+`
-resource "aws_lambda_function" "test" {
-  filename      = "test-fixtures/lambdatest.zip"
-  function_name = "%s"
-  role          = aws_iam_role.iam_for_lambda.arn
-  handler       = "exports.example"
-  runtime       = "nodejs12.x"
-  publish       = true
-  vpc_config {
-    security_group_ids = []
-    subnet_ids         = []
-  }
-}
-`, funcName)
-}
-
-func testAccFunctionConfig_vpcUpdated(funcName, policyName, roleName, sgName, sgName2 string) string {
-	return fmt.Sprintf(acctest.ConfigLambdaBase(policyName, roleName, sgName)+`
-resource "aws_lambda_function" "test" {
-  filename      = "test-fixtures/lambdatest.zip"
-  function_name = "%s"
-  role          = aws_iam_role.iam_for_lambda.arn
-  handler       = "exports.example"
-  runtime       = "nodejs12.x"
-
-  vpc_config {
-    subnet_ids         = [aws_subnet.subnet_for_lambda.id, aws_subnet.subnet_for_lambda_az2.id]
-    security_group_ids = [aws_security_group.sg_for_lambda.id, aws_security_group.sg_for_lambda_2.id]
-  }
-}
-
-resource "aws_security_group" "sg_for_lambda_2" {
-  name        = "sg_for_lambda_%s"
-  description = "Allow all inbound traffic for lambda test"
-  vpc_id      = aws_vpc.vpc_for_lambda.id
-
-  ingress {
-    from_port   = 80
-    to_port     = 80
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-}
-`, funcName, sgName2)
-}
-
-func testAccFunctionConfig_emptyVPC(funcName, policyName, roleName, sgName string) string {
-	return fmt.Sprintf(acctest.ConfigLambdaBase(policyName, roleName, sgName)+`
-resource "aws_lambda_function" "test" {
-  filename      = "test-fixtures/lambdatest.zip"
-  function_name = "%s"
+  function_name = %[1]q
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
   runtime       = "nodejs12.x"
@@ -3298,7 +3270,7 @@ resource "aws_lambda_function" "test" {
     security_group_ids = []
   }
 }
-`, funcName)
+`, rName))
 }
 
 func testAccFunctionConfig_s3Simple(bucketName, roleName, funcName string) string {
