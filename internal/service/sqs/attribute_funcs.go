@@ -21,23 +21,7 @@ type queueAttributeHandler struct {
 	SchemaKey     string
 }
 
-func (h *queueAttributeHandler) Create() schema.CreateContextFunc {
-	return h.upsert
-}
-
-func (h *queueAttributeHandler) Read() schema.ReadContextFunc {
-	return h.read
-}
-
-func (h *queueAttributeHandler) Update() schema.UpdateContextFunc {
-	return h.upsert
-}
-
-func (h *queueAttributeHandler) Delete() schema.DeleteContextFunc {
-	return h.delete
-}
-
-func (h *queueAttributeHandler) upsert(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func (h *queueAttributeHandler) Upsert(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).SQSConn
 
 	attrValue, err := structure.NormalizeJsonString(d.Get(h.SchemaKey).(string))
@@ -68,14 +52,14 @@ func (h *queueAttributeHandler) upsert(ctx context.Context, d *schema.ResourceDa
 		return diag.Errorf("waiting for SQS Queue (%s) attribute (%s) create: %s", d.Id(), h.AttributeName, err)
 	}
 
-	return h.read(ctx, d, meta)
+	return h.Read(ctx, d, meta)
 }
 
-func (h *queueAttributeHandler) read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func (h *queueAttributeHandler) Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	return nil
 }
 
-func (h *queueAttributeHandler) delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func (h *queueAttributeHandler) Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).SQSConn
 
 	log.Printf("[DEBUG] Deleting SQS Queue (%s) attribute: %s", d.Id(), h.AttributeName)

@@ -13,10 +13,10 @@ func ResourceQueuePolicy() *schema.Resource {
 
 	//lintignore:R011
 	return &schema.Resource{
-		CreateWithoutTimeout: h.Create(),
-		ReadWithoutTimeout:   h.Read(),
-		UpdateWithoutTimeout: h.Update(),
-		DeleteWithoutTimeout: h.Delete(),
+		CreateWithoutTimeout: h.Upsert,
+		ReadWithoutTimeout:   h.Read,
+		UpdateWithoutTimeout: h.Upsert,
+		DeleteWithoutTimeout: h.Delete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
