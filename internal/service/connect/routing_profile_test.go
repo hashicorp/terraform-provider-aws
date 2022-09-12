@@ -15,25 +15,6 @@ import (
 	tfconnect "github.com/hashicorp/terraform-provider-aws/internal/service/connect"
 )
 
-// Serialized acceptance tests due to Connect account limits (max 2 parallel tests)
-func TestAccConnectRoutingProfile_serial(t *testing.T) {
-	testCases := map[string]func(t *testing.T){
-		"basic":                      testAccRoutingProfile_basic,
-		"disappears":                 testAccRoutingProfile_disappears,
-		"updateConcurrency":          testAccRoutingProfile_updateConcurrency,
-		"updateDefaultOutboundQueue": testAccRoutingProfile_updateDefaultOutboundQueue,
-		"updateQueues":               testAccRoutingProfile_updateQueues,
-		"updateTags":                 testAccRoutingProfile_updateTags,
-	}
-
-	for name, tc := range testCases {
-		tc := tc
-		t.Run(name, func(t *testing.T) {
-			tc(t)
-		})
-	}
-}
-
 func testAccRoutingProfile_basic(t *testing.T) {
 	var v connect.DescribeRoutingProfileOutput
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")

@@ -192,9 +192,21 @@ func testAccClassificationJob_complete(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "s3_job_definition.0.scoping.0.excludes.0.and.0.simple_scope_term.0.comparator", "EQ"),
 					resource.TestCheckResourceAttr(resourceName, "s3_job_definition.0.scoping.0.excludes.0.and.0.simple_scope_term.0.key", "OBJECT_EXTENSION"),
 					resource.TestCheckResourceAttr(resourceName, "s3_job_definition.0.scoping.0.excludes.0.and.0.simple_scope_term.0.values.0", "test"),
+					resource.TestCheckResourceAttr(resourceName, "s3_job_definition.0.scoping.0.excludes.0.and.1.tag_scope_term.0.comparator", "EQ"),
+					resource.TestCheckResourceAttr(resourceName, "s3_job_definition.0.scoping.0.excludes.0.and.1.tag_scope_term.0.key", "TAG"),
+					resource.TestCheckResourceAttr(resourceName, "s3_job_definition.0.scoping.0.excludes.0.and.1.tag_scope_term.0.tag_values.0.key", "test"),
+					resource.TestCheckResourceAttr(resourceName, "s3_job_definition.0.scoping.0.excludes.0.and.1.tag_scope_term.0.tag_values.0.value", "test"),
+					resource.TestCheckResourceAttr(resourceName, "s3_job_definition.0.scoping.0.excludes.0.and.1.tag_scope_term.0.tag_values.1.key", "test2"),
+					resource.TestCheckResourceAttr(resourceName, "s3_job_definition.0.scoping.0.excludes.0.and.1.tag_scope_term.0.tag_values.1.value", "test2"),
 					resource.TestCheckResourceAttr(resourceName, "s3_job_definition.0.scoping.0.includes.0.and.0.simple_scope_term.0.comparator", "EQ"),
 					resource.TestCheckResourceAttr(resourceName, "s3_job_definition.0.scoping.0.includes.0.and.0.simple_scope_term.0.key", "OBJECT_EXTENSION"),
 					resource.TestCheckResourceAttr(resourceName, "s3_job_definition.0.scoping.0.includes.0.and.0.simple_scope_term.0.values.0", "test"),
+					resource.TestCheckResourceAttr(resourceName, "s3_job_definition.0.scoping.0.includes.0.and.1.tag_scope_term.0.comparator", "EQ"),
+					resource.TestCheckResourceAttr(resourceName, "s3_job_definition.0.scoping.0.includes.0.and.1.tag_scope_term.0.key", "TAG"),
+					resource.TestCheckResourceAttr(resourceName, "s3_job_definition.0.scoping.0.includes.0.and.1.tag_scope_term.0.tag_values.0.key", "test"),
+					resource.TestCheckResourceAttr(resourceName, "s3_job_definition.0.scoping.0.includes.0.and.1.tag_scope_term.0.tag_values.0.value", "test"),
+					resource.TestCheckResourceAttr(resourceName, "s3_job_definition.0.scoping.0.includes.0.and.1.tag_scope_term.0.tag_values.1.key", "test2"),
+					resource.TestCheckResourceAttr(resourceName, "s3_job_definition.0.scoping.0.includes.0.and.1.tag_scope_term.0.tag_values.1.value", "test2"),
 				),
 			},
 			{
@@ -210,9 +222,21 @@ func testAccClassificationJob_complete(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "s3_job_definition.0.scoping.0.excludes.0.and.0.simple_scope_term.0.comparator", "EQ"),
 					resource.TestCheckResourceAttr(resourceName, "s3_job_definition.0.scoping.0.excludes.0.and.0.simple_scope_term.0.key", "OBJECT_EXTENSION"),
 					resource.TestCheckResourceAttr(resourceName, "s3_job_definition.0.scoping.0.excludes.0.and.0.simple_scope_term.0.values.0", "test"),
+					resource.TestCheckResourceAttr(resourceName, "s3_job_definition.0.scoping.0.excludes.0.and.1.tag_scope_term.0.comparator", "EQ"),
+					resource.TestCheckResourceAttr(resourceName, "s3_job_definition.0.scoping.0.excludes.0.and.1.tag_scope_term.0.key", "TAG"),
+					resource.TestCheckResourceAttr(resourceName, "s3_job_definition.0.scoping.0.excludes.0.and.1.tag_scope_term.0.tag_values.0.key", "test"),
+					resource.TestCheckResourceAttr(resourceName, "s3_job_definition.0.scoping.0.excludes.0.and.1.tag_scope_term.0.tag_values.0.value", "test"),
+					resource.TestCheckResourceAttr(resourceName, "s3_job_definition.0.scoping.0.excludes.0.and.1.tag_scope_term.0.tag_values.1.key", "test2"),
+					resource.TestCheckResourceAttr(resourceName, "s3_job_definition.0.scoping.0.excludes.0.and.1.tag_scope_term.0.tag_values.1.value", "test2"),
 					resource.TestCheckResourceAttr(resourceName, "s3_job_definition.0.scoping.0.includes.0.and.0.simple_scope_term.0.comparator", "EQ"),
 					resource.TestCheckResourceAttr(resourceName, "s3_job_definition.0.scoping.0.includes.0.and.0.simple_scope_term.0.key", "OBJECT_EXTENSION"),
 					resource.TestCheckResourceAttr(resourceName, "s3_job_definition.0.scoping.0.includes.0.and.0.simple_scope_term.0.values.0", "test"),
+					resource.TestCheckResourceAttr(resourceName, "s3_job_definition.0.scoping.0.includes.0.and.1.tag_scope_term.0.comparator", "EQ"),
+					resource.TestCheckResourceAttr(resourceName, "s3_job_definition.0.scoping.0.includes.0.and.1.tag_scope_term.0.key", "TAG"),
+					resource.TestCheckResourceAttr(resourceName, "s3_job_definition.0.scoping.0.includes.0.and.1.tag_scope_term.0.tag_values.0.key", "test"),
+					resource.TestCheckResourceAttr(resourceName, "s3_job_definition.0.scoping.0.includes.0.and.1.tag_scope_term.0.tag_values.0.value", "test"),
+					resource.TestCheckResourceAttr(resourceName, "s3_job_definition.0.scoping.0.includes.0.and.1.tag_scope_term.0.tag_values.1.key", "test2"),
+					resource.TestCheckResourceAttr(resourceName, "s3_job_definition.0.scoping.0.includes.0.and.1.tag_scope_term.0.tag_values.1.value", "test2"),
 				),
 			},
 			{
@@ -259,6 +283,90 @@ func testAccClassificationJob_WithTags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.Key", "value"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.Key", "value"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccClassificationJob_BucketCriteria(t *testing.T) {
+	var macie2Output macie2.DescribeClassificationJobOutput
+	resourceName := "aws_macie2_classification_job.test"
+	currentAccount := "data.aws_caller_identity.current"
+	description := "Description of a test"
+	descriptionUpdated := "Updated Description of a test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClassificationJobDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, macie2.EndpointsID),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClassificationJobConfig_bucketCriteria(macie2.JobStatusRunning, description),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClassificationJobExists(resourceName, &macie2Output),
+					resource.TestCheckResourceAttr(resourceName, "job_type", macie2.JobTypeScheduled),
+					resource.TestCheckResourceAttr(resourceName, "job_status", macie2.JobStatusRunning),
+					acctest.CheckResourceAttrRFC3339(resourceName, "created_at"),
+					resource.TestCheckResourceAttr(resourceName, "description", description),
+					resource.TestCheckResourceAttr(resourceName, "sampling_percentage", "100"),
+					resource.TestCheckResourceAttr(resourceName, "initial_run", "true"),
+					resource.TestCheckResourceAttr(resourceName, "s3_job_definition.0.bucket_criteria.0.excludes.0.and.0.simple_criterion.0.comparator", "NE"),
+					resource.TestCheckResourceAttr(resourceName, "s3_job_definition.0.bucket_criteria.0.excludes.0.and.0.simple_criterion.0.key", "S3_BUCKET_SHARED_ACCESS"),
+					resource.TestCheckResourceAttr(resourceName, "s3_job_definition.0.bucket_criteria.0.excludes.0.and.0.simple_criterion.0.values.0", "EXTERNAL"),
+					resource.TestCheckResourceAttr(resourceName, "s3_job_definition.0.bucket_criteria.0.excludes.0.and.0.simple_criterion.0.values.1", "INTERNAL"),
+					resource.TestCheckResourceAttr(resourceName, "s3_job_definition.0.bucket_criteria.0.excludes.0.and.0.simple_criterion.0.values.2", "NOT_SHARED"),
+					resource.TestCheckResourceAttr(resourceName, "s3_job_definition.0.bucket_criteria.0.excludes.0.and.0.simple_criterion.0.values.3", "UNKNOWN"),
+					resource.TestCheckResourceAttr(resourceName, "s3_job_definition.0.bucket_criteria.0.excludes.0.and.1.tag_criterion.0.comparator", "NE"),
+					resource.TestCheckResourceAttr(resourceName, "s3_job_definition.0.bucket_criteria.0.excludes.0.and.1.tag_criterion.0.tag_values.0.key", "test"),
+					resource.TestCheckResourceAttr(resourceName, "s3_job_definition.0.bucket_criteria.0.excludes.0.and.1.tag_criterion.0.tag_values.0.value", "test"),
+					resource.TestCheckResourceAttr(resourceName, "s3_job_definition.0.bucket_criteria.0.excludes.0.and.1.tag_criterion.0.tag_values.1.key", "test2"),
+					resource.TestCheckResourceAttr(resourceName, "s3_job_definition.0.bucket_criteria.0.excludes.0.and.1.tag_criterion.0.tag_values.1.value", "test2"),
+					resource.TestCheckResourceAttr(resourceName, "s3_job_definition.0.bucket_criteria.0.includes.0.and.0.simple_criterion.0.comparator", "EQ"),
+					resource.TestCheckResourceAttr(resourceName, "s3_job_definition.0.bucket_criteria.0.includes.0.and.0.simple_criterion.0.key", "ACCOUNT_ID"),
+					resource.TestCheckResourceAttrPair(resourceName, "s3_job_definition.0.bucket_criteria.0.includes.0.and.0.simple_criterion.0.values.0", currentAccount, "account_id"),
+					resource.TestCheckResourceAttr(resourceName, "s3_job_definition.0.bucket_criteria.0.includes.0.and.1.tag_criterion.0.comparator", "EQ"),
+					resource.TestCheckResourceAttr(resourceName, "s3_job_definition.0.bucket_criteria.0.includes.0.and.1.tag_criterion.0.tag_values.0.key", "test"),
+					resource.TestCheckResourceAttr(resourceName, "s3_job_definition.0.bucket_criteria.0.includes.0.and.1.tag_criterion.0.tag_values.0.value", "test"),
+					resource.TestCheckResourceAttr(resourceName, "s3_job_definition.0.bucket_criteria.0.includes.0.and.1.tag_criterion.0.tag_values.1.key", "test2"),
+					resource.TestCheckResourceAttr(resourceName, "s3_job_definition.0.bucket_criteria.0.includes.0.and.1.tag_criterion.0.tag_values.1.value", "test2"),
+				),
+			},
+			{
+				Config: testAccClassificationJobConfig_bucketCriteria(macie2.JobStatusRunning, descriptionUpdated),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClassificationJobExists(resourceName, &macie2Output),
+					resource.TestCheckResourceAttr(resourceName, "job_type", macie2.JobTypeScheduled),
+					resource.TestCheckResourceAttr(resourceName, "job_status", macie2.JobStatusRunning),
+					acctest.CheckResourceAttrRFC3339(resourceName, "created_at"),
+					resource.TestCheckResourceAttr(resourceName, "description", descriptionUpdated),
+					resource.TestCheckResourceAttr(resourceName, "sampling_percentage", "100"),
+					resource.TestCheckResourceAttr(resourceName, "initial_run", "true"),
+					resource.TestCheckResourceAttr(resourceName, "s3_job_definition.0.bucket_criteria.0.excludes.0.and.0.simple_criterion.0.comparator", "NE"),
+					resource.TestCheckResourceAttr(resourceName, "s3_job_definition.0.bucket_criteria.0.excludes.0.and.0.simple_criterion.0.key", "S3_BUCKET_SHARED_ACCESS"),
+					resource.TestCheckResourceAttr(resourceName, "s3_job_definition.0.bucket_criteria.0.excludes.0.and.0.simple_criterion.0.values.0", "EXTERNAL"),
+					resource.TestCheckResourceAttr(resourceName, "s3_job_definition.0.bucket_criteria.0.excludes.0.and.0.simple_criterion.0.values.1", "INTERNAL"),
+					resource.TestCheckResourceAttr(resourceName, "s3_job_definition.0.bucket_criteria.0.excludes.0.and.0.simple_criterion.0.values.2", "NOT_SHARED"),
+					resource.TestCheckResourceAttr(resourceName, "s3_job_definition.0.bucket_criteria.0.excludes.0.and.0.simple_criterion.0.values.3", "UNKNOWN"),
+					resource.TestCheckResourceAttr(resourceName, "s3_job_definition.0.bucket_criteria.0.excludes.0.and.1.tag_criterion.0.comparator", "NE"),
+					resource.TestCheckResourceAttr(resourceName, "s3_job_definition.0.bucket_criteria.0.excludes.0.and.1.tag_criterion.0.tag_values.0.key", "test"),
+					resource.TestCheckResourceAttr(resourceName, "s3_job_definition.0.bucket_criteria.0.excludes.0.and.1.tag_criterion.0.tag_values.0.value", "test"),
+					resource.TestCheckResourceAttr(resourceName, "s3_job_definition.0.bucket_criteria.0.excludes.0.and.1.tag_criterion.0.tag_values.1.key", "test2"),
+					resource.TestCheckResourceAttr(resourceName, "s3_job_definition.0.bucket_criteria.0.excludes.0.and.1.tag_criterion.0.tag_values.1.value", "test2"),
+					resource.TestCheckResourceAttr(resourceName, "s3_job_definition.0.bucket_criteria.0.includes.0.and.0.simple_criterion.0.comparator", "EQ"),
+					resource.TestCheckResourceAttr(resourceName, "s3_job_definition.0.bucket_criteria.0.includes.0.and.0.simple_criterion.0.key", "ACCOUNT_ID"),
+					resource.TestCheckResourceAttrPair(resourceName, "s3_job_definition.0.bucket_criteria.0.includes.0.and.0.simple_criterion.0.values.0", currentAccount, "account_id"),
+					resource.TestCheckResourceAttr(resourceName, "s3_job_definition.0.bucket_criteria.0.includes.0.and.1.tag_criterion.0.comparator", "EQ"),
+					resource.TestCheckResourceAttr(resourceName, "s3_job_definition.0.bucket_criteria.0.includes.0.and.1.tag_criterion.0.tag_values.0.key", "test"),
+					resource.TestCheckResourceAttr(resourceName, "s3_job_definition.0.bucket_criteria.0.includes.0.and.1.tag_criterion.0.tag_values.0.value", "test"),
+					resource.TestCheckResourceAttr(resourceName, "s3_job_definition.0.bucket_criteria.0.includes.0.and.1.tag_criterion.0.tag_values.1.key", "test2"),
+					resource.TestCheckResourceAttr(resourceName, "s3_job_definition.0.bucket_criteria.0.includes.0.and.1.tag_criterion.0.tag_values.1.value", "test2"),
 				),
 			},
 			{
@@ -407,6 +515,21 @@ resource "aws_macie2_classification_job" "test" {
             values     = ["test"]
           }
         }
+        and {
+          tag_scope_term {
+            comparator = "EQ"
+            key        = "TAG"
+            tag_values {
+              key   = "test"
+              value = "test"
+            }
+            tag_values {
+              key   = "test2"
+              value = "test2"
+            }
+            target = "S3_OBJECT"
+          }
+        }
       }
       includes {
         and {
@@ -414,6 +537,21 @@ resource "aws_macie2_classification_job" "test" {
             comparator = "EQ"
             key        = "OBJECT_EXTENSION"
             values     = ["test"]
+          }
+        }
+        and {
+          tag_scope_term {
+            comparator = "EQ"
+            key        = "TAG"
+            tag_values {
+              key   = "test"
+              value = "test"
+            }
+            tag_values {
+              key   = "test2"
+              value = "test2"
+            }
+            target = "S3_OBJECT"
           }
         }
       }
@@ -534,4 +672,81 @@ resource "aws_macie2_classification_job" "test" {
   depends_on = [aws_macie2_account.test]
 }
 `, nameBucket, jobStatus)
+}
+
+func testAccClassificationJobConfig_bucketCriteria(jobStatus, description string) string {
+	return fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+
+resource "aws_macie2_account" "test" {}
+
+resource "aws_macie2_classification_job" "test" {
+  job_type = "SCHEDULED"
+  s3_job_definition {
+    bucket_criteria {
+      excludes {
+        and {
+          simple_criterion {
+            comparator = "NE"
+            key        = "S3_BUCKET_SHARED_ACCESS"
+            values = [
+              "EXTERNAL",
+              "INTERNAL",
+              "NOT_SHARED",
+              "UNKNOWN"
+            ]
+          }
+        }
+        and {
+          tag_criterion {
+            comparator = "NE"
+            tag_values {
+              key   = "test"
+              value = "test"
+            }
+            tag_values {
+              key   = "test2"
+              value = "test2"
+            }
+          }
+        }
+      }
+
+      includes {
+        and {
+          simple_criterion {
+            comparator = "EQ"
+            key        = "ACCOUNT_ID"
+            values = [
+              data.aws_caller_identity.current.account_id,
+            ]
+          }
+        }
+        and {
+          tag_criterion {
+            comparator = "EQ"
+            tag_values {
+              key   = "test"
+              value = "test"
+            }
+            tag_values {
+              key   = "test2"
+              value = "test2"
+            }
+          }
+        }
+      }
+    }
+  }
+  schedule_frequency {
+    daily_schedule = true
+  }
+  sampling_percentage = 100
+  initial_run         = true
+  job_status          = %[1]q
+  description         = %[2]q
+
+  depends_on = [aws_macie2_account.test]
+}
+`, jobStatus, description)
 }

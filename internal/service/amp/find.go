@@ -75,3 +75,28 @@ func FindRuleGroupNamespaceByARN(ctx context.Context, conn *prometheusservice.Pr
 
 	return output.RuleGroupsNamespace, nil
 }
+
+func FindWorkspaceByID(conn *prometheusservice.PrometheusService, id string) (*prometheusservice.WorkspaceDescription, error) {
+	input := &prometheusservice.DescribeWorkspaceInput{
+		WorkspaceId: aws.String(id),
+	}
+
+	output, err := conn.DescribeWorkspace(input)
+
+	if tfawserr.ErrCodeEquals(err, prometheusservice.ErrCodeResourceNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.Workspace == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.Workspace, nil
+}

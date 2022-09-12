@@ -115,19 +115,37 @@ func Resource{{ .Resource }}() *schema.Resource {
 		},
 		{{ if .IncludeComments }}
 		// TIP: ==== SCHEMA ====
-		// In the schema, add each of the arguments and attributes in snake
-		// case (e.g., delete_automated_backups).
-		// * Alphabetize arguments to make them easier to find.
-		// * Do not add a blank line between arguments/attributes.
+		// In the schema, add each of the attributes in snake case (e.g.,
+		// delete_automated_backups).
 		//
-		// Users can configure argument values while attribute values cannot be
-		// configured and are used as output. Arguments have either:
+		// Formatting rules:
+		// * Alphabetize attributes to make them easier to find.
+		// * Do not add a blank line between attributes.
+		//
+		// Attribute basics:
+		// * If a user can provide a value ("configure a value") for an
+		//   attribute (e.g., instances = 5), we call the attribute an
+		//   "argument."
+		// * You change the way users interact with attributes using:
+		//     - Required
+		//     - Optional
+		//     - Computed
+		// * There are only four valid combinations:
+		//
+		// 1. Required only - the user must provide a value
 		// Required: true,
+		//
+		// 2. Optional only - the user can configure or omit a value; do not
+		//    use Default or DefaultFunc
 		// Optional: true,
 		//
-		// All attributes will be computed and some arguments. If users will
-		// want to read updated information or detect drift for an argument,
-		// it should be computed:
+		// 3. Computed only - the provider can provide a value but the user
+		//    cannot, i.e., read-only
+		// Computed: true,
+		//
+		// 4. Optional AND Computed - the provider or user can provide a value;
+		//    use this combination if you are using Default or DefaultFunc
+		// Optional: true,
 		// Computed: true,
 		//
 		// You will typically find arguments in the input struct

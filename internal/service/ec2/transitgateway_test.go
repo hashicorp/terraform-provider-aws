@@ -84,6 +84,16 @@ func TestAccTransitGateway_serial(t *testing.T) {
 			"DifferentAccount": testAccTransitGatewayPeeringAttachmentAccepter_differentAccount,
 			"Tags":             testAccTransitGatewayPeeringAttachmentAccepter_Tags,
 		},
+		"PolicyTable": {
+			"basic":                    testAccTransitGatewayPolicyTable_basic,
+			"disappears":               testAccTransitGatewayPolicyTable_disappears,
+			"disappearsTransitGateway": testAccTransitGatewayPolicyTable_disappears_TransitGateway,
+			"Tags":                     testAccTransitGatewayPolicyTable_Tags,
+		},
+		"PolicyTableAssociation": {
+			"basic":      testAccTransitGatewayPolicyTableAssociation_basic,
+			"disappears": testAccTransitGatewayPolicyTableAssociation_disappears,
+		},
 		"PrefixListReference": {
 			"basic":                      testAccTransitGatewayPrefixListReference_basic,
 			"disappears":                 testAccTransitGatewayPrefixListReference_disappears,
@@ -680,11 +690,7 @@ func testAccCheckTransitGatewayAssociationDefaultRouteTableAttachmentAssociated(
 			return errors.New("EC2 Transit Gateway Route Table Association not found")
 		}
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 
@@ -744,11 +750,7 @@ func testAccCheckTransitGatewayPropagationDefaultRouteTableAttachmentPropagated(
 			return errors.New("EC2 Transit Gateway Route Table Propagation not enabled")
 		}
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 

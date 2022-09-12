@@ -94,6 +94,7 @@ The following arguments are supported:
   Network Load Balancers do not support the `lambda` target type.
 
   Application Load Balancers do not support the `alb` target type.
+* `ip_address_type` (Optional, forces new resource) The type of IP addresses used by the target group, only supported when target type is set to `ip`. Possible values are `ipv4` or `ipv6`.
 * `vpc_id` - (Optional, Forces new resource) Identifier of the VPC in which to create the target group. Required when `target_type` is `instance`, `ip` or `alb`. Does not apply when `target_type` is `lambda`.
 
 ### health_check

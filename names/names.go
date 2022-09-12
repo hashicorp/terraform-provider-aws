@@ -23,7 +23,10 @@ import (
 
 // This "should" be defined by the AWS Go SDK v2, but currently isn't.
 const (
+	ComprehendEndpointID     = "comprehend"
+	IdentityStoreEndpointID  = "identitystore"
 	KendraEndpointID         = "kendra"
+	MediaLiveEndpointID      = "medialive"
 	RolesAnywhereEndpointID  = "rolesanywhere"
 	Route53DomainsEndpointID = "route53domains"
 	TranscribeEndpointID     = "transcribe"

@@ -367,7 +367,7 @@ func TestAccEventsTarget_http(t *testing.T) {
 	})
 }
 
-//https://github.com/hashicorp/terraform-provider-aws/issues/23805
+// https://github.com/hashicorp/terraform-provider-aws/issues/23805
 func TestAccEventsTarget_http_params(t *testing.T) {
 	resourceName := "aws_cloudwatch_event_target.test"
 

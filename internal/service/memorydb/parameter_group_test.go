@@ -301,11 +301,7 @@ func testAccCheckParameterGroupExists(n string) resource.TestCheckFunc {
 
 		_, err := tfmemorydb.FindParameterGroupByName(context.Background(), conn, rs.Primary.Attributes["name"])
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 

@@ -187,11 +187,7 @@ func testAccCheckRiskConfigurationExists(name string) resource.TestCheckFunc {
 
 		_, err := tfcognitoidp.FindRiskConfigurationById(conn, rs.Primary.ID)
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 

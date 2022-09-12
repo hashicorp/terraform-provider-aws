@@ -1,6 +1,7 @@
 package ec2
 
 import (
+	"context"
 	"fmt"
 	"log"
 
@@ -68,7 +69,7 @@ func resourceNetworkInterfaceAttachmentCreate(d *schema.ResourceData, meta inter
 func resourceNetworkInterfaceAttachmentRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	attachment, err := FindNetworkInterfaceAttachmentByID(conn, d.Id())
+	attachment, err := FindNetworkInterfaceAttachmentByID(context.TODO(), conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EC2 Network Interface Attachment (%s) not found, removing from state", d.Id())

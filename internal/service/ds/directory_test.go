@@ -272,6 +272,7 @@ func TestAccDSDirectory_connector(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "edition", ""),
 					resource.TestCheckResourceAttr(resourceName, "enable_sso", "false"),
 					resource.TestCheckResourceAttr(resourceName, "name", domainName),
+					resource.TestCheckResourceAttr(resourceName, "radius_settings.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "security_group_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "short_name"),
 					resource.TestCheckResourceAttr(resourceName, "size", "Small"),

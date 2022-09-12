@@ -28,8 +28,8 @@ jobs:
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v3
         with:
-          version: v1.47.3
-          args: --out-${NO_FUTURE}format line-number --config .ci/.golangci.yml
+          version: latest
+          args: --config .ci/.golangci.yml
   golangci-lintb:
     name: 2 of 2
     needs: [golangci-linta]
@@ -42,5 +42,5 @@ jobs:
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v3
         with:
-          version: v1.47.3
-          args: --out-${NO_FUTURE}format line-number --config .ci/.golangci2.yml
+          version: latest
+          args: --config .ci/.golangci2.yml

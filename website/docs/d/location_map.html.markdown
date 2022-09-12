@@ -20,14 +20,14 @@ data "aws_location_map" "example" {
 
 ## Argument Reference
 
-* `map_name` - (Required) The name of the map resource.
+* `map_name` - (Required) Name of the map resource.
 
 ## Attribute Reference
 
 * `configuration` - List of configurations that specify the map tile style selected from a partner data provider.
     * `style` - The map style selected from an available data provider.
-* `create_time` - The timestamp for when the map resource was created in ISO 8601 format.
-* `description` - The optional description for the map resource.
-* `map_arn` - The Amazon Resource Name (ARN) for the map resource.
+* `create_time` - Timestamp for when the map resource was created in ISO 8601 format.
+* `description` - Optional description for the map resource.
+* `map_arn` - ARN for the map resource.
 * `tags` - Key-value map of resource tags for the map.
-* `update_time` - The timestamp for when the map resource was last updated in ISO 8601 format.
+* `update_time` - Timestamp for when the map resource was last updated in ISO 8601 format.

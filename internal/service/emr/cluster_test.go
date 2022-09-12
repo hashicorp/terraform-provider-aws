@@ -1720,18 +1720,8 @@ func testAccDeleteManagedSecurityGroup(conn *ec2.EC2, securityGroup *ec2.Securit
 
 // Sub-configs (used by other configs)
 
-func testAccClusterBaseVPCConfig(rName string, mapPublicIPOnLaunch bool) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  # Many instance types are not available in this availability zone
-  exclude_zone_ids = ["usw2-az4"]
-  state            = "available"
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+func testAccClusterConfig_baseVPC(rName string, mapPublicIPOnLaunch bool) string {
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInDefaultExclude(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block           = "10.0.0.0/16"
   enable_dns_hostnames = true
@@ -1750,6 +1740,7 @@ resource "aws_internet_gateway" "test" {
 }
 
 resource "aws_security_group" "test" {
+  name   = %[1]q
   vpc_id = aws_vpc.test.id
 
   ingress {
@@ -1794,16 +1785,20 @@ resource "aws_route_table" "test" {
     cidr_block = "0.0.0.0/0"
     gateway_id = aws_internet_gateway.test.id
   }
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_route_table_association" "test" {
   route_table_id = aws_route_table.test.id
   subnet_id      = aws_subnet.test.id
 }
-`, rName, mapPublicIPOnLaunch)
+`, rName, mapPublicIPOnLaunch))
 }
 
-func testAccClusterIAMInstanceProfileBaseConfig(rName string) string {
+func testAccClusterConfig_baseIAMInstanceProfile(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_instance_profile" "emr_instance_profile" {
   name = "%[1]s_profile"
@@ -1875,7 +1870,7 @@ EOT
 `, rName)
 }
 
-func testAccClusterIAMServiceRoleBaseConfig(rName string) string {
+func testAccClusterConfig_baseIAMServiceRole(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "emr_service" {
   name = "%[1]s_default_role"
@@ -1905,7 +1900,7 @@ resource "aws_iam_role_policy_attachment" "emr_service" {
 `, rName)
 }
 
-func testAccClusterIAMAutoScalingRoleConfig(rName string) string {
+func testAccClusterConfig_baseIAMAutoScalingRole(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "emr_autoscaling_role" {
   name               = "%[1]s_autoscaling_role"
@@ -1958,7 +1953,7 @@ EOF
 
 func testAccClusterConfig_Step(rName string, stepConfig string) string {
 	return acctest.ConfigCompose(
-		testAccClusterBaseVPCConfig(rName, false),
+		testAccClusterConfig_baseVPC(rName, false),
 		fmt.Sprintf(`
 resource "aws_emr_cluster" "test" {
   applications                      = ["Spark"]
@@ -2126,10 +2121,10 @@ const testAccClusterConfig_Step_SparkStep = `
 
 func testAccClusterConfig_basic(rName string) string {
 	return acctest.ConfigCompose(
-		testAccClusterBaseVPCConfig(rName, false),
-		testAccClusterIAMServiceRoleBaseConfig(rName),
-		testAccClusterIAMInstanceProfileBaseConfig(rName),
-		testAccClusterIAMAutoScalingRoleConfig(rName),
+		testAccClusterConfig_baseVPC(rName, false),
+		testAccClusterConfig_baseIAMServiceRole(rName),
+		testAccClusterConfig_baseIAMInstanceProfile(rName),
+		testAccClusterConfig_baseIAMAutoScalingRole(rName),
 		fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -2184,10 +2179,10 @@ resource "aws_emr_cluster" "test" {
 
 func testAccClusterConfig_additionalInfo(rName string) string {
 	return acctest.ConfigCompose(
-		testAccClusterBaseVPCConfig(rName, false),
-		testAccClusterIAMServiceRoleBaseConfig(rName),
-		testAccClusterIAMInstanceProfileBaseConfig(rName),
-		testAccClusterIAMAutoScalingRoleConfig(rName),
+		testAccClusterConfig_baseVPC(rName, false),
+		testAccClusterConfig_baseIAMServiceRole(rName),
+		testAccClusterConfig_baseIAMInstanceProfile(rName),
+		testAccClusterConfig_baseIAMAutoScalingRole(rName),
 		fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -2251,9 +2246,9 @@ EOF
 
 func testAccClusterConfig_configurationsJSON(rName string) string {
 	return acctest.ConfigCompose(
-		testAccClusterBaseVPCConfig(rName, false),
-		testAccClusterIAMServiceRoleBaseConfig(rName),
-		testAccClusterIAMInstanceProfileBaseConfig(rName),
+		testAccClusterConfig_baseVPC(rName, false),
+		testAccClusterConfig_baseIAMServiceRole(rName),
+		testAccClusterConfig_baseIAMInstanceProfile(rName),
 		fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -2324,7 +2319,7 @@ EOF
 
 func testAccClusterConfig_coreInstanceGroupAutoScalingPolicy(rName, autoscalingPolicy string) string {
 	return acctest.ConfigCompose(
-		testAccClusterBaseVPCConfig(rName, false),
+		testAccClusterConfig_baseVPC(rName, false),
 		fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -2389,7 +2384,7 @@ POLICY
 
 func testAccClusterConfig_coreInstanceGroupAutoScalingPolicyRemoved(rName string) string {
 	return acctest.ConfigCompose(
-		testAccClusterBaseVPCConfig(rName, false),
+		testAccClusterConfig_baseVPC(rName, false),
 		fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -2451,7 +2446,7 @@ resource "aws_emr_cluster" "test" {
 
 func testAccClusterConfig_coreInstanceGroupBidPrice(rName, bidPrice string) string {
 	return acctest.ConfigCompose(
-		testAccClusterBaseVPCConfig(rName, false),
+		testAccClusterConfig_baseVPC(rName, false),
 		fmt.Sprintf(`
 resource "aws_emr_cluster" "test" {
   applications                      = ["Spark"]
@@ -2483,7 +2478,7 @@ resource "aws_emr_cluster" "test" {
 
 func testAccClusterConfig_coreInstanceGroupInstanceCount(rName string, instanceCount int) string {
 	return acctest.ConfigCompose(
-		testAccClusterBaseVPCConfig(rName, false),
+		testAccClusterConfig_baseVPC(rName, false),
 		fmt.Sprintf(`
 resource "aws_emr_cluster" "test" {
   applications                      = ["Spark"]
@@ -2515,7 +2510,7 @@ resource "aws_emr_cluster" "test" {
 
 func testAccClusterConfig_coreInstanceGroupInstanceType(rName, instanceType string) string {
 	return acctest.ConfigCompose(
-		testAccClusterBaseVPCConfig(rName, false),
+		testAccClusterConfig_baseVPC(rName, false),
 		fmt.Sprintf(`
 resource "aws_emr_cluster" "test" {
   applications                      = ["Spark"]
@@ -2546,7 +2541,7 @@ resource "aws_emr_cluster" "test" {
 
 func testAccClusterConfig_coreInstanceGroupName(rName, instanceGroupName string) string {
 	return acctest.ConfigCompose(
-		testAccClusterBaseVPCConfig(rName, false),
+		testAccClusterConfig_baseVPC(rName, false),
 		fmt.Sprintf(`
 resource "aws_emr_cluster" "test" {
   applications                      = ["Spark"]
@@ -2578,7 +2573,7 @@ resource "aws_emr_cluster" "test" {
 
 func testAccClusterConfig_ec2AttributesDefaultManagedSecurityGroups(rName string) string {
 	return acctest.ConfigCompose(
-		testAccClusterBaseVPCConfig(rName, false),
+		testAccClusterConfig_baseVPC(rName, false),
 		fmt.Sprintf(`
 resource "aws_emr_cluster" "test" {
   applications                      = ["Spark"]
@@ -2603,7 +2598,7 @@ resource "aws_emr_cluster" "test" {
 
 func testAccClusterConfig_kerberosDedicatedKdc(rName string, password string) string {
 	return acctest.ConfigCompose(
-		testAccClusterBaseVPCConfig(rName, false),
+		testAccClusterConfig_baseVPC(rName, false),
 		fmt.Sprintf(`
 resource "aws_emr_security_configuration" "test" {
   configuration = <<EOF
@@ -2657,7 +2652,7 @@ resource "aws_emr_cluster" "test" {
 
 func testAccClusterConfig_masterInstanceGroupBidPrice(rName, bidPrice string) string {
 	return acctest.ConfigCompose(
-		testAccClusterBaseVPCConfig(rName, false),
+		testAccClusterConfig_baseVPC(rName, false),
 		fmt.Sprintf(`
 resource "aws_emr_cluster" "test" {
   applications                      = ["Spark"]
@@ -2685,7 +2680,7 @@ resource "aws_emr_cluster" "test" {
 
 func testAccClusterConfig_masterInstanceGroupInstanceCount(rName string, instanceCount int) string {
 	return acctest.ConfigCompose(
-		testAccClusterBaseVPCConfig(rName, true),
+		testAccClusterConfig_baseVPC(rName, true),
 		fmt.Sprintf(`
 resource "aws_emr_cluster" "test" {
   applications                      = ["Spark"]
@@ -2721,7 +2716,7 @@ resource "aws_emr_cluster" "test" {
 
 func testAccClusterConfig_masterInstanceGroupInstanceType(rName, instanceType string) string {
 	return acctest.ConfigCompose(
-		testAccClusterBaseVPCConfig(rName, false),
+		testAccClusterConfig_baseVPC(rName, false),
 		fmt.Sprintf(`
 resource "aws_emr_cluster" "test" {
   applications                      = ["Spark"]
@@ -2748,7 +2743,7 @@ resource "aws_emr_cluster" "test" {
 
 func testAccClusterConfig_masterInstanceGroupName(rName, instanceGroupName string) string {
 	return acctest.ConfigCompose(
-		testAccClusterBaseVPCConfig(rName, false),
+		testAccClusterConfig_baseVPC(rName, false),
 		fmt.Sprintf(`
 resource "aws_emr_cluster" "test" {
   applications                      = ["Spark"]
@@ -2776,10 +2771,10 @@ resource "aws_emr_cluster" "test" {
 
 func testAccClusterConfig_securityConfiguration(rName string) string {
 	return acctest.ConfigCompose(
-		testAccClusterBaseVPCConfig(rName, false),
-		testAccClusterIAMServiceRoleBaseConfig(rName),
-		testAccClusterIAMInstanceProfileBaseConfig(rName),
-		testAccClusterIAMAutoScalingRoleConfig(rName),
+		testAccClusterConfig_baseVPC(rName, false),
+		testAccClusterConfig_baseIAMServiceRole(rName),
+		testAccClusterConfig_baseIAMInstanceProfile(rName),
+		testAccClusterConfig_baseIAMAutoScalingRole(rName),
 		fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -2902,9 +2897,9 @@ func testAccClusterConfig_stepMultipleListStates(rName string) string {
 
 func testAccClusterConfig_bootstrap(rName string) string {
 	return acctest.ConfigCompose(
-		testAccClusterBaseVPCConfig(rName, false),
-		testAccClusterIAMServiceRoleBaseConfig(rName),
-		testAccClusterIAMInstanceProfileBaseConfig(rName),
+		testAccClusterConfig_baseVPC(rName, false),
+		testAccClusterConfig_baseIAMServiceRole(rName),
+		testAccClusterConfig_baseIAMInstanceProfile(rName),
 		testAccClusterBootstrapActionBucketConfig(rName),
 		fmt.Sprintf(`
 data "aws_partition" "current" {}
@@ -2966,9 +2961,9 @@ resource "aws_emr_cluster" "test" {
 
 func testAccClusterConfig_bootstrapAdd(rName string) string {
 	return acctest.ConfigCompose(
-		testAccClusterBaseVPCConfig(rName, false),
-		testAccClusterIAMServiceRoleBaseConfig(rName),
-		testAccClusterIAMInstanceProfileBaseConfig(rName),
+		testAccClusterConfig_baseVPC(rName, false),
+		testAccClusterConfig_baseIAMServiceRole(rName),
+		testAccClusterConfig_baseIAMInstanceProfile(rName),
 		testAccClusterBootstrapActionBucketConfig(rName),
 		fmt.Sprintf(`
 data "aws_partition" "current" {}
@@ -3036,9 +3031,9 @@ resource "aws_emr_cluster" "test" {
 
 func testAccClusterConfig_bootstrapReorder(rName string) string {
 	return acctest.ConfigCompose(
-		testAccClusterBaseVPCConfig(rName, false),
-		testAccClusterIAMServiceRoleBaseConfig(rName),
-		testAccClusterIAMInstanceProfileBaseConfig(rName),
+		testAccClusterConfig_baseVPC(rName, false),
+		testAccClusterConfig_baseIAMServiceRole(rName),
+		testAccClusterConfig_baseIAMInstanceProfile(rName),
 		testAccClusterBootstrapActionBucketConfig(rName),
 		fmt.Sprintf(`
 data "aws_partition" "current" {}
@@ -3106,10 +3101,10 @@ resource "aws_emr_cluster" "test" {
 
 func testAccClusterConfig_terminationPolicy(rName string, term string) string {
 	return acctest.ConfigCompose(
-		testAccClusterBaseVPCConfig(rName, false),
-		testAccClusterIAMServiceRoleBaseConfig(rName),
-		testAccClusterIAMInstanceProfileBaseConfig(rName),
-		testAccClusterIAMAutoScalingRoleConfig(rName),
+		testAccClusterConfig_baseVPC(rName, false),
+		testAccClusterConfig_baseIAMServiceRole(rName),
+		testAccClusterConfig_baseIAMInstanceProfile(rName),
+		testAccClusterConfig_baseIAMAutoScalingRole(rName),
 		fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -3161,10 +3156,10 @@ resource "aws_emr_cluster" "test" {
 
 func testAccClusterConfig_keepJob(rName string, keepJob bool) string {
 	return acctest.ConfigCompose(
-		testAccClusterBaseVPCConfig(rName, false),
-		testAccClusterIAMServiceRoleBaseConfig(rName),
-		testAccClusterIAMInstanceProfileBaseConfig(rName),
-		testAccClusterIAMAutoScalingRoleConfig(rName),
+		testAccClusterConfig_baseVPC(rName, false),
+		testAccClusterConfig_baseIAMServiceRole(rName),
+		testAccClusterConfig_baseIAMInstanceProfile(rName),
+		testAccClusterConfig_baseIAMAutoScalingRole(rName),
 		fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -3226,10 +3221,10 @@ resource "aws_emr_cluster" "test" {
 
 func testAccClusterConfig_visibleToAllUsersUpdated(rName string) string {
 	return acctest.ConfigCompose(
-		testAccClusterBaseVPCConfig(rName, false),
-		testAccClusterIAMServiceRoleBaseConfig(rName),
-		testAccClusterIAMInstanceProfileBaseConfig(rName),
-		testAccClusterIAMAutoScalingRoleConfig(rName),
+		testAccClusterConfig_baseVPC(rName, false),
+		testAccClusterConfig_baseIAMServiceRole(rName),
+		testAccClusterConfig_baseIAMInstanceProfile(rName),
+		testAccClusterConfig_baseIAMAutoScalingRole(rName),
 		fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -3281,9 +3276,9 @@ resource "aws_emr_cluster" "test" {
 
 func testAccClusterConfig_s3Logging(rName string) string {
 	return acctest.ConfigCompose(
-		testAccClusterBaseVPCConfig(rName, false),
+		testAccClusterConfig_baseVPC(rName, false),
 		testAccClusterIAMServiceRoleCustomAMIIDConfig(rName),
-		testAccClusterIAMInstanceProfileBaseConfig(rName),
+		testAccClusterConfig_baseIAMInstanceProfile(rName),
 		fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -3327,9 +3322,9 @@ data "aws_caller_identity" "current" {}
 
 func testAccClusterConfig_s3Encryption(rName string) string {
 	return acctest.ConfigCompose(
-		testAccClusterBaseVPCConfig(rName, false),
+		testAccClusterConfig_baseVPC(rName, false),
 		testAccClusterIAMServiceRoleCustomAMIIDConfig(rName),
-		testAccClusterIAMInstanceProfileBaseConfig(rName),
+		testAccClusterConfig_baseIAMInstanceProfile(rName),
 		fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -3396,10 +3391,10 @@ data "aws_caller_identity" "current" {}
 
 func testAccClusterConfig_updatedTags(rName string) string {
 	return acctest.ConfigCompose(
-		testAccClusterBaseVPCConfig(rName, false),
-		testAccClusterIAMServiceRoleBaseConfig(rName),
-		testAccClusterIAMInstanceProfileBaseConfig(rName),
-		testAccClusterIAMAutoScalingRoleConfig(rName),
+		testAccClusterConfig_baseVPC(rName, false),
+		testAccClusterConfig_baseIAMServiceRole(rName),
+		testAccClusterConfig_baseIAMInstanceProfile(rName),
+		testAccClusterConfig_baseIAMAutoScalingRole(rName),
 		fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -3450,10 +3445,10 @@ resource "aws_emr_cluster" "test" {
 
 func testAccClusterConfig_updatedRootVolumeSize(rName string) string {
 	return acctest.ConfigCompose(
-		testAccClusterBaseVPCConfig(rName, false),
-		testAccClusterIAMServiceRoleBaseConfig(rName),
-		testAccClusterIAMInstanceProfileBaseConfig(rName),
-		testAccClusterIAMAutoScalingRoleConfig(rName),
+		testAccClusterConfig_baseVPC(rName, false),
+		testAccClusterConfig_baseIAMServiceRole(rName),
+		testAccClusterConfig_baseIAMInstanceProfile(rName),
+		testAccClusterConfig_baseIAMAutoScalingRole(rName),
 		fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -3506,7 +3501,7 @@ resource "aws_emr_cluster" "test" {
 
 func testAccClusterConfig_stepConcurrencyLevel(rName string, stepConcurrencyLevel int) string {
 	return acctest.ConfigCompose(
-		testAccClusterBaseVPCConfig(rName, false),
+		testAccClusterConfig_baseVPC(rName, false),
 		fmt.Sprintf(`
 resource "aws_emr_cluster" "test" {
   applications                      = ["Spark"]
@@ -3535,7 +3530,7 @@ resource "aws_emr_cluster" "test" {
 
 func testAccClusterConfig_ebs(rName string, volumesPerInstance int) string {
 	return acctest.ConfigCompose(
-		testAccClusterBaseVPCConfig(rName, false),
+		testAccClusterConfig_baseVPC(rName, false),
 		fmt.Sprintf(`
 resource "aws_emr_cluster" "test" {
   applications                      = ["Spark"]
@@ -3587,10 +3582,10 @@ resource "aws_emr_cluster" "test" {
 
 func testAccClusterConfig_customAMIID(rName string) string {
 	return acctest.ConfigCompose(
-		testAccClusterBaseVPCConfig(rName, false),
+		testAccClusterConfig_baseVPC(rName, false),
 		testAccClusterIAMServiceRoleCustomAMIIDConfig(rName),
-		testAccClusterIAMInstanceProfileBaseConfig(rName),
-		testAccClusterIAMAutoScalingRoleConfig(rName),
+		testAccClusterConfig_baseIAMInstanceProfile(rName),
+		testAccClusterConfig_baseIAMAutoScalingRole(rName),
 		fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -3669,9 +3664,9 @@ data "aws_ami" "emr-custom-ami" {
 
 func testAccClusterConfig_instanceFleets(rName string) string {
 	return acctest.ConfigCompose(
-		testAccClusterBaseVPCConfig(rName, false),
-		testAccClusterIAMServiceRoleBaseConfig(rName),
-		testAccClusterIAMInstanceProfileBaseConfig(rName),
+		testAccClusterConfig_baseVPC(rName, false),
+		testAccClusterConfig_baseIAMServiceRole(rName),
+		testAccClusterConfig_baseIAMInstanceProfile(rName),
 		testAccClusterBootstrapActionBucketConfig(rName),
 		fmt.Sprintf(`
 data "aws_partition" "current" {}
@@ -3757,9 +3752,9 @@ resource "aws_emr_cluster" "test" {
 
 func testAccClusterConfig_instanceFleetMultipleSubnets(rName string) string {
 	return acctest.ConfigCompose(
-		testAccClusterBaseVPCConfig(rName, false),
-		testAccClusterIAMServiceRoleBaseConfig(rName),
-		testAccClusterIAMInstanceProfileBaseConfig(rName),
+		testAccClusterConfig_baseVPC(rName, false),
+		testAccClusterConfig_baseIAMServiceRole(rName),
+		testAccClusterConfig_baseIAMInstanceProfile(rName),
 		testAccClusterBootstrapActionBucketConfig(rName),
 		fmt.Sprintf(`
 data "aws_partition" "current" {}
@@ -3857,9 +3852,9 @@ resource "aws_route_table_association" "test2" {
 
 func testAccClusterConfig_instanceFleetsMasterOnly(rName string) string {
 	return acctest.ConfigCompose(
-		testAccClusterBaseVPCConfig(rName, false),
-		testAccClusterIAMServiceRoleBaseConfig(rName),
-		testAccClusterIAMInstanceProfileBaseConfig(rName),
+		testAccClusterConfig_baseVPC(rName, false),
+		testAccClusterConfig_baseIAMServiceRole(rName),
+		testAccClusterConfig_baseIAMInstanceProfile(rName),
 		testAccClusterBootstrapActionBucketConfig(rName),
 		fmt.Sprintf(`
 data "aws_partition" "current" {}
@@ -3902,7 +3897,7 @@ resource "aws_emr_cluster" "test" {
 
 func testAccClusterConfig_autoTermination(rName string, timeout int) string {
 	return acctest.ConfigCompose(
-		testAccClusterBaseVPCConfig(rName, false),
+		testAccClusterConfig_baseVPC(rName, false),
 		fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -3935,7 +3930,7 @@ resource "aws_emr_cluster" "test" {
 
 func testAccClusterConfig_noAutoTermination(rName string) string {
 	return acctest.ConfigCompose(
-		testAccClusterBaseVPCConfig(rName, false),
+		testAccClusterConfig_baseVPC(rName, false),
 		fmt.Sprintf(`
 data "aws_partition" "current" {}
 

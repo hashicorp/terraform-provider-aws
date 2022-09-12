@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccConnectUserHierarchyGroupDataSource_hierarchyGroupID(t *testing.T) {
+func testAccUserHierarchyGroupDataSource_hierarchyGroupID(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName3 := sdkacctest.RandomWithPrefix("resource-test-terraform")
@@ -46,7 +46,7 @@ func TestAccConnectUserHierarchyGroupDataSource_hierarchyGroupID(t *testing.T) {
 	})
 }
 
-func TestAccConnectUserHierarchyGroupDataSource_name(t *testing.T) {
+func testAccUserHierarchyGroupDataSource_name(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName3 := sdkacctest.RandomWithPrefix("resource-test-terraform")

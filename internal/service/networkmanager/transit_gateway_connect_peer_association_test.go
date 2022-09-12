@@ -152,11 +152,7 @@ func testAccCheckTransitGatewayConnectPeerAssociationExists(n string) resource.T
 
 		_, err = tfnetworkmanager.FindTransitGatewayConnectPeerAssociationByTwoPartKey(context.Background(), conn, globalNetworkID, connectPeerARN)
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 

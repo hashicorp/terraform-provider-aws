@@ -326,11 +326,8 @@ func testAccCheckContainerServiceExists(resourceName string) resource.TestCheckF
 		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn
 
 		_, err := tflightsail.FindContainerServiceByName(context.Background(), conn, rs.Primary.ID)
-		if err != nil {
-			return err
-		}
 
-		return nil
+		return err
 	}
 }
 

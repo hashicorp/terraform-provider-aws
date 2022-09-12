@@ -256,6 +256,13 @@ func ResourceTargetGroup() *schema.Resource {
 					},
 				},
 			},
+			"ip_address_type": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice(elbv2.TargetGroupIpAddressTypeEnum_Values(), false),
+			},
 			"target_type": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -318,6 +325,12 @@ func resourceTargetGroupCreate(d *schema.ResourceData, meta interface{}) error {
 			params.ProtocolVersion = aws.String(d.Get("protocol_version").(string))
 		}
 		params.VpcId = aws.String(d.Get("vpc_id").(string))
+
+		if d.Get("target_type").(string) == elbv2.TargetTypeEnumIp {
+			if _, ok := d.GetOk("ip_address_type"); ok {
+				params.IpAddressType = aws.String(d.Get("ip_address_type").(string))
+			}
+		}
 	}
 
 	if healthChecks := d.Get("health_check").([]interface{}); len(healthChecks) == 1 {
@@ -368,7 +381,15 @@ func resourceTargetGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	resp, err := conn.CreateTargetGroup(params)
 
 	// Some partitions may not support tag-on-create
-	if params.Tags != nil && verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
+	if params.Tags != nil && verify.ErrorISOUnsupported(conn.PartitionID, err) {
+		log.Printf("[WARN] ELBv2 Target Group (%s) create failed (%s) with tags. Trying create without tags.", groupName, err)
+		params.Tags = nil
+		resp, err = conn.CreateTargetGroup(params)
+	}
+
+	// Tags are not supported on creation with some protocol types(i.e. GENEVE)
+	// Retry creation without tags
+	if params.Tags != nil && tfawserr.ErrMessageContains(err, ErrValidationError, TagsOnCreationErrMessage) {
 		log.Printf("[WARN] ELBv2 Target Group (%s) create failed (%s) with tags. Trying create without tags.", groupName, err)
 		params.Tags = nil
 		resp, err = conn.CreateTargetGroup(params)
@@ -521,7 +542,7 @@ func resourceTargetGroupCreate(d *schema.ResourceData, meta interface{}) error {
 		err := UpdateTags(conn, d.Id(), nil, tags)
 
 		// if default tags only, log and continue (i.e., should error if explicitly setting tags and they can't be)
-		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
+		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.ErrorISOUnsupported(conn.PartitionID, err) {
 			log.Printf("[WARN] error adding tags after create for ELBv2 Target Group (%s): %s", d.Id(), err)
 			return resourceTargetGroupRead(d, meta)
 		}
@@ -778,7 +799,7 @@ func resourceTargetGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		// ISO partitions may not support tagging, giving error
-		if verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
+		if verify.ErrorISOUnsupported(conn.PartitionID, err) {
 			log.Printf("[WARN] Unable to update tags for ELBv2 Target Group %s: %s", d.Id(), err)
 			return resourceTargetGroupRead(d, meta)
 		}
@@ -967,7 +988,7 @@ func flattenTargetGroupResource(d *schema.ResourceData, meta interface{}, target
 
 	tags, err := ListTags(conn, d.Id())
 
-	if verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
+	if verify.ErrorISOUnsupported(conn.PartitionID, err) {
 		log.Printf("[WARN] Unable to list tags for ELBv2 Target Group %s: %s", d.Id(), err)
 		return nil
 	}

@@ -40,6 +40,11 @@ func init() {
 		Name: "aws_location_tracker",
 		F:    sweepTrackers,
 	})
+
+	resource.AddTestSweepers("aws_location_tracker_association", &resource.Sweeper{
+		Name: "aws_location_tracker_association",
+		F:    sweepTrackerAssociations,
+	})
 }
 
 func sweepGeofenceCollections(region string) error {
@@ -271,6 +276,70 @@ func sweepTrackers(region string) error {
 
 	if sweep.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping Location Service Tracker sweep for %s: %s", region, errs)
+		return nil
+	}
+
+	return errs.ErrorOrNil()
+}
+
+func sweepTrackerAssociations(region string) error {
+	client, err := sweep.SharedRegionalSweepClient(region)
+
+	if err != nil {
+		return fmt.Errorf("error getting client: %w", err)
+	}
+
+	conn := client.(*conns.AWSClient).LocationConn
+	sweepResources := make([]*sweep.SweepResource, 0)
+	var errs *multierror.Error
+
+	input := &locationservice.ListTrackersInput{}
+
+	err = conn.ListTrackersPages(input, func(page *locationservice.ListTrackersOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, entry := range page.Entries {
+			input := &locationservice.ListTrackerConsumersInput{
+				TrackerName: entry.TrackerName,
+			}
+
+			err := conn.ListTrackerConsumersPages(input, func(page *locationservice.ListTrackerConsumersOutput, lastPage bool) bool {
+				if page == nil {
+					return !lastPage
+				}
+
+				for _, arn := range page.ConsumerArns {
+					r := ResourceTrackerAssociation()
+					d := r.Data(nil)
+
+					d.SetId(fmt.Sprintf("%s|%s", aws.StringValue(entry.TrackerName), aws.StringValue(arn)))
+
+					sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+				}
+
+				return !lastPage
+			})
+
+			if err != nil {
+				errs = multierror.Append(errs, fmt.Errorf("error listing Location Service Tracker Association for %s: %w", region, err))
+			}
+		}
+
+		return !lastPage
+	})
+
+	if err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("error listing Location Service Tracker for %s: %w", region, err))
+	}
+
+	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("error sweeping Location Service Tracker Association for %s: %w", region, err))
+	}
+
+	if sweep.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping Location Service Tracker Association sweep for %s: %s", region, errs)
 		return nil
 	}
 

@@ -1,6 +1,7 @@
 package ec2
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -50,7 +51,7 @@ func dataSourceNetworkInterfacesRead(d *schema.ResourceData, meta interface{}) e
 
 	networkInterfaceIDs := []string{}
 
-	output, err := FindNetworkInterfaces(conn, input)
+	output, err := FindNetworkInterfacesWithContext(context.TODO(), conn, input)
 
 	if err != nil {
 		return fmt.Errorf("error reading EC2 Network Interfaces: %w", err)

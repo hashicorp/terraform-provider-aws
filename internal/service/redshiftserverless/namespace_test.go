@@ -162,11 +162,7 @@ func testAccCheckNamespaceExists(name string) resource.TestCheckFunc {
 
 		_, err := tfredshiftserverless.FindNamespaceByName(conn, rs.Primary.ID)
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 

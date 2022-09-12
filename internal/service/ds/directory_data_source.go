@@ -85,6 +85,43 @@ func DataSourceDirectory() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"radius_settings": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"authentication_protocol": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"display_label": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"radius_port": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"radius_retries": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"radius_servers": {
+							Type:     schema.TypeSet,
+							Computed: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+						"radius_timeout": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"use_same_username": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+					},
+				},
+			},
 			"security_group_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -159,6 +196,13 @@ func dataSourceDirectoryRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("edition", dir.Edition)
 	d.Set("enable_sso", dir.SsoEnabled)
 	d.Set("name", dir.Name)
+	if dir.RadiusSettings != nil {
+		if err := d.Set("radius_settings", []interface{}{flattenRadiusSettings(dir.RadiusSettings)}); err != nil {
+			return fmt.Errorf("setting radius_settings: %w", err)
+		}
+	} else {
+		d.Set("radius_settings", nil)
+	}
 	if aws.StringValue(dir.Type) == directoryservice.DirectoryTypeAdconnector {
 		d.Set("security_group_id", dir.ConnectSettings.SecurityGroupId)
 	} else if dir.VpcSettings != nil {
@@ -188,4 +232,42 @@ func dataSourceDirectoryRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	return nil
+}
+
+func flattenRadiusSettings(apiObject *directoryservice.RadiusSettings) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.AuthenticationProtocol; v != nil {
+		tfMap["authentication_protocol"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.DisplayLabel; v != nil {
+		tfMap["display_label"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.RadiusPort; v != nil {
+		tfMap["radius_port"] = aws.Int64Value(v)
+	}
+
+	if v := apiObject.RadiusRetries; v != nil {
+		tfMap["radius_retries"] = aws.Int64Value(v)
+	}
+
+	if v := apiObject.RadiusServers; v != nil {
+		tfMap["radius_servers"] = aws.StringValueSlice(v)
+	}
+
+	if v := apiObject.RadiusTimeout; v != nil {
+		tfMap["radius_timeout"] = aws.Int64Value(v)
+	}
+
+	if v := apiObject.UseSameUsername; v != nil {
+		tfMap["use_same_username"] = aws.BoolValue(v)
+	}
+
+	return tfMap
 }

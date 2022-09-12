@@ -147,7 +147,7 @@ func TestAccVPCPeeringConnection_options(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCPeeringConnectionConfig_accepterRequesterOptions(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVPCPeeringConnectionExists(
 						resourceName,
 						&v,
@@ -166,12 +166,12 @@ func TestAccVPCPeeringConnection_options(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						resourceName,
 						"requester.0.allow_classic_link_to_remote_vpc",
-						"true",
+						"false",
 					),
 					resource.TestCheckResourceAttr(
 						resourceName,
 						"requester.0.allow_vpc_to_remote_classic_link",
-						"true",
+						"false",
 					),
 					// Accepter's view:
 					resource.TestCheckResourceAttr(
@@ -208,7 +208,7 @@ func TestAccVPCPeeringConnection_options(t *testing.T) {
 			},
 			{
 				Config: testAccVPCPeeringConnectionConfig_accepterRequesterOptions(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVPCPeeringConnectionExists(
 						resourceName,
 						&v,
@@ -227,12 +227,12 @@ func TestAccVPCPeeringConnection_options(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						resourceName,
 						"requester.0.allow_classic_link_to_remote_vpc",
-						"true",
+						"false",
 					),
 					resource.TestCheckResourceAttr(
 						resourceName,
 						"requester.0.allow_vpc_to_remote_classic_link",
-						"true",
+						"false",
 					),
 					// Accepter's view:
 					resource.TestCheckResourceAttr(
@@ -587,8 +587,8 @@ resource "aws_vpc_peering_connection" "test" {
   }
 
   requester {
-    allow_vpc_to_remote_classic_link = true
-    allow_classic_link_to_remote_vpc = true
+    allow_vpc_to_remote_classic_link = false
+    allow_classic_link_to_remote_vpc = false
   }
 }
 `, rName)
@@ -719,8 +719,8 @@ resource "aws_vpc_peering_connection" "test" {
   }
 
   requester {
-    allow_vpc_to_remote_classic_link = true
-    allow_classic_link_to_remote_vpc = true
+    allow_vpc_to_remote_classic_link = false
+    allow_classic_link_to_remote_vpc = false
   }
 }
 `, rName)

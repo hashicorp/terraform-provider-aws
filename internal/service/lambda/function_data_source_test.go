@@ -81,6 +81,50 @@ func TestAccLambdaFunctionDataSource_version(t *testing.T) {
 	})
 }
 
+func TestAccLambdaFunctionDataSource_latestVersion(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	dataSourceName := "data.aws_lambda_function.test"
+	resourceName := "aws_lambda_function.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFunctionDataSourceConfig_latestVersion(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "qualified_arn", resourceName, "qualified_arn"),
+					resource.TestCheckResourceAttr(dataSourceName, "version", "1"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccLambdaFunctionDataSource_unpublishedVersion(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	dataSourceName := "data.aws_lambda_function.test"
+	resourceName := "aws_lambda_function.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFunctionDataSourceConfig_unpublishedVersion(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "qualified_arn", resourceName, "qualified_arn"),
+					resource.TestCheckResourceAttr(dataSourceName, "version", "$LATEST"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccLambdaFunctionDataSource_alias(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_lambda_function.test"
@@ -364,6 +408,40 @@ resource "aws_lambda_function" "test" {
 data "aws_lambda_function" "test" {
   function_name = aws_lambda_function.test.function_name
   qualifier     = 1
+}
+`, rName))
+}
+
+func testAccFunctionDataSourceConfig_latestVersion(rName string) string {
+	return acctest.ConfigCompose(testAccFunctionDataSourceConfig_base(rName), fmt.Sprintf(`
+resource "aws_lambda_function" "test" {
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = %[1]q
+  handler       = "exports.example"
+  publish       = true
+  role          = aws_iam_role.lambda.arn
+  runtime       = "nodejs12.x"
+}
+
+data "aws_lambda_function" "test" {
+  function_name = aws_lambda_function.test.function_name
+}
+`, rName))
+}
+
+func testAccFunctionDataSourceConfig_unpublishedVersion(rName string) string {
+	return acctest.ConfigCompose(testAccFunctionDataSourceConfig_base(rName), fmt.Sprintf(`
+resource "aws_lambda_function" "test" {
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = %[1]q
+  handler       = "exports.example"
+  publish       = false
+  role          = aws_iam_role.lambda.arn
+  runtime       = "nodejs12.x"
+}
+
+data "aws_lambda_function" "test" {
+  function_name = aws_lambda_function.test.function_name
 }
 `, rName))
 }

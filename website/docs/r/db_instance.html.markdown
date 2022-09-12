@@ -157,6 +157,7 @@ what IAM permissions are needed to allow Enhanced Monitoring for RDS Instances.
 * `name` - (Optional, **Deprecated** use `db_name` instead) The name of the database to create when the DB instance is created. If this parameter is not specified, no database is created in the DB instance. Note that this does not apply for Oracle or SQL Server engines. See the [AWS documentation](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/rds/create-db-instance.html) for more details on what applies for those engines. If you are providing an Oracle db name, it needs to be in all upper case. Cannot be specified for a replica.
 * `nchar_character_set_name` - (Optional, Forces new resource) The national character set is used in the NCHAR, NVARCHAR2, and NCLOB data types for Oracle instances. This can't be changed. See [Oracle Character Sets
 Supported in Amazon RDS](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Appendix.OracleCharacterSets.html).
+* `network_type` - (Optional) The network type of the DB instance. Valid values: `IPV4`, `DUAL`.
 * `option_group_name` - (Optional) Name of the DB option group to associate.
 * `parameter_group_name` - (Optional) Name of the DB parameter group to
 associate.
@@ -165,7 +166,7 @@ is provided) Password for the master DB user. Note that this may show up in
 logs, and it will be stored in the state file.
 * `performance_insights_enabled` - (Optional) Specifies whether Performance Insights are enabled. Defaults to false.
 * `performance_insights_kms_key_id` - (Optional) The ARN for the KMS key to encrypt Performance Insights data. When specifying `performance_insights_kms_key_id`, `performance_insights_enabled` needs to be set to true. Once KMS key is set, it can never be changed.
-* `performance_insights_retention_period` - (Optional) The amount of time in days to retain Performance Insights data. Either 7 (7 days) or 731 (2 years). When specifying `performance_insights_retention_period`, `performance_insights_enabled` needs to be set to true. Defaults to '7'.
+* `performance_insights_retention_period` - (Optional) Amount of time in days to retain Performance Insights data. Valid values are `7`, `731` (2 years) or a multiple of `31`. When specifying `performance_insights_retention_period`, `performance_insights_enabled` needs to be set to true. Defaults to '7'.
 * `port` - (Optional) The port on which the DB accepts connections.
 * `publicly_accessible` - (Optional) Bool to control if instance is publicly
 accessible. Default is `false`.
@@ -269,7 +270,7 @@ In addition to all arguments above, the following attributes are exported:
 * `availability_zone` - The availability zone of the instance.
 * `backup_retention_period` - The backup retention period.
 * `backup_window` - The backup window.
-* `ca_cert_identifier` - Specifies the identifier of the CA certificate for the
+* `ca_cert_identifier` - Identifier of the CA certificate for the
 DB instance.
 * `db_name` - The database name.
 * `domain` - The ID of the Directory Service Active Directory domain the instance is joined to
@@ -288,7 +289,7 @@ in a Route 53 Alias record).
 * `port` - The database port.
 * `resource_id` - The RDS Resource ID of this instance.
 * `status` - The RDS instance status.
-* `storage_encrypted` - Specifies whether the DB instance is encrypted.
+* `storage_encrypted` - Whether the DB instance is encrypted.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `username` - The master username for the database.
 

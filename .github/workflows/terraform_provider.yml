@@ -11,6 +11,7 @@ on:
       - .ci/scripts/providerlint.sh
       - .go-version
       - .ci/.golangci.yml
+      - .markdownlint.yml
       - internal/**
       - docs/index.md
       - docs/data-sources/**
@@ -174,7 +175,7 @@ jobs:
   compile_sweepers:
     name: Compile sweepers
     needs: [go_build]
-    runs-on: ubuntu-latest
+    runs-on: [custom, linux, medium]
     steps:
       - uses: actions/checkout@v3
         with:
@@ -267,3 +268,12 @@ jobs:
             -provider-source registry.terraform.io/hashicorp/aws \
             -providers-schema-json terraform-providers-schema/schema.json \
             -require-resource-subcategory
+
+  markdown-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: avto-dev/markdown-lint@v1
+        with:
+          args: '.'
+          ignore: './docs ./website/docs ./CHANGELOG.md ./internal/service/cloudformation/testdata/examplecompany-exampleservice-exampleresource/docs'

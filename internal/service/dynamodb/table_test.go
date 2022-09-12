@@ -1,7 +1,6 @@
 package dynamodb_test
 
 import (
-	"errors"
 	"fmt"
 	"log"
 	"regexp"
@@ -1622,8 +1621,8 @@ func TestAccDynamoDBTable_Replica_tagsOneOfTwo(t *testing.T) {
 				Config: testAccTableConfig_replicaTags(rName, "benny", "smiles", true, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(resourceName, &conf),
-					testAccCheckReplicaHasTags(resourceName, acctest.AlternateRegion(), true),
-					testAccCheckReplicaHasTags(resourceName, acctest.ThirdRegion(), false),
+					testAccCheckReplicaHasTags(resourceName, acctest.AlternateRegion(), 3),
+					testAccCheckReplicaHasTags(resourceName, acctest.ThirdRegion(), 0),
 					resource.TestCheckResourceAttr(resourceName, "replica.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
 						"region_name":    acctest.AlternateRegion(),
@@ -1661,8 +1660,196 @@ func TestAccDynamoDBTable_Replica_tagsTwoOfTwo(t *testing.T) {
 				Config: testAccTableConfig_replicaTags(rName, "Structure", "Adobe", true, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(resourceName, &conf),
-					testAccCheckReplicaHasTags(resourceName, acctest.AlternateRegion(), true),
-					testAccCheckReplicaHasTags(resourceName, acctest.ThirdRegion(), true),
+					testAccCheckReplicaHasTags(resourceName, acctest.AlternateRegion(), 3),
+					testAccCheckReplicaHasTags(resourceName, acctest.ThirdRegion(), 3),
+					resource.TestCheckResourceAttr(resourceName, "replica.#", "2"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
+						"region_name":    acctest.AlternateRegion(),
+						"propagate_tags": "true",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
+						"region_name":    acctest.ThirdRegion(),
+						"propagate_tags": "true",
+					}),
+				),
+			},
+		},
+	})
+}
+
+func TestAccDynamoDBTable_Replica_tagsNext(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var conf dynamodb.DescribeTableOutput
+	resourceName := "aws_dynamodb_table.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckMultipleRegion(t, 2) },
+		ErrorCheck:               acctest.ErrorCheck(t, dynamodb.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(t, 3),
+		CheckDestroy:             testAccCheckTableDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTableConfig_replicaTagsNext1(rName, acctest.AlternateRegion(), true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(resourceName, &conf),
+					testAccCheckReplicaHasTags(resourceName, acctest.AlternateRegion(), 2),
+					resource.TestCheckResourceAttr(resourceName, "replica.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
+						"region_name":    acctest.AlternateRegion(),
+						"propagate_tags": "true",
+					}),
+				),
+			},
+			{
+				Config: testAccTableConfig_replicaTagsNext2(rName, acctest.AlternateRegion(), true, acctest.ThirdRegion(), true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(resourceName, &conf),
+					testAccCheckReplicaHasTags(resourceName, acctest.AlternateRegion(), 2),
+					testAccCheckReplicaHasTags(resourceName, acctest.ThirdRegion(), 2),
+					resource.TestCheckResourceAttr(resourceName, "replica.#", "2"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
+						"region_name":    acctest.AlternateRegion(),
+						"propagate_tags": "true",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
+						"region_name":    acctest.ThirdRegion(),
+						"propagate_tags": "true",
+					}),
+				),
+			},
+			{
+				Config: testAccTableConfig_replicaTagsNext1(rName, acctest.AlternateRegion(), true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(resourceName, &conf),
+					testAccCheckReplicaHasTags(resourceName, acctest.AlternateRegion(), 2),
+					resource.TestCheckResourceAttr(resourceName, "replica.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
+						"region_name":    acctest.AlternateRegion(),
+						"propagate_tags": "true",
+					}),
+				),
+			},
+			{
+				Config: testAccTableConfig_replicaTagsNext2(rName, acctest.AlternateRegion(), true, acctest.ThirdRegion(), false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(resourceName, &conf),
+					testAccCheckReplicaHasTags(resourceName, acctest.AlternateRegion(), 2),
+					testAccCheckReplicaHasTags(resourceName, acctest.ThirdRegion(), 0),
+					resource.TestCheckResourceAttr(resourceName, "replica.#", "2"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
+						"region_name":    acctest.AlternateRegion(),
+						"propagate_tags": "true",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
+						"region_name":    acctest.ThirdRegion(),
+						"propagate_tags": "false",
+					}),
+				),
+			},
+			{
+				Config: testAccTableConfig_replicaTagsNext2(rName, acctest.AlternateRegion(), false, acctest.ThirdRegion(), false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(resourceName, &conf),
+					testAccCheckReplicaHasTags(resourceName, acctest.AlternateRegion(), 2),
+					testAccCheckReplicaHasTags(resourceName, acctest.ThirdRegion(), 0),
+					resource.TestCheckResourceAttr(resourceName, "replica.#", "2"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
+						"region_name":    acctest.AlternateRegion(),
+						"propagate_tags": "false",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
+						"region_name":    acctest.ThirdRegion(),
+						"propagate_tags": "false",
+					}),
+				),
+			},
+		},
+	})
+}
+
+func TestAccDynamoDBTable_Replica_tagsUpdate(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var conf dynamodb.DescribeTableOutput
+	resourceName := "aws_dynamodb_table.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckMultipleRegion(t, 2) },
+		ErrorCheck:               acctest.ErrorCheck(t, dynamodb.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(t, 3),
+		CheckDestroy:             testAccCheckTableDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTableConfig_replicaTagsUpdate1(rName, acctest.AlternateRegion()),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(resourceName, &conf),
+					testAccCheckReplicaHasTags(resourceName, acctest.AlternateRegion(), 2),
+					resource.TestCheckResourceAttr(resourceName, "replica.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
+						"region_name":    acctest.AlternateRegion(),
+						"propagate_tags": "true",
+					}),
+				),
+			},
+			{
+				Config: testAccTableConfig_replicaTagsUpdate2(rName, acctest.AlternateRegion()),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(resourceName, &conf),
+					testAccCheckReplicaHasTags(resourceName, acctest.AlternateRegion(), 4),
+					resource.TestCheckResourceAttr(resourceName, "replica.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
+						"region_name":    acctest.AlternateRegion(),
+						"propagate_tags": "true",
+					}),
+				),
+			},
+			{
+				Config: testAccTableConfig_replicaTagsUpdate3(rName, acctest.AlternateRegion(), acctest.ThirdRegion()),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(resourceName, &conf),
+					testAccCheckReplicaHasTags(resourceName, acctest.AlternateRegion(), 4),
+					testAccCheckReplicaHasTags(resourceName, acctest.ThirdRegion(), 4),
+					resource.TestCheckResourceAttr(resourceName, "replica.#", "2"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
+						"region_name":    acctest.AlternateRegion(),
+						"propagate_tags": "true",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
+						"region_name":    acctest.ThirdRegion(),
+						"propagate_tags": "true",
+					}),
+				),
+			},
+			{
+				Config: testAccTableConfig_replicaTagsUpdate4(rName, acctest.AlternateRegion(), acctest.ThirdRegion()),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(resourceName, &conf),
+					testAccCheckReplicaHasTags(resourceName, acctest.AlternateRegion(), 6),
+					testAccCheckReplicaHasTags(resourceName, acctest.ThirdRegion(), 6),
+					resource.TestCheckResourceAttr(resourceName, "replica.#", "2"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
+						"region_name":    acctest.AlternateRegion(),
+						"propagate_tags": "true",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
+						"region_name":    acctest.ThirdRegion(),
+						"propagate_tags": "true",
+					}),
+				),
+			},
+			{
+				Config: testAccTableConfig_replicaTagsUpdate5(rName, acctest.AlternateRegion(), acctest.ThirdRegion()),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(resourceName, &conf),
+					testAccCheckReplicaHasTags(resourceName, acctest.AlternateRegion(), 1),
+					testAccCheckReplicaHasTags(resourceName, acctest.ThirdRegion(), 1),
 					resource.TestCheckResourceAttr(resourceName, "replica.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
 						"region_name":    acctest.AlternateRegion(),
@@ -1854,15 +2041,15 @@ func testAccCheckInitialTableExists(n string, table *dynamodb.DescribeTableOutpu
 	}
 }
 
-func testAccCheckReplicaHasTags(n string, region string, should bool) resource.TestCheckFunc {
+func testAccCheckReplicaHasTags(n string, region string, count int) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", n)
+			return fmt.Errorf("not found: %s", n)
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No DynamoDB table name specified!")
+			return fmt.Errorf("no DynamoDB table name specified!")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBConn
@@ -1889,12 +2076,8 @@ func testAccCheckReplicaHasTags(n string, region string, should bool) resource.T
 			return create.Error(names.DynamoDB, create.ErrActionChecking, tfdynamodb.ResNameTable, rs.Primary.Attributes["arn"], err)
 		}
 
-		if len(tags.Keys()) > 0 && !should {
-			return create.Error(names.DynamoDB, create.ErrActionChecking, tfdynamodb.ResNameTable, rs.Primary.Attributes["arn"], errors.New("replica should not have tags but does"))
-		}
-
-		if len(tags.Keys()) == 0 && should {
-			return create.Error(names.DynamoDB, create.ErrActionChecking, tfdynamodb.ResNameTable, rs.Primary.Attributes["arn"], errors.New("replica should have tags but does not"))
+		if len(tags.Keys()) != count {
+			return create.Error(names.DynamoDB, create.ErrActionChecking, tfdynamodb.ResNameTable, rs.Primary.Attributes["arn"], fmt.Errorf("expected %d tags on replica, found %d", count, len(tags.Keys())))
 		}
 
 		return nil
@@ -2899,41 +3082,6 @@ resource "aws_dynamodb_table" "test" {
 `, rName, mainPITR, replica1, replica2))
 }
 
-func testAccTableConfig_replica2(rName string) string {
-	return acctest.ConfigCompose(
-		acctest.ConfigMultipleRegionProvider(3),
-		fmt.Sprintf(`
-data "aws_region" "alternate" {
-  provider = "awsalternate"
-}
-
-data "aws_region" "third" {
-  provider = "awsthird"
-}
-
-resource "aws_dynamodb_table" "test" {
-  name             = %[1]q
-  hash_key         = "TestTableHashKey"
-  billing_mode     = "PAY_PER_REQUEST"
-  stream_enabled   = true
-  stream_view_type = "NEW_AND_OLD_IMAGES"
-
-  attribute {
-    name = "TestTableHashKey"
-    type = "S"
-  }
-
-  replica {
-    region_name = data.aws_region.alternate.name
-  }
-
-  replica {
-    region_name = data.aws_region.third.name
-  }
-}
-`, rName))
-}
-
 func testAccTableConfig_replicaTags(rName, key, value string, propagate1, propagate2 bool) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigMultipleRegionProvider(3),
@@ -2975,6 +3123,271 @@ resource "aws_dynamodb_table" "test" {
   }
 }
 `, rName, key, value, propagate1, propagate2))
+}
+
+func testAccTableConfig_replica2(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigMultipleRegionProvider(3),
+		fmt.Sprintf(`
+data "aws_region" "alternate" {
+  provider = "awsalternate"
+}
+
+data "aws_region" "third" {
+  provider = "awsthird"
+}
+
+resource "aws_dynamodb_table" "test" {
+  name             = %[1]q
+  hash_key         = "TestTableHashKey"
+  billing_mode     = "PAY_PER_REQUEST"
+  stream_enabled   = true
+  stream_view_type = "NEW_AND_OLD_IMAGES"
+
+  attribute {
+    name = "TestTableHashKey"
+    type = "S"
+  }
+
+  replica {
+    region_name = data.aws_region.alternate.name
+  }
+
+  replica {
+    region_name = data.aws_region.third.name
+  }
+}
+`, rName))
+}
+
+func testAccTableConfig_replicaTagsNext1(rName string, region1 string, propagate1 bool) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigMultipleRegionProvider(3),
+		fmt.Sprintf(`
+resource "aws_dynamodb_table" "test" {
+  name             = %[1]q
+  hash_key         = "TestTableHashKey"
+  billing_mode     = "PAY_PER_REQUEST"
+  stream_enabled   = true
+  stream_view_type = "NEW_AND_OLD_IMAGES"
+
+  attribute {
+    name = "TestTableHashKey"
+    type = "S"
+  }
+
+  replica {
+    region_name    = %[2]q
+    propagate_tags = %[3]t
+  }
+
+  tags = {
+    Name = %[1]q
+    Pozo = "Amargo"
+  }
+}
+`, rName, region1, propagate1))
+}
+
+func testAccTableConfig_replicaTagsNext2(rName, region1 string, propagate1 bool, region2 string, propagate2 bool) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigMultipleRegionProvider(3),
+		fmt.Sprintf(`
+resource "aws_dynamodb_table" "test" {
+  name             = %[1]q
+  hash_key         = "TestTableHashKey"
+  billing_mode     = "PAY_PER_REQUEST"
+  stream_enabled   = true
+  stream_view_type = "NEW_AND_OLD_IMAGES"
+
+  attribute {
+    name = "TestTableHashKey"
+    type = "S"
+  }
+
+  replica {
+    region_name    = %[2]q
+    propagate_tags = %[3]t
+  }
+
+  replica {
+    region_name    = %[4]q
+    propagate_tags = %[5]t
+  }
+
+  tags = {
+    Name = %[1]q
+    Pozo = "Amargo"
+  }
+}
+`, rName, region1, propagate1, region2, propagate2))
+}
+
+func testAccTableConfig_replicaTagsUpdate1(rName, region1 string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigMultipleRegionProvider(3),
+		fmt.Sprintf(`
+resource "aws_dynamodb_table" "test" {
+  name             = %[1]q
+  hash_key         = "TestTableHashKey"
+  billing_mode     = "PAY_PER_REQUEST"
+  stream_enabled   = true
+  stream_view_type = "NEW_AND_OLD_IMAGES"
+
+  attribute {
+    name = "TestTableHashKey"
+    type = "S"
+  }
+
+  replica {
+    region_name    = %[2]q
+    propagate_tags = true
+  }
+
+  tags = {
+    Name = %[1]q
+    Pozo = "Amargo"
+  }
+}
+`, rName, region1))
+}
+
+func testAccTableConfig_replicaTagsUpdate2(rName, region1 string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigMultipleRegionProvider(3),
+		fmt.Sprintf(`
+resource "aws_dynamodb_table" "test" {
+  name             = %[1]q
+  hash_key         = "TestTableHashKey"
+  billing_mode     = "PAY_PER_REQUEST"
+  stream_enabled   = true
+  stream_view_type = "NEW_AND_OLD_IMAGES"
+
+  attribute {
+    name = "TestTableHashKey"
+    type = "S"
+  }
+
+  replica {
+    region_name    = %[2]q
+    propagate_tags = true
+  }
+
+  tags = {
+    Name   = %[1]q
+    Pozo   = "Amargo"
+    tyDi   = "Lullaby"
+    Thrill = "Seekers"
+  }
+}
+`, rName, region1))
+}
+
+func testAccTableConfig_replicaTagsUpdate3(rName, region1 string, region2 string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigMultipleRegionProvider(3),
+		fmt.Sprintf(`
+resource "aws_dynamodb_table" "test" {
+  name             = %[1]q
+  hash_key         = "TestTableHashKey"
+  billing_mode     = "PAY_PER_REQUEST"
+  stream_enabled   = true
+  stream_view_type = "NEW_AND_OLD_IMAGES"
+
+  attribute {
+    name = "TestTableHashKey"
+    type = "S"
+  }
+
+  replica {
+    region_name    = %[2]q
+    propagate_tags = true
+  }
+
+  replica {
+    region_name    = %[3]q
+    propagate_tags = true
+  }
+
+  tags = {
+    Name   = %[1]q
+    Pozo   = "Amargo"
+    tyDi   = "Lullaby"
+    Thrill = "Seekers"
+  }
+}
+`, rName, region1, region2))
+}
+
+func testAccTableConfig_replicaTagsUpdate4(rName, region1 string, region2 string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigMultipleRegionProvider(3),
+		fmt.Sprintf(`
+resource "aws_dynamodb_table" "test" {
+  name             = %[1]q
+  hash_key         = "TestTableHashKey"
+  billing_mode     = "PAY_PER_REQUEST"
+  stream_enabled   = true
+  stream_view_type = "NEW_AND_OLD_IMAGES"
+
+  attribute {
+    name = "TestTableHashKey"
+    type = "S"
+  }
+
+  replica {
+    region_name    = %[2]q
+    propagate_tags = true
+  }
+
+  replica {
+    region_name    = %[3]q
+    propagate_tags = true
+  }
+
+  tags = {
+    Name    = %[1]q
+    Pozo    = "Amargo"
+    tyDi    = "Lullaby"
+    Thrill  = "Seekers"
+    Tristan = "Joe"
+    Humming = "bird"
+  }
+}
+`, rName, region1, region2))
+}
+
+func testAccTableConfig_replicaTagsUpdate5(rName, region1 string, region2 string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigMultipleRegionProvider(3),
+		fmt.Sprintf(`
+resource "aws_dynamodb_table" "test" {
+  name             = %[1]q
+  hash_key         = "TestTableHashKey"
+  billing_mode     = "PAY_PER_REQUEST"
+  stream_enabled   = true
+  stream_view_type = "NEW_AND_OLD_IMAGES"
+
+  attribute {
+    name = "TestTableHashKey"
+    type = "S"
+  }
+
+  replica {
+    region_name    = %[2]q
+    propagate_tags = true
+  }
+
+  replica {
+    region_name    = %[3]q
+    propagate_tags = true
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, region1, region2))
 }
 
 func testAccTableConfig_lsi(rName, lsiName string) string {

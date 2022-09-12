@@ -225,11 +225,7 @@ func testAccCheckSiteExists(n string) resource.TestCheckFunc {
 
 		_, err := tfnetworkmanager.FindSiteByTwoPartKey(context.Background(), conn, rs.Primary.Attributes["global_network_id"], rs.Primary.ID)
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 

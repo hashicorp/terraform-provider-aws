@@ -128,14 +128,9 @@ func resourceRuleAssociationDelete(d *schema.ResourceData, meta interface{}) err
 		return fmt.Errorf("error deleting Route 53 Resolver rule association (%s): %s", d.Id(), err)
 	}
 
-	err = RuleAssociationWaitUntilTargetState(conn, d.Id(), d.Timeout(schema.TimeoutDelete),
+	return RuleAssociationWaitUntilTargetState(conn, d.Id(), d.Timeout(schema.TimeoutDelete),
 		[]string{route53resolver.ResolverRuleAssociationStatusDeleting},
 		[]string{RuleAssociationStatusDeleted})
-	if err != nil {
-		return err
-	}
-
-	return nil
 }
 
 func ruleAssociationRefresh(conn *route53resolver.Route53Resolver, assocId string) resource.StateRefreshFunc {

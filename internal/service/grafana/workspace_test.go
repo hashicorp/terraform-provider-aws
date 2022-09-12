@@ -27,6 +27,9 @@ func TestAccGrafana_serial(t *testing.T) {
 			"notificationDestinations": testAccWorkspace_notificationDestinations,
 			"tags":                     testAccWorkspace_tags,
 		},
+		"ApiKey": {
+			"basic": testAccWorkspaceAPIKey_basic,
+		},
 		"DataSource": {
 			"basic": testAccWorkspaceDataSource_basic,
 		},
@@ -509,11 +512,7 @@ func testAccCheckWorkspaceExists(name string) resource.TestCheckFunc {
 
 		_, err := tfgrafana.FindWorkspaceByID(conn, rs.Primary.ID)
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 

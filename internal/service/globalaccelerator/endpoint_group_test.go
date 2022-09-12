@@ -482,11 +482,8 @@ func testAccCheckEndpointGroupDeleteSecurityGroup(vpc *ec2.Vpc) resource.TestChe
 		_, err = conn.DeleteSecurityGroup(&ec2.DeleteSecurityGroupInput{
 			GroupId: sg.GroupId,
 		})
-		if err != nil {
-			return err
-		}
 
-		return nil
+		return err
 	}
 }
 
