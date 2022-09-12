@@ -15,6 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/acm"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -40,10 +41,10 @@ const (
 
 func ResourceCertificate() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceCertificateCreate,
-		Read:   resourceCertificateRead,
-		Update: resourceCertificateUpdate,
-		Delete: resourceCertificateDelete,
+		CreateWithoutTimeout: resourceCertificateCreate,
+		ReadWithoutTimeout:   resourceCertificateRead,
+		UpdateWithoutTimeout: resourceCertificateUpdate,
+		DeleteWithoutTimeout: resourceCertificateDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -262,7 +263,7 @@ func ResourceCertificate() *schema.Resource {
 	}
 }
 
-func resourceCertificateCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).ACMConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
@@ -272,7 +273,7 @@ func resourceCertificateCreate(d *schema.ResourceData, meta interface{}) error {
 		_, v2 := d.GetOk("validation_method")
 
 		if !v1 && !v2 {
-			return errors.New("`certificate_authority_arn` or `validation_method` must be set when creating an ACM certificate")
+			return diag.FromErr(errors.New("`certificate_authority_arn` or `validation_method` must be set when creating an ACM certificate"))
 		}
 
 		domainName := d.Get("domain_name").(string)
@@ -311,7 +312,7 @@ func resourceCertificateCreate(d *schema.ResourceData, meta interface{}) error {
 		output, err := conn.RequestCertificate(input)
 
 		if err != nil {
-			return fmt.Errorf("requesting ACM Certificate (%s): %w", domainName, err)
+			return diag.Errorf("requesting ACM Certificate (%s): %s", domainName, err)
 		}
 
 		d.SetId(aws.StringValue(output.CertificateArn))
@@ -332,20 +333,20 @@ func resourceCertificateCreate(d *schema.ResourceData, meta interface{}) error {
 		output, err := conn.ImportCertificate(input)
 
 		if err != nil {
-			return fmt.Errorf("importing ACM Certificate: %w", err)
+			return diag.Errorf("importing ACM Certificate: %s", err)
 		}
 
 		d.SetId(aws.StringValue(output.CertificateArn))
 	}
 
 	if _, err := waitCertificateDomainValidationsAvailable(conn, d.Id(), certificateDNSValidationAssignmentTimeout); err != nil {
-		return fmt.Errorf("waiting for ACM Certificate (%s) to be issued: %w", d.Id(), err)
+		return diag.Errorf("waiting for ACM Certificate (%s) to be issued: %s", d.Id(), err)
 	}
 
-	return resourceCertificateRead(d, meta)
+	return resourceCertificateRead(ctx, d, meta)
 }
 
-func resourceCertificateRead(d *schema.ResourceData, meta interface{}) error {
+func resourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).ACMConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -359,7 +360,7 @@ func resourceCertificateRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("reading ACM Certificate (%s): %w", d.Id(), err)
+		return diag.Errorf("reading ACM Certificate (%s): %s", d.Id(), err)
 	}
 
 	domainValidationOptions, validationEmails := flattenDomainValidations(certificate.DomainValidationOptions)
@@ -368,21 +369,21 @@ func resourceCertificateRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("certificate_authority_arn", certificate.CertificateAuthorityArn)
 	d.Set("domain_name", certificate.DomainName)
 	if err := d.Set("domain_validation_options", domainValidationOptions); err != nil {
-		return fmt.Errorf("error setting domain_validation_options: %w", err)
-	}
-	if certificate.NotBefore != nil {
-		d.Set("not_before", aws.TimeValue(certificate.NotBefore).Format(time.RFC3339))
-	} else {
-		d.Set("not_before", nil)
+		return diag.Errorf("setting domain_validation_options: %s", err)
 	}
 	if certificate.NotAfter != nil {
 		d.Set("not_after", aws.TimeValue(certificate.NotAfter).Format(time.RFC3339))
 	} else {
 		d.Set("not_after", nil)
 	}
+	if certificate.NotBefore != nil {
+		d.Set("not_before", aws.TimeValue(certificate.NotBefore).Format(time.RFC3339))
+	} else {
+		d.Set("not_before", nil)
+	}
 	if certificate.Options != nil {
 		if err := d.Set("options", []interface{}{flattenCertificateOptions(certificate.Options)}); err != nil {
-			return fmt.Errorf("error setting options: %w", err)
+			return diag.Errorf("setting options: %s", err)
 		}
 	} else {
 		d.Set("options", nil)
@@ -395,24 +396,24 @@ func resourceCertificateRead(d *schema.ResourceData, meta interface{}) error {
 	tags, err := ListTags(conn, d.Id())
 
 	if err != nil {
-		return fmt.Errorf("listing tags for ACM Certificate (%s): %w", d.Id(), err)
+		return diag.Errorf("listing tags for ACM Certificate (%s): %s", d.Id(), err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return diag.Errorf("setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return diag.Errorf("setting tags_all: %s", err)
 	}
 
 	return nil
 }
 
-func resourceCertificateUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceCertificateUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).ACMConn
 
 	if d.HasChanges("private_key", "certificate_body", "certificate_chain") {
@@ -436,7 +437,7 @@ func resourceCertificateUpdate(d *schema.ResourceData, meta interface{}) error {
 			_, err := conn.ImportCertificate(input)
 
 			if err != nil {
-				return fmt.Errorf("re-importing ACM Certificate (%s): %w", d.Id(), err)
+				return diag.Errorf("re-importing ACM Certificate (%s): %s", d.Id(), err)
 			}
 		}
 	}
@@ -445,14 +446,14 @@ func resourceCertificateUpdate(d *schema.ResourceData, meta interface{}) error {
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating tags: %w", err)
+			return diag.Errorf("updating ACM Certificate (%s) tags: %s", d.Id(), err)
 		}
 	}
 
-	return resourceCertificateRead(d, meta)
+	return resourceCertificateRead(ctx, d, meta)
 }
 
-func resourceCertificateDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceCertificateDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).ACMConn
 
 	log.Printf("[INFO] Deleting ACM Certificate: %s", d.Id())
@@ -468,7 +469,7 @@ func resourceCertificateDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("deleting ACM Certificate (%s): %w", d.Id(), err)
+		return diag.Errorf("deleting ACM Certificate (%s): %w", d.Id(), err)
 	}
 
 	return nil
