@@ -1,5 +1,4 @@
-// TODO: Move this to a shared 'types' package.
-package fwprovider
+package fwtypes
 
 import (
 	"context"

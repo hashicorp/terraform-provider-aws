@@ -157,6 +157,36 @@ func FindDBClusterWithActivityStream(conn *rds.RDS, dbClusterArn string) (*rds.D
 	return dbCluster, nil
 }
 
+func FindDBClusterSnapshotByID(conn *rds.RDS, id string) (*rds.DBClusterSnapshot, error) {
+	input := &rds.DescribeDBClusterSnapshotsInput{
+		DBClusterSnapshotIdentifier: aws.String(id),
+	}
+
+	output, err := conn.DescribeDBClusterSnapshots(input)
+
+	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBClusterSnapshotNotFoundFault) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if output == nil || len(output.DBClusterSnapshots) == 0 || output.DBClusterSnapshots[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	dbClusterSnapshot := output.DBClusterSnapshots[0]
+
+	// Eventual consistency check.
+	if aws.StringValue(dbClusterSnapshot.DBClusterSnapshotIdentifier) != id {
+		return nil, &resource.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return dbClusterSnapshot, nil
+}
+
 func FindDBInstanceByID(conn *rds.RDS, id string) (*rds.DBInstance, error) {
 	input := &rds.DescribeDBInstancesInput{
 		DBInstanceIdentifier: aws.String(id),
@@ -363,6 +393,95 @@ func findDBInstanceAutomatedBackups(conn *rds.RDS, input *rds.DescribeDBInstance
 	})
 
 	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBInstanceAutomatedBackupNotFoundFault) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
+func FindGlobalClusterByDBClusterARN(conn *rds.RDS, dbClusterARN string) (*rds.GlobalCluster, error) {
+	input := &rds.DescribeGlobalClustersInput{}
+	globalClusters, err := findGlobalClusters(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	for _, globalCluster := range globalClusters {
+		for _, v := range globalCluster.GlobalClusterMembers {
+			if aws.StringValue(v.DBClusterArn) == dbClusterARN {
+				return globalCluster, nil
+			}
+		}
+	}
+
+	return nil, &resource.NotFoundError{LastRequest: dbClusterARN}
+}
+
+func FindGlobalClusterByID(conn *rds.RDS, id string) (*rds.GlobalCluster, error) {
+	input := &rds.DescribeGlobalClustersInput{
+		GlobalClusterIdentifier: aws.String(id),
+	}
+
+	output, err := findGlobalCluster(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Eventual consistency check.
+	if aws.StringValue(output.GlobalClusterIdentifier) != id {
+		return nil, &resource.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func findGlobalCluster(conn *rds.RDS, input *rds.DescribeGlobalClustersInput) (*rds.GlobalCluster, error) {
+	output, err := findGlobalClusters(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(output) == 0 || output[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return output[0], nil
+}
+
+func findGlobalClusters(conn *rds.RDS, input *rds.DescribeGlobalClustersInput) ([]*rds.GlobalCluster, error) {
+	var output []*rds.GlobalCluster
+
+	err := conn.DescribeGlobalClustersPages(input, func(page *rds.DescribeGlobalClustersOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.GlobalClusters {
+			if v != nil {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, rds.ErrCodeGlobalClusterNotFoundFault) {
 		return nil, &resource.NotFoundError{
 			LastError:   err,
 			LastRequest: input,

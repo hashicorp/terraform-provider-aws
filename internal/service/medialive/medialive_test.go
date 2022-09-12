@@ -13,6 +13,10 @@ func TestAccMediaLive_serial(t *testing.T) {
 			"updateTags": testAccMultiplex_updateTags,
 			"start":      testAccMultiplex_start,
 		},
+		"MultiplexProgram": {
+			"basic":      testAccMultiplexProgram_basic,
+			"disappears": testAccMultiplexProgram_disappears,
+		},
 	}
 
 	for group, m := range testCases {

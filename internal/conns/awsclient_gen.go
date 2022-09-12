@@ -2,8 +2,6 @@
 package conns
 
 import (
-	"fmt"
-
 	"github.com/aws/aws-sdk-go-v2/service/comprehend"
 	"github.com/aws/aws-sdk-go-v2/service/fis"
 	"github.com/aws/aws-sdk-go-v2/service/identitystore"
@@ -307,6 +305,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/workspaces"
 	"github.com/aws/aws-sdk-go/service/workspacesweb"
 	"github.com/aws/aws-sdk-go/service/xray"
+	"github.com/hashicorp/terraform-provider-aws/internal/intf"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
@@ -320,6 +319,7 @@ type AWSClient struct {
 	Region                    string
 	ReverseDNSPrefix          string
 	S3ConnURICleaningDisabled *s3.S3
+	ServiceMap                map[string]intf.ServiceData
 	Session                   *session.Session
 	SupportedPlatforms        []string
 	TerraformVersion          string
@@ -626,18 +626,4 @@ type AWSClient struct {
 	WorkSpacesConn                   *workspaces.WorkSpaces
 	WorkSpacesWebConn                *workspacesweb.WorkSpacesWeb
 	XRayConn                         *xray.XRay
-}
-
-// PartitionHostname returns a hostname with the provider domain suffix for the partition
-// e.g. PREFIX.amazonaws.com
-// The prefix should not contain a trailing period.
-func (client *AWSClient) PartitionHostname(prefix string) string {
-	return fmt.Sprintf("%s.%s", prefix, client.DNSSuffix)
-}
-
-// RegionalHostname returns a hostname with the provider domain suffix for the region and partition
-// e.g. PREFIX.us-west-2.amazonaws.com
-// The prefix should not contain a trailing period.
-func (client *AWSClient) RegionalHostname(prefix string) string {
-	return fmt.Sprintf("%s.%s.%s", prefix, client.Region, client.DNSSuffix)
 }

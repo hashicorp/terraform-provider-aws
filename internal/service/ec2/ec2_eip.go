@@ -131,12 +131,10 @@ func resourceEIPCreate(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
-	if _, ok := d.GetOk("vpc"); !ok {
-		return errors.New(`with the retirement of EC2-Classic no new non-VPC EC2 EIPs can be created`)
-	}
+	input := &ec2.AllocateAddressInput{}
 
-	input := &ec2.AllocateAddressInput{
-		Domain: aws.String(ec2.DomainTypeVpc),
+	if v := d.Get("vpc"); v != nil && v.(bool) {
+		input.Domain = aws.String(ec2.DomainTypeVpc)
 	}
 
 	if v, ok := d.GetOk("address"); ok {

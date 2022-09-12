@@ -502,7 +502,7 @@ func TestAccVPCSecurityGroup_basic(t *testing.T) {
 					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
 					resource.TestCheckResourceAttr(resourceName, "revoke_rules_on_delete", "false"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttrSet(resourceName, "vpc_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "vpc_id", "aws_vpc.test", "id"),
 				),
 			},
 			{
@@ -533,6 +533,42 @@ func TestAccVPCSecurityGroup_disappears(t *testing.T) {
 					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceSecurityGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccVPCSecurityGroup_noVPC(t *testing.T) {
+	var group ec2.SecurityGroup
+	resourceName := "aws_security_group.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSecurityGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCSecurityGroupConfig_noVPC(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckSecurityGroupExists(resourceName, &group),
+					resource.TestCheckResourceAttrPair(resourceName, "vpc_id", "data.aws_vpc.default", "id"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
+			},
+			{
+				Config:   testAccVPCSecurityGroupConfig_defaultVPC(rName),
+				PlanOnly: true,
+			},
+			{
+				Config:   testAccVPCSecurityGroupConfig_noVPC(rName),
+				PlanOnly: true,
 			},
 		},
 	})
@@ -1339,7 +1375,7 @@ func TestAccVPCSecurityGroup_vpc(t *testing.T) {
 						"cidr_blocks.#": "1",
 						"cidr_blocks.0": "10.0.0.0/8",
 					}),
-					resource.TestCheckResourceAttrSet(resourceName, "vpc_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "vpc_id", "aws_vpc.test", "id"),
 				),
 			},
 			{
@@ -1375,7 +1411,7 @@ func TestAccVPCSecurityGroup_vpcNegOneIngress(t *testing.T) {
 						"cidr_blocks.#": "1",
 						"cidr_blocks.0": "10.0.0.0/8",
 					}),
-					resource.TestCheckResourceAttrSet(resourceName, "vpc_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "vpc_id", "aws_vpc.test", "id"),
 				),
 			},
 			{
@@ -1411,7 +1447,7 @@ func TestAccVPCSecurityGroup_vpcProtoNumIngress(t *testing.T) {
 						"cidr_blocks.#": "1",
 						"cidr_blocks.0": "10.0.0.0/8",
 					}),
-					resource.TestCheckResourceAttrSet(resourceName, "vpc_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "vpc_id", "aws_vpc.test", "id"),
 				),
 			},
 			{
@@ -2198,7 +2234,7 @@ func TestAccVPCSecurityGroup_emrDependencyViolation(t *testing.T) {
 					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
 					resource.TestCheckResourceAttr(resourceName, "revoke_rules_on_delete", "true"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttrSet(resourceName, "vpc_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "vpc_id", "aws_vpc.test", "id"),
 				),
 				ExpectError: regexp.MustCompile("unexpected state"),
 			},
@@ -2451,6 +2487,31 @@ resource "aws_security_group" "test" {
   vpc_id      = aws_vpc.test.id
 }
 `, rName, namePrefix)
+}
+
+func testAccVPCSecurityGroupConfig_noVPC(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_security_group" "test" {
+  name = %[1]q
+}
+
+data "aws_vpc" "default" {
+  default = true
+}
+`, rName)
+}
+
+func testAccVPCSecurityGroupConfig_defaultVPC(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_security_group" "test" {
+  name   = %[1]q
+  vpc_id = data.aws_vpc.default.id
+}
+
+data "aws_vpc" "default" {
+  default = true
+}
+`, rName)
 }
 
 func testAccVPCSecurityGroupConfig_tags1(rName, tagKey1, tagValue1 string) string {

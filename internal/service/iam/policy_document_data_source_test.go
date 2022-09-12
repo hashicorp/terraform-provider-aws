@@ -241,6 +241,28 @@ func TestAccIAMPolicyDocumentDataSource_duplicateSid(t *testing.T) {
 	})
 }
 
+func TestAccIAMPolicyDocumentDataSource_sourcePolicyValidJSON(t *testing.T) {
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccPolicyDocumentDataSourceConfig_invalidJSON,
+				ExpectError: regexp.MustCompile(`"source_policy_documents.0" contains an invalid JSON: unexpected end of JSON input`),
+			},
+			{
+				Config: testAccPolicyDocumentDataSourceConfig_emptyString,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("data.aws_iam_policy_document.test", "json",
+						testAccPolicyDocumentExpectedJSONNoStatement,
+					),
+				),
+			},
+		},
+	})
+}
+
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/10777
 func TestAccIAMPolicyDocumentDataSource_StatementPrincipalIdentifiers_stringAndSlice(t *testing.T) {
 	dataSourceName := "data.aws_iam_policy_document.test"
@@ -1359,6 +1381,22 @@ data "aws_iam_policy_document" "test" {
   }
 }
 `
+
+var testAccPolicyDocumentDataSourceConfig_emptyString = `
+data "aws_iam_policy_document" "test" {
+  source_policy_documents = [""]
+}
+`
+
+var testAccPolicyDocumentDataSourceConfig_invalidJSON = `
+data "aws_iam_policy_document" "test" {
+  source_policy_documents = ["{"]
+}
+`
+
+var testAccPolicyDocumentExpectedJSONNoStatement = `{
+  "Version": "2012-10-17"
+}`
 
 func testAccPolicyDocumentExpectedJSONStatementPrincipalIdentifiersMultiplePrincipals() string {
 	return fmt.Sprintf(`{
