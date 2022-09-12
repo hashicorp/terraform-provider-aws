@@ -15,6 +15,7 @@ import (
 )
 
 func TestAccRekognitionCollection_Resource_basic(t *testing.T) {
+	var collection rekognition.DescribeCollectionOutput
 	resourceName := "aws_rekognition_collection.test"
 	rName := fmt.Sprintf("test-collection-%d", sdkacctest.RandInt())
 
@@ -27,7 +28,7 @@ func TestAccRekognitionCollection_Resource_basic(t *testing.T) {
 			{
 				Config: testAccCollectionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCollectionExists(resourceName),
+					testAccCheckCollectionExists(resourceName, &collection),
 					resource.TestCheckResourceAttr(resourceName, "collection_id", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "collection_arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "face_count"),
@@ -44,6 +45,7 @@ func TestAccRekognitionCollection_Resource_basic(t *testing.T) {
 }
 
 func TestAccRekognitionCollection_Resource_tags(t *testing.T) {
+	var collection rekognition.DescribeCollectionOutput
 	resourceName := "aws_rekognition_collection.test"
 	rName := fmt.Sprintf("test-collection-%d", sdkacctest.RandInt())
 
@@ -56,7 +58,7 @@ func TestAccRekognitionCollection_Resource_tags(t *testing.T) {
 			{
 				Config: testAccCollectionConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCollectionExists(resourceName),
+					testAccCheckCollectionExists(resourceName, &collection),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -69,7 +71,7 @@ func TestAccRekognitionCollection_Resource_tags(t *testing.T) {
 			{
 				Config: testAccCollectionConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCollectionExists(resourceName),
+					testAccCheckCollectionExists(resourceName, &collection),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -78,7 +80,7 @@ func TestAccRekognitionCollection_Resource_tags(t *testing.T) {
 			{
 				Config: testAccCollectionConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCollectionExists(resourceName),
+					testAccCheckCollectionExists(resourceName, &collection),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -87,7 +89,7 @@ func TestAccRekognitionCollection_Resource_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckCollectionExists(n string) resource.TestCheckFunc {
+func testAccCheckCollectionExists(n string, res *rekognition.DescribeCollectionOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -100,13 +102,15 @@ func testAccCheckCollectionExists(n string) resource.TestCheckFunc {
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).RekognitionConn
 
-		_, err := conn.DescribeCollection(&rekognition.DescribeCollectionInput{
+		collection, err := conn.DescribeCollection(&rekognition.DescribeCollectionInput{
 			CollectionId: aws.String(rs.Primary.ID),
 		})
 
 		if err != nil {
 			return err
 		}
+
+		*res = *collection
 
 		return nil
 	}
