@@ -135,6 +135,12 @@ func ResourceInstance() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
+			"custom_iam_instance_profile": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^AWSRDSCustom.*$`), "must begin with AWSRDSCustom"),
+			},
 			"customer_owned_ip_enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -569,6 +575,10 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 			input.AvailabilityZone = aws.String(v.(string))
 		}
 
+		if v, ok := d.GetOk("custom_iam_instance_profile"); ok {
+			input.CustomIamInstanceProfile = aws.String(v.(string))
+		}
+
 		if v, ok := d.GetOk("db_subnet_group_name"); ok {
 			input.DBSubnetGroupName = aws.String(v.(string))
 		}
@@ -924,6 +934,10 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 			requiresModifyDbInstance = true
 		}
 
+		if v, ok := d.GetOk("custom_iam_instance_profile"); ok {
+			input.CustomIamInstanceProfile = aws.String(v.(string))
+		}
+
 		if v, ok := d.GetOk("customer_owned_ip_enabled"); ok {
 			input.EnableCustomerOwnedIp = aws.Bool(v.(bool))
 		}
@@ -1049,7 +1063,18 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		log.Printf("[DEBUG] Creating RDS DB Instance: %s", input)
-		_, err := conn.RestoreDBInstanceFromDBSnapshot(input)
+		_, err := tfresource.RetryWhen(propagationTimeout,
+			func() (interface{}, error) {
+				return conn.RestoreDBInstanceFromDBSnapshot(input)
+			},
+			func(err error) (bool, error) {
+				if tfawserr.ErrMessageContains(err, errCodeValidationError, "RDS couldn't fetch the role from instance profile") {
+					return true, err
+				}
+
+				return false, err
+			},
+		)
 
 		// When using SQL Server engine with MultiAZ enabled, its not
 		// possible to immediately enable mirroring since
@@ -1106,6 +1131,10 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 
 		if v, ok := d.GetOk("availability_zone"); ok {
 			input.AvailabilityZone = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("custom_iam_instance_profile"); ok {
+			input.CustomIamInstanceProfile = aws.String(v.(string))
 		}
 
 		if v, ok := d.GetOk("customer_owned_ip_enabled"); ok {
@@ -1193,7 +1222,18 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		log.Printf("[DEBUG] Creating RDS DB Instance: %s", input)
-		_, err := conn.RestoreDBInstanceToPointInTime(input)
+		_, err := tfresource.RetryWhen(propagationTimeout,
+			func() (interface{}, error) {
+				return conn.RestoreDBInstanceToPointInTime(input)
+			},
+			func(err error) (bool, error) {
+				if tfawserr.ErrMessageContains(err, errCodeValidationError, "RDS couldn't fetch the role from instance profile") {
+					return true, err
+				}
+
+				return false, err
+			},
+		)
 
 		if err != nil {
 			return fmt.Errorf("creating RDS DB Instance (restore to point-in-time) (%s): %w", identifier, err)
@@ -1245,6 +1285,10 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 
 		if v, ok := d.GetOk("character_set_name"); ok {
 			input.CharacterSetName = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("custom_iam_instance_profile"); ok {
+			input.CustomIamInstanceProfile = aws.String(v.(string))
 		}
 
 		if v, ok := d.GetOk("customer_owned_ip_enabled"); ok {
@@ -1352,11 +1396,21 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		log.Printf("[DEBUG] Creating RDS DB Instance: %s", input)
-		outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(5*time.Minute,
+		outputRaw, err := tfresource.RetryWhen(propagationTimeout,
 			func() (interface{}, error) {
 				return conn.CreateDBInstance(input)
 			},
-			errCodeInvalidParameterValue, "ENHANCED_MONITORING")
+			func(err error) (bool, error) {
+				if tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "ENHANCED_MONITORING") {
+					return true, err
+				}
+				if tfawserr.ErrMessageContains(err, errCodeValidationError, "RDS couldn't fetch the role from instance profile") {
+					return true, err
+				}
+
+				return false, err
+			},
+		)
 
 		if err != nil {
 			return fmt.Errorf("creating RDS DB Instance (%s): %w", identifier, err)
@@ -1436,6 +1490,7 @@ func resourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("ca_cert_identifier", v.CACertificateIdentifier)
 	d.Set("character_set_name", v.CharacterSetName)
 	d.Set("copy_tags_to_snapshot", v.CopyTagsToSnapshot)
+	d.Set("custom_iam_instance_profile", v.CustomIamInstanceProfile)
 	d.Set("customer_owned_ip_enabled", v.CustomerOwnedIpEnabled)
 	d.Set("db_name", v.DBName)
 	if v.DBSubnetGroup != nil {
