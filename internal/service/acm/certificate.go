@@ -469,7 +469,7 @@ func resourceCertificateDelete(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting ACM Certificate (%s): %w", d.Id(), err)
+		return diag.Errorf("deleting ACM Certificate (%s): %s", d.Id(), err)
 	}
 
 	return nil
