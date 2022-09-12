@@ -64,9 +64,15 @@ func resourceManagedPolicyAttachmentCreate(d *schema.ResourceData, meta interfac
 		PermissionSetArn: aws.String(permissionSetArn),
 	}
 
+	policy, _ := FindManagedPolicy(conn, managedPolicyArn, permissionSetArn, instanceArn)
+
 	_, err := conn.AttachManagedPolicyToPermissionSet(input)
 
 	if err != nil {
+		if tfawserr.ErrCodeEquals(err, ssoadmin.ErrCodeConflictException) && policy != nil {
+			log.Printf("[WARN] Managed Policy (%s) is already attached to SSO Permission Set (%s)", managedPolicyArn, permissionSetArn)
+			return nil
+		}
 		return fmt.Errorf("error attaching Managed Policy to SSO Permission Set (%s): %w", permissionSetArn, err)
 	}
 

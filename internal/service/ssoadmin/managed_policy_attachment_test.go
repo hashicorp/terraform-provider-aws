@@ -167,6 +167,44 @@ func TestAccSSOAdminManagedPolicyAttachment_multipleManagedPolicies(t *testing.T
 	})
 }
 
+func TestAccSSOAdminManagedPolicyAttachment_duplicateManagedPolicies(t *testing.T) {
+	resourceName := "aws_ssoadmin_managed_policy_attachment.test"
+	permissionSetResourceName := "aws_ssoadmin_permission_set.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckInstances(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ssoadmin.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckManagedPolicyAttachmentDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccManagedPolicyAttachmentConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckManagedPolicyAttachmentExists(resourceName),
+				),
+			},
+			{
+				Config: testAccManagedPolicyAttachmentConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckManagedPolicyAttachmentExists(resourceName),
+					//lintignore:AWSAT001
+					resource.TestMatchResourceAttr(resourceName, "managed_policy_arn", regexp.MustCompile(`policy/AlexaForBusinessDeviceSetup`)),
+					resource.TestCheckResourceAttr(resourceName, "managed_policy_name", "AlexaForBusinessDeviceSetup"),
+					resource.TestCheckResourceAttrPair(resourceName, "instance_arn", permissionSetResourceName, "instance_arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "permission_set_arn", permissionSetResourceName, "arn"),
+				),
+				ExpectNonEmptyPlan: false,
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckManagedPolicyAttachmentDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).SSOAdminConn
 
