@@ -184,7 +184,7 @@ func ResourceConnection() *schema.Resource {
 										Type:     schema.TypeList,
 										Required: true,
 										MaxItems: 1,
-										Elem:     connectionHttpParameterSchema("auth_parameters.0.oauth.0.oauth_http_parameters.0"),
+										Elem:     connectionHTTPParameterSchema("auth_parameters.0.oauth.0.oauth_http_parameters.0"),
 									},
 									"client_parameters": {
 										Type:     schema.TypeList,
@@ -217,7 +217,7 @@ func ResourceConnection() *schema.Resource {
 							Type:     schema.TypeList,
 							Optional: true,
 							MaxItems: 1,
-							Elem:     connectionHttpParameterSchema("auth_parameters.0.invocation_http_parameters.0"),
+							Elem:     connectionHTTPParameterSchema("auth_parameters.0.invocation_http_parameters.0"),
 						},
 					},
 				},
