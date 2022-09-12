@@ -1594,7 +1594,7 @@ func expandCustomConnectorProfileCredentials(m map[string]interface{}) *appflow.
 		credentials.Custom = expandCustomAuthCredentials(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := m["oauth2_credentials"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["oauth2"].([]interface{}); ok && len(v) > 0 {
 		credentials.Oauth2 = expandOAuth2Credentials(v[0].(map[string]interface{}))
 	}
 
@@ -1911,6 +1911,10 @@ func expandConnectorProfileProperties(m map[string]interface{}) *appflow.Connect
 		cpc.Amplitude = v[0].(*appflow.AmplitudeConnectorProfileProperties)
 	}
 
+	if v, ok := m["custom_connector"].([]interface{}); ok && len(v) > 0 {
+		cpc.CustomConnector = expandCustomConnectorProfileProperties(v[0].(map[string]interface{}))
+	}
+
 	if v, ok := m["datadog"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		cpc.Datadog = expandDatadogConnectorProfileProperties(v[0].(map[string]interface{}))
 	}
@@ -2049,6 +2053,20 @@ func expandSalesforceConnectorProfileProperties(m map[string]interface{}) *appfl
 	return &properties
 }
 
+func expandCustomConnectorProfileProperties(m map[string]interface{}) *appflow.CustomConnectorProfileProperties {
+	properties := appflow.CustomConnectorProfileProperties{}
+
+	if v, ok := m["oauth2_properties"].([]interface{}); ok && len(v) > 0 {
+		properties.OAuth2Properties = expandOAuth2Properties(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := m["profile_properties"].(map[string]interface{}); ok && len(v) > 0 {
+		properties.ProfileProperties = flex.ExpandStringMap(v)
+	}
+
+	return &properties
+}
+
 func expandSAPODataConnectorProfileProperties(m map[string]interface{}) *appflow.SAPODataConnectorProfileProperties {
 	properties := appflow.SAPODataConnectorProfileProperties{
 		ApplicationHostUrl:     aws.String(m["application_host_url"].(string)),
@@ -2132,6 +2150,19 @@ func expandOAuthProperties(m map[string]interface{}) *appflow.OAuthProperties {
 	return &properties
 }
 
+func expandOAuth2Properties(m map[string]interface{}) *appflow.OAuth2Properties {
+	properties := appflow.OAuth2Properties{
+		OAuth2GrantType: aws.String(m["oauth2_grant_type"].(string)),
+		TokenUrl:        aws.String(m["token_url"].(string)),
+	}
+
+	if v, ok := m["token_url_custom_properties"].(map[string]interface{}); ok && len(v) > 0 {
+		properties.TokenUrlCustomProperties = flex.ExpandStringMap(v)
+	}
+
+	return &properties
+}
+
 func flattenConnectorProfileConfig(cpp *appflow.ConnectorProfileProperties, cpc []interface{}) []interface{} {
 	m := make(map[string]interface{})
 
@@ -2147,6 +2178,9 @@ func flattenConnectorProfileProperties(cpp *appflow.ConnectorProfileProperties) 
 
 	if cpp.Amplitude != nil {
 		result["amplitude"] = []interface{}{m}
+	}
+	if cpp.CustomConnector != nil {
+		result["custom_connector"] = flattenCustomConnectorProfileProperties(cpp.CustomConnector)
 	}
 	if cpp.Datadog != nil {
 		m["instance_url"] = aws.StringValue(cpp.Datadog.InstanceUrl)
@@ -2226,6 +2260,20 @@ func flattenRedshiftConnectorProfileProperties(properties *appflow.RedshiftConne
 	return []interface{}{m}
 }
 
+func flattenCustomConnectorProfileProperties(properties *appflow.CustomConnectorProfileProperties) []interface{} {
+	m := make(map[string]interface{})
+
+	if properties.OAuth2Properties != nil {
+		m["oauth2_properties"] = flattenOAuth2Properties(properties.OAuth2Properties)
+	}
+
+	if properties.ProfileProperties != nil {
+		m["profile_properties"] = flex.PointersMapToStringList(properties.ProfileProperties)
+	}
+
+	return []interface{}{m}
+}
+
 func flattenSalesforceConnectorProfileProperties(properties *appflow.SalesforceConnectorProfileProperties) []interface{} {
 	m := make(map[string]interface{})
 
@@ -2290,6 +2338,15 @@ func flattenOAuthProperties(properties *appflow.OAuthProperties) []interface{} {
 
 	m["auth_code_url"] = aws.StringValue(properties.AuthCodeUrl)
 	m["oauth_scopes"] = aws.StringValueSlice(properties.OAuthScopes)
+	m["token_url"] = aws.StringValue(properties.TokenUrl)
+
+	return []interface{}{m}
+}
+
+func flattenOAuth2Properties(properties *appflow.OAuth2Properties) []interface{} {
+	m := make(map[string]interface{})
+
+	m["oauth2_grant_type"] = aws.StringValue(properties.OAuth2GrantType)
 	m["token_url"] = aws.StringValue(properties.TokenUrl)
 
 	return []interface{}{m}
