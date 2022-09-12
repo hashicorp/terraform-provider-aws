@@ -126,6 +126,10 @@ func DataSourceFunction() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"qualified_invoke_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"qualifier": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -304,6 +308,7 @@ func dataSourceFunctionRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("memory_size", function.MemorySize)
 	d.Set("qualified_arn", qualifiedARN)
+	d.Set("qualified_invoke_arn", functionInvokeARN(qualifiedARN, meta))
 
 	// Add Signing Profile Version ARN
 	if err := d.Set("signing_profile_version_arn", function.SigningProfileVersionArn); err != nil {

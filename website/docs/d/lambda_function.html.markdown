@@ -49,6 +49,7 @@ In addition to all arguments above, the following attributes are exported:
 * `layers` - List of Lambda Layer ARNs attached to your Lambda Function.
 * `memory_size` - Amount of memory in MB your Lambda Function can use at runtime.
 * `qualified_arn` - Qualified (`:QUALIFIER` or `:VERSION` suffix) ARN identifying your Lambda Function. See also `arn`.
+* `qualified_invoke_arn` - Qualified (`:QUALIFIER` or `:VERSION` suffix) ARN to be used for invoking Lambda Function from API Gateway. See also `invoke_arn`.
 * `reserved_concurrent_executions` - The amount of reserved concurrent executions for this lambda function or `-1` if unreserved.
 * `role` - IAM role attached to the Lambda Function.
 * `runtime` - Runtime environment for the Lambda function.
