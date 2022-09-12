@@ -9,8 +9,7 @@ on:
     paths:
       - .github/workflows/golangci-lint.yml
       - .go-version
-      - .ci/.golangci.yml
-      - .ci/.golangci2.yml
+      - .ci/.golangci*.yml
       - internal/**
       - go.sum
       - main.go
@@ -30,7 +29,7 @@ jobs:
         uses: golangci/golangci-lint-action@v3
         with:
           version: latest
-          args: -c .ci/.golangci.yml
+          args: --config .ci/.golangci.yml
   golangci-lintb:
     name: 2 of 2
     needs: [golangci-linta]
@@ -44,4 +43,4 @@ jobs:
         uses: golangci/golangci-lint-action@v3
         with:
           version: latest
-          args: -c .ci/.golangci2.yml
+          args: --config .ci/.golangci2.yml

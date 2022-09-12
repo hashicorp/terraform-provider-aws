@@ -156,7 +156,7 @@ func testAccCheckPublicDNSNamespaceDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := tfservicediscovery.FindNamespaceByID(context.TODO(), conn, rs.Primary.ID)
+		_, err := tfservicediscovery.FindNamespaceByID(context.Background(), conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -185,7 +185,7 @@ func testAccCheckPublicDNSNamespaceExists(n string) resource.TestCheckFunc {
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceDiscoveryConn
 
-		_, err := tfservicediscovery.FindNamespaceByID(context.TODO(), conn, rs.Primary.ID)
+		_, err := tfservicediscovery.FindNamespaceByID(context.Background(), conn, rs.Primary.ID)
 
 		return err
 	}

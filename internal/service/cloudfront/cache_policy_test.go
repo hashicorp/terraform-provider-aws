@@ -242,11 +242,7 @@ func testAccCheckCachePolicyExists(n string) resource.TestCheckFunc {
 
 		_, err := tfcloudfront.FindCachePolicyByID(conn, rs.Primary.ID)
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 

@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccConnectQuickConnectDataSource_id(t *testing.T) {
+func testAccQuickConnectDataSource_id(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	resourceName := "aws_connect_quick_connect.test"
@@ -41,7 +41,7 @@ func TestAccConnectQuickConnectDataSource_id(t *testing.T) {
 	})
 }
 
-func TestAccConnectQuickConnectDataSource_name(t *testing.T) {
+func testAccQuickConnectDataSource_name(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	resourceName := "aws_connect_quick_connect.test"

@@ -743,6 +743,7 @@ func (s *server) ReadResource(ctx context.Context, req *tfplugin5.ReadResource_R
 	}
 	logging.ProtocolData(ctx, s.protocolDataDir, rpc, "Request", "CurrentState", r.CurrentState)
 	logging.ProtocolData(ctx, s.protocolDataDir, rpc, "Request", "ProviderMeta", r.ProviderMeta)
+	logging.ProtocolPrivateData(ctx, s.protocolDataDir, rpc, "Request", "Private", r.Private)
 	ctx = tf5serverlogging.DownstreamRequest(ctx)
 	resp, err := s.downstream.ReadResource(ctx, r)
 	if err != nil {
@@ -751,6 +752,7 @@ func (s *server) ReadResource(ctx context.Context, req *tfplugin5.ReadResource_R
 	}
 	tf5serverlogging.DownstreamResponse(ctx, resp.Diagnostics)
 	logging.ProtocolData(ctx, s.protocolDataDir, rpc, "Response", "NewState", resp.NewState)
+	logging.ProtocolPrivateData(ctx, s.protocolDataDir, rpc, "Response", "Private", resp.Private)
 	ret, err := toproto.ReadResource_Response(resp)
 	if err != nil {
 		logging.ProtocolError(ctx, "Error converting response to protobuf", map[string]interface{}{logging.KeyError: err})
@@ -776,6 +778,7 @@ func (s *server) PlanResourceChange(ctx context.Context, req *tfplugin5.PlanReso
 	logging.ProtocolData(ctx, s.protocolDataDir, rpc, "Request", "PriorState", r.PriorState)
 	logging.ProtocolData(ctx, s.protocolDataDir, rpc, "Request", "ProposedNewState", r.ProposedNewState)
 	logging.ProtocolData(ctx, s.protocolDataDir, rpc, "Request", "ProviderMeta", r.ProviderMeta)
+	logging.ProtocolPrivateData(ctx, s.protocolDataDir, rpc, "Request", "PriorPrivate", r.PriorPrivate)
 	ctx = tf5serverlogging.DownstreamRequest(ctx)
 	resp, err := s.downstream.PlanResourceChange(ctx, r)
 	if err != nil {
@@ -784,6 +787,7 @@ func (s *server) PlanResourceChange(ctx context.Context, req *tfplugin5.PlanReso
 	}
 	tf5serverlogging.DownstreamResponse(ctx, resp.Diagnostics)
 	logging.ProtocolData(ctx, s.protocolDataDir, rpc, "Response", "PlannedState", resp.PlannedState)
+	logging.ProtocolPrivateData(ctx, s.protocolDataDir, rpc, "Response", "PlannedPrivate", resp.PlannedPrivate)
 	ret, err := toproto.PlanResourceChange_Response(resp)
 	if err != nil {
 		logging.ProtocolError(ctx, "Error converting response to protobuf", map[string]interface{}{logging.KeyError: err})
@@ -807,8 +811,9 @@ func (s *server) ApplyResourceChange(ctx context.Context, req *tfplugin5.ApplyRe
 	}
 	logging.ProtocolData(ctx, s.protocolDataDir, rpc, "Request", "Config", r.Config)
 	logging.ProtocolData(ctx, s.protocolDataDir, rpc, "Request", "PlannedState", r.PlannedState)
-	logging.ProtocolData(ctx, s.protocolDataDir, rpc, "Request", "Config", r.Config)
-	logging.ProtocolData(ctx, s.protocolDataDir, rpc, "Request", "Config", r.Config)
+	logging.ProtocolData(ctx, s.protocolDataDir, rpc, "Request", "PriorState", r.PriorState)
+	logging.ProtocolData(ctx, s.protocolDataDir, rpc, "Request", "ProviderMeta", r.ProviderMeta)
+	logging.ProtocolPrivateData(ctx, s.protocolDataDir, rpc, "Request", "PlannedPrivate", r.PlannedPrivate)
 	ctx = tf5serverlogging.DownstreamRequest(ctx)
 	resp, err := s.downstream.ApplyResourceChange(ctx, r)
 	if err != nil {
@@ -817,6 +822,7 @@ func (s *server) ApplyResourceChange(ctx context.Context, req *tfplugin5.ApplyRe
 	}
 	tf5serverlogging.DownstreamResponse(ctx, resp.Diagnostics)
 	logging.ProtocolData(ctx, s.protocolDataDir, rpc, "Response", "NewState", resp.NewState)
+	logging.ProtocolPrivateData(ctx, s.protocolDataDir, rpc, "Response", "Private", resp.Private)
 	ret, err := toproto.ApplyResourceChange_Response(resp)
 	if err != nil {
 		logging.ProtocolError(ctx, "Error converting response to protobuf", map[string]interface{}{logging.KeyError: err})
@@ -847,6 +853,7 @@ func (s *server) ImportResourceState(ctx context.Context, req *tfplugin5.ImportR
 	tf5serverlogging.DownstreamResponse(ctx, resp.Diagnostics)
 	for _, importedResource := range resp.ImportedResources {
 		logging.ProtocolData(ctx, s.protocolDataDir, rpc, "Response_ImportedResource", "State", importedResource.State)
+		logging.ProtocolPrivateData(ctx, s.protocolDataDir, rpc, "Response_ImportedResource", "Private", importedResource.Private)
 	}
 	ret, err := toproto.ImportResourceState_Response(resp)
 	if err != nil {

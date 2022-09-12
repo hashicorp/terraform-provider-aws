@@ -12,8 +12,8 @@ on:
       - .github/workflows/website.yml
       - .go-version
       - .ci/.markdownlinkcheck.json
-      - .ci/.markdownlint.yml
       - .ci/.tflint.hcl
+      - .markdownlint.yml
       - website/docs/**
       - tools/go.mod
 
@@ -68,7 +68,6 @@ jobs:
       - uses: actions/checkout@v3
       - uses: avto-dev/markdown-lint@v1
         with:
-          config: ".ci/.markdownlint.yml"
           args: "website/docs"
   misspell:
     runs-on: ubuntu-latest
@@ -153,7 +152,7 @@ jobs:
               "--disable-rule=aws_appsync_resolver_invalid_request_template"
               "--disable-rule=aws_appsync_resolver_invalid_response_template"
               "--disable-rule=aws_servicecatalog_portfolio_share_invalid_type"
-              "--disable-rule=aws_s3_object_copy_invalid_source"              
+              "--disable-rule=aws_s3_object_copy_invalid_source"
           )
           while read -r filename; do
             rules=("${shared_rules[@]}")

@@ -1761,7 +1761,7 @@ func testAccCheckDataSourceDestroy(s *terraform.State) error {
 		if err != nil {
 			return err
 		}
-		_, err = tfkendra.FindDataSourceByID(context.TODO(), conn, id, indexId)
+		_, err = tfkendra.FindDataSourceByID(context.Background(), conn, id, indexId)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -1794,7 +1794,7 @@ func testAccCheckDataSourceExists(name string) resource.TestCheckFunc {
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).KendraConn
 
-		_, err = tfkendra.FindDataSourceByID(context.TODO(), conn, id, indexId)
+		_, err = tfkendra.FindDataSourceByID(context.Background(), conn, id, indexId)
 
 		if err != nil {
 			return fmt.Errorf("Error describing Kendra Data Source: %s", err.Error())

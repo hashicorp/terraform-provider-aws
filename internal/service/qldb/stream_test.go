@@ -149,7 +149,7 @@ func testAccCheckStreamExists(n string, v *qldb.JournalKinesisStreamDescription)
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).QLDBConn
 
-		output, err := tfqldb.FindStream(context.TODO(), conn, rs.Primary.Attributes["ledger_name"], rs.Primary.ID)
+		output, err := tfqldb.FindStream(context.Background(), conn, rs.Primary.Attributes["ledger_name"], rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -169,7 +169,7 @@ func testAccCheckStreamDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := tfqldb.FindStream(context.TODO(), conn, rs.Primary.Attributes["ledger_name"], rs.Primary.ID)
+		_, err := tfqldb.FindStream(context.Background(), conn, rs.Primary.Attributes["ledger_name"], rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue

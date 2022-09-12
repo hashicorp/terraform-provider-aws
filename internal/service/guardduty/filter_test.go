@@ -247,11 +247,8 @@ func testAccCheckFilterExists(name string, filter *guardduty.GetFilterOutput) re
 			FilterName: aws.String(name),
 		}
 		filter, err = conn.GetFilter(&input)
-		if err != nil {
-			return err
-		}
 
-		return nil
+		return err
 	}
 }
 

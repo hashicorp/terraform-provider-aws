@@ -39,9 +39,9 @@ data "aws_lb" "test" {
 
 The following arguments are supported:
 
-* `arn` - (Optional) The full ARN of the load balancer.
-* `name` - (Optional) The unique name of the load balancer.
-* `tags` - (Optional) A mapping of tags, each pair of which must exactly match a pair on the desired load balancer.
+* `arn` - (Optional) Full ARN of the load balancer.
+* `name` - (Optional) Unique name of the load balancer.
+* `tags` - (Optional) Mapping of tags, each pair of which must exactly match a pair on the desired load balancer.
 
 ~> **NOTE**: When both `arn` and `name` are specified, `arn` takes precedence. `tags` has lowest precedence.
 

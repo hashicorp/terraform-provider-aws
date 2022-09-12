@@ -156,7 +156,7 @@ data "aws_acmpca_certificate_authority" "test" {
 `, commonName)
 }
 
-//lintignore:AWSAT003,AWSAT005
+// lintignore:AWSAT003,AWSAT005
 const testAccCertificateAuthorityDataSourceConfig_nonExistent = `
 data "aws_acmpca_certificate_authority" "test" {
   arn = "arn:aws:acm-pca:us-east-1:123456789012:certificate-authority/tf-acc-test-does-not-exist"

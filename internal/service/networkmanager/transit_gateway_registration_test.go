@@ -141,7 +141,7 @@ func testAccCheckTransitGatewayRegistrationDestroy(s *terraform.State) error {
 			return err
 		}
 
-		_, err = tfnetworkmanager.FindTransitGatewayRegistrationByTwoPartKey(context.TODO(), conn, globalNetworkID, transitGatewayARN)
+		_, err = tfnetworkmanager.FindTransitGatewayRegistrationByTwoPartKey(context.Background(), conn, globalNetworkID, transitGatewayARN)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -176,13 +176,9 @@ func testAccCheckTransitGatewayRegistrationExists(n string) resource.TestCheckFu
 			return err
 		}
 
-		_, err = tfnetworkmanager.FindTransitGatewayRegistrationByTwoPartKey(context.TODO(), conn, globalNetworkID, transitGatewayARN)
+		_, err = tfnetworkmanager.FindTransitGatewayRegistrationByTwoPartKey(context.Background(), conn, globalNetworkID, transitGatewayARN)
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 func testAccTransitGatewayRegistrationConfig_basic(rName string) string {

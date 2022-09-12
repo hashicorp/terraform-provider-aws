@@ -99,7 +99,7 @@ func testAccCheckStandardsControlExists(n string, control *securityhub.Standards
 			return err
 		}
 
-		output, err := tfsecurityhub.FindStandardsControlByStandardsSubscriptionARNAndStandardsControlARN(context.TODO(), conn, standardsSubscriptionARN, rs.Primary.ID)
+		output, err := tfsecurityhub.FindStandardsControlByStandardsSubscriptionARNAndStandardsControlARN(context.Background(), conn, standardsSubscriptionARN, rs.Primary.ID)
 
 		if err != nil {
 			return err

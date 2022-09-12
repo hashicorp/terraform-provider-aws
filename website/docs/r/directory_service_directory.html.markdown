@@ -131,6 +131,7 @@ The following arguments are supported:
 * `connect_settings` - (Required for `ADConnector`) Connector related information about the directory. Fields documented below.
 * `alias` - (Optional) The alias for the directory (must be unique amongst all aliases in AWS). Required for `enable_sso`.
 * `description` - (Optional) A textual description for the directory.
+* `desired_number_of_domain_controllers` - (Optional) The number of domain controllers desired in the directory. Minimum value of `2`. Scaling of domain controllers is only supported for `MicrosoftAD` directories.
 * `short_name` - (Optional) The short name of the directory, such as `CORP`.
 * `enable_sso` - (Optional) Whether to enable single-sign on for the directory. Requires `alias`. Defaults to `false`.
 * `type` (Optional) - The directory type (`SimpleAD`, `ADConnector` or `MicrosoftAD` are accepted values). Defaults to `SimpleAD`.
@@ -162,6 +163,14 @@ In addition to all arguments above, the following attributes are exported:
 `connect_settings` (for `ADConnector`) is also exported with the following attributes:
 
 * `connect_ips` - The IP addresses of the AD Connector servers.
+
+## Timeouts
+
+`aws_directory_service_directory` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+
+- `create` - (Default `60 minutes`) Used for directory creation
+- `update` - (Default `60 minutes`) Used for directory update
+- `delete` - (Default `60 minutes`) Used for directory deletion
 
 ## Import
 

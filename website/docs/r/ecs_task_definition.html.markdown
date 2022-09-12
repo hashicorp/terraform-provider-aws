@@ -248,6 +248,7 @@ The following arguments are optional:
 * `proxy_configuration` - (Optional) Configuration block for the App Mesh proxy. [Detailed below.](#proxy_configuration)
 * `ephemeral_storage` - (Optional)  The amount of ephemeral storage to allocate for the task. This parameter is used to expand the total amount of ephemeral storage available, beyond the default amount, for tasks hosted on AWS Fargate. See [Ephemeral Storage](#ephemeral_storage).
 * `requires_compatibilities` - (Optional) Set of launch types required by the task. The valid values are `EC2` and `FARGATE`.
+* `skip_destroy` - (Optional) Whether to retain the old revision when the resource is destroyed or replacement is necessary. Default is `false`.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `task_role_arn` - (Optional) ARN of IAM role that allows your Amazon ECS container task to make calls to other AWS services.
 * `volume` - (Optional) Configuration block for [volumes](#volume) that containers in your task may use. Detailed below.

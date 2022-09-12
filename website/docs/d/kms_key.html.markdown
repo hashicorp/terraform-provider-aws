@@ -45,7 +45,7 @@ data "aws_kms_key" "by_key_arn" {
 ## Attributes Reference
 
 * `id`: The globally unique identifier for the key
-* `arn`: The Amazon Resource Name (ARN) of the key
+* `arn`: The ARN of the key
 * `aws_account_id`: The twelve-digit account ID of the AWS account that owns the key
 * `creation_date`: The date and time when the key was created
 * `deletion_date`: The date and time after which AWS KMS deletes the key. This value is present only when `key_state` is `PendingDeletion`, otherwise this value is 0

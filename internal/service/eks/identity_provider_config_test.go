@@ -21,7 +21,7 @@ func TestAccEKSIdentityProviderConfig_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	eksClusterResourceName := "aws_eks_cluster.test"
 	resourceName := "aws_eks_identity_provider_config.test"
-	ctx := context.TODO()
+	ctx := context.Background()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
@@ -64,7 +64,7 @@ func TestAccEKSIdentityProviderConfig_disappears(t *testing.T) {
 	var config eks.OidcIdentityProviderConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_eks_identity_provider_config.test"
-	ctx := context.TODO()
+	ctx := context.Background()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
@@ -88,7 +88,7 @@ func TestAccEKSIdentityProviderConfig_allOIDCOptions(t *testing.T) {
 	var config eks.OidcIdentityProviderConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_eks_identity_provider_config.test"
-	ctx := context.TODO()
+	ctx := context.Background()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
@@ -126,7 +126,7 @@ func TestAccEKSIdentityProviderConfig_tags(t *testing.T) {
 	var config eks.OidcIdentityProviderConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_eks_identity_provider_config.test"
-	ctx := context.TODO()
+	ctx := context.Background()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
@@ -200,7 +200,7 @@ func testAccCheckIdentityProviderExistsConfig(ctx context.Context, resourceName 
 }
 
 func testAccCheckIdentityProviderDestroyConfig(s *terraform.State) error {
-	ctx := context.TODO()
+	ctx := context.Background()
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EKSConn
 
 	for _, rs := range s.RootModule().Resources {

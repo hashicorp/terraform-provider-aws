@@ -39,8 +39,8 @@ data "aws_lb_target_group" "test" {
 
 The following arguments are supported:
 
-* `arn` - (Optional) The full ARN of the target group.
-* `name` - (Optional) The unique name of the target group.
+* `arn` - (Optional) Full ARN of the target group.
+* `name` - (Optional) Unique name of the target group.
 
 ~> **NOTE**: When both `arn` and `name` are specified, `arn` takes precedence.
 

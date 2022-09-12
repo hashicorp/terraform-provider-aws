@@ -28,7 +28,7 @@ output "foo" {
 
 The following arguments are supported:
 
-* `bucket` - (Required) The bucket name.
+* `bucket` - (Required) Bucket name.
 
 ## Attributes Reference
 

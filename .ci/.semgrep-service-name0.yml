@@ -2896,6 +2896,64 @@ rules:
           patterns:
             - pattern-regex: "(?i)CognitoIDP"
     severity: WARNING
+  - id: comprehend-in-func-name
+    languages:
+      - go
+    message: Do not use "Comprehend" in func name inside comprehend package
+    paths:
+      include:
+        - internal/service/comprehend
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)Comprehend"
+            - pattern-not-regex: ^TestAcc.*
+    severity: WARNING
+  - id: comprehend-in-test-name
+    languages:
+      - go
+    message: Include "Comprehend" in test name
+    paths:
+      include:
+        - internal/service/comprehend/*_test.go
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-not-regex: "^TestAccComprehend"
+            - pattern-regex: ^TestAcc.*
+    severity: WARNING
+  - id: comprehend-in-const-name
+    languages:
+      - go
+    message: Do not use "Comprehend" in const name inside comprehend package
+    paths:
+      include:
+        - internal/service/comprehend
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)Comprehend"
+    severity: WARNING
+  - id: comprehend-in-var-name
+    languages:
+      - go
+    message: Do not use "Comprehend" in var name inside comprehend package
+    paths:
+      include:
+        - internal/service/comprehend
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)Comprehend"
+    severity: WARNING
   - id: configservice-in-func-name
     languages:
       - go
@@ -2939,49 +2997,4 @@ rules:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)ConfigService"
-    severity: WARNING
-  - id: configservice-in-var-name
-    languages:
-      - go
-    message: Do not use "ConfigService" in var name inside configservice package
-    paths:
-      include:
-        - internal/service/configservice
-    patterns:
-      - pattern: var $NAME = ...
-      - metavariable-pattern:
-          metavariable: $NAME
-          patterns:
-            - pattern-regex: "(?i)ConfigService"
-    severity: WARNING
-  - id: connect-in-func-name
-    languages:
-      - go
-    message: Do not use "Connect" in func name inside connect package
-    paths:
-      include:
-        - internal/service/connect
-    patterns:
-      - pattern: func $NAME( ... ) { ... }
-      - metavariable-pattern:
-          metavariable: $NAME
-          patterns:
-            - pattern-regex: "(?i)Connect"
-            - pattern-not-regex: .*uickConnect.*
-            - pattern-not-regex: ^TestAcc.*
-    severity: WARNING
-  - id: connect-in-test-name
-    languages:
-      - go
-    message: Include "Connect" in test name
-    paths:
-      include:
-        - internal/service/connect/*_test.go
-    patterns:
-      - pattern: func $NAME( ... ) { ... }
-      - metavariable-pattern:
-          metavariable: $NAME
-          patterns:
-            - pattern-not-regex: "^TestAccConnect"
-            - pattern-regex: ^TestAcc.*
     severity: WARNING

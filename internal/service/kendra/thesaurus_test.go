@@ -327,7 +327,7 @@ func testAccCheckThesaurusDestroy(s *terraform.State) error {
 			return err
 		}
 
-		_, err = tfkendra.FindThesaurusByID(context.TODO(), conn, id, indexId)
+		_, err = tfkendra.FindThesaurusByID(context.Background(), conn, id, indexId)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -359,7 +359,7 @@ func testAccCheckThesaurusExists(name string) resource.TestCheckFunc {
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).KendraConn
 
-		_, err = tfkendra.FindThesaurusByID(context.TODO(), conn, id, indexId)
+		_, err = tfkendra.FindThesaurusByID(context.Background(), conn, id, indexId)
 
 		if err != nil {
 			return fmt.Errorf("Error describing Kendra Thesaurus: %s", err.Error())

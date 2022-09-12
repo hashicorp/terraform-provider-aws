@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccConnectRoutingProfileDataSource_routingProfileID(t *testing.T) {
+func testAccRoutingProfileDataSource_routingProfileID(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName3 := sdkacctest.RandomWithPrefix("resource-test-terraform")
@@ -62,7 +62,7 @@ func TestAccConnectRoutingProfileDataSource_routingProfileID(t *testing.T) {
 	})
 }
 
-func TestAccConnectRoutingProfileDataSource_name(t *testing.T) {
+func testAccRoutingProfileDataSource_name(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName3 := sdkacctest.RandomWithPrefix("resource-test-terraform")

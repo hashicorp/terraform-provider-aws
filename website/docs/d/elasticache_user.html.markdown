@@ -22,12 +22,12 @@ data "aws_elasticache_user" "bar" {
 
 The following arguments are supported:
 
-* `user_id` – (Required) The identifier for the user.
+* `user_id` – (Required) Identifier for the user.
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-* `user_id` - The identifier for the user.
-* `user_name` - The user name of the user.
-* `access_string` - A string for what access a user possesses within the associated ElastiCache replication groups or clusters.
+* `user_id` - Identifier for the user.
+* `user_name` - User name of the user.
+* `access_string` - String for what access a user possesses within the associated ElastiCache replication groups or clusters.

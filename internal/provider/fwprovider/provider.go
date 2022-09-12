@@ -2,28 +2,32 @@ package fwprovider
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/service/meta"
+	"github.com/hashicorp/terraform-provider-aws/internal/fwtypes"
+	"github.com/hashicorp/terraform-provider-aws/internal/intf"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/medialive"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // New returns a new, initialized Terraform Plugin Framework-style provider instance.
 // The provider instance is fully configured once the `Configure` method has been called.
-func New(primary interface{ Meta() interface{} }) tfsdk.Provider {
-	return &provider{
+func New(primary interface{ Meta() interface{} }) provider.Provider {
+	return &fwprovider{
 		Primary: primary,
 	}
 }
 
-type provider struct {
+type fwprovider struct {
 	Primary interface{ Meta() interface{} }
 }
 
 // GetSchema returns the schema for this provider's configuration.
-func (p *provider) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnostics) {
+func (p *fwprovider) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	// This schema must match exactly the Terraform Protocol v5 (Terraform Plugin SDK v2) provider's schema.
@@ -164,7 +168,7 @@ func (p *provider) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnostic
 			"assume_role": {
 				Attributes: map[string]tfsdk.Attribute{
 					"duration": {
-						Type:        DurationType,
+						Type:        fwtypes.DurationType,
 						Optional:    true,
 						Description: "The duration, between 15 minutes and 12 hours, of the role session. Valid time units are ns, us (or µs), ms, s, h, or m.",
 					},
@@ -199,6 +203,11 @@ func (p *provider) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnostic
 						Optional:    true,
 						Description: "An identifier for the assumed role session.",
 					},
+					"source_identity": {
+						Type:        types.StringType,
+						Optional:    true,
+						Description: "Source identity specified by the principal assuming the role.",
+					},
 					"tags": {
 						Type:        types.MapType{ElemType: types.StringType},
 						Optional:    true,
@@ -216,7 +225,7 @@ func (p *provider) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnostic
 			"assume_role_with_web_identity": {
 				Attributes: map[string]tfsdk.Attribute{
 					"duration": {
-						Type:        DurationType,
+						Type:        fwtypes.DurationType,
 						Optional:    true,
 						Description: "The duration, between 15 minutes and 12 hours, of the role session. Valid time units are ns, us (or µs), ms, s, h, or m.",
 					},
@@ -291,34 +300,46 @@ func (p *provider) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnostic
 // Configure is called at the beginning of the provider lifecycle, when
 // Terraform sends to the provider the values the user specified in the
 // provider configuration block.
-func (p *provider) Configure(ctx context.Context, request tfsdk.ConfigureProviderRequest, response *tfsdk.ConfigureProviderResponse) {
+func (p *fwprovider) Configure(ctx context.Context, request provider.ConfigureRequest, response *provider.ConfigureResponse) {
 	// Provider's parsed configuration (its instance state) is available through the primary provider's Meta() method.
 }
 
 // GetResources returns a mapping of resource names to type
 // implementations.
-func (p *provider) GetResources(ctx context.Context) (map[string]tfsdk.ResourceType, diag.Diagnostics) {
+func (p *fwprovider) GetResources(ctx context.Context) (map[string]provider.ResourceType, diag.Diagnostics) {
 	var diags diag.Diagnostics
-	resources := make(map[string]tfsdk.ResourceType)
+	resources := make(map[string]provider.ResourceType)
+
+	resources["aws_medialive_multiplex_program"] = medialive.NewResourceMultiplexProgramType(ctx, p.Primary)
 
 	return resources, diags
 }
 
 // GetDataSources returns a mapping of data source name to types
 // implementations.
-func (p *provider) GetDataSources(ctx context.Context) (map[string]tfsdk.DataSourceType, diag.Diagnostics) {
+func (p *fwprovider) GetDataSources(ctx context.Context) (map[string]provider.DataSourceType, diag.Diagnostics) {
 	var diags diag.Diagnostics
-	dataSources := make(map[string]tfsdk.DataSourceType)
+	dataSources := make(map[string]provider.DataSourceType)
 
-	// TODO: This should be done via service-level self-registration and initializatin in the primary provider.
-	t, err := meta.NewDataSourceARNType(ctx)
+	// TODO Better error messages.
+	// TODO Wrap the returned type to add standard context, logging etc.
+	providerData := p.Primary.Meta().(intf.ProviderData)
+	for serviceID, data := range providerData.Services(ctx) {
+		dsTypes, err := data.DataSources(ctx)
 
-	if err != nil {
-		diags.AddError("UhOh", err.Error())
-		return nil, diags
+		if err != nil {
+			diags.AddError(fmt.Sprintf("data sources for service (%s)", serviceID), err.Error())
+			return nil, diags
+		}
+
+		for name, dsType := range dsTypes {
+			if _, ok := dataSources[name]; ok {
+				diags.AddError(fmt.Sprintf("service (%s) data source (%s) already registered", serviceID, name), "")
+			} else {
+				dataSources[name] = dsType
+			}
+		}
 	}
-
-	dataSources["aws_arn"] = t
 
 	return dataSources, diags
 }

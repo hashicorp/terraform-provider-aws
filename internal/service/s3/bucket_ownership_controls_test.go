@@ -176,11 +176,7 @@ func testAccCheckBucketOwnershipControlsExists(resourceName string) resource.Tes
 
 		_, err := conn.GetBucketOwnershipControls(input)
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 

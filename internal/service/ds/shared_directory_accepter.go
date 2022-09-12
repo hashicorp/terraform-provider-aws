@@ -4,12 +4,12 @@ import (
 	"context"
 	"errors"
 	"log"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/directoryservice"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -26,8 +26,14 @@ func ResourceSharedDirectoryAccepter() *schema.Resource {
 		CreateContext: resourceSharedDirectoryAccepterCreate,
 		ReadContext:   resourceSharedDirectoryAccepterRead,
 		DeleteContext: resourceSharedDirectoryAccepterDelete,
+
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
+		},
+
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(60 * time.Minute),
+			Delete: schema.DefaultTimeout(60 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -79,7 +85,7 @@ func resourceSharedDirectoryAccepterCreate(ctx context.Context, d *schema.Resour
 
 	d.Set("notes", output.SharedDirectory.ShareNotes) // only available in response to create
 
-	_, err = waitDirectoryShared(ctx, conn, d.Id())
+	_, err = waitDirectoryShared(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate))
 
 	if err != nil {
 		return create.DiagError(names.DS, create.ErrActionWaitingForCreation, ResNameSharedDirectoryAccepter, d.Id(), err)
@@ -91,7 +97,7 @@ func resourceSharedDirectoryAccepterCreate(ctx context.Context, d *schema.Resour
 func resourceSharedDirectoryAccepterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).DSConn
 
-	dir, err := findDirectoryByID(conn, d.Id())
+	dir, err := FindDirectoryByID(conn, d.Id())
 
 	if err != nil {
 		return create.DiagError(names.DS, create.ErrActionReading, ResNameSharedDirectoryAccepter, d.Id(), err)
@@ -101,43 +107,29 @@ func resourceSharedDirectoryAccepterRead(ctx context.Context, d *schema.Resource
 	d.Set("owner_account_id", dir.OwnerDirectoryDescription.AccountId)
 	d.Set("owner_directory_id", dir.OwnerDirectoryDescription.DirectoryId)
 	d.Set("shared_directory_id", dir.DirectoryId)
+
 	return nil
 }
 
 func resourceSharedDirectoryAccepterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).DSConn
 
-	input := &directoryservice.DeleteDirectoryInput{
-		DirectoryId: aws.String(d.Id()),
-	}
+	log.Printf("[DEBUG] Deleting Directory Service Directory: %s", d.Id())
+	_, err := tfresource.RetryWhenAWSErrMessageContains(directoryApplicationDeauthorizedPropagationTimeout, func() (interface{}, error) {
+		return conn.DeleteDirectory(&directoryservice.DeleteDirectoryInput{
+			DirectoryId: aws.String(d.Id()),
+		})
+	}, directoryservice.ErrCodeClientException, "authorized applications")
 
-	log.Printf("[DEBUG] Deleting Directory Service Directory: (%s)", d.Id())
-	err := resource.Retry(directoryApplicationDeauthorizedPropagationTimeout, func() *resource.RetryError {
-		_, err := conn.DeleteDirectory(input)
-
-		if tfawserr.ErrCodeEquals(err, directoryservice.ErrCodeEntityDoesNotExistException) {
-			return nil
-		}
-		if tfawserr.ErrMessageContains(err, directoryservice.ErrCodeClientException, "authorized applications") {
-			return resource.RetryableError(err)
-		}
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-
+	if tfawserr.ErrCodeEquals(err, directoryservice.ErrCodeEntityDoesNotExistException) {
 		return nil
-	})
-	if tfresource.TimedOut(err) {
-		_, err = conn.DeleteDirectory(input)
 	}
 
 	if err != nil {
 		return create.DiagError(names.DS, create.ErrActionDeleting, ResNameSharedDirectoryAccepter, d.Id(), err)
 	}
 
-	err = waitDirectoryDeleted(conn, d.Id())
-
-	if err != nil {
+	if _, err := waitDirectoryDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return create.DiagError(names.DS, create.ErrActionWaitingForDeletion, ResNameSharedDirectoryAccepter, d.Id(), err)
 	}
 

@@ -237,11 +237,7 @@ func testAccCheckActivationDestroy(s *terraform.State) error {
 			}
 		}
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 
 	return nil

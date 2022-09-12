@@ -4,10 +4,12 @@ import (
 	"fmt"
 	"log"
 	"regexp"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/backup"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -22,14 +24,24 @@ func ResourceVault() *schema.Resource {
 		Read:   resourceVaultRead,
 		Update: resourceVaultUpdate,
 		Delete: resourceVaultDelete,
+
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
+		},
+
+		Timeouts: &schema.ResourceTimeout{
+			Delete: schema.DefaultTimeout(10 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"force_destroy": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
 			},
 			"kms_key_arn": {
 				Type:         schema.TypeString,
@@ -39,10 +51,13 @@ func ResourceVault() *schema.Resource {
 				ValidateFunc: verify.ValidARN,
 			},
 			"name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9\-\_\.]{1,50}$`), "must consist of lowercase letters, numbers, and hyphens."),
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(2, 50),
+					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9\-\_]*$`), "must consist of letters, numbers, and hyphens."),
+				),
 			},
 			"recovery_points": {
 				Type:     schema.TypeInt,
@@ -74,7 +89,7 @@ func resourceVaultCreate(d *schema.ResourceData, meta interface{}) error {
 	_, err := conn.CreateBackupVault(input)
 
 	if err != nil {
-		return fmt.Errorf("error creating Backup Vault (%s): %w", name, err)
+		return fmt.Errorf("creating Backup Vault (%s): %w", name, err)
 	}
 
 	d.SetId(name)
@@ -96,7 +111,7 @@ func resourceVaultRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading Backup Vault (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading Backup Vault (%s): %w", d.Id(), err)
 	}
 
 	d.Set("arn", output.BackupVaultArn)
@@ -107,18 +122,18 @@ func resourceVaultRead(d *schema.ResourceData, meta interface{}) error {
 	tags, err := ListTags(conn, d.Get("arn").(string))
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for Backup Vault (%s): %w", d.Id(), err)
+		return fmt.Errorf("listing tags for Backup Vault (%s): %w", d.Id(), err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return fmt.Errorf("setting tags: %w", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return fmt.Errorf("setting tags_all: %w", err)
 	}
 
 	return nil
@@ -130,7 +145,7 @@ func resourceVaultUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating tags for Backup Vault (%s): %w", d.Id(), err)
+			return fmt.Errorf("updating tags for Backup Vault (%s): %w", d.Id(), err)
 		}
 	}
 
@@ -139,6 +154,48 @@ func resourceVaultUpdate(d *schema.ResourceData, meta interface{}) error {
 
 func resourceVaultDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).BackupConn
+
+	if d.Get("force_destroy").(bool) {
+		input := &backup.ListRecoveryPointsByBackupVaultInput{
+			BackupVaultName: aws.String(d.Id()),
+		}
+		var recoveryPointErrs *multierror.Error
+
+		err := conn.ListRecoveryPointsByBackupVaultPages(input, func(page *backup.ListRecoveryPointsByBackupVaultOutput, lastPage bool) bool {
+			if page == nil {
+				return !lastPage
+			}
+
+			for _, v := range page.RecoveryPoints {
+				recoveryPointARN := aws.StringValue(v.RecoveryPointArn)
+
+				log.Printf("[DEBUG] Deleting Backup Vault recovery point: %s", recoveryPointARN)
+				_, err := conn.DeleteRecoveryPoint(&backup.DeleteRecoveryPointInput{
+					BackupVaultName:  aws.String(d.Id()),
+					RecoveryPointArn: aws.String(recoveryPointARN),
+				})
+
+				if err != nil {
+					recoveryPointErrs = multierror.Append(recoveryPointErrs, fmt.Errorf("deleting Backup Vault (%s) recovery point (%s): %w", d.Id(), recoveryPointARN, err))
+					continue
+				}
+
+				if _, err := waitRecoveryPointDeleted(conn, d.Id(), recoveryPointARN, d.Timeout(schema.TimeoutDelete)); err != nil {
+					recoveryPointErrs = multierror.Append(recoveryPointErrs, fmt.Errorf("waiting for Backup Vault (%s) recovery point (%s) delete: %w", d.Id(), recoveryPointARN, err))
+				}
+			}
+
+			return !lastPage
+		})
+
+		if err != nil {
+			return fmt.Errorf("listing Backup Vault (%s) recovery points: %w", d.Id(), err)
+		}
+
+		if err := recoveryPointErrs.ErrorOrNil(); err != nil {
+			return err
+		}
+	}
 
 	log.Printf("[DEBUG] Deleting Backup Vault: %s", d.Id())
 	_, err := conn.DeleteBackupVault(&backup.DeleteBackupVaultInput{
@@ -150,7 +207,7 @@ func resourceVaultDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting Backup Vault (%s): %w", d.Id(), err)
+		return fmt.Errorf("deleting Backup Vault (%s): %w", d.Id(), err)
 	}
 
 	return nil

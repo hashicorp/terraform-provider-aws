@@ -72,8 +72,8 @@ The following arguments are optional:
 
 ### `access_endpoints`
 
-* `endpoint_type` - (Required) The type of the interface endpoint. See the [`AccessEndpoint` AWS API documentation](https://docs.aws.amazon.com/appstream2/latest/APIReference/API_AccessEndpoint.html) for valid values.
-* `vpce_id` - (Optional) The ID of the VPC in which the interface endpoint is used.
+* `endpoint_type` - (Required) Type of the interface endpoint. See the [`AccessEndpoint` AWS API documentation](https://docs.aws.amazon.com/appstream2/latest/APIReference/API_AccessEndpoint.html) for valid values.
+* `vpce_id` - (Optional) ID of the VPC in which the interface endpoint is used.
 
 ### `storage_connectors`
 
@@ -84,7 +84,7 @@ The following arguments are optional:
 ### `user_settings`
 
 * `action` - (Required) Action that is enabled or disabled. Valid values are: `CLIPBOARD_COPY_FROM_LOCAL_DEVICE`,  `CLIPBOARD_COPY_TO_LOCAL_DEVICE`, `FILE_UPLOAD`, `FILE_DOWNLOAD`, `PRINTING_TO_LOCAL_DEVICE`, `DOMAIN_PASSWORD_SIGNIN`, `DOMAIN_SMART_CARD_SIGNIN`.
-* `permission` - (Required) Indicates whether the action is enabled or disabled. Valid values are: `ENABLED`, `DISABLED`.
+* `permission` - (Required) Whether the action is enabled or disabled. Valid values are: `ENABLED`, `DISABLED`.
 
 ## Attributes Reference
 

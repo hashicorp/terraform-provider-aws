@@ -69,7 +69,7 @@ func testAccCheckCostAllocationTagExists(resourceName string, output *costexplor
 			return create.Error(names.CE, create.ErrActionCheckingExistence, tfce.ResNameCostAllocationTag, resourceName, errors.New("not found in state"))
 		}
 
-		ctx := context.TODO()
+		ctx := context.Background()
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CEConn
 		costAllocTag, err := tfce.FindCostAllocationTagByKey(ctx, conn, rs.Primary.ID)
 

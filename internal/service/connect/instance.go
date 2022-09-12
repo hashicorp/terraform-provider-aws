@@ -252,10 +252,8 @@ func resourceInstanceUpdateAttribute(ctx context.Context, conn *connect.Connect,
 	}
 
 	_, err := conn.UpdateInstanceAttributeWithContext(ctx, input)
-	if err != nil {
-		return err
-	}
-	return nil
+
+	return err
 }
 
 func resourceInstanceReadAttribute(ctx context.Context, conn *connect.Connect, instanceID string, attributeType string) (bool, error) {

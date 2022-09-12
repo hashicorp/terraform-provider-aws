@@ -25,14 +25,14 @@ const (
 // type, a period (.), and the name label. The name for the below example
 // configuration would be "myprovider_thing.example".
 //
-//     resource "myprovider_thing" "example" { ... }
+//	resource "myprovider_thing" "example" { ... }
 //
 // For data sources, the name parameter is a combination of the keyword "data",
 // a period (.), the data source type, a period (.), and the name label. The
 // name for the below example configuration would be
 // "data.myprovider_thing.example".
 //
-//     data "myprovider_thing" "example" { ... }
+//	data "myprovider_thing" "example" { ... }
 //
 // The key parameter is an attribute path in Terraform CLI 0.11 and earlier
 // "flatmap" syntax. Keys start with the attribute name of a top-level
@@ -46,10 +46,10 @@ const (
 // You may check for unset nested attributes, however this will also match keys
 // set to an empty string. Use a map with at least 1 non-empty value.
 //
-//     map[string]string{
-//       "key1": "value",
-//       "key2": "",
-//     }
+//	map[string]string{
+//	  "key1": "value",
+//	  "key2": "",
+//	}
 //
 // If the values map is not granular enough, it is possible to match an element
 // you were not intending to in the set. Provide the most complete mapping of
@@ -97,14 +97,14 @@ func TestCheckTypeSetElemNestedAttrs(name, attr string, values map[string]string
 // type, a period (.), and the name label. The name for the below example
 // configuration would be "myprovider_thing.example".
 //
-//     resource "myprovider_thing" "example" { ... }
+//	resource "myprovider_thing" "example" { ... }
 //
 // For data sources, the name parameter is a combination of the keyword "data",
 // a period (.), the data source type, a period (.), and the name label. The
 // name for the below example configuration would be
 // "data.myprovider_thing.example".
 //
-//     data "myprovider_thing" "example" { ... }
+//	data "myprovider_thing" "example" { ... }
 //
 // The key parameter is an attribute path in Terraform CLI 0.11 and earlier
 // "flatmap" syntax. Keys start with the attribute name of a top-level
@@ -118,10 +118,10 @@ func TestCheckTypeSetElemNestedAttrs(name, attr string, values map[string]string
 // You may check for unset nested attributes, however this will also match keys
 // set to an empty string. Use a map with at least 1 non-empty value.
 //
-//     map[string]*regexp.Regexp{
-//       "key1": regexp.MustCompile(`^value`),
-//       "key2": regexp.MustCompile(`^$`),
-//     }
+//	map[string]*regexp.Regexp{
+//	  "key1": regexp.MustCompile(`^value`),
+//	  "key2": regexp.MustCompile(`^$`),
+//	}
 //
 // If the values map is not granular enough, it is possible to match an element
 // you were not intending to in the set. Provide the most complete mapping of
@@ -176,14 +176,14 @@ func TestMatchTypeSetElemNestedAttrs(name, attr string, values map[string]*regex
 // type, a period (.), and the name label. The name for the below example
 // configuration would be "myprovider_thing.example".
 //
-//     resource "myprovider_thing" "example" { ... }
+//	resource "myprovider_thing" "example" { ... }
 //
 // For data sources, the name parameter is a combination of the keyword "data",
 // a period (.), the data source type, a period (.), and the name label. The
 // name for the below example configuration would be
 // "data.myprovider_thing.example".
 //
-//     data "myprovider_thing" "example" { ... }
+//	data "myprovider_thing" "example" { ... }
 //
 // The key parameter is an attribute path in Terraform CLI 0.11 and earlier
 // "flatmap" syntax. Keys start with the attribute name of a top-level
@@ -194,9 +194,9 @@ func TestMatchTypeSetElemNestedAttrs(name, attr string, values map[string]*regex
 // The value parameter is the stringified data to check at the given key. Use
 // the following attribute type rules to set the value:
 //
-//     - Boolean: "false" or "true".
-//     - Float/Integer: Stringified number, such as "1.2" or "123".
-//     - String: No conversion necessary.
+//   - Boolean: "false" or "true".
+//   - Float/Integer: Stringified number, such as "1.2" or "123".
+//   - String: No conversion necessary.
 func TestCheckTypeSetElemAttr(name, attr, value string) TestCheckFunc {
 	return func(s *terraform.State) error {
 		is, err := primaryInstanceState(s, name)
@@ -222,14 +222,14 @@ func TestCheckTypeSetElemAttr(name, attr, value string) TestCheckFunc {
 // type, a period (.), and the name label. The name for the below example
 // configuration would be "myprovider_thing.example".
 //
-//     resource "myprovider_thing" "example" { ... }
+//	resource "myprovider_thing" "example" { ... }
 //
 // For data sources, the name parameter is a combination of the keyword "data",
 // a period (.), the data source type, a period (.), and the name label. The
 // name for the below example configuration would be
 // "data.myprovider_thing.example".
 //
-//     data "myprovider_thing" "example" { ... }
+//	data "myprovider_thing" "example" { ... }
 //
 // The first and second names may use any combination of managed resources
 // and/or data sources.

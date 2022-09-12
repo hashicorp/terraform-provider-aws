@@ -52,7 +52,7 @@ func (diags Diagnostics) ForRPC() Diagnostics {
 // that aren't accompanied by at least one error) since such APIs have no
 // mechanism through which to report these.
 //
-//     return result, diags.Error()
+//	return result, diags.Error()
 func (diags Diagnostics) Err() error {
 	if !diags.HasErrors() {
 		return nil

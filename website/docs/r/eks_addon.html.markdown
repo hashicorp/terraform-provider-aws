@@ -110,6 +110,14 @@ In addition to all arguments above, the following attributes are exported:
 * `modified_at` - Date and time in [RFC3339 format](https://tools.ietf.org/html/rfc3339#section-5.8) that the EKS add-on was updated.
 * `tags_all` - (Optional) Key-value map of resource tags, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
+## Timeouts
+
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+
+* `create` - (Default `20m`)
+* `update` - (Default `20m`)
+* `delete` - (Default `40m`)
+
 ## Import
 
 EKS add-on can be imported using the `cluster_name` and `addon_name` separated by a colon (`:`), e.g.,

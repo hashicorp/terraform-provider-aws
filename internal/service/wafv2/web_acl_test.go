@@ -98,12 +98,19 @@ func TestAccWAFV2WebACL_Update_rule(t *testing.T) {
 						"visibility_config.0.metric_name":                fmt.Sprintf("%s-metric-name-1", webACLName),
 						"visibility_config.0.sampled_requests_enabled":   "false",
 						"statement.#": "1",
-						"statement.0.size_constraint_statement.#":                                 "1",
-						"statement.0.size_constraint_statement.0.comparison_operator":             "LT",
-						"statement.0.size_constraint_statement.0.field_to_match.#":                "1",
-						"statement.0.size_constraint_statement.0.field_to_match.0.query_string.#": "1",
-						"statement.0.size_constraint_statement.0.size":                            "50",
-						"statement.0.size_constraint_statement.0.text_transformation.#":           "2",
+						"statement.0.size_constraint_statement.#":                                          "1",
+						"statement.0.size_constraint_statement.0.comparison_operator":                      "LT",
+						"statement.0.size_constraint_statement.0.field_to_match.#":                         "1",
+						"statement.0.size_constraint_statement.0.field_to_match.0.all_query_arguments.#":   "0",
+						"statement.0.size_constraint_statement.0.field_to_match.0.body.#":                  "0",
+						"statement.0.size_constraint_statement.0.field_to_match.0.cookies.#":               "0",
+						"statement.0.size_constraint_statement.0.field_to_match.0.method.#":                "0",
+						"statement.0.size_constraint_statement.0.field_to_match.0.query_string.#":          "1",
+						"statement.0.size_constraint_statement.0.field_to_match.0.single_header.#":         "0",
+						"statement.0.size_constraint_statement.0.field_to_match.0.single_query_argument.#": "0",
+						"statement.0.size_constraint_statement.0.field_to_match.0.uri_path.#":              "0",
+						"statement.0.size_constraint_statement.0.size":                                     "50",
+						"statement.0.size_constraint_statement.0.text_transformation.#":                    "2",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*.statement.0.size_constraint_statement.0.text_transformation.*", map[string]string{
 						"priority": "2",
@@ -717,6 +724,126 @@ func TestAccWAFV2WebACL_RateBased_basic(t *testing.T) {
 						"statement.0.rate_based_statement.0.scope_down_statement.0.geo_match_statement.0.country_codes.#": "2",
 						"statement.0.rate_based_statement.0.scope_down_statement.0.geo_match_statement.0.country_codes.0": "US",
 						"statement.0.rate_based_statement.0.scope_down_statement.0.geo_match_statement.0.country_codes.1": "NL",
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccWebACLImportStateIdFunc(resourceName),
+			},
+		},
+	})
+}
+
+func TestAccWAFV2WebACL_ByteMatchStatement_basic(t *testing.T) {
+	var v wafv2.WebACL
+	webACLName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_wafv2_web_acl.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckScopeRegional(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, wafv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWebACLDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWebACLConfig_byteMatchStatement(webACLName, wafv2.PositionalConstraintContainsWord, "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWebACLExists(resourceName, &v),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/webacl/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "name", webACLName),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						"statement.#":                                         "1",
+						"statement.0.byte_match_statement.#":                  "1",
+						"statement.0.byte_match_statement.0.field_to_match.#": "1",
+						"statement.0.byte_match_statement.0.field_to_match.0.all_query_arguments.#": "1",
+						"statement.0.byte_match_statement.0.positional_constraint":                  "CONTAINS_WORD",
+						"statement.0.byte_match_statement.0.search_string":                          "value1",
+						"statement.0.byte_match_statement.0.text_transformation.#":                  "1",
+						"statement.0.byte_match_statement.0.text_transformation.0.priority":         "0",
+						"statement.0.byte_match_statement.0.text_transformation.0.type":             "NONE",
+					}),
+				),
+			},
+			{
+				Config: testAccWebACLConfig_byteMatchStatement(webACLName, wafv2.PositionalConstraintExactly, "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWebACLExists(resourceName, &v),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/webacl/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "name", webACLName),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						"statement.#":                                         "1",
+						"statement.0.byte_match_statement.#":                  "1",
+						"statement.0.byte_match_statement.0.field_to_match.#": "1",
+						"statement.0.byte_match_statement.0.field_to_match.0.all_query_arguments.#": "1",
+						"statement.0.byte_match_statement.0.positional_constraint":                  "EXACTLY",
+						"statement.0.byte_match_statement.0.search_string":                          "value2",
+						"statement.0.byte_match_statement.0.text_transformation.#":                  "1",
+						"statement.0.byte_match_statement.0.text_transformation.0.priority":         "0",
+						"statement.0.byte_match_statement.0.text_transformation.0.type":             "NONE",
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccWebACLImportStateIdFunc(resourceName),
+			},
+		},
+	})
+}
+
+func TestAccWAFV2WebACL_ByteMatchStatement_jsonBody(t *testing.T) {
+	var v wafv2.WebACL
+	webACLName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_wafv2_web_acl.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckScopeRegional(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, wafv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWebACLDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWebACLConfig_byteMatchStatementJSONBody(webACLName, wafv2.JsonMatchScopeValue, wafv2.FallbackBehaviorMatch, wafv2.OversizeHandlingNoMatch, `included_paths = ["/dogs/0/name", "/dogs/1/name"]`),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWebACLExists(resourceName, &v),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/webacl/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "name", webACLName),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						"statement.0.byte_match_statement.0.field_to_match.0.json_body.#":                                  "1",
+						"statement.0.byte_match_statement.0.field_to_match.0.json_body.0.match_scope":                      "VALUE",
+						"statement.0.byte_match_statement.0.field_to_match.0.json_body.0.invalid_fallback_behavior":        "MATCH",
+						"statement.0.byte_match_statement.0.field_to_match.0.json_body.0.oversize_handling":                "NO_MATCH",
+						"statement.0.byte_match_statement.0.field_to_match.0.json_body.0.match_pattern.#":                  "1",
+						"statement.0.byte_match_statement.0.field_to_match.0.json_body.0.match_pattern.0.all.#":            "0",
+						"statement.0.byte_match_statement.0.field_to_match.0.json_body.0.match_pattern.0.included_paths.#": "2",
+						"statement.0.byte_match_statement.0.field_to_match.0.json_body.0.match_pattern.0.included_paths.0": "/dogs/0/name",
+						"statement.0.byte_match_statement.0.field_to_match.0.json_body.0.match_pattern.0.included_paths.1": "/dogs/1/name",
+					}),
+				),
+			},
+			{
+				Config: testAccWebACLConfig_byteMatchStatementJSONBody(webACLName, wafv2.JsonMatchScopeAll, wafv2.FallbackBehaviorNoMatch, wafv2.OversizeHandlingContinue, "all {}"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWebACLExists(resourceName, &v),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/webacl/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "name", webACLName),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						"statement.0.byte_match_statement.0.field_to_match.0.json_body.#":                                  "1",
+						"statement.0.byte_match_statement.0.field_to_match.0.json_body.0.match_scope":                      "ALL",
+						"statement.0.byte_match_statement.0.field_to_match.0.json_body.0.invalid_fallback_behavior":        "NO_MATCH",
+						"statement.0.byte_match_statement.0.field_to_match.0.json_body.0.oversize_handling":                "CONTINUE",
+						"statement.0.byte_match_statement.0.field_to_match.0.json_body.0.match_pattern.#":                  "1",
+						"statement.0.byte_match_statement.0.field_to_match.0.json_body.0.match_pattern.0.all.#":            "1",
+						"statement.0.byte_match_statement.0.field_to_match.0.json_body.0.match_pattern.0.included_paths.#": "0",
 					}),
 				),
 			},
@@ -1861,6 +1988,111 @@ resource "aws_wafv2_web_acl" "test" {
   }
 }
 `, name, ruleName1, priority1, ruleName2, priority2)
+}
+
+func testAccWebACLConfig_byteMatchStatement(name, positionalConstraint, searchString string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_web_acl" "test" {
+  name        = "%[1]s"
+  description = "%[1]s"
+  scope       = "REGIONAL"
+
+  default_action {
+    allow {}
+  }
+
+  rule {
+    name     = "rule-1"
+    priority = 1
+
+    action {
+      count {}
+    }
+
+    statement {
+      byte_match_statement {
+        field_to_match {
+          all_query_arguments {}
+        }
+        positional_constraint = "%[2]s"
+        search_string         = "%[3]s"
+        text_transformation {
+          priority = 0
+          type     = "NONE"
+        }
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = false
+      metric_name                = "friendly-rule-metric-name"
+      sampled_requests_enabled   = false
+    }
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
+  }
+}
+`, name, positionalConstraint, searchString)
+}
+
+func testAccWebACLConfig_byteMatchStatementJSONBody(name, matchScope, invalidFallbackBehavior, oversizeHandling, matchPattern string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_web_acl" "test" {
+  name        = "%[1]s"
+  description = "%[1]s"
+  scope       = "REGIONAL"
+
+  default_action {
+    allow {}
+  }
+
+  rule {
+    name     = "rule-1"
+    priority = 1
+
+    action {
+      count {}
+    }
+
+    statement {
+      byte_match_statement {
+        field_to_match {
+          json_body {
+            match_scope               = "%[2]s"
+            invalid_fallback_behavior = "%[3]s"
+            oversize_handling         = "%[4]s"
+            match_pattern {
+              %[5]s
+            }
+          }
+        }
+        positional_constraint = "CONTAINS_WORD"
+        search_string         = "Buddy"
+        text_transformation {
+          priority = 0
+          type     = "NONE"
+        }
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = false
+      metric_name                = "friendly-rule-metric-name"
+      sampled_requests_enabled   = false
+    }
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
+  }
+}
+`, name, matchScope, invalidFallbackBehavior, oversizeHandling, matchPattern)
 }
 
 func testAccWebACLConfig_geoMatchStatement(name, countryCodes string) string {

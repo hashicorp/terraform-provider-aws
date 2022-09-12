@@ -358,11 +358,7 @@ func testAccCheckMetricStreamExists(n string) resource.TestCheckFunc {
 
 		_, err := conn.GetMetricStream(&params)
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 

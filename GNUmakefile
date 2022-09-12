@@ -8,6 +8,7 @@ ACCTEST_PARALLELISM ?= 20
 
 ifneq ($(origin PKG), undefined)
 	PKG_NAME = internal/service/$(PKG)
+	TEST = ./$(PKG_NAME)/...
 endif
 
 ifneq ($(origin TESTS), undefined)
@@ -16,6 +17,41 @@ endif
 
 ifneq ($(origin SWEEPERS), undefined)
 	SWEEPARGS = -sweep-run='$(SWEEPERS)'
+endif
+
+ifeq ($(PKG_NAME), internal/service/ebs)
+	PKG_NAME = internal/service/ec2
+	TEST = ./$(PKG_NAME)/...
+endif
+
+ifeq ($(PKG_NAME), internal/service/ipam)
+	PKG_NAME = internal/service/ec2
+	TEST = ./$(PKG_NAME)/...
+endif
+
+ifeq ($(PKG_NAME), internal/service/transitgateway)
+	PKG_NAME = internal/service/ec2
+	TEST = ./$(PKG_NAME)/...
+endif
+
+ifeq ($(PKG_NAME), internal/service/vpc)
+	PKG_NAME = internal/service/ec2
+	TEST = ./$(PKG_NAME)/...
+endif
+
+ifeq ($(PKG_NAME), internal/service/vpnclient)
+	PKG_NAME = internal/service/ec2
+	TEST = ./$(PKG_NAME)/...
+endif
+
+ifeq ($(PKG_NAME), internal/service/vpnsite)
+	PKG_NAME = internal/service/ec2
+	TEST = ./$(PKG_NAME)/...
+endif
+
+ifeq ($(PKG_NAME), internal/service/wavelength)
+	PKG_NAME = internal/service/ec2
+	TEST = ./$(PKG_NAME)/...
 endif
 
 default: build
@@ -30,8 +66,8 @@ gen:
 	rm -f internal/conns/*_gen.go
 	rm -f internal/service/**/*_gen.go
 	rm -f internal/sweep/sweep_test.go
-	rm -f names/*_gen.go
 	rm -f names/caps.md
+	rm -f names/*_gen.go
 	rm -f website/allowed-subcategories.txt
 	rm -f website/docs/guides/custom-service-endpoints.html.md
 	rm -f .ci/.semgrep-caps-aws-ec2.yml
@@ -115,6 +151,7 @@ gh-workflows-lint:
 
 golangci-lint:
 	@echo "==> Checking source code with golangci-lint..."
+	@golangci-lint -c .ci/.golangci.yml run ./$(PKG_NAME)/...
 	@golangci-lint -c .ci/.golangci2.yml run ./$(PKG_NAME)/...
 
 providerlint:
@@ -201,18 +238,28 @@ semgrep:
 
 semall:
 	@echo "==> Running Semgrep checks locally (must have semgrep installed)..."
-	@semgrep -c .ci/.semgrep.yml
-	@semgrep -c .ci/.semgrep-caps-aws-ec2.yml
-	@semgrep -c .ci/.semgrep-configs.yml
-	@semgrep -c .ci/.semgrep-service-name0.yml
-	@semgrep -c .ci/.semgrep-service-name1.yml
-	@semgrep -c .ci/.semgrep-service-name2.yml
-	@semgrep -c .ci/.semgrep-service-name3.yml
+	@semgrep --error --metrics=off \
+		--config .ci/.semgrep.yml \
+		--config .ci/.semgrep-caps-aws-ec2.yml \
+		--config .ci/.semgrep-configs.yml \
+		--config .ci/.semgrep-service-name0.yml \
+		--config .ci/.semgrep-service-name1.yml \
+		--config .ci/.semgrep-service-name2.yml \
+		--config .ci/.semgrep-service-name3.yml \
+		--config 'r/dgryski.semgrep-go.badnilguard' \
+		--config 'r/dgryski.semgrep-go.errnilcheck' \
+    	--config 'r/dgryski.semgrep-go.marshaljson' \
+		--config 'r/dgryski.semgrep-go.nilerr' \
+        --config 'r/dgryski.semgrep-go.oddifsequence' \
+		--config 'r/dgryski.semgrep-go.oserrors'
 
 skaff:
 	cd skaff && go install github.com/hashicorp/terraform-provider-aws/skaff
 
 tfsdk2fw:
 	cd tools/tfsdk2fw && go install github.com/hashicorp/terraform-provider-aws/tools/tfsdk2fw
+
+yamllint:
+	@yamllint .
 
 .PHONY: providerlint build gen generate-changelog gh-workflows-lint golangci-lint sweep test testacc fmt fmtcheck lint tools test-compile website-link-check website-lint website-lint-fix depscheck docscheck semgrep skaff tfsdk2fw

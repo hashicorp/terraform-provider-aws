@@ -37,7 +37,7 @@ resource "aws_vpn_connection" "transit" {
 
 The following arguments are supported:
 
-* `id` - (Optional) The ID of the gateway.
+* `id` - (Optional) ID of the gateway.
 * `filter` - (Optional) One or more [name-value pairs][dcg-filters] to filter by.
 
 [dcg-filters]: https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeCustomerGateways.html
@@ -46,13 +46,13 @@ The following arguments are supported:
 
 In addition to the arguments above, the following attributes are exported:
 
-* `arn` - The ARN of the customer gateway.
-* `bgp_asn` - The gateway's Border Gateway Protocol (BGP) Autonomous System Number (ASN).
-* `certificate_arn` - The Amazon Resource Name (ARN) for the customer gateway certificate.
-* `device_name` - A name for the customer gateway device.
-* `ip_address` - The IP address of the gateway's Internet-routable external interface.
+* `arn` - ARN of the customer gateway.
+* `bgp_asn` - Gateway's Border Gateway Protocol (BGP) Autonomous System Number (ASN).
+* `certificate_arn` - ARN for the customer gateway certificate.
+* `device_name` - Name for the customer gateway device.
+* `ip_address` - IP address of the gateway's Internet-routable external interface.
 * `tags` - Map of key-value pairs assigned to the gateway.
-* `type` - The type of customer gateway. The only type AWS supports at this time is "ipsec.1".
+* `type` - Type of customer gateway. The only type AWS supports at this time is "ipsec.1".
 
 ## Timeouts
 

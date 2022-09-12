@@ -486,11 +486,7 @@ func testAccCheckBucketLifecycleConfigurationExists(resourceName string) resourc
 
 		_, err = conn.GetBucketLifecycleConfiguration(input)
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 
