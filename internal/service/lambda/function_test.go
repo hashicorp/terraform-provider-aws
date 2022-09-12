@@ -1249,13 +1249,7 @@ func TestAccLambdaFunction_layers(t *testing.T) {
 	}
 
 	var conf lambda.GetFunctionOutput
-
-	rString := sdkacctest.RandString(8)
-	funcName := fmt.Sprintf("tf_acc_lambda_func_layer_%s", rString)
-	layerName := fmt.Sprintf("tf_acc_layer_lambda_func_layer_%s", rString)
-	policyName := fmt.Sprintf("tf_acc_policy_lambda_func_layer_%s", rString)
-	roleName := fmt.Sprintf("tf_acc_role_lambda_func_layer_%s", rString)
-	sgName := fmt.Sprintf("tf_acc_sg_lambda_func_layer_%s", rString)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lambda_function.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -1265,11 +1259,9 @@ func TestAccLambdaFunction_layers(t *testing.T) {
 		CheckDestroy:             testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFunctionConfig_layers(funcName, layerName, policyName, roleName, sgName),
+				Config: testAccFunctionConfig_layers(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, &conf),
-					testAccCheckFunctionName(&conf, funcName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
 					testAccCheckFunctionVersion(&conf, tflambda.FunctionVersionLatest),
 					resource.TestCheckResourceAttr(resourceName, "layers.#", "1"),
 				),
@@ -1290,14 +1282,7 @@ func TestAccLambdaFunction_layersUpdate(t *testing.T) {
 	}
 
 	var conf lambda.GetFunctionOutput
-
-	rString := sdkacctest.RandString(8)
-	funcName := fmt.Sprintf("tf_acc_lambda_func_layer_%s", rString)
-	layerName := fmt.Sprintf("tf_acc_lambda_layer_%s", rString)
-	layer2Name := fmt.Sprintf("tf_acc_lambda_layer2_%s", rString)
-	policyName := fmt.Sprintf("tf_acc_policy_lambda_func_vpc_%s", rString)
-	roleName := fmt.Sprintf("tf_acc_role_lambda_func_vpc_%s", rString)
-	sgName := fmt.Sprintf("tf_acc_sg_lambda_func_vpc_%s", rString)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lambda_function.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -1307,11 +1292,9 @@ func TestAccLambdaFunction_layersUpdate(t *testing.T) {
 		CheckDestroy:             testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFunctionConfig_layers(funcName, layerName, policyName, roleName, sgName),
+				Config: testAccFunctionConfig_layers(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, &conf),
-					testAccCheckFunctionName(&conf, funcName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
 					testAccCheckFunctionVersion(&conf, tflambda.FunctionVersionLatest),
 					resource.TestCheckResourceAttr(resourceName, "layers.#", "1"),
 				),
@@ -1323,11 +1306,9 @@ func TestAccLambdaFunction_layersUpdate(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"filename", "publish"},
 			},
 			{
-				Config: testAccFunctionConfig_layersUpdated(funcName, layerName, layer2Name, policyName, roleName, sgName),
+				Config: testAccFunctionConfig_layersUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, &conf),
-					testAccCheckFunctionName(&conf, funcName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
 					testAccCheckFunctionVersion(&conf, tflambda.FunctionVersionLatest),
 					resource.TestCheckResourceAttr(resourceName, "layers.#", "2"),
 				),
@@ -3054,6 +3035,90 @@ resource "aws_lambda_function" "test" {
 `, rName))
 }
 
+func testAccFunctionConfig_kmsKeyARNNoEnvironmentVariables(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLambdaBase(rName, rName, rName),
+		fmt.Sprintf(`
+resource "aws_kms_key" "test" {
+  description             = %[1]q
+  deletion_window_in_days = 7
+
+  policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Id": "kms-tf-1",
+  "Statement": [
+    {
+      "Sid": "Enable IAM User Permissions",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "*"
+      },
+      "Action": "kms:*",
+      "Resource": "*"
+    }
+  ]
+}
+POLICY
+}
+
+resource "aws_lambda_function" "test" {
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = %[1]q
+  handler       = "exports.example"
+  kms_key_arn   = aws_kms_key.test.arn
+  role          = aws_iam_role.iam_for_lambda.arn
+  runtime       = "nodejs12.x"
+}
+`, rName))
+}
+
+func testAccFunctionConfig_layers(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLambdaBase(rName, rName, rName),
+		fmt.Sprintf(`
+resource "aws_lambda_layer_version" "test" {
+  count = 2
+
+  filename            = "test-fixtures/lambdatest.zip"
+  layer_name          = "%[1]s-${count.index}"
+  compatible_runtimes = ["nodejs12.x"]
+}
+
+resource "aws_lambda_function" "test" {
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = %[1]q
+  role          = aws_iam_role.iam_for_lambda.arn
+  handler       = "exports.example"
+  runtime       = "nodejs12.x"
+  layers        = [aws_lambda_layer_version.test[0].arn]
+}
+`, rName))
+}
+
+func testAccFunctionConfig_layersUpdated(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLambdaBase(rName, rName, rName),
+		fmt.Sprintf(`
+resource "aws_lambda_layer_version" "test" {
+  count = 2
+
+  filename            = "test-fixtures/lambdatest.zip"
+  layer_name          = "%[1]s-${count.index}"
+  compatible_runtimes = ["nodejs12.x"]
+}
+
+resource "aws_lambda_function" "test" {
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = %[1]q
+  role          = aws_iam_role.iam_for_lambda.arn
+  handler       = "exports.example"
+  runtime       = "nodejs12.x"
+  layers        = aws_lambda_layer_version.test[*].arn
+}
+`, rName))
+}
+
 func testAccFunctionConfig_vpcProperIAMDependencies(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
@@ -3129,89 +3194,6 @@ resource "aws_lambda_function" "test" {
   }
 }
 `, rName)
-}
-
-func testAccFunctionConfig_kmsKeyARNNoEnvironmentVariables(rName string) string {
-	return fmt.Sprintf(acctest.ConfigLambdaBase(rName, rName, rName)+`
-resource "aws_kms_key" "test" {
-  description             = %[1]q
-  deletion_window_in_days = 7
-
-  policy = <<POLICY
-{
-  "Version": "2012-10-17",
-  "Id": "kms-tf-1",
-  "Statement": [
-    {
-      "Sid": "Enable IAM User Permissions",
-      "Effect": "Allow",
-      "Principal": {
-        "AWS": "*"
-      },
-      "Action": "kms:*",
-      "Resource": "*"
-    }
-  ]
-}
-POLICY
-}
-
-resource "aws_lambda_function" "test" {
-  filename      = "test-fixtures/lambdatest.zip"
-  function_name = %[1]q
-  handler       = "exports.example"
-  kms_key_arn   = aws_kms_key.test.arn
-  role          = aws_iam_role.iam_for_lambda.arn
-  runtime       = "nodejs12.x"
-}
-`, rName)
-}
-
-func testAccFunctionConfig_layers(funcName, layerName, policyName, roleName, sgName string) string {
-	return fmt.Sprintf(acctest.ConfigLambdaBase(policyName, roleName, sgName)+`
-resource "aws_lambda_layer_version" "test" {
-  filename            = "test-fixtures/lambdatest.zip"
-  layer_name          = "%s"
-  compatible_runtimes = ["nodejs12.x"]
-}
-
-resource "aws_lambda_function" "test" {
-  filename      = "test-fixtures/lambdatest.zip"
-  function_name = "%s"
-  role          = aws_iam_role.iam_for_lambda.arn
-  handler       = "exports.example"
-  runtime       = "nodejs12.x"
-  layers        = [aws_lambda_layer_version.test.arn]
-}
-`, layerName, funcName)
-}
-
-func testAccFunctionConfig_layersUpdated(funcName, layerName, layer2Name, policyName, roleName, sgName string) string {
-	return fmt.Sprintf(acctest.ConfigLambdaBase(policyName, roleName, sgName)+`
-resource "aws_lambda_layer_version" "test" {
-  filename            = "test-fixtures/lambdatest.zip"
-  layer_name          = "%s"
-  compatible_runtimes = ["nodejs12.x"]
-}
-
-resource "aws_lambda_layer_version" "test_2" {
-  filename            = "test-fixtures/lambdatest_modified.zip"
-  layer_name          = "%s"
-  compatible_runtimes = ["nodejs12.x"]
-}
-
-resource "aws_lambda_function" "test" {
-  filename      = "test-fixtures/lambdatest.zip"
-  function_name = "%s"
-  role          = aws_iam_role.iam_for_lambda.arn
-  handler       = "exports.example"
-  runtime       = "nodejs12.x"
-  layers = [
-    aws_lambda_layer_version.test.arn,
-    aws_lambda_layer_version.test_2.arn,
-  ]
-}
-`, layerName, layer2Name, funcName)
 }
 
 func testAccFunctionConfig_vpc(funcName, policyName, roleName, sgName string) string {
