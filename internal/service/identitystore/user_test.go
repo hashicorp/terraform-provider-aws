@@ -39,6 +39,7 @@ func TestAccIdentityStoreUser_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(resourceName, &user),
 					resource.TestCheckResourceAttr(resourceName, "display_name", "Acceptance Test"),
+					resource.TestCheckResourceAttr(resourceName, "emails.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "identity_store_id"),
 					resource.TestCheckResourceAttr(resourceName, "name.0.family_name", "Doe"),
 					resource.TestCheckResourceAttr(resourceName, "name.0.given_name", "John"),
@@ -78,6 +79,70 @@ func TestAccIdentityStoreUser_disappears(t *testing.T) {
 					acctest.CheckResourceDisappears(acctest.Provider, tfidentitystore.ResourceUser(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccIdentityStoreUser_Emails(t *testing.T) {
+	var user identitystore.DescribeUserOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_identitystore_user.test"
+
+	email1 := rName + "-1@example.com"
+	email2 := rName + "-2@example.com"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(names.IdentityStoreEndpointID, t)
+			testAccPreCheck(t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccUserConfig_emails(rName, email1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckUserExists(resourceName, &user),
+					resource.TestCheckResourceAttr(resourceName, "emails.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "emails.0.primary", "false"),
+					resource.TestCheckResourceAttr(resourceName, "emails.0.type", ""),
+					resource.TestCheckResourceAttr(resourceName, "emails.0.value", email1),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccUserConfig_emails(rName, email2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckUserExists(resourceName, &user),
+					resource.TestCheckResourceAttr(resourceName, "emails.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "emails.0.primary", "false"),
+					resource.TestCheckResourceAttr(resourceName, "emails.0.type", ""),
+					resource.TestCheckResourceAttr(resourceName, "emails.0.value", email2),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccUserConfig_noEmails(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckUserExists(resourceName, &user),
+					resource.TestCheckResourceAttr(resourceName, "emails.#", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -253,6 +318,46 @@ resource "aws_identitystore_user" "test" {
   name {
     family_name = "Doe"
     given_name  = "John"
+  }
+}
+`, rName)
+}
+
+func testAccUserConfig_emails(rName, emailValue string) string {
+	return fmt.Sprintf(`
+data "aws_ssoadmin_instances" "test" {}
+
+resource "aws_identitystore_user" "test" {
+  identity_store_id = tolist(data.aws_ssoadmin_instances.test.identity_store_ids)[0]
+
+  display_name = "Acceptance Test"
+  user_name    = %[1]q
+
+  name {
+    family_name = "John"
+    given_name  = "Doe"
+  }
+
+  emails {
+    value = %[2]q
+  }
+}
+`, rName, emailValue)
+}
+
+func testAccUserConfig_noEmails(rName string) string {
+	return fmt.Sprintf(`
+data "aws_ssoadmin_instances" "test" {}
+
+resource "aws_identitystore_user" "test" {
+  identity_store_id = tolist(data.aws_ssoadmin_instances.test.identity_store_ids)[0]
+
+  display_name = "Acceptance Test"
+  user_name    = %[1]q
+
+  name {
+    family_name = "John"
+    given_name  = "Doe"
   }
 }
 `, rName)
