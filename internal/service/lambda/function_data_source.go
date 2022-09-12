@@ -242,7 +242,7 @@ func dataSourceFunctionRead(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		// If no published version exists, AWS returns '$LATEST' for latestVersion
-		if latestVersion != "$LATEST" {
+		if latestVersion != FunctionVersionLatest {
 			input.Qualifier = aws.String(latestVersion)
 		}
 	}
