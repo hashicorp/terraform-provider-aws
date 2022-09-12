@@ -979,13 +979,8 @@ func TestAccLambdaFunction_architectures(t *testing.T) {
 	}
 
 	var conf lambda.GetFunctionOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lambda_function.test"
-
-	rString := sdkacctest.RandString(8)
-	funcName := fmt.Sprintf("tf_acc_lambda_func_basic_%s", rString)
-	policyName := fmt.Sprintf("tf_acc_policy_lambda_func_basic_%s", rString)
-	roleName := fmt.Sprintf("tf_acc_role_lambda_func_basic_%s", rString)
-	sgName := fmt.Sprintf("tf_acc_sg_lambda_func_basic_%s", rString)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
@@ -995,16 +990,14 @@ func TestAccLambdaFunction_architectures(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Ensure function with arm64 architecture can be created
 			{
-				Config: testAccFunctionConfig_architecturesARM64(funcName, policyName, roleName, sgName),
+				Config: testAccFunctionConfig_architecturesARM64(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, &conf),
-					testAccCheckFunctionName(&conf, funcName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
 					testAccCheckFunctionInvokeARN(resourceName, &conf),
 					testAccCheckFunctionQualifiedInvokeARN(resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "package_type", lambda.PackageTypeZip),
 					resource.TestCheckResourceAttr(resourceName, "architectures.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "architectures.0", lambda.ArchitectureArm64),
+					resource.TestCheckResourceAttr(resourceName, "package_type", lambda.PackageTypeZip),
 				),
 			},
 			// Ensure configuration can be imported
@@ -1016,16 +1009,14 @@ func TestAccLambdaFunction_architectures(t *testing.T) {
 			},
 			// Ensure function's "architectures" attribute can be removed. The actual architecture remains unchanged.
 			{
-				Config: testAccFunctionConfig_basic(funcName, policyName, roleName, sgName),
+				Config: testAccFunctionConfig_basic(rName, rName, rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, &conf),
-					testAccCheckFunctionName(&conf, funcName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
 					testAccCheckFunctionInvokeARN(resourceName, &conf),
 					testAccCheckFunctionQualifiedInvokeARN(resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "package_type", lambda.PackageTypeZip),
 					resource.TestCheckResourceAttr(resourceName, "architectures.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "architectures.0", lambda.ArchitectureArm64),
+					resource.TestCheckResourceAttr(resourceName, "package_type", lambda.PackageTypeZip),
 				),
 			},
 		},
@@ -1038,13 +1029,8 @@ func TestAccLambdaFunction_architecturesUpdate(t *testing.T) {
 	}
 
 	var conf lambda.GetFunctionOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lambda_function.test"
-
-	rString := sdkacctest.RandString(8)
-	funcName := fmt.Sprintf("tf_acc_lambda_func_basic_%s", rString)
-	policyName := fmt.Sprintf("tf_acc_policy_lambda_func_basic_%s", rString)
-	roleName := fmt.Sprintf("tf_acc_role_lambda_func_basic_%s", rString)
-	sgName := fmt.Sprintf("tf_acc_sg_lambda_func_basic_%s", rString)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
@@ -1054,16 +1040,14 @@ func TestAccLambdaFunction_architecturesUpdate(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Ensure function with arm64 architecture can be created
 			{
-				Config: testAccFunctionConfig_architecturesARM64(funcName, policyName, roleName, sgName),
+				Config: testAccFunctionConfig_architecturesARM64(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, &conf),
-					testAccCheckFunctionName(&conf, funcName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
 					testAccCheckFunctionInvokeARN(resourceName, &conf),
 					testAccCheckFunctionQualifiedInvokeARN(resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "package_type", lambda.PackageTypeZip),
 					resource.TestCheckResourceAttr(resourceName, "architectures.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "architectures.0", lambda.ArchitectureArm64),
+					resource.TestCheckResourceAttr(resourceName, "package_type", lambda.PackageTypeZip),
 				),
 			},
 			// Ensure configuration can be imported
@@ -1075,16 +1059,14 @@ func TestAccLambdaFunction_architecturesUpdate(t *testing.T) {
 			},
 			// Ensure function architecture can be updated
 			{
-				Config: testAccFunctionConfig_architecturesUpdate(funcName, policyName, roleName, sgName),
+				Config: testAccFunctionConfig_architecturesUpdate(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, &conf),
-					testAccCheckFunctionName(&conf, funcName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
 					testAccCheckFunctionInvokeARN(resourceName, &conf),
 					testAccCheckFunctionQualifiedInvokeARN(resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "package_type", lambda.PackageTypeZip),
 					resource.TestCheckResourceAttr(resourceName, "architectures.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "architectures.0", lambda.ArchitectureX8664),
+					resource.TestCheckResourceAttr(resourceName, "package_type", lambda.PackageTypeZip),
 				),
 			},
 		},
@@ -1097,14 +1079,8 @@ func TestAccLambdaFunction_architecturesWithLayer(t *testing.T) {
 	}
 
 	var conf lambda.GetFunctionOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lambda_function.test"
-
-	rString := sdkacctest.RandString(8)
-	funcName := fmt.Sprintf("tf_acc_lambda_func_basic_%s", rString)
-	layerName := fmt.Sprintf("tf_acc_lambda_layer_%s", rString)
-	policyName := fmt.Sprintf("tf_acc_policy_lambda_func_basic_%s", rString)
-	roleName := fmt.Sprintf("tf_acc_role_lambda_func_basic_%s", rString)
-	sgName := fmt.Sprintf("tf_acc_sg_lambda_func_basic_%s", rString)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
@@ -1114,16 +1090,14 @@ func TestAccLambdaFunction_architecturesWithLayer(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Ensure function with arm64 architecture can be created
 			{
-				Config: testAccFunctionConfig_architecturesARM64Layer(funcName, layerName, policyName, roleName, sgName),
+				Config: testAccFunctionConfig_architecturesARM64Layer(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, &conf),
-					testAccCheckFunctionName(&conf, funcName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
 					testAccCheckFunctionInvokeARN(resourceName, &conf),
 					testAccCheckFunctionQualifiedInvokeARN(resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "package_type", lambda.PackageTypeZip),
 					resource.TestCheckResourceAttr(resourceName, "architectures.0", lambda.ArchitectureArm64),
 					resource.TestCheckResourceAttr(resourceName, "layers.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "package_type", lambda.PackageTypeZip),
 				),
 			},
 			// Ensure configuration can be imported
@@ -1135,16 +1109,14 @@ func TestAccLambdaFunction_architecturesWithLayer(t *testing.T) {
 			},
 			// Ensure function architecture can be updated
 			{
-				Config: testAccFunctionConfig_architecturesUpdateLayer(funcName, layerName, policyName, roleName, sgName),
+				Config: testAccFunctionConfig_architecturesUpdateLayer(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, &conf),
-					testAccCheckFunctionName(&conf, funcName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
 					testAccCheckFunctionInvokeARN(resourceName, &conf),
 					testAccCheckFunctionQualifiedInvokeARN(resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "package_type", lambda.PackageTypeZip),
 					resource.TestCheckResourceAttr(resourceName, "architectures.0", lambda.ArchitectureX8664),
 					resource.TestCheckResourceAttr(resourceName, "layers.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "package_type", lambda.PackageTypeZip),
 				),
 			},
 		},
@@ -1157,9 +1129,7 @@ func TestAccLambdaFunction_ephemeralStorage(t *testing.T) {
 	resourceName := "aws_lambda_function.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(t)
-		},
+		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFunctionDestroy,
@@ -1201,11 +1171,7 @@ func TestAccLambdaFunction_tracing(t *testing.T) {
 	}
 
 	var conf lambda.GetFunctionOutput
-	rString := sdkacctest.RandString(8)
-	funcName := fmt.Sprintf("tf_acc_lambda_func_tracing_cfg_%s", rString)
-	policyName := fmt.Sprintf("tf_acc_policy_lambda_func_tracing_cfg_%s", rString)
-	roleName := fmt.Sprintf("tf_acc_role_lambda_func_tracing_cfg_%s", rString)
-	sgName := fmt.Sprintf("tf_acc_sg_lambda_func_tracing_cfg_%s", rString)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lambda_function.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -1215,11 +1181,10 @@ func TestAccLambdaFunction_tracing(t *testing.T) {
 		CheckDestroy:             testAccCheckFunctionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFunctionConfig_tracing(funcName, policyName, roleName, sgName),
+				Config: testAccFunctionConfig_tracing(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, &conf),
-					testAccCheckFunctionName(&conf, funcName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
+					resource.TestCheckResourceAttr(resourceName, "tracing_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tracing_config.0.mode", "Active"),
 				),
 			},
@@ -1230,11 +1195,10 @@ func TestAccLambdaFunction_tracing(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"filename", "publish"},
 			},
 			{
-				Config: testAccFunctionConfig_tracingUpdated(funcName, policyName, roleName, sgName),
+				Config: testAccFunctionConfig_tracingUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(resourceName, &conf),
-					testAccCheckFunctionName(&conf, funcName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
+					resource.TestCheckResourceAttr(resourceName, "tracing_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tracing_config.0.mode", "PassThrough"),
 				),
 			},
@@ -2942,72 +2906,152 @@ resource "aws_lambda_function" "test" {
 `, imageID, rName))
 }
 
-func testAccFunctionConfig_architecturesARM64(funcName, policyName, roleName, sgName string) string {
-	return fmt.Sprintf(acctest.ConfigLambdaBase(policyName, roleName, sgName)+`
+func testAccFunctionConfig_architecturesARM64(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLambdaBase(rName, rName, rName),
+		fmt.Sprintf(`
 resource "aws_lambda_function" "test" {
   filename      = "test-fixtures/lambdatest.zip"
-  function_name = "%s"
+  function_name = %[1]q
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
   runtime       = "nodejs12.x"
   architectures = ["arm64"]
 }
-`, funcName)
+`, rName))
 }
 
-func testAccFunctionConfig_architecturesUpdate(funcName, policyName, roleName, sgName string) string {
-	return fmt.Sprintf(acctest.ConfigLambdaBase(policyName, roleName, sgName)+`
+func testAccFunctionConfig_architecturesUpdate(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLambdaBase(rName, rName, rName),
+		fmt.Sprintf(`
 resource "aws_lambda_function" "test" {
   filename      = "test-fixtures/lambdatest.zip"
-  function_name = "%s"
+  function_name = %[1]q
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
   runtime       = "nodejs12.x"
   architectures = ["x86_64"]
 }
-`, funcName)
+`, rName))
 }
 
-func testAccFunctionConfig_architecturesARM64Layer(funcName, layerName, policyName, roleName, sgName string) string {
-	return fmt.Sprintf(acctest.ConfigLambdaBase(policyName, roleName, sgName)+`
+func testAccFunctionConfig_architecturesARM64Layer(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLambdaBase(rName, rName, rName),
+		fmt.Sprintf(`
 resource "aws_lambda_layer_version" "test" {
   filename                 = "test-fixtures/lambdatest.zip"
-  layer_name               = "%[1]s"
+  layer_name               = %[1]q
   compatible_runtimes      = ["nodejs12.x"]
   compatible_architectures = ["arm64", "x86_64"]
 }
 
 resource "aws_lambda_function" "test" {
   filename      = "test-fixtures/lambdatest.zip"
-  function_name = "%[2]s"
+  function_name = %[1]q
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
   runtime       = "nodejs12.x"
   architectures = ["arm64"]
   layers        = [aws_lambda_layer_version.test.arn]
 }
-`, layerName, funcName)
+`, rName))
 }
 
-func testAccFunctionConfig_architecturesUpdateLayer(funcName, layerName, policyName, roleName, sgName string) string {
-	return fmt.Sprintf(acctest.ConfigLambdaBase(policyName, roleName, sgName)+`
+func testAccFunctionConfig_architecturesUpdateLayer(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLambdaBase(rName, rName, rName),
+		fmt.Sprintf(`
 resource "aws_lambda_layer_version" "test" {
   filename                 = "test-fixtures/lambdatest.zip"
-  layer_name               = "%[1]s"
+  layer_name               = %[1]q
   compatible_runtimes      = ["nodejs12.x"]
   compatible_architectures = ["arm64", "x86_64"]
 }
 
 resource "aws_lambda_function" "test" {
   filename      = "test-fixtures/lambdatest.zip"
-  function_name = "%[2]s"
+  function_name = %[1]q
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
   runtime       = "nodejs12.x"
   architectures = ["x86_64"]
   layers        = [aws_lambda_layer_version.test.arn]
 }
-`, layerName, funcName)
+`, rName))
+}
+
+func testAccFunctionConfig_ephemeralStorage(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLambdaBase(rName, rName, rName),
+		fmt.Sprintf(`
+resource "aws_lambda_function" "test" {
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = %[1]q
+  role          = aws_iam_role.iam_for_lambda.arn
+  handler       = "exports.example"
+  runtime       = "nodejs12.x"
+
+  ephemeral_storage {
+    size = 1024
+  }
+}
+`, rName))
+}
+
+func testAccFunctionConfig_updateEphemeralStorage(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLambdaBase(rName, rName, rName),
+		fmt.Sprintf(`
+resource "aws_lambda_function" "test" {
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = %[1]q
+  role          = aws_iam_role.iam_for_lambda.arn
+  handler       = "exports.example"
+  runtime       = "nodejs12.x"
+
+  ephemeral_storage {
+    size = 2048
+  }
+}
+`, rName))
+}
+
+func testAccFunctionConfig_tracing(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLambdaBase(rName, rName, rName),
+		fmt.Sprintf(`
+resource "aws_lambda_function" "test" {
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = %[1]q
+  role          = aws_iam_role.iam_for_lambda.arn
+  handler       = "exports.example"
+  runtime       = "nodejs12.x"
+
+  tracing_config {
+    mode = "Active"
+  }
+}
+`, rName))
+}
+
+func testAccFunctionConfig_tracingUpdated(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLambdaBase(rName, rName, rName),
+		fmt.Sprintf(`
+resource "aws_lambda_function" "test" {
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = %[1]q
+  role          = aws_iam_role.iam_for_lambda.arn
+  handler       = "exports.example"
+  runtime       = "nodejs12.x"
+
+  tracing_config {
+    mode = "PassThrough"
+  }
+}
+`, rName))
 }
 
 func testAccFunctionConfig_vpcProperIAMDependencies(rName string) string {
@@ -3085,38 +3129,6 @@ resource "aws_lambda_function" "test" {
   }
 }
 `, rName)
-}
-
-func testAccFunctionConfig_tracing(funcName, policyName, roleName, sgName string) string {
-	return fmt.Sprintf(acctest.ConfigLambdaBase(policyName, roleName, sgName)+`
-resource "aws_lambda_function" "test" {
-  filename      = "test-fixtures/lambdatest.zip"
-  function_name = "%s"
-  role          = aws_iam_role.iam_for_lambda.arn
-  handler       = "exports.example"
-  runtime       = "nodejs12.x"
-
-  tracing_config {
-    mode = "Active"
-  }
-}
-`, funcName)
-}
-
-func testAccFunctionConfig_tracingUpdated(funcName, policyName, roleName, sgName string) string {
-	return fmt.Sprintf(acctest.ConfigLambdaBase(policyName, roleName, sgName)+`
-resource "aws_lambda_function" "test" {
-  filename      = "test-fixtures/lambdatest.zip"
-  function_name = "%s"
-  role          = aws_iam_role.iam_for_lambda.arn
-  handler       = "exports.example"
-  runtime       = "nodejs12.x"
-
-  tracing_config {
-    mode = "PassThrough"
-  }
-}
-`, funcName)
 }
 
 func testAccFunctionConfig_kmsKeyARNNoEnvironmentVariables(rName string) string {
@@ -3562,42 +3574,6 @@ resource "aws_lambda_function" "test" {
   handler       = "exports.example"
 }
 `, funcName)
-}
-
-func testAccFunctionConfig_ephemeralStorage(rName string) string {
-	return acctest.ConfigCompose(
-		acctest.ConfigLambdaBase(rName, rName, rName),
-		fmt.Sprintf(`
-resource "aws_lambda_function" "test" {
-  filename      = "test-fixtures/lambdatest.zip"
-  function_name = %[1]q
-  role          = aws_iam_role.iam_for_lambda.arn
-  handler       = "exports.example"
-  runtime       = "nodejs12.x"
-
-  ephemeral_storage {
-    size = 1024
-  }
-}
-`, rName))
-}
-
-func testAccFunctionConfig_updateEphemeralStorage(rName string) string {
-	return acctest.ConfigCompose(
-		acctest.ConfigLambdaBase(rName, rName, rName),
-		fmt.Sprintf(`
-resource "aws_lambda_function" "test" {
-  filename      = "test-fixtures/lambdatest.zip"
-  function_name = %[1]q
-  role          = aws_iam_role.iam_for_lambda.arn
-  handler       = "exports.example"
-  runtime       = "nodejs12.x"
-
-  ephemeral_storage {
-    size = 2048
-  }
-}
-`, rName))
 }
 
 func TestFlattenImageConfigShouldNotFailWithEmptyImageConfig(t *testing.T) {
