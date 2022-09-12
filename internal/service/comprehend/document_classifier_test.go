@@ -48,9 +48,11 @@ func TestAccComprehendDocumentClassifier_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "input_data_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "input_data_config.0.augmented_manifests.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "input_data_config.0.data_format", string(types.DocumentClassifierDataFormatComprehendCsv)),
+					resource.TestCheckResourceAttr(resourceName, "input_data_config.0.label_delimiter", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "input_data_config.0.s3_uri"),
 					resource.TestCheckResourceAttr(resourceName, "input_data_config.0.test_s3_uri", ""),
 					resource.TestCheckResourceAttr(resourceName, "language_code", "en"),
+					resource.TestCheckResourceAttr(resourceName, "mode", string(types.DocumentClassifierModeMultiClass)),
 					resource.TestCheckResourceAttr(resourceName, "model_kms_key_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "0"),
@@ -64,6 +66,10 @@ func TestAccComprehendDocumentClassifier_basic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+			{
+				Config:   testAccDocumentClassifierConfig_Mode_singleLabel(rName),
+				PlanOnly: true,
 			},
 		},
 	})
@@ -325,153 +331,164 @@ func TestAccComprehendDocumentClassifier_testDocuments(t *testing.T) {
 	})
 }
 
-// func TestAccComprehendDocumentClassifier_annotations_basic(t *testing.T) {
-// 	if testing.Short() {
-// 		t.Skip("skipping long-running test in short mode")
-// 	}
+func TestAccComprehendDocumentClassifier_SingleLabel_ValidateNoDelimiterSet(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
 
-// 	var documentclassifier types.DocumentClassifierProperties
-// 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-// 	resourceName := "aws_comprehend_document_classifier.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-// 	resource.ParallelTest(t, resource.TestCase{
-// 		PreCheck: func() {
-// 			acctest.PreCheck(t)
-// 			acctest.PreCheckPartitionHasService(names.ComprehendEndpointID, t)
-// 			testAccPreCheck(t)
-// 		},
-// 		ErrorCheck:               acctest.ErrorCheck(t, names.ComprehendEndpointID),
-// 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-// 		CheckDestroy:             testAccCheckDocumentClassifierDestroy,
-// 		Steps: []resource.TestStep{
-// 			{
-// 				Config: testAccDocumentClassifierConfig_annotations_basic(rName),
-// 				Check: resource.ComposeAggregateTestCheckFunc(
-// 					testAccCheckDocumentClassifierExists(resourceName, &documentclassifier),
-// 					testAccCheckDocumentClassifierPublishedVersions(resourceName, 1),
-// 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-// 					resource.TestCheckResourceAttrPair(resourceName, "data_access_role_arn", "aws_iam_role.test", "arn"),
-// 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "comprehend", regexp.MustCompile(fmt.Sprintf(`document-classifier/%s/version/%s$`, rName, uniqueIDPattern()))),
-// 					resource.TestCheckResourceAttr(resourceName, "input_data_config.#", "1"),
-// 					resource.TestCheckResourceAttr(resourceName, "input_data_config.0.augmented_manifests.#", "0"),
-// 					resource.TestCheckResourceAttr(resourceName, "input_data_config.0.data_format", string(types.DocumentClassifierDataFormatComprehendCsv)),
-// 					resource.TestCheckResourceAttr(resourceName, "language_code", "en"),
-// 					resource.TestCheckResourceAttr(resourceName, "model_kms_key_id", ""),
-// 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-// 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "0"),
-// 					acctest.CheckResourceAttrNameGenerated(resourceName, "version_name"),
-// 					resource.TestCheckResourceAttr(resourceName, "version_name_prefix", resource.UniqueIdPrefix),
-// 					resource.TestCheckResourceAttr(resourceName, "volume_kms_key_id", ""),
-// 					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "0"),
-// 				),
-// 			},
-// 			{
-// 				ResourceName:      resourceName,
-// 				ImportState:       true,
-// 				ImportStateVerify: true,
-// 			},
-// 		},
-// 	})
-// }
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(names.ComprehendEndpointID, t)
+			testAccPreCheck(t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ComprehendEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDocumentClassifierDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccDocumentClassifierConfig_modeDefault_ValidateNoDelimiterSet(rName, tfcomprehend.DocumentClassifierLabelSeparatorDefault),
+				ExpectError: regexp.MustCompile(fmt.Sprintf(`input_data_config.label_delimiter must not be set when mode is %s`, types.DocumentClassifierModeMultiClass)),
+			},
+			{
+				Config:      testAccDocumentClassifierConfig_modeDefault_ValidateNoDelimiterSet(rName, ">"),
+				ExpectError: regexp.MustCompile(fmt.Sprintf(`input_data_config.label_delimiter must not be set when mode is %s`, types.DocumentClassifierModeMultiClass)),
+			},
+			{
+				Config:      testAccDocumentClassifierConfig_modeSingleLabel_ValidateNoDelimiterSet(rName, tfcomprehend.DocumentClassifierLabelSeparatorDefault),
+				ExpectError: regexp.MustCompile(fmt.Sprintf(`input_data_config.label_delimiter must not be set when mode is %s`, types.DocumentClassifierModeMultiClass)),
+			},
+			{
+				Config:      testAccDocumentClassifierConfig_modeSingleLabel_ValidateNoDelimiterSet(rName, ">"),
+				ExpectError: regexp.MustCompile(fmt.Sprintf(`input_data_config.label_delimiter must not be set when mode is %s`, types.DocumentClassifierModeMultiClass)),
+			},
+		},
+	})
+}
 
-// func TestAccComprehendDocumentClassifier_annotations_testDocuments(t *testing.T) {
-// 	if testing.Short() {
-// 		t.Skip("skipping long-running test in short mode")
-// 	}
+func TestAccComprehendDocumentClassifier_multiLabel_basic(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
 
-// 	var documentclassifier types.DocumentClassifierProperties
-// 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-// 	resourceName := "aws_comprehend_document_classifier.test"
+	var documentclassifier types.DocumentClassifierProperties
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_comprehend_document_classifier.test"
 
-// 	resource.ParallelTest(t, resource.TestCase{
-// 		PreCheck: func() {
-// 			acctest.PreCheck(t)
-// 			acctest.PreCheckPartitionHasService(names.ComprehendEndpointID, t)
-// 			testAccPreCheck(t)
-// 		},
-// 		ErrorCheck:               acctest.ErrorCheck(t, names.ComprehendEndpointID),
-// 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-// 		CheckDestroy:             testAccCheckDocumentClassifierDestroy,
-// 		Steps: []resource.TestStep{
-// 			{
-// 				Config: testAccDocumentClassifierConfig_annotations_testDocuments(rName),
-// 				Check: resource.ComposeAggregateTestCheckFunc(
-// 					testAccCheckDocumentClassifierExists(resourceName, &documentclassifier),
-// 					testAccCheckDocumentClassifierPublishedVersions(resourceName, 1),
-// 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-// 					resource.TestCheckResourceAttrPair(resourceName, "data_access_role_arn", "aws_iam_role.test", "arn"),
-// 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "comprehend", regexp.MustCompile(fmt.Sprintf(`document-classifier/%s/version/%s$`, rName, uniqueIDPattern()))),
-// 					resource.TestCheckResourceAttr(resourceName, "input_data_config.#", "1"),
-// 					resource.TestCheckResourceAttr(resourceName, "input_data_config.0.augmented_manifests.#", "0"),
-// 					resource.TestCheckResourceAttr(resourceName, "input_data_config.0.data_format", string(types.DocumentClassifierDataFormatComprehendCsv)),
-// 					resource.TestCheckResourceAttr(resourceName, "language_code", "en"),
-// 					resource.TestCheckResourceAttr(resourceName, "model_kms_key_id", ""),
-// 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-// 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "0"),
-// 					acctest.CheckResourceAttrNameGenerated(resourceName, "version_name"),
-// 					resource.TestCheckResourceAttr(resourceName, "version_name_prefix", resource.UniqueIdPrefix),
-// 					resource.TestCheckResourceAttr(resourceName, "volume_kms_key_id", ""),
-// 					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "0"),
-// 				),
-// 			},
-// 			{
-// 				ResourceName:      resourceName,
-// 				ImportState:       true,
-// 				ImportStateVerify: true,
-// 			},
-// 		},
-// 	})
-// }
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(names.ComprehendEndpointID, t)
+			testAccPreCheck(t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ComprehendEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDocumentClassifierDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDocumentClassifierConfig_multiLabel_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDocumentClassifierExists(resourceName, &documentclassifier),
+					testAccCheckDocumentClassifierPublishedVersions(resourceName, 1),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttrPair(resourceName, "data_access_role_arn", "aws_iam_role.test", "arn"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "comprehend", regexp.MustCompile(fmt.Sprintf(`document-classifier/%s/version/%s$`, rName, uniqueIDPattern()))),
+					resource.TestCheckResourceAttr(resourceName, "input_data_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "input_data_config.0.augmented_manifests.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "input_data_config.0.data_format", string(types.DocumentClassifierDataFormatComprehendCsv)),
+					resource.TestCheckResourceAttr(resourceName, "input_data_config.0.label_delimiter", tfcomprehend.DocumentClassifierLabelSeparatorDefault),
+					resource.TestCheckResourceAttr(resourceName, "language_code", "en"),
+					resource.TestCheckResourceAttr(resourceName, "mode", string(types.DocumentClassifierModeMultiLabel)),
+					resource.TestCheckResourceAttr(resourceName, "model_kms_key_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "0"),
+					acctest.CheckResourceAttrNameGenerated(resourceName, "version_name"),
+					resource.TestCheckResourceAttr(resourceName, "version_name_prefix", resource.UniqueIdPrefix),
+					resource.TestCheckResourceAttr(resourceName, "volume_kms_key_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config:   testAccDocumentClassifierConfig_multiLabel_defaultDelimiter(rName),
+				PlanOnly: true,
+			},
+		},
+	})
+}
 
-// func TestAccComprehendDocumentClassifier_annotations_validateNoTestDocuments(t *testing.T) {
-// 	if testing.Short() {
-// 		t.Skip("skipping long-running test in short mode")
-// 	}
+func TestAccComprehendDocumentClassifier_multiLabel_labelDelimiter(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
 
-// 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	var documentclassifier types.DocumentClassifierProperties
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_comprehend_document_classifier.test"
+	const delimiter = "~"
+	const delimiterUpdated = "/"
 
-// 	resource.ParallelTest(t, resource.TestCase{
-// 		PreCheck: func() {
-// 			acctest.PreCheck(t)
-// 			acctest.PreCheckPartitionHasService(names.ComprehendEndpointID, t)
-// 			testAccPreCheck(t)
-// 		},
-// 		ErrorCheck:               acctest.ErrorCheck(t, names.ComprehendEndpointID),
-// 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-// 		CheckDestroy:             testAccCheckDocumentClassifierDestroy,
-// 		Steps: []resource.TestStep{
-// 			{
-// 				Config:      testAccDocumentClassifierConfig_annotations_noTestDocuments(rName),
-// 				ExpectError: regexp.MustCompile("input_data_config.documents.test_s3_uri must be set when input_data_config.annotations.test_s3_uri is set"),
-// 			},
-// 		},
-// 	})
-// }
-
-// func TestAccComprehendDocumentClassifier_annotations_validateNoTestAnnotations(t *testing.T) {
-// 	if testing.Short() {
-// 		t.Skip("skipping long-running test in short mode")
-// 	}
-
-// 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-// 	resource.ParallelTest(t, resource.TestCase{
-// 		PreCheck: func() {
-// 			acctest.PreCheck(t)
-// 			acctest.PreCheckPartitionHasService(names.ComprehendEndpointID, t)
-// 			testAccPreCheck(t)
-// 		},
-// 		ErrorCheck:               acctest.ErrorCheck(t, names.ComprehendEndpointID),
-// 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-// 		CheckDestroy:             testAccCheckDocumentClassifierDestroy,
-// 		Steps: []resource.TestStep{
-// 			{
-// 				Config:      testAccDocumentClassifierConfig_annotations_noTestAnnotations(rName),
-// 				ExpectError: regexp.MustCompile("input_data_config.annotations.test_s3_uri must be set when input_data_config.documents.test_s3_uri is set"),
-// 			},
-// 		},
-// 	})
-// }
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(names.ComprehendEndpointID, t)
+			testAccPreCheck(t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ComprehendEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDocumentClassifierDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDocumentClassifierConfig_multiLabel_delimiter(rName, delimiter),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDocumentClassifierExists(resourceName, &documentclassifier),
+					testAccCheckDocumentClassifierPublishedVersions(resourceName, 1),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttrPair(resourceName, "data_access_role_arn", "aws_iam_role.test", "arn"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "comprehend", regexp.MustCompile(fmt.Sprintf(`document-classifier/%s/version/%s$`, rName, uniqueIDPattern()))),
+					resource.TestCheckResourceAttr(resourceName, "input_data_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "input_data_config.0.augmented_manifests.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "input_data_config.0.data_format", string(types.DocumentClassifierDataFormatComprehendCsv)),
+					resource.TestCheckResourceAttr(resourceName, "input_data_config.0.label_delimiter", delimiter),
+					resource.TestCheckResourceAttr(resourceName, "language_code", "en"),
+					resource.TestCheckResourceAttr(resourceName, "mode", string(types.DocumentClassifierModeMultiLabel)),
+					resource.TestCheckResourceAttr(resourceName, "model_kms_key_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "0"),
+					acctest.CheckResourceAttrNameGenerated(resourceName, "version_name"),
+					resource.TestCheckResourceAttr(resourceName, "version_name_prefix", resource.UniqueIdPrefix),
+					resource.TestCheckResourceAttr(resourceName, "volume_kms_key_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccDocumentClassifierConfig_multiLabel_delimiter(rName, delimiterUpdated),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDocumentClassifierExists(resourceName, &documentclassifier),
+					testAccCheckDocumentClassifierPublishedVersions(resourceName, 2),
+					resource.TestCheckResourceAttr(resourceName, "input_data_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "input_data_config.0.label_delimiter", delimiterUpdated),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
 
 func TestAccComprehendDocumentClassifier_KMSKeys_CreateIDs(t *testing.T) {
 	if testing.Short() {
@@ -555,12 +572,12 @@ func TestAccComprehendDocumentClassifier_KMSKeys_CreateARNs(t *testing.T) {
 	})
 }
 
-func TestAccComprehendDocumentClassifier_KMSKeys_Update(t *testing.T) {
+func TestAccComprehendDocumentClassifier_KMSKeys_Add(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var v1, v2, v3, v4 types.DocumentClassifierProperties
+	var v1, v2 types.DocumentClassifierProperties
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_comprehend_document_classifier.test"
 
@@ -597,11 +614,43 @@ func TestAccComprehendDocumentClassifier_KMSKeys_Update(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
+		},
+	})
+}
+
+func TestAccComprehendDocumentClassifier_KMSKeys_Update(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var v1, v2 types.DocumentClassifierProperties
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_comprehend_document_classifier.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(names.ComprehendEndpointID, t)
+			testAccPreCheck(t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ComprehendEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDocumentClassifierDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDocumentClassifierConfig_kmsKeys_Set(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDocumentClassifierExists(resourceName, &v1),
+					testAccCheckDocumentClassifierPublishedVersions(resourceName, 1),
+					resource.TestCheckResourceAttrPair(resourceName, "model_kms_key_id", "aws_kms_key.model", "key_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "volume_kms_key_id", "aws_kms_key.volume", "key_id"),
+				),
+			},
 			{
 				Config: testAccDocumentClassifierConfig_kmsKeys_Update(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDocumentClassifierExists(resourceName, &v3),
-					testAccCheckDocumentClassifierPublishedVersions(resourceName, 3),
+					testAccCheckDocumentClassifierExists(resourceName, &v2),
+					testAccCheckDocumentClassifierPublishedVersions(resourceName, 2),
 					resource.TestCheckResourceAttrPair(resourceName, "model_kms_key_id", "aws_kms_key.model2", "key_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "volume_kms_key_id", "aws_kms_key.volume2", "key_id"),
 				),
@@ -611,14 +660,51 @@ func TestAccComprehendDocumentClassifier_KMSKeys_Update(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
+		},
+	})
+}
+
+func TestAccComprehendDocumentClassifier_KMSKeys_Remove(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var v1, v2 types.DocumentClassifierProperties
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_comprehend_document_classifier.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(names.ComprehendEndpointID, t)
+			testAccPreCheck(t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ComprehendEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDocumentClassifierDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDocumentClassifierConfig_kmsKeys_Set(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDocumentClassifierExists(resourceName, &v1),
+					testAccCheckDocumentClassifierPublishedVersions(resourceName, 1),
+					resource.TestCheckResourceAttrPair(resourceName, "model_kms_key_id", "aws_kms_key.model", "key_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "volume_kms_key_id", "aws_kms_key.volume", "key_id"),
+				),
+			},
 			{
 				Config: testAccDocumentClassifierConfig_kmsKeys_None(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDocumentClassifierExists(resourceName, &v4),
-					testAccCheckDocumentClassifierPublishedVersions(resourceName, 4),
+					testAccCheckDocumentClassifierExists(resourceName, &v2),
+					testAccCheckDocumentClassifierPublishedVersions(resourceName, 2),
 					resource.TestCheckResourceAttr(resourceName, "model_kms_key_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "volume_kms_key_id", ""),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -683,12 +769,12 @@ func TestAccComprehendDocumentClassifier_VPCConfig_Create(t *testing.T) {
 	})
 }
 
-func TestAccComprehendDocumentClassifier_VPCConfig_Update(t *testing.T) {
+func TestAccComprehendDocumentClassifier_VPCConfig_Add(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var dc1, dc2, dc3 types.DocumentClassifierProperties
+	var dc1, dc2 types.DocumentClassifierProperties
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_comprehend_document_classifier.test"
 
@@ -728,11 +814,52 @@ func TestAccComprehendDocumentClassifier_VPCConfig_Update(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
+		},
+	})
+}
+
+func TestAccComprehendDocumentClassifier_VPCConfig_Remove(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dc1, dc2 types.DocumentClassifierProperties
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_comprehend_document_classifier.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(names.ComprehendEndpointID, t)
+			testAccPreCheck(t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ComprehendEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDocumentClassifierDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDocumentClassifierConfig_vpcConfig(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDocumentClassifierExists(resourceName, &dc1),
+					testAccCheckDocumentClassifierPublishedVersions(resourceName, 1),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.security_group_ids.#", "1"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "vpc_config.0.security_group_ids.*", "aws_security_group.test.0", "id"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.subnets.#", "2"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "vpc_config.0.subnets.*", "aws_subnet.test.0", "id"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "vpc_config.0.subnets.*", "aws_subnet.test.1", "id"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 			{
 				Config: testAccDocumentClassifierConfig_vpcConfig_None(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDocumentClassifierExists(resourceName, &dc3),
-					testAccCheckDocumentClassifierPublishedVersions(resourceName, 3),
+					testAccCheckDocumentClassifierExists(resourceName, &dc2),
+					testAccCheckDocumentClassifierPublishedVersions(resourceName, 2),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "0"),
 				),
 			},
@@ -1027,6 +1154,32 @@ resource "aws_comprehend_document_classifier" "test" {
 `, rName))
 }
 
+func testAccDocumentClassifierConfig_Mode_singleLabel(rName string) string {
+	return acctest.ConfigCompose(
+		testAccDocumentClassifierBasicRoleConfig(rName),
+		testAccDocumentClassifierS3BucketConfig(rName),
+		testAccDocumentClassifierConfig_S3_documents,
+		fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_comprehend_document_classifier" "test" {
+  name = %[1]q
+
+  data_access_role_arn = aws_iam_role.test.arn
+
+  language_code = "en"
+  mode          = "MULTI_CLASS"
+  input_data_config {
+    s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+  }
+
+  depends_on = [
+    aws_iam_role_policy.test,
+  ]
+}
+`, rName))
+}
+
 func testAccDocumentClassifierConfig_versionName(rName, vName, key, value string) string {
 	return acctest.ConfigCompose(
 		testAccDocumentClassifierBasicRoleConfig(rName),
@@ -1158,6 +1311,116 @@ resource "aws_comprehend_document_classifier" "test" {
   ]
 }
 `, rName))
+}
+
+func testAccDocumentClassifierConfig_modeDefault_ValidateNoDelimiterSet(rName, delimiter string) string {
+	return acctest.ConfigCompose(
+		testAccDocumentClassifierBasicRoleConfig(rName),
+		testAccDocumentClassifierS3BucketConfig(rName),
+		testAccDocumentClassifierConfig_S3_documents,
+		fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_comprehend_document_classifier" "test" {
+  name = %[1]q
+
+  data_access_role_arn = aws_iam_role.test.arn
+
+  language_code = "en"
+  input_data_config {
+    s3_uri          = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+	label_delimiter = %q
+  }
+
+  depends_on = [
+    aws_iam_role_policy.test,
+  ]
+}
+`, rName, delimiter))
+}
+
+func testAccDocumentClassifierConfig_modeSingleLabel_ValidateNoDelimiterSet(rName, delimiter string) string {
+	return acctest.ConfigCompose(
+		testAccDocumentClassifierBasicRoleConfig(rName),
+		testAccDocumentClassifierS3BucketConfig(rName),
+		testAccDocumentClassifierConfig_S3_documents,
+		fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_comprehend_document_classifier" "test" {
+  name = %[1]q
+
+  data_access_role_arn = aws_iam_role.test.arn
+
+  language_code = "en"
+  mode          = "MULTI_CLASS"
+  input_data_config {
+    s3_uri          = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+	label_delimiter = %q
+  }
+
+  depends_on = [
+    aws_iam_role_policy.test,
+  ]
+}
+`, rName, delimiter))
+}
+
+func testAccDocumentClassifierConfig_multiLabel_basic(rName string) string {
+	return acctest.ConfigCompose(
+		testAccDocumentClassifierBasicRoleConfig(rName),
+		testAccDocumentClassifierS3BucketConfig(rName),
+		testAccDocumentClassifierConfig_S3_multilabel,
+		fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_comprehend_document_classifier" "test" {
+  name = %[1]q
+
+  data_access_role_arn = aws_iam_role.test.arn
+
+  language_code = "en"
+  mode          = "MULTI_LABEL"
+  input_data_config {
+    s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.multilabel.id}"
+  }
+
+  depends_on = [
+    aws_iam_role_policy.test,
+  ]
+}
+`, rName))
+}
+
+func testAccDocumentClassifierConfig_multiLabel_defaultDelimiter(rName string) string {
+	return testAccDocumentClassifierConfig_multiLabel_delimiter(rName, tfcomprehend.DocumentClassifierLabelSeparatorDefault)
+}
+
+func testAccDocumentClassifierConfig_multiLabel_delimiter(rName, delimiter string) string {
+	return acctest.ConfigCompose(
+		testAccDocumentClassifierBasicRoleConfig(rName),
+		testAccDocumentClassifierS3BucketConfig(rName),
+		testAccDocumentClassifierConfig_S3_multilabel,
+		fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_comprehend_document_classifier" "test" {
+  name = %[1]q
+
+  data_access_role_arn = aws_iam_role.test.arn
+
+  language_code = "en"
+  mode          = "MULTI_LABEL"
+  input_data_config {
+    s3_uri          = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.multilabel.id}"
+	label_delimiter = %[2]q
+  }
+
+  depends_on = [
+    aws_iam_role_policy.test,
+  ]
+}
+`, rName, delimiter))
 }
 
 func testAccDocumentClassifierConfig_kmsKeyIds(rName string) string {
@@ -1877,5 +2140,13 @@ resource "aws_s3_object" "documents" {
   bucket = aws_s3_bucket.test.bucket
   key    = "documents.csv"
   source = "test-fixtures/document_classifier/documents.csv"
+}
+`
+
+const testAccDocumentClassifierConfig_S3_multilabel = `
+resource "aws_s3_object" "multilabel" {
+  bucket = aws_s3_bucket.test.bucket
+  key    = "documents.csv"
+  source = "test-fixtures/document_classifier_multilabel/documents.csv"
 }
 `

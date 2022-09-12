@@ -15,11 +15,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/comprehend"
 	"github.com/aws/aws-sdk-go-v2/service/comprehend/types"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	awsdiag "github.com/hashicorp/terraform-provider-aws/internal/diag"
@@ -110,12 +112,12 @@ func ResourceDocumentClassifier() *schema.Resource {
 							ValidateDiagFunc: enum.Validate[types.DocumentClassifierDataFormat](),
 							Default:          types.DocumentClassifierDataFormatComprehendCsv,
 						},
-						// "label_delimiter":{
-						// Type:schema.TypeString,
-						// Optional: true,
-						// ValidateDiagFunc: ,
-						// Default: "|",
-						// },
+						"label_delimiter": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: validation.StringInSlice(documentClassifierLabelSeparators(), false),
+						},
 						"s3_uri": {
 							Type:     schema.TypeString,
 							Optional: true,
@@ -131,6 +133,12 @@ func ResourceDocumentClassifier() *schema.Resource {
 				Type:             schema.TypeString,
 				Required:         true,
 				ValidateDiagFunc: enum.Validate[types.SyntaxLanguageCode](),
+			},
+			"mode": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				ValidateDiagFunc: enum.Validate[types.DocumentClassifierMode](),
+				Default:          types.DocumentClassifierModeMultiClass,
 			},
 			"model_kms_key_id": {
 				Type:             schema.TypeString,
@@ -207,6 +215,20 @@ func ResourceDocumentClassifier() *schema.Resource {
 
 				return nil
 			},
+			func(_ context.Context, diff *schema.ResourceDiff, _ interface{}) error {
+				mode := types.DocumentClassifierMode(diff.Get("mode").(string))
+
+				if mode == types.DocumentClassifierModeMultiClass {
+					config := diff.GetRawConfig()
+					inputDataConfig := config.GetAttr("input_data_config").Index(cty.NumberIntVal(0))
+					labelDelimiter := inputDataConfig.GetAttr("label_delimiter")
+					if !labelDelimiter.IsNull() {
+						return fmt.Errorf("input_data_config.label_delimiter must not be set when mode is %s", types.DocumentClassifierModeMultiClass)
+					}
+				}
+
+				return nil
+			},
 		),
 	}
 }
@@ -249,6 +271,7 @@ func resourceDocumentClassifierRead(ctx context.Context, d *schema.ResourceData,
 	d.Set("arn", out.DocumentClassifierArn)
 	d.Set("data_access_role_arn", out.DataAccessRoleArn)
 	d.Set("language_code", out.LanguageCode)
+	d.Set("mode", out.Mode)
 	d.Set("model_kms_key_id", out.ModelKmsKeyId)
 	d.Set("version_name", out.VersionName)
 	d.Set("version_name_prefix", create.NamePrefixFromName(aws.ToString(out.VersionName)))
@@ -435,9 +458,10 @@ func fullValueTypeName(v reflect.Value) string {
 func documentClassifierPublishVersion(ctx context.Context, conn *comprehend.Client, d *schema.ResourceData, versionName *string, action string, timeout time.Duration, awsClient *conns.AWSClient) diag.Diagnostics {
 	in := &comprehend.CreateDocumentClassifierInput{
 		DataAccessRoleArn:      aws.String(d.Get("data_access_role_arn").(string)),
-		InputDataConfig:        expandDocumentClassifierInputDataConfig(getDocumentClassifierInputDataConfig(d)),
+		InputDataConfig:        expandDocumentClassifierInputDataConfig(d),
 		LanguageCode:           types.LanguageCode(d.Get("language_code").(string)),
 		DocumentClassifierName: aws.String(d.Get("name").(string)),
+		Mode:                   types.DocumentClassifierMode(d.Get("mode").(string)),
 		VersionName:            versionName,
 		VpcConfig:              expandVPCConfig(d.Get("vpc_config").([]interface{})),
 		ClientRequestToken:     aws.String(resource.UniqueId()),
@@ -701,6 +725,10 @@ func flattenDocumentClassifierInputDataConfig(apiObject *types.DocumentClassifie
 		"s3_uri":              aws.ToString(apiObject.S3Uri),
 	}
 
+	if apiObject.LabelDelimiter != nil {
+		m["label_delimiter"] = aws.ToString(apiObject.LabelDelimiter)
+	}
+
 	if apiObject.TestS3Uri != nil {
 		m["test_s3_uri"] = aws.ToString(apiObject.TestS3Uri)
 	}
@@ -708,8 +736,8 @@ func flattenDocumentClassifierInputDataConfig(apiObject *types.DocumentClassifie
 	return []interface{}{m}
 }
 
-func getDocumentClassifierInputDataConfig(diff resourceGetter) map[string]any {
-	v := diff.Get("input_data_config").([]any)
+func getDocumentClassifierInputDataConfig(d resourceGetter) map[string]any {
+	v := d.Get("input_data_config").([]any)
 	if len(v) == 0 {
 		return nil
 	}
@@ -717,7 +745,8 @@ func getDocumentClassifierInputDataConfig(diff resourceGetter) map[string]any {
 	return v[0].(map[string]any)
 }
 
-func expandDocumentClassifierInputDataConfig(tfMap map[string]any) *types.DocumentClassifierInputDataConfig {
+func expandDocumentClassifierInputDataConfig(d *schema.ResourceData) *types.DocumentClassifierInputDataConfig {
+	tfMap := getDocumentClassifierInputDataConfig(d)
 	if len(tfMap) == 0 {
 		return nil
 	}
@@ -728,9 +757,9 @@ func expandDocumentClassifierInputDataConfig(tfMap map[string]any) *types.Docume
 		S3Uri:              aws.String(tfMap["s3_uri"].(string)),
 	}
 
-	// if v, ok := tfMap["label_delimiter"].(string); ok && v != "" {
-	// 	a.LabelDelimiter = aws.String(v)
-	// }
+	if v, ok := tfMap["label_delimiter"].(string); ok && v != "" {
+		a.LabelDelimiter = aws.String(v)
+	}
 
 	if v, ok := tfMap["test_s3_uri"].(string); ok && v != "" {
 		a.TestS3Uri = aws.String(v)
@@ -752,4 +781,32 @@ func DocumentClassifierParseARN(arnString string) (string, error) {
 	name := matches[1]
 
 	return name, nil
+}
+
+const DocumentClassifierLabelSeparatorDefault = "|"
+
+func documentClassifierLabelSeparators() []string {
+	return []string{
+		DocumentClassifierLabelSeparatorDefault,
+		"~",
+		"!",
+		"@",
+		"#",
+		"$",
+		"%",
+		"^",
+		"*",
+		"-",
+		"_",
+		"+",
+		"=",
+		"\\",
+		":",
+		";",
+		">",
+		"?",
+		"/",
+		" ",
+		"\t",
+	}
 }

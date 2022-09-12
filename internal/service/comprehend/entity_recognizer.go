@@ -851,8 +851,8 @@ func flattenEntityList(apiObject *types.EntityRecognizerEntityList) []interface{
 	return []interface{}{m}
 }
 
-func getEntityRecognizerInputDataConfig(diff resourceGetter) map[string]any {
-	v := diff.Get("input_data_config").([]any)
+func getEntityRecognizerInputDataConfig(d resourceGetter) map[string]any {
+	v := d.Get("input_data_config").([]any)
 	if len(v) == 0 {
 		return nil
 	}

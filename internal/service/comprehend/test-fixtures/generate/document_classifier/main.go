@@ -42,7 +42,7 @@ func main() {
 		log.Fatalf("error opening file %q: %s", "documents.csv", err)
 	}
 	defer closeFile(documentFile, "documents.csv")
-	annotationsWriter := csv.NewWriter(documentFile)
+	documentsWriter := csv.NewWriter(documentFile)
 
 	for i := 0; i < 100; i++ {
 		name := faker.Name().Name()
@@ -61,12 +61,12 @@ func main() {
 			line = fmt.Sprintf(doc, name, product, company)
 		}
 
-		if err := annotationsWriter.Write([]string{doctype, line}); err != nil {
-			log.Fatalf("error writing to file %q: %s", "annotations.csv", err)
+		if err := documentsWriter.Write([]string{doctype, line}); err != nil {
+			log.Fatalf("error writing to file %q: %s", "documents.csv", err)
 		}
 	}
 
-	annotationsWriter.Flush()
+	documentsWriter.Flush()
 }
 
 func closeFile(f *os.File, name string) {

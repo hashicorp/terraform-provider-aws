@@ -54,6 +54,9 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `mode` - (Optional, Default: `MULTI_CLASS`) The document classification mode.
+  One of `MULTI_CLASS` or `MULTI_LABEL`.
+  `MULTI_CLASS` is also known as "Single Label" in the AWS Console.
 * `model_kms_key_id` - (Optional) The ID or ARN of a KMS Key used to encrypt trained Document Classifiers.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` Configuration Block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `version_name` - (Optional) Name for the version of the Document Classifier.
@@ -78,6 +81,9 @@ The following arguments are optional:
   See the [`augmented_manifests` Configuration Block](#augmented_manifests-configuration-block) section below.
 * `data_format` - (Optional, Default: `COMPREHEND_CSV`) The format for the training data.
   One of `COMPREHEND_CSV` or `AUGMENTED_MANIFEST`.
+* `label_delimiter` - (Optional) Delimiter between labels when training a multi-label classifier.
+  Valid values are `|`, `~`, `!`, `@`, `#`, `$`, `%`, `^`, `*`, `-`, `_`, `+`, `=`, `\`, `:`, `;`, `>`, `?`, `/`, `<space>`, and `<tab>`.
+  Default is `|`.
 * `s3_uri` - (Optional) Location of training documents.
   Used if `data_format` is `COMPREHEND_CSV`.
 * `test_s3uri` - (Optional) Location of test documents.
