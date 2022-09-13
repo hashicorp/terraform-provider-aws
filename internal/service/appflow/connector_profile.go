@@ -1463,12 +1463,12 @@ func resourceConnectorProfileRead(ctx context.Context, d *schema.ResourceData, m
 
 func resourceConnectorProfileUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).AppFlowConn
-	out, _ := FindConnectorProfileByARN(ctx, conn, d.Id())
+	connectorProfile, _ := FindConnectorProfileByARN(context.Background(), conn, d.Id())
 
 	updateConnectorProfileInput := appflow.UpdateConnectorProfileInput{
 		ConnectionMode:         aws.String(d.Get("connection_mode").(string)),
 		ConnectorProfileConfig: expandConnectorProfileConfig(d.Get("connector_profile_config").([]interface{})[0].(map[string]interface{})),
-		ConnectorProfileName:   out.ConnectorProfileName,
+		ConnectorProfileName:   connectorProfile.ConnectorProfileName,
 	}
 
 	_, err := conn.UpdateConnectorProfile(&updateConnectorProfileInput)
