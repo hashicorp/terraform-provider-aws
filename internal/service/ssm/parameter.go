@@ -180,7 +180,7 @@ func resourceParameterCreate(d *schema.ResourceData, meta interface{}) error {
 	_, err := conn.PutParameter(paramInput)
 
 	if tfawserr.ErrMessageContains(err, "ValidationException", "Tier is not supported") {
-		log.Printf("[WARN] Updating SSM Parameter (%s): tier %q not supported, using default", d.Get("name").(string), d.Get("tier").(string))
+		log.Printf("[WARN] Creating SSM Parameter (%s): tier %q not supported, using default", name, d.Get("tier").(string))
 		paramInput.Tier = nil
 		_, err = conn.PutParameter(paramInput)
 	}
