@@ -619,7 +619,7 @@ func TestAccCognitoIDPUserPool_SMS_snsRegion(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "mfa_configuration", "OFF"),
 					resource.TestCheckResourceAttr(resourceName, "sms_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "sms_configuration.0.sns_region", "foobar"),
+					resource.TestCheckResourceAttr(resourceName, "sms_configuration.0.sns_region", acctest.Region()),
 					resource.TestCheckResourceAttrPair(resourceName, "sms_configuration.0.sns_caller_arn", iamRoleResourceName, "arn"),
 				),
 			},
