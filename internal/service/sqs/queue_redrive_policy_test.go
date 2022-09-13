@@ -24,7 +24,7 @@ func TestAccSQSQueueRedrivePolicy_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckQueueDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccQueueRedriveAllowPolicyConfig_basic(rName),
+				Config: testAccQueueRedrivePolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueueExists(queueResourceName, &queueAttributes),
 					testAccCheckQueueExists(fmt.Sprintf("%s_ddl", queueResourceName), &queueAttributes),
@@ -37,7 +37,7 @@ func TestAccSQSQueueRedrivePolicy_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config:   testAccQueueRedriveAllowPolicyConfig_basic(rName),
+				Config:   testAccQueueRedrivePolicyConfig_basic(rName),
 				PlanOnly: true,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "redrive_policy", queueResourceName, "redrive_policy"),
@@ -60,7 +60,7 @@ func TestAccSQSQueueRedrivePolicy_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckQueueDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccQueueRedriveAllowPolicyConfig_basic(rName),
+				Config: testAccQueueRedrivePolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueueExists(queueResourceName, &queueAttributes),
 					testAccCheckQueueExists(fmt.Sprintf("%s_ddl", queueResourceName), &queueAttributes),
@@ -84,7 +84,7 @@ func TestAccSQSQueueRedrivePolicy_Disappears_queue(t *testing.T) {
 		CheckDestroy:             testAccCheckQueueDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccQueueRedriveAllowPolicyConfig_basic(rName),
+				Config: testAccQueueRedrivePolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueueExists(queueResourceName, &queueAttributes),
 					acctest.CheckResourceDisappears(acctest.Provider, tfsqs.ResourceQueue(), queueResourceName),
@@ -108,7 +108,7 @@ func TestAccSQSQueueRedrivePolicy_update(t *testing.T) {
 		CheckDestroy:             testAccCheckQueueDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccQueueRedriveAllowPolicyConfig_basic(rName),
+				Config: testAccQueueRedrivePolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueueExists(queueResourceName, &queueAttributes),
 					resource.TestCheckResourceAttrSet(resourceName, "redrive_policy"),
@@ -120,7 +120,7 @@ func TestAccSQSQueueRedrivePolicy_update(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccQueueRedriveAllowPolicyConfig_updated(rName),
+				Config: testAccQueueRedrivePolicyConfig_updated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceName, "redrive_policy"),
 				),
