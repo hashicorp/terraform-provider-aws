@@ -11,9 +11,9 @@ import (
 	tfsqs "github.com/hashicorp/terraform-provider-aws/internal/service/sqs"
 )
 
-func TestAccSQSQueueRedrivePolicy_basic(t *testing.T) {
+func TestAccSQSQueueRedriveAllowPolicy_basic(t *testing.T) {
 	var queueAttributes map[string]string
-	resourceName := "aws_sqs_queue_redrive_policy.test"
+	resourceName := "aws_sqs_queue_redrive_allow_policy.test"
 	queueResourceName := "aws_sqs_queue.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -27,8 +27,7 @@ func TestAccSQSQueueRedrivePolicy_basic(t *testing.T) {
 				Config: testAccQueueRedriveAllowPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueueExists(queueResourceName, &queueAttributes),
-					testAccCheckQueueExists(fmt.Sprintf("%s_ddl", queueResourceName), &queueAttributes),
-					resource.TestCheckResourceAttrSet(resourceName, "redrive_policy"),
+					resource.TestCheckResourceAttrSet(resourceName, "redrive_allow_policy"),
 				),
 			},
 			{
@@ -40,16 +39,16 @@ func TestAccSQSQueueRedrivePolicy_basic(t *testing.T) {
 				Config:   testAccQueueRedriveAllowPolicyConfig_basic(rName),
 				PlanOnly: true,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(resourceName, "redrive_policy", queueResourceName, "redrive_policy"),
+					resource.TestCheckResourceAttrPair(resourceName, "redrive_allow_policy", queueResourceName, "redrive_allow_policy"),
 				),
 			},
 		},
 	})
 }
 
-func TestAccSQSQueueRedrivePolicy_disappears(t *testing.T) {
+func TestAccSQSQueueRedriveAllowPolicy_disappears(t *testing.T) {
 	var queueAttributes map[string]string
-	resourceName := "aws_sqs_queue_redrive_policy.test"
+	resourceName := "aws_sqs_queue_redrive_allow_policy.test"
 	queueResourceName := "aws_sqs_queue.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -63,8 +62,7 @@ func TestAccSQSQueueRedrivePolicy_disappears(t *testing.T) {
 				Config: testAccQueueRedriveAllowPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueueExists(queueResourceName, &queueAttributes),
-					testAccCheckQueueExists(fmt.Sprintf("%s_ddl", queueResourceName), &queueAttributes),
-					acctest.CheckResourceDisappears(acctest.Provider, tfsqs.ResourceQueueRedrivePolicy(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfsqs.ResourceQueueRedriveAllowPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -72,7 +70,7 @@ func TestAccSQSQueueRedrivePolicy_disappears(t *testing.T) {
 	})
 }
 
-func TestAccSQSQueueRedrivePolicy_Disappears_queue(t *testing.T) {
+func TestAccSQSQueueRedriveAllowPolicy_Disappears_queue(t *testing.T) {
 	var queueAttributes map[string]string
 	queueResourceName := "aws_sqs_queue.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -95,9 +93,9 @@ func TestAccSQSQueueRedrivePolicy_Disappears_queue(t *testing.T) {
 	})
 }
 
-func TestAccSQSQueueRedrivePolicy_update(t *testing.T) {
+func TestAccSQSQueueRedriveAllowPolicy_update(t *testing.T) {
 	var queueAttributes map[string]string
-	resourceName := "aws_sqs_queue_redrive_policy.test"
+	resourceName := "aws_sqs_queue_redrive_allow_policy.test"
 	queueResourceName := "aws_sqs_queue.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -111,7 +109,7 @@ func TestAccSQSQueueRedrivePolicy_update(t *testing.T) {
 				Config: testAccQueueRedriveAllowPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueueExists(queueResourceName, &queueAttributes),
-					resource.TestCheckResourceAttrSet(resourceName, "redrive_policy"),
+					resource.TestCheckResourceAttrSet(resourceName, "redrive_allow_policy"),
 				),
 			},
 			{
@@ -122,56 +120,55 @@ func TestAccSQSQueueRedrivePolicy_update(t *testing.T) {
 			{
 				Config: testAccQueueRedriveAllowPolicyConfig_updated(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(resourceName, "redrive_policy"),
+					resource.TestCheckResourceAttrSet(resourceName, "redrive_allow_policy"),
 				),
 			},
 		},
 	})
 }
 
-func testAccQueueRedrivePolicyConfig_basic(rName string) string {
+func testAccQueueRedriveAllowPolicyConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_sqs_queue" "test" {
   name = %[1]q
 }
 
-resource "aws_sqs_queue" "test_ddl" {
-  name = "%[1]s_ddl"
-  redrive_allow_policy = jsonencode({
-    redrivePermission = "byQueue",
-    sourceQueueArns   = [aws_sqs_queue.test.arn]
+resource "aws_sqs_queue" "test_src" {
+  name = "%[1]s_src"
+  redrive_policy = jsonencode({
+    deadLetterTargetArn = aws_sqs_queue.test.arn
+    maxReceiveCount     = 4
   })
 }
 
-resource "aws_sqs_queue_redrive_policy" "test" {
+resource "aws_sqs_queue_redrive_allow_policy" "test" {
   queue_url = aws_sqs_queue.test.id
-  redrive_policy = jsonencode({
-    deadLetterTargetArn = aws_sqs_queue.test_ddl.arn
-    maxReceiveCount     = 4
+  redrive_allow_policy = jsonencode({
+    redrivePermission = "byQueue",
+    sourceQueueArns   = [aws_sqs_queue.test_src.arn]
   })
 }
 `, rName)
 }
 
-func testAccQueueRedrivePolicyConfig_updated(rName string) string {
+func testAccQueueRedriveAllowPolicyConfig_updated(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_sqs_queue" "test" {
   name = %[1]q
 }
 
-resource "aws_sqs_queue" "test_ddl" {
-  name = "%[1]s_ddl"
-  redrive_allow_policy = jsonencode({
-    redrivePermission = "byQueue",
-    sourceQueueArns   = [aws_sqs_queue.test.arn]
+resource "aws_sqs_queue" "test_src" {
+  name = "%[1]s_src"
+  redrive_policy = jsonencode({
+    deadLetterTargetArn = aws_sqs_queue.test.arn
+    maxReceiveCount     = 4
   })
 }
 
-resource "aws_sqs_queue_redrive_policy" "test" {
+resource "aws_sqs_queue_redrive_allow_policy" "test" {
   queue_url = aws_sqs_queue.test.id
-  redrive_policy = jsonencode({
-    deadLetterTargetArn = aws_sqs_queue.test_ddl.arn
-    maxReceiveCount     = 2
+  redrive_allow_policy = jsonencode({
+    redrivePermission = "allowAll"
   })
 }
 `, rName)

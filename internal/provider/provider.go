@@ -2054,9 +2054,10 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_sns_topic_policy":         sns.ResourceTopicPolicy(),
 			"aws_sns_topic_subscription":   sns.ResourceTopicSubscription(),
 
-			"aws_sqs_queue":                sqs.ResourceQueue(),
-			"aws_sqs_queue_policy":         sqs.ResourceQueuePolicy(),
-			"aws_sqs_queue_redrive_policy": sqs.ResourceQueueRedrivePolicy(),
+			"aws_sqs_queue":                      sqs.ResourceQueue(),
+			"aws_sqs_queue_policy":               sqs.ResourceQueuePolicy(),
+			"aws_sqs_queue_redrive_allow_policy": sqs.ResourceQueueRedriveAllowPolicy(),
+			"aws_sqs_queue_redrive_policy":       sqs.ResourceQueueRedrivePolicy(),
 
 			"aws_ssm_activation":                ssm.ResourceActivation(),
 			"aws_ssm_association":               ssm.ResourceAssociation(),
