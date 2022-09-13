@@ -615,7 +615,7 @@ func TestAccCognitoIDPUserPool_SMS_snsRegion(t *testing.T) {
 		CheckDestroy:             testAccCheckUserPoolDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserPoolConfig_smsConfigurationSnsRegion(rName, "us-east-1"),
+				Config: testAccUserPoolConfig_smsConfigurationSnsRegion(rName, acctest.Region()),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "mfa_configuration", "OFF"),
 					resource.TestCheckResourceAttr(resourceName, "sms_configuration.#", "1"),
