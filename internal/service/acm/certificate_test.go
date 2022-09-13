@@ -39,6 +39,7 @@ func TestAccACMCertificate_emailValidation(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "status", acm.CertificateStatusPendingValidation),
 					resource.TestCheckResourceAttr(resourceName, "subject_alternative_names.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "subject_alternative_names.*", domain),
+					resource.TestCheckResourceAttr(resourceName, "type", "AMAZON_ISSUED"),
 					acctest.CheckResourceAttrGreaterThanValue(resourceName, "validation_emails.#", "0"),
 					resource.TestMatchResourceAttr(resourceName, "validation_emails.0", regexp.MustCompile(`^[^@]+@.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "validation_method", acm.ValidationMethodEmail),
@@ -80,6 +81,7 @@ func TestAccACMCertificate_dnsValidation(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "status", acm.CertificateStatusPendingValidation),
 					resource.TestCheckResourceAttr(resourceName, "subject_alternative_names.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "subject_alternative_names.*", domain),
+					resource.TestCheckResourceAttr(resourceName, "type", "AMAZON_ISSUED"),
 					resource.TestCheckResourceAttr(resourceName, "validation_emails.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "validation_method", acm.ValidationMethodDns),
 					resource.TestCheckResourceAttr(resourceName, "validation_option.#", "0"),
@@ -189,17 +191,18 @@ func TestAccACMCertificate_privateCert(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCertificateExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "acm", regexp.MustCompile("certificate/.+$")),
+					resource.TestCheckResourceAttrPair(resourceName, "certificate_authority_arn", certificateAuthorityResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "domain_name", certificateDomainName),
 					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "not_after", ""),
+					resource.TestCheckResourceAttr(resourceName, "not_before", ""),
 					resource.TestCheckResourceAttr(resourceName, "status", acm.CertificateStatusFailed), // FailureReason: PCA_INVALID_STATE (PCA State: PENDING_CERTIFICATE)
 					resource.TestCheckResourceAttr(resourceName, "subject_alternative_names.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "subject_alternative_names.*", certificateDomainName),
+					resource.TestCheckResourceAttr(resourceName, "type", "PRIVATE"),
 					resource.TestCheckResourceAttr(resourceName, "validation_emails.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "validation_method", "NONE"),
 					resource.TestCheckResourceAttr(resourceName, "validation_option.#", "0"),
-					resource.TestCheckResourceAttrPair(resourceName, "certificate_authority_arn", certificateAuthorityResourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "not_before", ""),
-					resource.TestCheckResourceAttr(resourceName, "not_after", ""),
 				),
 			},
 			{
@@ -678,8 +681,9 @@ func TestAccACMCertificate_Imported_validityDates(t *testing.T) {
 				Config: testAccCertificateConfig_privateKey(certificate, key, caCertificate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCertificateExists(resourceName, &v),
-					acctest.CheckResourceAttrRFC3339(resourceName, "not_before"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "not_after"),
+					acctest.CheckResourceAttrRFC3339(resourceName, "not_before"),
+					resource.TestCheckResourceAttr(resourceName, "type", "IMPORTED"),
 				),
 			},
 			{

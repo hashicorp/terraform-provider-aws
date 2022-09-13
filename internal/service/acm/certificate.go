@@ -173,6 +173,10 @@ func ResourceCertificate() *schema.Resource {
 			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
+			"type": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"validation_emails": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -390,6 +394,7 @@ func resourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 	d.Set("status", certificate.Status)
 	d.Set("subject_alternative_names", aws.StringValueSlice(certificate.SubjectAlternativeNames))
+	d.Set("type", certificate.Type)
 	d.Set("validation_emails", validationEmails)
 	d.Set("validation_method", certificateValidationMethod(certificate))
 
