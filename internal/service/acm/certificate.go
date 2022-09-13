@@ -154,6 +154,22 @@ func ResourceCertificate() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"renewal_summary": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"renewal_status": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"renewal_status_reason": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
 			"status": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -397,6 +413,13 @@ func resourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta i
 		d.Set("options", nil)
 	}
 	d.Set("renewal_eligibility", certificate.RenewalEligibility)
+	if certificate.RenewalSummary != nil {
+		if err := d.Set("renewal_summary", []interface{}{flattenRenewalSummary(certificate.RenewalSummary)}); err != nil {
+			return diag.Errorf("setting renewal_summary: %s", err)
+		}
+	} else {
+		d.Set("renewal_summary", nil)
+	}
 	d.Set("status", certificate.Status)
 	d.Set("subject_alternative_names", aws.StringValueSlice(certificate.SubjectAlternativeNames))
 	d.Set("type", certificate.Type)
@@ -638,6 +661,24 @@ func flattenDomainValidations(apiObjects []*acm.DomainValidation) ([]interface{}
 	}
 
 	return tfList, tfStrings
+}
+
+func flattenRenewalSummary(apiObject *acm.RenewalSummary) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.RenewalStatus; v != nil {
+		tfMap["renewal_status"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.RenewalStatusReason; v != nil {
+		tfMap["renewal_status_reason"] = aws.StringValue(v)
+	}
+
+	return tfMap
 }
 
 func isChangeNormalizeCertRemoval(oldRaw, newRaw interface{}) bool {

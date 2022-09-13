@@ -157,6 +157,7 @@ In addition to all arguments above, the following attributes are exported:
 * `not_after` - Expiration date and time of the certificate.
 * `not_before` - Start of the validity period of the certificate.
 * `renewal_eligibility` - Whether the certificate is eligible for renewal.
+* `renewal_summary` - Contains information about the status of ACM's [managed renewal](https://docs.aws.amazon.com/acm/latest/userguide/acm-renewal.html) for the certificate.
 * `status` - Status of the certificate.
 * `type` - Source of the certificate.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
@@ -168,6 +169,11 @@ Domain validation objects export the following attributes:
 * `resource_record_name` - The name of the DNS record to create to validate the certificate
 * `resource_record_type` - The type of DNS record to create
 * `resource_record_value` - The value the DNS record needs to have
+
+Renewal summary objects export the following attributes:
+
+* `renewal_status` - The status of ACM's managed renewal of the certificate
+* `renewal_status_reason` - The reason that a renewal request was unsuccessful
 
 [1]: https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html
 
