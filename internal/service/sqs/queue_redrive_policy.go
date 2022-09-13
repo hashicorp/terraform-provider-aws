@@ -8,8 +8,24 @@ import (
 )
 
 func ResourceQueueRedrivePolicy() *schema.Resource {
+	h := &queueAttributeHandler{
+		AttributeName: sqs.QueueAttributeNameRedrivePolicy,
+		SchemaKey:     "redrive_policy",
+		ToSet: func(old, new string) (string, error) {
+			if BytesEqual([]byte(old), []byte(new)) {
+				return old, nil
+			}
+			return new, nil
+		},
+	}
+
 	return &schema.Resource{
 		Schema: map[string]*schema.Schema{
+			"queue_url": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
 			"redrive_policy": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -19,19 +35,15 @@ func ResourceQueueRedrivePolicy() *schema.Resource {
 					return json
 				},
 			},
-			"queue_url": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
 		},
-		SchemaVersion: 0,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
-		CreateContext: generateQueueAttributeUpsertFunc(sqs.QueueAttributeNameRedrivePolicy),
-		ReadContext:   generateQueueAttributeReadFunc(sqs.QueueAttributeNameRedrivePolicy),
-		UpdateContext: generateQueueAttributeUpsertFunc(sqs.QueueAttributeNameRedrivePolicy),
-		DeleteContext: generateQueueAttributeDeleteFunc(sqs.QueueAttributeNameRedrivePolicy),
+
+		CreateWithoutTimeout: h.Upsert,
+		ReadWithoutTimeout:   h.Read,
+		UpdateWithoutTimeout: h.Upsert,
+		DeleteWithoutTimeout: h.Delete,
 	}
 }

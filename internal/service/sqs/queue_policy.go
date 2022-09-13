@@ -9,7 +9,11 @@ import (
 )
 
 func ResourceQueuePolicy() *schema.Resource {
-	h := &queueAttributeHandler{AttributeName: sqs.QueueAttributeNamePolicy, SchemaKey: "policy"}
+	h := &queueAttributeHandler{
+		AttributeName: sqs.QueueAttributeNamePolicy,
+		SchemaKey:     "policy",
+		ToSet:         verify.PolicyToSet,
+	}
 
 	//lintignore:R011
 	return &schema.Resource{
