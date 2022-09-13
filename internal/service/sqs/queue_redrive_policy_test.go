@@ -27,7 +27,7 @@ func TestAccSQSQueueRedrivePolicy_basic(t *testing.T) {
 				Config: testAccQueueRedrivePolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueueExists(queueResourceName, &queueAttributes),
-					testAccCheckQueueExists(fmt.Sprintf("%s-ddl", queueResourceName), &queueAttributes),
+					testAccCheckQueueExists(fmt.Sprintf("%s_ddl", queueResourceName), &queueAttributes),
 					resource.TestCheckResourceAttrSet(resourceName, "redrive_policy"),
 				),
 			},
@@ -63,7 +63,7 @@ func TestAccSQSQueueRedrivePolicy_disappears(t *testing.T) {
 				Config: testAccQueueRedrivePolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueueExists(queueResourceName, &queueAttributes),
-					testAccCheckQueueExists(fmt.Sprintf("%s-ddl", queueResourceName), &queueAttributes),
+					testAccCheckQueueExists(fmt.Sprintf("%s_ddl", queueResourceName), &queueAttributes),
 					acctest.CheckResourceDisappears(acctest.Provider, tfsqs.ResourceQueueRedrivePolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -135,8 +135,8 @@ resource "aws_sqs_queue" "test" {
   name = %[1]q
 }
 
-resource "aws_sqs_queue" "test-ddl" {
-  name = "%[1]s-ddl"
+resource "aws_sqs_queue" "test_ddl" {
+  name = "%[1]s_ddl"
   redrive_allow_policy = jsonencode({
     redrivePermission = "byQueue",
     sourceQueueArns   = [aws_sqs_queue.test.arn]
@@ -146,7 +146,7 @@ resource "aws_sqs_queue" "test-ddl" {
 resource "aws_sqs_queue_redrive_policy" "test" {
   queue_url = aws_sqs_queue.test.id
   redrive_policy = jsonencode({
-    deadLetterTargetArn = aws_sqs_queue.test-ddl.arn
+    deadLetterTargetArn = aws_sqs_queue.test_ddl.arn
     maxReceiveCount     = 4
   })
 }
@@ -159,8 +159,8 @@ resource "aws_sqs_queue" "test" {
   name = %[1]q
 }
 
-resource "aws_sqs_queue" "test-ddl" {
-  name = "%[1]s-ddl"
+resource "aws_sqs_queue" "test_ddl" {
+  name = "%[1]s_ddl"
   redrive_allow_policy = jsonencode({
     redrivePermission = "byQueue",
     sourceQueueArns   = [aws_sqs_queue.test.arn]
@@ -170,7 +170,7 @@ resource "aws_sqs_queue" "test-ddl" {
 resource "aws_sqs_queue_redrive_policy" "test" {
   queue_url = aws_sqs_queue.test.id
   redrive_policy = jsonencode({
-    deadLetterTargetArn = aws_sqs_queue.test-ddl.arn
+    deadLetterTargetArn = aws_sqs_queue.test_ddl.arn
     maxReceiveCount     = 2
   })
 }
