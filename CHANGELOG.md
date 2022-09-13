@@ -3,6 +3,13 @@
 FEATURES:
 
 * **New Data Source:** `aws_ec2_managed_prefix_lists` ([#26727](https://github.com/hashicorp/terraform-provider-aws/issues/26727))
+* **New Resource:** `aws_sqs_queue_redrive_allow_policy` ([#26733](https://github.com/hashicorp/terraform-provider-aws/issues/26733))
+* **New Resource:** `aws_sqs_queue_redrive_policy` ([#26733](https://github.com/hashicorp/terraform-provider-aws/issues/26733))
+
+ENHANCEMENTS:
+
+* data-source/aws_lambda_function: Add `qualified_invoke_arn` attribute ([#26439](https://github.com/hashicorp/terraform-provider-aws/issues/26439))
+* resource/aws_lambda_function: Add `qualified_invoke_arn` attribute ([#26439](https://github.com/hashicorp/terraform-provider-aws/issues/26439))
 
 BUG FIXES:
 
