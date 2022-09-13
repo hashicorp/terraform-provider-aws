@@ -186,7 +186,7 @@ func resourceParameterCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error creating SSM parameter (%s): %w", name, err)
+		return fmt.Errorf("error creating SSM Parameter (%s): %w", name, err)
 	}
 
 	// Since the AWS SSM Service does not support PutParameter requests with
@@ -355,7 +355,7 @@ func resourceParameterUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if err != nil {
-			return fmt.Errorf("error updating SSM parameter (%s): %w", d.Id(), err)
+			return fmt.Errorf("error updating SSM Parameter (%s): %w", d.Id(), err)
 		}
 	}
 
