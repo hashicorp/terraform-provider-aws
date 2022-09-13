@@ -1,6 +1,7 @@
 package sqs
 
 import (
+	"context"
 	"strconv"
 
 	"github.com/aws/aws-sdk-go/service/sqs"
@@ -9,9 +10,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func statusQueueState(conn *sqs.SQS, url string) resource.StateRefreshFunc {
+func statusQueueState(ctx context.Context, conn *sqs.SQS, url string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindQueueAttributesByURL(conn, url)
+		output, err := FindQueueAttributesByURL(ctx, conn, url)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -25,7 +26,7 @@ func statusQueueState(conn *sqs.SQS, url string) resource.StateRefreshFunc {
 	}
 }
 
-func statusQueueAttributeState(conn *sqs.SQS, url string, expected map[string]string) resource.StateRefreshFunc {
+func statusQueueAttributeState(ctx context.Context, conn *sqs.SQS, url string, expected map[string]string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		attributesMatch := func(got map[string]string) string {
 			for k, e := range expected {
@@ -70,7 +71,7 @@ func statusQueueAttributeState(conn *sqs.SQS, url string, expected map[string]st
 			return queueAttributeStateEqual
 		}
 
-		got, err := FindQueueAttributesByURL(conn, url)
+		got, err := FindQueueAttributesByURL(ctx, conn, url)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

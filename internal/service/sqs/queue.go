@@ -218,8 +218,8 @@ func resourceQueueCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	log.Printf("[DEBUG] Creating SQS Queue: %s", input)
-	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(queueCreatedTimeout, func() (interface{}, error) {
-		return conn.CreateQueue(input)
+	outputRaw, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, queueCreatedTimeout, func() (interface{}, error) {
+		return conn.CreateQueueWithContext(ctx, input)
 	}, sqs.ErrCodeQueueDeletedRecently)
 
 	// Some partitions may not support tag-on-create
@@ -227,8 +227,8 @@ func resourceQueueCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		log.Printf("[WARN] failed creating SQS Queue (%s) with tags: %s. Trying create without tags.", name, err)
 
 		input.Tags = nil
-		outputRaw, err = tfresource.RetryWhenAWSErrCodeEquals(queueCreatedTimeout, func() (interface{}, error) {
-			return conn.CreateQueue(input)
+		outputRaw, err = tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, queueCreatedTimeout, func() (interface{}, error) {
+			return conn.CreateQueueWithContext(ctx, input)
 		}, sqs.ErrCodeQueueDeletedRecently)
 	}
 
@@ -238,7 +238,7 @@ func resourceQueueCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	d.SetId(aws.StringValue(outputRaw.(*sqs.CreateQueueOutput).QueueUrl))
 
-	err = waitQueueAttributesPropagated(conn, d.Id(), attributes)
+	err = waitQueueAttributesPropagated(ctx, conn, d.Id(), attributes)
 
 	if err != nil {
 		return diag.Errorf("waiting for SQS Queue (%s) attributes create: %s", d.Id(), err)
@@ -246,7 +246,7 @@ func resourceQueueCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	// Only post-create tagging supported in some partitions
 	if input.Tags == nil && len(tags) > 0 {
-		err := UpdateTags(conn, d.Id(), nil, tags)
+		err := UpdateTagsWithContext(ctx, conn, d.Id(), nil, tags)
 
 		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.ErrorISOUnsupported(conn.PartitionID, err) {
 			// if default tags only, log and continue (i.e., should error if explicitly setting tags and they can't be)
@@ -267,8 +267,8 @@ func resourceQueueRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	outputRaw, err := tfresource.RetryWhenNotFound(queueReadTimeout, func() (interface{}, error) {
-		return FindQueueAttributesByURL(conn, d.Id())
+	outputRaw, err := tfresource.RetryWhenNotFoundContext(ctx, queueReadTimeout, func() (interface{}, error) {
+		return FindQueueAttributesByURL(ctx, conn, d.Id())
 	})
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -308,8 +308,8 @@ func resourceQueueRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 	d.Set("url", d.Id())
 
-	outputRaw, err = tfresource.RetryWhenAWSErrCodeEquals(queueTagsTimeout, func() (interface{}, error) {
-		return ListTags(conn, d.Id())
+	outputRaw, err = tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, queueTagsTimeout, func() (interface{}, error) {
+		return ListTagsWithContext(ctx, conn, d.Id())
 	}, sqs.ErrCodeQueueDoesNotExist)
 
 	if verify.ErrorISOUnsupported(conn.PartitionID, err) {
@@ -352,13 +352,13 @@ func resourceQueueUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 
 		log.Printf("[DEBUG] Updating SQS Queue: %s", input)
-		_, err = conn.SetQueueAttributes(input)
+		_, err = conn.SetQueueAttributesWithContext(ctx, input)
 
 		if err != nil {
 			return diag.Errorf("updating SQS Queue (%s) attributes: %s", d.Id(), err)
 		}
 
-		err = waitQueueAttributesPropagated(conn, d.Id(), attributes)
+		err = waitQueueAttributesPropagated(ctx, conn, d.Id(), attributes)
 
 		if err != nil {
 			return diag.Errorf("waiting for SQS Queue (%s) attributes update: %s", d.Id(), err)
@@ -367,7 +367,7 @@ func resourceQueueUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		err := UpdateTags(conn, d.Id(), o, n)
+		err := UpdateTagsWithContext(ctx, conn, d.Id(), o, n)
 
 		if verify.ErrorISOUnsupported(conn.PartitionID, err) {
 			// Some partitions may not support tagging, giving error
@@ -387,7 +387,7 @@ func resourceQueueDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	conn := meta.(*conns.AWSClient).SQSConn
 
 	log.Printf("[DEBUG] Deleting SQS Queue: %s", d.Id())
-	_, err := conn.DeleteQueue(&sqs.DeleteQueueInput{
+	_, err := conn.DeleteQueueWithContext(ctx, &sqs.DeleteQueueInput{
 		QueueUrl: aws.String(d.Id()),
 	})
 
@@ -399,7 +399,7 @@ func resourceQueueDelete(ctx context.Context, d *schema.ResourceData, meta inter
 		return diag.Errorf("deleting SQS Queue (%s): %s", d.Id(), err)
 	}
 
-	err = waitQueueDeleted(conn, d.Id())
+	err = waitQueueDeleted(ctx, conn, d.Id())
 
 	if err != nil {
 		return diag.Errorf("waiting for SQS Queue (%s) delete: %s", d.Id(), err)
