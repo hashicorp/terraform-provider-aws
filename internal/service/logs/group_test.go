@@ -39,7 +39,7 @@ func TestAccLogsGroup_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"retention_in_days"}, //this has a default value
+				ImportStateVerifyIgnore: []string{"retention_in_days", "skip_destroy"},
 			},
 		},
 	})
@@ -66,7 +66,31 @@ func TestAccLogsGroup_namePrefix(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"retention_in_days", "name_prefix"},
+				ImportStateVerifyIgnore: []string{"retention_in_days", "skip_destroy", "name_prefix"},
+			},
+		},
+	})
+}
+
+func TestAccLogsGroup_skipDestroy(t *testing.T) {
+	var lg cloudwatchlogs.LogGroup
+	rInt := sdkacctest.RandInt()
+	resourceName := "aws_cloudwatch_log_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             nil, // this purposely leaves dangling resources, since skip_destroy = true
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGroupConfig_skipDestroy(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGroupExists(resourceName, &lg),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "logs", fmt.Sprintf("log-group:foo-bar-%d", rInt)),
+					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("foo-bar-%d", rInt)),
+					resource.TestCheckResourceAttr(resourceName, "skip_destroy", "true"),
+				),
 			},
 		},
 	})
@@ -95,7 +119,7 @@ func TestAccLogsGroup_NamePrefix_retention(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"retention_in_days", "name_prefix"},
+				ImportStateVerifyIgnore: []string{"retention_in_days", "skip_destroy", "name_prefix"},
 			},
 			{
 				Config: testAccGroupConfig_namePrefixRetention(rName, 7),
@@ -129,7 +153,7 @@ func TestAccLogsGroup_generatedName(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"retention_in_days"},
+				ImportStateVerifyIgnore: []string{"retention_in_days", "skip_destroy"},
 			},
 		},
 	})
@@ -157,7 +181,7 @@ func TestAccLogsGroup_retentionPolicy(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"retention_in_days"},
+				ImportStateVerifyIgnore: []string{"retention_in_days", "skip_destroy"},
 			},
 			{
 				Config: testAccGroupConfig_modifiedRetention(rInt),
@@ -196,7 +220,7 @@ func TestAccLogsGroup_multiple(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"retention_in_days"},
+				ImportStateVerifyIgnore: []string{"retention_in_days", "skip_destroy"},
 			},
 		},
 	})
@@ -250,7 +274,7 @@ func TestAccLogsGroup_tagging(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"retention_in_days"},
+				ImportStateVerifyIgnore: []string{"retention_in_days", "skip_destroy"},
 			},
 			{
 				Config: testAccGroupConfig_tagsAdded(rInt),
@@ -309,7 +333,7 @@ func TestAccLogsGroup_kmsKey(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"retention_in_days"},
+				ImportStateVerifyIgnore: []string{"retention_in_days", "skip_destroy"},
 			},
 			{
 				Config: testAccGroupConfig_kmsKeyID(rInt),
@@ -509,6 +533,15 @@ resource "aws_cloudwatch_log_group" "test" {
   retention_in_days = %d
 }
 `, rName, retention)
+}
+
+func testAccGroupConfig_skipDestroy(rInt int) string {
+	return fmt.Sprintf(`
+resource "aws_cloudwatch_log_group" "test" {
+  name         = "foo-bar-%d"
+  skip_destroy = true
+}
+`, rInt)
 }
 
 const testAccGroupConfig_generatedName = `

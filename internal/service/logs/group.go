@@ -40,6 +40,11 @@ func ResourceGroup() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validLogGroupNamePrefix,
 			},
+			"skip_destroy": {
+				Type:     schema.TypeBool,
+				Default:  false,
+				Optional: true,
+			},
 
 			"retention_in_days": {
 				Type:         schema.TypeInt,
@@ -248,6 +253,11 @@ func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceGroupDelete(d *schema.ResourceData, meta interface{}) error {
+	if v, ok := d.GetOk("skip_destroy"); ok && v.(bool) {
+		log.Printf("[DEBUG] Retaining CloudWatch Log Group: %s", d.Id())
+		return nil
+	}
+
 	conn := meta.(*conns.AWSClient).LogsConn
 	log.Printf("[INFO] Deleting CloudWatch Log Group: %s", d.Id())
 	_, err := conn.DeleteLogGroup(&cloudwatchlogs.DeleteLogGroupInput{
