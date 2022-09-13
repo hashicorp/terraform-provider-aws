@@ -1782,7 +1782,7 @@ resource "aws_cognito_user_pool" "test" {
 }
 
 func testAccUserPoolConfig_smsConfigurationSnsRegion(rName string, snsRegion string) string {
-	return testAccUserPoolSMSConfigurationBaseConfig(rName, snsRegion) + fmt.Sprintf(`
+	return testAccUserPoolSMSConfigurationBaseConfig(rName, "test") + fmt.Sprintf(`
 resource "aws_cognito_user_pool" "test" {
   name = %[1]q
 
