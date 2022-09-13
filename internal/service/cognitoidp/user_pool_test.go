@@ -615,7 +615,7 @@ func TestAccCognitoIDPUserPool_SMS_snsRegion(t *testing.T) {
 		CheckDestroy:             testAccCheckUserPoolDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserPoolConfig_smsConfigurationSnsRegion(rName, acctest.Region()),
+				Config: testAccUserPoolConfig_smsConfigurationSNSRegion(rName, acctest.Region()),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "mfa_configuration", "OFF"),
 					resource.TestCheckResourceAttr(resourceName, "sms_configuration.#", "1"),
@@ -1778,7 +1778,7 @@ resource "aws_cognito_user_pool" "test" {
 `, rName, externalID)
 }
 
-func testAccUserPoolConfig_smsConfigurationSnsRegion(rName string, snsRegion string) string {
+func testAccUserPoolConfig_smsConfigurationSNSRegion(rName string, snsRegion string) string {
 	return testAccUserPoolSMSConfigurationBaseConfig(rName, "test") + fmt.Sprintf(`
 resource "aws_cognito_user_pool" "test" {
   name = %[1]q
