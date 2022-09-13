@@ -3,7 +3,7 @@ subcategory: "SQS (Simple Queue)"
 layout: "aws"
 page_title: "AWS: aws_sqs_queue_redrive_policy"
 description: |-
-Provides a SQS Queue Redrive Policy resource.
+  Provides a SQS Queue Redrive Policy resource.
 ---
 
 # Resource: aws_sqs_queue_redrive_policy
