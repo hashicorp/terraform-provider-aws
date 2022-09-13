@@ -222,7 +222,7 @@ of several sub-resources - these resources are laid out below.
 * `is_ipv6_enabled` (Optional) - Whether the IPv6 is enabled for the distribution.
 
 * `http_version` (Optional) - The maximum HTTP version to support on the
-    distribution. Allowed values are `http1.1` and `http2`. The default is
+    distribution. Allowed values are `http1.1`, `http2`, `http2and3` and `http3`. The default is
     `http2`.
 
 * `logging_config` (Optional) - The [logging
@@ -342,7 +342,7 @@ See the [CloudFront User Guide](https://docs.aws.amazon.com/AmazonCloudFront/lat
 * `cookies` (Required) - The [forwarded values cookies](#cookies-arguments)
     that specifies how CloudFront handles cookies (maximum one).
 
-* `headers` (Optional) - Specifies the Headers, if any, that you want
+* `headers` (Optional) - Headers, if any, that you want
     CloudFront to vary upon for this cache behavior. Specify `*` to include all
     headers.
 
@@ -415,7 +415,7 @@ resource "aws_cloudfront_distribution" "example" {
 
 ##### Cookies Arguments
 
-* `forward` (Required) - Specifies whether you want CloudFront to forward
+* `forward` (Required) - Whether you want CloudFront to forward
     cookies to the origin that is associated with this cache behavior. You can
     specify `all`, `none` or `whitelist`. If `whitelist`, you must include the
     subsequent `whitelisted_names`
@@ -472,6 +472,8 @@ argument should not be specified.
 * `custom_header` (Optional) - One or more sub-resources with `name` and
     `value` parameters that specify header data that will be sent to the origin
     (multiples allowed).
+
+* `origin_access_control_id` (Optional) - The unique identifier of an origin access control for this origin.
 
 * `origin_id` (Required) - A unique identifier for the origin.
 

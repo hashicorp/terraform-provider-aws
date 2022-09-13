@@ -107,11 +107,7 @@ func testAccCheckHostedConnectionExists(name string) resource.TestCheckFunc {
 
 		_, err := tfdirectconnect.FindHostedConnectionByID(conn, rs.Primary.ID)
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 

@@ -1326,11 +1326,7 @@ func testAccCheckServiceExists(name string, service *ecs.Service) resource.TestC
 			return nil
 		})
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 

@@ -102,11 +102,7 @@ func testAccCheckLifecycleHookExists(n string) resource.TestCheckFunc {
 
 		_, err := tfautoscaling.FindLifecycleHook(conn, rs.Primary.Attributes["autoscaling_group_name"], rs.Primary.ID)
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 

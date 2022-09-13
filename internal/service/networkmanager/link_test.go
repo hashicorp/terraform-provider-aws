@@ -199,11 +199,7 @@ func testAccCheckLinkExists(n string) resource.TestCheckFunc {
 
 		_, err := tfnetworkmanager.FindLinkByTwoPartKey(context.Background(), conn, rs.Primary.Attributes["global_network_id"], rs.Primary.ID)
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 

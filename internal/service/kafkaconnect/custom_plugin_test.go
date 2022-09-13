@@ -140,11 +140,7 @@ func testAccCheckCustomPluginExists(name string) resource.TestCheckFunc {
 
 		_, err := tfkafkaconnect.FindCustomPluginByARN(context.Background(), conn, rs.Primary.ID)
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 

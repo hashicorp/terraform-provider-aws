@@ -15,6 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/experimental/nullable"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/intf"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/accessanalyzer"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/account"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/acm"
@@ -123,6 +125,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/macie"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/macie2"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/mediaconvert"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/medialive"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/mediapackage"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/mediastore"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/memorydb"
@@ -195,7 +198,6 @@ import (
 // New returns a new, initialized Terraform Plugin SDK v2-style provider instance.
 // The provider instance is fully configured once the `ConfigureContextFunc` has been called.
 func New(_ context.Context) (*schema.Provider, error) {
-	// The actual provider
 	provider := &schema.Provider{
 		// This schema must match exactly the Terraform Protocol v6 (Terraform Plugin Framework) provider's schema.
 		// Notably the attributes can have no Default values.
@@ -547,9 +549,13 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_ec2_local_gateway":                          ec2.DataSourceLocalGateway(),
 			"aws_ec2_local_gateways":                         ec2.DataSourceLocalGateways(),
 			"aws_ec2_managed_prefix_list":                    ec2.DataSourceManagedPrefixList(),
+			"aws_ec2_managed_prefix_lists":                   ec2.DataSourceManagedPrefixLists(),
+			"aws_ec2_network_insights_analysis":              ec2.DataSourceNetworkInsightsAnalysis(),
+			"aws_ec2_network_insights_path":                  ec2.DataSourceNetworkInsightsPath(),
 			"aws_ec2_serial_console_access":                  ec2.DataSourceSerialConsoleAccess(),
 			"aws_ec2_spot_price":                             ec2.DataSourceSpotPrice(),
 			"aws_ec2_transit_gateway":                        ec2.DataSourceTransitGateway(),
+			"aws_ec2_transit_gateway_attachment":             ec2.DataSourceTransitGatewayAttachment(),
 			"aws_ec2_transit_gateway_connect":                ec2.DataSourceTransitGatewayConnect(),
 			"aws_ec2_transit_gateway_connect_peer":           ec2.DataSourceTransitGatewayConnectPeer(),
 			"aws_ec2_transit_gateway_dx_gateway_attachment":  ec2.DataSourceTransitGatewayDxGatewayAttachment(),
@@ -735,11 +741,13 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_lex_intent":    lexmodels.DataSourceIntent(),
 			"aws_lex_slot_type": lexmodels.DataSourceSlotType(),
 
-			"aws_location_geofence_collection": location.DataSourceGeofenceCollection(),
-			"aws_location_map":                 location.DataSourceMap(),
-			"aws_location_place_index":         location.DataSourcePlaceIndex(),
-			"aws_location_route_calculator":    location.DataSourceRouteCalculator(),
-			"aws_location_tracker":             location.DataSourceTracker(),
+			"aws_location_geofence_collection":  location.DataSourceGeofenceCollection(),
+			"aws_location_map":                  location.DataSourceMap(),
+			"aws_location_place_index":          location.DataSourcePlaceIndex(),
+			"aws_location_route_calculator":     location.DataSourceRouteCalculator(),
+			"aws_location_tracker":              location.DataSourceTracker(),
+			"aws_location_tracker_association":  location.DataSourceTrackerAssociation(),
+			"aws_location_tracker_associations": location.DataSourceTrackerAssociations(),
 
 			// "aws_arn":                     meta.DataSourceARN(), // Now implemented using Terraform Plugin Framework.
 			"aws_billing_service_account": meta.DataSourceBillingServiceAccount(),
@@ -1094,6 +1102,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_cloudfront_function":                       cloudfront.ResourceFunction(),
 			"aws_cloudfront_key_group":                      cloudfront.ResourceKeyGroup(),
 			"aws_cloudfront_monitoring_subscription":        cloudfront.ResourceMonitoringSubscription(),
+			"aws_cloudfront_origin_access_control":          cloudfront.ResourceOriginAccessControl(),
 			"aws_cloudfront_origin_access_identity":         cloudfront.ResourceOriginAccessIdentity(),
 			"aws_cloudfront_origin_request_policy":          cloudfront.ResourceOriginRequestPolicy(),
 			"aws_cloudfront_public_key":                     cloudfront.ResourcePublicKey(),
@@ -1323,6 +1332,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_ec2_local_gateway_route_table_vpc_association":    ec2.ResourceLocalGatewayRouteTableVPCAssociation(),
 			"aws_ec2_managed_prefix_list":                          ec2.ResourceManagedPrefixList(),
 			"aws_ec2_managed_prefix_list_entry":                    ec2.ResourceManagedPrefixListEntry(),
+			"aws_ec2_network_insights_analysis":                    ec2.ResourceNetworkInsightsAnalysis(),
 			"aws_ec2_network_insights_path":                        ec2.ResourceNetworkInsightsPath(),
 			"aws_ec2_serial_console_access":                        ec2.ResourceSerialConsoleAccess(),
 			"aws_ec2_subnet_cidr_reservation":                      ec2.ResourceSubnetCIDRReservation(),
@@ -1340,6 +1350,8 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_ec2_transit_gateway_multicast_group_source":       ec2.ResourceTransitGatewayMulticastGroupSource(),
 			"aws_ec2_transit_gateway_peering_attachment":           ec2.ResourceTransitGatewayPeeringAttachment(),
 			"aws_ec2_transit_gateway_peering_attachment_accepter":  ec2.ResourceTransitGatewayPeeringAttachmentAccepter(),
+			"aws_ec2_transit_gateway_policy_table":                 ec2.ResourceTransitGatewayPolicyTable(),
+			"aws_ec2_transit_gateway_policy_table_association":     ec2.ResourceTransitGatewayPolicyTableAssociation(),
 			"aws_ec2_transit_gateway_prefix_list_reference":        ec2.ResourceTransitGatewayPrefixListReference(),
 			"aws_ec2_transit_gateway_route":                        ec2.ResourceTransitGatewayRoute(),
 			"aws_ec2_transit_gateway_route_table":                  ec2.ResourceTransitGatewayRouteTable(),
@@ -1550,6 +1562,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_grafana_license_association":          grafana.ResourceLicenseAssociation(),
 			"aws_grafana_role_association":             grafana.ResourceRoleAssociation(),
 			"aws_grafana_workspace":                    grafana.ResourceWorkspace(),
+			"aws_grafana_workspace_api_key":            grafana.ResourceWorkspaceAPIKey(),
 			"aws_grafana_workspace_saml_configuration": grafana.ResourceWorkspaceSAMLConfiguration(),
 
 			"aws_guardduty_detector":                   guardduty.ResourceDetector(),
@@ -1620,6 +1633,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_msk_cluster":                  kafka.ResourceCluster(),
 			"aws_msk_configuration":            kafka.ResourceConfiguration(),
 			"aws_msk_scram_secret_association": kafka.ResourceScramSecretAssociation(),
+			"aws_msk_serverless_cluster":       kafka.ResourceServerlessCluster(),
 
 			"aws_mskconnect_connector":            kafkaconnect.ResourceConnector(),
 			"aws_mskconnect_custom_plugin":        kafkaconnect.ResourceCustomPlugin(),
@@ -1711,6 +1725,10 @@ func New(_ context.Context) (*schema.Provider, error) {
 
 			"aws_media_package_channel": mediapackage.ResourceChannel(),
 
+			"aws_medialive_input":                medialive.ResourceInput(),
+			"aws_medialive_input_security_group": medialive.ResourceInputSecurityGroup(),
+			"aws_medialive_multiplex":            medialive.ResourceMultiplex(),
+
 			"aws_media_store_container":        mediastore.ResourceContainer(),
 			"aws_media_store_container_policy": mediastore.ResourceContainerPolicy(),
 
@@ -1741,6 +1759,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_networkfirewall_resource_policy":       networkfirewall.ResourceResourcePolicy(),
 			"aws_networkfirewall_rule_group":            networkfirewall.ResourceRuleGroup(),
 
+			"aws_networkmanager_attachment_accepter":                      networkmanager.ResourceAttachmentAccepter(),
 			"aws_networkmanager_connection":                               networkmanager.ResourceConnection(),
 			"aws_networkmanager_customer_gateway_association":             networkmanager.ResourceCustomerGatewayAssociation(),
 			"aws_networkmanager_device":                                   networkmanager.ResourceDevice(),
@@ -1749,7 +1768,10 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_networkmanager_link_association":                         networkmanager.ResourceLinkAssociation(),
 			"aws_networkmanager_site":                                     networkmanager.ResourceSite(),
 			"aws_networkmanager_transit_gateway_connect_peer_association": networkmanager.ResourceTransitGatewayConnectPeerAssociation(),
+			"aws_networkmanager_transit_gateway_peering":                  networkmanager.ResourceTransitGatewayPeering(),
 			"aws_networkmanager_transit_gateway_registration":             networkmanager.ResourceTransitGatewayRegistration(),
+			"aws_networkmanager_transit_gateway_route_table_attachment":   networkmanager.ResourceTransitGatewayRouteTableAttachment(),
+			"aws_networkmanager_vpc_attachment":                           networkmanager.ResourceVPCAttachment(),
 
 			"aws_opensearch_domain":              opensearch.ResourceDomain(),
 			"aws_opensearch_domain_policy":       opensearch.ResourceDomainPolicy(),
@@ -1846,7 +1868,10 @@ func New(_ context.Context) (*schema.Provider, error) {
 
 			"aws_redshiftdata_statement": redshiftdata.ResourceStatement(),
 
-			"aws_redshiftserverless_namespace": redshiftserverless.ResourceNamespace(),
+			"aws_redshiftserverless_endpoint_access": redshiftserverless.ResourceEndpointAccess(),
+			"aws_redshiftserverless_namespace":       redshiftserverless.ResourceNamespace(),
+			"aws_redshiftserverless_usage_limit":     redshiftserverless.ResourceUsageLimit(),
+			"aws_redshiftserverless_workgroup":       redshiftserverless.ResourceWorkgroup(),
 
 			"aws_resourcegroups_group": resourcegroups.ResourceGroup(),
 
@@ -2044,10 +2069,11 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_ssm_resource_data_sync":        ssm.ResourceResourceDataSync(),
 			"aws_ssm_service_setting":           ssm.ResourceServiceSetting(),
 
-			"aws_ssoadmin_account_assignment":           ssoadmin.ResourceAccountAssignment(),
-			"aws_ssoadmin_managed_policy_attachment":    ssoadmin.ResourceManagedPolicyAttachment(),
-			"aws_ssoadmin_permission_set":               ssoadmin.ResourcePermissionSet(),
-			"aws_ssoadmin_permission_set_inline_policy": ssoadmin.ResourcePermissionSetInlinePolicy(),
+			"aws_ssoadmin_account_assignment":                 ssoadmin.ResourceAccountAssignment(),
+			"aws_ssoadmin_customer_managed_policy_attachment": ssoadmin.ResourceCustomerManagedPolicyAttachment(),
+			"aws_ssoadmin_managed_policy_attachment":          ssoadmin.ResourceManagedPolicyAttachment(),
+			"aws_ssoadmin_permission_set":                     ssoadmin.ResourcePermissionSet(),
+			"aws_ssoadmin_permission_set_inline_policy":       ssoadmin.ResourcePermissionSetInlinePolicy(),
 
 			"aws_storagegateway_cache":                   storagegateway.ResourceCache(),
 			"aws_storagegateway_cached_iscsi_volume":     storagegateway.ResourceCachediSCSIVolume(),
@@ -2126,28 +2152,41 @@ func New(_ context.Context) (*schema.Provider, error) {
 	}
 
 	provider.ConfigureContextFunc = func(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
-		terraformVersion := provider.TerraformVersion
-		if terraformVersion == "" {
-			// Terraform 0.12 introduced this field to the protocol
-			// We can therefore assume that if it's missing it's 0.10 or 0.11
-			terraformVersion = "0.11+compatible"
-		}
-		return providerConfigure(ctx, d, terraformVersion)
+		return configure(ctx, provider, d)
 	}
+
+	providerData := &conns.AWSClient{
+		// TODO: This should be generated.
+
+		// ServiceData is used before configuration to determine the provider's exported resources and data sources.
+		ServiceMap: map[string]intf.ServiceData{
+			"meta": meta.ServiceData,
+		},
+	}
+
+	// Set the provider Meta (instance data) here.
+	// It will be overwritten by the result of the call to ConfigureContextFunc.
+	provider.SetMeta(providerData)
 
 	return provider, nil
 }
 
-func providerConfigure(ctx context.Context, d *schema.ResourceData, terraformVersion string) (interface{}, diag.Diagnostics) {
+// configure ensures that the provider is fully configured.
+func configure(ctx context.Context, provider *schema.Provider, d *schema.ResourceData) (*conns.AWSClient, diag.Diagnostics) {
+	terraformVersion := provider.TerraformVersion
+	if terraformVersion == "" {
+		// Terraform 0.12 introduced this field to the protocol
+		// We can therefore assume that if it's missing it's 0.10 or 0.11
+		terraformVersion = "0.11+compatible"
+	}
+
 	config := conns.Config{
 		AccessKey:                      d.Get("access_key").(string),
-		DefaultTagsConfig:              expandProviderDefaultTags(d.Get("default_tags").([]interface{})),
 		CustomCABundle:                 d.Get("custom_ca_bundle").(string),
 		EC2MetadataServiceEndpoint:     d.Get("ec2_metadata_service_endpoint").(string),
 		EC2MetadataServiceEndpointMode: d.Get("ec2_metadata_service_endpoint_mode").(string),
 		Endpoints:                      make(map[string]string),
 		HTTPProxy:                      d.Get("http_proxy").(string),
-		IgnoreTagsConfig:               expandProviderIgnoreTags(d.Get("ignore_tags").([]interface{})),
 		Insecure:                       d.Get("insecure").(bool),
 		MaxRetries:                     25, // Set default here, not in schema (muxing with v6 provider).
 		Profile:                        d.Get("profile").(string),
@@ -2165,54 +2204,54 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData, terraformVer
 		UseFIPSEndpoint:                d.Get("use_fips_endpoint").(bool),
 	}
 
+	if v, ok := d.GetOk("allowed_account_ids"); ok && v.(*schema.Set).Len() > 0 {
+		config.AllowedAccountIds = flex.ExpandStringValueSet(v.(*schema.Set))
+	}
+
+	if v, ok := d.GetOk("assume_role"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		config.AssumeRole = expandAssumeRole(v.([]interface{})[0].(map[string]interface{}))
+		log.Printf("[INFO] assume_role configuration set: (ARN: %q, SessionID: %q, ExternalID: %q, SourceIdentity: %q)", config.AssumeRole.RoleARN, config.AssumeRole.SessionName, config.AssumeRole.ExternalID, config.AssumeRole.SourceIdentity)
+	}
+
+	if v, ok := d.GetOk("assume_role_with_web_identity"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		config.AssumeRoleWithWebIdentity = expandAssumeRoleWithWebIdentity(v.([]interface{})[0].(map[string]interface{}))
+		log.Printf("[INFO] assume_role_with_web_identity configuration set: (ARN: %q, SessionID: %q)", config.AssumeRoleWithWebIdentity.RoleARN, config.AssumeRoleWithWebIdentity.SessionName)
+	}
+
+	if v, ok := d.GetOk("default_tags"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		config.DefaultTagsConfig = expandDefaultTags(v.([]interface{})[0].(map[string]interface{}))
+	}
+
+	if v, ok := d.GetOk("endpoints"); ok && v.(*schema.Set).Len() > 0 {
+		endpoints, err := expandEndpoints(v.(*schema.Set).List())
+
+		if err != nil {
+			return nil, diag.FromErr(err)
+		}
+
+		config.Endpoints = endpoints
+	}
+
+	if v, ok := d.GetOk("forbidden_account_ids"); ok && v.(*schema.Set).Len() > 0 {
+		config.ForbiddenAccountIds = flex.ExpandStringValueSet(v.(*schema.Set))
+	}
+
+	if v, ok := d.GetOk("ignore_tags"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		config.IgnoreTagsConfig = expandIgnoreTags(v.([]interface{})[0].(map[string]interface{}))
+	}
+
 	if v, ok := d.GetOk("max_retries"); ok {
 		config.MaxRetries = v.(int)
 	}
 
-	if raw := d.Get("shared_config_files").([]interface{}); len(raw) != 0 {
-		l := make([]string, len(raw))
-		for i, v := range raw {
-			l[i] = v.(string)
-		}
-		config.SharedConfigFiles = l
+	if v, ok := d.GetOk("shared_credentials_file"); ok {
+		config.SharedCredentialsFiles = []string{v.(string)}
+	} else if v, ok := d.GetOk("shared_credentials_files"); ok && len(v.([]interface{})) > 0 {
+		config.SharedCredentialsFiles = flex.ExpandStringValueList(v.([]interface{}))
 	}
 
-	if v := d.Get("shared_credentials_file").(string); v != "" {
-		config.SharedCredentialsFiles = []string{v}
-	}
-
-	if raw := d.Get("shared_credentials_files").([]interface{}); len(raw) != 0 {
-		l := make([]string, len(raw))
-		for i, v := range raw {
-			l[i] = v.(string)
-		}
-		config.SharedCredentialsFiles = l
-	}
-
-	if l, ok := d.Get("assume_role").([]interface{}); ok && len(l) > 0 && l[0] != nil {
-		config.AssumeRole = expandAssumeRole(l[0].(map[string]interface{}))
-		log.Printf("[INFO] assume_role configuration set: (ARN: %q, SessionID: %q, ExternalID: %q)", config.AssumeRole.RoleARN, config.AssumeRole.SessionName, config.AssumeRole.ExternalID)
-	}
-
-	if l, ok := d.Get("assume_role_with_web_identity").([]interface{}); ok && len(l) > 0 && l[0] != nil {
-		config.AssumeRoleWithWebIdentity = expandAssumeRoleWithWebIdentity(l[0].(map[string]interface{}))
-		log.Printf("[INFO] assume_role_with_web_identity configuration set: (ARN: %q, SessionID: %q)", config.AssumeRoleWithWebIdentity.RoleARN, config.AssumeRoleWithWebIdentity.SessionName)
-	}
-
-	if err := expandEndpoints(d.Get("endpoints").(*schema.Set).List(), config.Endpoints); err != nil {
-		return nil, diag.FromErr(err)
-	}
-
-	if v, ok := d.GetOk("allowed_account_ids"); ok {
-		for _, accountIDRaw := range v.(*schema.Set).List() {
-			config.AllowedAccountIds = append(config.AllowedAccountIds, accountIDRaw.(string))
-		}
-	}
-
-	if v, ok := d.GetOk("forbidden_account_ids"); ok {
-		for _, accountIDRaw := range v.(*schema.Set).List() {
-			config.ForbiddenAccountIds = append(config.ForbiddenAccountIds, accountIDRaw.(string))
-		}
+	if v, ok := d.GetOk("shared_config_files"); ok && len(v.([]interface{})) > 0 {
+		config.SharedConfigFiles = flex.ExpandStringValueList(v.([]interface{}))
 	}
 
 	if v, null, _ := nullable.Bool(d.Get("skip_metadata_api_check").(string)).Value(); !null {
@@ -2223,7 +2262,24 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData, terraformVer
 		}
 	}
 
-	return config.Client(ctx)
+	providerData, diags := config.ConfigureProvider(ctx, provider.Meta().(*conns.AWSClient))
+
+	if diags.HasError() {
+		return nil, diags
+	}
+
+	// Configure each service.
+	for _, v := range providerData.ServiceMap {
+		if err := v.Configure(ctx, providerData); err != nil {
+			diags = append(diags, diag.FromErr(err)...)
+		}
+	}
+
+	if diags.HasError() {
+		return nil, diags
+	}
+
+	return providerData, diags
 }
 
 func assumeRoleSchema() *schema.Schema {
@@ -2283,6 +2339,12 @@ func assumeRoleSchema() *schema.Schema {
 					Optional:     true,
 					Description:  "An identifier for the assumed role session.",
 					ValidateFunc: validAssumeRoleSessionName,
+				},
+				"source_identity": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Description:  "Source identity specified by the principal assuming the role.",
+					ValidateFunc: validAssumeRoleSourceIdentity,
 				},
 				"tags": {
 					Type:        schema.TypeMap,
@@ -2378,191 +2440,177 @@ func endpointsSchema() *schema.Schema {
 	}
 }
 
-func expandAssumeRole(m map[string]interface{}) *awsbase.AssumeRole {
-	assumeRole := awsbase.AssumeRole{}
-
-	if v, ok := m["duration"].(string); ok && v != "" {
-		duration, _ := time.ParseDuration(v)
-		assumeRole.Duration = duration
+func expandAssumeRole(tfMap map[string]interface{}) *awsbase.AssumeRole {
+	if tfMap == nil {
+		return nil
 	}
 
-	if v, ok := m["duration_seconds"].(int); ok && v != 0 {
+	assumeRole := awsbase.AssumeRole{}
+
+	if v, ok := tfMap["duration"].(string); ok && v != "" {
+		duration, _ := time.ParseDuration(v)
+		assumeRole.Duration = duration
+	} else if v, ok := tfMap["duration_seconds"].(int); ok && v != 0 {
 		assumeRole.Duration = time.Duration(v) * time.Second
 	}
 
-	if v, ok := m["external_id"].(string); ok && v != "" {
+	if v, ok := tfMap["external_id"].(string); ok && v != "" {
 		assumeRole.ExternalID = v
 	}
 
-	if v, ok := m["policy"].(string); ok && v != "" {
+	if v, ok := tfMap["policy"].(string); ok && v != "" {
 		assumeRole.Policy = v
 	}
 
-	if policyARNSet, ok := m["policy_arns"].(*schema.Set); ok && policyARNSet.Len() > 0 {
-		for _, policyARNRaw := range policyARNSet.List() {
-			policyARN, ok := policyARNRaw.(string)
-
-			if !ok {
-				continue
-			}
-
-			assumeRole.PolicyARNs = append(assumeRole.PolicyARNs, policyARN)
-		}
+	if v, ok := tfMap["policy_arns"].(*schema.Set); ok && v.Len() > 0 {
+		assumeRole.PolicyARNs = flex.ExpandStringValueSet(v)
 	}
 
-	if v, ok := m["role_arn"].(string); ok && v != "" {
+	if v, ok := tfMap["role_arn"].(string); ok && v != "" {
 		assumeRole.RoleARN = v
 	}
 
-	if v, ok := m["session_name"].(string); ok && v != "" {
+	if v, ok := tfMap["session_name"].(string); ok && v != "" {
 		assumeRole.SessionName = v
 	}
 
-	if tagMapRaw, ok := m["tags"].(map[string]interface{}); ok && len(tagMapRaw) > 0 {
-		assumeRole.Tags = make(map[string]string)
-
-		for k, vRaw := range tagMapRaw {
-			v, ok := vRaw.(string)
-
-			if !ok {
-				continue
-			}
-
-			assumeRole.Tags[k] = v
-		}
+	if v, ok := tfMap["source_identity"].(string); ok && v != "" {
+		assumeRole.SourceIdentity = v
 	}
 
-	if transitiveTagKeySet, ok := m["transitive_tag_keys"].(*schema.Set); ok && transitiveTagKeySet.Len() > 0 {
-		for _, transitiveTagKeyRaw := range transitiveTagKeySet.List() {
-			transitiveTagKey, ok := transitiveTagKeyRaw.(string)
+	if v, ok := tfMap["tags"].(map[string]interface{}); ok && len(v) > 0 {
+		assumeRole.Tags = flex.ExpandStringValueMap(v)
+	}
 
-			if !ok {
-				continue
-			}
-
-			assumeRole.TransitiveTagKeys = append(assumeRole.TransitiveTagKeys, transitiveTagKey)
-		}
+	if v, ok := tfMap["transitive_tag_keys"].(*schema.Set); ok && v.Len() > 0 {
+		assumeRole.TransitiveTagKeys = flex.ExpandStringValueSet(v)
 	}
 
 	return &assumeRole
 }
 
-func expandAssumeRoleWithWebIdentity(m map[string]interface{}) *awsbase.AssumeRoleWithWebIdentity {
-	assumeRole := awsbase.AssumeRoleWithWebIdentity{}
-
-	if v, ok := m["duration"].(string); ok && v != "" {
-		duration, _ := time.ParseDuration(v)
-		assumeRole.Duration = duration
+func expandAssumeRoleWithWebIdentity(tfMap map[string]interface{}) *awsbase.AssumeRoleWithWebIdentity {
+	if tfMap == nil {
+		return nil
 	}
 
-	if v, ok := m["duration_seconds"].(int); ok && v != 0 {
+	assumeRole := awsbase.AssumeRoleWithWebIdentity{}
+
+	if v, ok := tfMap["duration"].(string); ok && v != "" {
+		duration, _ := time.ParseDuration(v)
+		assumeRole.Duration = duration
+	} else if v, ok := tfMap["duration_seconds"].(int); ok && v != 0 {
 		assumeRole.Duration = time.Duration(v) * time.Second
 	}
 
-	if v, ok := m["policy"].(string); ok && v != "" {
+	if v, ok := tfMap["policy"].(string); ok && v != "" {
 		assumeRole.Policy = v
 	}
 
-	if policyARNSet, ok := m["policy_arns"].(*schema.Set); ok && policyARNSet.Len() > 0 {
-		for _, policyARNRaw := range policyARNSet.List() {
-			policyARN, ok := policyARNRaw.(string)
-
-			if !ok {
-				continue
-			}
-
-			assumeRole.PolicyARNs = append(assumeRole.PolicyARNs, policyARN)
-		}
+	if v, ok := tfMap["policy_arns"].(*schema.Set); ok && v.Len() > 0 {
+		assumeRole.PolicyARNs = flex.ExpandStringValueSet(v)
 	}
 
-	if v, ok := m["role_arn"].(string); ok && v != "" {
+	if v, ok := tfMap["role_arn"].(string); ok && v != "" {
 		assumeRole.RoleARN = v
 	}
 
-	if v, ok := m["session_name"].(string); ok && v != "" {
+	if v, ok := tfMap["session_name"].(string); ok && v != "" {
 		assumeRole.SessionName = v
 	}
 
-	if v, ok := m["web_identity_token"].(string); ok && v != "" {
+	if v, ok := tfMap["web_identity_token"].(string); ok && v != "" {
 		assumeRole.WebIdentityToken = v
 	}
 
-	if v, ok := m["web_identity_token_file"].(string); ok && v != "" {
+	if v, ok := tfMap["web_identity_token_file"].(string); ok && v != "" {
 		assumeRole.WebIdentityTokenFile = v
 	}
 
 	return &assumeRole
 }
 
-func expandProviderDefaultTags(l []interface{}) *tftags.DefaultConfig {
-	if len(l) == 0 || l[0] == nil {
+func expandDefaultTags(tfMap map[string]interface{}) *tftags.DefaultConfig {
+	if tfMap == nil {
 		return nil
 	}
 
 	defaultConfig := &tftags.DefaultConfig{}
-	m := l[0].(map[string]interface{})
 
-	if v, ok := m["tags"].(map[string]interface{}); ok {
+	if v, ok := tfMap["tags"].(map[string]interface{}); ok {
 		defaultConfig.Tags = tftags.New(v)
 	}
+
 	return defaultConfig
 }
 
-func expandProviderIgnoreTags(l []interface{}) *tftags.IgnoreConfig {
-	if len(l) == 0 || l[0] == nil {
+func expandIgnoreTags(tfMap map[string]interface{}) *tftags.IgnoreConfig {
+	if tfMap == nil {
 		return nil
 	}
 
 	ignoreConfig := &tftags.IgnoreConfig{}
-	m := l[0].(map[string]interface{})
 
-	if v, ok := m["keys"].(*schema.Set); ok {
+	if v, ok := tfMap["keys"].(*schema.Set); ok {
 		ignoreConfig.Keys = tftags.New(v.List())
 	}
 
-	if v, ok := m["key_prefixes"].(*schema.Set); ok {
+	if v, ok := tfMap["key_prefixes"].(*schema.Set); ok {
 		ignoreConfig.KeyPrefixes = tftags.New(v.List())
 	}
 
 	return ignoreConfig
 }
 
-func expandEndpoints(endpointsSetList []interface{}, out map[string]string) error {
-	for _, endpointsSetI := range endpointsSetList {
-		endpoints := endpointsSetI.(map[string]interface{})
-
-		for _, hclKey := range names.Aliases() {
-			var serviceKey string
-			var err error
-			if serviceKey, err = names.ProviderPackageForAlias(hclKey); err != nil {
-				return fmt.Errorf("failed to assign endpoint (%s): %w", hclKey, err)
-			}
-
-			if out[serviceKey] == "" && endpoints[hclKey].(string) != "" {
-				out[serviceKey] = endpoints[hclKey].(string)
-			}
-		}
+func expandEndpoints(tfList []interface{}) (map[string]string, error) {
+	if len(tfList) == 0 {
+		return nil, nil
 	}
 
-	for _, service := range names.ProviderPackages() {
-		if out[service] != "" {
+	endpoints := make(map[string]string)
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
+
+		if !ok {
 			continue
 		}
 
-		envvar := names.EnvVar(service)
-		if envvar != "" {
-			if v := os.Getenv(envvar); v != "" {
-				out[service] = v
-				continue
+		for _, alias := range names.Aliases() {
+			pkg, err := names.ProviderPackageForAlias(alias)
+
+			if err != nil {
+				return nil, fmt.Errorf("failed to assign endpoint (%s): %w", alias, err)
 			}
-		}
-		if envvarDeprecated := names.DeprecatedEnvVar(service); envvarDeprecated != "" {
-			if v := os.Getenv(envvarDeprecated); v != "" {
-				log.Printf("[WARN] The environment variable %q is deprecated. Use %q instead.", envvarDeprecated, envvar)
-				out[service] = v
+
+			if endpoints[pkg] == "" {
+				if v := tfMap[alias].(string); v != "" {
+					endpoints[pkg] = v
+				}
 			}
 		}
 	}
 
-	return nil
+	for _, pkg := range names.ProviderPackages() {
+		if endpoints[pkg] != "" {
+			continue
+		}
+
+		envVar := names.EnvVar(pkg)
+		if envVar != "" {
+			if v := os.Getenv(envVar); v != "" {
+				endpoints[pkg] = v
+				continue
+			}
+		}
+
+		if deprecatedEnvVar := names.DeprecatedEnvVar(pkg); deprecatedEnvVar != "" {
+			if v := os.Getenv(deprecatedEnvVar); v != "" {
+				log.Printf("[WARN] The environment variable %q is deprecated. Use %q instead.", deprecatedEnvVar, envVar)
+				endpoints[pkg] = v
+			}
+		}
+	}
+
+	return endpoints, nil
 }

@@ -485,11 +485,8 @@ func testAccCheckContainerServiceDeploymentVersionExists(resourceName string) re
 		}
 
 		_, err = tflightsail.FindContainerServiceDeploymentByVersion(context.Background(), conn, serviceName, version)
-		if err != nil {
-			return err
-		}
 
-		return nil
+		return err
 	}
 }
 

@@ -109,11 +109,7 @@ func testAccVPNConnectionRouteExists(n string) resource.TestCheckFunc {
 
 		_, err = tfec2.FindVPNConnectionRouteByVPNConnectionIDAndCIDR(conn, vpnConnectionID, cidrBlock)
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 

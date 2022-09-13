@@ -23,6 +23,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func ResourceSecurityGroup() *schema.Resource {
@@ -196,7 +197,6 @@ func resourceSecurityGroupCreate(d *schema.ResourceData, meta interface{}) error
 		input.TagSpecifications = tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeSecurityGroup)
 	}
 
-	log.Printf("[DEBUG] Creating Security Group: %s", input)
 	output, err := conn.CreateSecurityGroup(input)
 
 	if err != nil {
@@ -214,6 +214,7 @@ func resourceSecurityGroupCreate(d *schema.ResourceData, meta interface{}) error
 
 	// AWS defaults all Security Groups to have an ALLOW ALL egress rule.
 	// Here we revoke that rule, so users don't unknowingly have/use it.
+	// This will only be false for Security Groups in EC2-Classic
 	if aws.StringValue(group.VpcId) != "" {
 		input := &ec2.RevokeSecurityGroupEgressInput{
 			GroupId: aws.String(d.Id()),
@@ -342,6 +343,7 @@ func resourceSecurityGroupUpdate(d *schema.ResourceData, meta interface{}) error
 		return fmt.Errorf("updating Security Group (%s) %s rules: %w", d.Id(), securityGroupRuleTypeIngress, err)
 	}
 
+	// This will only be false for Security Groups in EC2-Classic
 	if d.Get("vpc_id") != nil {
 		err = updateSecurityGroupRules(conn, d, securityGroupRuleTypeEgress, group)
 
@@ -370,20 +372,16 @@ func resourceSecurityGroupDelete(d *schema.ResourceData, meta interface{}) error
 
 	// conditionally revoke rules first before attempting to delete the group
 	if v := d.Get("revoke_rules_on_delete").(bool); v {
-		err := forceRevokeSecurityGroupRules(conn, d.Id())
-
-		if tfawserr.ErrCodeEquals(err, errCodeInvalidGroupNotFound) {
-			return nil
-		}
+		err := forceRevokeSecurityGroupRules(conn, d.Id(), false)
 
 		if err != nil {
-			return err
+			return create.Error(names.EC2, create.ErrActionDeleting, "Security Group", d.Id(), err)
 		}
 	}
 
 	log.Printf("[DEBUG] Deleting Security Group: %s", d.Id())
 	_, err := tfresource.RetryWhenAWSErrCodeEquals(
-		d.Timeout(schema.TimeoutDelete),
+		2*time.Minute, // short initial attempt followed by full length attempt
 		func() (interface{}, error) {
 			return conn.DeleteSecurityGroup(&ec2.DeleteSecurityGroupInput{
 				GroupId: aws.String(d.Id()),
@@ -391,6 +389,26 @@ func resourceSecurityGroupDelete(d *schema.ResourceData, meta interface{}) error
 		},
 		errCodeDependencyViolation, errCodeInvalidGroupInUse,
 	)
+
+	if tfawserr.ErrCodeEquals(err, errCodeDependencyViolation) {
+		if v := d.Get("revoke_rules_on_delete").(bool); v {
+			err := forceRevokeSecurityGroupRules(conn, d.Id(), true)
+
+			if err != nil {
+				return create.Error(names.EC2, create.ErrActionDeleting, "Security Group", d.Id(), err)
+			}
+		}
+
+		_, err = tfresource.RetryWhenAWSErrCodeEquals(
+			d.Timeout(schema.TimeoutDelete),
+			func() (interface{}, error) {
+				return conn.DeleteSecurityGroup(&ec2.DeleteSecurityGroupInput{
+					GroupId: aws.String(d.Id()),
+				})
+			},
+			errCodeDependencyViolation, errCodeInvalidGroupInUse,
+		)
+	}
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidGroupNotFound) {
 		return nil
@@ -411,42 +429,157 @@ func resourceSecurityGroupDelete(d *schema.ResourceData, meta interface{}) error
 	return nil
 }
 
-// forceRevokeSecurityGroupRules revokes all of the specified Security Group's ingress & egress rules.
-func forceRevokeSecurityGroupRules(conn *ec2.EC2, id string) error {
-	group, err := FindSecurityGroupByID(conn, id)
+// forceRevokeSecurityGroupRules revokes all of the security group's ingress & egress rules
+// AND rules in other security groups that depend on this security group. Trying to delete
+// this security group with rules that originate in other groups but point here, will cause
+// a DepedencyViolation error. searchAll = true means to search every security group
+// looking for a rule depending on this security group. Otherwise, it will only look at
+// groups that this group knows about.
+func forceRevokeSecurityGroupRules(conn *ec2.EC2, id string, searchAll bool) error {
+	conns.GlobalMutexKV.Lock(id)
+	defer conns.GlobalMutexKV.Unlock(id)
 
+	rules, err := rulesInSGsTouchingThis(conn, id, searchAll)
 	if err != nil {
-		return fmt.Errorf("reading Security Group (%s): %w", id, err)
+		return fmt.Errorf("describing security group rules: %s", err)
 	}
 
-	if len(group.IpPermissions) > 0 {
-		input := &ec2.RevokeSecurityGroupIngressInput{
-			IpPermissions: group.IpPermissions,
-		}
+	for _, rule := range rules {
+		var err error
 
-		if aws.StringValue(group.VpcId) == "" {
-			input.GroupName = group.GroupName
+		if rule.IsEgress == nil || !aws.BoolValue(rule.IsEgress) {
+			input := &ec2.RevokeSecurityGroupIngressInput{
+				SecurityGroupRuleIds: []*string{rule.SecurityGroupRuleId},
+			}
+
+			if rule.GroupId != nil {
+				input.GroupId = rule.GroupId
+			} else {
+				// If this rule isn't "owned" by this group, this will be wrong.
+				// However, ec2.SecurityGroupRule doesn't include name so can't
+				// be used. If it affects anything, this would affect default
+				// VPCs.
+				sg, err := FindSecurityGroupByID(conn, id)
+				if err != nil {
+					return fmt.Errorf("reading Security Group (%s): %w", id, err)
+				}
+
+				input.GroupName = sg.GroupName
+			}
+
+			_, err = conn.RevokeSecurityGroupIngress(input)
 		} else {
-			input.GroupId = group.GroupId
+			input := &ec2.RevokeSecurityGroupEgressInput{
+				GroupId:              rule.GroupId,
+				SecurityGroupRuleIds: []*string{rule.SecurityGroupRuleId},
+			}
+
+			_, err = conn.RevokeSecurityGroupEgress(input)
 		}
 
-		if _, err := conn.RevokeSecurityGroupIngress(input); err != nil {
-			return fmt.Errorf("revoking Security Group (%s) ingress rules: %w", id, err)
-		}
-	}
-
-	if len(group.IpPermissionsEgress) > 0 {
-		input := &ec2.RevokeSecurityGroupEgressInput{
-			GroupId:       group.GroupId,
-			IpPermissions: group.IpPermissionsEgress,
+		if tfawserr.ErrCodeEquals(err, errCodeInvalidSecurityGroupRuleIdNotFound) {
+			continue
 		}
 
-		if _, err := conn.RevokeSecurityGroupEgress(input); err != nil {
-			return fmt.Errorf("revoking Security Group (%s) egress rules: %w", id, err)
+		if tfawserr.ErrCodeEquals(err, errCodeInvalidGroupNotFound) {
+			continue
+		}
+
+		if err != nil {
+			return fmt.Errorf("revoking Security Group (%s) Rule (%s): %w", id, aws.StringValue(rule.SecurityGroupRuleId), err)
 		}
 	}
 
 	return nil
+}
+
+// rulesInSGsTouchingThis finds all rules related to this group even if they live in
+// other groups. If searchAll = true, this could take a while as it looks through every
+// security group accessible from the account. This should only be used for troublesome
+// DependencyViolations.
+func rulesInSGsTouchingThis(conn *ec2.EC2, id string, searchAll bool) ([]*ec2.SecurityGroupRule, error) {
+	var input *ec2.DescribeSecurityGroupRulesInput
+
+	if searchAll {
+		input = &ec2.DescribeSecurityGroupRulesInput{}
+	} else {
+		sgs, err := relatedSGs(conn, id)
+		if err != nil {
+			return nil, fmt.Errorf("describing security group rules: %s", err)
+		}
+
+		input = &ec2.DescribeSecurityGroupRulesInput{
+			Filters: []*ec2.Filter{
+				{
+					Name:   aws.String("group-id"),
+					Values: aws.StringSlice(sgs),
+				},
+			},
+		}
+	}
+
+	rules := []*ec2.SecurityGroupRule{}
+
+	err := conn.DescribeSecurityGroupRulesPages(input,
+		func(page *ec2.DescribeSecurityGroupRulesOutput, lastPage bool) bool {
+			for _, rule := range page.SecurityGroupRules {
+				if rule == nil || rule.GroupId == nil {
+					continue
+				}
+
+				if aws.StringValue(rule.GroupId) == id {
+					rules = append(rules, rule)
+					continue
+				}
+
+				if rule.ReferencedGroupInfo != nil && rule.ReferencedGroupInfo.GroupId != nil && aws.StringValue(rule.ReferencedGroupInfo.GroupId) == id {
+					rules = append(rules, rule)
+					continue
+				}
+			}
+			return lastPage
+		})
+
+	if err != nil {
+		return nil, fmt.Errorf("describing security group rules: %w", err)
+	}
+
+	return rules, nil
+}
+
+// relatedSGs returns security group IDs of any other security group that is related
+// to this one through a rule that this group knows about. This group can still have
+// dependent rules beyond those in these groups. However, the majority of the time,
+// revoking related rules should allow the group to be deleted.
+func relatedSGs(conn *ec2.EC2, id string) ([]string, error) {
+	relatedSGs := []string{id}
+
+	sg, err := FindSecurityGroupByID(conn, id)
+	if err != nil {
+		return nil, fmt.Errorf("reading Security Group (%s): %w", id, err)
+	}
+
+	if len(sg.IpPermissions) > 0 {
+		for _, v := range sg.IpPermissions {
+			for _, v := range v.UserIdGroupPairs {
+				if v.GroupId != nil && aws.StringValue(v.GroupId) != id {
+					relatedSGs = append(relatedSGs, aws.StringValue(v.GroupId))
+				}
+			}
+		}
+	}
+
+	if len(sg.IpPermissionsEgress) > 0 {
+		for _, v := range sg.IpPermissionsEgress {
+			for _, v := range v.UserIdGroupPairs {
+				if v.GroupId != nil && aws.StringValue(v.GroupId) != id {
+					relatedSGs = append(relatedSGs, aws.StringValue(v.GroupId))
+				}
+			}
+		}
+	}
+
+	return relatedSGs, nil
 }
 
 func SecurityGroupRuleHash(v interface{}) int {
@@ -622,13 +755,13 @@ func updateSecurityGroupRules(conn *ec2.EC2, d *schema.ResourceData, ruleType st
 	del, err := ExpandIPPerms(group, SecurityGroupCollapseRules(ruleType, os.Difference(ns).List()))
 
 	if err != nil {
-		return err
+		return fmt.Errorf("updating rules: %w", err)
 	}
 
 	add, err := ExpandIPPerms(group, SecurityGroupCollapseRules(ruleType, ns.Difference(os).List()))
 
 	if err != nil {
-		return err
+		return fmt.Errorf("updating rules: %w", err)
 	}
 
 	// TODO: We need to handle partial state better in the in-between

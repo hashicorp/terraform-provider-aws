@@ -1,6 +1,7 @@
 package rds
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"regexp"
@@ -316,6 +317,12 @@ func ResourceInstance() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
+			"network_type": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.StringInSlice(NetworkType_Values(), false),
+			},
 			"option_group_name": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -453,9 +460,10 @@ func ResourceInstance() *schema.Resource {
 				},
 			},
 			"security_group_names": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
+				Type:       schema.TypeSet,
+				Optional:   true,
+				Elem:       &schema.Schema{Type: schema.TypeString},
+				Deprecated: `With the retirement of EC2-Classic the security_group_names attribute has been deprecated and will be removed in a future version.`,
 			},
 			"skip_final_snapshot": {
 				Type:     schema.TypeBool,
@@ -514,6 +522,10 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).RDSConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+
+	if v, ok := d.GetOk("security_group_names"); ok && v.(*schema.Set).Len() > 0 {
+		return errors.New(`with the retirement of EC2-Classic no new RDS DB Instances can be created referencing RDS DB Security Groups`)
+	}
 
 	// Some API calls (e.g. CreateDBInstanceReadReplica and
 	// RestoreDBInstanceFromDBSnapshot do not support all parameters to
@@ -590,6 +602,10 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 
 		if v, ok := d.GetOk("multi_az"); ok {
 			input.MultiAZ = aws.Bool(v.(bool))
+		}
+
+		if v, ok := d.GetOk("network_type"); ok {
+			input.NetworkType = aws.String(v.(string))
 		}
 
 		if v, ok := d.GetOk("option_group_name"); ok {
@@ -693,13 +709,6 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 			modifyDbInstanceInput.MasterUserPassword = aws.String(v.(string))
 			requiresModifyDbInstance = true
 		}
-
-		if v := d.Get("security_group_names").(*schema.Set); v.Len() > 0 {
-			if current, desired := flattenDBSecurityGroups(output.DBInstance.DBSecurityGroups), v; !desired.Equal(current) {
-				modifyDbInstanceInput.DBSecurityGroups = flex.ExpandStringSet(v)
-				requiresModifyDbInstance = true
-			}
-		}
 	} else if v, ok := d.GetOk("s3_import"); ok {
 		dbName := d.Get("db_name").(string)
 		if dbName == "" {
@@ -794,6 +803,10 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 			input.MultiAZ = aws.Bool(v.(bool))
 		}
 
+		if v, ok := d.GetOk("network_type"); ok {
+			input.NetworkType = aws.String(v.(string))
+		}
+
 		if v, ok := d.GetOk("option_group_name"); ok {
 			input.OptionGroupName = aws.String(v.(string))
 		}
@@ -816,10 +829,6 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 
 		if v, ok := d.GetOk("port"); ok {
 			input.Port = aws.Int64(int64(v.(int)))
-		}
-
-		if v, ok := d.GetOk("security_group_names"); ok && v.(*schema.Set).Len() > 0 {
-			input.DBSecurityGroups = flex.ExpandStringSet(v.(*schema.Set))
 		}
 
 		if v, ok := d.GetOk("storage_type"); ok {
@@ -992,6 +1001,10 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 			}
 		}
 
+		if v, ok := d.GetOk("network_type"); ok {
+			input.NetworkType = aws.String(v.(string))
+		}
+
 		if v, ok := d.GetOk("option_group_name"); ok {
 			input.OptionGroupName = aws.String(v.(string))
 		}
@@ -1020,11 +1033,6 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 
 		if v, ok := d.GetOk("port"); ok {
 			input.Port = aws.Int64(int64(v.(int)))
-		}
-
-		if v := d.Get("security_group_names").(*schema.Set); v.Len() > 0 {
-			modifyDbInstanceInput.DBSecurityGroups = flex.ExpandStringSet(v)
-			requiresModifyDbInstance = true
 		}
 
 		if v, ok := d.GetOk("storage_type"); ok {
@@ -1299,6 +1307,10 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 			input.NcharCharacterSetName = aws.String(v.(string))
 		}
 
+		if v, ok := d.GetOk("network_type"); ok {
+			input.NetworkType = aws.String(v.(string))
+		}
+
 		if v, ok := d.GetOk("option_group_name"); ok {
 			input.OptionGroupName = aws.String(v.(string))
 		}
@@ -1458,6 +1470,7 @@ func resourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("multi_az", v.MultiAZ)
 	d.Set("name", v.DBName)
 	d.Set("nchar_character_set_name", v.NcharCharacterSetName)
+	d.Set("network_type", v.NetworkType)
 	if len(v.OptionGroupMemberships) > 0 && v.OptionGroupMemberships[0] != nil {
 		d.Set("option_group_name", v.OptionGroupMemberships[0].OptionGroupName)
 	}
@@ -1647,6 +1660,10 @@ func resourceInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 			input.MultiAZ = aws.Bool(d.Get("multi_az").(bool))
 		}
 
+		if d.HasChange("network_type") {
+			input.NetworkType = aws.String(d.Get("network_type").(string))
+		}
+
 		if d.HasChange("option_group_name") {
 			input.OptionGroupName = aws.String(d.Get("option_group_name").(string))
 		}
@@ -1787,8 +1804,45 @@ func resourceInstanceDelete(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	log.Printf("[DEBUG] Deleting DB Instance: %s", d.Id())
+	log.Printf("[DEBUG] Deleting RDS DB Instance: %s", d.Id())
 	_, err := conn.DeleteDBInstance(input)
+
+	if tfawserr.ErrMessageContains(err, "InvalidParameterCombination", "disable deletion pro") {
+		if v, ok := d.GetOk("deletion_protection"); (!ok || !v.(bool)) && d.Get("apply_immediately").(bool) {
+			_, ierr := tfresource.RetryWhen(d.Timeout(schema.TimeoutUpdate),
+				func() (interface{}, error) {
+					return conn.ModifyDBInstance(&rds.ModifyDBInstanceInput{
+						ApplyImmediately:     aws.Bool(true),
+						DBInstanceIdentifier: aws.String(d.Id()),
+						DeletionProtection:   aws.Bool(false),
+					})
+				},
+				func(err error) (bool, error) {
+					// Retry for IAM eventual consistency.
+					if tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "IAM role ARN value is invalid or") {
+						return true, err
+					}
+
+					// "InvalidDBInstanceState: RDS is configuring Enhanced Monitoring or Performance Insights for this DB instance. Try your request later."
+					if tfawserr.ErrMessageContains(err, rds.ErrCodeInvalidDBInstanceStateFault, "your request later") {
+						return true, err
+					}
+
+					return false, err
+				},
+			)
+
+			if ierr != nil {
+				return fmt.Errorf("updating RDS DB Instance (%s): %w", d.Id(), err)
+			}
+
+			if _, ierr := waitDBInstanceUpdated(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); ierr != nil {
+				return fmt.Errorf("waiting for RDS DB Instance (%s) update: %w", d.Id(), ierr)
+			}
+
+			_, err = conn.DeleteDBInstance(input)
+		}
+	}
 
 	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBInstanceNotFoundFault) {
 		return nil
@@ -1818,14 +1872,4 @@ func dbSetResourceDataEngineVersionFromInstance(d *schema.ResourceData, c *rds.D
 	oldVersion := d.Get("engine_version").(string)
 	newVersion := aws.StringValue(c.EngineVersion)
 	compareActualEngineVersion(d, oldVersion, newVersion)
-}
-
-func flattenDBSecurityGroups(groups []*rds.DBSecurityGroupMembership) *schema.Set {
-	result := &schema.Set{
-		F: schema.HashString,
-	}
-	for _, v := range groups {
-		result.Add(aws.StringValue(v.DBSecurityGroupName))
-	}
-	return result
 }

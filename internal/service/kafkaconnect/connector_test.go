@@ -237,11 +237,7 @@ func testAccCheckConnectorExists(n string) resource.TestCheckFunc {
 
 		_, err := tfkafkaconnect.FindConnectorByARN(context.Background(), conn, rs.Primary.ID)
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 

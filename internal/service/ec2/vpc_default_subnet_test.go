@@ -339,13 +339,7 @@ func testAccCheckDefaultSubnetDestroyExists(s *terraform.State) error {
 		}
 	}
 
-	err := testAccCreateMissingDefaultSubnets()
-
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return testAccCreateMissingDefaultSubnets()
 }
 
 // testAccCheckDefaultSubnetDestroyNotFound runs after all resources are destroyed.
@@ -372,13 +366,7 @@ func testAccCheckDefaultSubnetDestroyNotFound(s *terraform.State) error {
 		return fmt.Errorf("EC2 Default Subnet %s still exists", rs.Primary.ID)
 	}
 
-	err := testAccCreateMissingDefaultSubnets()
-
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return testAccCreateMissingDefaultSubnets()
 }
 
 func testAccCreateMissingDefaultSubnets() error {

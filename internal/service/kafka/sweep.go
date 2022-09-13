@@ -39,18 +39,18 @@ func sweepClusters(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 	conn := client.(*conns.AWSClient).KafkaConn
-	input := &kafka.ListClustersInput{}
+	input := &kafka.ListClustersV2Input{}
 	sweepResources := make([]*sweep.SweepResource, 0)
 
-	err = conn.ListClustersPages(input, func(page *kafka.ListClustersOutput, lastPage bool) bool {
+	err = conn.ListClustersV2Pages(input, func(page *kafka.ListClustersV2Output, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
 
-		for _, cluster := range page.ClusterInfoList {
+		for _, v := range page.ClusterInfoList {
 			r := ResourceCluster()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(cluster.ClusterArn))
+			d.SetId(aws.StringValue(v.ClusterArn))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}

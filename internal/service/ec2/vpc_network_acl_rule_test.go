@@ -390,11 +390,7 @@ func testAccCheckNetworkACLRuleExists(n string) resource.TestCheckFunc {
 
 		_, err = tfec2.FindNetworkACLEntryByThreePartKey(conn, naclID, egress, ruleNumber)
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 

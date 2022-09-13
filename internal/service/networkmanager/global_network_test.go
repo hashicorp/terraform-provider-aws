@@ -177,11 +177,7 @@ func testAccCheckGlobalNetworkExists(n string) resource.TestCheckFunc {
 
 		_, err := tfnetworkmanager.FindGlobalNetworkByID(context.Background(), conn, rs.Primary.ID)
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 

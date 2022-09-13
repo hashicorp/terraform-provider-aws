@@ -84,7 +84,7 @@ resource/aws_eip: Add network_border_group argument
 
 #### Deprecations
 
-A breaking-change entry should use the `release-note:note` header and have a prefix indicating the resource or data source it corresponds to, a colon, then followed by a brief summary. Use a `provider` prefix for provider level changes.
+A deprecation entry should use the `release-note:note` header and have a prefix indicating the resource or data source it corresponds to, a colon, then followed by a brief summary. Use a `provider` prefix for provider level changes.
 
 ``````markdown
 ```release-note:note

@@ -85,7 +85,8 @@ func SharedRegionalSweepClientWithContext(ctx context.Context, region string) (i
 	}
 
 	// configures a default client for the region, using the above env vars
-	client, diags := conf.Client(ctx)
+	client, diags := conf.ConfigureProvider(ctx, &conns.AWSClient{})
+
 	if diags.HasError() {
 		return nil, fmt.Errorf("error getting AWS client: %#v", diags)
 	}

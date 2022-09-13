@@ -235,11 +235,7 @@ func testAccCheckCertificateValidationExists(n string) resource.TestCheckFunc {
 
 		_, err := tfacm.FindCertificateValidationByARN(conn, rs.Primary.Attributes["certificate_arn"])
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 
