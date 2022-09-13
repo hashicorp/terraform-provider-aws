@@ -466,6 +466,7 @@ func ResourceUserPool() *schema.Resource {
 						"sns_region": {
 							Type:         schema.TypeString,
 							Optional:     true,
+							Computed:     true,
 							ValidateFunc: verify.ValidRegionName,
 						},
 					},
