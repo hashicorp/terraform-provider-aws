@@ -1210,7 +1210,7 @@ func sweepThings(region string) error {
   }
 
   conn := client.(*conns.AWSClient).ExampleConn
-  sweepResources := make([]*sweep.SweepResource, 0)
+  sweepResources := make([]sweep.Sweepable, 0)
   var errs *multierror.Error
 
   input := &example.ListThingsInput{}
@@ -1276,7 +1276,7 @@ func sweepThings(region string) error {
   }
 
   conn := client.(*conns.AWSClient).ExampleConn
-  sweepResources := make([]*sweep.SweepResource, 0)
+  sweepResources := make([]sweep.Sweepable, 0)
   var errs *multierror.Error
 
   input := &example.ListThingsInput{}

@@ -60,7 +60,7 @@ func sweepFramework(region string) error {
 	conn := client.(*conns.AWSClient).BackupConn
 	input := &backup.ListFrameworksInput{}
 	var sweeperErrs *multierror.Error
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = conn.ListFrameworksPages(input, func(page *backup.ListFrameworksOutput, lastPage bool) bool {
 		if page == nil {
@@ -102,7 +102,7 @@ func sweepReportPlan(region string) error {
 	conn := client.(*conns.AWSClient).BackupConn
 	input := &backup.ListReportPlansInput{}
 	var sweeperErrs *multierror.Error
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = conn.ListReportPlansPages(input, func(page *backup.ListReportPlansOutput, lastPage bool) bool {
 		if page == nil {
@@ -144,7 +144,7 @@ func sweepVaultLockConfiguration(region string) error {
 	}
 
 	conn := client.(*conns.AWSClient).BackupConn
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
 	input := &backup.ListBackupVaultsInput{}
@@ -193,7 +193,7 @@ func sweepVaultNotifications(region string) error {
 	}
 
 	conn := client.(*conns.AWSClient).BackupConn
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
 	input := &backup.ListBackupVaultsInput{}
@@ -242,7 +242,7 @@ func sweepVaultPolicies(region string) error {
 	conn := client.(*conns.AWSClient).BackupConn
 	input := &backup.ListBackupVaultsInput{}
 	var sweeperErrs *multierror.Error
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = conn.ListBackupVaultsPages(input, func(page *backup.ListBackupVaultsOutput, lastPage bool) bool {
 		if page == nil {
@@ -285,7 +285,7 @@ func sweepVaults(region string) error {
 	conn := client.(*conns.AWSClient).BackupConn
 	input := &backup.ListBackupVaultsInput{}
 	var sweeperErrs *multierror.Error
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = conn.ListBackupVaultsPages(input, func(page *backup.ListBackupVaultsOutput, lastPage bool) bool {
 		if page == nil {

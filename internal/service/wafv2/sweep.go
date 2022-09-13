@@ -213,7 +213,7 @@ func sweepWebACLs(region string) error {
 	}
 
 	conn := client.(*conns.AWSClient).WAFV2Conn
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
 	input := &wafv2.ListWebACLsInput{

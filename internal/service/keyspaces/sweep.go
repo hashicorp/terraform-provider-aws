@@ -29,7 +29,7 @@ func sweepKeyspaces(region string) error { // nosemgrep:ci.keyspaces-in-func-nam
 	}
 	conn := client.(*conns.AWSClient).KeyspacesConn
 	input := &keyspaces.ListKeyspacesInput{}
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = conn.ListKeyspacesPages(input, func(page *keyspaces.ListKeyspacesOutput, lastPage bool) bool {
 		if page == nil {
