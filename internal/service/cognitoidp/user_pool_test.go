@@ -1720,7 +1720,6 @@ resource "aws_cognito_user_pool" "test" {
   sms_configuration {
     external_id    = "test"
     sns_caller_arn = aws_iam_role.test.arn
-    sns_region     = "us-east-1"
   }
 }
 `, rName)
@@ -1735,7 +1734,6 @@ resource "aws_cognito_user_pool" "test" {
   sms_configuration {
     external_id    = "test"
     sns_caller_arn = aws_iam_role.test.arn
-    sns_region     = "us-east-1"
   }
 
   software_token_mfa_configuration {
@@ -1775,7 +1773,6 @@ resource "aws_cognito_user_pool" "test" {
   sms_configuration {
     external_id    = %[2]q
     sns_caller_arn = aws_iam_role.test.arn
-    sns_region     = "us-east-1"
   }
 }
 `, rName, externalID)
@@ -1803,7 +1800,6 @@ resource "aws_cognito_user_pool" "test" {
   sms_configuration {
     external_id    = "test"
     sns_caller_arn = aws_iam_role.test.arn
-    sns_region     = "us-east-1"
   }
 }
 `, rName)
@@ -2382,7 +2378,6 @@ resource "aws_cognito_user_pool" "test" {
   sms_configuration {
     external_id    = data.aws_caller_identity.current.account_id
     sns_caller_arn = aws_iam_role.test.arn
-    sns_region     = "us-east-1"
   }
 }
 `, name, mfaconfig, smsAuthMsg)

@@ -148,7 +148,6 @@ resource "aws_cognito_user_pool" "pool" {
   sms_configuration {
     external_id    = "12345"
     sns_caller_arn = aws_iam_role.cidp.arn
-    sns_region     = "us-east-1"
   }
 
   tags = {
