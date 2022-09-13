@@ -149,7 +149,8 @@ func resourceParameterCreate(d *schema.ResourceData, meta interface{}) error {
 	paramInput := &ssm.PutParameterInput{
 		Name:           aws.String(name),
 		Type:           aws.String(d.Get("type").(string)),
-		Value:          aws.String(value),
+		Value:          aws.String(d.Get("value").(string)),
+		Overwrite:      aws.Bool(ShouldUpdateParameter(d)),
 		AllowedPattern: aws.String(d.Get("allowed_pattern").(string)),
 	}
 
@@ -169,20 +170,34 @@ func resourceParameterCreate(d *schema.ResourceData, meta interface{}) error {
 		paramInput.SetKeyId(keyID.(string))
 	}
 
-	if len(tags) > 0 {
+	// AWS SSM Service only supports PutParameter requests with Tags
+	// iff Overwrite is not provided or is false; in this resource's case,
+	// the Overwrite value is always set in the paramInput so we check for the value
+	if len(tags) > 0 && !aws.BoolValue(paramInput.Overwrite) {
 		paramInput.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	_, err := conn.PutParameter(paramInput)
 
 	if tfawserr.ErrMessageContains(err, "ValidationException", "Tier is not supported") {
-		log.Printf("[WARN] Creating SSM Parameter (%s): tier %q not supported, using default", name, d.Get("tier").(string))
+		log.Printf("[WARN] Updating SSM Parameter (%s): tier %q not supported, using default", d.Get("name").(string), d.Get("tier").(string))
 		paramInput.Tier = nil
 		_, err = conn.PutParameter(paramInput)
 	}
 
 	if err != nil {
-		return fmt.Errorf("error creating SSM Parameter (%s): %w", name, err)
+		return fmt.Errorf("error creating SSM parameter (%s): %w", name, err)
+	}
+
+	// Since the AWS SSM Service does not support PutParameter requests with
+	// Tags and Overwrite set to true, we make an additional API call
+	// to Update the resource's tags if necessary
+	if d.HasChange("tags_all") && paramInput.Tags == nil {
+		o, n := d.GetChange("tags_all")
+
+		if err := UpdateTags(conn, name, ssm.ResourceTypeForTaggingParameter, o, n); err != nil {
+			return fmt.Errorf("error updating SSM Parameter (%s) tags: %w", name, err)
+		}
 	}
 
 	d.SetId(name)
@@ -340,7 +355,7 @@ func resourceParameterUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if err != nil {
-			return fmt.Errorf("error updating SSM Parameter (%s): %w", d.Id(), err)
+			return fmt.Errorf("error updating SSM parameter (%s): %w", d.Id(), err)
 		}
 	}
 
