@@ -156,6 +156,7 @@ In addition to all arguments above, the following attributes are exported:
 * `domain_validation_options` - Set of domain validation objects which can be used to complete certificate validation. Can have more than one element, e.g., if SANs are defined. Only set if `DNS`-validation was used.
 * `not_after` - Expiration date and time of the certificate.
 * `not_before` - Start of the validity period of the certificate.
+* `renewal_eligibility` - Whether the certificate is eligible for renewal.
 * `status` - Status of the certificate.
 * `type` - Source of the certificate.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).

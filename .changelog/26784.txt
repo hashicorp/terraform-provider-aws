@@ -1,3 +1,3 @@
 ```release-note:enhancement
-resource/aws_acm_certificate: Add `type` attribute
+resource/aws_acm_certificate: Add `renewal_eligibility` and `type` attributes
 ```

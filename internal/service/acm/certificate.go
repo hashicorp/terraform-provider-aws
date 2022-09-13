@@ -150,6 +150,10 @@ func ResourceCertificate() *schema.Resource {
 				Sensitive:    true,
 				ExactlyOneOf: []string{"domain_name", "private_key"},
 			},
+			"renewal_eligibility": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"status": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -392,6 +396,7 @@ func resourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta i
 	} else {
 		d.Set("options", nil)
 	}
+	d.Set("renewal_eligibility", certificate.RenewalEligibility)
 	d.Set("status", certificate.Status)
 	d.Set("subject_alternative_names", aws.StringValueSlice(certificate.SubjectAlternativeNames))
 	d.Set("type", certificate.Type)
