@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_rds_cluster: Prevent erroring out and failure of Postgres AWS RDS Cluster creation when setting 'upgrade' cloudwatch log export type.
+```
