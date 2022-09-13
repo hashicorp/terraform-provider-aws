@@ -1463,12 +1463,12 @@ func resourceConnectorProfileRead(ctx context.Context, d *schema.ResourceData, m
 
 func resourceConnectorProfileUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).AppFlowConn
-	name := d.Get("name").(string)
+	out, _ := FindConnectorProfileByARN(ctx, conn, d.Id())
 
 	updateConnectorProfileInput := appflow.UpdateConnectorProfileInput{
 		ConnectionMode:         aws.String(d.Get("connection_mode").(string)),
 		ConnectorProfileConfig: expandConnectorProfileConfig(d.Get("connector_profile_config").([]interface{})[0].(map[string]interface{})),
-		ConnectorProfileName:   aws.String(name),
+		ConnectorProfileName:   out.ConnectorProfileName,
 	}
 
 	_, err := conn.UpdateConnectorProfile(&updateConnectorProfileInput)
@@ -2268,7 +2268,7 @@ func flattenCustomConnectorProfileProperties(properties *appflow.CustomConnector
 	}
 
 	if properties.ProfileProperties != nil {
-		m["profile_properties"] = flex.PointersMapToStringList(properties.ProfileProperties)
+		m["profile_properties"] = aws.StringValueMap(properties.ProfileProperties)
 	}
 
 	return []interface{}{m}
@@ -2348,6 +2348,7 @@ func flattenOAuth2Properties(properties *appflow.OAuth2Properties) []interface{}
 
 	m["oauth2_grant_type"] = aws.StringValue(properties.OAuth2GrantType)
 	m["token_url"] = aws.StringValue(properties.TokenUrl)
+	m["token_url_custom_properties"] = aws.StringValueMap(properties.TokenUrlCustomProperties)
 
 	return []interface{}{m}
 }
