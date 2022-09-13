@@ -149,7 +149,7 @@ func resourceParameterCreate(d *schema.ResourceData, meta interface{}) error {
 	paramInput := &ssm.PutParameterInput{
 		Name:           aws.String(name),
 		Type:           aws.String(d.Get("type").(string)),
-		Value:          aws.String(d.Get("value").(string)),
+		Value:          aws.String(value),
 		Overwrite:      aws.Bool(ShouldUpdateParameter(d)),
 		AllowedPattern: aws.String(d.Get("allowed_pattern").(string)),
 	}
