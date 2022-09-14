@@ -55,7 +55,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-IdentityStore Group can be imported using the `group_id`, e.g.,
+A `aws_identitystore_group` can be imported using the `group_id`, e.g.,
 
 ```
 $ terraform import aws_identitystore_group.example example-group-id
