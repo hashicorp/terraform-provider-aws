@@ -31,7 +31,7 @@ func sweepIndex(region string) error {
 
 	ctx := context.Background()
 	conn := client.(*conns.AWSClient).KendraConn
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 	in := &kendra.ListIndicesInput{}
 	var errs *multierror.Error
 

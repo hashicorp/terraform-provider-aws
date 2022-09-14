@@ -84,8 +84,8 @@ type Config struct {
 	UseFIPSEndpoint                bool
 }
 
-// Client configures and returns a fully initialized AWSClient
-func (c *Config) Client(ctx context.Context) (interface{}, diag.Diagnostics) {
+// ConfigureProvider configures the provided provider Meta (instance data).
+func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWSClient, diag.Diagnostics) {
 	awsbaseConfig := awsbase.Config{
 		AccessKey:                     c.AccessKey,
 		APNInfo:                       StdUserAgentProducts(c.TerraformVersion),
@@ -185,7 +185,7 @@ func (c *Config) Client(ctx context.Context) (interface{}, diag.Diagnostics) {
 		DNSSuffix = p.DNSSuffix()
 	}
 
-	client := c.clientConns(sess)
+	c.clientConns(client, sess)
 
 	client.AccountID = accountID
 	client.DefaultTagsConfig = c.DefaultTagsConfig

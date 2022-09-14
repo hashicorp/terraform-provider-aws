@@ -3,7 +3,6 @@ package ec2
 import (
 	"bytes"
 	"context"
-	"errors"
 	"fmt"
 	"log"
 	"regexp"
@@ -181,10 +180,6 @@ func resourceSecurityGroupCreate(d *schema.ResourceData, meta interface{}) error
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
-	if _, ok := d.GetOk("vpc_id"); !ok {
-		return errors.New(`with the retirement of EC2-Classic no new Security Groups can be created without referencing a VPC`)
-	}
-
 	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
 	input := &ec2.CreateSecurityGroupInput{
 		GroupName: aws.String(name),
@@ -202,7 +197,6 @@ func resourceSecurityGroupCreate(d *schema.ResourceData, meta interface{}) error
 		input.TagSpecifications = tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeSecurityGroup)
 	}
 
-	log.Printf("[DEBUG] Creating Security Group: %s", input)
 	output, err := conn.CreateSecurityGroup(input)
 
 	if err != nil {
@@ -220,6 +214,7 @@ func resourceSecurityGroupCreate(d *schema.ResourceData, meta interface{}) error
 
 	// AWS defaults all Security Groups to have an ALLOW ALL egress rule.
 	// Here we revoke that rule, so users don't unknowingly have/use it.
+	// This will only be false for Security Groups in EC2-Classic
 	if aws.StringValue(group.VpcId) != "" {
 		input := &ec2.RevokeSecurityGroupEgressInput{
 			GroupId: aws.String(d.Id()),
@@ -348,6 +343,7 @@ func resourceSecurityGroupUpdate(d *schema.ResourceData, meta interface{}) error
 		return fmt.Errorf("updating Security Group (%s) %s rules: %w", d.Id(), securityGroupRuleTypeIngress, err)
 	}
 
+	// This will only be false for Security Groups in EC2-Classic
 	if d.Get("vpc_id") != nil {
 		err = updateSecurityGroupRules(conn, d, securityGroupRuleTypeEgress, group)
 
@@ -481,7 +477,7 @@ func forceRevokeSecurityGroupRules(conn *ec2.EC2, id string, searchAll bool) err
 			_, err = conn.RevokeSecurityGroupEgress(input)
 		}
 
-		if tfawserr.ErrCodeEquals(err, errCodeInvalidSecurityGroupRuleIDNotFound) {
+		if tfawserr.ErrCodeEquals(err, errCodeInvalidSecurityGroupRuleIdNotFound) {
 			continue
 		}
 

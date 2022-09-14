@@ -226,7 +226,7 @@ func sweepReplicationGroups(region string) error {
 	}
 
 	conn := client.(*conns.AWSClient).ElastiCacheConn
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
 	err = conn.DescribeReplicationGroupsPages(&elasticache.DescribeReplicationGroupsInput{}, func(page *elasticache.DescribeReplicationGroupsOutput, lastPage bool) bool {
