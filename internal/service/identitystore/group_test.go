@@ -90,8 +90,8 @@ func testAccCheckGroupDestroy(s *terraform.State) error {
 		}
 
 		_, err := conn.DescribeGroup(ctx, &identitystore.DescribeGroupInput{
-			IdentityStoreId: aws.String(rs.Primary.Attributes["identity_store_id"]),
 			GroupId:         aws.String(rs.Primary.Attributes["group_id"]),
+			IdentityStoreId: aws.String(rs.Primary.Attributes["identity_store_id"]),
 		})
 		if err != nil {
 			var nfe *types.ResourceNotFoundException
@@ -121,8 +121,8 @@ func testAccCheckGroupExists(name string, group *identitystore.DescribeGroupOutp
 		conn := acctest.Provider.Meta().(*conns.AWSClient).IdentityStoreConn
 		ctx := context.Background()
 		resp, err := conn.DescribeGroup(ctx, &identitystore.DescribeGroupInput{
-			IdentityStoreId: aws.String(rs.Primary.Attributes["identity_store_id"]),
 			GroupId:         aws.String(rs.Primary.Attributes["group_id"]),
+			IdentityStoreId: aws.String(rs.Primary.Attributes["identity_store_id"]),
 		})
 
 		if err != nil {

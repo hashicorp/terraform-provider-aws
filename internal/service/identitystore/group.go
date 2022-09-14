@@ -3,7 +3,6 @@ package identitystore
 import (
 	"context"
 	"errors"
-	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -101,7 +100,7 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		return create.DiagError(names.IdentityStore, create.ErrActionCreating, ResNameGroup, d.Get("identity_store_id").(string), errors.New("empty output"))
 	}
 
-	d.SetId(fmt.Sprintf("%s/%s", aws.ToString(out.IdentityStoreId), aws.ToString(out.GroupId)))
+	d.SetId(aws.ToString(out.GroupId))
 
 	return resourceGroupRead(ctx, d, meta)
 }
