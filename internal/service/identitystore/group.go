@@ -2,21 +2,28 @@ package identitystore
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"log"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/identitystore"
+	"github.com/aws/aws-sdk-go-v2/service/identitystore/document"
 	types "github.com/aws/aws-sdk-go-v2/service/identitystore/types"
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func ResourceGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceGroupCreate,
 		ReadWithoutTimeout:   resourceGroupRead,
+		UpdateWithoutTimeout: resourceGroupUpdate,
 		DeleteWithoutTimeout: resourceGroupDelete,
 
 		Importer: &schema.ResourceImporter{
@@ -65,6 +72,10 @@ func ResourceGroup() *schema.Resource {
 	}
 }
 
+const (
+	ResNameGroup = "Group"
+)
+
 func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).IdentityStoreConn
 
@@ -82,17 +93,17 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		input.DisplayName = aws.String(v.(string))
 	}
 
-	output, err := conn.CreateGroup(ctx, input)
+	out, err := conn.CreateGroup(ctx, input)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error creating Identity Store Group (%s): %w", identityStoreId, err))
+		return create.DiagError(names.IdentityStore, create.ErrActionCreating, ResNameGroup, d.Get("identity_store_id").(string), err)
 	}
 
-	if output == nil || output.GroupId == nil {
-		return diag.FromErr(fmt.Errorf("error creating Identity Store Group (%s): empty output", identityStoreId))
+	if out == nil || out.GroupId == nil {
+		return create.DiagError(names.IdentityStore, create.ErrActionCreating, ResNameGroup, d.Get("identity_store_id").(string), errors.New("empty output"))
 	}
 
-	d.SetId(aws.StringValue(output.GroupId))
+	d.SetId(fmt.Sprintf("%s/%s", aws.ToString(out.IdentityStoreId), aws.ToString(out.GroupId)))
 
 	return resourceGroupRead(ctx, d, meta)
 }
@@ -105,30 +116,61 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		IdentityStoreId: aws.String(d.Get("identity_store_id").(string)),
 	}
 
-	output, err := conn.DescribeGroup(ctx, input)
+	out, err := conn.DescribeGroup(ctx, input)
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] IdentityStore Group (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error reading Identity Store Group (%s): %w", d.Id(), err))
+		return create.DiagError(names.IdentityStore, create.ErrActionReading, ResNameGroup, d.Id(), err)
 	}
 
-	if output == nil || output.GroupId == nil {
-		return diag.FromErr(fmt.Errorf("error reading Identity Store Group (%s): empty output", d.Id()))
-	}
+	d.Set("group_id", out.GroupId)
+	d.Set("identity_store_id", out.IdentityStoreId)
+	d.Set("description", out.Description)
+	d.Set("display_name", out.DisplayName)
 
-	d.Set("group_id", output.GroupId)
-	d.Set("identity_store_id", output.IdentityStoreId)
-	d.Set("description", output.Description)
-	d.Set("display_name", output.DisplayName)
-
-	if err := d.Set("external_ids", flattenExternalIds(output.ExternalIds)); err != nil {
-		return diag.Errorf("error setting external_ids: %s", err)
+	if err := d.Set("external_ids", flattenExternalIds(out.ExternalIds)); err != nil {
+		return create.DiagError(names.IdentityStore, create.ErrActionSetting, ResNameGroup, d.Id(), err)
 	}
 
 	return nil
 }
 
+func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).IdentityStoreConn
+
+	in := &identitystore.UpdateGroupInput{
+		GroupId:         aws.String(d.Get("group_id").(string)),
+		IdentityStoreId: aws.String(d.Get("identity_store_id").(string)),
+		Operations:      nil,
+	}
+
+	if d.HasChange("display_name") {
+		in.Operations = append(in.Operations, types.AttributeOperation{
+			AttributePath:  aws.String("displayName"),
+			AttributeValue: document.NewLazyDocument(d.Get("display_name").(string)),
+		})
+	}
+
+	if len(in.Operations) > 0 {
+		log.Printf("[DEBUG] Updating IdentityStore Group (%s): %#v", d.Id(), in)
+		_, err := conn.UpdateGroup(ctx, in)
+		if err != nil {
+			return create.DiagError(names.IdentityStore, create.ErrActionUpdating, ResNameGroup, d.Id(), err)
+		}
+	}
+
+	return resourceGroupRead(ctx, d, meta)
+}
+
 func resourceGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).IdentityStoreConn
+
+	log.Printf("[INFO] Deleting IdentityStore Group %s", d.Id())
 
 	input := &identitystore.DeleteGroupInput{
 		GroupId:         aws.String(d.Id()),
@@ -138,7 +180,12 @@ func resourceGroupDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	_, err := conn.DeleteGroup(ctx, input)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error deleting Identity Store Group (%s): %w", d.Id(), err))
+		var nfe *types.ResourceNotFoundException
+		if errors.As(err, &nfe) {
+			return nil
+		}
+
+		return create.DiagError(names.IdentityStore, create.ErrActionDeleting, ResNameGroup, d.Id(), err)
 	}
 
 	return nil
@@ -170,11 +217,11 @@ func flattenExternalId(apiObject types.ExternalId) map[string]interface{} {
 	m := map[string]interface{}{}
 
 	if v := apiObject.Id; v != nil {
-		m["id"] = aws.StringValue(v)
+		m["id"] = aws.ToString(v)
 	}
 
 	if v := apiObject.Issuer; v != nil {
-		m["issuer"] = aws.StringValue(v)
+		m["issuer"] = aws.ToString(v)
 	}
 
 	return m
