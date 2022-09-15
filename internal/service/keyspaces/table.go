@@ -164,7 +164,7 @@ func ResourceTable() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"clustering_key": {
-							Type:     schema.TypeSet,
+							Type:     schema.TypeList,
 							Optional: true,
 							ForceNew: true,
 							Elem: &schema.Resource{
@@ -218,7 +218,7 @@ func ResourceTable() *schema.Resource {
 							},
 						},
 						"partition_key": {
-							Type:     schema.TypeSet,
+							Type:     schema.TypeList,
 							Required: true,
 							ForceNew: true,
 							Elem: &schema.Resource{
