@@ -24,9 +24,9 @@ resource "aws_dx_connection" "hoge" {
 ### Request a MACsec-capable connection
 ```terraform
 resource "aws_dx_connection" "example" {
-  name      = "tf-dx-connection"
-  bandwidth = "10Gbps"
-  location  = "EqDA2"
+  name             = "tf-dx-connection"
+  bandwidth        = "10Gbps"
+  location         = "EqDA2"
   macsec_requested = true
 }
 ```
@@ -36,11 +36,11 @@ resource "aws_dx_connection" "example" {
 
 ```terraform
 resource "aws_dx_connection" "example" {
-  name      = "tf-dx-connection"
-  bandwidth = "10Gbps"
-  location  = "EqDC2"
+  name             = "tf-dx-connection"
+  bandwidth        = "10Gbps"
+  location         = "EqDC2"
   macsec_requested = true
-  encryption_mode = "must_encrypt"
+  encryption_mode  = "must_encrypt"
 }
 ```
 

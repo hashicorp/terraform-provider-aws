@@ -112,7 +112,7 @@ func resourceMacSecKeyRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if connection.MacSecKeys == nil {
-		return fmt.Errorf("No MACSec keys found on Direct Connect Connection (%s)", d.Id())
+		return fmt.Errorf("no MACSec keys found on Direct Connect Connection (%s)", d.Id())
 	}
 
 	for _, key := range connection.MacSecKeys {
