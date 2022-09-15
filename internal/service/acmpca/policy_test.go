@@ -17,13 +17,13 @@ func TestAccACMPCAPolicy_Basic(t *testing.T) {
 	resourceName := "aws_acmpca_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, acmpca.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckPolicyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, acmpca.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPolicyConfig(),
+				Config: testAccPolicyConfig_basic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPolicyExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "policy"),
@@ -77,15 +77,11 @@ func testAccCheckPolicyExists(n string) resource.TestCheckFunc {
 
 		_, err := tfacmpca.FindPolicyByARN(conn, rs.Primary.ID)
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 
-func testAccPolicyConfig() string {
+func testAccPolicyConfig_basic() string {
 	return `
 data "aws_caller_identity" "current" {}
 

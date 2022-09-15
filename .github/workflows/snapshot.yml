@@ -20,7 +20,7 @@ jobs:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
       - name: goreleaser release
-        uses: goreleaser/goreleaser-action@v2
+        uses: goreleaser/goreleaser-action@v3
         with:
           args: release --rm-dist --skip-sign --snapshot --timeout 2h
       - name: artifact naming

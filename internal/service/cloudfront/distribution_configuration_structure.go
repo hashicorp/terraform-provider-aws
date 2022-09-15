@@ -20,14 +20,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
-// cloudFrontRoute53ZoneID defines the route 53 zone ID for CloudFront. This
+// route53ZoneID defines the route 53 zone ID for CloudFront. This
 // is used to set the zone_id attribute.
-const cloudFrontRoute53ZoneID = "Z2FDTNDATAQYW2"
+const route53ZoneID = "Z2FDTNDATAQYW2"
 
-// cloudFrontCNRoute53ZoneID defines the route 53 zone ID for CloudFront in AWS CN.
+// cnRoute53ZoneID defines the route 53 zone ID for CloudFront in AWS CN.
 // This is used to set the zone_id attribute.
 // ref: https://docs.amazonaws.cn/en_us/aws/latest/userguide/route53.html
-const cloudFrontCNRoute53ZoneID = "Z3RFFRIM2A3IF5"
+const cnRoute53ZoneID = "Z3RFFRIM2A3IF5"
 
 // Assemble the *cloudfront.DistributionConfig variable. Calls out to various
 // expander functions to convert attributes and sub-attributes to the various
@@ -90,7 +90,7 @@ func flattenDistributionConfig(d *schema.ResourceData, distributionConfig *cloud
 	d.Set("enabled", distributionConfig.Enabled)
 	d.Set("is_ipv6_enabled", distributionConfig.IsIPV6Enabled)
 	d.Set("price_class", distributionConfig.PriceClass)
-	d.Set("hosted_zone_id", cloudFrontRoute53ZoneID)
+	d.Set("hosted_zone_id", route53ZoneID)
 
 	err = d.Set("default_cache_behavior", []interface{}{flattenDefaultCacheBehavior(distributionConfig.DefaultCacheBehavior)})
 	if err != nil {
@@ -720,6 +720,9 @@ func ExpandOrigin(m map[string]interface{}) *cloudfront.Origin {
 			origin.CustomOriginConfig = ExpandCustomOriginConfig(s[0].(map[string]interface{}))
 		}
 	}
+	if v, ok := m["origin_access_control_id"]; ok {
+		origin.OriginAccessControlId = aws.String(v.(string))
+	}
 	if v, ok := m["origin_path"]; ok {
 		origin.OriginPath = aws.String(v.(string))
 	}
@@ -762,6 +765,9 @@ func FlattenOrigin(or *cloudfront.Origin) map[string]interface{} {
 	}
 	if or.CustomOriginConfig != nil {
 		m["custom_origin_config"] = []interface{}{FlattenCustomOriginConfig(or.CustomOriginConfig)}
+	}
+	if or.OriginAccessControlId != nil {
+		m["origin_access_control_id"] = aws.StringValue(or.OriginAccessControlId)
 	}
 	if or.OriginPath != nil {
 		m["origin_path"] = aws.StringValue(or.OriginPath)
@@ -894,6 +900,11 @@ func OriginHash(v interface{}) int {
 			buf.WriteString(fmt.Sprintf("%d-", customOriginConfigHash((s[0].(map[string]interface{})))))
 		}
 	}
+
+	if v, ok := m["origin_access_control_id"]; ok {
+		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+	}
+
 	if v, ok := m["origin_path"]; ok {
 		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
 	}

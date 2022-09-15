@@ -2,22 +2,28 @@
 package kinesis
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kinesis"
+	"github.com/aws/aws-sdk-go/service/kinesis/kinesisiface"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 // ListTags lists kinesis service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(conn *kinesis.Kinesis, identifier string) (tftags.KeyValueTags, error) {
+func ListTags(conn kinesisiface.KinesisAPI, identifier string) (tftags.KeyValueTags, error) {
+	return ListTagsWithContext(context.Background(), conn, identifier)
+}
+
+func ListTagsWithContext(ctx context.Context, conn kinesisiface.KinesisAPI, identifier string) (tftags.KeyValueTags, error) {
 	input := &kinesis.ListTagsForStreamInput{
 		StreamName: aws.String(identifier),
 	}
 
-	output, err := conn.ListTagsForStream(input)
+	output, err := conn.ListTagsForStreamWithContext(ctx, input)
 
 	if err != nil {
 		return tftags.New(nil), err
@@ -58,7 +64,10 @@ func KeyValueTags(tags []*kinesis.Tag) tftags.KeyValueTags {
 // UpdateTags updates kinesis service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(conn *kinesis.Kinesis, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+func UpdateTags(conn kinesisiface.KinesisAPI, identifier string, oldTags interface{}, newTags interface{}) error {
+	return UpdateTagsWithContext(context.Background(), conn, identifier, oldTags, newTags)
+}
+func UpdateTagsWithContext(ctx context.Context, conn kinesisiface.KinesisAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
 	oldTags := tftags.New(oldTagsMap)
 	newTags := tftags.New(newTagsMap)
 
@@ -69,10 +78,10 @@ func UpdateTags(conn *kinesis.Kinesis, identifier string, oldTagsMap interface{}
 				TagKeys:    aws.StringSlice(removedTags.IgnoreAWS().Keys()),
 			}
 
-			_, err := conn.RemoveTagsFromStream(input)
+			_, err := conn.RemoveTagsFromStreamWithContext(ctx, input)
 
 			if err != nil {
-				return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
+				return fmt.Errorf("untagging resource (%s): %w", identifier, err)
 			}
 		}
 	}
@@ -84,10 +93,10 @@ func UpdateTags(conn *kinesis.Kinesis, identifier string, oldTagsMap interface{}
 				Tags:       aws.StringMap(updatedTags.IgnoreAWS().Map()),
 			}
 
-			_, err := conn.AddTagsToStream(input)
+			_, err := conn.AddTagsToStreamWithContext(ctx, input)
 
 			if err != nil {
-				return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
+				return fmt.Errorf("tagging resource (%s): %w", identifier, err)
 			}
 		}
 	}

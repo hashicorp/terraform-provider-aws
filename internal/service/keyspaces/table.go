@@ -210,8 +210,8 @@ func ResourceTable() *schema.Resource {
 										Type:     schema.TypeString,
 										Required: true,
 										ValidateFunc: validation.StringMatch(
-											regexp.MustCompile(`^[a-z0-9]+$`),
-											"The type must consist of lower case alphanumerics.",
+											regexp.MustCompile(`^[a-z0-9]+(\<[a-z0-9]+(, *[a-z0-9]+){0,1}\>)?$`),
+											"The type must consist of lower case alphanumerics and an optional list of upto two lower case alphanumerics enclosed in angle brackets '<>'.",
 										),
 									},
 								},

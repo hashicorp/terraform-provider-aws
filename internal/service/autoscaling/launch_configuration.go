@@ -1,10 +1,10 @@
 package autoscaling
 
-import ( // nosemgrep: aws-sdk-go-multiple-service-imports
-
+import ( // nosemgrep:ci.aws-sdk-go-multiple-service-imports
 	"crypto/sha1"
 	"encoding/base64"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"log"
 
@@ -41,8 +41,8 @@ func ResourceLaunchConfiguration() *schema.Resource {
 			"associate_public_ip_address": {
 				Type:     schema.TypeBool,
 				Optional: true,
+				Computed: true,
 				ForceNew: true,
-				Default:  false,
 			},
 			"ebs_block_device": {
 				Type:     schema.TypeSet,
@@ -306,15 +306,17 @@ func ResourceLaunchConfiguration() *schema.Resource {
 				},
 			},
 			"vpc_classic_link_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
+				Type:       schema.TypeString,
+				Optional:   true,
+				ForceNew:   true,
+				Deprecated: `With the retirement of EC2-Classic the vpc_classic_link_id attribute has been deprecated and will be removed in a future version.`,
 			},
 			"vpc_classic_link_security_groups": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				ForceNew: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
+				Type:       schema.TypeSet,
+				Optional:   true,
+				ForceNew:   true,
+				Elem:       &schema.Schema{Type: schema.TypeString},
+				Deprecated: `With the retirement of EC2-Classic the vpc_classic_link_security_groups attribute has been deprecated and will be removed in a future version.`,
 			},
 		},
 	}
@@ -324,21 +326,25 @@ func resourceLaunchConfigurationCreate(d *schema.ResourceData, meta interface{})
 	autoscalingconn := meta.(*conns.AWSClient).AutoScalingConn
 	ec2conn := meta.(*conns.AWSClient).EC2Conn
 
-	lcName := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
-	input := autoscaling.CreateLaunchConfigurationInput{
-		AssociatePublicIpAddress: aws.Bool(d.Get("associate_public_ip_address").(bool)),
-		EbsOptimized:             aws.Bool(d.Get("ebs_optimized").(bool)),
-		ImageId:                  aws.String(d.Get("image_id").(string)),
-		InstanceType:             aws.String(d.Get("instance_type").(string)),
-		LaunchConfigurationName:  aws.String(lcName),
-	}
-
-	if v, ok := d.GetOk("vpc_classic_link_id"); ok {
-		input.ClassicLinkVPCId = aws.String(v.(string))
+	if _, ok := d.GetOk("vpc_classic_link_id"); ok {
+		return errors.New(`with the retirement of EC2-Classic no new Auto Scaling Launch Configurations can be created referencing ClassicLink`)
 	}
 
 	if v, ok := d.GetOk("vpc_classic_link_security_groups"); ok && v.(*schema.Set).Len() > 0 {
-		input.ClassicLinkVPCSecurityGroups = flex.ExpandStringSet(v.(*schema.Set))
+		return errors.New(`with the retirement of EC2-Classic no new Auto Scaling Launch Configurations can be created referencing ClassicLink`)
+	}
+
+	lcName := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
+	input := autoscaling.CreateLaunchConfigurationInput{
+		EbsOptimized:            aws.Bool(d.Get("ebs_optimized").(bool)),
+		ImageId:                 aws.String(d.Get("image_id").(string)),
+		InstanceType:            aws.String(d.Get("instance_type").(string)),
+		LaunchConfigurationName: aws.String(lcName),
+	}
+
+	associatePublicIPAddress := d.GetRawConfig().GetAttr("associate_public_ip_address")
+	if associatePublicIPAddress.IsKnown() && !associatePublicIPAddress.IsNull() {
+		input.AssociatePublicIpAddress = aws.Bool(associatePublicIPAddress.True())
 	}
 
 	if v, ok := d.GetOk("iam_instance_profile"); ok {

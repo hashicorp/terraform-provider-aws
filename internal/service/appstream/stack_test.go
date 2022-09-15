@@ -21,10 +21,10 @@ func TestAccAppStreamStack_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckStackDestroy,
-		ErrorCheck:        acctest.ErrorCheck(t, appstream.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckStackDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, appstream.EndpointsID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStackConfig_basic(rName),
@@ -49,10 +49,10 @@ func TestAccAppStreamStack_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckStackDestroy,
-		ErrorCheck:        acctest.ErrorCheck(t, appstream.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckStackDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, appstream.EndpointsID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStackConfig_basic(rName),
@@ -74,13 +74,13 @@ func TestAccAppStreamStack_complete(t *testing.T) {
 	descriptionUpdated := "Updated Description of a test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckStackDestroy,
-		ErrorCheck:        acctest.ErrorCheck(t, appstream.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckStackDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, appstream.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccStackCompleteConfig(rName, description),
+				Config: testAccStackConfig_complete(rName, description),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStackExists(resourceName, &stackOutput),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -89,12 +89,15 @@ func TestAccAppStreamStack_complete(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccStackCompleteConfig(rName, descriptionUpdated),
+				Config: testAccStackConfig_complete(rName, descriptionUpdated),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStackExists(resourceName, &stackOutput),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					acctest.CheckResourceAttrRFC3339(resourceName, "created_time"),
 					resource.TestCheckResourceAttr(resourceName, "description", descriptionUpdated),
+					resource.TestCheckResourceAttr(resourceName, "embed_host_domains.#", "2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "embed_host_domains.*", "example.com"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "embed_host_domains.*", "subdomain.example.com"),
 				),
 			},
 			{
@@ -114,13 +117,13 @@ func TestAccAppStreamStack_withTags(t *testing.T) {
 	descriptionUpdated := "Updated Description of a test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckStackDestroy,
-		ErrorCheck:        acctest.ErrorCheck(t, appstream.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckStackDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, appstream.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccStackCompleteConfig(rName, description),
+				Config: testAccStackConfig_complete(rName, description),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStackExists(resourceName, &stackOutput),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -129,7 +132,7 @@ func TestAccAppStreamStack_withTags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccStackWithTagsConfig(rName, descriptionUpdated),
+				Config: testAccStackConfig_tags(rName, descriptionUpdated),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStackExists(resourceName, &stackOutput),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -164,7 +167,7 @@ func testAccCheckStackExists(resourceName string, appStreamStack *appstream.Stac
 			return fmt.Errorf("problem checking for AppStream Stack existence: %w", err)
 		}
 
-		if resp == nil && len(resp.Stacks) == 0 {
+		if resp == nil || len(resp.Stacks) == 0 {
 			return fmt.Errorf("appstream stack %q does not exist", rs.Primary.ID)
 		}
 
@@ -209,11 +212,13 @@ resource "aws_appstream_stack" "test" {
 `, name)
 }
 
-func testAccStackCompleteConfig(name, description string) string {
+func testAccStackConfig_complete(name, description string) string {
 	return fmt.Sprintf(`
 resource "aws_appstream_stack" "test" {
   name        = %[1]q
   description = %[2]q
+
+  embed_host_domains = ["example.com", "subdomain.example.com"]
 
   storage_connectors {
     connector_type = "HOMEFOLDERS"
@@ -247,7 +252,7 @@ resource "aws_appstream_stack" "test" {
 `, name, description)
 }
 
-func testAccStackWithTagsConfig(name, description string) string {
+func testAccStackConfig_tags(name, description string) string {
 	return fmt.Sprintf(`
 resource "aws_appstream_stack" "test" {
   name        = %[1]q

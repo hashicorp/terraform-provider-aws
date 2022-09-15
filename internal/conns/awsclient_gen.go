@@ -2,9 +2,14 @@
 package conns
 
 import (
-	"fmt"
-
+	"github.com/aws/aws-sdk-go-v2/service/comprehend"
+	"github.com/aws/aws-sdk-go-v2/service/fis"
+	"github.com/aws/aws-sdk-go-v2/service/identitystore"
+	"github.com/aws/aws-sdk-go-v2/service/kendra"
+	"github.com/aws/aws-sdk-go-v2/service/medialive"
+	"github.com/aws/aws-sdk-go-v2/service/rolesanywhere"
 	"github.com/aws/aws-sdk-go-v2/service/route53domains"
+	"github.com/aws/aws-sdk-go-v2/service/transcribe"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/accessanalyzer"
 	"github.com/aws/aws-sdk-go/service/account"
@@ -71,7 +76,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/cognitoidentity"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/aws/aws-sdk-go/service/cognitosync"
-	"github.com/aws/aws-sdk-go/service/comprehend"
 	"github.com/aws/aws-sdk-go/service/comprehendmedical"
 	"github.com/aws/aws-sdk-go/service/computeoptimizer"
 	"github.com/aws/aws-sdk-go/service/configservice"
@@ -119,7 +123,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/finspace"
 	"github.com/aws/aws-sdk-go/service/finspacedata"
 	"github.com/aws/aws-sdk-go/service/firehose"
-	"github.com/aws/aws-sdk-go/service/fis"
 	"github.com/aws/aws-sdk-go/service/fms"
 	"github.com/aws/aws-sdk-go/service/forecastqueryservice"
 	"github.com/aws/aws-sdk-go/service/forecastservice"
@@ -138,7 +141,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/healthlake"
 	"github.com/aws/aws-sdk-go/service/honeycode"
 	"github.com/aws/aws-sdk-go/service/iam"
-	"github.com/aws/aws-sdk-go/service/identitystore"
 	"github.com/aws/aws-sdk-go/service/imagebuilder"
 	"github.com/aws/aws-sdk-go/service/inspector"
 	"github.com/aws/aws-sdk-go/service/inspector2"
@@ -160,7 +162,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/ivs"
 	"github.com/aws/aws-sdk-go/service/kafka"
 	"github.com/aws/aws-sdk-go/service/kafkaconnect"
-	"github.com/aws/aws-sdk-go/service/kendra"
 	"github.com/aws/aws-sdk-go/service/keyspaces"
 	"github.com/aws/aws-sdk-go/service/kinesis"
 	"github.com/aws/aws-sdk-go/service/kinesisanalytics"
@@ -193,7 +194,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/marketplacemetering"
 	"github.com/aws/aws-sdk-go/service/mediaconnect"
 	"github.com/aws/aws-sdk-go/service/mediaconvert"
-	"github.com/aws/aws-sdk-go/service/medialive"
 	"github.com/aws/aws-sdk-go/service/mediapackage"
 	"github.com/aws/aws-sdk-go/service/mediapackagevod"
 	"github.com/aws/aws-sdk-go/service/mediastore"
@@ -239,6 +239,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/recyclebin"
 	"github.com/aws/aws-sdk-go/service/redshift"
 	"github.com/aws/aws-sdk-go/service/redshiftdataapiservice"
+	"github.com/aws/aws-sdk-go/service/redshiftserverless"
 	"github.com/aws/aws-sdk-go/service/rekognition"
 	"github.com/aws/aws-sdk-go/service/resiliencehub"
 	"github.com/aws/aws-sdk-go/service/resourcegroups"
@@ -289,7 +290,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/textract"
 	"github.com/aws/aws-sdk-go/service/timestreamquery"
 	"github.com/aws/aws-sdk-go/service/timestreamwrite"
-	"github.com/aws/aws-sdk-go/service/transcribeservice"
 	"github.com/aws/aws-sdk-go/service/transcribestreamingservice"
 	"github.com/aws/aws-sdk-go/service/transfer"
 	"github.com/aws/aws-sdk-go/service/translate"
@@ -305,6 +305,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/workspaces"
 	"github.com/aws/aws-sdk-go/service/workspacesweb"
 	"github.com/aws/aws-sdk-go/service/xray"
+	"github.com/hashicorp/terraform-provider-aws/internal/intf"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
@@ -318,6 +319,7 @@ type AWSClient struct {
 	Region                    string
 	ReverseDNSPrefix          string
 	S3ConnURICleaningDisabled *s3.S3
+	ServiceMap                map[string]intf.ServiceData
 	Session                   *session.Session
 	SupportedPlatforms        []string
 	TerraformVersion          string
@@ -383,7 +385,7 @@ type AWSClient struct {
 	CognitoIDPConn                   *cognitoidentityprovider.CognitoIdentityProvider
 	CognitoIdentityConn              *cognitoidentity.CognitoIdentity
 	CognitoSyncConn                  *cognitosync.CognitoSync
-	ComprehendConn                   *comprehend.Comprehend
+	ComprehendConn                   *comprehend.Client
 	ComprehendMedicalConn            *comprehendmedical.ComprehendMedical
 	ComputeOptimizerConn             *computeoptimizer.ComputeOptimizer
 	ConfigServiceConn                *configservice.ConfigService
@@ -429,7 +431,7 @@ type AWSClient struct {
 	ElasticsearchConn                *elasticsearchservice.ElasticsearchService
 	EventsConn                       *eventbridge.EventBridge
 	EvidentlyConn                    *cloudwatchevidently.CloudWatchEvidently
-	FISConn                          *fis.FIS
+	FISConn                          *fis.Client
 	FMSConn                          *fms.FMS
 	FSxConn                          *fsx.FSx
 	FinSpaceConn                     *finspace.Finspace
@@ -452,7 +454,7 @@ type AWSClient struct {
 	HoneycodeConn                    *honeycode.Honeycode
 	IAMConn                          *iam.IAM
 	IVSConn                          *ivs.IVS
-	IdentityStoreConn                *identitystore.IdentityStore
+	IdentityStoreConn                *identitystore.Client
 	ImageBuilderConn                 *imagebuilder.Imagebuilder
 	InspectorConn                    *inspector.Inspector
 	Inspector2Conn                   *inspector2.Inspector2
@@ -474,7 +476,7 @@ type AWSClient struct {
 	KMSConn                          *kms.KMS
 	KafkaConn                        *kafka.Kafka
 	KafkaConnectConn                 *kafkaconnect.KafkaConnect
-	KendraConn                       *kendra.Kendra
+	KendraConn                       *kendra.Client
 	KeyspacesConn                    *keyspaces.Keyspaces
 	KinesisConn                      *kinesis.Kinesis
 	KinesisAnalyticsConn             *kinesisanalytics.KinesisAnalytics
@@ -509,7 +511,7 @@ type AWSClient struct {
 	MarketplaceMeteringConn          *marketplacemetering.MarketplaceMetering
 	MediaConnectConn                 *mediaconnect.MediaConnect
 	MediaConvertConn                 *mediaconvert.MediaConvert
-	MediaLiveConn                    *medialive.MediaLive
+	MediaLiveConn                    *medialive.Client
 	MediaPackageConn                 *mediapackage.MediaPackage
 	MediaPackageVODConn              *mediapackagevod.MediaPackageVod
 	MediaStoreConn                   *mediastore.MediaStore
@@ -552,11 +554,13 @@ type AWSClient struct {
 	RUMConn                          *cloudwatchrum.CloudWatchRUM
 	RedshiftConn                     *redshift.Redshift
 	RedshiftDataConn                 *redshiftdataapiservice.RedshiftDataAPIService
+	RedshiftServerlessConn           *redshiftserverless.RedshiftServerless
 	RekognitionConn                  *rekognition.Rekognition
 	ResilienceHubConn                *resiliencehub.ResilienceHub
 	ResourceGroupsConn               *resourcegroups.ResourceGroups
 	ResourceGroupsTaggingAPIConn     *resourcegroupstaggingapi.ResourceGroupsTaggingAPI
 	RoboMakerConn                    *robomaker.RoboMaker
+	RolesAnywhereConn                *rolesanywhere.Client
 	Route53Conn                      *route53.Route53
 	Route53DomainsConn               *route53domains.Client
 	Route53RecoveryClusterConn       *route53recoverycluster.Route53RecoveryCluster
@@ -605,7 +609,7 @@ type AWSClient struct {
 	TextractConn                     *textract.Textract
 	TimestreamQueryConn              *timestreamquery.TimestreamQuery
 	TimestreamWriteConn              *timestreamwrite.TimestreamWrite
-	TranscribeConn                   *transcribeservice.TranscribeService
+	TranscribeConn                   *transcribe.Client
 	TranscribeStreamingConn          *transcribestreamingservice.TranscribeStreamingService
 	TransferConn                     *transfer.Transfer
 	TranslateConn                    *translate.Translate
@@ -622,18 +626,4 @@ type AWSClient struct {
 	WorkSpacesConn                   *workspaces.WorkSpaces
 	WorkSpacesWebConn                *workspacesweb.WorkSpacesWeb
 	XRayConn                         *xray.XRay
-}
-
-// PartitionHostname returns a hostname with the provider domain suffix for the partition
-// e.g. PREFIX.amazonaws.com
-// The prefix should not contain a trailing period.
-func (client *AWSClient) PartitionHostname(prefix string) string {
-	return fmt.Sprintf("%s.%s", prefix, client.DNSSuffix)
-}
-
-// RegionalHostname returns a hostname with the provider domain suffix for the region and partition
-// e.g. PREFIX.us-west-2.amazonaws.com
-// The prefix should not contain a trailing period.
-func (client *AWSClient) RegionalHostname(prefix string) string {
-	return fmt.Sprintf("%s.%s.%s", prefix, client.Region, client.DNSSuffix)
 }

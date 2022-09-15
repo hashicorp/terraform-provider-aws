@@ -16,10 +16,10 @@ func TestAccIAMOpenidConnectProviderDataSource_basic(t *testing.T) {
 	resourceName := "aws_iam_openid_connect_provider.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, iam.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckOpenIDConnectProviderDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOpenIDConnectProviderDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOpenIDConnectProviderDataSourceConfig_basic(rString),
@@ -42,10 +42,10 @@ func TestAccIAMOpenidConnectProviderDataSource_url(t *testing.T) {
 	resourceName := "aws_iam_openid_connect_provider.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, iam.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckOpenIDConnectProviderDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOpenIDConnectProviderDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOpenIDConnectProviderDataSourceConfig_url(rString),
@@ -68,10 +68,10 @@ func TestAccIAMOpenidConnectProviderDataSource_tags(t *testing.T) {
 	resourceName := "aws_iam_openid_connect_provider.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, iam.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckOpenIDConnectProviderDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOpenIDConnectProviderDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOpenIDConnectProviderDataSourceConfig_tags(rString),

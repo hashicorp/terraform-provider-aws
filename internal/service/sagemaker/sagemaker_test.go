@@ -45,6 +45,7 @@ func TestAccSageMaker_serial(t *testing.T) {
 			"kms":                                                    testAccDomain_kms,
 			"securityGroup":                                          testAccDomain_securityGroup,
 			"sharingSettings":                                        testAccDomain_sharingSettings,
+			"defaultUserSettingsUpdated":                             testAccDomain_defaultUserSettingsUpdated,
 		},
 		"FlowDefinition": {
 			"basic":                          testAccFlowDefinition_basic,

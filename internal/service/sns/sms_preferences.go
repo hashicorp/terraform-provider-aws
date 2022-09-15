@@ -167,13 +167,7 @@ func resourceSMSPreferencesGet(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error getting SNS SMS Preferences: %w", err)
 	}
 
-	err = SMSPreferencesAttributeMap.APIAttributesToResourceData(aws.StringValueMap(output.Attributes), d)
-
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return SMSPreferencesAttributeMap.APIAttributesToResourceData(aws.StringValueMap(output.Attributes), d)
 }
 
 func resourceSMSPreferencesDelete(d *schema.ResourceData, meta interface{}) error {

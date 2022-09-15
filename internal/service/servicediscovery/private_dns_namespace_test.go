@@ -1,19 +1,19 @@
 package servicediscovery_test
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/servicediscovery"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfservicediscovery "github.com/hashicorp/terraform-provider-aws/internal/service/servicediscovery"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccServiceDiscoveryPrivateDNSNamespace_basic(t *testing.T) {
@@ -26,9 +26,9 @@ func TestAccServiceDiscoveryPrivateDNSNamespace_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService(servicediscovery.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, servicediscovery.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckPrivateDNSNamespaceDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, servicediscovery.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPrivateDNSNamespaceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPrivateDNSNamespaceConfig_basic(rName),
@@ -60,9 +60,9 @@ func TestAccServiceDiscoveryPrivateDNSNamespace_disappears(t *testing.T) {
 			acctest.PreCheckPartitionHasService(servicediscovery.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, servicediscovery.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckPrivateDNSNamespaceDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, servicediscovery.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPrivateDNSNamespaceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPrivateDNSNamespaceConfig_basic(rName),
@@ -86,9 +86,9 @@ func TestAccServiceDiscoveryPrivateDNSNamespace_description(t *testing.T) {
 			acctest.PreCheckPartitionHasService(servicediscovery.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, servicediscovery.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckPrivateDNSNamespaceDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, servicediscovery.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPrivateDNSNamespaceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPrivateDNSNamespaceConfig_description(rName, "test"),
@@ -102,8 +102,8 @@ func TestAccServiceDiscoveryPrivateDNSNamespace_description(t *testing.T) {
 }
 
 // This acceptance test ensures we properly send back error messaging. References:
-//  * https://github.com/hashicorp/terraform-provider-aws/issues/2830
-//  * https://github.com/hashicorp/terraform-provider-aws/issues/5532
+//   - https://github.com/hashicorp/terraform-provider-aws/issues/2830
+//   - https://github.com/hashicorp/terraform-provider-aws/issues/5532
 func TestAccServiceDiscoveryPrivateDNSNamespace_Error_overlap(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -113,9 +113,9 @@ func TestAccServiceDiscoveryPrivateDNSNamespace_Error_overlap(t *testing.T) {
 			acctest.PreCheckPartitionHasService(servicediscovery.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, servicediscovery.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckPrivateDNSNamespaceDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, servicediscovery.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPrivateDNSNamespaceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccPrivateDNSNamespaceConfig_overlapping(rName),
@@ -135,9 +135,9 @@ func TestAccServiceDiscoveryPrivateDNSNamespace_tags(t *testing.T) {
 			acctest.PreCheckPartitionHasService(servicediscovery.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, servicediscovery.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckPrivateDNSNamespaceDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, servicediscovery.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPrivateDNSNamespaceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPrivateDNSNamespaceConfig_tags1(rName, "key1", "value1"),
@@ -182,29 +182,38 @@ func testAccCheckPrivateDNSNamespaceDestroy(s *terraform.State) error {
 			continue
 		}
 
-		input := &servicediscovery.GetNamespaceInput{
-			Id: aws.String(rs.Primary.ID),
+		_, err := tfservicediscovery.FindNamespaceByID(context.Background(), conn, rs.Primary.ID)
+
+		if tfresource.NotFound(err) {
+			continue
 		}
 
-		_, err := conn.GetNamespace(input)
 		if err != nil {
-			if tfawserr.ErrCodeEquals(err, servicediscovery.ErrCodeNamespaceNotFound) {
-				return nil
-			}
 			return err
 		}
+
+		return fmt.Errorf("Service Discovery Private DNS Namespace %s still exists", rs.Primary.ID)
 	}
+
 	return nil
 }
 
-func testAccCheckPrivateDNSNamespaceExists(name string) resource.TestCheckFunc {
+func testAccCheckPrivateDNSNamespaceExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		_, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", name)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
-		return nil
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No Service Discovery Private DNS Namespace ID is set")
+		}
+
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceDiscoveryConn
+
+		_, err := tfservicediscovery.FindNamespaceByID(context.Background(), conn, rs.Primary.ID)
+
+		return err
 	}
 }
 
@@ -235,7 +244,7 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_service_discovery_private_dns_namespace" "test" {
-  name = "%[1]s.tf"
+  name = "%[1]s.test"
   vpc  = aws_vpc.test.id
 }
 `, rName)
@@ -253,7 +262,7 @@ resource "aws_vpc" "test" {
 
 resource "aws_service_discovery_private_dns_namespace" "test" {
   description = %[1]q
-  name        = "%[2]s.tf"
+  name        = "%[2]s.test"
   vpc         = aws_vpc.test.id
 }
 `, description, rName)
@@ -270,7 +279,7 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_service_discovery_private_dns_namespace" "top" {
-  name = "%[1]s.tf"
+  name = "%[1]s.test"
   vpc  = aws_vpc.test.id
 }
 
@@ -293,7 +302,7 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_service_discovery_private_dns_namespace" "test" {
-  name = "%[1]s.tf"
+  name = "%[1]s.test"
   vpc  = aws_vpc.test.id
 
   tags = {
@@ -314,7 +323,7 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_service_discovery_private_dns_namespace" "test" {
-  name = "%[1]s.tf"
+  name = "%[1]s.test"
   vpc  = aws_vpc.test.id
 
   tags = {

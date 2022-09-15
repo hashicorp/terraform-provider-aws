@@ -8,7 +8,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/detective"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -16,7 +15,6 @@ import (
 )
 
 func testAccMember_basic(t *testing.T) {
-	var providers []*schema.Provider
 	var detectiveOutput detective.MemberDetail
 	resourceName := "aws_detective_member.test"
 	dataSourceAlternate := "data.aws_caller_identity.member"
@@ -27,9 +25,9 @@ func testAccMember_basic(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckAlternateAccount(t)
 		},
-		ProviderFactories: acctest.FactoriesAlternate(&providers),
-		CheckDestroy:      testAccCheckMemberDestroy,
-		ErrorCheck:        acctest.ErrorCheck(t, detective.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
+		CheckDestroy:             testAccCheckMemberDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, detective.EndpointsID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMemberConfig_basic(email),
@@ -54,7 +52,6 @@ func testAccMember_basic(t *testing.T) {
 }
 
 func testAccMember_disappears(t *testing.T) {
-	var providers []*schema.Provider
 	var detectiveOutput detective.MemberDetail
 	resourceName := "aws_detective_member.test"
 	email := testAccMemberFromEnv(t)
@@ -64,9 +61,9 @@ func testAccMember_disappears(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckAlternateAccount(t)
 		},
-		ProviderFactories: acctest.FactoriesAlternate(&providers),
-		CheckDestroy:      testAccCheckMemberDestroy,
-		ErrorCheck:        acctest.ErrorCheck(t, detective.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
+		CheckDestroy:             testAccCheckMemberDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, detective.EndpointsID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMemberConfig_basic(email),
@@ -82,7 +79,6 @@ func testAccMember_disappears(t *testing.T) {
 
 func testAccMember_message(t *testing.T) {
 	var detectiveOutput detective.MemberDetail
-	var providers []*schema.Provider
 	resourceName := "aws_detective_member.test"
 	dataSourceAlternate := "data.aws_caller_identity.member"
 	email := testAccMemberFromEnv(t)
@@ -92,9 +88,9 @@ func testAccMember_message(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckAlternateAccount(t)
 		},
-		ProviderFactories: acctest.FactoriesAlternate(&providers),
-		CheckDestroy:      testAccCheckInvitationAccepterDestroy,
-		ErrorCheck:        acctest.ErrorCheck(t, detective.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
+		CheckDestroy:             testAccCheckInvitationAccepterDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, detective.EndpointsID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMemberConfig_invitationMessage(email, false),

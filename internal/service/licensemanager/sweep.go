@@ -27,36 +27,38 @@ func sweepLicenseConfigurations(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 	conn := client.(*conns.AWSClient).LicenseManagerConn
+	input := &licensemanager.ListLicenseConfigurationsInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
 
-	resp, err := conn.ListLicenseConfigurations(&licensemanager.ListLicenseConfigurationsInput{})
-
-	if err != nil {
-		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping License Manager License Configuration sweep for %s: %s", region, err)
-			return nil
+	err = listLicenseConfigurationsPages(conn, input, func(page *licensemanager.ListLicenseConfigurationsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
 		}
-		return fmt.Errorf("Error retrieving License Manager license configurations: %s", err)
-	}
 
-	if len(resp.LicenseConfigurations) == 0 {
-		log.Print("[DEBUG] No License Manager license configurations to sweep")
+		for _, v := range page.LicenseConfigurations {
+			r := ResourceLicenseConfiguration()
+			d := r.Data(nil)
+			d.SetId(aws.StringValue(v.LicenseConfigurationArn))
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+
+		return !lastPage
+	})
+
+	if sweep.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping License Manager License Configuration sweep for %s: %s", region, err)
 		return nil
 	}
 
-	for _, lc := range resp.LicenseConfigurations {
-		id := aws.StringValue(lc.LicenseConfigurationArn)
+	if err != nil {
+		return fmt.Errorf("error listing License Manager License Configurations (%s): %w", region, err)
+	}
 
-		log.Printf("[INFO] Deleting License Manager license configuration: %s", id)
+	err = sweep.SweepOrchestrator(sweepResources)
 
-		opts := &licensemanager.DeleteLicenseConfigurationInput{
-			LicenseConfigurationArn: aws.String(id),
-		}
-
-		_, err := conn.DeleteLicenseConfiguration(opts)
-
-		if err != nil {
-			log.Printf("[ERROR] Error deleting License Manager license configuration (%s): %s", id, err)
-		}
+	if err != nil {
+		return fmt.Errorf("error sweeping License Manager License Configurations (%s): %w", region, err)
 	}
 
 	return nil

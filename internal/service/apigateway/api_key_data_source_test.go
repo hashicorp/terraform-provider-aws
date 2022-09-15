@@ -16,12 +16,12 @@ func TestAccAPIGatewayAPIKeyDataSource_basic(t *testing.T) {
 	dataSourceName1 := "data.aws_api_gateway_api_key.test_key"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, apigateway.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAPIKeyDataSourceConfig(rName),
+				Config: testAccAPIKeyDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName1, "id", dataSourceName1, "id"),
 					resource.TestCheckResourceAttrPair(resourceName1, "name", dataSourceName1, "name"),
@@ -37,7 +37,7 @@ func TestAccAPIGatewayAPIKeyDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccAPIKeyDataSourceConfig(r string) string {
+func testAccAPIKeyDataSourceConfig_basic(r string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_api_key" "example_key" {
   name = "%s"

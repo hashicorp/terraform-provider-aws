@@ -46,12 +46,12 @@ func TestAccAPIGatewayV2APIMapping_basic(t *testing.T) {
 
 func testAccAPIMapping_createCertificate(t *testing.T, rName string, certificateArn *string) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      nil,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
-			{
+			{ // nosemgrep:ci.test-config-funcs-correct-form
 				Config: "# Dummy config.",
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAPIMappingCreateCertificate(rName, certificateArn),
@@ -71,10 +71,10 @@ func testAccAPIMapping_basic(t *testing.T, rName string, certificateArn *string)
 	stageResourceName := "aws_apigatewayv2_stage.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAPIMappingDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAPIMappingDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAPIMappingConfig_basic(rName, *certificateArn),
@@ -99,10 +99,10 @@ func testAccAPIMapping_disappears(t *testing.T, rName string, certificateArn *st
 	resourceName := "aws_apigatewayv2_api_mapping.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAPIMappingDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAPIMappingDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAPIMappingConfig_basic(rName, *certificateArn),
@@ -124,13 +124,13 @@ func testAccAPIMapping_key(t *testing.T, rName string, certificateArn *string) {
 	stageResourceName := "aws_apigatewayv2_stage.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAPIMappingDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAPIMappingDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAPIMappingConfig_apiMappingKey(rName, *certificateArn, "$context.domainName"),
+				Config: testAccAPIMappingConfig_key(rName, *certificateArn, "$context.domainName"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAPIMappingExists(resourceName, &domainName, &v),
 					resource.TestCheckResourceAttr(resourceName, "api_mapping_key", "$context.domainName"),
@@ -138,7 +138,7 @@ func testAccAPIMapping_key(t *testing.T, rName string, certificateArn *string) {
 					resource.TestCheckResourceAttrPair(resourceName, "stage", stageResourceName, "name")),
 			},
 			{
-				Config: testAccAPIMappingConfig_apiMappingKey(rName, *certificateArn, "$context.apiId"),
+				Config: testAccAPIMappingConfig_key(rName, *certificateArn, "$context.apiId"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAPIMappingExists(resourceName, &domainName, &v),
 					resource.TestCheckResourceAttr(resourceName, "api_mapping_key", "$context.apiId"),
@@ -281,7 +281,7 @@ resource "aws_apigatewayv2_api_mapping" "test" {
 `
 }
 
-func testAccAPIMappingConfig_apiMappingKey(rName, certificateArn, apiMappingKey string) string {
+func testAccAPIMappingConfig_key(rName, certificateArn, apiMappingKey string) string {
 	return testAccAPIMappingConfig_base(rName, certificateArn) + testAccStageConfig_basicWebSocket(rName) + fmt.Sprintf(`
 resource "aws_apigatewayv2_api_mapping" "test" {
   api_id      = aws_apigatewayv2_api.test.id

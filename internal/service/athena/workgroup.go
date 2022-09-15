@@ -441,7 +441,7 @@ func expandWorkGroupResultConfiguration(l []interface{}) *athena.ResultConfigura
 	}
 
 	if v, ok := m["acl_configuration"]; ok {
-		resultConfiguration.AclConfiguration = expandResultConfigurationAclConfig(v.([]interface{}))
+		resultConfiguration.AclConfiguration = expandResultConfigurationACLConfig(v.([]interface{}))
 	}
 
 	return resultConfiguration
@@ -475,7 +475,7 @@ func expandWorkGroupResultConfigurationUpdates(l []interface{}) *athena.ResultCo
 	}
 
 	if v, ok := m["acl_configuration"]; ok {
-		resultConfigurationUpdates.AclConfiguration = expandResultConfigurationAclConfig(v.([]interface{}))
+		resultConfigurationUpdates.AclConfiguration = expandResultConfigurationACLConfig(v.([]interface{}))
 	} else {
 		resultConfigurationUpdates.RemoveAclConfiguration = aws.Bool(true)
 	}
@@ -548,7 +548,7 @@ func flattenWorkGroupResultConfiguration(resultConfiguration *athena.ResultConfi
 	}
 
 	if resultConfiguration.AclConfiguration != nil {
-		m["acl_configuration"] = flattenWorkGroupAclConfiguration(resultConfiguration.AclConfiguration)
+		m["acl_configuration"] = flattenWorkGroupACLConfiguration(resultConfiguration.AclConfiguration)
 	}
 
 	return []interface{}{m}
@@ -567,7 +567,7 @@ func flattenWorkGroupEncryptionConfiguration(encryptionConfiguration *athena.Enc
 	return []interface{}{m}
 }
 
-func flattenWorkGroupAclConfiguration(aclConfig *athena.AclConfiguration) []interface{} {
+func flattenWorkGroupACLConfiguration(aclConfig *athena.AclConfiguration) []interface{} {
 	if aclConfig == nil {
 		return []interface{}{}
 	}

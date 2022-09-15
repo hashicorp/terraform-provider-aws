@@ -19,15 +19,16 @@ func DataSourceFunction() *schema.Resource {
 		Read: dataSourceFunctionRead,
 
 		Schema: map[string]*schema.Schema{
-			"function_name": {
-				Type:     schema.TypeString,
-				Required: true,
+			"architectures": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"qualifier": {
+			"arn": {
 				Type:     schema.TypeString,
-				Optional: true,
+				Computed: true,
 			},
-			"description": {
+			"code_signing_config_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -39,6 +40,23 @@ func DataSourceFunction() *schema.Resource {
 						"target_arn": {
 							Type:     schema.TypeString,
 							Computed: true,
+						},
+					},
+				},
+			},
+			"description": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"environment": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"variables": {
+							Type:     schema.TypeMap,
+							Computed: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 					},
 				},
@@ -71,20 +89,50 @@ func DataSourceFunction() *schema.Resource {
 					},
 				},
 			},
+			"function_name": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
 			"handler": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"image_uri": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"invoke_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"kms_key_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"last_modified": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"layers": {
 				Type:     schema.TypeList,
 				Computed: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"memory_size": {
 				Type:     schema.TypeInt,
 				Computed: true,
+			},
+			"qualified_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"qualified_invoke_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"qualifier": {
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 			"reserved_concurrent_executions": {
 				Type:     schema.TypeInt,
@@ -98,51 +146,11 @@ func DataSourceFunction() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"timeout": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"version": {
+			"signing_job_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"vpc_config": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"subnet_ids": {
-							Type:     schema.TypeSet,
-							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-							Set:      schema.HashString,
-						},
-						"security_group_ids": {
-							Type:     schema.TypeSet,
-							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-							Set:      schema.HashString,
-						},
-						"vpc_id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
-				},
-			},
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"qualified_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"invoke_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"last_modified": {
+			"signing_profile_version_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -154,18 +162,10 @@ func DataSourceFunction() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"environment": {
-				Type:     schema.TypeList,
+			"tags": tftags.TagsSchemaComputed(),
+			"timeout": {
+				Type:     schema.TypeInt,
 				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"variables": {
-							Type:     schema.TypeMap,
-							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-					},
-				},
 			},
 			"tracing_config": {
 				Type:     schema.TypeList,
@@ -179,33 +179,31 @@ func DataSourceFunction() *schema.Resource {
 					},
 				},
 			},
-			"kms_key_arn": {
+			"version": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tftags.TagsSchemaComputed(),
-			"signing_profile_version_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"signing_job_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"code_signing_config_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"architectures": {
+			"vpc_config": {
 				Type:     schema.TypeList,
 				Computed: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"security_group_ids": {
+							Type:     schema.TypeSet,
+							Computed: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+						"subnet_ids": {
+							Type:     schema.TypeSet,
+							Computed: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+						"vpc_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
 				},
-			},
-			"image_uri": {
-				Type:     schema.TypeString,
-				Computed: true,
 			},
 		},
 	}
@@ -223,6 +221,30 @@ func dataSourceFunctionRead(d *schema.ResourceData, meta interface{}) error {
 
 	if v, ok := d.GetOk("qualifier"); ok {
 		input.Qualifier = aws.String(v.(string))
+	} else {
+		// If no qualifier provided, set version to latest published version
+		versionsInput := &lambda.ListVersionsByFunctionInput{
+			FunctionName: aws.String(functionName),
+		}
+		var latestVersion string
+		log.Printf("[DEBUG] Getting List of Lambda Versions : %s", versionsInput)
+		errVersions := conn.ListVersionsByFunctionPages(versionsInput, func(p *lambda.ListVersionsByFunctionOutput, lastPage bool) bool {
+			if lastPage {
+				last := p.Versions[len(p.Versions)-1]
+				latestVersion = aws.StringValue(last.Version)
+				return false
+			}
+			return true
+		})
+
+		if errVersions != nil {
+			return fmt.Errorf("error getting List of Lambda Versions for Function (%s): %s", functionName, errVersions)
+		}
+
+		// If no published version exists, AWS returns '$LATEST' for latestVersion
+		if latestVersion != FunctionVersionLatest {
+			input.Qualifier = aws.String(latestVersion)
+		}
 	}
 
 	log.Printf("[DEBUG] Getting Lambda Function: %s", input)
@@ -239,8 +261,10 @@ func dataSourceFunctionRead(d *schema.ResourceData, meta interface{}) error {
 	function := output.Configuration
 
 	functionARN := aws.StringValue(function.FunctionArn)
-	qualifierSuffix := fmt.Sprintf(":%s", d.Get("qualifier").(string))
+	qualifierSuffix := fmt.Sprintf(":%s", aws.StringValue(input.Qualifier))
 	versionSuffix := fmt.Sprintf(":%s", aws.StringValue(function.Version))
+
+	d.Set("version", function.Version)
 
 	qualifiedARN := functionARN
 	if !strings.HasSuffix(functionARN, qualifierSuffix) && !strings.HasSuffix(functionARN, versionSuffix) {
@@ -284,6 +308,7 @@ func dataSourceFunctionRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("memory_size", function.MemorySize)
 	d.Set("qualified_arn", qualifiedARN)
+	d.Set("qualified_invoke_arn", functionInvokeARN(qualifiedARN, meta))
 
 	// Add Signing Profile Version ARN
 	if err := d.Set("signing_profile_version_arn", function.SigningProfileVersionArn); err != nil {
@@ -323,7 +348,6 @@ func dataSourceFunctionRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.Set("timeout", function.Timeout)
-	d.Set("version", function.Version)
 
 	if err := d.Set("vpc_config", flattenVPCConfigResponse(function.VpcConfig)); err != nil {
 		return fmt.Errorf("error setting vpc_config: %w", err)

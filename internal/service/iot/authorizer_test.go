@@ -20,13 +20,13 @@ func TestAccIoTAuthorizer_basic(t *testing.T) {
 	resourceName := "aws_iot_authorizer.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, iot.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAuthorizerDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iot.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAuthorizerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAuthorizerBasicConfig(rName),
+				Config: testAccAuthorizerConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAuthorizerExists(resourceName, &conf),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "iot", fmt.Sprintf("authorizer/%s", rName)),
@@ -54,13 +54,13 @@ func TestAccIoTAuthorizer_disappears(t *testing.T) {
 	resourceName := "aws_iot_authorizer.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, iot.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAuthorizerDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iot.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAuthorizerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAuthorizerBasicConfig(rName),
+				Config: testAccAuthorizerConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAuthorizerExists(resourceName, &conf),
 					acctest.CheckResourceDisappears(acctest.Provider, tfiot.ResourceAuthorizer(), resourceName),
@@ -77,13 +77,13 @@ func TestAccIoTAuthorizer_signingDisabled(t *testing.T) {
 	resourceName := "aws_iot_authorizer.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, iot.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAuthorizerDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iot.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAuthorizerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAuthorizerSigningDisabledConfig(rName),
+				Config: testAccAuthorizerConfig_signingDisabled(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAuthorizerExists(resourceName, &conf),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "iot", fmt.Sprintf("authorizer/%s", rName)),
@@ -109,13 +109,13 @@ func TestAccIoTAuthorizer_update(t *testing.T) {
 	resourceName := "aws_iot_authorizer.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, iot.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAuthorizerDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iot.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAuthorizerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAuthorizerBasicConfig(rName),
+				Config: testAccAuthorizerConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAuthorizerExists(resourceName, &conf),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "iot", fmt.Sprintf("authorizer/%s", rName)),
@@ -129,7 +129,7 @@ func TestAccIoTAuthorizer_update(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAuthorizerUpdatedConfig(rName),
+				Config: testAccAuthorizerConfig_updated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAuthorizerExists(resourceName, &conf),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "iot", fmt.Sprintf("authorizer/%s", rName)),
@@ -229,7 +229,7 @@ resource "aws_lambda_function" "test" {
 `, rName)
 }
 
-func testAccAuthorizerBasicConfig(rName string) string {
+func testAccAuthorizerConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccAuthorizerBaseConfig(rName), fmt.Sprintf(`
 resource "aws_iot_authorizer" "test" {
   name                    = %[1]q
@@ -237,13 +237,13 @@ resource "aws_iot_authorizer" "test" {
   token_key_name          = "Token-Header-1"
 
   token_signing_public_keys = {
-    Key1 = "${file("test-fixtures/iot-authorizer-signing-key.pem")}"
+    Key1 = file("test-fixtures/iot-authorizer-signing-key.pem")
   }
 }
 `, rName))
 }
 
-func testAccAuthorizerUpdatedConfig(rName string) string {
+func testAccAuthorizerConfig_updated(rName string) string {
 	return acctest.ConfigCompose(testAccAuthorizerBaseConfig(rName), fmt.Sprintf(`
 resource "aws_iot_authorizer" "test" {
   name                    = %[1]q
@@ -254,14 +254,14 @@ resource "aws_iot_authorizer" "test" {
   enable_caching_for_http = true
 
   token_signing_public_keys = {
-    Key1 = "${file("test-fixtures/iot-authorizer-signing-key.pem")}"
-    Key2 = "${file("test-fixtures/iot-authorizer-signing-key.pem")}"
+    Key1 = file("test-fixtures/iot-authorizer-signing-key.pem")
+    Key2 = file("test-fixtures/iot-authorizer-signing-key.pem")
   }
 }
 `, rName))
 }
 
-func testAccAuthorizerSigningDisabledConfig(rName string) string {
+func testAccAuthorizerConfig_signingDisabled(rName string) string {
 	return acctest.ConfigCompose(testAccAuthorizerBaseConfig(rName), fmt.Sprintf(`
 resource "aws_iot_authorizer" "test" {
   name                    = %[1]q

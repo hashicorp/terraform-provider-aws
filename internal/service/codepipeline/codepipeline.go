@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -25,12 +26,12 @@ import (
 )
 
 const (
-	CodePipelineProviderGitHub = "GitHub"
+	providerGitHub = "GitHub"
 
-	CodePipelineGitHubActionConfigurationOAuthToken = "OAuthToken"
+	gitHubActionConfigurationOAuthToken = "OAuthToken"
 )
 
-func ResourceCodePipeline() *schema.Resource {
+func ResourceCodePipeline() *schema.Resource { // nosemgrep:ci.codepipeline-in-func-name
 	return &schema.Resource{
 		Create: resourceCreate,
 		Read:   resourceRead,
@@ -446,11 +447,11 @@ func flattenStageActions(si int, actions []*codepipeline.ActionDeclaration, d *s
 			config := aws.StringValueMap(action.Configuration)
 
 			actionProvider := aws.StringValue(action.ActionTypeId.Provider)
-			if actionProvider == CodePipelineProviderGitHub {
-				if _, ok := config[CodePipelineGitHubActionConfigurationOAuthToken]; ok {
+			if actionProvider == providerGitHub {
+				if _, ok := config[gitHubActionConfigurationOAuthToken]; ok {
 					// The AWS API returns "****" for the OAuthToken value. Pull the value from the configuration.
 					addr := fmt.Sprintf("stage.%d.action.%d.configuration.OAuthToken", si, ai)
-					config[CodePipelineGitHubActionConfigurationOAuthToken] = d.Get(addr).(string)
+					config[gitHubActionConfigurationOAuthToken] = d.Get(addr).(string)
 				}
 			}
 
@@ -538,13 +539,13 @@ func resourceRead(d *schema.ResourceData, meta interface{}) error {
 	})
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, codepipeline.ErrCodePipelineNotFoundException) {
-		names.LogNotFoundRemoveState(names.CodePipeline, names.ErrActionReading, ResCodePipeline, d.Id())
+		create.LogNotFoundRemoveState(names.CodePipeline, create.ErrActionReading, ResNamePipeline, d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return names.Error(names.CodePipeline, names.ErrActionReading, ResCodePipeline, d.Id(), err)
+		return create.Error(names.CodePipeline, create.ErrActionReading, ResNamePipeline, d.Id(), err)
 	}
 
 	metadata := resp.Metadata
@@ -643,7 +644,7 @@ func resourceValidateActionProvider(i interface{}, path cty.Path) diag.Diagnosti
 		return diag.Errorf("expected type to be string")
 	}
 
-	if v == CodePipelineProviderGitHub {
+	if v == providerGitHub {
 		return diag.Diagnostics{
 			diag.Diagnostic{
 				Severity: diag.Warning,
@@ -662,7 +663,7 @@ func suppressStageActionConfiguration(k, old, new string, d *schema.ResourceData
 	providerAddr := strings.Join(append(parts, "provider"), ".")
 	provider := d.Get(providerAddr).(string)
 
-	if provider == CodePipelineProviderGitHub && strings.HasSuffix(k, CodePipelineGitHubActionConfigurationOAuthToken) {
+	if provider == providerGitHub && strings.HasSuffix(k, gitHubActionConfigurationOAuthToken) {
 		hash := hashGitHubToken(new)
 		return old == hash
 	}
@@ -670,15 +671,15 @@ func suppressStageActionConfiguration(k, old, new string, d *schema.ResourceData
 	return false
 }
 
-const codePipelineGitHubTokenHashPrefix = "hash-"
+const gitHubTokenHashPrefix = "hash-"
 
 func hashGitHubToken(token string) string {
 	// Without this check, the value was getting encoded twice
-	if strings.HasPrefix(token, codePipelineGitHubTokenHashPrefix) {
+	if strings.HasPrefix(token, gitHubTokenHashPrefix) {
 		return token
 	}
 	sum := sha256.Sum256([]byte(token))
-	return codePipelineGitHubTokenHashPrefix + hex.EncodeToString(sum[:])
+	return gitHubTokenHashPrefix + hex.EncodeToString(sum[:])
 }
 
 // https://github.com/hashicorp/terraform-plugin-sdk/issues/780.

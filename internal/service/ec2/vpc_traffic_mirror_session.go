@@ -139,7 +139,7 @@ func resourceTrafficMirrorSessionUpdate(d *schema.ResourceData, meta interface{}
 	var removeFields []*string
 	if d.HasChange("description") {
 		n := d.Get("description")
-		if "" != n {
+		if n != "" {
 			input.Description = aws.String(n.(string))
 		} else {
 			removeFields = append(removeFields, aws.String("description"))
@@ -211,7 +211,7 @@ func resourceTrafficMirrorSessionRead(d *schema.ResourceData, meta interface{}) 
 		return fmt.Errorf("error describing EC2 Traffic Mirror Session (%s): %w", sessionId, err)
 	}
 
-	if 0 == len(out.TrafficMirrorSessions) {
+	if len(out.TrafficMirrorSessions) == 0 {
 		log.Printf("[WARN] EC2 Traffic Mirror Session (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil

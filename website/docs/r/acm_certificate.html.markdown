@@ -118,49 +118,51 @@ resource "aws_route53_record" "example" {
 The following arguments are supported:
 
 * Creating an Amazon issued certificate
-    * `domain_name` - (Required) A domain name for which the certificate should be issued
+    * `domain_name` - (Required) Domain name for which the certificate should be issued
     * `subject_alternative_names` - (Optional) Set of domains that should be SANs in the issued certificate. To remove all elements of a previously configured list, set this value equal to an empty list (`[]`) or use the [`terraform taint` command](https://www.terraform.io/docs/commands/taint.html) to trigger recreation.
     * `validation_method` - (Required) Which method to use for validation. `DNS` or `EMAIL` are valid, `NONE` can be used for certificates that were imported into ACM and then into Terraform.
     * `options` - (Optional) Configuration block used to set certificate options. Detailed below.
     * `validation_option` - (Optional) Configuration block used to specify information about the initial validation of each domain name. Detailed below.
 * Importing an existing certificate
-    * `private_key` - (Required) The certificate's PEM-formatted private key
-    * `certificate_body` - (Required) The certificate's PEM-formatted public key
-    * `certificate_chain` - (Optional) The certificate's PEM-formatted chain
+    * `private_key` - (Required) Certificate's PEM-formatted private key
+    * `certificate_body` - (Required) Certificate's PEM-formatted public key
+    * `certificate_chain` - (Optional) Certificate's PEM-formatted chain
 * Creating a private CA issued certificate
-    * `domain_name` - (Required) A domain name for which the certificate should be issued
+    * `domain_name` - (Required) Domain name for which the certificate should be issued
     * `certificate_authority_arn` - (Required) ARN of an ACM PCA
     * `subject_alternative_names` - (Optional) Set of domains that should be SANs in the issued certificate. To remove all elements of a previously configured list, set this value equal to an empty list (`[]`) or use the [`terraform taint` command](https://www.terraform.io/docs/commands/taint.html) to trigger recreation.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## options Configuration Block
 
 Supported nested arguments for the `options` configuration block:
 
-* `certificate_transparency_logging_preference` - (Optional) Specifies whether certificate details should be added to a certificate transparency log. Valid values are `ENABLED` or `DISABLED`. See https://docs.aws.amazon.com/acm/latest/userguide/acm-concepts.html#concept-transparency for more details.
+* `certificate_transparency_logging_preference` - (Optional) Whether certificate details should be added to a certificate transparency log. Valid values are `ENABLED` or `DISABLED`. See https://docs.aws.amazon.com/acm/latest/userguide/acm-concepts.html#concept-transparency for more details.
 
 ## validation_option Configuration Block
 
 Supported nested arguments for the `validation_option` configuration block:
 
-* `domain_name` - (Required) A fully qualified domain name (FQDN) in the certificate.
-* `validation_domain` - (Required) The domain name that you want ACM to use to send you validation emails. This domain name is the suffix of the email addresses that you want ACM to use. This must be the same as the `domain_name` value or a superdomain of the `domain_name` value. For example, if you request a certificate for `"testing.example.com"`, you can specify `"example.com"` for this value.
+* `domain_name` - (Required) Fully qualified domain name (FQDN) in the certificate.
+* `validation_domain` - (Required) Domain name that you want ACM to use to send you validation emails. This domain name is the suffix of the email addresses that you want ACM to use. This must be the same as the `domain_name` value or a superdomain of the `domain_name` value. For example, if you request a certificate for `"testing.example.com"`, you can specify `"example.com"` for this value.
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - The ARN of the certificate
-* `arn` - The ARN of the certificate
-* `domain_name` - The domain name for which the certificate is issued
+* `id` - ARN of the certificate
+* `arn` - ARN of the certificate
+* `domain_name` - Domain name for which the certificate is issued
 * `domain_validation_options` - Set of domain validation objects which can be used to complete certificate validation. Can have more than one element, e.g., if SANs are defined. Only set if `DNS`-validation was used.
+* `not_after` - Expiration date and time of the certificate.
+* `not_before` - Start of the validity period of the certificate.
 * `status` - Status of the certificate.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
-* `validation_emails` - A list of addresses that received a validation E-Mail. Only set if `EMAIL`-validation was used.
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `validation_emails` - List of addresses that received a validation E-Mail. Only set if `EMAIL`-validation was used.
 
 Domain validation objects export the following attributes:
 
-* `domain_name` - The domain to be validated
+* `domain_name` - Domain to be validated
 * `resource_record_name` - The name of the DNS record to create to validate the certificate
 * `resource_record_type` - The type of DNS record to create
 * `resource_record_value` - The value the DNS record needs to have

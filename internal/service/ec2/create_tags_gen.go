@@ -40,7 +40,7 @@ func CreateTags(conn *ec2.EC2, identifier string, tagsMap interface{}) error {
 	})
 
 	if err != nil {
-		return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
+		return fmt.Errorf("tagging resource (%s): %w", identifier, err)
 	}
 
 	return nil

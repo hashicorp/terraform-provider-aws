@@ -32,13 +32,13 @@ func TestAccCloudWatchMetricStream_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, cloudwatch.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckMetricStreamDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudwatch.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMetricStreamDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMetricStreamConfig(rName),
+				Config: testAccMetricStreamConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMetricStreamExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -63,13 +63,13 @@ func TestAccCloudWatchMetricStream_noName(t *testing.T) {
 	resourceName := "aws_cloudwatch_metric_stream.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, cloudwatch.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckMetricStreamDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudwatch.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMetricStreamDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMetricStreamNoNameConfig(),
+				Config: testAccMetricStreamConfig_noName(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMetricStreamExists(resourceName),
 				),
@@ -88,13 +88,13 @@ func TestAccCloudWatchMetricStream_namePrefix(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudwatch.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, cloudwatch.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckMetricStreamDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudwatch.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudwatch.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMetricStreamDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMetricStreamNamePrefixConfig(rName),
+				Config: testAccMetricStreamConfig_namePrefix(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMetricStreamExists(resourceName),
 					testAccCheckMetricStreamGeneratedNamePrefix(resourceName, acctest.ResourcePrefix),
@@ -114,13 +114,13 @@ func TestAccCloudWatchMetricStream_includeFilters(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, cloudwatch.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckMetricStreamDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudwatch.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMetricStreamDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMetricStreamIncludeFiltersConfig(rName),
+				Config: testAccMetricStreamConfig_includeFilters(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMetricStreamExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -142,13 +142,13 @@ func TestAccCloudWatchMetricStream_excludeFilters(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, cloudwatch.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckMetricStreamDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudwatch.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMetricStreamDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMetricStreamExcludeFiltersConfig(rName),
+				Config: testAccMetricStreamConfig_excludeFilters(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMetricStreamExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -170,13 +170,13 @@ func TestAccCloudWatchMetricStream_update(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, cloudwatch.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckMetricStreamDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudwatch.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMetricStreamDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMetricStreamUpdateARNConfig(rName),
+				Config: testAccMetricStreamConfig_updateARN(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMetricStreamExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -189,7 +189,7 @@ func TestAccCloudWatchMetricStream_update(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccMetricStreamConfig(rName),
+				Config: testAccMetricStreamConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMetricStreamExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -206,20 +206,20 @@ func TestAccCloudWatchMetricStream_updateName(t *testing.T) {
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, cloudwatch.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckMetricStreamDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudwatch.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMetricStreamDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMetricStreamConfig(rName),
+				Config: testAccMetricStreamConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMetricStreamExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 				),
 			},
 			{
-				Config: testAccMetricStreamConfig(rName2),
+				Config: testAccMetricStreamConfig_basic(rName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMetricStreamExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName2),
@@ -235,13 +235,13 @@ func TestAccCloudWatchMetricStream_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, cloudwatch.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckMetricStreamDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudwatch.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMetricStreamDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMetricStreamTagsConfig(rName),
+				Config: testAccMetricStreamConfig_tags(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMetricStreamExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -261,58 +261,58 @@ func TestAccCloudWatchMetricStream_additional_statistics(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, cloudwatch.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckMetricStreamDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudwatch.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMetricStreamDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccMetricStreamAdditionalStatisticsConfig(rName, "p0"),
+				Config:      testAccMetricStreamConfig_additionalStatistics(rName, "p0"),
 				ExpectError: regexp.MustCompile(`invalid statistic, see: https:\/\/docs\.aws\.amazon\.com\/.*`),
 			},
 			{
-				Config:      testAccMetricStreamAdditionalStatisticsConfig(rName, "p100"),
+				Config:      testAccMetricStreamConfig_additionalStatistics(rName, "p100"),
 				ExpectError: regexp.MustCompile(`invalid statistic, see: https:\/\/docs\.aws\.amazon\.com\/.*`),
 			},
 			{
-				Config:      testAccMetricStreamAdditionalStatisticsConfig(rName, "p"),
+				Config:      testAccMetricStreamConfig_additionalStatistics(rName, "p"),
 				ExpectError: regexp.MustCompile(`invalid statistic, see: https:\/\/docs\.aws\.amazon\.com\/.*`),
 			},
 			{
-				Config:      testAccMetricStreamAdditionalStatisticsConfig(rName, "tm"),
+				Config:      testAccMetricStreamConfig_additionalStatistics(rName, "tm"),
 				ExpectError: regexp.MustCompile(`invalid statistic, see: https:\/\/docs\.aws\.amazon\.com\/.*`),
 			},
 			{
-				Config:      testAccMetricStreamAdditionalStatisticsConfig(rName, "tc()"),
+				Config:      testAccMetricStreamConfig_additionalStatistics(rName, "tc()"),
 				ExpectError: regexp.MustCompile(`invalid statistic, see: https:\/\/docs\.aws\.amazon\.com\/.*`),
 			},
 			{
-				Config:      testAccMetricStreamAdditionalStatisticsConfig(rName, "p99.12345678901"),
+				Config:      testAccMetricStreamConfig_additionalStatistics(rName, "p99.12345678901"),
 				ExpectError: regexp.MustCompile(`invalid statistic, see: https:\/\/docs\.aws\.amazon\.com\/.*`),
 			},
 			{
-				Config: testAccMetricStreamAdditionalStatisticsConfig(rName, "IQM"),
+				Config: testAccMetricStreamConfig_additionalStatistics(rName, "IQM"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMetricStreamExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "statistics_configuration.#", "2"),
 				),
 			},
 			{
-				Config: testAccMetricStreamAdditionalStatisticsConfig(rName, "PR(:50)"),
+				Config: testAccMetricStreamConfig_additionalStatistics(rName, "PR(:50)"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMetricStreamExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "statistics_configuration.#", "2"),
 				),
 			},
 			{
-				Config: testAccMetricStreamAdditionalStatisticsConfig(rName, "TS(50.5:)"),
+				Config: testAccMetricStreamConfig_additionalStatistics(rName, "TS(50.5:)"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMetricStreamExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "statistics_configuration.#", "2"),
 				),
 			},
 			{
-				Config: testAccMetricStreamAdditionalStatisticsConfig(rName, "TC(1:100)"),
+				Config: testAccMetricStreamConfig_additionalStatistics(rName, "TC(1:100)"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMetricStreamExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "statistics_configuration.#", "2"),
@@ -358,11 +358,7 @@ func testAccCheckMetricStreamExists(n string) resource.TestCheckFunc {
 
 		_, err := conn.GetMetricStream(&params)
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 
@@ -412,7 +408,7 @@ func testAccCheckMetricStreamDestroyPrevious(name string) resource.TestCheckFunc
 	}
 }
 
-func testAccMetricStreamConfig(rName string) string {
+func testAccMetricStreamConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -531,7 +527,7 @@ resource "aws_kinesis_firehose_delivery_stream" "s3_stream" {
 `, rName)
 }
 
-func testAccMetricStreamUpdateARNConfig(rName string) string {
+func testAccMetricStreamConfig_updateARN(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 data "aws_region" "current" {}
@@ -546,7 +542,7 @@ resource "aws_cloudwatch_metric_stream" "test" {
 `, rName)
 }
 
-func testAccMetricStreamIncludeFiltersConfig(rName string) string {
+func testAccMetricStreamConfig_includeFilters(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 data "aws_region" "current" {}
@@ -569,7 +565,7 @@ resource "aws_cloudwatch_metric_stream" "test" {
 `, rName)
 }
 
-func testAccMetricStreamNoNameConfig() string {
+func testAccMetricStreamConfig_noName() string {
 	return `
 data "aws_partition" "current" {}
 data "aws_region" "current" {}
@@ -583,7 +579,7 @@ resource "aws_cloudwatch_metric_stream" "test" {
 `
 }
 
-func testAccMetricStreamNamePrefixConfig(rName string) string {
+func testAccMetricStreamConfig_namePrefix(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 data "aws_region" "current" {}
@@ -598,7 +594,7 @@ resource "aws_cloudwatch_metric_stream" "test" {
 `, rName)
 }
 
-func testAccMetricStreamExcludeFiltersConfig(rName string) string {
+func testAccMetricStreamConfig_excludeFilters(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 data "aws_region" "current" {}
@@ -621,7 +617,7 @@ resource "aws_cloudwatch_metric_stream" "test" {
 `, rName)
 }
 
-func testAccMetricStreamTagsConfig(rName string) string {
+func testAccMetricStreamConfig_tags(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 data "aws_region" "current" {}
@@ -641,7 +637,7 @@ resource "aws_cloudwatch_metric_stream" "test" {
 `, rName)
 }
 
-func testAccMetricStreamAdditionalStatisticsConfig(rName string, stat string) string {
+func testAccMetricStreamConfig_additionalStatistics(rName string, stat string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 data "aws_region" "current" {}

@@ -95,7 +95,7 @@ func resourceUploadCreate(d *schema.ResourceData, meta interface{}) error {
 func resourceUploadRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DeviceFarmConn
 
-	upload, err := FindUploadByArn(conn, d.Id())
+	upload, err := FindUploadByARN(conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] DeviceFarm Upload (%s) not found, removing from state", d.Id())

@@ -75,13 +75,13 @@ func TestAccAPIGatewayBasePathMapping_basic(t *testing.T) {
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, name)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, apigateway.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckBasePathDestroy(name),
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBasePathDestroy(name),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBasePathBasePathConfig(name, key, certificate, acctest.ResourcePrefix),
+				Config: testAccBasePathMappingConfig_basic(name, key, certificate, acctest.ResourcePrefix),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBasePathExists("aws_api_gateway_base_path_mapping.test", &conf),
 				),
@@ -105,13 +105,13 @@ func TestAccAPIGatewayBasePathMapping_BasePath_empty(t *testing.T) {
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, name)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, apigateway.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckBasePathDestroy(name),
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBasePathDestroy(name),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBasePathBasePathConfig(name, key, certificate, ""),
+				Config: testAccBasePathMappingConfig_basic(name, key, certificate, ""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBasePathExists("aws_api_gateway_base_path_mapping.test", &conf),
 				),
@@ -134,30 +134,30 @@ func TestAccAPIGatewayBasePathMapping_updates(t *testing.T) {
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, name)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, apigateway.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckBasePathDestroy(name),
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBasePathDestroy(name),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBasePathBasePathConfig(name, key, certificate, ""),
+				Config: testAccBasePathMappingConfig_basic(name, key, certificate, ""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBasePathExists(resourceName, &confFirst),
 					testAccCheckBasePathStageAttribute(&confFirst, "test"),
 				),
 			},
 			{
-				Config: testAccBasePathBasePathAltStageAndAPIConfig(name, key, certificate, ""),
+				Config: testAccBasePathMappingConfig_altStageAndAPI(name, key, certificate, ""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBasePathExists(resourceName, &conf),
 					testAccCheckBasePathBasePathAttribute(&conf, "(none)"),
 					testAccCheckBasePathStageAttribute(&conf, "test2"),
-					testAccCheckRestAPIIdAttributeHasChanged(&conf, &confFirst),
+					testAccCheckRestAPIIDAttributeHasChanged(&conf, &confFirst),
 					resource.TestCheckResourceAttr(resourceName, "stage_name", "test2"),
 				),
 			},
 			{
-				Config: testAccBasePathBasePathAltStageAndAPIConfig(name, key, certificate, "thing"),
+				Config: testAccBasePathMappingConfig_altStageAndAPI(name, key, certificate, "thing"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBasePathExists(resourceName, &conf),
 					testAccCheckBasePathBasePathAttribute(&conf, "thing"),
@@ -185,13 +185,13 @@ func TestAccAPIGatewayBasePathMapping_disappears(t *testing.T) {
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, name)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, apigateway.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckBasePathDestroy(name),
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBasePathDestroy(name),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBasePathBasePathConfig(name, key, certificate, acctest.ResourcePrefix),
+				Config: testAccBasePathMappingConfig_basic(name, key, certificate, acctest.ResourcePrefix),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBasePathExists(resourceName, &conf),
 					acctest.CheckResourceDisappears(acctest.Provider, tfapigateway.ResourceBasePathMapping(), resourceName),
@@ -282,7 +282,7 @@ func testAccCheckBasePathStageAttribute(conf *apigateway.BasePathMapping, basePa
 	}
 }
 
-func testAccCheckRestAPIIdAttributeHasChanged(conf *apigateway.BasePathMapping, previousConf *apigateway.BasePathMapping) resource.TestCheckFunc {
+func testAccCheckRestAPIIDAttributeHasChanged(conf *apigateway.BasePathMapping, previousConf *apigateway.BasePathMapping) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if conf.RestApiId == nil {
 			return fmt.Errorf("attribute RestApiId should not be nil")
@@ -362,7 +362,7 @@ resource "aws_api_gateway_deployment" "test" {
 `, domainName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key))
 }
 
-func testAccBasePathBasePathConfig(domainName, key, certificate, basePath string) string {
+func testAccBasePathMappingConfig_basic(domainName, key, certificate, basePath string) string {
 	return testAccBasePathBaseConfig(domainName, key, certificate) + fmt.Sprintf(`
 resource "aws_api_gateway_base_path_mapping" "test" {
   api_id      = aws_api_gateway_rest_api.test.id
@@ -373,7 +373,7 @@ resource "aws_api_gateway_base_path_mapping" "test" {
 `, basePath)
 }
 
-func testAccBasePathBasePathAltStageAndAPIConfig(domainName, key, certificate, basePath string) string {
+func testAccBasePathMappingConfig_altStageAndAPI(domainName, key, certificate, basePath string) string {
 	return testAccBasePathBaseConfig(domainName, key, certificate) + fmt.Sprintf(`
 
 resource "aws_api_gateway_rest_api" "test2" {

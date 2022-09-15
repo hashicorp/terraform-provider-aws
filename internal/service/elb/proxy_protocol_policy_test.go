@@ -17,13 +17,13 @@ import (
 func TestAccELBProxyProtocolPolicy_basic(t *testing.T) {
 	lbName := fmt.Sprintf("tf-test-lb-%s", sdkacctest.RandString(5))
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, elb.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckProxyProtocolPolicyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elb.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProxyProtocolPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProxyProtocolPolicyConfig(lbName),
+				Config: testAccProxyProtocolPolicyConfig_basic(lbName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(
 						"aws_proxy_protocol_policy.smtp", "load_balancer", lbName),
@@ -33,7 +33,7 @@ func TestAccELBProxyProtocolPolicy_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccProxyProtocolPolicyConfigUpdate(lbName),
+				Config: testAccProxyProtocolPolicyConfig_update(lbName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("aws_proxy_protocol_policy.smtp", "load_balancer", lbName),
 					resource.TestCheckResourceAttr("aws_proxy_protocol_policy.smtp", "instance_ports.#", "2"),
@@ -71,7 +71,7 @@ func testAccCheckProxyProtocolPolicyDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccProxyProtocolPolicyConfig(rName string) string {
+func testAccProxyProtocolPolicyConfig_basic(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_elb" "lb" {
   name               = "%s"
@@ -99,7 +99,7 @@ resource "aws_proxy_protocol_policy" "smtp" {
 `, rName))
 }
 
-func testAccProxyProtocolPolicyConfigUpdate(rName string) string {
+func testAccProxyProtocolPolicyConfig_update(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_elb" "lb" {
   name               = "%s"

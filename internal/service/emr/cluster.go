@@ -171,6 +171,11 @@ func ResourceCluster() *schema.Resource {
 										Required: true,
 										ForceNew: true,
 									},
+									"throughput": {
+										Type:     schema.TypeInt,
+										Optional: true,
+										ForceNew: true,
+									},
 									"type": {
 										Type:         schema.TypeString,
 										Required:     true,
@@ -391,6 +396,11 @@ func ResourceCluster() *schema.Resource {
 									"size": {
 										Type:     schema.TypeInt,
 										Required: true,
+										ForceNew: true,
+									},
+									"throughput": {
+										Type:     schema.TypeInt,
+										Optional: true,
 										ForceNew: true,
 									},
 									"type": {
@@ -932,7 +942,7 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 		if err != nil {
 			return fmt.Errorf("configurations_json contains an invalid JSON: %v", err)
 		}
-		params.Configurations, err = expandConfigurationJson(info)
+		params.Configurations, err = expandConfigurationJSON(info)
 		if err != nil {
 			return fmt.Errorf("Error reading EMR configurations_json: %w", err)
 		}
@@ -1095,7 +1105,7 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if _, ok := d.GetOk("configurations_json"); ok {
-		configOut, err := flattenConfigurationJson(cluster.Configurations)
+		configOut, err := flattenConfigurationJSON(cluster.Configurations)
 		if err != nil {
 			return fmt.Errorf("Error reading EMR cluster configurations: %w", err)
 		}
@@ -1666,6 +1676,9 @@ func flattenEBSConfig(ebsBlockDevices []*emr.EbsBlockDevice) *schema.Set {
 		if ebs.VolumeSpecification.SizeInGB != nil {
 			ebsAttrs["size"] = int(aws.Int64Value(ebs.VolumeSpecification.SizeInGB))
 		}
+		if ebs.VolumeSpecification.Throughput != nil {
+			ebsAttrs["throughput"] = aws.Int64Value(ebs.VolumeSpecification.Throughput)
+		}
 		if ebs.VolumeSpecification.VolumeType != nil {
 			ebsAttrs["type"] = aws.StringValue(ebs.VolumeSpecification.VolumeType)
 		}
@@ -1814,6 +1827,9 @@ func expandEBSConfig(configAttributes map[string]interface{}, config *emr.Instan
 					VolumeType: aws.String(rawEbsConfig["type"].(string)),
 				},
 			}
+			if v, ok := rawEbsConfig["throughput"].(int); ok && v != 0 {
+				ebsBlockDeviceConfig.VolumeSpecification.Throughput = aws.Int64(int64(v))
+			}
 			if v, ok := rawEbsConfig["iops"].(int); ok && v != 0 {
 				ebsBlockDeviceConfig.VolumeSpecification.Iops = aws.Int64(int64(v))
 			}
@@ -1825,7 +1841,7 @@ func expandEBSConfig(configAttributes map[string]interface{}, config *emr.Instan
 	}
 }
 
-func expandConfigurationJson(input string) ([]*emr.Configuration, error) {
+func expandConfigurationJSON(input string) ([]*emr.Configuration, error) {
 	configsOut := []*emr.Configuration{}
 	err := json.Unmarshal([]byte(input), &configsOut)
 	if err != nil {
@@ -1836,7 +1852,7 @@ func expandConfigurationJson(input string) ([]*emr.Configuration, error) {
 	return configsOut, nil
 }
 
-func flattenConfigurationJson(config []*emr.Configuration) (string, error) {
+func flattenConfigurationJSON(config []*emr.Configuration) (string, error) {
 	out, err := jsonutil.BuildJSON(config)
 	if err != nil {
 		return "", err
@@ -1847,15 +1863,15 @@ func flattenConfigurationJson(config []*emr.Configuration) (string, error) {
 func expandConfigures(input string) []*emr.Configuration {
 	configsOut := []*emr.Configuration{}
 	if strings.HasPrefix(input, "http") {
-		if err := readHttpJson(input, &configsOut); err != nil {
+		if err := readHTTPJSON(input, &configsOut); err != nil {
 			log.Printf("[ERR] Error reading HTTP JSON: %s", err)
 		}
 	} else if strings.HasSuffix(input, ".json") {
-		if err := readLocalJson(input, &configsOut); err != nil {
+		if err := readLocalJSON(input, &configsOut); err != nil {
 			log.Printf("[ERR] Error reading local JSON: %s", err)
 		}
 	} else {
-		if err := readBodyJson(input, &configsOut); err != nil {
+		if err := readBodyJSON(input, &configsOut); err != nil {
 			log.Printf("[ERR] Error reading body JSON: %s", err)
 		}
 	}
@@ -1864,7 +1880,7 @@ func expandConfigures(input string) []*emr.Configuration {
 	return configsOut
 }
 
-func readHttpJson(url string, target interface{}) error {
+func readHTTPJSON(url string, target interface{}) error {
 	r, err := http.Get(url)
 	if err != nil {
 		return err
@@ -1874,7 +1890,7 @@ func readHttpJson(url string, target interface{}) error {
 	return json.NewDecoder(r.Body).Decode(target)
 }
 
-func readLocalJson(localFile string, target interface{}) error {
+func readLocalJSON(localFile string, target interface{}) error {
 	file, e := os.ReadFile(localFile)
 	if e != nil {
 		log.Printf("[ERROR] %s", e)
@@ -1884,7 +1900,7 @@ func readLocalJson(localFile string, target interface{}) error {
 	return json.Unmarshal(file, target)
 }
 
-func readBodyJson(body string, target interface{}) error {
+func readBodyJSON(body string, target interface{}) error {
 	log.Printf("[DEBUG] Raw Body %s\n", body)
 	err := json.Unmarshal([]byte(body), target)
 	if err != nil {
@@ -1909,6 +1925,9 @@ func resourceClusterEBSHashConfig(v interface{}) int {
 	buf.WriteString(fmt.Sprintf("%d-", m["size"].(int)))
 	buf.WriteString(fmt.Sprintf("%s-", m["type"].(string)))
 	buf.WriteString(fmt.Sprintf("%d-", m["volumes_per_instance"].(int)))
+	if v, ok := m["throughput"].(int); ok && v != 0 {
+		buf.WriteString(fmt.Sprintf("%d-", v))
+	}
 	if v, ok := m["iops"].(int); ok && v != 0 {
 		buf.WriteString(fmt.Sprintf("%d-", v))
 	}
@@ -2091,6 +2110,9 @@ func expandEBSConfiguration(ebsConfigurations []interface{}) *emr.EbsConfigurati
 				SizeInGB:   aws.Int64(int64(cfg["size"].(int))),
 				VolumeType: aws.String(cfg["type"].(string)),
 			},
+		}
+		if v, ok := cfg["throughput"].(int); ok && v != 0 {
+			ebsBlockDeviceConfig.VolumeSpecification.Throughput = aws.Int64(int64(v))
 		}
 		if v, ok := cfg["iops"].(int); ok && v != 0 {
 			ebsBlockDeviceConfig.VolumeSpecification.Iops = aws.Int64(int64(v))

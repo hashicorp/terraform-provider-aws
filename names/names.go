@@ -23,21 +23,27 @@ import (
 
 // This "should" be defined by the AWS Go SDK v2, but currently isn't.
 const (
+	ComprehendEndpointID     = "comprehend"
+	IdentityStoreEndpointID  = "identitystore"
+	KendraEndpointID         = "kendra"
+	MediaLiveEndpointID      = "medialive"
+	RolesAnywhereEndpointID  = "rolesanywhere"
 	Route53DomainsEndpointID = "route53domains"
+	TranscribeEndpointID     = "transcribe"
 )
 
 // Type ServiceDatum corresponds closely to columns in `names_data.csv` and are
 // described in detail in README.md.
 type ServiceDatum struct {
-	Aliases           []string
-	Brand             string
-	DeprecatedEnvVar  string
-	EnvVar            string
-	GoV1ClientName    string
-	GoV1Package       string
-	GoV2Package       string
-	HumanFriendly     string
-	ProviderNameUpper string
+	Aliases            []string
+	Brand              string
+	DeprecatedEnvVar   string
+	EnvVar             string
+	GoV1ClientTypeName string
+	GoV1Package        string
+	GoV2Package        string
+	HumanFriendly      string
+	ProviderNameUpper  string
 }
 
 // serviceData key is the AWS provider service package
@@ -86,14 +92,14 @@ func readCSVIntoServiceData() error {
 		}
 
 		serviceData[p] = &ServiceDatum{
-			Brand:             l[ColBrand],
-			DeprecatedEnvVar:  l[ColDeprecatedEnvVar],
-			EnvVar:            l[ColEnvVar],
-			GoV1ClientName:    l[ColGoV1ClientName],
-			GoV1Package:       l[ColGoV1Package],
-			GoV2Package:       l[ColGoV2Package],
-			HumanFriendly:     l[ColHumanFriendly],
-			ProviderNameUpper: l[ColProviderNameUpper],
+			Brand:              l[ColBrand],
+			DeprecatedEnvVar:   l[ColDeprecatedEnvVar],
+			EnvVar:             l[ColEnvVar],
+			GoV1ClientTypeName: l[ColGoV1ClientTypeName],
+			GoV1Package:        l[ColGoV1Package],
+			GoV2Package:        l[ColGoV2Package],
+			HumanFriendly:      l[ColHumanFriendly],
+			ProviderNameUpper:  l[ColProviderNameUpper],
 		}
 
 		a := []string{p}
@@ -182,18 +188,48 @@ func FullHumanFriendly(service string) (string, error) {
 	return "", fmt.Errorf("no service data found for %s", service)
 }
 
+func AWSGoPackage(providerPackage string, version int) (string, error) {
+	switch version {
+	case 1:
+		return AWSGoV1Package(providerPackage)
+	case 2:
+		return AWSGoV2Package(providerPackage)
+	default:
+		return "", fmt.Errorf("unsupported AWS SDK Go version: %d", version)
+	}
+}
+
 func AWSGoV1Package(providerPackage string) (string, error) {
 	if v, ok := serviceData[providerPackage]; ok {
 		return v.GoV1Package, nil
 	}
 
-	return "", fmt.Errorf("getting AWS Go SDK v1 package, %s not found", providerPackage)
+	return "", fmt.Errorf("getting AWS SDK Go v1 package, %s not found", providerPackage)
 }
 
-func AWSGoV1ClientName(providerPackage string) (string, error) {
+func AWSGoV2Package(providerPackage string) (string, error) {
 	if v, ok := serviceData[providerPackage]; ok {
-		return v.GoV1ClientName, nil
+		return v.GoV2Package, nil
 	}
 
-	return "", fmt.Errorf("getting AWS Go SDK v1 client name, %s not found", providerPackage)
+	return "", fmt.Errorf("getting AWS SDK Go v2 package, %s not found", providerPackage)
+}
+
+func AWSGoClientTypeName(providerPackage string, version int) (string, error) {
+	switch version {
+	case 1:
+		return AWSGoV1ClientTypeName(providerPackage)
+	case 2:
+		return "Client", nil
+	default:
+		return "", fmt.Errorf("unsupported AWS SDK Go version: %d", version)
+	}
+}
+
+func AWSGoV1ClientTypeName(providerPackage string) (string, error) {
+	if v, ok := serviceData[providerPackage]; ok {
+		return v.GoV1ClientTypeName, nil
+	}
+
+	return "", fmt.Errorf("getting AWS SDK Go v1 client type name, %s not found", providerPackage)
 }

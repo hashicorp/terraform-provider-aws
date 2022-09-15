@@ -17,12 +17,12 @@ import (
 
 func TestAccMetaIPRangesDataSource_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIPRangesConfig,
+				Config: testAccIPRangesDataSourceConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccIPRangesCheckAttributes("data.aws_ip_ranges.some"),
 					testAccIPRangesCheckCIDRBlocksAttribute("data.aws_ip_ranges.some", "cidr_blocks"),
@@ -37,12 +37,12 @@ func TestAccMetaIPRangesDataSource_basic(t *testing.T) {
 
 func TestAccMetaIPRangesDataSource_url(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIPRangesURLConfig,
+				Config: testAccIPRangesDataSourceConfig_url,
 				Check: resource.ComposeTestCheckFunc(
 					testAccIPRangesCheckAttributes("data.aws_ip_ranges.some"),
 					testAccIPRangesCheckCIDRBlocksAttribute("data.aws_ip_ranges.some", "cidr_blocks"),
@@ -160,7 +160,7 @@ func testAccIPRangesCheckCIDRBlocksAttribute(name, attribute string) resource.Te
 }
 
 // lintignore:AWSAT003
-const testAccIPRangesConfig = `
+const testAccIPRangesDataSourceConfig_basic = `
 data "aws_ip_ranges" "some" {
   regions  = ["eu-west-1", "eu-central-1"]
   services = ["ec2"]
@@ -173,7 +173,7 @@ data "aws_ip_ranges" "none" {
 `
 
 // lintignore:AWSAT003
-const testAccIPRangesURLConfig = `
+const testAccIPRangesDataSourceConfig_url = `
 data "aws_ip_ranges" "some" {
   regions  = ["eu-west-1", "eu-central-1"]
   services = ["ec2"]

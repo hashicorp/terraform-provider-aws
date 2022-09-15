@@ -5,7 +5,7 @@ on:
       - main
   pull_request:
     paths:
-      - .markdownlinkcheck.json
+      - .ci/.markdownlinkcheck.json
       - .markdownlint.yml
       - .github/workflows/documentation.yml
       - .go-version
@@ -17,23 +17,22 @@ jobs:
     env:
       UV_THREADPOOL_SIZE: 128
     steps:
-    - uses: actions/checkout@v3
-    - uses: YakDriver/md-check-links@v2.0.5
-      with:
-        use-quiet-mode: 'yes'
-        use-verbose-mode: 'yes'
-        config-file: '.markdownlinkcheck.json'
-        folder-path: 'docs'
-        file-extension: '.md'
-        base-branch: "main"
-        check-modified-files-only: "yes"
+      - uses: actions/checkout@v3
+      - uses: YakDriver/md-check-links@v2.0.5
+        with:
+          use-quiet-mode: 'yes'
+          use-verbose-mode: 'yes'
+          config-file: '.ci/.markdownlinkcheck.json'
+          folder-path: 'docs'
+          file-extension: '.md'
+          base-branch: "main"
+          check-modified-files-only: "yes"
   markdown-lint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
       - uses: avto-dev/markdown-lint@v1
         with:
-          config: '.markdownlint.yml'
           args: 'docs'
   misspell:
     runs-on: ubuntu-latest
@@ -48,5 +47,5 @@ jobs:
         with:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
-      - run: cd tools && go install github.com/client9/misspell/cmd/misspell
+      - run: cd .ci/tools && go install github.com/client9/misspell/cmd/misspell
       - run: misspell -error -source text docs/

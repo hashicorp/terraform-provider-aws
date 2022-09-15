@@ -23,10 +23,10 @@ func TestAccAPIGatewayVPCLink_basic(t *testing.T) {
 	vpcLinkNameUpdated := fmt.Sprintf("tf-apigateway-update-%s", rName)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, apigateway.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckVPCLinkDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVPCLinkDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCLinkConfig_basic(rName, "test"),
@@ -44,7 +44,7 @@ func TestAccAPIGatewayVPCLink_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccVPCLinkConfig_Update(rName, "test update"),
+				Config: testAccVPCLinkConfig_update(rName, "test update"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCLinkExists(resourceName),
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexp.MustCompile(`/vpclinks/.+`)),
@@ -64,10 +64,10 @@ func TestAccAPIGatewayVPCLink_tags(t *testing.T) {
 	description := "test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, apigateway.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckVPCLinkDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVPCLinkDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCLinkConfig_tags1(rName, description, "key1", "value1"),
@@ -117,10 +117,10 @@ func TestAccAPIGatewayVPCLink_disappears(t *testing.T) {
 	resourceName := "aws_api_gateway_vpc_link.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, apigateway.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckVPCLinkDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVPCLinkDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCLinkConfig_basic(rName, "test"),
@@ -254,7 +254,7 @@ resource "aws_api_gateway_vpc_link" "test" {
 `, rName, description, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
-func testAccVPCLinkConfig_Update(rName, description string) string {
+func testAccVPCLinkConfig_update(rName, description string) string {
 	return testAccVPCLinkConfig_basis(rName) + fmt.Sprintf(`
 resource "aws_api_gateway_vpc_link" "test" {
   name        = "tf-apigateway-update-%s"

@@ -204,13 +204,7 @@ func resourceTopicSubscriptionRead(d *schema.ResourceData, meta interface{}) err
 
 	attributes := outputRaw.(map[string]string)
 
-	err = subscriptionAttributeMap.APIAttributesToResourceData(attributes, d)
-
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return subscriptionAttributeMap.APIAttributesToResourceData(attributes, d)
 }
 
 func resourceTopicSubscriptionUpdate(d *schema.ResourceData, meta interface{}) error {

@@ -22,10 +22,10 @@ func TestAccStorageGatewayStorediSCSIVolume_basic(t *testing.T) {
 	resourceName := "aws_storagegateway_stored_iscsi_volume.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, storagegateway.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckStorediSCSIVolumeDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, storagegateway.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckStorediSCSIVolumeDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStorediSCSIVolumeConfig_basic(rName),
@@ -64,10 +64,10 @@ func TestAccStorageGatewayStorediSCSIVolume_kms(t *testing.T) {
 	keyResourceName := "aws_kms_key.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, storagegateway.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckStorediSCSIVolumeDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, storagegateway.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckStorediSCSIVolumeDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStorediSCSIVolumeConfig_kmsEncrypted(rName),
@@ -92,10 +92,10 @@ func TestAccStorageGatewayStorediSCSIVolume_tags(t *testing.T) {
 	resourceName := "aws_storagegateway_stored_iscsi_volume.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, storagegateway.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckStorediSCSIVolumeDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, storagegateway.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckStorediSCSIVolumeDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStorediSCSIVolumeConfig_tags1(rName, "key1", "value1"),
@@ -140,10 +140,10 @@ func TestAccStorageGatewayStorediSCSIVolume_snapshotID(t *testing.T) {
 	resourceName := "aws_storagegateway_stored_iscsi_volume.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, storagegateway.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckStorediSCSIVolumeDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, storagegateway.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckStorediSCSIVolumeDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStorediSCSIVolumeConfig_snapshotID(rName),
@@ -177,10 +177,10 @@ func TestAccStorageGatewayStorediSCSIVolume_disappears(t *testing.T) {
 	resourceName := "aws_storagegateway_stored_iscsi_volume.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, storagegateway.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckStorediSCSIVolumeDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, storagegateway.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckStorediSCSIVolumeDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStorediSCSIVolumeConfig_basic(rName),

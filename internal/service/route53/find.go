@@ -81,7 +81,7 @@ func FindKeySigningKeyByResourceID(conn *route53.Route53, resourceID string) (*r
 	hostedZoneID, name, err := KeySigningKeyParseResourceID(resourceID)
 
 	if err != nil {
-		return nil, fmt.Errorf("error parsing Route 53 Key Signing Key (%s) identifier: %w", resourceID, err)
+		return nil, fmt.Errorf("parsing Route 53 Key Signing Key (%s) identifier: %w", resourceID, err)
 	}
 
 	return FindKeySigningKey(conn, hostedZoneID, name)

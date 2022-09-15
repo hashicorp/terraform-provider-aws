@@ -925,7 +925,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
+		if err := UpdateTagsWithContext(ctx, conn, d.Id(), o, n); err != nil {
 			return diag.Errorf("updating MSK Cluster (%s) tags: %s", d.Id(), err)
 		}
 	}
@@ -1086,7 +1086,7 @@ func expandClientAuthentication(tfMap map[string]interface{}) *kafka.ClientAuthe
 	apiObject := &kafka.ClientAuthentication{}
 
 	if v, ok := tfMap["sasl"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.Sasl = expandSasl(v[0].(map[string]interface{}))
+		apiObject.Sasl = expandSASL(v[0].(map[string]interface{}))
 	}
 
 	if v, ok := tfMap["tls"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
@@ -1102,7 +1102,7 @@ func expandClientAuthentication(tfMap map[string]interface{}) *kafka.ClientAuthe
 	return apiObject
 }
 
-func expandSasl(tfMap map[string]interface{}) *kafka.Sasl {
+func expandSASL(tfMap map[string]interface{}) *kafka.Sasl {
 	if tfMap == nil {
 		return nil
 	}
@@ -1479,7 +1479,7 @@ func flattenClientAuthentication(apiObject *kafka.ClientAuthentication) map[stri
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Sasl; v != nil {
-		tfMap["sasl"] = []interface{}{flattenSasl(v)}
+		tfMap["sasl"] = []interface{}{flattenSASL(v)}
 	}
 
 	if v := apiObject.Tls; v != nil {
@@ -1495,7 +1495,7 @@ func flattenClientAuthentication(apiObject *kafka.ClientAuthentication) map[stri
 	return tfMap
 }
 
-func flattenSasl(apiObject *kafka.Sasl) map[string]interface{} {
+func flattenSASL(apiObject *kafka.Sasl) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}

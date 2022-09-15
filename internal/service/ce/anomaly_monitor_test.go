@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfce "github.com/hashicorp/terraform-provider-aws/internal/service/ce"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -24,10 +25,10 @@ func TestAccCEAnomalyMonitor_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAnomalyMonitorDestroy,
-		ErrorCheck:        acctest.ErrorCheck(t, costexplorer.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAnomalyMonitorDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, costexplorer.EndpointsID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAnomalyMonitorConfig_basic(rName),
@@ -54,10 +55,10 @@ func TestAccCEAnomalyMonitor_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAnomalyMonitorDestroy,
-		ErrorCheck:        acctest.ErrorCheck(t, costexplorer.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAnomalyMonitorDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, costexplorer.EndpointsID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAnomalyMonitorConfig_basic(rName),
@@ -78,10 +79,10 @@ func TestAccCEAnomalyMonitor_update(t *testing.T) {
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAnomalyMonitorDestroy,
-		ErrorCheck:        acctest.ErrorCheck(t, costexplorer.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAnomalyMonitorDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, costexplorer.EndpointsID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAnomalyMonitorConfig_basic(rName),
@@ -112,13 +113,13 @@ func TestAccCEAnomalyMonitor_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAnomalyMonitorDestroy,
-		ErrorCheck:        acctest.ErrorCheck(t, costexplorer.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAnomalyMonitorDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, costexplorer.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAnomalyMonitorConfig_Tags1(rName, "key1", "value1"),
+				Config: testAccAnomalyMonitorConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAnomalyMonitorExists(resourceName, &monitor),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -131,7 +132,7 @@ func TestAccCEAnomalyMonitor_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAnomalyMonitorConfig_Tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccAnomalyMonitorConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAnomalyMonitorExists(resourceName, &monitor),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -140,7 +141,7 @@ func TestAccCEAnomalyMonitor_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAnomalyMonitorConfig_Tags1(rName, "key2", "value2"),
+				Config: testAccAnomalyMonitorConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAnomalyMonitorExists(resourceName, &monitor),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -160,13 +161,13 @@ func TestAccCEAnomalyMonitor_Dimensional(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAnomalyMonitorDestroy,
-		ErrorCheck:        acctest.ErrorCheck(t, costexplorer.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAnomalyMonitorDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, costexplorer.EndpointsID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAnomalyMonitorConfig_Dimensional(rName),
+				Config: testAccAnomalyMonitorConfig_dimensional(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAnomalyMonitorExists(resourceName, &monitor),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -230,7 +231,7 @@ func testAccCheckAnomalyMonitorDestroy(s *terraform.State) error {
 			return err
 		}
 
-		return names.Error(names.CE, names.ErrActionCheckingDestroyed, tfce.ResAnomalyMonitor, rs.Primary.ID, errors.New("still exists"))
+		return create.Error(names.CE, create.ErrActionCheckingDestroyed, tfce.ResNameAnomalyMonitor, rs.Primary.ID, errors.New("still exists"))
 
 	}
 
@@ -264,7 +265,7 @@ JSON
 `, rName)
 }
 
-func testAccAnomalyMonitorConfig_Tags1(rName string, tagKey1, tagValue1 string) string {
+func testAccAnomalyMonitorConfig_tags1(rName string, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`	
 resource "aws_ce_anomaly_monitor" "test" {
   name         = %[1]q
@@ -294,7 +295,7 @@ JSON
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccAnomalyMonitorConfig_Tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccAnomalyMonitorConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`	
 resource "aws_ce_anomaly_monitor" "test" {
   name         = %[1]q
@@ -325,7 +326,7 @@ JSON
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
-func testAccAnomalyMonitorConfig_Dimensional(rName string) string {
+func testAccAnomalyMonitorConfig_dimensional(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ce_anomaly_monitor" "test" {
   name              = %[1]q

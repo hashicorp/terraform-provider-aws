@@ -61,6 +61,11 @@ func ResourceHost() *schema.Resource {
 				Optional:     true,
 				ExactlyOneOf: []string{"instance_family", "instance_type"},
 			},
+			"outpost_arn": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
 			"owner_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -89,6 +94,10 @@ func resourceHostCreate(d *schema.ResourceData, meta interface{}) error {
 
 	if v, ok := d.GetOk("instance_type"); ok {
 		input.InstanceType = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("outpost_arn"); ok {
+		input.OutpostArn = aws.String(v.(string))
 	}
 
 	if len(tags) > 0 {
@@ -141,6 +150,7 @@ func resourceHostRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("host_recovery", host.HostRecovery)
 	d.Set("instance_family", host.HostProperties.InstanceFamily)
 	d.Set("instance_type", host.HostProperties.InstanceType)
+	d.Set("outpost_arn", host.OutpostArn)
 	d.Set("owner_id", host.OwnerId)
 
 	tags := KeyValueTags(host.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)

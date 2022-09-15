@@ -142,7 +142,7 @@ service/codestarnotifications:
 service/cognitoidentity:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_cognito_identity_(?!provider)'
 service/cognitoidp:
-  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_cognito_(identity_provider|resource|user)'
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_cognito_(identity_provider|resource|user|risk)'
 service/cognitosync:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_cognitosync_'
 service/comprehend:
@@ -491,6 +491,8 @@ service/redshift:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_redshift_'
 service/redshiftdata:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_redshiftdata_'
+service/redshiftserverless:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_redshiftserverless_'
 service/rekognition:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_rekognition_'
 service/resiliencehub:
@@ -501,6 +503,8 @@ service/resourcegroupstaggingapi:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_resourcegroupstaggingapi_'
 service/robomaker:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_robomaker_'
+service/rolesanywhere:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_rolesanywhere_'
 service/route53:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_route53_(?!resolver_)'
 service/route53domains:

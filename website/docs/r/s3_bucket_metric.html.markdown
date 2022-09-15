@@ -52,7 +52,7 @@ resource "aws_s3_bucket_metric" "example-filtered" {
 The following arguments are supported:
 
 * `bucket` - (Required) The name of the bucket to put metric configuration.
-* `name` - (Required) Unique identifier of the metrics configuration for the bucket.
+* `name` - (Required) Unique identifier of the metrics configuration for the bucket. Must be less than or equal to 64 characters in length.
 * `filter` - (Optional) [Object filtering](http://docs.aws.amazon.com/AmazonS3/latest/dev/metrics-configurations.html#metrics-configurations-filter) that accepts a prefix, tags, or a logical AND of prefix and tags (documented below).
 
 The `filter` metric configuration supports the following:

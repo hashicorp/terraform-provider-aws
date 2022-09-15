@@ -26,13 +26,13 @@ func TestAccEFSReplicationConfiguration_basic(t *testing.T) {
 	var providers []*schema.Provider
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, efs.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.CheckWithProviders(testAccCheckReplicationConfigurationDestroy, &providers),
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, efs.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckWithProviders(testAccCheckReplicationConfigurationDestroy, &providers),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReplicationConfigurationConfig(region),
+				Config: testAccReplicationConfigurationConfig_basic(region),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationConfigurationExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "creation_time"),
@@ -66,11 +66,11 @@ func TestAccEFSReplicationConfiguration_disappears(t *testing.T) {
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, efs.EndpointsID),
-		ProviderFactories: acctest.FactoriesAlternate(&providers),
+		ProviderFactories: acctest.FactoriesAlternate(t, &providers),
 		CheckDestroy:      acctest.CheckWithProviders(testAccCheckReplicationConfigurationDestroy, &providers),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReplicationConfigurationConfig(region),
+				Config: testAccReplicationConfigurationConfig_basic(region),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationConfigurationExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfefs.ResourceReplicationConfiguration(), resourceName),
@@ -98,11 +98,11 @@ func TestAccEFSReplicationConfiguration_allAttributes(t *testing.T) {
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, efs.EndpointsID),
-		ProviderFactories: acctest.FactoriesAlternate(&providers),
+		ProviderFactories: acctest.FactoriesAlternate(t, &providers),
 		CheckDestroy:      acctest.CheckWithProviders(testAccCheckReplicationConfigurationDestroy, &providers),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReplicationConfigurationFullConfig(alternateRegion),
+				Config: testAccReplicationConfigurationConfig_full(alternateRegion),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationConfigurationExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "creation_time"),
@@ -137,11 +137,7 @@ func testAccCheckReplicationConfigurationExists(n string) resource.TestCheckFunc
 
 		_, err := tfefs.FindReplicationConfigurationByID(conn, rs.Primary.ID)
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 
@@ -169,7 +165,7 @@ func testAccCheckReplicationConfigurationDestroy(s *terraform.State, provider *s
 	return nil
 }
 
-func testAccReplicationConfigurationConfig(region string) string {
+func testAccReplicationConfigurationConfig_basic(region string) string {
 	return fmt.Sprintf(`
 resource "aws_efs_file_system" "test" {}
 
@@ -183,7 +179,7 @@ resource "aws_efs_replication_configuration" "test" {
 `, region)
 }
 
-func testAccReplicationConfigurationFullConfig(region string) string {
+func testAccReplicationConfigurationConfig_full(region string) string {
 	return acctest.ConfigCompose(acctest.ConfigAlternateRegionProvider(), fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   provider = "awsalternate"

@@ -30,8 +30,8 @@ const (
 	AppDeletedTimeout                 = 10 * time.Minute
 	FlowDefinitionActiveTimeout       = 2 * time.Minute
 	FlowDefinitionDeletedTimeout      = 2 * time.Minute
-	ProjectCreatedTimeout             = 2 * time.Minute
-	ProjectDeletedTimeout             = 5 * time.Minute
+	ProjectCreatedTimeout             = 15 * time.Minute
+	ProjectDeletedTimeout             = 15 * time.Minute
 )
 
 // WaitNotebookInstanceInService waits for a NotebookInstance to return InService
@@ -51,6 +51,10 @@ func WaitNotebookInstanceInService(conn *sagemaker.SageMaker, notebookName strin
 	outputRaw, err := stateConf.WaitForState()
 
 	if output, ok := outputRaw.(*sagemaker.DescribeNotebookInstanceOutput); ok {
+		if status := aws.StringValue(output.NotebookInstanceStatus); status == sagemaker.NotebookInstanceStatusFailed {
+			tfresource.SetLastError(err, errors.New(aws.StringValue(output.FailureReason)))
+		}
+
 		return output, err
 	}
 
@@ -72,6 +76,10 @@ func WaitNotebookInstanceStopped(conn *sagemaker.SageMaker, notebookName string)
 	outputRaw, err := stateConf.WaitForState()
 
 	if output, ok := outputRaw.(*sagemaker.DescribeNotebookInstanceOutput); ok {
+		if status := aws.StringValue(output.NotebookInstanceStatus); status == sagemaker.NotebookInstanceStatusFailed {
+			tfresource.SetLastError(err, errors.New(aws.StringValue(output.FailureReason)))
+		}
+
 		return output, err
 	}
 
@@ -92,6 +100,10 @@ func WaitNotebookInstanceDeleted(conn *sagemaker.SageMaker, notebookName string)
 	outputRaw, err := stateConf.WaitForState()
 
 	if output, ok := outputRaw.(*sagemaker.DescribeNotebookInstanceOutput); ok {
+		if status := aws.StringValue(output.NotebookInstanceStatus); status == sagemaker.NotebookInstanceStatusFailed {
+			tfresource.SetLastError(err, errors.New(aws.StringValue(output.FailureReason)))
+		}
+
 		return output, err
 	}
 

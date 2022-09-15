@@ -217,6 +217,7 @@ across different markets and instance types. Conflicts with `launch_template_con
 * `target_capacity` - The number of units to request. You can choose to set the
   target capacity in terms of instances or a performance characteristic that is
   important to your application workload, such as vCPUs, memory, or I/O.
+* `target_capacity_unit_type` - (Optional) The unit for the target capacity. This can only be done with `instance_requirements` defined
 * `allocation_strategy` - Indicates how to allocate the target capacity across
   the Spot pools specified by the Spot fleet request. The default is
   `lowestPrice`.
@@ -245,7 +246,7 @@ across different markets and instance types. Conflicts with `launch_template_con
 * `on_demand_allocation_strategy` - The order of the launch template overrides to use in fulfilling On-Demand capacity. the possible values are: `lowestPrice` and `prioritized`. the default is `lowestPrice`.
 * `on_demand_max_total_price` - The maximum amount per hour for On-Demand Instances that you're willing to pay. When the maximum amount you're willing to pay is reached, the fleet stops launching instances even if it hasn’t met the target capacity.
 * `on_demand_target_capacity` - The number of On-Demand units to request. If the request type is `maintain`, you can specify a target capacity of 0 and add capacity later.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### Launch Template Configs
 
@@ -370,7 +371,7 @@ This configuration block supports the following:
     * `max` - (Optional) Maximum.
 * `on_demand_max_price_percentage_over_lowest_price` - (Optional) The price protection threshold for On-Demand Instances. This is the maximum you’ll pay for an On-Demand Instance, expressed as a percentage higher than the cheapest M, C, or R instance type with your specified attributes. When Amazon EC2 Auto Scaling selects instance types with your attributes, we will exclude instance types whose price is higher than your threshold. The parameter accepts an integer, which Amazon EC2 Auto Scaling interprets as a percentage. To turn off price protection, specify a high value, such as 999999. Default is 20.
 
-    If you set DesiredCapacityType to vcpu or memory-mib, the price protection threshold is applied based on the per vCPU or per memory price instead of the per instance price.  
+    If you set DesiredCapacityType to vcpu or memory-mib, the price protection threshold is applied based on the per vCPU or per memory price instead of the per instance price.
 * `require_hibernate_support` - (Optional) Indicate whether instance types must support On-Demand Instance Hibernation, either `true` or `false`. Default is `false`.
 * `spot_max_price_percentage_over_lowest_price` - (Optional) The price protection threshold for Spot Instances. This is the maximum you’ll pay for a Spot Instance, expressed as a percentage higher than the cheapest M, C, or R instance type with your specified attributes. When Amazon EC2 Auto Scaling selects instance types with your attributes, we will exclude instance types whose price is higher than your threshold. The parameter accepts an integer, which Amazon EC2 Auto Scaling interprets as a percentage. To turn off price protection, specify a high value, such as 999999. Default is 100.
 
@@ -382,20 +383,20 @@ This configuration block supports the following:
     * `min` - (Optional) Minimum.
     * `max` - (Optional) Maximum.
 
-### Timeouts
-
-The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) for certain actions:
-
-* `create` - (Defaults to 10 mins) Used when requesting the spot instance (only valid if `wait_for_fulfillment = true`)
-* `delete` - (Defaults to 15 mins) Used when destroying the spot instance
-
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - The Spot fleet request ID
 * `spot_request_state` - The state of the Spot fleet request.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+
+## Timeouts
+
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+
+* `create` - (Default `10m`)
+* `delete` - (Default `15m`)
 
 ## Import
 

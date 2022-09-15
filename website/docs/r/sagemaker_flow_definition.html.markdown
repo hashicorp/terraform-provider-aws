@@ -116,7 +116,7 @@ The following arguments are supported:
 * `output_config` - (Required) An object containing information about where the human review results will be uploaded. See [Output Config](#output-config) details below.
 * `human_loop_activation_config` - (Optional) An object containing information about the events that trigger a human workflow. See [Human Loop Activation Config](#human-loop-activation-config) details below.
 * `human_loop_request_source` - (Optional) Container for configuring the source of human task requests. Use to specify if Amazon Rekognition or Amazon Textract is used as an integration source. See [Human Loop Request Source](#human-loop-request-source) details below.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### Human Loop Config
 
@@ -164,7 +164,7 @@ In addition to all arguments above, the following attributes are exported:
 
 * `arn` - The Amazon Resource Name (ARN) assigned by AWS to this Flow Definition.
 * `id` - The name of the Flow Definition.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 

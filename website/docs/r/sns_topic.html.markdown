@@ -95,7 +95,7 @@ The following arguments are supported:
 * `firehose_success_feedback_role_arn` - (Optional) The IAM role permitted to receive success feedback for this topic
 * `firehose_success_feedback_sample_rate` - (Optional) Percentage of success to sample
 * `firehose_failure_feedback_role_arn` - (Optional) IAM role for failure feedback
-* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attributes Reference
 
@@ -104,7 +104,7 @@ In addition to all arguments above, the following attributes are exported:
 * `id` - The ARN of the SNS topic
 * `arn` - The ARN of the SNS topic, as a more obvious property (clone of id)
 * `owner` - The AWS Account ID of the SNS topic owner
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 

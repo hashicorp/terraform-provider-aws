@@ -22,10 +22,10 @@ func TestAccConfigServiceConfigurationAggregator_account(t *testing.T) {
 	resourceName := "aws_config_configuration_aggregator.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, configservice.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckConfigurationAggregatorDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, configservice.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckConfigurationAggregatorDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConfigurationAggregatorConfig_account(rName),
@@ -57,10 +57,10 @@ func TestAccConfigServiceConfigurationAggregator_organization(t *testing.T) {
 	resourceName := "aws_config_configuration_aggregator.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, configservice.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckConfigurationAggregatorDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, configservice.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckConfigurationAggregatorDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConfigurationAggregatorConfig_organization(rName),
@@ -87,10 +87,10 @@ func TestAccConfigServiceConfigurationAggregator_switch(t *testing.T) {
 	resourceName := "aws_config_configuration_aggregator.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, configservice.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckConfigurationAggregatorDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, configservice.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckConfigurationAggregatorDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConfigurationAggregatorConfig_account(rName),
@@ -116,13 +116,13 @@ func TestAccConfigServiceConfigurationAggregator_tags(t *testing.T) {
 	resourceName := "aws_config_configuration_aggregator.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, configservice.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckConfigurationAggregatorDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, configservice.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckConfigurationAggregatorDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfigurationAggregatorTags1Config(rName, "key1", "value1"),
+				Config: testAccConfigurationAggregatorConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationAggregatorExists(resourceName, &ca),
 					testAccCheckConfigurationAggregatorName(resourceName, rName, &ca),
@@ -131,7 +131,7 @@ func TestAccConfigServiceConfigurationAggregator_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccConfigurationAggregatorTags2Config(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccConfigurationAggregatorConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationAggregatorExists(resourceName, &ca),
 					testAccCheckConfigurationAggregatorName(resourceName, rName, &ca),
@@ -146,7 +146,7 @@ func TestAccConfigServiceConfigurationAggregator_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccConfigurationAggregatorTags1Config(rName, "key2", "value2"),
+				Config: testAccConfigurationAggregatorConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationAggregatorExists(resourceName, &ca),
 					testAccCheckConfigurationAggregatorName(resourceName, rName, &ca),
@@ -164,10 +164,10 @@ func TestAccConfigServiceConfigurationAggregator_disappears(t *testing.T) {
 	resourceName := "aws_config_configuration_aggregator.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, configservice.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckConfigurationAggregatorDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, configservice.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckConfigurationAggregatorDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConfigurationAggregatorConfig_account(rName),
@@ -309,7 +309,7 @@ resource "aws_iam_role_policy_attachment" "test" {
 `, rName)
 }
 
-func testAccConfigurationAggregatorTags1Config(rName, tagKey1, tagValue1 string) string {
+func testAccConfigurationAggregatorConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 
@@ -330,7 +330,7 @@ resource "aws_config_configuration_aggregator" "test" {
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccConfigurationAggregatorTags2Config(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccConfigurationAggregatorConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 

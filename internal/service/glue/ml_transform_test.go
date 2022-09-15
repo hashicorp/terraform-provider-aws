@@ -25,10 +25,10 @@ func TestAccGlueMlTransform_basic(t *testing.T) {
 	tableResourceName := "aws_glue_catalog_table.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, glue.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckMLTransformDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMLTransformDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMLTransformConfig_basic(rName),
@@ -73,10 +73,10 @@ func TestAccGlueMlTransform_typeFindMatchesFull(t *testing.T) {
 	resourceName := "aws_glue_ml_transform.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, glue.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckMLTransformDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMLTransformDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMLTransformConfig_typeFindMatchesFull(rName, true, 0.5),
@@ -133,10 +133,10 @@ func TestAccGlueMlTransform_description(t *testing.T) {
 	resourceName := "aws_glue_ml_transform.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, glue.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckMLTransformDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMLTransformDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMLTransformConfig_description(rName, "First Description"),
@@ -168,10 +168,10 @@ func TestAccGlueMlTransform_glueVersion(t *testing.T) {
 	resourceName := "aws_glue_ml_transform.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, glue.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckMLTransformDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMLTransformDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMLTransformConfig_version(rName, "0.9"),
@@ -203,10 +203,10 @@ func TestAccGlueMlTransform_maxRetries(t *testing.T) {
 	resourceName := "aws_glue_ml_transform.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, glue.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckMLTransformDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMLTransformDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccMLTransformConfig_maxRetries(rName, 11),
@@ -242,10 +242,10 @@ func TestAccGlueMlTransform_tags(t *testing.T) {
 	resourceName := "aws_glue_ml_transform.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, glue.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckMLTransformDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMLTransformDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMLTransformConfig_tags1(rName, "key1", "value1"),
@@ -288,10 +288,10 @@ func TestAccGlueMlTransform_timeout(t *testing.T) {
 	resourceName := "aws_glue_ml_transform.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, glue.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckMLTransformDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMLTransformDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMLTransformConfig_timeout(rName, 1),
@@ -323,10 +323,10 @@ func TestAccGlueMlTransform_workerType(t *testing.T) {
 	resourceName := "aws_glue_ml_transform.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, glue.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckMLTransformDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMLTransformDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMLTransformConfig_workerType(rName, "Standard", 1),
@@ -360,10 +360,10 @@ func TestAccGlueMlTransform_maxCapacity(t *testing.T) {
 	resourceName := "aws_glue_ml_transform.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, glue.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckMLTransformDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMLTransformDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMLTransformConfig_maxCapacity(rName, 10),
@@ -395,10 +395,10 @@ func TestAccGlueMlTransform_disappears(t *testing.T) {
 	resourceName := "aws_glue_ml_transform.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, glue.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckMLTransformDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMLTransformDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMLTransformConfig_basic(rName),

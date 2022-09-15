@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -101,24 +102,24 @@ func resourceConfigurationRecorderRead(d *schema.ResourceData, meta interface{})
 	}
 	out, err := conn.DescribeConfigurationRecorders(&input)
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, configservice.ErrCodeNoSuchConfigurationRecorderException) {
-		names.LogNotFoundRemoveState(names.ConfigService, names.ErrActionReading, "Configuration Recorder", d.Id())
+		create.LogNotFoundRemoveState(names.ConfigService, create.ErrActionReading, ResNameConfigurationRecorder, d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return names.Error(names.ConfigService, names.ErrActionReading, "Configuration Recorder", d.Id(), err)
+		return create.Error(names.ConfigService, create.ErrActionReading, ResNameConfigurationRecorder, d.Id(), err)
 	}
 
 	numberOfRecorders := len(out.ConfigurationRecorders)
 	if !d.IsNewResource() && numberOfRecorders < 1 {
-		names.LogNotFoundRemoveState(names.ConfigService, names.ErrActionReading, "Configuration Recorder", d.Id())
+		create.LogNotFoundRemoveState(names.ConfigService, create.ErrActionReading, ResNameConfigurationRecorder, d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if d.IsNewResource() && numberOfRecorders < 1 {
-		return names.Error(names.ConfigService, names.ErrActionReading, "Configuration Recorder", d.Id(), errors.New("none found"))
+		return create.Error(names.ConfigService, create.ErrActionReading, ResNameConfigurationRecorder, d.Id(), errors.New("none found"))
 	}
 
 	if numberOfRecorders > 1 {

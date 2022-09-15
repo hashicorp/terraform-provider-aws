@@ -17,14 +17,14 @@ func testAccOrganizationDataSource_basic(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckOrganizationsAccount(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, organizations.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		ErrorCheck:               acctest.ErrorCheck(t, organizations.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOrganizationConfig_resourceOnly,
+				Config: testAccOrganizationDataSourceConfig_resourceOnly,
 			},
 			{
-				Config: testAccOrganizationConfig_basic,
+				Config: testAccOrganizationDataSourceConfig_basic,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "accounts.#", dataSourceName, "accounts.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
@@ -43,17 +43,17 @@ func testAccOrganizationDataSource_basic(t *testing.T) {
 			{
 				// This is to make sure the data source isn't around trying to read the resource
 				// when the resource is being destroyed
-				Config: testAccOrganizationConfig_resourceOnly,
+				Config: testAccOrganizationDataSourceConfig_resourceOnly,
 			},
 		},
 	})
 }
 
-const testAccOrganizationConfig_resourceOnly = `
+const testAccOrganizationDataSourceConfig_resourceOnly = `
 resource "aws_organizations_organization" "test" {}
 `
 
-const testAccOrganizationConfig_basic = `
+const testAccOrganizationDataSourceConfig_basic = `
 resource "aws_organizations_organization" "test" {}
 
 data "aws_organizations_organization" "test" {}

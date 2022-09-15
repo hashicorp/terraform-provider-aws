@@ -8,7 +8,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/macie2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -25,7 +24,6 @@ const (
 )
 
 func testAccMember_basic(t *testing.T) {
-	var providers []*schema.Provider
 	var macie2Output macie2.GetMemberOutput
 	resourceName := "aws_macie2_member.member"
 	dataSourceAlternate := "data.aws_caller_identity.member"
@@ -35,9 +33,9 @@ func testAccMember_basic(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckAlternateAccount(t)
 		},
-		ProviderFactories: acctest.FactoriesAlternate(&providers),
-		CheckDestroy:      testAccCheckMemberDestroy,
-		ErrorCheck:        acctest.ErrorCheck(t, macie2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
+		CheckDestroy:             testAccCheckMemberDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, macie2.EndpointsID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMemberConfig_basic(acctest.DefaultEmailAddress),
@@ -63,7 +61,6 @@ func testAccMember_basic(t *testing.T) {
 }
 
 func testAccMember_disappears(t *testing.T) {
-	var providers []*schema.Provider
 	var macie2Output macie2.GetMemberOutput
 	resourceName := "aws_macie2_member.member"
 
@@ -72,9 +69,9 @@ func testAccMember_disappears(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckAlternateAccount(t)
 		},
-		ProviderFactories: acctest.FactoriesAlternate(&providers),
-		CheckDestroy:      testAccCheckMemberDestroy,
-		ErrorCheck:        acctest.ErrorCheck(t, macie2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
+		CheckDestroy:             testAccCheckMemberDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, macie2.EndpointsID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMemberConfig_basic(acctest.DefaultEmailAddress),
@@ -90,7 +87,6 @@ func testAccMember_disappears(t *testing.T) {
 
 func testAccMember_invitationDisableEmailNotification(t *testing.T) {
 	var macie2Output macie2.GetMemberOutput
-	var providers []*schema.Provider
 	resourceName := "aws_macie2_member.member"
 	email := conns.SkipIfEnvVarEmpty(t, EnvVarAlternateEmail, EnvVarAlternateEmailMessageError)
 
@@ -99,9 +95,9 @@ func testAccMember_invitationDisableEmailNotification(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckAlternateAccount(t)
 		},
-		ProviderFactories: acctest.FactoriesAlternate(&providers),
-		CheckDestroy:      testAccCheckInvitationAccepterDestroy,
-		ErrorCheck:        acctest.ErrorCheck(t, macie2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
+		CheckDestroy:             testAccCheckInvitationAccepterDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, macie2.EndpointsID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMemberConfig_inviteInvitationDisableEmailNotification(email, "true", true),
@@ -131,7 +127,6 @@ func testAccMember_invitationDisableEmailNotification(t *testing.T) {
 
 func testAccMember_invite(t *testing.T) {
 	var macie2Output macie2.GetMemberOutput
-	var providers []*schema.Provider
 	resourceName := "aws_macie2_member.member"
 	dataSourceAlternate := "data.aws_caller_identity.member"
 	email := conns.SkipIfEnvVarEmpty(t, EnvVarAlternateEmail, EnvVarAlternateEmailMessageError)
@@ -141,9 +136,9 @@ func testAccMember_invite(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckAlternateAccount(t)
 		},
-		ProviderFactories: acctest.FactoriesAlternate(&providers),
-		CheckDestroy:      testAccCheckInvitationAccepterDestroy,
-		ErrorCheck:        acctest.ErrorCheck(t, macie2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
+		CheckDestroy:             testAccCheckInvitationAccepterDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, macie2.EndpointsID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMemberConfig_invite(email, false),
@@ -186,7 +181,6 @@ func testAccMember_invite(t *testing.T) {
 
 func testAccMember_inviteRemoved(t *testing.T) {
 	var macie2Output macie2.GetMemberOutput
-	var providers []*schema.Provider
 	resourceName := "aws_macie2_member.member"
 	dataSourceAlternate := "data.aws_caller_identity.member"
 	email := conns.SkipIfEnvVarEmpty(t, EnvVarAlternateEmail, EnvVarAlternateEmailMessageError)
@@ -196,9 +190,9 @@ func testAccMember_inviteRemoved(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckAlternateAccount(t)
 		},
-		ProviderFactories: acctest.FactoriesAlternate(&providers),
-		CheckDestroy:      testAccCheckInvitationAccepterDestroy,
-		ErrorCheck:        acctest.ErrorCheck(t, macie2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
+		CheckDestroy:             testAccCheckInvitationAccepterDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, macie2.EndpointsID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMemberConfig_invite(email, true),
@@ -241,7 +235,6 @@ func testAccMember_inviteRemoved(t *testing.T) {
 
 func testAccMember_status(t *testing.T) {
 	var macie2Output macie2.GetMemberOutput
-	var providers []*schema.Provider
 	resourceName := "aws_macie2_member.member"
 	dataSourceAlternate := "data.aws_caller_identity.member"
 	email := conns.SkipIfEnvVarEmpty(t, EnvVarAlternateEmail, EnvVarAlternateEmailMessageError)
@@ -251,9 +244,9 @@ func testAccMember_status(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckAlternateAccount(t)
 		},
-		ProviderFactories: acctest.FactoriesAlternate(&providers),
-		CheckDestroy:      testAccCheckInvitationAccepterDestroy,
-		ErrorCheck:        acctest.ErrorCheck(t, macie2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
+		CheckDestroy:             testAccCheckInvitationAccepterDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, macie2.EndpointsID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMemberConfig_status(email, macie2.MacieStatusEnabled, true),
@@ -295,7 +288,6 @@ func testAccMember_status(t *testing.T) {
 }
 
 func testAccMember_withTags(t *testing.T) {
-	var providers []*schema.Provider
 	var macie2Output macie2.GetMemberOutput
 	resourceName := "aws_macie2_member.member"
 	dataSourceAlternate := "data.aws_caller_identity.member"
@@ -305,9 +297,9 @@ func testAccMember_withTags(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckAlternateAccount(t)
 		},
-		ProviderFactories: acctest.FactoriesAlternate(&providers),
-		CheckDestroy:      testAccCheckMemberDestroy,
-		ErrorCheck:        acctest.ErrorCheck(t, macie2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
+		CheckDestroy:             testAccCheckMemberDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, macie2.EndpointsID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMemberConfig_tags(acctest.DefaultEmailAddress),

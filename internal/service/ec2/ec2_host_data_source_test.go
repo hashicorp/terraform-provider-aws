@@ -16,9 +16,9 @@ func TestAccEC2HostDataSource_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccHostDataSourceConfig_basic(rName),
@@ -31,6 +31,7 @@ func TestAccEC2HostDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "host_recovery", resourceName, "host_recovery"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "instance_family", resourceName, "instance_family"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "instance_type", resourceName, "instance_type"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "outpost_arn", resourceName, "outpost_arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "owner_id", resourceName, "owner_id"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "sockets"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "tags.%", resourceName, "tags.%"),
@@ -47,9 +48,9 @@ func TestAccEC2HostDataSource_filter(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccHostDataSourceConfig_filter(rName),
@@ -62,6 +63,7 @@ func TestAccEC2HostDataSource_filter(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "host_recovery", resourceName, "host_recovery"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "instance_family", resourceName, "instance_family"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "instance_type", resourceName, "instance_type"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "outpost_arn", resourceName, "outpost_arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "owner_id", resourceName, "owner_id"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "sockets"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "tags.%", resourceName, "tags.%"),

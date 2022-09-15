@@ -85,7 +85,8 @@ func SharedRegionalSweepClientWithContext(ctx context.Context, region string) (i
 	}
 
 	// configures a default client for the region, using the above env vars
-	client, diags := conf.Client(ctx)
+	client, diags := conf.ConfigureProvider(ctx, &conns.AWSClient{})
+
 	if diags.HasError() {
 		return nil, fmt.Errorf("error getting AWS client: %#v", diags)
 	}
@@ -93,6 +94,10 @@ func SharedRegionalSweepClientWithContext(ctx context.Context, region string) (i
 	SweeperClients[region] = client
 
 	return client, nil
+}
+
+type Sweepable interface {
+	Delete(ctx context.Context, rc RetryConfig) error
 }
 
 type SweepResource struct {
@@ -109,37 +114,56 @@ func NewSweepResource(resource *schema.Resource, d *schema.ResourceData, meta in
 	}
 }
 
-func SweepOrchestrator(sweepResources []*SweepResource) error {
-	return SweepOrchestratorWithContext(context.Background(), sweepResources, 0*time.Millisecond, 0*time.Millisecond, 0*time.Millisecond, 0*time.Millisecond, SweepThrottlingRetryTimeout)
+type RetryConfig struct {
+	Delay        time.Duration
+	DelayRand    time.Duration
+	MinTimeout   time.Duration
+	PollInterval time.Duration
+	Timeout      time.Duration
 }
 
-func SweepOrchestratorWithContext(ctx context.Context, sweepResources []*SweepResource, delay time.Duration, delayRand time.Duration, minTimeout time.Duration, pollInterval time.Duration, timeout time.Duration) error {
-	var g multierror.Group
+func (sr *SweepResource) Delete(ctx context.Context, rc RetryConfig) error {
+	err := tfresource.RetryConfigContext(ctx, rc.Delay, rc.DelayRand, rc.MinTimeout, rc.PollInterval, rc.Timeout, func() *resource.RetryError {
+		err := DeleteResource(sr.resource, sr.d, sr.meta)
 
-	for _, sweepResource := range sweepResources {
-		sweepResource := sweepResource
-
-		g.Go(func() error {
-			err := tfresource.RetryConfigContext(ctx, delay, delayRand, minTimeout, pollInterval, timeout, func() *resource.RetryError {
-				err := DeleteResource(sweepResource.resource, sweepResource.d, sweepResource.meta)
-
-				if err != nil {
-					if strings.Contains(err.Error(), "Throttling") {
-						log.Printf("[INFO] While sweeping resource (%s), encountered throttling error (%s). Retrying...", sweepResource.d.Id(), err)
-						return resource.RetryableError(err)
-					}
-
-					return resource.NonRetryableError(err)
-				}
-
-				return nil
-			})
-
-			if tfresource.TimedOut(err) {
-				err = DeleteResource(sweepResource.resource, sweepResource.d, sweepResource.meta)
+		if err != nil {
+			if strings.Contains(err.Error(), "Throttling") {
+				log.Printf("[INFO] While sweeping resource (%s), encountered throttling error (%s). Retrying...", sr.d.Id(), err)
+				return resource.RetryableError(err)
 			}
 
-			return err
+			return resource.NonRetryableError(err)
+		}
+
+		return nil
+	})
+
+	if tfresource.TimedOut(err) {
+		err = DeleteResource(sr.resource, sr.d, sr.meta)
+	}
+
+	return err
+
+}
+
+func SweepOrchestrator(sweepables []Sweepable) error {
+	return SweepOrchestratorWithContext(context.Background(), sweepables, 0*time.Millisecond, 0*time.Millisecond, 0*time.Millisecond, 0*time.Millisecond, SweepThrottlingRetryTimeout)
+}
+
+func SweepOrchestratorWithContext(ctx context.Context, sweepables []Sweepable, delay time.Duration, delayRand time.Duration, minTimeout time.Duration, pollInterval time.Duration, timeout time.Duration) error {
+	var g multierror.Group
+
+	for _, sweepable := range sweepables {
+		sweepable := sweepable
+
+		g.Go(func() error {
+			return sweepable.Delete(ctx, RetryConfig{
+				Delay:        delay,
+				DelayRand:    delayRand,
+				MinTimeout:   minTimeout,
+				PollInterval: pollInterval,
+				Timeout:      timeout,
+			})
 		})
 	}
 

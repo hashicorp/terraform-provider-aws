@@ -25,10 +25,10 @@ func TestAccIAMRolePolicy_basic(t *testing.T) {
 	roleName := "aws_iam_role.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, iam.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRolePolicyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRolePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRolePolicyConfig_basic(rName),
@@ -73,13 +73,13 @@ func TestAccIAMRolePolicy_disappears(t *testing.T) {
 	rolePolicyResourceName := "aws_iam_role_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, iam.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRolePolicyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRolePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRolePolicyConfig(rName),
+				Config: testAccRolePolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRolePolicyExists(
 						roleResourceName,
@@ -101,10 +101,10 @@ func TestAccIAMRolePolicy_policyOrder(t *testing.T) {
 	roleName := "aws_iam_role.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, iam.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRolePolicyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRolePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRolePolicyConfig_order(rName),
@@ -131,10 +131,10 @@ func TestAccIAMRolePolicy_namePrefix(t *testing.T) {
 	roleName := "aws_iam_role.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, iam.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRolePolicyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRolePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRolePolicyConfig_namePrefix(rName, "*"),
@@ -176,10 +176,10 @@ func TestAccIAMRolePolicy_generatedName(t *testing.T) {
 	roleName := "aws_iam_role.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, iam.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRolePolicyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRolePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRolePolicyConfig_generatedName(rName, "*"),
@@ -217,10 +217,10 @@ func TestAccIAMRolePolicy_invalidJSON(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, iam.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRolePolicyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRolePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccRolePolicyConfig_invalidJSON(rName),
@@ -234,13 +234,13 @@ func TestAccIAMRolePolicy_Policy_invalidResource(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, iam.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRolePolicyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRolePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccRolePolicyConfig_Policy_invalidResource(rName),
+				Config:      testAccRolePolicyConfig_invalidResource(rName),
 				ExpectError: regexp.MustCompile("MalformedPolicyDocument"),
 			},
 		},
@@ -354,47 +354,6 @@ func testAccCheckRolePolicyNameMatches(i, j *iam.GetRolePolicyOutput) resource.T
 
 		return nil
 	}
-}
-
-func testAccRolePolicyConfig(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_iam_role" "test" {
-  name = %[1]q
-  path = "/"
-
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Sid": "",
-      "Effect": "Allow",
-      "Principal": {
-        "Service": "ec2.amazonaws.com"
-      },
-      "Action": "sts:AssumeRole"
-    }
-  ]
-}
-EOF
-}
-
-resource "aws_iam_role_policy" "test" {
-  name = %[1]q
-  role = aws_iam_role.test.name
-
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": {
-    "Effect": "Allow",
-    "Action": "*",
-    "Resource": "*"
-  }
-}
-EOF
-}
-`, rName)
 }
 
 func testAccRolePolicyConfig_basic(rName string) string {
@@ -616,7 +575,7 @@ resource "aws_iam_role_policy" "test" {
 `, rName)
 }
 
-func testAccRolePolicyConfig_Policy_invalidResource(rName string) string {
+func testAccRolePolicyConfig_invalidResource(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
   name = %[1]q

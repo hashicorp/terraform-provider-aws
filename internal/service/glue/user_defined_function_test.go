@@ -21,10 +21,10 @@ func TestAccGlueUserDefinedFunction_basic(t *testing.T) {
 	resourceName := "aws_glue_user_defined_function.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, glue.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckUDFDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUDFDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserDefinedFunctionConfig_basic(rName, rName),
@@ -61,10 +61,10 @@ func TestAccGlueUserDefinedFunction_Resource_uri(t *testing.T) {
 	resourceName := "aws_glue_user_defined_function.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, glue.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckUDFDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUDFDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserDefinedFunctionConfig_resourceURI1(rName),
@@ -101,10 +101,10 @@ func TestAccGlueUserDefinedFunction_disappears(t *testing.T) {
 	resourceName := "aws_glue_user_defined_function.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, glue.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckUDFDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUDFDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserDefinedFunctionConfig_basic(rName, rName),

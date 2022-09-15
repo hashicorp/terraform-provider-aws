@@ -3,14 +3,16 @@ package datasource
 import (
 	"bytes"
 	_ "embed"
+	"errors"
 	"fmt"
+	"io/fs"
 	"os"
 	"path/filepath"
-	"regexp"
 	"strings"
 	"text/template"
 
 	"github.com/hashicorp/terraform-provider-aws/names"
+	"github.com/hashicorp/terraform-provider-aws/skaff/resource"
 )
 
 //go:embed datasource.tmpl
@@ -23,28 +25,19 @@ var datasourceTestTmpl string
 var websiteTmpl string
 
 type TemplateData struct {
-	DataSource      string
-	DataSourceLower string
-	IncludeComments bool
-	ServicePackage  string
-	Service         string
-	ServiceLower    string
-	AWSServiceName  string
+	DataSource          string
+	DataSourceLower     string
+	DataSourceSnake     string
+	IncludeComments     bool
+	ServicePackage      string
+	Service             string
+	ServiceLower        string
+	AWSServiceName      string
+	AWSGoSDKV2          bool
+	HumanDataSourceName string
 }
 
-func toSnakeCase(upper string, snakeName string) string {
-	if snakeName != "" {
-		return snakeName
-	}
-
-	re := regexp.MustCompile(`([a-z])([A-Z]{2,})`)
-	upper = re.ReplaceAllString(upper, `${1}_${2}`)
-
-	re2 := regexp.MustCompile(`([A-Z][a-z])`)
-	return strings.TrimPrefix(strings.ToLower(re2.ReplaceAllString(upper, `_$1`)), "_")
-}
-
-func Create(dsName, snakeName string, comments, force bool) error {
+func Create(dsName, snakeName string, comments, force, v2 bool) error {
 	wd, err := os.Getwd() // os.Getenv("GOPACKAGE") not available since this is not run with go generate
 	if err != nil {
 		return fmt.Errorf("error reading working directory: %s", err)
@@ -64,6 +57,8 @@ func Create(dsName, snakeName string, comments, force bool) error {
 		return fmt.Errorf("error checking: snake name should be all lower case with underscores, if needed (e.g., db_instance)")
 	}
 
+	snakeName = resource.ToSnakeCase(dsName, snakeName)
+
 	s, err := names.ProviderNameUpper(servicePackage)
 	if err != nil {
 		return fmt.Errorf("error getting service connection name: %w", err)
@@ -75,26 +70,29 @@ func Create(dsName, snakeName string, comments, force bool) error {
 	}
 
 	templateData := TemplateData{
-		DataSource:      dsName,
-		DataSourceLower: strings.ToLower(dsName),
-		IncludeComments: comments,
-		ServicePackage:  servicePackage,
-		Service:         s,
-		ServiceLower:    strings.ToLower(s),
-		AWSServiceName:  sn,
+		DataSource:          dsName,
+		DataSourceLower:     strings.ToLower(dsName),
+		DataSourceSnake:     snakeName,
+		IncludeComments:     comments,
+		ServicePackage:      servicePackage,
+		Service:             s,
+		ServiceLower:        strings.ToLower(s),
+		AWSServiceName:      sn,
+		AWSGoSDKV2:          v2,
+		HumanDataSourceName: fmt.Sprintf("%s Data Source", resource.HumanResName(dsName)),
 	}
 
-	f := fmt.Sprintf("%s_data_source.go", toSnakeCase(dsName, snakeName))
+	f := fmt.Sprintf("%s_data_source.go", snakeName)
 	if err = writeTemplate("newds", f, datasourceTmpl, force, templateData); err != nil {
 		return fmt.Errorf("writing datasource template: %w", err)
 	}
 
-	tf := fmt.Sprintf("%s_data_source_test.go", toSnakeCase(dsName, snakeName))
+	tf := fmt.Sprintf("%s_data_source_test.go", snakeName)
 	if err = writeTemplate("dstest", tf, datasourceTestTmpl, force, templateData); err != nil {
 		return fmt.Errorf("writing datasource test template: %w", err)
 	}
 
-	wf := fmt.Sprintf("%s_%s.html.markdown", servicePackage, toSnakeCase(dsName, snakeName))
+	wf := fmt.Sprintf("%s_%s.html.markdown", servicePackage, snakeName)
 	wf = filepath.Join("..", "..", "..", "website", "docs", "d", wf)
 	if err = writeTemplate("webdoc", wf, websiteTmpl, force, templateData); err != nil {
 		return fmt.Errorf("writing datasource website doc template: %w", err)
@@ -104,7 +102,7 @@ func Create(dsName, snakeName string, comments, force bool) error {
 }
 
 func writeTemplate(templateName, filename, tmpl string, force bool, td TemplateData) error {
-	if _, err := os.Stat(filename); !os.IsNotExist(err) && !force {
+	if _, err := os.Stat(filename); !errors.Is(err, fs.ErrNotExist) && !force {
 		return fmt.Errorf("file (%s) already exists and force is not set", filename)
 	}
 

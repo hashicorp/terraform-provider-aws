@@ -20,13 +20,13 @@ func TestAccCloudFrontResponseHeadersPolicy_CorsConfig(t *testing.T) {
 	resourceName := "aws_cloudfront_response_headers_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, cloudfront.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckResponseHeadersPolicyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudfront.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckResponseHeadersPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccResponseHeadersPolicyCorsConfigConfig(rName1),
+				Config: testAccResponseHeadersPolicyConfig_cors(rName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResponseHeadersPolicyExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "comment", "test comment"),
@@ -60,7 +60,7 @@ func TestAccCloudFrontResponseHeadersPolicy_CorsConfig(t *testing.T) {
 				ImportStateVerifyIgnore: []string{},
 			},
 			{
-				Config: testAccResponseHeadersPolicyCorsConfigUpdatedConfig(rName2),
+				Config: testAccResponseHeadersPolicyConfig_corsUpdated(rName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResponseHeadersPolicyExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "comment", "test comment updated"),
@@ -97,13 +97,13 @@ func TestAccCloudFrontResponseHeadersPolicy_CustomHeadersConfig(t *testing.T) {
 	resourceName := "aws_cloudfront_response_headers_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, cloudfront.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckResponseHeadersPolicyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudfront.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckResponseHeadersPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccResponseHeadersPolicyCustomHeadersConfigConfig(rName),
+				Config: testAccResponseHeadersPolicyConfig_custom(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResponseHeadersPolicyExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "comment", ""),
@@ -141,13 +141,13 @@ func TestAccCloudFrontResponseHeadersPolicy_SecurityHeadersConfig(t *testing.T) 
 	resourceName := "aws_cloudfront_response_headers_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, cloudfront.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckResponseHeadersPolicyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudfront.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckResponseHeadersPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccResponseHeadersPolicySecurityHeadersConfigConfig(rName),
+				Config: testAccResponseHeadersPolicyConfig_security(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResponseHeadersPolicyExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "comment", ""),
@@ -186,7 +186,7 @@ func TestAccCloudFrontResponseHeadersPolicy_SecurityHeadersConfig(t *testing.T) 
 				ImportStateVerifyIgnore: []string{},
 			},
 			{
-				Config: testAccResponseHeadersPolicySecurityHeadersConfigUpdatedConfig(rName),
+				Config: testAccResponseHeadersPolicyConfig_securityUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResponseHeadersPolicyExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "comment", ""),
@@ -220,13 +220,13 @@ func TestAccCloudFrontResponseHeadersPolicy_ServerTimingHeadersConfig(t *testing
 	resourceName := "aws_cloudfront_response_headers_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, cloudfront.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckResponseHeadersPolicyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudfront.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckResponseHeadersPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccResponseHeadersPolicyServerTimingHeadersConfigConfig(rName, true, 10),
+				Config: testAccResponseHeadersPolicyConfig_serverTiming(rName, true, 10),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResponseHeadersPolicyExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "comment", ""),
@@ -247,7 +247,7 @@ func TestAccCloudFrontResponseHeadersPolicy_ServerTimingHeadersConfig(t *testing
 				ImportStateVerifyIgnore: []string{},
 			},
 			{
-				Config: testAccResponseHeadersPolicyServerTimingHeadersConfigConfig(rName, true, 90),
+				Config: testAccResponseHeadersPolicyConfig_serverTiming(rName, true, 90),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResponseHeadersPolicyExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "comment", ""),
@@ -262,7 +262,7 @@ func TestAccCloudFrontResponseHeadersPolicy_ServerTimingHeadersConfig(t *testing
 				),
 			},
 			{
-				Config: testAccResponseHeadersPolicyServerTimingHeadersConfigConfig(rName, false, 0),
+				Config: testAccResponseHeadersPolicyConfig_serverTiming(rName, false, 0),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResponseHeadersPolicyExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "comment", ""),
@@ -285,13 +285,13 @@ func TestAccCloudFrontResponseHeadersPolicy_disappears(t *testing.T) {
 	resourceName := "aws_cloudfront_response_headers_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, cloudfront.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckResponseHeadersPolicyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudfront.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckResponseHeadersPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccResponseHeadersPolicyCorsConfigConfig(rName),
+				Config: testAccResponseHeadersPolicyConfig_cors(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResponseHeadersPolicyExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfcloudfront.ResourceResponseHeadersPolicy(), resourceName),
@@ -341,15 +341,11 @@ func testAccCheckResponseHeadersPolicyExists(n string) resource.TestCheckFunc {
 
 		_, err := tfcloudfront.FindResponseHeadersPolicyByID(conn, rs.Primary.ID)
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 
-func testAccResponseHeadersPolicyCorsConfigConfig(rName string) string {
+func testAccResponseHeadersPolicyConfig_cors(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudfront_response_headers_policy" "test" {
   name    = %[1]q
@@ -376,7 +372,7 @@ resource "aws_cloudfront_response_headers_policy" "test" {
 `, rName)
 }
 
-func testAccResponseHeadersPolicyCorsConfigUpdatedConfig(rName string) string {
+func testAccResponseHeadersPolicyConfig_corsUpdated(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudfront_response_headers_policy" "test" {
   name    = %[1]q
@@ -409,7 +405,7 @@ resource "aws_cloudfront_response_headers_policy" "test" {
 `, rName)
 }
 
-func testAccResponseHeadersPolicyCustomHeadersConfigConfig(rName string) string {
+func testAccResponseHeadersPolicyConfig_custom(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudfront_response_headers_policy" "test" {
   name = %[1]q
@@ -431,7 +427,7 @@ resource "aws_cloudfront_response_headers_policy" "test" {
 `, rName)
 }
 
-func testAccResponseHeadersPolicySecurityHeadersConfigConfig(rName string) string {
+func testAccResponseHeadersPolicyConfig_security(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudfront_response_headers_policy" "test" {
   name = %[1]q
@@ -465,7 +461,7 @@ resource "aws_cloudfront_response_headers_policy" "test" {
 `, rName)
 }
 
-func testAccResponseHeadersPolicySecurityHeadersConfigUpdatedConfig(rName string) string {
+func testAccResponseHeadersPolicyConfig_securityUpdated(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudfront_response_headers_policy" "test" {
   name = %[1]q
@@ -490,7 +486,7 @@ resource "aws_cloudfront_response_headers_policy" "test" {
 `, rName)
 }
 
-func testAccResponseHeadersPolicyServerTimingHeadersConfigConfig(rName string, enabled bool, rate float64) string {
+func testAccResponseHeadersPolicyConfig_serverTiming(rName string, enabled bool, rate float64) string {
 	return fmt.Sprintf(`
 resource "aws_cloudfront_response_headers_policy" "test" {
   name = %[1]q

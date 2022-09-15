@@ -118,7 +118,7 @@ func resourceIPAMPoolCIDRAllocationCreate(d *schema.ResourceData, meta interface
 	log.Printf("[DEBUG] Creating IPAM Pool Allocation: %s", input)
 	output, err := conn.AllocateIpamPoolCidr(input)
 	if err != nil {
-		return fmt.Errorf("Error allocating cidr from IPAM pool (%s): %w", d.Get("ipam_pool_id").(string), err)
+		return fmt.Errorf("Error allocating CIDR from IPAM Pool (%s): %w", d.Get("ipam_pool_id").(string), err)
 	}
 	d.SetId(encodeIPAMPoolCIDRAllocationID(aws.StringValue(output.IpamPoolAllocation.IpamPoolAllocationId), pool_id))
 
@@ -135,7 +135,7 @@ func resourceIPAMPoolCIDRAllocationRead(d *schema.ResourceData, meta interface{}
 	}
 
 	if !d.IsNewResource() && cidr_allocation == nil {
-		log.Printf("[WARN] IPAM Pool Cidr Allocation (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] IPAM Pool Allocation (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
@@ -167,13 +167,12 @@ func resourceIPAMPoolCIDRAllocationDelete(d *schema.ResourceData, meta interface
 		Cidr:                 aws.String(d.Get("cidr").(string)),
 	}
 
-	log.Printf("[DEBUG] Releasing IPAM Pool CIDR Allocation: %s", input)
 	output, err := conn.ReleaseIpamPoolAllocation(input)
 	if err != nil || !aws.BoolValue(output.Success) {
 		if tfawserr.ErrCodeEquals(err, InvalidIPAMPoolIDNotFound) {
 			return nil
 		}
-		return fmt.Errorf("error releasing IPAM CIDR Allocation: (%s): %w", d.Id(), err)
+		return fmt.Errorf("error releasing IPAM Pool Allocation (%s): %w", d.Id(), err)
 	}
 
 	return nil

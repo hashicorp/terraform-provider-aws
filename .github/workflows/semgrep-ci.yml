@@ -8,51 +8,88 @@ on:
   pull_request:
     paths:
       - internal/**
-      - .semgrep.yml
-      - .semgrep-service-name*yml
+      - .semgrep*yml
+      - .github/workflows/semgrep-ci.yml
+
+env:
+  SEMGREP_SEND_METRICS: "off"
+  SEMGREP_ENABLE_VERSION_CHECK: false
+  COMMON_PARAMS: --error --quiet
 
 jobs:
   semgrep:
+    name: Code Quality Scan
     runs-on: ubuntu-latest
+    container:
+      image: returntocorp/semgrep
     steps:
-    - uses: actions/checkout@v3
-      with:
-       fetch-depth: 0
-    - name: semgrep
-      uses: returntocorp/semgrep-action@v1
+      - uses: actions/checkout@v3
+      - run: |
+          semgrep $COMMON_PARAMS \
+            --config .ci/.semgrep.yml \
+            --config 'r/dgryski.semgrep-go.badnilguard' \
+            --config 'r/dgryski.semgrep-go.errnilcheck' \
+            --config 'r/dgryski.semgrep-go.marshaljson' \
+            --config 'r/dgryski.semgrep-go.nilerr' \
+            --config 'r/dgryski.semgrep-go.oddifsequence' \
+            --config 'r/dgryski.semgrep-go.oserrors'
+
+  naming_cae:
+    name: Naming Scan Caps/AWS/EC2
+    runs-on: ubuntu-latest
+    container:
+      image: returntocorp/semgrep
+    if: (github.action != 'dependabot[bot]')
+    steps:
+      - uses: actions/checkout@v3
+      - run: semgrep $COMMON_PARAMS --config .ci/.semgrep-caps-aws-ec2.yml
+
+  naming_tests:
+    name: Test Configs Scan
+    runs-on: ubuntu-latest
+    container:
+      image: returntocorp/semgrep
+    if: (github.action != 'dependabot[bot]')
+    steps:
+      - uses: actions/checkout@v3
+      - run: semgrep $COMMON_PARAMS --config .ci/.semgrep-configs.yml
+
   naming_semgrep0:
-    name: Semgrep Naming Scan A-C,EC2
+    name: Service Name Scan A-C
     runs-on: ubuntu-latest
     container:
       image: returntocorp/semgrep
     if: (github.action != 'dependabot[bot]')
     steps:
-    - uses: actions/checkout@v3
-    - run: semgrep -c .semgrep-service-name0.yml
+      - uses: actions/checkout@v3
+      - run: semgrep $COMMON_PARAMS --config .ci/.semgrep-service-name0.yml
+
   naming_semgrep1:
-    name: Semgrep Naming Scan C-G
+    name: Service Name Scan C-I
     runs-on: ubuntu-latest
     container:
       image: returntocorp/semgrep
     if: (github.action != 'dependabot[bot]')
     steps:
-    - uses: actions/checkout@v3
-    - run: semgrep -c .semgrep-service-name1.yml
+      - uses: actions/checkout@v3
+      - run: semgrep $COMMON_PARAMS --config .ci/.semgrep-service-name1.yml
+
   naming_semgrep2:
-    name: Semgrep Naming Scan G-Q
+    name: Service Name Scan I-Q
     runs-on: ubuntu-latest
     container:
       image: returntocorp/semgrep
     if: (github.action != 'dependabot[bot]')
     steps:
-    - uses: actions/checkout@v3
-    - run: semgrep -c .semgrep-service-name2.yml
+      - uses: actions/checkout@v3
+      - run: semgrep $COMMON_PARAMS --config .ci/.semgrep-service-name2.yml
+
   naming_semgrep3:
-    name: Semgrep Naming Scan Q-Z
+    name: Service Name Scan Q-Z
     runs-on: ubuntu-latest
     container:
       image: returntocorp/semgrep
     if: (github.action != 'dependabot[bot]')
     steps:
-    - uses: actions/checkout@v3
-    - run: semgrep -c .semgrep-service-name3.yml
+      - uses: actions/checkout@v3
+      - run: semgrep $COMMON_PARAMS --config .ci/.semgrep-service-name3.yml

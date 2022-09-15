@@ -1,11 +1,14 @@
 package ec2
 
 import (
+	"context"
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -15,9 +18,10 @@ import (
 func ResourceManagedPrefixListEntry() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
-		Create: resourceManagedPrefixListEntryCreate,
-		Read:   resourceManagedPrefixListEntryRead,
-		Delete: resourceManagedPrefixListEntryDelete,
+		CreateWithoutTimeout: resourceManagedPrefixListEntryCreate,
+		ReadWithoutTimeout:   resourceManagedPrefixListEntryRead,
+		DeleteWithoutTimeout: resourceManagedPrefixListEntryDelete,
+
 		Importer: &schema.ResourceImporter{
 			State: resourceManagedPrefixListEntryImport,
 		},
@@ -44,18 +48,12 @@ func ResourceManagedPrefixListEntry() *schema.Resource {
 	}
 }
 
-func resourceManagedPrefixListEntryCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceManagedPrefixListEntryCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	cidr := d.Get("cidr").(string)
 	plID := d.Get("prefix_list_id").(string)
-	id := ManagedPrefixListEntryCreateID(plID, cidr)
-
-	pl, err := FindManagedPrefixListByID(conn, plID)
-
-	if err != nil {
-		return fmt.Errorf("error reading EC2 Managed Prefix List (%s): %w", plID, err)
-	}
+	id := ManagedPrefixListEntryCreateResourceID(plID, cidr)
 
 	addPrefixListEntry := &ec2.AddPrefixListEntry{Cidr: aws.String(cidr)}
 
@@ -63,48 +61,60 @@ func resourceManagedPrefixListEntryCreate(d *schema.ResourceData, meta interface
 		addPrefixListEntry.Description = aws.String(v.(string))
 	}
 
-	input := &ec2.ModifyManagedPrefixListInput{
-		AddEntries:     []*ec2.AddPrefixListEntry{addPrefixListEntry},
-		CurrentVersion: pl.Version,
-		PrefixListId:   aws.String(plID),
-	}
+	_, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
+		mutexKey := fmt.Sprintf("vpc-managed-prefix-list-%s", plID)
+		conns.GlobalMutexKV.Lock(mutexKey)
+		defer conns.GlobalMutexKV.Unlock(mutexKey)
 
-	_, err = conn.ModifyManagedPrefixList(input)
+		pl, err := FindManagedPrefixListByID(ctx, conn, plID)
+
+		if err != nil {
+			return nil, fmt.Errorf("reading VPC Managed Prefix List (%s): %w", plID, err)
+		}
+
+		input := &ec2.ModifyManagedPrefixListInput{
+			AddEntries:     []*ec2.AddPrefixListEntry{addPrefixListEntry},
+			CurrentVersion: pl.Version,
+			PrefixListId:   aws.String(plID),
+		}
+
+		return conn.ModifyManagedPrefixListWithContext(ctx, input)
+	}, errCodeIncorrectState, errCodePrefixListVersionMismatch)
 
 	if err != nil {
-		return fmt.Errorf("error creating EC2 Managed Prefix List Entry (%s): %w", id, err)
+		return diag.Errorf("creating VPC Managed Prefix List Entry (%s): %s", id, err)
 	}
 
 	d.SetId(id)
 
-	if _, err := WaitManagedPrefixListModified(conn, plID); err != nil {
-		return fmt.Errorf("error waiting for EC2 Managed Prefix List Entry (%s) create: %w", d.Id(), err)
+	if _, err := WaitManagedPrefixListModified(ctx, conn, plID); err != nil {
+		return diag.Errorf("waiting for VPC Managed Prefix List Entry (%s) create: %s", d.Id(), err)
 	}
 
-	return resourceManagedPrefixListEntryRead(d, meta)
+	return resourceManagedPrefixListEntryRead(ctx, d, meta)
 }
 
-func resourceManagedPrefixListEntryRead(d *schema.ResourceData, meta interface{}) error {
+func resourceManagedPrefixListEntryRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	plID, cidr, err := ManagedPrefixListEntryParseID(d.Id())
+	plID, cidr, err := ManagedPrefixListEntryParseResourceID(d.Id())
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ManagedPrefixListEntryCreateTimeout, func() (interface{}, error) {
-		return FindManagedPrefixListEntryByIDAndCIDR(conn, plID, cidr)
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFoundContext(ctx, ManagedPrefixListEntryCreateTimeout, func() (interface{}, error) {
+		return FindManagedPrefixListEntryByIDAndCIDR(ctx, conn, plID, cidr)
 	}, d.IsNewResource())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] EC2 Managed Prefix List Entry (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] VPC Managed Prefix List Entry (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading EC2 Managed Prefix List Entry (%s): %w", d.Id(), err)
+		return diag.Errorf("reading VPC Managed Prefix List Entry (%s): %s", d.Id(), err)
 	}
 
 	entry := outputRaw.(*ec2.PrefixListEntry)
@@ -115,44 +125,50 @@ func resourceManagedPrefixListEntryRead(d *schema.ResourceData, meta interface{}
 	return nil
 }
 
-func resourceManagedPrefixListEntryDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceManagedPrefixListEntryDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	plID, cidr, err := ManagedPrefixListEntryParseID(d.Id())
+	plID, cidr, err := ManagedPrefixListEntryParseResourceID(d.Id())
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
-	pl, err := FindManagedPrefixListByID(conn, plID)
+	_, err = tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
+		mutexKey := fmt.Sprintf("vpc-managed-prefix-list-%s", plID)
+		conns.GlobalMutexKV.Lock(mutexKey)
+		defer conns.GlobalMutexKV.Unlock(mutexKey)
+
+		pl, err := FindManagedPrefixListByID(ctx, conn, plID)
+
+		if err != nil {
+			return nil, fmt.Errorf("reading VPC Managed Prefix List (%s): %w", plID, err)
+		}
+
+		input := &ec2.ModifyManagedPrefixListInput{
+			CurrentVersion: pl.Version,
+			PrefixListId:   aws.String(plID),
+			RemoveEntries:  []*ec2.RemovePrefixListEntry{{Cidr: aws.String(cidr)}},
+		}
+
+		return conn.ModifyManagedPrefixListWithContext(ctx, input)
+	}, errCodeIncorrectState, errCodePrefixListVersionMismatch)
 
 	if err != nil {
-		return fmt.Errorf("error reading EC2 Managed Prefix List (%s): %w", plID, err)
+		return diag.Errorf("deleting VPC Managed Prefix List Entry (%s): %s", d.Id(), err)
 	}
 
-	input := &ec2.ModifyManagedPrefixListInput{
-		CurrentVersion: pl.Version,
-		PrefixListId:   aws.String(plID),
-		RemoveEntries:  []*ec2.RemovePrefixListEntry{{Cidr: aws.String(cidr)}},
-	}
-
-	_, err = conn.ModifyManagedPrefixList(input)
+	_, err = WaitManagedPrefixListModified(ctx, conn, plID)
 
 	if err != nil {
-		return fmt.Errorf("error deleting EC2 Managed Prefix List Entry (%s): %w", d.Id(), err)
-	}
-
-	_, err = WaitManagedPrefixListModified(conn, plID)
-
-	if err != nil {
-		return fmt.Errorf("error waiting for EC2 Managed Prefix List Entry (%s) delete: %w", d.Id(), err)
+		return diag.Errorf("waiting for VPC Managed Prefix List Entry (%s) delete: %s", d.Id(), err)
 	}
 
 	return nil
 }
 
 func resourceManagedPrefixListEntryImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	plID, cidr, err := ManagedPrefixListEntryParseID(d.Id())
+	plID, cidr, err := ManagedPrefixListEntryParseResourceID(d.Id())
 
 	if err != nil {
 		return nil, err
@@ -162,4 +178,23 @@ func resourceManagedPrefixListEntryImport(d *schema.ResourceData, meta interface
 	d.Set("prefix_list_id", plID)
 
 	return []*schema.ResourceData{d}, nil
+}
+
+const managedPrefixListEntryIDSeparator = ","
+
+func ManagedPrefixListEntryCreateResourceID(prefixListID, cidrBlock string) string {
+	parts := []string{prefixListID, cidrBlock}
+	id := strings.Join(parts, managedPrefixListEntryIDSeparator)
+
+	return id
+}
+
+func ManagedPrefixListEntryParseResourceID(id string) (string, string, error) {
+	parts := strings.Split(id, managedPrefixListEntryIDSeparator)
+
+	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
+		return parts[0], parts[1], nil
+	}
+
+	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected prefix-list-id%[2]scidr-block", id, managedPrefixListEntryIDSeparator)
 }

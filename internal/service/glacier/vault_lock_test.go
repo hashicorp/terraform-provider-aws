@@ -21,13 +21,13 @@ func TestAccGlacierVaultLock_basic(t *testing.T) {
 	resourceName := "aws_glacier_vault_lock.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, glacier.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckVaultLockDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, glacier.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVaultLockDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVaultLockConfigCompleteLock(rName, false),
+				Config: testAccVaultLockConfig_complete(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVaultLockExists(resourceName, &vaultLock1),
 					resource.TestCheckResourceAttr(resourceName, "complete_lock", "false"),
@@ -53,13 +53,13 @@ func TestAccGlacierVaultLock_completeLock(t *testing.T) {
 	resourceName := "aws_glacier_vault_lock.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, glacier.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckVaultLockDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, glacier.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVaultLockDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVaultLockConfigCompleteLock(rName, true),
+				Config: testAccVaultLockConfig_complete(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVaultLockExists(resourceName, &vaultLock1),
 					resource.TestCheckResourceAttr(resourceName, "complete_lock", "true"),
@@ -85,13 +85,13 @@ func TestAccGlacierVaultLock_ignoreEquivalentPolicy(t *testing.T) {
 	resourceName := "aws_glacier_vault_lock.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, glacier.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckVaultLockDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, glacier.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVaultLockDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVaultLockPolicyOrderConfig(rName, false),
+				Config: testAccVaultLockConfig_policyOrder(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVaultLockExists(resourceName, &vaultLock1),
 					resource.TestCheckResourceAttr(resourceName, "complete_lock", "false"),
@@ -101,7 +101,7 @@ func TestAccGlacierVaultLock_ignoreEquivalentPolicy(t *testing.T) {
 				),
 			},
 			{
-				Config:   testAccVaultLockPolicyNewOrderConfig(rName, false),
+				Config:   testAccVaultLockConfig_policyNewOrder(rName, false),
 				PlanOnly: true,
 			},
 		},
@@ -169,7 +169,7 @@ func testAccCheckVaultLockDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccVaultLockConfigCompleteLock(rName string, completeLock bool) string {
+func testAccVaultLockConfig_complete(rName string, completeLock bool) string {
 	return fmt.Sprintf(`
 resource "aws_glacier_vault" "test" {
   name = %q
@@ -207,7 +207,7 @@ resource "aws_glacier_vault_lock" "test" {
 `, rName, completeLock, completeLock)
 }
 
-func testAccVaultLockPolicyOrderConfig(rName string, completeLock bool) string {
+func testAccVaultLockConfig_policyOrder(rName string, completeLock bool) string {
 	return fmt.Sprintf(`
 resource "aws_glacier_vault" "test" {
   name = %[1]q
@@ -241,7 +241,7 @@ resource "aws_glacier_vault_lock" "test" {
 `, rName, completeLock)
 }
 
-func testAccVaultLockPolicyNewOrderConfig(rName string, completeLock bool) string {
+func testAccVaultLockConfig_policyNewOrder(rName string, completeLock bool) string {
 	return fmt.Sprintf(`
 resource "aws_glacier_vault" "test" {
   name = %[1]q

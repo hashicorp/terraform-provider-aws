@@ -51,7 +51,7 @@ The following arguments are optional:
 * `support_description` - (Optional) Support information about the product.
 * `support_email` - (Optional) Contact email for product support.
 * `support_url` - (Optional) Contact URL for product support.
-* `tags` - (Optional) Tags to apply to the product. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Tags to apply to the product. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### provisioning_artifact_parameters
 
@@ -73,17 +73,16 @@ In addition to all arguments above, the following attributes are exported:
 * `has_default_path` - Whether the product has a default path. If the product does not have a default path, call `ListLaunchPaths` to disambiguate between paths.  Otherwise, `ListLaunchPaths` is not required, and the output of ProductViewSummary can be used directly with `DescribeProvisioningParameters`.
 * `id` - Product ID. For example, `prod-dnigbtea24ste`.
 * `status` - Status of the product.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
-`aws_servicecatalog_product` provides the following
-[Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
 
-- `create` - (Default `5 minutes`)
-- `read` - (Default `10 minutes`)
-- `update` - (Default `5 minutes`)
-- `delete` - (Default `5 minutes`)
+- `create` - (Default `5m`)
+- `read` - (Default `10m`)
+- `update` - (Default `5m`)
+- `delete` - (Default `5m`)
 
 ## Import
 

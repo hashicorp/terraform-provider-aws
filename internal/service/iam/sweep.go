@@ -267,7 +267,7 @@ func sweepInstanceProfile(region string) error {
 			}
 
 			log.Printf("[INFO] Sweeping IAM Instance Profile %q", name)
-			err := r.Delete(d, client)
+			err := sweep.DeleteResource(r, d, client)
 
 			if err != nil {
 				sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error deleting IAM Instance Profile (%s): %w", name, err))
@@ -307,7 +307,7 @@ func sweepOpenIDConnectProvider(region string) error {
 		r := ResourceOpenIDConnectProvider()
 		d := r.Data(nil)
 		d.SetId(arn)
-		err := r.Delete(d, client)
+		err := sweep.DeleteResource(r, d, client)
 
 		if err != nil {
 			sweeperErr := fmt.Errorf("error deleting IAM OIDC Provider (%s): %w", arn, err)
@@ -372,7 +372,7 @@ func sweepServiceSpecificCredentials(region string) error {
 			r := ResourceServiceSpecificCredential()
 			d := r.Data(nil)
 			d.SetId(id)
-			err := r.Delete(d, client)
+			err := sweep.DeleteResource(r, d, client)
 
 			if err != nil {
 				sweeperErr := fmt.Errorf("error deleting IAM Service Specific Credential (%s): %w", id, err)
@@ -543,7 +543,7 @@ func sweepSAMLProvider(region string) error {
 		r := ResourceSAMLProvider()
 		d := r.Data(nil)
 		d.SetId(arn)
-		err := r.Delete(d, client)
+		err := sweep.DeleteResource(r, d, client)
 
 		if err != nil {
 			sweeperErr := fmt.Errorf("error deleting IAM SAML Provider (%s): %w", arn, err)
@@ -629,7 +629,7 @@ func sweepServiceLinkedRoles(region string) error {
 			r := ResourceServiceLinkedRole()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(role.Arn))
-			err := r.Delete(d, client)
+			err := sweep.DeleteResource(r, d, client)
 			if err != nil {
 				sweeperErr := fmt.Errorf("error deleting IAM Service Linked Role (%s): %w", roleName, err)
 				log.Printf("[ERROR] %s", sweeperErr)
@@ -839,10 +839,18 @@ func roleNameFilter(name string) bool {
 		return true
 	}
 
+	randTF := regexp.MustCompile(`^tf-[0-9]{16}`)
+	if randTF.MatchString(name) {
+		return true
+	}
+
 	// We have a lot of role name prefixes for role names that don't match the standard pattern. This is not an
 	// exhaustive list.
 	prefixes := []string{
 		"another_rds",
+		"aws_batch_service_role",
+		"aws_elastictranscoder_pipeline_tf_test",
+		"batch_tf_batch_target-",
 		"codepipeline-",
 		"cognito_authenticated_",
 		"cognito_unauthenticated_",
@@ -853,13 +861,24 @@ func roleNameFilter(name string) bool {
 		"foobar",
 		"iam_emr",
 		"iam_for_sfn",
+		"KinesisFirehoseServiceRole-test",
 		"rds",
+		"resource-test-terraform-",
 		"role",
 		"sns-delivery-status",
 		"ssm_role",
 		"ssm-role",
+		"terraform-2021",
+		"terraform-2022",
 		"test",
+		"tf_ecs_target",
+		"tf_ecs",
+		"tf_test",
 		"tf-acc",
+		"tf-iam-role-replication",
+		"tf-opsworks-acc",
+		"tf-test-iam",
+		"tf-test",
 	}
 	for _, prefix := range prefixes {
 		if strings.HasPrefix(name, prefix) {
@@ -895,7 +914,7 @@ func sweepVirtualMFADevice(region string) error {
 			r := ResourceVirtualMFADevice()
 			d := r.Data(nil)
 			d.SetId(serialNum)
-			err := r.Delete(d, client)
+			err := sweep.DeleteResource(r, d, client)
 			if err != nil {
 				sweeperErr := fmt.Errorf("error deleting IAM Virtual MFA Device (%s): %w", device, err)
 				log.Printf("[ERROR] %s", sweeperErr)
@@ -961,7 +980,7 @@ func sweepSigningCertificates(region string) error {
 			r := ResourceSigningCertificate()
 			d := r.Data(nil)
 			d.SetId(id)
-			err := r.Delete(d, client)
+			err := sweep.DeleteResource(r, d, client)
 
 			if err != nil {
 				sweeperErr := fmt.Errorf("error deleting IAM Signing Certificate (%s): %w", id, err)

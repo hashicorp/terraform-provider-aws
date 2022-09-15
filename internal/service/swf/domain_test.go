@@ -33,9 +33,9 @@ func TestAccSWFDomain_basic(t *testing.T) {
 			acctest.PreCheck(t)
 			testAccPreCheckDomainTestingEnabled(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, swf.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDomainDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, swf.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDomainDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainConfig_name(rName),
@@ -64,9 +64,9 @@ func TestAccSWFDomain_tags(t *testing.T) {
 			acctest.PreCheck(t)
 			testAccPreCheckDomainTestingEnabled(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, swf.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDomainDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, swf.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDomainDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainConfig_tags1(rName, "key1", "value1"),
@@ -110,9 +110,9 @@ func TestAccSWFDomain_namePrefix(t *testing.T) {
 			acctest.PreCheck(t)
 			testAccPreCheckDomainTestingEnabled(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, swf.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDomainDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, swf.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDomainDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainConfig_namePrefix,
@@ -139,9 +139,9 @@ func TestAccSWFDomain_generatedName(t *testing.T) {
 			acctest.PreCheck(t)
 			testAccPreCheckDomainTestingEnabled(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, swf.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDomainDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, swf.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDomainDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainConfig_generatedName,
@@ -167,9 +167,9 @@ func TestAccSWFDomain_description(t *testing.T) {
 			acctest.PreCheck(t)
 			testAccPreCheckDomainTestingEnabled(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, swf.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDomainDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, swf.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDomainDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainConfig_description(rName, "description1"),

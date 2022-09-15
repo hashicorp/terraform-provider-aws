@@ -15,6 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/experimental/nullable"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/intf"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/accessanalyzer"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/account"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/acm"
@@ -27,6 +29,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/appconfig"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/appflow"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/appintegrations"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/applicationinsights"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/appmesh"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/appstream"
@@ -55,6 +58,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/codestarnotifications"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cognitoidentity"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cognitoidp"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/comprehend"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/configservice"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/connect"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cur"
@@ -88,6 +92,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/emrserverless"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/events"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/firehose"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/fis"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/fms"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/fsx"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/gamelift"
@@ -103,6 +108,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/iot"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/kafka"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/kafkaconnect"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/kendra"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/keyspaces"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/kinesis"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/kinesisanalytics"
@@ -119,6 +125,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/macie"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/macie2"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/mediaconvert"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/medialive"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/mediapackage"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/mediastore"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/memorydb"
@@ -140,13 +147,16 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/rds"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/redshift"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/redshiftdata"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/redshiftserverless"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/resourcegroups"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/resourcegroupstaggingapi"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/rolesanywhere"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/route53"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/route53domains"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/route53recoverycontrolconfig"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/route53recoveryreadiness"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/route53resolver"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/rum"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/s3"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/s3control"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/s3outposts"
@@ -172,6 +182,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/swf"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/synthetics"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/timestreamwrite"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/transcribe"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/transfer"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/waf"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/wafregional"
@@ -184,18 +195,16 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// Provider returns a *schema.Provider.
-func Provider() *schema.Provider {
-	// TODO: Move the validation to this, requires conditional schemas
-	// TODO: Move the configuration to this, requires validation
-
-	// The actual provider
+// New returns a new, initialized Terraform Plugin SDK v2-style provider instance.
+// The provider instance is fully configured once the `ConfigureContextFunc` has been called.
+func New(_ context.Context) (*schema.Provider, error) {
 	provider := &schema.Provider{
+		// This schema must match exactly the Terraform Protocol v6 (Terraform Plugin Framework) provider's schema.
+		// Notably the attributes can have no Default values.
 		Schema: map[string]*schema.Schema{
 			"access_key": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  "",
 				Description: "The access key for API operations. You can retrieve this\n" +
 					"from the 'Security & Credentials' section of the AWS console.",
 			},
@@ -284,14 +293,12 @@ func Provider() *schema.Provider {
 			"insecure": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  false,
 				Description: "Explicitly allow the provider to perform \"insecure\" SSL requests. If omitted, " +
 					"default value is `false`",
 			},
 			"max_retries": {
 				Type:     schema.TypeInt,
 				Optional: true,
-				Default:  25,
 				Description: "The maximum number of times an AWS API request is\n" +
 					"being executed. If the API request still fails, an error is\n" +
 					"thrown.",
@@ -299,7 +306,6 @@ func Provider() *schema.Provider {
 			"profile": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  "",
 				Description: "The profile for API operations. If not set, the default profile\n" +
 					"created with `aws configure` will be used.",
 			},
@@ -312,7 +318,6 @@ func Provider() *schema.Provider {
 			"s3_force_path_style": {
 				Type:       schema.TypeBool,
 				Optional:   true,
-				Default:    false,
 				Deprecated: "Use s3_use_path_style instead.",
 				Description: "Set this to true to enable the request to use path-style addressing,\n" +
 					"i.e., https://s3.amazonaws.com/BUCKET/KEY. By default, the S3 client will\n" +
@@ -322,7 +327,6 @@ func Provider() *schema.Provider {
 			"s3_use_path_style": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  false,
 				Description: "Set this to true to enable the request to use path-style addressing,\n" +
 					"i.e., https://s3.amazonaws.com/BUCKET/KEY. By default, the S3 client will\n" +
 					"use virtual hosted bucket addressing when possible\n" +
@@ -331,7 +335,6 @@ func Provider() *schema.Provider {
 			"secret_key": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  "",
 				Description: "The secret key for API operations. You can retrieve this\n" +
 					"from the 'Security & Credentials' section of the AWS console.",
 			},
@@ -344,7 +347,6 @@ func Provider() *schema.Provider {
 			"shared_credentials_file": {
 				Type:          schema.TypeString,
 				Optional:      true,
-				Default:       "",
 				Deprecated:    "Use shared_credentials_files instead.",
 				ConflictsWith: []string{"shared_credentials_files"},
 				Description:   "The path to the shared credentials file. If not set, defaults to ~/.aws/credentials.",
@@ -359,14 +361,12 @@ func Provider() *schema.Provider {
 			"skip_credentials_validation": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  false,
 				Description: "Skip the credentials validation via STS API. " +
 					"Used for AWS API implementations that do not have STS available/implemented.",
 			},
 			"skip_get_ec2_platforms": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  false,
 				Description: "Skip getting the supported EC2 platforms. " +
 					"Used by users that don't have ec2:DescribeAccountAttributes permissions.",
 			},
@@ -380,41 +380,35 @@ func Provider() *schema.Provider {
 			"skip_region_validation": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  false,
 				Description: "Skip static validation of region name. " +
 					"Used by users of alternative AWS-like APIs or users w/ access to regions that are not public (yet).",
 			},
 			"skip_requesting_account_id": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  false,
 				Description: "Skip requesting the account ID. " +
 					"Used for AWS API implementations that do not have IAM/STS API and/or metadata API.",
 			},
 			"sts_region": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  "",
 				Description: "The region where AWS STS operations will take place. Examples\n" +
 					"are us-east-1 and us-west-2.", // lintignore:AWSAT003,
 			},
 			"token": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  "",
 				Description: "session token. A session token is only required if you are\n" +
 					"using temporary security credentials.",
 			},
 			"use_dualstack_endpoint": {
 				Type:        schema.TypeBool,
 				Optional:    true,
-				Default:     false,
 				Description: "Resolve an endpoint with DualStack capability",
 			},
 			"use_fips_endpoint": {
 				Type:        schema.TypeBool,
 				Optional:    true,
-				Default:     false,
 				Description: "Resolve an endpoint with FIPS capability",
 			},
 		},
@@ -508,6 +502,7 @@ func Provider() *schema.Provider {
 			"aws_connect_quick_connect":               connect.DataSourceQuickConnect(),
 			"aws_connect_routing_profile":             connect.DataSourceRoutingProfile(),
 			"aws_connect_security_profile":            connect.DataSourceSecurityProfile(),
+			"aws_connect_user_hierarchy_group":        connect.DataSourceUserHierarchyGroup(),
 			"aws_connect_user_hierarchy_structure":    connect.DataSourceUserHierarchyStructure(),
 
 			"aws_cur_report_definition": cur.DataSourceReportDefinition(),
@@ -554,9 +549,13 @@ func Provider() *schema.Provider {
 			"aws_ec2_local_gateway":                          ec2.DataSourceLocalGateway(),
 			"aws_ec2_local_gateways":                         ec2.DataSourceLocalGateways(),
 			"aws_ec2_managed_prefix_list":                    ec2.DataSourceManagedPrefixList(),
+			"aws_ec2_managed_prefix_lists":                   ec2.DataSourceManagedPrefixLists(),
+			"aws_ec2_network_insights_analysis":              ec2.DataSourceNetworkInsightsAnalysis(),
+			"aws_ec2_network_insights_path":                  ec2.DataSourceNetworkInsightsPath(),
 			"aws_ec2_serial_console_access":                  ec2.DataSourceSerialConsoleAccess(),
 			"aws_ec2_spot_price":                             ec2.DataSourceSpotPrice(),
 			"aws_ec2_transit_gateway":                        ec2.DataSourceTransitGateway(),
+			"aws_ec2_transit_gateway_attachment":             ec2.DataSourceTransitGatewayAttachment(),
 			"aws_ec2_transit_gateway_connect":                ec2.DataSourceTransitGatewayConnect(),
 			"aws_ec2_transit_gateway_connect_peer":           ec2.DataSourceTransitGatewayConnectPeer(),
 			"aws_ec2_transit_gateway_dx_gateway_attachment":  ec2.DataSourceTransitGatewayDxGatewayAttachment(),
@@ -652,6 +651,8 @@ func Provider() *schema.Provider {
 
 			"aws_kinesis_firehose_delivery_stream": firehose.DataSourceDeliveryStream(),
 
+			"aws_fsx_openzfs_snapshot": fsx.DataSourceOpenzfsSnapshot(),
+
 			"aws_globalaccelerator_accelerator": globalaccelerator.DataSourceAccelerator(),
 
 			"aws_glue_connection":                       glue.DataSourceConnection(),
@@ -708,6 +709,12 @@ func Provider() *schema.Provider {
 			"aws_mskconnect_custom_plugin":        kafkaconnect.DataSourceCustomPlugin(),
 			"aws_mskconnect_worker_configuration": kafkaconnect.DataSourceWorkerConfiguration(),
 
+			"aws_kendra_experience":                   kendra.DataSourceExperience(),
+			"aws_kendra_faq":                          kendra.DataSourceFaq(),
+			"aws_kendra_index":                        kendra.DataSourceIndex(),
+			"aws_kendra_query_suggestions_block_list": kendra.DataSourceQuerySuggestionsBlockList(),
+			"aws_kendra_thesaurus":                    kendra.DataSourceThesaurus(),
+
 			"aws_kinesis_stream":          kinesis.DataSourceStream(),
 			"aws_kinesis_stream_consumer": kinesis.DataSourceStreamConsumer(),
 
@@ -734,10 +741,15 @@ func Provider() *schema.Provider {
 			"aws_lex_intent":    lexmodels.DataSourceIntent(),
 			"aws_lex_slot_type": lexmodels.DataSourceSlotType(),
 
-			"aws_location_map":         location.DataSourceMap(),
-			"aws_location_place_index": location.DataSourcePlaceIndex(),
+			"aws_location_geofence_collection":  location.DataSourceGeofenceCollection(),
+			"aws_location_map":                  location.DataSourceMap(),
+			"aws_location_place_index":          location.DataSourcePlaceIndex(),
+			"aws_location_route_calculator":     location.DataSourceRouteCalculator(),
+			"aws_location_tracker":              location.DataSourceTracker(),
+			"aws_location_tracker_association":  location.DataSourceTrackerAssociation(),
+			"aws_location_tracker_associations": location.DataSourceTrackerAssociations(),
 
-			"aws_arn":                     meta.DataSourceARN(),
+			// "aws_arn":                     meta.DataSourceARN(), // Now implemented using Terraform Plugin Framework.
 			"aws_billing_service_account": meta.DataSourceBillingServiceAccount(),
 			"aws_default_tags":            meta.DataSourceDefaultTags(),
 			"aws_ip_ranges":               meta.DataSourceIPRanges(),
@@ -759,6 +771,9 @@ func Provider() *schema.Provider {
 			"aws_neptune_engine_version":        neptune.DataSourceEngineVersion(),
 			"aws_neptune_orderable_db_instance": neptune.DataSourceOrderableDBInstance(),
 
+			"aws_networkfirewall_firewall":        networkfirewall.DataSourceFirewall(),
+			"aws_networkfirewall_firewall_policy": networkfirewall.DataSourceFirewallPolicy(),
+
 			"aws_networkmanager_connection":                   networkmanager.DataSourceConnection(),
 			"aws_networkmanager_connections":                  networkmanager.DataSourceConnections(),
 			"aws_networkmanager_core_network_policy_document": networkmanager.DataSourceCoreNetworkPolicyDocument(),
@@ -779,6 +794,8 @@ func Provider() *schema.Provider {
 			"aws_organizations_organizational_units":     organizations.DataSourceOrganizationalUnits(),
 			"aws_organizations_resource_tags":            organizations.DataSourceResourceTags(),
 
+			"aws_outposts_asset":                  outposts.DataSourceOutpostAsset(),
+			"aws_outposts_assets":                 outposts.DataSourceOutpostAssets(),
 			"aws_outposts_outpost":                outposts.DataSourceOutpost(),
 			"aws_outposts_outpost_instance_type":  outposts.DataSourceOutpostInstanceType(),
 			"aws_outposts_outpost_instance_types": outposts.DataSourceOutpostInstanceTypes(),
@@ -787,6 +804,8 @@ func Provider() *schema.Provider {
 			"aws_outposts_sites":                  outposts.DataSourceSites(),
 
 			"aws_pricing_product": pricing.DataSourceProduct(),
+
+			"aws_prometheus_workspace": amp.DataSourceWorkspace(),
 
 			"aws_qldb_ledger": qldb.DataSourceLedger(),
 
@@ -831,8 +850,11 @@ func Provider() *schema.Provider {
 			"aws_s3_bucket_objects": s3.DataSourceBucketObjects(), // DEPRECATED: use aws_s3_objects instead
 			"aws_s3_bucket_policy":  s3.DataSourceBucketPolicy(),
 
+			"aws_s3_account_public_access_block": s3control.DataSourceAccountPublicAccessBlock(),
+
 			"aws_sagemaker_prebuilt_ecr_image": sagemaker.DataSourcePrebuiltECRImage(),
 
+			"aws_secretsmanager_random_password": secretsmanager.DataSourceRandomPassword(),
 			"aws_secretsmanager_secret":          secretsmanager.DataSourceSecret(),
 			"aws_secretsmanager_secret_rotation": secretsmanager.DataSourceSecretRotation(),
 			"aws_secretsmanager_secret_version":  secretsmanager.DataSourceSecretVersion(),
@@ -846,7 +868,9 @@ func Provider() *schema.Provider {
 			"aws_servicecatalog_portfolio":             servicecatalog.DataSourcePortfolio(),
 			"aws_servicecatalog_product":               servicecatalog.DataSourceProduct(),
 
-			"aws_service_discovery_dns_namespace": servicediscovery.DataSourceDNSNamespace(),
+			"aws_service_discovery_dns_namespace":  servicediscovery.DataSourceDNSNamespace(),
+			"aws_service_discovery_http_namespace": servicediscovery.DataSourceHTTPNamespace(),
+			"aws_service_discovery_service":        servicediscovery.DataSourceService(),
 
 			"aws_servicequotas_service":       servicequotas.DataSourceService(),
 			"aws_servicequotas_service_quota": servicequotas.DataSourceServiceQuota(),
@@ -877,15 +901,17 @@ func Provider() *schema.Provider {
 
 			"aws_transfer_server": transfer.DataSourceServer(),
 
-			"aws_waf_ipset":           waf.DataSourceIPSet(),
-			"aws_waf_rule":            waf.DataSourceRule(),
-			"aws_waf_rate_based_rule": waf.DataSourceRateBasedRule(),
-			"aws_waf_web_acl":         waf.DataSourceWebACL(),
+			"aws_waf_ipset":                 waf.DataSourceIPSet(),
+			"aws_waf_rule":                  waf.DataSourceRule(),
+			"aws_waf_rate_based_rule":       waf.DataSourceRateBasedRule(),
+			"aws_waf_subscribed_rule_group": waf.DataSourceSubscribedRuleGroup(),
+			"aws_waf_web_acl":               waf.DataSourceWebACL(),
 
-			"aws_wafregional_ipset":           wafregional.DataSourceIPSet(),
-			"aws_wafregional_rule":            wafregional.DataSourceRule(),
-			"aws_wafregional_rate_based_rule": wafregional.DataSourceRateBasedRule(),
-			"aws_wafregional_web_acl":         wafregional.DataSourceWebACL(),
+			"aws_wafregional_ipset":                 wafregional.DataSourceIPSet(),
+			"aws_wafregional_rule":                  wafregional.DataSourceRule(),
+			"aws_wafregional_rate_based_rule":       wafregional.DataSourceRateBasedRule(),
+			"aws_wafregional_subscribed_rule_group": wafregional.DataSourceSubscribedRuleGroup(),
+			"aws_wafregional_web_acl":               wafregional.DataSourceWebACL(),
 
 			"aws_wafv2_ip_set":            wafv2.DataSourceIPSet(),
 			"aws_wafv2_regex_pattern_set": wafv2.DataSourceRegexPatternSet(),
@@ -899,7 +925,8 @@ func Provider() *schema.Provider {
 		},
 
 		ResourcesMap: map[string]*schema.Resource{
-			"aws_accessanalyzer_analyzer": accessanalyzer.ResourceAnalyzer(),
+			"aws_accessanalyzer_analyzer":     accessanalyzer.ResourceAnalyzer(),
+			"aws_accessanalyzer_archive_rule": accessanalyzer.ResourceArchiveRule(),
 
 			"aws_account_alternate_contact": account.ResourceAlternateContact(),
 
@@ -909,7 +936,10 @@ func Provider() *schema.Provider {
 			"aws_acmpca_certificate":                       acmpca.ResourceCertificate(),
 			"aws_acmpca_certificate_authority":             acmpca.ResourceCertificateAuthority(),
 			"aws_acmpca_certificate_authority_certificate": acmpca.ResourceCertificateAuthorityCertificate(),
+			"aws_acmpca_permission":                        acmpca.ResourcePermission(),
 			"aws_acmpca_policy":                            acmpca.ResourcePolicy(),
+
+			"aws_applicationinsights_application": applicationinsights.ResourceApplication(),
 
 			"aws_prometheus_workspace":                amp.ResourceWorkspace(),
 			"aws_prometheus_alert_manager_definition": amp.ResourceAlertManagerDefinition(),
@@ -985,6 +1015,7 @@ func Provider() *schema.Provider {
 
 			"aws_apprunner_vpc_connector":                      apprunner.ResourceVPCConnector(),
 			"aws_apprunner_auto_scaling_configuration_version": apprunner.ResourceAutoScalingConfigurationVersion(),
+			"aws_apprunner_observability_configuration":        apprunner.ResourceObservabilityConfiguration(),
 			"aws_apprunner_connection":                         apprunner.ResourceConnection(),
 			"aws_apprunner_custom_domain_association":          apprunner.ResourceCustomDomainAssociation(),
 			"aws_apprunner_service":                            apprunner.ResourceService(),
@@ -1001,7 +1032,7 @@ func Provider() *schema.Provider {
 			"aws_appsync_api_key":                     appsync.ResourceAPIKey(),
 			"aws_appsync_datasource":                  appsync.ResourceDataSource(),
 			"aws_appsync_domain_name":                 appsync.ResourceDomainName(),
-			"aws_appsync_domain_name_api_association": appsync.ResourceDomainNameApiAssociation(),
+			"aws_appsync_domain_name_api_association": appsync.ResourceDomainNameAPIAssociation(),
 			"aws_appsync_function":                    appsync.ResourceFunction(),
 			"aws_appsync_graphql_api":                 appsync.ResourceGraphQLAPI(),
 			"aws_appsync_resolver":                    appsync.ResourceResolver(),
@@ -1041,8 +1072,10 @@ func Provider() *schema.Provider {
 			"aws_budgets_budget":        budgets.ResourceBudget(),
 			"aws_budgets_budget_action": budgets.ResourceBudgetAction(),
 
-			"aws_ce_anomaly_monitor": ce.ResourceAnomalyMonitor(),
-			"aws_ce_cost_category":   ce.ResourceCostCategory(),
+			"aws_ce_anomaly_monitor":      ce.ResourceAnomalyMonitor(),
+			"aws_ce_anomaly_subscription": ce.ResourceAnomalySubscription(),
+			"aws_ce_cost_allocation_tag":  ce.ResourceCostAllocationTag(),
+			"aws_ce_cost_category":        ce.ResourceCostCategory(),
 
 			"aws_chime_voice_connector":                         chime.ResourceVoiceConnector(),
 			"aws_chime_voice_connector_group":                   chime.ResourceVoiceConnectorGroup(),
@@ -1069,6 +1102,7 @@ func Provider() *schema.Provider {
 			"aws_cloudfront_function":                       cloudfront.ResourceFunction(),
 			"aws_cloudfront_key_group":                      cloudfront.ResourceKeyGroup(),
 			"aws_cloudfront_monitoring_subscription":        cloudfront.ResourceMonitoringSubscription(),
+			"aws_cloudfront_origin_access_control":          cloudfront.ResourceOriginAccessControl(),
 			"aws_cloudfront_origin_access_identity":         cloudfront.ResourceOriginAccessIdentity(),
 			"aws_cloudfront_origin_request_policy":          cloudfront.ResourceOriginRequestPolicy(),
 			"aws_cloudfront_public_key":                     cloudfront.ResourcePublicKey(),
@@ -1107,6 +1141,8 @@ func Provider() *schema.Provider {
 			"aws_cloudwatch_log_subscription_filter": logs.ResourceSubscriptionFilter(),
 			"aws_cloudwatch_query_definition":        logs.ResourceQueryDefinition(),
 
+			"aws_rum_app_monitor": rum.ResourceAppMonitor(),
+
 			"aws_codeartifact_domain":                        codeartifact.ResourceDomain(),
 			"aws_codeartifact_domain_permissions_policy":     codeartifact.ResourceDomainPermissionsPolicy(),
 			"aws_codeartifact_repository":                    codeartifact.ResourceRepository(),
@@ -1141,6 +1177,7 @@ func Provider() *schema.Provider {
 
 			"aws_cognito_identity_provider":          cognitoidp.ResourceIdentityProvider(),
 			"aws_cognito_resource_server":            cognitoidp.ResourceResourceServer(),
+			"aws_cognito_risk_configuration":         cognitoidp.ResourceRiskConfiguration(),
 			"aws_cognito_user":                       cognitoidp.ResourceUser(),
 			"aws_cognito_user_group":                 cognitoidp.ResourceUserGroup(),
 			"aws_cognito_user_in_group":              cognitoidp.ResourceUserInGroup(),
@@ -1148,6 +1185,8 @@ func Provider() *schema.Provider {
 			"aws_cognito_user_pool_client":           cognitoidp.ResourceUserPoolClient(),
 			"aws_cognito_user_pool_domain":           cognitoidp.ResourceUserPoolDomain(),
 			"aws_cognito_user_pool_ui_customization": cognitoidp.ResourceUserPoolUICustomization(),
+
+			"aws_comprehend_entity_recognizer": comprehend.ResourceEntityRecognizer(),
 
 			"aws_config_aggregate_authorization":       configservice.ResourceAggregateAuthorization(),
 			"aws_config_config_rule":                   configservice.ResourceConfigRule(),
@@ -1165,14 +1204,17 @@ func Provider() *schema.Provider {
 			"aws_connect_contact_flow":                connect.ResourceContactFlow(),
 			"aws_connect_contact_flow_module":         connect.ResourceContactFlowModule(),
 			"aws_connect_instance":                    connect.ResourceInstance(),
+			"aws_connect_instance_storage_config":     connect.ResourceInstanceStorageConfig(),
 			"aws_connect_hours_of_operation":          connect.ResourceHoursOfOperation(),
 			"aws_connect_lambda_function_association": connect.ResourceLambdaFunctionAssociation(),
 			"aws_connect_queue":                       connect.ResourceQueue(),
 			"aws_connect_quick_connect":               connect.ResourceQuickConnect(),
 			"aws_connect_routing_profile":             connect.ResourceRoutingProfile(),
 			"aws_connect_security_profile":            connect.ResourceSecurityProfile(),
+			"aws_connect_user":                        connect.ResourceUser(),
 			"aws_connect_user_hierarchy_group":        connect.ResourceUserHierarchyGroup(),
 			"aws_connect_user_hierarchy_structure":    connect.ResourceUserHierarchyStructure(),
+			"aws_connect_vocabulary":                  connect.ResourceVocabulary(),
 
 			"aws_cur_report_definition": cur.ResourceReportDefinition(),
 
@@ -1244,15 +1286,20 @@ func Provider() *schema.Provider {
 			"aws_docdb_global_cluster":          docdb.ResourceGlobalCluster(),
 			"aws_docdb_subnet_group":            docdb.ResourceSubnetGroup(),
 
-			"aws_directory_service_conditional_forwarder": ds.ResourceConditionalForwarder(),
-			"aws_directory_service_directory":             ds.ResourceDirectory(),
-			"aws_directory_service_log_subscription":      ds.ResourceLogSubscription(),
+			"aws_directory_service_conditional_forwarder":     ds.ResourceConditionalForwarder(),
+			"aws_directory_service_directory":                 ds.ResourceDirectory(),
+			"aws_directory_service_log_subscription":          ds.ResourceLogSubscription(),
+			"aws_directory_service_region":                    ds.ResourceRegion(),
+			"aws_directory_service_radius_settings":           ds.ResourceRadiusSettings(),
+			"aws_directory_service_shared_directory_accepter": ds.ResourceSharedDirectoryAccepter(),
+			"aws_directory_service_shared_directory":          ds.ResourceSharedDirectory(),
 
 			"aws_dynamodb_contributor_insights":          dynamodb.ResourceContributorInsights(),
 			"aws_dynamodb_global_table":                  dynamodb.ResourceGlobalTable(),
 			"aws_dynamodb_kinesis_streaming_destination": dynamodb.ResourceKinesisStreamingDestination(),
 			"aws_dynamodb_table":                         dynamodb.ResourceTable(),
 			"aws_dynamodb_table_item":                    dynamodb.ResourceTableItem(),
+			"aws_dynamodb_table_replica":                 dynamodb.ResourceTableReplica(),
 			"aws_dynamodb_tag":                           dynamodb.ResourceTag(),
 
 			"aws_ami":                                              ec2.ResourceAMI(),
@@ -1285,6 +1332,7 @@ func Provider() *schema.Provider {
 			"aws_ec2_local_gateway_route_table_vpc_association":    ec2.ResourceLocalGatewayRouteTableVPCAssociation(),
 			"aws_ec2_managed_prefix_list":                          ec2.ResourceManagedPrefixList(),
 			"aws_ec2_managed_prefix_list_entry":                    ec2.ResourceManagedPrefixListEntry(),
+			"aws_ec2_network_insights_analysis":                    ec2.ResourceNetworkInsightsAnalysis(),
 			"aws_ec2_network_insights_path":                        ec2.ResourceNetworkInsightsPath(),
 			"aws_ec2_serial_console_access":                        ec2.ResourceSerialConsoleAccess(),
 			"aws_ec2_subnet_cidr_reservation":                      ec2.ResourceSubnetCIDRReservation(),
@@ -1302,6 +1350,8 @@ func Provider() *schema.Provider {
 			"aws_ec2_transit_gateway_multicast_group_source":       ec2.ResourceTransitGatewayMulticastGroupSource(),
 			"aws_ec2_transit_gateway_peering_attachment":           ec2.ResourceTransitGatewayPeeringAttachment(),
 			"aws_ec2_transit_gateway_peering_attachment_accepter":  ec2.ResourceTransitGatewayPeeringAttachmentAccepter(),
+			"aws_ec2_transit_gateway_policy_table":                 ec2.ResourceTransitGatewayPolicyTable(),
+			"aws_ec2_transit_gateway_policy_table_association":     ec2.ResourceTransitGatewayPolicyTableAssociation(),
 			"aws_ec2_transit_gateway_prefix_list_reference":        ec2.ResourceTransitGatewayPrefixListReference(),
 			"aws_ec2_transit_gateway_route":                        ec2.ResourceTransitGatewayRoute(),
 			"aws_ec2_transit_gateway_route_table":                  ec2.ResourceTransitGatewayRouteTable(),
@@ -1460,6 +1510,8 @@ func Provider() *schema.Provider {
 
 			"aws_kinesis_firehose_delivery_stream": firehose.ResourceDeliveryStream(),
 
+			"aws_fis_experiment_template": fis.ResourceExperimentTemplate(),
+
 			"aws_fms_admin_account": fms.ResourceAdminAccount(),
 			"aws_fms_policy":        fms.ResourcePolicy(),
 
@@ -1510,7 +1562,8 @@ func Provider() *schema.Provider {
 			"aws_grafana_license_association":          grafana.ResourceLicenseAssociation(),
 			"aws_grafana_role_association":             grafana.ResourceRoleAssociation(),
 			"aws_grafana_workspace":                    grafana.ResourceWorkspace(),
-			"aws_grafana_workspace_saml_configuration": grafana.ResourceWorkspaceSamlConfiguration(),
+			"aws_grafana_workspace_api_key":            grafana.ResourceWorkspaceAPIKey(),
+			"aws_grafana_workspace_saml_configuration": grafana.ResourceWorkspaceSAMLConfiguration(),
 
 			"aws_guardduty_detector":                   guardduty.ResourceDetector(),
 			"aws_guardduty_filter":                     guardduty.ResourceFilter(),
@@ -1580,10 +1633,18 @@ func Provider() *schema.Provider {
 			"aws_msk_cluster":                  kafka.ResourceCluster(),
 			"aws_msk_configuration":            kafka.ResourceConfiguration(),
 			"aws_msk_scram_secret_association": kafka.ResourceScramSecretAssociation(),
+			"aws_msk_serverless_cluster":       kafka.ResourceServerlessCluster(),
 
 			"aws_mskconnect_connector":            kafkaconnect.ResourceConnector(),
 			"aws_mskconnect_custom_plugin":        kafkaconnect.ResourceCustomPlugin(),
 			"aws_mskconnect_worker_configuration": kafkaconnect.ResourceWorkerConfiguration(),
+
+			"aws_kendra_data_source":                  kendra.ResourceDataSource(),
+			"aws_kendra_experience":                   kendra.ResourceExperience(),
+			"aws_kendra_faq":                          kendra.ResourceFaq(),
+			"aws_kendra_index":                        kendra.ResourceIndex(),
+			"aws_kendra_query_suggestions_block_list": kendra.ResourceQuerySuggestionsBlockList(),
+			"aws_kendra_thesaurus":                    kendra.ResourceThesaurus(),
 
 			"aws_keyspaces_keyspace": keyspaces.ResourceKeyspace(),
 			"aws_keyspaces_table":    keyspaces.ResourceTable(),
@@ -1606,8 +1667,10 @@ func Provider() *schema.Provider {
 			"aws_kms_replica_key":          kms.ResourceReplicaKey(),
 
 			"aws_lakeformation_data_lake_settings": lakeformation.ResourceDataLakeSettings(),
+			"aws_lakeformation_lf_tag":             lakeformation.ResourceLFTag(),
 			"aws_lakeformation_permissions":        lakeformation.ResourcePermissions(),
 			"aws_lakeformation_resource":           lakeformation.ResourceResource(),
+			"aws_lakeformation_resource_lf_tags":   lakeformation.ResourceResourceLFTags(),
 
 			"aws_lambda_alias":                          lambda.ResourceAlias(),
 			"aws_lambda_code_signing_config":            lambda.ResourceCodeSigningConfig(),
@@ -1629,30 +1692,42 @@ func Provider() *schema.Provider {
 			"aws_licensemanager_association":           licensemanager.ResourceAssociation(),
 			"aws_licensemanager_license_configuration": licensemanager.ResourceLicenseConfiguration(),
 
-			"aws_lightsail_domain":                lightsail.ResourceDomain(),
-			"aws_lightsail_instance":              lightsail.ResourceInstance(),
-			"aws_lightsail_instance_public_ports": lightsail.ResourceInstancePublicPorts(),
-			"aws_lightsail_key_pair":              lightsail.ResourceKeyPair(),
-			"aws_lightsail_static_ip":             lightsail.ResourceStaticIP(),
-			"aws_lightsail_static_ip_attachment":  lightsail.ResourceStaticIPAttachment(),
+			"aws_lightsail_container_service":                    lightsail.ResourceContainerService(),
+			"aws_lightsail_container_service_deployment_version": lightsail.ResourceContainerServiceDeploymentVersion(),
+			"aws_lightsail_database":                             lightsail.ResourceDatabase(),
+			"aws_lightsail_domain":                               lightsail.ResourceDomain(),
+			"aws_lightsail_instance":                             lightsail.ResourceInstance(),
+			"aws_lightsail_instance_public_ports":                lightsail.ResourceInstancePublicPorts(),
+			"aws_lightsail_key_pair":                             lightsail.ResourceKeyPair(),
+			"aws_lightsail_static_ip":                            lightsail.ResourceStaticIP(),
+			"aws_lightsail_static_ip_attachment":                 lightsail.ResourceStaticIPAttachment(),
 
-			"aws_location_map":         location.ResourceMap(),
-			"aws_location_place_index": location.ResourcePlaceIndex(),
+			"aws_location_geofence_collection": location.ResourceGeofenceCollection(),
+			"aws_location_map":                 location.ResourceMap(),
+			"aws_location_place_index":         location.ResourcePlaceIndex(),
+			"aws_location_route_calculator":    location.ResourceRouteCalculator(),
+			"aws_location_tracker":             location.ResourceTracker(),
+			"aws_location_tracker_association": location.ResourceTrackerAssociation(),
 
 			"aws_macie_member_account_association": macie.ResourceMemberAccountAssociation(),
 			"aws_macie_s3_bucket_association":      macie.ResourceS3BucketAssociation(),
 
-			"aws_macie2_account":                    macie2.ResourceAccount(),
-			"aws_macie2_classification_job":         macie2.ResourceClassificationJob(),
-			"aws_macie2_custom_data_identifier":     macie2.ResourceCustomDataIdentifier(),
-			"aws_macie2_findings_filter":            macie2.ResourceFindingsFilter(),
-			"aws_macie2_invitation_accepter":        macie2.ResourceInvitationAccepter(),
-			"aws_macie2_member":                     macie2.ResourceMember(),
-			"aws_macie2_organization_admin_account": macie2.ResourceOrganizationAdminAccount(),
+			"aws_macie2_account":                             macie2.ResourceAccount(),
+			"aws_macie2_classification_job":                  macie2.ResourceClassificationJob(),
+			"aws_macie2_custom_data_identifier":              macie2.ResourceCustomDataIdentifier(),
+			"aws_macie2_findings_filter":                     macie2.ResourceFindingsFilter(),
+			"aws_macie2_invitation_accepter":                 macie2.ResourceInvitationAccepter(),
+			"aws_macie2_member":                              macie2.ResourceMember(),
+			"aws_macie2_organization_admin_account":          macie2.ResourceOrganizationAdminAccount(),
+			"aws_macie2_classification_export_configuration": macie2.ResourceClassificationExportConfiguration(),
 
 			"aws_media_convert_queue": mediaconvert.ResourceQueue(),
 
 			"aws_media_package_channel": mediapackage.ResourceChannel(),
+
+			"aws_medialive_input":                medialive.ResourceInput(),
+			"aws_medialive_input_security_group": medialive.ResourceInputSecurityGroup(),
+			"aws_medialive_multiplex":            medialive.ResourceMultiplex(),
 
 			"aws_media_store_container":        mediastore.ResourceContainer(),
 			"aws_media_store_container_policy": mediastore.ResourceContainerPolicy(),
@@ -1684,6 +1759,7 @@ func Provider() *schema.Provider {
 			"aws_networkfirewall_resource_policy":       networkfirewall.ResourceResourcePolicy(),
 			"aws_networkfirewall_rule_group":            networkfirewall.ResourceRuleGroup(),
 
+			"aws_networkmanager_attachment_accepter":                      networkmanager.ResourceAttachmentAccepter(),
 			"aws_networkmanager_connection":                               networkmanager.ResourceConnection(),
 			"aws_networkmanager_customer_gateway_association":             networkmanager.ResourceCustomerGatewayAssociation(),
 			"aws_networkmanager_device":                                   networkmanager.ResourceDevice(),
@@ -1692,7 +1768,10 @@ func Provider() *schema.Provider {
 			"aws_networkmanager_link_association":                         networkmanager.ResourceLinkAssociation(),
 			"aws_networkmanager_site":                                     networkmanager.ResourceSite(),
 			"aws_networkmanager_transit_gateway_connect_peer_association": networkmanager.ResourceTransitGatewayConnectPeerAssociation(),
+			"aws_networkmanager_transit_gateway_peering":                  networkmanager.ResourceTransitGatewayPeering(),
 			"aws_networkmanager_transit_gateway_registration":             networkmanager.ResourceTransitGatewayRegistration(),
+			"aws_networkmanager_transit_gateway_route_table_attachment":   networkmanager.ResourceTransitGatewayRouteTableAttachment(),
+			"aws_networkmanager_vpc_attachment":                           networkmanager.ResourceVPCAttachment(),
 
 			"aws_opensearch_domain":              opensearch.ResourceDomain(),
 			"aws_opensearch_domain_policy":       opensearch.ResourceDomainPolicy(),
@@ -1789,7 +1868,15 @@ func Provider() *schema.Provider {
 
 			"aws_redshiftdata_statement": redshiftdata.ResourceStatement(),
 
+			"aws_redshiftserverless_endpoint_access": redshiftserverless.ResourceEndpointAccess(),
+			"aws_redshiftserverless_namespace":       redshiftserverless.ResourceNamespace(),
+			"aws_redshiftserverless_usage_limit":     redshiftserverless.ResourceUsageLimit(),
+			"aws_redshiftserverless_workgroup":       redshiftserverless.ResourceWorkgroup(),
+
 			"aws_resourcegroups_group": resourcegroups.ResourceGroup(),
+
+			"aws_rolesanywhere_profile":      rolesanywhere.ResourceProfile(),
+			"aws_rolesanywhere_trust_anchor": rolesanywhere.ResourceTrustAnchor(),
 
 			"aws_route53_delegation_set":                route53.ResourceDelegationSet(),
 			"aws_route53_health_check":                  route53.ResourceHealthCheck(),
@@ -1967,8 +2054,10 @@ func Provider() *schema.Provider {
 			"aws_sns_topic_policy":         sns.ResourceTopicPolicy(),
 			"aws_sns_topic_subscription":   sns.ResourceTopicSubscription(),
 
-			"aws_sqs_queue":        sqs.ResourceQueue(),
-			"aws_sqs_queue_policy": sqs.ResourceQueuePolicy(),
+			"aws_sqs_queue":                      sqs.ResourceQueue(),
+			"aws_sqs_queue_policy":               sqs.ResourceQueuePolicy(),
+			"aws_sqs_queue_redrive_allow_policy": sqs.ResourceQueueRedriveAllowPolicy(),
+			"aws_sqs_queue_redrive_policy":       sqs.ResourceQueueRedrivePolicy(),
 
 			"aws_ssm_activation":                ssm.ResourceActivation(),
 			"aws_ssm_association":               ssm.ResourceAssociation(),
@@ -1980,11 +2069,13 @@ func Provider() *schema.Provider {
 			"aws_ssm_patch_baseline":            ssm.ResourcePatchBaseline(),
 			"aws_ssm_patch_group":               ssm.ResourcePatchGroup(),
 			"aws_ssm_resource_data_sync":        ssm.ResourceResourceDataSync(),
+			"aws_ssm_service_setting":           ssm.ResourceServiceSetting(),
 
-			"aws_ssoadmin_account_assignment":           ssoadmin.ResourceAccountAssignment(),
-			"aws_ssoadmin_managed_policy_attachment":    ssoadmin.ResourceManagedPolicyAttachment(),
-			"aws_ssoadmin_permission_set":               ssoadmin.ResourcePermissionSet(),
-			"aws_ssoadmin_permission_set_inline_policy": ssoadmin.ResourcePermissionSetInlinePolicy(),
+			"aws_ssoadmin_account_assignment":                 ssoadmin.ResourceAccountAssignment(),
+			"aws_ssoadmin_customer_managed_policy_attachment": ssoadmin.ResourceCustomerManagedPolicyAttachment(),
+			"aws_ssoadmin_managed_policy_attachment":          ssoadmin.ResourceManagedPolicyAttachment(),
+			"aws_ssoadmin_permission_set":                     ssoadmin.ResourcePermissionSet(),
+			"aws_ssoadmin_permission_set_inline_policy":       ssoadmin.ResourcePermissionSetInlinePolicy(),
 
 			"aws_storagegateway_cache":                   storagegateway.ResourceCache(),
 			"aws_storagegateway_cached_iscsi_volume":     storagegateway.ResourceCachediSCSIVolume(),
@@ -2003,6 +2094,11 @@ func Provider() *schema.Provider {
 
 			"aws_timestreamwrite_database": timestreamwrite.ResourceDatabase(),
 			"aws_timestreamwrite_table":    timestreamwrite.ResourceTable(),
+
+			"aws_transcribe_language_model":     transcribe.ResourceLanguageModel(),
+			"aws_transcribe_medical_vocabulary": transcribe.ResourceMedicalVocabulary(),
+			"aws_transcribe_vocabulary":         transcribe.ResourceVocabulary(),
+			"aws_transcribe_vocabulary_filter":  transcribe.ResourceVocabularyFilter(),
 
 			"aws_transfer_access":   transfer.ResourceAccess(),
 			"aws_transfer_server":   transfer.ResourceServer(),
@@ -2058,30 +2154,43 @@ func Provider() *schema.Provider {
 	}
 
 	provider.ConfigureContextFunc = func(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
-		terraformVersion := provider.TerraformVersion
-		if terraformVersion == "" {
-			// Terraform 0.12 introduced this field to the protocol
-			// We can therefore assume that if it's missing it's 0.10 or 0.11
-			terraformVersion = "0.11+compatible"
-		}
-		return providerConfigure(ctx, d, terraformVersion)
+		return configure(ctx, provider, d)
 	}
 
-	return provider
+	providerData := &conns.AWSClient{
+		// TODO: This should be generated.
+
+		// ServiceData is used before configuration to determine the provider's exported resources and data sources.
+		ServiceMap: map[string]intf.ServiceData{
+			"meta": meta.ServiceData,
+		},
+	}
+
+	// Set the provider Meta (instance data) here.
+	// It will be overwritten by the result of the call to ConfigureContextFunc.
+	provider.SetMeta(providerData)
+
+	return provider, nil
 }
 
-func providerConfigure(ctx context.Context, d *schema.ResourceData, terraformVersion string) (interface{}, diag.Diagnostics) {
+// configure ensures that the provider is fully configured.
+func configure(ctx context.Context, provider *schema.Provider, d *schema.ResourceData) (*conns.AWSClient, diag.Diagnostics) {
+	terraformVersion := provider.TerraformVersion
+	if terraformVersion == "" {
+		// Terraform 0.12 introduced this field to the protocol
+		// We can therefore assume that if it's missing it's 0.10 or 0.11
+		terraformVersion = "0.11+compatible"
+	}
+
 	config := conns.Config{
 		AccessKey:                      d.Get("access_key").(string),
-		DefaultTagsConfig:              expandProviderDefaultTags(d.Get("default_tags").([]interface{})),
 		CustomCABundle:                 d.Get("custom_ca_bundle").(string),
 		EC2MetadataServiceEndpoint:     d.Get("ec2_metadata_service_endpoint").(string),
 		EC2MetadataServiceEndpointMode: d.Get("ec2_metadata_service_endpoint_mode").(string),
 		Endpoints:                      make(map[string]string),
 		HTTPProxy:                      d.Get("http_proxy").(string),
-		IgnoreTagsConfig:               expandProviderIgnoreTags(d.Get("ignore_tags").([]interface{})),
 		Insecure:                       d.Get("insecure").(bool),
-		MaxRetries:                     d.Get("max_retries").(int),
+		MaxRetries:                     25, // Set default here, not in schema (muxing with v6 provider).
 		Profile:                        d.Get("profile").(string),
 		Region:                         d.Get("region").(string),
 		S3UsePathStyle:                 d.Get("s3_use_path_style").(bool) || d.Get("s3_force_path_style").(bool),
@@ -2097,50 +2206,54 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData, terraformVer
 		UseFIPSEndpoint:                d.Get("use_fips_endpoint").(bool),
 	}
 
-	if raw := d.Get("shared_config_files").([]interface{}); len(raw) != 0 {
-		l := make([]string, len(raw))
-		for i, v := range raw {
-			l[i] = v.(string)
-		}
-		config.SharedConfigFiles = l
+	if v, ok := d.GetOk("allowed_account_ids"); ok && v.(*schema.Set).Len() > 0 {
+		config.AllowedAccountIds = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
-	if v := d.Get("shared_credentials_file").(string); v != "" {
-		config.SharedCredentialsFiles = []string{v}
-	}
-	if raw := d.Get("shared_credentials_files").([]interface{}); len(raw) != 0 {
-		l := make([]string, len(raw))
-		for i, v := range raw {
-			l[i] = v.(string)
-		}
-		config.SharedCredentialsFiles = l
+	if v, ok := d.GetOk("assume_role"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		config.AssumeRole = expandAssumeRole(v.([]interface{})[0].(map[string]interface{}))
+		log.Printf("[INFO] assume_role configuration set: (ARN: %q, SessionID: %q, ExternalID: %q, SourceIdentity: %q)", config.AssumeRole.RoleARN, config.AssumeRole.SessionName, config.AssumeRole.ExternalID, config.AssumeRole.SourceIdentity)
 	}
 
-	if l, ok := d.Get("assume_role").([]interface{}); ok && len(l) > 0 && l[0] != nil {
-		config.AssumeRole = expandAssumeRole(l[0].(map[string]interface{}))
-		log.Printf("[INFO] assume_role configuration set: (ARN: %q, SessionID: %q, ExternalID: %q)", config.AssumeRole.RoleARN, config.AssumeRole.SessionName, config.AssumeRole.ExternalID)
-	}
-
-	if l, ok := d.Get("assume_role_with_web_identity").([]interface{}); ok && len(l) > 0 && l[0] != nil {
-		config.AssumeRoleWithWebIdentity = expandAssumeRoleWithWebIdentity(l[0].(map[string]interface{}))
+	if v, ok := d.GetOk("assume_role_with_web_identity"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		config.AssumeRoleWithWebIdentity = expandAssumeRoleWithWebIdentity(v.([]interface{})[0].(map[string]interface{}))
 		log.Printf("[INFO] assume_role_with_web_identity configuration set: (ARN: %q, SessionID: %q)", config.AssumeRoleWithWebIdentity.RoleARN, config.AssumeRoleWithWebIdentity.SessionName)
 	}
 
-	endpointsSet := d.Get("endpoints").(*schema.Set)
-	if err := expandEndpoints(endpointsSet.List(), config.Endpoints); err != nil {
-		return nil, diag.FromErr(err)
+	if v, ok := d.GetOk("default_tags"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		config.DefaultTagsConfig = expandDefaultTags(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	if v, ok := d.GetOk("allowed_account_ids"); ok {
-		for _, accountIDRaw := range v.(*schema.Set).List() {
-			config.AllowedAccountIds = append(config.AllowedAccountIds, accountIDRaw.(string))
+	if v, ok := d.GetOk("endpoints"); ok && v.(*schema.Set).Len() > 0 {
+		endpoints, err := expandEndpoints(v.(*schema.Set).List())
+
+		if err != nil {
+			return nil, diag.FromErr(err)
 		}
+
+		config.Endpoints = endpoints
 	}
 
-	if v, ok := d.GetOk("forbidden_account_ids"); ok {
-		for _, accountIDRaw := range v.(*schema.Set).List() {
-			config.ForbiddenAccountIds = append(config.ForbiddenAccountIds, accountIDRaw.(string))
-		}
+	if v, ok := d.GetOk("forbidden_account_ids"); ok && v.(*schema.Set).Len() > 0 {
+		config.ForbiddenAccountIds = flex.ExpandStringValueSet(v.(*schema.Set))
+	}
+
+	if v, ok := d.GetOk("ignore_tags"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		config.IgnoreTagsConfig = expandIgnoreTags(v.([]interface{})[0].(map[string]interface{}))
+	}
+
+	if v, ok := d.GetOk("max_retries"); ok {
+		config.MaxRetries = v.(int)
+	}
+
+	if v, ok := d.GetOk("shared_credentials_file"); ok {
+		config.SharedCredentialsFiles = []string{v.(string)}
+	} else if v, ok := d.GetOk("shared_credentials_files"); ok && len(v.([]interface{})) > 0 {
+		config.SharedCredentialsFiles = flex.ExpandStringValueList(v.([]interface{}))
+	}
+
+	if v, ok := d.GetOk("shared_config_files"); ok && len(v.([]interface{})) > 0 {
+		config.SharedConfigFiles = flex.ExpandStringValueList(v.([]interface{}))
 	}
 
 	if v, null, _ := nullable.Bool(d.Get("skip_metadata_api_check").(string)).Value(); !null {
@@ -2151,7 +2264,24 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData, terraformVer
 		}
 	}
 
-	return config.Client(ctx)
+	providerData, diags := config.ConfigureProvider(ctx, provider.Meta().(*conns.AWSClient))
+
+	if diags.HasError() {
+		return nil, diags
+	}
+
+	// Configure each service.
+	for _, v := range providerData.ServiceMap {
+		if err := v.Configure(ctx, providerData); err != nil {
+			diags = append(diags, diag.FromErr(err)...)
+		}
+	}
+
+	if diags.HasError() {
+		return nil, diags
+	}
+
+	return providerData, diags
 }
 
 func assumeRoleSchema() *schema.Schema {
@@ -2211,6 +2341,12 @@ func assumeRoleSchema() *schema.Schema {
 					Optional:     true,
 					Description:  "An identifier for the assumed role session.",
 					ValidateFunc: validAssumeRoleSessionName,
+				},
+				"source_identity": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Description:  "Source identity specified by the principal assuming the role.",
+					ValidateFunc: validAssumeRoleSourceIdentity,
 				},
 				"tags": {
 					Type:        schema.TypeMap,
@@ -2306,191 +2442,177 @@ func endpointsSchema() *schema.Schema {
 	}
 }
 
-func expandAssumeRole(m map[string]interface{}) *awsbase.AssumeRole {
-	assumeRole := awsbase.AssumeRole{}
-
-	if v, ok := m["duration"].(string); ok && v != "" {
-		duration, _ := time.ParseDuration(v)
-		assumeRole.Duration = duration
+func expandAssumeRole(tfMap map[string]interface{}) *awsbase.AssumeRole {
+	if tfMap == nil {
+		return nil
 	}
 
-	if v, ok := m["duration_seconds"].(int); ok && v != 0 {
+	assumeRole := awsbase.AssumeRole{}
+
+	if v, ok := tfMap["duration"].(string); ok && v != "" {
+		duration, _ := time.ParseDuration(v)
+		assumeRole.Duration = duration
+	} else if v, ok := tfMap["duration_seconds"].(int); ok && v != 0 {
 		assumeRole.Duration = time.Duration(v) * time.Second
 	}
 
-	if v, ok := m["external_id"].(string); ok && v != "" {
+	if v, ok := tfMap["external_id"].(string); ok && v != "" {
 		assumeRole.ExternalID = v
 	}
 
-	if v, ok := m["policy"].(string); ok && v != "" {
+	if v, ok := tfMap["policy"].(string); ok && v != "" {
 		assumeRole.Policy = v
 	}
 
-	if policyARNSet, ok := m["policy_arns"].(*schema.Set); ok && policyARNSet.Len() > 0 {
-		for _, policyARNRaw := range policyARNSet.List() {
-			policyARN, ok := policyARNRaw.(string)
-
-			if !ok {
-				continue
-			}
-
-			assumeRole.PolicyARNs = append(assumeRole.PolicyARNs, policyARN)
-		}
+	if v, ok := tfMap["policy_arns"].(*schema.Set); ok && v.Len() > 0 {
+		assumeRole.PolicyARNs = flex.ExpandStringValueSet(v)
 	}
 
-	if v, ok := m["role_arn"].(string); ok && v != "" {
+	if v, ok := tfMap["role_arn"].(string); ok && v != "" {
 		assumeRole.RoleARN = v
 	}
 
-	if v, ok := m["session_name"].(string); ok && v != "" {
+	if v, ok := tfMap["session_name"].(string); ok && v != "" {
 		assumeRole.SessionName = v
 	}
 
-	if tagMapRaw, ok := m["tags"].(map[string]interface{}); ok && len(tagMapRaw) > 0 {
-		assumeRole.Tags = make(map[string]string)
-
-		for k, vRaw := range tagMapRaw {
-			v, ok := vRaw.(string)
-
-			if !ok {
-				continue
-			}
-
-			assumeRole.Tags[k] = v
-		}
+	if v, ok := tfMap["source_identity"].(string); ok && v != "" {
+		assumeRole.SourceIdentity = v
 	}
 
-	if transitiveTagKeySet, ok := m["transitive_tag_keys"].(*schema.Set); ok && transitiveTagKeySet.Len() > 0 {
-		for _, transitiveTagKeyRaw := range transitiveTagKeySet.List() {
-			transitiveTagKey, ok := transitiveTagKeyRaw.(string)
+	if v, ok := tfMap["tags"].(map[string]interface{}); ok && len(v) > 0 {
+		assumeRole.Tags = flex.ExpandStringValueMap(v)
+	}
 
-			if !ok {
-				continue
-			}
-
-			assumeRole.TransitiveTagKeys = append(assumeRole.TransitiveTagKeys, transitiveTagKey)
-		}
+	if v, ok := tfMap["transitive_tag_keys"].(*schema.Set); ok && v.Len() > 0 {
+		assumeRole.TransitiveTagKeys = flex.ExpandStringValueSet(v)
 	}
 
 	return &assumeRole
 }
 
-func expandAssumeRoleWithWebIdentity(m map[string]interface{}) *awsbase.AssumeRoleWithWebIdentity {
-	assumeRole := awsbase.AssumeRoleWithWebIdentity{}
-
-	if v, ok := m["duration"].(string); ok && v != "" {
-		duration, _ := time.ParseDuration(v)
-		assumeRole.Duration = duration
+func expandAssumeRoleWithWebIdentity(tfMap map[string]interface{}) *awsbase.AssumeRoleWithWebIdentity {
+	if tfMap == nil {
+		return nil
 	}
 
-	if v, ok := m["duration_seconds"].(int); ok && v != 0 {
+	assumeRole := awsbase.AssumeRoleWithWebIdentity{}
+
+	if v, ok := tfMap["duration"].(string); ok && v != "" {
+		duration, _ := time.ParseDuration(v)
+		assumeRole.Duration = duration
+	} else if v, ok := tfMap["duration_seconds"].(int); ok && v != 0 {
 		assumeRole.Duration = time.Duration(v) * time.Second
 	}
 
-	if v, ok := m["policy"].(string); ok && v != "" {
+	if v, ok := tfMap["policy"].(string); ok && v != "" {
 		assumeRole.Policy = v
 	}
 
-	if policyARNSet, ok := m["policy_arns"].(*schema.Set); ok && policyARNSet.Len() > 0 {
-		for _, policyARNRaw := range policyARNSet.List() {
-			policyARN, ok := policyARNRaw.(string)
-
-			if !ok {
-				continue
-			}
-
-			assumeRole.PolicyARNs = append(assumeRole.PolicyARNs, policyARN)
-		}
+	if v, ok := tfMap["policy_arns"].(*schema.Set); ok && v.Len() > 0 {
+		assumeRole.PolicyARNs = flex.ExpandStringValueSet(v)
 	}
 
-	if v, ok := m["role_arn"].(string); ok && v != "" {
+	if v, ok := tfMap["role_arn"].(string); ok && v != "" {
 		assumeRole.RoleARN = v
 	}
 
-	if v, ok := m["session_name"].(string); ok && v != "" {
+	if v, ok := tfMap["session_name"].(string); ok && v != "" {
 		assumeRole.SessionName = v
 	}
 
-	if v, ok := m["web_identity_token"].(string); ok && v != "" {
+	if v, ok := tfMap["web_identity_token"].(string); ok && v != "" {
 		assumeRole.WebIdentityToken = v
 	}
 
-	if v, ok := m["web_identity_token_file"].(string); ok && v != "" {
+	if v, ok := tfMap["web_identity_token_file"].(string); ok && v != "" {
 		assumeRole.WebIdentityTokenFile = v
 	}
 
 	return &assumeRole
 }
 
-func expandProviderDefaultTags(l []interface{}) *tftags.DefaultConfig {
-	if len(l) == 0 || l[0] == nil {
+func expandDefaultTags(tfMap map[string]interface{}) *tftags.DefaultConfig {
+	if tfMap == nil {
 		return nil
 	}
 
 	defaultConfig := &tftags.DefaultConfig{}
-	m := l[0].(map[string]interface{})
 
-	if v, ok := m["tags"].(map[string]interface{}); ok {
+	if v, ok := tfMap["tags"].(map[string]interface{}); ok {
 		defaultConfig.Tags = tftags.New(v)
 	}
+
 	return defaultConfig
 }
 
-func expandProviderIgnoreTags(l []interface{}) *tftags.IgnoreConfig {
-	if len(l) == 0 || l[0] == nil {
+func expandIgnoreTags(tfMap map[string]interface{}) *tftags.IgnoreConfig {
+	if tfMap == nil {
 		return nil
 	}
 
 	ignoreConfig := &tftags.IgnoreConfig{}
-	m := l[0].(map[string]interface{})
 
-	if v, ok := m["keys"].(*schema.Set); ok {
+	if v, ok := tfMap["keys"].(*schema.Set); ok {
 		ignoreConfig.Keys = tftags.New(v.List())
 	}
 
-	if v, ok := m["key_prefixes"].(*schema.Set); ok {
+	if v, ok := tfMap["key_prefixes"].(*schema.Set); ok {
 		ignoreConfig.KeyPrefixes = tftags.New(v.List())
 	}
 
 	return ignoreConfig
 }
 
-func expandEndpoints(endpointsSetList []interface{}, out map[string]string) error {
-	for _, endpointsSetI := range endpointsSetList {
-		endpoints := endpointsSetI.(map[string]interface{})
-
-		for _, hclKey := range names.Aliases() {
-			var serviceKey string
-			var err error
-			if serviceKey, err = names.ProviderPackageForAlias(hclKey); err != nil {
-				return fmt.Errorf("failed to assign endpoint (%s): %w", hclKey, err)
-			}
-
-			if out[serviceKey] == "" && endpoints[hclKey].(string) != "" {
-				out[serviceKey] = endpoints[hclKey].(string)
-			}
-		}
+func expandEndpoints(tfList []interface{}) (map[string]string, error) {
+	if len(tfList) == 0 {
+		return nil, nil
 	}
 
-	for _, service := range names.ProviderPackages() {
-		if out[service] != "" {
+	endpoints := make(map[string]string)
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
+
+		if !ok {
 			continue
 		}
 
-		envvar := names.EnvVar(service)
-		if envvar != "" {
-			if v := os.Getenv(envvar); v != "" {
-				out[service] = v
-				continue
+		for _, alias := range names.Aliases() {
+			pkg, err := names.ProviderPackageForAlias(alias)
+
+			if err != nil {
+				return nil, fmt.Errorf("failed to assign endpoint (%s): %w", alias, err)
 			}
-		}
-		if envvarDeprecated := names.DeprecatedEnvVar(service); envvarDeprecated != "" {
-			if v := os.Getenv(envvarDeprecated); v != "" {
-				log.Printf("[WARN] The environment variable %q is deprecated. Use %q instead.", envvarDeprecated, envvar)
-				out[service] = v
+
+			if endpoints[pkg] == "" {
+				if v := tfMap[alias].(string); v != "" {
+					endpoints[pkg] = v
+				}
 			}
 		}
 	}
 
-	return nil
+	for _, pkg := range names.ProviderPackages() {
+		if endpoints[pkg] != "" {
+			continue
+		}
+
+		envVar := names.EnvVar(pkg)
+		if envVar != "" {
+			if v := os.Getenv(envVar); v != "" {
+				endpoints[pkg] = v
+				continue
+			}
+		}
+
+		if deprecatedEnvVar := names.DeprecatedEnvVar(pkg); deprecatedEnvVar != "" {
+			if v := os.Getenv(deprecatedEnvVar); v != "" {
+				log.Printf("[WARN] The environment variable %q is deprecated. Use %q instead.", deprecatedEnvVar, envVar)
+				endpoints[pkg] = v
+			}
+		}
+	}
+
+	return endpoints, nil
 }

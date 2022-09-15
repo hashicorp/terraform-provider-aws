@@ -8,10 +8,50 @@ ACCTEST_PARALLELISM ?= 20
 
 ifneq ($(origin PKG), undefined)
 	PKG_NAME = internal/service/$(PKG)
+	TEST = ./$(PKG_NAME)/...
 endif
 
 ifneq ($(origin TESTS), undefined)
 	RUNARGS = -run='$(TESTS)'
+endif
+
+ifneq ($(origin SWEEPERS), undefined)
+	SWEEPARGS = -sweep-run='$(SWEEPERS)'
+endif
+
+ifeq ($(PKG_NAME), internal/service/ebs)
+	PKG_NAME = internal/service/ec2
+	TEST = ./$(PKG_NAME)/...
+endif
+
+ifeq ($(PKG_NAME), internal/service/ipam)
+	PKG_NAME = internal/service/ec2
+	TEST = ./$(PKG_NAME)/...
+endif
+
+ifeq ($(PKG_NAME), internal/service/transitgateway)
+	PKG_NAME = internal/service/ec2
+	TEST = ./$(PKG_NAME)/...
+endif
+
+ifeq ($(PKG_NAME), internal/service/vpc)
+	PKG_NAME = internal/service/ec2
+	TEST = ./$(PKG_NAME)/...
+endif
+
+ifeq ($(PKG_NAME), internal/service/vpnclient)
+	PKG_NAME = internal/service/ec2
+	TEST = ./$(PKG_NAME)/...
+endif
+
+ifeq ($(PKG_NAME), internal/service/vpnsite)
+	PKG_NAME = internal/service/ec2
+	TEST = ./$(PKG_NAME)/...
+endif
+
+ifeq ($(PKG_NAME), internal/service/wavelength)
+	PKG_NAME = internal/service/ec2
+	TEST = ./$(PKG_NAME)/...
 endif
 
 default: build
@@ -26,9 +66,13 @@ gen:
 	rm -f internal/conns/*_gen.go
 	rm -f internal/service/**/*_gen.go
 	rm -f internal/sweep/sweep_test.go
+	rm -f names/caps.md
 	rm -f names/*_gen.go
 	rm -f website/allowed-subcategories.txt
 	rm -f website/docs/guides/custom-service-endpoints.html.md
+	rm -f .ci/.semgrep-caps-aws-ec2.yml
+	rm -f .ci/.semgrep-configs.yml
+	rm -f .ci/.semgrep-service-name*.yml
 	go generate ./...
 
 sweep:
@@ -54,11 +98,11 @@ testacc: fmtcheck
 
 fmt:
 	@echo "==> Fixing source code with gofmt..."
-	gofmt -s -w ./$(PKG_NAME) ./names $(filter-out ./providerlint/go% ./providerlint/README.md ./providerlint/vendor, $(wildcard ./providerlint/*))
+	gofmt -s -w ./$(PKG_NAME) ./names $(filter-out ./.ci/providerlint/go% ./.ci/providerlint/README.md ./.ci/providerlint/vendor, $(wildcard ./.ci/providerlint/*))
 
 # Currently required by tf-deploy compile
 fmtcheck:
-	@sh -c "'$(CURDIR)/scripts/gofmtcheck.sh'"
+	@sh -c "'$(CURDIR)/.ci/scripts/gofmtcheck.sh'"
 
 gencheck:
 	@echo "==> Checking generated source code..."
@@ -68,7 +112,7 @@ gencheck:
 
 generate-changelog:
 	@echo "==> Generating changelog..."
-	@sh -c "'$(CURDIR)/scripts/generate-changelog.sh'"
+	@sh -c "'$(CURDIR)/.ci/scripts/generate-changelog.sh'"
 
 depscheck:
 	@echo "==> Checking source code with go mod tidy..."
@@ -107,7 +151,8 @@ gh-workflows-lint:
 
 golangci-lint:
 	@echo "==> Checking source code with golangci-lint..."
-	@golangci-lint run ./$(PKG_NAME)/...
+	@golangci-lint -c .ci/.golangci.yml run ./$(PKG_NAME)/...
+	@golangci-lint -c .ci/.golangci2.yml run ./$(PKG_NAME)/...
 
 providerlint:
 	@echo "==> Checking source code with providerlint..."
@@ -141,15 +186,15 @@ importlint:
 	@impi --local . --scheme stdThirdPartyLocal ./$(PKG_NAME)/...
 
 tools:
-	cd providerlint && go install .
-	cd tools && go install github.com/bflad/tfproviderdocs
-	cd tools && go install github.com/client9/misspell/cmd/misspell
-	cd tools && go install github.com/golangci/golangci-lint/cmd/golangci-lint
-	cd tools && go install github.com/katbyte/terrafmt
-	cd tools && go install github.com/terraform-linters/tflint
-	cd tools && go install github.com/pavius/impi/cmd/impi
-	cd tools && go install github.com/hashicorp/go-changelog/cmd/changelog-build
-	cd tools && go install github.com/rhysd/actionlint/cmd/actionlint
+	cd .ci/providerlint && go install .
+	cd .ci/tools && go install github.com/bflad/tfproviderdocs
+	cd .ci/tools && go install github.com/client9/misspell/cmd/misspell
+	cd .ci/tools && go install github.com/golangci/golangci-lint/cmd/golangci-lint
+	cd .ci/tools && go install github.com/katbyte/terrafmt
+	cd .ci/tools && go install github.com/terraform-linters/tflint
+	cd .ci/tools && go install github.com/pavius/impi/cmd/impi
+	cd .ci/tools && go install github.com/hashicorp/go-changelog/cmd/changelog-build
+	cd .ci/tools && go install github.com/rhysd/actionlint/cmd/actionlint
 
 test-compile:
 	@if [ "$(TEST)" = "./..." ]; then \
@@ -160,10 +205,10 @@ test-compile:
 	go test -c $(TEST) $(TESTARGS)
 
 website-link-check:
-	@scripts/markdown-link-check.sh
+	@.ci/scripts/markdown-link-check.sh
 
 website-link-check-ghrc:
-	@LINK_CHECK_CONTAINER="ghcr.io/tcort/markdown-link-check:stable" scripts/markdown-link-check.sh
+	@LINK_CHECK_CONTAINER="ghcr.io/tcort/markdown-link-check:stable" .ci/scripts/markdown-link-check.sh
 
 website-lint:
 	@echo "==> Checking website against linters..."
@@ -189,14 +234,32 @@ website-lint-fix:
 
 semgrep:
 	@echo "==> Running Semgrep static analysis..."
-	@docker run --rm --volume "${PWD}:/src" returntocorp/semgrep --config .semgrep.yml
+	@docker run --rm --volume "${PWD}:/src" returntocorp/semgrep --config .ci/.semgrep.yml
 
 semall:
 	@echo "==> Running Semgrep checks locally (must have semgrep installed)..."
-	@semgrep -c .semgrep.yml
-	@semgrep -c .semgrep-service-name0.yml
-	@semgrep -c .semgrep-service-name1.yml
-	@semgrep -c .semgrep-service-name2.yml
-	@semgrep -c .semgrep-service-name3.yml
+	@semgrep --error --metrics=off \
+		--config .ci/.semgrep.yml \
+		--config .ci/.semgrep-caps-aws-ec2.yml \
+		--config .ci/.semgrep-configs.yml \
+		--config .ci/.semgrep-service-name0.yml \
+		--config .ci/.semgrep-service-name1.yml \
+		--config .ci/.semgrep-service-name2.yml \
+		--config .ci/.semgrep-service-name3.yml \
+		--config 'r/dgryski.semgrep-go.badnilguard' \
+		--config 'r/dgryski.semgrep-go.errnilcheck' \
+    	--config 'r/dgryski.semgrep-go.marshaljson' \
+		--config 'r/dgryski.semgrep-go.nilerr' \
+        --config 'r/dgryski.semgrep-go.oddifsequence' \
+		--config 'r/dgryski.semgrep-go.oserrors'
 
-.PHONY: providerlint build gen generate-changelog gh-workflows-lint golangci-lint sweep test testacc fmt fmtcheck lint tools test-compile website-link-check website-lint website-lint-fix depscheck docscheck semgrep
+skaff:
+	cd skaff && go install github.com/hashicorp/terraform-provider-aws/skaff
+
+tfsdk2fw:
+	cd tools/tfsdk2fw && go install github.com/hashicorp/terraform-provider-aws/tools/tfsdk2fw
+
+yamllint:
+	@yamllint .
+
+.PHONY: providerlint build gen generate-changelog gh-workflows-lint golangci-lint sweep test testacc fmt fmtcheck lint tools test-compile website-link-check website-lint website-lint-fix depscheck docscheck semgrep skaff tfsdk2fw

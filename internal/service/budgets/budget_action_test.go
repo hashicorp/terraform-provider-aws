@@ -21,13 +21,13 @@ func TestAccBudgetsBudgetAction_basic(t *testing.T) {
 	var conf budgets.Action
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(budgets.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, budgets.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccBudgetActionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(budgets.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, budgets.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccBudgetActionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBudgetActionBasicConfig(rName),
+				Config: testAccBudgetActionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccBudgetActionExists(resourceName, &conf),
 					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "budgets", regexp.MustCompile(fmt.Sprintf(`budget/%s/action/.+`, rName))),
@@ -61,13 +61,13 @@ func TestAccBudgetsBudgetAction_disappears(t *testing.T) {
 	var conf budgets.Action
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(budgets.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, budgets.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccBudgetActionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(budgets.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, budgets.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccBudgetActionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBudgetActionBasicConfig(rName),
+				Config: testAccBudgetActionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccBudgetActionExists(resourceName, &conf),
 					acctest.CheckResourceDisappears(acctest.Provider, tfbudgets.ResourceBudgetAction(), resourceName),
@@ -139,7 +139,7 @@ func testAccBudgetActionDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccBudgetActionBasicConfig(rName string) string {
+func testAccBudgetActionConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_policy" "test" {
   name        = %[1]q

@@ -2,6 +2,7 @@ package ec2
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -12,6 +13,10 @@ import (
 func DataSourceInstanceTypes() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourceInstanceTypesRead,
+
+		Timeouts: &schema.ResourceTimeout{
+			Read: schema.DefaultTimeout(20 * time.Minute),
+		},
 
 		Schema: map[string]*schema.Schema{
 			"filter": DataSourceFiltersSchema(),
@@ -33,26 +38,16 @@ func dataSourceInstanceTypesRead(d *schema.ResourceData, meta interface{}) error
 		input.Filters = BuildFiltersDataSource(v.(*schema.Set))
 	}
 
-	var instanceTypes []string
-
-	err := conn.DescribeInstanceTypesPages(input, func(page *ec2.DescribeInstanceTypesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, instanceType := range page.InstanceTypes {
-			if instanceType == nil {
-				continue
-			}
-
-			instanceTypes = append(instanceTypes, aws.StringValue(instanceType.InstanceType))
-		}
-
-		return !lastPage
-	})
+	output, err := FindInstanceTypes(conn, input)
 
 	if err != nil {
-		return fmt.Errorf("error listing EC2 Instance Types: %w", err)
+		return fmt.Errorf("reading EC2 Instance Types: %w", err)
+	}
+
+	var instanceTypes []string
+
+	for _, instanceType := range output {
+		instanceTypes = append(instanceTypes, aws.StringValue(instanceType.InstanceType))
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)

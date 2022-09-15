@@ -314,7 +314,7 @@ The following arguments are optional:
 * `kms_key_id` - (Optional) KMS key ARN to use to encrypt the logs delivered by CloudTrail.
 * `s3_key_prefix` - (Optional) S3 key prefix that follows the name of the bucket you have designated for log file delivery.
 * `sns_topic_name` - (Optional) Name of the Amazon SNS topic defined for notification of log file delivery.
-* `tags` - (Optional) Map of tags to assign to the trail. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Map of tags to assign to the trail. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### event_selector
 
@@ -342,13 +342,13 @@ This configuration block supports the following attributes:
 ### Advanced Event Selector Arguments
 For **advanced_event_selector** the following attributes are supported.
 
-* `name` (Optional) - Specifies the name of the advanced event selector.
+* `name` (Optional) - Name of the advanced event selector.
 * `field_selector` (Required) - Specifies the selector statements in an advanced event selector. Fields documented below.
 
 #### Field Selector Arguments
 For **field_selector** the following attributes are supported.
 
-* `field` (Required) - Specifies a field in an event record on which to filter events to be logged. You can specify only the following values: `readOnly`, `eventSource`, `eventName`, `eventCategory`, `resources.type`, `resources.ARN`.
+* `field` (Required) - Field in an event record on which to filter events to be logged. You can specify only the following values: `readOnly`, `eventSource`, `eventName`, `eventCategory`, `resources.type`, `resources.ARN`.
 * `equals` (Optional) - A list of values that includes events that match the exact value of the event record field specified as the value of `field`. This is the only valid operator that you can use with the `readOnly`, `eventCategory`, and `resources.type` fields.
 * `not_equals` (Optional) - A list of values that excludes events that match the exact value of the event record field specified as the value of `field`.
 * `starts_with` (Optional) - A list of values that includes events that match the first few characters of the event record field specified as the value of `field`.
@@ -363,7 +363,7 @@ In addition to all arguments above, the following attributes are exported:
 * `arn` - ARN of the trail.
 * `home_region` - Region in which the trail was created.
 * `id` - Name of the trail.
-* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 

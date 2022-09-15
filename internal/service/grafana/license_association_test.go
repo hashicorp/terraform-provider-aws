@@ -20,13 +20,13 @@ func testAccLicenseAssociation_freeTrial(t *testing.T) {
 	workspaceResourceName := "aws_grafana_workspace.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(managedgrafana.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, managedgrafana.EndpointsID),
-		CheckDestroy:      testAccCheckLicenseAssociationDestroy,
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(managedgrafana.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, managedgrafana.EndpointsID),
+		CheckDestroy:             testAccCheckLicenseAssociationDestroy,
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLicenseAssociation(rName, managedgrafana.LicenseTypeEnterpriseFreeTrial),
+				Config: testAccLicenseAssociationConfig_basic(rName, managedgrafana.LicenseTypeEnterpriseFreeTrial),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLicenseAssociationExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "free_trial_expiration"),
@@ -38,8 +38,8 @@ func testAccLicenseAssociation_freeTrial(t *testing.T) {
 	})
 }
 
-func testAccLicenseAssociation(rName string, licenseType string) string {
-	return acctest.ConfigCompose(testAccWorkspaceConfigAuthenticationProvider(rName, "SAML"), fmt.Sprintf(`
+func testAccLicenseAssociationConfig_basic(rName string, licenseType string) string {
+	return acctest.ConfigCompose(testAccWorkspaceConfig_authenticationProvider(rName, "SAML"), fmt.Sprintf(`
 resource "aws_grafana_license_association" "test" {
   workspace_id = aws_grafana_workspace.test.id
   license_type = %[1]q
@@ -62,11 +62,7 @@ func testAccCheckLicenseAssociationExists(name string) resource.TestCheckFunc {
 
 		_, err := tfgrafana.FindLicensedWorkspaceByID(conn, rs.Primary.ID)
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 

@@ -17,9 +17,9 @@ func TestAccSSOAdminPermissionSetDataSource_arn(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckInstances(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ssoadmin.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckInstances(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ssoadmin.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPermissionSetDataSourceConfig_ssoByARN(rName),
@@ -42,9 +42,9 @@ func TestAccSSOAdminPermissionSetDataSource_name(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckInstances(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ssoadmin.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckInstances(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ssoadmin.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPermissionSetDataSourceConfig_ssoByName(rName),
@@ -64,9 +64,9 @@ func TestAccSSOAdminPermissionSetDataSource_name(t *testing.T) {
 func TestAccSSOAdminPermissionSetDataSource_nonExistent(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckInstances(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ssoadmin.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckInstances(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ssoadmin.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccPermissionSetDataSourceConfig_ssoByNameNonExistent,

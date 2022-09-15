@@ -114,6 +114,12 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - ID of the security group rule.
 
+## Timeouts
+
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+
+- `create` - (Default `5m`)
+
 ## Import
 
 Security Group Rules can be imported using the `security_group_id`, `type`, `protocol`, `from_port`, `to_port`, and source(s)/destination(s) (e.g., `cidr_block`) separated by underscores (`_`). All parts are required.

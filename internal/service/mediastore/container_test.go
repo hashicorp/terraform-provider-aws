@@ -18,10 +18,10 @@ func TestAccMediaStoreContainer_basic(t *testing.T) {
 	resourceName := "aws_media_store_container.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, mediastore.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckContainerDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, mediastore.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckContainerDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccContainerConfig_basic(sdkacctest.RandString(5)),
@@ -43,10 +43,10 @@ func TestAccMediaStoreContainer_tags(t *testing.T) {
 	resourceName := "aws_media_store_container.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, mediastore.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckContainerDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, mediastore.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckContainerDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccContainerConfig_tags(rName, "foo", "bar", "fizz", "buzz"),

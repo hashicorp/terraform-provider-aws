@@ -23,10 +23,10 @@ func testAccUserProfile_basic(t *testing.T) {
 	resourceName := "aws_sagemaker_user_profile.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckUserProfileDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserProfileDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserProfileConfig_basic(rName),
@@ -55,10 +55,10 @@ func testAccUserProfile_tags(t *testing.T) {
 	resourceName := "aws_sagemaker_user_profile.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckUserProfileDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserProfileDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserProfileConfig_tags1(rName, "key1", "value1"),
@@ -100,10 +100,10 @@ func testAccUserProfile_tensorboardAppSettings(t *testing.T) {
 	resourceName := "aws_sagemaker_user_profile.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckUserProfileDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserProfileDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserProfileConfig_tensorBoardAppSettings(rName),
@@ -130,10 +130,10 @@ func testAccUserProfile_tensorboardAppSettingsWithImage(t *testing.T) {
 	resourceName := "aws_sagemaker_user_profile.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckUserProfileDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserProfileDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserProfileConfig_tensorBoardAppSettingsImage(rName),
@@ -161,10 +161,10 @@ func testAccUserProfile_kernelGatewayAppSettings(t *testing.T) {
 	resourceName := "aws_sagemaker_user_profile.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckUserProfileDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserProfileDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserProfileConfig_kernelGatewayAppSettings(rName),
@@ -191,10 +191,10 @@ func testAccUserProfile_kernelGatewayAppSettings_lifecycleconfig(t *testing.T) {
 	resourceName := "aws_sagemaker_user_profile.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckUserProfileDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserProfileDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserProfileConfig_kernelGatewayAppSettingsLifecycle(rName),
@@ -229,10 +229,10 @@ func testAccUserProfile_kernelGatewayAppSettings_imageconfig(t *testing.T) {
 	baseImage := os.Getenv("SAGEMAKER_IMAGE_VERSION_BASE_IMAGE")
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckUserProfileDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserProfileDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserProfileConfig_kernelGatewayAppSettingsImage(rName, baseImage),
@@ -261,10 +261,10 @@ func testAccUserProfile_jupyterServerAppSettings(t *testing.T) {
 	resourceName := "aws_sagemaker_user_profile.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckUserProfileDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserProfileDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserProfileConfig_jupyterServerAppSettings(rName),
@@ -291,10 +291,10 @@ func testAccUserProfile_disappears(t *testing.T) {
 	resourceName := "aws_sagemaker_user_profile.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckUserProfileDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserProfileDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserProfileConfig_basic(rName),
@@ -326,7 +326,7 @@ func testAccCheckUserProfileDestroy(s *terraform.State) error {
 		}
 
 		if err != nil {
-			return fmt.Errorf("error reading SageMaker User Profile (%s): %w", rs.Primary.ID, err)
+			return fmt.Errorf("reading SageMaker User Profile (%s): %w", rs.Primary.ID, err)
 		}
 
 		userProfileArn := aws.StringValue(userProfile.UserProfileArn)

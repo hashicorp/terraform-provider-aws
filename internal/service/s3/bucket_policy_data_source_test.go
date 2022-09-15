@@ -21,12 +21,12 @@ func TestAccS3BucketPolicyDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_s3_bucket_policy.test"
 	resourceName := "aws_s3_bucket_policy.test"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceBucketPolicyConfigBasicConfig(rName),
+				Config: testAccBucketPolicyDataSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketPolicyExists(resourceName, &conf),
 					testAccCheckBucketPolicyMatch(dataSourceName, "policy", resourceName, "policy"),
@@ -137,7 +137,7 @@ data "aws_iam_policy_document" "test" {
 `, rName)
 }
 
-func testAccDataSourceBucketPolicyConfigBasicConfig(rName string) string {
+func testAccBucketPolicyDataSourceConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccDataSourceBucketPolicyBaseConfig(rName), `
 data "aws_s3_bucket_policy" "test" {
   bucket = aws_s3_bucket.test.id

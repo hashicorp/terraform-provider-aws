@@ -115,7 +115,7 @@ func resourceTestGridProjectRead(d *schema.ResourceData, meta interface{}) error
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	project, err := FindTestGridProjectByArn(conn, d.Id())
+	project, err := FindTestGridProjectByARN(conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] DeviceFarm Test Grid Project (%s) not found, removing from state", d.Id())

@@ -184,9 +184,9 @@ func resourceSelectionCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).BackupConn
 
 	selection := &backup.Selection{
-		Conditions:    expandBackupConditions(d.Get("condition").(*schema.Set).List()),
+		Conditions:    expandConditions(d.Get("condition").(*schema.Set).List()),
 		IamRoleArn:    aws.String(d.Get("iam_role_arn").(string)),
-		ListOfTags:    expandBackupConditionTags(d.Get("selection_tag").(*schema.Set).List()),
+		ListOfTags:    expandConditionTags(d.Get("selection_tag").(*schema.Set).List()),
 		NotResources:  flex.ExpandStringSet(d.Get("not_resources").(*schema.Set)),
 		Resources:     flex.ExpandStringSet(d.Get("resources").(*schema.Set)),
 		SelectionName: aws.String(d.Get("name").(string)),
@@ -296,7 +296,7 @@ func resourceSelectionRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("iam_role_arn", resp.BackupSelection.IamRoleArn)
 
 	if conditions := resp.BackupSelection.Conditions; conditions != nil {
-		if err := d.Set("condition", flattenBackupConditions(conditions)); err != nil {
+		if err := d.Set("condition", flattenConditions(conditions)); err != nil {
 			return fmt.Errorf("error setting conditions: %s", err)
 		}
 	}
@@ -365,7 +365,7 @@ func resourceSelectionImportState(d *schema.ResourceData, meta interface{}) ([]*
 	return []*schema.ResourceData{d}, nil
 }
 
-func expandBackupConditionTags(tagList []interface{}) []*backup.Condition {
+func expandConditionTags(tagList []interface{}) []*backup.Condition {
 	conditions := []*backup.Condition{}
 
 	for _, i := range tagList {
@@ -382,22 +382,22 @@ func expandBackupConditionTags(tagList []interface{}) []*backup.Condition {
 	return conditions
 }
 
-func expandBackupConditions(conditionsList []interface{}) *backup.Conditions {
+func expandConditions(conditionsList []interface{}) *backup.Conditions {
 	conditions := &backup.Conditions{}
 
 	for _, condition := range conditionsList {
 		mCondition := condition.(map[string]interface{})
 
-		if vStringEquals := expandBackupConditionParameters(mCondition["string_equals"].(*schema.Set).List()); len(vStringEquals) > 0 {
+		if vStringEquals := expandConditionParameters(mCondition["string_equals"].(*schema.Set).List()); len(vStringEquals) > 0 {
 			conditions.StringEquals = vStringEquals
 		}
-		if vStringNotEquals := expandBackupConditionParameters(mCondition["string_not_equals"].(*schema.Set).List()); len(vStringNotEquals) > 0 {
+		if vStringNotEquals := expandConditionParameters(mCondition["string_not_equals"].(*schema.Set).List()); len(vStringNotEquals) > 0 {
 			conditions.StringNotEquals = vStringNotEquals
 		}
-		if vStringLike := expandBackupConditionParameters(mCondition["string_like"].(*schema.Set).List()); len(vStringLike) > 0 {
+		if vStringLike := expandConditionParameters(mCondition["string_like"].(*schema.Set).List()); len(vStringLike) > 0 {
 			conditions.StringLike = vStringLike
 		}
-		if vStringNotLike := expandBackupConditionParameters(mCondition["string_not_like"].(*schema.Set).List()); len(vStringNotLike) > 0 {
+		if vStringNotLike := expandConditionParameters(mCondition["string_not_like"].(*schema.Set).List()); len(vStringNotLike) > 0 {
 			conditions.StringNotLike = vStringNotLike
 		}
 	}
@@ -405,7 +405,7 @@ func expandBackupConditions(conditionsList []interface{}) *backup.Conditions {
 	return conditions
 }
 
-func expandBackupConditionParameters(conditionParametersList []interface{}) []*backup.ConditionParameter {
+func expandConditionParameters(conditionParametersList []interface{}) []*backup.ConditionParameter {
 	conditionParameters := []*backup.ConditionParameter{}
 
 	for _, i := range conditionParametersList {
@@ -421,22 +421,22 @@ func expandBackupConditionParameters(conditionParametersList []interface{}) []*b
 	return conditionParameters
 }
 
-func flattenBackupConditions(conditions *backup.Conditions) *schema.Set {
+func flattenConditions(conditions *backup.Conditions) *schema.Set {
 	var vConditions []interface{}
 
 	mCondition := map[string]interface{}{}
 
-	mCondition["string_equals"] = flattenBackupConditionParameters(conditions.StringEquals)
-	mCondition["string_not_equals"] = flattenBackupConditionParameters(conditions.StringNotEquals)
-	mCondition["string_like"] = flattenBackupConditionParameters(conditions.StringLike)
-	mCondition["string_not_like"] = flattenBackupConditionParameters(conditions.StringNotLike)
+	mCondition["string_equals"] = flattenConditionParameters(conditions.StringEquals)
+	mCondition["string_not_equals"] = flattenConditionParameters(conditions.StringNotEquals)
+	mCondition["string_like"] = flattenConditionParameters(conditions.StringLike)
+	mCondition["string_not_like"] = flattenConditionParameters(conditions.StringNotLike)
 
 	vConditions = append(vConditions, mCondition)
 
-	return schema.NewSet(backupConditionsHash, vConditions)
+	return schema.NewSet(conditionsHash, vConditions)
 }
 
-func backupConditionsHash(vCondition interface{}) int {
+func conditionsHash(vCondition interface{}) int {
 	var buf bytes.Buffer
 
 	mCondition := vCondition.(map[string]interface{})
@@ -460,7 +460,7 @@ func backupConditionsHash(vCondition interface{}) int {
 	return create.StringHashcode(buf.String())
 }
 
-func flattenBackupConditionParameters(conditionParameters []*backup.ConditionParameter) []interface{} {
+func flattenConditionParameters(conditionParameters []*backup.ConditionParameter) []interface{} {
 	if len(conditionParameters) == 0 {
 		return nil
 	}

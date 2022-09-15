@@ -8,7 +8,7 @@ description: |-
 
 # Resource: aws_flow_log
 
-Provides a VPC/Subnet/ENI Flow Log to capture IP traffic for a specific network
+Provides a VPC/Subnet/ENI/Transit Gateway/Transit Gateway Attachment Flow Log to capture IP traffic for a specific network
 interface, subnet, or VPC. Logs are sent to a CloudWatch Log Group or a S3 Bucket.
 
 ## Example Usage
@@ -108,7 +108,7 @@ resource "aws_s3_bucket" "example" {
 
 ## Argument Reference
 
-~> **NOTE:** One of `eni_id`, `subnet_id`, or `vpc_id` must be specified.
+~> **NOTE:** One of `eni_id`, `subnet_id`, `transit_gateway_id`, `transit_gateway_attachment_id`, or `vpc_id` must be specified.
 
 The following arguments are supported:
 
@@ -116,17 +116,19 @@ The following arguments are supported:
 * `eni_id` - (Optional) Elastic Network Interface ID to attach to
 * `iam_role_arn` - (Optional) The ARN for the IAM role that's used to post flow logs to a CloudWatch Logs log group
 * `log_destination_type` - (Optional) The type of the logging destination. Valid values: `cloud-watch-logs`, `s3`. Default: `cloud-watch-logs`.
-* `log_destination` - (Optional) The ARN of the logging destination.
-* `log_group_name` - (Optional) *Deprecated:* Use `log_destination` instead. The name of the CloudWatch log group.
+* `log_destination` - (Optional) The ARN of the logging destination. Either `log_destination` or `log_group_name` must be set.
+* `log_group_name` - (Optional) *Deprecated:* Use `log_destination` instead. The name of the CloudWatch log group. Either `log_group_name` or `log_destination` must be set.
 * `subnet_id` - (Optional) Subnet ID to attach to
+* `transit_gateway_id` - (Optional) Transit Gateway ID to attach to
+* `transit_gateway_attachment_id` - (Optional) Transit Gateway Attachment ID to attach to
 * `vpc_id` - (Optional) VPC ID to attach to
 * `log_format` - (Optional) The fields to include in the flow log record, in the order in which they should appear.
 * `max_aggregation_interval` - (Optional) The maximum interval of time
   during which a flow of packets is captured and aggregated into a flow
   log record. Valid Values: `60` seconds (1 minute) or `600` seconds (10
-  minutes). Default: `600`.
+  minutes). Default: `600`. When `transit_gateway_id` or `transit_gateway_attachment_id` is specified, `max_aggregation_interval` _must_ be 60 seconds (1 minute).
 * `destination_options` - (Optional) Describes the destination options for a flow log. More details below.
-* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### destination_options
 
@@ -142,7 +144,7 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - The Flow Log ID
 * `arn` - The ARN of the Flow Log.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
