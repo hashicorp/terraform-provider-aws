@@ -73,33 +73,6 @@ func ResourceConnection() *schema.Resource {
 				Default:  false,
 				ForceNew: true,
 			},
-			// The MAC Security (MACsec) security keys associated with the connection.
-			"macsec_keys": {
-				// Slice of type MacSecKey
-				Type:     schema.TypeList,
-				Computed: true,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"secret_arn": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"ckn": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"state": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"start_on": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
-				},
-			},
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
