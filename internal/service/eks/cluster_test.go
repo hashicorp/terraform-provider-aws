@@ -608,7 +608,7 @@ func TestAccEKSCluster_Outpost_create(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
 		ErrorCheck:   acctest.ErrorCheck(t, eks.EndpointsID),
-		Providers:    acctest.Providers,
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy: testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -1045,7 +1045,7 @@ data "aws_outposts_outpost" "test" {
 
 resource "aws_eks_cluster" "test" {
   name     = %[1]q
-  role_arn = "arn:aws:iam::374958015927:role/my-cluster-role"
+  role_arn = "arn:aws:iam::374958015927:role/AmazonEKSLocalOutpostClusterRole"
 
   outpost_config {
 	control_plane_instance_type = "m5d.large"
@@ -1053,6 +1053,8 @@ resource "aws_eks_cluster" "test" {
   }
 
   vpc_config {
+	endpoint_private_access = true
+	endpoint_public_access = false
     subnet_ids = ["subnet-0a625ebe4ce3d66aa"]
   }
 }
