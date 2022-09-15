@@ -155,7 +155,7 @@ func MacSecKeyParseSecretARN(output *directconnect.AssociateMacSecKeyOutput) str
 			continue
 		}
 		if key != nil {
-			result = *key.SecretARN
+			result = aws.StringValue(key.SecretARN)
 		}
 	}
 	return result
