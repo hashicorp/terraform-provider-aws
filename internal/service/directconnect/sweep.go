@@ -484,7 +484,7 @@ func sweepMacSecKeys(region string) error {
 		}
 
 		for _, key := range connection.MacSecKeys {
-			arn := aws.StringValue(key.SecretArn)
+			arn := aws.StringValue(key.SecretARN)
 
 			input := &secretsmanager.DeleteSecretInput{
 				SecretId: aws.String(arn),
