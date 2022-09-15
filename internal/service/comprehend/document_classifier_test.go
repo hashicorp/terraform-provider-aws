@@ -54,6 +54,7 @@ func TestAccComprehendDocumentClassifier_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "language_code", "en"),
 					resource.TestCheckResourceAttr(resourceName, "mode", string(types.DocumentClassifierModeMultiClass)),
 					resource.TestCheckResourceAttr(resourceName, "model_kms_key_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "output_data_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "0"),
 					acctest.CheckResourceAttrNameGenerated(resourceName, "version_name"),
@@ -418,6 +419,54 @@ func TestAccComprehendDocumentClassifier_multiLabel_basic(t *testing.T) {
 			{
 				Config:   testAccDocumentClassifierConfig_multiLabel_defaultDelimiter(rName),
 				PlanOnly: true,
+			},
+		},
+	})
+}
+
+func TestAccComprehendDocumentClassifier_outputDataConfig_basic(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var documentclassifier types.DocumentClassifierProperties
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_comprehend_document_classifier.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(names.ComprehendEndpointID, t)
+			testAccPreCheck(t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ComprehendEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDocumentClassifierDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDocumentClassifierConfig_outputDataConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDocumentClassifierExists(resourceName, &documentclassifier),
+					testAccCheckDocumentClassifierPublishedVersions(resourceName, 1),
+					resource.TestCheckResourceAttr(resourceName, "output_data_config.#", "1"),
+					resource.TestMatchResourceAttr(resourceName, "output_data_config.0.s3_uri", regexp.MustCompile(`s3:.+/[-A-Za-z0-9]+/`)),
+					resource.TestMatchResourceAttr(resourceName, "output_data_config.0.output_s3_uri", regexp.MustCompile(`s3:.+/[-A-Za-z0-9]+/output/output.tar.gz`)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccDocumentClassifierConfig_outputDataConfig_basic2(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDocumentClassifierExists(resourceName, &documentclassifier),
+					testAccCheckDocumentClassifierPublishedVersions(resourceName, 1),
+					resource.TestCheckResourceAttr(resourceName, "output_data_config.#", "1"),
+					resource.TestMatchResourceAttr(resourceName, "output_data_config.0.s3_uri", regexp.MustCompile(`s3:.+/[-A-Za-z0-9]+/`)),
+					resource.TestMatchResourceAttr(resourceName, "output_data_config.0.output_s3_uri", regexp.MustCompile(`s3:.+/[-A-Za-z0-9]+/output/output.tar.gz`)),
+				),
 			},
 		},
 	})
@@ -1329,7 +1378,7 @@ resource "aws_comprehend_document_classifier" "test" {
   language_code = "en"
   input_data_config {
     s3_uri          = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
-	label_delimiter = %q
+    label_delimiter = %q
   }
 
   depends_on = [
@@ -1356,7 +1405,7 @@ resource "aws_comprehend_document_classifier" "test" {
   mode          = "MULTI_CLASS"
   input_data_config {
     s3_uri          = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
-	label_delimiter = %q
+    label_delimiter = %q
   }
 
   depends_on = [
@@ -1413,7 +1462,7 @@ resource "aws_comprehend_document_classifier" "test" {
   mode          = "MULTI_LABEL"
   input_data_config {
     s3_uri          = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.multilabel.id}"
-	label_delimiter = %[2]q
+    label_delimiter = %[2]q
   }
 
   depends_on = [
@@ -1786,10 +1835,75 @@ resource "aws_comprehend_document_classifier" "test" {
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }
 
+func testAccDocumentClassifierConfig_outputDataConfig_basic(rName string) string {
+	return acctest.ConfigCompose(
+		testAccDocumentClassifierBasicRoleConfig(rName),
+		testAccDocumentClassifierConfig_s3OutputRole(),
+		testAccDocumentClassifierS3BucketConfig(rName),
+		testAccDocumentClassifierConfig_S3_documents,
+		fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_comprehend_document_classifier" "test" {
+  name = %[1]q
+
+  data_access_role_arn = aws_iam_role.test.arn
+
+  language_code = "en"
+  input_data_config {
+    s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+  }
+
+  output_data_config {
+    s3_uri = "s3://${aws_s3_bucket.test.bucket}/outputs"
+  }
+
+  depends_on = [
+    aws_iam_role_policy.test,
+    aws_iam_role_policy.s3_output,
+  ]
+}
+`, rName))
+}
+
+func testAccDocumentClassifierConfig_outputDataConfig_basic2(rName string) string {
+	return acctest.ConfigCompose(
+		testAccDocumentClassifierBasicRoleConfig(rName),
+		testAccDocumentClassifierConfig_s3OutputRole(),
+		testAccDocumentClassifierS3BucketConfig(rName),
+		testAccDocumentClassifierConfig_S3_documents,
+		fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_comprehend_document_classifier" "test" {
+  name = %[1]q
+  version_name = "2"
+
+  data_access_role_arn = aws_iam_role.test.arn
+
+  language_code = "en"
+  input_data_config {
+    s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+  }
+
+  output_data_config {
+    s3_uri = "s3://${aws_s3_bucket.test.bucket}/outputs"
+  }
+
+  depends_on = [
+    aws_iam_role_policy.test,
+    aws_iam_role_policy.s3_output,
+  ]
+}
+`, rName))
+}
+
 func testAccDocumentClassifierS3BucketConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
+
+  force_destroy = true
 }
 
 resource "aws_s3_bucket_public_access_block" "test" {
@@ -1885,6 +1999,28 @@ data "aws_iam_policy_document" "vpc_access" {
 
     resources = [
       "*",
+    ]
+  }
+}
+`
+}
+
+func testAccDocumentClassifierConfig_s3OutputRole() string {
+	return `
+resource "aws_iam_role_policy" "s3_output" {
+  role = aws_iam_role.test.name
+
+  policy = data.aws_iam_policy_document.s3_output.json
+}
+
+data "aws_iam_policy_document" "s3_output" {
+  statement {
+    actions = [
+      "s3:PutObject",
+    ]
+
+    resources = [
+      "${aws_s3_bucket.test.arn}/*",
     ]
   }
 }

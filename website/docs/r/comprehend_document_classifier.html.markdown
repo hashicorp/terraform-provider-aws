@@ -58,6 +58,8 @@ The following arguments are optional:
   One of `MULTI_CLASS` or `MULTI_LABEL`.
   `MULTI_CLASS` is also known as "Single Label" in the AWS Console.
 * `model_kms_key_id` - (Optional) The ID or ARN of a KMS Key used to encrypt trained Document Classifiers.
+* `output_data_config` - (Optional) Configuration for the output results of training.
+  See the [`output_data_config` Configuration Block](#output_data_config-configuration-block) section below.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` Configuration Block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `version_name` - (Optional) Name for the version of the Document Classifier.
   Each version must have a unique name within the Document Classifier.
@@ -99,6 +101,11 @@ The following arguments are optional:
 * `split` - (Optional, Default: `TRAIN`) Purpose of data in augmented manifest.
   One of `TRAIN` or `TEST`.
 
+### `output_data_config` Configuration Block
+
+* `output_s3_uri` - (Computed) Full path for the output documents.
+* `s3_uri` - (Required) Destination path for the output documents.
+  The full path to the output file will be returned in `output_s3_uri`.
 
 ### `vpc_config` Configuration Block
 

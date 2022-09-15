@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"reflect"
 	"regexp"
 	"time"
 
@@ -151,7 +150,24 @@ func ResourceDocumentClassifier() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validModelName,
 			},
-			// "output_data_config"
+			"output_data_config": {
+				Type:             schema.TypeList,
+				Optional:         true,
+				MaxItems:         1,
+				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"s3_uri": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"output_s3_uri": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
 			"version_name": {
@@ -286,6 +302,10 @@ func resourceDocumentClassifierRead(ctx context.Context, d *schema.ResourceData,
 
 	if err := d.Set("input_data_config", flattenDocumentClassifierInputDataConfig(out.InputDataConfig)); err != nil {
 		return diag.Errorf("setting input_data_config: %s", err)
+	}
+
+	if err := d.Set("output_data_config", flattenDocumentClassifierOutputDataConfig(d, out.OutputDataConfig)); err != nil {
+		return diag.Errorf("setting output_data_config: %s", err)
 	}
 
 	if err := d.Set("vpc_config", flattenVPCConfig(out.VpcConfig)); err != nil {
@@ -442,19 +462,6 @@ func resourceDocumentClassifierDelete(ctx context.Context, d *schema.ResourceDat
 	return nil
 }
 
-func fullTypeName(i interface{}) string {
-	return fullValueTypeName(reflect.ValueOf(i))
-}
-
-func fullValueTypeName(v reflect.Value) string {
-	if v.Kind() == reflect.Ptr {
-		return "*" + fullValueTypeName(reflect.Indirect(v))
-	}
-
-	requestType := v.Type()
-	return fmt.Sprintf("%s.%s", requestType.PkgPath(), requestType.Name())
-}
-
 func documentClassifierPublishVersion(ctx context.Context, conn *comprehend.Client, d *schema.ResourceData, versionName *string, action string, timeout time.Duration, awsClient *conns.AWSClient) diag.Diagnostics {
 	in := &comprehend.CreateDocumentClassifierInput{
 		DataAccessRoleArn:      aws.String(d.Get("data_access_role_arn").(string)),
@@ -462,6 +469,7 @@ func documentClassifierPublishVersion(ctx context.Context, conn *comprehend.Clie
 		LanguageCode:           types.LanguageCode(d.Get("language_code").(string)),
 		DocumentClassifierName: aws.String(d.Get("name").(string)),
 		Mode:                   types.DocumentClassifierMode(d.Get("mode").(string)),
+		OutputDataConfig:       expandDocumentClassifierOutputDataConfig(d.Get("output_data_config").([]interface{})),
 		VersionName:            versionName,
 		VpcConfig:              expandVPCConfig(d.Get("vpc_config").([]interface{})),
 		ClientRequestToken:     aws.String(resource.UniqueId()),
@@ -736,6 +744,19 @@ func flattenDocumentClassifierInputDataConfig(apiObject *types.DocumentClassifie
 	return []interface{}{m}
 }
 
+func flattenDocumentClassifierOutputDataConfig(d *schema.ResourceData, apiObject *types.DocumentClassifierOutputDataConfig) []interface{} {
+	if apiObject == nil || apiObject.S3Uri == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"s3_uri":        d.Get("output_data_config.0.s3_uri"),
+		"output_s3_uri": aws.ToString(apiObject.S3Uri),
+	}
+
+	return []interface{}{m}
+}
+
 func getDocumentClassifierInputDataConfig(d resourceGetter) map[string]any {
 	v := d.Get("input_data_config").([]any)
 	if len(v) == 0 {
@@ -763,6 +784,20 @@ func expandDocumentClassifierInputDataConfig(d *schema.ResourceData) *types.Docu
 
 	if v, ok := tfMap["test_s3_uri"].(string); ok && v != "" {
 		a.TestS3Uri = aws.String(v)
+	}
+
+	return a
+}
+
+func expandDocumentClassifierOutputDataConfig(tfList []interface{}) *types.DocumentClassifierOutputDataConfig {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	tfMap := tfList[0].(map[string]interface{})
+
+	a := &types.DocumentClassifierOutputDataConfig{
+		S3Uri: aws.String(tfMap["s3_uri"].(string)),
 	}
 
 	return a
