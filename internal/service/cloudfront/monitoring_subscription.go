@@ -46,6 +46,7 @@ func ResourceMonitoringSubscription() *schema.Resource {
 									"realtime_metrics_subscription_status": {
 										Type:         schema.TypeString,
 										Required:     true,
+										ForceNew:     true,
 										ValidateFunc: validation.StringInSlice(cloudfront.RealtimeMetricsSubscriptionStatus_Values(), false),
 									},
 								},
@@ -87,6 +88,22 @@ func resourceMonitoringSubscriptionRead(d *schema.ResourceData, meta interface{}
 
 	output, err := FindMonitoringSubscriptionByDistributionID(conn, d.Id())
 
+	if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchDistribution) {
+		return fmt.Errorf("error reading CloudFront Monitoring Subscription (%s): %w", d.Id(), err)
+	}
+
+	// When creating a monitoring subscription with the subscription status of 'Disabled' AWS does not
+	// actually create a resource. Therefore, we can treat this error code as a disabled monitoring subscription.
+	if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchMonitoringSubscription) {
+		log.Printf("[INFO] CloudFront Monitoring Subscription (%s) not found, treating as disabled", d.Id())
+		d.Set("monitoring_subscription", []interface{}{flattenMonitoringSubscription(&cloudfront.MonitoringSubscription{
+			RealtimeMetricsSubscriptionConfig: &cloudfront.RealtimeMetricsSubscriptionConfig{
+				RealtimeMetricsSubscriptionStatus: aws.String(cloudfront.RealtimeMetricsSubscriptionStatusDisabled),
+			},
+		})})
+		return nil
+	}
+
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] CloudFront Monitoring Subscription (%s) not found, removing from state", d.Id())
 		d.SetId("")
@@ -117,6 +134,10 @@ func resourceMonitoringSubscriptionDelete(d *schema.ResourceData, meta interface
 	})
 
 	if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchDistribution) {
+		return nil
+	}
+
+	if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchMonitoringSubscription) {
 		return nil
 	}
 

@@ -2,6 +2,7 @@ package cloudfront_test
 
 import (
 	"fmt"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/cloudfront"
@@ -92,11 +93,25 @@ func TestAccCloudFrontMonitoringSubscription_update(t *testing.T) {
 			{
 				Config: testAccMonitoringSubscriptionConfig_basic("Disabled"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMonitoringSubscriptionExists(resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "distribution_id"),
 					resource.TestCheckResourceAttr(resourceName, "monitoring_subscription.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "monitoring_subscription.0.realtime_metrics_subscription_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "monitoring_subscription.0.realtime_metrics_subscription_config.0.realtime_metrics_subscription_status", "Disabled"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccMonitoringSubscriptionConfig_basic("Enabled"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMonitoringSubscriptionExists(resourceName, &v),
+					resource.TestCheckResourceAttrSet(resourceName, "distribution_id"),
+					resource.TestCheckResourceAttr(resourceName, "monitoring_subscription.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "monitoring_subscription.0.realtime_metrics_subscription_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "monitoring_subscription.0.realtime_metrics_subscription_config.0.realtime_metrics_subscription_status", "Enabled"),
 				),
 			},
 		},
@@ -112,6 +127,14 @@ func testAccCheckMonitoringSubscriptionDestroy(s *terraform.State) error {
 		}
 
 		_, err := tfcloudfront.FindMonitoringSubscriptionByDistributionID(conn, rs.Primary.ID)
+
+		if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchDistribution) {
+			continue
+		}
+
+		if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchMonitoringSubscription) {
+			continue
+		}
 
 		if tfresource.NotFound(err) {
 			continue

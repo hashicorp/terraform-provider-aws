@@ -141,13 +141,6 @@ func FindMonitoringSubscriptionByDistributionID(conn *cloudfront.CloudFront, id 
 
 	output, err := conn.GetMonitoringSubscription(input)
 
-	if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchDistribution) {
-		return nil, &resource.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
 	if err != nil {
 		return nil, err
 	}
