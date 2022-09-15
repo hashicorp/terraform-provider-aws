@@ -278,13 +278,17 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 		EncryptionConfig:   testAccClusterConfig_expandEncryption(d.Get("encryption_config").([]interface{})),
 		Logging:            expandLoggingTypes(d.Get("enabled_cluster_log_types").(*schema.Set)),
 		Name:               aws.String(name),
-		OutpostConfig:      expandEksOutpostConfigRequest(d.Get("outpost_config").([]interface{})),
 		ResourcesVpcConfig: testAccClusterConfig_expandVPCRequest(d.Get("vpc_config").([]interface{})),
 		RoleArn:            aws.String(d.Get("role_arn").(string)),
 	}
 
 	if _, ok := d.GetOk("kubernetes_network_config"); ok {
 		input.KubernetesNetworkConfig = expandNetworkConfigRequest(d.Get("kubernetes_network_config").([]interface{}))
+	}
+
+	if _, ok := d.GetOk("outpost_config"); ok {
+		input.OutpostConfig = expandEksOutpostConfigRequest(d.Get("outpost_config").([]interface{}))
+		input.ResourcesVpcConfig.EndpointPrivateAccess = aws.Bool(true)
 	}
 
 	if v, ok := d.GetOk("version"); ok {
