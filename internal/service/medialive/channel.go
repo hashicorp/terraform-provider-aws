@@ -130,6 +130,137 @@ func ResourceChannel() *schema.Resource {
 					},
 				},
 			},
+			"encoder_settings": {
+				Type:     schema.TypeList,
+				Required: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"audio_description": {
+							Type:     schema.TypeSet,
+							Required: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"audio_selector_name": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+									"name": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+									"audio_normalization_settings": {
+										Type:     schema.TypeList,
+										Optional: true,
+										Computed: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"algorithm": {
+													Type:             schema.TypeString,
+													Optional:         true,
+													Computed:         true,
+													ValidateDiagFunc: enum.Validate[types.AudioNormalizationAlgorithm](),
+												},
+												"algorithm_control": {
+													Type:             schema.TypeString,
+													Optional:         true,
+													Computed:         true,
+													ValidateDiagFunc: enum.Validate[types.AudioNormalizationAlgorithmControl](),
+												},
+												"target_lkfs": {
+													Type:     schema.TypeFloat,
+													Optional: true,
+													Computed: true,
+												},
+											},
+										},
+									},
+									"audio_type_control": {
+										Type:             schema.TypeString,
+										Optional:         true,
+										Computed:         true,
+										ValidateDiagFunc: enum.Validate[types.AudioDescriptionAudioTypeControl](),
+									},
+									"audio_watermark_settings": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"nielsen_watermarks_settings": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Computed: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"nielsen_cbet_settings": {
+																Type:     schema.TypeList,
+																Optional: true,
+																Computed: true,
+																MaxItems: 1,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"cbet_check_digit_string": {
+																			Type:     schema.TypeString,
+																			Required: true,
+																		},
+																		"cbet_stepaside": {
+																			Type:             schema.TypeString,
+																			Required:         true,
+																			ValidateDiagFunc: enum.Validate[types.NielsenWatermarksCbetStepaside](),
+																		},
+																		"csid": {
+																			Type:     schema.TypeString,
+																			Required: true,
+																		},
+																	},
+																},
+															},
+															"nielsen_distribution_type": {
+																Type:             schema.TypeString,
+																Optional:         true,
+																Computed:         true,
+																ValidateDiagFunc: enum.Validate[types.NielsenWatermarksDistributionTypes](),
+															},
+															"nielsen_naes_ii_nw_settings": {
+																Type:     schema.TypeList,
+																Optional: true,
+																Computed: true,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"check_digit_string": {
+																			Type:     schema.TypeString,
+																			Required: true,
+																		},
+																		"sid": {
+																			Type:     schema.TypeFloat,
+																			Required: true,
+																		},
+																	},
+																},
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+									"codec_settings": {
+										Type:     schema.TypeList,
+										Optional: true,
+										Computed: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 			"input_specification": {
 				Type:     schema.TypeList,
 				Required: true,
@@ -184,7 +315,7 @@ func ResourceChannel() *schema.Resource {
 			},
 			"role_arn": {
 				Type:             schema.TypeString,
-				Required:         true,
+				Optional:         true,
 				ValidateDiagFunc: validation.ToDiagFunc(verify.ValidARN),
 			},
 			"vpc": {
