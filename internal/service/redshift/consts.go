@@ -2,7 +2,6 @@ package redshift
 
 import "time"
 
-//nolint:deadcode,varcheck // These constants are missing from the AWS SDK
 const (
 	clusterAvailabilityStatusAvailable   = "Available"
 	clusterAvailabilityStatusFailed      = "Failed"
