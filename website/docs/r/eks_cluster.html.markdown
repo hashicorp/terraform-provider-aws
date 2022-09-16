@@ -153,7 +153,7 @@ resource "aws_iam_role" "example" {
 
 ### EKS Cluster on AWS Outpost
 
-[Creating a local Amazon EKS cluster on an AWS Outpost](https://docs.aws.amazon.com/eks/latest/userguide/create-cluster-outpost.html) 
+[Creating a local Amazon EKS cluster on an AWS Outpost](https://docs.aws.amazon.com/eks/latest/userguide/create-cluster-outpost.html)
 
 ```terraform
 resource "aws_iam_role" "example" {
@@ -167,13 +167,13 @@ resource "aws_eks_cluster" "example" {
 
   vpc_config {
     endpoint_private_access = true
-    endpoint_public_access = false
+    endpoint_public_access  = false
     # ... other configuration ...
   }
 
   outpost_config {
     control_plane_instance_type = "m5d.large"
-    outpost_arns = [data.aws_outposts_outpost.example.arn]
+    outpost_arns                = [data.aws_outposts_outpost.example.arn]
   }
 }
 ```
