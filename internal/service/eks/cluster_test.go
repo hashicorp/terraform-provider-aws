@@ -1047,7 +1047,7 @@ data "aws_outposts_outposts" "test" {}
 
 data "aws_subnets" test {
   filter {
-    name = "outpost-arn"
+    name   = "outpost-arn"
     values = [tolist(data.aws_outposts_outposts.test.arns)[0]]
   }
 }
@@ -1058,13 +1058,13 @@ resource "aws_eks_cluster" "test" {
 
   outpost_config {
     control_plane_instance_type = "m5d.large"
-    outpost_arns = [tolist(data.aws_outposts_outposts.test.arns)[0]]
+    outpost_arns                = [tolist(data.aws_outposts_outposts.test.arns)[0]]
   }
 
   vpc_config {
     endpoint_private_access = true
-    endpoint_public_access = false
-    subnet_ids = [tolist(data.aws_subnets.test.ids)[0]]
+    endpoint_public_access  = false
+    subnet_ids              = [tolist(data.aws_subnets.test.ids)[0]]
   }
 }
 `, rName))
