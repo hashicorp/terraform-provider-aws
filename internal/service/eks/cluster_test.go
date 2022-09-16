@@ -1039,18 +1039,17 @@ resource "aws_eks_cluster" "test" {
 
 func testAccClusterConfig_OutpostConfig(rName string) string {
 	return acctest.ConfigCompose(testAccClusterConfig_Base(rName), fmt.Sprintf(`
-
 data "aws_iam_role" "test" {
-	name = "AmazonEKSLocalOutpostClusterRole"
+  name = "AmazonEKSLocalOutpostClusterRole"
 }
 
 data "aws_outposts_outposts" "test" {}
 
 data "aws_subnets" test {
-	filter {
-		name = "outpost-arn"
-		values = [tolist(data.aws_outposts_outposts.test.arns)[0]]
-	}
+  filter {
+    name = "outpost-arn"
+    values = [tolist(data.aws_outposts_outposts.test.arns)[0]]
+  }
 }
 
 resource "aws_eks_cluster" "test" {
@@ -1058,13 +1057,13 @@ resource "aws_eks_cluster" "test" {
   role_arn = data.aws_iam_role.test.arn
 
   outpost_config {
-	control_plane_instance_type = "m5d.large"
+    control_plane_instance_type = "m5d.large"
     outpost_arns = [tolist(data.aws_outposts_outposts.test.arns)[0]]
   }
 
   vpc_config {
-	endpoint_private_access = true
-	endpoint_public_access = false
+    endpoint_private_access = true
+    endpoint_public_access = false
     subnet_ids = [tolist(data.aws_subnets.test.ids)[0]]
   }
 }
