@@ -2,6 +2,7 @@ package ec2
 
 import (
 	"context"
+	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -197,7 +198,10 @@ func resourceManagedPrefixListUpdate(ctx context.Context, d *schema.ResourceData
 		if newMaxEntry.(int) < oldMaxEntry.(int) {
 			maxEntryChangedDecrease = true
 		} else {
-			updateMaxEntry(ctx, conn, id, newMaxEntryInt)
+			err := updateMaxEntry(ctx, conn, id, newMaxEntryInt)
+			if err != nil {
+				return diag.Errorf("updating EC2 Managed Prefix List (%s) increased MaxEntries : %s", id, err)
+			}
 		}
 	}
 
@@ -298,7 +302,10 @@ func resourceManagedPrefixListUpdate(ctx context.Context, d *schema.ResourceData
 
 	// Only decrease MaxEntries after entry(s) have had opportunity to be removed
 	if maxEntryChangedDecrease {
-		updateMaxEntry(ctx, conn, id, newMaxEntryInt)
+		err := updateMaxEntry(ctx, conn, id, newMaxEntryInt)
+		if err != nil {
+			return diag.Errorf("updating EC2 Managed Prefix List (%s) decreased MaxEntries : %s", id, err)
+		}
 	}
 
 	if d.HasChange("tags_all") {
@@ -335,20 +342,21 @@ func resourceManagedPrefixListDelete(ctx context.Context, d *schema.ResourceData
 	return nil
 }
 
-func updateMaxEntry(ctx context.Context, conn *ec2.EC2, id string, maxEntries int64) diag.Diagnostics {
+func updateMaxEntry(ctx context.Context, conn *ec2.EC2, id string, maxEntries int64) error {
 	_, err := conn.ModifyManagedPrefixListWithContext(ctx, &ec2.ModifyManagedPrefixListInput{
 		PrefixListId: aws.String(id),
 		MaxEntries:   aws.Int64(maxEntries),
 	})
 
 	if err != nil {
-		return diag.Errorf("error updating MaxEntries for EC2 Managed Prefix List (%s): %s", id, err)
+		return fmt.Errorf("error updating MaxEntries for EC2 Managed Prefix List (%s): %s", id, err)
+
 	}
 
 	_, err = WaitManagedPrefixListModified(ctx, conn, id)
 
 	if err != nil {
-		return diag.Errorf("waiting for EC2 Managed Prefix List (%s) MaxEntries update: %s", id, err)
+		return fmt.Errorf("waiting for EC2 Managed Prefix List (%s) MaxEntries update: %s", id, err)
 	}
 
 	return nil

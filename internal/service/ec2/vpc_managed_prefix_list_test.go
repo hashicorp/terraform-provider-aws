@@ -483,12 +483,12 @@ resource "aws_ec2_managed_prefix_list" "test" {
   name           = %[1]q
 
   dynamic entry {
-	for_each = toset(slice(["1.0.0.0/8", "2.0.0.0/8", "3.0.0.0/8"], 0, %[2]d))
+	  for_each = toset(slice(["1.0.0.0/8", "2.0.0.0/8", "3.0.0.0/8"], 0, %[2]d))
 
-	content {
-		cidr        = entry.key
-		description = entry.key
-	}
+	  content {
+      cidr        = entry.key
+      description = entry.key
+	  }
   }
 }
 `, rName, maxEntryLength)
