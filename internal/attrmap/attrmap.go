@@ -108,7 +108,10 @@ func (m AttributeMap) ResourceDataToAPIAttributesCreate(d *schema.ResourceData) 
 
 		switch v, t := d.Get(tfAttributeName), attributeInfo.tfType; t {
 		case schema.TypeBool:
-			if v := v.(bool); v {
+			v := v.(bool)
+			if tfAttributeName == "sqs_managed_sse_enabled" {
+				apiAttributeValue = strconv.FormatBool(v)
+			} else if v {
 				apiAttributeValue = strconv.FormatBool(v)
 			}
 		case schema.TypeInt:
