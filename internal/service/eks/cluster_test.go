@@ -606,10 +606,10 @@ func TestAccEKSCluster_Outpost_create(t *testing.T) {
 	controlPlaneInstanceType := "m5d.large"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, eks.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, eks.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy: testAccCheckClusterDestroy,
+		CheckDestroy:             testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_OutpostConfig(rName),
@@ -1039,23 +1039,33 @@ resource "aws_eks_cluster" "test" {
 
 func testAccClusterConfig_OutpostConfig(rName string) string {
 	return acctest.ConfigCompose(testAccClusterConfig_Base(rName), fmt.Sprintf(`
-data "aws_outposts_outpost" "test" {
-  id = "op-062c383102b6f92a2"
+
+data "aws_iam_role" "test" {
+	name = "AmazonEKSLocalOutpostClusterRole"
+}
+
+data "aws_outposts_outposts" "test" {}
+
+data "aws_subnets" test {
+	filter {
+		name = "outpost-arn"
+		values = [tolist(data.aws_outposts_outposts.test.arns)[0]]
+	}
 }
 
 resource "aws_eks_cluster" "test" {
   name     = %[1]q
-  role_arn = "arn:aws:iam::374958015927:role/AmazonEKSLocalOutpostClusterRole"
+  role_arn = data.aws_iam_role.test.arn
 
   outpost_config {
 	control_plane_instance_type = "m5d.large"
-    outpost_arns = [data.aws_outposts_outpost.test.arn]
+    outpost_arns = [tolist(data.aws_outposts_outposts.test.arns)[0]]
   }
 
   vpc_config {
 	endpoint_private_access = true
 	endpoint_public_access = false
-    subnet_ids = ["subnet-0a625ebe4ce3d66aa"]
+    subnet_ids = [tolist(data.aws_subnets.test.ids)[0]]
   }
 }
 `, rName))
