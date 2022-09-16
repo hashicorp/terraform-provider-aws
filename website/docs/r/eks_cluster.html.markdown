@@ -166,6 +166,8 @@ resource "aws_eks_cluster" "example" {
   role_arn = aws_iam_role.example.arn
 
   vpc_config {
+    endpoint_private_access = true
+    endpoint_public_access = false
     # ... other configuration ...
   }
 
