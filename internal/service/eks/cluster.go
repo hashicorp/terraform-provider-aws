@@ -223,22 +223,19 @@ func ResourceCluster() *schema.Resource {
 							Computed: true,
 						},
 						"endpoint_private_access": {
-							Type:          schema.TypeBool,
-							Optional:      true,
-							Computed:      true,
-							ConflictsWith: []string{"outpost_config"},
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
 						},
 						"endpoint_public_access": {
-							Type:          schema.TypeBool,
-							Optional:      true,
-							Computed:      true,
-							ConflictsWith: []string{"outpost_config"},
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  true,
 						},
 						"public_access_cidrs": {
-							Type:          schema.TypeSet,
-							Optional:      true,
-							Computed:      true,
-							ConflictsWith: []string{"outpost_config"},
+							Type:     schema.TypeSet,
+							Optional: true,
+							Computed: true,
 							Elem: &schema.Schema{
 								Type:         schema.TypeString,
 								ValidateFunc: verify.ValidCIDRNetworkAddress,
@@ -288,7 +285,6 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 
 	if _, ok := d.GetOk("outpost_config"); ok {
 		input.OutpostConfig = expandEksOutpostConfigRequest(d.Get("outpost_config").([]interface{}))
-		input.ResourcesVpcConfig.EndpointPrivateAccess = aws.Bool(true)
 	}
 
 	if v, ok := d.GetOk("version"); ok {
