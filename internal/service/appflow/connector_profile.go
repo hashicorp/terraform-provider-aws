@@ -33,6 +33,7 @@ func ResourceConnectorProfile() *schema.Resource {
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
+				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 256),
 					validation.StringMatch(regexp.MustCompile(`[\w/!@#+=.-]+`), "must match [\\w/!@#+=.-]+"),
@@ -1463,12 +1464,12 @@ func resourceConnectorProfileRead(ctx context.Context, d *schema.ResourceData, m
 
 func resourceConnectorProfileUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).AppFlowConn
-	connectorProfile, _ := FindConnectorProfileByARN(context.Background(), conn, d.Id())
+	name := d.Get("name").(string)
 
 	updateConnectorProfileInput := appflow.UpdateConnectorProfileInput{
 		ConnectionMode:         aws.String(d.Get("connection_mode").(string)),
 		ConnectorProfileConfig: expandConnectorProfileConfig(d.Get("connector_profile_config").([]interface{})[0].(map[string]interface{})),
-		ConnectorProfileName:   connectorProfile.ConnectorProfileName,
+		ConnectorProfileName:   aws.String(name),
 	}
 
 	_, err := conn.UpdateConnectorProfile(&updateConnectorProfileInput)
