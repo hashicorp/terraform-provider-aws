@@ -276,7 +276,7 @@ func resourceManagedPrefixListUpdate(ctx context.Context, d *schema.ResourceData
 
 			if len(removals) > 0 {
 				input.RemoveEntries = removals
-
+			} else {
 				// Prevent this error if RemoveEntries is list with no elements after removals:
 				//   InvalidRequest: The request received was invalid.
 				input.RemoveEntries = nil
