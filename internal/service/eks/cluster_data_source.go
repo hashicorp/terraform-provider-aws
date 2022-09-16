@@ -85,6 +85,25 @@ func DataSourceCluster() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validClusterName,
 			},
+			"outpost_config": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"control_plane_instance_type": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"outpost_arns": {
+							Type:     schema.TypeSet,
+							Computed: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+						},
+					},
+				},
+			},
 			"platform_version": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -177,6 +196,10 @@ func dataSourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 
 	if err := d.Set("kubernetes_network_config", flattenNetworkConfig(cluster.KubernetesNetworkConfig)); err != nil {
 		return fmt.Errorf("error setting kubernetes_network_config: %w", err)
+	}
+
+	if err := d.Set("outpost_config", flattenEksOutpostConfig(cluster.OutpostConfig)); err != nil {
+		return fmt.Errorf("error setting outpost_config: %w", err)
 	}
 
 	d.Set("name", cluster.Name)
