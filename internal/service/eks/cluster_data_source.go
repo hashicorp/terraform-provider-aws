@@ -198,7 +198,7 @@ func dataSourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting kubernetes_network_config: %w", err)
 	}
 
-	if err := d.Set("outpost_config", flattenEksOutpostConfig(cluster.OutpostConfig)); err != nil {
+	if err := d.Set("outpost_config", flattenOutpostConfig(cluster.OutpostConfig)); err != nil {
 		return fmt.Errorf("error setting outpost_config: %w", err)
 	}
 

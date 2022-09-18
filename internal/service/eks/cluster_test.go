@@ -612,7 +612,7 @@ func TestAccEKSCluster_Outpost_create(t *testing.T) {
 		CheckDestroy:             testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_OutpostConfig(rName),
+				Config: testAccClusterConfig_outpost(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &cluster),
 					resource.TestCheckResourceAttr(resourceName, "outpost_config.#", "1"),
@@ -1037,7 +1037,7 @@ resource "aws_eks_cluster" "test" {
 `, rName, ipFamily))
 }
 
-func testAccClusterConfig_OutpostConfig(rName string) string {
+func testAccClusterConfig_outpost(rName string) string {
 	return acctest.ConfigCompose(testAccClusterConfig_Base(rName), fmt.Sprintf(`
 data "aws_iam_role" "test" {
   name = "AmazonEKSLocalOutpostClusterRole"
