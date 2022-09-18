@@ -38,3 +38,21 @@ func FindPullThroughCacheRuleByRepositoryPrefix(ctx context.Context, conn *ecr.E
 
 	return output.PullThroughCacheRules[0], nil
 }
+
+func FindImageDetails(conn *ecr.ECR, input *ecr.DescribeImagesInput) ([]*ecr.ImageDetail, error) {
+	var details []*ecr.ImageDetail
+	err := conn.DescribeImagesPages(input, func(output *ecr.DescribeImagesOutput, lastPage bool) bool {
+		if output == nil {
+			return !lastPage
+		}
+
+		details = append(details, output.ImageDetails...)
+
+		return !lastPage
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return details, nil
+}

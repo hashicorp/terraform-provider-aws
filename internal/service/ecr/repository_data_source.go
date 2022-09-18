@@ -3,6 +3,7 @@ package ecr
 import (
 	"fmt"
 	"log"
+	"sort"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
@@ -10,6 +11,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
@@ -55,6 +57,14 @@ func DataSourceRepository() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"most_recent_image_tags": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -71,6 +81,15 @@ func DataSourceRepository() *schema.Resource {
 			"tags": tftags.TagsSchemaComputed(),
 		},
 	}
+}
+
+type byImagePushedAt []*ecr.ImageDetail
+
+func (b byImagePushedAt) Len() int      { return len(b) }
+func (b byImagePushedAt) Swap(i, j int) { b[i], b[j] = b[j], b[i] }
+func (b byImagePushedAt) Less(i, j int) bool {
+	return b[i].ImagePushedAt != nil && b[j].ImagePushedAt != nil &&
+		aws.TimeValue(b[i].ImagePushedAt).Before(aws.TimeValue(b[j].ImagePushedAt))
 }
 
 func dataSourceRepositoryRead(d *schema.ResourceData, meta interface{}) error {
@@ -111,6 +130,23 @@ func dataSourceRepositoryRead(d *schema.ResourceData, meta interface{}) error {
 
 	if err := d.Set("encryption_configuration", flattenRepositoryEncryptionConfiguration(repository.EncryptionConfiguration)); err != nil {
 		return fmt.Errorf("error setting encryption_configuration for ECR Repository (%s): %w", arn, err)
+	}
+
+	detail, err := FindImageDetails(conn, &ecr.DescribeImagesInput{
+		RepositoryName: repository.RepositoryName,
+		RegistryId:     repository.RegistryId,
+	})
+	if err != nil {
+		return fmt.Errorf("error finding tagged image details for ECR Repository (%s): %w", arn, err)
+	}
+
+	imageTags := make([]*string, 0)
+	if len(detail) > 0 {
+		sort.Sort(sort.Reverse(byImagePushedAt(detail)))
+		imageTags = detail[0].ImageTags
+	}
+	if err := d.Set("most_recent_image_tags", flex.FlattenStringList(imageTags)); err != nil {
+		return fmt.Errorf("error setting most_recent_image_tags for ECR Repository (%s): %w", arn, err)
 	}
 
 	tags, err := ListTags(conn, arn)
