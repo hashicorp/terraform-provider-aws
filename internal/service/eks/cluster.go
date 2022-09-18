@@ -284,7 +284,7 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if _, ok := d.GetOk("outpost_config"); ok {
-		input.OutpostConfig = expandEksOutpostConfigRequest(d.Get("outpost_config").([]interface{}))
+		input.OutpostConfig = expandOutpostConfigRequest(d.Get("outpost_config").([]interface{}))
 	}
 
 	if v, ok := d.GetOk("version"); ok {
@@ -626,7 +626,7 @@ func expandProvider(tfList []interface{}) *eks.Provider {
 	return apiObject
 }
 
-func expandEksOutpostConfigRequest(l []interface{}) *eks.OutpostConfigRequest {
+func expandOutpostConfigRequest(l []interface{}) *eks.OutpostConfigRequest {
 	tfMap, ok := l[0].(map[string]interface{})
 
 	if !ok {
