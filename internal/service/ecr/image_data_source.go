@@ -3,6 +3,7 @@ package ecr
 import (
 	"fmt"
 	"log"
+	"sort"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ecr"
@@ -47,6 +48,10 @@ func DataSourceImage() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
+			"most_recent": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
 		},
 	}
 }
@@ -63,28 +68,33 @@ func dataSourceImageRead(d *schema.ResourceData, meta interface{}) error {
 		params.RegistryId = aws.String(regId.(string))
 	}
 
+	findMostRecent := false
+
+	if _, ok := d.GetOk("most_recent"); ok {
+		findMostRecent = true
+	}
+
 	imgId := ecr.ImageIdentifier{}
-	digest, ok := d.GetOk("image_digest")
-	if ok {
-		imgId.ImageDigest = aws.String(digest.(string))
-	}
-	tag, ok := d.GetOk("image_tag")
-	if ok {
-		imgId.ImageTag = aws.String(tag.(string))
+	if v, ok := d.GetOk("image_digest"); ok {
+		if findMostRecent {
+			return fmt.Errorf("cannot set image_digest when most_recent is set to true")
+		}
+		imgId.ImageDigest = aws.String(v.(string))
 	}
 
-	if imgId.ImageDigest == nil && imgId.ImageTag == nil {
-		return fmt.Errorf("At least one of either image_digest or image_tag must be defined")
+	if v, ok := d.GetOk("image_tag"); ok {
+		if findMostRecent {
+			return fmt.Errorf("cannot set image_tag when most_recent is set to true")
+		}
+		imgId.ImageTag = aws.String(v.(string))
 	}
 
-	params.ImageIds = []*ecr.ImageIdentifier{&imgId}
+	if !findMostRecent {
+		params.ImageIds = []*ecr.ImageIdentifier{&imgId}
+	}
 
-	var imageDetails []*ecr.ImageDetail
 	log.Printf("[DEBUG] Reading ECR Images: %s", params)
-	err := conn.DescribeImagesPages(params, func(page *ecr.DescribeImagesOutput, lastPage bool) bool {
-		imageDetails = append(imageDetails, page.ImageDetails...)
-		return true
-	})
+	imageDetails, err := FindImageDetails(conn, params)
 	if err != nil {
 		return fmt.Errorf("Error describing ECR images: %w", err)
 	}
@@ -92,9 +102,12 @@ func dataSourceImageRead(d *schema.ResourceData, meta interface{}) error {
 	if len(imageDetails) == 0 {
 		return fmt.Errorf("No matching image found")
 	}
-	if len(imageDetails) > 1 {
+
+	if len(imageDetails) > 1 && !findMostRecent {
 		return fmt.Errorf("More than one image found for tag/digest combination")
 	}
+
+	sort.Sort(sort.Reverse(byImagePushedAt(imageDetails)))
 
 	image := imageDetails[0]
 

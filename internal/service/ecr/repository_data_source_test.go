@@ -31,6 +31,7 @@ func TestAccECRRepositoryDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "image_scanning_configuration.#", dataSourceName, "image_scanning_configuration.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "image_tag_mutability", dataSourceName, "image_tag_mutability"),
 					resource.TestCheckResourceAttrPair(resourceName, "encryption_configuration.#", dataSourceName, "encryption_configuration.#"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "most_recent_image_tags.#"),
 				),
 			},
 		},
