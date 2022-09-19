@@ -252,8 +252,377 @@ func ResourceChannel() *schema.Resource {
 										Computed: true,
 										MaxItems: 1,
 										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{},
+											Schema: map[string]*schema.Schema{
+												"aac_settings": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Computed: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"bitrate": {
+																Type:     schema.TypeFloat,
+																Optional: true,
+																Computed: true,
+															},
+															"coding_mode": {
+																Type:             schema.TypeString,
+																Optional:         true,
+																Computed:         true,
+																ValidateDiagFunc: enum.Validate[types.AacCodingMode](),
+															},
+															"input_type": {
+																Type:             schema.TypeString,
+																Optional:         true,
+																Computed:         true,
+																ValidateDiagFunc: enum.Validate[types.AacInputType](),
+															},
+															"profile": {
+																Type:             schema.TypeString,
+																Optional:         true,
+																Computed:         true,
+																ValidateDiagFunc: enum.Validate[types.AacProfile](),
+															},
+															"raw_format": {
+																Type:             schema.TypeString,
+																Optional:         true,
+																Computed:         true,
+																ValidateDiagFunc: enum.Validate[types.AacRawFormat](),
+															},
+															"sample_rate": {
+																Type:     schema.TypeFloat,
+																Optional: true,
+																Computed: true,
+															},
+															"spec": {
+																Type:             schema.TypeString,
+																Optional:         true,
+																Computed:         true,
+																ValidateDiagFunc: enum.Validate[types.AacSpec](),
+															},
+															"vbr_quality": {
+																Type:             schema.TypeString,
+																Optional:         true,
+																Computed:         true,
+																ValidateDiagFunc: enum.Validate[types.AacVbrQuality](),
+															},
+														},
+													},
+												},
+												"ac3_settings": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Computed: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"bitrate": {
+																Type:     schema.TypeFloat,
+																Optional: true,
+																Computed: true,
+															},
+															"bitstream_mode": {
+																Type:             schema.TypeString,
+																Optional:         true,
+																Computed:         true,
+																ValidateDiagFunc: enum.Validate[types.Ac3BitstreamMode](),
+															},
+															"coding_mode": {
+																Type:             schema.TypeString,
+																Optional:         true,
+																Computed:         true,
+																ValidateDiagFunc: enum.Validate[types.Ac3CodingMode](),
+															},
+															"dialnorm": {
+																Type:     schema.TypeInt,
+																Optional: true,
+																Computed: true,
+															},
+															"drc_profile": {
+																Type:             schema.TypeString,
+																Optional:         true,
+																Computed:         true,
+																ValidateDiagFunc: enum.Validate[types.Ac3DrcProfile](),
+															},
+															"lfe_filter": {
+																Type:             schema.TypeString,
+																Optional:         true,
+																Computed:         true,
+																ValidateDiagFunc: enum.Validate[types.Ac3LfeFilter](),
+															},
+															"metadata_control": {
+																Type:             schema.TypeString,
+																Optional:         true,
+																Computed:         true,
+																ValidateDiagFunc: enum.Validate[types.Ac3MetadataControl](),
+															},
+														},
+													},
+												},
+												"eac3_settings": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Computed: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"attenuation_control": {
+																Type:             schema.TypeString,
+																Optional:         true,
+																Computed:         true,
+																ValidateDiagFunc: enum.Validate[types.Eac3AttenuationControl](),
+															},
+															"bitrate": {
+																Type:     schema.TypeFloat,
+																Optional: true,
+																Computed: true,
+															},
+															"bitstream_mode": {
+																Type:             schema.TypeString,
+																Optional:         true,
+																Computed:         true,
+																ValidateDiagFunc: enum.Validate[types.Eac3BitstreamMode](),
+															},
+															"coding_mode": {
+																Type:             schema.TypeString,
+																Optional:         true,
+																Computed:         true,
+																ValidateDiagFunc: enum.Validate[types.Eac3CodingMode](),
+															},
+															"dc_filter": {
+																Type:             schema.TypeString,
+																Optional:         true,
+																Computed:         true,
+																ValidateDiagFunc: enum.Validate[types.Eac3DcFilter](),
+															},
+															"dialnorm": {
+																Type:     schema.TypeInt,
+																Optional: true,
+																Computed: true,
+															},
+															"drc_line": {
+																Type:             schema.TypeString,
+																Optional:         true,
+																Computed:         true,
+																ValidateDiagFunc: enum.Validate[types.Eac3DrcLine](),
+															},
+															"drc_rf": {
+																Type:             schema.TypeString,
+																Optional:         true,
+																Computed:         true,
+																ValidateDiagFunc: enum.Validate[types.Eac3DrcRf](),
+															},
+															"lfe_control": {
+																Type:             schema.TypeString,
+																Optional:         true,
+																Computed:         true,
+																ValidateDiagFunc: enum.Validate[types.Eac3LfeControl](),
+															},
+															"lfe_filter": {
+																Type:             schema.TypeString,
+																Optional:         true,
+																Computed:         true,
+																ValidateDiagFunc: enum.Validate[types.Eac3LfeFilter](),
+															},
+															"lo_ro_center_mix_level": {
+																Type:     schema.TypeFloat,
+																Optional: true,
+																Computed: true,
+															},
+															"lo_ro_surround_mix_level": {
+																Type:     schema.TypeFloat,
+																Optional: true,
+																Computed: true,
+															},
+															"lt_rt_center_mix_level": {
+																Type:     schema.TypeFloat,
+																Optional: true,
+																Computed: true,
+															},
+															"lt_rt_surround_mix_level": {
+																Type:     schema.TypeFloat,
+																Optional: true,
+																Computed: true,
+															},
+															"metadata_control": {
+																Type:             schema.TypeString,
+																Optional:         true,
+																Computed:         true,
+																ValidateDiagFunc: enum.Validate[types.Eac3MetadataControl](),
+															},
+															"passthrough_control": {
+																Type:             schema.TypeString,
+																Optional:         true,
+																Computed:         true,
+																ValidateDiagFunc: enum.Validate[types.Eac3PassthroughControl](),
+															},
+															"phase_control": {
+																Type:             schema.TypeString,
+																Optional:         true,
+																Computed:         true,
+																ValidateDiagFunc: enum.Validate[types.Eac3PhaseControl](),
+															},
+															"stereo_downmix": {
+																Type:             schema.TypeString,
+																Optional:         true,
+																Computed:         true,
+																ValidateDiagFunc: enum.Validate[types.Eac3StereoDownmix](),
+															},
+															"surround_ex_mode": {
+																Type:             schema.TypeString,
+																Optional:         true,
+																Computed:         true,
+																ValidateDiagFunc: enum.Validate[types.Eac3SurroundExMode](),
+															},
+															"surround_mode": {
+																Type:             schema.TypeString,
+																Optional:         true,
+																Computed:         true,
+																ValidateDiagFunc: enum.Validate[types.Eac3SurroundMode](),
+															},
+														},
+													},
+												},
+												"mp2_settings": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Computed: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"bitrate": {
+																Type:     schema.TypeFloat,
+																Optional: true,
+																Computed: true,
+															},
+															"coding_mode": {
+																Type:             schema.TypeString,
+																Optional:         true,
+																Computed:         true,
+																ValidateDiagFunc: enum.Validate[types.Mp2CodingMode](),
+															},
+															"sample_rate": {
+																Type:     schema.TypeFloat,
+																Optional: true,
+																Computed: true,
+															},
+														},
+													},
+												},
+												"wav_settings": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Computed: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"bit_depth": {
+																Type:     schema.TypeFloat,
+																Optional: true,
+																Computed: true,
+															},
+															"coding_mode": {
+																Type:             schema.TypeString,
+																Optional:         true,
+																Computed:         true,
+																ValidateDiagFunc: enum.Validate[types.WavCodingMode](),
+															},
+															"sample_rate": {
+																Type:     schema.TypeFloat,
+																Optional: true,
+																Computed: true,
+															},
+														},
+													},
+												},
+											},
 										},
+									},
+									"language_code": {
+										Type:     schema.TypeString,
+										Optional: true,
+										Computed: true,
+									},
+									"language_code_control": {
+										Type:             schema.TypeString,
+										Optional:         true,
+										Computed:         true,
+										ValidateDiagFunc: enum.Validate[types.AudioDescriptionLanguageCodeControl](),
+									},
+									"remix_settings": {
+										Type:     schema.TypeList,
+										Optional: true,
+										Computed: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"channel_mappings": {
+													Type:     schema.TypeSet,
+													Required: true,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"input_channel_levels": {
+																Type:     schema.TypeSet,
+																Required: true,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"gain": {
+																			Type:     schema.TypeInt,
+																			Required: true,
+																		},
+																		"input_channel": {
+																			Type:     schema.TypeInt,
+																			Required: true,
+																		},
+																	},
+																},
+															},
+															"output_channel": {
+																Type:     schema.TypeInt,
+																Required: true,
+															},
+														},
+													},
+												},
+												"channels_in": {
+													Type:     schema.TypeInt,
+													Optional: true,
+													Computed: true,
+												},
+												"channels_out": {
+													Type:     schema.TypeInt,
+													Optional: true,
+													Computed: true,
+												},
+											},
+										},
+									},
+									"stream_name": {
+										Type:     schema.TypeString,
+										Optional: true,
+										Computed: true,
+									},
+								},
+							},
+						},
+						"output_groups": {
+							Type:     schema.TypeSet,
+							Required: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"output_group_settings": {
+										Type:     schema.TypeList,
+										Required: true,
+										MaxItems: 1,
+									},
+									"outputs": {
+										Type:     schema.TypeSet,
+										Required: true,
+									},
+									"name": {
+										Type:     schema.TypeString,
+										Optional: true,
+										Computed: true,
 									},
 								},
 							},
