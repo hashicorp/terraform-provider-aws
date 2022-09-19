@@ -187,7 +187,7 @@ func resourceProfileUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 
 		if d.HasChange("session_policy") {
-			input.Name = aws.String(d.Get("session_policy").(string))
+			input.SessionPolicy = aws.String(d.Get("session_policy").(string))
 		}
 
 		log.Printf("[DEBUG] Updating RolesAnywhere Profile (%s): %#v", d.Id(), input)
