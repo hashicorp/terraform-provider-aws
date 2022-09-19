@@ -371,7 +371,7 @@ func testAccVPCTrafficMirrorTargetConfig_gwlb(rName, description string) string 
 resource "aws_ec2_traffic_mirror_target" "test" {
   description                       = %[2]q
   gateway_load_balancer_endpoint_id = aws_vpc_endpoint.test.id
-  depends_on                        = [aws_vpc_endpoint.test]						
+  depends_on                        = [aws_vpc_endpoint.test]
 }
 `, rName, description))
 }
