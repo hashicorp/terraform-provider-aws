@@ -3,6 +3,7 @@ package iot
 import (
 	"context"
 	"log"
+	"regexp"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iot"
@@ -104,6 +105,30 @@ func ResourceIndexingConfiguration() *schema.Resource {
 							Optional:     true,
 							Default:      iot.DeviceDefenderIndexingModeOff,
 							ValidateFunc: validation.StringInSlice(iot.DeviceDefenderIndexingMode_Values(), false),
+						},
+						"filter": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Computed: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"named_shadow_names": {
+										Type:     schema.TypeSet,
+										Optional: true,
+										Computed: true,
+										MinItems: 1,
+										MaxItems: 10, // TODO What should this be? 10 or 64? https://docs.aws.amazon.com/iot/latest/apireference/API_IndexingFilter.html
+										Elem: &schema.Schema{
+											Type: schema.TypeString,
+											ValidateFunc: validation.All(
+												validation.StringLenBetween(1, 64),
+												validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9:_-]+`), "must contain only alphanumeric characters, underscores, colons, and hyphens"),
+											),
+										},
+									},
+								},
+							},
 						},
 						"managed_field": {
 							Type:     schema.TypeSet,
