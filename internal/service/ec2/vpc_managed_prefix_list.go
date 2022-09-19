@@ -183,8 +183,6 @@ func resourceManagedPrefixListRead(ctx context.Context, d *schema.ResourceData, 
 func resourceManagedPrefixListUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	id := d.Id()
-
 	// MaxEntries & Entry cannot change in the same API call.
 	//   If MaxEntry is increasing, complete before updating entry(s)
 	//   If MaxEntry is decreasing, complete after updating entry(s)
@@ -198,16 +196,16 @@ func resourceManagedPrefixListUpdate(ctx context.Context, d *schema.ResourceData
 		if newMaxEntry.(int) < oldMaxEntry.(int) {
 			maxEntryChangedDecrease = true
 		} else {
-			err := updateMaxEntry(ctx, conn, id, newMaxEntryInt)
+			err := updateMaxEntry(ctx, conn, d.Id(), newMaxEntryInt)
 			if err != nil {
-				return diag.Errorf("updating EC2 Managed Prefix List (%s) increased MaxEntries : %s", id, err)
+				return diag.Errorf("updating EC2 Managed Prefix List (%s) increased MaxEntries : %s", d.Id(), err)
 			}
 		}
 	}
 
 	if d.HasChangesExcept("tags", "tags_all", "max_entries") {
 		input := &ec2.ModifyManagedPrefixListInput{
-			PrefixListId: aws.String(id),
+			PrefixListId: aws.String(d.Id()),
 		}
 
 		input.PrefixListName = aws.String(d.Get("name").(string))
@@ -261,18 +259,18 @@ func resourceManagedPrefixListUpdate(ctx context.Context, d *schema.ResourceData
 			if len(descriptionOnlyRemovals) > 0 {
 				_, err := conn.ModifyManagedPrefixListWithContext(ctx, &ec2.ModifyManagedPrefixListInput{
 					CurrentVersion: input.CurrentVersion,
-					PrefixListId:   aws.String(id),
+					PrefixListId:   aws.String(d.Id()),
 					RemoveEntries:  descriptionOnlyRemovals,
 				})
 
 				if err != nil {
-					return diag.Errorf("updating EC2 Managed Prefix List (%s): %s", id, err)
+					return diag.Errorf("updating EC2 Managed Prefix List (%s): %s", d.Id(), err)
 				}
 
-				managedPrefixList, err := WaitManagedPrefixListModified(ctx, conn, id)
+				managedPrefixList, err := WaitManagedPrefixListModified(ctx, conn, d.Id())
 
 				if err != nil {
-					return diag.Errorf("waiting for EC2 Managed Prefix List (%s) update: %s", id, err)
+					return diag.Errorf("waiting for EC2 Managed Prefix List (%s) update: %s", d.Id(), err)
 				}
 
 				input.CurrentVersion = managedPrefixList.Version
@@ -290,29 +288,29 @@ func resourceManagedPrefixListUpdate(ctx context.Context, d *schema.ResourceData
 		_, err := conn.ModifyManagedPrefixListWithContext(ctx, input)
 
 		if err != nil {
-			return diag.Errorf("updating EC2 Managed Prefix List (%s): %s", id, err)
+			return diag.Errorf("updating EC2 Managed Prefix List (%s): %s", d.Id(), err)
 		}
 
 		if wait {
-			if _, err := WaitManagedPrefixListModified(ctx, conn, id); err != nil {
-				return diag.Errorf("waiting for EC2 Managed Prefix List (%s) update: %s", id, err)
+			if _, err := WaitManagedPrefixListModified(ctx, conn, d.Id()); err != nil {
+				return diag.Errorf("waiting for EC2 Managed Prefix List (%s) update: %s", d.Id(), err)
 			}
 		}
 	}
 
 	// Only decrease MaxEntries after entry(s) have had opportunity to be removed
 	if maxEntryChangedDecrease {
-		err := updateMaxEntry(ctx, conn, id, newMaxEntryInt)
+		err := updateMaxEntry(ctx, conn, d.Id(), newMaxEntryInt)
 		if err != nil {
-			return diag.Errorf("updating EC2 Managed Prefix List (%s) decreased MaxEntries : %s", id, err)
+			return diag.Errorf("updating EC2 Managed Prefix List (%s) decreased MaxEntries : %s", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTagsWithContext(ctx, conn, id, o, n); err != nil {
-			return diag.Errorf("updating EC2 Managed Prefix List (%s) tags: %s", id, err)
+		if err := UpdateTagsWithContext(ctx, conn, d.Id(), o, n); err != nil {
+			return diag.Errorf("updating EC2 Managed Prefix List (%s) tags: %s", d.Id(), err)
 		}
 	}
 
