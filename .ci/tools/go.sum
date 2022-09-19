@@ -283,7 +283,6 @@ github.com/golang/mock v1.4.1/go.mod h1:UOMv5ysSaYNkG+OFQykRIcU/QvvxJf3p21QfJ2Bt
 github.com/golang/mock v1.4.3/go.mod h1:UOMv5ysSaYNkG+OFQykRIcU/QvvxJf3p21QfJ2Bt3cw=
 github.com/golang/mock v1.4.4/go.mod h1:l3mdAwkq5BuhzHwde/uurv3sEJeZMXNpwsxVWU71h+4=
 github.com/golang/mock v1.5.0/go.mod h1:CWnOUgYIOo4TcNZ0wHX3YZCqsaM1I1Jvs6v3mP3KVu8=
-github.com/golang/mock v1.6.0 h1:ErTB+efbowRARo13NNdxyJji2egdxLGQhRaY+DUumQc=
 github.com/golang/mock v1.6.0/go.mod h1:p6yTPP+5HYm5mzsMV8JkE6ZKdX+/wYM6Hr+LicevLPs=
 github.com/golang/protobuf v1.1.0/go.mod h1:6lQm79b+lXiMfvg/cZm0SGofjICqVBUtrP5yJMmIC1U=
 github.com/golang/protobuf v1.2.0/go.mod h1:6lQm79b+lXiMfvg/cZm0SGofjICqVBUtrP5yJMmIC1U=
@@ -340,8 +339,9 @@ github.com/google/go-cmp v0.5.4/go.mod h1:v8dTdLbMG2kIc/vJvl+f65V22dbkXbowE6jgT/
 github.com/google/go-cmp v0.5.5/go.mod h1:v8dTdLbMG2kIc/vJvl+f65V22dbkXbowE6jgT/gNBxE=
 github.com/google/go-cmp v0.5.6/go.mod h1:v8dTdLbMG2kIc/vJvl+f65V22dbkXbowE6jgT/gNBxE=
 github.com/google/go-cmp v0.5.7/go.mod h1:n+brtR0CgQNWTVd5ZUFpTBC8YFBDLK/h/bpaJ8/DtOE=
-github.com/google/go-cmp v0.5.8 h1:e6P7q2lk1O+qJJb4BtCQXlK8vWEO8V1ZeuEdJNOqZyg=
 github.com/google/go-cmp v0.5.8/go.mod h1:17dUlkBOakJ0+DkrSSNjCkIjxS6bF9zb3elmeNGIjoY=
+github.com/google/go-cmp v0.5.9 h1:O2Tfq5qg4qc4AmwVlvv0oLiVAGB7enBSJ2x2DqQFi38=
+github.com/google/go-cmp v0.5.9/go.mod h1:17dUlkBOakJ0+DkrSSNjCkIjxS6bF9zb3elmeNGIjoY=
 github.com/google/go-github v17.0.0+incompatible/go.mod h1:zLgOLi98H3fifZn+44m+umXrS52loVEgC2AApnigrVQ=
 github.com/google/go-github/v35 v35.3.0 h1:fU+WBzuukn0VssbayTT+Zo3/ESKX9JYWjbZTLOTEyho=
 github.com/google/go-github/v35 v35.3.0/go.mod h1:yWB7uCcVWaUbUP74Aq3whuMySRMatyRmq5U9FTNlbio=
@@ -775,12 +775,12 @@ github.com/tenntenn/modver v1.0.1 h1:2klLppGhDgzJrScMpkj9Ujy3rXPUspSjAcev9tSEBgA
 github.com/tenntenn/modver v1.0.1/go.mod h1:bePIyQPb7UeioSRkw3Q0XeMhYZSMx9B8ePqg6SAMGH0=
 github.com/tenntenn/text/transform v0.0.0-20200319021203-7eef512accb3 h1:f+jULpRQGxTSkNYKJ51yaw6ChIqO+Je8UqsTKN/cDag=
 github.com/tenntenn/text/transform v0.0.0-20200319021203-7eef512accb3/go.mod h1:ON8b8w4BN/kE1EOhwT0o+d62W65a6aPw1nouo9LMgyY=
-github.com/terraform-linters/tflint v0.39.3 h1:VitlqdLQ59rG3N/nZA94U3UvpMO//T0wDcCK6im1nCU=
-github.com/terraform-linters/tflint v0.39.3/go.mod h1:Ock5wnYhBJxas49B5iSx4ujNyfaKB5nlA24/kmqfMiw=
-github.com/terraform-linters/tflint-plugin-sdk v0.11.0 h1:SXgx5GVTLuPolMLbhH7/U8YDp26vIrF7bFpDalyYk8g=
-github.com/terraform-linters/tflint-plugin-sdk v0.11.0/go.mod h1:51sL8jOhqlNwCCzd5K2s88HiHRYjL4Rf+qPcZ/cApdc=
-github.com/terraform-linters/tflint-plugin-sdk v0.12.0 h1:M++ZPQXIbcGKnI6KyQz3AblCkodoKIY/glheL43LTOU=
-github.com/terraform-linters/tflint-plugin-sdk v0.12.0/go.mod h1:/lXvT/LfKOWdjoQgtRbA8VSHtGr8RFwarPIDf20lXbc=
+github.com/terraform-linters/tflint v0.40.1 h1:wW18IyrcjspZGajhF3Fcln9c1UarbVg4vm6xkRy8E6A=
+github.com/terraform-linters/tflint v0.40.1/go.mod h1:7u4d6ENgwtH6zd9QMPcSHOVRklOF/QcimP+gH7mqjN8=
+github.com/terraform-linters/tflint-plugin-sdk v0.13.0 h1:aGRUMlN+m1dAGZ7vLPRrC71Esl8GMxC71Fce/RRv3i4=
+github.com/terraform-linters/tflint-plugin-sdk v0.13.0/go.mod h1:BWxrWRnzU+wQddNnsY4HGDEVBNLhVzQZZU8tCoRYxVI=
+github.com/terraform-linters/tflint-ruleset-terraform v0.1.1 h1:dAi25kUMZ3+c1aiQZlP+ifxXnRv+WNpSVSMBroUxeOI=
+github.com/terraform-linters/tflint-ruleset-terraform v0.1.1/go.mod h1:+iOphcKeOXXNPqjc3STxHvJ+4km5y8Zo+qqqPLgqFFw=
 github.com/tetafro/godot v1.4.11 h1:BVoBIqAf/2QdbFmSwAWnaIqDivZdOV0ZRwEm6jivLKw=
 github.com/tetafro/godot v1.4.11/go.mod h1:LR3CJpxDVGlYOWn3ZZg1PgNZdTUvzsZWu8xaEohUpn8=
 github.com/timakin/bodyclose v0.0.0-20210704033933-f49887972144 h1:kl4KhGNsJIbDHS9/4U9yQo1UcPQM0kOMJHn29EoH/Ro=
