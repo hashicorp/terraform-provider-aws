@@ -160,6 +160,37 @@ func TestAccVPCTrafficMirrorTarget_disappears(t *testing.T) {
 	})
 }
 
+func TestAccVPCTrafficMirrorTarget_gwlb(t *testing.T) {
+
+	resourceName := "aws_ec2_traffic_mirror_target.test"
+	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(10))
+	description := "test gwlb endpoint target"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			testAccPreCheckTrafficMirrorTarget(t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTrafficMirrorTargetDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCTrafficMirrorTargetConfig_gwlb(rName, description),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "description", description),
+					resource.TestMatchResourceAttr(resourceName, "gateway_load_balancer_endpoint_id", regexp.MustCompile("vpce-.*")),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckTrafficMirrorTargetExists(name string, target *ec2.TrafficMirrorTarget) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
@@ -330,6 +361,19 @@ resource "aws_ec2_traffic_mirror_target" "test" {
   }
 }
 `, rName, description, tagKey1, tagValue1, tagKey2, tagValue2))
+}
+
+func testAccVPCTrafficMirrorTargetConfig_gwlb(rName, description string) string {
+	return acctest.ConfigCompose(
+		//testAccTrafficMirrorTargetConfigBase(rName),
+		testAccVPCEndpointConfig_gatewayLoadBalancer(rName),
+		fmt.Sprintf(`
+resource "aws_ec2_traffic_mirror_target" "test" {
+  description                       = %[2]q
+  gateway_load_balancer_endpoint_id = aws_vpc_endpoint.test.id
+  depends_on                        = [aws_vpc_endpoint.test]						
+}
+`, rName, description))
 }
 
 func testAccPreCheckTrafficMirrorTarget(t *testing.T) {
