@@ -682,8 +682,8 @@ github.com/quasilyte/regex/syntax v0.0.0-20200407221936-30656e2c4a95 h1:L8QM9bvf
 github.com/quasilyte/regex/syntax v0.0.0-20200407221936-30656e2c4a95/go.mod h1:rlzQ04UMyJXu/aOvhd8qT+hvDrFpiwqp8MRXDY9szc0=
 github.com/quasilyte/stdinfo v0.0.0-20220114132959-f7386bf02567 h1:M8mH9eK4OUR4lu7Gd+PU1fV2/qnDNfzT635KRSObncs=
 github.com/quasilyte/stdinfo v0.0.0-20220114132959-f7386bf02567/go.mod h1:DWNGW8A4Y+GyBgPuaQJuWiy0XYftx4Xm/y5Jqk9I6VQ=
-github.com/rhysd/actionlint v1.6.17 h1:U6Idx7mLvWFBnaL8tm8oye0fdBUH9ehgoxG25bBy9p8=
-github.com/rhysd/actionlint v1.6.17/go.mod h1:fCaKErUfJqiyFdeUp3858hULCCupHWlPRB3RhIHS6pY=
+github.com/rhysd/actionlint v1.6.18 h1:LV0zZSye5fRyCwWYor+HlDpAhDg6+LIawFMKNJlcgMY=
+github.com/rhysd/actionlint v1.6.18/go.mod h1:fCaKErUfJqiyFdeUp3858hULCCupHWlPRB3RhIHS6pY=
 github.com/rivo/uniseg v0.2.0/go.mod h1:J6wj4VEh+S6ZtnVlnTBMWIodfgj8LQOQFoIToxlJtxc=
 github.com/rivo/uniseg v0.3.4 h1:3Z3Eu6FGHZWSfNKJTOUiPatWwfc7DzJRU04jFUqJODw=
 github.com/rivo/uniseg v0.3.4/go.mod h1:FN3SvrM+Zdj16jyLfmOkMNblXMcoc8DfTHruCPUcx88=
@@ -779,8 +779,6 @@ github.com/terraform-linters/tflint v0.39.3 h1:VitlqdLQ59rG3N/nZA94U3UvpMO//T0wD
 github.com/terraform-linters/tflint v0.39.3/go.mod h1:Ock5wnYhBJxas49B5iSx4ujNyfaKB5nlA24/kmqfMiw=
 github.com/terraform-linters/tflint-plugin-sdk v0.11.0 h1:SXgx5GVTLuPolMLbhH7/U8YDp26vIrF7bFpDalyYk8g=
 github.com/terraform-linters/tflint-plugin-sdk v0.11.0/go.mod h1:51sL8jOhqlNwCCzd5K2s88HiHRYjL4Rf+qPcZ/cApdc=
-github.com/terraform-linters/tflint-plugin-sdk v0.12.0 h1:M++ZPQXIbcGKnI6KyQz3AblCkodoKIY/glheL43LTOU=
-github.com/terraform-linters/tflint-plugin-sdk v0.12.0/go.mod h1:/lXvT/LfKOWdjoQgtRbA8VSHtGr8RFwarPIDf20lXbc=
 github.com/tetafro/godot v1.4.11 h1:BVoBIqAf/2QdbFmSwAWnaIqDivZdOV0ZRwEm6jivLKw=
 github.com/tetafro/godot v1.4.11/go.mod h1:LR3CJpxDVGlYOWn3ZZg1PgNZdTUvzsZWu8xaEohUpn8=
 github.com/timakin/bodyclose v0.0.0-20210704033933-f49887972144 h1:kl4KhGNsJIbDHS9/4U9yQo1UcPQM0kOMJHn29EoH/Ro=
