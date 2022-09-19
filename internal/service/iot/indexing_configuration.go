@@ -392,7 +392,7 @@ func expandThingIndexingConfiguration(tfMap map[string]interface{}) *iot.ThingIn
 		apiObject.ThingIndexingMode = aws.String(v)
 	}
 
-	if v, ok := tfMap["rules"]; ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if v, ok := tfMap["filter"]; ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		apiObject.Filter = expandIndexingFilter(v.([]interface{})[0].(map[string]interface{}))
 	}
 
