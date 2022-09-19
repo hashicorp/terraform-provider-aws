@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
 func ResourceIndexingConfiguration() *schema.Resource {
@@ -118,7 +119,6 @@ func ResourceIndexingConfiguration() *schema.Resource {
 										Optional: true,
 										Computed: true,
 										MinItems: 1,
-										MaxItems: 10, // TODO What should this be? 10 or 64? https://docs.aws.amazon.com/iot/latest/apireference/API_IndexingFilter.html
 										Elem: &schema.Schema{
 											Type: schema.TypeString,
 											ValidateFunc: validation.All(
@@ -278,6 +278,24 @@ func flattenThingIndexingConfiguration(apiObject *iot.ThingIndexingConfiguration
 		tfMap["thing_indexing_mode"] = aws.StringValue(v)
 	}
 
+	if v := apiObject.Filter; v != nil {
+		tfMap["filter"] = flattenIndexingFilter(v)
+	}
+
+	return tfMap
+}
+
+func flattenIndexingFilter(apiObject *iot.IndexingFilter) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.NamedShadowNames; v != nil {
+		tfMap["named_shadow_names"] = aws.StringValueSlice(v)
+	}
+
 	return tfMap
 }
 
@@ -368,6 +386,24 @@ func expandThingIndexingConfiguration(tfMap map[string]interface{}) *iot.ThingIn
 
 	if v, ok := tfMap["thing_indexing_mode"].(string); ok && v != "" {
 		apiObject.ThingIndexingMode = aws.String(v)
+	}
+
+	if v, ok := tfMap["rules"]; ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		apiObject.Filter = expandIndexingFilter(v.([]interface{})[0].(map[string]interface{}))
+	}
+
+	return apiObject
+}
+
+func expandIndexingFilter(tfMap map[string]interface{}) *iot.IndexingFilter {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &iot.IndexingFilter{}
+
+	if v, ok := tfMap["named_shadow_names"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.NamedShadowNames = flex.ExpandStringSet(v)
 	}
 
 	return apiObject
