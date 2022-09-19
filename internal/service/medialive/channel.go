@@ -614,6 +614,272 @@ func ResourceChannel() *schema.Resource {
 										Type:     schema.TypeList,
 										Required: true,
 										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"archive_group_settings": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Computed: true,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"destination": func() *schema.Schema {
+																return destinationSchema()
+															}(),
+															"archive_cdn_settings": {
+																Type:     schema.TypeList,
+																Optional: true,
+																Computed: true,
+																MaxItems: 1,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"archive_s3_settings": {
+																			Type:     schema.TypeList,
+																			Optional: true,
+																			Computed: true,
+																			MaxItems: 1,
+																			Elem: &schema.Resource{
+																				Schema: map[string]*schema.Schema{
+																					"canned_acl": {
+																						Type:             schema.TypeString,
+																						Optional:         true,
+																						Computed:         true,
+																						ValidateDiagFunc: enum.Validate[types.S3CannedAcl](),
+																					},
+																				},
+																			},
+																		},
+																	},
+																},
+															},
+															"rollover_interval": {
+																Type:     schema.TypeInt,
+																Optional: true,
+																Computed: true,
+															},
+														},
+													},
+												},
+												"frame_capture_group_settings": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Computed: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"destination": func() *schema.Schema {
+																return destinationSchema()
+															}(),
+															"frame_capture_cdn_settings": {
+																Type:     schema.TypeList,
+																Optional: true,
+																Computed: true,
+																MaxItems: 1,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"frame_capture_s3_settings": {
+																			Type:     schema.TypeList,
+																			Optional: true,
+																			Computed: true,
+																			MaxItems: 1,
+																			Elem: &schema.Resource{
+																				Schema: map[string]*schema.Schema{
+																					"canned_acl": {
+																						Type:             schema.TypeString,
+																						Optional:         true,
+																						Computed:         true,
+																						ValidateDiagFunc: enum.Validate[types.S3CannedAcl](),
+																					},
+																				},
+																			},
+																		},
+																	},
+																},
+															},
+														},
+													},
+												},
+												"hls_group_settings": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Computed: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"destination": func() *schema.Schema {
+																return destinationSchema()
+															}(),
+															"ad_markers": {
+																Type:             schema.TypeList,
+																Optional:         true,
+																ValidateDiagFunc: enum.Validate[types.HlsAdMarkers](),
+																Elem:             &schema.Schema{Type: schema.TypeString},
+															},
+															"base_url_content": {
+																Type:     schema.TypeString,
+																Optional: true,
+																Computed: true,
+															},
+															"base_url_content1": {
+																Type:     schema.TypeString,
+																Optional: true,
+																Computed: true,
+															},
+															"base_url_manifest": {
+																Type:     schema.TypeString,
+																Optional: true,
+																Computed: true,
+															},
+															"base_url_manifest1": {
+																Type:     schema.TypeString,
+																Optional: true,
+																Computed: true,
+															},
+															"caption_language_mappings": {
+																Type:     schema.TypeSet,
+																Optional: true,
+																MaxItems: 4,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"caption_channel": {
+																			Type:     schema.TypeInt,
+																			Required: true,
+																		},
+																		"language_code": {
+																			Type:     schema.TypeString,
+																			Required: true,
+																		},
+																		"language_description": {
+																			Type:     schema.TypeString,
+																			Required: true,
+																		},
+																	},
+																},
+															},
+															"caption_language_setting": {
+																Type:             schema.TypeString,
+																Optional:         true,
+																Computed:         true,
+																ValidateDiagFunc: enum.Validate[types.HlsCaptionLanguageSetting](),
+															},
+															"client_cache": {
+																Type:             schema.TypeString,
+																Optional:         true,
+																Computed:         true,
+																ValidateDiagFunc: enum.Validate[types.HlsClientCache](),
+															},
+															"codec_specification": {
+																Type:             schema.TypeString,
+																Optional:         true,
+																Computed:         true,
+																ValidateDiagFunc: enum.Validate[types.HlsCodecSpecification](),
+															},
+															"constant_iv": {
+																Type:     schema.TypeString,
+																Optional: true,
+																Computed: true,
+															},
+															"directory_structure": {
+																Type:             schema.TypeString,
+																Optional:         true,
+																Computed:         true,
+																ValidateDiagFunc: enum.Validate[types.HlsDirectoryStructure](),
+															},
+															"discontinuity_tags": {
+																Type:             schema.TypeString,
+																Optional:         true,
+																Computed:         true,
+																ValidateDiagFunc: enum.Validate[types.HlsDiscontinuityTags](),
+															},
+															"encryption_type": {
+																Type:             schema.TypeString,
+																Optional:         true,
+																Computed:         true,
+																ValidateDiagFunc: enum.Validate[types.HlsEncryptionType](),
+															},
+															"hls_cdn_settings": {
+																Type:     schema.TypeList,
+																Optional: true,
+																Computed: true,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"hls_akamai_settings": {
+																			Type:     schema.TypeList,
+																			Optional: true,
+																			MaxItems: 1,
+																			Elem: &schema.Resource{
+																				Schema: map[string]*schema.Schema{
+																					"connection_retry_interval": func() *schema.Schema {
+																						return connectionRetryIntervalSchema()
+																					}(),
+																					"filecache_duration": {
+																						Type:     schema.TypeInt,
+																						Optional: true,
+																						Computed: true,
+																					},
+																					"http_transfer_mode": {
+																						Type:             schema.TypeString,
+																						Optional:         true,
+																						Computed:         true,
+																						ValidateDiagFunc: enum.Validate[types.HlsAkamaiHttpTransferMode](),
+																					},
+																					"num_retries": {
+																						Type:     schema.TypeInt,
+																						Optional: true,
+																						Computed: true,
+																					},
+																					"restart_delay": {
+																						Type:     schema.TypeInt,
+																						Optional: true,
+																						Computed: true,
+																					},
+																					"salt": {
+																						Type:     schema.TypeString,
+																						Optional: true,
+																						Computed: true,
+																					},
+																					"token": {
+																						Type:     schema.TypeString,
+																						Optional: true,
+																						Computed: true,
+																					},
+																				},
+																			},
+																		},
+																		"hls_basic_put_settings": {
+																			Type:     schema.TypeList,
+																			Optional: true,
+																			MaxItems: 1,
+																			Elem: &schema.Resource{
+																				Schema: map[string]*schema.Schema{
+																					"connection_retry_interval": func() *schema.Schema {
+																						return connectionRetryIntervalSchema()
+																					}(),
+																					"filecache_duration": {
+																						Type:     schema.TypeInt,
+																						Optional: true,
+																						Computed: true,
+																					},
+																					"num_retries": {
+																						Type:     schema.TypeInt,
+																						Optional: true,
+																						Computed: true,
+																					},
+																					"restart_delay": {
+																						Type:     schema.TypeInt,
+																						Optional: true,
+																						Computed: true,
+																					},
+																				},
+																			},
+																		},
+																	},
+																},
+															},
+														},
+													},
+												},
+											},
+										},
 									},
 									"outputs": {
 										Type:     schema.TypeSet,
