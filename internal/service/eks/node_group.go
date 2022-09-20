@@ -223,7 +223,7 @@ func ResourceNodeGroup() *schema.Resource {
 			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
-			"taint": {
+			"taints": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				MaxItems: 50,
@@ -337,7 +337,7 @@ func resourceNodeGroupCreate(ctx context.Context, d *schema.ResourceData, meta i
 		input.ScalingConfig = expandNodegroupScalingConfig(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	if v, ok := d.GetOk("taint"); ok && v.(*schema.Set).Len() > 0 {
+	if v, ok := d.GetOk("taints"); ok && v.(*schema.Set).Len() > 0 {
 		input.Taints = expandTaints(v.(*schema.Set).List())
 	}
 
@@ -438,8 +438,8 @@ func resourceNodeGroupRead(ctx context.Context, d *schema.ResourceData, meta int
 		return diag.Errorf("error setting subnets: %s", err)
 	}
 
-	if err := d.Set("taint", flattenTaints(nodeGroup.Taints)); err != nil {
-		return diag.Errorf("error setting taint: %s", err)
+	if err := d.Set("taints", flattenTaints(nodeGroup.Taints)); err != nil {
+		return diag.Errorf("error setting taints: %s", err)
 	}
 
 	if nodeGroup.UpdateConfig != nil {
@@ -527,9 +527,9 @@ func resourceNodeGroupUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		}
 	}
 
-	if d.HasChanges("labels", "scaling_config", "taint", "update_config") {
+	if d.HasChanges("labels", "scaling_config", "taints", "update_config") {
 		oldLabelsRaw, newLabelsRaw := d.GetChange("labels")
-		oldTaintsRaw, newTaintsRaw := d.GetChange("taint")
+		oldTaintsRaw, newTaintsRaw := d.GetChange("taints")
 
 		input := &eks.UpdateNodegroupConfigInput{
 			ClientRequestToken: aws.String(resource.UniqueId()),
