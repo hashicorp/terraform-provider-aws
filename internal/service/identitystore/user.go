@@ -17,7 +17,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 	"log"
-	"os"
 	"regexp"
 	"strings"
 )
@@ -191,8 +190,6 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	return nil
 }
 
-var lgr = log.New(os.Stderr, "DEBUG - ", 0)
-
 func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).IdentityStoreConn
 
@@ -202,43 +199,83 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		Operations:      nil,
 	}
 
-	if d.HasChange("display_name") {
-		lgr.Printf("display_name changed")
-		in.Operations = append(in.Operations, types.AttributeOperation{
-			AttributePath:  aws.String("displayName"),
-			AttributeValue: document.NewLazyDocument(d.Get("display_name").(string)),
-		})
+	// IMPLEMENTATION NOTE.
+	//
+	// Complex types, such as the `emails` field, don't allow field by field
+	// updates, and require that the entire sub-object is modified.
+	//
+	// In those sub-objects, to remove a field, it must not be present at all
+	// in the updated attribute value.
+	//
+	// However, structs such as types.Email don't specify omitempty in their
+	// struct tags, so the document.NewLazyDocument marshaller will write out
+	// nulls.
+	//
+	// This is why, for those complex fields, a custom Expand function is
+	// provided that converts the Go SDK type (e.g. types.Email) into a field
+	// by field representation of what the API would expect.
+
+	fieldsToUpdate := []struct {
+		Attribute string
+		Field     string
+		Expand    func(interface{}) interface{}
+	}{
+		{
+			Attribute: "display_name",
+			Field:     "displayName",
+		},
+		{
+			Attribute: "name.0.family_name",
+			Field:     "name.familyName",
+		},
+		{
+			Attribute: "name.0.given_name",
+			Field:     "name.givenName",
+		},
+		{
+			Attribute: "emails",
+			Field:     "emails",
+			Expand: func(value interface{}) interface{} {
+				emails := expandEmails(value.([]interface{}))
+
+				var result []interface{}
+
+				// The API requires a null to unset the list, so in the case
+				// of no emails, a nil result is preferable.
+				for _, email := range emails {
+					m := map[string]interface{}{}
+
+					m["primary"] = email.Primary
+
+					if v := email.Type; v != nil {
+						m["type"] = v
+					}
+
+					if v := email.Value; v != nil {
+						m["value"] = v
+					}
+
+					result = append(result, m)
+				}
+
+				return result
+			},
+		},
 	}
 
-	if d.HasChange("emails") {
-		lgr.Printf("emails changed")
+	for _, fieldToUpdate := range fieldsToUpdate {
+		if d.HasChange(fieldToUpdate.Attribute) {
+			value := d.Get(fieldToUpdate.Attribute)
 
-		emails := expandEmails(d.Get("emails").([]interface{}))
+			if expand := fieldToUpdate.Expand; expand != nil {
+				value = expand(value)
+			}
 
-		if len(emails) == 0 {
-			emails = nil // The API requires a null to unset the field.
+			in.Operations = append(in.Operations, types.AttributeOperation{
+				AttributePath:  aws.String(fieldToUpdate.Field),
+				AttributeValue: document.NewLazyDocument(value),
+			})
 		}
-
-		in.Operations = append(in.Operations, types.AttributeOperation{
-			AttributePath:  aws.String("emails"),
-			AttributeValue: document.NewLazyDocument(emails),
-		})
-	}
-
-	if d.HasChange("name.0.family_name") {
-		lgr.Printf("family_name changed")
-		in.Operations = append(in.Operations, types.AttributeOperation{
-			AttributePath:  aws.String("name.familyName"),
-			AttributeValue: document.NewLazyDocument(d.Get("name.0.family_name").(string)),
-		})
-	}
-
-	if d.HasChange("name.0.given_name") {
-		lgr.Printf("given_name changed")
-		in.Operations = append(in.Operations, types.AttributeOperation{
-			AttributePath:  aws.String("name.givenName"),
-			AttributeValue: document.NewLazyDocument(d.Get("name.0.given_name").(string)),
-		})
 	}
 
 	if len(in.Operations) > 0 {
@@ -373,8 +410,6 @@ func expandEmail(tfMap map[string]interface{}) *types.Email {
 	if v, ok := tfMap["value"].(string); ok && v != "" {
 		a.Value = aws.String(v)
 	}
-
-	lgr.Printf("%+v %+v %+v", a.Primary, aws.ToString(a.Type), aws.ToString(a.Value))
 
 	return a
 }
