@@ -998,7 +998,6 @@ func expandVolumesEFSVolume(efsConfig []interface{}) *ecs.EFSVolumeConfiguration
 		efsVol.TransitEncryptionPort = aws.Int64(int64(v))
 	}
 	if v, ok := config["authorization_config"].([]interface{}); ok && len(v) > 0 {
-		efsVol.RootDirectory = nil
 		efsVol.AuthorizationConfig = expandVolumesEFSVolumeAuthorizationConfig(v)
 	}
 
