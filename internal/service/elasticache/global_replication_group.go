@@ -62,6 +62,7 @@ func ResourceGlobalReplicationGroup() *schema.Resource {
 			},
 			"cache_node_type": {
 				Type:     schema.TypeString,
+				Optional: true,
 				Computed: true,
 			},
 			"cluster_enabled": {
@@ -255,6 +256,16 @@ func resourceGlobalReplicationGroupCreate(d *schema.ResourceData, meta interface
 		return fmt.Errorf("waiting for ElastiCache Global Replication Group (%s) creation: %w", d.Id(), err)
 	}
 
+	if v, ok := d.GetOk("cache_node_type"); ok {
+		if v.(string) == aws.StringValue(globalReplicationGroup.CacheNodeType) {
+			log.Printf("[DEBUG] Not updating ElastiCache Global Replication Group (%s) node type: no change from %q", d.Id(), v)
+		} else {
+			if err := updateGlobalReplicationGroup(conn, d.Id(), globalReplicationGroupNodeTypeUpdater(v.(string))); err != nil {
+				return fmt.Errorf("updating ElastiCache Global Replication Group (%s) node type on creation: %w", d.Id(), err)
+			}
+		}
+	}
+
 	if v, ok := d.GetOk("engine_version"); ok {
 		requestedVersion, _ := normalizeEngineVersion(v.(string))
 
@@ -358,6 +369,12 @@ func resourceGlobalReplicationGroupUpdate(d *schema.ResourceData, meta interface
 	}
 
 	// Only one field can be changed per request
+	if d.HasChange("cache_node_type") {
+		if err := updateGlobalReplicationGroup(conn, d.Id(), globalReplicationGroupNodeTypeUpdater(d.Get("cache_node_type").(string))); err != nil {
+			return fmt.Errorf("updating ElastiCache Global Replication Group (%s) node type: %w", d.Id(), err)
+		}
+	}
+
 	if d.HasChange("global_replication_group_description") {
 		if err := updateGlobalReplicationGroup(conn, d.Id(), globalReplicationGroupDescriptionUpdater(d.Get("global_replication_group_description").(string))); err != nil {
 			return fmt.Errorf("updating ElastiCache Global Replication Group (%s) description: %w", d.Id(), err)
@@ -383,6 +400,12 @@ func globalReplicationGroupEngineVersionMajorUpdater(version, paramGroupName str
 	return func(input *elasticache.ModifyGlobalReplicationGroupInput) {
 		input.EngineVersion = aws.String(version)
 		input.CacheParameterGroupName = aws.String(paramGroupName)
+	}
+}
+
+func globalReplicationGroupNodeTypeUpdater(nodeType string) globalReplicationGroupUpdater {
+	return func(input *elasticache.ModifyGlobalReplicationGroupInput) {
+		input.CacheNodeType = aws.String(nodeType)
 	}
 }
 
