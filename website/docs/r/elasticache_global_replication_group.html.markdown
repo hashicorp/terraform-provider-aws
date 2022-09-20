@@ -100,6 +100,10 @@ resource "aws_elasticache_replication_group" "secondary" {
 
 The following arguments are supported:
 
+* `cache_node_type` - (Optional) The instance class used.
+  See AWS documentation for information on [supported node types](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/CacheNodes.SupportedTypes.html)
+  and [guidance on selecting node types](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/nodes-select-size.html).
+  When creating, by default the Global Replication Group inherits the node type of the primary replication group.
 * `engine_version` - (Optional) Redis version to use for the Global Replication Group.
   When creating, by default the Global Replication Group inherits the version of the primary replication group.
   If a version is specified, the Global Replication Group and all member replication groups will be upgraded to this version.
@@ -124,7 +128,6 @@ In addition to all arguments above, the following attributes are exported:
 * `engine_version_actual` - The full version number of the cache engine running on the members of this global replication group.
 * `at_rest_encryption_enabled` - A flag that indicate whether the encryption at rest is enabled.
 * `auth_token_enabled` - A flag that indicate whether AuthToken (password) is enabled.
-* `cache_node_type` - The instance class used. See AWS documentation for information on [supported node types](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/CacheNodes.SupportedTypes.html) and [guidance on selecting node types](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/nodes-select-size.html).
 * `cluster_enabled` - Indicates whether the Global Datastore is cluster enabled.
 * `engine` - The name of the cache engine to be used for the clusters in this global replication group.
 * `global_replication_group_id` - The full ID of the global replication group.
