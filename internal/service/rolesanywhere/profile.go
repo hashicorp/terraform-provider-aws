@@ -199,7 +199,7 @@ func resourceProfileUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 	if d.HasChange("enabled") {
 		_, n := d.GetChange("enabled")
-		if n == "true" {
+		if n == true {
 			err := enableProfile(ctx, d.Id(), meta)
 			if err != nil {
 				diag.Errorf("enabling RolesAnywhere Profile (%s): %s", d.Id(), err)
