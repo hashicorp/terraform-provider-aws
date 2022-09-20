@@ -121,7 +121,6 @@ func ResourceIndexingConfiguration() *schema.Resource {
 									"named_shadow_names": {
 										Type:     schema.TypeSet,
 										Optional: true,
-										Computed: true,
 										MinItems: 1,
 										Elem: &schema.Schema{
 											Type: schema.TypeString,
@@ -283,7 +282,7 @@ func flattenThingIndexingConfiguration(apiObject *iot.ThingIndexingConfiguration
 	}
 
 	if v := apiObject.Filter; v != nil {
-		tfMap["filter"] = flattenIndexingFilter(v)
+		tfMap["filter"] = []interface{}{flattenIndexingFilter(v)}
 	}
 
 	return tfMap
