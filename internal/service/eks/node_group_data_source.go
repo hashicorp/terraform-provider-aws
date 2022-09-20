@@ -212,7 +212,7 @@ func dataSourceNodeGroupRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	if err := d.Set("taints", flattenTaints(nodeGroup.Taints)); err != nil {
-		return diag.Errorf("error setting taint: %s", err)
+		return diag.Errorf("error setting taints: %s", err)
 	}
 
 	d.Set("version", nodeGroup.Version)
