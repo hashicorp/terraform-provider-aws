@@ -83,20 +83,16 @@ func ResourceUser() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"family_name": {
-							Type:     schema.TypeString,
-							Required: true,
-							ValidateDiagFunc: validation.ToDiagFunc(validation.All(
-								validation.StringLenBetween(1, 1024),
-								validation.StringMatch(regexp.MustCompile(`^[\p{L}\p{M}\p{S}\p{N}\p{P}\t\n\r  　]+$`), "must be a printable name"),
-							)),
+							Type:             schema.TypeString,
+							Required:         true,
+							ValidateDiagFunc: resourceUserValidateName,
+						},
 						},
 						"given_name": {
-							Type:     schema.TypeString,
-							Required: true,
-							ValidateDiagFunc: validation.ToDiagFunc(validation.All(
-								validation.StringLenBetween(1, 1024),
-								validation.StringMatch(regexp.MustCompile(`^[\p{L}\p{M}\p{S}\p{N}\p{P}\t\n\r  　]+$`), "must be a printable name"),
-							)),
+							Type:             schema.TypeString,
+							Required:         true,
+							ValidateDiagFunc: resourceUserValidateName,
+						},
 						},
 					},
 				},
@@ -461,3 +457,8 @@ func resourceUserParseID(id string) (identityStoreId, userId string, err error) 
 
 	return parts[0], parts[1], nil
 }
+
+var resourceUserValidateName = validation.ToDiagFunc(validation.All(
+	validation.StringLenBetween(1, 1024),
+	validation.StringMatch(regexp.MustCompile(`^[\p{L}\p{M}\p{S}\p{N}\p{P}\t\n\r  　]+$`), "must be a printable name"),
+))
