@@ -175,16 +175,13 @@ func ResourceCluster() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 							ForceNew: true,
-							// ValidateFunc: validControlPlaneInstanceType,
 						},
 						"outpost_arns": {
 							Type:     schema.TypeSet,
 							Required: true,
 							MinItems: 1,
 							Elem: &schema.Schema{
-								Type:         schema.TypeString,
-								Required:     true,
-								ValidateFunc: verify.ValidARN,
+								Type: schema.TypeString,
 							},
 						},
 					},
