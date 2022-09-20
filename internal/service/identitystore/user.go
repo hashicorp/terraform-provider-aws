@@ -87,6 +87,10 @@ func ResourceUser() *schema.Resource {
 							Required:         true,
 							ValidateDiagFunc: resourceUserValidateName,
 						},
+						"formatted": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateDiagFunc: resourceUserValidateName,
 						},
 						"given_name": {
 							Type:             schema.TypeString,
@@ -225,6 +229,10 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 			Field:     "name.familyName",
 		},
 		{
+			Attribute: "name.0.formatted",
+			Field:     "name.formatted",
+		},
+		{
 			Attribute: "name.0.given_name",
 			Field:     "name.givenName",
 		},
@@ -345,6 +353,10 @@ func flattenName(apiObject *types.Name) map[string]interface{} {
 		m["family_name"] = aws.ToString(v)
 	}
 
+	if v := apiObject.Formatted; v != nil {
+		m["formatted"] = aws.ToString(v)
+	}
+
 	if v := apiObject.GivenName; v != nil {
 		m["given_name"] = aws.ToString(v)
 	}
@@ -361,6 +373,10 @@ func expandName(tfMap map[string]interface{}) *types.Name {
 
 	if v, ok := tfMap["family_name"].(string); ok && v != "" {
 		a.FamilyName = aws.String(v)
+	}
+
+	if v, ok := tfMap["formatted"].(string); ok && v != "" {
+		a.Formatted = aws.String(v)
 	}
 
 	if v, ok := tfMap["given_name"].(string); ok && v != "" {
