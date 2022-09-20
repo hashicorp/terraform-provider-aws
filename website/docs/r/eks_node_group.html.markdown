@@ -138,7 +138,7 @@ The following arguments are optional:
 * `release_version` – (Optional) AMI version of the EKS Node Group. Defaults to latest version for Kubernetes version.
 * `remote_access` - (Optional) Configuration block with remote access settings. Detailed below.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `taint` - (Optional) The Kubernetes taints to be applied to the nodes in the node group. Maximum of 50 taints per node group. Detailed below.
+* `taints` - (Optional) The Kubernetes taints to be applied to the nodes in the node group. Maximum of 50 taints per node group. Detailed below.
 * `version` – (Optional) Kubernetes version. Defaults to EKS Cluster Kubernetes version. Terraform will only perform drift detection if a configuration value is provided.
 
 ### launch_template Configuration Block
@@ -160,7 +160,7 @@ The following arguments are optional:
 * `max_size` - (Required) Maximum number of worker nodes.
 * `min_size` - (Required) Minimum number of worker nodes.
 
-### taint Configuration Block
+### taints Configuration Block
 
 * `key` - (Required) The key of the taint. Maximum length of 63.
 * `value` - (Optional) The value of the taint. Maximum length of 63.
