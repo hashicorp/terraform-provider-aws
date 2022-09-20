@@ -97,6 +97,11 @@ func ResourceUser() *schema.Resource {
 							Required:         true,
 							ValidateDiagFunc: resourceUserValidateName,
 						},
+						"honorific_prefix": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateDiagFunc: resourceUserValidateName,
+						},
 						},
 					},
 				},
@@ -237,6 +242,10 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 			Field:     "name.givenName",
 		},
 		{
+			Attribute: "name.0.honorific_prefix",
+			Field:     "name.honorificPrefix",
+		},
+		{
 			Attribute: "emails",
 			Field:     "emails",
 			Expand: func(value interface{}) interface{} {
@@ -361,6 +370,10 @@ func flattenName(apiObject *types.Name) map[string]interface{} {
 		m["given_name"] = aws.ToString(v)
 	}
 
+	if v := apiObject.HonorificPrefix; v != nil {
+		m["honorific_prefix"] = aws.ToString(v)
+	}
+
 	return m
 }
 
@@ -381,6 +394,10 @@ func expandName(tfMap map[string]interface{}) *types.Name {
 
 	if v, ok := tfMap["given_name"].(string); ok && v != "" {
 		a.GivenName = aws.String(v)
+	}
+
+	if v, ok := tfMap["honorific_prefix"].(string); ok && v != "" {
+		a.HonorificPrefix = aws.String(v)
 	}
 
 	return a
