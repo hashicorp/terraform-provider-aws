@@ -38,6 +38,7 @@ func TestAccIdentityStoreUser_basic(t *testing.T) {
 				Config: testAccUserConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(resourceName, &user),
+					resource.TestCheckResourceAttr(resourceName, "addresses.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "display_name", "Acceptance Test"),
 					resource.TestCheckResourceAttr(resourceName, "emails.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "identity_store_id"),
@@ -90,6 +91,97 @@ func TestAccIdentityStoreUser_disappears(t *testing.T) {
 					acctest.CheckResourceDisappears(acctest.Provider, tfidentitystore.ResourceUser(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccIdentityStoreUser_Addresses(t *testing.T) {
+	var user identitystore.DescribeUserOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_identitystore_user.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(names.IdentityStoreEndpointID, t)
+			testAccPreCheck(t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccUserConfig_addresses2(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckUserExists(resourceName, &user),
+					resource.TestCheckResourceAttr(resourceName, "addresses.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "addresses.0.country", "US"),
+					resource.TestCheckResourceAttr(resourceName, "addresses.0.formatted", "Formatted Address 1"),
+					resource.TestCheckResourceAttr(resourceName, "addresses.0.locality", "The Locality 1"),
+					resource.TestCheckResourceAttr(resourceName, "addresses.0.postal_code", "AAA BBB 1"),
+					resource.TestCheckResourceAttr(resourceName, "addresses.0.primary", "true"),
+					resource.TestCheckResourceAttr(resourceName, "addresses.0.region", "The Region 1"),
+					resource.TestCheckResourceAttr(resourceName, "addresses.0.street_address", "The Street Address 1"),
+					resource.TestCheckResourceAttr(resourceName, "addresses.0.type", "The Type 1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccUserConfig_addresses3(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckUserExists(resourceName, &user),
+					resource.TestCheckResourceAttr(resourceName, "addresses.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "addresses.0.country", "GB"),
+					resource.TestCheckResourceAttr(resourceName, "addresses.0.formatted", "Formatted Address 2"),
+					resource.TestCheckResourceAttr(resourceName, "addresses.0.locality", "The Locality 2"),
+					resource.TestCheckResourceAttr(resourceName, "addresses.0.postal_code", "AAA BBB 2"),
+					resource.TestCheckResourceAttr(resourceName, "addresses.0.primary", "false"),
+					resource.TestCheckResourceAttr(resourceName, "addresses.0.region", "The Region 2"),
+					resource.TestCheckResourceAttr(resourceName, "addresses.0.street_address", "The Street Address 2"),
+					resource.TestCheckResourceAttr(resourceName, "addresses.0.type", "The Type 2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccUserConfig_addresses1(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckUserExists(resourceName, &user),
+					resource.TestCheckResourceAttr(resourceName, "addresses.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "addresses.0.country", "US"),
+					resource.TestCheckResourceAttr(resourceName, "addresses.0.formatted", ""),
+					resource.TestCheckResourceAttr(resourceName, "addresses.0.locality", ""),
+					resource.TestCheckResourceAttr(resourceName, "addresses.0.postal_code", ""),
+					resource.TestCheckResourceAttr(resourceName, "addresses.0.primary", "false"),
+					resource.TestCheckResourceAttr(resourceName, "addresses.0.region", ""),
+					resource.TestCheckResourceAttr(resourceName, "addresses.0.street_address", ""),
+					resource.TestCheckResourceAttr(resourceName, "addresses.0.type", "Home"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccUserConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckUserExists(resourceName, &user),
+					resource.TestCheckResourceAttr(resourceName, "addresses.#", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -912,6 +1004,87 @@ resource "aws_identitystore_user" "test" {
   name {
     family_name = "Doe"
     given_name  = "John"
+  }
+}
+`, rName)
+}
+
+func testAccUserConfig_addresses1(rName string) string {
+	return fmt.Sprintf(`
+data "aws_ssoadmin_instances" "test" {}
+
+resource "aws_identitystore_user" "test" {
+  identity_store_id = tolist(data.aws_ssoadmin_instances.test.identity_store_ids)[0]
+
+  display_name = "Acceptance Test"
+  user_name    = %[1]q
+
+  name {
+    family_name = "Doe"
+    given_name  = "John"
+  }
+
+  addresses {
+    country = "US"
+    type    = "Home"
+  }
+}
+`, rName)
+}
+
+func testAccUserConfig_addresses2(rName string) string {
+	return fmt.Sprintf(`
+data "aws_ssoadmin_instances" "test" {}
+
+resource "aws_identitystore_user" "test" {
+  identity_store_id = tolist(data.aws_ssoadmin_instances.test.identity_store_ids)[0]
+
+  display_name = "Acceptance Test"
+  user_name    = %[1]q
+
+  name {
+    family_name = "Doe"
+    given_name  = "John"
+  }
+
+  addresses {
+    country        = "US"
+    formatted      = "Formatted Address 1"
+    locality       = "The Locality 1"
+    postal_code    = "AAA BBB 1"
+    primary        = true
+    region         = "The Region 1"
+    street_address = "The Street Address 1"
+    type           = "The Type 1"
+  }
+}
+`, rName)
+}
+
+func testAccUserConfig_addresses3(rName string) string {
+	return fmt.Sprintf(`
+data "aws_ssoadmin_instances" "test" {}
+
+resource "aws_identitystore_user" "test" {
+  identity_store_id = tolist(data.aws_ssoadmin_instances.test.identity_store_ids)[0]
+
+  display_name = "Acceptance Test"
+  user_name    = %[1]q
+
+  name {
+    family_name = "Doe"
+    given_name  = "John"
+  }
+
+  addresses {
+    country        = "GB"
+    formatted      = "Formatted Address 2"
+    locality       = "The Locality 2"
+    postal_code    = "AAA BBB 2"
+    primary        = false
+    region         = "The Region 2"
+    street_address = "The Street Address 2"
+    type           = "The Type 2"
   }
 }
 `, rName)

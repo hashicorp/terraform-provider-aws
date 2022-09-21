@@ -33,6 +33,55 @@ func ResourceUser() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"addresses": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"country": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateDiagFunc: resourceUserValidateField(1024),
+						},
+						"formatted": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateDiagFunc: resourceUserValidateField(1024),
+						},
+						"locality": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateDiagFunc: resourceUserValidateField(1024),
+						},
+						"postal_code": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateDiagFunc: resourceUserValidateField(1024),
+						},
+						"primary": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
+						"region": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateDiagFunc: resourceUserValidateField(1024),
+						},
+						"street_address": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateDiagFunc: resourceUserValidateField(1024),
+						},
+						"type": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateDiagFunc: resourceUserValidateField(1024),
+						},
+					},
+				},
+			},
 			"display_name": {
 				Type:             schema.TypeString,
 				Required:         true,
@@ -171,6 +220,10 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		UserName:        aws.String(d.Get("user_name").(string)),
 	}
 
+	if v, ok := d.GetOk("addresses"); ok && len(v.([]interface{})) > 0 {
+		in.Addresses = expandAddresses(v.([]interface{}))
+	}
+
 	if v, ok := d.GetOk("emails"); ok && len(v.([]interface{})) > 0 {
 		in.Emails = expandEmails(v.([]interface{}))
 	}
@@ -253,6 +306,10 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	d.Set("user_id", out.UserId)
 	d.Set("user_name", out.UserName)
 	d.Set("user_type", out.UserType)
+
+	if err := d.Set("addresses", flattenAddresses(out.Addresses)); err != nil {
+		return create.DiagError(names.IdentityStore, create.ErrActionSetting, ResNameUser, d.Id(), err)
+	}
 
 	if err := d.Set("emails", flattenEmails(out.Emails)); err != nil {
 		return create.DiagError(names.IdentityStore, create.ErrActionSetting, ResNameUser, d.Id(), err)
@@ -350,6 +407,55 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		{
 			Attribute: "user_type",
 			Field:     "userType",
+		},
+		{
+			Attribute: "addresses",
+			Field:     "addresses",
+			Expand: func(value interface{}) interface{} {
+				addresses := expandAddresses(value.([]interface{}))
+
+				var result []interface{}
+
+				// The API requires a null to unset the list, so in the case
+				// of no addresses, a nil result is preferable.
+				for _, address := range addresses {
+					m := map[string]interface{}{}
+
+					if v := address.Country; v != nil {
+						m["country"] = v
+					}
+
+					if v := address.Formatted; v != nil {
+						m["formatted"] = v
+					}
+
+					if v := address.Locality; v != nil {
+						m["locality"] = v
+					}
+
+					if v := address.PostalCode; v != nil {
+						m["postalCode"] = v
+					}
+
+					m["primary"] = address.Primary
+
+					if v := address.Region; v != nil {
+						m["region"] = v
+					}
+
+					if v := address.StreetAddress; v != nil {
+						m["streetAddress"] = v
+					}
+
+					if v := address.Type; v != nil {
+						m["type"] = v
+					}
+
+					result = append(result, m)
+				}
+
+				return result
+			},
 		},
 		{
 			Attribute: "emails",
@@ -461,6 +567,123 @@ func findUserByID(ctx context.Context, conn *identitystore.Client, identityStore
 	}
 
 	return out, nil
+}
+
+func flattenAddress(apiObject *types.Address) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{}
+
+	if v := apiObject.Country; v != nil {
+		m["country"] = aws.ToString(v)
+	}
+
+	if v := apiObject.Formatted; v != nil {
+		m["formatted"] = aws.ToString(v)
+	}
+
+	if v := apiObject.Locality; v != nil {
+		m["locality"] = aws.ToString(v)
+	}
+
+	if v := apiObject.PostalCode; v != nil {
+		m["postal_code"] = aws.ToString(v)
+	}
+
+	m["primary"] = apiObject.Primary
+
+	if v := apiObject.Region; v != nil {
+		m["region"] = aws.ToString(v)
+	}
+
+	if v := apiObject.StreetAddress; v != nil {
+		m["street_address"] = aws.ToString(v)
+	}
+
+	if v := apiObject.Type; v != nil {
+		m["type"] = aws.ToString(v)
+	}
+
+	return m
+}
+
+func expandAddress(tfMap map[string]interface{}) *types.Address {
+	if tfMap == nil {
+		return nil
+	}
+
+	a := &types.Address{}
+
+	if v, ok := tfMap["country"].(string); ok && v != "" {
+		a.Country = aws.String(v)
+	}
+
+	if v, ok := tfMap["formatted"].(string); ok && v != "" {
+		a.Formatted = aws.String(v)
+	}
+
+	if v, ok := tfMap["locality"].(string); ok && v != "" {
+		a.Locality = aws.String(v)
+	}
+
+	if v, ok := tfMap["postal_code"].(string); ok && v != "" {
+		a.PostalCode = aws.String(v)
+	}
+
+	a.Primary = tfMap["primary"].(bool)
+
+	if v, ok := tfMap["region"].(string); ok && v != "" {
+		a.Region = aws.String(v)
+	}
+
+	if v, ok := tfMap["street_address"].(string); ok && v != "" {
+		a.StreetAddress = aws.String(v)
+	}
+
+	if v, ok := tfMap["type"].(string); ok && v != "" {
+		a.Type = aws.String(v)
+	}
+
+	return a
+}
+
+func flattenAddresses(apiObjects []types.Address) []interface{} {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var l []interface{}
+
+	for _, apiObject := range apiObjects {
+		apiObject := apiObject
+		l = append(l, flattenAddress(&apiObject))
+	}
+
+	return l
+}
+
+func expandAddresses(tfList []interface{}) []types.Address {
+	s := make([]types.Address, 0, len(tfList))
+
+	for _, r := range tfList {
+		m, ok := r.(map[string]interface{})
+
+		if !ok {
+			continue
+		}
+
+		a := expandAddress(m)
+
+		if a == nil {
+			continue
+		}
+
+		s = append(s, *a)
+	}
+
+	return s
 }
 
 func flattenName(apiObject *types.Name) map[string]interface{} {
