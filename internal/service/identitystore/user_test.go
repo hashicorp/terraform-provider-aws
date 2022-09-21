@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/aws/aws-sdk-go/service/ssoadmin"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"testing"
@@ -208,57 +209,12 @@ func TestAccIdentityStoreUser_Emails(t *testing.T) {
 		CheckDestroy:             testAccCheckUserDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserConfig_emails(rName, email1),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(resourceName, &user),
-					resource.TestCheckResourceAttr(resourceName, "emails.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "emails.0.primary", "false"),
-					resource.TestCheckResourceAttr(resourceName, "emails.0.type", ""),
-					resource.TestCheckResourceAttr(resourceName, "emails.0.value", email1),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccUserConfig_emails(rName, email2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(resourceName, &user),
-					resource.TestCheckResourceAttr(resourceName, "emails.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "emails.0.primary", "false"),
-					resource.TestCheckResourceAttr(resourceName, "emails.0.type", ""),
-					resource.TestCheckResourceAttr(resourceName, "emails.0.value", email2),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccUserConfig_emailsTypeAndPrimary(rName, true, "test-type-1", email2),
+				Config: testAccUserConfig_emails1(rName, email1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(resourceName, &user),
 					resource.TestCheckResourceAttr(resourceName, "emails.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "emails.0.primary", "true"),
-					resource.TestCheckResourceAttr(resourceName, "emails.0.type", "test-type-1"),
-					resource.TestCheckResourceAttr(resourceName, "emails.0.value", email2),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccUserConfig_emailsTypeAndPrimary(rName, false, "test-type-2", email1),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(resourceName, &user),
-					resource.TestCheckResourceAttr(resourceName, "emails.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "emails.0.primary", "false"),
-					resource.TestCheckResourceAttr(resourceName, "emails.0.type", "test-type-2"),
+					resource.TestCheckResourceAttr(resourceName, "emails.0.type", "The Type 1"),
 					resource.TestCheckResourceAttr(resourceName, "emails.0.value", email1),
 				),
 			},
@@ -268,13 +224,28 @@ func TestAccIdentityStoreUser_Emails(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccUserConfig_emails(rName, email2),
+				Config: testAccUserConfig_emails2(rName, email2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckUserExists(resourceName, &user),
+					resource.TestCheckResourceAttr(resourceName, "emails.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "emails.0.primary", "false"),
+					resource.TestCheckResourceAttr(resourceName, "emails.0.type", "The Type 2"),
+					resource.TestCheckResourceAttr(resourceName, "emails.0.value", email2),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccUserConfig_emails3(rName, email2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(resourceName, &user),
 					resource.TestCheckResourceAttr(resourceName, "emails.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "emails.0.primary", "false"),
 					resource.TestCheckResourceAttr(resourceName, "emails.0.type", ""),
-					resource.TestCheckResourceAttr(resourceName, "emails.0.value", email2),
+					resource.TestCheckResourceAttr(resourceName, "emails.0.value", ""),
 				),
 			},
 			{
@@ -1044,28 +1015,32 @@ func testAccCheckUserExists(name string, user *identitystore.DescribeUserOutput)
 }
 
 func testAccPreCheck(t *testing.T) {
-	//conn := acctest.Provider.Meta().(*conns.AWSClient).IdentityStoreConn
-	//ctx := context.Background()
-	//
-	//input := &identitystore.ListUsersInput{}
-	//_, err := conn.ListUsers(ctx, input)
-	//
-	//if acctest.PreCheckSkipError(err) {
-	//	t.Skipf("skipping acceptance testing: %s", err)
-	//}
-	//
-	//if err != nil {
-	//	t.Fatalf("unexpected PreCheck error: %s", err)
-	//}
-}
+	conn := acctest.Provider.Meta().(*conns.AWSClient).IdentityStoreConn
+	ssoadminConn := acctest.Provider.Meta().(*conns.AWSClient).SSOAdminConn
+	ctx := context.Background()
 
-func testAccCheckUserNotRecreated(before, after *identitystore.DescribeUserOutput) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if before, after := aws.ToString(before.UserId), aws.ToString(after.UserId); before != after {
-			return create.Error(names.IdentityStore, create.ErrActionCheckingNotRecreated, tfidentitystore.ResNameUser, before, errors.New("recreated"))
-		}
+	instances, err := ssoadminConn.ListInstances(&ssoadmin.ListInstancesInput{MaxResults: aws.Int64(1)})
 
-		return nil
+	if err != nil {
+		t.Fatalf("failed to list SSO instances: %s", err)
+	}
+
+	if len(instances.Instances) != 1 {
+		t.Fatalf("expected to find at least one SSO instance")
+	}
+
+	input := &identitystore.ListUsersInput{
+		IdentityStoreId: instances.Instances[0].IdentityStoreId,
+	}
+
+	_, err = conn.ListUsers(ctx, input)
+
+	if acctest.PreCheckSkipError(err) {
+		t.Skipf("skipping acceptance testing: %s", err)
+	}
+
+	if err != nil {
+		t.Fatalf("unexpected PreCheck error: %s", err)
 	}
 }
 
@@ -1168,7 +1143,7 @@ resource "aws_identitystore_user" "test" {
 `, rName)
 }
 
-func testAccUserConfig_emails(rName, emailValue string) string {
+func testAccUserConfig_emails1(rName, email string) string {
 	return fmt.Sprintf(`
 data "aws_ssoadmin_instances" "test" {}
 
@@ -1184,13 +1159,15 @@ resource "aws_identitystore_user" "test" {
   }
 
   emails {
-    value = %[2]q
+    primary = true
+    type    = "The Type 1"
+    value   = %[2]q
   }
 }
-`, rName, emailValue)
+`, rName, email)
 }
 
-func testAccUserConfig_emailsTypeAndPrimary(rName string, emailPrimary bool, emailType, emailValue string) string {
+func testAccUserConfig_emails2(rName, email string) string {
 	return fmt.Sprintf(`
 data "aws_ssoadmin_instances" "test" {}
 
@@ -1206,12 +1183,34 @@ resource "aws_identitystore_user" "test" {
   }
 
   emails {
-    primary = %[2]v
-    type    = %[3]q
-    value   = %[4]q
+    primary = false
+    type    = "The Type 2"
+    value   = %[2]q
   }
 }
-`, rName, emailPrimary, emailType, emailValue)
+`, rName, email)
+}
+
+func testAccUserConfig_emails3(rName, email string) string {
+	return fmt.Sprintf(`
+data "aws_ssoadmin_instances" "test" {}
+
+resource "aws_identitystore_user" "test" {
+  identity_store_id = tolist(data.aws_ssoadmin_instances.test.identity_store_ids)[0]
+
+  display_name = "Acceptance Test"
+  user_name    = %[1]q
+
+  name {
+    family_name = "John"
+    given_name  = "Doe"
+  }
+
+  emails {
+    
+  }
+}
+`, rName, email)
 }
 
 func testAccUserConfig_locale(rName, locale string) string {

@@ -396,9 +396,15 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 	// by field representation of what the API would expect.
 
 	fieldsToUpdate := []struct {
+		// Attribute corresponds to the provider schema.
 		Attribute string
-		Field     string
-		Expand    func(interface{}) interface{}
+
+		// Field corresponds to the AWS API schema.
+		Field string
+
+		// Expand, when not nil, is used to transform the value of the field
+		// given in Attribute before it's passed to the UpdateOperation.
+		Expand func(interface{}) interface{}
 	}{
 		{
 			Attribute: "display_name",
