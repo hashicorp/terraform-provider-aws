@@ -149,6 +149,11 @@ func ResourceUser() *schema.Resource {
 					validation.StringMatch(regexp.MustCompile(`^[\p{L}\p{M}\p{S}\p{N}\p{P}]+$`), "must be a user name"),
 				)),
 			},
+			"user_type": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				ValidateDiagFunc: resourceUserValidateField(1024),
+			},
 		},
 	}
 }
@@ -198,6 +203,10 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		in.Title = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("user_type"); ok && v.(string) != "" {
+		in.UserType = aws.String(v.(string))
+	}
+
 	out, err := conn.CreateUser(ctx, in)
 	if err != nil {
 		return create.DiagError(names.IdentityStore, create.ErrActionCreating, ResNameUser, d.Get("identity_store_id").(string), err)
@@ -243,6 +252,7 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	d.Set("title", out.Title)
 	d.Set("user_id", out.UserId)
 	d.Set("user_name", out.UserName)
+	d.Set("user_type", out.UserType)
 
 	if err := d.Set("emails", flattenEmails(out.Emails)); err != nil {
 		return create.DiagError(names.IdentityStore, create.ErrActionSetting, ResNameUser, d.Id(), err)
@@ -336,6 +346,10 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		{
 			Attribute: "title",
 			Field:     "title",
+		},
+		{
+			Attribute: "user_type",
+			Field:     "userType",
 		},
 		{
 			Attribute: "emails",
