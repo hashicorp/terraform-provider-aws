@@ -12,7 +12,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -811,27 +810,21 @@ func ResourceChannel() *schema.Resource {
 																					"connection_retry_interval": func() *schema.Schema {
 																						return connectionRetryIntervalSchema()
 																					}(),
-																					"filecache_duration": {
-																						Type:     schema.TypeInt,
-																						Optional: true,
-																						Computed: true,
-																					},
+																					"filecache_duration": func() *schema.Schema {
+																						return filecacheDurationSchema()
+																					}(),
 																					"http_transfer_mode": {
 																						Type:             schema.TypeString,
 																						Optional:         true,
 																						Computed:         true,
 																						ValidateDiagFunc: enum.Validate[types.HlsAkamaiHttpTransferMode](),
 																					},
-																					"num_retries": {
-																						Type:     schema.TypeInt,
-																						Optional: true,
-																						Computed: true,
-																					},
-																					"restart_delay": {
-																						Type:     schema.TypeInt,
-																						Optional: true,
-																						Computed: true,
-																					},
+																					"num_retries": func() *schema.Schema {
+																						return numRetriesSchema()
+																					}(),
+																					"restart_delay": func() *schema.Schema {
+																						return restartDelaySchema()
+																					}(),
 																					"salt": {
 																						Type:     schema.TypeString,
 																						Optional: true,
@@ -854,26 +847,112 @@ func ResourceChannel() *schema.Resource {
 																					"connection_retry_interval": func() *schema.Schema {
 																						return connectionRetryIntervalSchema()
 																					}(),
-																					"filecache_duration": {
-																						Type:     schema.TypeInt,
-																						Optional: true,
-																						Computed: true,
+																					"filecache_duration": func() *schema.Schema {
+																						return filecacheDurationSchema()
+																					}(),
+																					"num_retries": func() *schema.Schema {
+																						return numRetriesSchema()
+																					}(),
+																					"restart_delay": func() *schema.Schema {
+																						return restartDelaySchema()
+																					}(),
+																				},
+																			},
+																		},
+																		"hls_media_store_settings": {
+																			Type:     schema.TypeList,
+																			Optional: true,
+																			MaxItems: 1,
+																			Elem: &schema.Resource{
+																				Schema: map[string]*schema.Schema{
+																					"connection_retry_interval": func() *schema.Schema {
+																						return connectionRetryIntervalSchema()
+																					}(),
+																					"filecache_duration": func() *schema.Schema {
+																						return filecacheDurationSchema()
+																					}(),
+																					"media_store_storage_class": {
+																						Type:             schema.TypeString,
+																						Optional:         true,
+																						Computed:         true,
+																						ValidateDiagFunc: enum.Validate[types.HlsMediaStoreStorageClass](),
 																					},
-																					"num_retries": {
-																						Type:     schema.TypeInt,
-																						Optional: true,
-																						Computed: true,
+																					"num_retries": func() *schema.Schema {
+																						return numRetriesSchema()
+																					}(),
+																					"restart_delay": func() *schema.Schema {
+																						return restartDelaySchema()
+																					}(),
+																				},
+																			},
+																		},
+																		"hls_s3_settings": {
+																			Type:     schema.TypeList,
+																			Optional: true,
+																			MaxItems: 1,
+																			Elem: &schema.Resource{
+																				Schema: map[string]*schema.Schema{
+																					"canned_acl": {
+																						Type:             schema.TypeString,
+																						Optional:         true,
+																						Computed:         true,
+																						ValidateDiagFunc: enum.Validate[types.S3CannedAcl](),
 																					},
-																					"restart_delay": {
-																						Type:     schema.TypeInt,
-																						Optional: true,
-																						Computed: true,
+																				},
+																			},
+																		},
+																		"hls_webdav_settings": {
+																			Type:     schema.TypeList,
+																			Optional: true,
+																			MaxItems: 1,
+																			Elem: &schema.Resource{
+																				Schema: map[string]*schema.Schema{
+																					"connection_retry_interval": func() *schema.Schema {
+																						return connectionRetryIntervalSchema()
+																					}(),
+																					"filecache_duration": func() *schema.Schema {
+																						return filecacheDurationSchema()
+																					}(),
+																					"http_transfer_mode": {
+																						Type:             schema.TypeString,
+																						Optional:         true,
+																						Computed:         true,
+																						ValidateDiagFunc: enum.Validate[types.HlsWebdavHttpTransferMode](),
 																					},
+																					"num_retries": func() *schema.Schema {
+																						return numRetriesSchema()
+																					}(),
+																					"restart_delay": func() *schema.Schema {
+																						return restartDelaySchema()
+																					}(),
 																				},
 																			},
 																		},
 																	},
 																},
+															},
+															"hls_id3_segment_tagging": {
+																Type:             schema.TypeString,
+																Optional:         true,
+																Computed:         true,
+																ValidateDiagFunc: enum.Validate[types.HlsId3SegmentTaggingState](),
+															},
+															"incomplete_segment_behavior": {
+																Type:             schema.TypeString,
+																Optional:         true,
+																Computed:         true,
+																ValidateDiagFunc: enum.Validate[types.HlsIncompleteSegmentBehavior](),
+															},
+															"index_n_segments": {
+																Type:     schema.TypeInt,
+																Optional: true,
+																Computed: true,
+															},
+															"input_loss_action": {
+																Type:             schema.TypeString,
+																Optional:         true,
+																Computed:         true,
+																ValidateDiagFunc: enum.Validate[types.InputLossActionForHlsOut](),
 															},
 														},
 													},
@@ -1054,18 +1133,6 @@ func resourceChannelRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return create.DiagError(names.MediaLive, create.ErrActionSetting, ResNameChannel, d.Id(), err)
 	}
 
-	p, err := verify.SecondJSONUnlessEquivalent(d.Get("policy").(string), aws.ToString(out.Policy))
-	if err != nil {
-		return create.DiagError(names.MediaLive, create.ErrActionSetting, ResNameChannel, d.Id(), err)
-	}
-
-	p, err = structure.NormalizeJsonString(p)
-	if err != nil {
-		return create.DiagError(names.MediaLive, create.ErrActionSetting, ResNameChannel, d.Id(), err)
-	}
-
-	d.Set("policy", p)
-
 	tags, err := ListTags(ctx, conn, aws.ToString(out.Arn))
 	if err != nil {
 		return create.DiagError(names.MediaLive, create.ErrActionReading, ResNameChannel, d.Id(), err)
@@ -1092,11 +1159,11 @@ func resourceChannelUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	update := false
 
 	in := &medialive.UpdateChannelInput{
-		Id: aws.String(d.Id()),
+		ChannelId: aws.String(d.Id()),
 	}
 
 	if d.HasChanges("an_argument") {
-		in.AnArgument = aws.String(d.Get("an_argument").(string))
+		in.Name = aws.String(d.Get("name").(string))
 		update = true
 	}
 
@@ -1110,7 +1177,7 @@ func resourceChannelUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		return create.DiagError(names.MediaLive, create.ErrActionUpdating, ResNameChannel, d.Id(), err)
 	}
 
-	if _, err := waitChannelUpdated(ctx, conn, aws.ToString(out.OperationId), d.Timeout(schema.TimeoutUpdate)); err != nil {
+	if _, err := waitChannelUpdated(ctx, conn, aws.ToString(out.Channel.Id), d.Timeout(schema.TimeoutUpdate)); err != nil {
 		return create.DiagError(names.MediaLive, create.ErrActionWaitingForUpdate, ResNameChannel, d.Id(), err)
 	}
 
@@ -1123,16 +1190,16 @@ func resourceChannelDelete(ctx context.Context, d *schema.ResourceData, meta int
 	log.Printf("[INFO] Deleting MediaLive Channel %s", d.Id())
 
 	_, err := conn.DeleteChannel(ctx, &medialive.DeleteChannelInput{
-		Id: aws.String(d.Id()),
+		ChannelId: aws.String(d.Id()),
 	})
 
 	if err != nil {
-		var nfe *types.ResourceNotFoundException
+		var nfe *types.NotFoundException
 		if errors.As(err, &nfe) {
 			return nil
 		}
 
-		return create.DiagError(names.MediaLive, create.ErrActionDeleting, ResNameEndpoint, d.Id(), err)
+		return create.DiagError(names.MediaLive, create.ErrActionDeleting, ResNameChannel, d.Id(), err)
 	}
 
 	if _, err := waitChannelDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
@@ -1141,13 +1208,6 @@ func resourceChannelDelete(ctx context.Context, d *schema.ResourceData, meta int
 
 	return nil
 }
-
-const (
-	statusChangePending = "Pending"
-	statusDeleting      = "Deleting"
-	statusNormal        = "Normal"
-	statusUpdated       = "Updated"
-)
 
 func waitChannelCreated(ctx context.Context, conn *medialive.Client, id string, timeout time.Duration) (*medialive.DescribeChannelOutput, error) {
 	stateConf := &resource.StateChangeConf{

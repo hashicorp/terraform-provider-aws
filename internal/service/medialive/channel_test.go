@@ -2,13 +2,12 @@ package medialive_test
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/medialive"
-	"github.com/aws/aws-sdk-go-v2/service/medialive/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -16,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfmedialive "github.com/hashicorp/terraform-provider-aws/internal/service/medialive"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -24,7 +24,7 @@ func TestAccMediaLiveChannel_basic(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var channel medialive.DescribeChannelResponse
+	var channel medialive.DescribeChannelOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_medialive_channel.test"
 
@@ -32,7 +32,7 @@ func TestAccMediaLiveChannel_basic(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(names.MediaLiveEndpointID, t)
-			testAccPreCheck(t)
+			testAccChannelsPreCheck(t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -68,7 +68,7 @@ func TestAccMediaLiveChannel_disappears(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var channel medialive.DescribeChannelResponse
+	var channel medialive.DescribeChannelOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_medialive_channel.test"
 
@@ -76,14 +76,14 @@ func TestAccMediaLiveChannel_disappears(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(names.MediaLiveEndpointID, t)
-			testAccPreCheck(t)
+			testAccChannelsPreCheck(t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckChannelDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccChannelConfig_basic(rName, testAccChannelVersionNewer),
+				Config: testAccChannelConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckChannelExists(resourceName, &channel),
 					acctest.CheckResourceDisappears(acctest.Provider, tfmedialive.ResourceChannel(), resourceName),
@@ -103,27 +103,21 @@ func testAccCheckChannelDestroy(s *terraform.State) error {
 			continue
 		}
 
-		input := &medialive.DescribeChannelInput{
-			ChannelId: aws.String(rs.Primary.ID),
-		}
-		_, err := conn.DescribeChannel(ctx, &medialive.DescribeChannelInput{
-			ChannelId: aws.String(rs.Primary.ID),
-		})
-		if err != nil {
-			var nfe *types.ResourceNotFoundException
-			if errors.As(err, &nfe) {
-				return nil
-			}
-			return err
+		_, err := tfmedialive.FindChannelByID(ctx, conn, rs.Primary.ID)
+
+		if tfresource.NotFound(err) {
+			continue
 		}
 
-		return create.Error(names.MediaLive, create.ErrActionCheckingDestroyed, tfmedialive.ResNameChannel, rs.Primary.ID, errors.New("not destroyed"))
+		if err != nil {
+			return create.Error(names.MediaLive, create.ErrActionCheckingDestroyed, tfmedialive.ResNameChannel, rs.Primary.ID, err)
+		}
 	}
 
 	return nil
 }
 
-func testAccCheckChannelExists(name string, channel *medialive.DescribeChannelResponse) resource.TestCheckFunc {
+func testAccCheckChannelExists(name string, channel *medialive.DescribeChannelOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -136,9 +130,7 @@ func testAccCheckChannelExists(name string, channel *medialive.DescribeChannelRe
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).MediaLiveConn
 		ctx := context.Background()
-		resp, err := conn.DescribeChannel(ctx, &medialive.DescribeChannelInput{
-			ChannelId: aws.String(rs.Primary.ID),
-		})
+		resp, err := tfmedialive.FindChannelByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return create.Error(names.MediaLive, create.ErrActionCheckingExistence, tfmedialive.ResNameChannel, rs.Primary.ID, err)
@@ -150,7 +142,7 @@ func testAccCheckChannelExists(name string, channel *medialive.DescribeChannelRe
 	}
 }
 
-func testAccPreCheck(t *testing.T) {
+func testAccChannelsPreCheck(t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).MediaLiveConn
 	ctx := context.Background()
 
@@ -166,17 +158,7 @@ func testAccPreCheck(t *testing.T) {
 	}
 }
 
-func testAccCheckChannelNotRecreated(before, after *medialive.DescribeChannelResponse) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if before, after := aws.StringValue(before.ChannelId), aws.StringValue(after.ChannelId); before != after {
-			return create.Error(names.MediaLive, create.ErrActionCheckingNotRecreated, tfmedialive.ResNameChannel, aws.StringValue(before.ChannelId), errors.New("recreated"))
-		}
-
-		return nil
-	}
-}
-
-func testAccChannelConfig_basic(rName, version string) string {
+func testAccChannelConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_security_group" "test" {
   name = %[1]q
@@ -185,7 +167,6 @@ resource "aws_security_group" "test" {
 resource "aws_medialive_channel" "test" {
   channel_name             = %[1]q
   engine_type             = "ActiveMediaLive"
-  engine_version          = %[2]q
   host_instance_type      = "medialive.t2.micro"
   security_groups         = [aws_security_group.test.id]
   authentication_strategy = "simple"
@@ -200,5 +181,5 @@ resource "aws_medialive_channel" "test" {
     password = "TestTest1234"
   }
 }
-`, rName, version)
+`, rName)
 }
