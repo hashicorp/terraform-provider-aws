@@ -111,6 +111,11 @@ func ResourceUser() *schema.Resource {
 					},
 				},
 			},
+			"nick_name": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				ValidateDiagFunc: resourceUserValidateField(1024),
+			},
 			"user_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -153,6 +158,10 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		in.Name = expandName(v.([]interface{})[0].(map[string]interface{}))
 	}
 
+	if v, ok := d.GetOk("nick_name"); ok && v.(string) != "" {
+		in.NickName = aws.String(v.(string))
+	}
+
 	out, err := conn.CreateUser(ctx, in)
 	if err != nil {
 		return create.DiagError(names.IdentityStore, create.ErrActionCreating, ResNameUser, d.Get("identity_store_id").(string), err)
@@ -191,6 +200,7 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	d.Set("display_name", out.DisplayName)
 	d.Set("identity_store_id", out.IdentityStoreId)
 	d.Set("locale", out.Locale)
+	d.Set("nick_name", out.NickName)
 	d.Set("user_id", out.UserId)
 	d.Set("user_name", out.UserName)
 
@@ -266,6 +276,10 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		{
 			Attribute: "name.0.middle_name",
 			Field:     "name.middleName",
+		},
+		{
+			Attribute: "nick_name",
+			Field:     "nickName",
 		},
 		{
 			Attribute: "emails",
