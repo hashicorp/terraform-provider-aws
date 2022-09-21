@@ -102,6 +102,11 @@ func ResourceUser() *schema.Resource {
 							Optional:         true,
 							ValidateDiagFunc: resourceUserValidateName,
 						},
+						"honorific_suffix": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateDiagFunc: resourceUserValidateName,
+						},
 						},
 					},
 				},
@@ -246,6 +251,10 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 			Field:     "name.honorificPrefix",
 		},
 		{
+			Attribute: "name.0.honorific_suffix",
+			Field:     "name.honorificSuffix",
+		},
+		{
 			Attribute: "emails",
 			Field:     "emails",
 			Expand: func(value interface{}) interface{} {
@@ -282,6 +291,12 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 
 			if expand := fieldToUpdate.Expand; expand != nil {
 				value = expand(value)
+			}
+
+			// The API doesn't allow empty attribute values. To unset an
+			// attribute, set it to null.
+			if value == "" {
+				value = nil
 			}
 
 			in.Operations = append(in.Operations, types.AttributeOperation{
@@ -374,6 +389,10 @@ func flattenName(apiObject *types.Name) map[string]interface{} {
 		m["honorific_prefix"] = aws.ToString(v)
 	}
 
+	if v := apiObject.HonorificSuffix; v != nil {
+		m["honorific_suffix"] = aws.ToString(v)
+	}
+
 	return m
 }
 
@@ -398,6 +417,10 @@ func expandName(tfMap map[string]interface{}) *types.Name {
 
 	if v, ok := tfMap["honorific_prefix"].(string); ok && v != "" {
 		a.HonorificPrefix = aws.String(v)
+	}
+
+	if v, ok := tfMap["honorific_suffix"].(string); ok && v != "" {
+		a.HonorificSuffix = aws.String(v)
 	}
 
 	return a

@@ -178,7 +178,7 @@ func TestAccIdentityStoreUser_Emails(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccUserConfig_noEmails(rName),
+				Config: testAccUserConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(resourceName, &user),
 					resource.TestCheckResourceAttr(resourceName, "emails.#", "0"),
@@ -265,6 +265,18 @@ func TestAccIdentityStoreUser_NameFormatted(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name.0.formatted", "JD2"),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccUserConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckUserExists(resourceName, &user),
+					resource.TestCheckResourceAttr(resourceName, "name.0.formatted", ""),
+				),
+			},
 		},
 	})
 }
@@ -339,6 +351,56 @@ func TestAccIdentityStoreUser_NameHonorificPrefix(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(resourceName, &user),
 					resource.TestCheckResourceAttr(resourceName, "name.0.honorific_prefix", "Mr."),
+				),
+			},
+		},
+	})
+}
+
+func TestAccIdentityStoreUser_NameHonorificSuffix(t *testing.T) {
+	var user identitystore.DescribeUserOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_identitystore_user.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(names.IdentityStoreEndpointID, t)
+			testAccPreCheck(t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccUserConfig_nameHonorificSuffix(rName, "M.D."),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckUserExists(resourceName, &user),
+					resource.TestCheckResourceAttr(resourceName, "name.0.honorific_suffix", "M.D."),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccUserConfig_nameHonorificSuffix(rName, "MSc"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckUserExists(resourceName, &user),
+					resource.TestCheckResourceAttr(resourceName, "name.0.honorific_suffix", "MSc"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccUserConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckUserExists(resourceName, &user),
+					resource.TestCheckResourceAttr(resourceName, "name.0.honorific_suffix", ""),
 				),
 			},
 		},
@@ -490,24 +552,6 @@ resource "aws_identitystore_user" "test" {
 `, rName, emailPrimary, emailType, emailValue)
 }
 
-func testAccUserConfig_noEmails(rName string) string {
-	return fmt.Sprintf(`
-data "aws_ssoadmin_instances" "test" {}
-
-resource "aws_identitystore_user" "test" {
-  identity_store_id = tolist(data.aws_ssoadmin_instances.test.identity_store_ids)[0]
-
-  display_name = "Acceptance Test"
-  user_name    = %[1]q
-
-  name {
-    family_name = "John"
-    given_name  = "Doe"
-  }
-}
-`, rName)
-}
-
 func testAccUserConfig_nameFamilyName(rName, familyName string) string {
 	return fmt.Sprintf(`
 data "aws_ssoadmin_instances" "test" {}
@@ -580,4 +624,23 @@ resource "aws_identitystore_user" "test" {
   }
 }
 `, rName, honorificPrefix)
+}
+
+func testAccUserConfig_nameHonorificSuffix(rName, honorificSuffix string) string {
+	return fmt.Sprintf(`
+data "aws_ssoadmin_instances" "test" {}
+
+resource "aws_identitystore_user" "test" {
+  identity_store_id = tolist(data.aws_ssoadmin_instances.test.identity_store_ids)[0]
+
+  display_name = "Acceptance Test"
+  user_name    = %[1]q
+
+  name {
+    family_name      = "Doe"
+    given_name       = "John"
+    honorific_suffix = %[2]q 
+  }
+}
+`, rName, honorificSuffix)
 }
