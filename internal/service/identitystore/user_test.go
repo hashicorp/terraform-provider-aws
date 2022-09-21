@@ -193,6 +193,56 @@ func TestAccIdentityStoreUser_Emails(t *testing.T) {
 	})
 }
 
+func TestAccIdentityStoreUser_Locale(t *testing.T) {
+	var user identitystore.DescribeUserOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_identitystore_user.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(names.IdentityStoreEndpointID, t)
+			testAccPreCheck(t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccUserConfig_locale(rName, "en-US"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckUserExists(resourceName, &user),
+					resource.TestCheckResourceAttr(resourceName, "locale", "en-US"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccUserConfig_locale(rName, "en-GB"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckUserExists(resourceName, &user),
+					resource.TestCheckResourceAttr(resourceName, "locale", "en-GB"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccUserConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckUserExists(resourceName, &user),
+					resource.TestCheckResourceAttr(resourceName, "locale", ""),
+				),
+			},
+		},
+	})
+}
+
 func TestAccIdentityStoreUser_NameFamilyName(t *testing.T) {
 	var user identitystore.DescribeUserOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -600,6 +650,26 @@ resource "aws_identitystore_user" "test" {
   }
 }
 `, rName, emailPrimary, emailType, emailValue)
+}
+
+func testAccUserConfig_locale(rName, locale string) string {
+	return fmt.Sprintf(`
+data "aws_ssoadmin_instances" "test" {}
+
+resource "aws_identitystore_user" "test" {
+  identity_store_id = tolist(data.aws_ssoadmin_instances.test.identity_store_ids)[0]
+
+  display_name = "Acceptance Test"
+  user_name    = %[1]q
+
+  locale = %[2]q 
+
+  name {
+    family_name = "Doe"
+    given_name  = "John"
+  }
+}
+`, rName, locale)
 }
 
 func testAccUserConfig_nameFamilyName(rName, familyName string) string {

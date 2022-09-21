@@ -67,6 +67,11 @@ func ResourceUser() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
+			"locale": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				ValidateDiagFunc: resourceUserValidateField(1024),
+			},
 			"name": {
 				Type:     schema.TypeList,
 				Required: true,
@@ -140,6 +145,10 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		in.Emails = expandEmails(v.([]interface{}))
 	}
 
+	if v, ok := d.GetOk("locale"); ok && v.(string) != "" {
+		in.Locale = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOk("name"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		in.Name = expandName(v.([]interface{})[0].(map[string]interface{}))
 	}
@@ -181,6 +190,7 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 
 	d.Set("display_name", out.DisplayName)
 	d.Set("identity_store_id", out.IdentityStoreId)
+	d.Set("locale", out.Locale)
 	d.Set("user_id", out.UserId)
 	d.Set("user_name", out.UserName)
 
@@ -228,6 +238,10 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		{
 			Attribute: "display_name",
 			Field:     "displayName",
+		},
+		{
+			Attribute: "locale",
+			Field:     "locale",
 		},
 		{
 			Attribute: "name.0.family_name",
