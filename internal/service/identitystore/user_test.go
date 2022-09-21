@@ -50,6 +50,7 @@ func TestAccIdentityStoreUser_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name.0.honorific_suffix", ""),
 					resource.TestCheckResourceAttr(resourceName, "name.0.middle_name", ""),
 					resource.TestCheckResourceAttr(resourceName, "nick_name", ""),
+					resource.TestCheckResourceAttr(resourceName, "phone_numbers.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "preferred_language", ""),
 					resource.TestCheckResourceAttr(resourceName, "profile_url", ""),
 					resource.TestCheckResourceAttr(resourceName, "timezone", ""),
@@ -655,6 +656,82 @@ func TestAccIdentityStoreUser_NickName(t *testing.T) {
 					testAccCheckUserExists(resourceName, &user),
 					resource.TestCheckResourceAttr(resourceName, "nick_name", ""),
 				),
+			},
+		},
+	})
+}
+
+func TestAccIdentityStoreUser_PhoneNumbers(t *testing.T) {
+	var user identitystore.DescribeUserOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_identitystore_user.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(names.IdentityStoreEndpointID, t)
+			testAccPreCheck(t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccUserConfig_phoneNumbers1(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckUserExists(resourceName, &user),
+					resource.TestCheckResourceAttr(resourceName, "phone_numbers.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "phone_numbers.0.primary", "true"),
+					resource.TestCheckResourceAttr(resourceName, "phone_numbers.0.type", "The Type 1"),
+					resource.TestCheckResourceAttr(resourceName, "phone_numbers.0.value", "111111"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccUserConfig_phoneNumbers2(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckUserExists(resourceName, &user),
+					resource.TestCheckResourceAttr(resourceName, "phone_numbers.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "phone_numbers.0.primary", "false"),
+					resource.TestCheckResourceAttr(resourceName, "phone_numbers.0.type", "The Type 2"),
+					resource.TestCheckResourceAttr(resourceName, "phone_numbers.0.value", "2222222"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccUserConfig_phoneNumbers3(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckUserExists(resourceName, &user),
+					resource.TestCheckResourceAttr(resourceName, "phone_numbers.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "phone_numbers.0.primary", "false"),
+					resource.TestCheckResourceAttr(resourceName, "phone_numbers.0.type", ""),
+					resource.TestCheckResourceAttr(resourceName, "phone_numbers.0.value", "2222222"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccUserConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckUserExists(resourceName, &user),
+					resource.TestCheckResourceAttr(resourceName, "addresses.#", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -1286,6 +1363,76 @@ resource "aws_identitystore_user" "test" {
   }
 }
 `, rName, nickName)
+}
+
+func testAccUserConfig_phoneNumbers1(rName string) string {
+	return fmt.Sprintf(`
+data "aws_ssoadmin_instances" "test" {}
+
+resource "aws_identitystore_user" "test" {
+  identity_store_id = tolist(data.aws_ssoadmin_instances.test.identity_store_ids)[0]
+
+  display_name = "Acceptance Test"
+  user_name    = %[1]q
+
+  name {
+    family_name = "John"
+    given_name  = "Doe"
+  }
+
+  phone_numbers {
+    primary = true
+    type    = "The Type 1"
+    value   = "111111"
+  }
+}
+`, rName)
+}
+
+func testAccUserConfig_phoneNumbers2(rName string) string {
+	return fmt.Sprintf(`
+data "aws_ssoadmin_instances" "test" {}
+
+resource "aws_identitystore_user" "test" {
+  identity_store_id = tolist(data.aws_ssoadmin_instances.test.identity_store_ids)[0]
+
+  display_name = "Acceptance Test"
+  user_name    = %[1]q
+
+  name {
+    family_name = "John"
+    given_name  = "Doe"
+  }
+
+  phone_numbers {
+    primary = false
+    type    = "The Type 2"
+    value   = "2222222"
+  }
+}
+`, rName)
+}
+
+func testAccUserConfig_phoneNumbers3(rName string) string {
+	return fmt.Sprintf(`
+data "aws_ssoadmin_instances" "test" {}
+
+resource "aws_identitystore_user" "test" {
+  identity_store_id = tolist(data.aws_ssoadmin_instances.test.identity_store_ids)[0]
+
+  display_name = "Acceptance Test"
+  user_name    = %[1]q
+
+  name {
+    family_name = "John"
+    given_name  = "Doe"
+  }
+
+  phone_numbers {
+    value   = "2222222"
+  }
+}
+`, rName)
 }
 
 func testAccUserConfig_preferredLanguage(rName, preferredLanguage string) string {

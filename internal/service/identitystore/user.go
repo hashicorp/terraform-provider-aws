@@ -165,6 +165,30 @@ func ResourceUser() *schema.Resource {
 				Optional:         true,
 				ValidateDiagFunc: resourceUserValidateField(1024),
 			},
+			"phone_numbers": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"primary": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
+						"type": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateDiagFunc: resourceUserValidateField(1024),
+						},
+						"value": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateDiagFunc: resourceUserValidateField(1024),
+						},
+					},
+				},
+			},
 			"preferred_language": {
 				Type:             schema.TypeString,
 				Optional:         true,
@@ -234,6 +258,10 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 
 	if v, ok := d.GetOk("name"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		in.Name = expandName(v.([]interface{})[0].(map[string]interface{}))
+	}
+
+	if v, ok := d.GetOk("phone_numbers"); ok && len(v.([]interface{})) > 0 {
+		in.PhoneNumbers = expandPhoneNumbers(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("nick_name"); ok && v.(string) != "" {
@@ -316,6 +344,10 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	}
 
 	if err := d.Set("name", []interface{}{flattenName(out.Name)}); err != nil {
+		return create.DiagError(names.IdentityStore, create.ErrActionSetting, ResNameUser, d.Id(), err)
+	}
+
+	if err := d.Set("phone_numbers", flattenPhoneNumbers(out.PhoneNumbers)); err != nil {
 		return create.DiagError(names.IdentityStore, create.ErrActionSetting, ResNameUser, d.Id(), err)
 	}
 
@@ -462,6 +494,35 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 			Field:     "emails",
 			Expand: func(value interface{}) interface{} {
 				emails := expandEmails(value.([]interface{}))
+
+				var result []interface{}
+
+				// The API requires a null to unset the list, so in the case
+				// of no emails, a nil result is preferable.
+				for _, email := range emails {
+					m := map[string]interface{}{}
+
+					m["primary"] = email.Primary
+
+					if v := email.Type; v != nil {
+						m["type"] = v
+					}
+
+					if v := email.Value; v != nil {
+						m["value"] = v
+					}
+
+					result = append(result, m)
+				}
+
+				return result
+			},
+		},
+		{
+			Attribute: "phone_numbers",
+			Field:     "phoneNumbers",
+			Expand: func(value interface{}) interface{} {
+				emails := expandPhoneNumbers(value.([]interface{}))
 
 				var result []interface{}
 
@@ -820,6 +881,83 @@ func expandEmails(tfList []interface{}) []types.Email {
 		}
 
 		a := expandEmail(m)
+
+		if a == nil {
+			continue
+		}
+
+		s = append(s, *a)
+	}
+
+	return s
+}
+
+func flattenPhoneNumber(apiObject *types.PhoneNumber) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{}
+
+	m["primary"] = apiObject.Primary
+
+	if v := apiObject.Type; v != nil {
+		m["type"] = aws.ToString(v)
+	}
+
+	if v := apiObject.Value; v != nil {
+		m["value"] = aws.ToString(v)
+	}
+
+	return m
+}
+
+func expandPhoneNumber(tfMap map[string]interface{}) *types.PhoneNumber {
+	if tfMap == nil {
+		return nil
+	}
+
+	a := &types.PhoneNumber{}
+
+	a.Primary = tfMap["primary"].(bool)
+
+	if v, ok := tfMap["type"].(string); ok && v != "" {
+		a.Type = aws.String(v)
+	}
+
+	if v, ok := tfMap["value"].(string); ok && v != "" {
+		a.Value = aws.String(v)
+	}
+
+	return a
+}
+
+func flattenPhoneNumbers(apiObjects []types.PhoneNumber) []interface{} {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var l []interface{}
+
+	for _, apiObject := range apiObjects {
+		apiObject := apiObject
+		l = append(l, flattenPhoneNumber(&apiObject))
+	}
+
+	return l
+}
+
+func expandPhoneNumbers(tfList []interface{}) []types.PhoneNumber {
+	s := make([]types.PhoneNumber, 0, len(tfList))
+
+	for _, r := range tfList {
+		m, ok := r.(map[string]interface{})
+
+		if !ok {
+			continue
+		}
+
+		a := expandPhoneNumber(m)
 
 		if a == nil {
 			continue
