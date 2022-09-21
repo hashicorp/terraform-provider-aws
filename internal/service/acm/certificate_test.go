@@ -8,6 +8,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/acm"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -39,7 +40,9 @@ func TestAccACMCertificate_emailValidation(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "status", acm.CertificateStatusPendingValidation),
 					resource.TestCheckResourceAttr(resourceName, "subject_alternative_names.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "subject_alternative_names.*", domain),
-					resource.TestCheckResourceAttr(resourceName, "type", "AMAZON_ISSUED"),
+					resource.TestCheckResourceAttr(resourceName, "type", acm.CertificateTypeAmazonIssued),
+					resource.TestCheckResourceAttr(resourceName, "renewal_eligibility", acm.RenewalEligibilityIneligible),
+					resource.TestCheckResourceAttr(resourceName, "renewal_summary.#", "0"),
 					acctest.CheckResourceAttrGreaterThanValue(resourceName, "validation_emails.#", "0"),
 					resource.TestMatchResourceAttr(resourceName, "validation_emails.0", regexp.MustCompile(`^[^@]+@.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "validation_method", acm.ValidationMethodEmail),
@@ -81,7 +84,9 @@ func TestAccACMCertificate_dnsValidation(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "status", acm.CertificateStatusPendingValidation),
 					resource.TestCheckResourceAttr(resourceName, "subject_alternative_names.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "subject_alternative_names.*", domain),
-					resource.TestCheckResourceAttr(resourceName, "type", "AMAZON_ISSUED"),
+					resource.TestCheckResourceAttr(resourceName, "type", acm.CertificateTypeAmazonIssued),
+					resource.TestCheckResourceAttr(resourceName, "renewal_eligibility", acm.RenewalEligibilityIneligible),
+					resource.TestCheckResourceAttr(resourceName, "renewal_summary.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "validation_emails.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "validation_method", acm.ValidationMethodDns),
 					resource.TestCheckResourceAttr(resourceName, "validation_option.#", "0"),
@@ -196,12 +201,12 @@ func TestAccACMCertificate_privateCert(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "not_after", ""),
 					resource.TestCheckResourceAttr(resourceName, "not_before", ""),
-					resource.TestCheckResourceAttr(resourceName, "renewal_eligibility", "INELIGIBLE"),
+					resource.TestCheckResourceAttr(resourceName, "renewal_eligibility", acm.RenewalEligibilityIneligible),
 					resource.TestCheckResourceAttr(resourceName, "renewal_summary.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "status", acm.CertificateStatusFailed), // FailureReason: PCA_INVALID_STATE (PCA State: PENDING_CERTIFICATE)
 					resource.TestCheckResourceAttr(resourceName, "subject_alternative_names.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "subject_alternative_names.*", certificateDomainName),
-					resource.TestCheckResourceAttr(resourceName, "type", "PRIVATE"),
+					resource.TestCheckResourceAttr(resourceName, "type", acm.CertificateTypePrivate),
 					resource.TestCheckResourceAttr(resourceName, "validation_emails.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "validation_method", "NONE"),
 					resource.TestCheckResourceAttr(resourceName, "validation_option.#", "0"),
@@ -619,7 +624,7 @@ func TestAccACMCertificate_Imported_domainName(t *testing.T) {
 	newCaCertificate := acctest.TLSRSAX509SelfSignedCACertificatePEM(newCaKey)
 	newCertificate := acctest.TLSRSAX509LocallySignedCertificatePEM(newCaKey, newCaCertificate, key, commonName)
 	withoutChainDomain := acctest.RandomDomainName()
-	var v acm.CertificateDetail
+	var v1, v2, v3 acm.CertificateDetail
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
@@ -630,7 +635,8 @@ func TestAccACMCertificate_Imported_domainName(t *testing.T) {
 			{
 				Config: testAccCertificateConfig_privateKey(certificate, key, caCertificate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCertificateExists(resourceName, &v),
+					testAccCheckCertificateExists(resourceName, &v1),
+					resource.TestCheckResourceAttr(resourceName, "status", acm.CertificateStatusIssued),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "domain_name", commonName),
 				),
@@ -638,6 +644,8 @@ func TestAccACMCertificate_Imported_domainName(t *testing.T) {
 			{
 				Config: testAccCertificateConfig_privateKey(newCertificate, key, newCaCertificate),
 				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCertificateExists(resourceName, &v2),
+					testAccCheckCertficateNotRecreated(&v1, &v2),
 					resource.TestCheckResourceAttr(resourceName, "status", acm.CertificateStatusIssued),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "domain_name", commonName),
@@ -646,6 +654,8 @@ func TestAccACMCertificate_Imported_domainName(t *testing.T) {
 			{
 				Config: testAccCertificateConfig_privateKeyNoChain(withoutChainDomain),
 				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCertificateExists(resourceName, &v3),
+					testAccCheckCertficateNotRecreated(&v2, &v3),
 					resource.TestCheckResourceAttr(resourceName, "status", acm.CertificateStatusIssued),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "domain_name", withoutChainDomain),
@@ -685,9 +695,9 @@ func TestAccACMCertificate_Imported_validityDates(t *testing.T) {
 					testAccCheckCertificateExists(resourceName, &v),
 					acctest.CheckResourceAttrRFC3339(resourceName, "not_after"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "not_before"),
-					resource.TestCheckResourceAttr(resourceName, "renewal_eligibility", "INELIGIBLE"),
+					resource.TestCheckResourceAttr(resourceName, "renewal_eligibility", acm.RenewalEligibilityIneligible),
 					resource.TestCheckResourceAttr(resourceName, "renewal_summary.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "type", "IMPORTED"),
+					resource.TestCheckResourceAttr(resourceName, "type", acm.CertificateTypeImported),
 				),
 			},
 			{
@@ -834,6 +844,15 @@ func testAccCheckCertificateDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func testAccCheckCertficateNotRecreated(v1, v2 *acm.CertificateDetail) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if aws.StringValue(v1.CertificateArn) != aws.StringValue(v2.CertificateArn) {
+			return fmt.Errorf("ACM Certificate recreated")
+		}
+		return nil
+	}
 }
 
 func testAccCertificateConfig_basic(domainName, validationMethod string) string {
