@@ -34,12 +34,9 @@ func ResourceUser() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"display_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ValidateDiagFunc: validation.ToDiagFunc(validation.All(
-					validation.StringLenBetween(1, 1024),
-					validation.StringMatch(regexp.MustCompile(`^[\p{L}\p{M}\p{S}\p{N}\p{P}\t\n\r  　]+$`), "must be a printable name"),
-				)),
+				Type:             schema.TypeString,
+				Required:         true,
+				ValidateDiagFunc: resourceUserValidateField(1024),
 			},
 			"emails": {
 				Type:     schema.TypeList,
@@ -53,20 +50,14 @@ func ResourceUser() *schema.Resource {
 							Default:  false,
 						},
 						"type": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ValidateDiagFunc: validation.ToDiagFunc(validation.All(
-								validation.StringLenBetween(1, 1024),
-								validation.StringMatch(regexp.MustCompile(`^[\p{L}\p{M}\p{S}\p{N}\p{P}\t\n\r  　]+$`), "must be a printable type"),
-							)),
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateDiagFunc: resourceUserValidateField(1024),
 						},
 						"value": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ValidateDiagFunc: validation.ToDiagFunc(validation.All(
-								validation.StringLenBetween(1, 1024),
-								validation.StringMatch(regexp.MustCompile(`^[\p{L}\p{M}\p{S}\p{N}\p{P}\t\n\r  　]+$`), "must be a printable email"),
-							)),
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateDiagFunc: resourceUserValidateField(1024),
 						},
 					},
 				},
@@ -85,32 +76,32 @@ func ResourceUser() *schema.Resource {
 						"family_name": {
 							Type:             schema.TypeString,
 							Required:         true,
-							ValidateDiagFunc: resourceUserValidateName,
+							ValidateDiagFunc: resourceUserValidateField(1024),
 						},
 						"formatted": {
 							Type:             schema.TypeString,
 							Optional:         true,
-							ValidateDiagFunc: resourceUserValidateName,
+							ValidateDiagFunc: resourceUserValidateField(1024),
 						},
 						"given_name": {
 							Type:             schema.TypeString,
 							Required:         true,
-							ValidateDiagFunc: resourceUserValidateName,
+							ValidateDiagFunc: resourceUserValidateField(1024),
 						},
 						"honorific_prefix": {
 							Type:             schema.TypeString,
 							Optional:         true,
-							ValidateDiagFunc: resourceUserValidateName,
+							ValidateDiagFunc: resourceUserValidateField(1024),
 						},
 						"honorific_suffix": {
 							Type:             schema.TypeString,
 							Optional:         true,
-							ValidateDiagFunc: resourceUserValidateName,
+							ValidateDiagFunc: resourceUserValidateField(1024),
 						},
 						"middle_name": {
 							Type:             schema.TypeString,
 							Optional:         true,
-							ValidateDiagFunc: resourceUserValidateName,
+							ValidateDiagFunc: resourceUserValidateField(1024),
 						},
 					},
 				},
@@ -530,7 +521,9 @@ func resourceUserParseID(id string) (identityStoreId, userId string, err error) 
 	return parts[0], parts[1], nil
 }
 
-var resourceUserValidateName = validation.ToDiagFunc(validation.All(
-	validation.StringLenBetween(1, 1024),
-	validation.StringMatch(regexp.MustCompile(`^[\p{L}\p{M}\p{S}\p{N}\p{P}\t\n\r  　]+$`), "must be a printable name"),
-))
+func resourceUserValidateField(maxLength int) schema.SchemaValidateDiagFunc {
+	return validation.ToDiagFunc(validation.All(
+		validation.StringLenBetween(1, maxLength),
+		validation.StringMatch(regexp.MustCompile(`^[\p{L}\p{M}\p{S}\p{N}\p{P}\t\n\r  　]+$`), ""),
+	))
+}
