@@ -111,6 +111,22 @@ func ResourceUser() *schema.Resource {
 					},
 				},
 			},
+			"external_ids": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"id": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+						"issuer": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
 			"identity_store_id": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -340,6 +356,10 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	}
 
 	if err := d.Set("emails", flattenEmails(out.Emails)); err != nil {
+		return create.DiagError(names.IdentityStore, create.ErrActionSetting, ResNameUser, d.Id(), err)
+	}
+
+	if err := d.Set("external_ids", flattenExternalIds(out.ExternalIds)); err != nil {
 		return create.DiagError(names.IdentityStore, create.ErrActionSetting, ResNameUser, d.Id(), err)
 	}
 
@@ -890,6 +910,39 @@ func expandEmails(tfList []interface{}) []types.Email {
 	}
 
 	return s
+}
+
+func flattenExternalId(apiObject *types.ExternalId) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{}
+
+	if v := apiObject.Id; v != nil {
+		m["id"] = aws.ToString(v)
+	}
+
+	if v := apiObject.Issuer; v != nil {
+		m["issuer"] = aws.ToString(v)
+	}
+
+	return m
+}
+
+func flattenExternalIds(apiObjects []types.ExternalId) []interface{} {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var l []interface{}
+
+	for _, apiObject := range apiObjects {
+		apiObject := apiObject
+		l = append(l, flattenExternalId(&apiObject))
+	}
+
+	return l
 }
 
 func flattenPhoneNumber(apiObject *types.PhoneNumber) map[string]interface{} {

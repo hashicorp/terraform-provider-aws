@@ -41,6 +41,7 @@ func TestAccIdentityStoreUser_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "addresses.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "display_name", "Acceptance Test"),
 					resource.TestCheckResourceAttr(resourceName, "emails.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "external_ids.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "identity_store_id"),
 					resource.TestCheckResourceAttr(resourceName, "locale", ""),
 					resource.TestCheckResourceAttr(resourceName, "name.0.family_name", "Doe"),
