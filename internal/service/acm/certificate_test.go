@@ -183,7 +183,7 @@ func TestAccACMCertificate_privateCert(t *testing.T) {
 	resourceName := "aws_acm_certificate.test"
 	commonName := acctest.RandomDomain()
 	certificateDomainName := commonName.RandomSubdomain().String()
-	var v acm.CertificateDetail
+	var v1, v2 acm.CertificateDetail
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
@@ -193,17 +193,17 @@ func TestAccACMCertificate_privateCert(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCertificateConfig_privateCert(commonName.String(), certificateDomainName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCertificateExists(resourceName, &v),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckCertificateExists(resourceName, &v1),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "acm", regexp.MustCompile("certificate/.+$")),
 					resource.TestCheckResourceAttrPair(resourceName, "certificate_authority_arn", certificateAuthorityResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "domain_name", certificateDomainName),
 					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "not_after", ""),
-					resource.TestCheckResourceAttr(resourceName, "not_before", ""),
+					acctest.CheckResourceAttrRFC3339(resourceName, "not_after"),
+					acctest.CheckResourceAttrRFC3339(resourceName, "not_before"),
 					resource.TestCheckResourceAttr(resourceName, "renewal_eligibility", acm.RenewalEligibilityIneligible),
 					resource.TestCheckResourceAttr(resourceName, "renewal_summary.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "status", acm.CertificateStatusFailed), // FailureReason: PCA_INVALID_STATE (PCA State: PENDING_CERTIFICATE)
+					resource.TestCheckResourceAttr(resourceName, "status", acm.CertificateStatusIssued),
 					resource.TestCheckResourceAttr(resourceName, "subject_alternative_names.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "subject_alternative_names.*", certificateDomainName),
 					resource.TestCheckResourceAttr(resourceName, "type", acm.CertificateTypePrivate),
@@ -216,6 +216,27 @@ func TestAccACMCertificate_privateCert(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+			{
+				PreConfig: func() {
+					conn := acctest.Provider.Meta().(*conns.AWSClient).ACMConn
+
+					_, err := conn.ExportCertificate(&acm.ExportCertificateInput{
+						CertificateArn: v1.CertificateArn,
+						Passphrase:     []byte("passphrase"),
+					})
+					if err != nil {
+						t.Fatalf("exporting ACM Certificate (%s): %s", aws.StringValue(v1.CertificateArn), err)
+					}
+				},
+				Config: testAccCertificateConfig_privateCert(commonName.String(), certificateDomainName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckCertificateExists(resourceName, &v2),
+					resource.TestCheckResourceAttr(resourceName, "renewal_eligibility", acm.RenewalEligibilityEligible),
+					resource.TestCheckResourceAttr(resourceName, "renewal_summary.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "status", acm.CertificateStatusIssued),
+					resource.TestCheckResourceAttr(resourceName, "type", acm.CertificateTypePrivate),
+				),
 			},
 		},
 	})
@@ -880,6 +901,15 @@ resource "aws_acm_certificate" "test" {
 
 func testAccCertificateConfig_privateCert(commonName, certificateDomainName string) string {
 	return fmt.Sprintf(`
+resource "aws_acm_certificate" "test" {
+  domain_name               = %[2]q
+  certificate_authority_arn = aws_acmpca_certificate_authority.test.arn
+
+  depends_on = [
+	aws_acmpca_certificate_authority_certificate.test,
+  ]
+}
+
 resource "aws_acmpca_certificate_authority" "test" {
   permanent_deletion_time_in_days = 7
   type                            = "ROOT"
@@ -894,10 +924,27 @@ resource "aws_acmpca_certificate_authority" "test" {
   }
 }
 
-resource "aws_acm_certificate" "test" {
-  domain_name               = %[2]q
-  certificate_authority_arn = aws_acmpca_certificate_authority.test.arn
+resource "aws_acmpca_certificate" "test" {
+  certificate_authority_arn   = aws_acmpca_certificate_authority.test.arn
+  certificate_signing_request = aws_acmpca_certificate_authority.test.certificate_signing_request
+  signing_algorithm           = "SHA512WITHRSA"
+
+  template_arn = "arn:${data.aws_partition.current.partition}:acm-pca:::template/RootCACertificate/V1"
+
+  validity {
+    type  = "YEARS"
+    value = 2
+  }
 }
+
+resource "aws_acmpca_certificate_authority_certificate" "test" {
+  certificate_authority_arn = aws_acmpca_certificate_authority.test.arn
+
+  certificate       = aws_acmpca_certificate.test.certificate
+  certificate_chain = aws_acmpca_certificate.test.certificate_chain
+}
+
+data "aws_partition" "current" {}
 `, commonName, certificateDomainName)
 }
 
