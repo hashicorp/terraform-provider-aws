@@ -126,6 +126,11 @@ func ResourceUser() *schema.Resource {
 				Optional:         true,
 				ValidateDiagFunc: resourceUserValidateField(1024),
 			},
+			"timezone": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				ValidateDiagFunc: resourceUserValidateField(1024),
+			},
 			"user_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -180,6 +185,10 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		in.ProfileUrl = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("timezone"); ok && v.(string) != "" {
+		in.Timezone = aws.String(v.(string))
+	}
+
 	out, err := conn.CreateUser(ctx, in)
 	if err != nil {
 		return create.DiagError(names.IdentityStore, create.ErrActionCreating, ResNameUser, d.Get("identity_store_id").(string), err)
@@ -221,6 +230,7 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	d.Set("nick_name", out.NickName)
 	d.Set("preferred_language", out.PreferredLanguage)
 	d.Set("profile_url", out.ProfileUrl)
+	d.Set("timezone", out.Timezone)
 	d.Set("user_id", out.UserId)
 	d.Set("user_name", out.UserName)
 
@@ -308,6 +318,10 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		{
 			Attribute: "profile_url",
 			Field:     "profileUrl",
+		},
+		{
+			Attribute: "timezone",
+			Field:     "timezone",
 		},
 		{
 			Attribute: "emails",
