@@ -42,7 +42,7 @@ func sweepContainerServices(region string) error {
 
 	input := &lightsail.GetContainerServicesInput{}
 	var sweeperErrs *multierror.Error
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 
 	output, err := conn.GetContainerServicesWithContext(context.TODO(), input)
 

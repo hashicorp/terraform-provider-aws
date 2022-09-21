@@ -549,6 +549,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_ec2_local_gateway":                          ec2.DataSourceLocalGateway(),
 			"aws_ec2_local_gateways":                         ec2.DataSourceLocalGateways(),
 			"aws_ec2_managed_prefix_list":                    ec2.DataSourceManagedPrefixList(),
+			"aws_ec2_managed_prefix_lists":                   ec2.DataSourceManagedPrefixLists(),
 			"aws_ec2_network_insights_analysis":              ec2.DataSourceNetworkInsightsAnalysis(),
 			"aws_ec2_network_insights_path":                  ec2.DataSourceNetworkInsightsPath(),
 			"aws_ec2_serial_console_access":                  ec2.DataSourceSerialConsoleAccess(),
@@ -2053,8 +2054,10 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_sns_topic_policy":         sns.ResourceTopicPolicy(),
 			"aws_sns_topic_subscription":   sns.ResourceTopicSubscription(),
 
-			"aws_sqs_queue":        sqs.ResourceQueue(),
-			"aws_sqs_queue_policy": sqs.ResourceQueuePolicy(),
+			"aws_sqs_queue":                      sqs.ResourceQueue(),
+			"aws_sqs_queue_policy":               sqs.ResourceQueuePolicy(),
+			"aws_sqs_queue_redrive_allow_policy": sqs.ResourceQueueRedriveAllowPolicy(),
+			"aws_sqs_queue_redrive_policy":       sqs.ResourceQueueRedrivePolicy(),
 
 			"aws_ssm_activation":                ssm.ResourceActivation(),
 			"aws_ssm_association":               ssm.ResourceAssociation(),

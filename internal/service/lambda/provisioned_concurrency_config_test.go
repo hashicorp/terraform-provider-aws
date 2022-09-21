@@ -59,7 +59,7 @@ func TestAccLambdaProvisionedConcurrencyConfig_Disappears_lambdaFunction(t *test
 			{
 				Config: testAccProvisionedConcurrencyConfigConfig_concurrentExecutions(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFunctionExists(lambdaFunctionResourceName, rName, &function),
+					testAccCheckFunctionExists(lambdaFunctionResourceName, &function),
 					testAccCheckProvisionedConcurrencyExistsConfig(resourceName),
 					testAccCheckFunctionDisappears(&function),
 				),

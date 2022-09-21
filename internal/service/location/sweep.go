@@ -55,7 +55,7 @@ func sweepGeofenceCollections(region string) error {
 	}
 
 	conn := client.(*conns.AWSClient).LocationConn
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
 	input := &locationservice.ListGeofenceCollectionsInput{}
@@ -102,7 +102,7 @@ func sweepMaps(region string) error {
 	}
 
 	conn := client.(*conns.AWSClient).LocationConn
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
 	input := &locationservice.ListMapsInput{}
@@ -149,7 +149,7 @@ func sweepPlaceIndexes(region string) error {
 	}
 
 	conn := client.(*conns.AWSClient).LocationConn
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
 	input := &locationservice.ListPlaceIndexesInput{}
@@ -196,7 +196,7 @@ func sweepRouteCalculators(region string) error {
 	}
 
 	conn := client.(*conns.AWSClient).LocationConn
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
 	input := &locationservice.ListRouteCalculatorsInput{}
@@ -243,7 +243,7 @@ func sweepTrackers(region string) error {
 	}
 
 	conn := client.(*conns.AWSClient).LocationConn
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
 	input := &locationservice.ListTrackersInput{}
@@ -290,7 +290,7 @@ func sweepTrackerAssociations(region string) error {
 	}
 
 	conn := client.(*conns.AWSClient).LocationConn
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
 	input := &locationservice.ListTrackersInput{}

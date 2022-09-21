@@ -30,7 +30,7 @@ func sweepExperimentTemplates(region string) error {
 	}
 	conn := client.(*conns.AWSClient).FISConn
 	input := &fis.ListExperimentTemplatesInput{}
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 	var sweeperErrs *multierror.Error
 
 	pg := fis.NewListExperimentTemplatesPaginator(conn, input)

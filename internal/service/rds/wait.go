@@ -314,11 +314,12 @@ func waitDBInstanceUpdated(conn *rds.RDS, id string, timeout time.Duration) (*rd
 			InstanceStatusStorageFull,
 			InstanceStatusUpgrading,
 		},
-		Target:     []string{InstanceStatusAvailable, InstanceStatusStorageOptimization},
-		Refresh:    statusDBInstance(conn, id),
-		Timeout:    timeout,
-		MinTimeout: 10 * time.Second,
-		Delay:      30 * time.Second,
+		Target:                    []string{InstanceStatusAvailable, InstanceStatusStorageOptimization},
+		Refresh:                   statusDBInstance(conn, id),
+		Timeout:                   timeout,
+		MinTimeout:                10 * time.Second,
+		Delay:                     30 * time.Second,
+		ContinuousTargetOccurence: 3,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
