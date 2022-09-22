@@ -2,18 +2,18 @@ package resourcegroups
 
 import (
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/resourcegroups"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -249,7 +249,7 @@ func statusGroupConfigurationState(conn *resourcegroups.ResourceGroups, name str
 	}
 }
 
-func waitForConfigurationUpdatedState(conn *resourcegroups.ResourceGroups, name string, timeout time.Duration) (*resourcegroups.GroupConfiguration, error) {
+func waitForConfigurationUpdatedState(conn *resourcegroups.ResourceGroups, name string, timeout time.Duration) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
 			resourcegroups.GroupConfigurationStatusUpdating,
@@ -264,11 +264,11 @@ func waitForConfigurationUpdatedState(conn *resourcegroups.ResourceGroups, name 
 
 	outputRaw, err := stateConf.WaitForState()
 
-	if output, ok := outputRaw.(*resourcegroups.GroupConfiguration); ok {
-		return output, err
+	if _, ok := outputRaw.(*resourcegroups.GroupConfiguration); ok {
+		return err
 	}
 
-	return nil, err
+	return err
 }
 
 func resourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
@@ -301,7 +301,7 @@ func resourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
 
 	if waitForConfigurationAttached {
 		// Need to wait and refresh for when the configuration has been attached to the group
-		_, err := waitForConfigurationUpdatedState(conn, aws.StringValue(res.Group.Name), groupConfigurationAttachedTimeout)
+		err := waitForConfigurationUpdatedState(conn, aws.StringValue(res.Group.Name), groupConfigurationAttachedTimeout)
 		if err != nil {
 			return fmt.Errorf("error attaching configuration to resource group: %s", err)
 		}
@@ -434,7 +434,7 @@ func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("error updating configuration for resource group (%s): %s", d.Id(), err)
 		}
 
-		_, err = waitForConfigurationUpdatedState(conn, d.Id(), groupConfigurationAttachedTimeout)
+		err = waitForConfigurationUpdatedState(conn, d.Id(), groupConfigurationAttachedTimeout)
 		if err != nil {
 			return fmt.Errorf("error updating configuration on resource group: %s", err)
 		}
