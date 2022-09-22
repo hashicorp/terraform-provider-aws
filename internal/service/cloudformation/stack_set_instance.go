@@ -71,7 +71,6 @@ func ResourceStackSetInstance() *schema.Resource {
 							Optional:      true,
 							ConflictsWith: []string{"account_id"},
 							ValidateFunc:  validation.StringInSlice(cloudformation.AccountFilterType_Values(), false),
-							Default:       cloudformation.CallAsSelf,
 						},
 						"accounts": {
 							Type:          schema.TypeSet,
