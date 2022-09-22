@@ -44,6 +44,11 @@ func DataSourceEngineVersion() *schema.Resource {
 
 			"filter": namevaluesfilters.Schema(),
 
+			"include_all": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
+
 			"parameter_group_family": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -146,6 +151,10 @@ func dataSourceEngineVersionRead(d *schema.ResourceData, meta interface{}) error
 
 	if v, ok := d.GetOk("filter"); ok {
 		input.Filters = namevaluesfilters.New(v.(*schema.Set)).RDSFilters()
+	}
+
+	if v, ok := d.GetOk("include_all"); ok {
+		input.IncludeAll = aws.Bool(v.(bool))
 	}
 
 	if v, ok := d.GetOk("parameter_group_family"); ok {
