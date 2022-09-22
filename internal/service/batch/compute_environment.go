@@ -437,7 +437,7 @@ func resourceComputeEnvironmentDelete(d *schema.ResourceData, meta interface{}) 
 		}
 
 		if _, err := waitComputeEnvironmentDisabled(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-			return fmt.Errorf("error waiting for Batch Compute Environment (%s) disable: %w", d.Id(), err)
+			log.Printf("[WARN] error waiting for Batch Compute Environment (%s) disable: %s", d.Id(), err)
 		}
 	}
 
