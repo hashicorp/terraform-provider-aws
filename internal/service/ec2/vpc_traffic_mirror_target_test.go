@@ -179,7 +179,7 @@ func TestAccVPCTrafficMirrorTarget_gwlb(t *testing.T) {
 				Config: testAccVPCTrafficMirrorTargetConfig_gwlb(rName, description),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "description", description),
-					resource.TestMatchResourceAttr(resourceName, "gateway_load_balancer_endpoint_id", regexp.MustCompile("vpce-.*")),
+					resource.TestCheckResourceAttrPair(resourceName, "gateway_load_balancer_endpoint_id", "aws_vpc_endpoint.test", "id"),
 				),
 			},
 			{
@@ -365,7 +365,6 @@ resource "aws_ec2_traffic_mirror_target" "test" {
 
 func testAccVPCTrafficMirrorTargetConfig_gwlb(rName, description string) string {
 	return acctest.ConfigCompose(
-		//testAccTrafficMirrorTargetConfigBase(rName),
 		testAccVPCEndpointConfig_gatewayLoadBalancer(rName),
 		fmt.Sprintf(`
 resource "aws_ec2_traffic_mirror_target" "test" {

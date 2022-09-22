@@ -28,7 +28,7 @@ resource "aws_ec2_traffic_mirror_target" "eni" {
 
 resource "aws_ec2_traffic_mirror_target" "gwlb" {
   description                       = "GWLB target"
-  gateway_load_balancer_endpoint_id = aws_lb.lb.arn
+  gateway_load_balancer_endpoint_id = aws_vpc_endpoint.example.id
 }
 ```
 
