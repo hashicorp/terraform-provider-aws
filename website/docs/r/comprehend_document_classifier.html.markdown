@@ -57,7 +57,8 @@ The following arguments are optional:
 * `mode` - (Optional, Default: `MULTI_CLASS`) The document classification mode.
   One of `MULTI_CLASS` or `MULTI_LABEL`.
   `MULTI_CLASS` is also known as "Single Label" in the AWS Console.
-* `model_kms_key_id` - (Optional) The ID or ARN of a KMS Key used to encrypt trained Document Classifiers.
+* `model_kms_key_id` - (Optional) KMS Key used to encrypt trained Document Classifiers.
+  Can be a KMS Key ID or a KMS Key ARN.
 * `output_data_config` - (Optional) Configuration for the output results of training.
   See the [`output_data_config` Configuration Block](#output_data_config-configuration-block) section below.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` Configuration Block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -72,7 +73,8 @@ The following arguments are optional:
   Has a maximum length of 37 characters.
   Can contain upper- and lower-case letters, numbers, and hypen (`-`).
   Conflicts with `version_name`.
-* `volume_kms_key_id` - (Optional) ID or ARN of a KMS Key used to encrypt storage volumes during job processing.
+* `volume_kms_key_id` - (Optional) KMS Key used to encrypt storage volumes during job processing.
+  Can be a KMS Key ID or a KMS Key ARN.
 * `vpc_config` - (Optional) Configuration parameters for VPC to contain Document Classifier resources.
   See the [`vpc_config` Configuration Block](#vpc_config-configuration-block) section below.
 
@@ -103,6 +105,8 @@ The following arguments are optional:
 
 ### `output_data_config` Configuration Block
 
+* `kms_key_id` - (Optional) KMS Key used to encrypt the output documents.
+  Can be a KMS Key ID, a KMS Key ARN, a KMS Alias name, or a KMS Alias ARN.
 * `output_s3_uri` - (Computed) Full path for the output documents.
 * `s3_uri` - (Required) Destination path for the output documents.
   The full path to the output file will be returned in `output_s3_uri`.

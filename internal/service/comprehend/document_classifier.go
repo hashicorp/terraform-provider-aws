@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"regexp"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -153,13 +154,25 @@ func ResourceDocumentClassifier() *schema.Resource {
 			"output_data_config": {
 				Type:             schema.TypeList,
 				Optional:         true,
+				Computed:         true,
 				MaxItems:         1,
 				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"kms_key_id": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							DiffSuppressFunc: diffSuppressKMSKeyOrAlias,
+							ValidateFunc:     validateKMSKeyOrAlias,
+						},
 						"s3_uri": {
 							Type:     schema.TypeString,
 							Required: true,
+							DiffSuppressFunc: func(k, oldValue, newValue string, d *schema.ResourceData) bool {
+								o := strings.TrimRight(oldValue, "/")
+								n := strings.TrimRight(newValue, "/")
+								return o == n
+							},
 						},
 						"output_s3_uri": {
 							Type:     schema.TypeString,
@@ -304,7 +317,7 @@ func resourceDocumentClassifierRead(ctx context.Context, d *schema.ResourceData,
 		return diag.Errorf("setting input_data_config: %s", err)
 	}
 
-	if err := d.Set("output_data_config", flattenDocumentClassifierOutputDataConfig(d, out.OutputDataConfig)); err != nil {
+	if err := d.Set("output_data_config", flattenDocumentClassifierOutputDataConfig(out.OutputDataConfig)); err != nil {
 		return diag.Errorf("setting output_data_config: %s", err)
 	}
 
@@ -744,14 +757,25 @@ func flattenDocumentClassifierInputDataConfig(apiObject *types.DocumentClassifie
 	return []interface{}{m}
 }
 
-func flattenDocumentClassifierOutputDataConfig(d *schema.ResourceData, apiObject *types.DocumentClassifierOutputDataConfig) []interface{} {
+func flattenDocumentClassifierOutputDataConfig(apiObject *types.DocumentClassifierOutputDataConfig) []interface{} {
 	if apiObject == nil || apiObject.S3Uri == nil {
 		return nil
 	}
 
+	// On return, `S3Uri` contains the full path of the output documents, not the storage location
+	s3Uri := aws.ToString(apiObject.S3Uri)
 	m := map[string]interface{}{
-		"s3_uri":        d.Get("output_data_config.0.s3_uri"),
-		"output_s3_uri": aws.ToString(apiObject.S3Uri),
+		"output_s3_uri": s3Uri,
+	}
+
+	re := regexp.MustCompile(`^(s3://[-a-z0-9.]{3,63}(/.+)?/)[-a-zA-Z0-9]+/output/output\.tar\.gz`)
+	match := re.FindStringSubmatch(s3Uri)
+	if match != nil && match[1] != "" {
+		m["s3_uri"] = match[1]
+	}
+
+	if apiObject.KmsKeyId != nil {
+		m["kms_key_id"] = aws.ToString(apiObject.KmsKeyId)
 	}
 
 	return []interface{}{m}
@@ -798,6 +822,10 @@ func expandDocumentClassifierOutputDataConfig(tfList []interface{}) *types.Docum
 
 	a := &types.DocumentClassifierOutputDataConfig{
 		S3Uri: aws.String(tfMap["s3_uri"].(string)),
+	}
+
+	if v, ok := tfMap["kms_key_id"].(string); ok && v != "" {
+		a.KmsKeyId = aws.String(v)
 	}
 
 	return a

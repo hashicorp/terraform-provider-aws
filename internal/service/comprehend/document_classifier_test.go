@@ -444,13 +444,13 @@ func TestAccComprehendDocumentClassifier_outputDataConfig_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckDocumentClassifierDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDocumentClassifierConfig_outputDataConfig_basic(rName),
+				Config: testAccDocumentClassifierConfig_outputDataConfig_basic(rName, "outputs"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDocumentClassifierExists(resourceName, &documentclassifier),
 					testAccCheckDocumentClassifierPublishedVersions(resourceName, 1),
 					resource.TestCheckResourceAttr(resourceName, "output_data_config.#", "1"),
-					resource.TestMatchResourceAttr(resourceName, "output_data_config.0.s3_uri", regexp.MustCompile(`s3:.+/[-A-Za-z0-9]+/`)),
-					resource.TestMatchResourceAttr(resourceName, "output_data_config.0.output_s3_uri", regexp.MustCompile(`s3:.+/[-A-Za-z0-9]+/output/output.tar.gz`)),
+					resource.TestMatchResourceAttr(resourceName, "output_data_config.0.s3_uri", regexp.MustCompile(`s3://.+/outputs`)),
+					resource.TestMatchResourceAttr(resourceName, "output_data_config.0.output_s3_uri", regexp.MustCompile(`s3://.+/outputs/[-A-Za-z0-9]+/output/output.tar.gz`)),
 				),
 			},
 			{
@@ -459,14 +459,310 @@ func TestAccComprehendDocumentClassifier_outputDataConfig_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDocumentClassifierConfig_outputDataConfig_basic2(rName),
+				Config:   testAccDocumentClassifierConfig_outputDataConfig_basic(rName, "outputs/"),
+				PlanOnly: true,
+			},
+		},
+	})
+}
+
+func TestAccComprehendDocumentClassifier_outputDataConfig_kmsKeyCreateID(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var documentclassifier types.DocumentClassifierProperties
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_comprehend_document_classifier.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(names.ComprehendEndpointID, t)
+			testAccPreCheck(t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ComprehendEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDocumentClassifierDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDocumentClassifierConfig_outputDataConfig_kmsKeyId(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDocumentClassifierExists(resourceName, &documentclassifier),
 					testAccCheckDocumentClassifierPublishedVersions(resourceName, 1),
 					resource.TestCheckResourceAttr(resourceName, "output_data_config.#", "1"),
-					resource.TestMatchResourceAttr(resourceName, "output_data_config.0.s3_uri", regexp.MustCompile(`s3:.+/[-A-Za-z0-9]+/`)),
-					resource.TestMatchResourceAttr(resourceName, "output_data_config.0.output_s3_uri", regexp.MustCompile(`s3:.+/[-A-Za-z0-9]+/output/output.tar.gz`)),
+					resource.TestCheckResourceAttrPair(resourceName, "output_data_config.0.kms_key_id", "aws_kms_key.output", "key_id"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config:   testAccDocumentClassifierConfig_outputDataConfig_kmsKeyARN(rName),
+				PlanOnly: true,
+			},
+		},
+	})
+}
+
+func TestAccComprehendDocumentClassifier_outputDataConfig_kmsKeyCreateARN(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var documentclassifier types.DocumentClassifierProperties
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_comprehend_document_classifier.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(names.ComprehendEndpointID, t)
+			testAccPreCheck(t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ComprehendEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDocumentClassifierDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDocumentClassifierConfig_outputDataConfig_kmsKeyARN(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDocumentClassifierExists(resourceName, &documentclassifier),
+					testAccCheckDocumentClassifierPublishedVersions(resourceName, 1),
+					resource.TestCheckResourceAttr(resourceName, "output_data_config.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "output_data_config.0.kms_key_id", "aws_kms_key.output", "arn"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config:   testAccDocumentClassifierConfig_outputDataConfig_kmsKeyId(rName),
+				PlanOnly: true,
+			},
+		},
+	})
+}
+
+func TestAccComprehendDocumentClassifier_outputDataConfig_kmsKeyCreateAliasName(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var documentclassifier types.DocumentClassifierProperties
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_comprehend_document_classifier.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(names.ComprehendEndpointID, t)
+			testAccPreCheck(t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ComprehendEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDocumentClassifierDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDocumentClassifierConfig_outputDataConfig_kmsKeyAliasName(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDocumentClassifierExists(resourceName, &documentclassifier),
+					testAccCheckDocumentClassifierPublishedVersions(resourceName, 1),
+					resource.TestCheckResourceAttr(resourceName, "output_data_config.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "output_data_config.0.kms_key_id", "aws_kms_alias.output", "name"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config:   testAccDocumentClassifierConfig_outputDataConfig_kmsKeyAliasARN(rName),
+				PlanOnly: true,
+			},
+		},
+	})
+}
+
+func TestAccComprehendDocumentClassifier_outputDataConfig_kmsKeyCreateAliasARN(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var documentclassifier types.DocumentClassifierProperties
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_comprehend_document_classifier.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(names.ComprehendEndpointID, t)
+			testAccPreCheck(t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ComprehendEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDocumentClassifierDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDocumentClassifierConfig_outputDataConfig_kmsKeyAliasARN(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDocumentClassifierExists(resourceName, &documentclassifier),
+					testAccCheckDocumentClassifierPublishedVersions(resourceName, 1),
+					resource.TestCheckResourceAttr(resourceName, "output_data_config.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "output_data_config.0.kms_key_id", "aws_kms_alias.output", "arn"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config:   testAccDocumentClassifierConfig_outputDataConfig_kmsKeyAliasName(rName),
+				PlanOnly: true,
+			},
+		},
+	})
+}
+
+func TestAccComprehendDocumentClassifier_outputDataConfig_kmsKeyAdd(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var v1, v2 types.DocumentClassifierProperties
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_comprehend_document_classifier.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(names.ComprehendEndpointID, t)
+			testAccPreCheck(t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ComprehendEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDocumentClassifierDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDocumentClassifierConfig_outputDataConfig_kmsKeyNone(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDocumentClassifierExists(resourceName, &v1),
+					testAccCheckDocumentClassifierPublishedVersions(resourceName, 1),
+					resource.TestCheckResourceAttr(resourceName, "output_data_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "output_data_config.0.kms_key_id", ""),
+				),
+			},
+			{
+				Config: testAccDocumentClassifierConfig_outputDataConfig_kmsKeySet(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDocumentClassifierExists(resourceName, &v2),
+					testAccCheckDocumentClassifierPublishedVersions(resourceName, 2),
+					resource.TestCheckResourceAttr(resourceName, "output_data_config.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "output_data_config.0.kms_key_id", "aws_kms_key.output", "key_id"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccComprehendDocumentClassifier_outputDataConfig_kmsKeyUpdate(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var v1, v2 types.DocumentClassifierProperties
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_comprehend_document_classifier.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(names.ComprehendEndpointID, t)
+			testAccPreCheck(t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ComprehendEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDocumentClassifierDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDocumentClassifierConfig_outputDataConfig_kmsKeySet(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDocumentClassifierExists(resourceName, &v1),
+					testAccCheckDocumentClassifierPublishedVersions(resourceName, 1),
+					resource.TestCheckResourceAttr(resourceName, "output_data_config.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "output_data_config.0.kms_key_id", "aws_kms_key.output", "key_id"),
+				),
+			},
+			{
+				Config: testAccDocumentClassifierConfig_outputDataConfig_kmsKeyUpdate(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDocumentClassifierExists(resourceName, &v2),
+					testAccCheckDocumentClassifierPublishedVersions(resourceName, 2),
+					resource.TestCheckResourceAttr(resourceName, "output_data_config.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "output_data_config.0.kms_key_id", "aws_kms_key.output2", "key_id"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccComprehendDocumentClassifier_outputDataConfig_kmsKeyRemove(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var v1, v2 types.DocumentClassifierProperties
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_comprehend_document_classifier.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(names.ComprehendEndpointID, t)
+			testAccPreCheck(t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ComprehendEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDocumentClassifierDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDocumentClassifierConfig_outputDataConfig_kmsKeySet(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDocumentClassifierExists(resourceName, &v1),
+					testAccCheckDocumentClassifierPublishedVersions(resourceName, 1),
+					resource.TestCheckResourceAttr(resourceName, "output_data_config.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "output_data_config.0.kms_key_id", "aws_kms_key.output", "key_id"),
+				),
+			},
+			{
+				Config: testAccDocumentClassifierConfig_outputDataConfig_kmsKeyNone(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDocumentClassifierExists(resourceName, &v2),
+					testAccCheckDocumentClassifierPublishedVersions(resourceName, 2),
+					resource.TestCheckResourceAttr(resourceName, "output_data_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "output_data_config.0.kms_key_id", ""),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -1495,7 +1791,16 @@ resource "aws_comprehend_document_classifier" "test" {
 
   depends_on = [
     aws_iam_role_policy.test,
+    aws_iam_role_policy.kms_keys,
   ]
+}
+
+resource "aws_kms_key" "model" {
+  deletion_window_in_days = 7
+}
+
+resource "aws_kms_key" "volume" {
+  deletion_window_in_days = 7
 }
 
 resource "aws_iam_role_policy" "kms_keys" {
@@ -1523,14 +1828,6 @@ data "aws_iam_policy_document" "kms_keys" {
       aws_kms_key.volume.arn,
     ]
   }
-}
-
-resource "aws_kms_key" "model" {
-  deletion_window_in_days = 7
-}
-
-resource "aws_kms_key" "volume" {
-  deletion_window_in_days = 7
 }
 `, rName))
 }
@@ -1835,7 +2132,323 @@ resource "aws_comprehend_document_classifier" "test" {
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }
 
-func testAccDocumentClassifierConfig_outputDataConfig_basic(rName string) string {
+func testAccDocumentClassifierConfig_outputDataConfig_basic(rName, outputPath string) string {
+	return acctest.ConfigCompose(
+		testAccDocumentClassifierBasicRoleConfig(rName),
+		testAccDocumentClassifierConfig_s3OutputRole(),
+		testAccDocumentClassifierS3BucketConfig(rName),
+		testAccDocumentClassifierConfig_S3_documents,
+		fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_comprehend_document_classifier" "test" {
+  name = %[1]q
+
+  data_access_role_arn = aws_iam_role.test.arn
+
+  language_code = "en"
+  input_data_config {
+    s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+  }
+
+  output_data_config {
+    s3_uri = "s3://${aws_s3_bucket.test.bucket}/%[2]s"
+  }
+
+  depends_on = [
+    aws_iam_role_policy.test,
+    aws_iam_role_policy.s3_output,
+  ]
+}
+`, rName, outputPath))
+}
+
+func testAccDocumentClassifierConfig_outputDataConfig_kmsKeyId(rName string) string {
+	return acctest.ConfigCompose(
+		testAccDocumentClassifierBasicRoleConfig(rName),
+		testAccDocumentClassifierConfig_s3OutputRole(),
+		testAccDocumentClassifierS3BucketConfig(rName),
+		testAccDocumentClassifierConfig_S3_documents,
+		fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_comprehend_document_classifier" "test" {
+  name = %[1]q
+
+  data_access_role_arn = aws_iam_role.test.arn
+
+  language_code = "en"
+  input_data_config {
+    s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+  }
+
+  output_data_config {
+    s3_uri = "s3://${aws_s3_bucket.test.bucket}/outputs"
+	kms_key_id = aws_kms_key.output.key_id
+  }
+
+  depends_on = [
+    aws_iam_role_policy.test,
+    aws_iam_role_policy.s3_output,
+    aws_iam_role_policy.kms_keys,
+  ]
+}
+
+resource "aws_kms_key" "output" {
+  deletion_window_in_days = 7
+}
+
+resource "aws_iam_role_policy" "kms_keys" {
+  role = aws_iam_role.test.name
+
+  policy = data.aws_iam_policy_document.kms_keys.json
+}
+
+data "aws_iam_policy_document" "kms_keys" {
+  statement {
+    actions = [
+      "*",
+    ]
+
+    resources = [
+      aws_kms_key.output.arn,
+    ]
+  }
+}
+`, rName))
+}
+
+func testAccDocumentClassifierConfig_outputDataConfig_kmsKeyARN(rName string) string {
+	return acctest.ConfigCompose(
+		testAccDocumentClassifierBasicRoleConfig(rName),
+		testAccDocumentClassifierConfig_s3OutputRole(),
+		testAccDocumentClassifierS3BucketConfig(rName),
+		testAccDocumentClassifierConfig_S3_documents,
+		fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_comprehend_document_classifier" "test" {
+  name = %[1]q
+
+  data_access_role_arn = aws_iam_role.test.arn
+
+  language_code = "en"
+  input_data_config {
+    s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+  }
+
+  output_data_config {
+    s3_uri = "s3://${aws_s3_bucket.test.bucket}/outputs"
+	kms_key_id = aws_kms_key.output.arn
+  }
+
+  depends_on = [
+    aws_iam_role_policy.test,
+    aws_iam_role_policy.s3_output,
+    aws_iam_role_policy.kms_keys,
+  ]
+}
+
+resource "aws_kms_key" "output" {
+  deletion_window_in_days = 7
+}
+
+resource "aws_iam_role_policy" "kms_keys" {
+  role = aws_iam_role.test.name
+
+  policy = data.aws_iam_policy_document.kms_keys.json
+}
+
+data "aws_iam_policy_document" "kms_keys" {
+  statement {
+    actions = [
+      "*",
+    ]
+
+    resources = [
+      aws_kms_key.output.arn,
+    ]
+  }
+}
+`, rName))
+}
+
+func testAccDocumentClassifierConfig_outputDataConfig_kmsKeyAliasName(rName string) string {
+	return acctest.ConfigCompose(
+		testAccDocumentClassifierBasicRoleConfig(rName),
+		testAccDocumentClassifierConfig_s3OutputRole(),
+		testAccDocumentClassifierS3BucketConfig(rName),
+		testAccDocumentClassifierConfig_S3_documents,
+		fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_comprehend_document_classifier" "test" {
+  name = %[1]q
+
+  data_access_role_arn = aws_iam_role.test.arn
+
+  language_code = "en"
+  input_data_config {
+    s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+  }
+
+  output_data_config {
+    s3_uri = "s3://${aws_s3_bucket.test.bucket}/outputs"
+	kms_key_id = aws_kms_alias.output.name
+  }
+
+  depends_on = [
+    aws_iam_role_policy.test,
+    aws_iam_role_policy.s3_output,
+    aws_iam_role_policy.kms_keys,
+  ]
+}
+
+resource "aws_kms_alias" "output" {
+  name          = "alias/%[1]s"
+  target_key_id = aws_kms_key.output.key_id
+}
+
+resource "aws_kms_key" "output" {
+  deletion_window_in_days = 7
+}
+
+resource "aws_iam_role_policy" "kms_keys" {
+  role = aws_iam_role.test.name
+
+  policy = data.aws_iam_policy_document.kms_keys.json
+}
+
+data "aws_iam_policy_document" "kms_keys" {
+  statement {
+    actions = [
+      "*",
+    ]
+
+    resources = [
+      aws_kms_key.output.arn,
+    ]
+  }
+}
+`, rName))
+}
+
+func testAccDocumentClassifierConfig_outputDataConfig_kmsKeyAliasARN(rName string) string {
+	return acctest.ConfigCompose(
+		testAccDocumentClassifierBasicRoleConfig(rName),
+		testAccDocumentClassifierConfig_s3OutputRole(),
+		testAccDocumentClassifierS3BucketConfig(rName),
+		testAccDocumentClassifierConfig_S3_documents,
+		fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_comprehend_document_classifier" "test" {
+  name = %[1]q
+
+  data_access_role_arn = aws_iam_role.test.arn
+
+  language_code = "en"
+  input_data_config {
+    s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+  }
+
+  output_data_config {
+    s3_uri = "s3://${aws_s3_bucket.test.bucket}/outputs"
+	kms_key_id = aws_kms_alias.output.arn
+  }
+
+  depends_on = [
+    aws_iam_role_policy.test,
+    aws_iam_role_policy.s3_output,
+    aws_iam_role_policy.kms_keys,
+  ]
+}
+
+resource "aws_kms_alias" "output" {
+  name          = "alias/%[1]s"
+  target_key_id = aws_kms_key.output.key_id
+}
+
+resource "aws_kms_key" "output" {
+  deletion_window_in_days = 7
+}
+
+resource "aws_iam_role_policy" "kms_keys" {
+  role = aws_iam_role.test.name
+
+  policy = data.aws_iam_policy_document.kms_keys.json
+}
+
+data "aws_iam_policy_document" "kms_keys" {
+  statement {
+    actions = [
+      "*",
+    ]
+
+    resources = [
+      aws_kms_key.output.arn,
+    ]
+  }
+}
+`, rName))
+}
+
+func testAccDocumentClassifierConfig_outputDataConfig_kmsKeySet(rName string) string {
+	return acctest.ConfigCompose(
+		testAccDocumentClassifierBasicRoleConfig(rName),
+		testAccDocumentClassifierConfig_s3OutputRole(),
+		testAccDocumentClassifierS3BucketConfig(rName),
+		testAccDocumentClassifierConfig_S3_documents,
+		fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_comprehend_document_classifier" "test" {
+  name = %[1]q
+
+  data_access_role_arn = aws_iam_role.test.arn
+
+  language_code = "en"
+  input_data_config {
+    s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
+  }
+
+  output_data_config {
+    s3_uri = "s3://${aws_s3_bucket.test.bucket}/outputs"
+	kms_key_id = aws_kms_key.output.key_id
+  }
+
+  depends_on = [
+    aws_iam_role_policy.test,
+    aws_iam_role_policy.s3_output,
+    aws_iam_role_policy.kms_keys,
+  ]
+}
+
+resource "aws_kms_key" "output" {
+  deletion_window_in_days = 7
+}
+
+resource "aws_iam_role_policy" "kms_keys" {
+  role = aws_iam_role.test.name
+
+  policy = data.aws_iam_policy_document.kms_keys.json
+}
+
+data "aws_iam_policy_document" "kms_keys" {
+  statement {
+    actions = [
+      "*",
+    ]
+
+    resources = [
+      aws_kms_key.output.arn,
+    ]
+  }
+}
+`, rName))
+}
+
+func testAccDocumentClassifierConfig_outputDataConfig_kmsKeyNone(rName string) string {
 	return acctest.ConfigCompose(
 		testAccDocumentClassifierBasicRoleConfig(rName),
 		testAccDocumentClassifierConfig_s3OutputRole(),
@@ -1866,7 +2479,7 @@ resource "aws_comprehend_document_classifier" "test" {
 `, rName))
 }
 
-func testAccDocumentClassifierConfig_outputDataConfig_basic2(rName string) string {
+func testAccDocumentClassifierConfig_outputDataConfig_kmsKeyUpdate(rName string) string {
 	return acctest.ConfigCompose(
 		testAccDocumentClassifierBasicRoleConfig(rName),
 		testAccDocumentClassifierConfig_s3OutputRole(),
@@ -1877,7 +2490,6 @@ data "aws_partition" "current" {}
 
 resource "aws_comprehend_document_classifier" "test" {
   name = %[1]q
-  version_name = "2"
 
   data_access_role_arn = aws_iam_role.test.arn
 
@@ -1888,12 +2500,36 @@ resource "aws_comprehend_document_classifier" "test" {
 
   output_data_config {
     s3_uri = "s3://${aws_s3_bucket.test.bucket}/outputs"
+	kms_key_id = aws_kms_key.output2.key_id
   }
 
   depends_on = [
     aws_iam_role_policy.test,
     aws_iam_role_policy.s3_output,
+    aws_iam_role_policy.kms_keys,
   ]
+}
+
+resource "aws_kms_key" "output2" {
+  deletion_window_in_days = 7
+}
+
+resource "aws_iam_role_policy" "kms_keys" {
+  role = aws_iam_role.test.name
+
+  policy = data.aws_iam_policy_document.kms_keys.json
+}
+
+data "aws_iam_policy_document" "kms_keys" {
+  statement {
+    actions = [
+      "*",
+    ]
+
+    resources = [
+      aws_kms_key.output2.arn,
+    ]
+  }
 }
 `, rName))
 }
