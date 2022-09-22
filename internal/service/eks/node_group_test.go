@@ -252,10 +252,10 @@ func TestAccEKSNodeGroup_forceUpdateVersion(t *testing.T) {
 		CheckDestroy:             testAccCheckNodeGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNodeGroupConfig_forceUpdateVersion(rName, "1.19"),
+				Config: testAccNodeGroupConfig_forceUpdateVersion(rName, clusterVersionUpgradeInitial),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNodeGroupExists(resourceName, &nodeGroup1),
-					resource.TestCheckResourceAttr(resourceName, "version", "1.19"),
+					resource.TestCheckResourceAttr(resourceName, "version", clusterVersionUpgradeInitial),
 				),
 			},
 			{
@@ -265,10 +265,10 @@ func TestAccEKSNodeGroup_forceUpdateVersion(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"force_update_version"},
 			},
 			{
-				Config: testAccNodeGroupConfig_forceUpdateVersion(rName, "1.20"),
+				Config: testAccNodeGroupConfig_forceUpdateVersion(rName, clusterVersionUpgradeUpdated),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNodeGroupExists(resourceName, &nodeGroup1),
-					resource.TestCheckResourceAttr(resourceName, "version", "1.20"),
+					resource.TestCheckResourceAttr(resourceName, "version", clusterVersionUpgradeUpdated),
 				),
 			},
 		},
@@ -931,10 +931,10 @@ func TestAccEKSNodeGroup_version(t *testing.T) {
 		CheckDestroy:             testAccCheckNodeGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNodeGroupConfig_version(rName, "1.19"),
+				Config: testAccNodeGroupConfig_version(rName, clusterVersionUpgradeInitial),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNodeGroupExists(resourceName, &nodeGroup1),
-					resource.TestCheckResourceAttr(resourceName, "version", "1.19"),
+					resource.TestCheckResourceAttr(resourceName, "version", clusterVersionUpgradeInitial),
 				),
 			},
 			{
@@ -943,11 +943,11 @@ func TestAccEKSNodeGroup_version(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccNodeGroupConfig_version(rName, "1.20"),
+				Config: testAccNodeGroupConfig_version(rName, clusterVersionUpgradeUpdated),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNodeGroupExists(resourceName, &nodeGroup2),
 					testAccCheckNodeGroupNotRecreated(&nodeGroup1, &nodeGroup2),
-					resource.TestCheckResourceAttr(resourceName, "version", "1.20"),
+					resource.TestCheckResourceAttr(resourceName, "version", clusterVersionUpgradeUpdated),
 				),
 			},
 		},
