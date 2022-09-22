@@ -195,8 +195,8 @@ func TestAccIdentityStoreUser_Emails(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_identitystore_user.test"
 
-	email1 := rName + "-1@example.com"
-	email2 := rName + "-2@example.com"
+	email1 := acctest.RandomEmailAddress(acctest.RandomDomainName())
+	email2 := acctest.RandomEmailAddress(acctest.RandomDomainName())
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -759,7 +759,7 @@ func TestAccIdentityStoreUser_PreferredLanguage(t *testing.T) {
 	})
 }
 
-func TestAccIdentityStoreUser_ProfileUrl(t *testing.T) {
+func TestAccIdentityStoreUser_ProfileURL(t *testing.T) {
 	var user identitystore.DescribeUserOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_identitystore_user.test"
@@ -775,7 +775,7 @@ func TestAccIdentityStoreUser_ProfileUrl(t *testing.T) {
 		CheckDestroy:             testAccCheckUserDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserConfig_profileUrl(rName, "http://example.com/1"),
+				Config: testAccUserConfig_profileURL(rName, "http://example.com/1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(resourceName, &user),
 					resource.TestCheckResourceAttr(resourceName, "profile_url", "http://example.com/1"),
@@ -787,7 +787,7 @@ func TestAccIdentityStoreUser_ProfileUrl(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccUserConfig_profileUrl(rName, "http://example.com/2"),
+				Config: testAccUserConfig_profileURL(rName, "http://example.com/2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(resourceName, &user),
 					resource.TestCheckResourceAttr(resourceName, "profile_url", "http://example.com/2"),
@@ -1455,7 +1455,7 @@ resource "aws_identitystore_user" "test" {
 `, rName, preferredLanguage)
 }
 
-func testAccUserConfig_profileUrl(rName, profileUrl string) string {
+func testAccUserConfig_profileURL(rName, profileUrl string) string {
 	return fmt.Sprintf(`
 data "aws_ssoadmin_instances" "test" {}
 

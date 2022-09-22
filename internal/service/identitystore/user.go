@@ -264,7 +264,7 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		in.Emails = expandEmails(v.([]interface{}))
 	}
 
-	if v, ok := d.GetOk("locale"); ok && v.(string) != "" {
+	if v, ok := d.GetOk("locale"); ok {
 		in.Locale = aws.String(v.(string))
 	}
 
@@ -276,27 +276,27 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		in.PhoneNumbers = expandPhoneNumbers(v.([]interface{}))
 	}
 
-	if v, ok := d.GetOk("nick_name"); ok && v.(string) != "" {
+	if v, ok := d.GetOk("nick_name"); ok {
 		in.NickName = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("preferred_language"); ok && v.(string) != "" {
+	if v, ok := d.GetOk("preferred_language"); ok {
 		in.PreferredLanguage = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("profile_url"); ok && v.(string) != "" {
+	if v, ok := d.GetOk("profile_url"); ok {
 		in.ProfileUrl = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("timezone"); ok && v.(string) != "" {
+	if v, ok := d.GetOk("timezone"); ok {
 		in.Timezone = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("title"); ok && v.(string) != "" {
+	if v, ok := d.GetOk("title"); ok {
 		in.Title = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("user_type"); ok && v.(string) != "" {
+	if v, ok := d.GetOk("user_type"); ok {
 		in.UserType = aws.String(v.(string))
 	}
 

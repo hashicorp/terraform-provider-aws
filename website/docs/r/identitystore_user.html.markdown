@@ -30,7 +30,7 @@ resource "aws_identitystore_user" "example" {
     given_name  = "John"
     family_name = "Doe"
   }
-  
+
   emails {
     value = "john@example.com"
   }
