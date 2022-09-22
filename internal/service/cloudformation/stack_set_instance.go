@@ -57,17 +57,40 @@ func ResourceStackSetInstance() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"organizational_unit_ids": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							MinItems: 1,
+							Type:          schema.TypeSet,
+							Optional:      true,
+							MinItems:      1,
+							ConflictsWith: []string{"account_id"},
 							Elem: &schema.Schema{
 								Type:         schema.TypeString,
 								ValidateFunc: validation.StringMatch(regexp.MustCompile(`^(ou-[a-z0-9]{4,32}-[a-z0-9]{8,32}|r-[a-z0-9]{4,32})$`), ""),
 							},
 						},
+						"account_filter_type": {
+							Type:          schema.TypeString,
+							Optional:      true,
+							ConflictsWith: []string{"account_id"},
+							ValidateFunc:  validation.StringInSlice(cloudformation.AccountFilterType_Values(), false),
+							Default:       cloudformation.CallAsSelf,
+						},
+						"accounts": {
+							Type:          schema.TypeSet,
+							Optional:      true,
+							ConflictsWith: []string{"account_id"},
+							MinItems:      1,
+							Elem: &schema.Schema{
+								Type:         schema.TypeString,
+								ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[0-9]{12}$`), ""),
+							},
+						},
+						"accounts_url": {
+							Type:          schema.TypeString,
+							Optional:      true,
+							ConflictsWith: []string{"account_id"},
+							ValidateFunc:  validation.StringMatch(regexp.MustCompile(`(s3://|http(s?)://).+`), ""),
+						},
 					},
 				},
-				ConflictsWith: []string{"account_id"},
 			},
 			"operation_preferences": {
 				Type:     schema.TypeList,
@@ -420,6 +443,18 @@ func expandDeploymentTargets(l []interface{}) *cloudformation.DeploymentTargets 
 
 	if v, ok := tfMap["organizational_unit_ids"].(*schema.Set); ok && v.Len() > 0 {
 		dt.OrganizationalUnitIds = flex.ExpandStringSet(v)
+	}
+
+	if v, ok := tfMap["account_filter_type"].(string); ok && v != "" {
+		dt.AccountFilterType = aws.String(v)
+	}
+
+	if v, ok := tfMap["accounts"].(*schema.Set); ok && v.Len() > 0 {
+		dt.Accounts = flex.ExpandStringSet(v)
+	}
+
+	if v, ok := tfMap["accounts_url"].(string); ok && v != "" {
+		dt.AccountsUrl = aws.String(v)
 	}
 
 	return dt

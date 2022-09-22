@@ -247,6 +247,9 @@ func TestAccCloudFormationStackSetInstance_deploymentTargets(t *testing.T) {
 					testAccCheckStackSetInstanceExists(resourceName, &stackInstance),
 					resource.TestCheckResourceAttr(resourceName, "deployment_targets.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "deployment_targets.0.organizational_unit_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "deployment_targets.0.account_filter_type", "INTERSECTION"),
+					resource.TestCheckResourceAttr(resourceName, "deployment_targets.0.accounts.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "deployment_targets.0.accounts_url", "https://s3.eu-west-1.amazonaws.com/"),
 				),
 			},
 			{
