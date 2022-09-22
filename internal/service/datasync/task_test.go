@@ -535,6 +535,43 @@ func TestAccDataSyncTask_DefaultSyncOptions_preserveDevices(t *testing.T) {
 	})
 }
 
+func TestAccDataSyncTask_DefaultSyncOptions_securityDescriptorCopyFlags(t *testing.T) {
+	var task1, task2 datasync.DescribeTaskOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_datasync_task.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, datasync.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTaskDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTaskConfig_defaultSyncOptionsSecurityDescriptorCopyFlags(rName, "OWNER_DACL"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTaskExists(resourceName, &task1),
+					resource.TestCheckResourceAttr(resourceName, "options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "options.0.security_descriptor_copy_flags", "OWNER_DACL"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccTaskConfig_defaultSyncOptionsSecurityDescriptorCopyFlags(rName, "NONE"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTaskExists(resourceName, &task2),
+					testAccCheckTaskNotRecreated(&task1, &task2),
+					resource.TestCheckResourceAttr(resourceName, "options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "options.0.security_descriptor_copy_flags", "NONE"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccDataSyncTask_DefaultSyncOptions_taskQueueing(t *testing.T) {
 	var task1, task2 datasync.DescribeTaskOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1234,6 +1271,23 @@ resource "aws_datasync_task" "test" {
   }
 }
 `, rName, preserveDevices))
+}
+
+func testAccTaskConfig_defaultSyncOptionsSecurityDescriptorCopyFlags(rName, securityDescriptorCopyFlags string) string {
+	return acctest.ConfigCompose(
+		testAccTaskDestinationLocationS3BaseConfig(rName),
+		testAccTaskSourceLocationNFSBaseConfig(rName),
+		fmt.Sprintf(`
+resource "aws_datasync_task" "test" {
+  destination_location_arn = aws_datasync_location_s3.destination.arn
+  name                     = %[1]q
+  source_location_arn      = aws_datasync_location_nfs.source.arn
+
+  options {
+    security_descriptor_copy_flags = %[2]q
+  }
+}
+`, rName, securityDescriptorCopyFlags))
 }
 
 func testAccTaskConfig_defaultSyncOptionsQueueing(rName, taskQueueing string) string {
