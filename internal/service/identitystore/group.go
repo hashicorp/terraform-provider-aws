@@ -3,7 +3,9 @@ package identitystore
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log"
+	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/identitystore"
@@ -100,7 +102,7 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		return create.DiagError(names.IdentityStore, create.ErrActionCreating, ResNameGroup, d.Get("identity_store_id").(string), errors.New("empty output"))
 	}
 
-	d.SetId(aws.ToString(out.GroupId))
+	d.SetId(fmt.Sprintf("%s/%s", aws.ToString(out.IdentityStoreId), aws.ToString(out.GroupId)))
 
 	return resourceGroupRead(ctx, d, meta)
 }
@@ -108,9 +110,15 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).IdentityStoreConn
 
+	identityStoreId, groupId, err := resourceGroupParseID(d.Id())
+
+	if err != nil {
+		return create.DiagError(names.IdentityStore, create.ErrActionReading, ResNameGroup, d.Id(), err)
+	}
+
 	input := &identitystore.DescribeGroupInput{
-		GroupId:         aws.String(d.Id()),
-		IdentityStoreId: aws.String(d.Get("identity_store_id").(string)),
+		GroupId:         aws.String(groupId),
+		IdentityStoreId: aws.String(identityStoreId),
 	}
 
 	out, err := conn.DescribeGroup(ctx, input)
@@ -169,12 +177,10 @@ func resourceGroupDelete(ctx context.Context, d *schema.ResourceData, meta inter
 
 	log.Printf("[INFO] Deleting IdentityStore Group %s", d.Id())
 
-	input := &identitystore.DeleteGroupInput{
-		GroupId:         aws.String(d.Id()),
+	_, err := conn.DeleteGroup(ctx, &identitystore.DeleteGroupInput{
 		IdentityStoreId: aws.String(d.Get("identity_store_id").(string)),
-	}
-
-	_, err := conn.DeleteGroup(ctx, input)
+		GroupId:         aws.String(d.Get("group_id").(string)),
+	})
 
 	if err != nil {
 		var nfe *types.ResourceNotFoundException
@@ -222,4 +228,15 @@ func flattenExternalId(apiObject types.ExternalId) map[string]interface{} {
 	}
 
 	return m
+}
+
+func resourceGroupParseID(id string) (identityStoreId, groupId string, err error) {
+	parts := strings.Split(id, "/")
+
+	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
+		err = errors.New("???")
+		return
+	}
+
+	return parts[0], parts[1], nil
 }
