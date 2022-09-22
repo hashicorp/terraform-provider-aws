@@ -19,6 +19,11 @@ func DataSourceEngineVersion() *schema.Resource {
 				Computed: true,
 			},
 
+			"default_only": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
+
 			"engine": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -144,7 +149,9 @@ func dataSourceEngineVersionRead(d *schema.ResourceData, meta interface{}) error
 		input.EngineVersion = aws.String(v.(string))
 	}
 
-	if _, ok := d.GetOk("version"); !ok {
+	if v, ok := d.GetOk("default_only"); ok {
+		input.DefaultOnly = aws.Bool(v.(bool))
+	} else if _, ok := d.GetOk("version"); !ok {
 		if _, ok := d.GetOk("preferred_versions"); !ok {
 			input.DefaultOnly = aws.Bool(true)
 		}
