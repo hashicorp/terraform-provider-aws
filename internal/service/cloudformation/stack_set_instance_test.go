@@ -249,7 +249,7 @@ func TestAccCloudFormationStackSetInstance_deploymentTargets(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "deployment_targets.0.organizational_unit_ids.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "deployment_targets.0.account_filter_type", "INTERSECTION"),
 					resource.TestCheckResourceAttr(resourceName, "deployment_targets.0.accounts.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "deployment_targets.0.accounts_url", "https://s3.eu-west-1.amazonaws.com/"),
+					resource.TestCheckResourceAttr(resourceName, "deployment_targets.0.accounts_url", ""),
 				),
 			},
 			{
@@ -700,7 +700,9 @@ resource "aws_cloudformation_stack_set_instance" "test" {
   depends_on = [aws_iam_role_policy.Administration, aws_iam_role_policy.Execution]
 
   deployment_targets {
-    organizational_unit_ids = [data.aws_organizations_organization.test.roots[0].id]
+    account_filter_type = "INTERSECTION"
+	accounts = [data.aws_organizations_organization.test.non_master_accounts[0].id]
+	organizational_unit_ids = [data.aws_organizations_organization.test.roots[0].id]
   }
 
   stack_set_name = aws_cloudformation_stack_set.test.name
@@ -729,7 +731,9 @@ resource "aws_cloudformation_stack_set_instance" "test" {
   }
 
   deployment_targets {
-    organizational_unit_ids = [data.aws_organizations_organization.test.roots[0].id]
+    account_filter_type = "INTERSECTION"
+	accounts = [data.aws_organizations_organization.test.non_master_accounts[0].id]
+	organizational_unit_ids = [data.aws_organizations_organization.test.roots[0].id]
   }
 
   stack_set_name = aws_cloudformation_stack_set.test.name
