@@ -28,7 +28,6 @@ func TestAccIdentityStoreGroup_basic(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(names.IdentityStoreEndpointID, t)
-			testAccPreCheck(t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -62,7 +61,6 @@ func TestAccIdentityStoreGroup_disappears(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(names.IdentityStoreEndpointID, t)
 			testAccPreCheckSSOAdminInstances(t)
-			testAccPreCheck(t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -130,32 +128,6 @@ func testAccCheckGroupExists(name string, group *identitystore.DescribeGroupOutp
 		}
 
 		*group = *resp
-
-		return nil
-	}
-}
-
-func testAccPreCheck(t *testing.T) {
-	//conn := acctest.Provider.Meta().(*conns.AWSClient).IdentityStoreConn
-	//ctx := context.Background()
-	//
-	//input := &identitystore.ListGroupsInput{}
-	//_, err := conn.ListGroups(ctx, input)
-	//
-	//if acctest.PreCheckSkipError(err) {
-	//	t.Skipf("skipping acceptance testing: %s", err)
-	//}
-	//
-	//if err != nil {
-	//	t.Fatalf("unexpected PreCheck error: %s", err)
-	//}
-}
-
-func testAccCheckGroupNotRecreated(before, after *identitystore.DescribeGroupOutput) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if before, after := aws.ToString(before.GroupId), aws.ToString(after.GroupId); before != after {
-			return create.Error(names.IdentityStore, create.ErrActionCheckingNotRecreated, tfidentitystore.ResNameGroup, before, errors.New("recreated"))
-		}
 
 		return nil
 	}
