@@ -37,7 +37,7 @@ func sweepNamespaces(region string) error {
 	}
 	conn := client.(*conns.AWSClient).RedshiftServerlessConn
 	input := &redshiftserverless.ListNamespacesInput{}
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
 	err = conn.ListNamespacesPages(input, func(page *redshiftserverless.ListNamespacesOutput, lastPage bool) bool {
@@ -80,7 +80,7 @@ func sweepWorkgroups(region string) error {
 	}
 	conn := client.(*conns.AWSClient).RedshiftServerlessConn
 	input := &redshiftserverless.ListWorkgroupsInput{}
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
 	err = conn.ListWorkgroupsPages(input, func(page *redshiftserverless.ListWorkgroupsOutput, lastPage bool) bool {

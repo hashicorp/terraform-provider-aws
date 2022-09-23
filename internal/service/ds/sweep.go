@@ -98,7 +98,7 @@ func sweepRegions(region string) error {
 	}
 
 	conn := client.(*conns.AWSClient).DSConn
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
 	input := &directoryservice.DescribeDirectoriesInput{}

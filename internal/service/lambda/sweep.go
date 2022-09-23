@@ -38,7 +38,7 @@ func sweepFunctions(region string) error {
 	}
 	conn := client.(*conns.AWSClient).LambdaConn
 	input := &lambda.ListFunctionsInput{}
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = conn.ListFunctionsPages(input, func(page *lambda.ListFunctionsOutput, lastPage bool) bool {
 		if page == nil {
@@ -83,7 +83,7 @@ func sweepLayerVersions(region string) error {
 	conn := client.(*conns.AWSClient).LambdaConn
 	input := &lambda.ListLayersInput{}
 	var sweeperErrs *multierror.Error
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = conn.ListLayersPages(input, func(page *lambda.ListLayersOutput, lastPage bool) bool {
 		if page == nil {

@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/rds"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -352,6 +353,35 @@ func TestAccRDSInstance_kmsKey(t *testing.T) {
 					"password",
 					"skip_final_snapshot",
 				},
+			},
+		},
+	})
+}
+
+func TestAccRDSInstance_customIAMInstanceProfile(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var v rds.DBInstance
+	resourceName := "aws_db_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionNot(t, endpoints.AwsUsGovPartitionID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_customIAMInstanceProfile(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &v),
+					resource.TestCheckResourceAttrSet(resourceName, "custom_iam_instance_profile"),
+				),
 			},
 		},
 	})
@@ -4531,6 +4561,10 @@ func testAccInstanceConfig_orderableClassSQLServerEx() string {
 
 func testAccInstanceConfig_orderableClassSQLServerSe() string {
 	return testAccInstanceConfig_orderableClass("sqlserver-se", "license-included", "standard", sqlServerSEPreferredInstanceClasses)
+}
+
+func testAccInstanceConfig_orderableClassCustomSQLServerWeb() string {
+	return testAccInstanceConfig_orderableClass("custom-sqlserver-web", "", "gp2", sqlServerCustomPreferredInstanceClasses)
 }
 
 func testAccInstanceConfig_basic(rName string) string {
@@ -8873,6 +8907,34 @@ resource "aws_db_instance" "test" {
   password            = "avoid-plaintext-passwords"
   username            = "tfacctest"
   skip_final_snapshot = true
+}
+`, rName))
+}
+
+func testAccInstanceConfig_customIAMInstanceProfile(rName string) string {
+	return acctest.ConfigCompose(
+		testAccInstanceConfig_orderableClassCustomSQLServerWeb(),
+		fmt.Sprintf(`
+resource "aws_cloudformation_stack" "test" {
+  name          = %[1]q
+  capabilities  = ["CAPABILITY_NAMED_IAM"]
+  template_body = file("test-fixtures/custom-sql-cloudformation.json")
+}
+
+resource "aws_db_instance" "test" {
+  allocated_storage           = 20
+  auto_minor_version_upgrade  = false
+  custom_iam_instance_profile = aws_cloudformation_stack.test.outputs["RDSCustomSQLServerInstanceProfile"]
+  engine                      = data.aws_rds_engine_version.default.engine
+  identifier                  = %[1]q
+  instance_class              = data.aws_rds_orderable_db_instance.test.instance_class
+  kms_key_id                  = aws_cloudformation_stack.test.outputs["RDSCustomSQLServerKMSKey"]
+  password                    = "avoid-plaintext-passwords"
+  username                    = "tfacctest"
+  skip_final_snapshot         = true
+  storage_encrypted           = true
+  vpc_security_group_ids      = [aws_cloudformation_stack.test.outputs["RDSCustomSecurityGroup"]]
+  db_subnet_group_name        = aws_cloudformation_stack.test.outputs["DBSubnetGroup"]
 }
 `, rName))
 }

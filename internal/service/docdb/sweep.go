@@ -215,7 +215,7 @@ func sweepDBInstances(region string) error {
 	}
 
 	conn := client.(*conns.AWSClient).DocDBConn
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 	input := &docdb.DescribeDBInstancesInput{}
 
