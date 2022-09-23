@@ -35,6 +35,7 @@ func ResourceAdvancedAutomaticLayerProtection() *schema.Resource {
 	}
 }
 
+
 func resourceAdvancedAutomaticLayerProtectionUpdate(d *schema.ResourceData, meta interface{}) error {
 	return fmt.Errorf("resourceAdvancedAutomaticLayerProtectionUpdate, not implemented...")
 	conn := meta.(*conns.AWSClient).ShieldConn
