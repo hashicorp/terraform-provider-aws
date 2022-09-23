@@ -383,7 +383,7 @@ resource "aws_lambda_layer_version" "lambda_layer_test" {
   filename   = "test-fixtures/lambdatest.zip"
   layer_name = %[1]q
 
-  compatible_runtimes = ["nodejs14.x", "nodejs16.x",]
+  compatible_runtimes = ["nodejs14.x", "nodejs16.x"]
 }
 `, rName)
 }
