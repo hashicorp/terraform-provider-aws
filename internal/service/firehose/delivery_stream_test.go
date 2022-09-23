@@ -975,6 +975,32 @@ func TestAccFirehoseDeliveryStream_extendedS3Updates(t *testing.T) {
 		S3BackupMode: aws.String("Enabled"),
 	}
 
+	secondUpdateExtendedS3DestinationConfig := &firehose.ExtendedS3DestinationDescription{
+		BufferingHints: &firehose.BufferingHints{
+			IntervalInSeconds: aws.Int64(400),
+			SizeInMBs:         aws.Int64(10),
+		},
+		ProcessingConfiguration: &firehose.ProcessingConfiguration{
+			Enabled: aws.Bool(true),
+			Processors: []*firehose.Processor{
+				{
+					Type: aws.String("Lambda"),
+					Parameters: []*firehose.ProcessorParameter{
+						{
+							ParameterName:  aws.String("LambdaArn"),
+							ParameterValue: aws.String("valueNotTested"),
+						},
+						{
+							ParameterName:  aws.String("BufferIntervalInSeconds"),
+							ParameterValue: aws.String("201"),
+						},
+					},
+				},
+			},
+		},
+		S3BackupMode: aws.String("Enabled"),
+	}
+
 	removeProcessorsExtendedS3DestinationConfig := &firehose.ExtendedS3DestinationDescription{
 		BufferingHints: &firehose.BufferingHints{
 			IntervalInSeconds: aws.Int64(400),
@@ -1010,6 +1036,13 @@ func TestAccFirehoseDeliveryStream_extendedS3Updates(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeliveryStreamExists(resourceName, &stream),
 					testAccCheckDeliveryStreamAttributes(&stream, nil, firstUpdateExtendedS3DestinationConfig, nil, nil, nil, nil),
+				),
+			},
+			{
+				Config: testAccDeliveryStreamConfig_extendedS3UpdatesSetBufferIntervalNoBufferSize(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDeliveryStreamExists(resourceName, &stream),
+					testAccCheckDeliveryStreamAttributes(&stream, nil, secondUpdateExtendedS3DestinationConfig, nil, nil, nil, nil),
 				),
 			},
 			{
@@ -2976,6 +3009,52 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
         parameters {
           parameter_name  = "LambdaArn"
           parameter_value = "${aws_lambda_function.lambda_function_test.arn}:$LATEST"
+        }
+      }
+    }
+
+    buffer_size        = 10
+    buffer_interval    = 400
+    compression_format = "GZIP"
+    s3_backup_mode     = "Enabled"
+
+    s3_backup_configuration {
+      role_arn   = aws_iam_role.firehose.arn
+      bucket_arn = aws_s3_bucket.bucket.arn
+    }
+  }
+}
+`, rName))
+}
+
+func testAccDeliveryStreamConfig_extendedS3UpdatesSetBufferIntervalNoBufferSize(rName string) string {
+	return acctest.ConfigCompose(
+		testAccLambdaBasicConfig(rName),
+		testAccDeliveryStreamBaseConfig(rName),
+		fmt.Sprintf(`
+resource "aws_kinesis_firehose_delivery_stream" "test" {
+  depends_on  = [aws_iam_role_policy.firehose]
+  name        = %[1]q
+  destination = "extended_s3"
+
+  extended_s3_configuration {
+    role_arn   = aws_iam_role.firehose.arn
+    bucket_arn = aws_s3_bucket.bucket.arn
+
+    processing_configuration {
+      enabled = true
+
+      processors {
+        type = "Lambda"
+
+        parameters {
+          parameter_name  = "LambdaArn"
+          parameter_value = "${aws_lambda_function.lambda_function_test.arn}:$LATEST"
+        }
+
+        parameters {
+          parameter_name  = "BufferIntervalInSeconds"
+          parameter_value = 201
         }
       }
     }
