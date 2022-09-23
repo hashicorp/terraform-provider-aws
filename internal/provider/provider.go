@@ -2041,6 +2041,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_shield_protection":                          shield.ResourceProtection(),
 			"aws_shield_protection_group":                    shield.ResourceProtectionGroup(),
 			"aws_shield_protection_health_check_association": shield.ResourceProtectionHealthCheckAssociation(),
+			"aws_shield_advanced_automatic_layer_protection": shield.ResourceAdvancedAutomaticLayerProtection(),
 
 			"aws_signer_signing_job":                signer.ResourceSigningJob(),
 			"aws_signer_signing_profile":            signer.ResourceSigningProfile(),
