@@ -104,7 +104,7 @@ func resourceInstanceProfileCreate(d *schema.ResourceData, meta interface{}) err
 	response, err := conn.CreateInstanceProfile(request)
 
 	// Some partitions (i.e., ISO) may not support tag-on-create
-	if request.Tags != nil && verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
+	if request.Tags != nil && verify.ErrorISOUnsupported(conn.PartitionID, err) {
 		log.Printf("[WARN] failed creating IAM Instance Profile (%s) with tags: %s. Trying create without tags.", name, err)
 		request.Tags = nil
 
@@ -135,7 +135,7 @@ func resourceInstanceProfileCreate(d *schema.ResourceData, meta interface{}) err
 		err := instanceProfileUpdateTags(conn, d.Id(), nil, tags)
 
 		// If default tags only, log and continue. Otherwise, error.
-		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
+		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.ErrorISOUnsupported(conn.PartitionID, err) {
 			log.Printf("[WARN] failed adding tags after create for IAM Instance Profile (%s): %s", d.Id(), err)
 			return resourceInstanceProfileUpdate(d, meta)
 		}
@@ -228,7 +228,7 @@ func resourceInstanceProfileUpdate(d *schema.ResourceData, meta interface{}) err
 		err := instanceProfileUpdateTags(conn, d.Id(), o, n)
 
 		// Some partitions (i.e., ISO) may not support tagging, giving error
-		if verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
+		if verify.ErrorISOUnsupported(conn.PartitionID, err) {
 			log.Printf("[WARN] failed updating tags for IAM Instance Profile (%s): %s", d.Id(), err)
 			return nil
 		}

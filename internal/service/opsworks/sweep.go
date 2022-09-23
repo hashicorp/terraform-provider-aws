@@ -67,7 +67,7 @@ func sweepApplication(region string) error {
 	}
 
 	conn := client.(*conns.AWSClient).OpsWorksConn
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 
 	output, err := conn.DescribeStacks(&opsworks.DescribeStacksInput{})
 
@@ -118,7 +118,7 @@ func sweepInstance(region string) error {
 	}
 
 	conn := client.(*conns.AWSClient).OpsWorksConn
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 
 	output, err := conn.DescribeStacks(&opsworks.DescribeStacksInput{})
 
@@ -170,7 +170,7 @@ func sweepRDSDBInstance(region string) error {
 	}
 
 	conn := client.(*conns.AWSClient).OpsWorksConn
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 
 	output, err := conn.DescribeStacks(&opsworks.DescribeStacksInput{})
 
@@ -222,7 +222,7 @@ func sweepStacks(region string) error {
 	}
 
 	conn := client.(*conns.AWSClient).OpsWorksConn
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 
 	output, err := conn.DescribeStacks(&opsworks.DescribeStacksInput{})
 
@@ -264,7 +264,7 @@ func sweepLayers(region string) error {
 	}
 
 	conn := client.(*conns.AWSClient).OpsWorksConn
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 
 	output, err := conn.DescribeStacks(&opsworks.DescribeStacksInput{})
 
@@ -325,7 +325,7 @@ func sweepUserProfiles(region string) error {
 	}
 
 	conn := client.(*conns.AWSClient).OpsWorksConn
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 
 	output, err := conn.DescribeUserProfiles(&opsworks.DescribeUserProfilesInput{})
 

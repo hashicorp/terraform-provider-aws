@@ -30127,6 +30127,13 @@ var awsusgovPartition = partition{
 				},
 			},
 		},
+		"managedblockchain": service{
+			Endpoints: serviceEndpoints{
+				endpointKey{
+					Region: "us-gov-west-1",
+				}: endpoint{},
+			},
+		},
 		"mediaconvert": service{
 			Endpoints: serviceEndpoints{
 				endpointKey{

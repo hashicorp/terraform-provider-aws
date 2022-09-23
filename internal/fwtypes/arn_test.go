@@ -1,19 +1,18 @@
-// TODO: Move this to a shared 'types' package.
-package fwprovider_test
+package fwtypes_test
 
 import (
 	"context"
 	"testing"
-	"time"
 
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
-	"github.com/hashicorp/terraform-provider-aws/internal/provider/fwprovider"
+	"github.com/hashicorp/terraform-provider-aws/internal/fwtypes"
 )
 
-func TestDurationTypeValueFromTerraform(t *testing.T) {
+func TestARNTypeValueFromTerraform(t *testing.T) {
 	t.Parallel()
 
 	tests := map[string]struct {
@@ -23,15 +22,21 @@ func TestDurationTypeValueFromTerraform(t *testing.T) {
 	}{
 		"null value": {
 			val:      tftypes.NewValue(tftypes.String, nil),
-			expected: fwprovider.Duration{Null: true},
+			expected: fwtypes.ARN{Null: true},
 		},
 		"unknown value": {
 			val:      tftypes.NewValue(tftypes.String, tftypes.UnknownValue),
-			expected: fwprovider.Duration{Unknown: true},
+			expected: fwtypes.ARN{Unknown: true},
 		},
-		"valid duration": {
-			val:      tftypes.NewValue(tftypes.String, "2h"),
-			expected: fwprovider.Duration{Value: 2 * time.Hour},
+		"valid ARN": {
+			val: tftypes.NewValue(tftypes.String, "arn:aws:rds:us-east-1:123456789012:db:test"), // lintignore:AWSAT003,AWSAT005
+			expected: fwtypes.ARN{Value: arn.ARN{
+				Partition: "aws",
+				Service:   "rds",
+				Region:    "us-east-1", // lintignore:AWSAT003
+				AccountID: "123456789012",
+				Resource:  "db:test",
+			}},
 		},
 		"invalid duration": {
 			val:         tftypes.NewValue(tftypes.String, "not ok"),
@@ -43,7 +48,7 @@ func TestDurationTypeValueFromTerraform(t *testing.T) {
 		name, test := name, test
 		t.Run(name, func(t *testing.T) {
 			ctx := context.Background()
-			val, err := fwprovider.DurationType.ValueFromTerraform(ctx, test.val)
+			val, err := fwtypes.ARNType.ValueFromTerraform(ctx, test.val)
 
 			if err == nil && test.expectError {
 				t.Fatal("expected error, got no error")
@@ -59,7 +64,7 @@ func TestDurationTypeValueFromTerraform(t *testing.T) {
 	}
 }
 
-func TestDurationTypeValidate(t *testing.T) {
+func TestARNTypeValidate(t *testing.T) {
 	t.Parallel()
 
 	type testCase struct {
@@ -78,7 +83,7 @@ func TestDurationTypeValidate(t *testing.T) {
 			val: tftypes.NewValue(tftypes.String, nil),
 		},
 		"valid string": {
-			val: tftypes.NewValue(tftypes.String, "2h"),
+			val: tftypes.NewValue(tftypes.String, "arn:aws:rds:us-east-1:123456789012:db:test"), // lintignore:AWSAT003,AWSAT005
 		},
 		"invalid string": {
 			val:         tftypes.NewValue(tftypes.String, "not ok"),
@@ -91,7 +96,7 @@ func TestDurationTypeValidate(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			ctx := context.Background()
 
-			diags := fwprovider.DurationType.Validate(ctx, test.val, path.Root("test"))
+			diags := fwtypes.ARNType.Validate(ctx, test.val, path.Root("test"))
 
 			if !diags.HasError() && test.expectError {
 				t.Fatal("expected error, got no error")
