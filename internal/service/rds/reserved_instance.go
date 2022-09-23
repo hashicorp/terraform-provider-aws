@@ -82,8 +82,20 @@ func ResourceReservedInstance() *schema.Resource {
 				Computed: true,
 			},
 			"recurring_charges": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"recurring_charge_amount": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"recurring_charge_frequency": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
 			},
 			"start_time": {
 				Type:     schema.TypeString,
@@ -160,7 +172,7 @@ func resourceReservedInstanceRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("offering_id", reservation.ReservedDBInstancesOfferingId)
 	d.Set("offering_type", reservation.OfferingType)
 	d.Set("product_description", reservation.ProductDescription)
-	d.Set("recurring_charges", reservation.RecurringCharges)
+	d.Set("recurring_charges", flattenRecurringCharges(reservation.RecurringCharges))
 	d.Set("start_time", reservation.StartTime)
 	d.Set("state", reservation.State)
 	d.Set("usage_price", reservation.UsagePrice)
@@ -213,4 +225,22 @@ func resourceReservedInstanceDelete(ctx context.Context, d *schema.ResourceData,
 	log.Printf("[DEBUG] %s %s cannot be deleted. Removing from state.: %s", names.RDS, ResNameReservedInstance, d.Id())
 
 	return nil
+}
+
+func flattenRecurringCharges(recurringCharges []*rds.RecurringCharge) []interface{} {
+	if len(recurringCharges) == 0 {
+		return []interface{}{}
+	}
+
+	var rawRecurringCharges []interface{}
+	for _, recurringCharge := range recurringCharges {
+		rawRecurringCharge := map[string]interface{}{
+			"recurring_charge_amount":    recurringCharge.RecurringChargeAmount,
+			"recurring_charge_frequency": aws.ToString(recurringCharge.RecurringChargeFrequency),
+		}
+
+		rawRecurringCharges = append(rawRecurringCharges, rawRecurringCharge)
+	}
+
+	return rawRecurringCharges
 }
