@@ -1,0 +1,4 @@
+```release-note:enhancement
+resource/aws_kinesis_firehose_delivery_stream: Send default value for BufferIntervalInSeconds or BufferSizeInMBs when only one
+is set in a `processing_configuration`, removing the requirement to set both if only one is required to be changed.
+```
