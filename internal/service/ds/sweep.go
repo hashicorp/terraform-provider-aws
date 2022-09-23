@@ -10,6 +10,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/directoryservice"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -105,10 +106,12 @@ func sweepRegions(region string) error {
 				continue
 			}
 
-			id := aws.StringValue(directory.DirectoryId)
+			if directory.RegionsInfo == nil || len(directory.RegionsInfo.AdditionalRegions) == 0 {
+				continue
+			}
 
 			err := describeRegionsPages(conn, &directoryservice.DescribeRegionsInput{
-				DirectoryId: aws.String(id),
+				DirectoryId: directory.DirectoryId,
 			}, func(page *directoryservice.DescribeRegionsOutput, lastPage bool) bool {
 				if page == nil {
 					return !lastPage
@@ -126,8 +129,12 @@ func sweepRegions(region string) error {
 				return !lastPage
 			})
 
+			if tfawserr.ErrMessageContains(err, directoryservice.ErrCodeUnsupportedOperationException, "Multi-region replication") {
+				log.Printf("[INFO] Skipping Directory Service Regions for %s", aws.StringValue(directory.DirectoryId))
+				continue
+			}
 			if err != nil {
-				errs = multierror.Append(errs, fmt.Errorf("describing DS Regions for %s: %w", region, err))
+				errs = multierror.Append(errs, fmt.Errorf("describing Directory Service Regions for %s: %w", aws.StringValue(directory.DirectoryId), err))
 				continue
 			}
 		}
@@ -136,15 +143,15 @@ func sweepRegions(region string) error {
 	})
 
 	if err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("describing DS Directories for %s: %w", region, err))
+		errs = multierror.Append(errs, fmt.Errorf("listing Directory Service Directories for %s: %w", region, err))
 	}
 
 	if err = sweep.SweepOrchestrator(sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error sweeping DS Regions for %s: %w", region, err))
+		errs = multierror.Append(errs, fmt.Errorf("sweeping Directory Service Regions for %s: %w", region, err))
 	}
 
 	if sweep.SkipSweepError(errs.ErrorOrNil()) {
-		log.Printf("[WARN] Skipping DS Regions sweep for %s: %s", region, errs)
+		log.Printf("[WARN] Skipping Directory Service Regions sweep for %s: %s", region, errs)
 		return nil
 	}
 
