@@ -4,18 +4,18 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/aws/aws-sdk-go/service/ssoadmin"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/identitystore"
 	"github.com/aws/aws-sdk-go-v2/service/identitystore/types"
+	"github.com/aws/aws-sdk-go/service/ssoadmin"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfidentitystore "github.com/hashicorp/terraform-provider-aws/internal/service/identitystore"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -1206,9 +1206,7 @@ resource "aws_identitystore_user" "test" {
     given_name  = "Doe"
   }
 
-  emails {
-    
-  }
+  emails {}
 }
 `, rName, email)
 }
@@ -1223,7 +1221,7 @@ resource "aws_identitystore_user" "test" {
   display_name = "Acceptance Test"
   user_name    = %[1]q
 
-  locale = %[2]q 
+  locale = %[2]q
 
   name {
     family_name = "Doe"
@@ -1301,7 +1299,7 @@ resource "aws_identitystore_user" "test" {
   name {
     family_name      = "Doe"
     given_name       = "John"
-    honorific_prefix = %[2]q 
+    honorific_prefix = %[2]q
   }
 }
 `, rName, honorificPrefix)
@@ -1320,7 +1318,7 @@ resource "aws_identitystore_user" "test" {
   name {
     family_name      = "Doe"
     given_name       = "John"
-    honorific_suffix = %[2]q 
+    honorific_suffix = %[2]q
   }
 }
 `, rName, honorificSuffix)
@@ -1339,7 +1337,7 @@ resource "aws_identitystore_user" "test" {
   name {
     family_name = "Doe"
     given_name  = "John"
-    middle_name = %[2]q 
+    middle_name = %[2]q
   }
 }
 `, rName, middleName)
@@ -1355,7 +1353,7 @@ resource "aws_identitystore_user" "test" {
   display_name = "Acceptance Test"
   user_name    = %[1]q
 
-  nick_name = %[2]q 
+  nick_name = %[2]q
 
   name {
     family_name = "Doe"
@@ -1429,7 +1427,7 @@ resource "aws_identitystore_user" "test" {
   }
 
   phone_numbers {
-    value   = "2222222"
+    value = "2222222"
   }
 }
 `, rName)
@@ -1445,7 +1443,7 @@ resource "aws_identitystore_user" "test" {
   display_name = "Acceptance Test"
   user_name    = %[1]q
 
-  preferred_language = %[2]q 
+  preferred_language = %[2]q
 
   name {
     family_name = "Doe"
@@ -1465,7 +1463,7 @@ resource "aws_identitystore_user" "test" {
   display_name = "Acceptance Test"
   user_name    = %[1]q
 
-  profile_url = %[2]q 
+  profile_url = %[2]q
 
   name {
     family_name = "Doe"
@@ -1485,7 +1483,7 @@ resource "aws_identitystore_user" "test" {
   display_name = "Acceptance Test"
   user_name    = %[1]q
 
-  timezone = %[2]q 
+  timezone = %[2]q
 
   name {
     family_name = "Doe"
@@ -1505,7 +1503,7 @@ resource "aws_identitystore_user" "test" {
   display_name = "Acceptance Test"
   user_name    = %[1]q
 
-  title = %[2]q 
+  title = %[2]q
 
   name {
     family_name = "Doe"
@@ -1525,7 +1523,7 @@ resource "aws_identitystore_user" "test" {
   display_name = "Acceptance Test"
   user_name    = %[1]q
 
-  user_type = %[2]q 
+  user_type = %[2]q
 
   name {
     family_name = "Doe"
