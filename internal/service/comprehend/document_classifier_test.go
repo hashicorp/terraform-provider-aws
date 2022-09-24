@@ -2183,8 +2183,8 @@ resource "aws_comprehend_document_classifier" "test" {
   }
 
   output_data_config {
-    s3_uri = "s3://${aws_s3_bucket.test.bucket}/outputs"
-	kms_key_id = aws_kms_key.output.key_id
+    s3_uri     = "s3://${aws_s3_bucket.test.bucket}/outputs"
+    kms_key_id = aws_kms_key.output.key_id
   }
 
   depends_on = [
@@ -2238,8 +2238,8 @@ resource "aws_comprehend_document_classifier" "test" {
   }
 
   output_data_config {
-    s3_uri = "s3://${aws_s3_bucket.test.bucket}/outputs"
-	kms_key_id = aws_kms_key.output.arn
+    s3_uri     = "s3://${aws_s3_bucket.test.bucket}/outputs"
+    kms_key_id = aws_kms_key.output.arn
   }
 
   depends_on = [
@@ -2293,8 +2293,8 @@ resource "aws_comprehend_document_classifier" "test" {
   }
 
   output_data_config {
-    s3_uri = "s3://${aws_s3_bucket.test.bucket}/outputs"
-	kms_key_id = aws_kms_alias.output.name
+    s3_uri     = "s3://${aws_s3_bucket.test.bucket}/outputs"
+    kms_key_id = aws_kms_alias.output.name
   }
 
   depends_on = [
@@ -2353,8 +2353,8 @@ resource "aws_comprehend_document_classifier" "test" {
   }
 
   output_data_config {
-    s3_uri = "s3://${aws_s3_bucket.test.bucket}/outputs"
-	kms_key_id = aws_kms_alias.output.arn
+    s3_uri     = "s3://${aws_s3_bucket.test.bucket}/outputs"
+    kms_key_id = aws_kms_alias.output.arn
   }
 
   depends_on = [
@@ -2413,8 +2413,8 @@ resource "aws_comprehend_document_classifier" "test" {
   }
 
   output_data_config {
-    s3_uri = "s3://${aws_s3_bucket.test.bucket}/outputs"
-	kms_key_id = aws_kms_key.output.key_id
+    s3_uri     = "s3://${aws_s3_bucket.test.bucket}/outputs"
+    kms_key_id = aws_kms_key.output.key_id
   }
 
   depends_on = [
@@ -2499,8 +2499,8 @@ resource "aws_comprehend_document_classifier" "test" {
   }
 
   output_data_config {
-    s3_uri = "s3://${aws_s3_bucket.test.bucket}/outputs"
-	kms_key_id = aws_kms_key.output2.key_id
+    s3_uri     = "s3://${aws_s3_bucket.test.bucket}/outputs"
+    kms_key_id = aws_kms_key.output2.key_id
   }
 
   depends_on = [
