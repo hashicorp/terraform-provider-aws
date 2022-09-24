@@ -807,3 +807,43 @@ func waitCertificateDomainValidationsAvailable(ctx context.Context, conn *acm.AC
 
 	return nil, err
 }
+
+func statusCertificateRenewal(ctx context.Context, conn *acm.ACM, arn string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		certificate, err := FindCertificateByARN(ctx, conn, arn)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		if certificate.RenewalSummary == nil {
+			return nil, "", nil
+		}
+		if aws.StringValue(certificate.RenewalSummary.RenewalStatus) == acm.RenewalStatusFailed {
+			return certificate, acm.RenewalStatusFailed, fmt.Errorf("renewing ACM Certificate (%s) failed: %s", arn, aws.StringValue(certificate.RenewalSummary.RenewalStatusReason))
+		}
+
+		return certificate, aws.StringValue(certificate.RenewalSummary.RenewalStatus), nil
+	}
+}
+
+func WaitCertificateRenewed(ctx context.Context, conn *acm.ACM, arn string, timeout time.Duration) (*acm.CertificateDetail, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{acm.RenewalStatusPendingAutoRenewal},
+		Target:  []string{acm.RenewalStatusSuccess},
+		Refresh: statusCertificateRenewal(ctx, conn, arn),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*acm.CertificateDetail); ok {
+		return output, err
+	}
+
+	return nil, err
+}
