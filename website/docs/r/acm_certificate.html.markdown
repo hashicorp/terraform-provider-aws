@@ -173,7 +173,7 @@ Domain validation objects export the following attributes:
 Renewal summary objects export the following attributes:
 
 * `renewal_status` - The status of ACM's managed renewal of the certificate
-* `renewal_status_reason` - The reason that a renewal request was unsuccessful
+* `renewal_status_reason` - The reason that a renewal request was unsuccessful or is pending
 
 [1]: https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html
 
