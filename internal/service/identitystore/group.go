@@ -39,7 +39,8 @@ func ResourceGroup() *schema.Resource {
 			},
 			"display_name": {
 				Type:         schema.TypeString,
-				Optional:     true,
+				Required:     true,
+				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 1024),
 			},
 			"external_ids": {
