@@ -1,5 +1,5 @@
 ---
-subcategory: "IdentityStore"
+subcategory: "SSO Identity Store"
 layout: "aws"
 page_title: "AWS: aws_identitystore_group"
 description: |-
