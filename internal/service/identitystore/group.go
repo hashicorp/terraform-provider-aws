@@ -43,7 +43,7 @@ func ResourceGroup() *schema.Resource {
 				ValidateFunc: validation.StringLenBetween(1, 1024),
 			},
 			"external_ids": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -234,7 +234,7 @@ func resourceGroupParseID(id string) (identityStoreId, groupId string, err error
 	parts := strings.Split(id, "/")
 
 	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
-		err = errors.New("???")
+		err = errors.New("expected a resource id in the form: identity-store-id/group-id")
 		return
 	}
 
