@@ -76,6 +76,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/connectcontactlens"
 	"github.com/aws/aws-sdk-go/service/connectparticipant"
 	"github.com/aws/aws-sdk-go/service/connectwisdomservice"
+	"github.com/aws/aws-sdk-go/service/controltower"
 	"github.com/aws/aws-sdk-go/service/costandusagereportservice"
 	"github.com/aws/aws-sdk-go/service/costexplorer"
 	"github.com/aws/aws-sdk-go/service/customerprofiles"
@@ -362,6 +363,7 @@ func (c *Config) clientConns(client *AWSClient, sess *session.Session) {
 	client.ConnectConn = connect.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.Connect])}))
 	client.ConnectContactLensConn = connectcontactlens.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.ConnectContactLens])}))
 	client.ConnectParticipantConn = connectparticipant.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.ConnectParticipant])}))
+	client.ControlTowerConn = controltower.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.ControlTower])}))
 	client.CustomerProfilesConn = customerprofiles.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.CustomerProfiles])}))
 	client.DAXConn = dax.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.DAX])}))
 	client.DLMConn = dlm.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.DLM])}))
