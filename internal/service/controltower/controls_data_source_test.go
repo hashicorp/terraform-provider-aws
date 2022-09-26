@@ -9,13 +9,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccControlsDataSource_id(t *testing.T) {
+func TestAccControlTowerControlsDataSource_id(t *testing.T) {
 	dataSourceName := "data.aws_controltower_controls.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckControlTower(t)
+			acctest.PreCheckControlTowerDeployed(t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, controltower.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -32,21 +32,19 @@ func TestAccControlsDataSource_id(t *testing.T) {
 
 func testAccControlsDataSourceConfig_id() string {
 	return `
+data "aws_organizations_organization" "test" {}
 
-	data "aws_organizations_organization" "test" {}
+data "aws_organizations_organizational_units" "test" {
+  parent_id = data.aws_organizations_organization.test.roots[0].id
+}
 
-	data "aws_organizations_organizational_units" "test" {
-	  parent_id = data.aws_organizations_organization.test.roots[0].id
-	}
-	
-	data "aws_controltower_controls" "test" {
-	
-	  target_identifier = [
-		for x in data.aws_organizations_organizational_units.test.children :
-		x.arn if x.name == "Security"
-	  ][0]
-	
-	}
+data "aws_controltower_controls" "test" {
 
+  target_identifier = [
+    for x in data.aws_organizations_organizational_units.test.children :
+    x.arn if x.name == "Security"
+  ][0]
+
+}
 `
 }

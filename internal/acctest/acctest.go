@@ -1348,7 +1348,7 @@ func PreCheckOutpostsOutposts(t *testing.T) {
 	}
 }
 
-func PreCheckControlTower(t *testing.T) {
+func PreCheckControlTowerDeployed(t *testing.T) {
 	// validate this is the org management/potential control tower account
 
 	PreCheckOrganizationManagementAccount(t)
