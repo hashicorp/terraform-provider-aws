@@ -111,10 +111,10 @@ func TestAccElasticBeanstalkApplicationVersion_BeanstalkApp_process(t *testing.T
 	resourceName := "aws_elastic_beanstalk_application_version.default"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, elasticbeanstalk.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elasticbeanstalk.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:      testAccCheckApplicationVersionDestroy,
+		CheckDestroy:             testAccCheckApplicationVersionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccApplicationVersionConfig_process(sdkacctest.RandInt(), "true"),
