@@ -11,20 +11,42 @@ description: |-
 The ACM certificate resource allows requesting and management of certificates
 from the Amazon Certificate Manager.
 
-It deals with requesting certificates and managing their attributes and life-cycle.
+ACM certificates can be created in three ways:
+Amazon-issued, where AWS provides the certificate authority and automatically manages renewal;
+imported certificates, issued by another certificate authority;
+and private certificates, issued using an ACM Private Certificate Authority.
+
+## Amazon-Issued Certificates
+
+For Amazon-issued certificates, this resource deals with requesting certificates and managing their attributes and life-cycle.
 This resource does not deal with validation of a certificate but can provide inputs
-for other resources implementing the validation. It does not wait for a certificate to be issued.
+for other resources implementing the validation.
+It does not wait for a certificate to be issued.
 Use a [`aws_acm_certificate_validation`](acm_certificate_validation.html) resource for this.
 
 Most commonly, this resource is used together with [`aws_route53_record`](route53_record.html) and
 [`aws_acm_certificate_validation`](acm_certificate_validation.html) to request a DNS validated certificate,
 deploy the required validation records and wait for validation to complete.
 
-Domain validation through email is also supported but should be avoided as it requires a manual step outside
-of Terraform.
+Domain validation through email is also supported but should be avoided as it requires a manual step outside of Terraform.
 
 It's recommended to specify `create_before_destroy = true` in a [lifecycle][1] block to replace a certificate
 which is currently in use (eg, by [`aws_lb_listener`](lb_listener.html)).
+
+## Imported Certificates
+
+Imported certificates can be used to make certificates created with an external certificate authority available for AWS services.
+
+As they are not managed by AWS, imported certificates are not eligible for automatic renewal.
+New certificate materials can be supplied to an existing imported certificate to update it in place.
+
+## Private Certificates
+
+Private certificates are issued by an ACM Private Cerificate Authority, which can be created using the resource type [`aws_acmpca_certificate_authority`](acmpca_certificate_authority.html).
+
+Private certificates created using this resource are eligible for renewal if they have been exported or associated with another AWS service.
+See [managed renewal documentation](https://docs.aws.amazon.com/acm/latest/userguide/managed-renewal.html) for more information.
+
 
 ## Example Usage
 
@@ -128,9 +150,11 @@ The following arguments are supported:
     * `certificate_body` - (Required) Certificate's PEM-formatted public key
     * `certificate_chain` - (Optional) Certificate's PEM-formatted chain
 * Creating a private CA issued certificate
-    * `domain_name` - (Required) Domain name for which the certificate should be issued
     * `certificate_authority_arn` - (Required) ARN of an ACM PCA
-    * `subject_alternative_names` - (Optional) Set of domains that should be SANs in the issued certificate. To remove all elements of a previously configured list, set this value equal to an empty list (`[]`) or use the [`terraform taint` command](https://www.terraform.io/docs/commands/taint.html) to trigger recreation.
+    * `domain_name` - (Required) Domain name for which the certificate should be issued.
+* `subject_alternative_names` - (Optional) Set of domains that should be SANs in the issued certificate.
+  To remove all elements of a previously configured list, set this value equal to an empty list (`[]`)
+  or use the [`terraform taint` command](https://www.terraform.io/docs/commands/taint.html) to trigger recreation.
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## options Configuration Block
@@ -153,7 +177,9 @@ In addition to all arguments above, the following attributes are exported:
 * `id` - ARN of the certificate
 * `arn` - ARN of the certificate
 * `domain_name` - Domain name for which the certificate is issued
-* `domain_validation_options` - Set of domain validation objects which can be used to complete certificate validation. Can have more than one element, e.g., if SANs are defined. Only set if `DNS`-validation was used.
+* `domain_validation_options` - Set of domain validation objects which can be used to complete certificate validation.
+  Can have more than one element, e.g., if SANs are defined.
+  Only set if `DNS`-validation was used.
 * `not_after` - Expiration date and time of the certificate.
 * `not_before` - Start of the validity period of the certificate.
 * `renewal_eligibility` - Whether the certificate is eligible for renewal.

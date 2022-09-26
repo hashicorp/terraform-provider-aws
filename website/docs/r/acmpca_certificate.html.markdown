@@ -10,6 +10,11 @@ description: |-
 
 Provides a resource to issue a certificate using AWS Certificate Manager Private Certificate Authority (ACM PCA).
 
+Certificates created using `aws_acmpca_certificate` are not eligible for automatic renewal,
+and must be replaced instead.
+To issue a renewable certificate using an ACM PCA, create a [`aws_acm_certificate`](acm_certificate.html)
+with the parameter `certificate_authority_arn`.
+
 ## Example Usage
 
 ### Basic
