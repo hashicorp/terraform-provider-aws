@@ -209,9 +209,7 @@ func dataSource{{ .DataSource }}Read(ctx context.Context, d *schema.ResourceData
 	{{ if .IncludeComments }}
 	// TIP: Setting a complex type.
 	// For more information, see:
-	// https://github.com/hashicorp/terraform-provider-aws/blob/main/docs/contributing/data-handling-and-conversion.md
-	// https://github.com/hashicorp/terraform-provider-aws/blob/main/docs/contributing/data-handling-and-conversion.md#flatten-functions-for-blocks
-	// https://github.com/hashicorp/terraform-provider-aws/blob/main/docs/contributing/data-handling-and-conversion.md#root-typeset-of-resource-and-aws-list-of-structure
+	// https://hashicorp.github.io/terraform-provider-aws/data-handling-and-conversion/
 	{{- end }}
 	if err := d.Set("complex_argument", flattenComplexArguments(out.ComplexArguments)); err != nil {
 		return create.DiagError(names.{{ .Service }}, create.ErrActionSetting, DSName{{ .DataSource }}, d.Id(), err)
