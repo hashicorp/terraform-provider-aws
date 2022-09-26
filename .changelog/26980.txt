@@ -1,0 +1,4 @@
+```release-note:enhancement
+datasource/eks_cluster: Export `kubernetes_network_config.service_ipv6_cidr` attribute
+resource/eks_cluster: Export `kubernetes_network_config.service_ipv6_cidr` attribute
+```
