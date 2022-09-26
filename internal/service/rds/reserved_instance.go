@@ -3,6 +3,7 @@ package rds
 import (
 	"context"
 	"log"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
@@ -173,7 +174,7 @@ func resourceReservedInstanceRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("offering_type", reservation.OfferingType)
 	d.Set("product_description", reservation.ProductDescription)
 	d.Set("recurring_charges", flattenRecurringCharges(reservation.RecurringCharges))
-	d.Set("start_time", reservation.StartTime)
+	d.Set("start_time", (reservation.StartTime).Format(time.RFC3339))
 	d.Set("state", reservation.State)
 	d.Set("usage_price", reservation.UsagePrice)
 
