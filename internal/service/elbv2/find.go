@@ -92,3 +92,19 @@ func FindTargetGroupByARN(conn *elbv2.ELBV2, arn string) (*elbv2.TargetGroup, er
 
 	return nil, nil
 }
+
+func FindTargetGroupByName(conn *elbv2.ELBV2, name string) (*elbv2.TargetGroup, error) {
+	output, err := conn.DescribeTargetGroups(&elbv2.DescribeTargetGroupsInput{
+		Names: aws.StringSlice([]string{name}),
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(output.TargetGroups) == 0 {
+		return nil, nil
+	}
+
+	return output.TargetGroups[0], nil
+}

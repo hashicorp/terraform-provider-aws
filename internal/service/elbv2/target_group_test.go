@@ -2085,6 +2085,32 @@ func TestAccELBV2TargetGroup_ALBAlias_updateStickinessEnabled(t *testing.T) {
 	})
 }
 
+func TestAccELBV2TargetGroup_Name_noDuplicates(t *testing.T) {
+	var targetGroup elbv2.TargetGroup
+	tgName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_lb_target_group.first"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTargetGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTargetGroupConfig_duplicateNameFirst(tgName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTargetGroupExists(resourceName, &targetGroup),
+					resource.TestCheckResourceAttr(resourceName, "name", tgName),
+				),
+			},
+			{
+				Config:      testAccTargetGroupConfig_duplicateNameFirstAndSecond(tgName),
+				ExpectError: regexp.MustCompile("target group with name (.*?) already exist"),
+			},
+		},
+	})
+}
+
 func testAccTargetGroupConfig_albDefaults(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lb_target_group" "test" {
@@ -3721,6 +3747,63 @@ resource "aws_vpc" "test" {
     Name = %[1]q
   }
 }`, rName)
+}
+
+func testAccTargetGroupConfig_duplicateNameFirst(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_lb_target_group" "first" {
+  name     = %[1]q
+  port     = 443
+  protocol = "HTTPS"
+  vpc_id   = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName)
+}
+
+func testAccTargetGroupConfig_duplicateNameFirstAndSecond(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_lb_target_group" "first" {
+  name     = %[1]q
+  port     = 443
+  protocol = "HTTPS"
+  vpc_id   = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_lb_target_group" "second" {
+  name     = %[1]q
+  port     = 443
+  protocol = "HTTPS"
+  vpc_id   = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName)
 }
 
 func testAccCheckATargetGroupDestroy(s *terraform.State) error {

@@ -301,6 +301,14 @@ func resourceTargetGroupCreate(d *schema.ResourceData, meta interface{}) error {
 		groupName = resource.PrefixedUniqueId("tf-")
 	}
 
+	existingTg, err := FindTargetGroupByName(conn, groupName)
+	if err != nil && !tfawserr.ErrCodeEquals(err, elbv2.ErrCodeTargetGroupNotFoundException) {
+		return fmt.Errorf("finding target group by name (%s): %w", groupName, err)
+	}
+	if existingTg != nil {
+		return fmt.Errorf("target group with name (%s) already exists", groupName)
+	}
+
 	params := &elbv2.CreateTargetGroupInput{
 		Name:       aws.String(groupName),
 		TargetType: aws.String(d.Get("target_type").(string)),
