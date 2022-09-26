@@ -15,6 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/acmpca"
+	"github.com/aws/aws-sdk-go/service/cloudtrail"
 	"github.com/aws/aws-sdk-go/service/directoryservice"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/iam"
@@ -1344,6 +1345,45 @@ func PreCheckOutpostsOutposts(t *testing.T) {
 	// Ensure there is at least one Outpost
 	if output == nil || len(output.Outposts) == 0 {
 		t.Skip("skipping since no Outposts found")
+	}
+}
+
+func PreCheckControlTower(t *testing.T) {
+	// validate this is the org management/potential control tower account
+
+	PreCheckOrganizationManagementAccount(t)
+
+	// leverage the control tower created "aws-controltower-BaselineCloudTrail" to confirm control tower is deployed
+	var trails []string
+	conn := Provider.Meta().(*conns.AWSClient).CloudTrailConn
+
+	input := &cloudtrail.ListTrailsInput{}
+	err := conn.ListTrailsPages(input, func(page *cloudtrail.ListTrailsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+		for _, trail := range page.Trails {
+			if trail == nil {
+				continue
+			}
+			trails = append(trails, *trail.Name)
+		}
+		return !lastPage
+	})
+
+	if err != nil {
+		t.Fatalf("unexpected PreCheck error: %s", err)
+	}
+
+	// Ensure there is a Control Tower trail
+	ct_trail := false
+	for _, t := range trails {
+		if t == "aws-controltower-BaselineCloudTrail" {
+			ct_trail = true
+		}
+	}
+	if ct_trail == false {
+		t.Skip("skipping since Control Tower not found")
 	}
 }
 
