@@ -57,6 +57,11 @@ func ResourceApplicationVersion() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
+			"process": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
 		},
@@ -73,6 +78,7 @@ func resourceApplicationVersionCreate(d *schema.ResourceData, meta interface{}) 
 	bucket := d.Get("bucket").(string)
 	key := d.Get("key").(string)
 	name := d.Get("name").(string)
+	process := d.Get("process").(bool)
 
 	s3Location := elasticbeanstalk.S3Location{
 		S3Bucket: aws.String(bucket),
@@ -85,6 +91,7 @@ func resourceApplicationVersionCreate(d *schema.ResourceData, meta interface{}) 
 		SourceBundle:    &s3Location,
 		Tags:            Tags(tags.IgnoreElasticbeanstalk()),
 		VersionLabel:    aws.String(name),
+		Process:         aws.Bool(process),
 	}
 
 	log.Printf("[DEBUG] Elastic Beanstalk Application Version create opts: %s", createOpts)
