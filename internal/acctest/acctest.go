@@ -1382,7 +1382,7 @@ func PreCheckControlTowerDeployed(t *testing.T) {
 			ct_trail = true
 		}
 	}
-	if ct_trail == false {
+	if !ct_trail {
 		t.Skip("skipping since Control Tower not found")
 	}
 }
