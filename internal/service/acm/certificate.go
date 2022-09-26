@@ -74,9 +74,6 @@ func ResourceCertificate() *schema.Resource {
 				ConflictsWith: []string{"certificate_authority_arn", "domain_name", "validation_method"},
 			},
 			"domain_name": {
-				// AWS Provider 3.0.0 aws_route53_zone references no longer contain a
-				// trailing period, no longer requiring a custom StateFunc
-				// to prevent ACM API error
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
@@ -180,9 +177,6 @@ func ResourceCertificate() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 				Elem: &schema.Schema{
-					// AWS Provider 3.0.0 aws_route53_zone references no longer contain a
-					// trailing period, no longer requiring a custom StateFunc
-					// to prevent ACM API error
 					Type: schema.TypeString,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(1, 253),
@@ -237,9 +231,6 @@ func ResourceCertificate() *schema.Resource {
 				// Attempt to calculate the domain validation options based on domains present in domain_name and subject_alternative_names
 				if diff.Get("validation_method").(string) == acm.ValidationMethodDns && (diff.HasChange("domain_name") || diff.HasChange("subject_alternative_names")) {
 					domainValidationOptionsList := []interface{}{map[string]interface{}{
-						// AWS Provider 3.0 -- plan-time validation prevents "domain_name"
-						// argument to accept a string with trailing period; thus, trim of trailing period
-						// no longer required here
 						"domain_name": diff.Get("domain_name").(string),
 					}}
 
@@ -252,9 +243,6 @@ func ResourceCertificate() *schema.Resource {
 							}
 
 							m := map[string]interface{}{
-								// AWS Provider 3.0 -- plan-time validation prevents "subject_alternative_names"
-								// argument to accept strings with trailing period; thus, trim of trailing period
-								// no longer required here
 								"domain_name": san,
 							}
 
@@ -450,8 +438,6 @@ func resourceCertificateUpdate(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).ACMConn
 
 	if d.HasChanges("private_key", "certificate_body", "certificate_chain") {
-		// Prior to version 3.0.0 of the Terraform AWS Provider, these attributes were stored in state as hashes.
-		// If the changes to these attributes are only changes only match updating the state value, then skip the API call.
 		oCBRaw, nCBRaw := d.GetChange("certificate_body")
 		oCCRaw, nCCRaw := d.GetChange("certificate_chain")
 		oPKRaw, nPKRaw := d.GetChange("private_key")
