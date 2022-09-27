@@ -1,14 +1,14 @@
 ---
-subcategory: "{{ .Service }}"
+subcategory: "{{ .HumanFriendly }}"
 layout: "aws"
 page_title: "AWS: aws_{{ .ServicePackage }}_{{ .DataSourceSnake }}"
 description: |-
-  Terraform data source for managing an AWS {{ .Service }} {{ .DataSource }}.
+  Terraform data source for managing an AWS {{ .HumanFriendly }} {{ .HumanDataSourceName }}.
 ---
 
 # Data Source: aws_{{ .ServicePackage }}_{{ .DataSourceSnake }}
 
-Terraform data source for managing an AWS {{ .Service }} {{ .DataSource }}.
+Terraform data source for managing an AWS {{ .HumanFriendly }} {{ .HumanDataSourceName }}.
 
 ## Example Usage
 
@@ -33,5 +33,5 @@ The following arguments are optional:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `arn` - ARN of the {{ .DataSource }}.
+* `arn` - ARN of the {{ .HumanDataSourceName }}.
 * `example_attribute` - Concise description.

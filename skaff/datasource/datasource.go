@@ -29,6 +29,7 @@ type TemplateData struct {
 	DataSourceLower     string
 	DataSourceSnake     string
 	IncludeComments     bool
+	HumanFriendly       string
 	ServicePackage      string
 	Service             string
 	ServiceLower        string
@@ -69,10 +70,16 @@ func Create(dsName, snakeName string, comments, force, v2 bool) error {
 		return fmt.Errorf("error getting AWS service name: %w", err)
 	}
 
+	hf, err := names.HumanFriendly(servicePackage)
+	if err != nil {
+		return fmt.Errorf("error getting human-friendly name: %w", err)
+	}
+
 	templateData := TemplateData{
 		DataSource:          dsName,
 		DataSourceLower:     strings.ToLower(dsName),
 		DataSourceSnake:     snakeName,
+		HumanFriendly:       hf,
 		IncludeComments:     comments,
 		ServicePackage:      servicePackage,
 		Service:             s,

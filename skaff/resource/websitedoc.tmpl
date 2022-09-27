@@ -1,14 +1,14 @@
 ---
-subcategory: "{{ .Service }}"
+subcategory: "{{ .HumanFriendly }}"
 layout: "aws"
 page_title: "AWS: aws_{{ .ServicePackage }}_{{ .ResourceSnake }}"
 description: |-
-  Terraform resource for managing an AWS {{ .Service }} {{ .Resource }}.
+  Terraform resource for managing an AWS {{ .HumanFriendly }} {{ .HumanResourceName }}.
 ---
 
 # Resource: aws_{{ .ServicePackage }}_{{ .ResourceSnake }}
 
-Terraform resource for managing an AWS {{ .Service }} {{ .Resource }}.
+Terraform resource for managing an AWS {{ .HumanFriendly }} {{ .HumanResourceName }}.
 
 ## Example Usage
 
@@ -33,7 +33,7 @@ The following arguments are optional:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `arn` - ARN of the {{ .Resource }}.
+* `arn` - ARN of the {{ .HumanResourceName }}.
 * `example_attribute` - Concise description.
 
 ## Timeouts
@@ -46,7 +46,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-{{ .Service }} {{ .Resource }} can be imported using the `example_id_arg`, e.g.,
+{{ .HumanFriendly }} {{ .HumanResourceName }} can be imported using the `example_id_arg`, e.g.,
 
 ```
 $ terraform import aws_{{ .ServicePackage }}_{{ .ResourceSnake }}.example rft-8012925589
