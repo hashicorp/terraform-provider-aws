@@ -188,6 +188,18 @@ func FullHumanFriendly(service string) (string, error) {
 	return "", fmt.Errorf("no service data found for %s", service)
 }
 
+func HumanFriendly(service string) (string, error) {
+	if v, ok := serviceData[service]; ok {
+		return v.HumanFriendly, nil
+	}
+
+	if s, err := ProviderPackageForAlias(service); err == nil {
+		return HumanFriendly(s)
+	}
+
+	return "", fmt.Errorf("no service data found for %s", service)
+}
+
 func AWSGoPackage(providerPackage string, version int) (string, error) {
 	switch version {
 	case 1:
