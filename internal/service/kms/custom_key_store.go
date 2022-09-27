@@ -83,10 +83,6 @@ func resourceCustomKeyStoreCreate(ctx context.Context, d *schema.ResourceData, m
 
 	d.SetId(aws.StringValue(out.CustomKeyStoreId))
 
-	//if _, err := waitCustomKeyStoreCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-	//	return create.DiagError(names.KMS, create.ErrActionWaitingForCreation, ResNameCustomKeyStore, d.Id(), err)
-	//}
-
 	return resourceCustomKeyStoreRead(ctx, d, meta)
 }
 
@@ -142,10 +138,6 @@ func resourceCustomKeyStoreUpdate(ctx context.Context, d *schema.ResourceData, m
 		return create.DiagError(names.KMS, create.ErrActionUpdating, ResNameCustomKeyStore, d.Id(), err)
 	}
 
-	//if _, err := waitCustomKeyStoreUpdated(ctx, conn, aws.ToString(out.OperationId), d.Timeout(schema.TimeoutUpdate)); err != nil {
-	//	return create.DiagError(names.KMS, create.ErrActionWaitingForUpdate, ResNameCustomKeyStore, d.Id(), err)
-	//}
-
 	return resourceCustomKeyStoreRead(ctx, d, meta)
 }
 
@@ -162,83 +154,5 @@ func resourceCustomKeyStoreDelete(ctx context.Context, d *schema.ResourceData, m
 		return nil
 	}
 
-	//if _, err := waitCustomKeyStoreDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-	//	return create.DiagError(names.KMS, create.ErrActionWaitingForDeletion, ResNameCustomKeyStore, d.Id(), err)
-	//}
-
 	return nil
 }
-
-//const (
-//	statusChangePending = "Pending"
-//	statusDeleting      = "Deleting"
-//	statusNormal        = "Normal"
-//	statusUpdated       = "Updated"
-//)
-//
-//func waitCustomKeyStoreCreated(ctx context.Context, conn *kms.Client, id string, timeout time.Duration) (*kms.CustomKeyStore, error) {
-//	stateConf := &resource.StateChangeConf{
-//		Pending:                   []string{},
-//		Target:                    []string{statusNormal},
-//		Refresh:                   statusCustomKeyStore(ctx, conn, id),
-//		Timeout:                   timeout,
-//		NotFoundChecks:            20,
-//		ContinuousTargetOccurence: 2,
-//	}
-//
-//	outputRaw, err := stateConf.WaitForStateContext(ctx)
-//	if out, ok := outputRaw.(*kms.CustomKeyStore); ok {
-//		return out, err
-//	}
-//
-//	return nil, err
-//}
-//
-//func waitCustomKeyStoreUpdated(ctx context.Context, conn *kms.Client, id string, timeout time.Duration) (*kms.CustomKeyStore, error) {
-//	stateConf := &resource.StateChangeConf{
-//		Pending:                   []string{statusChangePending},
-//		Target:                    []string{statusUpdated},
-//		Refresh:                   statusCustomKeyStore(ctx, conn, id),
-//		Timeout:                   timeout,
-//		NotFoundChecks:            20,
-//		ContinuousTargetOccurence: 2,
-//	}
-//
-//	outputRaw, err := stateConf.WaitForStateContext(ctx)
-//	if out, ok := outputRaw.(*kms.CustomKeyStore); ok {
-//		return out, err
-//	}
-//
-//	return nil, err
-//}
-//
-//func waitCustomKeyStoreDeleted(ctx context.Context, conn *kms.Client, id string, timeout time.Duration) (*kms.CustomKeyStore, error) {
-//	stateConf := &resource.StateChangeConf{
-//		Pending: []string{statusDeleting, statusNormal},
-//		Target:  []string{},
-//		Refresh: statusCustomKeyStore(ctx, conn, id),
-//		Timeout: timeout,
-//	}
-//
-//	outputRaw, err := stateConf.WaitForStateContext(ctx)
-//	if out, ok := outputRaw.(*kms.CustomKeyStore); ok {
-//		return out, err
-//	}
-//
-//	return nil, err
-//}
-//
-//func statusCustomKeyStore(ctx context.Context, conn *kms.Client, id string) resource.StateRefreshFunc {
-//	return func() (interface{}, string, error) {
-//		out, err := findCustomKeyStoreByID(ctx, conn, id)
-//		if tfresource.NotFound(err) {
-//			return nil, "", nil
-//		}
-//
-//		if err != nil {
-//			return nil, "", err
-//		}
-//
-//		return out, aws.ToString(out.Status), nil
-//	}
-//}
