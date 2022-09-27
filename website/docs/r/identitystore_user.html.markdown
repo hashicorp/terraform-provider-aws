@@ -53,7 +53,7 @@ The following arguments are optional:
 * `addresses` - (Optional) Details about the user's address. At most 1 address is allowed. Detailed below.
 * `emails` - (Optional) Details about the user's email. At most 1 email is allowed. Detailed below.
 * `locale` - (Optional) The user's geographical region or location.
-* `nick_name` - (Optional) An alternate name for the user.
+* `nickname` - (Optional) An alternate name for the user.
 * `phone_numbers` - (Optional) Details about the user's phone number. At most 1 phone number is allowed. Detailed below.
 * `preferred_language` - (Optional) The preferred language of the user.
 * `profile_url` - (Optional) An URL that may be associated with the user.

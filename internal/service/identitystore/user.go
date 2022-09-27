@@ -176,7 +176,7 @@ func ResourceUser() *schema.Resource {
 					},
 				},
 			},
-			"nick_name": {
+			"nickname": {
 				Type:             schema.TypeString,
 				Optional:         true,
 				ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 1024)),
@@ -277,7 +277,7 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		in.PhoneNumbers = expandPhoneNumbers(v.([]interface{}))
 	}
 
-	if v, ok := d.GetOk("nick_name"); ok {
+	if v, ok := d.GetOk("nickname"); ok {
 		in.NickName = aws.String(v.(string))
 	}
 
@@ -339,7 +339,7 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	d.Set("display_name", out.DisplayName)
 	d.Set("identity_store_id", out.IdentityStoreId)
 	d.Set("locale", out.Locale)
-	d.Set("nick_name", out.NickName)
+	d.Set("nickname", out.NickName)
 	d.Set("preferred_language", out.PreferredLanguage)
 	d.Set("profile_url", out.ProfileUrl)
 	d.Set("timezone", out.Timezone)
@@ -440,7 +440,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 			Field:     "name.middleName",
 		},
 		{
-			Attribute: "nick_name",
+			Attribute: "nickname",
 			Field:     "nickName",
 		},
 		{

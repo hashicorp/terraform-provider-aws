@@ -51,7 +51,7 @@ func TestAccIdentityStoreUser_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name.0.honorific_prefix", ""),
 					resource.TestCheckResourceAttr(resourceName, "name.0.honorific_suffix", ""),
 					resource.TestCheckResourceAttr(resourceName, "name.0.middle_name", ""),
-					resource.TestCheckResourceAttr(resourceName, "nick_name", ""),
+					resource.TestCheckResourceAttr(resourceName, "nickname", ""),
 					resource.TestCheckResourceAttr(resourceName, "phone_numbers.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "preferred_language", ""),
 					resource.TestCheckResourceAttr(resourceName, "profile_url", ""),
@@ -602,7 +602,7 @@ func TestAccIdentityStoreUser_NickName(t *testing.T) {
 				Config: testAccUserConfig_nickName(rName, "JD"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(resourceName, &user),
-					resource.TestCheckResourceAttr(resourceName, "nick_name", "JD"),
+					resource.TestCheckResourceAttr(resourceName, "nickname", "JD"),
 				),
 			},
 			{
@@ -614,7 +614,7 @@ func TestAccIdentityStoreUser_NickName(t *testing.T) {
 				Config: testAccUserConfig_nickName(rName, "Johnny"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(resourceName, &user),
-					resource.TestCheckResourceAttr(resourceName, "nick_name", "Johnny"),
+					resource.TestCheckResourceAttr(resourceName, "nickname", "Johnny"),
 				),
 			},
 			{
@@ -626,7 +626,7 @@ func TestAccIdentityStoreUser_NickName(t *testing.T) {
 				Config: testAccUserConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(resourceName, &user),
-					resource.TestCheckResourceAttr(resourceName, "nick_name", ""),
+					resource.TestCheckResourceAttr(resourceName, "nickname", ""),
 				),
 			},
 		},
@@ -1353,7 +1353,7 @@ resource "aws_identitystore_user" "test" {
   display_name = "Acceptance Test"
   user_name    = %[1]q
 
-  nick_name = %[2]q
+  nickname = %[2]q
 
   name {
     family_name = "Doe"
