@@ -117,7 +117,7 @@ func resourceOrganizationConfigurationUpdate(ctx context.Context, d *schema.Reso
 		return create.DiagError(names.Inspector2, create.ErrActionUpdating, ResNameOrganizationConfiguration, d.Id(), err)
 	}
 
-	if _, err := waitOrganizationConfigurationUpdated(ctx, conn, d.Get("auto_enable.0.ec2").(bool), d.Get("auto_enable.0.ecr").(bool), d.Timeout(schema.TimeoutUpdate)); err != nil {
+	if err := waitOrganizationConfigurationUpdated(ctx, conn, d.Get("auto_enable.0.ec2").(bool), d.Get("auto_enable.0.ecr").(bool), d.Timeout(schema.TimeoutUpdate)); err != nil {
 		return create.DiagError(names.Inspector2, create.ErrActionWaitingForUpdate, ResNameOrganizationConfiguration, d.Id(), err)
 	}
 
@@ -143,14 +143,14 @@ func resourceOrganizationConfigurationDelete(ctx context.Context, d *schema.Reso
 		return create.DiagError(names.Inspector2, create.ErrActionUpdating, ResNameOrganizationConfiguration, d.Id(), err)
 	}
 
-	if _, err := waitOrganizationConfigurationUpdated(ctx, conn, false, false, d.Timeout(schema.TimeoutUpdate)); err != nil {
+	if err := waitOrganizationConfigurationUpdated(ctx, conn, false, false, d.Timeout(schema.TimeoutUpdate)); err != nil {
 		return create.DiagError(names.Inspector2, create.ErrActionWaitingForUpdate, ResNameOrganizationConfiguration, d.Id(), err)
 	}
 
 	return nil
 }
 
-func waitOrganizationConfigurationUpdated(ctx context.Context, conn *inspector2.Client, ec2, ecr bool, timeout time.Duration) (*inspector2.DescribeOrganizationConfigurationOutput, error) {
+func waitOrganizationConfigurationUpdated(ctx context.Context, conn *inspector2.Client, ec2, ecr bool, timeout time.Duration) error {
 	needle := fmt.Sprintf("%t:%t", ec2, ecr)
 
 	all := []string{
@@ -177,12 +177,9 @@ func waitOrganizationConfigurationUpdated(ctx context.Context, conn *inspector2.
 		MinTimeout:                time.Second * 5,
 	}
 
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*inspector2.DescribeOrganizationConfigurationOutput); ok {
-		return out, err
-	}
+	_, err := stateConf.WaitForStateContext(ctx)
 
-	return nil, err
+	return err
 }
 
 func statusOrganizationConfiguration(ctx context.Context, conn *inspector2.Client) resource.StateRefreshFunc {
