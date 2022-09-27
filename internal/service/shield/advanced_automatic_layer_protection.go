@@ -29,7 +29,6 @@ func ResourceAdvancedAutomaticLayerProtection() *schema.Resource {
 			"action": {
 				Type:     schema.TypeString,
 				Required: true,
-				ForceNew: true,
 			},
 		},
 	}
@@ -39,7 +38,7 @@ func resourceAdvancedAutomaticLayerProtectionUpdate(d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).ShieldConn
 
 	if !d.HasChange("action") {
-		return resourceProtectionRead(d, meta)
+		return resourceAdvancedAutomaticLayerProtectionRead(d, meta)
 	}
 
 	action := &shield.ResponseAction{}
@@ -62,7 +61,7 @@ func resourceAdvancedAutomaticLayerProtectionUpdate(d *schema.ResourceData, meta
 		return fmt.Errorf("error updating Application Layer Automatic Protection: %s", err)
 	}
 
-	return resourceProtectionRead(d, meta)
+	return resourceAdvancedAutomaticLayerProtectionRead(d, meta)
 }
 
 func resourceAdvancedAutomaticLayerProtectionCreate(d *schema.ResourceData, meta interface{}) error {
@@ -78,24 +77,33 @@ func resourceAdvancedAutomaticLayerProtectionCreate(d *schema.ResourceData, meta
 		action.Count = &shield.CountAction{}
 	}
 
-	input := &shield.EnableApplicationLayerAutomaticResponseInput{
+	enableAutomaticResponseInput := &shield.EnableApplicationLayerAutomaticResponseInput{
 		Action:      action,
 		ResourceArn: aws.String(d.Get("resource_arn").(string)),
 	}
 
-	_, err := conn.EnableApplicationLayerAutomaticResponse(input)
+	describeProtectionInput := &shield.DescribeProtectionInput{
+		ResourceArn: aws.String(d.Get("resource_arn").(string)),
+	}
+
+	res, err := conn.DescribeProtection(describeProtectionInput)
+	if err != nil {
+		return fmt.Errorf("error reading Protection: %s", err)
+	}
+
+	_, err = conn.EnableApplicationLayerAutomaticResponse(enableAutomaticResponseInput)
 	if err != nil {
 		return fmt.Errorf("error creating Application Layer Automatic Protection: %s", err)
 	}
-	d.SetId("")
-	return resourceProtectionRead(d, meta)
+
+	d.SetId(aws.StringValue(res.Protection.Id))
+	return resourceAdvancedAutomaticLayerProtectionRead(d, meta)
 }
 
 func resourceAdvancedAutomaticLayerProtectionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ShieldConn
 
-	input := &shield.
-		DescribeProtectionInput{
+	input := &shield.DescribeProtectionInput{
 		ProtectionId: aws.String(d.Id()),
 	}
 
@@ -111,8 +119,22 @@ func resourceAdvancedAutomaticLayerProtectionRead(d *schema.ResourceData, meta i
 		return fmt.Errorf("error reading Application Layer Automatic Protection (%s): %s", d.Id(), err)
 	}
 
-	d.Set("action", resp.Protection.ApplicationLayerAutomaticResponseConfiguration.Action.String())
+	a := resp.Protection.ApplicationLayerAutomaticResponseConfiguration.Action.Block.String()
+	b := resp.Protection.ApplicationLayerAutomaticResponseConfiguration.Action.Count.String()
+	var action string
+
+	if a != "" {
+		action = a
+	}
+	if b != "" {
+		action = b
+	}
+
+	arn := aws.StringValue(resp.Protection.ProtectionArn)
+	d.Set("arn", arn)
+	d.Set("name", resp.Protection.Name)
 	d.Set("resource_arn", resp.Protection.ResourceArn)
+	d.Set("action", action)
 
 	return nil
 }
