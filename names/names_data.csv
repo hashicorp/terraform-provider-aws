@@ -168,7 +168,7 @@ honeycode,honeycode,honeycode,honeycode,,honeycode,,,Honeycode,Honeycode,,1,,aws
 iam,iam,iam,iam,,iam,,,IAM,IAM,,1,,aws_iam_,,iam_,IAM (Identity & Access Management),AWS,,,AWS_IAM_ENDPOINT,TF_AWS_IAM_ENDPOINT,
 accessanalyzer,accessanalyzer,accessanalyzer,accessanalyzer,,accessanalyzer,,,AccessAnalyzer,AccessAnalyzer,,1,,aws_accessanalyzer_,,accessanalyzer_,IAM Access Analyzer,AWS,,,,,
 inspector,inspector,inspector,inspector,,inspector,,,Inspector,Inspector,,1,,aws_inspector_,,inspector_,Inspector,Amazon,,,,,
-inspector2,inspector2,inspector2,inspector2,,inspector2,,,Inspector2,Inspector2,,1,,aws_inspector2_,,inspector2_,Inspector V2,Amazon,,,,,
+inspector2,inspector2,inspector2,inspector2,,inspector2,,inspectorv2,Inspector2,Inspector2,x,2,,aws_inspector2_,,inspector2_,Inspector V2,Amazon,,,,,
 iot1click-devices,iot1clickdevices,iot1clickdevicesservice,iot1clickdevicesservice,,iot1clickdevices,,iot1clickdevicesservice,IoT1ClickDevices,IoT1ClickDevicesService,,1,,aws_iot1clickdevices_,,iot1clickdevices_,IoT 1-Click Devices,AWS,,,,,
 iot1click-projects,iot1clickprojects,iot1clickprojects,iot1clickprojects,,iot1clickprojects,,,IoT1ClickProjects,IoT1ClickProjects,,1,,aws_iot1clickprojects_,,iot1clickprojects_,IoT 1-Click Projects,AWS,,,,,
 iotanalytics,iotanalytics,iotanalytics,iotanalytics,,iotanalytics,,,IoTAnalytics,IoTAnalytics,,1,,aws_iotanalytics_,,iotanalytics_,IoT Analytics,AWS,,,,,

@@ -90,6 +90,7 @@ val services = mapOf(
     "identitystore" to ServiceSpec("SSO Identity Store"),
     "imagebuilder" to ServiceSpec("EC2 Image Builder"),
     "inspector" to ServiceSpec("Inspector"),
+    "inspector2" to ServiceSpec("Inspector V2"),
     "iot" to ServiceSpec("IoT Core"),
     "iotanalytics" to ServiceSpec("IoT Analytics"),
     "iotevents" to ServiceSpec("IoT Events"),

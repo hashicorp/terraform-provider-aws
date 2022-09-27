@@ -25,6 +25,7 @@ import (
 const (
 	ComprehendEndpointID     = "comprehend"
 	IdentityStoreEndpointID  = "identitystore"
+	Inspector2EndpointID     = "inspector2"
 	KendraEndpointID         = "kendra"
 	MediaLiveEndpointID      = "medialive"
 	RolesAnywhereEndpointID  = "rolesanywhere"
