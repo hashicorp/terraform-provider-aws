@@ -67,6 +67,7 @@ func init() {
 			"aws_glue_crawler",
 			"aws_glue_job",
 			"aws_instance",
+			"aws_iot_topic_rule_destination",
 			"aws_lambda_function",
 			"aws_launch_configuration",
 			"aws_redshift_cluster",

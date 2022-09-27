@@ -30,7 +30,7 @@ func sweepResourceShares(region string) error {
 	input := &ram.GetResourceSharesInput{
 		ResourceOwner: aws.String(ram.ResourceOwnerSelf),
 	}
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = conn.GetResourceSharesPages(input, func(page *ram.GetResourceSharesOutput, lastPage bool) bool {
 		if page == nil {

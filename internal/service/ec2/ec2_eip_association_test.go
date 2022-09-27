@@ -5,7 +5,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -141,43 +140,6 @@ func TestAccEC2EIPAssociation_spotInstance(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
-func TestAccEC2EIPAssociation_classic(t *testing.T) {
-	var a ec2.Address
-	resourceName := "aws_eip_association.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckEC2Classic(t)
-			// Force to us-east-1 so that testAccCheckEIPAssociationExists/testAccCheckEIPAssociationDestroy work correctly.
-			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
-		},
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		CheckDestroy: testAccCheckEIPAssociationDestroy,
-		Steps: []resource.TestStep{
-			// Create the EC2-Classic Instance and ENI with the last version that supports that.
-			{
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"aws": {
-						Source:            "hashicorp/aws",
-						VersionConstraint: "4.28.0",
-					},
-				},
-				Config: testAccEIPAssociationConfig_classicNoAssociation(),
-			},
-			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				Config:                   testAccEIPAssociationConfig_classicWithAssociation(),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEIPAssociationExists(resourceName, &a),
-					resource.TestCheckResourceAttr(resourceName, "allocation_id", ""),
-					resource.TestCheckResourceAttrSet(resourceName, "public_ip"),
-				),
 			},
 		},
 	})
@@ -420,27 +382,4 @@ resource "aws_eip_association" "test" {
   instance_id   = aws_spot_instance_request.test.spot_instance_id
 }
 `, rName, publicKey))
-}
-
-func testAccEIPAssociationConfig_classicNoAssociation() string {
-	return acctest.ConfigCompose(
-		testAccLatestAmazonLinuxPVEBSAMIConfig(),
-		acctest.AvailableEC2InstanceTypeForRegion("t1.micro", "m3.medium", "m3.large", "c3.large", "r3.large"),
-		`
-resource "aws_instance" "test" {
-  ami           = data.aws_ami.amzn-ami-minimal-pv-ebs.id
-  instance_type = data.aws_ec2_instance_type_offering.available.instance_type
-}
-
-resource "aws_eip" "test" {}
-`)
-}
-
-func testAccEIPAssociationConfig_classicWithAssociation() string {
-	return acctest.ConfigCompose(testAccEIPAssociationConfig_classicNoAssociation(), `
-resource "aws_eip_association" "test" {
-  public_ip   = aws_eip.test.id
-  instance_id = aws_instance.test.id
-}
-`)
 }

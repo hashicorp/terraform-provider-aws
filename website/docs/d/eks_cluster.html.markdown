@@ -49,6 +49,9 @@ output "identity-oidc-issuer" {
         * `issuer` - Issuer URL for the OpenID Connect identity provider.
 * `kubernetes_network_config` - Nested list containing Kubernetes Network Configuration.
     * `service_ipv4_cidr` - The CIDR block to assign Kubernetes service IP addresses from.
+* `outpost_config` - Contains Outpost Configuration.
+    * `control_plane_instance_type` - The Amazon EC2 instance type for all Kubernetes control plane instances.
+    * `outpost_arns` - List of ARNs of the Outposts hosting the EKS cluster. Only a single ARN is supported currently.
 * `platform_version` - Platform version for the cluster.
 * `role_arn` - ARN of the IAM role that provides permissions for the Kubernetes control plane to make calls to AWS API operations on your behalf.
 * `status` - Status of the EKS cluster. One of `CREATING`, `ACTIVE`, `DELETING`, `FAILED`.

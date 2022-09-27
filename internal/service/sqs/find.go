@@ -1,19 +1,22 @@
 package sqs
 
 import (
+	"context"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func FindQueueAttributesByURL(conn *sqs.SQS, url string) (map[string]string, error) {
+func FindQueueAttributesByURL(ctx context.Context, conn *sqs.SQS, url string) (map[string]string, error) {
 	input := &sqs.GetQueueAttributesInput{
 		AttributeNames: aws.StringSlice([]string{sqs.QueueAttributeNameAll}),
 		QueueUrl:       aws.String(url),
 	}
 
-	output, err := conn.GetQueueAttributes(input)
+	output, err := conn.GetQueueAttributesWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, sqs.ErrCodeQueueDoesNotExist) {
 		return nil, &resource.NotFoundError{
@@ -27,22 +30,19 @@ func FindQueueAttributesByURL(conn *sqs.SQS, url string) (map[string]string, err
 	}
 
 	if output == nil || output.Attributes == nil {
-		return nil, &resource.NotFoundError{
-			Message:     "Empty result",
-			LastRequest: input,
-		}
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
 	return aws.StringValueMap(output.Attributes), nil
 }
 
-func FindQueuePolicyByURL(conn *sqs.SQS, url string) (string, error) {
+func FindQueueAttributeByURL(ctx context.Context, conn *sqs.SQS, url string, attributeName string) (string, error) {
 	input := &sqs.GetQueueAttributesInput{
-		AttributeNames: aws.StringSlice([]string{sqs.QueueAttributeNamePolicy}),
+		AttributeNames: aws.StringSlice([]string{attributeName}),
 		QueueUrl:       aws.String(url),
 	}
 
-	output, err := conn.GetQueueAttributes(input)
+	output, err := conn.GetQueueAttributesWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, sqs.ErrCodeQueueDoesNotExist) {
 		return "", &resource.NotFoundError{
@@ -56,19 +56,13 @@ func FindQueuePolicyByURL(conn *sqs.SQS, url string) (string, error) {
 	}
 
 	if output == nil || output.Attributes == nil {
-		return "", &resource.NotFoundError{
-			Message:     "Empty result",
-			LastRequest: input,
-		}
+		return "", tfresource.NewEmptyResultError(input)
 	}
 
-	v, ok := output.Attributes[sqs.QueueAttributeNamePolicy]
+	v, ok := output.Attributes[attributeName]
 
 	if !ok || aws.StringValue(v) == "" {
-		return "", &resource.NotFoundError{
-			Message:     "Empty result",
-			LastRequest: input,
-		}
+		return "", tfresource.NewEmptyResultError(input)
 	}
 
 	return aws.StringValue(v), nil
