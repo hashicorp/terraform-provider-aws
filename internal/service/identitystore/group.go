@@ -10,8 +10,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/identitystore"
 	"github.com/aws/aws-sdk-go-v2/service/identitystore/document"
-	types "github.com/aws/aws-sdk-go-v2/service/identitystore/types"
+	"github.com/aws/aws-sdk-go-v2/service/identitystore/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -117,12 +118,7 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return create.DiagError(names.IdentityStore, create.ErrActionReading, ResNameGroup, d.Id(), err)
 	}
 
-	input := &identitystore.DescribeGroupInput{
-		GroupId:         aws.String(groupId),
-		IdentityStoreId: aws.String(identityStoreId),
-	}
-
-	out, err := conn.DescribeGroup(ctx, input)
+	out, err := findGroupByID(ctx, conn, identityStoreId, groupId)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] IdentityStore Group (%s) not found, removing from state", d.Id())
@@ -193,6 +189,33 @@ func resourceGroupDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	return nil
+}
+
+func findGroupByID(ctx context.Context, conn *identitystore.Client, identityStoreId, groupId string) (*identitystore.DescribeGroupOutput, error) {
+	in := &identitystore.DescribeGroupInput{
+		GroupId:         aws.String(groupId),
+		IdentityStoreId: aws.String(identityStoreId),
+	}
+
+	out, err := conn.DescribeGroup(ctx, in)
+
+	if err != nil {
+		var e *types.ResourceNotFoundException
+		if errors.As(err, &e) {
+			return nil, &resource.NotFoundError{
+				LastError:   err,
+				LastRequest: in,
+			}
+		} else {
+			return nil, err
+		}
+	}
+
+	if out == nil || out.GroupId == nil {
+		return nil, tfresource.NewEmptyResultError(in)
+	}
+
+	return out, nil
 }
 
 func resourceGroupParseID(id string) (identityStoreId, groupId string, err error) {
