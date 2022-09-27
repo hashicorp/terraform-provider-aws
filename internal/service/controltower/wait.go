@@ -10,14 +10,14 @@ import (
 
 const (
 	// Maximum amount of time to wait for a control to be created, updated, or deleted
-	controlTimeout = 5 * time.Minute
+	controlTimeout = 60 * time.Minute
 )
 
-func waitControlCreated(ctx context.Context, conn *controltower.ControlTower, operation_identifier string) (*controltower.ControlOperation, error) {
+func waitControl(ctx context.Context, conn *controltower.ControlTower, operation_identifier string) (*controltower.ControlOperation, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{controltower.ControlOperationStatusInProgress},
 		Target:  []string{controltower.ControlOperationStatusSucceeded},
-		Refresh: statusControlCreated(ctx, conn, operation_identifier),
+		Refresh: statusControl(ctx, conn, operation_identifier),
 		Timeout: controlTimeout,
 	}
 

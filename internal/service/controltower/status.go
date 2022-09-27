@@ -8,13 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-const (
-	resourceStatusFailed     = "FAILED"
-	resourceStatusInProgress = "IN_PROGRESS"
-	resourceStatusSucceeded  = "SUCCEEDED"
-)
-
-func statusControlCreated(ctx context.Context, conn *controltower.ControlTower, operation_identifier string) resource.StateRefreshFunc {
+func statusControl(ctx context.Context, conn *controltower.ControlTower, operation_identifier string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &controltower.GetControlOperationInput{
 			OperationIdentifier: aws.String(operation_identifier),
@@ -23,9 +17,9 @@ func statusControlCreated(ctx context.Context, conn *controltower.ControlTower, 
 		output, err := conn.GetControlOperationWithContext(ctx, input)
 
 		if err != nil {
-			return output, resourceStatusFailed, err
+			return output, controltower.ControlOperationStatusFailed, err
 		}
 
-		return output.ControlOperation, *output.ControlOperation.Status, nil
+		return output.ControlOperation, aws.StringValue(output.ControlOperation.Status), nil
 	}
 }

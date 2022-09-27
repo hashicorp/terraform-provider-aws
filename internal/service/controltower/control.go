@@ -17,7 +17,6 @@ func ResourceControl() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: resourceControlCreate,
 		ReadContext:   resourceControlRead,
-		UpdateContext: resourceControlUpdate,
 		DeleteContext: resourceControlDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -27,15 +26,16 @@ func ResourceControl() *schema.Resource {
 			"control_identifier": {
 				Type:         schema.TypeString,
 				Required:     true,
+				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
 			"target_identifier": {
 				Type:         schema.TypeString,
 				Required:     true,
+				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
 		},
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -57,11 +57,12 @@ func resourceControlCreate(ctx context.Context, d *schema.ResourceData, meta int
 		return diag.Errorf("Enabling ControlTower Control (%s): %s", control_identifier, err)
 	}
 
-	if _, err := waitControlCreated(ctx, conn, *output.OperationIdentifier); err != nil {
+	d.SetId(target_identifier)
+
+	if _, err := waitControl(ctx, conn, *output.OperationIdentifier); err != nil {
 		return diag.FromErr(fmt.Errorf("error waiting for ControlTower Control (%s) to be created: %w", d.Id(), err))
 	}
 
-	d.SetId(target_identifier)
 	d.Set("control_identifier", control_identifier)
 
 	return resourceControlRead(ctx, d, meta)
@@ -82,7 +83,7 @@ func resourceControlRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	for _, c := range output.EnabledControls {
-		if c == d.Get("control_identifier") {
+		if *c.ControlIdentifier == d.Get("control_identifier") {
 			return nil
 		}
 	}
@@ -94,30 +95,27 @@ func resourceControlRead(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceControlDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	// conn := meta.(*conns.AWSClient).ControlTowerConn
+	conn := meta.(*conns.AWSClient).ControlTowerConn
 
-	// control_identifier := d.Get("control_identifier").(string)
-	// target_identifier := d.Get("target_identifier").(string)
+	log.Printf("[DEBUG] Disabling ControlTower Control %s", d.Id())
 
-	// input := &controltower.DisableControlInput{
-	// 	ControlIdentifier: aws.String(control_identifier),
-	// 	TargetIdentifier:  aws.String(target_identifier),
-	// }
+	control_identifier := d.Get("control_identifier").(string)
+	target_identifier := d.Get("target_identifier").(string)
 
-	// log.Printf("[DEBUG] Enabling ControlTower Control: %#v", input)
-	// output, err := conn.DisableControlWithContext(ctx, input)
+	input := &controltower.DisableControlInput{
+		ControlIdentifier: aws.String(control_identifier),
+		TargetIdentifier:  aws.String(target_identifier),
+	}
 
-	// if err != nil {
-	// 	return diag.Errorf("Enabling ControlTower Control (%s): %s", control_identifier, err)
-	// }
+	output, err := conn.DisableControlWithContext(ctx, input)
 
-	// d.SetId(aws.StringValue(target_identifier))
+	if err != nil {
+		return diag.Errorf("error disabling ControlTower Control (%s): %s", control_identifier, err)
+	}
 
-	// return resourceProfileRead(ctx, d, meta)
-	return nil
-}
+	if _, err := waitControl(ctx, conn, *output.OperationIdentifier); err != nil {
+		return diag.FromErr(fmt.Errorf("error waiting for ControlTower Control (%s) to disable: %w", d.Id(), err))
+	}
 
-func resourceControlUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	// conn := meta.(*conns.AWSClient).ControlTowerConn
 	return nil
 }
