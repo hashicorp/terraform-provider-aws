@@ -72,7 +72,7 @@ func resourceCustomKeyStoreCreate(ctx context.Context, d *schema.ResourceData, m
 
 	out, err := conn.CreateCustomKeyStoreWithContext(ctx, in)
 	if err != nil {
-		return create.DiagError(names.KMS, create.ErrActionCreating, ResNameCustomKeyStore, d.Get("name").(string), err)
+		return create.DiagError(names.KMS, create.ErrActionCreating, ResNameCustomKeyStore, d.Get("custom_key_store_name").(string), err)
 	}
 
 	if out == nil {
@@ -240,4 +240,3 @@ func resourceCustomKeyStoreDelete(ctx context.Context, d *schema.ResourceData, m
 //		return out, aws.ToString(out.Status), nil
 //	}
 //}
-

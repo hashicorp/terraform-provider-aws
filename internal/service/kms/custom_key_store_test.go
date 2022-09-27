@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
 	"regexp"
 	"testing"
 
@@ -20,6 +21,10 @@ import (
 )
 
 func TestAccKMSCustomKeyStore_basic(t *testing.T) {
+	if os.Getenv("CLOUD_HSM_CLUSTER_ID") == "" {
+		t.Skip("CLOUD_HSM_CLUSTER_ID environment variable not set")
+	}
+
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -63,6 +68,10 @@ func TestAccKMSCustomKeyStore_basic(t *testing.T) {
 }
 
 func TestAccKMSCustomKeyStore_disappears(t *testing.T) {
+	if os.Getenv("CLOUD_HSM_CLUSTER_ID") == "" {
+		t.Skip("CLOUD_HSM_CLUSTER_ID environment variable not set")
+	}
+
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
