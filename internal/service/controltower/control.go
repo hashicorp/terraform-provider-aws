@@ -83,14 +83,16 @@ func resourceControlRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	for _, c := range output.EnabledControls {
-		if *c.ControlIdentifier == d.Get("control_identifier") {
+		if aws.StringValue(c.ControlIdentifier) == d.Get("control_identifier") {
 			return nil
 		}
 	}
 
 	// control identifier not found in response
-	log.Printf("[WARN] ControlTower Control (%s) not found, removing from state", d.Id())
-	d.SetId("")
+	if !d.IsNewResource() {
+		log.Printf("[WARN] ControlTower Control (%s) not found, removing from state", d.Id())
+		d.SetId("")
+	}
 	return nil
 }
 

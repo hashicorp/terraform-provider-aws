@@ -13,6 +13,7 @@ const (
 	controlTimeout = 60 * time.Minute
 )
 
+//nolint:unparam //linter is producing false positive
 func waitControl(ctx context.Context, conn *controltower.ControlTower, operation_identifier string) (*controltower.ControlOperation, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{controltower.ControlOperationStatusInProgress},
@@ -21,7 +22,7 @@ func waitControl(ctx context.Context, conn *controltower.ControlTower, operation
 		Timeout: controlTimeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if v, ok := outputRaw.(*controltower.ControlOperation); ok {
 		return v, err
