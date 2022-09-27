@@ -8,8 +8,8 @@ on:
       - .github/workflows/examples.yml
       - .go-version
       - .ci/.tflint.hcl
+      - .ci/tools/go.mod
       - examples/**
-      - tools/go.mod
 
 env:
   AWS_DEFAULT_REGION: us-west-2
