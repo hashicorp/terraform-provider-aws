@@ -46,7 +46,7 @@ func sweepAccessPoints(region string) error {
 	input := &s3control.ListAccessPointsInput{
 		AccountId: aws.String(accountID),
 	}
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 	var sweeperErrs *multierror.Error
 
 	err = conn.ListAccessPointsPages(input, func(page *s3control.ListAccessPointsOutput, lastPage bool) bool {
@@ -111,7 +111,7 @@ func sweepMultiRegionAccessPoints(region string) error {
 	input := &s3control.ListMultiRegionAccessPointsInput{
 		AccountId: aws.String(accountID),
 	}
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = conn.ListMultiRegionAccessPointsPages(input, func(page *s3control.ListMultiRegionAccessPointsOutput, lastPage bool) bool {
 		if page == nil {
@@ -157,7 +157,7 @@ func sweepObjectLambdaAccessPoints(region string) error {
 	input := &s3control.ListAccessPointsForObjectLambdaInput{
 		AccountId: aws.String(accountID),
 	}
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 
 	conn.ListAccessPointsForObjectLambdaPages(input, func(page *s3control.ListAccessPointsForObjectLambdaOutput, lastPage bool) bool {
 		if page == nil {

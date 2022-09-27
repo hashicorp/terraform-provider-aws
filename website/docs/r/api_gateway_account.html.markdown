@@ -70,7 +70,7 @@ EOF
 
 The following argument is supported:
 
-* `cloudwatch_role_arn` - (Optional) The ARN of an IAM role for CloudWatch (to allow logging & monitoring). See more [in AWS Docs](https://docs.aws.amazon.com/apigateway/latest/developerguide/how-to-stage-settings.html#how-to-stage-settings-console). Logging & monitoring can be enabled/disabled and otherwise tuned on the API Gateway Stage level.
+* `cloudwatch_role_arn` - (Optional) ARN of an IAM role for CloudWatch (to allow logging & monitoring). See more [in AWS Docs](https://docs.aws.amazon.com/apigateway/latest/developerguide/how-to-stage-settings.html#how-to-stage-settings-console). Logging & monitoring can be enabled/disabled and otherwise tuned on the API Gateway Stage level.
 
 ## Attributes Reference
 
@@ -80,8 +80,8 @@ The following attribute is exported:
 
 `throttle_settings` block exports the following:
 
-* `burst_limit` - The absolute maximum number of times API Gateway allows the API to be called per second (RPS).
-* `rate_limit` - The number of times API Gateway allows the API to be called per second on average (RPS).
+* `burst_limit` - Absolute maximum number of times API Gateway allows the API to be called per second (RPS).
+* `rate_limit` - Number of times API Gateway allows the API to be called per second on average (RPS).
 
 
 ## Import

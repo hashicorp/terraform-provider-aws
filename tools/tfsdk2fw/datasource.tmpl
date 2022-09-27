@@ -5,6 +5,7 @@ package {{ .PackageName }}
 import (
     "context"
 
+    {{if .ImportFrameworkAttr }}"github.com/hashicorp/terraform-plugin-framework/attr"{{- end}}
     "github.com/hashicorp/terraform-plugin-framework/datasource"
     "github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/provider"
@@ -14,7 +15,7 @@ import (
 )
 
 func init() {
-    registerDataSourceTypeFactory("{{ .TFTypeName }}", newDataSource{{ .Name }}Type)
+    // registerDataSourceTypeFactory("{{ .TFTypeName }}", newDataSource{{ .Name }}Type)
 }
 
 // newDataSource{{ .Name }}Type instantiates a new DataSourceType for the {{ .TFTypeName }} data source.
@@ -32,7 +33,7 @@ func (t *dataSource{{ .Name }}Type) GetSchema(context.Context) (tfsdk.Schema, di
 }
 
 // NewDataSource instantiates a new DataSource of this DataSourceType.
-func (t *dataSource{{ .Name }}Type) NewDataSource(ctx context.Context, provider provider.Provider) (provider.DataSource, diag.Diagnostics) {
+func (t *dataSource{{ .Name }}Type) NewDataSource(ctx context.Context, provider provider.Provider) (datasource.DataSource, diag.Diagnostics) {
     return &dataSource{{ .Name }}{}, nil
 }
 
@@ -42,4 +43,8 @@ type dataSource{{ .Name }} struct {}
 // Config values should be read from the ReadRequest and new state values set on the ReadResponse.
 func (d *dataSource{{ .Name }}) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
     tflog.Trace(ctx, "dataSource{{ .Name }}.Read enter")
+}
+
+type dataSource{{ .Name }}Data struct {
+    {{ .Struct }}
 }

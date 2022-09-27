@@ -69,7 +69,7 @@ interpolation.
     * `device_name` - Physical name of the device.
     * `encrypted` - If the EBS volume is encrypted.
     * `iops` - `0` If the EBS volume is not a provisioned IOPS image, otherwise the supported IOPS count.
-    * `kms_key_arn` - Amazon Resource Name (ARN) of KMS Key, if EBS volume is encrypted.
+    * `kms_key_arn` - ARN of KMS Key, if EBS volume is encrypted.
     * `snapshot_id` - ID of the snapshot.
     * `throughput` - Throughput of the volume, in MiB/s.
     * `volume_size` - Size of the volume, in GiB.

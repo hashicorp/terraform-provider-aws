@@ -20,21 +20,21 @@ data "aws_workspaces_directory" "example" {
 
 ## Argument Reference
 
-* `directory_id` - (Required) The directory identifier for registration in WorkSpaces service.
+* `directory_id` - (Required) Directory identifier for registration in WorkSpaces service.
 
 ## Attributes Reference
 
-* `id` - The WorkSpaces directory identifier.
-* `alias` - The directory alias.
-* `customer_user_name` - The user name for the service account.
-* `directory_name` - The name of the directory.
-* `directory_type` - The directory type.
-* `dns_ip_addresses` - The IP addresses of the DNS servers for the directory.
-* `iam_role_id` - The identifier of the IAM role. This is the role that allows Amazon WorkSpaces to make calls to other services, such as Amazon EC2, on your behalf.
-* `ip_group_ids` - The identifiers of the IP access control groups associated with the directory.
-* `registration_code` - The registration code for the directory. This is the code that users enter in their Amazon WorkSpaces client application to connect to the directory.
+* `id` - WorkSpaces directory identifier.
+* `alias` - Directory alias.
+* `customer_user_name` - User name for the service account.
+* `directory_name` - Name of the directory.
+* `directory_type` - Directory type.
+* `dns_ip_addresses` - IP addresses of the DNS servers for the directory.
+* `iam_role_id` - Identifier of the IAM role. This is the role that allows Amazon WorkSpaces to make calls to other services, such as Amazon EC2, on your behalf.
+* `ip_group_ids` - Identifiers of the IP access control groups associated with the directory.
+* `registration_code` - Registration code for the directory. This is the code that users enter in their Amazon WorkSpaces client application to connect to the directory.
 * `self_service_permissions` – The permissions to enable or disable self-service capabilities.
-* `subnet_ids` - The identifiers of the subnets where the directory resides.
+* `subnet_ids` - Identifiers of the subnets where the directory resides.
 * `tags` – A map of tags assigned to the WorkSpaces directory.
 * `workspace_creation_properties` – The default properties that are used for creating WorkSpaces. Defined below.
 * `workspace_access_properties` – (Optional) Specifies which devices and operating systems users can use to access their WorkSpaces. Defined below.

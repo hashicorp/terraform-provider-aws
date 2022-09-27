@@ -40,13 +40,13 @@ output "availability_zone_to_volume_id" {
 
 * `filter` - (Optional) Custom filter block as described below.
 
-* `tags` - (Optional) A map of tags, each pair of which must exactly match
+* `tags` - (Optional) Map of tags, each pair of which must exactly match
   a pair on the desired volumes.
 
 More complex filters can be expressed using one or more `filter` sub-blocks,
 which take the following arguments:
 
-* `name` - (Required) The name of the field to filter by, as defined by
+* `name` - (Required) Name of the field to filter by, as defined by
   [the underlying AWS API](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeVolumes.html).
   For example, if matching against the `size` filter, use:
 
@@ -65,7 +65,7 @@ data "aws_ebs_volumes" "ten_or_twenty_gb_volumes" {
 ## Attributes Reference
 
 * `id` - AWS Region.
-* `ids` - A set of all the EBS Volume IDs found. This data source will fail if
+* `ids` - Set of all the EBS Volume IDs found. This data source will fail if
   no volumes match the provided criteria.
 
 ## Timeouts

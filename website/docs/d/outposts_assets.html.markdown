@@ -29,4 +29,4 @@ The following arguments are required:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `asset_ids` - A list of all the subnet ids found. This data source will fail if none are found.
+* `asset_ids` - List of all the subnet ids found. This data source will fail if none are found.

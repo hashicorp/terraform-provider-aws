@@ -1624,9 +1624,10 @@ func TestAccEC2SpotFleetRequest_capacityRebalance(t *testing.T) {
 }
 
 func TestAccEC2SpotFleetRequest_withInstanceStoreAMI(t *testing.T) {
-	acctest.Skip(t, "Test fails due to test harness constraints")
+	var config ec2.SpotFleetRequestConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
+	resourceName := "aws_spot_fleet_request.test"
 
 	publicKey, _, err := sdkacctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
 	if err != nil {
@@ -1640,8 +1641,20 @@ func TestAccEC2SpotFleetRequest_withInstanceStoreAMI(t *testing.T) {
 		CheckDestroy:             testAccCheckSpotFleetRequestDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccSpotFleetRequestConfig_launchSpecificationInstanceStoreAMI(rName, publicKey, validUntil),
-				ExpectError: regexp.MustCompile("Instance store backed AMIs do not provide a root device name"),
+				Config: testAccSpotFleetRequestConfig_launchSpecificationInstanceStoreAMI(rName, publicKey, validUntil),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckSpotFleetRequestExists(resourceName, &config),
+					resource.TestCheckResourceAttr(resourceName, "launch_specification.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_specification.0.ebs_block_device.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "launch_specification.0.ebs_optimized", "false"),
+					resource.TestCheckResourceAttr(resourceName, "launch_specification.0.root_block_device.#", "0"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"wait_for_fulfillment"},
 			},
 		},
 	})
@@ -1741,8 +1754,7 @@ func testAccCheckSpotFleetRequestDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckSpotFleetRequest_EBSAttributes(
-	sfr *ec2.SpotFleetRequestConfig) resource.TestCheckFunc {
+func testAccCheckSpotFleetRequest_EBSAttributes(sfr *ec2.SpotFleetRequestConfig) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if len(sfr.SpotFleetRequestConfig.LaunchSpecifications) == 0 {
 			return errors.New("Missing launch specification")
@@ -3147,7 +3159,7 @@ func testAccSpotFleetRequestConfig_launchSpecificationInstanceStoreAMI(rName, pu
 		testAccSpotFleetRequestConfig_base(rName, publicKey),
 		fmt.Sprintf(`
 resource "aws_spot_fleet_request" "test" {
-  iam_fleet_role                      = aws_iam_role.test-role.arn
+  iam_fleet_role                      = aws_iam_role.test.arn
   spot_price                          = "0.05"
   target_capacity                     = 2
   valid_until                         = %[2]q

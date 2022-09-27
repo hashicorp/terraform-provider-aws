@@ -38,3 +38,19 @@ func statusWorkgroup(conn *redshiftserverless.RedshiftServerless, name string) r
 		return output, aws.StringValue(output.Status), nil
 	}
 }
+
+func statusEndpointAccess(conn *redshiftserverless.RedshiftServerless, name string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindEndpointAccessByName(conn, name)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.EndpointStatus), nil
+	}
+}

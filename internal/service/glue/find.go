@@ -153,7 +153,7 @@ func FindPartitionByValues(conn *glue.Glue, id string) (*glue.Partition, error) 
 		return nil, err
 	}
 
-	if output == nil && output.Partition == nil {
+	if output == nil || output.Partition == nil {
 		return nil, nil
 	}
 

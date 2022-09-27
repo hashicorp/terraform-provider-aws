@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/rds"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -107,7 +108,7 @@ func TestAccRDSInstance_identifierPrefix(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_identifierPrefix("tf-acc-test-prefix-"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
 					acctest.CheckResourceAttrNameFromPrefix(resourceName, "identifier", "tf-acc-test-prefix-"),
 					resource.TestCheckResourceAttr(resourceName, "identifier_prefix", "tf-acc-test-prefix-"),
@@ -141,7 +142,7 @@ func TestAccRDSInstance_identifierGenerated(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_identifierGenerated(),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
 					acctest.CheckResourceAttrNameGenerated(resourceName, "identifier"),
 					resource.TestCheckResourceAttr(resourceName, "identifier_prefix", resource.UniqueIdPrefix),
@@ -298,7 +299,7 @@ func TestAccRDSInstance_onlyMajorVersion(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_majorVersionOnly(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "engine", "mysql"),
 					resource.TestCheckResourceAttr(resourceName, "engine_version", "8.0"),
@@ -335,7 +336,7 @@ func TestAccRDSInstance_kmsKey(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_kmsKeyID(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
 					testAccCheckInstanceAttributes(&v),
 					resource.TestCheckResourceAttrPair(resourceName, "kms_key_id", kmsKeyResourceName, "arn"),
@@ -352,6 +353,35 @@ func TestAccRDSInstance_kmsKey(t *testing.T) {
 					"password",
 					"skip_final_snapshot",
 				},
+			},
+		},
+	})
+}
+
+func TestAccRDSInstance_customIAMInstanceProfile(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var v rds.DBInstance
+	resourceName := "aws_db_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionNot(t, endpoints.AwsUsGovPartitionID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_customIAMInstanceProfile(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &v),
+					resource.TestCheckResourceAttrSet(resourceName, "custom_iam_instance_profile"),
+				),
 			},
 		},
 	})
@@ -374,14 +404,14 @@ func TestAccRDSInstance_subnetGroup(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_subnetGroup(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "db_subnet_group_name", rName),
 				),
 			},
 			{
 				Config: testAccInstanceConfig_subnetGroupUpdated(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "db_subnet_group_name", fmt.Sprintf("%s-2", rName)),
 				),
@@ -407,14 +437,14 @@ func TestAccRDSInstance_networkType(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_networkType(rName, "IPV4"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "network_type", "IPV4"),
 				),
 			},
 			{
 				Config: testAccInstanceConfig_networkType(rName, "DUAL"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "network_type", "DUAL"),
 				),
@@ -440,7 +470,7 @@ func TestAccRDSInstance_optionGroup(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_optionGroup(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
 					testAccCheckInstanceAttributes(&v),
 					resource.TestCheckResourceAttr(resourceName, "option_group_name", rName),
@@ -467,7 +497,7 @@ func TestAccRDSInstance_iamAuth(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_iamAuth(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
 					testAccCheckInstanceAttributes(&v),
 					resource.TestCheckResourceAttr(resourceName, "iam_database_authentication_enabled", "true"),
@@ -495,7 +525,7 @@ func TestAccRDSInstance_allowMajorVersionUpgrade(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_allowMajorVersionUpgrade(rName, true),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &dbInstance1),
 					resource.TestCheckResourceAttr(resourceName, "allow_major_version_upgrade", "true"),
 				),
@@ -514,7 +544,7 @@ func TestAccRDSInstance_allowMajorVersionUpgrade(t *testing.T) {
 			},
 			{
 				Config: testAccInstanceConfig_allowMajorVersionUpgrade(rName, false),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &dbInstance1),
 					resource.TestCheckResourceAttr(resourceName, "allow_major_version_upgrade", "false"),
 				),
@@ -543,7 +573,7 @@ func TestAccRDSInstance_dbSubnetGroupName(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_dbSubnetGroupName(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &dbInstance),
 					testAccCheckSubnetGroupExists(resourceName, &dbSubnetGroup),
 					resource.TestCheckResourceAttrPair(resourceName, "db_subnet_group_name", dbSubnetGroupResourceName, "name"),
@@ -573,7 +603,7 @@ func TestAccRDSInstance_DBSubnetGroupName_ramShared(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_DBSubnetGroupName_ramShared(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &dbInstance),
 					testAccCheckSubnetGroupExists(dbSubnetGroupResourceName, &dbSubnetGroup),
 					resource.TestCheckResourceAttrPair(resourceName, "db_subnet_group_name", dbSubnetGroupResourceName, "name"),
@@ -603,7 +633,7 @@ func TestAccRDSInstance_DBSubnetGroupName_vpcSecurityGroupIDs(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_DBSubnetGroupName_vpcSecurityGroupIDs(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &dbInstance),
 					testAccCheckSubnetGroupExists(resourceName, &dbSubnetGroup),
 					resource.TestCheckResourceAttrPair(resourceName, "db_subnet_group_name", dbSubnetGroupResourceName, "name"),
@@ -631,7 +661,7 @@ func TestAccRDSInstance_deletionProtection(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_deletionProtection(rName, true),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "deletion_protection", "true"),
 				),
@@ -650,7 +680,7 @@ func TestAccRDSInstance_deletionProtection(t *testing.T) {
 			},
 			{
 				Config: testAccInstanceConfig_deletionProtection(rName, false),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "deletion_protection", "false"),
 				),
@@ -679,7 +709,7 @@ func TestAccRDSInstance_finalSnapshotIdentifier(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_finalSnapshotID(rName1, rName1),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
 				),
 			},
@@ -687,7 +717,7 @@ func TestAccRDSInstance_finalSnapshotIdentifier(t *testing.T) {
 			// https://github.com/hashicorp/terraform-provider-aws/issues/26280
 			{
 				Config: testAccInstanceConfig_finalSnapshotID(rName1, rName2),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
 				),
 			},
@@ -712,7 +742,7 @@ func TestAccRDSInstance_FinalSnapshotIdentifier_skipFinalSnapshot(t *testing.T) 
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_FinalSnapshotID_skipFinalSnapshot(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
 				),
 			},
@@ -738,7 +768,7 @@ func TestAccRDSInstance_isAlreadyBeingDeleted(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_mariaDB(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &dbInstance),
 				),
 			},
@@ -780,28 +810,28 @@ func TestAccRDSInstance_maxAllocatedStorage(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_maxAllocatedStorage(rName, 10),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "max_allocated_storage", "10"),
 				),
 			},
 			{
 				Config: testAccInstanceConfig_maxAllocatedStorage(rName, 5),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "max_allocated_storage", "0"),
 				),
 			},
 			{
 				Config: testAccInstanceConfig_maxAllocatedStorage(rName, 15),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "max_allocated_storage", "15"),
 				),
 			},
 			{
 				Config: testAccInstanceConfig_maxAllocatedStorage(rName, 0),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "max_allocated_storage", "0"),
 				),
@@ -832,7 +862,7 @@ func TestAccRDSInstance_password(t *testing.T) {
 			},
 			{
 				Config: testAccInstanceConfig_password(rName, "valid-password"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "password", "valid-password"),
 				),
@@ -1020,7 +1050,7 @@ func TestAccRDSInstance_ReplicateSourceDB_allocatedStorage(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_ReplicateSourceDB_allocatedStorage(rName, 10),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(sourceResourceName, &sourceDbInstance),
 					testAccCheckInstanceExists(resourceName, &dbInstance),
 					testAccCheckInstanceReplicaAttributes(&sourceDbInstance, &dbInstance),
@@ -1050,7 +1080,7 @@ func TestAccRDSInstance_ReplicateSourceDB_iops(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_ReplicateSourceDB_iops(rName, 1000),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(sourceResourceName, &sourceDbInstance),
 					testAccCheckInstanceExists(resourceName, &dbInstance),
 					testAccCheckInstanceReplicaAttributes(&sourceDbInstance, &dbInstance),
@@ -1080,7 +1110,7 @@ func TestAccRDSInstance_ReplicateSourceDB_allocatedStorageAndIops(t *testing.T) 
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_ReplicateSourceDB_allocatedStorageAndIOPS(rName, 220, 2200),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(sourceResourceName, &sourceDbInstance),
 					testAccCheckInstanceExists(resourceName, &dbInstance),
 					testAccCheckInstanceReplicaAttributes(&sourceDbInstance, &dbInstance),
@@ -1111,7 +1141,7 @@ func TestAccRDSInstance_ReplicateSourceDB_allowMajorVersionUpgrade(t *testing.T)
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_ReplicateSourceDB_allowMajorVersionUpgrade(rName, true),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(sourceResourceName, &sourceDbInstance),
 					testAccCheckInstanceExists(resourceName, &dbInstance),
 					testAccCheckInstanceReplicaAttributes(&sourceDbInstance, &dbInstance),
@@ -1141,7 +1171,7 @@ func TestAccRDSInstance_ReplicateSourceDB_autoMinorVersionUpgrade(t *testing.T) 
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_ReplicateSourceDB_autoMinorVersionUpgrade(rName, false),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(sourceResourceName, &sourceDbInstance),
 					testAccCheckInstanceExists(resourceName, &dbInstance),
 					testAccCheckInstanceReplicaAttributes(&sourceDbInstance, &dbInstance),
@@ -1171,7 +1201,7 @@ func TestAccRDSInstance_ReplicateSourceDB_availabilityZone(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_ReplicateSourceDB_availabilityZone(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(sourceResourceName, &sourceDbInstance),
 					testAccCheckInstanceExists(resourceName, &dbInstance),
 					testAccCheckInstanceReplicaAttributes(&sourceDbInstance, &dbInstance),
@@ -1199,7 +1229,7 @@ func TestAccRDSInstance_ReplicateSourceDB_backupRetentionPeriod(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_ReplicateSourceDB_backupRetentionPeriod(rName, 1),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(sourceResourceName, &sourceDbInstance),
 					testAccCheckInstanceExists(resourceName, &dbInstance),
 					testAccCheckInstanceReplicaAttributes(&sourceDbInstance, &dbInstance),
@@ -1229,7 +1259,7 @@ func TestAccRDSInstance_ReplicateSourceDB_backupWindow(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_ReplicateSourceDB_backupWindow(rName, "00:00-08:00", "sun:23:00-sun:23:30"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(sourceResourceName, &sourceDbInstance),
 					testAccCheckInstanceExists(resourceName, &dbInstance),
 					testAccCheckInstanceReplicaAttributes(&sourceDbInstance, &dbInstance),
@@ -1263,7 +1293,7 @@ func TestAccRDSInstance_ReplicateSourceDB_dbSubnetGroupName(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_ReplicateSourceDB_dbSubnetGroupName(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &dbInstance),
 					testAccCheckSubnetGroupExists(resourceName, &dbSubnetGroup),
 					resource.TestCheckResourceAttrPair(resourceName, "db_subnet_group_name", dbSubnetGroupResourceName, "name"),
@@ -1298,7 +1328,7 @@ func TestAccRDSInstance_ReplicateSourceDBDBSubnetGroupName_ramShared(t *testing.
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_ReplicateSourceDB_DBSubnetGroupName_ramShared(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &dbInstance),
 					testAccCheckSubnetGroupExists(dbSubnetGroupResourceName, &dbSubnetGroup),
 					resource.TestCheckResourceAttrPair(resourceName, "db_subnet_group_name", dbSubnetGroupResourceName, "name"),
@@ -1331,7 +1361,7 @@ func TestAccRDSInstance_ReplicateSourceDBDBSubnetGroupName_vpcSecurityGroupIDs(t
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_ReplicateSourceDB_DBSubnetGroupName_vpcSecurityGroupIDs(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &dbInstance),
 					testAccCheckSubnetGroupExists(resourceName, &dbSubnetGroup),
 					resource.TestCheckResourceAttrPair(resourceName, "db_subnet_group_name", dbSubnetGroupResourceName, "name"),
@@ -1368,7 +1398,7 @@ func TestAccRDSInstance_ReplicateSourceDB_deletionProtection(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_ReplicateSourceDB_deletionProtection(rName, true),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(sourceResourceName, &sourceDbInstance),
 					testAccCheckInstanceExists(resourceName, &dbInstance),
 					testAccCheckInstanceReplicaAttributes(&sourceDbInstance, &dbInstance),
@@ -1378,7 +1408,7 @@ func TestAccRDSInstance_ReplicateSourceDB_deletionProtection(t *testing.T) {
 			// Ensure we disable deletion protection before attempting to delete :)
 			{
 				Config: testAccInstanceConfig_ReplicateSourceDB_deletionProtection(rName, false),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(sourceResourceName, &sourceDbInstance),
 					testAccCheckInstanceExists(resourceName, &dbInstance),
 					testAccCheckInstanceReplicaAttributes(&sourceDbInstance, &dbInstance),
@@ -1408,7 +1438,7 @@ func TestAccRDSInstance_ReplicateSourceDB_iamDatabaseAuthenticationEnabled(t *te
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_ReplicateSourceDB_iamDatabaseAuthenticationEnabled(rName, true),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(sourceResourceName, &sourceDbInstance),
 					testAccCheckInstanceExists(resourceName, &dbInstance),
 					testAccCheckInstanceReplicaAttributes(&sourceDbInstance, &dbInstance),
@@ -1438,7 +1468,7 @@ func TestAccRDSInstance_ReplicateSourceDB_maintenanceWindow(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_ReplicateSourceDB_maintenanceWindow(rName, "00:00-08:00", "sun:23:00-sun:23:30"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(sourceResourceName, &sourceDbInstance),
 					testAccCheckInstanceExists(resourceName, &dbInstance),
 					testAccCheckInstanceReplicaAttributes(&sourceDbInstance, &dbInstance),
@@ -1468,7 +1498,7 @@ func TestAccRDSInstance_ReplicateSourceDB_maxAllocatedStorage(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_ReplicateSourceDB_maxAllocatedStorage(rName, 10),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(sourceResourceName, &sourceDbInstance),
 					testAccCheckInstanceExists(resourceName, &dbInstance),
 					testAccCheckInstanceReplicaAttributes(&sourceDbInstance, &dbInstance),
@@ -1498,7 +1528,7 @@ func TestAccRDSInstance_ReplicateSourceDB_monitoring(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_ReplicateSourceDB_monitoring(rName, 5),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(sourceResourceName, &sourceDbInstance),
 					testAccCheckInstanceExists(resourceName, &dbInstance),
 					testAccCheckInstanceReplicaAttributes(&sourceDbInstance, &dbInstance),
@@ -1528,13 +1558,13 @@ func TestAccRDSInstance_ReplicateSourceDB_monitoring_sourceAlreadyExists(t *test
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_ReplicateSourceDB_monitoring_sourceOnly(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(sourceResourceName, &sourceDbInstance),
 				),
 			},
 			{
 				Config: testAccInstanceConfig_ReplicateSourceDB_monitoring(rName, 5),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(sourceResourceName, &sourceDbInstance),
 					testAccCheckInstanceExists(resourceName, &dbInstance),
 					testAccCheckInstanceReplicaAttributes(&sourceDbInstance, &dbInstance),
@@ -1564,7 +1594,7 @@ func TestAccRDSInstance_ReplicateSourceDB_multiAZ(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_ReplicateSourceDB_multiAZ(rName, true),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(sourceResourceName, &sourceDbInstance),
 					testAccCheckInstanceExists(resourceName, &dbInstance),
 					testAccCheckInstanceReplicaAttributes(&sourceDbInstance, &dbInstance),
@@ -1594,7 +1624,7 @@ func TestAccRDSInstance_ReplicateSourceDB_networkType(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_ReplicateSourceDB_networkType(rName, "IPV4"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(sourceResourceName, &sourceDbInstance),
 					testAccCheckInstanceExists(resourceName, &dbInstance),
 					testAccCheckInstanceReplicaAttributes(&sourceDbInstance, &dbInstance),
@@ -1753,7 +1783,7 @@ func TestAccRDSInstance_ReplicateSourceDB_port(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_ReplicateSourceDB_port(rName, 9999),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(sourceResourceName, &sourceDbInstance),
 					testAccCheckInstanceExists(resourceName, &dbInstance),
 					testAccCheckInstanceReplicaAttributes(&sourceDbInstance, &dbInstance),
@@ -1783,7 +1813,7 @@ func TestAccRDSInstance_ReplicateSourceDB_vpcSecurityGroupIDs(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_ReplicateSourceDB_vpcSecurityGroupIDs(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(sourceResourceName, &sourceDbInstance),
 					testAccCheckInstanceExists(resourceName, &dbInstance),
 					testAccCheckInstanceReplicaAttributes(&sourceDbInstance, &dbInstance),
@@ -1814,7 +1844,7 @@ func TestAccRDSInstance_ReplicateSourceDB_caCertificateIdentifier(t *testing.T) 
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_ReplicateSourceDB_caCertificateID(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(sourceResourceName, &sourceDbInstance),
 					testAccCheckInstanceExists(resourceName, &dbInstance),
 					testAccCheckInstanceReplicaAttributes(&sourceDbInstance, &dbInstance),
@@ -1845,7 +1875,7 @@ func TestAccRDSInstance_ReplicateSourceDB_replicaMode(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_ReplicateSourceDB_replicaMode(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(sourceResourceName, &sourceDbInstance),
 					testAccCheckInstanceExists(resourceName, &dbInstance),
 					testAccCheckInstanceReplicaAttributes(&sourceDbInstance, &dbInstance),
@@ -1920,7 +1950,7 @@ func TestAccRDSInstance_S3Import_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_S3Import_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "identifier", rName),
 					resource.TestCheckResourceAttr(resourceName, "identifier_prefix", ""),
@@ -1959,7 +1989,7 @@ func TestAccRDSInstance_SnapshotIdentifier_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_snapshotID(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(sourceDbResourceName, &sourceDbInstance),
 					testAccCheckDBSnapshotExists(snapshotResourceName, &dbSnapshot),
 					testAccCheckInstanceExists(resourceName, &dbInstance),
@@ -2000,7 +2030,7 @@ func TestAccRDSInstance_SnapshotIdentifier_namePrefix(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_SnapshotIdentifier_namePrefix(identifierPrefix, sourceName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
 					acctest.CheckResourceAttrNameFromPrefix(resourceName, "identifier", identifierPrefix),
 					resource.TestCheckResourceAttr(resourceName, "identifier_prefix", identifierPrefix),
@@ -2037,7 +2067,7 @@ func TestAccRDSInstance_SnapshotIdentifier_nameGenerated(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_SnapshotIdentifier_nameGenerated(sourceName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
 					acctest.CheckResourceAttrNameGenerated(resourceName, "identifier"),
 					resource.TestCheckResourceAttr(resourceName, "identifier_prefix", resource.UniqueIdPrefix),
@@ -2075,13 +2105,13 @@ func TestAccRDSInstance_SnapshotIdentifier_AssociationRemoved(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_snapshotID(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &dbInstance1),
 				),
 			},
 			{
 				Config: testAccInstanceConfig_SnapshotID_associationRemoved(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &dbInstance2),
 					testAccCheckInstanceNotRecreated(&dbInstance1, &dbInstance2),
 					resource.TestCheckResourceAttrPair(resourceName, "allocated_storage", sourceDbResourceName, "allocated_storage"),
@@ -2114,7 +2144,7 @@ func TestAccRDSInstance_SnapshotIdentifier_allocatedStorage(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_SnapshotID_allocatedStorage(rName, 10),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(sourceDbResourceName, &sourceDbInstance),
 					testAccCheckDBSnapshotExists(snapshotResourceName, &dbSnapshot),
 					testAccCheckInstanceExists(resourceName, &dbInstance),
@@ -2146,7 +2176,7 @@ func TestAccRDSInstance_SnapshotIdentifier_io1Storage(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_SnapshotID_io1Storage(rName, 1000),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(sourceDbResourceName, &sourceDbInstance),
 					testAccCheckDBSnapshotExists(snapshotResourceName, &dbSnapshot),
 					testAccCheckInstanceExists(resourceName, &dbInstance),
@@ -2178,7 +2208,7 @@ func TestAccRDSInstance_SnapshotIdentifier_allowMajorVersionUpgrade(t *testing.T
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_SnapshotID_allowMajorVersionUpgrade(rName, true),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(sourceDbResourceName, &sourceDbInstance),
 					testAccCheckDBSnapshotExists(snapshotResourceName, &dbSnapshot),
 					testAccCheckInstanceExists(resourceName, &dbInstance),
@@ -2210,7 +2240,7 @@ func TestAccRDSInstance_SnapshotIdentifier_autoMinorVersionUpgrade(t *testing.T)
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_SnapshotID_autoMinorVersionUpgrade(rName, false),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(sourceDbResourceName, &sourceDbInstance),
 					testAccCheckDBSnapshotExists(snapshotResourceName, &dbSnapshot),
 					testAccCheckInstanceExists(resourceName, &dbInstance),
@@ -2242,7 +2272,7 @@ func TestAccRDSInstance_SnapshotIdentifier_availabilityZone(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_SnapshotID_availabilityZone(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(sourceDbResourceName, &sourceDbInstance),
 					testAccCheckDBSnapshotExists(snapshotResourceName, &dbSnapshot),
 					testAccCheckInstanceExists(resourceName, &dbInstance),
@@ -2273,7 +2303,7 @@ func TestAccRDSInstance_SnapshotIdentifier_backupRetentionPeriodOverride(t *test
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_SnapshotID_backupRetentionPeriod(rName, 1),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(sourceDbResourceName, &sourceDbInstance),
 					testAccCheckDBSnapshotExists(snapshotResourceName, &dbSnapshot),
 					testAccCheckInstanceExists(resourceName, &dbInstance),
@@ -2305,7 +2335,7 @@ func TestAccRDSInstance_SnapshotIdentifier_backupRetentionPeriodUnset(t *testing
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_SnapshotID_BackupRetentionPeriod_unset(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(sourceDbResourceName, &sourceDbInstance),
 					testAccCheckDBSnapshotExists(snapshotResourceName, &dbSnapshot),
 					testAccCheckInstanceExists(resourceName, &dbInstance),
@@ -2337,7 +2367,7 @@ func TestAccRDSInstance_SnapshotIdentifier_backupWindow(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_SnapshotID_backupWindow(rName, "00:00-08:00", "sun:23:00-sun:23:30"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(sourceDbResourceName, &sourceDbInstance),
 					testAccCheckDBSnapshotExists(snapshotResourceName, &dbSnapshot),
 					testAccCheckInstanceExists(resourceName, &dbInstance),
@@ -2371,7 +2401,7 @@ func TestAccRDSInstance_SnapshotIdentifier_dbSubnetGroupName(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_SnapshotID_dbSubnetGroupName(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(sourceDbResourceName, &sourceDbInstance),
 					testAccCheckDBSnapshotExists(snapshotResourceName, &dbSnapshot),
 					testAccCheckInstanceExists(resourceName, &dbInstance),
@@ -2410,7 +2440,7 @@ func TestAccRDSInstance_SnapshotIdentifier_dbSubnetGroupNameRAMShared(t *testing
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_SnapshotID_DBSubnetGroupName_ramShared(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(sourceDbResourceName, &sourceDbInstance),
 					testAccCheckDBSnapshotExists(snapshotResourceName, &dbSnapshot),
 					testAccCheckInstanceExists(resourceName, &dbInstance),
@@ -2445,7 +2475,7 @@ func TestAccRDSInstance_SnapshotIdentifier_dbSubnetGroupNameVPCSecurityGroupIDs(
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_SnapshotID_DBSubnetGroupName_vpcSecurityGroupIDs(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(sourceDbResourceName, &sourceDbInstance),
 					testAccCheckDBSnapshotExists(snapshotResourceName, &dbSnapshot),
 					testAccCheckInstanceExists(resourceName, &dbInstance),
@@ -2478,7 +2508,7 @@ func TestAccRDSInstance_SnapshotIdentifier_deletionProtection(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_SnapshotID_deletionProtection(rName, true),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(sourceDbResourceName, &sourceDbInstance),
 					testAccCheckDBSnapshotExists(snapshotResourceName, &dbSnapshot),
 					testAccCheckInstanceExists(resourceName, &dbInstance),
@@ -2488,7 +2518,7 @@ func TestAccRDSInstance_SnapshotIdentifier_deletionProtection(t *testing.T) {
 			// Ensure we disable deletion protection before attempting to delete :)
 			{
 				Config: testAccInstanceConfig_SnapshotID_deletionProtection(rName, false),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(sourceDbResourceName, &sourceDbInstance),
 					testAccCheckDBSnapshotExists(snapshotResourceName, &dbSnapshot),
 					testAccCheckInstanceExists(resourceName, &dbInstance),
@@ -2520,7 +2550,7 @@ func TestAccRDSInstance_SnapshotIdentifier_iamDatabaseAuthenticationEnabled(t *t
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_SnapshotID_iamDatabaseAuthenticationEnabled(rName, true),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(sourceDbResourceName, &sourceDbInstance),
 					testAccCheckDBSnapshotExists(snapshotResourceName, &dbSnapshot),
 					testAccCheckInstanceExists(resourceName, &dbInstance),
@@ -2552,7 +2582,7 @@ func TestAccRDSInstance_SnapshotIdentifier_maintenanceWindow(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_SnapshotID_maintenanceWindow(rName, "00:00-08:00", "sun:23:00-sun:23:30"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(sourceDbResourceName, &sourceDbInstance),
 					testAccCheckDBSnapshotExists(snapshotResourceName, &dbSnapshot),
 					testAccCheckInstanceExists(resourceName, &dbInstance),
@@ -2584,7 +2614,7 @@ func TestAccRDSInstance_SnapshotIdentifier_maxAllocatedStorage(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_SnapshotID_maxAllocatedStorage(rName, 10),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(sourceDbResourceName, &sourceDbInstance),
 					testAccCheckDBSnapshotExists(snapshotResourceName, &dbSnapshot),
 					testAccCheckInstanceExists(resourceName, &dbInstance),
@@ -2616,7 +2646,7 @@ func TestAccRDSInstance_SnapshotIdentifier_monitoring(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_SnapshotID_monitoring(rName, 5),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(sourceDbResourceName, &sourceDbInstance),
 					testAccCheckDBSnapshotExists(snapshotResourceName, &dbSnapshot),
 					testAccCheckInstanceExists(resourceName, &dbInstance),
@@ -2648,7 +2678,7 @@ func TestAccRDSInstance_SnapshotIdentifier_multiAZ(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_SnapshotID_multiAZ(rName, true),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(sourceDbResourceName, &sourceDbInstance),
 					testAccCheckDBSnapshotExists(snapshotResourceName, &dbSnapshot),
 					testAccCheckInstanceExists(resourceName, &dbInstance),
@@ -2680,7 +2710,7 @@ func TestAccRDSInstance_SnapshotIdentifier_multiAZSQLServer(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_SnapshotID_MultiAZ_sqlServer(rName, true),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(sourceDbResourceName, &sourceDbInstance),
 					testAccCheckDBSnapshotExists(snapshotResourceName, &dbSnapshot),
 					testAccCheckInstanceExists(resourceName, &dbInstance),
@@ -2712,7 +2742,7 @@ func TestAccRDSInstance_SnapshotIdentifier_parameterGroupName(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_SnapshotID_parameterGroupName(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(sourceDbResourceName, &sourceDbInstance),
 					testAccCheckDBSnapshotExists(snapshotResourceName, &dbSnapshot),
 					testAccCheckInstanceExists(resourceName, &dbInstance),
@@ -2745,7 +2775,7 @@ func TestAccRDSInstance_SnapshotIdentifier_port(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_SnapshotID_port(rName, 9999),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(sourceDbResourceName, &sourceDbInstance),
 					testAccCheckDBSnapshotExists(snapshotResourceName, &dbSnapshot),
 					testAccCheckInstanceExists(resourceName, &dbInstance),
@@ -2777,7 +2807,7 @@ func TestAccRDSInstance_SnapshotIdentifier_tags(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_SnapshotID_tags(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(sourceDbResourceName, &sourceDbInstance),
 					testAccCheckDBSnapshotExists(snapshotResourceName, &dbSnapshot),
 					testAccCheckInstanceExists(resourceName, &dbInstance),
@@ -2785,12 +2815,20 @@ func TestAccRDSInstance_SnapshotIdentifier_tags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"snapshot_identifier",
+				},
+			},
 		},
 	})
 }
 
 func TestAccRDSInstance_SnapshotIdentifier_tagsRemove(t *testing.T) {
-	acctest.Skip(t, "To be fixed: https://github.com/hashicorp/terraform-provider-aws/issues/5959")
+	acctest.Skip(t, "To be fixed: https://github.com/hashicorp/terraform-provider-aws/issues/26808")
 	// --- FAIL: TestAccRDSInstance_SnapshotIdentifierTags_unset (1086.15s)
 	//     testing.go:527: Step 0 error: Check failed: Check 4/4 error: aws_db_instance.test: Attribute 'tags.%' expected "0", got "1"
 
@@ -2809,13 +2847,21 @@ func TestAccRDSInstance_SnapshotIdentifier_tagsRemove(t *testing.T) {
 		CheckDestroy:             testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig_SnapshotID_Tags_clear(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Config: testAccInstanceConfig_SnapshotID_tagsRemove(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(sourceDbResourceName, &sourceDbInstance),
 					testAccCheckDBSnapshotExists(snapshotResourceName, &dbSnapshot),
 					testAccCheckInstanceExists(resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"snapshot_identifier",
+				},
 			},
 		},
 	})
@@ -2842,7 +2888,7 @@ func TestAccRDSInstance_SnapshotIdentifier_vpcSecurityGroupIDs(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_SnapshotID_vpcSecurityGroupIDs(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(sourceDbResourceName, &sourceDbInstance),
 					testAccCheckDBSnapshotExists(snapshotResourceName, &dbSnapshot),
 					testAccCheckInstanceExists(resourceName, &dbInstance),
@@ -2877,7 +2923,7 @@ func TestAccRDSInstance_SnapshotIdentifier_vpcSecurityGroupIDsTags(t *testing.T)
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_SnapshotID_VPCSecurityGroupIDs_tags(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(sourceDbResourceName, &sourceDbInstance),
 					testAccCheckDBSnapshotExists(snapshotResourceName, &dbSnapshot),
 					testAccCheckInstanceExists(resourceName, &dbInstance),
@@ -2906,7 +2952,7 @@ func TestAccRDSInstance_monitoringInterval(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_monitoringInterval(rName, 30),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "monitoring_interval", "30"),
 				),
@@ -2924,21 +2970,21 @@ func TestAccRDSInstance_monitoringInterval(t *testing.T) {
 			},
 			{
 				Config: testAccInstanceConfig_monitoringInterval(rName, 60),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "monitoring_interval", "60"),
 				),
 			},
 			{
 				Config: testAccInstanceConfig_monitoringInterval(rName, 0),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "monitoring_interval", "0"),
 				),
 			},
 			{
 				Config: testAccInstanceConfig_monitoringInterval(rName, 30),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "monitoring_interval", "30"),
 				),
@@ -2965,7 +3011,7 @@ func TestAccRDSInstance_MonitoringRoleARN_enabledToDisabled(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_monitoringRoleARN(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &dbInstance),
 					resource.TestCheckResourceAttrPair(resourceName, "monitoring_role_arn", iamRoleResourceName, "arn"),
 				),
@@ -2983,7 +3029,7 @@ func TestAccRDSInstance_MonitoringRoleARN_enabledToDisabled(t *testing.T) {
 			},
 			{
 				Config: testAccInstanceConfig_monitoringInterval(rName, 0),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "monitoring_interval", "0"),
 				),
@@ -3010,7 +3056,7 @@ func TestAccRDSInstance_MonitoringRoleARN_enabledToRemoved(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_monitoringRoleARN(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &dbInstance),
 					resource.TestCheckResourceAttrPair(resourceName, "monitoring_role_arn", iamRoleResourceName, "arn"),
 				),
@@ -3028,7 +3074,7 @@ func TestAccRDSInstance_MonitoringRoleARN_enabledToRemoved(t *testing.T) {
 			},
 			{
 				Config: testAccInstanceConfig_monitoringRoleARNRemoved(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &dbInstance),
 				),
 			},
@@ -3054,7 +3100,7 @@ func TestAccRDSInstance_MonitoringRoleARN_removedToEnabled(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_monitoringRoleARNRemoved(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &dbInstance),
 				),
 			},
@@ -3071,7 +3117,7 @@ func TestAccRDSInstance_MonitoringRoleARN_removedToEnabled(t *testing.T) {
 			},
 			{
 				Config: testAccInstanceConfig_monitoringRoleARN(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &dbInstance),
 					resource.TestCheckResourceAttrPair(resourceName, "monitoring_role_arn", iamRoleResourceName, "arn"),
 				),
@@ -3100,7 +3146,7 @@ func TestAccRDSInstance_separateIopsUpdate(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_SnapshotInstanceConfig_iopsUpdate(rName, 1000),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists("aws_db_instance.bar", &v),
 					testAccCheckInstanceAttributes(&v),
 				),
@@ -3108,7 +3154,7 @@ func TestAccRDSInstance_separateIopsUpdate(t *testing.T) {
 
 			{
 				Config: testAccInstanceConfig_SnapshotInstanceConfig_iopsUpdate(rName, 2000),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists("aws_db_instance.bar", &v),
 					testAccCheckInstanceAttributes(&v),
 				),
@@ -3135,7 +3181,7 @@ func TestAccRDSInstance_portUpdate(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_SnapshotInstanceConfig_mySQLPort(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "port", "3306"),
 				),
@@ -3143,7 +3189,7 @@ func TestAccRDSInstance_portUpdate(t *testing.T) {
 
 			{
 				Config: testAccInstanceConfig_SnapshotInstanceConfig_updateMySQLPort(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "port", "3305"),
 				),
@@ -3169,7 +3215,7 @@ func TestAccRDSInstance_MSSQL_tz(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_MSSQL_timezone(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
 					testAccCheckInstanceAttributes_MSSQL(&v, ""),
 					resource.TestCheckResourceAttr(resourceName, "allocated_storage", "20"),
@@ -3179,7 +3225,7 @@ func TestAccRDSInstance_MSSQL_tz(t *testing.T) {
 
 			{
 				Config: testAccInstanceConfig_MSSQL_timezone_AKST(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
 					testAccCheckInstanceAttributes_MSSQL(&v, "Alaskan Standard Time"),
 					resource.TestCheckResourceAttr(resourceName, "allocated_storage", "20"),
@@ -3211,7 +3257,7 @@ func TestAccRDSInstance_MSSQL_domain(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_mssqlDomain(rName, domain1, domain2),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &vBefore),
 					testAccCheckInstanceDomainAttributes(domain1, &vBefore),
 					resource.TestCheckResourceAttrSet(resourceName, "domain"),
@@ -3220,7 +3266,7 @@ func TestAccRDSInstance_MSSQL_domain(t *testing.T) {
 			},
 			{
 				Config: testAccInstanceConfig_mssqlUpdateDomain(rName, domain1, domain2),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &vAfter),
 					testAccCheckInstanceDomainAttributes(domain2, &vAfter),
 					resource.TestCheckResourceAttrSet(resourceName, "domain"),
@@ -3250,7 +3296,7 @@ func TestAccRDSInstance_MSSQL_domainSnapshotRestore(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_mssqlDomainSnapshotRestore(rName, domain),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &vRestoredInstance),
 					testAccCheckInstanceExists(originResourceName, &v),
 					testAccCheckInstanceDomainAttributes(domain, &vRestoredInstance),
@@ -3280,7 +3326,7 @@ func TestAccRDSInstance_MySQL_snapshotRestoreWithEngineVersion(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_mySQLSnapshotRestoreEngineVersion(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(restoreResourceName, &vRestoredInstance),
 					testAccCheckInstanceExists(resourceName, &v),
 					// Hardcoded older version. Will to update when no longer compatible to upgrade from this to the default version.
@@ -3308,29 +3354,8 @@ func TestAccRDSInstance_minorVersion(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_autoMinorVersion(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists("aws_db_instance.bar", &v),
-				),
-			},
-		},
-	})
-}
-
-func TestAccRDSInstance_ec2Classic(t *testing.T) {
-	var v rds.DBInstance
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_db_instance.bar"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckEC2Classic(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstanceEC2ClassicDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccInstanceConfig_ec2Classic(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceEC2ClassicExists(resourceName, &v),
 				),
 			},
 		},
@@ -3354,7 +3379,7 @@ func TestAccRDSInstance_cloudWatchLogsExport(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_cloudWatchLogsExportConfiguration(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "enabled_cloudwatch_logs_exports.*", "audit"),
@@ -3394,7 +3419,7 @@ func TestAccRDSInstance_EnabledCloudWatchLogsExports_mySQL(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_cloudWatchLogsExportConfiguration(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "enabled_cloudwatch_logs_exports.*", "audit"),
@@ -3403,7 +3428,7 @@ func TestAccRDSInstance_EnabledCloudWatchLogsExports_mySQL(t *testing.T) {
 			},
 			{
 				Config: testAccInstanceConfig_cloudWatchLogsExportConfigurationAdd(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.#", "3"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "enabled_cloudwatch_logs_exports.*", "audit"),
@@ -3413,7 +3438,7 @@ func TestAccRDSInstance_EnabledCloudWatchLogsExports_mySQL(t *testing.T) {
 			},
 			{
 				Config: testAccInstanceConfig_cloudWatchLogsExportConfigurationModify(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.#", "3"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "enabled_cloudwatch_logs_exports.*", "audit"),
@@ -3423,7 +3448,7 @@ func TestAccRDSInstance_EnabledCloudWatchLogsExports_mySQL(t *testing.T) {
 			},
 			{
 				Config: testAccInstanceConfig_cloudWatchLogsExportConfigurationDelete(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.#", "0"),
 				),
@@ -3449,7 +3474,7 @@ func TestAccRDSInstance_EnabledCloudWatchLogsExports_msSQL(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_EnabledCloudWatchLogsExports_mssql(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.#", "2"),
 				),
@@ -3486,7 +3511,7 @@ func TestAccRDSInstance_EnabledCloudWatchLogsExports_oracle(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_EnabledCloudWatchLogsExports_oracle(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.#", "3"),
 				),
@@ -3524,7 +3549,7 @@ func TestAccRDSInstance_EnabledCloudWatchLogsExports_postgresql(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_EnabledCloudWatchLogsExports_postgreSQL(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.#", "2"),
 				),
@@ -3563,7 +3588,7 @@ func TestAccRDSInstance_noDeleteAutomatedBackups(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_noDeleteAutomatedBackups(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &dbInstance),
 				),
 			},
@@ -3589,7 +3614,7 @@ func TestAccRDSInstance_PerformanceInsightsEnabled_disabledToEnabled(t *testing.
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_performanceInsightsDisabled(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "performance_insights_enabled", "false"),
 				),
@@ -3606,7 +3631,7 @@ func TestAccRDSInstance_PerformanceInsightsEnabled_disabledToEnabled(t *testing.
 			},
 			{
 				Config: testAccInstanceConfig_performanceInsightsEnabled(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "performance_insights_enabled", "true"),
 				),
@@ -3632,7 +3657,7 @@ func TestAccRDSInstance_PerformanceInsightsEnabled_enabledToDisabled(t *testing.
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_performanceInsightsEnabled(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "performance_insights_enabled", "true"),
 				),
@@ -3649,7 +3674,7 @@ func TestAccRDSInstance_PerformanceInsightsEnabled_enabledToDisabled(t *testing.
 			},
 			{
 				Config: testAccInstanceConfig_performanceInsightsDisabled(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "performance_insights_enabled", "false"),
 				),
@@ -3676,7 +3701,7 @@ func TestAccRDSInstance_performanceInsightsKMSKeyID(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_performanceInsightsKMSKeyID(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "performance_insights_enabled", "true"),
 					resource.TestCheckResourceAttrPair(resourceName, "performance_insights_kms_key_id", kmsKeyResourceName, "arn"),
@@ -3694,7 +3719,7 @@ func TestAccRDSInstance_performanceInsightsKMSKeyID(t *testing.T) {
 			},
 			{
 				Config: testAccInstanceConfig_performanceInsightsKMSKeyIdDisabled(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "performance_insights_enabled", "false"),
 					resource.TestCheckResourceAttrPair(resourceName, "performance_insights_kms_key_id", kmsKeyResourceName, "arn"),
@@ -3702,7 +3727,7 @@ func TestAccRDSInstance_performanceInsightsKMSKeyID(t *testing.T) {
 			},
 			{
 				Config: testAccInstanceConfig_performanceInsightsKMSKeyID(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "performance_insights_enabled", "true"),
 					resource.TestCheckResourceAttrPair(resourceName, "performance_insights_kms_key_id", kmsKeyResourceName, "arn"),
@@ -3729,7 +3754,7 @@ func TestAccRDSInstance_performanceInsightsRetentionPeriod(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_performanceInsightsRetentionPeriod(rName, 731),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "performance_insights_enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "performance_insights_retention_period", "731"),
@@ -3747,10 +3772,18 @@ func TestAccRDSInstance_performanceInsightsRetentionPeriod(t *testing.T) {
 			},
 			{
 				Config: testAccInstanceConfig_performanceInsightsRetentionPeriod(rName, 7),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "performance_insights_enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "performance_insights_retention_period", "7"),
+				),
+			},
+			{
+				Config: testAccInstanceConfig_performanceInsightsRetentionPeriod(rName, 155),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, "performance_insights_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "performance_insights_retention_period", "155"),
 				),
 			},
 		},
@@ -3777,7 +3810,7 @@ func TestAccRDSInstance_ReplicateSourceDB_performanceInsightsEnabled(t *testing.
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_ReplicateSourceDB_performanceInsightsEnabled(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(sourceResourceName, &sourceDbInstance),
 					testAccCheckInstanceExists(resourceName, &dbInstance),
 					testAccCheckInstanceReplicaAttributes(&sourceDbInstance, &dbInstance),
@@ -3812,7 +3845,7 @@ func TestAccRDSInstance_SnapshotIdentifier_performanceInsightsEnabled(t *testing
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_SnapshotID_performanceInsightsEnabled(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(sourceDbResourceName, &sourceDbInstance),
 					testAccCheckDBSnapshotExists(snapshotResourceName, &dbSnapshot),
 					testAccCheckInstanceExists(resourceName, &dbInstance),
@@ -3843,7 +3876,7 @@ func TestAccRDSInstance_caCertificateIdentifier(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_caCertificateID(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "ca_cert_identifier", dataSourceName, "id"),
 				),
@@ -3870,7 +3903,7 @@ func TestAccRDSInstance_RestoreToPointInTime_sourceIdentifier(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_RestoreToPointInTime_sourceID(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(sourceName, &sourceDbInstance),
 					testAccCheckInstanceExists(resourceName, &dbInstance),
 				),
@@ -3911,7 +3944,7 @@ func TestAccRDSInstance_RestoreToPointInTime_sourceResourceID(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_RestoreToPointInTime_sourceResourceID(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(sourceName, &sourceDbInstance),
 					testAccCheckInstanceExists(resourceName, &dbInstance),
 				),
@@ -3952,7 +3985,7 @@ func TestAccRDSInstance_RestoreToPointInTime_monitoring(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_RestoreToPointInTime_monitoring(rName, 5),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(sourceName, &sourceDbInstance),
 					testAccCheckInstanceExists(resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "monitoring_interval", "5"),
@@ -3980,7 +4013,7 @@ func TestAccRDSInstance_NationalCharacterSet_oracle(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_NationalCharacterSet_oracle(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "nchar_character_set_name", "UTF8"),
 				),
@@ -4019,7 +4052,7 @@ func TestAccRDSInstance_NoNationalCharacterSet_oracle(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_NoNationalCharacterSet_oracle(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "nchar_character_set_name", "AL16UTF16"),
 				),
@@ -4053,7 +4086,7 @@ func TestAccRDSInstance_coIPEnabled(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_Outpost_coIPEnabled(rName, true, 0),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
 					testAccCheckInstanceAttributes(&v),
 					resource.TestCheckResourceAttr(
@@ -4077,7 +4110,7 @@ func TestAccRDSInstance_CoIPEnabled_disabledToEnabled(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_Outpost_coIPEnabled(rName, false, 0),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "customer_owned_ip_enabled", "false"),
 				),
@@ -4094,7 +4127,7 @@ func TestAccRDSInstance_CoIPEnabled_disabledToEnabled(t *testing.T) {
 			},
 			{
 				Config: testAccInstanceConfig_Outpost_coIPEnabled(rName, true, 0),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "customer_owned_ip_enabled", "true"),
 				),
@@ -4116,7 +4149,7 @@ func TestAccRDSInstance_CoIPEnabled_enabledToDisabled(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_Outpost_coIPEnabled(rName, true, 0),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "customer_owned_ip_enabled", "true"),
 				),
@@ -4133,7 +4166,7 @@ func TestAccRDSInstance_CoIPEnabled_enabledToDisabled(t *testing.T) {
 			},
 			{
 				Config: testAccInstanceConfig_Outpost_coIPEnabled(rName, false, 0),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "customer_owned_ip_enabled", "false"),
 				),
@@ -4156,7 +4189,7 @@ func TestAccRDSInstance_CoIPEnabled_restoreToPointInTime(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_CoIPEnabled_restorePointInTime(rName, false, true),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(sourceName, &sourceDbInstance),
 					testAccCheckInstanceExists(resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "customer_owned_ip_enabled", "true"),
@@ -4197,7 +4230,7 @@ func TestAccRDSInstance_CoIPEnabled_snapshotIdentifier(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_CoIPEnabled_snapshotID(rName, false, true),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(sourceDbResourceName, &sourceDbInstance),
 					testAccCheckDBSnapshotExists(snapshotResourceName, &dbSnapshot),
 					testAccCheckInstanceExists(resourceName, &dbInstance),
@@ -4225,7 +4258,7 @@ func TestAccRDSInstance_license(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_license(rName, "license-included"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "license_model", "license-included"),
 				),
@@ -4244,7 +4277,7 @@ func TestAccRDSInstance_license(t *testing.T) {
 			},
 			{
 				Config: testAccInstanceConfig_license(rName, "bring-your-own-license"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "license_model", "bring-your-own-license"),
 				),
@@ -4435,7 +4468,7 @@ func testAccCheckInstanceDestroyWithFinalSnapshot(s *terraform.State) error {
 			return err
 		}
 
-		return fmt.Errorf("DB Instance %s still exists", rs.Primary.ID)
+		return fmt.Errorf("RDS DB Instance %s still exists", rs.Primary.ID)
 	}
 
 	return nil
@@ -4460,7 +4493,7 @@ func testAccCheckInstanceDestroyWithoutFinalSnapshot(s *terraform.State) error {
 				return err
 			}
 		} else {
-			return fmt.Errorf("DB Snapshot %s exists", finalSnapshotID)
+			return fmt.Errorf("RDS DB Snapshot %s exists", finalSnapshotID)
 		}
 
 		_, err = tfrds.FindDBInstanceByID(conn, rs.Primary.ID)
@@ -4473,7 +4506,7 @@ func testAccCheckInstanceDestroyWithoutFinalSnapshot(s *terraform.State) error {
 			return err
 		}
 
-		return fmt.Errorf("DB Instance %s still exists", rs.Primary.ID)
+		return fmt.Errorf("RDS DB Instance %s still exists", rs.Primary.ID)
 	}
 
 	return nil
@@ -4500,56 +4533,6 @@ func testAccCheckInstanceExists(n string, v *rds.DBInstance) resource.TestCheckF
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
-
-		output, err := tfrds.FindDBInstanceByID(conn, rs.Primary.ID)
-
-		if err != nil {
-			return err
-		}
-
-		*v = *output
-
-		return nil
-	}
-}
-
-func testAccCheckInstanceEC2ClassicDestroy(s *terraform.State) error {
-	conn := acctest.ProviderEC2Classic.Meta().(*conns.AWSClient).RDSConn
-
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_db_instance" {
-			continue
-		}
-
-		_, err := tfrds.FindDBInstanceByID(conn, rs.Primary.ID)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("RDS DB Instance %s still exists", rs.Primary.ID)
-	}
-
-	return nil
-}
-
-func testAccCheckInstanceEC2ClassicExists(resourceName string, v *rds.DBInstance) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
-
-		if !ok {
-			return fmt.Errorf("resource (%s) state not found", resourceName)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("resource ID not set")
-		}
-
-		conn := acctest.ProviderEC2Classic.Meta().(*conns.AWSClient).RDSConn
 
 		output, err := tfrds.FindDBInstanceByID(conn, rs.Primary.ID)
 
@@ -4594,6 +4577,10 @@ func testAccInstanceConfig_orderableClassSQLServerEx() string {
 
 func testAccInstanceConfig_orderableClassSQLServerSe() string {
 	return testAccInstanceConfig_orderableClass("sqlserver-se", "license-included", "standard", sqlServerSEPreferredInstanceClasses)
+}
+
+func testAccInstanceConfig_orderableClassCustomSQLServerWeb() string {
+	return testAccInstanceConfig_orderableClass("custom-sqlserver-web", "", "gp2", sqlServerCustomPreferredInstanceClasses)
 }
 
 func testAccInstanceConfig_basic(rName string) string {
@@ -5028,7 +5015,7 @@ resource "aws_db_instance" "test" {
 `, rName))
 }
 
-func testAccInstanceConfig_baseS3Import(rName string) string {
+func testAccInstanceConfig_baseS3Import(rName string) string { //nolint:unused // This function is used in a skipped acceptance test
 	return acctest.ConfigCompose(
 		testAccInstanceConfig_baseVPC(rName),
 		fmt.Sprintf(`
@@ -5113,7 +5100,7 @@ data "aws_rds_orderable_db_instance" "test" {
 `, rName))
 }
 
-func testAccInstanceConfig_S3Import_basic(rName string) string {
+func testAccInstanceConfig_S3Import_basic(rName string) string { //nolint:unused // This function is used in a skipped acceptance test
 	return acctest.ConfigCompose(
 		testAccInstanceConfig_baseS3Import(rName),
 		fmt.Sprintf(`
@@ -5944,39 +5931,6 @@ resource "aws_db_instance" "test" {
   skip_final_snapshot  = true
 
   apply_immediately = true
-}
-`, rName))
-}
-
-func testAccInstanceConfig_ec2Classic(rName string) string {
-	return acctest.ConfigCompose(
-		acctest.ConfigEC2ClassicRegionProvider(),
-		fmt.Sprintf(`
-data "aws_rds_engine_version" "default" {
-  engine = "mysql"
-}
-
-# EC2-Classic specific
-data "aws_rds_orderable_db_instance" "test" {
-  engine                     = data.aws_rds_engine_version.default.engine
-  engine_version             = data.aws_rds_engine_version.default.version
-  preferred_instance_classes = ["db.m3.medium", "db.m3.large", "db.r3.large"]
-}
-
-resource "aws_db_instance" "bar" {
-  identifier           = %[1]q
-  allocated_storage    = 10
-  engine               = data.aws_rds_orderable_db_instance.test.engine
-  engine_version       = data.aws_rds_orderable_db_instance.test.engine_version
-  instance_class       = data.aws_rds_orderable_db_instance.test.instance_class
-  storage_type         = data.aws_rds_orderable_db_instance.test.storage_type
-  db_name              = "baz"
-  password             = "barbarbarbar"
-  username             = "foo"
-  publicly_accessible  = true
-  security_group_names = ["default"]
-  parameter_group_name = "default.${data.aws_rds_engine_version.default.parameter_group_family}"
-  skip_final_snapshot  = true
 }
 `, rName))
 }
@@ -6995,7 +6949,7 @@ resource "aws_db_instance" "test" {
 `, rName, mySQLPreferredInstanceClasses))
 }
 
-func testAccInstanceConfig_ReplicateSourceDB_deletionProtection(rName string, deletionProtection bool) string {
+func testAccInstanceConfig_ReplicateSourceDB_deletionProtection(rName string, deletionProtection bool) string { //nolint:unused // This function is used in a skipped acceptance test
 	return acctest.ConfigCompose(testAccInstanceConfig_orderableClassMySQL(), fmt.Sprintf(`
 resource "aws_db_instance" "source" {
   allocated_storage       = 5
@@ -8434,7 +8388,7 @@ resource "aws_db_instance" "test" {
 `, rName))
 }
 
-func testAccInstanceConfig_SnapshotID_Tags_clear(rName string) string {
+func testAccInstanceConfig_SnapshotID_tagsRemove(rName string) string { //nolint:unused // This function is used in a skipped acceptance test
 	return acctest.ConfigCompose(
 		testAccInstanceConfig_orderableClassMariadb(),
 		fmt.Sprintf(`
@@ -8969,6 +8923,34 @@ resource "aws_db_instance" "test" {
   password            = "avoid-plaintext-passwords"
   username            = "tfacctest"
   skip_final_snapshot = true
+}
+`, rName))
+}
+
+func testAccInstanceConfig_customIAMInstanceProfile(rName string) string {
+	return acctest.ConfigCompose(
+		testAccInstanceConfig_orderableClassCustomSQLServerWeb(),
+		fmt.Sprintf(`
+resource "aws_cloudformation_stack" "test" {
+  name          = %[1]q
+  capabilities  = ["CAPABILITY_NAMED_IAM"]
+  template_body = file("test-fixtures/custom-sql-cloudformation.json")
+}
+
+resource "aws_db_instance" "test" {
+  allocated_storage           = 20
+  auto_minor_version_upgrade  = false
+  custom_iam_instance_profile = aws_cloudformation_stack.test.outputs["RDSCustomSQLServerInstanceProfile"]
+  engine                      = data.aws_rds_engine_version.default.engine
+  identifier                  = %[1]q
+  instance_class              = data.aws_rds_orderable_db_instance.test.instance_class
+  kms_key_id                  = aws_cloudformation_stack.test.outputs["RDSCustomSQLServerKMSKey"]
+  password                    = "avoid-plaintext-passwords"
+  username                    = "tfacctest"
+  skip_final_snapshot         = true
+  storage_encrypted           = true
+  vpc_security_group_ids      = [aws_cloudformation_stack.test.outputs["RDSCustomSecurityGroup"]]
+  db_subnet_group_name        = aws_cloudformation_stack.test.outputs["DBSubnetGroup"]
 }
 `, rName))
 }

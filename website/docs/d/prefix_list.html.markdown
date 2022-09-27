@@ -63,24 +63,24 @@ The arguments of this data source act as filters for querying the available
 prefix lists. The given filters must match exactly one prefix list
 whose data will be exported as attributes.
 
-* `prefix_list_id` - (Optional) The ID of the prefix list to select.
-* `name` - (Optional) The name of the prefix list to select.
+* `prefix_list_id` - (Optional) ID of the prefix list to select.
+* `name` - (Optional) Name of the prefix list to select.
 * `filter` - (Optional) Configuration block(s) for filtering. Detailed below.
 
 ### filter Configuration Block
 
 The following arguments are supported by the `filter` configuration block:
 
-* `name` - (Required) The name of the filter field. Valid values can be found in the [EC2 DescribePrefixLists API Reference](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribePrefixLists.html).
+* `name` - (Required) Name of the filter field. Valid values can be found in the [EC2 DescribePrefixLists API Reference](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribePrefixLists.html).
 * `values` - (Required) Set of values that are accepted for the given filter field. Results will be selected if any given value matches.
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - The ID of the selected prefix list.
-* `name` - The name of the selected prefix list.
-* `cidr_blocks` - The list of CIDR blocks for the AWS service associated with the prefix list.
+* `id` - ID of the selected prefix list.
+* `name` - Name of the selected prefix list.
+* `cidr_blocks` - List of CIDR blocks for the AWS service associated with the prefix list.
 
 ## Timeouts
 

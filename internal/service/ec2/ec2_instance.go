@@ -443,7 +443,7 @@ func ResourceInstance() *schema.Resource {
 						"instance_metadata_tags": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							Default:      ec2.InstanceMetadataTagsStateDisabled,
+							Computed:     true,
 							ValidateFunc: validation.StringInSlice(ec2.InstanceMetadataTagsState_Values(), false),
 						},
 					},
@@ -818,7 +818,6 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 		CapacityReservationSpecification:  instanceOpts.CapacityReservationSpecification,
 		CpuOptions:                        instanceOpts.CpuOptions,
 		CreditSpecification:               instanceOpts.CreditSpecification,
-		DisableApiStop:                    instanceOpts.DisableAPIStop,
 		DisableApiTermination:             instanceOpts.DisableAPITermination,
 		EbsOptimized:                      instanceOpts.EBSOptimized,
 		EnclaveOptions:                    instanceOpts.EnclaveOptions,
@@ -845,6 +844,10 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 		SubnetId:                          instanceOpts.SubnetID,
 		TagSpecifications:                 tagSpecifications,
 		UserData:                          instanceOpts.UserData64,
+	}
+
+	if instanceOpts.DisableAPIStop != nil {
+		input.DisableApiStop = instanceOpts.DisableAPIStop
 	}
 
 	log.Printf("[DEBUG] Creating EC2 Instance: %s", input)
@@ -1199,10 +1202,12 @@ func resourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 			Attribute:  aws.String(ec2.InstanceAttributeNameDisableApiStop),
 			InstanceId: aws.String(d.Id()),
 		})
-		if err != nil {
+		if err != nil && !verify.ErrorISOUnsupported(meta.(*conns.AWSClient).Partition, err) {
 			return fmt.Errorf("reading EC2 Instance (%s) attribute: %w ", d.Id(), err)
 		}
-		d.Set("disable_api_stop", attr.DisableApiStop.Value)
+		if !verify.ErrorISOUnsupported(meta.(*conns.AWSClient).Partition, err) {
+			d.Set("disable_api_stop", attr.DisableApiStop.Value)
+		}
 	}
 	{
 		if isSnowballEdgeInstance(d.Id()) {
@@ -1672,9 +1677,13 @@ func resourceInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 					input.InstanceMetadataTags = aws.String(tfMap["instance_metadata_tags"].(string))
 				}
 
-				log.Printf("[DEBUG] Modifying EC2 Instance metadata options: %s", input)
 				_, err := conn.ModifyInstanceMetadataOptions(input)
+				if tfawserr.ErrMessageContains(err, errCodeUnsupportedOperation, "InstanceMetadataTags") {
+					log.Printf("[WARN] updating EC2 Instance (%s) metadata options: %s. Retrying without instance metadata tags.", d.Id(), err)
+					input.InstanceMetadataTags = nil
 
+					_, err = conn.ModifyInstanceMetadataOptions(input)
+				}
 				if err != nil {
 					return fmt.Errorf("updating EC2 Instance (%s) metadata options: %w", d.Id(), err)
 				}
@@ -1818,8 +1827,10 @@ func resourceInstanceDelete(d *schema.ResourceData, meta interface{}) error {
 		log.Printf("[WARN] attempting to terminate EC2 Instance (%s) despite error disabling API termination: %s", d.Id(), err)
 	}
 
-	if err := disableInstanceAPIStop(conn, d.Id(), d.Get("disable_api_stop").(bool)); err != nil {
-		log.Printf("[WARN] attempting to terminate EC2 Instance (%s) despite error disabling API stop: %s", d.Id(), err)
+	if v, ok := d.GetOk("disable_api_stop"); ok {
+		if err := disableInstanceAPIStop(conn, d.Id(), v.(bool)); err != nil {
+			log.Printf("[WARN] attempting to terminate EC2 Instance (%s) despite error disabling API stop: %s", d.Id(), err)
+		}
 	}
 
 	if err := terminateInstance(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
@@ -2539,11 +2550,14 @@ func buildInstanceOpts(d *schema.ResourceData, meta interface{}) (*instanceOpts,
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	opts := &instanceOpts{
-		DisableAPIStop:        aws.Bool(d.Get("disable_api_stop").(bool)),
 		DisableAPITermination: aws.Bool(d.Get("disable_api_termination").(bool)),
 		EBSOptimized:          aws.Bool(d.Get("ebs_optimized").(bool)),
 		EnclaveOptions:        expandEnclaveOptions(d.Get("enclave_options").([]interface{})),
 		MetadataOptions:       expandInstanceMetadataOptions(d.Get("metadata_options").([]interface{})),
+	}
+
+	if v, ok := d.GetOk("disable_api_stop"); ok {
+		opts.DisableAPIStop = aws.Bool(v.(bool))
 	}
 
 	if v, ok := d.GetOk("ami"); ok {
