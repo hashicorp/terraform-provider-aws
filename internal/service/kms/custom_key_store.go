@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -29,9 +30,9 @@ func ResourceCustomKeyStore() *schema.Resource {
 		},
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(30 * time.Minute),
-			Update: schema.DefaultTimeout(30 * time.Minute),
-			Delete: schema.DefaultTimeout(30 * time.Minute),
+			Create: schema.DefaultTimeout(15 * time.Minute),
+			Update: schema.DefaultTimeout(15 * time.Minute),
+			Delete: schema.DefaultTimeout(15 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -45,8 +46,9 @@ func ResourceCustomKeyStore() *schema.Resource {
 				Required: true,
 			},
 			"key_store_password": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:             schema.TypeString,
+				Required:         true,
+				ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(7, 32)),
 			},
 			"trust_anchor_certificate": {
 				Type:     schema.TypeString,
@@ -103,7 +105,7 @@ func resourceCustomKeyStoreRead(ctx context.Context, d *schema.ResourceData, met
 		return create.DiagError(names.KMS, create.ErrActionReading, ResNameCustomKeyStore, d.Id(), err)
 	}
 
-	d.Set("cloud_hms_cluster_id", out.CloudHsmClusterId)
+	d.Set("cloud_hsm_cluster_id", out.CloudHsmClusterId)
 	d.Set("custom_key_store_name", out.CustomKeyStoreName)
 	d.Set("trust_anchor_certificate", out.TrustAnchorCertificate)
 

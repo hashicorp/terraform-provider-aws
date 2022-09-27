@@ -47,7 +47,7 @@ func FindCustomKeyStoreByID(ctx context.Context, conn *kms.KMS, id string) (*kms
 	}
 	out, err := conn.DescribeCustomKeyStoresWithContext(ctx, in)
 
-	if tfawserr.ErrCodeEquals(err, kms.ErrCodeNotFoundException) {
+	if tfawserr.ErrCodeEquals(err, kms.ErrCodeCustomKeyStoreNotFoundException) {
 		return nil, &resource.NotFoundError{
 			LastError:   err,
 			LastRequest: in,

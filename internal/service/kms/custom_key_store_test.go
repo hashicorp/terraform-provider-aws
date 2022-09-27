@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/kms"
@@ -20,9 +19,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccKMSCustomKeyStore_basic(t *testing.T) {
+func testAccCustomKeyStore_basic(t *testing.T) {
 	if os.Getenv("CLOUD_HSM_CLUSTER_ID") == "" {
 		t.Skip("CLOUD_HSM_CLUSTER_ID environment variable not set")
+	}
+
+	if os.Getenv("TRUST_ANCHOR_CERTIFICATE") == "" {
+		t.Skip("TRUST_ANCHOR_CERTIFICATE environment variable not set")
 	}
 
 	if testing.Short() {
@@ -33,7 +36,10 @@ func TestAccKMSCustomKeyStore_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_kms_custom_key_store.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	clusterId := os.Getenv("CLOUD_HSM_CLUSTER_ID")
+	trustAnchorCertificate := os.Getenv("TRUST_ANCHOR_CERTIFICATE")
+
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(kms.EndpointsID, t)
@@ -44,32 +50,29 @@ func TestAccKMSCustomKeyStore_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckCustomKeyStoreDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCustomKeyStoreConfig_basic(rName),
+				Config: testAccCustomKeyStoreConfig_basic(rName, clusterId, trustAnchorCertificate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCustomKeyStoreExists(resourceName, &customkeystore),
-					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "false"),
-					resource.TestCheckResourceAttrSet(resourceName, "maintenance_window_start_time.0.day_of_week"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "user.*", map[string]string{
-						"console_access": "false",
-						"groups.#":       "0",
-						"username":       "Test",
-						"password":       "TestTest1234",
-					}),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "kms", regexp.MustCompile(`customkeystore:+.`)),
+					resource.TestCheckResourceAttr(resourceName, "cloud_hsm_cluster_id", clusterId),
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"key_store_password"},
 			},
 		},
 	})
 }
 
-func TestAccKMSCustomKeyStore_disappears(t *testing.T) {
+func testAccCustomKeyStore_update(t *testing.T) {
 	if os.Getenv("CLOUD_HSM_CLUSTER_ID") == "" {
 		t.Skip("CLOUD_HSM_CLUSTER_ID environment variable not set")
+	}
+
+	if os.Getenv("TRUST_ANCHOR_CERTIFICATE") == "" {
+		t.Skip("TRUST_ANCHOR_CERTIFICATE environment variable not set")
 	}
 
 	if testing.Short() {
@@ -80,7 +83,10 @@ func TestAccKMSCustomKeyStore_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_kms_custom_key_store.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	clusterId := os.Getenv("CLOUD_HSM_CLUSTER_ID")
+	trustAnchorCertificate := os.Getenv("TRUST_ANCHOR_CERTIFICATE")
+
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(kms.EndpointsID, t)
@@ -91,7 +97,49 @@ func TestAccKMSCustomKeyStore_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckCustomKeyStoreDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCustomKeyStoreConfig_basic(rName),
+				Config: testAccCustomKeyStoreConfig_basic(fmt.Sprintf("%s-updated", rName), clusterId, trustAnchorCertificate),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCustomKeyStoreExists(resourceName, &customkeystore),
+					resource.TestCheckResourceAttr(resourceName, "cloud_hsm_cluster_id", clusterId),
+					resource.TestCheckResourceAttr(resourceName, "custom_key_store_name", fmt.Sprintf("%s-updated", rName)),
+				),
+			},
+		},
+	})
+}
+
+func testAccCustomKeyStore_disappears(t *testing.T) {
+	if os.Getenv("CLOUD_HSM_CLUSTER_ID") == "" {
+		t.Skip("CLOUD_HSM_CLUSTER_ID environment variable not set")
+	}
+
+	if os.Getenv("TRUST_ANCHOR_CERTIFICATE") == "" {
+		t.Skip("TRUST_ANCHOR_CERTIFICATE environment variable not set")
+	}
+
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var customkeystore kms.CustomKeyStoresListEntry
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_kms_custom_key_store.test"
+
+	clusterId := os.Getenv("CLOUD_HSM_CLUSTER_ID")
+	trustAnchorCertificate := os.Getenv("TRUST_ANCHOR_CERTIFICATE")
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(kms.EndpointsID, t)
+			testAccCustomKeyStoresPreCheck(t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, kms.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCustomKeyStoreDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCustomKeyStoreConfig_basic(rName, clusterId, trustAnchorCertificate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCustomKeyStoreExists(resourceName, &customkeystore),
 					acctest.CheckResourceDisappears(acctest.Provider, tfkms.ResourceCustomKeyStore(), resourceName),
@@ -164,24 +212,14 @@ func testAccCustomKeyStoresPreCheck(t *testing.T) {
 	}
 }
 
-func testAccCustomKeyStoreConfig_basic(rName string) string {
+func testAccCustomKeyStoreConfig_basic(rName, clusterId, anchorCertificate string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_custom_key_store" "test" {
-  custom_key_store_name             = %[1]q
-  engine_type             = "ActiveKMS"
-  host_instance_type      = "kms.t2.micro"
-  security_groups         = [aws_security_group.test.id]
-  authentication_strategy = "simple"
-  storage_type            = "efs"
+  cloud_hsm_cluster_id  = %[2]q
+  custom_key_store_name = %[1]q
+  key_store_password    = "noplaintextpasswords1"
 
-  logs {
-    general = true
-  }
-
-  user {
-    username = "Test"
-    password = "TestTest1234"
-  }
+  trust_anchor_certificate = file(%[3]q)
 }
-`, rName)
+`, rName, clusterId, anchorCertificate)
 }

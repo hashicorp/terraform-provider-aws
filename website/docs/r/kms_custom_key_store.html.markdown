@@ -15,7 +15,12 @@ Terraform resource for managing an AWS KMS (Key Management) Custom Key Store.
 ### Basic Usage
 
 ```terraform
-resource "aws_kms_custom_key_store" "example" {
+resource "aws_kms_custom_key_store" "test" {
+  cloud_hsm_cluster_id  = var.clous_hsm_cluster_id
+  custom_key_store_name = "kms-custom-key-store-test"
+  key_store_password    = "noplaintextpasswords1"
+
+  trust_anchor_certificate = file("anchor-certificate.crt")
 }
 ```
 
@@ -23,31 +28,29 @@ resource "aws_kms_custom_key_store" "example" {
 
 The following arguments are required:
 
-* `example_arg` - (Required) Concise argument description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
-
-The following arguments are optional:
-
-* `optional_arg` - (Optional) Concise argument description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
+* `cloud_hsm_cluster_id` - (Required) Cluster ID of CloudHSM.
+* `custom_key_store_name` - (Required) Unique name for Custom Key Store.
+* `key_store_password` - (Required) Password for `kmsuser` on CloudHSM.
+* `trust_anchor_certificate` - (Required) Customer certificate used for signing on CloudHSM.
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-* `arn` - ARN of the Custom Key Store. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
-* `example_attribute` - Concise description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
+* `id` - The Custom Key Store ID
 
 ## Timeouts
 
 [Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
 
-* `create` - (Default `60m`)
-* `update` - (Default `180m`)
-* `delete` - (Default `90m`)
+* `create` - (Default `15m`)
+* `update` - (Default `15m`)
+* `delete` - (Default `15m`)
 
 ## Import
 
-KMS (Key Management) Custom Key Store can be imported using the `example_id_arg`, e.g.,
+KMS (Key Management) Custom Key Store can be imported using the `id`, e.g.,
 
 ```
-$ terraform import aws_kms_custom_key_store.example rft-8012925589
+$ terraform import aws_kms_custom_key_store.example cks-5ebd4ef395a96288e
 ```
