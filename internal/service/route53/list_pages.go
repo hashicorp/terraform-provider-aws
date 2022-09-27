@@ -12,11 +12,11 @@ import (
 
 // Custom Route 53 service lister functions using the same format as generated code.
 
-func listTrafficPolicyInstancesPages(conn *route53.Route53, input *route53.ListTrafficPolicyInstancesInput, fn func(*route53.ListTrafficPolicyInstancesOutput, bool) bool) error { //nolint:deadcode // This function is called from a sweeper.
+func listTrafficPolicyInstancesPages(conn *route53.Route53, input *route53.ListTrafficPolicyInstancesInput, fn func(*route53.ListTrafficPolicyInstancesOutput, bool) bool) error { //nolint:unused // This function is called from a sweeper.
 	return listTrafficPolicyInstancesPagesWithContext(context.Background(), conn, input, fn)
 }
 
-func listTrafficPolicyInstancesPagesWithContext(ctx context.Context, conn *route53.Route53, input *route53.ListTrafficPolicyInstancesInput, fn func(*route53.ListTrafficPolicyInstancesOutput, bool) bool) error {
+func listTrafficPolicyInstancesPagesWithContext(ctx context.Context, conn *route53.Route53, input *route53.ListTrafficPolicyInstancesInput, fn func(*route53.ListTrafficPolicyInstancesOutput, bool) bool) error { //nolint:unused // This function is called from a sweeper.
 	for {
 		output, err := conn.ListTrafficPolicyInstancesWithContext(ctx, input)
 		if err != nil {

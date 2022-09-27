@@ -76,9 +76,10 @@ func ResourceCluster() *schema.Resource {
 				Set: schema.HashString,
 			},
 			"encryption_config": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
+				Type:          schema.TypeList,
+				MaxItems:      1,
+				Optional:      true,
+				ConflictsWith: []string{"outpost_config"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"provider": {
@@ -130,10 +131,11 @@ func ResourceCluster() *schema.Resource {
 				},
 			},
 			"kubernetes_network_config": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
+				Type:          schema.TypeList,
+				Optional:      true,
+				Computed:      true,
+				MaxItems:      1,
+				ConflictsWith: []string{"outpost_config"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"ip_family": {
@@ -161,6 +163,29 @@ func ResourceCluster() *schema.Resource {
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validClusterName,
+			},
+			"outpost_config": {
+				Type:          schema.TypeList,
+				MaxItems:      1,
+				Optional:      true,
+				ConflictsWith: []string{"encryption_config", "kubernetes_network_config"},
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"control_plane_instance_type": {
+							Type:     schema.TypeString,
+							Required: true,
+							ForceNew: true,
+						},
+						"outpost_arns": {
+							Type:     schema.TypeSet,
+							Required: true,
+							MinItems: 1,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+						},
+					},
+				},
 			},
 			"platform_version": {
 				Type:     schema.TypeString,
@@ -253,6 +278,10 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 
 	if _, ok := d.GetOk("kubernetes_network_config"); ok {
 		input.KubernetesNetworkConfig = expandNetworkConfigRequest(d.Get("kubernetes_network_config").([]interface{}))
+	}
+
+	if _, ok := d.GetOk("outpost_config"); ok {
+		input.OutpostConfig = expandOutpostConfigRequest(d.Get("outpost_config").([]interface{}))
 	}
 
 	if v, ok := d.GetOk("version"); ok {
@@ -361,6 +390,10 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 
 	if err := d.Set("kubernetes_network_config", flattenNetworkConfig(cluster.KubernetesNetworkConfig)); err != nil {
 		return fmt.Errorf("error setting kubernetes_network_config: %w", err)
+	}
+
+	if err := d.Set("outpost_config", flattenOutpostConfig(cluster.OutpostConfig)); err != nil {
+		return fmt.Errorf("error setting outpost_config: %w", err)
 	}
 
 	d.Set("name", cluster.Name)
@@ -590,6 +623,26 @@ func expandProvider(tfList []interface{}) *eks.Provider {
 	return apiObject
 }
 
+func expandOutpostConfigRequest(l []interface{}) *eks.OutpostConfigRequest {
+	tfMap, ok := l[0].(map[string]interface{})
+
+	if !ok {
+		return nil
+	}
+
+	outpostConfigRequest := &eks.OutpostConfigRequest{}
+
+	if v, ok := tfMap["control_plane_instance_type"].(string); ok && v != "" {
+		outpostConfigRequest.ControlPlaneInstanceType = aws.String(v)
+	}
+
+	if v, ok := tfMap["outpost_arns"].(*schema.Set); ok && v.Len() > 0 {
+		outpostConfigRequest.OutpostArns = flex.ExpandStringSet(v)
+	}
+
+	return outpostConfigRequest
+}
+
 func testAccClusterConfig_expandVPCRequest(l []interface{}) *eks.VpcConfigRequest {
 	if len(l) == 0 {
 		return nil
@@ -781,6 +834,19 @@ func flattenNetworkConfig(apiObject *eks.KubernetesNetworkConfigResponse) []inte
 	tfMap := map[string]interface{}{
 		"service_ipv4_cidr": aws.StringValue(apiObject.ServiceIpv4Cidr),
 		"ip_family":         aws.StringValue(apiObject.IpFamily),
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenOutpostConfig(apiObject *eks.OutpostConfigResponse) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{
+		"control_plane_instance_type": aws.StringValue(apiObject.ControlPlaneInstanceType),
+		"outpost_arns":                aws.StringValueSlice(apiObject.OutpostArns),
 	}
 
 	return []interface{}{tfMap}
