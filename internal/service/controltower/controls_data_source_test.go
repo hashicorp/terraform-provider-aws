@@ -1,6 +1,7 @@
 package controltower_test
 
 import (
+	"fmt"
 	"regexp"
 	"testing"
 
@@ -11,6 +12,7 @@ import (
 
 func TestAccControlTowerControlsDataSource_id(t *testing.T) {
 	dataSourceName := "data.aws_controltower_controls.test"
+	ouName := "Security"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -21,7 +23,7 @@ func TestAccControlTowerControlsDataSource_id(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccControlsDataSourceConfig_id(),
+				Config: testAccControlsDataSourceConfig_id(ouName),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.MatchResourceAttrGlobalARN(dataSourceName, "target_identifier", "organizations", regexp.MustCompile(`ou/.+`)),
 				),
@@ -30,8 +32,8 @@ func TestAccControlTowerControlsDataSource_id(t *testing.T) {
 	})
 }
 
-func testAccControlsDataSourceConfig_id() string {
-	return `
+func testAccControlsDataSourceConfig_id(ouName string) string {
+	return fmt.Sprintf(`
 data "aws_organizations_organization" "test" {}
 
 data "aws_organizations_organizational_units" "test" {
@@ -42,9 +44,9 @@ data "aws_controltower_controls" "test" {
 
   target_identifier = [
     for x in data.aws_organizations_organizational_units.test.children :
-    x.arn if x.name == "Security"
+    x.arn if x.name == "%[1]s"
   ][0]
 
 }
-`
+`, ouName)
 }
