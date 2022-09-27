@@ -195,42 +195,6 @@ func resourceGroupDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	return nil
 }
 
-func flattenExternalIds(apiObjects []types.ExternalId) []interface{} {
-	if len(apiObjects) == 0 {
-		return nil
-	}
-
-	var l []interface{}
-
-	for _, apiObject := range apiObjects {
-		if apiObject == (types.ExternalId{}) {
-			continue
-		}
-
-		l = append(l, flattenExternalId(apiObject))
-	}
-
-	return l
-}
-
-func flattenExternalId(apiObject types.ExternalId) map[string]interface{} {
-	if apiObject == (types.ExternalId{}) {
-		return nil
-	}
-
-	m := map[string]interface{}{}
-
-	if v := apiObject.Id; v != nil {
-		m["id"] = aws.ToString(v)
-	}
-
-	if v := apiObject.Issuer; v != nil {
-		m["issuer"] = aws.ToString(v)
-	}
-
-	return m
-}
-
 func resourceGroupParseID(id string) (identityStoreId, groupId string, err error) {
 	parts := strings.Split(id, "/")
 

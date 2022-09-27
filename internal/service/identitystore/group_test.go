@@ -9,7 +9,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/identitystore"
 	"github.com/aws/aws-sdk-go-v2/service/identitystore/types"
-	"github.com/aws/aws-sdk-go/service/ssoadmin"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -144,34 +143,4 @@ resource "aws_identitystore_group" "test" {
   description       = "Example description"
 }
 `, displayName)
-}
-
-func testAccPreCheck(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).IdentityStoreConn
-	ssoadminConn := acctest.Provider.Meta().(*conns.AWSClient).SSOAdminConn
-	ctx := context.Background()
-
-	instances, err := ssoadminConn.ListInstances(&ssoadmin.ListInstancesInput{MaxResults: aws.Int64(1)})
-
-	if err != nil {
-		t.Fatalf("failed to list SSO instances: %s", err)
-	}
-
-	if len(instances.Instances) != 1 {
-		t.Fatalf("expected to find at least one SSO instance")
-	}
-
-	input := &identitystore.ListGroupsInput{
-		IdentityStoreId: instances.Instances[0].IdentityStoreId,
-	}
-
-	_, err = conn.ListGroups(ctx, input)
-
-	if acctest.PreCheckSkipError(err) {
-		t.Skipf("skipping acceptance testing: %s", err)
-	}
-
-	if err != nil {
-		t.Fatalf("unexpected PreCheck error: %s", err)
-	}
 }
