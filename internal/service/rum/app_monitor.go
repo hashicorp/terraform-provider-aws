@@ -32,6 +32,10 @@ func ResourceAppMonitor() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"application_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"app_monitor_configuration": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -176,6 +180,7 @@ func resourceAppMonitorRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("name", appMon.Name)
 	d.Set("arn", arn)
 	d.Set("domain", appMon.Domain)
+	d.Set("application_id", appMon.Id)
 
 	d.Set("cw_log_enabled", appMon.DataStorage.CwLog.CwLogEnabled)
 	d.Set("cw_log_group", appMon.DataStorage.CwLog.CwLogGroup)
