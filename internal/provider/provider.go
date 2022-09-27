@@ -1602,7 +1602,8 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_iam_user_ssh_key":                iam.ResourceUserSSHKey(),
 			"aws_iam_virtual_mfa_device":          iam.ResourceVirtualMFADevice(),
 
-			"aws_identitystore_user": identitystore.ResourceUser(),
+			"aws_identitystore_group": identitystore.ResourceGroup(),
+			"aws_identitystore_user":  identitystore.ResourceUser(),
 
 			"aws_imagebuilder_component":                    imagebuilder.ResourceComponent(),
 			"aws_imagebuilder_container_recipe":             imagebuilder.ResourceContainerRecipe(),
