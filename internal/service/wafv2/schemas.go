@@ -772,3 +772,140 @@ func headersMatchPatternBaseSchema() *schema.Schema {
 		},
 	}
 }
+
+func webACLRootStatementSchema(level int) *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Required: true,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"and_statement":                         statementSchema(level),
+				"byte_match_statement":                  byteMatchStatementSchema(),
+				"geo_match_statement":                   geoMatchStatementSchema(),
+				"ip_set_reference_statement":            ipSetReferenceStatementSchema(),
+				"label_match_statement":                 labelMatchStatementSchema(),
+				"managed_rule_group_statement":          managedRuleGroupStatementSchema(level),
+				"not_statement":                         statementSchema(level),
+				"or_statement":                          statementSchema(level),
+				"rate_based_statement":                  rateBasedStatementSchema(level),
+				"regex_pattern_set_reference_statement": regexPatternSetReferenceStatementSchema(),
+				"rule_group_reference_statement":        ruleGroupReferenceStatementSchema(),
+				"size_constraint_statement":             sizeConstraintSchema(),
+				"sqli_match_statement":                  sqliMatchStatementSchema(),
+				"xss_match_statement":                   xssMatchStatementSchema(),
+			},
+		},
+	}
+}
+
+func managedRuleGroupStatementSchema(level int) *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"excluded_rule": excludedRuleSchema(),
+				"name": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringLenBetween(1, 128),
+				},
+				"scope_down_statement": scopeDownStatementSchema(level - 1),
+				"vendor_name": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringLenBetween(1, 128),
+				},
+				"version": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(1, 128),
+				},
+			},
+		},
+	}
+}
+
+func excludedRuleSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"name": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringLenBetween(1, 128),
+				},
+			},
+		},
+	}
+}
+
+func rateBasedStatementSchema(level int) *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"aggregate_key_type": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Default:      wafv2.RateBasedStatementAggregateKeyTypeIp,
+					ValidateFunc: validation.StringInSlice(wafv2.RateBasedStatementAggregateKeyType_Values(), false),
+				},
+				"forwarded_ip_config": forwardedIPConfigSchema(),
+				"limit": {
+					Type:         schema.TypeInt,
+					Required:     true,
+					ValidateFunc: validation.IntBetween(100, 2000000000),
+				},
+				"scope_down_statement": scopeDownStatementSchema(level - 1),
+			},
+		},
+	}
+}
+
+func scopeDownStatementSchema(level int) *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"and_statement":                         statementSchema(level),
+				"byte_match_statement":                  byteMatchStatementSchema(),
+				"geo_match_statement":                   geoMatchStatementSchema(),
+				"label_match_statement":                 labelMatchStatementSchema(),
+				"ip_set_reference_statement":            ipSetReferenceStatementSchema(),
+				"not_statement":                         statementSchema(level),
+				"or_statement":                          statementSchema(level),
+				"regex_pattern_set_reference_statement": regexPatternSetReferenceStatementSchema(),
+				"size_constraint_statement":             sizeConstraintSchema(),
+				"sqli_match_statement":                  sqliMatchStatementSchema(),
+				"xss_match_statement":                   xssMatchStatementSchema(),
+			},
+		},
+	}
+}
+
+func ruleGroupReferenceStatementSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"arn": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"excluded_rule": excludedRuleSchema(),
+			},
+		},
+	}
+}

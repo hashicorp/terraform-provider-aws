@@ -1,19 +1,19 @@
 package wafv2_test
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/wafv2"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfwafv2 "github.com/hashicorp/terraform-provider-aws/internal/service/wafv2"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccWAFV2WebACL_basic(t *testing.T) {
@@ -1775,28 +1775,18 @@ func testAccCheckWebACLDestroy(s *terraform.State) error {
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFV2Conn
-		resp, err := conn.GetWebACL(
-			&wafv2.GetWebACLInput{
-				Id:    aws.String(rs.Primary.ID),
-				Name:  aws.String(rs.Primary.Attributes["name"]),
-				Scope: aws.String(rs.Primary.Attributes["scope"]),
-			})
 
-		if err == nil {
-			if resp == nil || resp.WebACL == nil {
-				return fmt.Errorf("Error getting WAFv2 WebACL")
-			}
-			if aws.StringValue(resp.WebACL.Id) == rs.Primary.ID {
-				return fmt.Errorf("WAFv2 WebACL %s still exists", rs.Primary.ID)
-			}
+		_, err := tfwafv2.FindWebACLByThreePartKey(context.Background(), conn, rs.Primary.ID, rs.Primary.Attributes["name"], rs.Primary.Attributes["scope"])
+
+		if tfresource.NotFound(err) {
+			continue
 		}
 
-		// Return nil if the WebACL is already destroyed
-		if tfawserr.ErrCodeEquals(err, wafv2.ErrCodeWAFNonexistentItemException) {
-			return nil
+		if err != nil {
+			return err
 		}
 
-		return err
+		return fmt.Errorf("WAFv2 WebACL %s still exists", rs.Primary.ID)
 	}
 
 	return nil
@@ -1814,26 +1804,16 @@ func testAccCheckWebACLExists(n string, v *wafv2.WebACL) resource.TestCheckFunc 
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFV2Conn
-		resp, err := conn.GetWebACL(&wafv2.GetWebACLInput{
-			Id:    aws.String(rs.Primary.ID),
-			Name:  aws.String(rs.Primary.Attributes["name"]),
-			Scope: aws.String(rs.Primary.Attributes["scope"]),
-		})
+
+		output, err := tfwafv2.FindWebACLByThreePartKey(context.Background(), conn, rs.Primary.ID, rs.Primary.Attributes["name"], rs.Primary.Attributes["scope"])
 
 		if err != nil {
 			return err
 		}
 
-		if resp == nil || resp.WebACL == nil {
-			return fmt.Errorf("Error getting WAFv2 WebACL")
-		}
+		*v = *output.WebACL
 
-		if aws.StringValue(resp.WebACL.Id) == rs.Primary.ID {
-			*v = *resp.WebACL
-			return nil
-		}
-
-		return fmt.Errorf("WAFv2 WebACL (%s) not found", rs.Primary.ID)
+		return nil
 	}
 }
 
