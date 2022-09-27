@@ -44,9 +44,10 @@ New certificate materials can be supplied to an existing imported certificate to
 
 Private certificates are issued by an ACM Private Cerificate Authority, which can be created using the resource type [`aws_acmpca_certificate_authority`](acmpca_certificate_authority.html).
 
-Private certificates created using this resource are eligible for renewal if they have been exported or associated with another AWS service.
+Private certificates created using this resource are eligible for managed renewal if they have been exported or associated with another AWS service.
 See [managed renewal documentation](https://docs.aws.amazon.com/acm/latest/userguide/managed-renewal.html) for more information.
-
+By default, a certificate is valid for 395 days and the managed renewal process will start 60 days before expiration.
+To renew the certificate earlier than 60 days before expiration, configure `early_renewal_duration`.
 
 ## Example Usage
 
@@ -152,6 +153,9 @@ The following arguments are supported:
 * Creating a private CA issued certificate
     * `certificate_authority_arn` - (Required) ARN of an ACM PCA
     * `domain_name` - (Required) Domain name for which the certificate should be issued.
+    * `early_renewal_duration` - (Optional) Amount of time to start automatic renewal process before expiration.
+      Has no effect if less than 60 days.
+      Represented by a string such as `2160h`.
 * `subject_alternative_names` - (Optional) Set of domains that should be SANs in the issued certificate.
   To remove all elements of a previously configured list, set this value equal to an empty list (`[]`)
   or use the [`terraform taint` command](https://www.terraform.io/docs/commands/taint.html) to trigger recreation.
@@ -182,12 +186,13 @@ In addition to all arguments above, the following attributes are exported:
   Only set if `DNS`-validation was used.
 * `not_after` - Expiration date and time of the certificate.
 * `not_before` - Start of the validity period of the certificate.
-* `renewal_eligibility` - Whether the certificate is eligible for renewal.
+* `pending_renewal` - `true` if a Private certificate eligible for managed renewal is within the `early_renewal_duration` period.
+* `renewal_eligibility` - Whether the certificate is eligible for managed renewal.
 * `renewal_summary` - Contains information about the status of ACM's [managed renewal](https://docs.aws.amazon.com/acm/latest/userguide/acm-renewal.html) for the certificate.
 * `status` - Status of the certificate.
 * `type` - Source of the certificate.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
-* `validation_emails` - List of addresses that received a validation E-Mail. Only set if `EMAIL`-validation was used.
+* `validation_emails` - List of addresses that received a validation email. Only set if `EMAIL` validation was used.
 
 Domain validation objects export the following attributes:
 
