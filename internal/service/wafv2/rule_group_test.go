@@ -1,19 +1,20 @@
 package wafv2_test
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/wafv2"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfwafv2 "github.com/hashicorp/terraform-provider-aws/internal/service/wafv2"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccWAFV2RuleGroup_basic(t *testing.T) {
@@ -1880,31 +1881,18 @@ func testAccCheckRuleGroupDestroy(s *terraform.State) error {
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFV2Conn
-		resp, err := conn.GetRuleGroup(
-			&wafv2.GetRuleGroupInput{
-				Id:    aws.String(rs.Primary.ID),
-				Name:  aws.String(rs.Primary.Attributes["name"]),
-				Scope: aws.String(rs.Primary.Attributes["scope"]),
-			})
 
-		if err == nil {
-			if resp == nil || resp.RuleGroup == nil {
-				return fmt.Errorf("Error getting WAFv2 RuleGroup")
-			}
+		_, err := tfwafv2.FindRuleGroupByThreePartKey(context.Background(), conn, rs.Primary.ID, rs.Primary.Attributes["name"], rs.Primary.Attributes["scope"])
 
-			if aws.StringValue(resp.RuleGroup.Id) == rs.Primary.ID {
-				return fmt.Errorf("WAFv2 RuleGroup %s still exists", rs.Primary.ID)
-			}
-
-			return nil
+		if tfresource.NotFound(err) {
+			continue
 		}
 
-		// Return nil if the RuleGroup is already destroyed
-		if tfawserr.ErrCodeEquals(err, wafv2.ErrCodeWAFNonexistentItemException) {
-			return nil
+		if err != nil {
+			return err
 		}
 
-		return err
+		return fmt.Errorf("WAFv2 RuleGroup %s still exists", rs.Primary.ID)
 	}
 
 	return nil
@@ -1922,26 +1910,16 @@ func testAccCheckRuleGroupExists(n string, v *wafv2.RuleGroup) resource.TestChec
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFV2Conn
-		resp, err := conn.GetRuleGroup(&wafv2.GetRuleGroupInput{
-			Id:    aws.String(rs.Primary.ID),
-			Name:  aws.String(rs.Primary.Attributes["name"]),
-			Scope: aws.String(rs.Primary.Attributes["scope"]),
-		})
+
+		output, err := tfwafv2.FindRuleGroupByThreePartKey(context.Background(), conn, rs.Primary.ID, rs.Primary.Attributes["name"], rs.Primary.Attributes["scope"])
 
 		if err != nil {
 			return err
 		}
 
-		if resp == nil || resp.RuleGroup == nil {
-			return fmt.Errorf("Error getting WAFv2 RuleGroup")
-		}
+		*v = *output.RuleGroup
 
-		if aws.StringValue(resp.RuleGroup.Id) == rs.Primary.ID {
-			*v = *resp.RuleGroup
-			return nil
-		}
-
-		return fmt.Errorf("WAFv2 RuleGroup (%s) not found", rs.Primary.ID)
+		return nil
 	}
 }
 
