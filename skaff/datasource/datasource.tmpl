@@ -145,7 +145,7 @@ func DataSource{{ .DataSource }}() *schema.Resource {
 }
 
 const (
-	DSName{{ .DataSource }} = "{{ .HumanDataSourceName }}"
+	DSName{{ .DataSource }} = "{{ .HumanDataSourceName }} Data Source"
 )
 
 func dataSource{{ .DataSource }}Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {

@@ -86,7 +86,7 @@ func Create(dsName, snakeName string, comments, force, v2 bool) error {
 		ServiceLower:         strings.ToLower(s),
 		AWSServiceName:       sn,
 		AWSGoSDKV2:           v2,
-		HumanDataSourceName:  fmt.Sprintf("%s Data Source", resource.HumanResName(dsName)),
+		HumanDataSourceName:  resource.HumanResName(dsName),
 	}
 
 	f := fmt.Sprintf("%s_data_source.go", snakeName)
