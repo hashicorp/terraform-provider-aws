@@ -4,6 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
+	"strings"
+
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/identitystore"
 	"github.com/aws/aws-sdk-go-v2/service/identitystore/types"
@@ -15,8 +18,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
-	"log"
-	"strings"
 )
 
 const (
@@ -118,6 +119,11 @@ func resourceGroupMembershipRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set("identity_store_id", out.IdentityStoreId)
 
 	memberId, err := getMemberIdMemberUserId(out.MemberId)
+
+	if err != nil {
+		return create.DiagError(names.IdentityStore, create.ErrActionReading, ResNameGroupMembership, d.Id(), err)
+	}
+
 	d.Set("member_id", memberId)
 	d.Set("membership_id", out.MembershipId)
 
