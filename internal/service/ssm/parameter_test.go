@@ -286,9 +286,30 @@ func TestAccSSMParameter_Overwrite_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckParameterDestroy,
 		Steps: []resource.TestStep{
 			{
+
+				PreConfig: func() {
+					conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn
+
+					input := &ssm.PutParameterInput{
+						Name:  aws.String(fmt.Sprintf("%s-%s", "test_parameter", name)),
+						Type:  aws.String(ssm.ParameterTypeString),
+						Value: aws.String("This value is set using the SDK"),
+					}
+
+					_, err := conn.PutParameter(input)
+					if err != nil {
+						t.Fatalf("creating SSM Parameter: (%s):, %s", name, err)
+					}
+				},
+				Config: testAccParameterConfig_basicOverwrite(name, "String", "This value is set using Terraform"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "version", "2"),
+				),
+			},
+			{
 				Config: testAccParameterConfig_basicOverwrite(name, "String", "test2"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "version", "1"),
+					resource.TestCheckResourceAttr(resourceName, "version", "3"),
 				),
 			},
 			{
@@ -303,7 +324,7 @@ func TestAccSSMParameter_Overwrite_basic(t *testing.T) {
 					testAccCheckParameterExists(resourceName, &param),
 					resource.TestCheckResourceAttr(resourceName, "value", "test3"),
 					resource.TestCheckResourceAttr(resourceName, "type", "String"),
-					resource.TestCheckResourceAttr(resourceName, "version", "2"),
+					resource.TestCheckResourceAttr(resourceName, "version", "4"),
 				),
 			},
 		},

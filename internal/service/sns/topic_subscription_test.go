@@ -1016,7 +1016,7 @@ resource "aws_lambda_function" "authorizer" {
   function_name    = "%[1]s-2"
   role             = aws_iam_role.iam_for_lambda.arn
   handler          = "main.authenticate"
-  runtime          = "nodejs12.x"
+  runtime          = "nodejs16.x"
 
   environment {
     variables = {

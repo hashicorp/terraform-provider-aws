@@ -1979,7 +1979,7 @@ resource "aws_lambda_function" "test" {
   source_code_hash = filebase64sha256("test-fixtures/lambdatest.zip")
   role             = aws_iam_role.test.arn
   handler          = "exports.example"
-  runtime          = "nodejs12.x"
+  runtime          = "nodejs16.x"
 }
 
 resource "aws_iam_role" "test" {

@@ -136,7 +136,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/aws/aws-sdk-go/service/imagebuilder"
 	"github.com/aws/aws-sdk-go/service/inspector"
-	"github.com/aws/aws-sdk-go/service/inspector2"
 	"github.com/aws/aws-sdk-go/service/iot"
 	"github.com/aws/aws-sdk-go/service/iot1clickdevicesservice"
 	"github.com/aws/aws-sdk-go/service/iot1clickprojects"
@@ -426,7 +425,6 @@ func (c *Config) clientConns(client *AWSClient, sess *session.Session) {
 	client.IVSConn = ivs.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.IVS])}))
 	client.ImageBuilderConn = imagebuilder.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.ImageBuilder])}))
 	client.InspectorConn = inspector.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.Inspector])}))
-	client.Inspector2Conn = inspector2.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.Inspector2])}))
 	client.IoTConn = iot.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.IoT])}))
 	client.IoT1ClickDevicesConn = iot1clickdevicesservice.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.IoT1ClickDevices])}))
 	client.IoT1ClickProjectsConn = iot1clickprojects.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.IoT1ClickProjects])}))
