@@ -18,7 +18,14 @@ func expandRules(l []interface{}) []*wafv2.Rule {
 		if rule == nil {
 			continue
 		}
-		rules = append(rules, expandRule(rule.(map[string]interface{})))
+
+		rule := rule.(map[string]interface{})
+
+		// if rule["name"].(string) == "" {
+		// 	continue
+		// }
+
+		rules = append(rules, expandRule(rule))
 	}
 
 	return rules
