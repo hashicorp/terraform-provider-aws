@@ -4,9 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"testing"
+
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/identitystore"
@@ -238,7 +239,7 @@ resource "aws_identitystore_user" "test" {
   identity_store_id = tolist(data.aws_ssoadmin_instances.test.identity_store_ids)[0]
 
   display_name = "Acceptance Test"
-  user_name    = "%s"
+  user_name    = %[1]q
 
   name {
     family_name = "Doe"
@@ -248,8 +249,8 @@ resource "aws_identitystore_user" "test" {
 
 resource "aws_identitystore_group" "test" {
   identity_store_id = tolist(data.aws_ssoadmin_instances.test.identity_store_ids)[0]
-  display_name = "%s"
-  description  = "Acceptance Test"
+  display_name      = %[2]q
+  description       = "Acceptance Test"
 }
 
 resource "aws_identitystore_group_membership" "test" {
