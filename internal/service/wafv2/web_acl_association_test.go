@@ -133,11 +133,7 @@ func testAccCheckWebACLAssociationExists(n string) resource.TestCheckFunc {
 
 		_, err = tfwafv2.FindWebACLByResourceARN(context.Background(), conn, resourceARN)
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 
