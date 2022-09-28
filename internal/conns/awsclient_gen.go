@@ -84,6 +84,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/connectcontactlens"
 	"github.com/aws/aws-sdk-go/service/connectparticipant"
 	"github.com/aws/aws-sdk-go/service/connectwisdomservice"
+	"github.com/aws/aws-sdk-go/service/controltower"
 	"github.com/aws/aws-sdk-go/service/costandusagereportservice"
 	"github.com/aws/aws-sdk-go/service/costexplorer"
 	"github.com/aws/aws-sdk-go/service/customerprofiles"
@@ -392,6 +393,7 @@ type AWSClient struct {
 	ConnectConn                      *connect.Connect
 	ConnectContactLensConn           *connectcontactlens.ConnectContactLens
 	ConnectParticipantConn           *connectparticipant.ConnectParticipant
+	ControlTowerConn                 *controltower.ControlTower
 	CustomerProfilesConn             *customerprofiles.CustomerProfiles
 	DAXConn                          *dax.DAX
 	DLMConn                          *dlm.DLM

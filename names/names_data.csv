@@ -91,7 +91,7 @@ connectparticipant,connectparticipant,connectparticipant,connectparticipant,,con
 voice-id,voiceid,voiceid,voiceid,,voiceid,,,VoiceID,VoiceID,,1,,aws_voiceid_,,voiceid_,Connect Voice ID,Amazon,,,,,
 wisdom,wisdom,connectwisdomservice,wisdom,,wisdom,,connectwisdomservice,Wisdom,ConnectWisdomService,,1,,aws_wisdom_,,wisdom_,Connect Wisdom,Amazon,,,,,
 ,,,,,,,,,,,,,,,,Console Mobile Application,AWS,x,,,,No SDK support
-,,,,,,,,,,,,,,,,Control Tower,AWS,x,,,,No SDK support
+controltower,controltower,controltower,controltower,,controltower,,,ControlTower,ControlTower,,1,,aws_controltower_,,controltower_,Control Tower,AWS,,,,,
 cur,cur,costandusagereportservice,costandusagereportservice,,cur,,costandusagereportservice,CUR,CostandUsageReportService,,1,,aws_cur_,,cur_,Cost and Usage Report,AWS,,,,,
 ,,,,,,,,,,,,,,,,Crypto Tools,AWS,x,,,,No SDK support
 ,,,,,,,,,,,,,,,,Cryptographic Services Overview,AWS,x,,,,No SDK support
