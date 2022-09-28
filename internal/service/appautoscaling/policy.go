@@ -45,6 +45,11 @@ func ResourcePolicy() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"alarm_arns": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem:     schema.TypeString,
+			},
 			"policy_type": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -290,6 +295,12 @@ func resourcePolicyRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("resource_id", p.ResourceId)
 	d.Set("scalable_dimension", p.ScalableDimension)
 	d.Set("service_namespace", p.ServiceNamespace)
+
+	var alarmARNs = make([]string, 0, len(p.Alarms))
+	for _, alarm := range p.Alarms {
+		alarmARNs = append(alarmARNs, aws.StringValue(alarm.AlarmARN))
+	}
+	d.Set("alarm_arns", alarmARNs)
 
 	if err := d.Set("step_scaling_policy_configuration", flattenStepScalingPolicyConfiguration(p.StepScalingPolicyConfiguration)); err != nil {
 		return create.SettingError(names.AppAutoScaling, ResNamePolicy, d.Id(), "step_scaling_policy_configuration", err)
