@@ -63,9 +63,10 @@ The following arguments are supported:
 
 * `certificate_authority_arn` - (Required) ARN of the certificate authority.
 * `certificate_signing_request` - (Required) Certificate Signing Request in PEM format.
-* `signing_algorithm` - (Required) Algorithm to use to sign certificate requests. Valid values: `SHA256WITHRSA`, `SHA256WITHECDSA`, `SHA384WITHRSA`, `SHA384WITHECDSA`, `SHA512WITHRSA`, `SHA512WITHECDSA`
+* `signing_algorithm` - (Required) Algorithm to use to sign certificate requests. Valid values: `SHA256WITHRSA`, `SHA256WITHECDSA`, `SHA384WITHRSA`, `SHA384WITHECDSA`, `SHA512WITHRSA`, `SHA512WITHECDSA`.
 * `validity` - (Required) Configures end of the validity period for the certificate. See [validity block](#validity-block) below.
-* `template_arn` - (Optional) Template to use when issuing a certificate. See [ACM PCA Documentation](https://docs.aws.amazon.com/acm-pca/latest/userguide/UsingTemplates.html) for more information.
+* `template_arn` - (Optional) Template to use when issuing a certificate.
+  See [ACM PCA Documentation](https://docs.aws.amazon.com/privateca/latest/userguide/UsingTemplates.html) for more information.
 
 ### validity block
 
