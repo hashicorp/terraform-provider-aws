@@ -33,7 +33,7 @@ Domain validation through email is also supported but should be avoided as it re
 It's recommended to specify `create_before_destroy = true` in a [lifecycle][1] block to replace a certificate
 which is currently in use (eg, by [`aws_lb_listener`](lb_listener.html)).
 
-## Imported Certificates
+## Certificates Imported from Other Certificate Authority
 
 Imported certificates can be used to make certificates created with an external certificate authority available for AWS services.
 
