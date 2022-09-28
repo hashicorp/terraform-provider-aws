@@ -1,5 +1,5 @@
 ---
-subcategory: "IdentityStore"
+subcategory: "SSO Identity Store"
 layout: "aws"
 page_title: "AWS: aws_identitystore_group_membership"
 description: |-
@@ -13,10 +13,10 @@ Terraform resource for managing an AWS IdentityStore Group Membership.
 ## Example Usage
 
 ```terraform
-data "aws_ssoadmin_instances" "test" {}
+data "aws_ssoadmin_instances" "example" {}
 
-resource "aws_identitystore_user" "test" {
-  identity_store_id = tolist(data.aws_ssoadmin_instances.test.identity_store_ids)[0]
+resource "aws_identitystore_user" "example" {
+  identity_store_id = tolist(data.aws_ssoadmin_instances.example.identity_store_ids)[0]
 
   display_name = "John Doe"
   user_name    = "john.doe@example.com"
@@ -27,18 +27,18 @@ resource "aws_identitystore_user" "test" {
   }
 }
 
-resource "aws_identitystore_group" "test" {
-  identity_store_id = tolist(data.aws_ssoadmin_instances.test.identity_store_ids)[0]
+resource "aws_identitystore_group" "example" {
+  identity_store_id = tolist(data.aws_ssoadmin_instances.example.identity_store_ids)[0]
   
   display_name = "MyGroup"
   description  = "Some group name"
 }
 
-resource "aws_identitystore_group_membership" "test" {
-  identity_store_id = tolist(data.aws_ssoadmin_instances.test.identity_store_ids)[0]
+resource "aws_identitystore_group_membership" "example" {
+  identity_store_id = tolist(data.aws_ssoadmin_instances.example.identity_store_ids)[0]
 
-  group_id  = aws_identitystore_group.test.group_id
-  member_id = aws_identitystore_user.test.user_id
+  group_id  = aws_identitystore_group.example.group_id
+  member_id = aws_identitystore_user.example.user_id
 }
 ```
 
@@ -61,5 +61,5 @@ In addition to all arguments above, the following attributes are exported:
 `aws_identitystore_group_membership` can be imported using the `identity_store_id/membership_id`, e.g.,
 
 ```
-$ terraform import aws_identitystore_group.example d-0000000000/00000000-0000-0000-0000-000000000000
+$ terraform import aws_identitystore_group_membership.example d-0000000000/00000000-0000-0000-0000-000000000000
 ```

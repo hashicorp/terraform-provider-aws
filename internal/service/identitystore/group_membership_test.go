@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/aws/aws-sdk-go/service/ssoadmin"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"testing"
@@ -229,68 +228,6 @@ func testAccCheckGroupMembershipExists(name string, groupMembership *identitysto
 
 		return nil
 	}
-}
-
-func testAccPreCheck(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).IdentityStoreConn
-	ssoadminConn := acctest.Provider.Meta().(*conns.AWSClient).SSOAdminConn
-	ctx := context.Background()
-
-	instances, err := ssoadminConn.ListInstances(&ssoadmin.ListInstancesInput{MaxResults: aws.Int64(1)})
-
-	if err != nil {
-		t.Fatalf("failed to list SSO instances: %s", err)
-	}
-
-	if len(instances.Instances) != 1 {
-		t.Fatalf("expected to find at least one SSO instance")
-	}
-
-	inputUsers := &identitystore.ListUsersInput{
-		IdentityStoreId: instances.Instances[0].IdentityStoreId,
-	}
-
-	_, err = conn.ListUsers(ctx, inputUsers)
-
-	if acctest.PreCheckSkipError(err) {
-		t.Skipf("skipping acceptance testing: %s", err)
-	}
-
-	if err != nil {
-		t.Fatalf("unexpected PreCheck error: %s", err)
-	}
-
-	inputGroups := &identitystore.ListGroupsInput{
-		IdentityStoreId: instances.Instances[0].IdentityStoreId,
-	}
-
-	outGroups, err := conn.ListGroups(ctx, inputGroups)
-
-	if acctest.PreCheckSkipError(err) {
-		t.Skipf("skipping acceptance testing: %s", err)
-	}
-
-	if err != nil {
-		t.Fatalf("unexpected PreCheck error: %s", err)
-	}
-
-	if len(outGroups.Groups) > 0 {
-		inputGroupMemberships := &identitystore.ListGroupMembershipsInput{
-			IdentityStoreId: instances.Instances[0].IdentityStoreId,
-			GroupId:         outGroups.Groups[0].GroupId,
-		}
-
-		_, err = conn.ListGroupMemberships(ctx, inputGroupMemberships)
-
-		if acctest.PreCheckSkipError(err) {
-			t.Skipf("skipping acceptance testing: %s", err)
-		}
-
-		if err != nil {
-			t.Fatalf("unexpected PreCheck error: %s", err)
-		}
-	}
-
 }
 
 func testAccGroupMembershipConfig_basic(groupName, userName string) string {

@@ -160,7 +160,7 @@ func getMemberIdMemberUserId(memberId types.MemberId) (*string, error) {
 	}
 }
 
-func resourceGroupMembershipParseID(id string) (identityStoreId, userId string, err error) {
+func resourceGroupMembershipParseID(id string) (identityStoreId, groupMembershipId string, err error) {
 	parts := strings.Split(id, "/")
 
 	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
