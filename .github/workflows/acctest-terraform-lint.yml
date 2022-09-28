@@ -9,9 +9,9 @@ on:
       - .github/workflows/acctest-terraform-lint.yml
       - .go-version
       - .ci/.tflint.hcl
-      - 'internal/service/**/*_test.go'
       - .ci/scripts/validate-terraform.sh
-      - tools/go.mod
+      - .ci/tools/go.mod
+      - 'internal/service/**/*_test.go'
 
 env:
   TEST_FILES_PARTITION1: '\./internal/service/[a-f].*/.*_test\.go'

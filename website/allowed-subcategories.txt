@@ -75,6 +75,7 @@ Connect Customer Profiles
 Connect Participant
 Connect Voice ID
 Connect Wisdom
+Control Tower
 Cost and Usage Report
 DLM (Data Lifecycle Manager)
 DMS (Database Migration)

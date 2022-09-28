@@ -278,7 +278,7 @@ func runNewTest(ctx context.Context, t testing.T, c TestCase, helper *plugintest
 				}
 			}
 
-			appliedCfg = step.Config
+			appliedCfg = step.mergedConfig(ctx, c)
 
 			logging.HelperResourceDebug(ctx, "Finished TestStep")
 

@@ -572,7 +572,7 @@ resource "aws_lambda_function" "test" {
   filename      = "test-fixtures/lambdatest.zip"
   function_name = %[1]q
   role          = aws_iam_role.test.arn
-  runtime       = "nodejs12.x"
+  runtime       = "nodejs16.x"
   handler       = "exports.handler"
 }
 
@@ -626,7 +626,7 @@ resource "aws_lambda_function" "test" {
   filename      = "test-fixtures/lambdatest.zip"
   function_name = "%[1]s-${count.index}"
   role          = aws_iam_role.test.arn
-  runtime       = "nodejs12.x"
+  runtime       = "nodejs16.x"
   handler       = "exports.handler"
 }
 

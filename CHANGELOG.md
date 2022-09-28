@@ -1,4 +1,26 @@
-## 4.31.0 (Unreleased)
+## 4.33.0 (Unreleased)
+
+FEATURES:
+
+* **New Resource:** `aws_identitystore_group` ([#26674](https://github.com/hashicorp/terraform-provider-aws/issues/26674))
+* **New Resource:** `aws_identitystore_user` ([#26948](https://github.com/hashicorp/terraform-provider-aws/issues/26948))
+* **New Resource:** `aws_inspector2_organization_configuration` ([#27000](https://github.com/hashicorp/terraform-provider-aws/issues/27000))
+
+BUG FIXES:
+
+* resource/aws_ssm_parameter: Allow parameter overwrite on create ([#26785](https://github.com/hashicorp/terraform-provider-aws/issues/26785))
+
+## 4.32.0 (September 23, 2022)
+
+ENHANCEMENTS:
+
+* resource/aws_eks_cluster: Add `outpost_config` argument to support EKS local clusers on Outposts ([#26866](https://github.com/hashicorp/terraform-provider-aws/issues/26866))
+
+BUG FIXES:
+
+* resource/aws_ec2_managed_prefix_list: MaxEntries and Entry(s) can now be changed in the same apply ([#26845](https://github.com/hashicorp/terraform-provider-aws/issues/26845))
+
+## 4.31.0 (September 15, 2022)
 
 FEATURES:
 
@@ -9,6 +31,7 @@ FEATURES:
 ENHANCEMENTS:
 
 * data-source/aws_lambda_function: Add `qualified_invoke_arn` attribute ([#26439](https://github.com/hashicorp/terraform-provider-aws/issues/26439))
+* resource/aws_db_instance: Add `custom_iam_instance_profile` attribute ([#26765](https://github.com/hashicorp/terraform-provider-aws/issues/26765))
 * resource/aws_lambda_function: Add `qualified_invoke_arn` attribute ([#26439](https://github.com/hashicorp/terraform-provider-aws/issues/26439))
 
 BUG FIXES:
