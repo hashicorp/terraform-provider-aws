@@ -1667,6 +1667,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 
 			"aws_kms_alias":                kms.ResourceAlias(),
 			"aws_kms_ciphertext":           kms.ResourceCiphertext(),
+			"aws_kms_custom_key_store":     kms.ResourceCustomKeyStore(),
 			"aws_kms_external_key":         kms.ResourceExternalKey(),
 			"aws_kms_grant":                kms.ResourceGrant(),
 			"aws_kms_key":                  kms.ResourceKey(),
