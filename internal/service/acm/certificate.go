@@ -287,15 +287,22 @@ func ResourceCertificate() *schema.Resource {
 
 				return nil
 			},
-			func(_ context.Context, diff *schema.ResourceDiff, _ interface{}) error {
+			func(_ context.Context, diff *schema.ResourceDiff, _ any) error {
 				if diff.Id() == "" {
 					return nil
 				}
-				if v, ok := diff.Get("early_renewal_duration").(string); !(ok && v != "") {
-					return nil
-				}
 
-				if diff.Get("pending_renewal").(bool) {
+				if diff.HasChange("early_renewal_duration") {
+					if duration := diff.Get("early_renewal_duration").(string); duration == "" {
+						if err := diff.SetNew("pending_renewal", false); err != nil {
+							return err
+						}
+					} else {
+						if err := diff.SetNew("pending_renewal", certificateSetPendingRenewal(diff)); err != nil {
+							return err
+						}
+					}
+				} else if diff.Get("pending_renewal").(bool) {
 					// Trigger a diff
 					if err := diff.SetNewComputed("pending_renewal"); err != nil {
 						return err
@@ -435,7 +442,6 @@ func resourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta i
 	} else {
 		d.Set("options", nil)
 	}
-	certificateSetPendingRenewal(d, certificate)
 	d.Set("renewal_eligibility", certificate.RenewalEligibility)
 	if certificate.RenewalSummary != nil {
 		if err := d.Set("renewal_summary", []interface{}{flattenRenewalSummary(certificate.RenewalSummary)}); err != nil {
@@ -449,6 +455,8 @@ func resourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("type", certificate.Type)
 	d.Set("validation_emails", validationEmails)
 	d.Set("validation_method", certificateValidationMethod(certificate))
+
+	d.Set("pending_renewal", certificateSetPendingRenewal(d))
 
 	tags, err := ListTagsWithContext(ctx, conn, d.Id())
 
@@ -489,6 +497,7 @@ func resourceCertificateUpdate(ctx context.Context, d *schema.ResourceData, meta
 				input.CertificateChain = []byte(chain.(string))
 			}
 
+			log.Printf("[INFO] Re-importing ACM Certificate (%s)", d.Id())
 			_, err := conn.ImportCertificateWithContext(ctx, input)
 
 			if err != nil {
@@ -569,26 +578,34 @@ func domainValidationOptionsHash(v interface{}) int {
 	return 0
 }
 
-func certificateSetPendingRenewal(d *schema.ResourceData, certificate *acm.CertificateDetail) {
-	d.Set("pending_renewal", false)
+type resourceGetter interface {
+	Get(key string) any
+}
 
-	if aws.StringValue(certificate.RenewalEligibility) != acm.RenewalEligibilityEligible || certificate.NotAfter == nil {
-		return
+func certificateSetPendingRenewal(d resourceGetter) bool {
+	if d.Get("renewal_eligibility") != acm.RenewalEligibilityEligible {
+		return false
 	}
 
-	earlyDuration, earlyDurationOk := d.GetOk("early_renewal_duration")
-	if !earlyDurationOk {
-		return
+	notAfterRaw := d.Get("not_after")
+	if notAfterRaw == nil {
+		return false
+	}
+	notAfter, _ := time.Parse(time.RFC3339, notAfterRaw.(string))
+
+	earlyDuration := d.Get("early_renewal_duration").(string)
+	if earlyDuration == "" {
+		return false
 	}
 
-	duration, err := time.ParseDuration(earlyDuration.(string))
+	duration, err := time.ParseDuration(earlyDuration)
 	if err != nil {
-		return
+		return false
 	}
 
-	earlyExpiration := aws.TimeValue(certificate.NotAfter).Add(-duration)
+	earlyExpiration := notAfter.Add(-duration)
 
-	d.Set("pending_renewal", time.Now().After(earlyExpiration))
+	return time.Now().After(earlyExpiration)
 }
 
 func expandCertificateOptions(tfMap map[string]interface{}) *acm.CertificateOptions {

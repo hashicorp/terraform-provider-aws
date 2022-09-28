@@ -192,7 +192,7 @@ func TestAccACMCertificate_privateCertificate_renewable(t *testing.T) {
 	resourceName := "aws_acm_certificate.test"
 	commonName := acctest.RandomDomain()
 	certificateDomainName := commonName.RandomSubdomain().String()
-	var v1, v2, v3 acm.CertificateDetail
+	var v1, v2, v3, v4 acm.CertificateDetail
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
@@ -243,6 +243,7 @@ func TestAccACMCertificate_privateCertificate_renewable(t *testing.T) {
 				Config: testAccCertificateConfig_privateCertificate_renewable(commonName.String(), certificateDomainName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateExists(resourceName, &v2),
+					testAccCheckCertificateNotRenewed(&v1, &v2),
 					resource.TestCheckResourceAttr(resourceName, "pending_renewal", "false"),
 					resource.TestCheckResourceAttr(resourceName, "renewal_eligibility", acm.RenewalEligibilityEligible),
 					resource.TestCheckResourceAttr(resourceName, "renewal_summary.#", "0"),
@@ -281,11 +282,6 @@ func TestAccACMCertificate_privateCertificate_renewable(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
 				PreConfig: func() {
 					conn := acctest.Provider.Meta().(*conns.AWSClient).ACMConn
 
@@ -297,7 +293,8 @@ func TestAccACMCertificate_privateCertificate_renewable(t *testing.T) {
 				},
 				Config: testAccCertificateConfig_privateCertificate_renewable(commonName.String(), certificateDomainName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCertificateExists(resourceName, &v3),
+					testAccCheckCertificateExists(resourceName, &v4),
+					testAccCheckCertificateRenewed(&v3, &v4),
 					resource.TestCheckResourceAttr(resourceName, "pending_renewal", "false"),
 					resource.TestCheckResourceAttr(resourceName, "renewal_eligibility", acm.RenewalEligibilityIneligible),
 					resource.TestCheckResourceAttr(resourceName, "renewal_summary.#", "1"),
@@ -411,11 +408,6 @@ func TestAccACMCertificate_privateCertificate_noRenewalPermission(t *testing.T) 
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
 				PreConfig: func() {
 					time.Sleep(tfacm.CertificateRenewalTimeout)
 				},
@@ -469,13 +461,10 @@ func TestAccACMCertificate_privateCertificate_pendingRenewal(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"early_renewal_duration",
-					"pending_renewal",
-				},
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"early_renewal_duration"},
 			},
 			{
 				PreConfig: func() {
@@ -508,26 +497,375 @@ func TestAccACMCertificate_privateCertificate_pendingRenewal(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"early_renewal_duration",
-					"pending_renewal",
-				},
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"early_renewal_duration"},
 			},
 		},
 	})
 }
 
-func testAccCheckCertificateRenewed(i, j *acm.CertificateDetail) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if !aws.TimeValue(j.NotAfter).After(aws.TimeValue(i.NotAfter)) {
-			return fmt.Errorf("ACM Certificate not renewed: i.NotAfter=%q, j.NotAfter=%q", aws.TimeValue(i.NotAfter), aws.TimeValue(j.NotAfter))
-		}
+func TestAccACMCertificate_privateCertificate_addEarlyRenewalPast(t *testing.T) {
+	resourceName := "aws_acm_certificate.test"
+	commonName := acctest.RandomDomain()
+	certificateDomainName := commonName.RandomSubdomain().String()
+	duration := (395 * 24 * time.Hour).String()
+	var v1, v2, v3 acm.CertificateDetail
 
-		return nil
-	}
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, acm.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCertificateDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCertificateConfig_privateCertificate_renewable(commonName.String(), certificateDomainName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckCertificateExists(resourceName, &v1),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "acm", regexp.MustCompile("certificate/.+$")),
+					resource.TestCheckResourceAttr(resourceName, "early_renewal_duration", ""),
+					resource.TestCheckResourceAttr(resourceName, "pending_renewal", "false"),
+					resource.TestCheckResourceAttr(resourceName, "renewal_eligibility", acm.RenewalEligibilityIneligible),
+					resource.TestCheckResourceAttr(resourceName, "renewal_summary.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "status", acm.CertificateStatusIssued),
+					resource.TestCheckTypeSetElemAttr(resourceName, "subject_alternative_names.*", certificateDomainName),
+					resource.TestCheckResourceAttr(resourceName, "type", acm.CertificateTypePrivate),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"early_renewal_duration"},
+			},
+			{
+				PreConfig: func() {
+					conn := acctest.Provider.Meta().(*conns.AWSClient).ACMConn
+
+					_, err := conn.ExportCertificate(&acm.ExportCertificateInput{
+						CertificateArn: v1.CertificateArn,
+						Passphrase:     []byte("passphrase"),
+					})
+					if err != nil {
+						t.Fatalf("exporting ACM Certificate (%s): %s", aws.StringValue(v1.CertificateArn), err)
+					}
+				},
+				// Ideally, we'd have a `RefreshOnly` test step here to validate that `pending_renewal` is false and `renewal_eligibility` is `ELIGIBLE` after exporting.
+				// https://github.com/hashicorp/terraform-plugin-sdk/issues/1069
+				Config: testAccCertificateConfig_privateCertificate_renewable(commonName.String(), certificateDomainName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckCertificateExists(resourceName, &v2),
+					testAccCheckCertificateNotRenewed(&v1, &v2),
+					resource.TestCheckResourceAttr(resourceName, "early_renewal_duration", ""),
+					resource.TestCheckResourceAttr(resourceName, "pending_renewal", "false"),
+					resource.TestCheckResourceAttr(resourceName, "renewal_eligibility", acm.RenewalEligibilityEligible),
+					resource.TestCheckResourceAttr(resourceName, "renewal_summary.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "status", acm.CertificateStatusIssued),
+					resource.TestCheckResourceAttr(resourceName, "type", acm.CertificateTypePrivate),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"early_renewal_duration"},
+			},
+			{
+				// Ideally, we'd have a `RefreshOnly` test step here to validate that `pending_renewal` is true after setting `early_renewal_duration`.
+				// https://github.com/hashicorp/terraform-plugin-sdk/issues/1069
+				Config: testAccCertificateConfig_privateCertificate_pendingRenewal(commonName.String(), certificateDomainName, duration),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckCertificateExists(resourceName, &v3),
+					testAccCheckCertificateRenewed(&v2, &v3),
+					resource.TestCheckResourceAttr(resourceName, "early_renewal_duration", duration),
+					resource.TestCheckResourceAttr(resourceName, "pending_renewal", "false"),
+					resource.TestCheckResourceAttr(resourceName, "renewal_eligibility", acm.RenewalEligibilityIneligible),
+					resource.TestCheckResourceAttr(resourceName, "renewal_summary.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "renewal_summary.0.renewal_status", acm.RenewalStatusSuccess),
+					resource.TestCheckResourceAttr(resourceName, "renewal_summary.0.renewal_status_reason", ""),
+					acctest.CheckResourceAttrRFC3339(resourceName, "renewal_summary.0.updated_at"),
+					resource.TestCheckResourceAttr(resourceName, "status", acm.CertificateStatusIssued),
+					resource.TestCheckResourceAttr(resourceName, "type", acm.CertificateTypePrivate),
+				),
+			},
+		},
+	})
+}
+
+func TestAccACMCertificate_privateCertificate_addEarlyRenewalPastIneligible(t *testing.T) {
+	resourceName := "aws_acm_certificate.test"
+	commonName := acctest.RandomDomain()
+	certificateDomainName := commonName.RandomSubdomain().String()
+	duration := (395 * 24 * time.Hour).String()
+	var v1, v2 acm.CertificateDetail
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, acm.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCertificateDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCertificateConfig_privateCertificate_renewable(commonName.String(), certificateDomainName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckCertificateExists(resourceName, &v1),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "acm", regexp.MustCompile("certificate/.+$")),
+					resource.TestCheckResourceAttr(resourceName, "early_renewal_duration", ""),
+					resource.TestCheckResourceAttr(resourceName, "pending_renewal", "false"),
+					resource.TestCheckResourceAttr(resourceName, "renewal_eligibility", acm.RenewalEligibilityIneligible),
+					resource.TestCheckResourceAttr(resourceName, "renewal_summary.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "status", acm.CertificateStatusIssued),
+					resource.TestCheckTypeSetElemAttr(resourceName, "subject_alternative_names.*", certificateDomainName),
+					resource.TestCheckResourceAttr(resourceName, "type", acm.CertificateTypePrivate),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"early_renewal_duration"},
+			},
+			{
+				// Ideally, we'd have a `RefreshOnly` test step here to validate that `pending_renewal` is true after setting `early_renewal_duration`.
+				// https://github.com/hashicorp/terraform-plugin-sdk/issues/1069
+				Config: testAccCertificateConfig_privateCertificate_pendingRenewal(commonName.String(), certificateDomainName, duration),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckCertificateExists(resourceName, &v2),
+					testAccCheckCertificateNotRenewed(&v1, &v2),
+					resource.TestCheckResourceAttr(resourceName, "early_renewal_duration", duration),
+					resource.TestCheckResourceAttr(resourceName, "pending_renewal", "false"),
+					resource.TestCheckResourceAttr(resourceName, "renewal_eligibility", acm.RenewalEligibilityIneligible),
+					resource.TestCheckResourceAttr(resourceName, "renewal_summary.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "status", acm.CertificateStatusIssued),
+					resource.TestCheckResourceAttr(resourceName, "type", acm.CertificateTypePrivate),
+				),
+			},
+		},
+	})
+}
+
+func TestAccACMCertificate_privateCertificate_addEarlyRenewalFuture(t *testing.T) {
+	resourceName := "aws_acm_certificate.test"
+	commonName := acctest.RandomDomain()
+	certificateDomainName := commonName.RandomSubdomain().String()
+	duration := (90 * 24 * time.Hour).String()
+	var v1, v2, v3 acm.CertificateDetail
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, acm.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCertificateDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCertificateConfig_privateCertificate_renewable(commonName.String(), certificateDomainName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckCertificateExists(resourceName, &v1),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "acm", regexp.MustCompile("certificate/.+$")),
+					resource.TestCheckResourceAttr(resourceName, "early_renewal_duration", ""),
+					resource.TestCheckResourceAttr(resourceName, "pending_renewal", "false"),
+					resource.TestCheckResourceAttr(resourceName, "renewal_eligibility", acm.RenewalEligibilityIneligible),
+					resource.TestCheckResourceAttr(resourceName, "renewal_summary.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "status", acm.CertificateStatusIssued),
+					resource.TestCheckTypeSetElemAttr(resourceName, "subject_alternative_names.*", certificateDomainName),
+					resource.TestCheckResourceAttr(resourceName, "type", acm.CertificateTypePrivate),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"early_renewal_duration"},
+			},
+			{
+				PreConfig: func() {
+					conn := acctest.Provider.Meta().(*conns.AWSClient).ACMConn
+
+					_, err := conn.ExportCertificate(&acm.ExportCertificateInput{
+						CertificateArn: v1.CertificateArn,
+						Passphrase:     []byte("passphrase"),
+					})
+					if err != nil {
+						t.Fatalf("exporting ACM Certificate (%s): %s", aws.StringValue(v1.CertificateArn), err)
+					}
+				},
+				// Ideally, we'd have a `RefreshOnly` test step here to validate that `pending_renewal` is false and `renewal_eligibility` is `ELIGIBLE` after exporting.
+				// https://github.com/hashicorp/terraform-plugin-sdk/issues/1069
+				Config: testAccCertificateConfig_privateCertificate_renewable(commonName.String(), certificateDomainName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckCertificateExists(resourceName, &v2),
+					testAccCheckCertificateNotRenewed(&v1, &v2),
+					resource.TestCheckResourceAttr(resourceName, "early_renewal_duration", ""),
+					resource.TestCheckResourceAttr(resourceName, "pending_renewal", "false"),
+					resource.TestCheckResourceAttr(resourceName, "renewal_eligibility", acm.RenewalEligibilityEligible),
+					resource.TestCheckResourceAttr(resourceName, "renewal_summary.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "status", acm.CertificateStatusIssued),
+					resource.TestCheckResourceAttr(resourceName, "type", acm.CertificateTypePrivate),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"early_renewal_duration"},
+			},
+			{
+				// Ideally, we'd have a `RefreshOnly` test step here to validate that `pending_renewal` is true after setting `early_renewal_duration`.
+				// https://github.com/hashicorp/terraform-plugin-sdk/issues/1069
+				Config: testAccCertificateConfig_privateCertificate_pendingRenewal(commonName.String(), certificateDomainName, duration),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckCertificateExists(resourceName, &v3),
+					testAccCheckCertificateNotRenewed(&v2, &v3),
+					resource.TestCheckResourceAttr(resourceName, "early_renewal_duration", duration),
+					resource.TestCheckResourceAttr(resourceName, "pending_renewal", "false"),
+					resource.TestCheckResourceAttr(resourceName, "renewal_eligibility", acm.RenewalEligibilityEligible),
+					resource.TestCheckResourceAttr(resourceName, "renewal_summary.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "status", acm.CertificateStatusIssued),
+					resource.TestCheckResourceAttr(resourceName, "type", acm.CertificateTypePrivate),
+				),
+			},
+		},
+	})
+}
+
+func TestAccACMCertificate_privateCertificate_updateEarlyRenewalFuture(t *testing.T) {
+	resourceName := "aws_acm_certificate.test"
+	commonName := acctest.RandomDomain()
+	certificateDomainName := commonName.RandomSubdomain().String()
+	duration := (395 * 24 * time.Hour).String()
+	durationUpdated := (90 * 24 * time.Hour).String()
+	var v1, v2 acm.CertificateDetail
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, acm.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCertificateDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCertificateConfig_privateCertificate_pendingRenewal(commonName.String(), certificateDomainName, duration),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckCertificateExists(resourceName, &v1),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "acm", regexp.MustCompile("certificate/.+$")),
+					resource.TestCheckResourceAttr(resourceName, "early_renewal_duration", duration),
+					resource.TestCheckResourceAttr(resourceName, "pending_renewal", "false"),
+					resource.TestCheckResourceAttr(resourceName, "renewal_eligibility", acm.RenewalEligibilityIneligible),
+					resource.TestCheckResourceAttr(resourceName, "renewal_summary.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "status", acm.CertificateStatusIssued),
+					resource.TestCheckTypeSetElemAttr(resourceName, "subject_alternative_names.*", certificateDomainName),
+					resource.TestCheckResourceAttr(resourceName, "type", acm.CertificateTypePrivate),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"early_renewal_duration"},
+			},
+			{
+				PreConfig: func() {
+					conn := acctest.Provider.Meta().(*conns.AWSClient).ACMConn
+
+					_, err := conn.ExportCertificate(&acm.ExportCertificateInput{
+						CertificateArn: v1.CertificateArn,
+						Passphrase:     []byte("passphrase"),
+					})
+					if err != nil {
+						t.Fatalf("exporting ACM Certificate (%s): %s", aws.StringValue(v1.CertificateArn), err)
+					}
+				},
+				// Ideally, we'd have a `RefreshOnly` test step here to validate that `pending_renewal` is false and `renewal_eligibility` is `ELIGIBLE` after exporting.
+				// https://github.com/hashicorp/terraform-plugin-sdk/issues/1069
+				Config: testAccCertificateConfig_privateCertificate_pendingRenewal(commonName.String(), certificateDomainName, durationUpdated),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckCertificateExists(resourceName, &v2),
+					testAccCheckCertificateNotRenewed(&v1, &v2),
+					resource.TestCheckResourceAttr(resourceName, "early_renewal_duration", durationUpdated),
+					resource.TestCheckResourceAttr(resourceName, "pending_renewal", "false"),
+					resource.TestCheckResourceAttr(resourceName, "renewal_eligibility", acm.RenewalEligibilityEligible),
+					resource.TestCheckResourceAttr(resourceName, "renewal_summary.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "status", acm.CertificateStatusIssued),
+					resource.TestCheckResourceAttr(resourceName, "type", acm.CertificateTypePrivate),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"early_renewal_duration"},
+			},
+		},
+	})
+}
+
+func TestAccACMCertificate_privateCertificate_removeEarlyRenewal(t *testing.T) {
+	resourceName := "aws_acm_certificate.test"
+	commonName := acctest.RandomDomain()
+	certificateDomainName := commonName.RandomSubdomain().String()
+	duration := (395 * 24 * time.Hour).String()
+	var v1, v2 acm.CertificateDetail
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, acm.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCertificateDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCertificateConfig_privateCertificate_pendingRenewal(commonName.String(), certificateDomainName, duration),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckCertificateExists(resourceName, &v1),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "acm", regexp.MustCompile("certificate/.+$")),
+					resource.TestCheckResourceAttr(resourceName, "early_renewal_duration", duration),
+					resource.TestCheckResourceAttr(resourceName, "pending_renewal", "false"),
+					resource.TestCheckResourceAttr(resourceName, "renewal_eligibility", acm.RenewalEligibilityIneligible),
+					resource.TestCheckResourceAttr(resourceName, "renewal_summary.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "status", acm.CertificateStatusIssued),
+					resource.TestCheckTypeSetElemAttr(resourceName, "subject_alternative_names.*", certificateDomainName),
+					resource.TestCheckResourceAttr(resourceName, "type", acm.CertificateTypePrivate),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"early_renewal_duration"},
+			},
+			{
+				PreConfig: func() {
+					conn := acctest.Provider.Meta().(*conns.AWSClient).ACMConn
+
+					_, err := conn.ExportCertificate(&acm.ExportCertificateInput{
+						CertificateArn: v1.CertificateArn,
+						Passphrase:     []byte("passphrase"),
+					})
+					if err != nil {
+						t.Fatalf("exporting ACM Certificate (%s): %s", aws.StringValue(v1.CertificateArn), err)
+					}
+				},
+				// Ideally, we'd have a `RefreshOnly` test step here to validate that `pending_renewal` is false and `renewal_eligibility` is `ELIGIBLE` after exporting.
+				// https://github.com/hashicorp/terraform-plugin-sdk/issues/1069
+				Config: testAccCertificateConfig_privateCertificate_renewable(commonName.String(), certificateDomainName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckCertificateExists(resourceName, &v2),
+					testAccCheckCertificateNotRenewed(&v1, &v2),
+					resource.TestCheckResourceAttr(resourceName, "early_renewal_duration", ""),
+					resource.TestCheckResourceAttr(resourceName, "pending_renewal", "false"),
+					resource.TestCheckResourceAttr(resourceName, "renewal_eligibility", acm.RenewalEligibilityEligible),
+					resource.TestCheckResourceAttr(resourceName, "renewal_summary.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "status", acm.CertificateStatusIssued),
+					resource.TestCheckResourceAttr(resourceName, "type", acm.CertificateTypePrivate),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"early_renewal_duration"},
+			},
+		},
+	})
 }
 
 // TestAccACMCertificate_Root_trailingPeriod updated in 3.0 to account for domain_name plan-time validation
@@ -1161,6 +1499,26 @@ func testAccCheckCertficateNotRecreated(v1, v2 *acm.CertificateDetail) resource.
 		if aws.StringValue(v1.CertificateArn) != aws.StringValue(v2.CertificateArn) {
 			return fmt.Errorf("ACM Certificate recreated")
 		}
+		return nil
+	}
+}
+
+func testAccCheckCertificateRenewed(i, j *acm.CertificateDetail) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if !aws.TimeValue(j.NotAfter).After(aws.TimeValue(i.NotAfter)) {
+			return fmt.Errorf("ACM Certificate not renewed: i.NotAfter=%q, j.NotAfter=%q", aws.TimeValue(i.NotAfter), aws.TimeValue(j.NotAfter))
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckCertificateNotRenewed(i, j *acm.CertificateDetail) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if !aws.TimeValue(j.NotAfter).Equal(aws.TimeValue(i.NotAfter)) {
+			return fmt.Errorf("ACM Certificate renewed: i.NotAfter=%q, j.NotAfter=%q", aws.TimeValue(i.NotAfter), aws.TimeValue(j.NotAfter))
+		}
+
 		return nil
 	}
 }
