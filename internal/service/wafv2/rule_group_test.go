@@ -2575,7 +2575,9 @@ resource "aws_wafv2_rule_group" "test" {
         search_string         = "word"
 
         field_to_match {
-          body {}
+          body {
+            oversize_handling = "CONTINUE"
+          }
         }
 
         text_transformation {
@@ -3706,7 +3708,9 @@ resource "aws_wafv2_rule_group" "test" {
         arn = aws_wafv2_regex_pattern_set.test.arn
 
         field_to_match {
-          body {}
+          body {
+            oversize_handling = "CONTINUE"
+          }
         }
 
         text_transformation {
@@ -3898,7 +3902,9 @@ resource "aws_wafv2_rule_group" "test" {
     statement {
       sqli_match_statement {
         field_to_match {
-          body {}
+          body {
+            oversize_handling = "CONTINUE"
+          }
         }
 
         text_transformation {
@@ -3952,7 +3958,9 @@ resource "aws_wafv2_rule_group" "test" {
     statement {
       xss_match_statement {
         field_to_match {
-          body {}
+          body {
+            oversize_handling = "CONTINUE"
+          }
         }
 
         text_transformation {
@@ -3996,7 +4004,9 @@ resource "aws_wafv2_rule_group" "test" {
     statement {
       xss_match_statement {
         field_to_match {
-          body {}
+          body {
+            oversize_handling = "CONTINUE"
+          }
         }
 
         text_transformation {
