@@ -2622,11 +2622,11 @@ resource "aws_rds_cluster" "test" {
 func testAccClusterConfig_enabledCloudWatchLogsExportsPostgreSQL1(rName, enabledCloudwatchLogExports1 string) string {
 	return fmt.Sprintf(`
 resource "aws_rds_cluster" "test" {
-  cluster_identifier              = %q
-  enabled_cloudwatch_logs_exports = [%q]
+  cluster_identifier              = %[1]q
+  enabled_cloudwatch_logs_exports = [%[2]q]
   engine                          = "aurora-postgresql"
-  master_username                 = "foo"
-  master_password                 = "mustbeeightcharaters"
+  master_username                 = "tfacctest"
+  master_password                 = "avoid-plaintext-passwords"
   skip_final_snapshot             = true
 }
 `, rName, enabledCloudwatchLogExports1)
@@ -2635,11 +2635,11 @@ resource "aws_rds_cluster" "test" {
 func testAccClusterConfig_enabledCloudWatchLogsExportsPostgreSQL2(rName, enabledCloudwatchLogExports1, enabledCloudwatchLogExports2 string) string {
 	return fmt.Sprintf(`
 resource "aws_rds_cluster" "test" {
-  cluster_identifier              = %q
-  enabled_cloudwatch_logs_exports = [%q, %q]
-  engine                          = "postgres"
-  master_username                 = "foo"
-  master_password                 = "mustbeeightcharaters"
+  cluster_identifier              = %[1]q
+  enabled_cloudwatch_logs_exports = [%[2]q, %[3]q]
+  engine                          = "aurora-postgresql"
+  master_username                 = "tfacctest"
+  master_password                 = "avoid-plaintext-passwords"
   skip_final_snapshot             = true
 }
 `, rName, enabledCloudwatchLogExports1, enabledCloudwatchLogExports2)
