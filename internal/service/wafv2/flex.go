@@ -1018,6 +1018,32 @@ func expandExcludedRule(m map[string]interface{}) *wafv2.ExcludedRule {
 	}
 }
 
+func expandRegexPatternSet(l []interface{}) []*wafv2.Regex {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	regexPatterns := make([]*wafv2.Regex, 0)
+	for _, regexPattern := range l {
+		if regexPattern == nil {
+			continue
+		}
+		regexPatterns = append(regexPatterns, expandRegex(regexPattern.(map[string]interface{})))
+	}
+
+	return regexPatterns
+}
+
+func expandRegex(m map[string]interface{}) *wafv2.Regex {
+	if m == nil {
+		return nil
+	}
+
+	return &wafv2.Regex{
+		RegexString: aws.String(m["regex_string"].(string)),
+	}
+}
+
 func flattenRules(r []*wafv2.Rule) interface{} {
 	out := make([]map[string]interface{}, len(r))
 	for i, rule := range r {
@@ -1858,4 +1884,24 @@ func flattenExcludedRules(r []*wafv2.ExcludedRule) interface{} {
 	}
 
 	return out
+}
+
+func flattenRegexPatternSet(r []*wafv2.Regex) interface{} {
+	if r == nil {
+		return []interface{}{}
+	}
+
+	regexPatterns := make([]interface{}, 0)
+
+	for _, regexPattern := range r {
+		if regexPattern == nil {
+			continue
+		}
+		d := map[string]interface{}{
+			"regex_string": aws.StringValue(regexPattern.RegexString),
+		}
+		regexPatterns = append(regexPatterns, d)
+	}
+
+	return regexPatterns
 }
