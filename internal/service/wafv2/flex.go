@@ -728,14 +728,13 @@ func expandXSSMatchStatement(l []interface{}) *wafv2.XssMatchStatement {
 }
 
 func expandBody(l []interface{}) *wafv2.Body {
-	apiObject := &wafv2.Body{}
-
-	// oversize_handling may be Optional. In that case return an empty Body.
 	if len(l) == 0 || l[0] == nil {
-		return apiObject
+		return nil
 	}
 
 	m := l[0].(map[string]interface{})
+
+	apiObject := &wafv2.Body{}
 
 	if v, ok := m["oversize_handling"].(string); ok && v != "" {
 		apiObject.OversizeHandling = aws.String(v)
