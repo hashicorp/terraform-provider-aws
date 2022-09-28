@@ -29,7 +29,6 @@ resource "aws_wafv2_rule_group" "example" {
     }
 
     statement {
-
       geo_match_statement {
         country_codes = ["US", "NL"]
       }
@@ -535,7 +534,7 @@ Inspect the request body, which immediately follows the request headers.
 
 The `body` block supports the following arguments:
 
-* `oversize_handling` - (Optional) Oversize handling tells AWS WAF what to do with a web request when the request component that the rule inspects is over the limits. Valid values include the following: `CONTINUE`, `MATCH`, `NO_MATCH`. See the AWS [documentation](https://docs.aws.amazon.com/waf/latest/developerguide/waf-rule-statement-oversize-handling.html) for more information.
+* `oversize_handling` - (Required) Oversize handling tells AWS WAF what to do with a web request when the request component that the rule inspects is over the limits. Valid values include the following: `CONTINUE`, `MATCH`, `NO_MATCH`. See the AWS [documentation](https://docs.aws.amazon.com/waf/latest/developerguide/waf-rule-statement-oversize-handling.html) for more information.
 
 ### Headers
 
