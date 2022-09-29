@@ -105,6 +105,11 @@ resource "aws_wafv2_web_acl" "test" {
     metric_name                = %[1]q
     sampled_requests_enabled   = false
   }
+  lifecycle {
+    ignore_changes = [
+      rule,
+    ]
+  }
 }
 
 resource "aws_cloudfront_distribution" "test" {
