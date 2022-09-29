@@ -37,7 +37,9 @@ func ResourcePolicy() *schema.Resource {
 			"alarm_arns": {
 				Type:     schema.TypeList,
 				Computed: true,
-				Elem:     schema.TypeString,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
 			},
 			"arn": {
 				Type:     schema.TypeString,
