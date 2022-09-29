@@ -153,15 +153,9 @@ func ResourcePolicy() *schema.Resource {
 										Required: true,
 									},
 									"statistic": {
-										Type:     schema.TypeString,
-										Required: true,
-										ValidateFunc: validation.StringInSlice([]string{
-											applicationautoscaling.MetricStatisticAverage,
-											applicationautoscaling.MetricStatisticMinimum,
-											applicationautoscaling.MetricStatisticMaximum,
-											applicationautoscaling.MetricStatisticSampleCount,
-											applicationautoscaling.MetricStatisticSum,
-										}, false),
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.StringInSlice(applicationautoscaling.MetricStatistic_Values(), false),
 									},
 									"unit": {
 										Type:     schema.TypeString,
