@@ -22,8 +22,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdktypes"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/types/duration"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -111,10 +113,10 @@ func ResourceCertificate() *schema.Resource {
 				Set: domainValidationOptionsHash,
 			},
 			"early_renewal_duration": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ValidateFunc:  verify.ValidDuration,
-				ConflictsWith: []string{"certificate_body", "certificate_chain", "private_key", "validation_method"},
+				Type:             schema.TypeString,
+				Optional:         true,
+				ValidateDiagFunc: validateHybridDuration,
+				ConflictsWith:    []string{"certificate_body", "certificate_chain", "private_key", "validation_method"},
 			},
 			"not_after": {
 				Type:     schema.TypeString,
@@ -594,16 +596,13 @@ func certificateSetPendingRenewal(d resourceGetter) bool {
 	notAfter, _ := time.Parse(time.RFC3339, notAfterRaw.(string))
 
 	earlyDuration := d.Get("early_renewal_duration").(string)
-	if earlyDuration == "" {
+
+	duration, null, err := hybridDurationType(earlyDuration).Value()
+	if null || err != nil {
 		return false
 	}
 
-	duration, err := time.ParseDuration(earlyDuration)
-	if err != nil {
-		return false
-	}
-
-	earlyExpiration := notAfter.Add(-duration)
+	earlyExpiration := duration.SubFrom(notAfter)
 
 	return time.Now().After(earlyExpiration)
 }
@@ -924,4 +923,57 @@ func WaitCertificateRenewed(ctx context.Context, conn *acm.ACM, arn string, time
 	}
 
 	return nil, err
+}
+
+var validateHybridDuration = verify.ValidAnyDiag(
+	sdktypes.ValidateDuration,
+	sdktypes.ValidateRFC3339Duration,
+)
+
+type hybridDurationType string
+
+func (d hybridDurationType) IsNull() bool {
+	return d == ""
+}
+
+func (d hybridDurationType) Value() (hybridDurationValue, bool, error) {
+	if d.IsNull() {
+		return nil, true, nil
+	}
+
+	value, err := parseHybridDuration(string(d))
+	if err != nil {
+		return nil, false, err
+	}
+	return value, false, nil
+}
+
+type hybridDurationValue interface {
+	SubFrom(time.Time) time.Time
+}
+
+func parseHybridDuration(s string) (hybridDurationValue, error) {
+	if duration, err := duration.Parse(s); err == nil {
+		return rfc3339HybridDurationValue{d: duration}, nil
+	}
+	if duration, err := time.ParseDuration(s); err == nil {
+		return goHybridDurationValue{d: duration}, nil
+	}
+	return nil, fmt.Errorf("unable to parse: %q", s)
+}
+
+type rfc3339HybridDurationValue struct {
+	d duration.Duration
+}
+
+func (v rfc3339HybridDurationValue) SubFrom(t time.Time) time.Time {
+	return duration.Sub(t, v.d)
+}
+
+type goHybridDurationValue struct {
+	d time.Duration
+}
+
+func (v goHybridDurationValue) SubFrom(t time.Time) time.Time {
+	return t.Add(-v.d)
 }
