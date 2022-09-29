@@ -8,6 +8,11 @@ FEATURES:
 * **New Resource:** `aws_inspector2_organization_configuration` ([#27000](https://github.com/hashicorp/terraform-provider-aws/issues/27000))
 * **New Resource:** `aws_kms_custom_key_store` ([#26997](https://github.com/hashicorp/terraform-provider-aws/issues/26997))
 
+ENHANCEMENTS:
+
+* resource/aws_appautoscaling_policy: Add `alarm_arns` attribute ([#27011](https://github.com/hashicorp/terraform-provider-aws/issues/27011))
+* resource/aws_dms_endpoint: Add `s3_settings.use_task_start_time_for_full_load_timestamp` argument ([#27004](https://github.com/hashicorp/terraform-provider-aws/issues/27004))
+
 BUG FIXES:
 
 * resource/aws_rds_cluster: Support `upgrade` as a valid value in `enabled_cloudwatch_logs_exports` ([#26792](https://github.com/hashicorp/terraform-provider-aws/issues/26792))
