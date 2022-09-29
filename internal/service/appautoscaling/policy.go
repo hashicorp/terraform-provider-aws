@@ -34,21 +34,21 @@ func ResourcePolicy() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"alarm_arns": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem:     schema.TypeString,
+			},
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 				// https://github.com/boto/botocore/blob/9f322b1/botocore/data/autoscaling/2011-01-01/service-2.json#L1862-L1873
 				ValidateFunc: validation.StringLenBetween(0, 255),
-			},
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"alarm_arns": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     schema.TypeString,
 			},
 			"policy_type": {
 				Type:     schema.TypeString,
@@ -170,6 +170,11 @@ func ResourcePolicy() *schema.Resource {
 								},
 							},
 						},
+						"disable_scale_in": {
+							Type:     schema.TypeBool,
+							Default:  false,
+							Optional: true,
+						},
 						"predefined_metric_specification": {
 							Type:          schema.TypeList,
 							MaxItems:      1,
@@ -188,11 +193,6 @@ func ResourcePolicy() *schema.Resource {
 									},
 								},
 							},
-						},
-						"disable_scale_in": {
-							Type:     schema.TypeBool,
-							Default:  false,
-							Optional: true,
 						},
 						"scale_in_cooldown": {
 							Type:     schema.TypeInt,
