@@ -16,17 +16,18 @@ without having to hard code the ID as input.
 
 ```terraform
 data "aws_kms_custom_key_store" "keystore" {
-  name = "my_cloudhsm"
+  custom_key_store_name = "my_cloudhsm"
 }
 ```
 
 ## Argument Reference
 
-* `name` - (Optional) The user-specified friendly name for the custom key store.
-* `id` - (Optional) The ID for the custom key store.
+* `custom_key_store_id` - (Optional) The ID for the custom key store.
+* `custom_key_store_name` - (Optional) The user-specified friendly name for the custom key store.
 
 ## Attributes Reference
 
+* `id` - The ID for the custom key store.
 * `cloudhsm_cluster_id` - ID for the CloudHSM cluster that is associated with the custom key store.
 * `connection_state` - Indicates whether the custom key store is connected to its CloudHSM cluster.
 * `creation_date` - The date and time when the custom key store was created.
