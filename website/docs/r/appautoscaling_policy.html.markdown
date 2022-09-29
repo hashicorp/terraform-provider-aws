@@ -231,6 +231,7 @@ The `target_tracking_scaling_policy_configuration` `predefined_metric_specificat
 
 In addition to all arguments above, the following attributes are exported:
 
+* `alarm_arns` - List of CloudWatch alarm ARNs associated with the scaling policy.
 * `arn` - ARN assigned by AWS to the scaling policy.
 * `name` - Scaling policy's name.
 * `policy_type` - Scaling policy's type.
