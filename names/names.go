@@ -25,6 +25,7 @@ import (
 const (
 	ComprehendEndpointID     = "comprehend"
 	IdentityStoreEndpointID  = "identitystore"
+	Inspector2EndpointID     = "inspector2"
 	KendraEndpointID         = "kendra"
 	MediaLiveEndpointID      = "medialive"
 	RolesAnywhereEndpointID  = "rolesanywhere"
@@ -183,6 +184,18 @@ func FullHumanFriendly(service string) (string, error) {
 
 	if s, err := ProviderPackageForAlias(service); err == nil {
 		return FullHumanFriendly(s)
+	}
+
+	return "", fmt.Errorf("no service data found for %s", service)
+}
+
+func HumanFriendly(service string) (string, error) {
+	if v, ok := serviceData[service]; ok {
+		return v.HumanFriendly, nil
+	}
+
+	if s, err := ProviderPackageForAlias(service); err == nil {
+		return HumanFriendly(s)
 	}
 
 	return "", fmt.Errorf("no service data found for %s", service)

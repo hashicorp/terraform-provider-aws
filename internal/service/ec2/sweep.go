@@ -149,6 +149,7 @@ func init() {
 		Name: "aws_network_interface",
 		F:    sweepNetworkInterfaces,
 		Dependencies: []string{
+			"aws_db_proxy",
 			"aws_directory_service_directory",
 			"aws_ec2_client_vpn_endpoint",
 			"aws_ec2_transit_gateway_vpc_attachment",
