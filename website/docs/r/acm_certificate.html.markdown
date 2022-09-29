@@ -155,7 +155,9 @@ The following arguments are supported:
     * `domain_name` - (Required) Domain name for which the certificate should be issued.
     * `early_renewal_duration` - (Optional) Amount of time to start automatic renewal process before expiration.
       Has no effect if less than 60 days.
-      Represented by a string such as `2160h`.
+      Represented by either
+      a subset of [RFC 3339 duration](https://www.rfc-editor.org/rfc/rfc3339) supporting years, months, and days (e.g., `P90D`),
+      or a string such as `2160h`.
 * `subject_alternative_names` - (Optional) Set of domains that should be SANs in the issued certificate.
   To remove all elements of a previously configured list, set this value equal to an empty list (`[]`)
   or use the [`terraform taint` command](https://www.terraform.io/docs/commands/taint.html) to trigger recreation.
