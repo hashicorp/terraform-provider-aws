@@ -7,6 +7,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kms"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -159,7 +160,10 @@ func testAccCheckCustomKeyStoreDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := tfkms.FindCustomKeyStoreByID(ctx, conn, rs.Primary.ID)
+		in := &kms.DescribeCustomKeyStoresInput{
+			CustomKeyStoreId: aws.String(rs.Primary.ID),
+		}
+		_, err := tfkms.FindCustomKeyStoreByID(ctx, conn, in)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -184,7 +188,11 @@ func testAccCheckCustomKeyStoreExists(name string, customkeystore *kms.CustomKey
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).KMSConn
 		ctx := context.Background()
-		resp, err := tfkms.FindCustomKeyStoreByID(ctx, conn, rs.Primary.ID)
+
+		in := &kms.DescribeCustomKeyStoresInput{
+			CustomKeyStoreId: aws.String(rs.Primary.ID),
+		}
+		resp, err := tfkms.FindCustomKeyStoreByID(ctx, conn, in)
 
 		if err != nil {
 			return create.Error(names.KMS, create.ErrActionCheckingExistence, tfkms.ResNameCustomKeyStore, rs.Primary.ID, err)
