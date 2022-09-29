@@ -121,6 +121,29 @@ func TestAccKMSKey_asymmetricKey(t *testing.T) {
 	})
 }
 
+func TestAccKMSKey_hmacKey(t *testing.T) {
+	var key kms.KeyMetadata
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_kms_key.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, kms.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckKeyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccKeyConfig_hmac(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKeyExists(resourceName, &key),
+					resource.TestCheckResourceAttr(resourceName, "customer_master_key_spec", "HMAC_256"),
+					resource.TestCheckResourceAttr(resourceName, "key_usage", "GENERATE_VERIFY_MAC"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccKMSKey_Policy_basic(t *testing.T) {
 	var key kms.KeyMetadata
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -576,6 +599,18 @@ resource "aws_kms_key" "test" {
 
   key_usage                = "SIGN_VERIFY"
   customer_master_key_spec = "ECC_NIST_P384"
+}
+`, rName)
+}
+
+func testAccKeyConfig_hmac(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_kms_key" "test" {
+  description             = %[1]q
+  deletion_window_in_days = 7
+
+  key_usage                = "GENERATE_VERIFY_MAC"
+  customer_master_key_spec = "HMAC_256"
 }
 `, rName)
 }
