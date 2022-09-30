@@ -46,7 +46,6 @@ func TestAccRolesAnywhereProfile_basic(t *testing.T) {
 }
 
 func TestAccRolesAnywhereProfile_tags(t *testing.T) {
-
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	roleName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rolesanywhere_profile.test"
@@ -92,7 +91,6 @@ func TestAccRolesAnywhereProfile_tags(t *testing.T) {
 }
 
 func TestAccRolesAnywhereProfile_disappears(t *testing.T) {
-
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	roleName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rolesanywhere_profile.test"
@@ -110,6 +108,47 @@ func TestAccRolesAnywhereProfile_disappears(t *testing.T) {
 					acctest.CheckResourceDisappears(acctest.Provider, tfrolesanywhere.ResourceProfile(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccRolesAnywhereProfile_enabled(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	roleName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_rolesanywhere_profile.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RolesAnywhereEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProfileDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccProfileConfig_enabled(rName, roleName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProfileExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccProfileConfig_enabled(rName, roleName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProfileExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
+				),
+			},
+			{
+				Config: testAccProfileConfig_enabled(rName, roleName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProfileExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
+				),
 			},
 		},
 	})
@@ -224,4 +263,16 @@ resource "aws_rolesanywhere_profile" "test" {
   }
 }
 `, rName, tag1, value1, tag2, value2))
+}
+
+func testAccProfileConfig_enabled(rName, roleName string, enabled bool) string {
+	return acctest.ConfigCompose(
+		testAccProfileConfig_base(roleName),
+		fmt.Sprintf(`
+resource "aws_rolesanywhere_profile" "test" {
+  name      = %[1]q
+  role_arns = [aws_iam_role.test.arn]
+  enabled   = %[2]t
+}
+`, rName, enabled))
 }
