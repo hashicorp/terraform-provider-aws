@@ -9,12 +9,13 @@ require (
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.12.17
 	github.com/aws/aws-sdk-go-v2/service/comprehend v1.19.0
 	github.com/aws/aws-sdk-go-v2/service/fis v1.13.1
-	github.com/aws/aws-sdk-go-v2/service/identitystore v1.15.2
+	github.com/aws/aws-sdk-go-v2/service/identitystore v1.15.5
 	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.8.1
 	github.com/aws/aws-sdk-go-v2/service/kendra v1.33.3
 	github.com/aws/aws-sdk-go-v2/service/medialive v1.23.1
 	github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.0.10
 	github.com/aws/aws-sdk-go-v2/service/route53domains v1.12.17
+	github.com/aws/aws-sdk-go-v2/service/sesv2 v1.13.18
 	github.com/aws/aws-sdk-go-v2/service/transcribe v1.21.9
 	github.com/beevik/etree v1.1.0
 	github.com/google/go-cmp v0.5.9
@@ -44,8 +45,6 @@ require (
 	golang.org/x/tools v0.1.12
 	gopkg.in/yaml.v2 v2.4.0
 )
-
-require github.com/aws/aws-sdk-go-v2/service/sesv2 v1.13.18
 
 require (
 	github.com/agext/levenshtein v1.2.2 // indirect
