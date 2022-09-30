@@ -7,7 +7,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/identitystore"
-	"github.com/aws/aws-sdk-go-v2/service/identitystore/document"
 	"github.com/aws/aws-sdk-go-v2/service/identitystore/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -78,27 +77,10 @@ func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 	var userId string
 
-	if v, ok := d.GetOk("user_id"); ok && v.(string) != "" {
-		userId = v.(string)
-	} else {
-		var uniqueAttribute types.UniqueAttribute
-
-		filters := expandFilters(d.Get("filter").(*schema.Set).List())
-
-		if len(filters) > 1 {
-			panic("too many filters -- must be one unique attribute or an external identifier")
-		}
-
-		if uniqueAttribute.AttributePath == nil {
-			uniqueAttribute = types.UniqueAttribute{
-				AttributePath:  filters[0].AttributePath,
-				AttributeValue: document.NewLazyDocument(aws.ToString(filters[0].AttributeValue)),
-			}
-		}
-
+	if v, ok := d.GetOk("filter"); ok && v.(*schema.Set).Len() > 0 {
 		input := &identitystore.GetUserIdInput{
 			AlternateIdentifier: &types.AlternateIdentifierMemberUniqueAttribute{
-				Value: uniqueAttribute,
+				Value: *expandUniqueAttribute(v.(*schema.Set).List()[0].(map[string]interface{})),
 			},
 			IdentityStoreId: aws.String(identityStoreId),
 		}
@@ -115,6 +97,15 @@ func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta interf
 		}
 
 		userId = aws.ToString(output.UserId)
+	}
+
+	if v, ok := d.GetOk("user_id"); ok && v.(string) != "" {
+		if userId != "" && userId != v.(string) {
+			// The given user doesn't match the search criteria.
+			return diag.Errorf("no Identity Store User found matching criteria; try different search")
+		}
+
+		userId = v.(string)
 	}
 
 	user, err := findUserByID(ctx, conn, identityStoreId, userId)

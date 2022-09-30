@@ -104,6 +104,26 @@ func TestAccIdentityStoreUserDataSource_nonExistent(t *testing.T) {
 	})
 }
 
+func TestAccIdentityStoreUserDataSource_userIdFilterMismatch(t *testing.T) {
+	name1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	email1 := acctest.RandomEmailAddress(acctest.RandomDomainName())
+	name2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	email2 := acctest.RandomEmailAddress(acctest.RandomDomainName())
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSSOAdminInstances(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, identitystore.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccUserDataSourceConfig_userIdFilterMismatch(name1, email1, name2, email2),
+				ExpectError: regexp.MustCompile(`no Identity Store User found matching criteria`),
+			},
+		},
+	})
+}
+
 func testAccUserDataSourceConfig_base(name, email string) string {
 	return fmt.Sprintf(`
 data "aws_ssoadmin_instances" "test" {}
@@ -172,6 +192,38 @@ data "aws_identitystore_user" "test" {
   user_id = aws_identitystore_user.test.user_id
 }
 `)
+}
+
+func testAccUserDataSourceConfig_userIdFilterMismatch(name1, email1, name2, email2 string) string {
+	return acctest.ConfigCompose(
+		testAccUserDataSourceConfig_base(name1, email1),
+		fmt.Sprintf(`
+resource "aws_identitystore_user" "test2" {
+  identity_store_id = tolist(data.aws_ssoadmin_instances.test.identity_store_ids)[0]
+  display_name      = "Acceptance Test"
+  user_name         = %[1]q
+
+  name {
+    family_name = "Acceptance"
+    given_name  = "Test"
+  }
+
+  emails {
+    value = %[2]q
+  }
+}
+
+data "aws_identitystore_user" "test" {
+  identity_store_id = tolist(data.aws_ssoadmin_instances.test.identity_store_ids)[0]
+
+  filter {
+    attribute_path  = "UserName"
+    attribute_value = aws_identitystore_user.test.user_name
+  }
+
+  user_id = aws_identitystore_user.test2.user_id
+}
+`, name2, email2))
 }
 
 const testAccUserDataSourceConfig_nonExistent = `
