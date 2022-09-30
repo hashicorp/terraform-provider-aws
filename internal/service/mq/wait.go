@@ -7,20 +7,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-const (
-	BrokerCreateTimeout = 30 * time.Minute
-	BrokerDeleteTimeout = 30 * time.Minute
-	BrokerRebootTimeout = 30 * time.Minute
-)
-
-func WaitBrokerCreated(conn *mq.MQ, id string) (*mq.DescribeBrokerResponse, error) {
+func WaitBrokerCreated(conn *mq.MQ, id string, timeout time.Duration) (*mq.DescribeBrokerResponse, error) {
 	stateConf := resource.StateChangeConf{
 		Pending: []string{
 			mq.BrokerStateCreationInProgress,
 			mq.BrokerStateRebootInProgress,
 		},
 		Target:  []string{mq.BrokerStateRunning},
-		Timeout: BrokerCreateTimeout,
+		Timeout: timeout,
 		Refresh: StatusBroker(conn, id),
 	}
 	outputRaw, err := stateConf.WaitForState()
@@ -32,7 +26,7 @@ func WaitBrokerCreated(conn *mq.MQ, id string) (*mq.DescribeBrokerResponse, erro
 	return nil, err
 }
 
-func WaitBrokerDeleted(conn *mq.MQ, id string) (*mq.DescribeBrokerResponse, error) {
+func WaitBrokerDeleted(conn *mq.MQ, id string, timeout time.Duration) (*mq.DescribeBrokerResponse, error) {
 	stateConf := resource.StateChangeConf{
 		Pending: []string{
 			mq.BrokerStateCreationFailed,
@@ -41,7 +35,7 @@ func WaitBrokerDeleted(conn *mq.MQ, id string) (*mq.DescribeBrokerResponse, erro
 			mq.BrokerStateRunning,
 		},
 		Target:  []string{},
-		Timeout: BrokerDeleteTimeout,
+		Timeout: timeout,
 		Refresh: StatusBroker(conn, id),
 	}
 	outputRaw, err := stateConf.WaitForState()
@@ -53,13 +47,13 @@ func WaitBrokerDeleted(conn *mq.MQ, id string) (*mq.DescribeBrokerResponse, erro
 	return nil, err
 }
 
-func WaitBrokerRebooted(conn *mq.MQ, id string) (*mq.DescribeBrokerResponse, error) {
+func WaitBrokerRebooted(conn *mq.MQ, id string, timeout time.Duration) (*mq.DescribeBrokerResponse, error) {
 	stateConf := resource.StateChangeConf{
 		Pending: []string{
 			mq.BrokerStateRebootInProgress,
 		},
 		Target:  []string{mq.BrokerStateRunning},
-		Timeout: BrokerRebootTimeout,
+		Timeout: timeout,
 		Refresh: StatusBroker(conn, id),
 	}
 	outputRaw, err := stateConf.WaitForState()

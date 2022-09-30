@@ -10,6 +10,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/mq"
@@ -35,6 +36,11 @@ func ResourceBroker() *schema.Resource {
 		Delete: resourceBrokerDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
+		},
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(30 * time.Minute),
+			Update: schema.DefaultTimeout(30 * time.Minute),
+			Delete: schema.DefaultTimeout(30 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -407,7 +413,7 @@ func resourceBrokerCreate(d *schema.ResourceData, meta interface{}) error {
 	d.SetId(aws.StringValue(out.BrokerId))
 	d.Set("arn", out.BrokerArn)
 
-	if _, err := WaitBrokerCreated(conn, d.Id()); err != nil {
+	if _, err := WaitBrokerCreated(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return fmt.Errorf("error waiting for MQ Broker (%s) creation: %w", d.Id(), err)
 	}
 
@@ -593,7 +599,7 @@ func resourceBrokerUpdate(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("error rebooting MQ Broker (%s): %w", d.Id(), err)
 		}
 
-		if _, err := WaitBrokerRebooted(conn, d.Id()); err != nil {
+		if _, err := WaitBrokerRebooted(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return fmt.Errorf("error waiting for MQ Broker (%s) reboot: %w", d.Id(), err)
 		}
 	}
@@ -620,7 +626,7 @@ func resourceBrokerDelete(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	if _, err := WaitBrokerDeleted(conn, d.Id()); err != nil {
+	if _, err := WaitBrokerDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return fmt.Errorf("error waiting for MQ Broker (%s) deletion: %w", d.Id(), err)
 	}
 
