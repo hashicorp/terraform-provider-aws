@@ -13,7 +13,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.8.1
 	github.com/aws/aws-sdk-go-v2/service/kendra v1.33.3
 	github.com/aws/aws-sdk-go-v2/service/medialive v1.22.7
-	github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.0.7
+	github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.0.10
 	github.com/aws/aws-sdk-go-v2/service/route53domains v1.12.15
 	github.com/aws/aws-sdk-go-v2/service/transcribe v1.21.7
 	github.com/beevik/etree v1.1.0
