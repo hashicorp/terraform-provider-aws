@@ -28,18 +28,11 @@ func DataSourceReservedOffering() *schema.Resource {
 			},
 			"db_instance_class": {
 				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
+				Required: true,
 			},
 			"duration": {
 				Type:     schema.TypeInt,
-				Optional: true,
-				Computed: true,
-			},
-			"first_match": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
+				Required: true,
 			},
 			"fixed_price": {
 				Type:     schema.TypeFloat,
@@ -47,18 +40,15 @@ func DataSourceReservedOffering() *schema.Resource {
 			},
 			"multi_az": {
 				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
+				Required: true,
 			},
 			"offering_id": {
 				Type:     schema.TypeString,
-				Optional: true,
 				Computed: true,
 			},
 			"offering_type": {
 				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
+				Required: true,
 				ValidateFunc: validation.StringInSlice([]string{
 					"Partial Upfront",
 					"All Upfront",
@@ -67,8 +57,7 @@ func DataSourceReservedOffering() *schema.Resource {
 			},
 			"product_description": {
 				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
+				Required: true,
 			},
 		},
 	}
