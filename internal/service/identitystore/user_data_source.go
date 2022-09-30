@@ -23,8 +23,10 @@ func DataSourceUser() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"filter": {
-				Type:     schema.TypeSet,
-				Required: true,
+				Type:         schema.TypeSet,
+				Optional:     true,
+				MaxItems:     1,
+				AtLeastOneOf: []string{"filter", "user_id"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"attribute_path": {
@@ -49,9 +51,10 @@ func DataSourceUser() *schema.Resource {
 			},
 
 			"user_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				AtLeastOneOf: []string{"filter", "user_id"},
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 47),
 					validation.StringMatch(regexp.MustCompile(`^([0-9a-f]{10}-|)[A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}$`), "must match ([0-9a-f]{10}-|)[A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}"),
