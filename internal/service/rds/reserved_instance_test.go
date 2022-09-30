@@ -28,7 +28,7 @@ func TestAccRDSReservedInstance_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_reserved_instance.test"
 	dataSourceName := "data.aws_rds_reserved_instance_offering.test"
-	instanceCount := 1
+	instanceCount := "1"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
@@ -91,7 +91,7 @@ func testAccReservedInstanceExists(n string, reservation *rds.ReservedDBInstance
 	}
 }
 
-func testAccReservedInstanceConfig_basic(rName string, instanceCount int) string {
+func testAccReservedInstanceConfig_basic(rName string, instanceCount string) string {
 	return fmt.Sprintf(`
 data "aws_rds_reserved_instance_offering" "test" {
   db_instance_class   = "db.t2.micro"
@@ -103,7 +103,7 @@ data "aws_rds_reserved_instance_offering" "test" {
 resource "aws_rds_reserved_instance" "test" {
   offering_id    = data.aws_rds_reserved_instance_offering.test.offering_id
   reservation_id = %[1]q
-  instance_count = %[2]v
+  instance_count = %[2]s
 }
 `, rName, instanceCount)
 }
