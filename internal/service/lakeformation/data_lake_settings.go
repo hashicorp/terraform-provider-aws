@@ -101,6 +101,25 @@ func ResourceDataLakeSettings() *schema.Resource {
 					ValidateFunc: verify.ValidAccountID,
 				},
 			},
+			"allow_external_data_filtering": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
+			"external_data_filtering_allow_list": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Optional: true,
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: validPrincipal,
+				},
+			},
+			"authorized_session_tag_value_list": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
 		},
 	}
 }
@@ -130,6 +149,18 @@ func resourceDataLakeSettingsCreate(d *schema.ResourceData, meta interface{}) er
 
 	if v, ok := d.GetOk("trusted_resource_owners"); ok {
 		settings.TrustedResourceOwners = flex.ExpandStringList(v.([]interface{}))
+	}
+
+	if v, ok := d.GetOk("allow_external_data_filtering"); ok {
+		settings.AllowExternalDataFiltering = aws.Bool(v.(bool))
+	}
+
+	if v, ok := d.GetOk("external_data_filtering_allow_list"); ok {
+		settings.ExternalDataFilteringAllowList = expandDataLakeSettingsDataFilteringAllowList(v.(*schema.Set))
+	}
+
+	if v, ok := d.GetOk("authorized_session_tag_value_list"); ok {
+		settings.AuthorizedSessionTagValueList = flex.ExpandStringList(v.([]interface{}))
 	}
 
 	input.DataLakeSettings = settings
@@ -199,6 +230,9 @@ func resourceDataLakeSettingsRead(d *schema.ResourceData, meta interface{}) erro
 	d.Set("create_table_default_permissions", flattenDataLakeSettingsCreateDefaultPermissions(settings.CreateTableDefaultPermissions))
 	d.Set("admins", flattenDataLakeSettingsAdmins(settings.DataLakeAdmins))
 	d.Set("trusted_resource_owners", flex.FlattenStringList(settings.TrustedResourceOwners))
+	d.Set("allow_external_data_filtering", settings.AllowExternalDataFiltering)
+	d.Set("external_data_filtering_allow_list", flattenDataLakeSettingsDataFilteringAllowList(settings.ExternalDataFilteringAllowList))
+	d.Set("authorized_session_tag_value_list", flex.FlattenStringList(settings.AuthorizedSessionTagValueList))
 
 	return nil
 }
@@ -302,6 +336,36 @@ func expandDataLakeSettingsAdmins(tfSet *schema.Set) []*lakeformation.DataLakePr
 }
 
 func flattenDataLakeSettingsAdmins(apiObjects []*lakeformation.DataLakePrincipal) []interface{} {
+	if apiObjects == nil {
+		return nil
+	}
+
+	tfSlice := make([]interface{}, 0, len(apiObjects))
+
+	for _, apiObject := range apiObjects {
+		tfSlice = append(tfSlice, *apiObject.DataLakePrincipalIdentifier)
+	}
+
+	return tfSlice
+}
+
+func expandDataLakeSettingsDataFilteringAllowList(tfSet *schema.Set) []*lakeformation.DataLakePrincipal {
+	tfSlice := tfSet.List()
+	apiObjects := make([]*lakeformation.DataLakePrincipal, 0, len(tfSlice))
+
+	for _, tfItem := range tfSlice {
+		val, ok := tfItem.(string)
+		if ok && val != "" {
+			apiObjects = append(apiObjects, &lakeformation.DataLakePrincipal{
+				DataLakePrincipalIdentifier: aws.String(tfItem.(string)),
+			})
+		}
+	}
+
+	return apiObjects
+}
+
+func flattenDataLakeSettingsDataFilteringAllowList(apiObjects []*lakeformation.DataLakePrincipal) []interface{} {
 	if apiObjects == nil {
 		return nil
 	}
