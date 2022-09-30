@@ -386,10 +386,10 @@ func fieldToMatchBaseSchema() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 							ValidateFunc: validation.All(
-								validation.StringLenBetween(1, 40),
+								validation.StringLenBetween(1, 64),
 								// The value is returned in lower case by the API.
 								// Trying to solve it with StateFunc and/or DiffSuppressFunc resulted in hash problem of the rule field or didn't work.
-								validation.StringMatch(regexp.MustCompile(`^[a-z0-9-_]+$`), "must contain only lowercase alphanumeric characters, underscores, and hyphens"),
+								validation.StringMatch(regexp.MustCompile(`.*\S.*`), "must match the pattern specified by https://docs.aws.amazon.com/waf/latest/APIReference/API_SingleHeader.html"),
 							),
 						},
 					},
