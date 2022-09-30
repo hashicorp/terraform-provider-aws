@@ -2,33 +2,34 @@ package identitystore_test
 
 import (
 	"fmt"
-	"os"
 	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/identitystore"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccIdentityStoreUserDataSource_userName(t *testing.T) {
 	dataSourceName := "data.aws_identitystore_user.test"
-	name := os.Getenv("AWS_IDENTITY_STORE_USER_NAME")
+	resourceName := "aws_identitystore_user.test"
+	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	email := acctest.RandomEmailAddress(acctest.RandomDomainName())
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			testAccPreCheckSSOAdminInstances(t)
-			testAccPreCheckUserName(t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, identitystore.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             nil,
+		CheckDestroy:             testAccCheckUserDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserDataSourceConfig_displayName(name),
+				Config: testAccUserDataSourceConfig_displayName(name, email),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(dataSourceName, "user_id"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "user_id", resourceName, "user_id"),
 					resource.TestCheckResourceAttr(dataSourceName, "user_name", name),
 				),
 			},
@@ -38,25 +39,24 @@ func TestAccIdentityStoreUserDataSource_userName(t *testing.T) {
 
 func TestAccIdentityStoreUserDataSource_userID(t *testing.T) {
 	dataSourceName := "data.aws_identitystore_user.test"
-	name := os.Getenv("AWS_IDENTITY_STORE_USER_NAME")
-	userID := os.Getenv("AWS_IDENTITY_STORE_USER_ID")
+	resourceName := "aws_identitystore_user.test"
+	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	email := acctest.RandomEmailAddress(acctest.RandomDomainName())
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			testAccPreCheckSSOAdminInstances(t)
-			testAccPreCheckUserName(t)
-			testAccPreCheckUserID(t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, identitystore.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             nil,
+		CheckDestroy:             testAccCheckUserDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserDataSourceConfig_id(name, userID),
+				Config: testAccUserDataSourceConfig_id(name, email),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "user_id", userID),
-					resource.TestCheckResourceAttrSet(dataSourceName, "user_name"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "user_id", resourceName, "user_id"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "user_name", resourceName, "user_name"),
 				),
 			},
 		},
@@ -68,7 +68,7 @@ func TestAccIdentityStoreUserDataSource_nonExistent(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSSOAdminInstances(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, identitystore.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             nil,
+		CheckDestroy:             testAccCheckUserDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccUserDataSourceConfig_nonExistent,
@@ -78,49 +78,58 @@ func TestAccIdentityStoreUserDataSource_nonExistent(t *testing.T) {
 	})
 }
 
-func testAccPreCheckUserName(t *testing.T) {
-	if os.Getenv("AWS_IDENTITY_STORE_USER_NAME") == "" {
-		t.Skip("AWS_IDENTITY_STORE_USER_NAME env var must be set for AWS Identity Store User acceptance test. " +
-			"This is required until ListUsers API returns results without filtering by name.")
-	}
-}
-
-func testAccPreCheckUserID(t *testing.T) {
-	if os.Getenv("AWS_IDENTITY_STORE_USER_ID") == "" {
-		t.Skip("AWS_IDENTITY_STORE_USER_ID env var must be set for AWS Identity Store User acceptance test. " +
-			"This is required until ListUsers API returns results without filtering by name.")
-	}
-}
-
-func testAccUserDataSourceConfig_displayName(name string) string {
+func testAccUserDataSourceConfig_base(name, email string) string {
 	return fmt.Sprintf(`
 data "aws_ssoadmin_instances" "test" {}
 
-data "aws_identitystore_user" "test" {
-  filter {
-    attribute_path  = "UserName"
-    attribute_value = %q
-  }
+resource "aws_identitystore_user" "test" {
   identity_store_id = tolist(data.aws_ssoadmin_instances.test.identity_store_ids)[0]
-}
-`, name)
-}
+  display_name      = "Acceptance Test"
+  user_name         = %[1]q
 
-func testAccUserDataSourceConfig_id(name, id string) string {
-	return fmt.Sprintf(`
-data "aws_ssoadmin_instances" "test" {}
-
-data "aws_identitystore_user" "test" {
-  filter {
-    attribute_path  = "UserName"
-    attribute_value = %q
+  name {
+    family_name = "Acceptance"
+    given_name  = "Test"
   }
 
-  user_id = %q
-
-  identity_store_id = tolist(data.aws_ssoadmin_instances.test.identity_store_ids)[0]
+  emails {
+    value = %[2]q
+  }
 }
-`, name, id)
+`, name, email)
+}
+
+func testAccUserDataSourceConfig_displayName(name, email string) string {
+	return acctest.ConfigCompose(
+		testAccUserDataSourceConfig_base(name, email),
+		`
+data "aws_identitystore_user" "test" {
+  identity_store_id = tolist(data.aws_ssoadmin_instances.test.identity_store_ids)[0]
+
+  filter {
+    attribute_path  = "UserName"
+    attribute_value = aws_identitystore_user.test.user_name
+  }
+}
+`,
+	)
+}
+
+func testAccUserDataSourceConfig_id(name, email string) string {
+	return acctest.ConfigCompose(
+		testAccUserDataSourceConfig_base(name, email),
+		`
+data "aws_identitystore_user" "test" {
+  identity_store_id = tolist(data.aws_ssoadmin_instances.test.identity_store_ids)[0]
+
+  filter {
+    attribute_path  = "UserName"
+    attribute_value = aws_identitystore_user.test.user_name
+  }
+
+  user_id = aws_identitystore_user.test.user_id
+}
+`)
 }
 
 const testAccUserDataSourceConfig_nonExistent = `
