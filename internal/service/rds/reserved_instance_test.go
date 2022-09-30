@@ -39,7 +39,7 @@ func TestAccRDSReservedInstance_basic(t *testing.T) {
 			{
 				Config: testAccReservedInstanceConfig_basic(rName, instanceCount),
 				Check: resource.ComposeTestCheckFunc(
-					testAccRDSReservedInstanceExists(resourceName, &reservation),
+					testAccReservedInstanceExists(resourceName, &reservation),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "rds", regexp.MustCompile(`rds:.+`)),
 					resource.TestCheckResourceAttrPair(dataSourceName, "currency_code", resourceName, "currency_code"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "db_instance_class", resourceName, "db_instance_class"),
@@ -62,7 +62,7 @@ func TestAccRDSReservedInstance_basic(t *testing.T) {
 	})
 }
 
-func testAccRDSReservedInstanceExists(n string, reservation *rds.ReservedDBInstance) resource.TestCheckFunc {
+func testAccReservedInstanceExists(n string, reservation *rds.ReservedDBInstance) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
 
