@@ -45,6 +45,7 @@ val services = mapOf(
     "comprehend" to ServiceSpec("Comprehend", parallelismOverride = 10),
     "configservice" to ServiceSpec("Config"),
     "connect" to ServiceSpec("Connect"),
+    "controltower" to ServiceSpec("Control Tower"),
     "cur" to ServiceSpec("Cost and Usage Report"),
     "dataexchange" to ServiceSpec("Data Exchange"),
     "datapipeline" to ServiceSpec("Data Pipeline"),

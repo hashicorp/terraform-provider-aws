@@ -154,6 +154,7 @@ func ClusterExportableLogType_Values() []string {
 		ExportableLogTypeGeneral,
 		ExportableLogTypePostgreSQL,
 		ExportableLogTypeSlowQuery,
+		ExportableLogTypeUpgrade,
 	}
 }
 

@@ -14,9 +14,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/experimental/intf"
 	"github.com/hashicorp/terraform-provider-aws/internal/experimental/nullable"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	"github.com/hashicorp/terraform-provider-aws/internal/intf"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/accessanalyzer"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/account"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/acm"
@@ -719,12 +719,13 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_kinesis_stream":          kinesis.DataSourceStream(),
 			"aws_kinesis_stream_consumer": kinesis.DataSourceStreamConsumer(),
 
-			"aws_kms_alias":      kms.DataSourceAlias(),
-			"aws_kms_ciphertext": kms.DataSourceCiphertext(),
-			"aws_kms_key":        kms.DataSourceKey(),
-			"aws_kms_public_key": kms.DataSourcePublicKey(),
-			"aws_kms_secret":     kms.DataSourceSecret(),
-			"aws_kms_secrets":    kms.DataSourceSecrets(),
+			"aws_kms_alias":            kms.DataSourceAlias(),
+			"aws_kms_ciphertext":       kms.DataSourceCiphertext(),
+			"aws_kms_custom_key_store": kms.DataSourceCustomKeyStore(),
+			"aws_kms_key":              kms.DataSourceKey(),
+			"aws_kms_public_key":       kms.DataSourcePublicKey(),
+			"aws_kms_secret":           kms.DataSourceSecret(),
+			"aws_kms_secrets":          kms.DataSourceSecrets(),
 
 			"aws_lakeformation_data_lake_settings": lakeformation.DataSourceDataLakeSettings(),
 			"aws_lakeformation_permissions":        lakeformation.DataSourcePermissions(),
@@ -1603,8 +1604,9 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_iam_user_ssh_key":                iam.ResourceUserSSHKey(),
 			"aws_iam_virtual_mfa_device":          iam.ResourceVirtualMFADevice(),
 
-			"aws_identitystore_group": identitystore.ResourceGroup(),
-			"aws_identitystore_user":  identitystore.ResourceUser(),
+			"aws_identitystore_group":            identitystore.ResourceGroup(),
+			"aws_identitystore_user":             identitystore.ResourceUser(),
+			"aws_identitystore_group_membership": identitystore.ResourceGroupMembership(),
 
 			"aws_imagebuilder_component":                    imagebuilder.ResourceComponent(),
 			"aws_imagebuilder_container_recipe":             imagebuilder.ResourceContainerRecipe(),
@@ -1666,6 +1668,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 
 			"aws_kms_alias":                kms.ResourceAlias(),
 			"aws_kms_ciphertext":           kms.ResourceCiphertext(),
+			"aws_kms_custom_key_store":     kms.ResourceCustomKeyStore(),
 			"aws_kms_external_key":         kms.ResourceExternalKey(),
 			"aws_kms_grant":                kms.ResourceGrant(),
 			"aws_kms_key":                  kms.ResourceKey(),
