@@ -49,6 +49,7 @@ jobs:
     steps:
       - name: Add comment to add helpful context for new contributors
         uses: actions/first-interaction@v1
+        continue-on-error: true
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           pr-message: |-
