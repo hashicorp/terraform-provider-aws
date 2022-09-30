@@ -14,9 +14,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/experimental/intf"
 	"github.com/hashicorp/terraform-provider-aws/internal/experimental/nullable"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	"github.com/hashicorp/terraform-provider-aws/internal/intf"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/accessanalyzer"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/account"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/acm"
@@ -105,6 +105,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/identitystore"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/imagebuilder"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/inspector"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/inspector2"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/iot"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/kafka"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/kafkaconnect"
@@ -718,12 +719,13 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_kinesis_stream":          kinesis.DataSourceStream(),
 			"aws_kinesis_stream_consumer": kinesis.DataSourceStreamConsumer(),
 
-			"aws_kms_alias":      kms.DataSourceAlias(),
-			"aws_kms_ciphertext": kms.DataSourceCiphertext(),
-			"aws_kms_key":        kms.DataSourceKey(),
-			"aws_kms_public_key": kms.DataSourcePublicKey(),
-			"aws_kms_secret":     kms.DataSourceSecret(),
-			"aws_kms_secrets":    kms.DataSourceSecrets(),
+			"aws_kms_alias":            kms.DataSourceAlias(),
+			"aws_kms_ciphertext":       kms.DataSourceCiphertext(),
+			"aws_kms_custom_key_store": kms.DataSourceCustomKeyStore(),
+			"aws_kms_key":              kms.DataSourceKey(),
+			"aws_kms_public_key":       kms.DataSourcePublicKey(),
+			"aws_kms_secret":           kms.DataSourceSecret(),
+			"aws_kms_secrets":          kms.DataSourceSecrets(),
 
 			"aws_lakeformation_data_lake_settings": lakeformation.DataSourceDataLakeSettings(),
 			"aws_lakeformation_permissions":        lakeformation.DataSourcePermissions(),
@@ -1602,6 +1604,10 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_iam_user_ssh_key":                iam.ResourceUserSSHKey(),
 			"aws_iam_virtual_mfa_device":          iam.ResourceVirtualMFADevice(),
 
+			"aws_identitystore_group":            identitystore.ResourceGroup(),
+			"aws_identitystore_user":             identitystore.ResourceUser(),
+			"aws_identitystore_group_membership": identitystore.ResourceGroupMembership(),
+
 			"aws_imagebuilder_component":                    imagebuilder.ResourceComponent(),
 			"aws_imagebuilder_container_recipe":             imagebuilder.ResourceContainerRecipe(),
 			"aws_imagebuilder_distribution_configuration":   imagebuilder.ResourceDistributionConfiguration(),
@@ -1613,6 +1619,8 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_inspector_assessment_target":   inspector.ResourceAssessmentTarget(),
 			"aws_inspector_assessment_template": inspector.ResourceAssessmentTemplate(),
 			"aws_inspector_resource_group":      inspector.ResourceResourceGroup(),
+
+			"aws_inspector2_organization_configuration": inspector2.ResourceOrganizationConfiguration(),
 
 			"aws_iot_authorizer":                 iot.ResourceAuthorizer(),
 			"aws_iot_certificate":                iot.ResourceCertificate(),
@@ -1660,6 +1668,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 
 			"aws_kms_alias":                kms.ResourceAlias(),
 			"aws_kms_ciphertext":           kms.ResourceCiphertext(),
+			"aws_kms_custom_key_store":     kms.ResourceCustomKeyStore(),
 			"aws_kms_external_key":         kms.ResourceExternalKey(),
 			"aws_kms_grant":                kms.ResourceGrant(),
 			"aws_kms_key":                  kms.ResourceKey(),

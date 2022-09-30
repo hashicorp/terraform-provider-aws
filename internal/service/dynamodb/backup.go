@@ -7,11 +7,11 @@ import (
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 )
 
-func listBackupsPages(conn *dynamodb.DynamoDB, input *dynamodb.ListBackupsInput, fn func(*dynamodb.ListBackupsOutput, bool) bool) error { //nolint:deadcode // used in sweeper
+func listBackupsPages(conn *dynamodb.DynamoDB, input *dynamodb.ListBackupsInput, fn func(*dynamodb.ListBackupsOutput, bool) bool) error { //nolint:unused // This function is called from a sweeper.
 	return listBackupsPagesWithContext(context.Background(), conn, input, fn)
 }
 
-func listBackupsPagesWithContext(ctx context.Context, conn *dynamodb.DynamoDB, input *dynamodb.ListBackupsInput, fn func(*dynamodb.ListBackupsOutput, bool) bool) error {
+func listBackupsPagesWithContext(ctx context.Context, conn *dynamodb.DynamoDB, input *dynamodb.ListBackupsInput, fn func(*dynamodb.ListBackupsOutput, bool) bool) error { //nolint:unused // This function is called from a sweeper.
 	for {
 		output, err := conn.ListBackupsWithContext(ctx, input)
 		if err != nil {

@@ -4,17 +4,17 @@ go 1.18
 
 require (
 	github.com/ProtonMail/go-crypto v0.0.0-20210428141323-04723f9f07d7
-	github.com/aws/aws-sdk-go v1.44.94
-	github.com/aws/aws-sdk-go-v2 v1.16.15
+	github.com/aws/aws-sdk-go v1.44.104
+	github.com/aws/aws-sdk-go-v2 v1.16.16
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.12.15
 	github.com/aws/aws-sdk-go-v2/service/comprehend v1.18.10
 	github.com/aws/aws-sdk-go-v2/service/fis v1.12.15
 	github.com/aws/aws-sdk-go-v2/service/identitystore v1.15.2
+	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.8.1
 	github.com/aws/aws-sdk-go-v2/service/kendra v1.33.3
 	github.com/aws/aws-sdk-go-v2/service/medialive v1.22.7
 	github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.0.7
 	github.com/aws/aws-sdk-go-v2/service/route53domains v1.12.15
-	github.com/aws/aws-sdk-go-v2/service/sesv2 v1.13.17
 	github.com/aws/aws-sdk-go-v2/service/transcribe v1.21.7
 	github.com/beevik/etree v1.1.0
 	github.com/google/go-cmp v0.5.9
@@ -32,7 +32,7 @@ require (
 	github.com/hashicorp/terraform-plugin-go v0.14.0
 	github.com/hashicorp/terraform-plugin-log v0.7.0
 	github.com/hashicorp/terraform-plugin-mux v0.7.0
-	github.com/hashicorp/terraform-plugin-sdk/v2 v2.22.0
+	github.com/hashicorp/terraform-plugin-sdk/v2 v2.23.0
 	github.com/mattbaird/jsonpatch v0.0.0-20200820163806-098863c1fc24
 	github.com/mitchellh/copystructure v1.2.0
 	github.com/mitchellh/go-homedir v1.1.0
@@ -45,14 +45,16 @@ require (
 	gopkg.in/yaml.v2 v2.4.0
 )
 
+require github.com/aws/aws-sdk-go-v2/service/sesv2 v1.13.18
+
 require (
 	github.com/agext/levenshtein v1.2.2 // indirect
 	github.com/apparentlymart/go-cidr v1.1.0 // indirect
 	github.com/apparentlymart/go-textseg/v13 v13.0.0 // indirect
 	github.com/aws/aws-sdk-go-v2/config v1.15.4 // indirect
 	github.com/aws/aws-sdk-go-v2/credentials v1.12.0 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/configsources v1.1.22 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.4.16 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/configsources v1.1.23 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.4.17 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/ini v1.3.11 // indirect
 	github.com/aws/aws-sdk-go-v2/service/iam v1.18.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.9.4 // indirect

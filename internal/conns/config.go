@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/comprehend"
 	"github.com/aws/aws-sdk-go-v2/service/fis"
 	"github.com/aws/aws-sdk-go-v2/service/identitystore"
+	"github.com/aws/aws-sdk-go-v2/service/inspector2"
 	"github.com/aws/aws-sdk-go-v2/service/kendra"
 	"github.com/aws/aws-sdk-go-v2/service/medialive"
 	"github.com/aws/aws-sdk-go-v2/service/rolesanywhere"
@@ -213,6 +214,12 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 	client.IdentityStoreConn = identitystore.NewFromConfig(cfg, func(o *identitystore.Options) {
 		if endpoint := c.Endpoints[names.IdentityStore]; endpoint != "" {
 			o.EndpointResolver = identitystore.EndpointResolverFromURL(endpoint)
+		}
+	})
+
+	client.Inspector2Conn = inspector2.NewFromConfig(cfg, func(o *inspector2.Options) {
+		if endpoint := c.Endpoints[names.Inspector2]; endpoint != "" {
+			o.EndpointResolver = inspector2.EndpointResolverFromURL(endpoint)
 		}
 	})
 

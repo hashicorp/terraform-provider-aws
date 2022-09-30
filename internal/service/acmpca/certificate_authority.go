@@ -55,7 +55,7 @@ func ResourceCertificateAuthority() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			// https://docs.aws.amazon.com/acm-pca/latest/APIReference/API_CertificateAuthorityConfiguration.html
+			// https://docs.aws.amazon.com/privateca/latest/APIReference/API_CertificateAuthorityConfiguration.html
 			"certificate_authority_configuration": {
 				Type:     schema.TypeList,
 				Required: true,
@@ -86,7 +86,7 @@ func ResourceCertificateAuthority() *schema.Resource {
 								acmpca.SigningAlgorithmSha512withrsa,
 							}, false),
 						},
-						// https://docs.aws.amazon.com/acm-pca/latest/APIReference/API_ASN1Subject.html
+						// https://docs.aws.amazon.com/privateca/latest/APIReference/API_ASN1Subject.html
 						"subject": {
 							Type:     schema.TypeList,
 							Required: true,
@@ -199,7 +199,7 @@ func ResourceCertificateAuthority() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			// https://docs.aws.amazon.com/acm-pca/latest/APIReference/API_RevocationConfiguration.html
+			// https://docs.aws.amazon.com/privateca/latest/APIReference/API_RevocationConfiguration.html
 			"revocation_configuration": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -212,7 +212,7 @@ func ResourceCertificateAuthority() *schema.Resource {
 				},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						// https://docs.aws.amazon.com/acm-pca/latest/APIReference/API_CrlConfiguration.html
+						// https://docs.aws.amazon.com/privateca/latest/APIReference/API_CrlConfiguration.html
 						"crl_configuration": {
 							Type:     schema.TypeList,
 							Optional: true,
@@ -255,7 +255,7 @@ func ResourceCertificateAuthority() *schema.Resource {
 								},
 							},
 						},
-						// https://docs.aws.amazon.com/acm-pca/latest/APIReference/API_OcspConfiguration.html
+						// https://docs.aws.amazon.com/privateca/latest/APIReference/API_OcspConfiguration.html
 						"ocsp_configuration": {
 							Type:     schema.TypeList,
 							Optional: true,

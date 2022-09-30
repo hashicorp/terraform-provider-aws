@@ -623,6 +623,11 @@ func ResourceEndpoint() *schema.Resource {
 							Optional: true,
 							Default:  false,
 						},
+						"use_task_start_time_for_full_load_timestamp": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
 					},
 				},
 			},
@@ -1905,6 +1910,9 @@ func expandS3Settings(tfMap map[string]interface{}) *dms.S3Settings {
 	if v, ok := tfMap["use_csv_no_sup_value"].(bool); ok {
 		apiObject.UseCsvNoSupValue = aws.Bool(v)
 	}
+	if v, ok := tfMap["use_task_start_time_for_full_load_timestamp"].(bool); ok {
+		apiObject.UseTaskStartTimeForFullLoadTimestamp = aws.Bool(v)
+	}
 
 	return apiObject
 }
@@ -2020,6 +2028,9 @@ func flattenS3Settings(apiObject *dms.S3Settings) []map[string]interface{} {
 	}
 	if v := apiObject.UseCsvNoSupValue; v != nil {
 		tfMap["use_csv_no_sup_value"] = aws.BoolValue(v)
+	}
+	if v := apiObject.UseTaskStartTimeForFullLoadTimestamp; v != nil {
+		tfMap["use_task_start_time_for_full_load_timestamp"] = aws.BoolValue(v)
 	}
 
 	return []map[string]interface{}{tfMap}
