@@ -44,19 +44,18 @@ jobs:
           l_max_size: '300'
           xl_label: 'size/XL'
           message_if_xl: ''
-  PullRequestComments:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Add comment to add helpful context for new contributors
-        uses: actions/first-interaction@v1
-        continue-on-error: true
-        with:
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
-          pr-message: |-
-            Welcome @${{github.actor}} :wave:
-
-            It looks like this is your first Pull Request submission to the [Terraform AWS Provider](https://github.com/hashicorp/terraform-provider-aws)! If you haven’t already done so please make sure you have checked out our [CONTRIBUTOR](https://hashicorp.github.io/terraform-provider-aws/) guide and [FAQ](https://hashicorp.github.io/terraform-provider-aws/faq/) to make sure your contribution is adhering to best practice and has all the necessary elements in place for a successful approval.
-
-            Also take a look at our [FAQ](https://hashicorp.github.io/terraform-provider-aws/faq/) which details how we prioritize Pull Requests for inclusion.
-
-            Thanks again, and welcome to the community! :smiley:
+#  PullRequestComments:
+#    runs-on: ubuntu-latest
+#    steps:
+#      - name: Add comment to add helpful context for new contributors
+#        uses: actions/first-interaction@v1
+#        with:
+#          repo-token: ${{ secrets.GITHUB_TOKEN }}
+#          pr-message: |-
+#            Welcome @${{github.actor}} :wave:
+#
+#            It looks like this is your first Pull Request submission to the [Terraform AWS Provider](https://github.com/hashicorp/terraform-provider-aws)! If you haven’t already done so please make sure you have checked out our [CONTRIBUTOR](https://hashicorp.github.io/terraform-provider-aws/) guide and [FAQ](https://hashicorp.github.io/terraform-provider-aws/faq/) to make sure your contribution is adhering to best practice and has all the necessary elements in place for a successful approval.
+#
+#            Also take a look at our [FAQ](https://hashicorp.github.io/terraform-provider-aws/faq/) which details how we prioritize Pull Requests for inclusion.
+#
+#            Thanks again, and welcome to the community! :smiley:
