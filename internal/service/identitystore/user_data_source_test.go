@@ -37,6 +37,32 @@ func TestAccIdentityStoreUserDataSource_userName(t *testing.T) {
 	})
 }
 
+func TestAccIdentityStoreUserDataSource_email(t *testing.T) {
+	dataSourceName := "data.aws_identitystore_user.test"
+	resourceName := "aws_identitystore_user.test"
+	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	email := acctest.RandomEmailAddress(acctest.RandomDomainName())
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			testAccPreCheckSSOAdminInstances(t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, identitystore.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccUserDataSourceConfig_email(name, email),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair(dataSourceName, "user_id", resourceName, "user_id"),
+					resource.TestCheckResourceAttr(dataSourceName, "user_name", name),
+				),
+			},
+		},
+	})
+}
+
 func TestAccIdentityStoreUserDataSource_userID(t *testing.T) {
 	dataSourceName := "data.aws_identitystore_user.test"
 	resourceName := "aws_identitystore_user.test"
@@ -109,6 +135,22 @@ data "aws_identitystore_user" "test" {
   filter {
     attribute_path  = "UserName"
     attribute_value = aws_identitystore_user.test.user_name
+  }
+}
+`,
+	)
+}
+
+func testAccUserDataSourceConfig_email(name, email string) string {
+	return acctest.ConfigCompose(
+		testAccUserDataSourceConfig_base(name, email),
+		`
+data "aws_identitystore_user" "test" {
+  identity_store_id = tolist(data.aws_ssoadmin_instances.test.identity_store_ids)[0]
+
+  filter {
+    attribute_path  = "Emails.Value"
+    attribute_value = aws_identitystore_user.test.emails[0].value
   }
 }
 `,

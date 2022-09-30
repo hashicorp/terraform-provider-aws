@@ -2,12 +2,15 @@ package identitystore
 
 import (
 	"context"
+	"errors"
 	"regexp"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/identitystore"
+	"github.com/aws/aws-sdk-go-v2/service/identitystore/document"
 	"github.com/aws/aws-sdk-go-v2/service/identitystore/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -73,47 +76,59 @@ func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 	identityStoreId := d.Get("identity_store_id").(string)
 
-	// Filters has been marked as deprecated in favour of GetUserId, which
-	// allows only a single filter. Keep using it to maintain backwards
-	// compatibility of the data source.
+	var userId string
 
-	input := &identitystore.ListUsersInput{
-		IdentityStoreId: aws.String(identityStoreId),
-		Filters:         expandFilters(d.Get("filter").(*schema.Set).List()),
-	}
+	if v, ok := d.GetOk("user_id"); ok && v.(string) != "" {
+		userId = v.(string)
+	} else {
+		var uniqueAttribute types.UniqueAttribute
 
-	var results []types.User
+		filters := expandFilters(d.Get("filter").(*schema.Set).List())
 
-	paginator := identitystore.NewListUsersPaginator(conn, input)
+		if len(filters) > 1 {
+			panic("too many filters -- must be one unique attribute or an external identifier")
+		}
 
-	for paginator.HasMorePages() {
-		page, err := paginator.NextPage(ctx)
+		if uniqueAttribute.AttributePath == nil {
+			uniqueAttribute = types.UniqueAttribute{
+				AttributePath:  filters[0].AttributePath,
+				AttributeValue: document.NewLazyDocument(aws.ToString(filters[0].AttributeValue)),
+			}
+		}
+
+		input := &identitystore.GetUserIdInput{
+			AlternateIdentifier: &types.AlternateIdentifierMemberUniqueAttribute{
+				Value: uniqueAttribute,
+			},
+			IdentityStoreId: aws.String(identityStoreId),
+		}
+
+		output, err := conn.GetUserId(ctx, input)
 
 		if err != nil {
-			return create.DiagError(names.IdentityStore, create.ErrActionReading, DSNameUser, identityStoreId, err)
-		}
-
-		for _, user := range page.Users {
-			if v, ok := d.GetOk("user_id"); ok && v.(string) != aws.ToString(user.UserId) {
-				continue
+			var e *types.ResourceNotFoundException
+			if errors.As(err, &e) {
+				return diag.Errorf("no Identity Store User found matching criteria; try different search")
+			} else {
+				return create.DiagError(names.IdentityStore, create.ErrActionReading, DSNameUser, identityStoreId, err)
 			}
-
-			results = append(results, user)
 		}
+
+		userId = aws.ToString(output.UserId)
 	}
 
-	if len(results) == 0 {
-		return diag.Errorf("no Identity Store User found matching criteria\n%v; try different search", input.Filters)
+	user, err := findUserByID(ctx, conn, identityStoreId, userId)
+
+	if err != nil {
+		if _, ok := err.(*resource.NotFoundError); ok {
+			return diag.Errorf("no Identity Store User found matching criteria; try different search")
+		}
+
+		return create.DiagError(names.IdentityStore, create.ErrActionReading, DSNameUser, identityStoreId, err)
 	}
 
-	if len(results) > 1 {
-		return diag.Errorf("multiple Identity Store Users found matching criteria\n%v; try different search", input.Filters)
-	}
-
-	user := results[0]
-
-	d.SetId(aws.ToString(user.UserId))
-	d.Set("user_id", user.UserId)
+	d.SetId(userId)
+	d.Set("user_id", userId)
 	d.Set("user_name", user.UserName)
 
 	return nil
