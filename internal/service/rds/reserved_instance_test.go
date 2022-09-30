@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 	"regexp"
-	"strconv"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/rds"
@@ -45,7 +44,7 @@ func TestAccRDSReservedInstance_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "db_instance_class", resourceName, "db_instance_class"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "duration", resourceName, "duration"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "fixed_price", resourceName, "fixed_price"),
-					resource.TestCheckResourceAttr(resourceName, "instance_cout", strconv.Itoa(instanceCount)),
+					resource.TestCheckResourceAttr(resourceName, "instance_cout", instanceCount),
 					resource.TestCheckResourceAttrSet(resourceName, "lease_id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "multi_az", resourceName, "multi_az"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "offering_id", resourceName, "offering_id"),
