@@ -25,6 +25,11 @@ resource "aws_ec2_traffic_mirror_target" "eni" {
   description          = "ENI target"
   network_interface_id = aws_instance.test.primary_network_interface_id
 }
+
+resource "aws_ec2_traffic_mirror_target" "gwlb" {
+  description                       = "GWLB target"
+  gateway_load_balancer_endpoint_id = aws_vpc_endpoint.example.id
+}
 ```
 
 ## Argument Reference
@@ -34,6 +39,7 @@ The following arguments are supported:
 * `description` - (Optional, Forces new) A description of the traffic mirror session.
 * `network_interface_id` - (Optional, Forces new) The network interface ID that is associated with the target.
 * `network_load_balancer_arn` - (Optional, Forces new) The Amazon Resource Name (ARN) of the Network Load Balancer that is associated with the target.
+* `gateway_load_balancer_endpoint_id` - (Optional, Forces new) The VPC Endpoint Id of the Gateway Load Balancer that is associated with the target.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 **NOTE:** Either `network_interface_id` or `network_load_balancer_arn` should be specified and both should not be specified together
