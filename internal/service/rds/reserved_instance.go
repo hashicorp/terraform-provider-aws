@@ -39,6 +39,10 @@ func ResourceReservedInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"db_instance_class": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"duration": {
 				Type:     schema.TypeInt,
 				Computed: true,
@@ -47,17 +51,8 @@ func ResourceReservedInstance() *schema.Resource {
 				Type:     schema.TypeFloat,
 				Computed: true,
 			},
-			"instance_class": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"instance_count": {
 				Type:     schema.TypeInt,
-				Required: true,
-				ForceNew: true,
-			},
-			"instance_id": {
-				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
@@ -97,6 +92,11 @@ func ResourceReservedInstance() *schema.Resource {
 						},
 					},
 				},
+			},
+			"reservation_id": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
 			},
 			"start_time": {
 				Type:     schema.TypeString,
@@ -163,17 +163,17 @@ func resourceReservedInstanceRead(ctx context.Context, d *schema.ResourceData, m
 
 	d.Set("arn", reservation.ReservedDBInstanceArn)
 	d.Set("currency_code", reservation.CurrencyCode)
+	d.Set("db_instance_class", reservation.DBInstanceClass)
 	d.Set("duration", reservation.Duration)
 	d.Set("fixed_price", reservation.FixedPrice)
-	d.Set("instance_class", reservation.DBInstanceClass)
 	d.Set("instance_count", reservation.DBInstanceCount)
-	d.Set("instance_id", reservation.ReservedDBInstanceId)
 	d.Set("lease_id", reservation.LeaseId)
 	d.Set("multi_az", reservation.MultiAZ)
 	d.Set("offering_id", reservation.ReservedDBInstancesOfferingId)
 	d.Set("offering_type", reservation.OfferingType)
 	d.Set("product_description", reservation.ProductDescription)
 	d.Set("recurring_charges", flattenRecurringCharges(reservation.RecurringCharges))
+	d.Set("reservation_id", reservation.ReservedDBInstanceId)
 	d.Set("start_time", (reservation.StartTime).Format(time.RFC3339))
 	d.Set("state", reservation.State)
 	d.Set("usage_price", reservation.UsagePrice)

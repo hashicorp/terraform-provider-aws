@@ -9,7 +9,7 @@ import (
 )
 
 func TestAccRDSInstanceOffering_basic(t *testing.T) {
-	datasourceName := "data.aws_rds_reserved_instance_offering.test"
+	dataSourceName := "data.aws_rds_reserved_instance_offering.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
@@ -20,14 +20,14 @@ func TestAccRDSInstanceOffering_basic(t *testing.T) {
 			{
 				Config: testAccInstanceOfferingConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(datasourceName, "currency_code"),
-					resource.TestCheckResourceAttr(datasourceName, "db_instance_class", "db.t2.micro"),
-					resource.TestCheckResourceAttr(datasourceName, "duration", "31536000"),
-					resource.TestCheckResourceAttrSet(datasourceName, "fixed_price"),
-					resource.TestCheckResourceAttr(datasourceName, "multi_az", "false"),
-					resource.TestCheckResourceAttrSet(datasourceName, "offering_id"),
-					resource.TestCheckResourceAttr(datasourceName, "offering_type", "All Upfront"),
-					resource.TestCheckResourceAttr(datasourceName, "product_description", "mysql"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "currency_code"),
+					resource.TestCheckResourceAttr(dataSourceName, "db_instance_class", "db.t2.micro"),
+					resource.TestCheckResourceAttr(dataSourceName, "duration", "31536000"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "fixed_price"),
+					resource.TestCheckResourceAttr(dataSourceName, "multi_az", "false"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "offering_id"),
+					resource.TestCheckResourceAttr(dataSourceName, "offering_type", "All Upfront"),
+					resource.TestCheckResourceAttr(dataSourceName, "product_description", "mysql"),
 				),
 			},
 		},
