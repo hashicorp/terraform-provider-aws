@@ -124,6 +124,21 @@ func TestAccIdentityStoreUserDataSource_userIdFilterMismatch(t *testing.T) {
 	})
 }
 
+func TestAccIdentityStoreUserDataSource_filterConflictsWithExternalId(t *testing.T) {
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSSOAdminInstances(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, identitystore.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccUserDataSourceConfig_filterConflictsWithExternalId,
+				ExpectError: regexp.MustCompile(`Conflicting configuration arguments`),
+			},
+		},
+	})
+}
+
 func testAccUserDataSourceConfig_base(name, email string) string {
 	return fmt.Sprintf(`
 data "aws_ssoadmin_instances" "test" {}
@@ -234,6 +249,24 @@ data "aws_identitystore_user" "test" {
     attribute_path  = "UserName"
     attribute_value = "does-not-exist"
   }
+  identity_store_id = tolist(data.aws_ssoadmin_instances.test.identity_store_ids)[0]
+}
+`
+
+const testAccUserDataSourceConfig_filterConflictsWithExternalId = `
+data "aws_ssoadmin_instances" "test" {}
+
+data "aws_identitystore_user" "test" {
+  external_id {
+    id     = "test"
+    issuer = "test"
+  }
+
+  filter {
+    attribute_path  = "UserName"
+    attribute_value = "does-not-exist"
+  }
+
   identity_store_id = tolist(data.aws_ssoadmin_instances.test.identity_store_ids)[0]
 }
 `

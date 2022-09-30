@@ -22,11 +22,32 @@ func DataSourceUser() *schema.Resource {
 		ReadContext: dataSourceUserRead,
 
 		Schema: map[string]*schema.Schema{
+			"external_id": {
+				Type:          schema.TypeSet,
+				Optional:      true,
+				MaxItems:      1,
+				AtLeastOneOf:  []string{"external_id", "filter", "user_id"},
+				ConflictsWith: []string{"filter"},
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"id": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"issuer": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+					},
+				},
+			},
+
 			"filter": {
-				Type:         schema.TypeSet,
-				Optional:     true,
-				MaxItems:     1,
-				AtLeastOneOf: []string{"filter", "user_id"},
+				Type:          schema.TypeSet,
+				Optional:      true,
+				MaxItems:      1,
+				AtLeastOneOf:  []string{"external_id", "filter", "user_id"},
+				ConflictsWith: []string{"external_id"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"attribute_path": {
@@ -54,7 +75,7 @@ func DataSourceUser() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				AtLeastOneOf: []string{"filter", "user_id"},
+				AtLeastOneOf: []string{"external_id", "filter", "user_id"},
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 47),
 					validation.StringMatch(regexp.MustCompile(`^([0-9a-f]{10}-|)[A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}$`), "must match ([0-9a-f]{10}-|)[A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}"),
@@ -100,11 +121,31 @@ func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta interf
 		}
 
 		userId = aws.ToString(output.UserId)
+	} else if v, ok := d.GetOk("external_id"); ok && v.(*schema.Set).Len() > 0 {
+		input := &identitystore.GetUserIdInput{
+			AlternateIdentifier: &types.AlternateIdentifierMemberExternalId{
+				Value: *expandExternalId(v.(*schema.Set).List()[0].(map[string]interface{})),
+			},
+			IdentityStoreId: aws.String(identityStoreId),
+		}
+
+		output, err := conn.GetUserId(ctx, input)
+
+		if err != nil {
+			var e *types.ResourceNotFoundException
+			if errors.As(err, &e) {
+				return diag.Errorf("no Identity Store User found matching criteria; try different search")
+			} else {
+				return create.DiagError(names.IdentityStore, create.ErrActionReading, DSNameUser, identityStoreId, err)
+			}
+		}
+
+		userId = aws.ToString(output.UserId)
 	}
 
 	if v, ok := d.GetOk("user_id"); ok && v.(string) != "" {
 		if userId != "" && userId != v.(string) {
-			// The given user doesn't match the search criteria.
+			// We were given a filter, and it found a user different to this one.
 			return diag.Errorf("no Identity Store User found matching criteria; try different search")
 		}
 
@@ -122,7 +163,7 @@ func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	d.SetId(userId)
-	d.Set("user_id", userId)
+	d.Set("user_id", user.UserId)
 	d.Set("user_name", user.UserName)
 
 	return nil
