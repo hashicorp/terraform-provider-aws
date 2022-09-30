@@ -9,11 +9,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/identitystore"
 	"github.com/aws/aws-sdk-go-v2/service/identitystore/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -23,7 +23,7 @@ func DataSourceUser() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"external_id": {
-				Type:          schema.TypeSet,
+				Type:          schema.TypeList,
 				Optional:      true,
 				MaxItems:      1,
 				AtLeastOneOf:  []string{"external_id", "filter", "user_id"},
@@ -43,7 +43,7 @@ func DataSourceUser() *schema.Resource {
 			},
 
 			"filter": {
-				Type:          schema.TypeSet,
+				Type:          schema.TypeList,
 				Optional:      true,
 				MaxItems:      1,
 				AtLeastOneOf:  []string{"external_id", "filter", "user_id"},
@@ -101,10 +101,10 @@ func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 	var userId string
 
-	if v, ok := d.GetOk("filter"); ok && v.(*schema.Set).Len() > 0 {
+	if v, ok := d.GetOk("filter"); ok && len(v.([]interface{})) > 0 {
 		input := &identitystore.GetUserIdInput{
 			AlternateIdentifier: &types.AlternateIdentifierMemberUniqueAttribute{
-				Value: *expandUniqueAttribute(v.(*schema.Set).List()[0].(map[string]interface{})),
+				Value: *expandUniqueAttribute(v.([]interface{})[0].(map[string]interface{})),
 			},
 			IdentityStoreId: aws.String(identityStoreId),
 		}
@@ -121,10 +121,10 @@ func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta interf
 		}
 
 		userId = aws.ToString(output.UserId)
-	} else if v, ok := d.GetOk("external_id"); ok && v.(*schema.Set).Len() > 0 {
+	} else if v, ok := d.GetOk("external_id"); ok && len(v.([]interface{})) > 0 {
 		input := &identitystore.GetUserIdInput{
 			AlternateIdentifier: &types.AlternateIdentifierMemberExternalId{
-				Value: *expandExternalId(v.(*schema.Set).List()[0].(map[string]interface{})),
+				Value: *expandExternalId(v.([]interface{})[0].(map[string]interface{})),
 			},
 			IdentityStoreId: aws.String(identityStoreId),
 		}
@@ -155,7 +155,7 @@ func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta interf
 	user, err := findUserByID(ctx, conn, identityStoreId, userId)
 
 	if err != nil {
-		if _, ok := err.(*resource.NotFoundError); ok {
+		if tfresource.NotFound(err) {
 			return diag.Errorf("no Identity Store User found matching criteria; try different search")
 		}
 
