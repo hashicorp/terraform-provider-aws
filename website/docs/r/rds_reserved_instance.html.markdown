@@ -13,8 +13,16 @@ Manages RDS DB Instance Reservations. **Once created, a reservation is valid for
 ## Example Usage
 
 ```terraform
+data "aws_rds_reserved_instance_offering" "test" {
+  db_instance_class   = "db.t2.micro"
+  duration            = 31536000
+  multi_az            = false
+  offering_type       = "All Upfront"
+  product_description = "mysql"
+}
+
 resource "aws_rds_reserved_instance" "example" {
-  offering_id    = "438012d3-4052-4cc7-b2e3-8d3372e0e706"
+  offering_id    = data.aws_rds_reserved_instance_offering.test.offering_id
   reservation_id = "optionalCustomReservationID"
   instance_count = 3
 }
