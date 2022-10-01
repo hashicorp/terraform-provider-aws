@@ -178,6 +178,39 @@ func DataSourceUser() *schema.Resource {
 				),
 			},
 
+			"name": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"family_name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"formatted": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"given_name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"honorific_prefix": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"honorific_suffix": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"middle_name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
+
 			"user_id": {
 				Type:          schema.TypeString,
 				Optional:      true,
@@ -273,6 +306,10 @@ func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	if err := d.Set("external_ids", flattenExternalIds(user.ExternalIds)); err != nil {
+		return create.DiagError(names.IdentityStore, create.ErrActionSetting, ResNameUser, d.Id(), err)
+	}
+
+	if err := d.Set("name", []interface{}{flattenName(user.Name)}); err != nil {
 		return create.DiagError(names.IdentityStore, create.ErrActionSetting, ResNameUser, d.Id(), err)
 	}
 

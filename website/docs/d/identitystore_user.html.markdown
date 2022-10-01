@@ -96,4 +96,11 @@ In addition to all arguments above, the following attributes are exported:
 * `external_ids` - List of identifiers issued to this resource by an external identity provider.
   * `id` - The identifier issued to this resource by an external identity provider.
   * `issuer` - The issuer for an external identifier.
+* `name` - Details about the user's full name.
+  * `family_name` - The family name of the user.
+  * `formatted` - The name that is typically displayed when the name is shown for display.
+  * `given_name` - The given name of the user.
+  * `honorific_prefix` - The honorific prefix of the user.
+  * `honorific_suffix` - The honorific suffix of the user.
+  * `middle_name` - The middle name of the user.
 * `user_name` - User's user name value.
