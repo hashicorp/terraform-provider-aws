@@ -103,4 +103,8 @@ In addition to all arguments above, the following attributes are exported:
   * `honorific_prefix` - The honorific prefix of the user.
   * `honorific_suffix` - The honorific suffix of the user.
   * `middle_name` - The middle name of the user.
+* `phone_numbers` - List of details about the user's phone number.
+  * `primary` - When `true`, this is the primary phone number associated with the user.
+  * `type` - The type of phone number.
+  * `value` - The user's phone number.
 * `user_name` - User's user name value.

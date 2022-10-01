@@ -35,6 +35,7 @@ func TestAccIdentityStoreUserDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "emails.0", resourceName, "emails.0"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "external_ids.#", resourceName, "external_ids.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "name.0", resourceName, "name.0"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "phone_numbers.0", resourceName, "phone_numbers.0"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "user_id", resourceName, "user_id"),
 				),
 			},
@@ -286,6 +287,12 @@ resource "aws_identitystore_user" "test" {
     honorific_prefix = "Dr"
     honorific_suffix = "PhD"
     middle_name      = "John"
+  }
+
+  phone_numbers {
+    primary = false
+    type    = "The Type 2"
+    value   = "2222222"
   }
 }
 
