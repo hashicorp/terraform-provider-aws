@@ -62,7 +62,6 @@ func DataSourceUser() *schema.Resource {
 					},
 				},
 			},
-
 			"alternate_identifier": {
 				Type:          schema.TypeList,
 				Optional:      true,
@@ -109,7 +108,10 @@ func DataSourceUser() *schema.Resource {
 					},
 				},
 			},
-
+			"display_name": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"emails": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -130,7 +132,6 @@ func DataSourceUser() *schema.Resource {
 					},
 				},
 			},
-
 			"external_ids": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -147,7 +148,6 @@ func DataSourceUser() *schema.Resource {
 					},
 				},
 			},
-
 			"filter": {
 				Deprecated:    "Use the alternate_identifier attribute instead.",
 				Type:          schema.TypeList,
@@ -168,7 +168,6 @@ func DataSourceUser() *schema.Resource {
 					},
 				},
 			},
-
 			"identity_store_id": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -177,7 +176,10 @@ func DataSourceUser() *schema.Resource {
 					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9-]*$`), "must match [a-zA-Z0-9-]"),
 				),
 			},
-
+			"locale": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"name": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -210,7 +212,10 @@ func DataSourceUser() *schema.Resource {
 					},
 				},
 			},
-
+			"nickname": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"phone_numbers": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -231,7 +236,22 @@ func DataSourceUser() *schema.Resource {
 					},
 				},
 			},
-
+			"preferred_language": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"profile_url": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"timezone": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"title": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"user_id": {
 				Type:          schema.TypeString,
 				Optional:      true,
@@ -243,8 +263,11 @@ func DataSourceUser() *schema.Resource {
 					validation.StringMatch(regexp.MustCompile(`^([0-9a-f]{10}-|)[A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}$`), "must match ([0-9a-f]{10}-|)[A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}"),
 				),
 			},
-
 			"user_name": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"user_type": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -315,8 +338,17 @@ func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 	d.SetId(userId)
 
+	d.Set("display_name", user.DisplayName)
+	d.Set("identity_store_id", user.IdentityStoreId)
+	d.Set("locale", user.Locale)
+	d.Set("nickname", user.NickName)
+	d.Set("preferred_language", user.PreferredLanguage)
+	d.Set("profile_url", user.ProfileUrl)
+	d.Set("timezone", user.Timezone)
+	d.Set("title", user.Title)
 	d.Set("user_id", user.UserId)
 	d.Set("user_name", user.UserName)
+	d.Set("user_type", user.UserType)
 
 	if err := d.Set("addresses", flattenAddresses(user.Addresses)); err != nil {
 		return create.DiagError(names.IdentityStore, create.ErrActionSetting, ResNameUser, d.Id(), err)

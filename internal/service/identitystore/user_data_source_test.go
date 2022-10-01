@@ -29,14 +29,22 @@ func TestAccIdentityStoreUserDataSource_basic(t *testing.T) {
 			{
 				Config: testAccUserDataSourceConfig_basic(name, email),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "user_name", resourceName, "user_name"),
-					resource.TestCheckResourceAttr(dataSourceName, "user_name", name),
+					resource.TestCheckResourceAttrPair(dataSourceName, "display_name", resourceName, "display_name"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "addresses.0", resourceName, "addresses.0"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "emails.0", resourceName, "emails.0"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "external_ids.#", resourceName, "external_ids.#"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "locale", resourceName, "locale"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "name.0", resourceName, "name.0"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "nickname", resourceName, "nickname"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "phone_numbers.0", resourceName, "phone_numbers.0"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "preferred_language", resourceName, "preferred_language"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "profile_url", resourceName, "profile_url"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "timezone", resourceName, "timezone"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "title", resourceName, "title"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "user_id", resourceName, "user_id"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "user_name", resourceName, "user_name"),
+					resource.TestCheckResourceAttr(dataSourceName, "user_name", name),
+					resource.TestCheckResourceAttrPair(dataSourceName, "user_type", resourceName, "user_type"),
 				),
 			},
 		},
@@ -280,6 +288,8 @@ resource "aws_identitystore_user" "test" {
     value   = %[2]q
   }
 
+  locale = "The Locale"
+
   name {
     family_name      = "Acceptance"
     formatted        = "Acceptance Test"
@@ -289,11 +299,19 @@ resource "aws_identitystore_user" "test" {
     middle_name      = "John"
   }
 
+  nickname = "The Nickname"
+
   phone_numbers {
     primary = false
     type    = "The Type 2"
     value   = "2222222"
   }
+
+  preferred_language = "en-US"
+  profile_url        = "http://example.com"
+  timezone           = "UTC"
+  title              = "Mr"
+  user_type          = "Member"
 }
 
 data "aws_identitystore_user" "test" {
