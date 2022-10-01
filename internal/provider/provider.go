@@ -14,9 +14,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/experimental/intf"
 	"github.com/hashicorp/terraform-provider-aws/internal/experimental/nullable"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	"github.com/hashicorp/terraform-provider-aws/internal/intf"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/accessanalyzer"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/account"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/acm"
@@ -719,12 +719,13 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_kinesis_stream":          kinesis.DataSourceStream(),
 			"aws_kinesis_stream_consumer": kinesis.DataSourceStreamConsumer(),
 
-			"aws_kms_alias":      kms.DataSourceAlias(),
-			"aws_kms_ciphertext": kms.DataSourceCiphertext(),
-			"aws_kms_key":        kms.DataSourceKey(),
-			"aws_kms_public_key": kms.DataSourcePublicKey(),
-			"aws_kms_secret":     kms.DataSourceSecret(),
-			"aws_kms_secrets":    kms.DataSourceSecrets(),
+			"aws_kms_alias":            kms.DataSourceAlias(),
+			"aws_kms_ciphertext":       kms.DataSourceCiphertext(),
+			"aws_kms_custom_key_store": kms.DataSourceCustomKeyStore(),
+			"aws_kms_key":              kms.DataSourceKey(),
+			"aws_kms_public_key":       kms.DataSourcePublicKey(),
+			"aws_kms_secret":           kms.DataSourceSecret(),
+			"aws_kms_secrets":          kms.DataSourceSecrets(),
 
 			"aws_lakeformation_data_lake_settings": lakeformation.DataSourceDataLakeSettings(),
 			"aws_lakeformation_permissions":        lakeformation.DataSourcePermissions(),

@@ -173,7 +173,7 @@ func resourceTrustAnchorUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 		if d.HasChange("enabled") {
 			_, n := d.GetChange("enabled")
-			if n == "true" {
+			if n == true {
 				if err := enableTrustAnchor(ctx, d.Id(), meta); err != nil {
 					diag.Errorf("enabling RolesAnywhere Trust Anchor (%s): %s", d.Id(), err)
 				}

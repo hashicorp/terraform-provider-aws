@@ -4,18 +4,19 @@ go 1.18
 
 require (
 	github.com/ProtonMail/go-crypto v0.0.0-20210428141323-04723f9f07d7
-	github.com/aws/aws-sdk-go v1.44.104
+	github.com/aws/aws-sdk-go v1.44.108
 	github.com/aws/aws-sdk-go-v2 v1.16.16
-	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.12.15
-	github.com/aws/aws-sdk-go-v2/service/comprehend v1.18.10
-	github.com/aws/aws-sdk-go-v2/service/fis v1.12.15
-	github.com/aws/aws-sdk-go-v2/service/identitystore v1.15.2
+	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.12.17
+	github.com/aws/aws-sdk-go-v2/service/comprehend v1.19.0
+	github.com/aws/aws-sdk-go-v2/service/fis v1.13.1
+	github.com/aws/aws-sdk-go-v2/service/identitystore v1.15.5
 	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.8.1
-	github.com/aws/aws-sdk-go-v2/service/kendra v1.33.3
-	github.com/aws/aws-sdk-go-v2/service/medialive v1.22.7
-	github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.0.7
-	github.com/aws/aws-sdk-go-v2/service/route53domains v1.12.15
-	github.com/aws/aws-sdk-go-v2/service/transcribe v1.21.7
+	github.com/aws/aws-sdk-go-v2/service/kendra v1.35.0
+	github.com/aws/aws-sdk-go-v2/service/medialive v1.23.1
+	github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.0.10
+	github.com/aws/aws-sdk-go-v2/service/route53domains v1.12.17
+	github.com/aws/aws-sdk-go-v2/service/sesv2 v1.13.18
+	github.com/aws/aws-sdk-go-v2/service/transcribe v1.21.9
 	github.com/beevik/etree v1.1.0
 	github.com/google/go-cmp v0.5.9
 	github.com/hashicorp/aws-cloudformation-resource-schema-sdk-go v0.18.0
@@ -26,7 +27,7 @@ require (
 	github.com/hashicorp/go-cty v1.4.1-0.20200414143053-d3edf31b6320
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/hashicorp/go-version v1.6.0
-	github.com/hashicorp/hcl/v2 v2.14.0
+	github.com/hashicorp/hcl/v2 v2.14.1
 	github.com/hashicorp/terraform-plugin-framework v0.11.1
 	github.com/hashicorp/terraform-plugin-framework-validators v0.5.0
 	github.com/hashicorp/terraform-plugin-go v0.14.0

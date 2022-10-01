@@ -12,7 +12,7 @@ jobs:
     steps:
       - name: Add community note to new Issues
         if: github.event_name == 'issues'
-        uses: peter-evans/create-or-update-comment@v1
+        uses: peter-evans/create-or-update-comment@v2
         with:
           issue-number: ${{ github.event.issue.number }}
           body: |
@@ -30,7 +30,7 @@ jobs:
             * If this would be your first contribution, please review the [contribution guide](https://hashicorp.github.io/terraform-provider-aws/).
 
       - name: Add community note to new Pull Requests
-        uses: peter-evans/create-or-update-comment@v1
+        uses: peter-evans/create-or-update-comment@v2
         if: github.event_name == 'pull_request_target'
         with:
           issue-number: ${{ github.event.pull_request.number }}

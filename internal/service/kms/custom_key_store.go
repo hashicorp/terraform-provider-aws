@@ -89,7 +89,10 @@ func resourceCustomKeyStoreCreate(ctx context.Context, d *schema.ResourceData, m
 func resourceCustomKeyStoreRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).KMSConn
 
-	out, err := FindCustomKeyStoreByID(ctx, conn, d.Id())
+	in := &kms.DescribeCustomKeyStoresInput{
+		CustomKeyStoreId: aws.String(d.Id()),
+	}
+	out, err := FindCustomKeyStoreByID(ctx, conn, in)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] KMS CustomKeyStore (%s) not found, removing from state", d.Id())
