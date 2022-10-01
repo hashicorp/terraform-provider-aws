@@ -915,39 +915,6 @@ func expandEmails(tfList []interface{}) []types.Email {
 	return s
 }
 
-func flattenExternalId(apiObject *types.ExternalId) map[string]interface{} {
-	if apiObject == nil {
-		return nil
-	}
-
-	m := map[string]interface{}{}
-
-	if v := apiObject.Id; v != nil {
-		m["id"] = aws.ToString(v)
-	}
-
-	if v := apiObject.Issuer; v != nil {
-		m["issuer"] = aws.ToString(v)
-	}
-
-	return m
-}
-
-func flattenExternalIds(apiObjects []types.ExternalId) []interface{} {
-	if len(apiObjects) == 0 {
-		return nil
-	}
-
-	var l []interface{}
-
-	for _, apiObject := range apiObjects {
-		apiObject := apiObject
-		l = append(l, flattenExternalId(&apiObject))
-	}
-
-	return l
-}
-
 func flattenPhoneNumber(apiObject *types.PhoneNumber) map[string]interface{} {
 	if apiObject == nil {
 		return nil
