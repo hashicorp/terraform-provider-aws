@@ -6,6 +6,24 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/identitystore/types"
 )
 
+func expandAlternateIdentifier(tfMap map[string]interface{}) types.AlternateIdentifier {
+	if tfMap == nil {
+		return nil
+	}
+
+	if v, ok := tfMap["external_id"]; ok && len(v.([]interface{})) > 0 {
+		return &types.AlternateIdentifierMemberExternalId{
+			Value: *expandExternalId(v.([]interface{})[0].(map[string]interface{})),
+		}
+	} else if v, ok := tfMap["unique_attribute"]; ok && len(v.([]interface{})) > 0 {
+		return &types.AlternateIdentifierMemberUniqueAttribute{
+			Value: *expandUniqueAttribute(v.([]interface{})[0].(map[string]interface{})),
+		}
+	} else {
+		return nil
+	}
+}
+
 func expandExternalId(tfMap map[string]interface{}) *types.ExternalId {
 	if tfMap == nil {
 		return nil

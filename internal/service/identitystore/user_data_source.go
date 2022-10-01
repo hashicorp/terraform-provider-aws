@@ -22,32 +22,60 @@ func DataSourceUser() *schema.Resource {
 		ReadContext: dataSourceUserRead,
 
 		Schema: map[string]*schema.Schema{
-			"external_id": {
+			"alternate_identifier": {
 				Type:          schema.TypeList,
 				Optional:      true,
 				MaxItems:      1,
-				AtLeastOneOf:  []string{"external_id", "filter", "user_id"},
-				ConflictsWith: []string{"filter"},
+				ConflictsWith: []string{"filter", "user_id"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"id": {
-							Type:     schema.TypeString,
-							Required: true,
+						"external_id": {
+							Type:         schema.TypeList,
+							Optional:     true,
+							MaxItems:     1,
+							ExactlyOneOf: []string{"alternate_identifier.0.external_id", "alternate_identifier.0.unique_attribute"},
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"id": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+									"issuer": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+								},
+							},
 						},
-						"issuer": {
-							Type:     schema.TypeString,
-							Required: true,
+						"unique_attribute": {
+							Type:         schema.TypeList,
+							Optional:     true,
+							MaxItems:     1,
+							ExactlyOneOf: []string{"alternate_identifier.0.external_id", "alternate_identifier.0.unique_attribute"},
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"attribute_path": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+									"attribute_value": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+								},
+							},
 						},
 					},
 				},
 			},
 
 			"filter": {
+				Deprecated:    "Use the alternate_identifier attribute instead.",
 				Type:          schema.TypeList,
 				Optional:      true,
 				MaxItems:      1,
-				AtLeastOneOf:  []string{"external_id", "filter", "user_id"},
-				ConflictsWith: []string{"external_id"},
+				AtLeastOneOf:  []string{"alternate_identifier", "filter", "user_id"},
+				ConflictsWith: []string{"alternate_identifier"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"attribute_path": {
@@ -72,10 +100,11 @@ func DataSourceUser() *schema.Resource {
 			},
 
 			"user_id": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				AtLeastOneOf: []string{"external_id", "filter", "user_id"},
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				AtLeastOneOf:  []string{"alternate_identifier", "filter", "user_id"},
+				ConflictsWith: []string{"alternate_identifier"},
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 47),
 					validation.StringMatch(regexp.MustCompile(`^([0-9a-f]{10}-|)[A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}$`), "must match ([0-9a-f]{10}-|)[A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}"),
@@ -99,37 +128,26 @@ func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 	identityStoreId := d.Get("identity_store_id").(string)
 
-	var userId string
+	var getUserIdInput *identitystore.GetUserIdInput
 
-	if v, ok := d.GetOk("filter"); ok && len(v.([]interface{})) > 0 {
-		input := &identitystore.GetUserIdInput{
+	if v, ok := d.GetOk("alternate_identifier"); ok && len(v.([]interface{})) > 0 {
+		getUserIdInput = &identitystore.GetUserIdInput{
+			AlternateIdentifier: expandAlternateIdentifier(v.([]interface{})[0].(map[string]interface{})),
+			IdentityStoreId:     aws.String(identityStoreId),
+		}
+	} else if v, ok := d.GetOk("filter"); ok && len(v.([]interface{})) > 0 {
+		getUserIdInput = &identitystore.GetUserIdInput{
 			AlternateIdentifier: &types.AlternateIdentifierMemberUniqueAttribute{
 				Value: *expandUniqueAttribute(v.([]interface{})[0].(map[string]interface{})),
 			},
 			IdentityStoreId: aws.String(identityStoreId),
 		}
+	}
 
-		output, err := conn.GetUserId(ctx, input)
+	var userId string
 
-		if err != nil {
-			var e *types.ResourceNotFoundException
-			if errors.As(err, &e) {
-				return diag.Errorf("no Identity Store User found matching criteria; try different search")
-			} else {
-				return create.DiagError(names.IdentityStore, create.ErrActionReading, DSNameUser, identityStoreId, err)
-			}
-		}
-
-		userId = aws.ToString(output.UserId)
-	} else if v, ok := d.GetOk("external_id"); ok && len(v.([]interface{})) > 0 {
-		input := &identitystore.GetUserIdInput{
-			AlternateIdentifier: &types.AlternateIdentifierMemberExternalId{
-				Value: *expandExternalId(v.([]interface{})[0].(map[string]interface{})),
-			},
-			IdentityStoreId: aws.String(identityStoreId),
-		}
-
-		output, err := conn.GetUserId(ctx, input)
+	if getUserIdInput != nil {
+		output, err := conn.GetUserId(ctx, getUserIdInput)
 
 		if err != nil {
 			var e *types.ResourceNotFoundException
