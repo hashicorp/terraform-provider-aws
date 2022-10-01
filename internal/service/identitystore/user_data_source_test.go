@@ -15,6 +15,7 @@ func TestAccIdentityStoreUserDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_identitystore_user.test"
 	resourceName := "aws_identitystore_user.test"
 	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	email := acctest.RandomEmailAddress(acctest.RandomDomainName())
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -26,11 +27,12 @@ func TestAccIdentityStoreUserDataSource_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckUserDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserDataSourceConfig_basic(name),
+				Config: testAccUserDataSourceConfig_basic(name, email),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "user_name", resourceName, "user_name"),
 					resource.TestCheckResourceAttr(dataSourceName, "user_name", name),
 					resource.TestCheckResourceAttrPair(dataSourceName, "addresses.0", resourceName, "addresses.0"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "emails.0", resourceName, "emails.0"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "user_id", resourceName, "user_id"),
 				),
 			},
@@ -249,7 +251,7 @@ resource "aws_identitystore_user" "test" {
 `, name, email)
 }
 
-func testAccUserDataSourceConfig_basic(name string) string {
+func testAccUserDataSourceConfig_basic(name, email string) string {
 	return fmt.Sprintf(`
 data "aws_ssoadmin_instances" "test" {}
 
@@ -269,6 +271,12 @@ resource "aws_identitystore_user" "test" {
     type           = "The Type 1"
   }
 
+  emails {
+    primary = true
+    type    = "The Type 1"
+    value   = %[2]q
+  }
+
   name {
     family_name = "Acceptance"
     given_name  = "Test"
@@ -279,7 +287,7 @@ data "aws_identitystore_user" "test" {
   identity_store_id = tolist(data.aws_ssoadmin_instances.test.identity_store_ids)[0]
   user_id           = aws_identitystore_user.test.user_id
 }
-`, name)
+`, name, email)
 }
 
 func testAccUserDataSourceConfig_filterUserName(name, email string) string {

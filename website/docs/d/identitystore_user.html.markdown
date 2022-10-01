@@ -89,4 +89,8 @@ In addition to all arguments above, the following attributes are exported:
   * `region` - The region of the address.
   * `street_address` - The street of the address.
   * `type` - The type of address.
+* `emails` - Details about the user's email.
+  * `primary` - When `true`, this is the primary email associated with the user.
+  * `type` - The type of email.
+  * `value` - The email address. This value must be unique across the identity store.
 * `user_name` - User's user name value.
