@@ -10,9 +10,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func DataSourceIPAMPoolCidrs() *schema.Resource {
+func DataSourceIPAMPoolCIDRs() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceIPAMPoolCidrsRead,
+		Read: dataSourceIPAMPoolCIDRsRead,
 
 		Timeouts: &schema.ResourceTimeout{
 			Read: schema.DefaultTimeout(1 * time.Minute),
@@ -45,7 +45,7 @@ func DataSourceIPAMPoolCidrs() *schema.Resource {
 	}
 }
 
-func dataSourceIPAMPoolCidrsRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceIPAMPoolCIDRsRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
 	input := &ec2.GetIpamPoolCidrsInput{}
@@ -73,20 +73,20 @@ func dataSourceIPAMPoolCidrsRead(d *schema.ResourceData, meta interface{}) error
 	cidrs = output.IpamPoolCidrs
 
 	d.SetId(d.Get("ipam_pool_id").(string))
-	d.Set("ipam_pool_cidrs", flattenIPAMPoolCidrs(cidrs))
+	d.Set("ipam_pool_cidrs", flattenIPAMPoolCIDRs(cidrs))
 
 	return nil
 }
 
-func flattenIPAMPoolCidrs(c []*ec2.IpamPoolCidr) []interface{} {
+func flattenIPAMPoolCIDRs(c []*ec2.IpamPoolCidr) []interface{} {
 	cidrs := []interface{}{}
 	for _, cidr := range c {
-		cidrs = append(cidrs, flattenIPAMPoolCidr(cidr))
+		cidrs = append(cidrs, flattenIPAMPoolCIDR(cidr))
 	}
 	return cidrs
 }
 
-func flattenIPAMPoolCidr(c *ec2.IpamPoolCidr) map[string]interface{} {
+func flattenIPAMPoolCIDR(c *ec2.IpamPoolCidr) map[string]interface{} {
 	cidr := make(map[string]interface{})
 	cidr["cidr"] = aws.StringValue(c.Cidr)
 	cidr["state"] = aws.StringValue(c.State)

@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccIPAMPoolCidrsDataSource_basic(t *testing.T) {
+func TestAccIPAMPoolCIDRsDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_vpc_ipam_pool_cidrs.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -17,19 +17,19 @@ func TestAccIPAMPoolCidrsDataSource_basic(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIPAMPoolCidrsDataSourceConfig_BasicOneCidrs,
+				Config: testAccIPAMPoolCIDRsDataSourceConfig_BasicOneCIDRs,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "ipam_pool_cidrs.#", "1"),
 				),
 			},
 			{
-				Config: testAccIPAMPoolCidrsDataSourceConfig_BasicTwoCidrs,
+				Config: testAccIPAMPoolCIDRsDataSourceConfig_BasicTwoCIDRs,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "ipam_pool_cidrs.#", "2"),
 				),
 			},
 			{
-				Config: testAccIPAMPoolCidrsDataSourceConfig_BasicTwoCidrsFiltered,
+				Config: testAccIPAMPoolCIDRsDataSourceConfig_BasicTwoCIDRsFiltered,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "ipam_pool_cidrs.#", "1"),
 				),
@@ -38,7 +38,7 @@ func TestAccIPAMPoolCidrsDataSource_basic(t *testing.T) {
 	})
 }
 
-var testAccIPAMPoolCidrsDataSourceConfig_BasicOneCidrs = acctest.ConfigCompose(
+var testAccIPAMPoolCIDRsDataSourceConfig_BasicOneCIDRs = acctest.ConfigCompose(
 	testAccIPAMPoolConfig_basic, `
 resource "aws_vpc_ipam_pool_cidr" "test" {
   ipam_pool_id = aws_vpc_ipam_pool.test.id
@@ -53,7 +53,7 @@ data "aws_vpc_ipam_pool_cidrs" "test" {
 }
 `)
 
-var testAccIPAMPoolCidrsDataSourceConfig_BasicTwoCidrs = acctest.ConfigCompose(
+var testAccIPAMPoolCIDRsDataSourceConfig_BasicTwoCIDRs = acctest.ConfigCompose(
 	testAccIPAMPoolConfig_basic, `
 
 
@@ -75,7 +75,7 @@ data "aws_vpc_ipam_pool_cidrs" "test" {
 }
 `)
 
-var testAccIPAMPoolCidrsDataSourceConfig_BasicTwoCidrsFiltered = acctest.ConfigCompose(
+var testAccIPAMPoolCIDRsDataSourceConfig_BasicTwoCIDRsFiltered = acctest.ConfigCompose(
 	testAccIPAMPoolConfig_basic, `
 resource "aws_vpc_ipam_pool_cidr" "test" {
   ipam_pool_id = aws_vpc_ipam_pool.test.id

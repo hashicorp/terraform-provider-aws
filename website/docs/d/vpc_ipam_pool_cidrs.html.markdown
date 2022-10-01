@@ -18,7 +18,19 @@ Basic usage:
 
 ```terraform
 data "aws_vpc_ipam_pool_cidrs" "c" {
-  ipam_pool_id = "ipam-pool-123"
+  ipam_pool_id = data.aws_vpc_ipam_pool.p.id
+}
+
+data "aws_vpc_ipam_pool" "p" {
+  filter {
+    name   = "description"
+    values = ["*mypool*"]
+  }
+
+  filter {
+    name   = "address-family"
+    values = ["ipv4"]
+  }
 }
 ```
 
