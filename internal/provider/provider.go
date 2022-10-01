@@ -432,6 +432,11 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_apigatewayv2_apis":   apigatewayv2.DataSourceAPIs(),
 			"aws_apigatewayv2_export": apigatewayv2.DataSourceExport(),
 
+			"aws_appconfig_configuration_profile":  appconfig.DataSourceConfigurationProfile(),
+			"aws_appconfig_configuration_profiles": appconfig.DataSourceConfigurationProfiles(),
+			"aws_appconfig_environment":            appconfig.DataSourceEnvironment(),
+			"aws_appconfig_environments":           appconfig.DataSourceEnvironments(),
+
 			"aws_appmesh_mesh":            appmesh.DataSourceMesh(),
 			"aws_appmesh_virtual_service": appmesh.DataSourceVirtualService(),
 
