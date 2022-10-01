@@ -80,7 +80,7 @@ The following arguments are supported by the `unique_attribute` configuration bl
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - Identifier of the user in the Identity Store.
-* `addresses` - Details about the user's address.
+* `addresses` - List of details about the user's address.
   * `country` - The country that this address is in.
   * `formatted` - The name that is typically displayed when the address is shown for display.
   * `locality` - The address locality.
@@ -89,8 +89,11 @@ In addition to all arguments above, the following attributes are exported:
   * `region` - The region of the address.
   * `street_address` - The street of the address.
   * `type` - The type of address.
-* `emails` - Details about the user's email.
+* `emails` - List of details about the user's email.
   * `primary` - When `true`, this is the primary email associated with the user.
   * `type` - The type of email.
   * `value` - The email address. This value must be unique across the identity store.
+* `external_ids` - List of identifiers issued to this resource by an external identity provider.
+  * `id` - The identifier issued to this resource by an external identity provider.
+  * `issuer` - The issuer for an external identifier.
 * `user_name` - User's user name value.

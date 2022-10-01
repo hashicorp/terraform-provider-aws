@@ -131,6 +131,23 @@ func DataSourceUser() *schema.Resource {
 				},
 			},
 
+			"external_ids": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"id": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+						"issuer": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
+
 			"filter": {
 				Deprecated:    "Use the alternate_identifier attribute instead.",
 				Type:          schema.TypeList,
@@ -252,6 +269,10 @@ func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	if err := d.Set("emails", flattenEmails(user.Emails)); err != nil {
+		return create.DiagError(names.IdentityStore, create.ErrActionSetting, ResNameUser, d.Id(), err)
+	}
+
+	if err := d.Set("external_ids", flattenExternalIds(user.ExternalIds)); err != nil {
 		return create.DiagError(names.IdentityStore, create.ErrActionSetting, ResNameUser, d.Id(), err)
 	}
 
