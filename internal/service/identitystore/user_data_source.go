@@ -22,6 +22,47 @@ func DataSourceUser() *schema.Resource {
 		ReadContext: dataSourceUserRead,
 
 		Schema: map[string]*schema.Schema{
+			"addresses": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"country": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"formatted": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"locality": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"postal_code": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"primary": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+						"region": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"street_address": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"type": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
+
 			"alternate_identifier": {
 				Type:          schema.TypeList,
 				Optional:      true,
@@ -181,8 +222,13 @@ func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	d.SetId(userId)
+
 	d.Set("user_id", user.UserId)
 	d.Set("user_name", user.UserName)
 
+	if err := d.Set("addresses", flattenAddresses(user.Addresses)); err != nil {
+		return create.DiagError(names.IdentityStore, create.ErrActionSetting, ResNameUser, d.Id(), err)
+	}
+	
 	return nil
 }

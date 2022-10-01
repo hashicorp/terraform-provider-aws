@@ -11,6 +11,33 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
+func TestAccIdentityStoreUserDataSource_basic(t *testing.T) {
+	dataSourceName := "data.aws_identitystore_user.test"
+	resourceName := "aws_identitystore_user.test"
+	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			testAccPreCheckSSOAdminInstances(t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, identitystore.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccUserDataSourceConfig_basic(name),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair(dataSourceName, "user_name", resourceName, "user_name"),
+					resource.TestCheckResourceAttr(dataSourceName, "user_name", name),
+					resource.TestCheckResourceAttrPair(dataSourceName, "addresses.0", resourceName, "addresses.0"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "user_id", resourceName, "user_id"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccIdentityStoreUserDataSource_filterUserName(t *testing.T) {
 	dataSourceName := "data.aws_identitystore_user.test"
 	resourceName := "aws_identitystore_user.test"
@@ -220,6 +247,39 @@ resource "aws_identitystore_user" "test" {
   }
 }
 `, name, email)
+}
+
+func testAccUserDataSourceConfig_basic(name string) string {
+	return fmt.Sprintf(`
+data "aws_ssoadmin_instances" "test" {}
+
+resource "aws_identitystore_user" "test" {
+  identity_store_id = tolist(data.aws_ssoadmin_instances.test.identity_store_ids)[0]
+  display_name      = %[1]q
+  user_name         = %[1]q
+
+  addresses {
+    country        = "US"
+    formatted      = "Formatted Address 1"
+    locality       = "The Locality 1"
+    postal_code    = "AAA BBB 1"
+    primary        = true
+    region         = "The Region 1"
+    street_address = "The Street Address 1"
+    type           = "The Type 1"
+  }
+
+  name {
+    family_name = "Acceptance"
+    given_name  = "Test"
+  }
+}
+
+data "aws_identitystore_user" "test" {
+  identity_store_id = tolist(data.aws_ssoadmin_instances.test.identity_store_ids)[0]
+  user_id           = aws_identitystore_user.test.user_id
+}
+`, name)
 }
 
 func testAccUserDataSourceConfig_filterUserName(name, email string) string {

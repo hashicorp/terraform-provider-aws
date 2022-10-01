@@ -80,4 +80,13 @@ The following arguments are supported by the `unique_attribute` configuration bl
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - Identifier of the user in the Identity Store.
+* `addresses` - Details about the user's address.
+  * `country` - The country that this address is in.
+  * `formatted` - The name that is typically displayed when the address is shown for display.
+  * `locality` - The address locality.
+  * `postal_code` - The postal code of the address.
+  * `primary` - When `true`, this is the primary address associated with the user.
+  * `region` - The region of the address.
+  * `street_address` - The street of the address.
+  * `type` - The type of address.
 * `user_name` - User's user name value.
