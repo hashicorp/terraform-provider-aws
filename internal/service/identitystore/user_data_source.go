@@ -352,23 +352,23 @@ func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("user_type", user.UserType)
 
 	if err := d.Set("addresses", flattenAddresses(user.Addresses)); err != nil {
-		return create.DiagError(names.IdentityStore, create.ErrActionSetting, ResNameUser, d.Id(), err)
+		return create.DiagError(names.IdentityStore, create.ErrActionSetting, DSNameUser, d.Id(), err)
 	}
 
 	if err := d.Set("emails", flattenEmails(user.Emails)); err != nil {
-		return create.DiagError(names.IdentityStore, create.ErrActionSetting, ResNameUser, d.Id(), err)
+		return create.DiagError(names.IdentityStore, create.ErrActionSetting, DSNameUser, d.Id(), err)
 	}
 
 	if err := d.Set("external_ids", flattenExternalIds(user.ExternalIds)); err != nil {
-		return create.DiagError(names.IdentityStore, create.ErrActionSetting, ResNameUser, d.Id(), err)
+		return create.DiagError(names.IdentityStore, create.ErrActionSetting, DSNameUser, d.Id(), err)
 	}
 
 	if err := d.Set("name", []interface{}{flattenName(user.Name)}); err != nil {
-		return create.DiagError(names.IdentityStore, create.ErrActionSetting, ResNameUser, d.Id(), err)
+		return create.DiagError(names.IdentityStore, create.ErrActionSetting, DSNameUser, d.Id(), err)
 	}
 
 	if err := d.Set("phone_numbers", flattenPhoneNumbers(user.PhoneNumbers)); err != nil {
-		return create.DiagError(names.IdentityStore, create.ErrActionSetting, ResNameUser, d.Id(), err)
+		return create.DiagError(names.IdentityStore, create.ErrActionSetting, DSNameUser, d.Id(), err)
 	}
 
 	return nil
