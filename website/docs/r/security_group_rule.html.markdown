@@ -8,19 +8,17 @@ description: |-
 
 # Resource: aws_security_group_rule
 
-Provides a security group rule resource. Represents one or many `ingress` or
-`egress` group rule(s), which can be added to external Security Groups.
+Provides a security group rule resource. Represents a single `ingress` or
+`egress` group rule, which can be added to external Security Groups.
 
 ~> **NOTE on Security Groups and Security Group Rules:** Terraform currently
-provides both a standalone Security Group Rule resource (a one or many `ingress` or
-`egress` rule(s)), and a [Security Group resource](security_group.html) with `ingress` and `egress` rules
+provides both a standalone Security Group Rule resource (one or many `ingress` or
+`egress` rules), and a [Security Group resource](security_group.html) with `ingress` and `egress` rules
 defined in-line. At this time you cannot use a Security Group with in-line rules
 in conjunction with any Security Group Rule resources. Doing so will cause
 a conflict of rule settings and will overwrite rules.
 
 ~> **NOTE:** Setting `protocol = "all"` or `protocol = -1` with `from_port` and `to_port` will result in the EC2 API creating a security group rule with all ports open. This API behavior cannot be controlled by Terraform and may generate warnings in the future.
-
-~> **NOTE:** Setting many source(s)/destination(s) (e.g., `cidr_block`) or a single source/destination with many list elements, for both `ingress` and `egress` respectively, will result in the EC2 API creating many security group rules. As a result, when used in conjunction with [create_before_destroy](https://www.terraform.io/language/meta-arguments/lifecycle#the-lifecycle-meta-argument) lifecycle managment, the security group rule resource will attempt to create multiple rules with the EC2 API but may fail with duplication errors. This can be prevented by ensuring that one security group rule resource only manages a single security group rule in AWS.
 
 ~> **NOTE:** Referencing Security Groups across VPC peering has certain restrictions. More information is available in the [VPC Peering User Guide](https://docs.aws.amazon.com/vpc/latest/peering/vpc-peering-security-groups.html).
 
