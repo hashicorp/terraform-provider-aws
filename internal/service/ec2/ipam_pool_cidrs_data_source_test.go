@@ -17,19 +17,19 @@ func TestAccIPAMPoolCIDRsDataSource_basic(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIPAMPoolCIDRsDataSourceConfig_BasicOneCIDRs,
+				Config: testAccIPAMPoolCIDRsDataSourceConfig_basicOneCIDRs,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "ipam_pool_cidrs.#", "1"),
 				),
 			},
 			{
-				Config: testAccIPAMPoolCIDRsDataSourceConfig_BasicTwoCIDRs,
+				Config: testAccIPAMPoolCIDRsDataSourceConfig_basicTwoCIDRs,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "ipam_pool_cidrs.#", "2"),
 				),
 			},
 			{
-				Config: testAccIPAMPoolCIDRsDataSourceConfig_BasicTwoCIDRsFiltered,
+				Config: testAccIPAMPoolCIDRsDataSourceConfig_basicTwoCIDRsFiltered,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "ipam_pool_cidrs.#", "1"),
 				),
@@ -38,7 +38,7 @@ func TestAccIPAMPoolCIDRsDataSource_basic(t *testing.T) {
 	})
 }
 
-var testAccIPAMPoolCIDRsDataSourceConfig_BasicOneCIDRs = acctest.ConfigCompose(
+var testAccIPAMPoolCIDRsDataSourceConfig_basicOneCIDRs = acctest.ConfigCompose(
 	testAccIPAMPoolConfig_basic, `
 resource "aws_vpc_ipam_pool_cidr" "test" {
   ipam_pool_id = aws_vpc_ipam_pool.test.id
@@ -53,7 +53,7 @@ data "aws_vpc_ipam_pool_cidrs" "test" {
 }
 `)
 
-var testAccIPAMPoolCIDRsDataSourceConfig_BasicTwoCIDRs = acctest.ConfigCompose(
+var testAccIPAMPoolCIDRsDataSourceConfig_basicTwoCIDRs = acctest.ConfigCompose(
 	testAccIPAMPoolConfig_basic, `
 
 
@@ -75,7 +75,7 @@ data "aws_vpc_ipam_pool_cidrs" "test" {
 }
 `)
 
-var testAccIPAMPoolCIDRsDataSourceConfig_BasicTwoCIDRsFiltered = acctest.ConfigCompose(
+var testAccIPAMPoolCIDRsDataSourceConfig_basicTwoCIDRsFiltered = acctest.ConfigCompose(
 	testAccIPAMPoolConfig_basic, `
 resource "aws_vpc_ipam_pool_cidr" "test" {
   ipam_pool_id = aws_vpc_ipam_pool.test.id
