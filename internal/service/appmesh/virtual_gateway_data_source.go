@@ -6,47 +6,20 @@ package appmesh
 
 import (
 	"fmt"
+	"time"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appmesh"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"time"
 )
 
-// DataSourceVirtualGateway 1. Package declaration
-// 2. Imports
-// 3. Main data source function with schema
-// 4. Create, read, update, delete functions (in that order)
-// 5. Other functions (flatteners, expanders, waiters, finders, etc.)
 func DataSourceVirtualGateway() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourceVirtualGatewayRead,
 
-		// TIP: ==== SCHEMA ====
-		// In the schema, add each of the arguments and attributes in snake
-		// case (e.g., delete_automated_backups).
-		// * Alphabetize arguments to make them easier to find.
-		// * Do not add a blank line between arguments/attributes.
-		//
-		// Users can configure argument values while attribute values cannot be
-		// configured and are used as output. Arguments have either:
-		// Required: true,
-		// Optional: true,
-		//
-		// All attributes will be computed and some arguments. If users w
-		// ant to read updated information or detect drift for an argument,
-		// it should be computed:
-		// Computed: true,
-		//
-		// You will typically find arguments in the input struct
-		// (e.g., CreateDBInstanceInput) for the create operation. Sometimes
-		// they are only in the input struct (e.g., ModifyDBInstanceInput) for
-		// the modify operation.
-		//
-		// For more about schema options, visit
-		// https://pkg.go.dev/github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema#Schema
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
@@ -54,6 +27,11 @@ func DataSourceVirtualGateway() *schema.Resource {
 			},
 
 			"mesh_name": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
+
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -144,8 +122,11 @@ func DataSourceVirtualGateway() *schema.Resource {
 															},
 
 															"ports": {
-																Type:     schema.TypeList,
+																Type:     schema.TypeSet,
 																Computed: true,
+																Elem: &schema.Schema{
+																	Type: schema.TypeInt,
+																},
 															},
 
 															"validation": {
@@ -166,6 +147,9 @@ func DataSourceVirtualGateway() *schema.Resource {
 																								"exact": {
 																									Type:     schema.TypeList,
 																									Computed: true,
+																									Elem: &schema.Schema{
+																										Type: schema.TypeString,
+																									},
 																								},
 																							},
 																						},
@@ -187,6 +171,9 @@ func DataSourceVirtualGateway() *schema.Resource {
 																								"certificate_authority_arns": {
 																									Type:     schema.TypeList,
 																									Computed: true,
+																									Elem: &schema.Schema{
+																										Type: schema.TypeString,
+																									},
 																								},
 																							},
 																						},
@@ -233,7 +220,7 @@ func DataSourceVirtualGateway() *schema.Resource {
 							},
 						},
 
-						"listeners": {
+						"listener": {
 							Type:     schema.TypeList,
 							Computed: true,
 							Elem: &schema.Resource{
@@ -426,6 +413,9 @@ func DataSourceVirtualGateway() *schema.Resource {
 																					"exact": {
 																						Type:     schema.TypeList,
 																						Computed: true,
+																						Elem: &schema.Schema{
+																							Type: schema.TypeString,
+																						},
 																					},
 																				},
 																			},
@@ -473,8 +463,8 @@ func DataSourceVirtualGateway() *schema.Resource {
 
 												"mode": {
 													Type:         schema.TypeString,
-													Computed:     true,
-													ValidateFunc: validation.StringInSlice([]string{"STRICT", "PERMISSIVE", "DISABLED"}, false),
+													ValidateFunc: validation.StringInSlice(appmesh.VirtualGatewayListenerTlsMode_Values(), false),
+													Required:     true,
 												},
 											},
 										},
@@ -561,7 +551,7 @@ func dataSourceVirtualGatewayRead(d *schema.ResourceData, meta interface{}) erro
 
 	req := &appmesh.DescribeVirtualGatewayInput{
 		MeshName:           aws.String(d.Get("mesh_name").(string)),
-		VirtualGatewayName: aws.String(d.Get("virtual_gateway_name").(string)),
+		VirtualGatewayName: aws.String(d.Get("name").(string)),
 	}
 
 	if v, ok := d.GetOk("mesh_owner"); ok {
