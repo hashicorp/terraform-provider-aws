@@ -315,7 +315,7 @@ resource "aws_sesv2_configuration_set" "test" {
   configuration_set_name = %[1]q
 
   delivery_options {
-	tls_policy = %[2]q
+    tls_policy = %[2]q
   }
 }
 `, rName, tlsPolicy)
@@ -327,7 +327,7 @@ resource "aws_sesv2_configuration_set" "test" {
   configuration_set_name = %[1]q
 
   reputation_options {
-	reputation_metrics_enabled = %[2]t
+    reputation_metrics_enabled = %[2]t
   }
 }
 `, rName, reputationMetricsEnabled)
@@ -339,7 +339,7 @@ resource "aws_sesv2_configuration_set" "test" {
   configuration_set_name = %[1]q
 
   sending_options {
-	sending_enabled = %[2]t
+    sending_enabled = %[2]t
   }
 }
 `, rName, sendingEnabled)
@@ -351,7 +351,7 @@ resource "aws_sesv2_configuration_set" "test" {
   configuration_set_name = %[1]q
 
   suppression_options {
-	suppressed_reasons = [%[2]q]
+    suppressed_reasons = [%[2]q]
   }
 }
 `, rName, suppressedReason)
