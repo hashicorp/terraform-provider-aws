@@ -54,8 +54,8 @@ resource "aws_appconfig_configuration_profile" "test_2" {
 }
 
 data "aws_appconfig_configuration_profiles" "test" {
-  application_id	= aws_appconfig_application.test.id
-  depends_on 		= [aws_appconfig_configuration_profile.test_1, aws_appconfig_configuration_profile.test_2]
+  application_id = aws_appconfig_application.test.id
+  depends_on     = [aws_appconfig_configuration_profile.test_1, aws_appconfig_configuration_profile.test_2]
 }
 `, rName1, rName2))
 }

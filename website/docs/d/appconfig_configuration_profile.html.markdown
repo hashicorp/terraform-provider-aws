@@ -3,7 +3,7 @@ subcategory: "AppConfig"
 layout: "aws"
 page_title: "AWS: aws_appconfig_configuration_profile"
 description: |-
-Terraform data source for managing an AWS AppConfig Configuration Profile.
+  Terraform data source for managing an AWS AppConfig Configuration Profile.
 ---
 
 # Data Source: aws_appconfig_configuration_profile

@@ -113,8 +113,8 @@ resource "aws_appconfig_environment" "test" {
   description    = "Example AppConfig Environment"
 
   monitor {
-	alarm_arn      = aws_cloudwatch_metric_alarm.test.arn
-	alarm_role_arn = aws_iam_role.test.arn
+    alarm_arn      = aws_cloudwatch_metric_alarm.test.arn
+    alarm_role_arn = aws_iam_role.test.arn
   }
 
   tags = {

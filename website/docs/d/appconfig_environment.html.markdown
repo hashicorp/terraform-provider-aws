@@ -3,7 +3,7 @@ subcategory: "AppConfig"
 layout: "aws"
 page_title: "AWS: aws_appconfig_environment"
 description: |-
-Terraform data source for managing an AWS AppConfig Environment.
+  Terraform data source for managing an AWS AppConfig Environment.
 ---
 
 # Data Source: aws_appconfig_environment
