@@ -12,16 +12,17 @@ import (
 )
 
 func TestAccAppMeshVirtualGatewayDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appmesh_virtual_gateway.test"
 	dataSourceName := "data.aws_appmesh_virtual_gateway.test"
 	vgName := fmt.Sprintf("tf-acc-test-%d-mesh-local", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appmesh.EndpointsID) },
 		ErrorCheck:               acctest.ErrorCheck(t, appmesh.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMeshDestroy,
+		CheckDestroy:             testAccCheckMeshDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVirtualGatewayDataSourceConfig_basic(rName, vgName),
@@ -41,16 +42,17 @@ func TestAccAppMeshVirtualGatewayDataSource_basic(t *testing.T) {
 }
 
 func TestAccAppMeshVirtualGatewayDataSource_backendDefaults(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appmesh_virtual_gateway.test"
 	dataSourceName := "data.aws_appmesh_virtual_gateway.test"
 	vgName := fmt.Sprintf("tf-acc-test-%d-mesh-local", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appmesh.EndpointsID) },
 		ErrorCheck:               acctest.ErrorCheck(t, appmesh.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMeshDestroy,
+		CheckDestroy:             testAccCheckMeshDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVirtualGatewayDataSourceConfig_backendDefaults(rName, vgName),
@@ -72,16 +74,17 @@ func TestAccAppMeshVirtualGatewayDataSource_backendDefaults(t *testing.T) {
 }
 
 func TestAccAppMeshVirtualGatewayDataSource_backendDefaultsUpdated(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appmesh_virtual_gateway.test"
 	dataSourceName := "data.aws_appmesh_virtual_gateway.test"
 	vgName := fmt.Sprintf("tf-acc-test-%d-mesh-local", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appmesh.EndpointsID) },
 		ErrorCheck:               acctest.ErrorCheck(t, appmesh.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMeshDestroy,
+		CheckDestroy:             testAccCheckMeshDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVirtualGatewayDataSourceConfig_backendDefaultsUpdated(rName, vgName),
@@ -104,16 +107,17 @@ func TestAccAppMeshVirtualGatewayDataSource_backendDefaultsUpdated(t *testing.T)
 }
 
 func TestAccAppMeshVirtualGatewayDataSource_backendDefaultsCertificate(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appmesh_virtual_gateway.test"
 	dataSourceName := "data.aws_appmesh_virtual_gateway.test"
 	vgName := fmt.Sprintf("tf-acc-test-%d-mesh-local", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appmesh.EndpointsID) },
 		ErrorCheck:               acctest.ErrorCheck(t, appmesh.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMeshDestroy,
+		CheckDestroy:             testAccCheckMeshDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVirtualGatewayDataSourceConfig_backendDefaultsCertificate(rName, vgName),
@@ -137,16 +141,17 @@ func TestAccAppMeshVirtualGatewayDataSource_backendDefaultsCertificate(t *testin
 }
 
 func TestAccAppMeshVirtualGatewayDataSource_listenerConnectionPool(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appmesh_virtual_gateway.test"
 	dataSourceName := "data.aws_appmesh_virtual_gateway.test"
 	vgName := fmt.Sprintf("tf-acc-test-%d-mesh-local", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appmesh.EndpointsID) },
 		ErrorCheck:               acctest.ErrorCheck(t, appmesh.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMeshDestroy,
+		CheckDestroy:             testAccCheckMeshDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVirtualGatewayDataSourceConfig_listenerConnectionPool(rName, vgName),
@@ -167,16 +172,17 @@ func TestAccAppMeshVirtualGatewayDataSource_listenerConnectionPool(t *testing.T)
 }
 
 func TestAccAppMeshVirtualGatewayDataSource_listenerConnectionPoolUpdated(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appmesh_virtual_gateway.test"
 	dataSourceName := "data.aws_appmesh_virtual_gateway.test"
 	vgName := fmt.Sprintf("tf-acc-test-%d-mesh-local", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appmesh.EndpointsID) },
 		ErrorCheck:               acctest.ErrorCheck(t, appmesh.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMeshDestroy,
+		CheckDestroy:             testAccCheckMeshDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVirtualGatewayDataSourceConfig_listenerConnectionPoolUpdated(rName, vgName),
@@ -198,16 +204,17 @@ func TestAccAppMeshVirtualGatewayDataSource_listenerConnectionPoolUpdated(t *tes
 }
 
 func TestAccAppMeshVirtualGatewayDataSource_listenerHealthChecks(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appmesh_virtual_gateway.test"
 	dataSourceName := "data.aws_appmesh_virtual_gateway.test"
 	vgName := fmt.Sprintf("tf-acc-test-%d-mesh-local", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appmesh.EndpointsID) },
 		ErrorCheck:               acctest.ErrorCheck(t, appmesh.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMeshDestroy,
+		CheckDestroy:             testAccCheckMeshDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVirtualGatewayDataSourceConfig_listenerHealthChecks(rName, vgName),
@@ -233,7 +240,7 @@ func TestAccAppMeshVirtualGatewayDataSource_listenerHealthChecks(t *testing.T) {
 }
 
 func TestAccAppMeshVirtualGatewayDataSource_listenerTLSACM(t *testing.T) {
-
+	ctx := acctest.Context(t)
 	var ca acmpca.CertificateAuthority
 	acmCAResourceName := "aws_acmpca_certificate_authority.test"
 	domain := acctest.RandomDomainName()
@@ -244,17 +251,17 @@ func TestAccAppMeshVirtualGatewayDataSource_listenerTLSACM(t *testing.T) {
 	vgName := fmt.Sprintf("tf-acc-test-%d-mesh-local", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appmesh.EndpointsID) },
 		ErrorCheck:               acctest.ErrorCheck(t, appmesh.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMeshDestroy,
+		CheckDestroy:             testAccCheckMeshDestroy(ctx),
 		Steps: []resource.TestStep{
 			// We need to create and activate the CA before issuing a certificate.
 			{
 				Config: testAccVirtualGatewayDataSourceConfig_rootCA(domain),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckACMPCACertificateAuthorityExists(acmCAResourceName, &ca),
-					acctest.CheckACMPCACertificateAuthorityActivateRootCA(&ca),
+					acctest.CheckACMPCACertificateAuthorityExists(ctx, acmCAResourceName, &ca),
+					acctest.CheckACMPCACertificateAuthorityActivateRootCA(ctx, &ca),
 				),
 			},
 			{
@@ -277,17 +284,17 @@ func TestAccAppMeshVirtualGatewayDataSource_listenerTLSACM(t *testing.T) {
 }
 
 func TestAccAppMeshVirtualGatewayDataSource_listenerTLSFile(t *testing.T) {
-
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appmesh_virtual_gateway.test"
 	dataSourceName := "data.aws_appmesh_virtual_gateway.test"
 	vgName := fmt.Sprintf("tf-acc-test-%d-mesh-local", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appmesh.EndpointsID) },
 		ErrorCheck:               acctest.ErrorCheck(t, appmesh.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMeshDestroy,
+		CheckDestroy:             testAccCheckMeshDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVirtualGatewayDataSourceConfig_listenerTLSFile(rName, vgName),
@@ -310,17 +317,17 @@ func TestAccAppMeshVirtualGatewayDataSource_listenerTLSFile(t *testing.T) {
 }
 
 func TestAccAppMeshVirtualGatewayDataSource_listenerValidation(t *testing.T) {
-
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appmesh_virtual_gateway.test"
 	dataSourceName := "data.aws_appmesh_virtual_gateway.test"
 	vgName := fmt.Sprintf("tf-acc-test-%d-mesh-local", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appmesh.EndpointsID) },
 		ErrorCheck:               acctest.ErrorCheck(t, appmesh.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMeshDestroy,
+		CheckDestroy:             testAccCheckMeshDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVirtualGatewayDataSourceConfig_listenerValidation(rName, vgName),
@@ -344,7 +351,7 @@ func TestAccAppMeshVirtualGatewayDataSource_listenerValidation(t *testing.T) {
 }
 
 func TestAccAppMeshVirtualGatewayDataSource_logging(t *testing.T) {
-
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appmesh_virtual_gateway.test"
 	dataSourceName := "data.aws_appmesh_virtual_gateway.test"
@@ -352,10 +359,10 @@ func TestAccAppMeshVirtualGatewayDataSource_logging(t *testing.T) {
 	path := "/tmp/access.log"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appmesh.EndpointsID) },
 		ErrorCheck:               acctest.ErrorCheck(t, appmesh.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMeshDestroy,
+		CheckDestroy:             testAccCheckMeshDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVirtualGatewayDataSourceConfig_logging(rName, vgName, path),
@@ -376,17 +383,17 @@ func TestAccAppMeshVirtualGatewayDataSource_logging(t *testing.T) {
 }
 
 func TestAccAppMeshVirtualGatewayDataSource_tags(t *testing.T) {
-
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appmesh_virtual_gateway.test"
 	dataSourceName := "data.aws_appmesh_virtual_gateway.test"
 	vgName := fmt.Sprintf("tf-acc-test-%d-mesh-local", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appmesh.EndpointsID) },
 		ErrorCheck:               acctest.ErrorCheck(t, appmesh.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMeshDestroy,
+		CheckDestroy:             testAccCheckMeshDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVirtualGatewayDataSourceConfig_tags(rName, vgName, "key1", "value1"),

@@ -35,7 +35,6 @@ data "aws_appmesh_virtual_gateway" "test" {
 
 The following arguments are required:
 
-
 * `name` - (Required) Name of the virtual gateway.
 * `mesh_name` - (Required) Name of the service mesh in which the virtual gateway exists.
 * `mesh_owner` - (Optional) AWS account ID of the service mesh's owner.
@@ -43,7 +42,6 @@ The following arguments are required:
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
-
 
 * `arn` - ARN of the virtual gateway.
 * `created_date` - Creation date of the virtual gateway.
