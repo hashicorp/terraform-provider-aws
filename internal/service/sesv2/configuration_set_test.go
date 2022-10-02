@@ -221,7 +221,7 @@ func TestAccSESV2ConfigurationSet_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckConfigurationSetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfigurationSet_tags1(rName, "key1", "value1"),
+				Config: testAccConfigurationSetConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationSetExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -234,7 +234,7 @@ func TestAccSESV2ConfigurationSet_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccConfigurationSet_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccConfigurationSetConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationSetExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -243,7 +243,7 @@ func TestAccSESV2ConfigurationSet_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccConfigurationSet_tags1(rName, "key2", "value2"),
+				Config: testAccConfigurationSetConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationSetExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -357,7 +357,7 @@ resource "aws_sesv2_configuration_set" "test" {
 `, rName, suppressedReason)
 }
 
-func testAccConfigurationSet_tags1(rName, tagKey1, tagValue1 string) string {
+func testAccConfigurationSetConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_sesv2_configuration_set" "test" {
   configuration_set_name = %[1]q
@@ -369,7 +369,7 @@ resource "aws_sesv2_configuration_set" "test" {
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccConfigurationSet_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccConfigurationSetConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_sesv2_configuration_set" "test" {
   configuration_set_name = %[1]q
