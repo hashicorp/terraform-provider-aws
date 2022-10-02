@@ -85,7 +85,7 @@ In addition to all arguments above, the following attributes are exported:
 
 * `arn` - ARN of the Configuration Set.
 * `reputation_options` - An object that defines whether or not Amazon SES collects reputation metrics for the emails that you send that use the configuration set.
-  * `last_fresh_start` - The date and time (in Unix time) when the reputation metrics were last given a fresh start. When your account is given a fresh start, your reputation metrics are calculated starting from the date of the fresh start.
+    * `last_fresh_start` - The date and time (in Unix time) when the reputation metrics were last given a fresh start. When your account is given a fresh start, your reputation metrics are calculated starting from the date of the fresh start.
 
 ## Import
 
