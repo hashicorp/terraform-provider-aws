@@ -3,19 +3,23 @@ package sesv2
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/sesv2"
 	"github.com/aws/aws-sdk-go-v2/service/sesv2/types"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -31,6 +35,10 @@ func ResourceConfigurationSet() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"configuration_set_name": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -106,8 +114,8 @@ func ResourceConfigurationSet() *schema.Resource {
 					},
 				},
 			},
-			// "tags":     tftags.TagsSchema(),
-			// "tags_all": tftags.TagsSchemaComputed(),
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 			"tracking_options": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -123,7 +131,7 @@ func ResourceConfigurationSet() *schema.Resource {
 			},
 		},
 
-		// CustomizeDiff: verify.SetTagsDiff,
+		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -158,12 +166,12 @@ func resourceConfigurationSetCreate(ctx context.Context, d *schema.ResourceData,
 		in.TrackingOptions = expandTrackingOptions(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	// defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	// tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
-	// if len(tags) > 0 {
-	// 	in.Tags = Tags(tags.IgnoreAWS())
-	// }
+	if len(tags) > 0 {
+		in.Tags = Tags(tags.IgnoreAWS())
+	}
 
 	out, err := conn.CreateConfigurationSet(ctx, in)
 	if err != nil {
@@ -194,6 +202,15 @@ func resourceConfigurationSetRead(ctx context.Context, d *schema.ResourceData, m
 		return create.DiagError(names.SESV2, create.ErrActionReading, ResNameConfigurationSet, d.Id(), err)
 	}
 
+	arn := arn.ARN{
+		Partition: meta.(*conns.AWSClient).Partition,
+		Service:   "sesv2",
+		Region:    meta.(*conns.AWSClient).Region,
+		AccountID: meta.(*conns.AWSClient).AccountID,
+		Resource:  fmt.Sprintf("configuration-set/%s", d.Id()),
+	}.String()
+
+	d.Set("arn", arn)
 	d.Set("configuration_set_name", out.ConfigurationSetName)
 
 	if out.DeliveryOptions != nil {
@@ -236,17 +253,22 @@ func resourceConfigurationSetRead(ctx context.Context, d *schema.ResourceData, m
 		d.Set("tracking_options", nil)
 	}
 
-	// defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	// ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-	// tags := KeyValueTags(out.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags, err := ListTags(ctx, conn, d.Get("arn").(string))
+	if err != nil {
+		return create.DiagError(names.SESV2, create.ErrActionReading, ResNameConfigurationSet, d.Id(), err)
+	}
 
-	// if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-	// 	return create.DiagError(names.SESV2, create.ErrActionSetting, ResNameConfigurationSet, d.Id(), err)
-	// }
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
-	// if err := d.Set("tags_all", tags.Map()); err != nil {
-	// 	return create.DiagError(names.SESV2, create.ErrActionSetting, ResNameConfigurationSet, d.Id(), err)
-	// }
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return create.DiagError(names.SESV2, create.ErrActionSetting, ResNameConfigurationSet, d.Id(), err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return create.DiagError(names.SESV2, create.ErrActionSetting, ResNameConfigurationSet, d.Id(), err)
+	}
 
 	return nil
 }
@@ -355,6 +377,14 @@ func resourceConfigurationSetUpdate(ctx context.Context, d *schema.ResourceData,
 		log.Printf("[DEBUG] Updating SESV2 ConfigurationSet TrackingOptions (%s): %#v", d.Id(), in)
 		_, err := conn.PutConfigurationSetTrackingOptions(ctx, in)
 		if err != nil {
+			return create.DiagError(names.SESV2, create.ErrActionUpdating, ResNameConfigurationSet, d.Id(), err)
+		}
+	}
+
+	if d.HasChanges("tags_all") {
+		o, n := d.GetChange("tags_all")
+
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
 			return create.DiagError(names.SESV2, create.ErrActionUpdating, ResNameConfigurationSet, d.Id(), err)
 		}
 	}
