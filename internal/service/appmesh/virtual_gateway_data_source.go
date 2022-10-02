@@ -222,7 +222,7 @@ func DataSourceVirtualGateway() *schema.Resource {
 
 						"listener": {
 							Type:     schema.TypeList,
-							Computed: true,
+							Required: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"connection_pool": {
