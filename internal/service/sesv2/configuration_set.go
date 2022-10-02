@@ -40,9 +40,10 @@ func ResourceConfigurationSet() *schema.Resource {
 				Computed: true,
 			},
 			"configuration_set_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringLenBetween(1, 64),
 			},
 			"delivery_options": {
 				Type:     schema.TypeList,
