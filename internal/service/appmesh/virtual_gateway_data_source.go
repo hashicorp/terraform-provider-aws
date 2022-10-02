@@ -6,14 +6,15 @@ package appmesh
 
 import (
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appmesh"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func DataSourceVirtualGateway() *schema.Resource {
@@ -21,40 +22,26 @@ func DataSourceVirtualGateway() *schema.Resource {
 		Read: dataSourceVirtualGatewayRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
+			"name": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringLenBetween(1, 255),
 			},
 
 			"mesh_name": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-
-			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-
-			"created_date": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"last_updated_date": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringLenBetween(1, 255),
 			},
 
 			"mesh_owner": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-
-			"resource_owner": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ForceNew:     true,
+				ValidateFunc: verify.ValidAccountID,
 			},
 
 			"spec": {
@@ -127,6 +114,7 @@ func DataSourceVirtualGateway() *schema.Resource {
 																Elem: &schema.Schema{
 																	Type: schema.TypeInt,
 																},
+																Set: schema.HashInt,
 															},
 
 															"validation": {
@@ -145,11 +133,10 @@ func DataSourceVirtualGateway() *schema.Resource {
 																						Elem: &schema.Resource{
 																							Schema: map[string]*schema.Schema{
 																								"exact": {
-																									Type:     schema.TypeList,
+																									Type:     schema.TypeSet,
 																									Computed: true,
-																									Elem: &schema.Schema{
-																										Type: schema.TypeString,
-																									},
+																									Elem:     &schema.Schema{Type: schema.TypeString},
+																									Set:      schema.HashString,
 																								},
 																							},
 																						},
@@ -169,11 +156,12 @@ func DataSourceVirtualGateway() *schema.Resource {
 																						Elem: &schema.Resource{
 																							Schema: map[string]*schema.Schema{
 																								"certificate_authority_arns": {
-																									Type:     schema.TypeList,
+																									Type:     schema.TypeSet,
 																									Computed: true,
 																									Elem: &schema.Schema{
 																										Type: schema.TypeString,
 																									},
+																									Set: schema.HashString,
 																								},
 																							},
 																						},
@@ -222,7 +210,7 @@ func DataSourceVirtualGateway() *schema.Resource {
 
 						"listener": {
 							Type:     schema.TypeList,
-							Required: true,
+							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"connection_pool": {
@@ -395,6 +383,11 @@ func DataSourceVirtualGateway() *schema.Resource {
 													},
 												},
 
+												"mode": {
+													Type:     schema.TypeString,
+													Computed: true,
+												},
+
 												"validation": {
 													Type:     schema.TypeList,
 													Computed: true,
@@ -411,11 +404,10 @@ func DataSourceVirtualGateway() *schema.Resource {
 																			Elem: &schema.Resource{
 																				Schema: map[string]*schema.Schema{
 																					"exact": {
-																						Type:     schema.TypeList,
+																						Type:     schema.TypeSet,
 																						Computed: true,
-																						Elem: &schema.Schema{
-																							Type: schema.TypeString,
-																						},
+																						Elem:     &schema.Schema{Type: schema.TypeString},
+																						Set:      schema.HashString,
 																					},
 																				},
 																			},
@@ -460,12 +452,6 @@ func DataSourceVirtualGateway() *schema.Resource {
 														},
 													},
 												},
-
-												"mode": {
-													Type:         schema.TypeString,
-													ValidateFunc: validation.StringInSlice(appmesh.VirtualGatewayListenerTlsMode_Values(), false),
-													Required:     true,
-												},
 											},
 										},
 									},
@@ -488,37 +474,6 @@ func DataSourceVirtualGateway() *schema.Resource {
 													Computed: true,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															"format": {
-																Type:     schema.TypeList,
-																Computed: true,
-																Elem: &schema.Resource{
-																	Schema: map[string]*schema.Schema{
-																		"json": {
-																			Type:     schema.TypeList,
-																			Computed: true,
-																			Elem: &schema.Resource{
-																				Schema: map[string]*schema.Schema{
-																					"key": {
-																						Type:     schema.TypeString,
-																						Computed: true,
-																					},
-
-																					"value": {
-																						Type:     schema.TypeString,
-																						Computed: true,
-																					},
-																				},
-																			},
-																		},
-
-																		"text": {
-																			Type:     schema.TypeString,
-																			Computed: true,
-																		},
-																	},
-																},
-															},
-
 															"path": {
 																Type:     schema.TypeString,
 																Computed: true,
@@ -535,14 +490,32 @@ func DataSourceVirtualGateway() *schema.Resource {
 					},
 				},
 			},
-			"tags": tftags.TagsSchemaComputed(),
+
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
+			"created_date": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
+			"last_updated_date": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
+			"resource_owner": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
+			"tags": tftags.TagsSchema(),
 		},
 	}
-}
 
-const (
-	DSNameVirtualGateway = "Virtual Gateway Data Source"
-)
+}
 
 func dataSourceVirtualGatewayRead(d *schema.ResourceData, meta interface{}) error {
 
