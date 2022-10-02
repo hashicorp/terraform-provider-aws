@@ -190,7 +190,7 @@ func resourceConfigurationSetCreate(ctx context.Context, d *schema.ResourceData,
 func resourceConfigurationSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).SESV2Conn
 
-	out, err := findConfigurationSetByID(ctx, conn, d.Id())
+	out, err := FindConfigurationSetByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] SESV2 ConfigurationSet (%s) not found, removing from state", d.Id())
@@ -413,7 +413,7 @@ func resourceConfigurationSetDelete(ctx context.Context, d *schema.ResourceData,
 	return nil
 }
 
-func findConfigurationSetByID(ctx context.Context, conn *sesv2.Client, id string) (*sesv2.GetConfigurationSetOutput, error) {
+func FindConfigurationSetByID(ctx context.Context, conn *sesv2.Client, id string) (*sesv2.GetConfigurationSetOutput, error) {
 	in := &sesv2.GetConfigurationSetInput{
 		ConfigurationSetName: aws.String(id),
 	}
