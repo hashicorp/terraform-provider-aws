@@ -137,7 +137,7 @@ func (m *multiplexProgram) GetSchema(context.Context) (tfsdk.Schema, diag.Diagno
 	return schema, nil
 }
 
-func (m *multiplexProgram) Configure(_ context.Context, request resource.ConfigureRequest, response *resource.ConfigureResponse) { //nolint:unparam
+func (m *multiplexProgram) Configure(_ context.Context, request resource.ConfigureRequest, response *resource.ConfigureResponse) {
 	m.meta = request.ProviderData
 }
 
