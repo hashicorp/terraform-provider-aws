@@ -58,21 +58,18 @@ func dataSourceIPAMPoolCIDRsRead(d *schema.ResourceData, meta interface{}) error
 		input.Filters = BuildFiltersDataSource(filters.(*schema.Set))
 	}
 
-	output, err := conn.GetIpamPoolCidrs(input)
-	var cidrs []*ec2.IpamPoolCidr
+	output, err := FindIPAMPoolCIDRs(conn, input)
 
 	if err != nil {
 		return err
 	}
 
-	if len(output.IpamPoolCidrs) == 0 || output.IpamPoolCidrs[0] == nil {
-		return tfresource.SingularDataSourceFindError("EC2 VPC IPAM POOL CIDRS", tfresource.NewEmptyResultError(input))
+	if len(output) == 0 || output[0] == nil {
+		return tfresource.SingularDataSourceFindError("CIDRS IN EC2 VPC IPAM POOL", tfresource.NewEmptyResultError(input))
 	}
 
-	cidrs = output.IpamPoolCidrs
-
 	d.SetId(d.Get("ipam_pool_id").(string))
-	d.Set("ipam_pool_cidrs", flattenIPAMPoolCIDRs(cidrs))
+	d.Set("ipam_pool_cidrs", flattenIPAMPoolCIDRs(output))
 
 	return nil
 }
