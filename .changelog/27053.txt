@@ -1,8 +1,7 @@
 ```release-note:enhancement
-resource/aws_identitystore_user: Add `alternate_identifier` argument.
-resource/aws_identitystore_user: Add all user attributes.
+data-source/aws_identitystore_user: Add `alternate_identifier` argument and `addresses`, `display_name`, `emails`, `external_ids`, `locale`, `name`, `nickname`, `phone_numbers`, `preferred_language`, `profile_url`, `timezone`, `title` and `user_type` attributes
 ```
 
 ```release-note:note
-data-source/aws_identitystore_user: The `filter` argument has been deprecated. Use the `alternate_identifier` argument instead.
+data-source/aws_identitystore_user: The `filter` argument has been deprecated. Use the `alternate_identifier` argument instead
  ```
