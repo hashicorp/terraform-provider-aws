@@ -73,8 +73,6 @@ func (d *dataSourceARN) GetSchema(context.Context) (tfsdk.Schema, diag.Diagnosti
 // provider-defined DataSource type. It is separately executed for each
 // ReadDataSource RPC.
 func (d *dataSourceARN) Configure(_ context.Context, request datasource.ConfigureRequest, response *datasource.ConfigureResponse) { //nolint:unparam
-	// TODO (FW0.13)
-	// request.ProviderData
 }
 
 // Read is called when the provider must read data source values in order to update state.

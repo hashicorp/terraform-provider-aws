@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/experimental/intf"
 	"github.com/hashicorp/terraform-provider-aws/internal/fwtypes"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/medialive"
@@ -316,17 +317,18 @@ func (p *fwprovider) Configure(ctx context.Context, request provider.ConfigureRe
 func (p *fwprovider) DataSources(ctx context.Context) []func() datasource.DataSource {
 	var dataSources []func() datasource.DataSource
 
-	// TODO Better error messages.
 	// TODO Wrap the returned type to add standard context, logging etc.
 	providerData := p.Primary.Meta().(intf.ProviderData)
-	for _, data := range providerData.Services(ctx) {
+	for serviceID, data := range providerData.Services(ctx) {
 		for _, v := range data.DataSources(ctx) {
 			v, err := v(ctx)
 
 			if err != nil {
-				// TODO (FW0.13)
-				// logging
-				// diags.AddError(fmt.Sprintf("data sources for service (%s)", serviceID), err.Error())
+				tflog.Warn(ctx, "creating data source", map[string]interface{}{
+					"service_id": serviceID,
+					"error":      err.Error(),
+				})
+
 				continue
 			}
 
