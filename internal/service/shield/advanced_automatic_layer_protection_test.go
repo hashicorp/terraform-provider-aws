@@ -177,7 +177,7 @@ resource "aws_shield_protection" "test" {
 
 resource "aws_shield_advanced_automatic_layer_protection" "test" {
   resource_arn = aws_cloudfront_distribution.test.arn
-  action = "count"
+  action = "COUNT"
 }
 `, rName)
 }

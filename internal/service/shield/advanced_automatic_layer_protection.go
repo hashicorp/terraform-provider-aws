@@ -30,7 +30,7 @@ func ResourceAdvancedAutomaticLayerProtection() *schema.Resource {
 			"action": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validation.StringInSlice([]string{"block", "count"}, false),
+				ValidateFunc: validation.StringInSlice([]string{"BLOCK", "COUNT"}, false),
 			},
 		},
 	}
@@ -45,9 +45,9 @@ func resourceAdvancedAutomaticLayerProtectionUpdate(d *schema.ResourceData, meta
 
 	action := &shield.ResponseAction{}
 	switch d.Get("action").(string) {
-	case "block":
+	case "BLOCK":
 		action.Block = &shield.BlockAction{}
-	case "count":
+	case "COUNT":
 		action.Count = &shield.CountAction{}
 	}
 
@@ -69,9 +69,9 @@ func resourceAdvancedAutomaticLayerProtectionCreate(d *schema.ResourceData, meta
 
 	action := &shield.ResponseAction{}
 	switch d.Get("action").(string) {
-	case "block":
+	case "BLOCK":
 		action.Block = &shield.BlockAction{}
-	case "count":
+	case "COUNT":
 		action.Count = &shield.CountAction{}
 	}
 
@@ -111,10 +111,10 @@ func resourceAdvancedAutomaticLayerProtectionRead(d *schema.ResourceData, meta i
 	var action string
 	if resp.Protection.ApplicationLayerAutomaticResponseConfiguration.Action != nil {
 		if resp.Protection.ApplicationLayerAutomaticResponseConfiguration.Action.Block != nil {
-			action = "block"
+			action = "BLOCK"
 		}
 		if resp.Protection.ApplicationLayerAutomaticResponseConfiguration.Action.Count != nil {
-			action = "count"
+			action = "COUNT"
 		}
 	}
 
