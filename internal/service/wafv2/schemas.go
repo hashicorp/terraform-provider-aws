@@ -397,7 +397,7 @@ func jsonBodySchema() *schema.Schema {
 					Required:     true,
 					ValidateFunc: validation.StringInSlice(wafv2.JsonMatchScope_Values(), false),
 				},
-				"oversize_handling": oversizeHandlingSchema(),
+				"oversize_handling": oversizeHandlingOptionalSchema(wafv2.OversizeHandlingContinue),
 			},
 		},
 	}
@@ -665,7 +665,7 @@ func cookiesSchema() *schema.Schema {
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"match_scope":       matchScopeSchema(),
-				"oversize_handling": oversizeHandlingSchema(),
+				"oversize_handling": oversizeHandlingRequiredSchema(),
 				"match_pattern":     cookiesMatchPatternSchema(),
 			},
 		},
@@ -694,7 +694,16 @@ func cookiesMatchPatternSchema() *schema.Schema {
 	}
 }
 
-func oversizeHandlingSchema() *schema.Schema {
+func oversizeHandlingOptionalSchema(defaultValue string) *schema.Schema {
+	return &schema.Schema{
+		Type:         schema.TypeString,
+		Optional:     true,
+		Default:      defaultValue,
+		ValidateFunc: validation.StringInSlice(wafv2.OversizeHandling_Values(), false),
+	}
+}
+
+func oversizeHandlingRequiredSchema() *schema.Schema {
 	return &schema.Schema{
 		Type:         schema.TypeString,
 		Required:     true,
@@ -730,7 +739,7 @@ func headersSchema() *schema.Schema {
 					},
 				},
 				"match_scope":       matchScopeSchema(),
-				"oversize_handling": oversizeHandlingSchema(),
+				"oversize_handling": oversizeHandlingRequiredSchema(),
 			},
 		},
 	}
