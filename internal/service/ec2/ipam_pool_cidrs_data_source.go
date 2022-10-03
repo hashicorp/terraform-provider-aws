@@ -24,7 +24,6 @@ func DataSourceIPAMPoolCIDRs() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			// computed
 			"ipam_pool_cidrs": {
 				Type:     schema.TypeSet,
 				Computed: true,
