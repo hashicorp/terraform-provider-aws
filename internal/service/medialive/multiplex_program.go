@@ -12,7 +12,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
-	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -23,17 +22,25 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func NewResourceMultiplexProgramType(_ context.Context, meta interface{ Meta() interface{} }) provider.ResourceType {
-	return &resourceMultiplexProgramType{
+func NewResourceMultiplexProgram(_ context.Context, meta interface{ Meta() interface{} }) resource.Resource {
+	return &multiplexProgram{
 		meta: meta,
 	}
 }
 
-type resourceMultiplexProgramType struct {
+const (
+	ResNameMultiplexProgram = "Multiplex Program"
+)
+
+type multiplexProgram struct {
 	meta interface{ Meta() interface{} }
 }
 
-func (t *resourceMultiplexProgramType) GetSchema(context.Context) (tfsdk.Schema, diag.Diagnostics) {
+func (m *multiplexProgram) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
+	response.TypeName = "aws_medialive_multiplex_program"
+}
+
+func (m *multiplexProgram) GetSchema(context.Context) (tfsdk.Schema, diag.Diagnostics) {
 	schema := tfsdk.Schema{
 		Attributes: map[string]tfsdk.Attribute{
 			"id": {
@@ -132,18 +139,9 @@ func (t *resourceMultiplexProgramType) GetSchema(context.Context) (tfsdk.Schema,
 	return schema, nil
 }
 
-const (
-	ResNameMultiplexProgram = "Multiplex Program"
-)
-
-func (t *resourceMultiplexProgramType) NewResource(ctx context.Context, provider provider.Provider) (resource.Resource, diag.Diagnostics) {
-	return &multiplexProgram{
-		meta: t.meta,
-	}, nil
-}
-
-type multiplexProgram struct {
-	meta interface{ Meta() interface{} }
+func (m *multiplexProgram) Configure(_ context.Context, request resource.ConfigureRequest, response *resource.ConfigureResponse) { //nolint:unparam
+	// TODO (FW0.13)
+	// request.ProviderData
 }
 
 func (m *multiplexProgram) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {

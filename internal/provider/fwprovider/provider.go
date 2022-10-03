@@ -2,10 +2,11 @@ package fwprovider
 
 import (
 	"context"
-	"fmt"
 
+	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/provider"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/experimental/intf"
@@ -302,46 +303,56 @@ func (p *fwprovider) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnost
 // provider configuration block.
 func (p *fwprovider) Configure(ctx context.Context, request provider.ConfigureRequest, response *provider.ConfigureResponse) {
 	// Provider's parsed configuration (its instance state) is available through the primary provider's Meta() method.
+
+	// TODO (FW0.13)
+	// response.DataSourceData =
+	// response.ResourceData =
 }
 
-// GetResources returns a mapping of resource names to type
-// implementations.
-func (p *fwprovider) GetResources(ctx context.Context) (map[string]provider.ResourceType, diag.Diagnostics) {
-	var diags diag.Diagnostics
-	resources := make(map[string]provider.ResourceType)
-
-	resources["aws_medialive_multiplex_program"] = medialive.NewResourceMultiplexProgramType(ctx, p.Primary)
-
-	return resources, diags
-}
-
-// GetDataSources returns a mapping of data source name to types
-// implementations.
-func (p *fwprovider) GetDataSources(ctx context.Context) (map[string]provider.DataSourceType, diag.Diagnostics) {
-	var diags diag.Diagnostics
-	dataSources := make(map[string]provider.DataSourceType)
+// DataSources returns a slice of functions to instantiate each DataSource
+// implementation.
+//
+// The data source type name is determined by the DataSource implementing
+// the Metadata method. All data sources must have unique names.
+func (p *fwprovider) DataSources(ctx context.Context) []func() datasource.DataSource {
+	var dataSources []func() datasource.DataSource
 
 	// TODO Better error messages.
 	// TODO Wrap the returned type to add standard context, logging etc.
 	providerData := p.Primary.Meta().(intf.ProviderData)
-	for serviceID, data := range providerData.Services(ctx) {
-		dsTypes, err := data.DataSources(ctx)
+	for _, data := range providerData.Services(ctx) {
+		for _, v := range data.DataSources(ctx) {
+			v, err := v(ctx)
 
-		if err != nil {
-			diags.AddError(fmt.Sprintf("data sources for service (%s)", serviceID), err.Error())
-			return nil, diags
-		}
-
-		for name, dsType := range dsTypes {
-			if _, ok := dataSources[name]; ok {
-				diags.AddError(fmt.Sprintf("service (%s) data source (%s) already registered", serviceID, name), "")
-			} else {
-				dataSources[name] = dsType
+			if err != nil {
+				// TODO (FW0.13)
+				// logging
+				// diags.AddError(fmt.Sprintf("data sources for service (%s)", serviceID), err.Error())
+				continue
 			}
+
+			dataSources = append(dataSources, func() datasource.DataSource {
+				return v
+			})
 		}
 	}
 
-	return dataSources, diags
+	return dataSources
+}
+
+// Resources returns a slice of functions to instantiate each Resource
+// implementation.
+//
+// The resource type name is determined by the Resource implementing
+// the Metadata method. All resources must have unique names.
+func (p *fwprovider) Resources(ctx context.Context) []func() resource.Resource {
+	var resources []func() resource.Resource
+
+	resources = append(resources, func() resource.Resource {
+		return medialive.NewResourceMultiplexProgram(ctx, p.Primary)
+	})
+
+	return resources
 }
 
 func endpointsBlock() tfsdk.Block {
