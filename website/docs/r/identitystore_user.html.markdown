@@ -78,7 +78,7 @@ The following arguments are optional:
 * `type` - (Optional) The type of email.
 * `value` - (Optional) The email address. This value must be unique across the identity store.
 
-### emails Configuration Block
+### name Configuration Block
 
 The following arguments are required:
 
