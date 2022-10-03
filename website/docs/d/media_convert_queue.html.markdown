@@ -13,8 +13,8 @@ Retrieve information about a AWS Elemental MediaConvert Queue.
 ## Example Usage
 
 ```terraform
-data "aws_media_convert_queue" "test" {
-  id = "tf-test-queue"
+data "aws_media_convert_queue" "example" {
+  id = "tf-example-queue"
 }
 ```
 
@@ -22,10 +22,10 @@ data "aws_media_convert_queue" "test" {
 
 The following arguments are supported:
 
-* `id` - (Required) Unique identifier of the queue. The same as `name`
+* `id` - (Required) Unique identifier of the queue. The same as `name`.
 
 ## Attributes Reference
 
-* `name` - The same as `id`
-* `arn` - The Arn of the queue
+* `name` - The same as `id`.
+* `arn` - The Arn of the queue.
 * `tags` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
