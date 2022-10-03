@@ -673,6 +673,40 @@ func TestAccEventsTarget_ecsFull(t *testing.T) {
 	})
 }
 
+func TestAccEventsTarget_ecsCapacityProvider(t *testing.T) {
+	resourceName := "aws_cloudwatch_event_target.test_capacity_provider"
+	var v eventbridge.Target
+	rName := sdkacctest.RandomWithPrefix("tf_ecs_target")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, eventbridge.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTargetDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTargetConfig_ecsCapacityProvider(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTargetExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "ecs_target.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.task_count", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.task_count", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.capacity_provider_strategy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.capacity_provider_strategy.base", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.capacity_provider_strategy.weight", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.capacity_provider_strategy.capacity_provider", "test"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccTargetImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccEventsTarget_batch(t *testing.T) {
 	resourceName := "aws_cloudwatch_event_target.test"
 	batchJobDefinitionResourceName := "aws_batch_job_definition.test"
@@ -1661,6 +1695,26 @@ resource "aws_cloudwatch_event_target" "test" {
 
     network_configuration {
       subnets = [aws_subnet.subnet.id]
+    }
+  }
+}
+`
+}
+
+func testAccTargetConfig_ecsCapacityProvider(rName string) string {
+	return testAccTargetECSBaseConfig(rName) + `
+resource "aws_cloudwatch_event_target" "test" {
+  arn      = aws_ecs_cluster.test.id
+  rule     = aws_cloudwatch_event_rule.test.id
+  role_arn = aws_iam_role.test.arn
+
+  ecs_target {
+    task_definition_arn     = aws_ecs_task_definition.task.arn
+
+    capacity_provider_strategy {
+      capacity_provider = "test"
+      base              = 1
+      weight            = 100
     }
   }
 }

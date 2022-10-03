@@ -162,6 +162,28 @@ func ResourceTarget() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"capacity_provider_strategy": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"base": {
+										Type:         schema.TypeInt,
+										Optional:     true,
+										ValidateFunc: validation.IntBetween(0, 100000),
+									},
+									"capacity_provider": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+									"weight": {
+										Type:         schema.TypeInt,
+										Optional:     true,
+										ValidateFunc: validation.IntBetween(0, 1000),
+									},
+								},
+							},
+						},
 						"enable_ecs_managed_tags": {
 							Type:     schema.TypeBool,
 							Optional: true,
@@ -698,6 +720,10 @@ func expandTargetECSParameters(config []interface{}) *eventbridge.EcsParameters 
 		param := c.(map[string]interface{})
 		tags := tftags.New(param["tags"].(map[string]interface{}))
 
+		if v, ok := param["capacity_provider_strategy"].(*schema.Set); ok && v.Len() > 0 {
+			ecsParameters.CapacityProviderStrategy = expandTargetCapacityProviderStrategy(v.List())
+		}
+
 		if val, ok := param["group"].(string); ok && val != "" {
 			ecsParameters.Group = aws.String(val)
 		}
@@ -911,6 +937,10 @@ func flattenTargetECSParameters(ecsParameters *eventbridge.EcsParameters) []map[
 		config["placement_constraint"] = flattenTargetPlacementConstraints(ecsParameters.PlacementConstraints)
 	}
 
+	if ecsParameters.CapacityProviderStrategy != nil {
+		config["capacity_provider_strategy"] = flattenTargetCapacityProviderStrategy(ecsParameters.CapacityProviderStrategy)
+	}
+
 	config["tags"] = KeyValueTags(ecsParameters.Tags).IgnoreAWS().Map()
 	config["enable_execute_command"] = aws.BoolValue(ecsParameters.EnableExecuteCommand)
 	config["enable_ecs_managed_tags"] = aws.BoolValue(ecsParameters.EnableECSManagedTags)
@@ -1066,6 +1096,40 @@ func expandTargetPlacementConstraints(tfList []interface{}) []*eventbridge.Place
 	return result
 }
 
+func expandTargetCapacityProviderStrategy(tfList []interface{}) []*eventbridge.CapacityProviderStrategyItem {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var result []*eventbridge.CapacityProviderStrategyItem
+
+	for _, tfMapRaw := range tfList {
+		if tfMapRaw == nil {
+			continue
+		}
+
+		cp := tfMapRaw.(map[string]interface{})
+
+		apiObject := &eventbridge.CapacityProviderStrategyItem{}
+
+		if val, ok := cp["base"]; ok {
+			apiObject.Base = aws.Int64(int64(val.(int)))
+		}
+
+		if val, ok := cp["weight"]; ok {
+			apiObject.Weight = aws.Int64(int64(val.(int)))
+		}
+
+		if val, ok := cp["capacity_provider"]; ok {
+			apiObject.CapacityProvider = aws.String(val.(string))
+		}
+
+		result = append(result, apiObject)
+	}
+
+	return result
+}
+
 func flattenTargetPlacementConstraints(pcs []*eventbridge.PlacementConstraint) []map[string]interface{} {
 	if len(pcs) == 0 {
 		return nil
@@ -1079,6 +1143,25 @@ func flattenTargetPlacementConstraints(pcs []*eventbridge.PlacementConstraint) [
 		}
 
 		results = append(results, c)
+	}
+	return results
+}
+
+func flattenTargetCapacityProviderStrategy(cps []*eventbridge.CapacityProviderStrategyItem) []map[string]interface{} {
+	if cps == nil {
+		return nil
+	}
+	results := make([]map[string]interface{}, 0)
+	for _, cp := range cps {
+		s := make(map[string]interface{})
+		s["capacity_provider"] = aws.StringValue(cp.CapacityProvider)
+		if cp.Weight != nil {
+			s["weight"] = aws.Int64Value(cp.Weight)
+		}
+		if cp.Base != nil {
+			s["base"] = aws.Int64Value(cp.Base)
+		}
+		results = append(results, s)
 	}
 	return results
 }
