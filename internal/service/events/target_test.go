@@ -690,11 +690,10 @@ func TestAccEventsTarget_ecsCapacityProvider(t *testing.T) {
 					testAccCheckTargetExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "ecs_target.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.task_count", "1"),
-					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.task_count", "1"),
 					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.capacity_provider_strategy.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.capacity_provider_strategy.base", "1"),
-					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.capacity_provider_strategy.weight", "1"),
-					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.capacity_provider_strategy.capacity_provider", "test"),
+					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.capacity_provider_strategy.0.base", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.capacity_provider_strategy.0.weight", "100"),
+					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.capacity_provider_strategy.0.capacity_provider", "test"),
 				),
 			},
 			{
@@ -1703,7 +1702,7 @@ resource "aws_cloudwatch_event_target" "test" {
 
 func testAccTargetConfig_ecsCapacityProvider(rName string) string {
 	return testAccTargetECSBaseConfig(rName) + `
-resource "aws_cloudwatch_event_target" "test" {
+resource "aws_cloudwatch_event_target" "test_capacity_provider" {
   arn      = aws_ecs_cluster.test.id
   rule     = aws_cloudwatch_event_rule.test.id
   role_arn = aws_iam_role.test.arn
@@ -1715,6 +1714,57 @@ resource "aws_cloudwatch_event_target" "test" {
       capacity_provider = "test"
       base              = 1
       weight            = 100
+    }
+  }
+}
+
+data "aws_ami" "test" {
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name   = "name"
+    values = ["amzn-ami-hvm-*-x86_64-gp2"]
+  }
+}
+
+resource "aws_launch_template" "test" {
+  name          = "test"
+  image_id      = data.aws_ami.test.image_id
+  instance_type = "t2.micro"
+}
+
+resource "aws_autoscaling_group" "test" {
+  name                = "test"
+  desired_capacity    = 0
+  max_size            = 0
+  min_size            = 0
+  vpc_zone_identifier = [aws_subnet.subnet.id]
+
+  launch_template {
+    id      = aws_launch_template.test.id
+    version = "$Latest"
+  }
+
+  tag {
+    key                 = "AmazonECSManaged"
+    value               = ""
+    propagate_at_launch = true
+  }
+}
+
+resource "aws_ecs_capacity_provider" "test" {
+  name = "test"
+
+  auto_scaling_group_provider {
+    auto_scaling_group_arn         = aws_autoscaling_group.test.arn
+    managed_termination_protection = "DISABLED"
+
+    managed_scaling {
+      maximum_scaling_step_size = 1
+      minimum_scaling_step_size = 1
+      status                    = "ENABLED"
+      target_capacity           = 1
     }
   }
 }
