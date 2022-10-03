@@ -415,30 +415,6 @@ func TestAccWAFV2RuleGroup_ByteMatchStatement_fieldToMatch(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccRuleGroupConfig_byteMatchStatementFieldToMatchBodyOversizeHandling(ruleGroupName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRuleGroupExists(resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"statement.#":                                         "1",
-						"statement.0.byte_match_statement.#":                  "1",
-						"statement.0.byte_match_statement.0.field_to_match.#": "1",
-						"statement.0.byte_match_statement.0.field_to_match.0.all_query_arguments.#":    "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.body.#":                   "1",
-						"statement.0.byte_match_statement.0.field_to_match.0.body.0.oversize_handling": "MATCH",
-						"statement.0.byte_match_statement.0.field_to_match.0.cookies.#":                "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.headers.#":                "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.json_body.#":              "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.method.#":                 "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.query_string.#":           "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.single_header.#":          "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.single_query_argument.#":  "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.uri_path.#":               "0",
-					}),
-				),
-			},
-			{
 				Config: testAccRuleGroupConfig_byteMatchStatementFieldToMatchCookies(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(resourceName, &v),
@@ -2629,55 +2605,6 @@ resource "aws_wafv2_rule_group" "test" {
             match_pattern {
               included_paths = ["/dogs/0/name", "/dogs/1/name"]
             }
-          }
-        }
-
-        text_transformation {
-          priority = 1
-          type     = "NONE"
-        }
-      }
-    }
-
-    visibility_config {
-      cloudwatch_metrics_enabled = false
-      metric_name                = "friendly-rule-metric-name"
-      sampled_requests_enabled   = false
-    }
-  }
-
-  visibility_config {
-    cloudwatch_metrics_enabled = false
-    metric_name                = "friendly-metric-name"
-    sampled_requests_enabled   = false
-  }
-}
-`, name)
-}
-
-func testAccRuleGroupConfig_byteMatchStatementFieldToMatchBodyOversizeHandling(name string) string {
-	return fmt.Sprintf(`
-resource "aws_wafv2_rule_group" "test" {
-  capacity = 15
-  name     = "%s"
-  scope    = "REGIONAL"
-
-  rule {
-    name     = "rule-1"
-    priority = 1
-
-    action {
-      allow {}
-    }
-
-    statement {
-      byte_match_statement {
-        positional_constraint = "CONTAINS"
-        search_string         = "word"
-
-        field_to_match {
-          body {
-            oversize_handling = "MATCH"
           }
         }
 
