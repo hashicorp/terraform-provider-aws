@@ -29,6 +29,7 @@ resource "aws_wafv2_rule_group" "example" {
     }
 
     statement {
+
       geo_match_statement {
         country_codes = ["US", "NL"]
       }
@@ -144,9 +145,7 @@ resource "aws_wafv2_rule_group" "example" {
           sqli_match_statement {
 
             field_to_match {
-              body {
-                oversize_handling = "MATCH"
-              }
+              body {}
             }
 
             text_transformation {
@@ -494,10 +493,10 @@ The part of a web request that you want AWS WAF to inspect. Include the single `
 The `field_to_match` block supports the following arguments:
 
 ~> **NOTE:** Only one of `all_query_arguments`, `body`, `cookies`, `headers`, `json_body`, `method`, `query_string`, `single_header`, `single_query_argument`, or `uri_path` can be specified.
-An empty configuration block `{}` should be used when specifying `all_query_arguments`, `method`, or `query_string` attributes.
+An empty configuration block `{}` should be used when specifying `all_query_arguments`, `body`, `method`, or `query_string` attributes.
 
 * `all_query_arguments` - (Optional) Inspect all query arguments.
-* `body` - (Optional) Inspect the request body, which immediately follows the request headers. See [Body](#body) below for details.
+* `body` - (Optional) Inspect the request body, which immediately follows the request headers.
 * `cookies` - (Optional) Inspect the cookies in the web request. See [Cookies](#cookies) below for details.
 * `headers` - (Optional) Inspect the request headers. See [Headers](#headers) below for details.
 * `json_body` - (Optional) Inspect the request body as JSON. See [JSON Body](#json-body) for details.
@@ -527,14 +526,6 @@ The `ip_set_forwarded_ip_config` block supports the following arguments:
 * `fallback_behavior` - (Required) - The match status to assign to the web request if the request doesn't have a valid IP address in the specified position. Valid values include: `MATCH` or `NO_MATCH`.
 * `header_name` - (Required) - The name of the HTTP header to use for the IP address.
 * `position` - (Required) - The position in the header to search for the IP address. Valid values include: `FIRST`, `LAST`, or `ANY`. If `ANY` is specified and the header contains more than 10 IP addresses, AWS WAFv2 inspects the last 10.
-
-### Body
-
-Inspect the request body, which immediately follows the request headers.
-
-The `body` block supports the following arguments:
-
-* `oversize_handling` - (Required) Oversize handling tells AWS WAF what to do with a web request when the request component that the rule inspects is over the limits. Valid values include the following: `CONTINUE`, `MATCH`, `NO_MATCH`. See the AWS [documentation](https://docs.aws.amazon.com/waf/latest/developerguide/waf-rule-statement-oversize-handling.html) for more information.
 
 ### Headers
 

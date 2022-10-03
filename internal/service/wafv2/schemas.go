@@ -321,7 +321,7 @@ func fieldToMatchBaseSchema() *schema.Resource {
 	return &schema.Resource{
 		Schema: map[string]*schema.Schema{
 			"all_query_arguments": emptySchema(),
-			"body":                bodySchema(),
+			"body":                emptySchema(),
 			"cookies":             cookiesSchema(),
 			"headers":             headersSchema(),
 			"json_body":           jsonBodySchema(),
@@ -652,19 +652,6 @@ func customResponseBodySchema() *schema.Schema {
 					Required:     true,
 					ValidateFunc: validation.StringInSlice(wafv2.ResponseContentType_Values(), false),
 				},
-			},
-		},
-	}
-}
-
-func bodySchema() *schema.Schema {
-	return &schema.Schema{
-		Type:     schema.TypeList,
-		Optional: true,
-		MaxItems: 1,
-		Elem: &schema.Resource{
-			Schema: map[string]*schema.Schema{
-				"oversize_handling": oversizeHandlingSchema(),
 			},
 		},
 	}

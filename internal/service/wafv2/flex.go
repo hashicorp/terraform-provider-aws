@@ -392,7 +392,7 @@ func expandFieldToMatch(l []interface{}) *wafv2.FieldToMatch {
 	}
 
 	if v, ok := m["body"]; ok && len(v.([]interface{})) > 0 {
-		f.Body = expandBody(m["body"].([]interface{}))
+		f.Body = &wafv2.Body{}
 	}
 
 	if v, ok := m["cookies"]; ok && len(v.([]interface{})) > 0 {
@@ -725,22 +725,6 @@ func expandXSSMatchStatement(l []interface{}) *wafv2.XssMatchStatement {
 		FieldToMatch:        expandFieldToMatch(m["field_to_match"].([]interface{})),
 		TextTransformations: expandTextTransformations(m["text_transformation"].(*schema.Set).List()),
 	}
-}
-
-func expandBody(l []interface{}) *wafv2.Body {
-	if len(l) == 0 || l[0] == nil {
-		return nil
-	}
-
-	m := l[0].(map[string]interface{})
-
-	apiObject := &wafv2.Body{}
-
-	if v, ok := m["oversize_handling"].(string); ok && v != "" {
-		apiObject.OversizeHandling = aws.String(v)
-	}
-
-	return apiObject
 }
 
 func expandHeaders(l []interface{}) *wafv2.Headers {
@@ -1335,7 +1319,7 @@ func flattenFieldToMatch(f *wafv2.FieldToMatch) interface{} {
 	}
 
 	if f.Body != nil {
-		m["body"] = flattenBody(f.Body)
+		m["body"] = make([]map[string]interface{}, 1)
 	}
 
 	if f.Cookies != nil {
@@ -1624,20 +1608,6 @@ func flattenVisibilityConfig(config *wafv2.VisibilityConfig) interface{} {
 		"cloudwatch_metrics_enabled": aws.BoolValue(config.CloudWatchMetricsEnabled),
 		"metric_name":                aws.StringValue(config.MetricName),
 		"sampled_requests_enabled":   aws.BoolValue(config.SampledRequestsEnabled),
-	}
-
-	return []interface{}{m}
-}
-
-func flattenBody(s *wafv2.Body) interface{} {
-	if s == nil {
-		return []interface{}{}
-	}
-
-	m := map[string]interface{}{}
-
-	if v := s.OversizeHandling; v != nil {
-		m["oversize_handling"] = aws.StringValue(v)
 	}
 
 	return []interface{}{m}
