@@ -303,10 +303,9 @@ func (p *fwprovider) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnost
 // provider configuration block.
 func (p *fwprovider) Configure(ctx context.Context, request provider.ConfigureRequest, response *provider.ConfigureResponse) {
 	// Provider's parsed configuration (its instance state) is available through the primary provider's Meta() method.
-
-	// TODO (FW0.13)
-	// response.DataSourceData =
-	// response.ResourceData =
+	v := p.Primary.Meta()
+	response.DataSourceData = v
+	response.ResourceData = v
 }
 
 // DataSources returns a slice of functions to instantiate each DataSource
@@ -349,7 +348,7 @@ func (p *fwprovider) Resources(ctx context.Context) []func() resource.Resource {
 	var resources []func() resource.Resource
 
 	resources = append(resources, func() resource.Resource {
-		return medialive.NewResourceMultiplexProgram(ctx, p.Primary)
+		return medialive.NewResourceMultiplexProgram(ctx)
 	})
 
 	return resources

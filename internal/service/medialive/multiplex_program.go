@@ -22,10 +22,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func NewResourceMultiplexProgram(_ context.Context, meta interface{ Meta() interface{} }) resource.Resource {
-	return &multiplexProgram{
-		meta: meta,
-	}
+func NewResourceMultiplexProgram(_ context.Context) resource.Resource {
+	return &multiplexProgram{}
 }
 
 const (
@@ -33,7 +31,7 @@ const (
 )
 
 type multiplexProgram struct {
-	meta interface{ Meta() interface{} }
+	meta any
 }
 
 func (m *multiplexProgram) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
@@ -140,12 +138,11 @@ func (m *multiplexProgram) GetSchema(context.Context) (tfsdk.Schema, diag.Diagno
 }
 
 func (m *multiplexProgram) Configure(_ context.Context, request resource.ConfigureRequest, response *resource.ConfigureResponse) { //nolint:unparam
-	// TODO (FW0.13)
-	// request.ProviderData
+	m.meta = request.ProviderData
 }
 
 func (m *multiplexProgram) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	conn := m.meta.Meta().(*conns.AWSClient).MediaLiveConn
+	conn := m.meta.(*conns.AWSClient).MediaLiveConn
 
 	var plan resourceMultiplexProgramData
 	diags := req.Plan.Get(ctx, &plan)
@@ -190,7 +187,7 @@ func (m *multiplexProgram) Create(ctx context.Context, req resource.CreateReques
 }
 
 func (m *multiplexProgram) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	conn := m.meta.Meta().(*conns.AWSClient).MediaLiveConn
+	conn := m.meta.(*conns.AWSClient).MediaLiveConn
 
 	var state resourceMultiplexProgramData
 	diags := req.State.Get(ctx, &state)
@@ -252,7 +249,7 @@ func (m *multiplexProgram) Update(ctx context.Context, req resource.UpdateReques
 }
 
 func (m *multiplexProgram) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	conn := m.meta.Meta().(*conns.AWSClient).MediaLiveConn
+	conn := m.meta.(*conns.AWSClient).MediaLiveConn
 
 	var state resourceMultiplexProgramData
 	diags := req.State.Get(ctx, &state)
