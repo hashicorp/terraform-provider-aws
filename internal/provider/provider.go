@@ -701,6 +701,8 @@ func New(_ context.Context) (*schema.Provider, error) {
 
 			"aws_iot_endpoint": iot.DataSourceEndpoint(),
 
+			"aws_media_convert_queue": mediaconvert.DataSourceQueue(),
+
 			"aws_msk_broker_nodes":  kafka.DataSourceBrokerNodes(),
 			"aws_msk_cluster":       kafka.DataSourceCluster(),
 			"aws_msk_configuration": kafka.DataSourceConfiguration(),
