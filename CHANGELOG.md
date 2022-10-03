@@ -10,6 +10,7 @@ FEATURES:
 * **New Data Source:** `aws_appconfig_configuration_profiles` ([#27054](https://github.com/hashicorp/terraform-provider-aws/issues/27054))
 * **New Data Source:** `aws_appconfig_environment` ([#27054](https://github.com/hashicorp/terraform-provider-aws/issues/27054))
 * **New Data Source:** `aws_appconfig_environments` ([#27054](https://github.com/hashicorp/terraform-provider-aws/issues/27054))
+* **New Data Source:** `aws_vpc_ipam_pool_cidrs` ([#27051](https://github.com/hashicorp/terraform-provider-aws/issues/27051))
 
 ENHANCEMENTS:
 
@@ -17,6 +18,8 @@ ENHANCEMENTS:
 * datasource/aws_eks_cluster: Add `service_ipv6_cidr` attribute to `kubernetes_network_config` block ([#26980](https://github.com/hashicorp/terraform-provider-aws/issues/26980))
 * resource/aws_eks_addon: Add `PRESERVE` option to `resolve_conflicts` argument. ([#27038](https://github.com/hashicorp/terraform-provider-aws/issues/27038))
 * resource/aws_eks_cluster: Add `service_ipv6_cidr` attribute to `kubernetes_network_config` block ([#26980](https://github.com/hashicorp/terraform-provider-aws/issues/26980))
+* resource/aws_wafv2_rule_group: Add `headers` attribute to the `field_to_match` block ([#26506](https://github.com/hashicorp/terraform-provider-aws/issues/26506))
+* resource/aws_wafv2_web_acl: Add `headers` attribute to the `field_to_match` block ([#26506](https://github.com/hashicorp/terraform-provider-aws/issues/26506))
 
 BUG FIXES:
 
