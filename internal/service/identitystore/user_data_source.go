@@ -3,7 +3,6 @@ package identitystore
 import (
 	"context"
 	"errors"
-	"fmt"
 	"regexp"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -337,7 +336,7 @@ func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return create.DiagError(names.IdentityStore, create.ErrActionReading, DSNameUser, identityStoreId, err)
 	}
 
-	d.SetId(fmt.Sprintf("%s/%s", aws.ToString(user.IdentityStoreId), aws.ToString(user.UserId)))
+	d.SetId(aws.ToString(user.UserId))
 
 	d.Set("display_name", user.DisplayName)
 	d.Set("identity_store_id", user.IdentityStoreId)
