@@ -391,11 +391,11 @@ func TestAccEventsTarget_http_params(t *testing.T) {
 }
 
 func TestAccEventsTarget_ecs(t *testing.T) {
+	var v eventbridge.Target
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_event_target.test"
 	iamRoleResourceName := "aws_iam_role.test"
 	ecsTaskDefinitionResourceName := "aws_ecs_task_definition.task"
-	var v eventbridge.Target
-	rName := sdkacctest.RandomWithPrefix("tf_ecs_target")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
@@ -461,11 +461,11 @@ func TestAccEventsTarget_redshift(t *testing.T) {
 // can be created without a specified LaunchType
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/16078
 func TestAccEventsTarget_ecsWithoutLaunchType(t *testing.T) {
+	var v eventbridge.Target
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_event_target.test"
 	iamRoleResourceName := "aws_iam_role.test"
 	ecsTaskDefinitionResourceName := "aws_ecs_task_definition.task"
-	var v eventbridge.Target
-	rName := sdkacctest.RandomWithPrefix("tf_ecs_target")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
@@ -521,11 +521,11 @@ func TestAccEventsTarget_ecsWithBlankLaunchType(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
+	var v eventbridge.Target
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_event_target.test"
 	iamRoleResourceName := "aws_iam_role.test"
 	ecsTaskDefinitionResourceName := "aws_ecs_task_definition.task"
-	var v eventbridge.Target
-	rName := sdkacctest.RandomWithPrefix("tf_ecs_target")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
@@ -577,9 +577,9 @@ func TestAccEventsTarget_ecsWithBlankLaunchType(t *testing.T) {
 }
 
 func TestAccEventsTarget_ecsWithBlankTaskCount(t *testing.T) {
-	resourceName := "aws_cloudwatch_event_target.test"
 	var v eventbridge.Target
-	rName := sdkacctest.RandomWithPrefix("tf_ecs_target")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_cloudwatch_event_target.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
@@ -606,9 +606,9 @@ func TestAccEventsTarget_ecsWithBlankTaskCount(t *testing.T) {
 }
 
 func TestAccEventsTarget_ecsFull(t *testing.T) {
-	resourceName := "aws_cloudwatch_event_target.test"
 	var v eventbridge.Target
-	rName := sdkacctest.RandomWithPrefix("tf_ecs_target")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_cloudwatch_event_target.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
@@ -643,9 +643,9 @@ func TestAccEventsTarget_ecsFull(t *testing.T) {
 }
 
 func TestAccEventsTarget_ecsCapacityProvider(t *testing.T) {
-	resourceName := "aws_cloudwatch_event_target.test_capacity_provider"
 	var v eventbridge.Target
-	rName := sdkacctest.RandomWithPrefix("tf_ecs_target")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_cloudwatch_event_target.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
@@ -1452,33 +1452,21 @@ resource "aws_cloudwatch_event_target" "test" {
 `
 }
 
-func testAccTargetECSBaseConfig(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_vpc" "vpc" {
-  cidr_block = "10.1.0.0/16"
-}
-
-resource "aws_subnet" "subnet" {
-  vpc_id     = aws_vpc.vpc.id
-  cidr_block = "10.1.1.0/24"
-}
-
+func testAccTargetConfig_ecsBase(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 1), fmt.Sprintf(`
 resource "aws_iam_role" "test" {
   name = %[1]q
 
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "events.${data.aws_partition.current.dns_suffix}"
-      },
-      "Effect": "Allow",
-      "Sid": ""
-    }
-  ]
+  "Statement": [{
+    "Action": "sts:AssumeRole",
+    "Principal": {
+      "Service": "events.${data.aws_partition.current.dns_suffix}"
+    },
+    "Effect": "Allow"
+  }]
 }
 EOF
 }
@@ -1489,18 +1477,12 @@ resource "aws_iam_role_policy" "test" {
 
   policy = <<EOF
 {
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-            "Effect": "Allow",
-            "Action": [
-                "ecs:RunTask"
-            ],
-            "Resource": [
-                "*"
-            ]
-        }
-    ]
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Effect": "Allow",
+    "Action": ["ecs:RunTask"],
+    "Resource": ["*"]
+  }]
 }
 EOF
 }
@@ -1537,11 +1519,11 @@ resource "aws_cloudwatch_event_rule" "test" {
 
   schedule_expression = "rate(5 minutes)"
 }
-`, rName)
+`, rName))
 }
 
 func testAccTargetConfig_ecs(rName string) string {
-	return testAccTargetECSBaseConfig(rName) + `
+	return acctest.ConfigCompose(testAccTargetConfig_ecsBase(rName), `
 resource "aws_cloudwatch_event_target" "test" {
   arn      = aws_ecs_cluster.test.id
   rule     = aws_cloudwatch_event_rule.test.id
@@ -1553,11 +1535,11 @@ resource "aws_cloudwatch_event_target" "test" {
     launch_type         = "FARGATE"
 
     network_configuration {
-      subnets = [aws_subnet.subnet.id]
+      subnets = aws_subnet.test[*].id
     }
   }
 }
-`
+`)
 }
 
 func testAccTargetConfig_redshift(rName string) string {
@@ -1632,7 +1614,7 @@ resource "aws_redshift_cluster" "test" {
 }
 
 func testAccTargetConfig_ecsNoLaunchType(rName string) string {
-	return testAccTargetECSBaseConfig(rName) + `
+	return acctest.ConfigCompose(testAccTargetConfig_ecsBase(rName), `
 resource "aws_cloudwatch_event_target" "test" {
   arn      = aws_ecs_cluster.test.id
   rule     = aws_cloudwatch_event_rule.test.id
@@ -1643,15 +1625,15 @@ resource "aws_cloudwatch_event_target" "test" {
     task_definition_arn = aws_ecs_task_definition.task.arn
 
     network_configuration {
-      subnets = [aws_subnet.subnet.id]
+      subnets = aws_subnet.test[*].id
     }
   }
 }
-`
+`)
 }
 
 func testAccTargetConfig_ecsBlankLaunchType(rName string) string {
-	return testAccTargetECSBaseConfig(rName) + `
+	return acctest.ConfigCompose(testAccTargetConfig_ecsBase(rName), `
 resource "aws_cloudwatch_event_target" "test" {
   arn      = aws_ecs_cluster.test.id
   rule     = aws_cloudwatch_event_rule.test.id
@@ -1663,15 +1645,15 @@ resource "aws_cloudwatch_event_target" "test" {
     launch_type         = null
 
     network_configuration {
-      subnets = [aws_subnet.subnet.id]
+      subnets = aws_subnet.test[*].id
     }
   }
 }
-`
+`)
 }
 
 func testAccTargetConfig_ecsBlankTaskCount(rName string) string {
-	return testAccTargetECSBaseConfig(rName) + `
+	return acctest.ConfigCompose(testAccTargetConfig_ecsBase(rName), `
 resource "aws_cloudwatch_event_target" "test" {
   arn      = aws_ecs_cluster.test.id
   rule     = aws_cloudwatch_event_rule.test.id
@@ -1682,15 +1664,15 @@ resource "aws_cloudwatch_event_target" "test" {
     launch_type         = "FARGATE"
 
     network_configuration {
-      subnets = [aws_subnet.subnet.id]
+      subnets = aws_subnet.test[*].id
     }
   }
 }
-`
+`)
 }
 
 func testAccTargetConfig_ecsBlankTaskCountFull(rName string) string {
-	return testAccTargetECSBaseConfig(rName) + `
+	return acctest.ConfigCompose(testAccTargetConfig_ecsBase(rName), `
 resource "aws_cloudwatch_event_target" "test" {
   arn      = aws_ecs_cluster.test.id
   rule     = aws_cloudwatch_event_rule.test.id
@@ -1712,19 +1694,23 @@ resource "aws_cloudwatch_event_target" "test" {
     }
 
     network_configuration {
-      subnets = [aws_subnet.subnet.id]
+      subnets = aws_subnet.test[*].id
     }
   }
 }
-`
+`)
 }
 
 func testAccTargetConfig_ecsCapacityProvider(rName string) string {
-	return testAccTargetECSBaseConfig(rName) + `
-resource "aws_cloudwatch_event_target" "test_capacity_provider" {
-  arn      = aws_ecs_cluster.test.id
-  rule     = aws_cloudwatch_event_rule.test.id
-  role_arn = aws_iam_role.test.arn
+	return acctest.ConfigCompose(
+		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
+		testAccTargetConfig_ecsBase(rName),
+		fmt.Sprintf(`
+resource "aws_cloudwatch_event_target" "test" {
+  arn       = aws_ecs_cluster.test.id
+  rule      = aws_cloudwatch_event_rule.test.id
+  role_arn  = aws_iam_role.test.arn
+  target_id = %[1]q
 
   ecs_target {
     task_definition_arn = aws_ecs_task_definition.task.arn
@@ -1737,28 +1723,18 @@ resource "aws_cloudwatch_event_target" "test_capacity_provider" {
   }
 }
 
-data "aws_ami" "test" {
-  most_recent = true
-  owners      = ["amazon"]
-
-  filter {
-    name   = "name"
-    values = ["amzn-ami-hvm-*-x86_64-gp2"]
-  }
-}
-
 resource "aws_launch_template" "test" {
-  name          = "test"
-  image_id      = data.aws_ami.test.image_id
+  name          = %[1]q
+  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = "t2.micro"
 }
 
 resource "aws_autoscaling_group" "test" {
-  name                = "test"
+  name                = %[1]q
   desired_capacity    = 0
   max_size            = 0
   min_size            = 0
-  vpc_zone_identifier = [aws_subnet.subnet.id]
+  vpc_zone_identifier = [aws_subnet.test[0].id]
 
   launch_template {
     id      = aws_launch_template.test.id
@@ -1773,7 +1749,7 @@ resource "aws_autoscaling_group" "test" {
 }
 
 resource "aws_ecs_capacity_provider" "test" {
-  name = "test"
+  name = %[1]q
 
   auto_scaling_group_provider {
     auto_scaling_group_arn         = aws_autoscaling_group.test.arn
@@ -1787,7 +1763,7 @@ resource "aws_ecs_capacity_provider" "test" {
     }
   }
 }
-`
+`, rName))
 }
 
 func testAccTargetConfig_batch(rName string) string {
