@@ -263,9 +263,12 @@ func regexMatchStatementSchema() *schema.Schema {
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"regex_string": {
-					Type:         schema.TypeString,
-					Required:     true,
-					ValidateFunc: validation.StringLenBetween(1, 512),
+					Type:     schema.TypeString,
+					Required: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 512),
+						validation.StringIsValidRegExp,
+					),
 				},
 				"field_to_match":      fieldToMatchSchema(),
 				"text_transformation": textTransformationSchema(),

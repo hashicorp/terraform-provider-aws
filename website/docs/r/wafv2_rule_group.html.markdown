@@ -144,7 +144,7 @@ resource "aws_wafv2_rule_group" "example" {
 
           regex_match_statement {
 
-            regex_string = "two"
+            regex_string = "[a-z]([a-z0-9_-]*[a-z0-9])?"
 
             field_to_match {
               single_header {

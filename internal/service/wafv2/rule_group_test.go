@@ -3364,7 +3364,7 @@ resource "aws_wafv2_rule_group" "test" {
 
     statement {
       regex_match_statement {
-        regex_string = "one"
+        regex_string = "[a-z]([a-z0-9_-]*[a-z0-9])?"
 
         field_to_match {
           body {}

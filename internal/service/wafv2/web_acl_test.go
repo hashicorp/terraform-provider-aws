@@ -3297,7 +3297,7 @@ resource "aws_wafv2_web_acl" "test" {
 
                 statement {
                   regex_match_statement {
-                    regex_string = "two"
+                    regex_string = "[a-z]([a-z0-9_-]*[a-z0-9])?"
 
                     field_to_match {
                       uri_path {}
@@ -3396,7 +3396,7 @@ resource "aws_wafv2_web_acl" "test" {
 
                 statement {
                   regex_match_statement {
-                    regex_string = "two"
+                    regex_string = "[a-z]([a-z0-9_-]*[a-z0-9])?"
 
                     field_to_match {
                       uri_path {}
