@@ -101,3 +101,5 @@ require (
 	google.golang.org/protobuf v1.28.1 // indirect
 	syreclabs.com/go/faker v1.2.3
 )
+
+replace github.com/hashicorp/terraform-plugin-sdk/v2 => github.com/gdavison/terraform-plugin-sdk/v2 v2.7.1-0.20221004011239-25864b0c7c8a
