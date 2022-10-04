@@ -200,14 +200,11 @@ func TestAccEventsTarget_generatedTargetID(t *testing.T) {
 }
 
 func TestAccEventsTarget_RetryPolicy_deadLetter(t *testing.T) {
+	var v eventbridge.Target
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_event_target.test"
 	kinesisStreamResourceName := "aws_kinesis_stream.test"
 	queueResourceName := "aws_sqs_queue.test"
-	var v eventbridge.Target
-
-	ruleName := sdkacctest.RandomWithPrefix("tf-acc-cw-event-rule-full")
-	ssmDocumentName := sdkacctest.RandomWithPrefix("tf_ssm_Document")
-	targetID := sdkacctest.RandomWithPrefix("tf-acc-cw-target-full")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
@@ -216,11 +213,11 @@ func TestAccEventsTarget_RetryPolicy_deadLetter(t *testing.T) {
 		CheckDestroy:             testAccCheckTargetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTargetConfig_retryPolicyDlc(ruleName, targetID, ssmDocumentName),
+				Config: testAccTargetConfig_retryPolicyDlc(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTargetExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "rule", ruleName),
-					resource.TestCheckResourceAttr(resourceName, "target_id", targetID),
+					resource.TestCheckResourceAttr(resourceName, "rule", rName),
+					resource.TestCheckResourceAttr(resourceName, "target_id", rName),
 					resource.TestCheckResourceAttrPair(resourceName, "arn", kinesisStreamResourceName, "arn"),
 					acctest.CheckResourceAttrEquivalentJSON(resourceName, "input", `{"source": ["aws.cloudtrail"]}`),
 					resource.TestCheckResourceAttr(resourceName, "input_path", ""),
@@ -228,6 +225,12 @@ func TestAccEventsTarget_RetryPolicy_deadLetter(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "retry_policy.0.maximum_retry_attempts", "5"),
 					resource.TestCheckResourceAttrPair(resourceName, "dead_letter_config.0.arn", queueResourceName, "arn"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccTargetImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -1086,7 +1089,7 @@ resource "aws_sns_topic" "test" {
 `, ruleName, snsTopicName)
 }
 
-func testAccTargetConfig_retryPolicyDlc(ruleName, targetName, rName string) string {
+func testAccTargetConfig_retryPolicyDlc(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_event_rule" "test" {
   name                = %[1]q
@@ -1095,27 +1098,24 @@ resource "aws_cloudwatch_event_rule" "test" {
 }
 
 resource "aws_iam_role" "test" {
-  name = %[2]q
+  name = %[1]q
 
   assume_role_policy = <<POLICY
 {
   "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "events.${data.aws_partition.current.dns_suffix}"
-      },
-      "Effect": "Allow",
-      "Sid": ""
-    }
-  ]
+  "Statement": [{
+    "Action": "sts:AssumeRole",
+    "Principal": {
+      "Service": "events.${data.aws_partition.current.dns_suffix}"
+    },
+    "Effect": "Allow"
+  }]
 }
 POLICY
 }
 
 resource "aws_iam_role_policy" "test" {
-  name = "%[2]s_policy"
+  name = %[1]q
   role = aws_iam_role.test.id
 
   policy = <<EOF
@@ -1138,11 +1138,14 @@ EOF
 }
 
 resource "aws_sqs_queue" "test" {
+  name = %[1]q
+
+  sqs_managed_sse_enabled = true
 }
 
 resource "aws_cloudwatch_event_target" "test" {
   rule      = aws_cloudwatch_event_rule.test.name
-  target_id = %[3]q
+  target_id = %[1]q
 
   input = <<INPUT
 { "source": ["aws.cloudtrail"] }
@@ -1161,12 +1164,12 @@ INPUT
 }
 
 resource "aws_kinesis_stream" "test" {
-  name        = "%[2]s_kinesis_test"
+  name        = %[1]q
   shard_count = 1
 }
 
 data "aws_partition" "current" {}
-`, ruleName, rName, targetName)
+`, rName)
 }
 
 func testAccTargetConfig_full(ruleName, targetName, rName string) string {
