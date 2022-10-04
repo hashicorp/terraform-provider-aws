@@ -735,9 +735,9 @@ func TestAccEventsTarget_kinesis(t *testing.T) {
 }
 
 func TestAccEventsTarget_sqs(t *testing.T) {
-	resourceName := "aws_cloudwatch_event_target.test"
 	var v eventbridge.Target
-	rName := sdkacctest.RandomWithPrefix("tf_sqs_target")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_cloudwatch_event_target.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
@@ -2007,7 +2007,7 @@ data "aws_partition" "current" {}
 func testAccTargetConfig_sqs(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_event_rule" "test" {
-  name                = "%[1]s"
+  name                = %[1]q
   description         = "schedule_batch_test"
   schedule_expression = "rate(5 minutes)"
 }
@@ -2019,11 +2019,15 @@ resource "aws_cloudwatch_event_target" "test" {
   sqs_target {
     message_group_id = "event_group"
   }
+
+  target_id = %[1]q
 }
 
 resource "aws_sqs_queue" "test" {
   name       = "%[1]s.fifo"
   fifo_queue = true
+
+  sqs_managed_sse_enabled = true
 }
 `, rName)
 }
