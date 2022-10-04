@@ -131,7 +131,6 @@ Other environment variables related to authorization are:
 * `AWS_CONFIG_FILE`
 * `AWS_SHARED_CREDENTIALS_FILE`
 
-
 ### Shared Configuration and Credentials Files
 
 The AWS Provider can source credentials and other settings from the [shared configuration and credentials files](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html).

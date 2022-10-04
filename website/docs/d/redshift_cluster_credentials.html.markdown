@@ -29,7 +29,6 @@ The following arguments are supported:
 * `db_groups` - (Optional) List of the names of existing database groups that the user named in `db_user` will join for the current session, in addition to any group memberships for an existing user. If not specified, a new user is added only to `PUBLIC`.
 * `duration_seconds` - (Optional)  The number of seconds until the returned temporary password expires. Valid values are between `900` and `3600`. Default value is `900`.
 
-
 ## Attribute Reference
 
 In addition to all arguments above, the following attributes are exported:

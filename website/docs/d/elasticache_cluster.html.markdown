@@ -24,7 +24,6 @@ The following arguments are supported:
 
 * `cluster_id` – (Required) Group identifier.
 
-
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
