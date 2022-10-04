@@ -109,9 +109,8 @@ func DataSourceAMI() *schema.Resource {
 				Computed: true,
 			},
 			"imds_support": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringInSlice([]string{"v2.0"}, false),
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"include_deprecated": {
 				Type:     schema.TypeBool,

@@ -304,6 +304,10 @@ func resourceAMICreate(d *schema.ResourceData, meta interface{}) error {
 		input.BootMode = aws.String(v)
 	}
 
+	if v := d.Get("imds_support").(string); v != "" {
+		input.ImdsSupport = aws.String(v)
+	}
+
 	if kernelId := d.Get("kernel_id").(string); kernelId != "" {
 		input.KernelId = aws.String(kernelId)
 	}
@@ -346,10 +350,6 @@ func resourceAMICreate(d *schema.ResourceData, meta interface{}) error {
 
 	if v, ok := d.GetOk("ephemeral_block_device"); ok && v.(*schema.Set).Len() > 0 {
 		input.BlockDeviceMappings = append(input.BlockDeviceMappings, expandBlockDeviceMappingsForAMIEphemeralBlockDevice(v.(*schema.Set).List())...)
-	}
-
-	if v := d.Get("imds_support").(string); v != "" {
-		input.ImdsSupport = aws.String(v)
 	}
 
 	output, err := conn.RegisterImage(input)
