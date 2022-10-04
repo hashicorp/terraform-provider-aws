@@ -1308,7 +1308,7 @@ func TestAccWAFV2RuleGroup_regexMatchStatement(t *testing.T) {
 		CheckDestroy:             testAccCheckRuleGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRuleGroupConfig_RegexMatchStatement(ruleGroupName),
+				Config: testAccRuleGroupConfig_regexMatchStatement(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
@@ -3640,7 +3640,7 @@ resource "aws_wafv2_rule_group" "test" {
 `, name)
 }
 
-func testAccRuleGroupConfig_RegexMatchStatement(name string) string {
+func testAccRuleGroupConfig_regexMatchStatement(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_rule_group" "test" {
   capacity = 50
