@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iot"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
@@ -55,7 +55,7 @@ func GetThingPricipalAttachment(conn *iot.IoT, thing, principal string) (bool, e
 	out, err := conn.ListThingPrincipals(&iot.ListThingPrincipalsInput{
 		ThingName: aws.String(thing),
 	})
-	if tfawserr.ErrMessageContains(err, iot.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, iot.ErrCodeResourceNotFoundException) {
 		return false, nil
 	} else if err != nil {
 		return false, err
@@ -101,7 +101,7 @@ func resourceThingPrincipalAttachmentDelete(d *schema.ResourceData, meta interfa
 		ThingName: aws.String(thing),
 	})
 
-	if tfawserr.ErrMessageContains(err, iot.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, iot.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] IoT Principal %s or Thing %s not found, removing from state", principal, thing)
 	} else if err != nil {
 		return fmt.Errorf("error detaching principal %s from thing %s: %s", principal, thing, err)

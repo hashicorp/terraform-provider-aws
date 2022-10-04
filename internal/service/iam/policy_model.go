@@ -4,12 +4,17 @@ import (
 	"encoding/json"
 	"fmt"
 	"sort"
+	"strconv"
+)
+
+const (
+	policyModelMarshallJSONStartSliceSize = 2
 )
 
 type IAMPolicyDoc struct {
 	Version    string                `json:",omitempty"`
 	Id         string                `json:",omitempty"`
-	Statements []*IAMPolicyStatement `json:"Statement"`
+	Statements []*IAMPolicyStatement `json:"Statement,omitempty"`
 }
 
 type IAMPolicyStatement struct {
@@ -110,7 +115,7 @@ func (ps IAMPolicyStatementPrincipalSet) MarshalJSON() ([]byte, error) {
 				raw[p.Type] = i
 			case string:
 				// Convert to []string to stop drop of principals
-				raw[p.Type] = make([]string, 0, 2)
+				raw[p.Type] = make([]string, 0, policyModelMarshallJSONStartSliceSize)
 				raw[p.Type] = append(raw[p.Type].([]string), v)
 				raw[p.Type] = append(raw[p.Type].([]string), i)
 			case []string:
@@ -195,6 +200,8 @@ func (cs *IAMPolicyStatementConditionSet) UnmarshalJSON(b []byte) error {
 			switch var_values := var_values.(type) {
 			case string:
 				out = append(out, IAMPolicyStatementCondition{Test: test_key, Variable: var_key, Values: []string{var_values}})
+			case bool:
+				out = append(out, IAMPolicyStatementCondition{Test: test_key, Variable: var_key, Values: strconv.FormatBool(var_values)})
 			case []interface{}:
 				values := []string{}
 				for _, v := range var_values {
@@ -209,7 +216,7 @@ func (cs *IAMPolicyStatementConditionSet) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
-func iamPolicyDecodeConfigStringList(lI []interface{}) interface{} {
+func policyDecodeConfigStringList(lI []interface{}) interface{} {
 	if len(lI) == 1 {
 		return lI[0].(string)
 	}

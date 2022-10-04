@@ -1,5 +1,5 @@
 ---
-subcategory: "EventBridge (CloudWatch Events)"
+subcategory: "EventBridge"
 layout: "aws"
 page_title: "AWS: aws_cloudwatch_event_archive"
 description: |-
@@ -66,6 +66,6 @@ In addition to all arguments above, the following attributes are exported:
 
 Event Archive can be imported using their name, for example
 
-```bash
-terraform import aws_cloudwatch_event_archive.imported_event_archive order-archive
+```console
+$ terraform import aws_cloudwatch_event_archive.imported_event_archive order-archive
 ```

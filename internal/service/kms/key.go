@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kms"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
@@ -39,6 +39,12 @@ func ResourceKey() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
+			},
+			"custom_key_store_id": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringLenBetween(1, 22),
 			},
 			"customer_master_key_spec": {
 				Type:         schema.TypeString,
@@ -121,6 +127,11 @@ func resourceKeyCreate(d *schema.ResourceData, meta interface{}) error {
 		input.Policy = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("custom_key_store_id"); ok {
+		input.Origin = aws.String(kms.OriginTypeAwsCloudhsm)
+		input.CustomKeyStoreId = aws.String(v.(string))
+	}
+
 	if len(tags) > 0 {
 		input.Tags = Tags(tags.IgnoreAWS())
 	}
@@ -142,13 +153,13 @@ func resourceKeyCreate(d *schema.ResourceData, meta interface{}) error {
 	d.SetId(aws.StringValue(outputRaw.(*kms.CreateKeyOutput).KeyMetadata.KeyId))
 
 	if enableKeyRotation := d.Get("enable_key_rotation").(bool); enableKeyRotation {
-		if err := updateKmsKeyRotationEnabled(conn, d.Id(), enableKeyRotation); err != nil {
+		if err := updateKeyRotationEnabled(conn, d.Id(), enableKeyRotation); err != nil {
 			return err
 		}
 	}
 
 	if enabled := d.Get("is_enabled").(bool); !enabled {
-		if err := updateKmsKeyEnabled(conn, d.Id(), enabled); err != nil {
+		if err := updateKeyEnabled(conn, d.Id(), enabled); err != nil {
 			return err
 		}
 	}
@@ -174,7 +185,7 @@ func resourceKeyRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	key, err := findKmsKey(conn, d.Id(), d.IsNewResource())
+	key, err := findKey(conn, d.Id(), d.IsNewResource())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] KMS Key (%s) not found, removing from state", d.Id())
@@ -192,6 +203,7 @@ func resourceKeyRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.Set("arn", key.metadata.Arn)
+	d.Set("custom_key_store_id", key.metadata.CustomKeyStoreId)
 	d.Set("customer_master_key_spec", key.metadata.CustomerMasterKeySpec)
 	d.Set("description", key.metadata.Description)
 	d.Set("enable_key_rotation", key.rotation)
@@ -227,32 +239,32 @@ func resourceKeyUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if hasChange, enabled := d.HasChange("is_enabled"), d.Get("is_enabled").(bool); hasChange && enabled {
 		// Enable before any attributes are modified.
-		if err := updateKmsKeyEnabled(conn, d.Id(), enabled); err != nil {
+		if err := updateKeyEnabled(conn, d.Id(), enabled); err != nil {
 			return err
 		}
 	}
 
 	if hasChange, enableKeyRotation := d.HasChange("enable_key_rotation"), d.Get("enable_key_rotation").(bool); hasChange {
-		if err := updateKmsKeyRotationEnabled(conn, d.Id(), enableKeyRotation); err != nil {
+		if err := updateKeyRotationEnabled(conn, d.Id(), enableKeyRotation); err != nil {
 			return err
 		}
 	}
 
 	if d.HasChange("description") {
-		if err := updateKmsKeyDescription(conn, d.Id(), d.Get("description").(string)); err != nil {
+		if err := updateKeyDescription(conn, d.Id(), d.Get("description").(string)); err != nil {
 			return err
 		}
 	}
 
 	if d.HasChange("policy") {
-		if err := updateKmsKeyPolicy(conn, d.Id(), d.Get("policy").(string), d.Get("bypass_policy_lockout_safety_check").(bool)); err != nil {
+		if err := updateKeyPolicy(conn, d.Id(), d.Get("policy").(string), d.Get("bypass_policy_lockout_safety_check").(bool)); err != nil {
 			return err
 		}
 	}
 
 	if hasChange, enabled := d.HasChange("is_enabled"), d.Get("is_enabled").(bool); hasChange && !enabled {
 		// Only disable after all attributes have been modified because we cannot modify disabled keys.
-		if err := updateKmsKeyEnabled(conn, d.Id(), enabled); err != nil {
+		if err := updateKeyEnabled(conn, d.Id(), enabled); err != nil {
 			return err
 		}
 	}
@@ -312,7 +324,7 @@ type kmsKey struct {
 	tags     tftags.KeyValueTags
 }
 
-func findKmsKey(conn *kms.KMS, keyID string, isNewResource bool) (*kmsKey, error) {
+func findKey(conn *kms.KMS, keyID string, isNewResource bool) (*kmsKey, error) {
 	// Wait for propagation since KMS is eventually consistent.
 	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(PropagationTimeout, func() (interface{}, error) {
 		var err error
@@ -364,7 +376,7 @@ func findKmsKey(conn *kms.KMS, keyID string, isNewResource bool) (*kmsKey, error
 	return outputRaw.(*kmsKey), nil
 }
 
-func updateKmsKeyDescription(conn *kms.KMS, keyID string, description string) error {
+func updateKeyDescription(conn *kms.KMS, keyID string, description string) error {
 	input := &kms.UpdateKeyDescriptionInput{
 		Description: aws.String(description),
 		KeyId:       aws.String(keyID),
@@ -387,7 +399,7 @@ func updateKmsKeyDescription(conn *kms.KMS, keyID string, description string) er
 	return nil
 }
 
-func updateKmsKeyEnabled(conn *kms.KMS, keyID string, enabled bool) error {
+func updateKeyEnabled(conn *kms.KMS, keyID string, enabled bool) error {
 	updateFunc := func() (interface{}, error) {
 		var err error
 
@@ -421,7 +433,7 @@ func updateKmsKeyEnabled(conn *kms.KMS, keyID string, enabled bool) error {
 	return nil
 }
 
-func updateKmsKeyPolicy(conn *kms.KMS, keyID string, policy string, bypassPolicyLockoutSafetyCheck bool) error {
+func updateKeyPolicy(conn *kms.KMS, keyID string, policy string, bypassPolicyLockoutSafetyCheck bool) error {
 	policy, err := structure.NormalizeJsonString(policy)
 
 	if err != nil {
@@ -444,7 +456,7 @@ func updateKmsKeyPolicy(conn *kms.KMS, keyID string, policy string, bypassPolicy
 		return nil, err
 	}
 
-	_, err = tfresource.RetryWhenAWSErrCodeEquals(PropagationTimeout, updateFunc, kms.ErrCodeNotFoundException)
+	_, err = tfresource.RetryWhenAWSErrCodeEquals(PropagationTimeout, updateFunc, kms.ErrCodeNotFoundException, kms.ErrCodeMalformedPolicyDocumentException)
 
 	if err != nil {
 		return fmt.Errorf("error updating KMS Key (%s) policy: %w", keyID, err)
@@ -460,7 +472,7 @@ func updateKmsKeyPolicy(conn *kms.KMS, keyID string, policy string, bypassPolicy
 	return nil
 }
 
-func updateKmsKeyRotationEnabled(conn *kms.KMS, keyID string, enabled bool) error {
+func updateKeyRotationEnabled(conn *kms.KMS, keyID string, enabled bool) error {
 	updateFunc := func() (interface{}, error) {
 		var err error
 

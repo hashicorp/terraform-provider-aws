@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/efs"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -56,7 +56,7 @@ func resourceBackupPolicyCreate(d *schema.ResourceData, meta interface{}) error 
 
 	fsID := d.Get("file_system_id").(string)
 
-	if err := efsBackupPolicyPut(conn, fsID, d.Get("backup_policy").([]interface{})[0].(map[string]interface{})); err != nil {
+	if err := backupPolicyPut(conn, fsID, d.Get("backup_policy").([]interface{})[0].(map[string]interface{})); err != nil {
 		return err
 	}
 
@@ -80,7 +80,7 @@ func resourceBackupPolicyRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error reading EFS Backup Policy (%s): %w", d.Id(), err)
 	}
 
-	if err := d.Set("backup_policy", []interface{}{flattenEfsBackupPolicy(output)}); err != nil {
+	if err := d.Set("backup_policy", []interface{}{flattenBackupPolicy(output)}); err != nil {
 		return fmt.Errorf("error setting backup_policy: %w", err)
 	}
 
@@ -92,7 +92,7 @@ func resourceBackupPolicyRead(d *schema.ResourceData, meta interface{}) error {
 func resourceBackupPolicyUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EFSConn
 
-	if err := efsBackupPolicyPut(conn, d.Id(), d.Get("backup_policy").([]interface{})[0].(map[string]interface{})); err != nil {
+	if err := backupPolicyPut(conn, d.Id(), d.Get("backup_policy").([]interface{})[0].(map[string]interface{})); err != nil {
 		return err
 	}
 
@@ -102,7 +102,7 @@ func resourceBackupPolicyUpdate(d *schema.ResourceData, meta interface{}) error 
 func resourceBackupPolicyDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EFSConn
 
-	err := efsBackupPolicyPut(conn, d.Id(), map[string]interface{}{
+	err := backupPolicyPut(conn, d.Id(), map[string]interface{}{
 		"status": efs.StatusDisabled,
 	})
 
@@ -111,17 +111,17 @@ func resourceBackupPolicyDelete(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	if err != nil {
-		return err
+		return fmt.Errorf("deleting EFS Backup Policy (%s): %w", d.Id(), err)
 	}
 
 	return nil
 }
 
-// efsBackupPolicyPut attempts to update the file system's backup policy.
+// backupPolicyPut attempts to update the file system's backup policy.
 // Any error is returned.
-func efsBackupPolicyPut(conn *efs.EFS, fsID string, tfMap map[string]interface{}) error {
+func backupPolicyPut(conn *efs.EFS, fsID string, tfMap map[string]interface{}) error {
 	input := &efs.PutBackupPolicyInput{
-		BackupPolicy: expandEfsBackupPolicy(tfMap),
+		BackupPolicy: expandBackupPolicy(tfMap),
 		FileSystemId: aws.String(fsID),
 	}
 
@@ -145,7 +145,7 @@ func efsBackupPolicyPut(conn *efs.EFS, fsID string, tfMap map[string]interface{}
 	return nil
 }
 
-func expandEfsBackupPolicy(tfMap map[string]interface{}) *efs.BackupPolicy {
+func expandBackupPolicy(tfMap map[string]interface{}) *efs.BackupPolicy {
 	if tfMap == nil {
 		return nil
 	}
@@ -159,7 +159,7 @@ func expandEfsBackupPolicy(tfMap map[string]interface{}) *efs.BackupPolicy {
 	return apiObject
 }
 
-func flattenEfsBackupPolicy(apiObject *efs.BackupPolicy) map[string]interface{} {
+func flattenBackupPolicy(apiObject *efs.BackupPolicy) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}

@@ -9,7 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/organizations"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -34,29 +34,15 @@ func ResourceAccount() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"joined_method": {
-				Type:     schema.TypeString,
-				Computed: true,
+			"close_on_deletion": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
 			},
-			"joined_timestamp": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"parent_id": {
-				Type:         schema.TypeString,
-				Computed:     true,
-				Optional:     true,
-				ValidateFunc: validation.StringMatch(regexp.MustCompile("^(r-[0-9a-z]{4,32})|(ou-[0-9a-z]{4,32}-[a-z0-9]{8,32})$"), "see https://docs.aws.amazon.com/organizations/latest/APIReference/API_MoveAccount.html#organizations-MoveAccount-request-DestinationParentId"),
-			},
-			"status": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"name": {
-				ForceNew:     true,
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringLenBetween(1, 50),
+			"create_govcloud": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
 			},
 			"email": {
 				ForceNew: true,
@@ -67,17 +53,45 @@ func ResourceAccount() *schema.Resource {
 					validation.StringMatch(regexp.MustCompile(`^[^\s@]+@[^\s@]+\.[^\s@]+$`), "must be a valid email address"),
 				),
 			},
+			"govcloud_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"iam_user_access_to_billing": {
 				ForceNew:     true,
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringInSlice([]string{organizations.IAMUserAccessToBillingAllow, organizations.IAMUserAccessToBillingDeny}, true),
 			},
+			"joined_method": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"joined_timestamp": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"name": {
+				ForceNew:     true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringLenBetween(1, 50),
+			},
+			"parent_id": {
+				Type:         schema.TypeString,
+				Computed:     true,
+				Optional:     true,
+				ValidateFunc: validation.StringMatch(regexp.MustCompile("^(r-[0-9a-z]{4,32})|(ou-[0-9a-z]{4,32}-[a-z0-9]{8,32})$"), "see https://docs.aws.amazon.com/organizations/latest/APIReference/API_MoveAccount.html#organizations-MoveAccount-request-DestinationParentId"),
+			},
 			"role_name": {
 				ForceNew:     true,
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[\w+=,.@-]{1,64}$`), "must consist of uppercase letters, lowercase letters, digits with no spaces, and any of the following characters"),
+			},
+			"status": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
@@ -92,90 +106,56 @@ func resourceAccountCreate(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
-	// Create the account
-	createOpts := &organizations.CreateAccountInput{
-		AccountName: aws.String(d.Get("name").(string)),
-		Email:       aws.String(d.Get("email").(string)),
+	var iamUserAccessToBilling *string
+
+	if v, ok := d.GetOk("iam_user_access_to_billing"); ok {
+		iamUserAccessToBilling = aws.String(v.(string))
 	}
 
-	if role, ok := d.GetOk("role_name"); ok {
-		createOpts.RoleName = aws.String(role.(string))
+	var roleName *string
+
+	if v, ok := d.GetOk("role_name"); ok {
+		roleName = aws.String(v.(string))
 	}
 
-	if iam_user, ok := d.GetOk("iam_user_access_to_billing"); ok {
-		createOpts.IamUserAccessToBilling = aws.String(iam_user.(string))
-	}
-
-	if len(tags) > 0 {
-		createOpts.Tags = Tags(tags.IgnoreAWS())
-	}
-
-	log.Printf("[DEBUG] Creating AWS Organizations Account: %s", createOpts)
-
-	var resp *organizations.CreateAccountOutput
-	err := resource.Retry(4*time.Minute, func() *resource.RetryError {
-		var err error
-
-		resp, err = conn.CreateAccount(createOpts)
-
-		if tfawserr.ErrMessageContains(err, organizations.ErrCodeFinalizingOrganizationException, "") {
-			return resource.RetryableError(err)
-		}
-
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-
-		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		resp, err = conn.CreateAccount(createOpts)
-	}
+	s, err := createAccount(
+		conn,
+		d.Get("name").(string),
+		d.Get("email").(string),
+		iamUserAccessToBilling,
+		roleName,
+		Tags(tags.IgnoreAWS()),
+		d.Get("create_govcloud").(bool),
+	)
 
 	if err != nil {
-		return fmt.Errorf("Error creating account: %w", err)
+		return fmt.Errorf("error creating AWS Organizations Account (%s): %w", d.Get("name").(string), err)
 	}
 
-	requestId := aws.StringValue(resp.CreateAccountStatus.Id)
+	output, err := waitAccountCreated(conn, aws.StringValue(s.Id))
 
-	// Wait for the account to become available
-	log.Printf("[DEBUG] Waiting for account request (%s) to succeed", requestId)
-
-	stateConf := &resource.StateChangeConf{
-		Pending:      []string{organizations.CreateAccountStateInProgress},
-		Target:       []string{organizations.CreateAccountStateSucceeded},
-		Refresh:      resourceAccountStateRefreshFunc(conn, requestId),
-		PollInterval: 10 * time.Second,
-		Timeout:      5 * time.Minute,
-	}
-	stateResp, stateErr := stateConf.WaitForState()
-	if stateErr != nil {
-		return fmt.Errorf(
-			"Error waiting for account request (%s) to become available: %w",
-			requestId, stateErr)
+	if err != nil {
+		return fmt.Errorf("error waiting for AWS Organizations Account (%s) create: %w", d.Get("name").(string), err)
 	}
 
-	// Store the ID
-	accountId := stateResp.(*organizations.CreateAccountStatus).AccountId
-	d.SetId(aws.StringValue(accountId))
+	d.SetId(aws.StringValue(output.AccountId))
+	d.Set("govcloud_id", output.GovCloudAccountId)
 
 	if v, ok := d.GetOk("parent_id"); ok {
-		newParentID := v.(string)
-
-		existingParentID, err := resourceAccountGetParentID(conn, d.Id())
+		oldParentAccountID, err := findParentAccountID(conn, d.Id())
 
 		if err != nil {
-			return fmt.Errorf("error getting AWS Organizations Account (%s) parent: %w", d.Id(), err)
+			return fmt.Errorf("error reading AWS Organizations Account (%s) parent: %w", d.Id(), err)
 		}
 
-		if newParentID != existingParentID {
+		if newParentAccountID := v.(string); newParentAccountID != oldParentAccountID {
 			input := &organizations.MoveAccountInput{
-				AccountId:           accountId,
-				SourceParentId:      aws.String(existingParentID),
-				DestinationParentId: aws.String(newParentID),
+				AccountId:           aws.String(d.Id()),
+				DestinationParentId: aws.String(newParentAccountID),
+				SourceParentId:      aws.String(oldParentAccountID),
 			}
 
+			log.Printf("[DEBUG] Moving AWS Organizations Account: %s", input)
 			if _, err := conn.MoveAccount(input); err != nil {
 				return fmt.Errorf("error moving AWS Organizations Account (%s): %w", d.Id(), err)
 			}
@@ -190,31 +170,22 @@ func resourceAccountRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	describeOpts := &organizations.DescribeAccountInput{
-		AccountId: aws.String(d.Id()),
-	}
-	resp, err := conn.DescribeAccount(describeOpts)
+	account, err := FindAccountByID(conn, d.Id())
 
-	if tfawserr.ErrMessageContains(err, organizations.ErrCodeAccountNotFoundException, "") {
-		log.Printf("[WARN] Account does not exist, removing from state: %s", d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] AWS Organizations Account does not exist, removing from state: %s", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error describing AWS Organizations Account (%s): %w", d.Id(), err)
+		return fmt.Errorf("error reading AWS Organizations Account (%s): %w", d.Id(), err)
 	}
 
-	account := resp.Account
-	if account == nil {
-		log.Printf("[WARN] Account does not exist, removing from state: %s", d.Id())
-		d.SetId("")
-		return nil
-	}
+	parentAccountID, err := findParentAccountID(conn, d.Id())
 
-	parentId, err := resourceAccountGetParentID(conn, d.Id())
 	if err != nil {
-		return fmt.Errorf("error getting AWS Organizations Account (%s) parent: %w", d.Id(), err)
+		return fmt.Errorf("error reading AWS Organizations Account (%s) parent: %w", d.Id(), err)
 	}
 
 	d.Set("arn", account.Arn)
@@ -222,7 +193,7 @@ func resourceAccountRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("joined_method", account.JoinedMethod)
 	d.Set("joined_timestamp", aws.TimeValue(account.JoinedTimestamp).Format(time.RFC3339))
 	d.Set("name", account.Name)
-	d.Set("parent_id", parentId)
+	d.Set("parent_id", parentAccountID)
 	d.Set("status", account.Status)
 
 	tags, err := ListTags(conn, d.Id())
@@ -276,59 +247,112 @@ func resourceAccountUpdate(d *schema.ResourceData, meta interface{}) error {
 func resourceAccountDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).OrganizationsConn
 
-	input := &organizations.RemoveAccountFromOrganizationInput{
-		AccountId: aws.String(d.Id()),
+	close := d.Get("close_on_deletion").(bool)
+	var err error
+
+	if close {
+		log.Printf("[DEBUG] Closing AWS Organizations Account: %s", d.Id())
+		_, err = conn.CloseAccount(&organizations.CloseAccountInput{
+			AccountId: aws.String(d.Id()),
+		})
+	} else {
+		log.Printf("[DEBUG] Removing AWS Organizations Account from organization: %s", d.Id())
+		_, err = conn.RemoveAccountFromOrganization(&organizations.RemoveAccountFromOrganizationInput{
+			AccountId: aws.String(d.Id()),
+		})
 	}
-	log.Printf("[DEBUG] Removing AWS account from organization: %s", input)
-	_, err := conn.RemoveAccountFromOrganization(input)
+
+	if tfawserr.ErrCodeEquals(err, organizations.ErrCodeAccountNotFoundException) {
+		return nil
+	}
+
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, organizations.ErrCodeAccountNotFoundException, "") {
-			return nil
-		}
-		return err
+		return fmt.Errorf("error deleting AWS Organizations Account (%s): %w", d.Id(), err)
 	}
+
+	if close {
+		if _, err := waitAccountDeleted(conn, d.Id()); err != nil {
+			return fmt.Errorf("error waiting for AWS Organizations Account (%s) delete: %w", d.Id(), err)
+		}
+	}
+
 	return nil
 }
 
-// resourceAccountStateRefreshFunc returns a resource.StateRefreshFunc
-// that is used to watch a CreateAccount request
-func resourceAccountStateRefreshFunc(conn *organizations.Organizations, id string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		opts := &organizations.DescribeCreateAccountStatusInput{
-			CreateAccountRequestId: aws.String(id),
+func createAccount(conn *organizations.Organizations, name, email string, iamUserAccessToBilling, roleName *string, tags []*organizations.Tag, govCloud bool) (*organizations.CreateAccountStatus, error) {
+	if govCloud {
+		input := &organizations.CreateGovCloudAccountInput{
+			AccountName: aws.String(name),
+			Email:       aws.String(email),
 		}
-		resp, err := conn.DescribeCreateAccountStatus(opts)
+
+		if iamUserAccessToBilling != nil {
+			input.IamUserAccessToBilling = iamUserAccessToBilling
+		}
+
+		if roleName != nil {
+			input.RoleName = roleName
+		}
+
+		if len(tags) > 0 {
+			input.Tags = tags
+		}
+
+		log.Printf("[DEBUG] Creating AWS Organizations Account with GovCloud Account: %s", input)
+		outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(4*time.Minute,
+			func() (interface{}, error) {
+				return conn.CreateGovCloudAccount(input)
+			},
+			organizations.ErrCodeFinalizingOrganizationException,
+		)
+
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, organizations.ErrCodeCreateAccountStatusNotFoundException, "") {
-				resp = nil
-			} else {
-				log.Printf("Error on OrganizationAccountStateRefresh: %s", err)
-				return nil, "", err
-			}
+			return nil, err
 		}
 
-		if resp == nil {
-			// Sometimes AWS just has consistency issues and doesn't see
-			// our account yet. Return an empty state.
-			return nil, "", nil
-		}
-
-		accountStatus := resp.CreateAccountStatus
-		if aws.StringValue(accountStatus.State) == organizations.CreateAccountStateFailed {
-			return nil, aws.StringValue(accountStatus.State), errors.New(aws.StringValue(accountStatus.FailureReason))
-		}
-		return accountStatus, aws.StringValue(accountStatus.State), nil
+		return outputRaw.(*organizations.CreateGovCloudAccountOutput).CreateAccountStatus, nil
 	}
+
+	input := &organizations.CreateAccountInput{
+		AccountName: aws.String(name),
+		Email:       aws.String(email),
+	}
+
+	if iamUserAccessToBilling != nil {
+		input.IamUserAccessToBilling = iamUserAccessToBilling
+	}
+
+	if roleName != nil {
+		input.RoleName = roleName
+	}
+
+	if len(tags) > 0 {
+		input.Tags = tags
+	}
+
+	log.Printf("[DEBUG] Creating AWS Organizations Account: %s", input)
+	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(4*time.Minute,
+		func() (interface{}, error) {
+			return conn.CreateAccount(input)
+		},
+		organizations.ErrCodeFinalizingOrganizationException,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return outputRaw.(*organizations.CreateAccountOutput).CreateAccountStatus, nil
 }
 
-func resourceAccountGetParentID(conn *organizations.Organizations, childId string) (string, error) {
+func findParentAccountID(conn *organizations.Organizations, id string) (string, error) {
 	input := &organizations.ListParentsInput{
-		ChildId: aws.String(childId),
+		ChildId: aws.String(id),
 	}
-	var parents []*organizations.Parent
+	var output []*organizations.Parent
 
 	err := conn.ListParentsPages(input, func(page *organizations.ListParentsOutput, lastPage bool) bool {
-		parents = append(parents, page.Parents...)
+		output = append(output, page.Parents...)
 
 		return !lastPage
 	})
@@ -337,12 +361,112 @@ func resourceAccountGetParentID(conn *organizations.Organizations, childId strin
 		return "", err
 	}
 
-	if len(parents) == 0 {
-		return "", nil
+	if len(output) == 0 || output[0] == nil {
+		return "", tfresource.NewEmptyResultError(input)
 	}
 
 	// assume there is only a single parent
 	// https://docs.aws.amazon.com/organizations/latest/APIReference/API_ListParents.html
-	parent := parents[0]
-	return aws.StringValue(parent.Id), nil
+	if count := len(output); count > 1 {
+		return "", tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return aws.StringValue(output[0].Id), nil
+}
+
+func findCreateAccountStatusByID(conn *organizations.Organizations, id string) (*organizations.CreateAccountStatus, error) {
+	input := &organizations.DescribeCreateAccountStatusInput{
+		CreateAccountRequestId: aws.String(id),
+	}
+
+	output, err := conn.DescribeCreateAccountStatus(input)
+
+	if tfawserr.ErrCodeEquals(err, organizations.ErrCodeCreateAccountStatusNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.CreateAccountStatus == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.CreateAccountStatus, nil
+}
+
+func statusCreateAccountState(conn *organizations.Organizations, id string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findCreateAccountStatusByID(conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.State), nil
+	}
+}
+
+func waitAccountCreated(conn *organizations.Organizations, id string) (*organizations.CreateAccountStatus, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending:      []string{organizations.CreateAccountStateInProgress},
+		Target:       []string{organizations.CreateAccountStateSucceeded},
+		Refresh:      statusCreateAccountState(conn, id),
+		PollInterval: 10 * time.Second,
+		Timeout:      5 * time.Minute,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*organizations.CreateAccountStatus); ok {
+		if state := aws.StringValue(output.State); state == organizations.CreateAccountStateFailed {
+			tfresource.SetLastError(err, errors.New(aws.StringValue(output.FailureReason)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func statusAccountStatus(conn *organizations.Organizations, id string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindAccountByID(conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.Status), nil
+	}
+}
+
+func waitAccountDeleted(conn *organizations.Organizations, id string) (*organizations.Account, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending:      []string{organizations.AccountStatusPendingClosure},
+		Target:       []string{},
+		Refresh:      statusAccountStatus(conn, id),
+		PollInterval: 10 * time.Second,
+		Timeout:      5 * time.Minute,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*organizations.Account); ok {
+		return output, err
+	}
+
+	return nil, err
 }

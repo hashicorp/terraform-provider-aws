@@ -1,0 +1,7 @@
+```release-note:enhancement
+data-source/aws_ssm_document: Support `TEXT` `document_format`
+```
+
+```release-note:bug
+data-source/aws_ssm_document: Dont generate `arn` for AWS managed docs.
+```

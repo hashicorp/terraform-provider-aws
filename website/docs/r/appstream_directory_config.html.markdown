@@ -1,5 +1,5 @@
 ---
-subcategory: "AppStream"
+subcategory: "AppStream 2.0"
 layout: "aws"
 page_title: "AWS: aws_appstream_directory_config"
 description: |-

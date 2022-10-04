@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ssoadmin"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -73,7 +73,7 @@ func resourceManagedPolicyAttachmentCreate(d *schema.ResourceData, meta interfac
 	d.SetId(fmt.Sprintf("%s,%s,%s", managedPolicyArn, permissionSetArn, instanceArn))
 
 	// Provision ALL accounts after attaching the managed policy
-	if err := provisionSsoAdminPermissionSet(conn, permissionSetArn, instanceArn); err != nil {
+	if err := provisionPermissionSet(conn, permissionSetArn, instanceArn); err != nil {
 		return err
 	}
 
@@ -138,7 +138,7 @@ func resourceManagedPolicyAttachmentDelete(d *schema.ResourceData, meta interfac
 	}
 
 	// Provision ALL accounts after detaching the managed policy
-	if err := provisionSsoAdminPermissionSet(conn, permissionSetArn, instanceArn); err != nil {
+	if err := provisionPermissionSet(conn, permissionSetArn, instanceArn); err != nil {
 		return err
 	}
 

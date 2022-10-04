@@ -18,48 +18,48 @@ import (
 func init() {
 	resource.AddTestSweepers("aws_fsx_backup", &resource.Sweeper{
 		Name: "aws_fsx_backup",
-		F:    sweepFSXBackups,
+		F:    sweepBackups,
 	})
 
 	resource.AddTestSweepers("aws_fsx_lustre_file_system", &resource.Sweeper{
 		Name: "aws_fsx_lustre_file_system",
-		F:    sweepFSXLustreFileSystems,
+		F:    sweepLustreFileSystems,
 	})
 
 	resource.AddTestSweepers("aws_fsx_ontap_file_system", &resource.Sweeper{
 		Name:         "aws_fsx_ontap_file_system",
-		F:            sweepFSXOntapFileSystems,
+		F:            sweepOntapFileSystems,
 		Dependencies: []string{"aws_fsx_ontap_storage_virtual_machine"},
 	})
 
 	resource.AddTestSweepers("aws_fsx_ontap_storage_virtual_machine", &resource.Sweeper{
 		Name:         "aws_fsx_ontap_storage_virtual_machine",
-		F:            sweepFSXOntapStorageVirtualMachine,
+		F:            sweepOntapStorageVirtualMachine,
 		Dependencies: []string{"aws_fsx_ontap_volume"},
 	})
 
 	resource.AddTestSweepers("aws_fsx_ontap_volume", &resource.Sweeper{
 		Name: "aws_fsx_ontap_volume",
-		F:    sweepFSXOntapVolume,
+		F:    sweepOntapVolume,
 	})
 
 	resource.AddTestSweepers("aws_fsx_openzfs_file_system", &resource.Sweeper{
 		Name: "aws_fsx_openzfs_file_system",
-		F:    sweepFSXOpenzfsFileSystems,
+		F:    sweepOpenZFSFileSystems,
 	})
 
 	resource.AddTestSweepers("aws_fsx_openzfs_volume", &resource.Sweeper{
 		Name: "aws_fsx_openzfs_volume",
-		F:    sweepFSXOpenzfsVolume,
+		F:    sweepOpenZFSVolume,
 	})
 
 	resource.AddTestSweepers("aws_fsx_windows_file_system", &resource.Sweeper{
 		Name: "aws_fsx_windows_file_system",
-		F:    sweepFSXWindowsFileSystems,
+		F:    sweepWindowsFileSystems,
 	})
 }
 
-func sweepFSXBackups(region string) error {
+func sweepBackups(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 
 	if err != nil {
@@ -67,7 +67,7 @@ func sweepFSXBackups(region string) error {
 	}
 
 	conn := client.(*conns.AWSClient).FSxConn
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 	input := &fsx.DescribeBackupsInput{}
 
@@ -103,7 +103,7 @@ func sweepFSXBackups(region string) error {
 	return errs.ErrorOrNil()
 }
 
-func sweepFSXLustreFileSystems(region string) error {
+func sweepLustreFileSystems(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 
 	if err != nil {
@@ -111,7 +111,7 @@ func sweepFSXLustreFileSystems(region string) error {
 	}
 
 	conn := client.(*conns.AWSClient).FSxConn
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 	input := &fsx.DescribeFileSystemsInput{}
 
@@ -151,7 +151,7 @@ func sweepFSXLustreFileSystems(region string) error {
 	return errs.ErrorOrNil()
 }
 
-func sweepFSXOntapFileSystems(region string) error {
+func sweepOntapFileSystems(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 
 	if err != nil {
@@ -159,7 +159,7 @@ func sweepFSXOntapFileSystems(region string) error {
 	}
 
 	conn := client.(*conns.AWSClient).FSxConn
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 	input := &fsx.DescribeFileSystemsInput{}
 
@@ -199,7 +199,7 @@ func sweepFSXOntapFileSystems(region string) error {
 	return errs.ErrorOrNil()
 }
 
-func sweepFSXOntapStorageVirtualMachine(region string) error {
+func sweepOntapStorageVirtualMachine(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 
 	if err != nil {
@@ -207,7 +207,7 @@ func sweepFSXOntapStorageVirtualMachine(region string) error {
 	}
 
 	conn := client.(*conns.AWSClient).FSxConn
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 	input := &fsx.DescribeStorageVirtualMachinesInput{}
 
@@ -243,7 +243,7 @@ func sweepFSXOntapStorageVirtualMachine(region string) error {
 	return errs.ErrorOrNil()
 }
 
-func sweepFSXOntapVolume(region string) error {
+func sweepOntapVolume(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 
 	if err != nil {
@@ -251,7 +251,7 @@ func sweepFSXOntapVolume(region string) error {
 	}
 
 	conn := client.(*conns.AWSClient).FSxConn
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 	input := &fsx.DescribeVolumesInput{}
 
@@ -294,7 +294,7 @@ func sweepFSXOntapVolume(region string) error {
 	return errs.ErrorOrNil()
 }
 
-func sweepFSXOpenzfsFileSystems(region string) error {
+func sweepOpenZFSFileSystems(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 
 	if err != nil {
@@ -302,7 +302,7 @@ func sweepFSXOpenzfsFileSystems(region string) error {
 	}
 
 	conn := client.(*conns.AWSClient).FSxConn
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 	input := &fsx.DescribeFileSystemsInput{}
 
@@ -342,7 +342,7 @@ func sweepFSXOpenzfsFileSystems(region string) error {
 	return errs.ErrorOrNil()
 }
 
-func sweepFSXOpenzfsVolume(region string) error {
+func sweepOpenZFSVolume(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 
 	if err != nil {
@@ -350,7 +350,7 @@ func sweepFSXOpenzfsVolume(region string) error {
 	}
 
 	conn := client.(*conns.AWSClient).FSxConn
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 	input := &fsx.DescribeVolumesInput{}
 
@@ -393,7 +393,7 @@ func sweepFSXOpenzfsVolume(region string) error {
 	return errs.ErrorOrNil()
 }
 
-func sweepFSXWindowsFileSystems(region string) error {
+func sweepWindowsFileSystems(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 
 	if err != nil {
@@ -401,7 +401,7 @@ func sweepFSXWindowsFileSystems(region string) error {
 	}
 
 	conn := client.(*conns.AWSClient).FSxConn
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 	input := &fsx.DescribeFileSystemsInput{}
 

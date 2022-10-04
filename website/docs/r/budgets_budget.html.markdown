@@ -1,5 +1,5 @@
 ---
-subcategory: "Budgets"
+subcategory: "Web Services Budgets"
 layout: "aws"
 page_title: "AWS: aws_budgets_budget"
 description: |-
@@ -109,15 +109,16 @@ resource "aws_budgets_budget" "ri_utilization" {
   }
 
   # RI Utilization plans require a service cost filter to be set
-  cost_filters = {
-    Service = "Amazon Relational Database Service"
+  cost_filter {
+    name = "Service"
+    values = [
+      "Amazon Relational Database Service",
+    ]
   }
 }
 ```
 
 ## Argument Reference
-
-~> **NOTE:** The `cost_filters` attribute will be deprecated and eventually removed in future releases, please use `cost_filter` instead.
 
 For more detailed documentation about each argument, refer to the [AWS official
 documentation](http://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/data-type-budget.html).
@@ -128,15 +129,15 @@ The following arguments are supported:
 * `name` - (Optional) The name of a budget. Unique within accounts.
 * `name_prefix` - (Optional) The prefix of the name of a budget. Unique within accounts.
 * `budget_type` - (Required) Whether this budget tracks monetary cost or usage.
-* `cost_filter` - (Optional) A list of [CostFilter](#Cost-Filter) name/values pair to apply to budget.
-* `cost_filters` - (Optional) Map of [CostFilters](#Cost-Filters) key/value pairs to apply to the budget.
-* `cost_types` - (Optional) Object containing [CostTypes](#Cost-Types) The types of cost included in a budget, such as tax and subscriptions.
+* `cost_filter` - (Optional) A list of [CostFilter](#cost-filter) name/values pair to apply to budget.
+* `cost_filters` - (Optional, **Deprecated**) Map of [CostFilters](#cost-filters) key/value pairs to apply to the budget.
+* `cost_types` - (Optional) Object containing [CostTypes](#cost-types) The types of cost included in a budget, such as tax and subscriptions.
 * `limit_amount` - (Required) The amount of cost or usage being measured for a budget.
 * `limit_unit` - (Required) The unit of measurement used for the budget forecast, actual spend, or budget threshold, such as dollars or GB. See [Spend](http://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/data-type-spend.html) documentation.
 * `time_period_end` - (Optional) The end of the time period covered by the budget. There are no restrictions on the end date. Format: `2017-01-01_12:00`.
 * `time_period_start` - (Optional) The start of the time period covered by the budget. If you don't specify a start date, AWS defaults to the start of your chosen time period. The start date must come before the end date. Format: `2017-01-01_12:00`.
 * `time_unit` - (Required) The length of time until a budget resets the actual and forecasted spend. Valid values: `MONTHLY`, `QUARTERLY`, `ANNUALLY`, and `DAILY`.
-* `notification` - (Optional) Object containing [Budget Notifications](#Budget-Notification). Can be used multiple times to define more than one budget notification
+* `notification` - (Optional) Object containing [Budget Notifications](#budget-notification). Can be used multiple times to define more than one budget notification
 
 ## Attributes Reference
 
@@ -150,7 +151,7 @@ In addition to all arguments above, the following attributes are exported:
 Valid keys for `cost_types` parameter.
 
 * `include_credit` - A boolean value whether to include credits in the cost budget. Defaults to `true`
-* `include_discount` - Specifies whether a budget includes discounts. Defaults to `true`
+* `include_discount` - Whether a budget includes discounts. Defaults to `true`
 * `include_other_subscription` - A boolean value whether to include other subscription costs in the cost budget. Defaults to `true`
 * `include_recurring` - A boolean value whether to include recurring costs in the cost budget. Defaults to `true`
 * `include_refund` - A boolean value whether to include refunds in the cost budget. Defaults to `true`
@@ -158,7 +159,7 @@ Valid keys for `cost_types` parameter.
 * `include_support` - A boolean value whether to include support costs in the cost budget. Defaults to `true`
 * `include_tax` - A boolean value whether to include tax in the cost budget. Defaults to `true`
 * `include_upfront` - A boolean value whether to include upfront costs in the cost budget. Defaults to `true`
-* `use_amortized` - Specifies whether a budget uses the amortized rate. Defaults to `false`
+* `use_amortized` - Whether a budget uses the amortized rate. Defaults to `false`
 * `use_blended` - A boolean value whether to use blended costs in the cost budget. Defaults to `false`
 
 Refer to [AWS CostTypes documentation](https://docs.aws.amazon.com/aws-cost-management/latest/APIReference/API_budgets_CostTypes.html) for further detail.
@@ -186,7 +187,9 @@ Refer to [AWS CostFilter documentation](http://docs.aws.amazon.com/awsaccountbil
 
 ### Cost Filters
 
-Valid key for `cost_filters` is same as `cost_filter`. Please refer to [Cost Filter](#Cost-Filter).
+**Note**: Attribute `cost_filters` is deprecated. Use `cost_filter` instead.
+
+Valid key for `cost_filters` is same as `cost_filter`. Please refer to [Cost Filter](#cost-filter).
 
 ### Budget Notification
 

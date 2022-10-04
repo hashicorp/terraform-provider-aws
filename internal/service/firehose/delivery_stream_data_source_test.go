@@ -16,13 +16,13 @@ func TestAccFirehoseDeliveryStreamDataSource_basic(t *testing.T) {
 	resourceName := "aws_kinesis_firehose_delivery_stream.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, firehose.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDeliveryStreamDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, firehose.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDeliveryStreamDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDeliveryStreamBasicDataSourceConfig(rName),
+				Config: testAccDeliveryStreamDataSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
 					resource.TestCheckResourceAttr(dataSourceName, "name", rName),
@@ -32,7 +32,7 @@ func TestAccFirehoseDeliveryStreamDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccDeliveryStreamBasicDataSourceConfig(rName string) string {
+func testAccDeliveryStreamDataSourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -96,6 +96,10 @@ EOF
 
 resource "aws_s3_bucket" "bucket" {
   bucket = %[1]q
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.bucket.id
   acl    = "private"
 }
 

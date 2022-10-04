@@ -1,5 +1,5 @@
 ---
-subcategory: "Kafka Connect (MSK Connect)"
+subcategory: "Managed Streaming for Kafka Connect"
 layout: "aws"
 page_title: "AWS: aws_mskconnect_worker_configuration"
 description: |-

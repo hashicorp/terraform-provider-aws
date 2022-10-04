@@ -5,7 +5,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -74,10 +74,14 @@ func FindStackByID(conn *cloudformation.CloudFormation, id string) (*cloudformat
 	return stack, nil
 }
 
-func FindStackInstanceAccountIdByOrgIDs(conn *cloudformation.CloudFormation, stackSetName, region string, orgIDs []string) (string, error) {
+func FindStackInstanceAccountIdByOrgIDs(conn *cloudformation.CloudFormation, stackSetName, region, callAs string, orgIDs []string) (string, error) {
 	input := &cloudformation.ListStackInstancesInput{
 		StackInstanceRegion: aws.String(region),
 		StackSetName:        aws.String(stackSetName),
+	}
+
+	if callAs != "" {
+		input.CallAs = aws.String(callAs)
 	}
 
 	var result string
@@ -118,11 +122,15 @@ func FindStackInstanceAccountIdByOrgIDs(conn *cloudformation.CloudFormation, sta
 	return result, nil
 }
 
-func FindStackInstanceByName(conn *cloudformation.CloudFormation, stackSetName, accountID, region string) (*cloudformation.StackInstance, error) {
+func FindStackInstanceByName(conn *cloudformation.CloudFormation, stackSetName, accountID, region, callAs string) (*cloudformation.StackInstance, error) {
 	input := &cloudformation.DescribeStackInstanceInput{
 		StackInstanceAccount: aws.String(accountID),
 		StackInstanceRegion:  aws.String(region),
 		StackSetName:         aws.String(stackSetName),
+	}
+
+	if callAs != "" {
+		input.CallAs = aws.String(callAs)
 	}
 
 	output, err := conn.DescribeStackInstance(input)
@@ -145,9 +153,13 @@ func FindStackInstanceByName(conn *cloudformation.CloudFormation, stackSetName, 
 	return output.StackInstance, nil
 }
 
-func FindStackSetByName(conn *cloudformation.CloudFormation, name string) (*cloudformation.StackSet, error) {
+func FindStackSetByName(conn *cloudformation.CloudFormation, name, callAs string) (*cloudformation.StackSet, error) {
 	input := &cloudformation.DescribeStackSetInput{
 		StackSetName: aws.String(name),
+	}
+
+	if callAs != "" {
+		input.CallAs = aws.String(callAs)
 	}
 
 	output, err := conn.DescribeStackSet(input)
@@ -170,10 +182,14 @@ func FindStackSetByName(conn *cloudformation.CloudFormation, name string) (*clou
 	return output.StackSet, nil
 }
 
-func FindStackSetOperationByStackSetNameAndOperationID(conn *cloudformation.CloudFormation, stackSetName, operationID string) (*cloudformation.StackSetOperation, error) {
+func FindStackSetOperationByStackSetNameAndOperationID(conn *cloudformation.CloudFormation, stackSetName, operationID, callAs string) (*cloudformation.StackSetOperation, error) {
 	input := &cloudformation.DescribeStackSetOperationInput{
 		OperationId:  aws.String(operationID),
 		StackSetName: aws.String(stackSetName),
+	}
+
+	if callAs != "" {
+		input.CallAs = aws.String(callAs)
 	}
 
 	output, err := conn.DescribeStackSetOperation(input)

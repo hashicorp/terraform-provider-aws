@@ -14,22 +14,22 @@ func TestAccOutpostsOutpostInstanceTypesDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_outposts_outpost_instance_types.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, outposts.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: nil,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, outposts.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOutpostInstanceTypesDataSourceConfig(),
+				Config: testAccOutpostInstanceTypesDataSourceConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOutpostsOutpostInstanceTypesAttributes(dataSourceName),
+					testAccCheckOutpostInstanceTypesAttributes(dataSourceName),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckOutpostsOutpostInstanceTypesAttributes(dataSourceName string) resource.TestCheckFunc {
+func testAccCheckOutpostInstanceTypesAttributes(dataSourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[dataSourceName]
 		if !ok {
@@ -44,7 +44,7 @@ func testAccCheckOutpostsOutpostInstanceTypesAttributes(dataSourceName string) r
 	}
 }
 
-func testAccOutpostInstanceTypesDataSourceConfig() string {
+func testAccOutpostInstanceTypesDataSourceConfig_basic() string {
 	return `
 data "aws_outposts_outposts" "test" {}
 

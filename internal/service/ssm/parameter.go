@@ -8,7 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ssm"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -21,7 +21,7 @@ import (
 
 const (
 	// Maximum amount of time to wait for asynchronous validation on SSM Parameter creation.
-	ssmParameterCreationValidationTimeout = 2 * time.Minute
+	parameterCreationValidationTimeout = 2 * time.Minute
 )
 
 func ResourceParameter() *schema.Resource {
@@ -35,42 +35,12 @@ func ResourceParameter() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 2048),
-			},
-			"description": {
+			"allowed_pattern": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 1024),
 			},
-			"tier": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      ssm.ParameterTierStandard,
-				ValidateFunc: validation.StringInSlice(ssm.ParameterTier_Values(), false),
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return d.Get("tier").(string) == ssm.ParameterTierIntelligentTiering
-				},
-			},
-			"type": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringInSlice(ssm.ParameterType_Values(), false),
-			},
-			"value": {
-				Type:      schema.TypeString,
-				Required:  true,
-				Sensitive: true,
-			},
 			"arn": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"key_id": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -84,31 +54,80 @@ func ResourceParameter() *schema.Resource {
 					"text",
 				}, false),
 			},
+			"description": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringLenBetween(0, 1024),
+			},
+			"insecure_value": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ExactlyOneOf: []string{"insecure_value", "value"},
+			},
+			"key_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"name": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringLenBetween(1, 2048),
+			},
 			"overwrite": {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
-			"allowed_pattern": {
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
+			"tier": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(0, 1024),
+				Computed:     true,
+				ValidateFunc: validation.StringInSlice(ssm.ParameterTier_Values(), false),
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					if old != "" {
+						return new == ssm.ParameterTierIntelligentTiering
+					}
+					return false
+				},
+			},
+			"type": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringInSlice(ssm.ParameterType_Values(), false),
+			},
+			"value": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Sensitive:    true,
+				Computed:     true,
+				ExactlyOneOf: []string{"insecure_value", "value"},
 			},
 			"version": {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
 		},
 
-		CustomizeDiff: customdiff.All(
+		CustomizeDiff: customdiff.Sequence(
 			// Prevent the following error during tier update from Advanced to Standard:
 			// ValidationException: This parameter uses the advanced-parameter tier. You can't downgrade a parameter from the advanced-parameter tier to the standard-parameter tier. If necessary, you can delete the advanced parameter and recreate it as a standard parameter.
-			// In the case of Advanced to Intelligent-Tiering, a ValidationException is not thrown
-			// but rather no change occurs without resource re-creation
 			customdiff.ForceNewIfChange("tier", func(_ context.Context, old, new, meta interface{}) bool {
-				return old.(string) == ssm.ParameterTierAdvanced && (new.(string) == ssm.ParameterTierStandard || new.(string) == ssm.ParameterTierIntelligentTiering)
+				return old.(string) == ssm.ParameterTierAdvanced && new.(string) == ssm.ParameterTierStandard
 			}),
+			customdiff.ComputedIf("version", func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
+				return diff.HasChange("value")
+			}),
+			customdiff.ComputedIf("value", func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
+				return diff.HasChange("insecure_value")
+			}),
+			customdiff.ComputedIf("insecure_value", func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
+				return diff.HasChange("value")
+			}),
+
 			verify.SetTagsDiff,
 		),
 	}
@@ -121,13 +140,22 @@ func resourceParameterCreate(d *schema.ResourceData, meta interface{}) error {
 
 	name := d.Get("name").(string)
 
+	value := d.Get("value").(string)
+
+	if v, ok := d.Get("insecure_value").(string); ok && v != "" {
+		value = v
+	}
+
 	paramInput := &ssm.PutParameterInput{
 		Name:           aws.String(name),
 		Type:           aws.String(d.Get("type").(string)),
-		Tier:           aws.String(d.Get("tier").(string)),
-		Value:          aws.String(d.Get("value").(string)),
+		Value:          aws.String(value),
 		Overwrite:      aws.Bool(ShouldUpdateParameter(d)),
 		AllowedPattern: aws.String(d.Get("allowed_pattern").(string)),
+	}
+
+	if v, ok := d.GetOk("tier"); ok {
+		paramInput.Tier = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("data_type"); ok {
@@ -152,12 +180,13 @@ func resourceParameterCreate(d *schema.ResourceData, meta interface{}) error {
 	_, err := conn.PutParameter(paramInput)
 
 	if tfawserr.ErrMessageContains(err, "ValidationException", "Tier is not supported") {
+		log.Printf("[WARN] Creating SSM Parameter (%s): tier %q not supported, using default", name, d.Get("tier").(string))
 		paramInput.Tier = nil
 		_, err = conn.PutParameter(paramInput)
 	}
 
 	if err != nil {
-		return fmt.Errorf("error creating SSM parameter (%s): %w", name, err)
+		return fmt.Errorf("error creating SSM Parameter (%s): %w", name, err)
 	}
 
 	// Since the AWS SSM Service does not support PutParameter requests with
@@ -187,7 +216,7 @@ func resourceParameterRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	var resp *ssm.GetParameterOutput
-	err := resource.Retry(ssmParameterCreationValidationTimeout, func() *resource.RetryError {
+	err := resource.Retry(parameterCreationValidationTimeout, func() *resource.RetryError {
 		var err error
 		resp, err = conn.GetParameter(input)
 
@@ -220,8 +249,17 @@ func resourceParameterRead(d *schema.ResourceData, meta interface{}) error {
 	name := aws.StringValue(param.Name)
 	d.Set("name", name)
 	d.Set("type", param.Type)
-	d.Set("value", param.Value)
 	d.Set("version", param.Version)
+
+	if _, ok := d.GetOk("insecure_value"); ok && aws.StringValue(param.Type) != ssm.ParameterTypeSecureString {
+		d.Set("insecure_value", param.Value)
+	} else {
+		d.Set("value", param.Value)
+	}
+
+	if aws.StringValue(param.Type) == ssm.ParameterTypeSecureString && d.Get("insecure_value").(string) != "" {
+		return fmt.Errorf("invalid configuration, cannot set type = %s and insecure_value", aws.StringValue(param.Type))
+	}
 
 	describeParamsInput := &ssm.DescribeParametersInput{
 		ParameterFilters: []*ssm.ParameterStringFilter{
@@ -237,7 +275,7 @@ func resourceParameterRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error describing SSM parameter (%s): %w", d.Id(), err)
 	}
 
-	if describeResp == nil || len(describeResp.Parameters) == 0 || describeResp.Parameters[0] == nil {
+	if !d.IsNewResource() && (describeResp == nil || len(describeResp.Parameters) == 0 || describeResp.Parameters[0] == nil) {
 		log.Printf("[WARN] SSM Parameter %q not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -246,10 +284,7 @@ func resourceParameterRead(d *schema.ResourceData, meta interface{}) error {
 	detail := describeResp.Parameters[0]
 	d.Set("key_id", detail.KeyId)
 	d.Set("description", detail.Description)
-	d.Set("tier", ssm.ParameterTierStandard)
-	if detail.Tier != nil {
-		d.Set("tier", detail.Tier)
-	}
+	d.Set("tier", detail.Tier)
 	d.Set("allowed_pattern", detail.AllowedPattern)
 	d.Set("data_type", detail.DataType)
 
@@ -279,13 +314,24 @@ func resourceParameterUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SSMConn
 
 	if d.HasChangesExcept("tags", "tags_all") {
+		value := d.Get("value").(string)
+
+		if v, ok := d.Get("insecure_value").(string); ok && v != "" {
+			value = v
+		}
 		paramInput := &ssm.PutParameterInput{
 			Name:           aws.String(d.Get("name").(string)),
 			Type:           aws.String(d.Get("type").(string)),
 			Tier:           aws.String(d.Get("tier").(string)),
-			Value:          aws.String(d.Get("value").(string)),
+			Value:          aws.String(value),
 			Overwrite:      aws.Bool(ShouldUpdateParameter(d)),
 			AllowedPattern: aws.String(d.Get("allowed_pattern").(string)),
+		}
+
+		// Retrieve the value set in the config directly to counteract the DiffSuppressFunc above
+		tier := d.GetRawConfig().GetAttr("tier")
+		if tier.IsKnown() && !tier.IsNull() {
+			paramInput.Tier = aws.String(tier.AsString())
 		}
 
 		if d.HasChange("data_type") {
@@ -303,12 +349,13 @@ func resourceParameterUpdate(d *schema.ResourceData, meta interface{}) error {
 		_, err := conn.PutParameter(paramInput)
 
 		if tfawserr.ErrMessageContains(err, "ValidationException", "Tier is not supported") {
+			log.Printf("[WARN] Updating SSM Parameter (%s): tier %q not supported, using default", d.Get("name").(string), d.Get("tier").(string))
 			paramInput.Tier = nil
 			_, err = conn.PutParameter(paramInput)
 		}
 
 		if err != nil {
-			return fmt.Errorf("error updating SSM parameter (%s): %w", d.Id(), err)
+			return fmt.Errorf("error updating SSM Parameter (%s): %w", d.Id(), err)
 		}
 	}
 

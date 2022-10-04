@@ -1,5 +1,5 @@
 ---
-subcategory: "MemoryDB"
+subcategory: "MemoryDB for Redis"
 layout: "aws"
 page_title: "AWS: aws_memorydb_user"
 description: |-
@@ -35,12 +35,15 @@ resource "aws_memorydb_user" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+The following arguments are required:
 
 * `access_string` - (Required) The access permissions string used for this user.
 * `authentication_mode` - (Required) Denotes the user's authentication properties. Detailed below.
 * `user_name` - (Required, Forces new resource) Name of the MemoryDB user. Up to 40 characters.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+
+The following arguments are optional:
+
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### authentication_mode Configuration Block
 
@@ -56,7 +59,7 @@ In addition to all arguments above, the following attributes are exported:
 * `minimum_engine_version` - The minimum engine version supported for the user.
 * `authentication_mode` configuration block
     * `password_count` - The number of passwords belonging to the user.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 

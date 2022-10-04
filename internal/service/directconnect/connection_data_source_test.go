@@ -16,12 +16,12 @@ func TestAccDirectConnectConnectionDataSource_basic(t *testing.T) {
 	datasourceName := "data.aws_dx_connection.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, directconnect.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, directconnect.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConnectionDataSourceConfig(rName),
+				Config: testAccConnectionDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(datasourceName, "aws_device", resourceName, "aws_device"),
@@ -37,7 +37,7 @@ func TestAccDirectConnectConnectionDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccConnectionDataSourceConfig(rName string) string {
+func testAccConnectionDataSourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 data "aws_dx_locations" "test" {}
 

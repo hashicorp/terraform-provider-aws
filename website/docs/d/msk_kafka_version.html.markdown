@@ -1,5 +1,5 @@
 ---
-subcategory: "Managed Streaming for Kafka (MSK)"
+subcategory: "Managed Streaming for Kafka"
 layout: "aws"
 page_title: "AWS: aws_msk_kafka_version"
 description: |-

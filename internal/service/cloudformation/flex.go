@@ -17,7 +17,7 @@ func expandParameters(params map[string]interface{}) []*cloudformation.Parameter
 	return cfParams
 }
 
-func flattenAllCloudFormationParameters(cfParams []*cloudformation.Parameter) map[string]interface{} {
+func flattenAllParameters(cfParams []*cloudformation.Parameter) map[string]interface{} {
 	params := make(map[string]interface{}, len(cfParams))
 	for _, p := range cfParams {
 		params[aws.StringValue(p.ParameterKey)] = aws.StringValue(p.ParameterValue)

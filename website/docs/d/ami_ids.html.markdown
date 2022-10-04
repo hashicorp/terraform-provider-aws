@@ -1,5 +1,5 @@
 ---
-subcategory: "EC2"
+subcategory: "EC2 (Elastic Compute Cloud)"
 layout: "aws"
 page_title: "AWS: aws_ami_ids"
 description: |-
@@ -34,10 +34,10 @@ permission on  the image. Valid items are the numeric account ID or `self`.
 are several valid keys, for a full reference, check out
 [describe-images in the AWS CLI reference][1].
 
-* `name_regex` - (Optional) A regex string to apply to the AMI list returned
+* `name_regex` - (Optional) Regex string to apply to the AMI list returned
 by AWS. This allows more advanced filtering not supported from the AWS API.
 This filtering is done locally on what AWS returns, and could have a performance
-impact if the result is large. It is recommended to combine this with other
+impact if the result is large. Combine this with other
 options to narrow down the list AWS returns.
 
 * `sort_ascending`  - (Defaults to `false`) Used to sort AMIs by creation time.
@@ -47,3 +47,9 @@ options to narrow down the list AWS returns.
 `ids` is set to the list of AMI IDs, sorted by creation time according to `sort_ascending`.
 
 [1]: http://docs.aws.amazon.com/cli/latest/reference/ec2/describe-images.html
+
+## Timeouts
+
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+
+- `read` - (Default `20m`)

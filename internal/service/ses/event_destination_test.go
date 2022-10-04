@@ -28,12 +28,12 @@ func TestAccSESEventDestination_basic(t *testing.T) {
 			acctest.PreCheck(t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSESEventDestinationDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, ses.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEventDestinationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEventDestinationConfig(rName1, rName2, rName3),
+				Config: testAccEventDestinationConfig_basic(rName1, rName2, rName3),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventDestinationExists(cloudwatchDestinationResourceName, &v1),
 					testAccCheckEventDestinationExists(kinesisDestinationResourceName, &v2),
@@ -82,12 +82,12 @@ func TestAccSESEventDestination_disappears(t *testing.T) {
 			acctest.PreCheck(t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSESEventDestinationDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, ses.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEventDestinationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEventDestinationConfig(rName1, rName2, rName3),
+				Config: testAccEventDestinationConfig_basic(rName1, rName2, rName3),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventDestinationExists(cloudwatchDestinationResourceName, &v1),
 					testAccCheckEventDestinationExists(kinesisDestinationResourceName, &v2),
@@ -102,7 +102,7 @@ func TestAccSESEventDestination_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckSESEventDestinationDestroy(s *terraform.State) error {
+func testAccCheckEventDestinationDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -164,10 +164,14 @@ func testAccCheckEventDestinationExists(n string, v *ses.EventDestination) resou
 	}
 }
 
-func testAccEventDestinationConfig(rName1, rName2, rName3 string) string {
+func testAccEventDestinationConfig_basic(rName1, rName2, rName3 string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[2]q
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.test.id
   acl    = "private"
 }
 

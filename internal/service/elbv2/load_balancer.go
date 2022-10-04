@@ -1,6 +1,6 @@
 package elbv2
 
-import ( // nosemgrep: aws-sdk-go-multiple-service-imports
+import ( // nosemgrep:ci.aws-sdk-go-multiple-service-imports
 	"bytes"
 	"context"
 	"errors"
@@ -12,7 +12,7 @@ import ( // nosemgrep: aws-sdk-go-multiple-service-imports
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/elbv2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -206,6 +206,13 @@ func ResourceLoadBalancer() *schema.Resource {
 				DiffSuppressFunc: suppressIfLBType("network"),
 			},
 
+			"preserve_host_header": {
+				Type:             schema.TypeBool,
+				Optional:         true,
+				Default:          false,
+				DiffSuppressFunc: suppressIfLBTypeNot(elbv2.LoadBalancerTypeEnumApplication),
+			},
+
 			"enable_cross_zone_load_balancing": {
 				Type:             schema.TypeBool,
 				Optional:         true,
@@ -359,8 +366,16 @@ func resourceLoadBalancerCreate(d *schema.ResourceData, meta interface{}) error 
 	log.Printf("[DEBUG] ALB create configuration: %#v", elbOpts)
 
 	resp, err := conn.CreateLoadBalancer(elbOpts)
+
+	// Some partitions may not support tag-on-create
+	if elbOpts.Tags != nil && verify.ErrorISOUnsupported(conn.PartitionID, err) {
+		log.Printf("[WARN] ELBv2 Load Balancer (%s) create failed (%s) with tags. Trying create without tags.", name, err)
+		elbOpts.Tags = nil
+		resp, err = conn.CreateLoadBalancer(elbOpts)
+	}
+
 	if err != nil {
-		return fmt.Errorf("error creating %s Load Balancer: %w", d.Get("load_balancer_type").(string), err)
+		return fmt.Errorf("creating %s Load Balancer: %w", d.Get("load_balancer_type").(string), err)
 	}
 
 	if len(resp.LoadBalancers) != 1 {
@@ -373,7 +388,22 @@ func resourceLoadBalancerCreate(d *schema.ResourceData, meta interface{}) error 
 
 	_, err = waitLoadBalancerActive(conn, aws.StringValue(lb.LoadBalancerArn), d.Timeout(schema.TimeoutCreate))
 	if err != nil {
-		return fmt.Errorf("error waiting for Load Balancer (%s) to be active: %w", d.Get("name").(string), err)
+		return fmt.Errorf("waiting for Load Balancer (%s) to be active: %w", d.Get("name").(string), err)
+	}
+
+	// Post-create tagging supported in some partitions
+	if elbOpts.Tags == nil && len(tags) > 0 {
+		err := UpdateTags(conn, d.Id(), nil, tags)
+
+		// if default tags only, log and continue (i.e., should error if explicitly setting tags and they can't be)
+		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.ErrorISOUnsupported(conn.PartitionID, err) {
+			log.Printf("[WARN] error adding tags after create for ELBv2 Load Balancer (%s): %s", d.Id(), err)
+			return resourceLoadBalancerUpdate(d, meta)
+		}
+
+		if err != nil {
+			return fmt.Errorf("creating ELBv2 Load Balancer (%s) tags: %w", d.Id(), err)
+		}
 	}
 
 	return resourceLoadBalancerUpdate(d, meta)
@@ -392,12 +422,12 @@ func resourceLoadBalancerRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error retrieving ALB (%s): %w", d.Id(), err)
+		return fmt.Errorf("retrieving ALB (%s): %w", d.Id(), err)
 	}
 
 	if lb == nil {
 		if d.IsNewResource() {
-			return fmt.Errorf("error retrieving ALB (%s): empty output after creation", d.Id())
+			return fmt.Errorf("retrieving ALB (%s): empty output after creation", d.Id())
 		}
 		log.Printf("[WARN] ALB %s not found in AWS, removing from state", d.Id())
 		d.SetId("")
@@ -409,33 +439,6 @@ func resourceLoadBalancerRead(d *schema.ResourceData, meta interface{}) error {
 
 func resourceLoadBalancerUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ELBV2Conn
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		err := resource.Retry(loadBalancerTagPropagationTimeout, func() *resource.RetryError {
-			err := UpdateTags(conn, d.Id(), o, n)
-
-			if tfawserr.ErrCodeEquals(err, elbv2.ErrCodeLoadBalancerNotFoundException) {
-				log.Printf("[DEBUG] Retrying tagging of LB (%s) after error: %s", d.Id(), err)
-				return resource.RetryableError(err)
-			}
-
-			if err != nil {
-				return resource.NonRetryableError(err)
-			}
-
-			return nil
-		})
-
-		if tfresource.TimedOut(err) {
-			err = UpdateTags(conn, d.Id(), o, n)
-		}
-
-		if err != nil {
-			return fmt.Errorf("error updating LB (%s) tags: %w", d.Id(), err)
-		}
-	}
 
 	attributes := make([]*elbv2.LoadBalancerAttribute, 0)
 
@@ -506,6 +509,13 @@ func resourceLoadBalancerUpdate(d *schema.ResourceData, meta interface{}) error 
 			})
 		}
 
+		if d.HasChange("preserve_host_header") || d.IsNewResource() {
+			attributes = append(attributes, &elbv2.LoadBalancerAttribute{
+				Key:   aws.String("routing.http.preserve_host_header.enabled"),
+				Value: aws.String(strconv.FormatBool(d.Get("preserve_host_header").(bool))),
+			})
+		}
+
 		if d.HasChange("desync_mitigation_mode") || d.IsNewResource() {
 			attributes = append(attributes, &elbv2.LoadBalancerAttribute{
 				Key:   aws.String("routing.http.desync_mitigation_mode"),
@@ -536,7 +546,25 @@ func resourceLoadBalancerUpdate(d *schema.ResourceData, meta interface{}) error 
 		}
 
 		log.Printf("[DEBUG] ALB Modify Load Balancer Attributes Request: %#v", input)
-		_, err := conn.ModifyLoadBalancerAttributes(input)
+
+		// Not all attributes are supported in all partitions (e.g., ISO)
+		var err error
+		for {
+			_, err = conn.ModifyLoadBalancerAttributes(input)
+			if err == nil {
+				break
+			}
+
+			re := regexp.MustCompile(`attribute key ('|")?([^'" ]+)('|")? is not recognized`)
+			if sm := re.FindStringSubmatch(err.Error()); len(sm) > 1 {
+				log.Printf("[WARN] failed to modify Load Balancer (%s), unsupported attribute (%s): %s", d.Id(), sm[2], err)
+				input.Attributes = removeAttribute(input.Attributes, sm[2])
+				continue
+			}
+
+			break
+		}
+
 		if err != nil {
 			return fmt.Errorf("failure configuring LB attributes: %w", err)
 		}
@@ -587,9 +615,48 @@ func resourceLoadBalancerUpdate(d *schema.ResourceData, meta interface{}) error 
 		}
 	}
 
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
+
+		err := resource.Retry(loadBalancerTagPropagationTimeout, func() *resource.RetryError {
+			err := UpdateTags(conn, d.Id(), o, n)
+
+			if tfawserr.ErrCodeEquals(err, elbv2.ErrCodeLoadBalancerNotFoundException) {
+				log.Printf("[DEBUG] Retrying tagging of LB (%s) after error: %s", d.Id(), err)
+				return resource.RetryableError(err)
+			}
+
+			if err != nil {
+				return resource.NonRetryableError(err)
+			}
+
+			return nil
+		})
+
+		if tfresource.TimedOut(err) {
+			err = UpdateTags(conn, d.Id(), o, n)
+		}
+
+		// ISO partitions may not support tagging, giving error
+		if verify.ErrorISOUnsupported(conn.PartitionID, err) {
+			log.Printf("[WARN] Unable to update tags for ELBv2 Load Balancer %s: %s", d.Id(), err)
+
+			_, err := waitLoadBalancerActive(conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
+			if err != nil {
+				return fmt.Errorf("waiting for Load Balancer (%s) to be active: %w", d.Get("name").(string), err)
+			}
+
+			return resourceLoadBalancerRead(d, meta)
+		}
+
+		if err != nil {
+			return fmt.Errorf("updating LB (%s) tags: %w", d.Id(), err)
+		}
+	}
+
 	_, err := waitLoadBalancerActive(conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
 	if err != nil {
-		return fmt.Errorf("error waiting for Load Balancer (%s) to be active: %w", d.Get("name").(string), err)
+		return fmt.Errorf("waiting for Load Balancer (%s) to be active: %w", d.Get("name").(string), err)
 	}
 
 	return resourceLoadBalancerRead(d, meta)
@@ -605,7 +672,7 @@ func resourceLoadBalancerDelete(d *schema.ResourceData, meta interface{}) error 
 		LoadBalancerArn: aws.String(d.Id()),
 	}
 	if _, err := conn.DeleteLoadBalancer(&deleteElbOpts); err != nil {
-		return fmt.Errorf("error deleting LB: %w", err)
+		return fmt.Errorf("deleting LB: %w", err)
 	}
 
 	ec2conn := meta.(*conns.AWSClient).EC2Conn
@@ -623,12 +690,23 @@ func resourceLoadBalancerDelete(d *schema.ResourceData, meta interface{}) error 
 	return nil
 }
 
+func removeAttribute(attributes []*elbv2.LoadBalancerAttribute, key string) []*elbv2.LoadBalancerAttribute {
+	for i, a := range attributes {
+		if aws.StringValue(a.Key) == key {
+			return append(attributes[:i], attributes[i+1:]...)
+		}
+	}
+
+	log.Printf("[WARN] Unable to remove attribute %s from Load Balancer attributes: not found", key)
+	return attributes
+}
+
 // ALB automatically creates ENI(s) on creation
 // but the cleanup is asynchronous and may take time
 // which then blocks IGW, SG or VPC on deletion
 // So we make the cleanup "synchronous" here
 func cleanupALBNetworkInterfaces(conn *ec2.EC2, lbArn string) error {
-	name, err := getLbNameFromArn(lbArn)
+	name, err := getLBNameFromARN(lbArn)
 
 	if err != nil {
 		return err
@@ -671,7 +749,7 @@ func cleanupALBNetworkInterfaces(conn *ec2.EC2, lbArn string) error {
 }
 
 func waitForNLBNetworkInterfacesToDetach(conn *ec2.EC2, lbArn string) error {
-	name, err := getLbNameFromArn(lbArn)
+	name, err := getLBNameFromARN(lbArn)
 
 	if err != nil {
 		return err
@@ -703,14 +781,10 @@ func waitForNLBNetworkInterfacesToDetach(conn *ec2.EC2, lbArn string) error {
 		},
 	)
 
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }
 
-func getLbNameFromArn(arn string) (string, error) {
+func getLBNameFromARN(arn string) (string, error) {
 	re := regexp.MustCompile("([^/]+/[^/]+/[^/]+)$")
 	matches := re.FindStringSubmatch(arn)
 	if len(matches) != 2 {
@@ -782,35 +856,18 @@ func flattenResource(d *schema.ResourceData, meta interface{}, lb *elbv2.LoadBal
 	d.Set("customer_owned_ipv4_pool", lb.CustomerOwnedIpv4Pool)
 
 	if err := d.Set("subnets", flattenSubnetsFromAvailabilityZones(lb.AvailabilityZones)); err != nil {
-		return fmt.Errorf("error setting subnets: %w", err)
+		return fmt.Errorf("setting subnets: %w", err)
 	}
 
 	if err := d.Set("subnet_mapping", flattenSubnetMappingsFromAvailabilityZones(lb.AvailabilityZones)); err != nil {
-		return fmt.Errorf("error setting subnet_mapping: %w", err)
-	}
-
-	tags, err := ListTags(conn, d.Id())
-
-	if err != nil {
-		return fmt.Errorf("error listing tags for (%s): %w", d.Id(), err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return fmt.Errorf("setting subnet_mapping: %w", err)
 	}
 
 	attributesResp, err := conn.DescribeLoadBalancerAttributes(&elbv2.DescribeLoadBalancerAttributesInput{
 		LoadBalancerArn: aws.String(d.Id()),
 	})
 	if err != nil {
-		return fmt.Errorf("error retrieving LB Attributes: %w", err)
+		return fmt.Errorf("retrieving LB Attributes: %w", err)
 	}
 
 	accessLogMap := map[string]interface{}{
@@ -830,7 +887,7 @@ func flattenResource(d *schema.ResourceData, meta interface{}, lb *elbv2.LoadBal
 		case "idle_timeout.timeout_seconds":
 			timeout, err := strconv.Atoi(aws.StringValue(attr.Value))
 			if err != nil {
-				return fmt.Errorf("error parsing ALB timeout: %w", err)
+				return fmt.Errorf("parsing ALB timeout: %w", err)
 			}
 			log.Printf("[DEBUG] Setting ALB Timeout Seconds: %d", timeout)
 			d.Set("idle_timeout", timeout)
@@ -838,6 +895,10 @@ func flattenResource(d *schema.ResourceData, meta interface{}, lb *elbv2.LoadBal
 			dropInvalidHeaderFieldsEnabled := aws.StringValue(attr.Value) == "true"
 			log.Printf("[DEBUG] Setting LB Invalid Header Fields Enabled: %t", dropInvalidHeaderFieldsEnabled)
 			d.Set("drop_invalid_header_fields", dropInvalidHeaderFieldsEnabled)
+		case "routing.http.preserve_host_header.enabled":
+			preserveHostHeaderEnabled := aws.StringValue(attr.Value) == "true"
+			log.Printf("[DEBUG] Setting LB Preserve Host Header Enabled: %t", preserveHostHeaderEnabled)
+			d.Set("preserve_host_header", preserveHostHeaderEnabled)
 		case "deletion_protection.enabled":
 			protectionEnabled := aws.StringValue(attr.Value) == "true"
 			log.Printf("[DEBUG] Setting LB Deletion Protection Enabled: %t", protectionEnabled)
@@ -862,7 +923,29 @@ func flattenResource(d *schema.ResourceData, meta interface{}, lb *elbv2.LoadBal
 	}
 
 	if err := d.Set("access_logs", []interface{}{accessLogMap}); err != nil {
-		return fmt.Errorf("error setting access_logs: %w", err)
+		return fmt.Errorf("setting access_logs: %w", err)
+	}
+
+	tags, err := ListTags(conn, d.Id())
+
+	if verify.ErrorISOUnsupported(conn.PartitionID, err) {
+		log.Printf("[WARN] Unable to list tags for ELBv2 Load Balancer %s: %s", d.Id(), err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("listing tags for (%s): %w", d.Id(), err)
+	}
+
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("setting tags_all: %w", err)
 	}
 
 	return nil

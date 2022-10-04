@@ -5,38 +5,38 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"log"
 	"regexp"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/codepipeline"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
-	CodePipelineProviderGitHub = "GitHub"
+	providerGitHub = "GitHub"
 
-	CodePipelineGitHubActionConfigurationOAuthToken = "OAuthToken"
+	gitHubActionConfigurationOAuthToken = "OAuthToken"
 )
 
-func ResourceCodePipeline() *schema.Resource {
+func ResourceCodePipeline() *schema.Resource { // nosemgrep:ci.codepipeline-in-func-name
 	return &schema.Resource{
-		Create: resourceCodePipelineCreate,
-		Read:   resourceCodePipelineRead,
-		Update: resourceCodePipelineUpdate,
-		Delete: resourceCodePipelineDelete,
+		Create: resourceCreate,
+		Read:   resourceRead,
+		Update: resourceUpdate,
+		Delete: resourceDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -129,7 +129,7 @@ func ResourceCodePipeline() *schema.Resource {
 											validation.MapKeyLenBetween(1, 1000),
 										),
 										Elem:             &schema.Schema{Type: schema.TypeString},
-										DiffSuppressFunc: suppressCodePipelineStageActionConfiguration,
+										DiffSuppressFunc: suppressStageActionConfiguration,
 									},
 									"category": {
 										Type:         schema.TypeString,
@@ -210,7 +210,7 @@ func ResourceCodePipeline() *schema.Resource {
 	}
 }
 
-func resourceCodePipelineCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CodePipelineConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
@@ -225,7 +225,7 @@ func resourceCodePipelineCreate(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	var resp *codepipeline.CreatePipelineOutput
-	err = resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
+	err = resource.Retry(propagationTimeout, func() *resource.RetryError {
 		var err error
 
 		resp, err = conn.CreatePipeline(params)
@@ -252,7 +252,7 @@ func resourceCodePipelineCreate(d *schema.ResourceData, meta interface{}) error 
 
 	d.SetId(aws.StringValue(resp.Pipeline.Name))
 
-	return resourceCodePipelineRead(d, meta)
+	return resourceRead(d, meta)
 }
 
 func expand(d *schema.ResourceData) (*codepipeline.PipelineDeclaration, error) {
@@ -447,11 +447,11 @@ func flattenStageActions(si int, actions []*codepipeline.ActionDeclaration, d *s
 			config := aws.StringValueMap(action.Configuration)
 
 			actionProvider := aws.StringValue(action.ActionTypeId.Provider)
-			if actionProvider == CodePipelineProviderGitHub {
-				if _, ok := config[CodePipelineGitHubActionConfigurationOAuthToken]; ok {
+			if actionProvider == providerGitHub {
+				if _, ok := config[gitHubActionConfigurationOAuthToken]; ok {
 					// The AWS API returns "****" for the OAuthToken value. Pull the value from the configuration.
 					addr := fmt.Sprintf("stage.%d.action.%d.configuration.OAuthToken", si, ai)
-					config[CodePipelineGitHubActionConfigurationOAuthToken] = d.Get(addr).(string)
+					config[gitHubActionConfigurationOAuthToken] = d.Get(addr).(string)
 				}
 			}
 
@@ -529,7 +529,7 @@ func flattenActionsInputArtifacts(artifacts []*codepipeline.InputArtifact) []str
 	return values
 }
 
-func resourceCodePipelineRead(d *schema.ResourceData, meta interface{}) error {
+func resourceRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CodePipelineConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -538,14 +538,14 @@ func resourceCodePipelineRead(d *schema.ResourceData, meta interface{}) error {
 		Name: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrMessageContains(err, codepipeline.ErrCodePipelineNotFoundException, "") {
-		log.Printf("[WARN] CodePipeline (%s) not found, removing from state", d.Id())
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, codepipeline.ErrCodePipelineNotFoundException) {
+		create.LogNotFoundRemoveState(names.CodePipeline, create.ErrActionReading, ResNamePipeline, d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading CodePipeline: %w", err)
+		return create.Error(names.CodePipeline, create.ErrActionReading, ResNamePipeline, d.Id(), err)
 	}
 
 	metadata := resp.Metadata
@@ -590,7 +590,7 @@ func resourceCodePipelineRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceCodePipelineUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CodePipelineConn
 
 	if d.HasChangesExcept("tags", "tags_all") {
@@ -617,17 +617,17 @@ func resourceCodePipelineUpdate(d *schema.ResourceData, meta interface{}) error 
 		}
 	}
 
-	return resourceCodePipelineRead(d, meta)
+	return resourceRead(d, meta)
 }
 
-func resourceCodePipelineDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).CodePipelineConn
 
 	_, err := conn.DeletePipeline(&codepipeline.DeletePipelineInput{
 		Name: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrMessageContains(err, codepipeline.ErrCodePipelineNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, codepipeline.ErrCodePipelineNotFoundException) {
 		return nil
 	}
 
@@ -644,7 +644,7 @@ func resourceValidateActionProvider(i interface{}, path cty.Path) diag.Diagnosti
 		return diag.Errorf("expected type to be string")
 	}
 
-	if v == CodePipelineProviderGitHub {
+	if v == providerGitHub {
 		return diag.Diagnostics{
 			diag.Diagnostic{
 				Severity: diag.Warning,
@@ -657,29 +657,29 @@ func resourceValidateActionProvider(i interface{}, path cty.Path) diag.Diagnosti
 	return nil
 }
 
-func suppressCodePipelineStageActionConfiguration(k, old, new string, d *schema.ResourceData) bool {
+func suppressStageActionConfiguration(k, old, new string, d *schema.ResourceData) bool {
 	parts := strings.Split(k, ".")
 	parts = parts[:len(parts)-2]
 	providerAddr := strings.Join(append(parts, "provider"), ".")
 	provider := d.Get(providerAddr).(string)
 
-	if provider == CodePipelineProviderGitHub && strings.HasSuffix(k, CodePipelineGitHubActionConfigurationOAuthToken) {
-		hash := hashCodePipelineGitHubToken(new)
+	if provider == providerGitHub && strings.HasSuffix(k, gitHubActionConfigurationOAuthToken) {
+		hash := hashGitHubToken(new)
 		return old == hash
 	}
 
 	return false
 }
 
-const codePipelineGitHubTokenHashPrefix = "hash-"
+const gitHubTokenHashPrefix = "hash-"
 
-func hashCodePipelineGitHubToken(token string) string {
+func hashGitHubToken(token string) string {
 	// Without this check, the value was getting encoded twice
-	if strings.HasPrefix(token, codePipelineGitHubTokenHashPrefix) {
+	if strings.HasPrefix(token, gitHubTokenHashPrefix) {
 		return token
 	}
 	sum := sha256.Sum256([]byte(token))
-	return codePipelineGitHubTokenHashPrefix + hex.EncodeToString(sum[:])
+	return gitHubTokenHashPrefix + hex.EncodeToString(sum[:])
 }
 
 // https://github.com/hashicorp/terraform-plugin-sdk/issues/780.

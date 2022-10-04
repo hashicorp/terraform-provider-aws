@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/opsworks"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -254,7 +254,7 @@ func resourceApplicationValidate(d *schema.ResourceData) error {
 }
 
 func resourceApplicationRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*conns.AWSClient).OpsWorksConn
+	conn := meta.(*conns.AWSClient).OpsWorksConn
 
 	req := &opsworks.DescribeAppsInput{
 		AppIds: []*string{
@@ -262,16 +262,18 @@ func resourceApplicationRead(d *schema.ResourceData, meta interface{}) error {
 		},
 	}
 
-	log.Printf("[DEBUG] Reading OpsWorks app: %s", d.Id())
+	log.Printf("[DEBUG] Reading OpsWorks Application: %s", d.Id())
 
-	resp, err := client.DescribeApps(req)
+	resp, err := conn.DescribeApps(req)
+
+	if tfawserr.ErrCodeEquals(err, opsworks.ErrCodeResourceNotFoundException) {
+		log.Printf("[DEBUG] OpsWorks Application (%s) not found", d.Id())
+		d.SetId("")
+		return nil
+	}
+
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, opsworks.ErrCodeResourceNotFoundException, "") {
-			log.Printf("[INFO] App not found: %s", d.Id())
-			d.SetId("")
-			return nil
-		}
-		return err
+		return fmt.Errorf("describing OpsWorks Application (%s): %w", d.Id(), err)
 	}
 
 	app := resp.Apps[0]
@@ -299,7 +301,7 @@ func resourceApplicationRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceApplicationCreate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*conns.AWSClient).OpsWorksConn
+	conn := meta.(*conns.AWSClient).OpsWorksConn
 
 	err := resourceApplicationValidate(d)
 	if err != nil {
@@ -321,19 +323,18 @@ func resourceApplicationCreate(d *schema.ResourceData, meta interface{}) error {
 		Attributes:       resourceApplicationAttributes(d),
 	}
 
-	resp, err := client.CreateApp(req)
+	resp, err := conn.CreateApp(req)
 	if err != nil {
 		return fmt.Errorf("Error creating OpsWorks application: %s", err)
 	}
 
-	appID := *resp.AppId
-	d.SetId(appID)
+	d.SetId(aws.StringValue(resp.AppId))
 
 	return resourceApplicationRead(d, meta)
 }
 
 func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*conns.AWSClient).OpsWorksConn
+	conn := meta.(*conns.AWSClient).OpsWorksConn
 
 	err := resourceApplicationValidate(d)
 	if err != nil {
@@ -356,7 +357,7 @@ func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[DEBUG] Updating OpsWorks layer: %s", d.Id())
 
-	_, err = client.UpdateApp(req)
+	_, err = conn.UpdateApp(req)
 	if err != nil {
 		return fmt.Errorf("Error updating OpsWorks app: %s", err)
 	}
@@ -365,7 +366,7 @@ func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceApplicationDelete(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*conns.AWSClient).OpsWorksConn
+	conn := meta.(*conns.AWSClient).OpsWorksConn
 
 	req := &opsworks.DeleteAppInput{
 		AppId: aws.String(d.Id()),
@@ -373,7 +374,13 @@ func resourceApplicationDelete(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[DEBUG] Deleting OpsWorks application: %s", d.Id())
 
-	_, err := client.DeleteApp(req)
+	_, err := conn.DeleteApp(req)
+
+	if tfawserr.ErrCodeEquals(err, opsworks.ErrCodeResourceNotFoundException) {
+		log.Printf("[DEBUG] OpsWorks Application (%s) not found to delete; removed from state", d.Id())
+		return nil
+	}
+
 	return err
 }
 
@@ -452,16 +459,16 @@ func resourceSetApplicationSource(d *schema.ResourceData, v *opsworks.Source) er
 	if v != nil {
 		m := make(map[string]interface{})
 		if v.Type != nil {
-			m["type"] = *v.Type
+			m["type"] = aws.StringValue(v.Type)
 		}
 		if v.Url != nil {
-			m["url"] = *v.Url
+			m["url"] = aws.StringValue(v.Url)
 		}
 		if v.Username != nil {
-			m["username"] = *v.Username
+			m["username"] = aws.StringValue(v.Username)
 		}
 		if v.Revision != nil {
-			m["revision"] = *v.Revision
+			m["revision"] = aws.StringValue(v.Revision)
 		}
 
 		// v.Password and v.SshKey will, on read, contain the placeholder string
@@ -473,12 +480,7 @@ func resourceSetApplicationSource(d *schema.ResourceData, v *opsworks.Source) er
 		nv = append(nv, m)
 	}
 
-	err := d.Set("app_source", nv)
-	if err != nil {
-		// should never happen
-		return err
-	}
-	return nil
+	return d.Set("app_source", nv)
 }
 
 func resourceApplicationsDataSource(d *schema.ResourceData) []*opsworks.DataSource {
@@ -531,15 +533,15 @@ func resourceSetApplicationSSL(d *schema.ResourceData, v *opsworks.SslConfigurat
 	if v != nil {
 		m := make(map[string]interface{})
 		if v.PrivateKey != nil {
-			m["private_key"] = *v.PrivateKey
+			m["private_key"] = aws.StringValue(v.PrivateKey)
 			set = true
 		}
 		if v.Certificate != nil {
-			m["certificate"] = *v.Certificate
+			m["certificate"] = aws.StringValue(v.Certificate)
 			set = true
 		}
 		if v.Chain != nil {
-			m["chain"] = *v.Chain
+			m["chain"] = aws.StringValue(v.Chain)
 			set = true
 		}
 		if set {
@@ -547,12 +549,7 @@ func resourceSetApplicationSSL(d *schema.ResourceData, v *opsworks.SslConfigurat
 		}
 	}
 
-	err := d.Set("ssl_configuration", nv)
-	if err != nil {
-		// should never happen
-		return err
-	}
-	return nil
+	return d.Set("ssl_configuration", nv)
 }
 
 func resourceApplicationAttributes(d *schema.ResourceData) map[string]*string {

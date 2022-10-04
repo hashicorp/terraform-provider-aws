@@ -9,7 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -278,7 +278,7 @@ func resourceUserProfileCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("user_settings"); ok {
-		input.UserSettings = expandSagemakerDomainDefaultUserSettings(v.([]interface{}))
+		input.UserSettings = expandDomainDefaultUserSettings(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("single_sign_on_user_identifier"); ok {
@@ -296,11 +296,11 @@ func resourceUserProfileCreate(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] SageMaker User Profile create config: %#v", *input)
 	output, err := conn.CreateUserProfile(input)
 	if err != nil {
-		return fmt.Errorf("error creating SageMaker User Profile: %w", err)
+		return fmt.Errorf("creating SageMaker User Profile: %w", err)
 	}
 
 	userProfileArn := aws.StringValue(output.UserProfileArn)
-	domainID, userProfileName, err := decodeSagemakerUserProfileName(userProfileArn)
+	domainID, userProfileName, err := decodeUserProfileName(userProfileArn)
 	if err != nil {
 		return err
 	}
@@ -308,7 +308,7 @@ func resourceUserProfileCreate(d *schema.ResourceData, meta interface{}) error {
 	d.SetId(userProfileArn)
 
 	if _, err := WaitUserProfileInService(conn, domainID, userProfileName); err != nil {
-		return fmt.Errorf("error waiting for SageMaker User Profile (%s) to create: %w", d.Id(), err)
+		return fmt.Errorf("waiting for SageMaker User Profile (%s) to create: %w", d.Id(), err)
 	}
 
 	return resourceUserProfileRead(d, meta)
@@ -319,19 +319,19 @@ func resourceUserProfileRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	domainID, userProfileName, err := decodeSagemakerUserProfileName(d.Id())
+	domainID, userProfileName, err := decodeUserProfileName(d.Id())
 	if err != nil {
 		return err
 	}
 
 	UserProfile, err := FindUserProfileByName(conn, domainID, userProfileName)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, sagemaker.ErrCodeResourceNotFound, "") {
+		if tfawserr.ErrCodeEquals(err, sagemaker.ErrCodeResourceNotFound) {
 			d.SetId("")
 			log.Printf("[WARN] Unable to find SageMaker User Profile (%s), removing from state", d.Id())
 			return nil
 		}
-		return fmt.Errorf("error reading SageMaker User Profile (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading SageMaker User Profile (%s): %w", d.Id(), err)
 	}
 
 	arn := aws.StringValue(UserProfile.UserProfileArn)
@@ -342,25 +342,25 @@ func resourceUserProfileRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("arn", arn)
 	d.Set("home_efs_file_system_uid", UserProfile.HomeEfsFileSystemUid)
 
-	if err := d.Set("user_settings", flattenSagemakerDomainDefaultUserSettings(UserProfile.UserSettings)); err != nil {
-		return fmt.Errorf("error setting user_settings for SageMaker User Profile (%s): %w", d.Id(), err)
+	if err := d.Set("user_settings", flattenDomainDefaultUserSettings(UserProfile.UserSettings)); err != nil {
+		return fmt.Errorf("setting user_settings for SageMaker User Profile (%s): %w", d.Id(), err)
 	}
 
 	tags, err := ListTags(conn, arn)
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for SageMaker User Profile (%s): %w", d.Id(), err)
+		return fmt.Errorf("listing tags for SageMaker User Profile (%s): %w", d.Id(), err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return fmt.Errorf("setting tags: %w", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return fmt.Errorf("setting tags_all: %w", err)
 	}
 
 	return nil
@@ -376,17 +376,17 @@ func resourceUserProfileUpdate(d *schema.ResourceData, meta interface{}) error {
 		input := &sagemaker.UpdateUserProfileInput{
 			UserProfileName: aws.String(userProfileName),
 			DomainId:        aws.String(domainID),
-			UserSettings:    expandSagemakerDomainDefaultUserSettings(d.Get("user_settings").([]interface{})),
+			UserSettings:    expandDomainDefaultUserSettings(d.Get("user_settings").([]interface{})),
 		}
 
 		log.Printf("[DEBUG] SageMaker User Profile update config: %#v", *input)
 		_, err := conn.UpdateUserProfile(input)
 		if err != nil {
-			return fmt.Errorf("error updating SageMaker User Profile: %w", err)
+			return fmt.Errorf("updating SageMaker User Profile: %w", err)
 		}
 
 		if _, err := WaitUserProfileInService(conn, domainID, userProfileName); err != nil {
-			return fmt.Errorf("error waiting for SageMaker User Profile (%s) to update: %w", d.Id(), err)
+			return fmt.Errorf("waiting for SageMaker User Profile (%s) to update: %w", d.Id(), err)
 		}
 	}
 
@@ -394,7 +394,7 @@ func resourceUserProfileUpdate(d *schema.ResourceData, meta interface{}) error {
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating SageMaker UserProfile (%s) tags: %w", d.Id(), err)
+			return fmt.Errorf("updating SageMaker UserProfile (%s) tags: %w", d.Id(), err)
 		}
 	}
 
@@ -413,21 +413,21 @@ func resourceUserProfileDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if _, err := conn.DeleteUserProfile(input); err != nil {
-		if !tfawserr.ErrMessageContains(err, sagemaker.ErrCodeResourceNotFound, "") {
-			return fmt.Errorf("error deleting SageMaker User Profile (%s): %w", d.Id(), err)
+		if !tfawserr.ErrCodeEquals(err, sagemaker.ErrCodeResourceNotFound) {
+			return fmt.Errorf("deleting SageMaker User Profile (%s): %w", d.Id(), err)
 		}
 	}
 
 	if _, err := WaitUserProfileDeleted(conn, domainID, userProfileName); err != nil {
-		if !tfawserr.ErrMessageContains(err, sagemaker.ErrCodeResourceNotFound, "") {
-			return fmt.Errorf("error waiting for SageMaker User Profile (%s) to delete: %w", d.Id(), err)
+		if !tfawserr.ErrCodeEquals(err, sagemaker.ErrCodeResourceNotFound) {
+			return fmt.Errorf("waiting for SageMaker User Profile (%s) to delete: %w", d.Id(), err)
 		}
 	}
 
 	return nil
 }
 
-func decodeSagemakerUserProfileName(id string) (string, string, error) {
+func decodeUserProfileName(id string) (string, string, error) {
 	userProfileARN, err := arn.Parse(id)
 	if err != nil {
 		return "", "", err

@@ -1,5 +1,5 @@
 ---
-subcategory: "EFS"
+subcategory: "EFS (Elastic File System)"
 layout: "aws"
 page_title: "AWS: aws_efs_file_system"
 description: |-
@@ -50,7 +50,7 @@ user guide for more information.
 * `lifecycle_policy` - (Optional) A file system [lifecycle policy](https://docs.aws.amazon.com/efs/latest/ug/API_LifecyclePolicy.html) object (documented below).
 * `performance_mode` - (Optional) The file system performance mode. Can be either `"generalPurpose"` or `"maxIO"` (Default: `"generalPurpose"`).
 * `provisioned_throughput_in_mibps` - (Optional) The throughput, measured in MiB/s, that you want to provision for the file system. Only applicable with `throughput_mode` set to `provisioned`.
-* `tags` - (Optional) A map of tags to assign to the file system. If configured with a provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the file system. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `throughput_mode` - (Optional) Throughput mode for the file system. Defaults to `bursting`. Valid values: `bursting`, `provisioned`. When using `provisioned`, also set `provisioned_throughput_in_mibps`.
 
 ### Lifecycle Policy Arguments
@@ -70,7 +70,7 @@ In addition to all arguments above, the following attributes are exported:
 * `owner_id` - The AWS account that created the file system. If the file system was createdby an IAM user, the parent account to which the user belongs is the owner.
 * `number_of_mount_targets` - The current number of mount targets that the file system has.
 * `size_in_bytes` - The latest known metered size (in bytes) of data stored in the file system, the value is not the exact size that the file system was at any point in time. See [Size In Bytes](#size-in-bytes).
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ### Size In Bytes
 

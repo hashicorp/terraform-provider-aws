@@ -5,7 +5,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/servicecatalog"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
@@ -385,34 +385,6 @@ func StatusProvisionedProduct(conn *servicecatalog.ServiceCatalog, acceptLanguag
 		}
 
 		return output, aws.StringValue(output.ProvisionedProductDetail.Status), err
-	}
-}
-
-func StatusRecord(conn *servicecatalog.ServiceCatalog, acceptLanguage, id string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		input := &servicecatalog.DescribeRecordInput{
-			Id: aws.String(id),
-		}
-
-		if acceptLanguage != "" {
-			input.AcceptLanguage = aws.String(acceptLanguage)
-		}
-
-		output, err := conn.DescribeRecord(input)
-
-		if tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
-			return nil, StatusNotFound, err
-		}
-
-		if err != nil {
-			return nil, servicecatalog.StatusFailed, err
-		}
-
-		if output == nil || output.RecordDetail == nil {
-			return nil, StatusNotFound, err
-		}
-
-		return output, aws.StringValue(output.RecordDetail.Status), err
 	}
 }
 

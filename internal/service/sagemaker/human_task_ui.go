@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -79,7 +79,7 @@ func resourceHumanTaskUICreate(d *schema.ResourceData, meta interface{}) error {
 	name := d.Get("human_task_ui_name").(string)
 	input := &sagemaker.CreateHumanTaskUiInput{
 		HumanTaskUiName: aws.String(name),
-		UiTemplate:      expandSagemakerHumanTaskUiUiTemplate(d.Get("ui_template").([]interface{})),
+		UiTemplate:      expandHumanTaskUiUiTemplate(d.Get("ui_template").([]interface{})),
 	}
 
 	if len(tags) > 0 {
@@ -90,7 +90,7 @@ func resourceHumanTaskUICreate(d *schema.ResourceData, meta interface{}) error {
 	_, err := conn.CreateHumanTaskUi(input)
 
 	if err != nil {
-		return fmt.Errorf("error creating SageMaker HumanTaskUi (%s): %w", name, err)
+		return fmt.Errorf("creating SageMaker HumanTaskUi (%s): %w", name, err)
 	}
 
 	d.SetId(name)
@@ -112,32 +112,32 @@ func resourceHumanTaskUIRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading SageMaker HumanTaskUi (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading SageMaker HumanTaskUi (%s): %w", d.Id(), err)
 	}
 
 	arn := aws.StringValue(humanTaskUi.HumanTaskUiArn)
 	d.Set("arn", arn)
 	d.Set("human_task_ui_name", humanTaskUi.HumanTaskUiName)
 
-	if err := d.Set("ui_template", flattenSagemakerHumanTaskUiUiTemplate(humanTaskUi.UiTemplate, d.Get("ui_template.0.content").(string))); err != nil {
-		return fmt.Errorf("error setting ui_template: %w", err)
+	if err := d.Set("ui_template", flattenHumanTaskUiUiTemplate(humanTaskUi.UiTemplate, d.Get("ui_template.0.content").(string))); err != nil {
+		return fmt.Errorf("setting ui_template: %w", err)
 	}
 
 	tags, err := ListTags(conn, arn)
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for SageMaker HumanTaskUi (%s): %w", d.Id(), err)
+		return fmt.Errorf("listing tags for SageMaker HumanTaskUi (%s): %w", d.Id(), err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return fmt.Errorf("setting tags: %w", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return fmt.Errorf("setting tags_all: %w", err)
 	}
 
 	return nil
@@ -150,7 +150,7 @@ func resourceHumanTaskUIUpdate(d *schema.ResourceData, meta interface{}) error {
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating SageMaker HumanTaskUi (%s) tags: %w", d.Id(), err)
+			return fmt.Errorf("updating SageMaker HumanTaskUi (%s) tags: %w", d.Id(), err)
 		}
 	}
 
@@ -170,13 +170,13 @@ func resourceHumanTaskUIDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting SageMaker HumanTaskUi (%s): %w", d.Id(), err)
+		return fmt.Errorf("deleting SageMaker HumanTaskUi (%s): %w", d.Id(), err)
 	}
 
 	return nil
 }
 
-func expandSagemakerHumanTaskUiUiTemplate(l []interface{}) *sagemaker.UiTemplate {
+func expandHumanTaskUiUiTemplate(l []interface{}) *sagemaker.UiTemplate {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -190,7 +190,7 @@ func expandSagemakerHumanTaskUiUiTemplate(l []interface{}) *sagemaker.UiTemplate
 	return config
 }
 
-func flattenSagemakerHumanTaskUiUiTemplate(config *sagemaker.UiTemplateInfo, content string) []map[string]interface{} {
+func flattenHumanTaskUiUiTemplate(config *sagemaker.UiTemplateInfo, content string) []map[string]interface{} {
 	if config == nil {
 		return []map[string]interface{}{}
 	}

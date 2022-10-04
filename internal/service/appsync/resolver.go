@@ -4,14 +4,16 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appsync"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -47,6 +49,11 @@ func ResourceResolver() *schema.Resource {
 				Optional:      true,
 				ConflictsWith: []string{"pipeline_config"},
 			},
+			"max_batch_size": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				ValidateFunc: validation.IntBetween(0, 2000),
+			},
 			"request_template": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -56,13 +63,10 @@ func ResourceResolver() *schema.Resource {
 				Optional: true,
 			},
 			"kind": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  appsync.ResolverKindUnit,
-				ValidateFunc: validation.StringInSlice([]string{
-					appsync.ResolverKindUnit,
-					appsync.ResolverKindPipeline,
-				}, true),
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      appsync.ResolverKindUnit,
+				ValidateFunc: validation.StringInSlice(appsync.ResolverKind_Values(), true),
 			},
 			"pipeline_config": {
 				Type:          schema.TypeList,
@@ -93,11 +97,43 @@ func ResourceResolver() *schema.Resource {
 							Elem: &schema.Schema{
 								Type: schema.TypeString,
 							},
-							Set: schema.HashString,
 						},
 						"ttl": {
 							Type:     schema.TypeInt,
 							Optional: true,
+						},
+					},
+				},
+			},
+			"sync_config": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"conflict_detection": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringInSlice(appsync.ConflictDetectionType_Values(), false),
+						},
+						"conflict_handler": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringInSlice(appsync.ConflictHandlerType_Values(), false),
+						},
+						"lambda_conflict_handler_config": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"lambda_conflict_handler_arn": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: verify.ValidARN,
+									},
+								},
+							},
 						},
 					},
 				},
@@ -120,6 +156,14 @@ func resourceResolverCreate(d *schema.ResourceData, meta interface{}) error {
 		Kind:      aws.String(d.Get("kind").(string)),
 	}
 
+	if v, ok := d.GetOkExists("max_batch_size"); ok {
+		input.MaxBatchSize = aws.Int64(int64(v.(int)))
+	}
+
+	if v, ok := d.GetOk("sync_config"); ok && len(v.([]interface{})) > 0 {
+		input.SyncConfig = expandSyncConfig(v.([]interface{}))
+	}
+
 	if v, ok := d.GetOk("data_source"); ok {
 		input.DataSourceName = aws.String(v.(string))
 	}
@@ -140,19 +184,19 @@ func resourceResolverCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("caching_config"); ok {
-		input.CachingConfig = expandAppsyncResolverCachingConfig(v.([]interface{}))
+		input.CachingConfig = expandResolverCachingConfig(v.([]interface{}))
 	}
 
 	mutexKey := fmt.Sprintf("appsync-schema-%s", d.Get("api_id").(string))
 	conns.GlobalMutexKV.Lock(mutexKey)
 	defer conns.GlobalMutexKV.Unlock(mutexKey)
 
-	_, err := verify.RetryOnAWSCode(appsync.ErrCodeConcurrentModificationException, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(2*time.Minute, func() (interface{}, error) {
 		return conn.CreateResolver(input)
-	})
+	}, appsync.ErrCodeConcurrentModificationException)
 
 	if err != nil {
-		return fmt.Errorf("error creating AppSync Resolver: %s", err)
+		return fmt.Errorf("error creating AppSync Resolver: %w", err)
 	}
 
 	d.SetId(d.Get("api_id").(string) + "-" + d.Get("type").(string) + "-" + d.Get("field").(string))
@@ -184,24 +228,30 @@ func resourceResolverRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error getting AppSync Resolver (%s): %s", d.Id(), err)
+		return fmt.Errorf("error getting AppSync Resolver (%s): %w", d.Id(), err)
 	}
 
+	resolver := resp.Resolver
 	d.Set("api_id", apiID)
-	d.Set("arn", resp.Resolver.ResolverArn)
-	d.Set("type", resp.Resolver.TypeName)
-	d.Set("field", resp.Resolver.FieldName)
-	d.Set("data_source", resp.Resolver.DataSourceName)
-	d.Set("request_template", resp.Resolver.RequestMappingTemplate)
-	d.Set("response_template", resp.Resolver.ResponseMappingTemplate)
-	d.Set("kind", resp.Resolver.Kind)
+	d.Set("arn", resolver.ResolverArn)
+	d.Set("type", resolver.TypeName)
+	d.Set("field", resolver.FieldName)
+	d.Set("data_source", resolver.DataSourceName)
+	d.Set("request_template", resolver.RequestMappingTemplate)
+	d.Set("response_template", resolver.ResponseMappingTemplate)
+	d.Set("kind", resolver.Kind)
+	d.Set("max_batch_size", resolver.MaxBatchSize)
 
-	if err := d.Set("pipeline_config", flattenAppsyncPipelineConfig(resp.Resolver.PipelineConfig)); err != nil {
-		return fmt.Errorf("Error setting pipeline_config: %s", err)
+	if err := d.Set("sync_config", flattenSyncConfig(resolver.SyncConfig)); err != nil {
+		return fmt.Errorf("error setting sync_config: %w", err)
 	}
 
-	if err := d.Set("caching_config", flattenAppsyncCachingConfig(resp.Resolver.CachingConfig)); err != nil {
-		return fmt.Errorf("Error setting caching_config: %s", err)
+	if err := d.Set("pipeline_config", flattenPipelineConfig(resolver.PipelineConfig)); err != nil {
+		return fmt.Errorf("Error setting pipeline_config: %w", err)
+	}
+
+	if err := d.Set("caching_config", flattenCachingConfig(resolver.CachingConfig)); err != nil {
+		return fmt.Errorf("Error setting caching_config: %w", err)
 	}
 
 	return nil
@@ -237,16 +287,24 @@ func resourceResolverUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("caching_config"); ok {
-		input.CachingConfig = expandAppsyncResolverCachingConfig(v.([]interface{}))
+		input.CachingConfig = expandResolverCachingConfig(v.([]interface{}))
+	}
+
+	if v, ok := d.GetOkExists("max_batch_size"); ok {
+		input.MaxBatchSize = aws.Int64(int64(v.(int)))
+	}
+
+	if v, ok := d.GetOk("sync_config"); ok && len(v.([]interface{})) > 0 {
+		input.SyncConfig = expandSyncConfig(v.([]interface{}))
 	}
 
 	mutexKey := fmt.Sprintf("appsync-schema-%s", d.Get("api_id").(string))
 	conns.GlobalMutexKV.Lock(mutexKey)
 	defer conns.GlobalMutexKV.Unlock(mutexKey)
 
-	_, err := verify.RetryOnAWSCode(appsync.ErrCodeConcurrentModificationException, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(2*time.Minute, func() (interface{}, error) {
 		return conn.UpdateResolver(input)
-	})
+	}, appsync.ErrCodeConcurrentModificationException)
 
 	if err != nil {
 		return fmt.Errorf("error updating AppSync Resolver (%s): %s", d.Id(), err)
@@ -274,9 +332,9 @@ func resourceResolverDelete(d *schema.ResourceData, meta interface{}) error {
 	conns.GlobalMutexKV.Lock(mutexKey)
 	defer conns.GlobalMutexKV.Unlock(mutexKey)
 
-	_, err = verify.RetryOnAWSCode(appsync.ErrCodeConcurrentModificationException, func() (interface{}, error) {
+	_, err = tfresource.RetryWhenAWSErrCodeEquals(2*time.Minute, func() (interface{}, error) {
 		return conn.DeleteResolver(input)
-	})
+	}, appsync.ErrCodeConcurrentModificationException)
 
 	if err != nil {
 		return fmt.Errorf("error deleting AppSync Resolver (%s): %s", d.Id(), err)
@@ -293,7 +351,7 @@ func DecodeResolverID(id string) (string, string, string, error) {
 	return idParts[0], idParts[1], idParts[2], nil
 }
 
-func expandAppsyncResolverCachingConfig(l []interface{}) *appsync.CachingConfig {
+func expandResolverCachingConfig(l []interface{}) *appsync.CachingConfig {
 	if len(l) < 1 || l[0] == nil {
 		return nil
 	}
@@ -311,7 +369,7 @@ func expandAppsyncResolverCachingConfig(l []interface{}) *appsync.CachingConfig 
 	return cachingConfig
 }
 
-func flattenAppsyncPipelineConfig(c *appsync.PipelineConfig) []interface{} {
+func flattenPipelineConfig(c *appsync.PipelineConfig) []interface{} {
 	if c == nil {
 		return nil
 	}
@@ -327,7 +385,7 @@ func flattenAppsyncPipelineConfig(c *appsync.PipelineConfig) []interface{} {
 	return []interface{}{m}
 }
 
-func flattenAppsyncCachingConfig(c *appsync.CachingConfig) []interface{} {
+func flattenCachingConfig(c *appsync.CachingConfig) []interface{} {
 	if c == nil {
 		return nil
 	}

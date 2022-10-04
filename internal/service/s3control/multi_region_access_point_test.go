@@ -9,7 +9,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3control"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -28,10 +27,10 @@ func TestAccS3ControlMultiRegionAccessPoint_basic(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, s3control.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckMultiRegionAccessPointDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, s3control.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMultiRegionAccessPointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMultiRegionAccessPointConfig_basic(bucketName, rName),
@@ -75,10 +74,10 @@ func TestAccS3ControlMultiRegionAccessPoint_disappears(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, s3control.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckMultiRegionAccessPointDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, s3control.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMultiRegionAccessPointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMultiRegionAccessPointConfig_basic(bucketName, rName),
@@ -103,13 +102,13 @@ func TestAccS3ControlMultiRegionAccessPoint_PublicAccessBlock(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, s3control.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckMultiRegionAccessPointDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, s3control.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMultiRegionAccessPointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMultiRegionAccessPointConfig_publicAccessBlock(bucketName, rName),
+				Config: testAccMultiRegionAccessPointConfig_publicBlock(bucketName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMultiRegionAccessPointExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "details.0.public_access_block.#", "1"),
@@ -140,10 +139,10 @@ func TestAccS3ControlMultiRegionAccessPoint_name(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, s3control.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckMultiRegionAccessPointDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, s3control.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMultiRegionAccessPointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMultiRegionAccessPointConfig_basic(bucketName, rName1),
@@ -170,7 +169,6 @@ func TestAccS3ControlMultiRegionAccessPoint_name(t *testing.T) {
 }
 
 func TestAccS3ControlMultiRegionAccessPoint_threeRegions(t *testing.T) {
-	var providers []*schema.Provider
 	var v s3control.MultiRegionAccessPointReport
 	resourceName := "aws_s3control_multi_region_access_point.test"
 	bucket1Name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -183,13 +181,13 @@ func TestAccS3ControlMultiRegionAccessPoint_threeRegions(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckMultipleRegion(t, 3) },
-		ErrorCheck:        acctest.ErrorCheck(t, s3control.EndpointsID),
-		ProviderFactories: acctest.FactoriesMultipleRegion(&providers, 3),
-		CheckDestroy:      testAccCheckMultiRegionAccessPointDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckMultipleRegion(t, 3) },
+		ErrorCheck:               acctest.ErrorCheck(t, s3control.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(t, 3),
+		CheckDestroy:             testAccCheckMultiRegionAccessPointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMultiRegionAccessPointConfig_threeRegions(bucket1Name, bucket2Name, bucket3Name, rName),
+				Config: testAccMultiRegionAccessPointConfig_three(bucket1Name, bucket2Name, bucket3Name, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMultiRegionAccessPointExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "details.0.region.#", "3"),
@@ -215,7 +213,7 @@ func TestAccS3ControlMultiRegionAccessPoint_threeRegions(t *testing.T) {
 }
 
 func testAccCheckMultiRegionAccessPointDestroy(s *terraform.State) error {
-	conn, err := tfs3control.S3ControlConnForMRAP(acctest.Provider.Meta().(*conns.AWSClient))
+	conn, err := tfs3control.ConnForMRAP(acctest.Provider.Meta().(*conns.AWSClient))
 
 	if err != nil {
 		return err
@@ -265,7 +263,7 @@ func testAccCheckMultiRegionAccessPointExists(n string, v *s3control.MultiRegion
 			return err
 		}
 
-		conn, err := tfs3control.S3ControlConnForMRAP(acctest.Provider.Meta().(*conns.AWSClient))
+		conn, err := tfs3control.ConnForMRAP(acctest.Provider.Meta().(*conns.AWSClient))
 
 		if err != nil {
 			return err
@@ -315,7 +313,7 @@ resource "aws_s3control_multi_region_access_point" "test" {
 `, bucketName, multiRegionAccessPointName)
 }
 
-func testAccMultiRegionAccessPointConfig_publicAccessBlock(bucketName, multiRegionAccessPointName string) string {
+func testAccMultiRegionAccessPointConfig_publicBlock(bucketName, multiRegionAccessPointName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
@@ -341,7 +339,7 @@ resource "aws_s3control_multi_region_access_point" "test" {
 `, bucketName, multiRegionAccessPointName)
 }
 
-func testAccMultiRegionAccessPointConfig_threeRegions(bucketName1, bucketName2, bucketName3, multiRegionAccessPointName string) string {
+func testAccMultiRegionAccessPointConfig_three(bucketName1, bucketName2, bucketName3, multiRegionAccessPointName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigMultipleRegionProvider(3),
 		fmt.Sprintf(`

@@ -17,13 +17,13 @@ func resourceTaskDefinitionMigrateState(v int, is *terraform.InstanceState, meta
 	switch v {
 	case 0:
 		log.Println("[INFO] Found AWS ECS Task Definition State v0; migrating to v1")
-		return migrateEcsTaskDefinitionStateV0toV1(is, conn)
+		return migrateTaskDefinitionStateV0toV1(is, conn)
 	default:
 		return is, fmt.Errorf("Unexpected schema version: %d", v)
 	}
 }
 
-func migrateEcsTaskDefinitionStateV0toV1(is *terraform.InstanceState, conn *ecs.ECS) (*terraform.InstanceState, error) {
+func migrateTaskDefinitionStateV0toV1(is *terraform.InstanceState, conn *ecs.ECS) (*terraform.InstanceState, error) {
 	arn := is.Attributes["arn"]
 
 	// We need to pull definitions from the API b/c they're unrecoverable from the checksum

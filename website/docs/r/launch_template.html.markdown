@@ -1,5 +1,5 @@
 ---
-subcategory: "EC2"
+subcategory: "EC2 (Elastic Compute Cloud)"
 layout: "aws"
 page_title: "AWS: aws_launch_template"
 description: |-
@@ -37,6 +37,7 @@ resource "aws_launch_template" "foo" {
     cpu_credits = "standard"
   }
 
+  disable_api_stop        = true
   disable_api_termination = true
 
   ebs_optimized = true
@@ -75,6 +76,7 @@ resource "aws_launch_template" "foo" {
     http_endpoint               = "enabled"
     http_tokens                 = "required"
     http_put_response_hop_limit = 1
+    instance_metadata_tags      = "enabled"
   }
 
   monitoring {
@@ -109,48 +111,52 @@ resource "aws_launch_template" "foo" {
 
 The following arguments are supported:
 
-* `name` - The name of the launch template. If you leave this blank, Terraform will auto-generate a unique name.
-* `name_prefix` - Creates a unique name beginning with the specified prefix. Conflicts with `name`.
-* `description` - Description of the launch template.
-* `default_version` - Default Version of the launch template.
-* `update_default_version` - Whether to update Default Version each update. Conflicts with `default_version`.
-* `block_device_mappings` - Specify volumes to attach to the instance besides the volumes specified by the AMI.
+* `block_device_mappings` - (Optional) Specify volumes to attach to the instance besides the volumes specified by the AMI.
   See [Block Devices](#block-devices) below for details.
-* `capacity_reservation_specification` - Targeting for EC2 capacity reservations. See [Capacity Reservation Specification](#capacity-reservation-specification) below for more details.
-* `cpu_options` - The CPU options for the instance. See [CPU Options](#cpu-options) below for more details.
-* `credit_specification` - Customize the credit specification of the instance. See [Credit
+* `capacity_reservation_specification` - (Optional) Targeting for EC2 capacity reservations. See [Capacity Reservation Specification](#capacity-reservation-specification) below for more details.
+* `cpu_options` - (Optional) The CPU options for the instance. See [CPU Options](#cpu-options) below for more details.
+* `credit_specification` - (Optional) Customize the credit specification of the instance. See [Credit
   Specification](#credit-specification) below for more details.
-* `disable_api_termination` - If `true`, enables [EC2 Instance
+* `default_version` - (Optional) Default Version of the launch template.
+* `description` - (Optional) Description of the launch template.
+* `disable_api_stop` - (Optional) If true, enables [EC2 Instance Stop Protection](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Stop_Start.html#Using_StopProtection).
+* `disable_api_termination` - (Optional) If `true`, enables [EC2 Instance
   Termination Protection](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/terminating-instances.html#Using_ChangingDisableAPITermination)
-* `ebs_optimized` - If `true`, the launched EC2 instance will be EBS-optimized.
-* `elastic_gpu_specifications` - The elastic GPU to attach to the instance. See [Elastic GPU](#elastic-gpu)
+* `ebs_optimized` - (Optional) If `true`, the launched EC2 instance will be EBS-optimized.
+* `elastic_gpu_specifications` - (Optional) The elastic GPU to attach to the instance. See [Elastic GPU](#elastic-gpu)
   below for more details.
 * `elastic_inference_accelerator` - (Optional) Configuration block containing an Elastic Inference Accelerator to attach to the instance. See [Elastic Inference Accelerator](#elastic-inference-accelerator) below for more details.
-* `iam_instance_profile` - The IAM Instance Profile to launch the instance with. See [Instance Profile](#instance-profile)
-  below for more details.
-* `image_id` - The AMI from which to launch the instance.
-* `instance_initiated_shutdown_behavior` - Shutdown behavior for the instance. Can be `stop` or `terminate`.
-  (Default: `stop`).
-* `instance_market_options` - The market (purchasing) option for the instance. See [Market Options](#market-options)
-  below for details.
-* `instance_type` - The type of the instance.
-* `kernel_id` - The kernel ID.
-* `key_name` - The key name to use for the instance.
-* `license_specification` - A list of license specifications to associate with. See [License Specification](#license-specification) below for more details.
-* `metadata_options` - (Optional) Customize the metadata options for the instance. See [Metadata Options](#metadata-options) below for more details.
-* `monitoring` - The monitoring option for the instance. See [Monitoring](#monitoring) below for more details.
-* `network_interfaces` - Customize network interfaces to be attached at instance boot time. See [Network
-  Interfaces](#network-interfaces) below for more details.
-* `placement` - The placement of the instance. See [Placement](#placement) below for more details.
-* `ram_disk_id` - The ID of the RAM disk.
-* `security_group_names` - A list of security group names to associate with. If you are creating Instances in a VPC, use
-  `vpc_security_group_ids` instead.
-* `vpc_security_group_ids` - A list of security group IDs to associate with. Conflicts with `network_interfaces.security_groups`
-* `tag_specifications` - The tags to apply to the resources during launch. See [Tag Specifications](#tag-specifications) below for more details.
-* `tags` - (Optional) A map of tags to assign to the launch template. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `user_data` - The Base64-encoded user data to provide when launching the instance.
-* `hibernation_options` - The hibernation options for the instance. See [Hibernation Options](#hibernation-options) below for more details.
 * `enclave_options` - (Optional) Enable Nitro Enclaves on launched instances. See [Enclave Options](#enclave-options) below for more details.
+* `hibernation_options` - (Optional) The hibernation options for the instance. See [Hibernation Options](#hibernation-options) below for more details.
+* `iam_instance_profile` - (Optional) The IAM Instance Profile to launch the instance with. See [Instance Profile](#instance-profile)
+  below for more details.
+* `image_id` - (Optional) The AMI from which to launch the instance.
+* `instance_initiated_shutdown_behavior` - (Optional) Shutdown behavior for the instance. Can be `stop` or `terminate`.
+  (Default: `stop`).
+* `instance_market_options` - (Optional) The market (purchasing) option for the instance. See [Market Options](#market-options)
+  below for details.
+* `instance_requirements` - (Optional) The attribute requirements for the type of instance. If present then `instance_type` cannot be present.
+* `instance_type` - (Optional) The type of the instance. If present then `instance_requirements` cannot be present.
+* `kernel_id` - (Optional) The kernel ID.
+* `key_name` - (Optional) The key name to use for the instance.
+* `license_specification` - (Optional) A list of license specifications to associate with. See [License Specification](#license-specification) below for more details.
+* `maintenance_options` - (Optional) The maintenance options for the instance. See [Maintenance Options](#maintenance-options) below for more details.
+* `metadata_options` - (Optional) Customize the metadata options for the instance. See [Metadata Options](#metadata-options) below for more details.
+* `monitoring` - (Optional) The monitoring option for the instance. See [Monitoring](#monitoring) below for more details.
+* `name` - (Optional) The name of the launch template. If you leave this blank, Terraform will auto-generate a unique name.
+* `name_prefix` - (Optional) Creates a unique name beginning with the specified prefix. Conflicts with `name`.
+* `network_interfaces` - (Optional) Customize network interfaces to be attached at instance boot time. See [Network
+  Interfaces](#network-interfaces) below for more details.
+* `placement` - (Optional) The placement of the instance. See [Placement](#placement) below for more details.
+* `private_dns_name_options` - (Optional) The options for the instance hostname. The default values are inherited from the subnet. See [Private DNS Name Options](#private-dns-name-options) below for more details.
+* `ram_disk_id` - (Optional) The ID of the RAM disk.
+* `security_group_names` - (Optional) A list of security group names to associate with. If you are creating Instances in a VPC, use
+  `vpc_security_group_ids` instead.
+* `tag_specifications` - (Optional) The tags to apply to the resources during launch. See [Tag Specifications](#tag-specifications) below for more details.
+* `tags` - (Optional) A map of tags to assign to the launch template. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `update_default_version` - (Optional) Whether to update Default Version each update. Conflicts with `default_version`.
+* `user_data` - (Optional) The base64-encoded user data to provide when launching the instance.
+* `vpc_security_group_ids` - (Optional) A list of security group IDs to associate with. Conflicts with `network_interfaces.security_groups`
 
 ### Block devices
 
@@ -193,7 +199,8 @@ The `capacity_reservation_specification` block supports the following:
 
 The `capacity_reservation_target` block supports the following:
 
-* `capacity_reservation_id` - The ID of the Capacity Reservation to target.
+* `capacity_reservation_id` - The ID of the Capacity Reservation in which to run the instance.
+* `capacity_reservation_resource_group_arn` - The ARN of the Capacity Reservation resource group in which to run the instance.
 
 ### CPU Options
 
@@ -229,6 +236,20 @@ The `elastic_inference_accelerator` configuration block supports the following:
 
 * `type` - (Required) Accelerator type.
 
+### Enclave Options
+
+The `enclave_options` block supports the following:
+
+* `enabled` - If set to `true`, Nitro Enclaves will be enabled on the instance.
+
+For more information, see the documentation on [Nitro Enclaves](https://docs.aws.amazon.com/enclaves/latest/user/nitro-enclave.html).
+
+### Hibernation Options
+
+The `hibernation_options` block supports the following:
+
+* `configured` - If set to `true`, the launched EC2 instance will hibernation enabled.
+
 ### Instance Profile
 
 The [IAM Instance Profile](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_use_switch-role-ec2_instance-profiles.html)
@@ -239,6 +260,107 @@ The `iam_instance_profile` block supports the following:
 * `arn` - The Amazon Resource Name (ARN) of the instance profile.
 * `name` - The name of the instance profile.
 
+### Instance Requirements
+
+This configuration block supports the following:
+
+~> **NOTE**: Both `memory_mib.min` and `vcpu_count.min` must be specified.
+
+* `accelerator_count` - (Optional) Block describing the minimum and maximum number of accelerators (GPUs, FPGAs, or AWS Inferentia chips). Default is no minimum or maximum.
+    * `min` - (Optional) Minimum.
+    * `max` - (Optional) Maximum. Set to `0` to exclude instance types with accelerators.
+* `accelerator_manufacturers` - (Optional) List of accelerator manufacturer names. Default is any manufacturer.
+
+    ```
+    Valid names:
+      * amazon-web-services
+      * amd
+      * nvidia
+      * xilinx
+    ```
+
+* `accelerator_names` - (Optional) List of accelerator names. Default is any acclerator.
+
+    ```
+    Valid names:
+      * a100            - NVIDIA A100 GPUs
+      * v100            - NVIDIA V100 GPUs
+      * k80             - NVIDIA K80 GPUs
+      * t4              - NVIDIA T4 GPUs
+      * m60             - NVIDIA M60 GPUs
+      * radeon-pro-v520 - AMD Radeon Pro V520 GPUs
+      * vu9p            - Xilinx VU9P FPGAs
+    ```
+
+* `accelerator_total_memory_mib` - (Optional) Block describing the minimum and maximum total memory of the accelerators. Default is no minimum or maximum.
+    * `min` - (Optional) Minimum.
+    * `max` - (Optional) Maximum.
+* `accelerator_types` - (Optional) List of accelerator types. Default is any accelerator type.
+
+    ```
+    Valid types:
+      * fpga
+      * gpu
+      * inference
+    ```
+
+* `bare_metal` - (Optional) Indicate whether bare metal instace types should be `included`, `excluded`, or `required`. Default is `excluded`.
+* `baseline_ebs_bandwidth_mbps` - (Optional) Block describing the minimum and maximum baseline EBS bandwidth, in Mbps. Default is no minimum or maximum.
+    * `min` - (Optional) Minimum.
+    * `max` - (Optional) Maximum.
+* `burstable_performance` - (Optional) Indicate whether burstable performance instance types should be `included`, `excluded`, or `required`. Default is `excluded`.
+* `cpu_manufacturers` (Optional) List of CPU manufacturer names. Default is any manufacturer.
+
+    ~> **NOTE**: Don't confuse the CPU hardware manufacturer with the CPU hardware architecture. Instances will be launched with a compatible CPU architecture based on the Amazon Machine Image (AMI) that you specify in your launch template.
+
+    ```
+    Valid names:
+      * amazon-web-services
+      * amd
+      * intel
+    ```
+
+* `excluded_instance_types` - (Optional) List of instance types to exclude. You can use strings with one or more wild cards, represented by an asterisk (\*). The following are examples: `c5*`, `m5a.*`, `r*`, `*3*`. For example, if you specify `c5*`, you are excluding the entire C5 instance family, which includes all C5a and C5n instance types. If you specify `m5a.*`, you are excluding all the M5a instance types, but not the M5n instance types. Maximum of 400 entries in the list; each entry is limited to 30 characters. Default is no excluded instance types.
+* `instance_generations` - (Optional) List of instance generation names. Default is any generation.
+
+    ```
+    Valid names:
+      * current  - Recommended for best performance.
+      * previous - For existing applications optimized for older instance types.
+    ```
+
+* `local_storage` - (Optional) Indicate whether instance types with local storage volumes are `included`, `excluded`, or `required`. Default is `included`.
+* `local_storage_types` - (Optional) List of local storage type names. Default any storage type.
+
+    ```
+    Value names:
+      * hdd - hard disk drive
+      * ssd - solid state drive
+    ```
+
+* `memory_gib_per_vcpu` - (Optional) Block describing the minimum and maximum amount of memory (GiB) per vCPU. Default is no minimum or maximum.
+    * `min` - (Optional) Minimum. May be a decimal number, e.g. `0.5`.
+    * `max` - (Optional) Maximum. May be a decimal number, e.g. `0.5`.
+* `memory_mib` - (Required) Block describing the minimum and maximum amount of memory (MiB). Default is no maximum.
+    * `min` - (Required) Minimum.
+    * `max` - (Optional) Maximum.
+* `network_interface_count` - (Optional) Block describing the minimum and maximum number of network interfaces. Default is no minimum or maximum.
+    * `min` - (Optional) Minimum.
+    * `max` - (Optional) Maximum.
+* `on_demand_max_price_percentage_over_lowest_price` - (Optional) The price protection threshold for On-Demand Instances. This is the maximum you’ll pay for an On-Demand Instance, expressed as a percentage higher than the cheapest M, C, or R instance type with your specified attributes. When Amazon EC2 Auto Scaling selects instance types with your attributes, we will exclude instance types whose price is higher than your threshold. The parameter accepts an integer, which Amazon EC2 Auto Scaling interprets as a percentage. To turn off price protection, specify a high value, such as 999999. Default is 20.
+
+    If you set DesiredCapacityType to vcpu or memory-mib, the price protection threshold is applied based on the per vCPU or per memory price instead of the per instance price.  
+* `require_hibernate_support` - (Optional) Indicate whether instance types must support On-Demand Instance Hibernation, either `true` or `false`. Default is `false`.
+* `spot_max_price_percentage_over_lowest_price` - (Optional) The price protection threshold for Spot Instances. This is the maximum you’ll pay for a Spot Instance, expressed as a percentage higher than the cheapest M, C, or R instance type with your specified attributes. When Amazon EC2 Auto Scaling selects instance types with your attributes, we will exclude instance types whose price is higher than your threshold. The parameter accepts an integer, which Amazon EC2 Auto Scaling interprets as a percentage. To turn off price protection, specify a high value, such as 999999. Default is 100.
+
+    If you set DesiredCapacityType to vcpu or memory-mib, the price protection threshold is applied based on the per vCPU or per memory price instead of the per instance price.
+* `total_local_storage_gb` - (Optional) Block describing the minimum and maximum total local storage (GB). Default is no minimum or maximum.
+    * `min` - (Optional) Minimum. May be a decimal number, e.g. `0.5`.
+    * `max` - (Optional) Maximum. May be a decimal number, e.g. `0.5`.
+* `vcpu_count` - (Required) Block describing the minimum and maximum number of vCPUs. Default is no maximum.
+    * `min` - (Required) Minimum.
+    * `max` - (Optional) Maximum.
+
 ### License Specification
 
 Associate one of more license configurations.
@@ -246,6 +368,12 @@ Associate one of more license configurations.
 The `license_specification` block supports the following:
 
 * `license_configuration_arn` - (Required) ARN of the license configuration.
+
+### Maintenance Options
+
+The `maintenance_options` block supports the following:
+
+* `auto_recovery` - (Optional) Disables the automatic recovery behavior of your instance or sets it to default. Can be `"default"` or `"disabled"`. See [Recover your instance](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-instance-recover.html) for more details.
 
 ### Market Options
 
@@ -275,6 +403,7 @@ The `metadata_options` block supports the following:
 * `http_tokens` - (Optional) Whether or not the metadata service requires session tokens, also referred to as _Instance Metadata Service Version 2 (IMDSv2)_. Can be `"optional"` or `"required"`. (Default: `"optional"`).
 * `http_put_response_hop_limit` - (Optional) The desired HTTP PUT response hop limit for instance metadata requests. The larger the number, the further instance metadata requests can travel. Can be an integer from `1` to `64`. (Default: `1`).
 * `http_protocol_ipv6` - (Optional) Enables or disables the IPv6 endpoint for the instance metadata service. (Default: `disabled`).
+* `instance_metadata_tags` - (Optional) Enables or disables access to instance tags from the instance metadata service. (Default: `disabled`).
 
 For more information, see the documentation on the [Instance Metadata Service](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-instance-metadata.html).
 
@@ -298,8 +427,12 @@ Each `network_interfaces` block supports the following:
 * `description` - Description of the network interface.
 * `device_index` - The integer index of the network interface attachment.
 * `interface_type` - The type of network interface. To create an Elastic Fabric Adapter (EFA), specify `efa`.
+* `ipv4_prefix_count` - The number of IPv4 prefixes to be automatically assigned to the network interface. Conflicts with `ipv4_prefixes`
+* `ipv4_prefixes` - One or more IPv4 prefixes to be assigned to the network interface. Conflicts with `ipv4_prefix_count`
 * `ipv6_addresses` - One or more specific IPv6 addresses from the IPv6 CIDR block range of your subnet. Conflicts with `ipv6_address_count`
 * `ipv6_address_count` - The number of IPv6 addresses to assign to a network interface. Conflicts with `ipv6_addresses`
+* `ipv6_prefix_count` - The number of IPv6 prefixes to be automatically assigned to the network interface. Conflicts with `ipv6_prefixes`
+* `ipv6_prefixes` - One or more IPv6 prefixes to be assigned to the network interface. Conflicts with `ipv6_prefix_count`
 * `network_interface_id` - The ID of the network interface to attach.
 * `network_card_index` - The index of the network card. Some instance types support multiple network cards. The primary network interface must be assigned to network card index 0. The default is network card index 0.
 * `private_ip_address` - The primary private IPv4 address.
@@ -323,19 +456,13 @@ The `placement` block supports the following:
 * `tenancy` - The tenancy of the instance (if the instance is running in a VPC). Can be `default`, `dedicated`, or `host`.
 * `partition_number` - The number of the partition the instance should launch in. Valid only if the placement group strategy is set to partition.
 
-### Hibernation Options
+### Private DNS Name Options
 
-The `hibernation_options` block supports the following:
+The `private_dns_name_options` block supports the following:
 
-* `configured` - If set to `true`, the launched EC2 instance will hibernation enabled.
-
-### Enclave Options
-
-The `enclave_options` block supports the following:
-
-* `enabled` - If set to `true`, Nitro Enclaves will be enabled on the instance.
-
-For more information, see the documentation on [Nitro Enclaves](https://docs.aws.amazon.com/enclaves/latest/user/nitro-enclave.html).
+* `enable_resource_name_dns_aaaa_record` - Indicates whether to respond to DNS queries for instance hostnames with DNS AAAA records.
+* `enable_resource_name_dns_a_record` - Indicates whether to respond to DNS queries for instance hostnames with DNS A records.
+* `hostname_type` - The type of hostname for Amazon EC2 instances. For IPv4 only subnets, an instance DNS name must be based on the instance IPv4 address. For IPv6 native subnets, an instance DNS name must be based on the instance ID. For dual-stack subnets, you can specify whether DNS names use the instance IPv4 address or the instance ID. Valid values: `ip-name` and `resource-name`.
 
 ### Tag Specifications
 
@@ -354,7 +481,7 @@ In addition to all arguments above, the following attributes are exported:
 * `arn` - Amazon Resource Name (ARN) of the launch template.
 * `id` - The ID of the launch template.
 * `latest_version` - The latest version of the launch template.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 

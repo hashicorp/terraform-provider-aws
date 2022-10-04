@@ -6,13 +6,15 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/cognitoidentity"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func ResourcePool() *schema.Resource {
@@ -172,12 +174,14 @@ func resourcePoolRead(d *schema.ResourceData, meta interface{}) error {
 	ip, err := conn.DescribeIdentityPool(&cognitoidentity.DescribeIdentityPoolInput{
 		IdentityPoolId: aws.String(d.Id()),
 	})
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, cognitoidentity.ErrCodeResourceNotFoundException) {
+		create.LogNotFoundRemoveState(names.CognitoIdentity, create.ErrActionReading, ResNamePool, d.Id())
+		d.SetId("")
+		return nil
+	}
+
 	if err != nil {
-		if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == cognitoidentity.ErrCodeResourceNotFoundException {
-			d.SetId("")
-			return nil
-		}
-		return err
+		return create.Error(names.CognitoIdentity, create.ErrActionReading, ResNamePool, d.Id(), err)
 	}
 
 	arn := arn.ARN{

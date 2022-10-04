@@ -112,7 +112,7 @@ func resourceFileSystemAssociationCreate(d *schema.ResourceData, meta interface{
 	}
 
 	if v, ok := d.GetOk("cache_attributes"); ok {
-		input.CacheAttributes = expandStorageGatewayFileSystemAssociationCacheAttributes(v.([]interface{}))
+		input.CacheAttributes = expandFileSystemAssociationCacheAttributes(v.([]interface{}))
 	}
 
 	log.Printf("[DEBUG] Creating Storage Gateway File System Association: %s", input)
@@ -153,7 +153,7 @@ func resourceFileSystemAssociationRead(d *schema.ResourceData, meta interface{})
 	d.Set("gateway_arn", filesystem.GatewayARN)
 	d.Set("location_arn", filesystem.LocationARN)
 
-	if err := d.Set("cache_attributes", flattenStorageGatewayFileSystemAssociationCacheAttributes(filesystem.CacheAttributes)); err != nil {
+	if err := d.Set("cache_attributes", flattenFileSystemAssociationCacheAttributes(filesystem.CacheAttributes)); err != nil {
 		return fmt.Errorf("error setting cache_attributes: %w", err)
 	}
 
@@ -190,7 +190,7 @@ func resourceFileSystemAssociationUpdate(d *schema.ResourceData, meta interface{
 		}
 
 		if v, ok := d.GetOk("cache_attributes"); ok {
-			input.CacheAttributes = expandStorageGatewayFileSystemAssociationCacheAttributes(v.([]interface{}))
+			input.CacheAttributes = expandFileSystemAssociationCacheAttributes(v.([]interface{}))
 		}
 
 		log.Printf("[DEBUG] Updating Storage Gateway File System Association: %s", input)
@@ -233,7 +233,7 @@ func resourceFileSystemAssociationDelete(d *schema.ResourceData, meta interface{
 	return nil
 }
 
-func expandStorageGatewayFileSystemAssociationCacheAttributes(l []interface{}) *storagegateway.CacheAttributes {
+func expandFileSystemAssociationCacheAttributes(l []interface{}) *storagegateway.CacheAttributes {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -247,7 +247,7 @@ func expandStorageGatewayFileSystemAssociationCacheAttributes(l []interface{}) *
 	return ca
 }
 
-func flattenStorageGatewayFileSystemAssociationCacheAttributes(ca *storagegateway.CacheAttributes) []interface{} {
+func flattenFileSystemAssociationCacheAttributes(ca *storagegateway.CacheAttributes) []interface{} {
 	if ca == nil {
 		return []interface{}{}
 	}

@@ -8,7 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/route53"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -74,7 +74,7 @@ func resourceZoneAssociationCreate(d *schema.ResourceData, meta interface{}) err
 	output, err := conn.AssociateVPCWithHostedZone(input)
 
 	if err != nil {
-		return fmt.Errorf("error associating Route 53 Hosted Zone (%s) to EC2 VPC (%s): %w", zoneID, vpcID, err)
+		return fmt.Errorf("associating Route 53 Hosted Zone (%s) to EC2 VPC (%s): %w", zoneID, vpcID, err)
 	}
 
 	d.SetId(fmt.Sprintf("%s:%s:%s", zoneID, vpcID, vpcRegion))
@@ -90,7 +90,7 @@ func resourceZoneAssociationCreate(d *schema.ResourceData, meta interface{}) err
 		}
 
 		if _, err := wait.WaitForState(); err != nil {
-			return fmt.Errorf("error waiting for Route 53 Zone Association (%s) synchronization: %w", d.Id(), err)
+			return fmt.Errorf("waiting for Route 53 Zone Association (%s) synchronization: %w", d.Id(), err)
 		}
 	}
 
@@ -124,12 +124,12 @@ func resourceZoneAssociationRead(d *schema.ResourceData, meta interface{}) error
 	}
 
 	if err != nil {
-		return fmt.Errorf("error getting Route 53 Zone Association (%s): %w", d.Id(), err)
+		return fmt.Errorf("getting Route 53 Zone Association (%s): %w", d.Id(), err)
 	}
 
 	if hostedZoneSummary == nil {
 		if d.IsNewResource() {
-			return fmt.Errorf("error getting Route 53 Zone Association (%s): missing after creation", d.Id())
+			return fmt.Errorf("getting Route 53 Zone Association (%s): missing after creation", d.Id())
 		}
 
 		log.Printf("[WARN] Route 53 Hosted Zone (%s) Association (%s) not found, removing from state", zoneID, vpcID)
@@ -183,7 +183,7 @@ func resourceZoneAssociationDelete(d *schema.ResourceData, meta interface{}) err
 	}
 
 	if err != nil {
-		return fmt.Errorf("error disassociating Route 53 Hosted Zone (%s) from EC2 VPC (%s): %w", zoneID, vpcID, err)
+		return fmt.Errorf("disassociating Route 53 Hosted Zone (%s) from EC2 VPC (%s): %w", zoneID, vpcID, err)
 	}
 
 	return nil
@@ -209,7 +209,7 @@ func resourceZoneAssociationRefreshFunc(conn *route53.Route53, changeId, id stri
 			Id: aws.String(changeId),
 		}
 		result, state, err := resourceGoWait(conn, changeRequest)
-		if tfawserr.ErrMessageContains(err, "AccessDenied", "") {
+		if tfawserr.ErrCodeEquals(err, "AccessDenied") {
 			log.Printf("[WARN] AccessDenied when trying to get Route 53 change progress for %s - ignoring due to likely cross account issue", id)
 			return true, route53.ChangeStatusInsync, nil
 		}

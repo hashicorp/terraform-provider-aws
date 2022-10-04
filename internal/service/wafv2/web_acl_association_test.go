@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/wafv2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -27,12 +27,12 @@ func TestAccWAFV2WebACLAssociation_basic(t *testing.T) {
 			acctest.PreCheckAPIGatewayTypeEDGE(t)
 			testAccPreCheckScopeRegional(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, wafv2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckWebACLAssociationDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, wafv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWebACLAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWebACLAssociationConfig(testName),
+				Config: testAccWebACLAssociationConfig_basic(testName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLAssociationExists(resourceName),
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "resource_arn", "apigateway", regexp.MustCompile(fmt.Sprintf("/restapis/.*/stages/%s", testName))),
@@ -59,12 +59,12 @@ func TestAccWAFV2WebACLAssociation_disappears(t *testing.T) {
 			acctest.PreCheckAPIGatewayTypeEDGE(t)
 			testAccPreCheckScopeRegional(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, wafv2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckWebACLAssociationDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, wafv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWebACLAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWebACLAssociationConfig(testName),
+				Config: testAccWebACLAssociationConfig_basic(testName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLAssociationExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfwafv2.ResourceWebACLAssociation(), resourceName),
@@ -72,7 +72,7 @@ func TestAccWAFV2WebACLAssociation_disappears(t *testing.T) {
 				ExpectNonEmptyPlan: true,
 			},
 			{
-				Config: testAccWebACLAssociationConfig(testName),
+				Config: testAccWebACLAssociationConfig_basic(testName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLAssociationExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, apigateway.ResourceStage(), "aws_api_gateway_stage.test"),
@@ -107,7 +107,7 @@ func testAccCheckWebACLAssociationDestroy(s *terraform.State) error {
 		}
 
 		// Return nil if the Web ACL Association is already destroyed
-		if tfawserr.ErrMessageContains(err, wafv2.ErrCodeWAFNonexistentItemException, "") {
+		if tfawserr.ErrCodeEquals(err, wafv2.ErrCodeWAFNonexistentItemException) {
 			return nil
 		}
 
@@ -127,7 +127,7 @@ func testAccCheckWebACLAssociationExists(name string) resource.TestCheckFunc {
 	}
 }
 
-func testAccWebACLAssociationConfig(name string) string {
+func testAccWebACLAssociationConfig_basic(name string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_stage" "test" {
   stage_name    = "%s"

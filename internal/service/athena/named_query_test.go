@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/athena"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -18,13 +18,13 @@ func TestAccAthenaNamedQuery_basic(t *testing.T) {
 	resourceName := "aws_athena_named_query.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, athena.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckNamedQueryDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, athena.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckNamedQueryDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAthenaNamedQueryConfig(sdkacctest.RandInt(), sdkacctest.RandString(5)),
+				Config: testAccNamedQueryConfig_basic(sdkacctest.RandInt(), sdkacctest.RandString(5)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNamedQueryExists(resourceName),
 				),
@@ -42,13 +42,13 @@ func TestAccAthenaNamedQuery_withWorkGroup(t *testing.T) {
 	resourceName := "aws_athena_named_query.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, athena.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckNamedQueryDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, athena.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckNamedQueryDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAthenaNamedWorkGroupQueryConfig(sdkacctest.RandInt(), sdkacctest.RandString(5)),
+				Config: testAccNamedQueryConfig_workGroup(sdkacctest.RandInt(), sdkacctest.RandString(5)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNamedQueryExists(resourceName),
 				),
@@ -105,7 +105,7 @@ func testAccCheckNamedQueryExists(name string) resource.TestCheckFunc {
 	}
 }
 
-func testAccAthenaNamedQueryConfig(rInt int, rName string) string {
+func testAccNamedQueryConfig_basic(rInt int, rName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket        = "tf-test-athena-db-%s-%d"
@@ -126,7 +126,7 @@ resource "aws_athena_named_query" "test" {
 `, rName, rInt, rName, rName)
 }
 
-func testAccAthenaNamedWorkGroupQueryConfig(rInt int, rName string) string {
+func testAccNamedQueryConfig_workGroup(rInt int, rName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket        = "tf-test-athena-db-%s-%d"

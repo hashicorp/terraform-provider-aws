@@ -9,7 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/wafv2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -52,7 +52,7 @@ func ResourceRuleGroup() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.IntAtLeast(1),
 			},
-			"custom_response_body": wafv2CustomResponseBodySchema(),
+			"custom_response_body": customResponseBodySchema(),
 			"description": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -91,9 +91,9 @@ func ResourceRuleGroup() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"allow": wafv2AllowConfigSchema(),
-									"block": wafv2BlockConfigSchema(),
-									"count": wafv2CountConfigSchema(),
+									"allow": allowConfigSchema(),
+									"block": blockConfigSchema(),
+									"count": countConfigSchema(),
 								},
 							},
 						},
@@ -106,15 +106,15 @@ func ResourceRuleGroup() *schema.Resource {
 							Type:     schema.TypeInt,
 							Required: true,
 						},
-						"rule_label":        wafv2RuleLabelsSchema(),
-						"statement":         wafv2RootStatementSchema(3),
-						"visibility_config": wafv2VisibilityConfigSchema(),
+						"rule_label":        ruleLabelsSchema(),
+						"statement":         rootStatementSchema(rootStatementSchemaLevel),
+						"visibility_config": visibilityConfigSchema(),
 					},
 				},
 			},
 			"tags":              tftags.TagsSchema(),
 			"tags_all":          tftags.TagsSchemaComputed(),
-			"visibility_config": wafv2VisibilityConfigSchema(),
+			"visibility_config": visibilityConfigSchema(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -131,12 +131,12 @@ func resourceRuleGroupCreate(d *schema.ResourceData, meta interface{}) error {
 		Name:             aws.String(d.Get("name").(string)),
 		Scope:            aws.String(d.Get("scope").(string)),
 		Capacity:         aws.Int64(int64(d.Get("capacity").(int))),
-		Rules:            expandWafv2Rules(d.Get("rule").(*schema.Set).List()),
-		VisibilityConfig: expandWafv2VisibilityConfig(d.Get("visibility_config").([]interface{})),
+		Rules:            expandRules(d.Get("rule").(*schema.Set).List()),
+		VisibilityConfig: expandVisibilityConfig(d.Get("visibility_config").([]interface{})),
 	}
 
 	if v, ok := d.GetOk("custom_response_body"); ok && v.(*schema.Set).Len() > 0 {
-		params.CustomResponseBodies = expandWafv2CustomResponseBodies(v.(*schema.Set).List())
+		params.CustomResponseBodies = expandCustomResponseBodies(v.(*schema.Set).List())
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -151,7 +151,7 @@ func resourceRuleGroupCreate(d *schema.ResourceData, meta interface{}) error {
 		var err error
 		resp, err = conn.CreateRuleGroup(params)
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, wafv2.ErrCodeWAFUnavailableEntityException, "") {
+			if tfawserr.ErrCodeEquals(err, wafv2.ErrCodeWAFUnavailableEntityException) {
 				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(err)
@@ -189,7 +189,7 @@ func resourceRuleGroupRead(d *schema.ResourceData, meta interface{}) error {
 
 	resp, err := conn.GetRuleGroup(params)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, wafv2.ErrCodeWAFNonexistentItemException, "") {
+		if tfawserr.ErrCodeEquals(err, wafv2.ErrCodeWAFNonexistentItemException) {
 			log.Printf("[WARN] WAFv2 RuleGroup (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -207,15 +207,15 @@ func resourceRuleGroupRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("arn", resp.RuleGroup.ARN)
 	d.Set("lock_token", resp.LockToken)
 
-	if err := d.Set("custom_response_body", flattenWafv2CustomResponseBodies(resp.RuleGroup.CustomResponseBodies)); err != nil {
+	if err := d.Set("custom_response_body", flattenCustomResponseBodies(resp.RuleGroup.CustomResponseBodies)); err != nil {
 		return fmt.Errorf("Error setting custom_response_body: %w", err)
 	}
 
-	if err := d.Set("rule", flattenWafv2Rules(resp.RuleGroup.Rules)); err != nil {
+	if err := d.Set("rule", flattenRules(resp.RuleGroup.Rules)); err != nil {
 		return fmt.Errorf("Error setting rule: %s", err)
 	}
 
-	if err := d.Set("visibility_config", flattenWafv2VisibilityConfig(resp.RuleGroup.VisibilityConfig)); err != nil {
+	if err := d.Set("visibility_config", flattenVisibilityConfig(resp.RuleGroup.VisibilityConfig)); err != nil {
 		return fmt.Errorf("Error setting visibility_config: %s", err)
 	}
 
@@ -249,12 +249,12 @@ func resourceRuleGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 		Name:             aws.String(d.Get("name").(string)),
 		Scope:            aws.String(d.Get("scope").(string)),
 		LockToken:        aws.String(d.Get("lock_token").(string)),
-		Rules:            expandWafv2Rules(d.Get("rule").(*schema.Set).List()),
-		VisibilityConfig: expandWafv2VisibilityConfig(d.Get("visibility_config").([]interface{})),
+		Rules:            expandRules(d.Get("rule").(*schema.Set).List()),
+		VisibilityConfig: expandVisibilityConfig(d.Get("visibility_config").([]interface{})),
 	}
 
 	if v, ok := d.GetOk("custom_response_body"); ok && v.(*schema.Set).Len() > 0 {
-		u.CustomResponseBodies = expandWafv2CustomResponseBodies(v.(*schema.Set).List())
+		u.CustomResponseBodies = expandCustomResponseBodies(v.(*schema.Set).List())
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -264,7 +264,7 @@ func resourceRuleGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
 		_, err := conn.UpdateRuleGroup(u)
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, wafv2.ErrCodeWAFUnavailableEntityException, "") {
+			if tfawserr.ErrCodeEquals(err, wafv2.ErrCodeWAFUnavailableEntityException) {
 				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(err)
@@ -305,10 +305,10 @@ func resourceRuleGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
 		_, err := conn.DeleteRuleGroup(r)
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, wafv2.ErrCodeWAFAssociatedItemException, "") {
+			if tfawserr.ErrCodeEquals(err, wafv2.ErrCodeWAFAssociatedItemException) {
 				return resource.RetryableError(err)
 			}
-			if tfawserr.ErrMessageContains(err, wafv2.ErrCodeWAFUnavailableEntityException, "") {
+			if tfawserr.ErrCodeEquals(err, wafv2.ErrCodeWAFUnavailableEntityException) {
 				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(err)

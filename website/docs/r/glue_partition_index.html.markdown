@@ -129,6 +129,13 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - Catalog ID, Database name, table name, and index name.
 
+## Timeouts
+
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+
+* `create` - (Default `10m`)
+* `delete` - (Default `10m`)
+
 ## Import
 
 Glue Partition Indexes can be imported with their catalog ID (usually AWS account ID), database name, table name, and index name, e.g.,

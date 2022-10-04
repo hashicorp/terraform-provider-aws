@@ -8,7 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/imagebuilder"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -39,6 +39,13 @@ func ResourceImage() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"container_recipe_arn": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^arn:aws[^:]*:imagebuilder:[^:]+:(?:\d{12}|aws):container-recipe/[a-z0-9-_]+/\d+\.\d+\.\d+$`), "valid container recipe ARN must be provided"),
+				ExactlyOneOf: []string{"container_recipe_arn", "image_recipe_arn"},
+			},
 			"distribution_configuration_arn": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -53,9 +60,10 @@ func ResourceImage() *schema.Resource {
 			},
 			"image_recipe_arn": {
 				Type:         schema.TypeString,
-				Required:     true,
+				Optional:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^arn:aws[^:]*:imagebuilder:[^:]+:(?:\d{12}|aws):image-recipe/[a-z0-9-_]+/\d+\.\d+\.\d+$`), "valid image recipe ARN must be provided"),
+				ExactlyOneOf: []string{"container_recipe_arn", "image_recipe_arn"},
 			},
 			"image_tests_configuration": {
 				Type:     schema.TypeList,
@@ -157,6 +165,10 @@ func resourceImageCreate(d *schema.ResourceData, meta interface{}) error {
 		EnhancedImageMetadataEnabled: aws.Bool(d.Get("enhanced_image_metadata_enabled").(bool)),
 	}
 
+	if v, ok := d.GetOk("container_recipe_arn"); ok {
+		input.ContainerRecipeArn = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOk("distribution_configuration_arn"); ok {
 		input.DistributionConfigurationArn = aws.String(v.(string))
 	}
@@ -225,6 +237,10 @@ func resourceImageRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("arn", image.Arn)
 	d.Set("date_created", image.DateCreated)
+
+	if image.ContainerRecipe != nil {
+		d.Set("container_recipe_arn", image.ContainerRecipe.Arn)
+	}
 
 	if image.DistributionConfiguration != nil {
 		d.Set("distribution_configuration_arn", image.DistributionConfiguration.Arn)

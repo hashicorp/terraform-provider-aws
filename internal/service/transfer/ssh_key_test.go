@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/transfer"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -27,10 +27,10 @@ func testAccSSHKey_basic(t *testing.T) {
 	}
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, transfer.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSSHKeyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, transfer.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSSHKeyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSSHKeyConfig_basic(rName, publicKey),
@@ -104,7 +104,7 @@ func testAccCheckSSHKeyDestroy(s *terraform.State) error {
 			ServerId: aws.String(serverID),
 		})
 
-		if tfawserr.ErrMessageContains(err, transfer.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, transfer.ErrCodeResourceNotFoundException) {
 			continue
 		}
 

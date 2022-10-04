@@ -9,12 +9,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -179,7 +178,7 @@ func resourceOptionGroupRead(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] Describe DB Option Group: %#v", params)
 	options, err := conn.DescribeOptionGroups(params)
 
-	if tfawserr.ErrMessageContains(err, rds.ErrCodeOptionGroupNotFoundFault, "") {
+	if tfawserr.ErrCodeEquals(err, rds.ErrCodeOptionGroupNotFoundFault) {
 		log.Printf("[WARN] RDS Option Group (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -191,7 +190,7 @@ func resourceOptionGroupRead(d *schema.ResourceData, meta interface{}) error {
 
 	var option *rds.OptionGroup
 	for _, ogl := range options.OptionGroupsList {
-		if *ogl.OptionGroupName == d.Id() {
+		if aws.StringValue(ogl.OptionGroupName) == d.Id() {
 			option = ogl
 			break
 		}
@@ -235,7 +234,7 @@ func resourceOptionGroupRead(d *schema.ResourceData, meta interface{}) error {
 
 func optionInList(optionName string, list []*string) bool {
 	for _, opt := range list {
-		if *opt == optionName {
+		if aws.StringValue(opt) == optionName {
 			return true
 		}
 	}
@@ -285,7 +284,7 @@ func resourceOptionGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 
 			log.Printf("[DEBUG] Modify DB Option Group: %s", modifyOpts)
 
-			err := resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
+			err := resource.Retry(propagationTimeout, func() *resource.RetryError {
 				_, err := conn.ModifyOptionGroup(modifyOpts)
 				if err != nil {
 					// InvalidParameterValue: IAM role ARN value is invalid or does not include the required permissions for: SQLSERVER_BACKUP_RESTORE
@@ -327,7 +326,7 @@ func resourceOptionGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	err := resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
 		_, err := conn.DeleteOptionGroup(deleteOpts)
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, rds.ErrCodeInvalidOptionGroupStateFault, "") {
+			if tfawserr.ErrCodeEquals(err, rds.ErrCodeInvalidOptionGroupStateFault) {
 				log.Printf(`[DEBUG] AWS believes the RDS Option Group is still in use, this could be because of a internal snapshot create by AWS, see github issue #4597 for more info. retrying...`)
 				return resource.RetryableError(err)
 			}

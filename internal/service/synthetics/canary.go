@@ -11,19 +11,18 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/synthetics"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/mitchellh/go-homedir"
 )
 
-const awsMutexCanary = `aws_synthetics_canary`
+const canaryMutex = `aws_synthetics_canary`
 
 func ResourceCanary() *schema.Resource {
 	return &schema.Resource{
@@ -75,6 +74,11 @@ func ResourceCanary() *schema.Resource {
 					return strings.TrimPrefix(new, "s3://") == old
 				},
 			},
+			"delete_lambda": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 			"engine_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -113,6 +117,11 @@ func ResourceCanary() *schema.Resource {
 						"active_tracing": {
 							Type:     schema.TypeBool,
 							Optional: true,
+						},
+						"environment_variables": {
+							Type:     schema.TypeMap,
+							Optional: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 						"memory_in_mb": {
 							Type:     schema.TypeInt,
@@ -313,13 +322,13 @@ func resourceCanaryCreate(d *schema.ResourceData, meta interface{}) error {
 	// timeout. Since the creation process is asynchronous and can take up to
 	// its own timeout, we store a stop time upfront for checking.
 	// Real-life experience shows that double the standard IAM propagation time is required.
-	iamPropagationTimeout := tfiam.PropagationTimeout * 2
-	iamwaiterStopTime := time.Now().Add(iamPropagationTimeout)
+	propagationTimeout := propagationTimeout * 2
+	iamwaiterStopTime := time.Now().Add(propagationTimeout)
 
 	_, err = tfresource.RetryWhen(
-		iamPropagationTimeout+canaryCreatedTimeout,
+		propagationTimeout+canaryCreatedTimeout,
 		func() (interface{}, error) {
-			return waitCanaryReady(conn, d.Id())
+			return retryCreateCanary(conn, d, input)
 		},
 		func(err error) (bool, error) {
 			// Only retry IAM eventual consistency errors up to that timeout.
@@ -337,7 +346,7 @@ func resourceCanaryCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.Get("start_canary").(bool) {
-		if err := syntheticsStartCanary(d.Id(), conn); err != nil {
+		if err := startCanary(d.Id(), conn); err != nil {
 			return err
 		}
 	}
@@ -385,7 +394,12 @@ func resourceCanaryRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting vpc config: %w", err)
 	}
 
-	if err := d.Set("run_config", flattenCanaryRunConfig(canary.RunConfig)); err != nil {
+	runConfig := &synthetics.CanaryRunConfigInput{}
+	if v, ok := d.GetOk("run_config"); ok {
+		runConfig = expandCanaryRunConfig(v.([]interface{}))
+	}
+
+	if err := d.Set("run_config", flattenCanaryRunConfig(canary.RunConfig, runConfig.EnvironmentVariables)); err != nil {
 		return fmt.Errorf("error setting run config: %w", err)
 	}
 
@@ -472,7 +486,7 @@ func resourceCanaryUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		status := d.Get("status").(string)
 		if status == synthetics.CanaryStateRunning {
-			if err := syntheticsStopCanary(d.Id(), conn); err != nil {
+			if err := stopCanary(d.Id(), conn); err != nil {
 				return err
 			}
 		}
@@ -495,7 +509,7 @@ func resourceCanaryUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if d.Get("start_canary").(bool) {
-			if err := syntheticsStartCanary(d.Id(), conn); err != nil {
+			if err := startCanary(d.Id(), conn); err != nil {
 				return err
 			}
 		}
@@ -505,13 +519,13 @@ func resourceCanaryUpdate(d *schema.ResourceData, meta interface{}) error {
 		status := d.Get("status").(string)
 		if d.Get("start_canary").(bool) {
 			if status != synthetics.CanaryStateRunning {
-				if err := syntheticsStartCanary(d.Id(), conn); err != nil {
+				if err := startCanary(d.Id(), conn); err != nil {
 					return err
 				}
 			}
 		} else {
 			if status == synthetics.CanaryStateRunning {
-				if err := syntheticsStopCanary(d.Id(), conn); err != nil {
+				if err := stopCanary(d.Id(), conn); err != nil {
 					return err
 				}
 			}
@@ -533,14 +547,15 @@ func resourceCanaryDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SyntheticsConn
 
 	if status := d.Get("status").(string); status == synthetics.CanaryStateRunning {
-		if err := syntheticsStopCanary(d.Id(), conn); err != nil {
+		if err := stopCanary(d.Id(), conn); err != nil {
 			return err
 		}
 	}
 
 	log.Printf("[DEBUG] Deleting Synthetics Canary: (%s)", d.Id())
 	_, err := conn.DeleteCanary(&synthetics.DeleteCanaryInput{
-		Name: aws.String(d.Id()),
+		Name:         aws.String(d.Id()),
+		DeleteLambda: aws.Bool(d.Get("delete_lambda").(bool)),
 	})
 
 	if tfawserr.ErrCodeEquals(err, synthetics.ErrCodeResourceNotFoundException) {
@@ -566,8 +581,8 @@ func expandCanaryCode(d *schema.ResourceData) (*synthetics.CanaryCodeInput, erro
 	}
 
 	if v, ok := d.GetOk("zip_file"); ok {
-		conns.GlobalMutexKV.Lock(awsMutexCanary)
-		defer conns.GlobalMutexKV.Unlock(awsMutexCanary)
+		conns.GlobalMutexKV.Lock(canaryMutex)
+		defer conns.GlobalMutexKV.Unlock(canaryMutex)
 		file, err := loadFileContent(v.(string))
 		if err != nil {
 			return nil, fmt.Errorf("unable to load %q: %w", v.(string), err)
@@ -703,10 +718,14 @@ func expandCanaryRunConfig(l []interface{}) *synthetics.CanaryRunConfigInput {
 		codeConfig.ActiveTracing = aws.Bool(v)
 	}
 
+	if vars, ok := m["environment_variables"].(map[string]interface{}); ok && len(vars) > 0 {
+		codeConfig.EnvironmentVariables = flex.ExpandStringMap(vars)
+	}
+
 	return codeConfig
 }
 
-func flattenCanaryRunConfig(canaryCodeOut *synthetics.CanaryRunConfigOutput) []interface{} {
+func flattenCanaryRunConfig(canaryCodeOut *synthetics.CanaryRunConfigOutput, envVars map[string]*string) []interface{} {
 	if canaryCodeOut == nil {
 		return []interface{}{}
 	}
@@ -715,6 +734,10 @@ func flattenCanaryRunConfig(canaryCodeOut *synthetics.CanaryRunConfigOutput) []i
 		"timeout_in_seconds": aws.Int64Value(canaryCodeOut.TimeoutInSeconds),
 		"memory_in_mb":       aws.Int64Value(canaryCodeOut.MemoryInMB),
 		"active_tracing":     aws.BoolValue(canaryCodeOut.ActiveTracing),
+	}
+
+	if envVars != nil {
+		m["environment_variables"] = aws.StringValueMap(envVars)
 	}
 
 	return []interface{}{m}
@@ -773,7 +796,7 @@ func flattenCanaryTimeline(timeline *synthetics.CanaryTimeline) []interface{} {
 	return []interface{}{m}
 }
 
-func syntheticsStartCanary(name string, conn *synthetics.Synthetics) error {
+func startCanary(name string, conn *synthetics.Synthetics) error {
 	log.Printf("[DEBUG] Starting Synthetics Canary: (%s)", name)
 	_, err := conn.StartCanary(&synthetics.StartCanaryInput{
 		Name: aws.String(name),
@@ -792,11 +815,15 @@ func syntheticsStartCanary(name string, conn *synthetics.Synthetics) error {
 	return nil
 }
 
-func syntheticsStopCanary(name string, conn *synthetics.Synthetics) error {
+func stopCanary(name string, conn *synthetics.Synthetics) error {
 	log.Printf("[DEBUG] Stopping Synthetics Canary: (%s)", name)
 	_, err := conn.StopCanary(&synthetics.StopCanaryInput{
 		Name: aws.String(name),
 	})
+
+	if tfawserr.ErrCodeEquals(err, synthetics.ErrCodeConflictException) {
+		return nil
+	}
 
 	if err != nil {
 		return fmt.Errorf("error stopping Synthetics Canary (%s): %w", name, err)

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"regexp"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -58,25 +59,6 @@ func ResourceTaskDefinition() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
-			"cpu": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-
-			"family": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 255),
-			},
-
-			"revision": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-
 			"container_definitions": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -85,9 +67,9 @@ func ResourceTaskDefinition() *schema.Resource {
 					// Sort the lists of environment variables as they are serialized to state, so we won't get
 					// spurious reorderings in plans (diff is suppressed if the environment variables haven't changed,
 					// but they still show in the plan if some other property changes).
-					orderedCDs, _ := expandEcsContainerDefinitions(v.(string))
+					orderedCDs, _ := expandContainerDefinitions(v.(string))
 					containerDefinitions(orderedCDs).OrderEnvironmentVariables()
-					unnormalizedJson, _ := flattenEcsContainerDefinitions(orderedCDs)
+					unnormalizedJson, _ := flattenContainerDefinitions(orderedCDs)
 					json, _ := structure.NormalizeJsonString(unnormalizedJson)
 					return json
 				},
@@ -98,6 +80,11 @@ func ResourceTaskDefinition() *schema.Resource {
 					return equal
 				},
 				ValidateFunc: ValidTaskDefinitionContainerDefinitions,
+			},
+			"cpu": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
 			},
 			"ephemeral_storage": {
 				Type:     schema.TypeList,
@@ -115,26 +102,51 @@ func ResourceTaskDefinition() *schema.Resource {
 					},
 				},
 			},
-			"task_role_arn": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-
 			"execution_role_arn": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-
+			"family": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(1, 255),
+					validation.StringMatch(regexp.MustCompile("^[0-9A-Za-z_-]+$"), "see https://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_TaskDefinition.html"),
+				),
+			},
+			"inference_accelerator": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				ForceNew: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"device_name": {
+							Type:     schema.TypeString,
+							Required: true,
+							ForceNew: true,
+						},
+						"device_type": {
+							Type:     schema.TypeString,
+							Required: true,
+							ForceNew: true,
+						},
+					},
+				},
+			},
+			"ipc_mode": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice(ecs.IpcMode_Values(), false),
+			},
 			"memory": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
 			},
-
 			"network_mode": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -142,188 +154,12 @@ func ResourceTaskDefinition() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice(ecs.NetworkMode_Values(), false),
 			},
-
-			"runtime_platform": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
-				ForceNew: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"operating_system_family": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ForceNew:     true,
-							ValidateFunc: validation.StringInSlice(ecs.OSFamily_Values(), false),
-						},
-						"cpu_architecture": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ForceNew:     true,
-							ValidateFunc: validation.StringInSlice(ecs.CPUArchitecture_Values(), false),
-						},
-					},
-				},
+			"pid_mode": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice(ecs.PidMode_Values(), false),
 			},
-
-			"volume": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				ForceNew: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"name": {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
-						},
-
-						"host_path": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
-						},
-
-						"docker_volume_configuration": {
-							Type:     schema.TypeList,
-							Optional: true,
-							ForceNew: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"scope": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										Computed:     true,
-										ForceNew:     true,
-										ValidateFunc: validation.StringInSlice(ecs.Scope_Values(), false),
-									},
-									"autoprovision": {
-										Type:     schema.TypeBool,
-										Optional: true,
-										ForceNew: true,
-										Default:  false,
-									},
-									"driver": {
-										Type:     schema.TypeString,
-										ForceNew: true,
-										Optional: true,
-									},
-									"driver_opts": {
-										Type:     schema.TypeMap,
-										Elem:     &schema.Schema{Type: schema.TypeString},
-										ForceNew: true,
-										Optional: true,
-									},
-									"labels": {
-										Type:     schema.TypeMap,
-										Elem:     &schema.Schema{Type: schema.TypeString},
-										ForceNew: true,
-										Optional: true,
-									},
-								},
-							},
-						},
-						"efs_volume_configuration": {
-							Type:     schema.TypeList,
-							Optional: true,
-							ForceNew: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"file_system_id": {
-										Type:     schema.TypeString,
-										ForceNew: true,
-										Required: true,
-									},
-									"root_directory": {
-										Type:     schema.TypeString,
-										ForceNew: true,
-										Optional: true,
-										Default:  "/",
-									},
-									"transit_encryption": {
-										Type:         schema.TypeString,
-										ForceNew:     true,
-										Optional:     true,
-										ValidateFunc: validation.StringInSlice(ecs.EFSTransitEncryption_Values(), false),
-									},
-									"transit_encryption_port": {
-										Type:         schema.TypeInt,
-										ForceNew:     true,
-										Optional:     true,
-										ValidateFunc: validation.IsPortNumber,
-									},
-									"authorization_config": {
-										Type:     schema.TypeList,
-										Optional: true,
-										ForceNew: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"access_point_id": {
-													Type:     schema.TypeString,
-													ForceNew: true,
-													Optional: true,
-												},
-												"iam": {
-													Type:         schema.TypeString,
-													ForceNew:     true,
-													Optional:     true,
-													ValidateFunc: validation.StringInSlice(ecs.EFSAuthorizationConfigIAM_Values(), false),
-												},
-											},
-										},
-									},
-								},
-							},
-						},
-						"fsx_windows_file_server_volume_configuration": {
-							Type:     schema.TypeList,
-							Optional: true,
-							ForceNew: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"file_system_id": {
-										Type:     schema.TypeString,
-										ForceNew: true,
-										Required: true,
-									},
-									"root_directory": {
-										Type:     schema.TypeString,
-										ForceNew: true,
-										Required: true,
-									},
-									"authorization_config": {
-										Type:     schema.TypeList,
-										Required: true,
-										ForceNew: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"credentials_parameter": {
-													Type:         schema.TypeString,
-													ForceNew:     true,
-													Required:     true,
-													ValidateFunc: verify.ValidARN,
-												},
-												"domain": {
-													Type:     schema.TypeString,
-													ForceNew: true,
-													Required: true,
-												},
-											},
-										},
-									},
-								},
-							},
-						},
-					},
-				},
-				Set: resourceTaskDefinitionVolumeHash,
-			},
-
 			"placement_constraints": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -331,49 +167,20 @@ func ResourceTaskDefinition() *schema.Resource {
 				MaxItems: 10,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"expression": {
+							Type:     schema.TypeString,
+							ForceNew: true,
+							Optional: true,
+						},
 						"type": {
 							Type:         schema.TypeString,
 							ForceNew:     true,
 							Required:     true,
 							ValidateFunc: validation.StringInSlice(ecs.TaskDefinitionPlacementConstraintType_Values(), false),
 						},
-						"expression": {
-							Type:     schema.TypeString,
-							ForceNew: true,
-							Optional: true,
-						},
 					},
 				},
 			},
-
-			"requires_compatibilities": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				ForceNew: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-					ValidateFunc: validation.StringInSlice([]string{
-						"EC2",
-						"FARGATE",
-						"EXTERNAL",
-					}, false),
-				},
-			},
-
-			"ipc_mode": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice(ecs.IpcMode_Values(), false),
-			},
-
-			"pid_mode": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice(ecs.PidMode_Values(), false),
-			},
-
 			"proxy_configuration": {
 				Type:     schema.TypeList,
 				MaxItems: 1,
@@ -402,27 +209,212 @@ func ResourceTaskDefinition() *schema.Resource {
 					},
 				},
 			},
-
+			"requires_compatibilities": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				ForceNew: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+					ValidateFunc: validation.StringInSlice([]string{
+						"EC2",
+						"FARGATE",
+						"EXTERNAL",
+					}, false),
+				},
+			},
+			"revision": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
+			"runtime_platform": {
+				Type:     schema.TypeList,
+				MaxItems: 1,
+				Optional: true,
+				ForceNew: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"cpu_architecture": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ForceNew:     true,
+							ValidateFunc: validation.StringInSlice(ecs.CPUArchitecture_Values(), false),
+						},
+						"operating_system_family": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ForceNew:     true,
+							ValidateFunc: validation.StringInSlice(ecs.OSFamily_Values(), false),
+						},
+					},
+				},
+			},
+			"skip_destroy": {
+				Type:     schema.TypeBool,
+				Default:  false,
+				Optional: true,
+			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
-			"inference_accelerator": {
+			"task_role_arn": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: verify.ValidARN,
+			},
+			"volume": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"device_name": {
+						"docker_volume_configuration": {
+							Type:     schema.TypeList,
+							Optional: true,
+							ForceNew: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"autoprovision": {
+										Type:     schema.TypeBool,
+										Optional: true,
+										ForceNew: true,
+										Default:  false,
+									},
+									"driver": {
+										Type:     schema.TypeString,
+										ForceNew: true,
+										Optional: true,
+									},
+									"driver_opts": {
+										Type:     schema.TypeMap,
+										Elem:     &schema.Schema{Type: schema.TypeString},
+										ForceNew: true,
+										Optional: true,
+									},
+									"labels": {
+										Type:     schema.TypeMap,
+										Elem:     &schema.Schema{Type: schema.TypeString},
+										ForceNew: true,
+										Optional: true,
+									},
+									"scope": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										Computed:     true,
+										ForceNew:     true,
+										ValidateFunc: validation.StringInSlice(ecs.Scope_Values(), false),
+									},
+								},
+							},
+						},
+						"efs_volume_configuration": {
+							Type:     schema.TypeList,
+							Optional: true,
+							ForceNew: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"authorization_config": {
+										Type:     schema.TypeList,
+										Optional: true,
+										ForceNew: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"access_point_id": {
+													Type:     schema.TypeString,
+													ForceNew: true,
+													Optional: true,
+												},
+												"iam": {
+													Type:         schema.TypeString,
+													ForceNew:     true,
+													Optional:     true,
+													ValidateFunc: validation.StringInSlice(ecs.EFSAuthorizationConfigIAM_Values(), false),
+												},
+											},
+										},
+									},
+									"file_system_id": {
+										Type:     schema.TypeString,
+										ForceNew: true,
+										Required: true,
+									},
+									"root_directory": {
+										Type:     schema.TypeString,
+										ForceNew: true,
+										Optional: true,
+										Default:  "/",
+									},
+									"transit_encryption": {
+										Type:         schema.TypeString,
+										ForceNew:     true,
+										Optional:     true,
+										ValidateFunc: validation.StringInSlice(ecs.EFSTransitEncryption_Values(), false),
+									},
+									"transit_encryption_port": {
+										Type:         schema.TypeInt,
+										ForceNew:     true,
+										Optional:     true,
+										ValidateFunc: validation.IsPortNumber,
+									},
+								},
+							},
+						},
+						"fsx_windows_file_server_volume_configuration": {
+							Type:     schema.TypeList,
+							Optional: true,
+							ForceNew: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"authorization_config": {
+										Type:     schema.TypeList,
+										Required: true,
+										ForceNew: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"credentials_parameter": {
+													Type:         schema.TypeString,
+													ForceNew:     true,
+													Required:     true,
+													ValidateFunc: verify.ValidARN,
+												},
+												"domain": {
+													Type:     schema.TypeString,
+													ForceNew: true,
+													Required: true,
+												},
+											},
+										},
+									},
+									"file_system_id": {
+										Type:     schema.TypeString,
+										ForceNew: true,
+										Required: true,
+									},
+									"root_directory": {
+										Type:     schema.TypeString,
+										ForceNew: true,
+										Required: true,
+									},
+								},
+							},
+						},
+						"host_path": {
 							Type:     schema.TypeString,
-							Required: true,
+							Optional: true,
 							ForceNew: true,
 						},
-						"device_type": {
+						"name": {
 							Type:     schema.TypeString,
 							Required: true,
 							ForceNew: true,
 						},
 					},
 				},
+				Set: resourceTaskDefinitionVolumeHash,
 			},
 		},
 	}
@@ -430,7 +422,7 @@ func ResourceTaskDefinition() *schema.Resource {
 
 func ValidTaskDefinitionContainerDefinitions(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
-	_, err := expandEcsContainerDefinitions(value)
+	_, err := expandContainerDefinitions(value)
 	if err != nil {
 		errors = append(errors, fmt.Errorf("ECS Task Definition container_definitions is invalid: %s", err))
 	}
@@ -443,7 +435,7 @@ func resourceTaskDefinitionCreate(d *schema.ResourceData, meta interface{}) erro
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	rawDefinitions := d.Get("container_definitions").(string)
-	definitions, err := expandEcsContainerDefinitions(rawDefinitions)
+	definitions, err := expandContainerDefinitions(rawDefinitions)
 	if err != nil {
 		return err
 	}
@@ -487,17 +479,17 @@ func resourceTaskDefinitionCreate(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	if v, ok := d.GetOk("volume"); ok {
-		volumes := expandEcsVolumes(v.(*schema.Set).List())
+		volumes := expandVolumes(v.(*schema.Set).List())
 		input.Volumes = volumes
 	}
 
 	if v, ok := d.GetOk("inference_accelerator"); ok {
-		input.InferenceAccelerators = expandEcsInferenceAccelerators(v.(*schema.Set).List())
+		input.InferenceAccelerators = expandInferenceAccelerators(v.(*schema.Set).List())
 	}
 
 	constraints := d.Get("placement_constraints").(*schema.Set).List()
 	if len(constraints) > 0 {
-		cons, err := expandEcsTaskDefinitionPlacementConstraints(constraints)
+		cons, err := expandTaskDefinitionPlacementConstraints(constraints)
 		if err != nil {
 			return err
 		}
@@ -510,31 +502,55 @@ func resourceTaskDefinitionCreate(d *schema.ResourceData, meta interface{}) erro
 
 	runtimePlatformConfigs := d.Get("runtime_platform").([]interface{})
 	if len(runtimePlatformConfigs) > 0 && runtimePlatformConfigs[0] != nil {
-		input.RuntimePlatform = expandEcsTaskDefinitionRuntimePlatformConfiguration(runtimePlatformConfigs)
+		input.RuntimePlatform = expandTaskDefinitionRuntimePlatformConfiguration(runtimePlatformConfigs)
 	}
 
 	proxyConfigs := d.Get("proxy_configuration").([]interface{})
 	if len(proxyConfigs) > 0 {
-		input.ProxyConfiguration = expandEcsTaskDefinitionProxyConfiguration(proxyConfigs)
+		input.ProxyConfiguration = expandTaskDefinitionProxyConfiguration(proxyConfigs)
 	}
 
 	if v, ok := d.GetOk("ephemeral_storage"); ok && len(v.([]interface{})) > 0 {
-		input.EphemeralStorage = expandEcsTaskDefinitionEphemeralStorage(v.([]interface{}))
+		input.EphemeralStorage = expandTaskDefinitionEphemeralStorage(v.([]interface{}))
 	}
 
 	log.Printf("[DEBUG] Registering ECS task definition: %s", input)
 	out, err := conn.RegisterTaskDefinition(&input)
-	if err != nil {
-		return err
+
+	// Some partitions (i.e., ISO) may not support tag-on-create
+	if input.Tags != nil && verify.ErrorISOUnsupported(conn.PartitionID, err) {
+		log.Printf("[WARN] ECS tagging failed creating Task Definition (%s) with tags: %s. Trying create without tags.", d.Get("family").(string), err)
+		input.Tags = nil
+
+		out, err = conn.RegisterTaskDefinition(&input)
 	}
 
-	taskDefinition := *out.TaskDefinition // nosemgrep: prefer-aws-go-sdk-pointer-conversion-assignment // false positive
+	if err != nil {
+		return fmt.Errorf("failed creating ECS Task Definition (%s): %w", d.Get("family").(string), err)
+	}
+
+	taskDefinition := *out.TaskDefinition // nosemgrep:ci.prefer-aws-go-sdk-pointer-conversion-assignment // false positive
 
 	log.Printf("[DEBUG] ECS task definition registered: %q (rev. %d)",
 		aws.StringValue(taskDefinition.TaskDefinitionArn), aws.Int64Value(taskDefinition.Revision))
 
 	d.SetId(aws.StringValue(taskDefinition.Family))
 	d.Set("arn", taskDefinition.TaskDefinitionArn)
+
+	// Some partitions (i.e., ISO) may not support tag-on-create, attempt tag after create
+	if input.Tags == nil && len(tags) > 0 {
+		err := UpdateTags(conn, aws.StringValue(taskDefinition.TaskDefinitionArn), nil, tags)
+
+		// If default tags only, log and continue. Otherwise, error.
+		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.ErrorISOUnsupported(conn.PartitionID, err) {
+			log.Printf("[WARN] ECS tagging failed adding tags after create for Task Definition (%s): %s", d.Id(), err)
+			return resourceTaskDefinitionRead(d, meta)
+		}
+
+		if err != nil {
+			return fmt.Errorf("ECS tagging failed adding tags after create for Task Definition (%s): %w", d.Id(), err)
+		}
+	}
 
 	return resourceTaskDefinitionRead(d, meta)
 }
@@ -545,13 +561,26 @@ func resourceTaskDefinitionRead(d *schema.ResourceData, meta interface{}) error 
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	log.Printf("[DEBUG] Reading task definition %s", d.Id())
-	out, err := conn.DescribeTaskDefinition(&ecs.DescribeTaskDefinitionInput{
+
+	input := ecs.DescribeTaskDefinitionInput{
 		TaskDefinition: aws.String(d.Get("arn").(string)),
 		Include:        []*string{aws.String(ecs.TaskDefinitionFieldTags)},
-	})
+	}
+
+	out, err := conn.DescribeTaskDefinition(&input)
+
+	// Some partitions (i.e., ISO) may not support tagging, giving error
+	if verify.ErrorISOUnsupported(conn.PartitionID, err) {
+		log.Printf("[WARN] ECS tagging failed describing Task Definition (%s) with tags: %s; retrying without tags", d.Id(), err)
+
+		input.Include = nil
+		out, err = conn.DescribeTaskDefinition(&input)
+	}
+
 	if err != nil {
 		return err
 	}
+
 	log.Printf("[DEBUG] Received task definition %s, status:%s\n %s", aws.StringValue(out.TaskDefinition.Family),
 		aws.StringValue(out.TaskDefinition.Status), out)
 
@@ -573,7 +602,7 @@ func resourceTaskDefinitionRead(d *schema.ResourceData, meta interface{}) error 
 	// some other property changes).
 	containerDefinitions(taskDefinition.ContainerDefinitions).OrderEnvironmentVariables()
 
-	defs, err := flattenEcsContainerDefinitions(taskDefinition.ContainerDefinitions)
+	defs, err := flattenContainerDefinitions(taskDefinition.ContainerDefinitions)
 	if err != nil {
 		return err
 	}
@@ -590,22 +619,11 @@ func resourceTaskDefinitionRead(d *schema.ResourceData, meta interface{}) error 
 	d.Set("ipc_mode", taskDefinition.IpcMode)
 	d.Set("pid_mode", taskDefinition.PidMode)
 
-	tags := KeyValueTags(out.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
-	}
-
-	if err := d.Set("volume", flattenEcsVolumes(taskDefinition.Volumes)); err != nil {
+	if err := d.Set("volume", flattenVolumes(taskDefinition.Volumes)); err != nil {
 		return fmt.Errorf("error setting volume: %w", err)
 	}
 
-	if err := d.Set("inference_accelerator", flattenEcsInferenceAccelerators(taskDefinition.InferenceAccelerators)); err != nil {
+	if err := d.Set("inference_accelerator", flattenInferenceAccelerators(taskDefinition.InferenceAccelerators)); err != nil {
 		return fmt.Errorf("error setting inference accelerators: %w", err)
 	}
 
@@ -625,9 +643,21 @@ func resourceTaskDefinitionRead(d *schema.ResourceData, meta interface{}) error 
 		return fmt.Errorf("error setting proxy_configuration: %w", err)
 	}
 
-	if err := d.Set("ephemeral_storage", flattenEcsTaskDefinitionEphemeralStorage(taskDefinition.EphemeralStorage)); err != nil {
+	if err := d.Set("ephemeral_storage", flattenTaskDefinitionEphemeralStorage(taskDefinition.EphemeralStorage)); err != nil {
 		return fmt.Errorf("error setting ephemeral_storage: %w", err)
 	}
+
+	tags := KeyValueTags(out.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %w", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return fmt.Errorf("error setting tags_all: %w", err)
+	}
+
 	return nil
 }
 
@@ -699,8 +729,16 @@ func resourceTaskDefinitionUpdate(d *schema.ResourceData, meta interface{}) erro
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating ECS Task Definition (%s) tags: %s", d.Id(), err)
+		err := UpdateTags(conn, d.Get("arn").(string), o, n)
+
+		// Some partitions (i.e., ISO) may not support tagging, giving error
+		if verify.ErrorISOUnsupported(conn.PartitionID, err) {
+			log.Printf("[WARN] ECS tagging failed updating tags for Task Definition (%s): %s", d.Id(), err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("ECS tagging failed updating tags for Task Definition (%s): %w", d.Id(), err)
 		}
 	}
 
@@ -708,6 +746,11 @@ func resourceTaskDefinitionUpdate(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceTaskDefinitionDelete(d *schema.ResourceData, meta interface{}) error {
+	if v, ok := d.GetOk("skip_destroy"); ok && v.(bool) {
+		log.Printf("[DEBUG] Retaining ECS Task Definition Revision %q", d.Id())
+		return nil
+	}
+
 	conn := meta.(*conns.AWSClient).ECSConn
 
 	_, err := conn.DeregisterTaskDefinition(&ecs.DeregisterTaskDefinitionInput{
@@ -781,7 +824,7 @@ func resourceTaskDefinitionVolumeHash(v interface{}) int {
 	return create.StringHashcode(buf.String())
 }
 
-func flattenEcsInferenceAccelerators(list []*ecs.InferenceAccelerator) []map[string]interface{} {
+func flattenInferenceAccelerators(list []*ecs.InferenceAccelerator) []map[string]interface{} {
 	result := make([]map[string]interface{}, 0, len(list))
 	for _, iAcc := range list {
 		l := map[string]interface{}{
@@ -794,7 +837,7 @@ func flattenEcsInferenceAccelerators(list []*ecs.InferenceAccelerator) []map[str
 	return result
 }
 
-func expandEcsInferenceAccelerators(configured []interface{}) []*ecs.InferenceAccelerator {
+func expandInferenceAccelerators(configured []interface{}) []*ecs.InferenceAccelerator {
 	iAccs := make([]*ecs.InferenceAccelerator, 0, len(configured))
 	for _, lRaw := range configured {
 		data := lRaw.(map[string]interface{})
@@ -808,7 +851,7 @@ func expandEcsInferenceAccelerators(configured []interface{}) []*ecs.InferenceAc
 	return iAccs
 }
 
-func expandEcsTaskDefinitionPlacementConstraints(constraints []interface{}) ([]*ecs.TaskDefinitionPlacementConstraint, error) {
+func expandTaskDefinitionPlacementConstraints(constraints []interface{}) ([]*ecs.TaskDefinitionPlacementConstraint, error) {
 	var pc []*ecs.TaskDefinitionPlacementConstraint
 	for _, raw := range constraints {
 		p := raw.(map[string]interface{})
@@ -826,7 +869,7 @@ func expandEcsTaskDefinitionPlacementConstraints(constraints []interface{}) ([]*
 	return pc, nil
 }
 
-func expandEcsTaskDefinitionRuntimePlatformConfiguration(runtimePlatformConfig []interface{}) *ecs.RuntimePlatform {
+func expandTaskDefinitionRuntimePlatformConfiguration(runtimePlatformConfig []interface{}) *ecs.RuntimePlatform {
 	config := runtimePlatformConfig[0]
 
 	configMap := config.(map[string]interface{})
@@ -845,7 +888,7 @@ func expandEcsTaskDefinitionRuntimePlatformConfiguration(runtimePlatformConfig [
 	return ecsProxyConfig
 }
 
-func expandEcsTaskDefinitionProxyConfiguration(proxyConfigs []interface{}) *ecs.ProxyConfiguration {
+func expandTaskDefinitionProxyConfiguration(proxyConfigs []interface{}) *ecs.ProxyConfiguration {
 	proxyConfig := proxyConfigs[0]
 	configMap := proxyConfig.(map[string]interface{})
 
@@ -870,7 +913,7 @@ func expandEcsTaskDefinitionProxyConfiguration(proxyConfigs []interface{}) *ecs.
 	return ecsProxyConfig
 }
 
-func expandEcsVolumes(configured []interface{}) []*ecs.Volume {
+func expandVolumes(configured []interface{}) []*ecs.Volume {
 	volumes := make([]*ecs.Volume, 0, len(configured))
 
 	// Loop over our configured volumes and create
@@ -890,15 +933,15 @@ func expandEcsVolumes(configured []interface{}) []*ecs.Volume {
 		}
 
 		if v, ok := data["docker_volume_configuration"].([]interface{}); ok && len(v) > 0 {
-			l.DockerVolumeConfiguration = expandEcsVolumesDockerVolume(v)
+			l.DockerVolumeConfiguration = expandVolumesDockerVolume(v)
 		}
 
 		if v, ok := data["efs_volume_configuration"].([]interface{}); ok && len(v) > 0 {
-			l.EfsVolumeConfiguration = expandEcsVolumesEFSVolume(v)
+			l.EfsVolumeConfiguration = expandVolumesEFSVolume(v)
 		}
 
 		if v, ok := data["fsx_windows_file_server_volume_configuration"].([]interface{}); ok && len(v) > 0 {
-			l.FsxWindowsFileServerVolumeConfiguration = expandEcsVolumesFsxWinVolume(v)
+			l.FsxWindowsFileServerVolumeConfiguration = expandVolumesFSxWinVolume(v)
 		}
 
 		volumes = append(volumes, l)
@@ -907,7 +950,7 @@ func expandEcsVolumes(configured []interface{}) []*ecs.Volume {
 	return volumes
 }
 
-func expandEcsVolumesDockerVolume(configList []interface{}) *ecs.DockerVolumeConfiguration {
+func expandVolumesDockerVolume(configList []interface{}) *ecs.DockerVolumeConfiguration {
 	config := configList[0].(map[string]interface{})
 	dockerVol := &ecs.DockerVolumeConfiguration{}
 
@@ -916,8 +959,7 @@ func expandEcsVolumesDockerVolume(configList []interface{}) *ecs.DockerVolumeCon
 	}
 
 	if v, ok := config["autoprovision"]; ok && v != "" {
-		scope := dockerVol.Scope
-		if scope == nil || *scope != ecs.ScopeTask || v.(bool) {
+		if dockerVol.Scope == nil || aws.StringValue(dockerVol.Scope) != ecs.ScopeTask || v.(bool) {
 			dockerVol.Autoprovision = aws.Bool(v.(bool))
 		}
 	}
@@ -937,7 +979,7 @@ func expandEcsVolumesDockerVolume(configList []interface{}) *ecs.DockerVolumeCon
 	return dockerVol
 }
 
-func expandEcsVolumesEFSVolume(efsConfig []interface{}) *ecs.EFSVolumeConfiguration {
+func expandVolumesEFSVolume(efsConfig []interface{}) *ecs.EFSVolumeConfiguration {
 	config := efsConfig[0].(map[string]interface{})
 	efsVol := &ecs.EFSVolumeConfiguration{}
 
@@ -957,13 +999,13 @@ func expandEcsVolumesEFSVolume(efsConfig []interface{}) *ecs.EFSVolumeConfigurat
 	}
 	if v, ok := config["authorization_config"].([]interface{}); ok && len(v) > 0 {
 		efsVol.RootDirectory = nil
-		efsVol.AuthorizationConfig = expandEcsVolumesEFSVolumeAuthorizationConfig(v)
+		efsVol.AuthorizationConfig = expandVolumesEFSVolumeAuthorizationConfig(v)
 	}
 
 	return efsVol
 }
 
-func expandEcsVolumesEFSVolumeAuthorizationConfig(efsConfig []interface{}) *ecs.EFSAuthorizationConfig {
+func expandVolumesEFSVolumeAuthorizationConfig(efsConfig []interface{}) *ecs.EFSAuthorizationConfig {
 	authconfig := efsConfig[0].(map[string]interface{})
 	auth := &ecs.EFSAuthorizationConfig{}
 
@@ -978,7 +1020,7 @@ func expandEcsVolumesEFSVolumeAuthorizationConfig(efsConfig []interface{}) *ecs.
 	return auth
 }
 
-func expandEcsVolumesFsxWinVolume(fsxWinConfig []interface{}) *ecs.FSxWindowsFileServerVolumeConfiguration {
+func expandVolumesFSxWinVolume(fsxWinConfig []interface{}) *ecs.FSxWindowsFileServerVolumeConfiguration {
 	config := fsxWinConfig[0].(map[string]interface{})
 	fsxVol := &ecs.FSxWindowsFileServerVolumeConfiguration{}
 
@@ -991,13 +1033,13 @@ func expandEcsVolumesFsxWinVolume(fsxWinConfig []interface{}) *ecs.FSxWindowsFil
 	}
 
 	if v, ok := config["authorization_config"].([]interface{}); ok && len(v) > 0 {
-		fsxVol.AuthorizationConfig = expandEcsVolumesFsxWinVolumeAuthorizationConfig(v)
+		fsxVol.AuthorizationConfig = expandVolumesFSxWinVolumeAuthorizationConfig(v)
 	}
 
 	return fsxVol
 }
 
-func expandEcsVolumesFsxWinVolumeAuthorizationConfig(config []interface{}) *ecs.FSxWindowsFileServerAuthorizationConfig {
+func expandVolumesFSxWinVolumeAuthorizationConfig(config []interface{}) *ecs.FSxWindowsFileServerAuthorizationConfig {
 	authconfig := config[0].(map[string]interface{})
 	auth := &ecs.FSxWindowsFileServerAuthorizationConfig{}
 
@@ -1012,7 +1054,7 @@ func expandEcsVolumesFsxWinVolumeAuthorizationConfig(config []interface{}) *ecs.
 	return auth
 }
 
-func flattenEcsVolumes(list []*ecs.Volume) []map[string]interface{} {
+func flattenVolumes(list []*ecs.Volume) []map[string]interface{} {
 	result := make([]map[string]interface{}, 0, len(list))
 	for _, volume := range list {
 		l := map[string]interface{}{
@@ -1032,7 +1074,7 @@ func flattenEcsVolumes(list []*ecs.Volume) []map[string]interface{} {
 		}
 
 		if volume.FsxWindowsFileServerVolumeConfiguration != nil {
-			l["fsx_windows_file_server_volume_configuration"] = flattenFsxWinVolumeConfiguration(volume.FsxWindowsFileServerVolumeConfiguration)
+			l["fsx_windows_file_server_volume_configuration"] = flattenFSxWinVolumeConfiguration(volume.FsxWindowsFileServerVolumeConfiguration)
 		}
 
 		result = append(result, l)
@@ -1112,7 +1154,7 @@ func flattenEFSVolumeAuthorizationConfig(config *ecs.EFSAuthorizationConfig) []i
 	return items
 }
 
-func flattenFsxWinVolumeConfiguration(config *ecs.FSxWindowsFileServerVolumeConfiguration) []interface{} {
+func flattenFSxWinVolumeConfiguration(config *ecs.FSxWindowsFileServerVolumeConfiguration) []interface{} {
 	var items []interface{}
 	m := make(map[string]interface{})
 	if config != nil {
@@ -1125,7 +1167,7 @@ func flattenFsxWinVolumeConfiguration(config *ecs.FSxWindowsFileServerVolumeConf
 		}
 
 		if v := config.AuthorizationConfig; v != nil {
-			m["authorization_config"] = flattenFsxWinVolumeAuthorizationConfig(v)
+			m["authorization_config"] = flattenFSxWinVolumeAuthorizationConfig(v)
 		}
 	}
 
@@ -1133,7 +1175,7 @@ func flattenFsxWinVolumeConfiguration(config *ecs.FSxWindowsFileServerVolumeConf
 	return items
 }
 
-func flattenFsxWinVolumeAuthorizationConfig(config *ecs.FSxWindowsFileServerAuthorizationConfig) []interface{} {
+func flattenFSxWinVolumeAuthorizationConfig(config *ecs.FSxWindowsFileServerAuthorizationConfig) []interface{} {
 	var items []interface{}
 	m := make(map[string]interface{})
 	if config != nil {
@@ -1149,7 +1191,7 @@ func flattenFsxWinVolumeAuthorizationConfig(config *ecs.FSxWindowsFileServerAuth
 	return items
 }
 
-func flattenEcsContainerDefinitions(definitions []*ecs.ContainerDefinition) (string, error) {
+func flattenContainerDefinitions(definitions []*ecs.ContainerDefinition) (string, error) {
 	b, err := jsonutil.BuildJSON(definitions)
 	if err != nil {
 		return "", err
@@ -1158,7 +1200,7 @@ func flattenEcsContainerDefinitions(definitions []*ecs.ContainerDefinition) (str
 	return string(b), nil
 }
 
-func expandEcsContainerDefinitions(rawDefinitions string) ([]*ecs.ContainerDefinition, error) {
+func expandContainerDefinitions(rawDefinitions string) ([]*ecs.ContainerDefinition, error) {
 	var definitions []*ecs.ContainerDefinition
 
 	err := json.Unmarshal([]byte(rawDefinitions), &definitions)
@@ -1169,7 +1211,7 @@ func expandEcsContainerDefinitions(rawDefinitions string) ([]*ecs.ContainerDefin
 	return definitions, nil
 }
 
-func expandEcsTaskDefinitionEphemeralStorage(config []interface{}) *ecs.EphemeralStorage {
+func expandTaskDefinitionEphemeralStorage(config []interface{}) *ecs.EphemeralStorage {
 	configMap := config[0].(map[string]interface{})
 
 	es := &ecs.EphemeralStorage{
@@ -1179,7 +1221,7 @@ func expandEcsTaskDefinitionEphemeralStorage(config []interface{}) *ecs.Ephemera
 	return es
 }
 
-func flattenEcsTaskDefinitionEphemeralStorage(pc *ecs.EphemeralStorage) []map[string]interface{} {
+func flattenTaskDefinitionEphemeralStorage(pc *ecs.EphemeralStorage) []map[string]interface{} {
 	if pc == nil {
 		return nil
 	}

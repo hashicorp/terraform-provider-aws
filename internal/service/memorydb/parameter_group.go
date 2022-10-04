@@ -5,17 +5,15 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"regexp"
 	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/memorydb"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -58,16 +56,7 @@ func ResourceParameterGroup() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name_prefix"},
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 255),
-					validation.StringDoesNotMatch(
-						regexp.MustCompile(`[-][-]`),
-						"The name may not contain two consecutive hyphens."),
-					validation.StringMatch(
-						// Similar to ElastiCache, MemoryDB normalises names to lowercase.
-						regexp.MustCompile(`^[a-z0-9-]*[a-z0-9]$`),
-						"Only lowercase alphanumeric characters and hyphens allowed. The name may not end with a hyphen."),
-				),
+				ValidateFunc:  validateResourceName(parameterGroupNameMaxLength),
 			},
 			"name_prefix": {
 				Type:          schema.TypeString,
@@ -75,16 +64,7 @@ func ResourceParameterGroup() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name"},
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 255-resource.UniqueIDSuffixLength),
-					validation.StringDoesNotMatch(
-						regexp.MustCompile(`[-][-]`),
-						"The name may not contain two consecutive hyphens."),
-					validation.StringMatch(
-						// Similar to ElastiCache, MemoryDB normalises names to lowercase.
-						regexp.MustCompile(`^[a-z0-9-]+$`),
-						"Only lowercase alphanumeric characters and hyphens allowed."),
-				),
+				ValidateFunc:  validateResourceNamePrefix(parameterGroupNameMaxLength - resource.UniqueIDSuffixLength),
 			},
 			"parameter": {
 				Type:     schema.TypeSet,

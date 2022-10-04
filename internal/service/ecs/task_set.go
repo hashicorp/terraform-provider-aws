@@ -8,12 +8,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ecs"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -301,7 +300,7 @@ func resourceTaskSetCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("capacity_provider_strategy"); ok && v.(*schema.Set).Len() > 0 {
-		input.CapacityProviderStrategy = expandEcsCapacityProviderStrategy(v.(*schema.Set))
+		input.CapacityProviderStrategy = expandCapacityProviderStrategy(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("external_id"); ok {
@@ -317,7 +316,7 @@ func resourceTaskSetCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("network_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.NetworkConfiguration = expandEcsNetworkConfiguration(v.([]interface{}))
+		input.NetworkConfiguration = expandNetworkConfiguration(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("platform_version"); ok {
@@ -332,31 +331,21 @@ func resourceTaskSetCreate(d *schema.ResourceData, meta interface{}) error {
 		input.ServiceRegistries = expandServiceRegistries(v.([]interface{}))
 	}
 
-	// Retry due to AWS IAM & ECS eventual consistency
-	output, err := tfresource.RetryWhen(
-		tfiam.PropagationTimeout+taskSetCreateTimeout,
-		func() (interface{}, error) {
-			return conn.CreateTaskSet(input)
-		},
-		func(err error) (bool, error) {
-			if tfawserr.ErrCodeEquals(err, ecs.ErrCodeClusterNotFoundException, ecs.ErrCodeServiceNotFoundException, ecs.ErrCodeTaskSetNotFoundException) ||
-				tfawserr.ErrMessageContains(err, ecs.ErrCodeInvalidParameterException, "does not have an associated load balancer") {
-				return true, err
-			}
-			return false, err
-		},
-	)
+	output, err := retryTaskSetCreate(conn, input)
+
+	// Some partitions (i.e., ISO) may not support tag-on-create
+	if input.Tags != nil && verify.ErrorISOUnsupported(conn.PartitionID, err) {
+		log.Printf("[WARN] ECS tagging failed creating Task Set with tags: %s. Trying create without tags.", err)
+		input.Tags = nil
+
+		output, err = retryTaskSetCreate(conn, input)
+	}
 
 	if err != nil {
 		return fmt.Errorf("error creating ECS TaskSet: %w", err)
 	}
 
-	result, ok := output.(*ecs.CreateTaskSetOutput)
-	if !ok || result == nil || result.TaskSet == nil {
-		return fmt.Errorf("error creating ECS TaskSet: empty output")
-	}
-
-	taskSetId := aws.StringValue(result.TaskSet.Id)
+	taskSetId := aws.StringValue(output.TaskSet.Id)
 
 	d.SetId(fmt.Sprintf("%s,%s,%s", taskSetId, service, cluster))
 
@@ -364,6 +353,21 @@ func resourceTaskSetCreate(d *schema.ResourceData, meta interface{}) error {
 		timeout, _ := time.ParseDuration(d.Get("wait_until_stable_timeout").(string))
 		if err := waitTaskSetStable(conn, timeout, taskSetId, service, cluster); err != nil {
 			return fmt.Errorf("error waiting for ECS TaskSet (%s) to be stable: %w", d.Id(), err)
+		}
+	}
+
+	// Some partitions (i.e., ISO) may not support tag-on-create, attempt tag after create
+	if input.Tags == nil && len(tags) > 0 {
+		err := UpdateTags(conn, aws.StringValue(output.TaskSet.TaskSetArn), nil, tags)
+
+		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.ErrorISOUnsupported(conn.PartitionID, err) {
+			// If default tags only, log and continue. Otherwise, error.
+			log.Printf("[WARN] ECS tagging failed adding tags after create for Task Set (%s): %s", d.Id(), err)
+			return resourceTaskSetRead(d, meta)
+		}
+
+		if err != nil {
+			return fmt.Errorf("ECS tagging failed adding tags after create for Task Set (%s): %w", d.Id(), err)
 		}
 	}
 
@@ -396,6 +400,14 @@ func resourceTaskSetRead(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 
+	// Some partitions (i.e., ISO) may not support tagging, giving error
+	if verify.ErrorISOUnsupported(conn.PartitionID, err) {
+		log.Printf("[WARN] ECS tagging failed describing Task Set (%s) with tags: %s; retrying without tags", d.Id(), err)
+
+		input.Include = nil
+		out, err = conn.DescribeTaskSets(input)
+	}
+
 	if err != nil {
 		return fmt.Errorf("error reading ECS TaskSet (%s): %w", d.Id(), err)
 	}
@@ -422,7 +434,7 @@ func resourceTaskSetRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("task_definition", taskSet.TaskDefinition)
 	d.Set("task_set_id", taskSet.Id)
 
-	if err := d.Set("capacity_provider_strategy", flattenEcsCapacityProviderStrategy(taskSet.CapacityProviderStrategy)); err != nil {
+	if err := d.Set("capacity_provider_strategy", flattenCapacityProviderStrategy(taskSet.CapacityProviderStrategy)); err != nil {
 		return fmt.Errorf("error setting capacity_provider_strategy: %w", err)
 	}
 
@@ -430,7 +442,7 @@ func resourceTaskSetRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting load_balancer: %w", err)
 	}
 
-	if err := d.Set("network_configuration", flattenEcsNetworkConfiguration(taskSet.NetworkConfiguration)); err != nil {
+	if err := d.Set("network_configuration", flattenNetworkConfiguration(taskSet.NetworkConfiguration)); err != nil {
 		return fmt.Errorf("error setting network_configuration: %w", err)
 	}
 
@@ -490,8 +502,16 @@ func resourceTaskSetUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating ECS TaskSet (%s) tags: %w", d.Id(), err)
+		err := UpdateTags(conn, d.Get("arn").(string), o, n)
+
+		// Some partitions (i.e., ISO) may not support tagging, giving error
+		if verify.ErrorISOUnsupported(conn.PartitionID, err) {
+			log.Printf("[WARN] ECS tagging failed updating tags for Task Set (%s): %s", d.Id(), err)
+			return resourceTaskSetRead(d, meta)
+		}
+
+		if err != nil {
+			return fmt.Errorf("ECS tagging failed updating tags for Task Set (%s): %w", d.Id(), err)
 		}
 	}
 
@@ -542,4 +562,27 @@ func TaskSetParseID(id string) (string, string, string, error) {
 	}
 
 	return parts[0], parts[1], parts[2], nil
+}
+
+func retryTaskSetCreate(conn *ecs.ECS, input *ecs.CreateTaskSetInput) (*ecs.CreateTaskSetOutput, error) {
+	outputRaw, err := tfresource.RetryWhen(
+		propagationTimeout+taskSetCreateTimeout,
+		func() (interface{}, error) {
+			return conn.CreateTaskSet(input)
+		},
+		func(err error) (bool, error) {
+			if tfawserr.ErrCodeEquals(err, ecs.ErrCodeClusterNotFoundException, ecs.ErrCodeServiceNotFoundException, ecs.ErrCodeTaskSetNotFoundException) ||
+				tfawserr.ErrMessageContains(err, ecs.ErrCodeInvalidParameterException, "does not have an associated load balancer") {
+				return true, err
+			}
+			return false, err
+		},
+	)
+
+	output, ok := outputRaw.(*ecs.CreateTaskSetOutput)
+	if !ok || output == nil || output.TaskSet == nil {
+		return nil, fmt.Errorf("error creating ECS TaskSet: empty output")
+	}
+
+	return output, err
 }

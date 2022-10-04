@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_cloudwatch_log_subscription_filter: Retry resource create and update when a conflicting operation error is returned
+```

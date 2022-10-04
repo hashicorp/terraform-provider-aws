@@ -7,12 +7,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/servicecatalog"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -24,6 +23,13 @@ func ResourceProvisioningArtifact() *schema.Resource {
 		Delete: resourceProvisioningArtifactDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
+		},
+
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(ProvisioningArtifactReadyTimeout),
+			Read:   schema.DefaultTimeout(ProvisioningArtifactReadTimeout),
+			Update: schema.DefaultTimeout(ProvisioningArtifactUpdateTimeout),
+			Delete: schema.DefaultTimeout(ProvisioningArtifactDeleteTimeout),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -118,7 +124,7 @@ func resourceProvisioningArtifactCreate(d *schema.ResourceData, meta interface{}
 	}
 
 	var output *servicecatalog.CreateProvisioningArtifactOutput
-	err := resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
 		var err error
 
 		output, err = conn.CreateProvisioningArtifact(input)
@@ -163,7 +169,7 @@ func resourceProvisioningArtifactRead(d *schema.ResourceData, meta interface{}) 
 		return fmt.Errorf("error parsing Service Catalog Provisioning Artifact ID (%s): %w", d.Id(), err)
 	}
 
-	output, err := WaitProvisioningArtifactReady(conn, artifactID, productID)
+	output, err := WaitProvisioningArtifactReady(conn, artifactID, productID, d.Timeout(schema.TimeoutRead))
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] Service Catalog Provisioning Artifact (%s) not found, removing from state", d.Id())
@@ -234,7 +240,7 @@ func resourceProvisioningArtifactUpdate(d *schema.ResourceData, meta interface{}
 			input.Name = aws.String(v.(string))
 		}
 
-		err = resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
+		err = resource.Retry(d.Timeout(schema.TimeoutUpdate), func() *resource.RetryError {
 			_, err := conn.UpdateProvisioningArtifact(input)
 
 			if tfawserr.ErrMessageContains(err, servicecatalog.ErrCodeInvalidParametersException, "profile does not exist") {
@@ -288,7 +294,7 @@ func resourceProvisioningArtifactDelete(d *schema.ResourceData, meta interface{}
 		return fmt.Errorf("error deleting Service Catalog Provisioning Artifact (%s): %w", d.Id(), err)
 	}
 
-	if err := WaitProvisioningArtifactDeleted(conn, artifactID, productID); err != nil {
+	if err := WaitProvisioningArtifactDeleted(conn, artifactID, productID, d.Timeout(schema.TimeoutDelete)); err != nil {
 		return fmt.Errorf("error waiting for Service Catalog Provisioning Artifact (%s) to be deleted: %w", d.Id(), err)
 	}
 

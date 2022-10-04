@@ -1,5 +1,5 @@
 ---
-subcategory: "EventBridge (CloudWatch Events)"
+subcategory: "EventBridge"
 layout: "aws"
 page_title: "AWS: aws_cloudwatch_event_target"
 description: |-
@@ -13,6 +13,8 @@ Provides an EventBridge Target resource.
 ~> **Note:** EventBridge was formerly known as CloudWatch Events. The functionality is identical.
 
 ## Example Usage
+
+### Kinesis Usage
 
 ```terraform
 resource "aws_cloudwatch_event_target" "yada" {
@@ -56,7 +58,7 @@ resource "aws_kinesis_stream" "test_stream" {
 }
 ```
 
-## Example SSM Document Usage
+### SSM Document Usage
 
 ```terraform
 data "aws_iam_policy_document" "ssm_lifecycle_trust" {
@@ -149,7 +151,7 @@ resource "aws_cloudwatch_event_target" "stop_instances" {
 }
 ```
 
-## Example RunCommand Usage
+### RunCommand Usage
 
 ```terraform
 resource "aws_cloudwatch_event_rule" "stop_instances" {
@@ -172,7 +174,7 @@ resource "aws_cloudwatch_event_target" "stop_instances" {
 }
 ```
 
-## Example ECS Run Task with Role and Task Override Usage
+### ECS Run Task with Role and Task Override Usage
 
 ```terraform
 resource "aws_iam_role" "ecs_events" {
@@ -242,7 +244,7 @@ DOC
 }
 ```
 
-## Example API Gateway target
+### API Gateway target
 
 ```terraform
 resource "aws_cloudwatch_event_target" "example" {
@@ -275,10 +277,10 @@ resource "aws_api_gateway_stage" "example" {
 }
 ```
 
-## Example Cross-Account Event Bus target
+### Cross-Account Event Bus target
 
 ```terraform
-data "aws_iam_role" "event_bus_invoke_remote_event_bus" {
+resource "aws_iam_role" "event_bus_invoke_remote_event_bus" {
   name               = "event-bus-invoke-remote-event-bus"
   assume_role_policy = <<EOF
 {
@@ -299,7 +301,7 @@ EOF
 data "aws_iam_policy_document" "event_bus_invoke_remote_event_bus" {
   statement {
     effect    = "Allow"
-    actions   = ["events.PutEvents"]
+    actions   = ["events:PutEvents"]
     resources = ["arn:aws:events:eu-west-1:1234567890:event-bus/My-Event-Bus"]
   }
 }
@@ -328,7 +330,7 @@ resource "aws_cloudwatch_event_target" "stop_instances" {
 }
 ```
 
-## Example Input Transformer Usage - JSON Object
+### Input Transformer Usage - JSON Object
 
 ```terraform
 resource "aws_cloudwatch_event_target" "example" {
@@ -354,7 +356,7 @@ resource "aws_cloudwatch_event_rule" "example" {
 }
 ```
 
-## Example Input Transformer Usage - Simple String
+### Input Transformer Usage - Simple String
 
 ```terraform
 resource "aws_cloudwatch_event_target" "example" {
@@ -375,13 +377,73 @@ resource "aws_cloudwatch_event_rule" "example" {
 }
 ```
 
+### Cloudwatch Log Group Usage
+
+```terraform
+resource "aws_cloudwatch_log_group" "example" {
+  name              = "/aws/events/guardduty/logs"
+  retention_in_days = 1
+}
+
+data "aws_iam_policy_document" "example_log_policy" {
+  statement {
+    actions = [
+      "logs:CreateLogStream",
+      "logs:PutLogEvents",
+    ]
+
+    resources = [
+      "${aws_cloudwatch_log_group.example.arn}:*"
+    ]
+
+    principals {
+      identifiers = ["events.amazonaws.com", "delivery.logs.amazonaws.com"]
+      type        = "Service"
+    }
+
+    condition {
+      test     = "ArnEquals"
+      values   = [aws_cloudwatch_event_rule.example.arn]
+      variable = "aws:SourceArn"
+    }
+  }
+}
+
+resource "aws_cloudwatch_log_resource_policy" "example" {
+  policy_document = data.aws_iam_policy_document.example_log_policy.json
+  policy_name     = "guardduty-log-publishing-policy"
+}
+
+resource "aws_cloudwatch_event_rule" "example" {
+  name        = "guard-duty_event_rule"
+  description = "GuardDuty Findings"
+
+  event_pattern = jsonencode(
+    {
+      "source" : [
+        "aws.guardduty"
+      ]
+    }
+  )
+
+  tags = {
+    Environment = "example"
+  }
+}
+
+resource "aws_cloudwatch_event_target" "example" {
+  rule = aws_cloudwatch_event_rule.example.name
+  arn  = aws_cloudwatch_log_group.example.arn
+}
+```
+
 ## Argument Reference
 
 -> **Note:** In order to be able to have your AWS Lambda function or
-   SNS topic invoked by an EventBridge rule, you must setup the right permissions
+   SNS topic invoked by an EventBridge rule, you must set up the right permissions
    using [`aws_lambda_permission`](/docs/providers/aws/r/lambda_permission.html)
    or [`aws_sns_topic.policy`](/docs/providers/aws/r/sns_topic.html#policy).
-   More info [here](https://docs.aws.amazon.com/AmazonCloudWatch/latest/events/resource-based-policies-cwe.html).
+   More info [here](https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-use-resource-based.html).
 
 The following arguments are supported:
 
@@ -411,7 +473,7 @@ The following arguments are supported:
 ### ecs_target
 
 * `group` - (Optional) Specifies an ECS task group for the task. The maximum length is 255 characters.
-* `launch_type` - (Optional) Specifies the launch type on which your task is running. The launch type that you specify here must match one of the launch type (compatibilities) of the target task. Valid values include: an empty string `""` (to specify no launch type), `EC2`, or `FARGATE`.
+* `launch_type` - (Optional) Specifies the launch type on which your task is running. The launch type that you specify here must match one of the launch type (compatibilities) of the target task. Valid values include: `EC2`, `EXTERNAL`, or `FARGATE`.
 * `network_configuration` - (Optional) Use this if the ECS task uses the awsvpc network mode. This specifies the VPC subnets and security groups associated with the task, and whether a public IP address is to be used. Required if launch_type is FARGATE because the awsvpc mode is required for Fargate tasks.
 * `platform_version` - (Optional) Specifies the platform version for the task. Specify only the numeric portion of the platform version, such as 1.1.0. This is used only if LaunchType is FARGATE. For more information about valid platform versions, see [AWS Fargate Platform Versions](http://docs.aws.amazon.com/AmazonECS/latest/developerguide/platform_versions.html).
 * `task_count` - (Optional) The number of tasks to create based on the TaskDefinition. The default is 1.

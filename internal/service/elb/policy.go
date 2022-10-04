@@ -6,9 +6,8 @@ import (
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/elb"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
@@ -42,6 +41,10 @@ func ResourcePolicy() *schema.Resource {
 			"policy_attribute": {
 				Type:     schema.TypeSet,
 				Optional: true,
+				// If policy_attribute(s) are not specified,
+				// default values per policy type (see https://awscli.amazonaws.com/v2/documentation/api/latest/reference/elb/describe-load-balancer-policies.html)
+				// will be returned by the API; thus, this TypeSet is marked as Computed.
+				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"name": {
@@ -55,6 +58,10 @@ func ResourcePolicy() *schema.Resource {
 						},
 					},
 				},
+				// For policy types like "SSLNegotiationPolicyType" that can reference predefined policies
+				// via the "Reference-Security-Policy" policy_attribute (https://docs.aws.amazon.com/elasticloadbalancing/latest/classic/elb-security-policy-table.html),
+				// differences caused by additional attributes returned by the API are suppressed.
+				DiffSuppressFunc: suppressPolicyAttributeDiffs,
 			},
 		},
 	}
@@ -63,23 +70,14 @@ func ResourcePolicy() *schema.Resource {
 func resourcePolicyCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ELBConn
 
-	attributes := []*elb.PolicyAttribute{}
-	if attributedata, ok := d.GetOk("policy_attribute"); ok {
-		attributeSet := attributedata.(*schema.Set).List()
-		for _, attribute := range attributeSet {
-			data := attribute.(map[string]interface{})
-			attributes = append(attributes, &elb.PolicyAttribute{
-				AttributeName:  aws.String(data["name"].(string)),
-				AttributeValue: aws.String(data["value"].(string)),
-			})
-		}
-	}
-
 	lbspOpts := &elb.CreateLoadBalancerPolicyInput{
 		LoadBalancerName: aws.String(d.Get("load_balancer_name").(string)),
 		PolicyName:       aws.String(d.Get("policy_name").(string)),
 		PolicyTypeName:   aws.String(d.Get("policy_type_name").(string)),
-		PolicyAttributes: attributes,
+	}
+
+	if v, ok := d.GetOk("policy_attribute"); ok && v.(*schema.Set).Len() > 0 {
+		lbspOpts.PolicyAttributes = ExpandPolicyAttributes(v.(*schema.Set).List())
 	}
 
 	if _, err := conn.CreateLoadBalancerPolicy(lbspOpts); err != nil {
@@ -104,13 +102,12 @@ func resourcePolicyRead(d *schema.ResourceData, meta interface{}) error {
 
 	getResp, err := conn.DescribeLoadBalancerPolicies(request)
 
-	if tfawserr.ErrMessageContains(err, "LoadBalancerNotFound", "") {
-		log.Printf("[WARN] Load Balancer Policy (%s) not found, removing from state", d.Id())
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, "LoadBalancerNotFound") {
+		log.Printf("[WARN] Load Balancer (%s) not found, removing from state", loadBalancerName)
 		d.SetId("")
 		return nil
 	}
-
-	if tfawserr.ErrMessageContains(err, elb.ErrCodePolicyNotFoundException, "") {
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, elb.ErrCodePolicyNotFoundException) {
 		log.Printf("[WARN] Load Balancer Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -128,21 +125,12 @@ func resourcePolicyRead(d *schema.ResourceData, meta interface{}) error {
 	policyTypeName := policyDesc.PolicyTypeName
 	policyAttributes := policyDesc.PolicyAttributeDescriptions
 
-	attributes := []map[string]string{}
-	for _, a := range policyAttributes {
-		pair := make(map[string]string)
-		pair["name"] = *a.AttributeName
-		pair["value"] = *a.AttributeValue
-		if (*policyTypeName == "SSLNegotiationPolicyType") && (*a.AttributeValue == "false") {
-			continue
-		}
-		attributes = append(attributes, pair)
-	}
-
 	d.Set("policy_name", policyName)
 	d.Set("policy_type_name", policyTypeName)
 	d.Set("load_balancer_name", loadBalancerName)
-	d.Set("policy_attribute", attributes)
+	if err := d.Set("policy_attribute", FlattenPolicyAttributes(policyAttributes)); err != nil {
+		return fmt.Errorf("setting policy_attribute: %w", err)
+	}
 
 	return nil
 }
@@ -235,12 +223,11 @@ func resourcePolicyAssigned(policyName, loadBalancerName string, conn *elb.ELB) 
 
 	describeResp, err := conn.DescribeLoadBalancers(describeElbOpts)
 
+	if tfawserr.ErrCodeEquals(err, elb.ErrCodeAccessPointNotFoundException) {
+		return false, nil
+	}
+
 	if err != nil {
-		if ec2err, ok := err.(awserr.Error); ok {
-			if ec2err.Code() == "LoadBalancerNotFound" {
-				return false, nil
-			}
-		}
 		return false, fmt.Errorf("Error retrieving ELB description: %s", err)
 	}
 
@@ -252,7 +239,7 @@ func resourcePolicyAssigned(policyName, loadBalancerName string, conn *elb.ELB) 
 	assigned := false
 	for _, backendServer := range lb.BackendServerDescriptions {
 		for _, name := range backendServer.PolicyNames {
-			if policyName == *name {
+			if policyName == aws.StringValue(name) {
 				assigned = true
 				break
 			}
@@ -261,7 +248,7 @@ func resourcePolicyAssigned(policyName, loadBalancerName string, conn *elb.ELB) 
 
 	for _, listener := range lb.ListenerDescriptions {
 		for _, name := range listener.PolicyNames {
-			if policyName == *name {
+			if policyName == aws.StringValue(name) {
 				assigned = true
 				break
 			}
@@ -285,12 +272,11 @@ func resourcePolicyUnassign(policyName, loadBalancerName string, conn *elb.ELB) 
 
 	describeResp, err := conn.DescribeLoadBalancers(describeElbOpts)
 
+	if tfawserr.ErrCodeEquals(err, elb.ErrCodeAccessPointNotFoundException) {
+		return reassignments, nil
+	}
+
 	if err != nil {
-		if ec2err, ok := err.(awserr.Error); ok {
-			if ec2err.Code() == "LoadBalancerNotFound" {
-				return reassignments, nil
-			}
-		}
 		return reassignments, fmt.Errorf("Error retrieving ELB description: %s", err)
 	}
 
@@ -304,7 +290,7 @@ func resourcePolicyUnassign(policyName, loadBalancerName string, conn *elb.ELB) 
 		policies := []*string{}
 
 		for _, name := range backendServer.PolicyNames {
-			if policyName != *name {
+			if policyName != aws.StringValue(name) {
 				policies = append(policies, name)
 			}
 		}
@@ -335,7 +321,7 @@ func resourcePolicyUnassign(policyName, loadBalancerName string, conn *elb.ELB) 
 		policies := []*string{}
 
 		for _, name := range listener.PolicyNames {
-			if policyName != *name {
+			if policyName != aws.StringValue(name) {
 				policies = append(policies, name)
 			}
 		}
@@ -363,4 +349,23 @@ func resourcePolicyUnassign(policyName, loadBalancerName string, conn *elb.ELB) 
 	}
 
 	return reassignments, nil
+}
+
+func suppressPolicyAttributeDiffs(k, old, new string, d *schema.ResourceData) bool {
+	// Show difference for new resource
+	if d.Id() == "" {
+		return false
+	}
+
+	// Show differences if configured attributes are not in state
+	if old == "0" && new != "0" {
+		return false
+	}
+
+	o, n := d.GetChange("policy_attribute")
+	oldAttributes := o.(*schema.Set)
+	newAttributes := n.(*schema.Set)
+
+	// Suppress differences if the attributes returned from the API contain those configured
+	return oldAttributes.Intersection(newAttributes).Len() == newAttributes.Len()
 }

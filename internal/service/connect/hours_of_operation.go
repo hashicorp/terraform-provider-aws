@@ -9,13 +9,14 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/connect"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceHoursOfOperation() *schema.Resource {
@@ -27,11 +28,12 @@ func ResourceHoursOfOperation() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
-		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(connectHoursOfOperationCreatedTimeout),
-			Delete: schema.DefaultTimeout(connectHoursOfOperationDeletedTimeout),
-		},
+		CustomizeDiff: verify.SetTagsDiff,
 		Schema: map[string]*schema.Schema{
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"config": {
 				Type:     schema.TypeSet,
 				Required: true,
@@ -94,8 +96,9 @@ func ResourceHoursOfOperation() *schema.Resource {
 				ValidateFunc: validation.StringLenBetween(1, 250),
 			},
 			"hours_of_operation_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:       schema.TypeString,
+				Computed:   true,
+				Deprecated: "use 'arn' attribute instead",
 			},
 			"hours_of_operation_id": {
 				Type:     schema.TypeString,
@@ -177,7 +180,7 @@ func resourceHoursOfOperationRead(ctx context.Context, d *schema.ResourceData, m
 		InstanceId:         aws.String(instanceID),
 	})
 
-	if !d.IsNewResource() && tfawserr.ErrMessageContains(err, connect.ErrCodeResourceNotFoundException, "") {
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, connect.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] Connect Hours of Operation (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -195,7 +198,8 @@ func resourceHoursOfOperationRead(ctx context.Context, d *schema.ResourceData, m
 		return diag.FromErr(err)
 	}
 
-	d.Set("hours_of_operation_arn", resp.HoursOfOperation.HoursOfOperationArn)
+	d.Set("arn", resp.HoursOfOperation.HoursOfOperationArn)
+	d.Set("hours_of_operation_arn", resp.HoursOfOperation.HoursOfOperationArn) // Deprecated
 	d.Set("hours_of_operation_id", resp.HoursOfOperation.HoursOfOperationId)
 	d.Set("instance_id", instanceID)
 	d.Set("description", resp.HoursOfOperation.Description)
@@ -225,37 +229,23 @@ func resourceHoursOfOperationUpdate(ctx context.Context, d *schema.ResourceData,
 		return diag.FromErr(err)
 	}
 
-	input := &connect.UpdateHoursOfOperationInput{
-		HoursOfOperationId: aws.String(hoursOfOperationID),
-		InstanceId:         aws.String(instanceID),
-	}
-
-	if d.HasChange("config") {
-		config := expandConfigs(d.Get("config").(*schema.Set).List())
-		input.Config = config
-	}
-
-	if d.HasChange("name") {
-		input.Name = aws.String(d.Get("name").(string))
-	}
-
-	if d.HasChange("description") {
-		input.Description = aws.String(d.Get("description").(string))
-	}
-
-	if d.HasChange("time_zone") {
-		input.TimeZone = aws.String(d.Get("time_zone").(string))
-	}
-
-	_, err = conn.UpdateHoursOfOperationWithContext(ctx, input)
-
-	if err != nil {
-		return diag.FromErr(fmt.Errorf("[ERROR] Error updating HoursOfOperation (%s): %w", d.Id(), err))
+	if d.HasChanges("config", "description", "name", "time_zone") {
+		_, err = conn.UpdateHoursOfOperationWithContext(ctx, &connect.UpdateHoursOfOperationInput{
+			Config:             expandConfigs(d.Get("config").(*schema.Set).List()),
+			Description:        aws.String(d.Get("description").(string)),
+			HoursOfOperationId: aws.String(hoursOfOperationID),
+			InstanceId:         aws.String(instanceID),
+			Name:               aws.String(d.Get("name").(string)),
+			TimeZone:           aws.String(d.Get("time_zone").(string)),
+		})
+		if err != nil {
+			return diag.FromErr(fmt.Errorf("[ERROR] Error updating HoursOfOperation (%s): %w", d.Id(), err))
+		}
 	}
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return diag.FromErr(fmt.Errorf("error updating tags: %w", err))
 		}
 	}

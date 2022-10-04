@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -18,9 +18,9 @@ import (
 )
 
 const (
-	AWSRDSClusterEndpointCreateTimeout = 30 * time.Minute
-	AWSRDSClusterEndpointRetryDelay    = 5 * time.Second
-	ClusterEndpointRetryMinTimeout     = 3 * time.Second
+	clusterEndpointCreateTimeout   = 30 * time.Minute
+	clusterEndpointRetryDelay      = 5 * time.Second
+	ClusterEndpointRetryMinTimeout = 3 * time.Second
 )
 
 func ResourceClusterEndpoint() *schema.Resource {
@@ -114,7 +114,7 @@ func resourceClusterEndpointCreate(d *schema.ResourceData, meta interface{}) err
 
 	d.SetId(endpointId)
 
-	err = resourceClusterEndpointWaitForAvailable(AWSRDSClusterEndpointCreateTimeout, d.Id(), conn)
+	err = resourceClusterEndpointWaitForAvailable(clusterEndpointCreateTimeout, d.Id(), conn)
 	if err != nil {
 		return err
 	}
@@ -252,7 +252,7 @@ func resourceClusterEndpointWaitForDestroy(timeout time.Duration, id string, con
 		Target:     []string{"destroyed"},
 		Refresh:    DBClusterEndpointStateRefreshFunc(conn, id),
 		Timeout:    timeout,
-		Delay:      AWSRDSClusterEndpointRetryDelay,
+		Delay:      clusterEndpointRetryDelay,
 		MinTimeout: ClusterEndpointRetryMinTimeout,
 	}
 	_, err := stateConf.WaitForState()
@@ -270,7 +270,7 @@ func resourceClusterEndpointWaitForAvailable(timeout time.Duration, id string, c
 		Target:     []string{"available"},
 		Refresh:    DBClusterEndpointStateRefreshFunc(conn, id),
 		Timeout:    timeout,
-		Delay:      AWSRDSClusterEndpointRetryDelay,
+		Delay:      clusterEndpointRetryDelay,
 		MinTimeout: ClusterEndpointRetryMinTimeout,
 	}
 
@@ -290,7 +290,7 @@ func DBClusterEndpointStateRefreshFunc(conn *rds.RDS, id string) resource.StateR
 				DBClusterEndpointIdentifier: aws.String(id),
 			})
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, rds.ErrCodeDBClusterNotFoundFault, "") {
+			if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBClusterNotFoundFault) {
 				return emptyResp, "destroyed", nil
 			} else if resp != nil && len(resp.DBClusterEndpoints) == 0 {
 				return emptyResp, "destroyed", nil

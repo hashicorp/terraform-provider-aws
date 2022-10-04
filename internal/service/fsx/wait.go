@@ -137,6 +137,72 @@ func waitFileSystemDeleted(conn *fsx.FSx, id string, timeout time.Duration) (*fs
 	return nil, err
 }
 
+func waitDataRepositoryAssociationCreated(conn *fsx.FSx, id string, timeout time.Duration) (*fsx.DataRepositoryAssociation, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{fsx.DataRepositoryLifecycleCreating},
+		Target:  []string{fsx.DataRepositoryLifecycleAvailable},
+		Refresh: statusDataRepositoryAssociation(conn, id),
+		Timeout: timeout,
+		Delay:   30 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*fsx.DataRepositoryAssociation); ok {
+		if status, details := aws.StringValue(output.Lifecycle), output.FailureDetails; status == fsx.DataRepositoryLifecycleFailed && details != nil {
+			tfresource.SetLastError(err, errors.New(aws.StringValue(output.FailureDetails.Message)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitDataRepositoryAssociationUpdated(conn *fsx.FSx, id string, timeout time.Duration) (*fsx.DataRepositoryAssociation, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{fsx.DataRepositoryLifecycleUpdating},
+		Target:  []string{fsx.DataRepositoryLifecycleAvailable},
+		Refresh: statusDataRepositoryAssociation(conn, id),
+		Timeout: timeout,
+		Delay:   30 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*fsx.DataRepositoryAssociation); ok {
+		if status, details := aws.StringValue(output.Lifecycle), output.FailureDetails; status == fsx.DataRepositoryLifecycleFailed && details != nil {
+			tfresource.SetLastError(err, errors.New(aws.StringValue(output.FailureDetails.Message)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitDataRepositoryAssociationDeleted(conn *fsx.FSx, id string, timeout time.Duration) (*fsx.DataRepositoryAssociation, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{fsx.DataRepositoryLifecycleAvailable, fsx.DataRepositoryLifecycleDeleting},
+		Target:  []string{},
+		Refresh: statusDataRepositoryAssociation(conn, id),
+		Timeout: timeout,
+		Delay:   30 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*fsx.DataRepositoryAssociation); ok {
+		if status, details := aws.StringValue(output.Lifecycle), output.FailureDetails; status == fsx.DataRepositoryLifecycleFailed && details != nil {
+			tfresource.SetLastError(err, errors.New(aws.StringValue(output.FailureDetails.Message)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
 func waitStorageVirtualMachineCreated(conn *fsx.FSx, id string, timeout time.Duration) (*fsx.StorageVirtualMachine, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{fsx.StorageVirtualMachineLifecycleCreating, fsx.StorageVirtualMachineLifecyclePending},

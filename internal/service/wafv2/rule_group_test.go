@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/wafv2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -22,13 +22,13 @@ func TestAccWAFV2RuleGroup_basic(t *testing.T) {
 	resourceName := "aws_wafv2_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckScopeRegional(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, wafv2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRuleGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckScopeRegional(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, wafv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRuleGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRuleGroupConfig_Basic(ruleGroupName),
+				Config: testAccRuleGroupConfig_basic(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
@@ -60,13 +60,13 @@ func TestAccWAFV2RuleGroup_updateRule(t *testing.T) {
 	resourceName := "aws_wafv2_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckScopeRegional(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, wafv2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRuleGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckScopeRegional(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, wafv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRuleGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRuleGroupConfig_Basic(ruleGroupName),
+				Config: testAccRuleGroupConfig_basic(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
@@ -83,7 +83,7 @@ func TestAccWAFV2RuleGroup_updateRule(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccRuleGroupConfig_BasicUpdate(ruleGroupName),
+				Config: testAccRuleGroupConfig_basicUpdate(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
@@ -127,13 +127,13 @@ func TestAccWAFV2RuleGroup_updateRuleProperties(t *testing.T) {
 	ruleName2 := fmt.Sprintf("%s-2", ruleGroupName)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckScopeRegional(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, wafv2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRuleGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckScopeRegional(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, wafv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRuleGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRuleGroupConfig_BasicUpdate(ruleGroupName),
+				Config: testAccRuleGroupConfig_basicUpdate(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
@@ -165,7 +165,7 @@ func TestAccWAFV2RuleGroup_updateRuleProperties(t *testing.T) {
 			},
 			{
 				// Test step verifies addition of a rule block with the first block unchanged
-				Config: testAccRuleGroupConfig_UpdateMultipleRules(ruleGroupName, "rule-1", ruleName2, 1, 2),
+				Config: testAccRuleGroupConfig_updateMultiples(ruleGroupName, "rule-1", ruleName2, 1, 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
@@ -225,7 +225,7 @@ func TestAccWAFV2RuleGroup_updateRuleProperties(t *testing.T) {
 			},
 			{
 				// Test step to verify a change in priority for rule #1 and a change in name and priority for rule #2
-				Config: testAccRuleGroupConfig_UpdateMultipleRules(ruleGroupName, "rule-1", "updated", 5, 10),
+				Config: testAccRuleGroupConfig_updateMultiples(ruleGroupName, "rule-1", "updated", 5, 10),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
@@ -299,13 +299,13 @@ func TestAccWAFV2RuleGroup_byteMatchStatement(t *testing.T) {
 	resourceName := "aws_wafv2_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckScopeRegional(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, wafv2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRuleGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckScopeRegional(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, wafv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRuleGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRuleGroupConfig_ByteMatchStatement(ruleGroupName),
+				Config: testAccRuleGroupConfig_byteMatchStatement(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
@@ -328,7 +328,7 @@ func TestAccWAFV2RuleGroup_byteMatchStatement(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccRuleGroupConfig_ByteMatchStatement_Update(ruleGroupName),
+				Config: testAccRuleGroupConfig_byteMatchStatementUpdate(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
@@ -362,13 +362,13 @@ func TestAccWAFV2RuleGroup_ByteMatchStatement_fieldToMatch(t *testing.T) {
 	resourceName := "aws_wafv2_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckScopeRegional(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, wafv2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRuleGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckScopeRegional(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, wafv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRuleGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRuleGroupConfig_ByteMatchStatement_FieldToMatchAllQueryArguments(ruleGroupName),
+				Config: testAccRuleGroupConfig_byteMatchStatementFieldToMatchAllQueryArguments(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
@@ -379,6 +379,8 @@ func TestAccWAFV2RuleGroup_ByteMatchStatement_fieldToMatch(t *testing.T) {
 						"statement.0.byte_match_statement.0.field_to_match.#": "1",
 						"statement.0.byte_match_statement.0.field_to_match.0.all_query_arguments.#":   "1",
 						"statement.0.byte_match_statement.0.field_to_match.0.body.#":                  "0",
+						"statement.0.byte_match_statement.0.field_to_match.0.cookies.#":               "0",
+						"statement.0.byte_match_statement.0.field_to_match.0.json_body.#":             "0",
 						"statement.0.byte_match_statement.0.field_to_match.0.method.#":                "0",
 						"statement.0.byte_match_statement.0.field_to_match.0.query_string.#":          "0",
 						"statement.0.byte_match_statement.0.field_to_match.0.single_header.#":         "0",
@@ -388,7 +390,7 @@ func TestAccWAFV2RuleGroup_ByteMatchStatement_fieldToMatch(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccRuleGroupConfig_ByteMatchStatement_FieldToMatchBody(ruleGroupName),
+				Config: testAccRuleGroupConfig_byteMatchStatementFieldToMatchBody(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
@@ -399,6 +401,8 @@ func TestAccWAFV2RuleGroup_ByteMatchStatement_fieldToMatch(t *testing.T) {
 						"statement.0.byte_match_statement.0.field_to_match.#": "1",
 						"statement.0.byte_match_statement.0.field_to_match.0.all_query_arguments.#":   "0",
 						"statement.0.byte_match_statement.0.field_to_match.0.body.#":                  "1",
+						"statement.0.byte_match_statement.0.field_to_match.0.cookies.#":               "0",
+						"statement.0.byte_match_statement.0.field_to_match.0.json_body.#":             "0",
 						"statement.0.byte_match_statement.0.field_to_match.0.method.#":                "0",
 						"statement.0.byte_match_statement.0.field_to_match.0.query_string.#":          "0",
 						"statement.0.byte_match_statement.0.field_to_match.0.single_header.#":         "0",
@@ -408,7 +412,54 @@ func TestAccWAFV2RuleGroup_ByteMatchStatement_fieldToMatch(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccRuleGroupConfig_ByteMatchStatement_FieldToMatchMethod(ruleGroupName),
+				Config: testAccRuleGroupConfig_byteMatchStatementFieldToMatchCookies(ruleGroupName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRuleGroupExists(resourceName, &v),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						"statement.#":                                         "1",
+						"statement.0.byte_match_statement.#":                  "1",
+						"statement.0.byte_match_statement.0.field_to_match.#": "1",
+						"statement.0.byte_match_statement.0.field_to_match.0.all_query_arguments.#":                        "0",
+						"statement.0.byte_match_statement.0.field_to_match.0.body.#":                                       "0",
+						"statement.0.byte_match_statement.0.field_to_match.0.cookies.#":                                    "1",
+						"statement.0.byte_match_statement.0.field_to_match.0.cookies.0.match_scope":                        "ALL",
+						"statement.0.byte_match_statement.0.field_to_match.0.cookies.0.oversize_handling":                  "NO_MATCH",
+						"statement.0.byte_match_statement.0.field_to_match.0.cookies.0.match_pattern.#":                    "1",
+						"statement.0.byte_match_statement.0.field_to_match.0.cookies.0.match_pattern.0.included_cookies.0": "test",
+						"statement.0.byte_match_statement.0.field_to_match.0.cookies.0.match_pattern.0.included_cookies.1": "cookie_test",
+						"statement.0.byte_match_statement.0.field_to_match.0.method.#":                                     "0",
+						"statement.0.byte_match_statement.0.field_to_match.0.query_string.#":                               "0",
+						"statement.0.byte_match_statement.0.field_to_match.0.single_header.#":                              "0",
+						"statement.0.byte_match_statement.0.field_to_match.0.single_query_argument.#":                      "0",
+						"statement.0.byte_match_statement.0.field_to_match.0.uri_path.#":                                   "0",
+					}),
+				),
+			},
+			{
+				Config: testAccRuleGroupConfig_byteMatchStatementFieldToMatchJSONBody(ruleGroupName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRuleGroupExists(resourceName, &v),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						"statement.#":                                                                                      "1",
+						"statement.0.byte_match_statement.#":                                                               "1",
+						"statement.0.byte_match_statement.0.field_to_match.#":                                              "1",
+						"statement.0.byte_match_statement.0.field_to_match.0.json_body.#":                                  "1",
+						"statement.0.byte_match_statement.0.field_to_match.0.json_body.0.match_scope":                      "VALUE",
+						"statement.0.byte_match_statement.0.field_to_match.0.json_body.0.invalid_fallback_behavior":        "MATCH",
+						"statement.0.byte_match_statement.0.field_to_match.0.json_body.0.oversize_handling":                "CONTINUE",
+						"statement.0.byte_match_statement.0.field_to_match.0.json_body.0.match_pattern.#":                  "1",
+						"statement.0.byte_match_statement.0.field_to_match.0.json_body.0.match_pattern.0.included_paths.#": "2",
+						"statement.0.byte_match_statement.0.field_to_match.0.json_body.0.match_pattern.0.included_paths.0": "/dogs/0/name",
+						"statement.0.byte_match_statement.0.field_to_match.0.json_body.0.match_pattern.0.included_paths.1": "/dogs/1/name",
+					}),
+				),
+			},
+			{
+				Config: testAccRuleGroupConfig_byteMatchStatementFieldToMatchMethod(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
@@ -419,6 +470,8 @@ func TestAccWAFV2RuleGroup_ByteMatchStatement_fieldToMatch(t *testing.T) {
 						"statement.0.byte_match_statement.0.field_to_match.#": "1",
 						"statement.0.byte_match_statement.0.field_to_match.0.all_query_arguments.#":   "0",
 						"statement.0.byte_match_statement.0.field_to_match.0.body.#":                  "0",
+						"statement.0.byte_match_statement.0.field_to_match.0.cookies.#":               "0",
+						"statement.0.byte_match_statement.0.field_to_match.0.json_body.#":             "0",
 						"statement.0.byte_match_statement.0.field_to_match.0.method.#":                "1",
 						"statement.0.byte_match_statement.0.field_to_match.0.query_string.#":          "0",
 						"statement.0.byte_match_statement.0.field_to_match.0.single_header.#":         "0",
@@ -428,7 +481,7 @@ func TestAccWAFV2RuleGroup_ByteMatchStatement_fieldToMatch(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccRuleGroupConfig_ByteMatchStatement_FieldToMatchQueryString(ruleGroupName),
+				Config: testAccRuleGroupConfig_byteMatchStatementFieldToMatchQueryString(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
@@ -439,6 +492,8 @@ func TestAccWAFV2RuleGroup_ByteMatchStatement_fieldToMatch(t *testing.T) {
 						"statement.0.byte_match_statement.0.field_to_match.#": "1",
 						"statement.0.byte_match_statement.0.field_to_match.0.all_query_arguments.#":   "0",
 						"statement.0.byte_match_statement.0.field_to_match.0.body.#":                  "0",
+						"statement.0.byte_match_statement.0.field_to_match.0.cookies.#":               "0",
+						"statement.0.byte_match_statement.0.field_to_match.0.json_body.#":             "0",
 						"statement.0.byte_match_statement.0.field_to_match.0.method.#":                "0",
 						"statement.0.byte_match_statement.0.field_to_match.0.query_string.#":          "1",
 						"statement.0.byte_match_statement.0.field_to_match.0.single_header.#":         "0",
@@ -448,7 +503,7 @@ func TestAccWAFV2RuleGroup_ByteMatchStatement_fieldToMatch(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccRuleGroupConfig_ByteMatchStatement_FieldToMatchSingleHeader(ruleGroupName),
+				Config: testAccRuleGroupConfig_byteMatchStatementFieldToMatchSingleHeader(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
@@ -459,6 +514,8 @@ func TestAccWAFV2RuleGroup_ByteMatchStatement_fieldToMatch(t *testing.T) {
 						"statement.0.byte_match_statement.0.field_to_match.#": "1",
 						"statement.0.byte_match_statement.0.field_to_match.0.all_query_arguments.#":   "0",
 						"statement.0.byte_match_statement.0.field_to_match.0.body.#":                  "0",
+						"statement.0.byte_match_statement.0.field_to_match.0.cookies.#":               "0",
+						"statement.0.byte_match_statement.0.field_to_match.0.json_body.#":             "0",
 						"statement.0.byte_match_statement.0.field_to_match.0.method.#":                "0",
 						"statement.0.byte_match_statement.0.field_to_match.0.query_string.#":          "0",
 						"statement.0.byte_match_statement.0.field_to_match.0.single_header.#":         "1",
@@ -469,7 +526,7 @@ func TestAccWAFV2RuleGroup_ByteMatchStatement_fieldToMatch(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccRuleGroupConfig_ByteMatchStatement_FieldToMatchSingleQueryArgument(ruleGroupName),
+				Config: testAccRuleGroupConfig_byteMatchStatementFieldToMatchSingleQueryArgument(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
@@ -480,6 +537,8 @@ func TestAccWAFV2RuleGroup_ByteMatchStatement_fieldToMatch(t *testing.T) {
 						"statement.0.byte_match_statement.0.field_to_match.#": "1",
 						"statement.0.byte_match_statement.0.field_to_match.0.all_query_arguments.#":        "0",
 						"statement.0.byte_match_statement.0.field_to_match.0.body.#":                       "0",
+						"statement.0.byte_match_statement.0.field_to_match.0.cookies.#":                    "0",
+						"statement.0.byte_match_statement.0.field_to_match.0.json_body.#":                  "0",
 						"statement.0.byte_match_statement.0.field_to_match.0.method.#":                     "0",
 						"statement.0.byte_match_statement.0.field_to_match.0.query_string.#":               "0",
 						"statement.0.byte_match_statement.0.field_to_match.0.single_header.#":              "0",
@@ -490,7 +549,7 @@ func TestAccWAFV2RuleGroup_ByteMatchStatement_fieldToMatch(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccRuleGroupConfig_ByteMatchStatement_FieldToMatchURIPath(ruleGroupName),
+				Config: testAccRuleGroupConfig_byteMatchStatementFieldToMatchURIPath(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
@@ -501,6 +560,8 @@ func TestAccWAFV2RuleGroup_ByteMatchStatement_fieldToMatch(t *testing.T) {
 						"statement.0.byte_match_statement.0.field_to_match.#": "1",
 						"statement.0.byte_match_statement.0.field_to_match.0.all_query_arguments.#":   "0",
 						"statement.0.byte_match_statement.0.field_to_match.0.body.#":                  "0",
+						"statement.0.byte_match_statement.0.field_to_match.0.cookies.#":               "0",
+						"statement.0.byte_match_statement.0.field_to_match.0.json_body.#":             "0",
 						"statement.0.byte_match_statement.0.field_to_match.0.method.#":                "0",
 						"statement.0.byte_match_statement.0.field_to_match.0.query_string.#":          "0",
 						"statement.0.byte_match_statement.0.field_to_match.0.single_header.#":         "0",
@@ -526,13 +587,13 @@ func TestAccWAFV2RuleGroup_changeNameForceNew(t *testing.T) {
 	resourceName := "aws_wafv2_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckScopeRegional(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, wafv2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRuleGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckScopeRegional(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, wafv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRuleGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRuleGroupConfig_Basic(ruleGroupName),
+				Config: testAccRuleGroupConfig_basic(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(resourceName, &before),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
@@ -548,7 +609,7 @@ func TestAccWAFV2RuleGroup_changeNameForceNew(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccRuleGroupConfig_Basic(ruleGroupNewName),
+				Config: testAccRuleGroupConfig_basic(ruleGroupNewName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(resourceName, &after),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
@@ -573,13 +634,13 @@ func TestAccWAFV2RuleGroup_changeCapacityForceNew(t *testing.T) {
 	resourceName := "aws_wafv2_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckScopeRegional(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, wafv2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRuleGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckScopeRegional(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, wafv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRuleGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRuleGroupConfig_Basic(ruleGroupName),
+				Config: testAccRuleGroupConfig_basic(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(resourceName, &before),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
@@ -595,7 +656,7 @@ func TestAccWAFV2RuleGroup_changeCapacityForceNew(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccRuleGroupConfig_UpdateCapacity(ruleGroupName),
+				Config: testAccRuleGroupConfig_updateCapacity(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(resourceName, &after),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
@@ -620,13 +681,13 @@ func TestAccWAFV2RuleGroup_changeMetricNameForceNew(t *testing.T) {
 	resourceName := "aws_wafv2_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckScopeRegional(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, wafv2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRuleGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckScopeRegional(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, wafv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRuleGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRuleGroupConfig_Basic(ruleGroupName),
+				Config: testAccRuleGroupConfig_basic(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(resourceName, &before),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
@@ -642,7 +703,7 @@ func TestAccWAFV2RuleGroup_changeMetricNameForceNew(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccRuleGroupConfig_UpdateMetricName(ruleGroupName),
+				Config: testAccRuleGroupConfig_updateMetricName(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(resourceName, &after),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
@@ -667,13 +728,13 @@ func TestAccWAFV2RuleGroup_disappears(t *testing.T) {
 	resourceName := "aws_wafv2_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckScopeRegional(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, wafv2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRuleGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckScopeRegional(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, wafv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRuleGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRuleGroupConfig_Minimal(ruleGroupName),
+				Config: testAccRuleGroupConfig_minimal(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(resourceName, &v),
 					acctest.CheckResourceDisappears(acctest.Provider, tfwafv2.ResourceRuleGroup(), resourceName),
@@ -690,13 +751,13 @@ func TestAccWAFV2RuleGroup_RuleLabels(t *testing.T) {
 	resourceName := "aws_wafv2_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckScopeRegional(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, wafv2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRuleGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckScopeRegional(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, wafv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRuleGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRuleGroupConfig_RuleLabels(ruleGroupName),
+				Config: testAccRuleGroupConfig_labels(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
@@ -709,7 +770,7 @@ func TestAccWAFV2RuleGroup_RuleLabels(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccRuleGroupConfig_NoRuleLabels(ruleGroupName),
+				Config: testAccRuleGroupConfig_noLabels(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
@@ -735,13 +796,13 @@ func TestAccWAFV2RuleGroup_geoMatchStatement(t *testing.T) {
 	resourceName := "aws_wafv2_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckScopeRegional(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, wafv2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRuleGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckScopeRegional(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, wafv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRuleGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRuleGroupConfig_GeoMatchStatement(ruleGroupName),
+				Config: testAccRuleGroupConfig_geoMatchStatement(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
@@ -757,7 +818,7 @@ func TestAccWAFV2RuleGroup_geoMatchStatement(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccRuleGroupConfig_GeoMatchStatement_Update(ruleGroupName),
+				Config: testAccRuleGroupConfig_geoMatchStatementUpdate(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
@@ -789,13 +850,13 @@ func TestAccWAFV2RuleGroup_GeoMatchStatement_forwardedIP(t *testing.T) {
 	resourceName := "aws_wafv2_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckScopeRegional(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, wafv2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRuleGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckScopeRegional(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, wafv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRuleGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRuleGroupConfig_GeoMatchStatement_ForwardedIPConfig(ruleGroupName, "MATCH", "X-Forwarded-For"),
+				Config: testAccRuleGroupConfig_geoMatchStatementForwardedIP(ruleGroupName, "MATCH", "X-Forwarded-For"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
@@ -813,7 +874,7 @@ func TestAccWAFV2RuleGroup_GeoMatchStatement_forwardedIP(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccRuleGroupConfig_GeoMatchStatement_ForwardedIPConfig(ruleGroupName, "NO_MATCH", "Updated"),
+				Config: testAccRuleGroupConfig_geoMatchStatementForwardedIP(ruleGroupName, "NO_MATCH", "Updated"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
@@ -846,13 +907,13 @@ func TestAccWAFV2RuleGroup_LabelMatchStatement(t *testing.T) {
 	resourceName := "aws_wafv2_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckScopeRegional(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, wafv2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRuleGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckScopeRegional(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, wafv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRuleGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRuleGroupConfig_LabelMatchStatement(ruleGroupName, "LABEL", "Hashicorp:Test:Label1"),
+				Config: testAccRuleGroupConfig_labelMatchStatement(ruleGroupName, "LABEL", "Hashicorp:Test:Label1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
@@ -866,7 +927,7 @@ func TestAccWAFV2RuleGroup_LabelMatchStatement(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccRuleGroupConfig_LabelMatchStatement(ruleGroupName, "NAMESPACE", "awswaf:managed:aws:bot-control:"),
+				Config: testAccRuleGroupConfig_labelMatchStatement(ruleGroupName, "NAMESPACE", "awswaf:managed:aws:bot-control:"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
@@ -895,13 +956,13 @@ func TestAccWAFV2RuleGroup_ipSetReferenceStatement(t *testing.T) {
 	resourceName := "aws_wafv2_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckScopeRegional(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, wafv2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRuleGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckScopeRegional(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, wafv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRuleGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRuleGroupConfig_IPSetReferenceStatement(ruleGroupName),
+				Config: testAccRuleGroupConfig_ipsetReferenceStatement(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
@@ -932,13 +993,13 @@ func TestAccWAFV2RuleGroup_IPSetReferenceStatement_ipsetForwardedIP(t *testing.T
 	resourceName := "aws_wafv2_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckScopeRegional(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, wafv2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRuleGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckScopeRegional(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, wafv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRuleGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRuleGroupConfig_IPSetReferenceStatement_IPSetForwardedIPConfig(ruleGroupName, "MATCH", "X-Forwarded-For", "FIRST"),
+				Config: testAccRuleGroupConfig_ipsetReferenceStatementIPSetForwardedIP(ruleGroupName, "MATCH", "X-Forwarded-For", "FIRST"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
@@ -959,7 +1020,7 @@ func TestAccWAFV2RuleGroup_IPSetReferenceStatement_ipsetForwardedIP(t *testing.T
 				),
 			},
 			{
-				Config: testAccRuleGroupConfig_IPSetReferenceStatement_IPSetForwardedIPConfig(ruleGroupName, "NO_MATCH", "X-Forwarded-For", "LAST"),
+				Config: testAccRuleGroupConfig_ipsetReferenceStatementIPSetForwardedIP(ruleGroupName, "NO_MATCH", "X-Forwarded-For", "LAST"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
@@ -980,7 +1041,7 @@ func TestAccWAFV2RuleGroup_IPSetReferenceStatement_ipsetForwardedIP(t *testing.T
 				),
 			},
 			{
-				Config: testAccRuleGroupConfig_IPSetReferenceStatement_IPSetForwardedIPConfig(ruleGroupName, "MATCH", "Updated", "ANY"),
+				Config: testAccRuleGroupConfig_ipsetReferenceStatementIPSetForwardedIP(ruleGroupName, "MATCH", "Updated", "ANY"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
@@ -1001,7 +1062,7 @@ func TestAccWAFV2RuleGroup_IPSetReferenceStatement_ipsetForwardedIP(t *testing.T
 				),
 			},
 			{
-				Config: testAccRuleGroupConfig_IPSetReferenceStatement(ruleGroupName),
+				Config: testAccRuleGroupConfig_ipsetReferenceStatement(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
@@ -1032,13 +1093,13 @@ func TestAccWAFV2RuleGroup_logicalRuleStatements(t *testing.T) {
 	resourceName := "aws_wafv2_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckScopeRegional(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, wafv2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRuleGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckScopeRegional(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, wafv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRuleGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRuleGroupConfig_LogicalRuleStatement_And(ruleGroupName),
+				Config: testAccRuleGroupConfig_logicalStatementAnd(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
@@ -1053,7 +1114,7 @@ func TestAccWAFV2RuleGroup_logicalRuleStatements(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccRuleGroupConfig_LogicalRuleStatement_NotAnd(ruleGroupName),
+				Config: testAccRuleGroupConfig_logicalStatementNotAnd(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
@@ -1070,7 +1131,7 @@ func TestAccWAFV2RuleGroup_logicalRuleStatements(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccRuleGroupConfig_LogicalRuleStatement_OrNotAnd(ruleGroupName),
+				Config: testAccRuleGroupConfig_logicalStatementOrNotAnd(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
@@ -1105,13 +1166,13 @@ func TestAccWAFV2RuleGroup_minimal(t *testing.T) {
 	resourceName := "aws_wafv2_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckScopeRegional(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, wafv2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRuleGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckScopeRegional(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, wafv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRuleGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRuleGroupConfig_Minimal(ruleGroupName),
+				Config: testAccRuleGroupConfig_minimal(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
@@ -1136,10 +1197,10 @@ func TestAccWAFV2RuleGroup_regexMatchStatement(t *testing.T) {
 	resourceName := "aws_wafv2_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckScopeRegional(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, wafv2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRuleGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckScopeRegional(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, wafv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRuleGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRuleGroupConfig_RegexMatchStatement(ruleGroupName),
@@ -1172,13 +1233,13 @@ func TestAccWAFV2RuleGroup_regexPatternSetReferenceStatement(t *testing.T) {
 	resourceName := "aws_wafv2_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckScopeRegional(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, wafv2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRuleGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckScopeRegional(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, wafv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRuleGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRuleGroupConfig_RegexPatternSetReferenceStatement(ruleGroupName),
+				Config: testAccRuleGroupConfig_regexPatternSetReferenceStatement(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
@@ -1210,13 +1271,13 @@ func TestAccWAFV2RuleGroup_ruleAction(t *testing.T) {
 	resourceName := "aws_wafv2_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckScopeRegional(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, wafv2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRuleGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckScopeRegional(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, wafv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRuleGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRuleGroupConfig_RuleActionAllow(ruleGroupName),
+				Config: testAccRuleGroupConfig_actionAllow(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
@@ -1236,7 +1297,7 @@ func TestAccWAFV2RuleGroup_ruleAction(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccRuleGroupConfig_RuleActionBlock(ruleGroupName),
+				Config: testAccRuleGroupConfig_actionBlock(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
@@ -1256,7 +1317,7 @@ func TestAccWAFV2RuleGroup_ruleAction(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccRuleGroupConfig_RuleActionCount(ruleGroupName),
+				Config: testAccRuleGroupConfig_actionCount(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
@@ -1291,13 +1352,13 @@ func TestAccWAFV2RuleGroup_RuleAction_customRequestHandling(t *testing.T) {
 	resourceName := "aws_wafv2_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckScopeRegional(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, wafv2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRuleGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckScopeRegional(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, wafv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRuleGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRuleGroupConfig_RuleActionAllow_CustomRequestHandling(ruleGroupName),
+				Config: testAccRuleGroupConfig_actionAllowCustomRequestHandling(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
@@ -1322,7 +1383,7 @@ func TestAccWAFV2RuleGroup_RuleAction_customRequestHandling(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccRuleGroupConfig_RuleActionCount_CustomRequestHandling(ruleGroupName),
+				Config: testAccRuleGroupConfig_actionCountCustomRequestHandling(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
@@ -1362,13 +1423,13 @@ func TestAccWAFV2RuleGroup_RuleAction_customResponse(t *testing.T) {
 	resourceName := "aws_wafv2_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckScopeRegional(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, wafv2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRuleGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckScopeRegional(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, wafv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRuleGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRuleGroupConfig_RuleActionBlock_CustomResponse(ruleGroupName),
+				Config: testAccRuleGroupConfig_actionBlockCustomResponse(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
@@ -1394,7 +1455,7 @@ func TestAccWAFV2RuleGroup_RuleAction_customResponse(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAwsWafv2RuleGroupConfig_RuleActionBlock_CustomResponseBody(ruleGroupName, "test_body_1"),
+				Config: testAccRuleGroupConfig_actionBlockCustomResponseBody(ruleGroupName, "test_body_1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
@@ -1426,7 +1487,7 @@ func TestAccWAFV2RuleGroup_RuleAction_customResponse(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAwsWafv2RuleGroupConfig_RuleActionBlock_CustomResponseBody(ruleGroupName, "test_body_2"),
+				Config: testAccRuleGroupConfig_actionBlockCustomResponseBody(ruleGroupName, "test_body_2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
@@ -1474,13 +1535,13 @@ func TestAccWAFV2RuleGroup_sizeConstraintStatement(t *testing.T) {
 	resourceName := "aws_wafv2_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckScopeRegional(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, wafv2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRuleGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckScopeRegional(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, wafv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRuleGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRuleGroupConfig_SizeConstraintStatement(ruleGroupName),
+				Config: testAccRuleGroupConfig_sizeConstraintStatement(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
@@ -1497,7 +1558,7 @@ func TestAccWAFV2RuleGroup_sizeConstraintStatement(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccRuleGroupConfig_SizeConstraintStatement_Update(ruleGroupName),
+				Config: testAccRuleGroupConfig_sizeConstraintStatementUpdate(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
@@ -1529,13 +1590,13 @@ func TestAccWAFV2RuleGroup_sqliMatchStatement(t *testing.T) {
 	resourceName := "aws_wafv2_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckScopeRegional(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, wafv2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRuleGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckScopeRegional(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, wafv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRuleGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRuleGroupConfig_SQLiMatchStatement(ruleGroupName),
+				Config: testAccRuleGroupConfig_sqliMatchStatement(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
@@ -1558,7 +1619,7 @@ func TestAccWAFV2RuleGroup_sqliMatchStatement(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccRuleGroupConfig_SQLiMatchStatement_Update(ruleGroupName),
+				Config: testAccRuleGroupConfig_sqliMatchStatementUpdate(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
@@ -1600,13 +1661,13 @@ func TestAccWAFV2RuleGroup_tags(t *testing.T) {
 	resourceName := "aws_wafv2_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckScopeRegional(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, wafv2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRuleGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckScopeRegional(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, wafv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRuleGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRuleGroupConfig_OneTag(ruleGroupName, "Tag1", "Value1"),
+				Config: testAccRuleGroupConfig_oneTag(ruleGroupName, "Tag1", "Value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
@@ -1621,7 +1682,7 @@ func TestAccWAFV2RuleGroup_tags(t *testing.T) {
 				ImportStateIdFunc: testAccRuleGroupImportStateIdFunc(resourceName),
 			},
 			{
-				Config: testAccRuleGroupConfig_TwoTags(ruleGroupName, "Tag1", "Value1Updated", "Tag2", "Value2"),
+				Config: testAccRuleGroupConfig_twoTags(ruleGroupName, "Tag1", "Value1Updated", "Tag2", "Value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
@@ -1631,7 +1692,7 @@ func TestAccWAFV2RuleGroup_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccRuleGroupConfig_OneTag(ruleGroupName, "Tag2", "Value2"),
+				Config: testAccRuleGroupConfig_oneTag(ruleGroupName, "Tag2", "Value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
@@ -1649,13 +1710,13 @@ func TestAccWAFV2RuleGroup_xssMatchStatement(t *testing.T) {
 	resourceName := "aws_wafv2_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckScopeRegional(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, wafv2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRuleGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckScopeRegional(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, wafv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRuleGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRuleGroupConfig_XSSMatchStatement(ruleGroupName),
+				Config: testAccRuleGroupConfig_xssMatchStatement(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
@@ -1674,7 +1735,7 @@ func TestAccWAFV2RuleGroup_xssMatchStatement(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccRuleGroupConfig_XSSMatchStatement_Update(ruleGroupName),
+				Config: testAccRuleGroupConfig_xssMatchStatementUpdate(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
@@ -1747,7 +1808,7 @@ func testAccCheckRuleGroupDestroy(s *terraform.State) error {
 		}
 
 		// Return nil if the RuleGroup is already destroyed
-		if tfawserr.ErrMessageContains(err, wafv2.ErrCodeWAFNonexistentItemException, "") {
+		if tfawserr.ErrCodeEquals(err, wafv2.ErrCodeWAFNonexistentItemException) {
 			return nil
 		}
 
@@ -1792,7 +1853,7 @@ func testAccCheckRuleGroupExists(n string, v *wafv2.RuleGroup) resource.TestChec
 	}
 }
 
-func testAccRuleGroupConfig_Basic(name string) string {
+func testAccRuleGroupConfig_basic(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_rule_group" "test" {
   capacity    = 2
@@ -1809,7 +1870,7 @@ resource "aws_wafv2_rule_group" "test" {
 `, name, name)
 }
 
-func testAccRuleGroupConfig_BasicUpdate(name string) string {
+func testAccRuleGroupConfig_basicUpdate(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_rule_group" "test" {
   capacity    = 50
@@ -1847,7 +1908,7 @@ resource "aws_wafv2_rule_group" "test" {
 `, name)
 }
 
-func testAccRuleGroupConfig_UpdateMultipleRules(name string, ruleName1, ruleName2 string, priority1, priority2 int) string {
+func testAccRuleGroupConfig_updateMultiples(name string, ruleName1, ruleName2 string, priority1, priority2 int) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_rule_group" "test" {
   capacity    = 50
@@ -1921,7 +1982,7 @@ resource "aws_wafv2_rule_group" "test" {
 `, name, ruleName1, priority1, ruleName2, priority2)
 }
 
-func testAccRuleGroupConfig_UpdateCapacity(name string) string {
+func testAccRuleGroupConfig_updateCapacity(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_rule_group" "test" {
   capacity    = 3
@@ -1938,7 +1999,7 @@ resource "aws_wafv2_rule_group" "test" {
 `, name, name)
 }
 
-func testAccRuleGroupConfig_UpdateMetricName(name string) string {
+func testAccRuleGroupConfig_updateMetricName(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_rule_group" "test" {
   capacity    = 2
@@ -1955,7 +2016,7 @@ resource "aws_wafv2_rule_group" "test" {
 `, name, name)
 }
 
-func testAccRuleGroupConfig_Minimal(name string) string {
+func testAccRuleGroupConfig_minimal(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_rule_group" "test" {
   capacity = 2
@@ -1971,7 +2032,7 @@ resource "aws_wafv2_rule_group" "test" {
 `, name)
 }
 
-func testAccRuleGroupConfig_RuleActionAllow(name string) string {
+func testAccRuleGroupConfig_actionAllow(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_rule_group" "test" {
   capacity = 2
@@ -2008,7 +2069,7 @@ resource "aws_wafv2_rule_group" "test" {
 `, name)
 }
 
-func testAccRuleGroupConfig_RuleActionAllow_CustomRequestHandling(name string) string {
+func testAccRuleGroupConfig_actionAllowCustomRequestHandling(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_rule_group" "test" {
   capacity = 2
@@ -2057,7 +2118,7 @@ resource "aws_wafv2_rule_group" "test" {
 `, name)
 }
 
-func testAccRuleGroupConfig_RuleActionBlock(name string) string {
+func testAccRuleGroupConfig_actionBlock(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_rule_group" "test" {
   capacity = 2
@@ -2094,7 +2155,7 @@ resource "aws_wafv2_rule_group" "test" {
 `, name)
 }
 
-func testAccRuleGroupConfig_RuleActionBlock_CustomResponse(name string) string {
+func testAccRuleGroupConfig_actionBlockCustomResponse(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_rule_group" "test" {
   capacity = 2
@@ -2144,7 +2205,7 @@ resource "aws_wafv2_rule_group" "test" {
 `, name)
 }
 
-func testAccAwsWafv2RuleGroupConfig_RuleActionBlock_CustomResponseBody(name string, customBodyKey string) string {
+func testAccRuleGroupConfig_actionBlockCustomResponseBody(name string, customBodyKey string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_rule_group" "test" {
   capacity = 2
@@ -2191,7 +2252,7 @@ resource "aws_wafv2_rule_group" "test" {
 `, name, customBodyKey)
 }
 
-func testAccRuleGroupConfig_RuleActionCount(name string) string {
+func testAccRuleGroupConfig_actionCount(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_rule_group" "test" {
   capacity = 2
@@ -2228,7 +2289,7 @@ resource "aws_wafv2_rule_group" "test" {
 `, name)
 }
 
-func testAccRuleGroupConfig_RuleActionCount_CustomRequestHandling(name string) string {
+func testAccRuleGroupConfig_actionCountCustomRequestHandling(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_rule_group" "test" {
   capacity = 2
@@ -2277,7 +2338,7 @@ resource "aws_wafv2_rule_group" "test" {
 `, name)
 }
 
-func testAccRuleGroupConfig_ByteMatchStatement(name string) string {
+func testAccRuleGroupConfig_byteMatchStatement(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_rule_group" "test" {
   capacity = 300
@@ -2329,7 +2390,7 @@ resource "aws_wafv2_rule_group" "test" {
 `, name)
 }
 
-func testAccRuleGroupConfig_ByteMatchStatement_Update(name string) string {
+func testAccRuleGroupConfig_byteMatchStatementUpdate(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_rule_group" "test" {
   capacity = 30
@@ -2376,7 +2437,7 @@ resource "aws_wafv2_rule_group" "test" {
 `, name)
 }
 
-func testAccRuleGroupConfig_ByteMatchStatement_FieldToMatchAllQueryArguments(name string) string {
+func testAccRuleGroupConfig_byteMatchStatementFieldToMatchAllQueryArguments(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_rule_group" "test" {
   capacity = 30
@@ -2423,7 +2484,7 @@ resource "aws_wafv2_rule_group" "test" {
 `, name)
 }
 
-func testAccRuleGroupConfig_ByteMatchStatement_FieldToMatchBody(name string) string {
+func testAccRuleGroupConfig_byteMatchStatementFieldToMatchBody(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_rule_group" "test" {
   capacity = 15
@@ -2470,7 +2531,61 @@ resource "aws_wafv2_rule_group" "test" {
 `, name)
 }
 
-func testAccRuleGroupConfig_ByteMatchStatement_FieldToMatchMethod(name string) string {
+func testAccRuleGroupConfig_byteMatchStatementFieldToMatchJSONBody(name string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_rule_group" "test" {
+  capacity = 20
+  name     = "%s"
+  scope    = "REGIONAL"
+
+  rule {
+    name     = "rule-1"
+    priority = 1
+
+    action {
+      allow {}
+    }
+
+    statement {
+      byte_match_statement {
+        positional_constraint = "CONTAINS"
+        search_string         = "Clifford"
+
+        field_to_match {
+          json_body {
+            match_scope               = "VALUE"
+            invalid_fallback_behavior = "MATCH"
+            oversize_handling         = "CONTINUE"
+            match_pattern {
+              included_paths = ["/dogs/0/name", "/dogs/1/name"]
+            }
+          }
+        }
+
+        text_transformation {
+          priority = 1
+          type     = "NONE"
+        }
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = false
+      metric_name                = "friendly-rule-metric-name"
+      sampled_requests_enabled   = false
+    }
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
+  }
+}
+`, name)
+}
+
+func testAccRuleGroupConfig_byteMatchStatementFieldToMatchMethod(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_rule_group" "test" {
   capacity = 15
@@ -2517,7 +2632,7 @@ resource "aws_wafv2_rule_group" "test" {
 `, name)
 }
 
-func testAccRuleGroupConfig_ByteMatchStatement_FieldToMatchQueryString(name string) string {
+func testAccRuleGroupConfig_byteMatchStatementFieldToMatchQueryString(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_rule_group" "test" {
   capacity = 15
@@ -2564,7 +2679,60 @@ resource "aws_wafv2_rule_group" "test" {
 `, name)
 }
 
-func testAccRuleGroupConfig_ByteMatchStatement_FieldToMatchSingleHeader(name string) string {
+func testAccRuleGroupConfig_byteMatchStatementFieldToMatchCookies(name string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_rule_group" "test" {
+  capacity = 15
+  name     = "%s"
+  scope    = "REGIONAL"
+
+  rule {
+    name     = "rule-1"
+    priority = 1
+
+    action {
+      allow {}
+    }
+
+    statement {
+      byte_match_statement {
+        positional_constraint = "CONTAINS"
+        search_string         = "word"
+
+        field_to_match {
+          cookies {
+            match_pattern {
+              included_cookies = ["test", "cookie_test"]
+            }
+            match_scope       = "ALL"
+            oversize_handling = "NO_MATCH"
+          }
+        }
+
+        text_transformation {
+          priority = 1
+          type     = "NONE"
+        }
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = false
+      metric_name                = "friendly-rule-metric-name"
+      sampled_requests_enabled   = false
+    }
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
+  }
+}
+`, name)
+}
+
+func testAccRuleGroupConfig_byteMatchStatementFieldToMatchSingleHeader(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_rule_group" "test" {
   capacity = 15
@@ -2613,7 +2781,7 @@ resource "aws_wafv2_rule_group" "test" {
 `, name)
 }
 
-func testAccRuleGroupConfig_ByteMatchStatement_FieldToMatchSingleQueryArgument(name string) string {
+func testAccRuleGroupConfig_byteMatchStatementFieldToMatchSingleQueryArgument(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_rule_group" "test" {
   capacity = 30
@@ -2662,7 +2830,7 @@ resource "aws_wafv2_rule_group" "test" {
 `, name)
 }
 
-func testAccRuleGroupConfig_ByteMatchStatement_FieldToMatchURIPath(name string) string {
+func testAccRuleGroupConfig_byteMatchStatementFieldToMatchURIPath(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_rule_group" "test" {
   capacity = 15
@@ -2709,7 +2877,7 @@ resource "aws_wafv2_rule_group" "test" {
 `, name)
 }
 
-func testAccRuleGroupConfig_IPSetReferenceStatement(name string) string {
+func testAccRuleGroupConfig_ipsetReferenceStatement(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_ip_set" "test" {
   name               = "ip-set-%s"
@@ -2753,7 +2921,7 @@ resource "aws_wafv2_rule_group" "test" {
 `, name, name)
 }
 
-func testAccRuleGroupConfig_IPSetReferenceStatement_IPSetForwardedIPConfig(name, fallbackBehavior, headerName, position string) string {
+func testAccRuleGroupConfig_ipsetReferenceStatementIPSetForwardedIP(name, fallbackBehavior, headerName, position string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_ip_set" "test" {
   name               = "ip-set-%[1]s"
@@ -2802,7 +2970,7 @@ resource "aws_wafv2_rule_group" "test" {
 `, name, fallbackBehavior, headerName, position)
 }
 
-func testAccRuleGroupConfig_GeoMatchStatement(name string) string {
+func testAccRuleGroupConfig_geoMatchStatement(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_rule_group" "test" {
   capacity = 2
@@ -2839,7 +3007,7 @@ resource "aws_wafv2_rule_group" "test" {
 `, name)
 }
 
-func testAccRuleGroupConfig_GeoMatchStatement_ForwardedIPConfig(name, fallbackBehavior, headerName string) string {
+func testAccRuleGroupConfig_geoMatchStatementForwardedIP(name, fallbackBehavior, headerName string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_rule_group" "test" {
   capacity = 2
@@ -2880,7 +3048,7 @@ resource "aws_wafv2_rule_group" "test" {
 `, name, fallbackBehavior, headerName)
 }
 
-func testAccRuleGroupConfig_GeoMatchStatement_Update(name string) string {
+func testAccRuleGroupConfig_geoMatchStatementUpdate(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_rule_group" "test" {
   capacity = 2
@@ -2917,7 +3085,7 @@ resource "aws_wafv2_rule_group" "test" {
 `, name)
 }
 
-func testAccRuleGroupConfig_LabelMatchStatement(name string, scope string, key string) string {
+func testAccRuleGroupConfig_labelMatchStatement(name string, scope string, key string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_rule_group" "test" {
   capacity = 2
@@ -2950,7 +3118,7 @@ resource "aws_wafv2_rule_group" "test" {
 `, name, scope, key)
 }
 
-func testAccRuleGroupConfig_RuleLabels(name string) string {
+func testAccRuleGroupConfig_labels(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_rule_group" "test" {
   capacity = 2
@@ -2988,7 +3156,7 @@ resource "aws_wafv2_rule_group" "test" {
 `, name)
 }
 
-func testAccRuleGroupConfig_NoRuleLabels(name string) string {
+func testAccRuleGroupConfig_noLabels(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_rule_group" "test" {
   capacity = 2
@@ -3020,7 +3188,7 @@ resource "aws_wafv2_rule_group" "test" {
 `, name)
 }
 
-func testAccRuleGroupConfig_LogicalRuleStatement_And(name string) string {
+func testAccRuleGroupConfig_logicalStatementAnd(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_rule_group" "test" {
   capacity = 2
@@ -3067,7 +3235,7 @@ resource "aws_wafv2_rule_group" "test" {
 `, name)
 }
 
-func testAccRuleGroupConfig_LogicalRuleStatement_NotAnd(name string) string {
+func testAccRuleGroupConfig_logicalStatementNotAnd(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_rule_group" "test" {
   capacity = 2
@@ -3118,7 +3286,7 @@ resource "aws_wafv2_rule_group" "test" {
 `, name)
 }
 
-func testAccRuleGroupConfig_LogicalRuleStatement_OrNotAnd(name string) string {
+func testAccRuleGroupConfig_logicalStatementOrNotAnd(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_rule_group" "test" {
   capacity = 3
@@ -3225,7 +3393,7 @@ resource "aws_wafv2_rule_group" "test" {
 `, name)
 }
 
-func testAccRuleGroupConfig_RegexPatternSetReferenceStatement(name string) string {
+func testAccRuleGroupConfig_regexPatternSetReferenceStatement(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_regex_pattern_set" "test" {
   name  = "regex-pattern-set-%s"
@@ -3280,7 +3448,7 @@ resource "aws_wafv2_rule_group" "test" {
 `, name, name)
 }
 
-func testAccRuleGroupConfig_SizeConstraintStatement(name string) string {
+func testAccRuleGroupConfig_sizeConstraintStatement(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_rule_group" "test" {
   capacity = 30
@@ -3327,7 +3495,7 @@ resource "aws_wafv2_rule_group" "test" {
 `, name)
 }
 
-func testAccRuleGroupConfig_SizeConstraintStatement_Update(name string) string {
+func testAccRuleGroupConfig_sizeConstraintStatementUpdate(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_rule_group" "test" {
   capacity = 30
@@ -3379,7 +3547,7 @@ resource "aws_wafv2_rule_group" "test" {
 `, name)
 }
 
-func testAccRuleGroupConfig_SQLiMatchStatement(name string) string {
+func testAccRuleGroupConfig_sqliMatchStatement(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_rule_group" "test" {
   capacity = 300
@@ -3428,7 +3596,7 @@ resource "aws_wafv2_rule_group" "test" {
 `, name)
 }
 
-func testAccRuleGroupConfig_SQLiMatchStatement_Update(name string) string {
+func testAccRuleGroupConfig_sqliMatchStatementUpdate(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_rule_group" "test" {
   capacity = 300
@@ -3482,7 +3650,7 @@ resource "aws_wafv2_rule_group" "test" {
 `, name)
 }
 
-func testAccRuleGroupConfig_XSSMatchStatement(name string) string {
+func testAccRuleGroupConfig_xssMatchStatement(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_rule_group" "test" {
   capacity = 300
@@ -3526,7 +3694,7 @@ resource "aws_wafv2_rule_group" "test" {
 `, name)
 }
 
-func testAccRuleGroupConfig_XSSMatchStatement_Update(name string) string {
+func testAccRuleGroupConfig_xssMatchStatementUpdate(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_rule_group" "test" {
   capacity = 300
@@ -3570,7 +3738,7 @@ resource "aws_wafv2_rule_group" "test" {
 `, name)
 }
 
-func testAccRuleGroupConfig_OneTag(name, tagKey, tagValue string) string {
+func testAccRuleGroupConfig_oneTag(name, tagKey, tagValue string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_rule_group" "test" {
   capacity    = 2
@@ -3591,7 +3759,7 @@ resource "aws_wafv2_rule_group" "test" {
 `, name, name, tagKey, tagValue)
 }
 
-func testAccRuleGroupConfig_TwoTags(name, tag1Key, tag1Value, tag2Key, tag2Value string) string {
+func testAccRuleGroupConfig_twoTags(name, tag1Key, tag1Value, tag2Key, tag2Value string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_rule_group" "test" {
   capacity    = 2

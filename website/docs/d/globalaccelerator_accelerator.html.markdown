@@ -33,8 +33,8 @@ data "aws_globalaccelerator_accelerator" "example" {
 
 The following arguments are supported:
 
-* `arn` - (Optional) The full ARN of the Global Accelerator.
-* `name` - (Optional) The unique name of the Global Accelerator.
+* `arn` - (Optional) Full ARN of the Global Accelerator.
+* `name` - (Optional) Unique name of the Global Accelerator.
 
 ~> **NOTE**: When both `arn` and `name` are specified, `arn` takes precedence.
 

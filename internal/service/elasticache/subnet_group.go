@@ -10,7 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/elasticache"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -95,12 +95,23 @@ func resourceSubnetGroupCreate(d *schema.ResourceData, meta interface{}) error {
 		CacheSubnetGroupDescription: aws.String(desc),
 		CacheSubnetGroupName:        aws.String(name),
 		SubnetIds:                   subnetIds,
-		Tags:                        Tags(tags.IgnoreAWS()),
 	}
 
-	_, err := conn.CreateCacheSubnetGroup(req)
+	if len(tags) > 0 {
+		req.Tags = Tags(tags.IgnoreAWS())
+	}
+
+	output, err := conn.CreateCacheSubnetGroup(req)
+
+	if req.Tags != nil && verify.ErrorISOUnsupported(conn.PartitionID, err) {
+		log.Printf("[WARN] failed creating ElastiCache Subnet Group with tags: %s. Trying create without tags.", err)
+
+		req.Tags = nil
+		output, err = conn.CreateCacheSubnetGroup(req)
+	}
+
 	if err != nil {
-		return fmt.Errorf("error creating ElastiCache Subnet Group (%s): %w", name, err)
+		return fmt.Errorf("creating ElastiCache Subnet Group (%s): %w", name, err)
 	}
 
 	// Assign the group name as the resource ID
@@ -108,6 +119,20 @@ func resourceSubnetGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	// mimic that or else we won't be able to refresh a resource whose
 	// name contained uppercase characters.
 	d.SetId(strings.ToLower(name))
+
+	// In some partitions, only post-create tagging supported
+	if req.Tags == nil && len(tags) > 0 {
+		err := UpdateTags(conn, aws.StringValue(output.CacheSubnetGroup.ARN), nil, tags)
+
+		if err != nil {
+			if v, ok := d.GetOk("tags"); (ok && len(v.(map[string]interface{})) > 0) || !verify.ErrorISOUnsupported(conn.PartitionID, err) {
+				// explicitly setting tags or not an iso-unsupported error
+				return fmt.Errorf("failed adding tags after create for ElastiCache Subnet Group (%s): %w", d.Id(), err)
+			}
+
+			log.Printf("[WARN] failed adding tags after create for ElastiCache Subnet Group (%s): %s", d.Id(), err)
+		}
+	}
 
 	return resourceSubnetGroupRead(d, meta)
 }
@@ -138,7 +163,7 @@ func resourceSubnetGroupRead(d *schema.ResourceData, meta interface{}) error {
 	var group *elasticache.CacheSubnetGroup
 	for _, g := range res.CacheSubnetGroups {
 		log.Printf("[DEBUG] %v %v", g.CacheSubnetGroupName, d.Id())
-		if *g.CacheSubnetGroupName == d.Id() {
+		if aws.StringValue(g.CacheSubnetGroupName) == d.Id() {
 			group = g
 		}
 	}
@@ -158,19 +183,26 @@ func resourceSubnetGroupRead(d *schema.ResourceData, meta interface{}) error {
 
 	tags, err := ListTags(conn, d.Get("arn").(string))
 
-	if err != nil && !tfawserr.ErrMessageContains(err, "UnknownOperationException", "") {
-		return fmt.Errorf("error listing tags for ElastiCache SubnetGroup (%s): %w", d.Id(), err)
+	if err != nil && !verify.ErrorISOUnsupported(conn.PartitionID, err) {
+		return fmt.Errorf("listing tags for ElastiCache Subnet Group (%s): %w", d.Id(), err)
 	}
 
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+	// tags not supported in all partitions
+	if err != nil {
+		log.Printf("[WARN] failed listing tags for Elasticache Subnet Group (%s): %s", d.Id(), err)
 	}
 
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+	if tags != nil {
+		tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+
+		//lintignore:AWSR002
+		if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+			return fmt.Errorf("error setting tags: %w", err)
+		}
+
+		if err := d.Set("tags_all", tags.Map()); err != nil {
+			return fmt.Errorf("error setting tags_all: %w", err)
+		}
 	}
 
 	return nil
@@ -201,8 +233,15 @@ func resourceSubnetGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating tags: %w", err)
+
+		err := UpdateTags(conn, d.Get("arn").(string), o, n)
+		if err != nil {
+			if v, ok := d.GetOk("tags"); (ok && len(v.(map[string]interface{})) > 0) || !verify.ErrorISOUnsupported(conn.PartitionID, err) {
+				// explicitly setting tags or not an iso-unsupported error
+				return fmt.Errorf("failed updating ElastiCache Subnet Group (%s) tags: %w", d.Id(), err)
+			}
+
+			log.Printf("[WARN] failed updating tags for ElastiCache Subnet Group (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -239,7 +278,7 @@ func resourceSubnetGroupDelete(d *schema.ResourceData, meta interface{}) error {
 		})
 	}
 
-	if tfawserr.ErrMessageContains(err, elasticache.ErrCodeCacheSubnetGroupNotFoundFault, "") {
+	if tfawserr.ErrCodeEquals(err, elasticache.ErrCodeCacheSubnetGroupNotFoundFault) {
 		return nil
 	}
 

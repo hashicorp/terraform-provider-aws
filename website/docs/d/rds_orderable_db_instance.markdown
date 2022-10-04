@@ -1,5 +1,5 @@
 ---
-subcategory: "RDS"
+subcategory: "RDS (Relational Database)"
 layout: "aws"
 page_title: "AWS: aws_rds_orderable_db_instance"
 description: |-
@@ -73,3 +73,4 @@ In addition to all arguments above, the following attributes are exported:
 * `outpost_capable` - Whether a DB instance supports RDS on Outposts.
 * `read_replica_capable` - Whether a DB instance can have a read replica.
 * `supported_engine_modes` - A list of the supported DB engine modes.
+* `supported_network_types` - The network types supported by the DB instance (`IPV4` or `DUAL`).

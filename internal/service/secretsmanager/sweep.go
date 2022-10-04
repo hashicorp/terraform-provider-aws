@@ -9,7 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/secretsmanager"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
@@ -50,7 +50,7 @@ func sweepSecretPolicies(region string) error {
 
 			_, err := conn.DeleteResourcePolicy(input)
 			if err != nil {
-				if tfawserr.ErrMessageContains(err, secretsmanager.ErrCodeResourceNotFoundException, "") {
+				if tfawserr.ErrCodeEquals(err, secretsmanager.ErrCodeResourceNotFoundException) {
 					continue
 				}
 				log.Printf("[ERROR] Failed to delete Secrets Manager Secret Policy (%s): %s", name, err)
@@ -93,7 +93,7 @@ func sweepSecrets(region string) error {
 
 			_, err := conn.DeleteSecret(input)
 			if err != nil {
-				if tfawserr.ErrMessageContains(err, secretsmanager.ErrCodeResourceNotFoundException, "") {
+				if tfawserr.ErrCodeEquals(err, secretsmanager.ErrCodeResourceNotFoundException) {
 					continue
 				}
 				log.Printf("[ERROR] Failed to delete Secrets Manager Secret (%s): %s", name, err)

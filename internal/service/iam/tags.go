@@ -257,3 +257,38 @@ func serverCertificateUpdateTags(conn *iam.IAM, identifier string, oldTagsMap in
 
 	return nil
 }
+
+// virtualMFAUpdateTags updates IAM Virtual MFA Device tags.
+// The identifier is the Virtual MFA Device ARN.
+func virtualMFAUpdateTags(conn *iam.IAM, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+	oldTags := tftags.New(oldTagsMap)
+	newTags := tftags.New(newTagsMap)
+
+	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
+		input := &iam.UntagMFADeviceInput{
+			SerialNumber: aws.String(identifier),
+			TagKeys:      aws.StringSlice(removedTags.Keys()),
+		}
+
+		_, err := conn.UntagMFADevice(input)
+
+		if err != nil {
+			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
+		}
+	}
+
+	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
+		input := &iam.TagMFADeviceInput{
+			SerialNumber: aws.String(identifier),
+			Tags:         Tags(updatedTags.IgnoreAWS()),
+		}
+
+		_, err := conn.TagMFADevice(input)
+
+		if err != nil {
+			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
+		}
+	}
+
+	return nil
+}

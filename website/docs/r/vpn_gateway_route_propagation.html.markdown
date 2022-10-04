@@ -1,5 +1,5 @@
 ---
-subcategory: "VPC"
+subcategory: "VPN (Site-to-Site)"
 layout: "aws"
 page_title: "AWS: aws_vpn_gateway_route_propagation"
 description: |-
@@ -36,7 +36,7 @@ No additional attributes are exported.
 
 ## Timeouts
 
-`aws_vpn_gateway_route_propagation` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
 
-- `create` - (Default `2 minutes`) Used for propagation creation
-- `delete` - (Default `2 minutes`) Used for propagation deletion
+- `create` - (Default `2m`)
+- `delete` - (Default `2m`)

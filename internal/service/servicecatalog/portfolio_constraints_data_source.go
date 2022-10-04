@@ -14,6 +14,10 @@ func DataSourcePortfolioConstraints() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourcePortfolioConstraintsRead,
 
+		Timeouts: &schema.ResourceTimeout{
+			Read: schema.DefaultTimeout(PortfolioConstraintsReadyTimeout),
+		},
+
 		Schema: map[string]*schema.Schema{
 			"accept_language": {
 				Type:         schema.TypeString,
@@ -68,7 +72,7 @@ func DataSourcePortfolioConstraints() *schema.Resource {
 func dataSourcePortfolioConstraintsRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ServiceCatalogConn
 
-	output, err := WaitPortfolioConstraintsReady(conn, d.Get("accept_language").(string), d.Get("portfolio_id").(string), d.Get("product_id").(string))
+	output, err := WaitPortfolioConstraintsReady(conn, d.Get("accept_language").(string), d.Get("portfolio_id").(string), d.Get("product_id").(string), d.Timeout(schema.TimeoutRead))
 
 	if err != nil {
 		return fmt.Errorf("error describing Service Catalog Portfolio Constraints: %w", err)
@@ -88,7 +92,7 @@ func dataSourcePortfolioConstraintsRead(d *schema.ResourceData, meta interface{}
 	d.Set("portfolio_id", d.Get("portfolio_id").(string))
 	d.Set("product_id", d.Get("product_id").(string))
 
-	if err := d.Set("details", flattenServiceCatalogConstraintDetails(output)); err != nil {
+	if err := d.Set("details", flattenConstraintDetails(output)); err != nil {
 		return fmt.Errorf("error setting details: %w", err)
 	}
 
@@ -97,7 +101,7 @@ func dataSourcePortfolioConstraintsRead(d *schema.ResourceData, meta interface{}
 	return nil
 }
 
-func flattenServiceCatalogConstraintDetail(apiObject *servicecatalog.ConstraintDetail) map[string]interface{} {
+func flattenConstraintDetail(apiObject *servicecatalog.ConstraintDetail) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -131,7 +135,7 @@ func flattenServiceCatalogConstraintDetail(apiObject *servicecatalog.ConstraintD
 	return tfMap
 }
 
-func flattenServiceCatalogConstraintDetails(apiObjects []*servicecatalog.ConstraintDetail) []interface{} {
+func flattenConstraintDetails(apiObjects []*servicecatalog.ConstraintDetail) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -143,7 +147,7 @@ func flattenServiceCatalogConstraintDetails(apiObjects []*servicecatalog.Constra
 			continue
 		}
 
-		tfList = append(tfList, flattenServiceCatalogConstraintDetail(apiObject))
+		tfList = append(tfList, flattenConstraintDetail(apiObject))
 	}
 
 	return tfList

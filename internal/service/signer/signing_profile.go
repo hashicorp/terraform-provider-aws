@@ -9,7 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/signer"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -227,7 +227,7 @@ func resourceSigningProfileRead(d *schema.ResourceData, meta interface{}) error 
 		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
-	if err := d.Set("revocation_record", flattenSignerSigningProfileRevocationRecord(signingProfileOutput.RevocationRecord)); err != nil {
+	if err := d.Set("revocation_record", flattenSigningProfileRevocationRecord(signingProfileOutput.RevocationRecord)); err != nil {
 		return fmt.Errorf("error setting signer signing profile revocation record: %s", err)
 	}
 
@@ -267,7 +267,7 @@ func resourceSigningProfileDelete(d *schema.ResourceData, meta interface{}) erro
 	return nil
 }
 
-func flattenSignerSigningProfileRevocationRecord(apiObject *signer.SigningProfileRevocationRecord) interface{} {
+func flattenSigningProfileRevocationRecord(apiObject *signer.SigningProfileRevocationRecord) interface{} {
 	if apiObject == nil {
 		return []interface{}{}
 	}

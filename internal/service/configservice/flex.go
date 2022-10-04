@@ -97,12 +97,21 @@ func expandRuleScope(l []interface{}) *configservice.Scope {
 func expandRuleSource(configured []interface{}) *configservice.Source {
 	cfg := configured[0].(map[string]interface{})
 	source := configservice.Source{
-		Owner:            aws.String(cfg["owner"].(string)),
-		SourceIdentifier: aws.String(cfg["source_identifier"].(string)),
+		Owner: aws.String(cfg["owner"].(string)),
 	}
+
+	if v, ok := cfg["source_identifier"].(string); ok && v != "" {
+		source.SourceIdentifier = aws.String(v)
+	}
+
 	if details, ok := cfg["source_detail"]; ok {
 		source.SourceDetails = expandRuleSourceDetails(details.(*schema.Set))
 	}
+
+	if v, ok := cfg["custom_policy_details"].([]interface{}); ok && len(v) > 0 {
+		source.CustomPolicyDetails = expandRuleSourceCustomPolicyDetails(v)
+	}
+
 	return &source
 }
 
@@ -127,6 +136,17 @@ func expandRuleSourceDetails(configured *schema.Set) []*configservice.SourceDeta
 	}
 
 	return results
+}
+
+func expandRuleSourceCustomPolicyDetails(configured []interface{}) *configservice.CustomPolicyDetails {
+	cfg := configured[0].(map[string]interface{})
+	source := configservice.CustomPolicyDetails{
+		PolicyRuntime:          aws.String(cfg["policy_runtime"].(string)),
+		PolicyText:             aws.String(cfg["policy_text"].(string)),
+		EnableDebugLogDelivery: aws.Bool(cfg["enable_debug_log_delivery"].(bool)),
+	}
+
+	return &source
 }
 
 func flattenAccountAggregationSources(sources []*configservice.AccountAggregationSource) []interface{} {
@@ -204,9 +224,26 @@ func flattenRuleSource(source *configservice.Source) []interface{} {
 	m := make(map[string]interface{})
 	m["owner"] = aws.StringValue(source.Owner)
 	m["source_identifier"] = aws.StringValue(source.SourceIdentifier)
+
+	if source.CustomPolicyDetails != nil {
+		m["custom_policy_details"] = flattenRuleSourceCustomPolicyDetails(source.CustomPolicyDetails)
+	}
+
 	if len(source.SourceDetails) > 0 {
 		m["source_detail"] = schema.NewSet(ruleSourceDetailsHash, flattenRuleSourceDetails(source.SourceDetails))
 	}
+
+	result = append(result, m)
+	return result
+}
+
+func flattenRuleSourceCustomPolicyDetails(source *configservice.CustomPolicyDetails) []interface{} {
+	var result []interface{}
+	m := make(map[string]interface{})
+	m["policy_runtime"] = aws.StringValue(source.PolicyRuntime)
+	m["policy_text"] = aws.StringValue(source.PolicyText)
+	m["enable_debug_log_delivery"] = aws.BoolValue(source.EnableDebugLogDelivery)
+
 	result = append(result, m)
 	return result
 }

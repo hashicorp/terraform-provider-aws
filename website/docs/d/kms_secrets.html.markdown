@@ -1,5 +1,5 @@
 ---
-subcategory: "KMS"
+subcategory: "KMS (Key Management)"
 layout: "aws"
 page_title: "AWS: aws_kms_secrets"
 description: |-
@@ -62,7 +62,7 @@ The following arguments are supported:
 
 Each `secret` supports the following arguments:
 
-* `name` - (Required) The name to export this secret under in the attributes.
+* `name` - (Required) Name to export this secret under in the attributes.
 * `payload` - (Required) Base64 encoded payload, as returned from a KMS encrypt operation.
 * `context` - (Optional) An optional mapping that makes up the Encryption Context for the secret.
 * `grant_tokens` (Optional) An optional list of Grant Tokens for the secret.

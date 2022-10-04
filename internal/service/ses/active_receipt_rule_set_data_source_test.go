@@ -18,14 +18,14 @@ func testAccActiveReceiptRuleSetDataSource_basic(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			testAccPreCheck(t)
-			testAccPreCheckSESReceiptRule(t)
+			testAccPreCheckReceiptRule(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSESActiveReceiptRuleSetDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, ses.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckActiveReceiptRuleSetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccActiveReceiptRuleSetDataSourceConfig(rName),
+				Config: testAccActiveReceiptRuleSetDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckActiveReceiptRuleSetExists(resourceName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "ses", fmt.Sprintf("receipt-rule-set/%s", rName)),
@@ -35,7 +35,7 @@ func testAccActiveReceiptRuleSetDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccActiveReceiptRuleSetDataSourceConfig(name string) string {
+func testAccActiveReceiptRuleSetDataSourceConfig_basic(name string) string {
 	return fmt.Sprintf(`
 resource "aws_ses_receipt_rule_set" "test" {
   rule_set_name = %[1]q

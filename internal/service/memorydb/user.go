@@ -3,11 +3,10 @@ package memorydb
 import (
 	"context"
 	"log"
-	"regexp"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/memorydb"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -77,17 +76,10 @@ func ResourceUser() *schema.Resource {
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
 			"user_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 40),
-					validation.StringMatch(
-						// MemoryDB normalises names to lowercase, so disallow uppercase characters.
-						regexp.MustCompile(`[a-z][a-z0-9-]*`),
-						"The user name must consist of letters, numbers, and hyphens.",
-					),
-				),
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validateResourceName(userNameMaxLength),
 			},
 		},
 	}

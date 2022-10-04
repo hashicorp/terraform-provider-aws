@@ -40,6 +40,13 @@ resource "aws_apprunner_service" "example" {
     }
   }
 
+  network_configuration {
+    egress_configuration {
+      egress_type       = "VPC"
+      vpc_connector_arn = aws_apprunner_vpc_connector.connector.arn
+    }
+  }
+
   tags = {
     Name = "example-apprunner-service"
   }
@@ -57,13 +64,50 @@ resource "aws_apprunner_service" "example" {
       image_configuration {
         port = "8000"
       }
-      image_identifier      = "public.ecr.aws/jg/hello:latest"
+      image_identifier      = "public.ecr.aws/aws-containers/hello-app-runner:latest"
       image_repository_type = "ECR_PUBLIC"
     }
+    auto_deployments_enabled = false
   }
 
   tags = {
     Name = "example-apprunner-service"
+  }
+}
+```
+
+### Service with Observability Configuration
+
+```terraform
+resource "aws_apprunner_service" "example" {
+  service_name = "example"
+
+  observability_configuration {
+    observability_configuration_arn = aws_apprunner_observability_configuration.example.arn
+    observability_enabled           = true
+  }
+
+  source_configuration {
+    image_repository {
+      image_configuration {
+        port = "8000"
+      }
+      image_identifier      = "public.ecr.aws/aws-containers/hello-app-runner:latest"
+      image_repository_type = "ECR_PUBLIC"
+    }
+    auto_deployments_enabled = false
+  }
+
+  tags = {
+    Name = "example-apprunner-service"
+  }
+}
+
+resource "aws_apprunner_observability_configuration" "example" {
+  observability_configuration_name = "example"
+
+  trace_configuration {
+    vendor = "AWSXRAY"
   }
 }
 ```
@@ -81,32 +125,34 @@ The following arguments are optional:
 * `encryption_configuration` - (Forces new resource) An optional custom encryption key that App Runner uses to encrypt the copy of your source repository that it maintains and your service logs. By default, App Runner uses an AWS managed CMK. See [Encryption Configuration](#encryption-configuration) below for more details.
 * `health_check_configuration` - (Forces new resource) Settings of the health check that AWS App Runner performs to monitor the health of your service. See [Health Check Configuration](#health-check-configuration) below for more details.
 * `instance_configuration` - The runtime configuration of instances (scaling units) of the App Runner service. See [Instance Configuration](#instance-configuration) below for more details.
-* `tags` - Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `network_configuration` - Configuration settings related to network traffic of the web application that the App Runner service runs. See [Network Configuration](#network-configuration) below for more details.
+* `observability_configuration` - The observability configuration of your service. See [Observability Configuration](#observability-configuration) below for more details.
+* `tags` - Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### Encryption Configuration
 
 The `encryption_configuration` block supports the following argument:
 
-* `kms_key` - (Required) The ARN of the KMS key used for encryption.
+* `kms_key` - (Required) ARN of the KMS key used for encryption.
 
 ### Health Check Configuration
 
 The `health_check_configuration` block supports the following arguments:
 
-* `healthy_threshold` - (Optional) The number of consecutive checks that must succeed before App Runner decides that the service is healthy. Defaults to 1. Minimum value of 1. Maximum value of 20.
-* `interval` - (Optional) The time interval, in seconds, between health checks. Defaults to 5. Minimum value of 1. Maximum value of 20.
-* `path` - (Optional) The URL to send requests to for health checks. Defaults to `/`. Minimum length of 0. Maximum length of 51200.
-* `protocol` - (Optional) The IP protocol that App Runner uses to perform health checks for your service. Valid values: `TCP`, `HTTP`. Defaults to `TCP`. If you set protocol to `HTTP`, App Runner sends health check requests to the HTTP path specified by `path`.
-* `timeout` - (Optional) The time, in seconds, to wait for a health check response before deciding it failed. Defaults to 2. Minimum value of  1. Maximum value of 20.
-* `unhealthy_threshold` - (Optional) The number of consecutive checks that must fail before App Runner decides that the service is unhealthy. Defaults to 5. Minimum value of  1. Maximum value of 20.
+* `healthy_threshold` - (Optional) Number of consecutive checks that must succeed before App Runner decides that the service is healthy. Defaults to 1. Minimum value of 1. Maximum value of 20.
+* `interval` - (Optional) Time interval, in seconds, between health checks. Defaults to 5. Minimum value of 1. Maximum value of 20.
+* `path` - (Optional) URL to send requests to for health checks. Defaults to `/`. Minimum length of 0. Maximum length of 51200.
+* `protocol` - (Optional) IP protocol that App Runner uses to perform health checks for your service. Valid values: `TCP`, `HTTP`. Defaults to `TCP`. If you set protocol to `HTTP`, App Runner sends health check requests to the HTTP path specified by `path`.
+* `timeout` - (Optional) Time, in seconds, to wait for a health check response before deciding it failed. Defaults to 2. Minimum value of  1. Maximum value of 20.
+* `unhealthy_threshold` - (Optional) Number of consecutive checks that must fail before App Runner decides that the service is unhealthy. Defaults to 5. Minimum value of  1. Maximum value of 20.
 
 ### Instance Configuration
 
 The `instance_configuration` block supports the following arguments:
 
-* `cpu` - (Optional) The number of CPU units reserved for each instance of your App Runner service represented as a String. Defaults to `1024`. Valid values: `1024|2048|(1|2) vCPU`.
-* `instance_role_arn` - (Optional) The Amazon Resource Name (ARN) of an IAM role that provides permissions to your App Runner service. These are permissions that your code needs when it calls any AWS APIs.
-* `memory` - (Optional) The amount of memory, in MB or GB, reserved for each instance of your App Runner service. Defaults to `2048`. Valid values: `2048|3072|4096|(2|3|4) GB`.
+* `cpu` - (Optional) Number of CPU units reserved for each instance of your App Runner service represented as a String. Defaults to `1024`. Valid values: `1024|2048|(1|2) vCPU`.
+* `instance_role_arn` - (Optional) ARN of an IAM role that provides permissions to your App Runner service. These are permissions that your code needs when it calls any AWS APIs.
+* `memory` - (Optional) Amount of memory, in MB or GB, reserved for each instance of your App Runner service. Defaults to `2048`. Valid values: `2048|3072|4096|(2|3|4) GB`.
 
 ### Source Configuration
 
@@ -126,29 +172,44 @@ The `authentication_configuration` block supports the following arguments:
 * `access_role_arn` - (Optional) ARN of the IAM role that grants the App Runner service access to a source repository. Required for ECR image repositories (but not for ECR Public)
 * `connection_arn` - (Optional) ARN of the App Runner connection that enables the App Runner service to connect to a source repository. Required for GitHub code repositories.
 
+### Network Configuration
+
+The `network_configuration` block supports the following arguments:
+
+* `egress_configuration` - (Optional) Network configuration settings for outbound message traffic.
+* `egress_type` - (Optional) Type of egress configuration.Set to DEFAULT for access to resources hosted on public networks.Set to VPC to associate your service to a custom VPC specified by VpcConnectorArn.
+* `vpc_connector_arn` - ARN of the App Runner VPC connector that you want to associate with your App Runner service. Only valid when EgressType = VPC.
+
+### Observability Configuration
+
+The `observability_configuration` block supports the following arguments:
+
+* `observability_configuration_arn` - (Required) ARN of the observability configuration that is associated with the service.
+* `observability_enabled` - (Required) When `true`, an observability configuration resource is associated with the service.
+
 ### Code Repository
 
 The `code_repository` block supports the following arguments:
 
 * `code_configuration` - (Optional) Configuration for building and running the service from a source code repository. See [Code Configuration](#code-configuration) below for more details.
-* `repository_url` - (Required) The location of the repository that contains the source code.
-* `source_code_version` - (Required) The version that should be used within the source code repository. See [Source Code Version](#source-code-version) below for more details.
+* `repository_url` - (Required) Location of the repository that contains the source code.
+* `source_code_version` - (Required) Version that should be used within the source code repository. See [Source Code Version](#source-code-version) below for more details.
 
 ### Image Repository
 
 The `image_repository` block supports the following arguments:
 
 * `image_configuration` - (Optional) Configuration for running the identified image. See [Image Configuration](#image-configuration) below for more details.
-* `image_identifier` - (Required) The identifier of an image. For an image in Amazon Elastic Container Registry (Amazon ECR), this is an image name. For the
+* `image_identifier` - (Required) Identifier of an image. For an image in Amazon Elastic Container Registry (Amazon ECR), this is an image name. For the
   image name format, see Pulling an image in the Amazon ECR User Guide.
-* `image_repository_type` - (Required) The type of the image repository. This reflects the repository provider and whether the repository is private or public. Valid values: `ECR` , `ECR_PUBLIC`.
+* `image_repository_type` - (Required) Type of the image repository. This reflects the repository provider and whether the repository is private or public. Valid values: `ECR` , `ECR_PUBLIC`.
 
 ### Code Configuration
 
 The `code_configuration` block supports the following arguments:
 
 * `code_configuration_values` - (Optional) Basic configuration for building and running the App Runner service. Use this parameter to quickly launch an App Runner service without providing an apprunner.yaml file in the source code repository (or ignoring the file if it exists). See [Code Configuration Values](#code-configuration-values) below for more details.
-* `configuration_source` - (Required) The source of the App Runner configuration. Valid values: `REPOSITORY`, `API`. Values are interpreted as follows:
+* `configuration_source` - (Required) Source of the App Runner configuration. Valid values: `REPOSITORY`, `API`. Values are interpreted as follows:
     * `REPOSITORY` - App Runner reads configuration values from the apprunner.yaml file in the
     source code repository and ignores the CodeConfigurationValues parameter.
     * `API` - App Runner uses configuration values provided in the CodeConfigurationValues
@@ -158,26 +219,26 @@ The `code_configuration` block supports the following arguments:
 
 The `code_configuration_values` blocks supports the following arguments:
 
-* `build_command` - (Optional) The command App Runner runs to build your application.
-* `port` - (Optional) The port that your application listens to in the container. Defaults to `"8080"`.
-* `runtime` - (Required) A runtime environment type for building and running an App Runner service. Represents a programming language runtime. Valid values: `PYTHON_3`, `NODEJS_12`.
+* `build_command` - (Optional) Command App Runner runs to build your application.
+* `port` - (Optional) Port that your application listens to in the container. Defaults to `"8080"`.
+* `runtime` - (Required) Runtime environment type for building and running an App Runner service. Represents a programming language runtime. Valid values: `PYTHON_3`, `NODEJS_12`.
 * `runtime_environment_variables` - (Optional) Environment variables available to your running App Runner service. A map of key/value pairs. Keys with a prefix of `AWSAPPRUNNER` are reserved for system use and aren't valid.
-* `start_command` - (Optional) The command App Runner runs to start your application.
+* `start_command` - (Optional) Command App Runner runs to start your application.
 
 ### Image Configuration
 
 The `image_configuration` block supports the following arguments:
 
-* `port` - (Optional) The port that your application listens to in the container. Defaults to `"8080"`.
+* `port` - (Optional) Port that your application listens to in the container. Defaults to `"8080"`.
 * `runtime_environment_variables` - (Optional) Environment variables available to your running App Runner service. A map of key/value pairs. Keys with a prefix of `AWSAPPRUNNER` are reserved for system use and aren't valid.
-* `start_command` - (Optional) A command App Runner runs to start the application in the source image. If specified, this command overrides the Docker image’s default start command.
+* `start_command` - (Optional) Command App Runner runs to start the application in the source image. If specified, this command overrides the Docker image’s default start command.
 
 ### Source Code Version
 
 The `source_code_version` block supports the following arguments:
 
-* `type` - (Required) The type of version identifier. For a git-based repository, branches represent versions. Valid values: `BRANCH`.
-* `value`- (Required) A source code version. For a git-based repository, a branch name maps to a specific version. App Runner uses the most recent commit to the branch.
+* `type` - (Required) Type of version identifier. For a git-based repository, branches represent versions. Valid values: `BRANCH`.
+* `value`- (Required) Source code version. For a git-based repository, a branch name maps to a specific version. App Runner uses the most recent commit to the branch.
 
 ## Attributes Reference
 
@@ -185,9 +246,9 @@ In addition to all arguments above, the following attributes are exported:
 
 * `arn` - ARN of the App Runner service.
 * `service_id` - An alphanumeric ID that App Runner generated for this service. Unique within the AWS Region.
-* `service_url` - A subdomain URL that App Runner generated for this service. You can use this URL to access your service web application.
-* `status` - The current state of the App Runner service.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `service_url` - Subdomain URL that App Runner generated for this service. You can use this URL to access your service web application.
+* `status` - Current state of the App Runner service.
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 

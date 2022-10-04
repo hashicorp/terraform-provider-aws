@@ -15,13 +15,12 @@ func DataSourceInstances() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"arns": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-
 			"identity_store_ids": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
@@ -32,39 +31,47 @@ func DataSourceInstances() *schema.Resource {
 func dataSourceInstancesRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SSOAdminConn
 
-	var instances []*ssoadmin.InstanceMetadata
-	var arns, ids []string
-
-	err := conn.ListInstancesPages(&ssoadmin.ListInstancesInput{}, func(page *ssoadmin.ListInstancesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		instances = append(instances, page.Instances...)
-
-		return !lastPage
-	})
+	output, err := findInstanceMetadatas(conn)
 
 	if err != nil {
 		return fmt.Errorf("error reading SSO Instances: %w", err)
 	}
 
-	if len(instances) == 0 {
-		return fmt.Errorf("error reading SSO Instance: no instances found")
-	}
+	var identityStoreIDs, arns []string
 
-	for _, instance := range instances {
-		arns = append(arns, aws.StringValue(instance.InstanceArn))
-		ids = append(ids, aws.StringValue(instance.IdentityStoreId))
+	for _, v := range output {
+		identityStoreIDs = append(identityStoreIDs, aws.StringValue(v.IdentityStoreId))
+		arns = append(arns, aws.StringValue(v.InstanceArn))
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
-	if err := d.Set("arns", arns); err != nil {
-		return fmt.Errorf("error setting arns: %w", err)
-	}
-	if err := d.Set("identity_store_ids", ids); err != nil {
-		return fmt.Errorf("error setting identity_store_ids: %w", err)
-	}
+	d.Set("arns", arns)
+	d.Set("identity_store_ids", identityStoreIDs)
 
 	return nil
+}
+
+func findInstanceMetadatas(conn *ssoadmin.SSOAdmin) ([]*ssoadmin.InstanceMetadata, error) {
+	input := &ssoadmin.ListInstancesInput{}
+	var output []*ssoadmin.InstanceMetadata
+
+	err := conn.ListInstancesPages(input, func(page *ssoadmin.ListInstancesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.Instances {
+			if v != nil {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
 }

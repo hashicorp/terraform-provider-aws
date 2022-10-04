@@ -1,5 +1,5 @@
 ---
-subcategory: "AppStream"
+subcategory: "AppStream 2.0"
 layout: "aws"
 page_title: "AWS: aws_appstream_user"
 description: |-
@@ -15,7 +15,7 @@ Provides an AppStream user.
 ```terraform
 resource "aws_appstream_user" "example" {
   authentication_type = "USERPOOL"
-  user_name           = "EMAIL ADDRESS"
+  user_name           = "EMAIL"
   first_name          = "FIRST NAME"
   last_name           = "LAST NAME"
 }
@@ -30,7 +30,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `enabled` - (Optional) Specifies whether the user in the user pool is enabled.
+* `enabled` - (Optional) Whether the user in the user pool is enabled.
 * `first_name` - (Optional) First name, or given name, of the user.
 * `last_name` - (Optional) Last name, or surname, of the user.
 * `send_email_notification` - (Optional) Send an email notification.

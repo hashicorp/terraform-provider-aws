@@ -1,21 +1,25 @@
 package s3
 
 import (
+	"bytes"
 	"fmt"
 	"log"
 	"net/http"
 	"net/url"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -323,7 +327,7 @@ func resourceObjectCopyRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error reading S3 Object (%s): empty response", d.Id())
 	}
 
-	log.Printf("[DEBUG] Reading S3 Bucket Object meta: %s", resp)
+	log.Printf("[DEBUG] Reading S3 Object meta: %s", resp)
 
 	d.Set("bucket_key_enabled", resp.BucketKeyEnabled)
 	d.Set("cache_control", resp.CacheControl)
@@ -347,10 +351,10 @@ func resourceObjectCopyRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("website_redirect", resp.WebsiteRedirectLocation)
 	d.Set("object_lock_legal_hold_status", resp.ObjectLockLegalHoldStatus)
 	d.Set("object_lock_mode", resp.ObjectLockMode)
-	d.Set("object_lock_retain_until_date", flattenS3ObjectDate(resp.ObjectLockRetainUntilDate))
+	d.Set("object_lock_retain_until_date", flattenObjectDate(resp.ObjectLockRetainUntilDate))
 
-	if err := resourceBucketObjectSetKMS(d, meta, resp.SSEKMSKeyId); err != nil {
-		return fmt.Errorf("bucket object KMS: %w", err)
+	if err := resourceObjectSetKMS(d, meta, resp.SSEKMSKeyId); err != nil {
+		return fmt.Errorf("object KMS: %w", err)
 	}
 
 	// See https://forums.aws.amazon.com/thread.jspa?threadID=44003
@@ -364,9 +368,9 @@ func resourceObjectCopyRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// Retry due to S3 eventual consistency
-	tagsRaw, err := verify.RetryOnAWSCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
+	tagsRaw, err := tfresource.RetryWhenAWSErrCodeEquals(2*time.Minute, func() (interface{}, error) {
 		return ObjectListTags(conn, bucket, key)
-	})
+	}, s3.ErrCodeNoSuchBucket)
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for S3 Bucket (%s) Object (%s): %w", bucket, key, err)
@@ -460,9 +464,9 @@ func resourceObjectCopyDelete(d *schema.ResourceData, meta interface{}) error {
 
 	var err error
 	if _, ok := d.GetOk("version_id"); ok {
-		err = DeleteAllObjectVersions(conn, bucket, key, d.Get("force_destroy").(bool), false)
+		_, err = DeleteAllObjectVersions(conn, bucket, key, d.Get("force_destroy").(bool), false)
 	} else {
-		err = deleteS3ObjectVersion(conn, bucket, key, "", false)
+		err = deleteObjectVersion(conn, bucket, key, "", false)
 	}
 
 	if err != nil {
@@ -515,7 +519,7 @@ func resourceObjectCopyDoCopy(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("copy_if_modified_since"); ok {
-		input.CopySourceIfModifiedSince = expandS3ObjectDate(v.(string))
+		input.CopySourceIfModifiedSince = expandObjectDate(v.(string))
 	}
 
 	if v, ok := d.GetOk("copy_if_none_match"); ok {
@@ -523,7 +527,7 @@ func resourceObjectCopyDoCopy(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("copy_if_unmodified_since"); ok {
-		input.CopySourceIfUnmodifiedSince = expandS3ObjectDate(v.(string))
+		input.CopySourceIfUnmodifiedSince = expandObjectDate(v.(string))
 	}
 
 	if v, ok := d.GetOk("customer_algorithm"); ok {
@@ -547,11 +551,11 @@ func resourceObjectCopyDoCopy(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("expires"); ok {
-		input.Expires = expandS3ObjectDate(v.(string))
+		input.Expires = expandObjectDate(v.(string))
 	}
 
 	if v, ok := d.GetOk("grant"); ok && v.(*schema.Set).Len() > 0 {
-		grants := expandS3Grants(v.(*schema.Set).List())
+		grants := expandObjectCopyGrants(v.(*schema.Set).List())
 		input.GrantFullControl = grants.FullControl
 		input.GrantRead = grants.Read
 		input.GrantReadACP = grants.ReadACP
@@ -585,7 +589,7 @@ func resourceObjectCopyDoCopy(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("object_lock_retain_until_date"); ok {
-		input.ObjectLockRetainUntilDate = expandS3ObjectDate(v.(string))
+		input.ObjectLockRetainUntilDate = expandObjectDate(v.(string))
 	}
 
 	if v, ok := d.GetOk("request_payer"); ok {
@@ -618,7 +622,7 @@ func resourceObjectCopyDoCopy(d *schema.ResourceData, meta interface{}) error {
 
 	if len(tags) > 0 {
 		// The tag-set must be encoded as URL Query parameters.
-		input.Tagging = aws.String(tags.IgnoreAWS().UrlEncode())
+		input.Tagging = aws.String(tags.IgnoreAWS().URLEncode())
 	}
 
 	if v, ok := d.GetOk("website_redirect"); ok {
@@ -635,7 +639,7 @@ func resourceObjectCopyDoCopy(d *schema.ResourceData, meta interface{}) error {
 
 	if output.CopyObjectResult != nil {
 		d.Set("etag", strings.Trim(aws.StringValue(output.CopyObjectResult.ETag), `"`))
-		d.Set("last_modified", flattenS3ObjectDate(output.CopyObjectResult.LastModified))
+		d.Set("last_modified", flattenObjectDate(output.CopyObjectResult.LastModified))
 	}
 
 	d.Set("expiration", output.Expiration)
@@ -647,7 +651,7 @@ func resourceObjectCopyDoCopy(d *schema.ResourceData, meta interface{}) error {
 	d.Set("version_id", output.VersionId)
 
 	d.SetId(d.Get("key").(string))
-	return resourceBucketObjectRead(d, meta)
+	return resourceObjectRead(d, meta)
 }
 
 type s3Grants struct {
@@ -657,7 +661,7 @@ type s3Grants struct {
 	WriteACP    *string
 }
 
-func expandS3Grant(tfMap map[string]interface{}) string {
+func expandObjectCopyGrant(tfMap map[string]interface{}) string {
 	if tfMap == nil {
 		return ""
 	}
@@ -696,7 +700,7 @@ func expandS3Grant(tfMap map[string]interface{}) string {
 	return fmt.Sprintf("uri=%s", *apiObject.URI)
 }
 
-func expandS3Grants(tfList []interface{}) *s3Grants {
+func expandObjectCopyGrants(tfList []interface{}) *s3Grants {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -714,7 +718,7 @@ func expandS3Grants(tfList []interface{}) *s3Grants {
 		}
 
 		for _, perm := range tfMap["permissions"].(*schema.Set).List() {
-			if v := expandS3Grant(tfMap); v != "" {
+			if v := expandObjectCopyGrant(tfMap); v != "" {
 				switch perm.(string) {
 				case s3.PermissionFullControl:
 					grantFullControl = append(grantFullControl, v)
@@ -748,4 +752,27 @@ func expandS3Grants(tfList []interface{}) *s3Grants {
 	}
 
 	return apiObjects
+}
+
+func grantHash(v interface{}) int {
+	var buf bytes.Buffer
+	m, ok := v.(map[string]interface{})
+
+	if !ok {
+		return 0
+	}
+
+	if v, ok := m["id"]; ok {
+		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+	}
+	if v, ok := m["type"]; ok {
+		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+	}
+	if v, ok := m["uri"]; ok {
+		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+	}
+	if p, ok := m["permissions"]; ok {
+		buf.WriteString(fmt.Sprintf("%v-", p.(*schema.Set).List()))
+	}
+	return create.StringHashcode(buf.String())
 }

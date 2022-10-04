@@ -134,7 +134,7 @@ func dataSourceSigningProfileRead(d *schema.ResourceData, meta interface{}) erro
 		return fmt.Errorf("error setting signer signing profile tags: %w", err)
 	}
 
-	if err := d.Set("revocation_record", flattenSignerSigningProfileRevocationRecord(signingProfileOutput.RevocationRecord)); err != nil {
+	if err := d.Set("revocation_record", flattenSigningProfileRevocationRecord(signingProfileOutput.RevocationRecord)); err != nil {
 		return fmt.Errorf("error setting signer signing profile revocation record: %w", err)
 	}
 

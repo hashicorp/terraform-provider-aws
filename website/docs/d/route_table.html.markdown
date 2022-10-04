@@ -1,5 +1,5 @@
 ---
-subcategory: "VPC"
+subcategory: "VPC (Virtual Private Cloud)"
 layout: "aws"
 page_title: "AWS: aws_route_table"
 description: |-
@@ -74,6 +74,7 @@ For destinations:
 For targets:
 
 * `carrier_gateway_id` - ID of the Carrier Gateway.
+* `core_network_arn` - ARN of the core network.
 * `egress_only_gateway_id` - ID of the Egress Only Internet Gateway.
 * `gateway_id` - Internet Gateway ID.
 * `instance_id` - EC2 instance ID.
@@ -93,3 +94,9 @@ Associations are also exported with the following attributes:
 * `route_table_association_id` - Association ID.
 * `route_table_id` - Route Table ID.
 * `subnet_id` - Subnet ID. Only set when associated with a subnet.
+
+## Timeouts
+
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+
+- `read` - (Default `20m`)

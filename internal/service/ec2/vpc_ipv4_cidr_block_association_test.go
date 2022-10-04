@@ -6,39 +6,44 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccVPCIPv4CIDRBlockAssociation_basic(t *testing.T) {
 	var associationSecondary, associationTertiary ec2.VpcCidrBlockAssociation
+	resource1Name := "aws_vpc_ipv4_cidr_block_association.secondary_cidr"
+	resource2Name := "aws_vpc_ipv4_cidr_block_association.tertiary_cidr"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckVPCIPv4CIDRBlockAssociationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVPCIPv4CIDRBlockAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCIPv4CIDRBlockAssociationConfig,
+				Config: testAccVPCIPv4CIDRBlockAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVPCIPv4CIDRBlockAssociationExists("aws_vpc_ipv4_cidr_block_association.secondary_cidr", &associationSecondary),
+					testAccCheckVPCIPv4CIDRBlockAssociationExists(resource1Name, &associationSecondary),
 					testAccCheckAdditionalVPCIPv4CIDRBlock(&associationSecondary, "172.2.0.0/16"),
-					testAccCheckVPCIPv4CIDRBlockAssociationExists("aws_vpc_ipv4_cidr_block_association.tertiary_cidr", &associationTertiary),
+					testAccCheckVPCIPv4CIDRBlockAssociationExists(resource2Name, &associationTertiary),
 					testAccCheckAdditionalVPCIPv4CIDRBlock(&associationTertiary, "170.2.0.0/16"),
 				),
 			},
 			{
-				ResourceName:      "aws_vpc_ipv4_cidr_block_association.secondary_cidr",
+				ResourceName:      resource1Name,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
 			{
-				ResourceName:      "aws_vpc_ipv4_cidr_block_association.tertiary_cidr",
+				ResourceName:      resource2Name,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -46,39 +51,73 @@ func TestAccVPCIPv4CIDRBlockAssociation_basic(t *testing.T) {
 	})
 }
 
-func TestAccVPCIPv4CIDRBlockAssociation_IpamBasic(t *testing.T) {
-	var associationSecondary ec2.VpcCidrBlockAssociation
-	netmaskLength := "28"
+func TestAccVPCIPv4CIDRBlockAssociation_disappears(t *testing.T) {
+	var associationSecondary, associationTertiary ec2.VpcCidrBlockAssociation
+	resource1Name := "aws_vpc_ipv4_cidr_block_association.secondary_cidr"
+	resource2Name := "aws_vpc_ipv4_cidr_block_association.tertiary_cidr"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccIPAMPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckVPCIPv4CIDRBlockAssociationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVPCIPv4CIDRBlockAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCIPv4CIDRBlockAssociationIpam(netmaskLength),
+				Config: testAccVPCIPv4CIDRBlockAssociationConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVPCIPv4CIDRBlockAssociationExists(resource1Name, &associationSecondary),
+					testAccCheckVPCIPv4CIDRBlockAssociationExists(resource2Name, &associationTertiary),
+					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceVPCIPv4CIDRBlockAssociation(), resource1Name),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccVPCIPv4CIDRBlockAssociation_ipamBasic(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var associationSecondary ec2.VpcCidrBlockAssociation
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); testAccIPAMPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVPCIPv4CIDRBlockAssociationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCIPv4CIDRBlockAssociationConfig_ipam(rName, 28),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCIPv4CIDRBlockAssociationExists("aws_vpc_ipv4_cidr_block_association.secondary_cidr", &associationSecondary),
-					testAccCheckVPCAssociationCIDRPrefix(&associationSecondary, netmaskLength),
+					testAccCheckVPCAssociationCIDRPrefix(&associationSecondary, "28"),
 				),
 			},
 		},
 	})
 }
 
-func TestAccVPCIPv4CIDRBlockAssociation_IpamBasicExplicitCIDR(t *testing.T) {
+func TestAccVPCIPv4CIDRBlockAssociation_ipamBasicExplicitCIDR(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var associationSecondary ec2.VpcCidrBlockAssociation
 	cidr := "172.2.0.32/28"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccIPAMPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckVPCIPv4CIDRBlockAssociationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccIPAMPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVPCIPv4CIDRBlockAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCIPv4CIDRBlockAssociationIpamExplicitCIDR(cidr),
+				Config: testAccVPCIPv4CIDRBlockAssociationConfig_ipamExplicit(rName, cidr),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCIPv4CIDRBlockAssociationExists("aws_vpc_ipv4_cidr_block_association.secondary_cidr", &associationSecondary),
 					testAccCheckAdditionalVPCIPv4CIDRBlock(&associationSecondary, cidr)),
@@ -116,37 +155,23 @@ func testAccCheckVPCIPv4CIDRBlockAssociationDestroy(s *terraform.State) error {
 			continue
 		}
 
-		// Try to find the VPC
-		DescribeVpcOpts := &ec2.DescribeVpcsInput{
-			VpcIds: []*string{aws.String(rs.Primary.Attributes["vpc_id"])},
-		}
-		resp, err := conn.DescribeVpcs(DescribeVpcOpts)
-		if err == nil {
-			vpc := resp.Vpcs[0]
+		_, _, err := tfec2.FindVPCCIDRBlockAssociationByID(conn, rs.Primary.ID)
 
-			for _, ipv4Association := range vpc.CidrBlockAssociationSet {
-				if *ipv4Association.AssociationId == rs.Primary.ID {
-					return fmt.Errorf("VPC CIDR block association still exists")
-				}
-			}
-
-			return nil
+		if tfresource.NotFound(err) {
+			continue
 		}
 
-		// Verify the error is what we want
-		ec2err, ok := err.(awserr.Error)
-		if !ok {
+		if err != nil {
 			return err
 		}
-		if ec2err.Code() != "InvalidVpcID.NotFound" {
-			return err
-		}
+
+		return fmt.Errorf("EC2 VPC IPv4 CIDR Block Association %s still exists", rs.Primary.ID)
 	}
 
 	return nil
 }
 
-func testAccCheckVPCIPv4CIDRBlockAssociationExists(n string, association *ec2.VpcCidrBlockAssociation) resource.TestCheckFunc {
+func testAccCheckVPCIPv4CIDRBlockAssociationExists(n string, v *ec2.VpcCidrBlockAssociation) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -154,96 +179,81 @@ func testAccCheckVPCIPv4CIDRBlockAssociationExists(n string, association *ec2.Vp
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No VPC ID is set")
+			return fmt.Errorf("No EC2 VPC IPv4 CIDR Block Association is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
-		DescribeVpcOpts := &ec2.DescribeVpcsInput{
-			VpcIds: []*string{aws.String(rs.Primary.Attributes["vpc_id"])},
-		}
-		resp, err := conn.DescribeVpcs(DescribeVpcOpts)
+
+		output, _, err := tfec2.FindVPCCIDRBlockAssociationByID(conn, rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
-		if len(resp.Vpcs) == 0 {
-			return fmt.Errorf("VPC not found")
-		}
 
-		vpc := resp.Vpcs[0]
-		found := false
-		for _, cidrAssociation := range vpc.CidrBlockAssociationSet {
-			if *cidrAssociation.AssociationId == rs.Primary.ID {
-				*association = *cidrAssociation
-				found = true
-			}
-		}
-
-		if !found {
-			return fmt.Errorf("VPC CIDR block association not found")
-		}
+		*v = *output
 
 		return nil
 	}
 }
 
-const testAccVPCIPv4CIDRBlockAssociationConfig = `
-resource "aws_vpc" "foo" {
+func testAccVPCIPv4CIDRBlockAssociationConfig_basic(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
   tags = {
-    Name = "terraform-testacc-vpc-ipv4-cidr-block-association"
+    Name = %[1]q
   }
 }
 
 resource "aws_vpc_ipv4_cidr_block_association" "secondary_cidr" {
-  vpc_id     = aws_vpc.foo.id
+  vpc_id     = aws_vpc.test.id
   cidr_block = "172.2.0.0/16"
 }
 
 resource "aws_vpc_ipv4_cidr_block_association" "tertiary_cidr" {
-  vpc_id     = aws_vpc.foo.id
+  vpc_id     = aws_vpc.test.id
   cidr_block = "170.2.0.0/16"
 }
-`
+`, rName)
+}
 
-func testAccVPCIPv4CIDRBlockAssociationIpam(netmaskLength string) string {
-	return testAccVpcIpamBase + fmt.Sprintf(`
+func testAccVPCIPv4CIDRBlockAssociationConfig_ipam(rName string, netmaskLength int) string {
+	return acctest.ConfigCompose(testAccIPAMIPv4Config_base(rName), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
   tags = {
-    Name = "terraform-testacc-vpc-ipv4-cidr-block-association"
+    Name = %[1]q
   }
 }
 
 resource "aws_vpc_ipv4_cidr_block_association" "secondary_cidr" {
   ipv4_ipam_pool_id   = aws_vpc_ipam_pool.test.id
-  ipv4_netmask_length = %[1]q
+  ipv4_netmask_length = %[2]d
   vpc_id              = aws_vpc.test.id
-  depends_on = [
-    aws_vpc_ipam_pool_cidr.test
-  ]
+
+  depends_on = [aws_vpc_ipam_pool_cidr.test]
 }
-`, netmaskLength)
+`, rName, netmaskLength))
 }
 
-func testAccVPCIPv4CIDRBlockAssociationIpamExplicitCIDR(cidr string) string {
-	return testAccVpcIpamBase + fmt.Sprintf(`
+func testAccVPCIPv4CIDRBlockAssociationConfig_ipamExplicit(rName, cidr string) string {
+	return acctest.ConfigCompose(testAccIPAMIPv4Config_base(rName), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
   tags = {
-    Name = "terraform-testacc-vpc-ipv4-cidr-block-association"
+    Name = %[1]q
   }
 }
 
 resource "aws_vpc_ipv4_cidr_block_association" "secondary_cidr" {
   ipv4_ipam_pool_id = aws_vpc_ipam_pool.test.id
-  cidr_block        = %[1]q
+  cidr_block        = %[2]q
   vpc_id            = aws_vpc.test.id
-  depends_on = [
-    aws_vpc_ipam_pool_cidr.test
-  ]
+
+  depends_on = [aws_vpc_ipam_pool_cidr.test]
 }
-`, cidr)
+`, rName, cidr))
 }

@@ -33,7 +33,7 @@ func dataSourceActiveReceiptRuleSetRead(d *schema.ResourceData, meta interface{}
 	data, err := conn.DescribeActiveReceiptRuleSet(&ses.DescribeActiveReceiptRuleSetInput{})
 
 	if err != nil {
-		return fmt.Errorf("error reading SES Active Receipt Rule Set: %s", err)
+		return fmt.Errorf("reading SES Active Receipt Rule Set: %s", err)
 	}
 
 	name := aws.StringValue(data.Metadata.Name)

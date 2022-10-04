@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/securityhub"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -14,13 +14,13 @@ import (
 
 func testAccAccount_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, securityhub.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAccountDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, securityhub.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAccountDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAccountConfig(),
+				Config: testAccAccountConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountExists("aws_securityhub_account.example"),
 				),
@@ -81,7 +81,7 @@ func testAccCheckAccountDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccAccountConfig() string {
+func testAccAccountConfig_basic() string {
 	return `
 resource "aws_securityhub_account" "example" {}
 `

@@ -22,14 +22,14 @@ func testAccBackendEnvironment_basic(t *testing.T) {
 
 	environmentName := sdkacctest.RandStringFromCharSet(10, sdkacctest.CharSetAlpha)
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, amplify.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBackendEnvironmentDestroy,
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, amplify.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBackendEnvironmentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBackendEnvironmentBasicConfig(rName, environmentName),
+				Config: testAccBackendEnvironmentConfig_basic(rName, environmentName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBackendEnvironmentExists(resourceName, &env),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "amplify", regexp.MustCompile(`apps/[^/]+/backendenvironments/.+`)),
@@ -54,14 +54,14 @@ func testAccBackendEnvironment_disappears(t *testing.T) {
 
 	environmentName := sdkacctest.RandStringFromCharSet(10, sdkacctest.CharSetAlpha)
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, amplify.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBackendEnvironmentDestroy,
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, amplify.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBackendEnvironmentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBackendEnvironmentBasicConfig(rName, environmentName),
+				Config: testAccBackendEnvironmentConfig_basic(rName, environmentName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBackendEnvironmentExists(resourceName, &env),
 					acctest.CheckResourceDisappears(acctest.Provider, tfamplify.ResourceBackendEnvironment(), resourceName),
@@ -79,14 +79,14 @@ func testAccBackendEnvironment_DeploymentArtifacts_StackName(t *testing.T) {
 
 	environmentName := sdkacctest.RandStringFromCharSet(10, sdkacctest.CharSetAlpha)
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, amplify.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBackendEnvironmentDestroy,
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, amplify.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBackendEnvironmentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBackendEnvironmentDeploymentArtifactsAndStackNameConfig(rName, environmentName),
+				Config: testAccBackendEnvironmentConfig_deploymentArtifactsAndStackName(rName, environmentName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBackendEnvironmentExists(resourceName, &env),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "amplify", regexp.MustCompile(`apps/[^/]+/backendenvironments/.+`)),
@@ -165,7 +165,7 @@ func testAccCheckBackendEnvironmentDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccBackendEnvironmentBasicConfig(rName string, environmentName string) string {
+func testAccBackendEnvironmentConfig_basic(rName string, environmentName string) string {
 	return fmt.Sprintf(`
 resource "aws_amplify_app" "test" {
   name = %[1]q
@@ -178,7 +178,7 @@ resource "aws_amplify_backend_environment" "test" {
 `, rName, environmentName)
 }
 
-func testAccBackendEnvironmentDeploymentArtifactsAndStackNameConfig(rName string, environmentName string) string {
+func testAccBackendEnvironmentConfig_deploymentArtifactsAndStackName(rName string, environmentName string) string {
 	return fmt.Sprintf(`
 resource "aws_amplify_app" "test" {
   name = %[1]q

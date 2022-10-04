@@ -1,0 +1,15 @@
+```release-note:new-data-source
+aws_opensearch_domain
+```
+
+```release-note:new-resource
+aws_opensearch_domain_policy
+```
+
+```release-note:new-resource
+aws_opensearch_domain_saml_options
+```
+
+```release-note:new-resource
+aws_opensearch_domain
+```

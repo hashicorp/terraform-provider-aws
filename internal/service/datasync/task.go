@@ -8,7 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/datasync"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -47,6 +47,24 @@ func ResourceTask() *schema.Resource {
 				ValidateFunc: verify.ValidARN,
 			},
 			"excludes": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"filter_type": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringInSlice(datasync.FilterType_Values(), false),
+						},
+						"value": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+					},
+				},
+			},
+			"includes": {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
@@ -195,7 +213,7 @@ func resourceTaskCreate(d *schema.ResourceData, meta interface{}) error {
 
 	input := &datasync.CreateTaskInput{
 		DestinationLocationArn: aws.String(d.Get("destination_location_arn").(string)),
-		Options:                expandDataSyncOptions(d.Get("options").([]interface{})),
+		Options:                expandOptions(d.Get("options").([]interface{})),
 		SourceLocationArn:      aws.String(d.Get("source_location_arn").(string)),
 		Tags:                   Tags(tags.IgnoreAWS()),
 	}
@@ -206,6 +224,10 @@ func resourceTaskCreate(d *schema.ResourceData, meta interface{}) error {
 
 	if v, ok := d.GetOk("excludes"); ok {
 		input.Excludes = expandFilterRules(v.([]interface{}))
+	}
+
+	if v, ok := d.GetOk("includes"); ok {
+		input.Includes = expandFilterRules(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("name"); ok {
@@ -255,8 +277,11 @@ func resourceTaskRead(d *schema.ResourceData, meta interface{}) error {
 	if err := d.Set("excludes", flattenFilterRules(output.Excludes)); err != nil {
 		return fmt.Errorf("error setting excludes: %w", err)
 	}
+	if err := d.Set("includes", flattenFilterRules(output.Includes)); err != nil {
+		return fmt.Errorf("error setting includes: %w", err)
+	}
 	d.Set("name", output.Name)
-	if err := d.Set("options", flattenDataSyncOptions(output.Options)); err != nil {
+	if err := d.Set("options", flattenOptions(output.Options)); err != nil {
 		return fmt.Errorf("error setting options: %w", err)
 	}
 	if err := d.Set("schedule", flattenTaskSchedule(output.Schedule)); err != nil {
@@ -300,12 +325,16 @@ func resourceTaskUpdate(d *schema.ResourceData, meta interface{}) error {
 			input.Excludes = expandFilterRules(d.Get("excludes").([]interface{}))
 		}
 
+		if d.HasChanges("includes") {
+			input.Includes = expandFilterRules(d.Get("includes").([]interface{}))
+		}
+
 		if d.HasChanges("name") {
 			input.Name = aws.String(d.Get("name").(string))
 		}
 
 		if d.HasChanges("options") {
-			input.Options = expandDataSyncOptions(d.Get("options").([]interface{}))
+			input.Options = expandOptions(d.Get("options").([]interface{}))
 		}
 
 		if d.HasChanges("schedule") {
@@ -348,6 +377,59 @@ func resourceTaskDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	return nil
+}
+
+func flattenOptions(options *datasync.Options) []interface{} {
+	if options == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"atime":                  aws.StringValue(options.Atime),
+		"bytes_per_second":       aws.Int64Value(options.BytesPerSecond),
+		"gid":                    aws.StringValue(options.Gid),
+		"log_level":              aws.StringValue(options.LogLevel),
+		"mtime":                  aws.StringValue(options.Mtime),
+		"overwrite_mode":         aws.StringValue(options.OverwriteMode),
+		"posix_permissions":      aws.StringValue(options.PosixPermissions),
+		"preserve_deleted_files": aws.StringValue(options.PreserveDeletedFiles),
+		"preserve_devices":       aws.StringValue(options.PreserveDevices),
+		"task_queueing":          aws.StringValue(options.TaskQueueing),
+		"transfer_mode":          aws.StringValue(options.TransferMode),
+		"uid":                    aws.StringValue(options.Uid),
+		"verify_mode":            aws.StringValue(options.VerifyMode),
+	}
+
+	return []interface{}{m}
+}
+
+func expandOptions(l []interface{}) *datasync.Options {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	options := &datasync.Options{
+		Atime:                aws.String(m["atime"].(string)),
+		Gid:                  aws.String(m["gid"].(string)),
+		LogLevel:             aws.String(m["log_level"].(string)),
+		Mtime:                aws.String(m["mtime"].(string)),
+		OverwriteMode:        aws.String(m["overwrite_mode"].(string)),
+		PreserveDeletedFiles: aws.String(m["preserve_deleted_files"].(string)),
+		PreserveDevices:      aws.String(m["preserve_devices"].(string)),
+		PosixPermissions:     aws.String(m["posix_permissions"].(string)),
+		TaskQueueing:         aws.String(m["task_queueing"].(string)),
+		TransferMode:         aws.String(m["transfer_mode"].(string)),
+		Uid:                  aws.String(m["uid"].(string)),
+		VerifyMode:           aws.String(m["verify_mode"].(string)),
+	}
+
+	if v, ok := m["bytes_per_second"]; ok && v.(int) > 0 {
+		options.BytesPerSecond = aws.Int64(int64(v.(int)))
+	}
+
+	return options
 }
 
 func expandTaskSchedule(l []interface{}) *datasync.TaskSchedule {

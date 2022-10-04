@@ -8,7 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/macie2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -19,9 +19,9 @@ import (
 
 func ResourceInvitationAccepter() *schema.Resource {
 	return &schema.Resource{
-		CreateWithoutTimeout: resourceMacie2InvitationAccepterCreate,
-		ReadWithoutTimeout:   resourceMacie2InvitationAccepterRead,
-		DeleteWithoutTimeout: resourceMacie2InvitationAccepterDelete,
+		CreateWithoutTimeout: resourceInvitationAccepterCreate,
+		ReadWithoutTimeout:   resourceInvitationAccepterRead,
+		DeleteWithoutTimeout: resourceInvitationAccepterDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -43,7 +43,7 @@ func ResourceInvitationAccepter() *schema.Resource {
 	}
 }
 
-func resourceMacie2InvitationAccepterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceInvitationAccepterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).Macie2Conn
 
 	adminAccountID := d.Get("administrator_account_id").(string)
@@ -101,10 +101,10 @@ func resourceMacie2InvitationAccepterCreate(ctx context.Context, d *schema.Resou
 
 	d.SetId(adminAccountID)
 
-	return resourceMacie2InvitationAccepterRead(ctx, d, meta)
+	return resourceInvitationAccepterRead(ctx, d, meta)
 }
 
-func resourceMacie2InvitationAccepterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceInvitationAccepterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).Macie2Conn
 
 	var err error
@@ -133,7 +133,7 @@ func resourceMacie2InvitationAccepterRead(ctx context.Context, d *schema.Resourc
 	return nil
 }
 
-func resourceMacie2InvitationAccepterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceInvitationAccepterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).Macie2Conn
 
 	input := &macie2.DisassociateFromAdministratorAccountInput{}

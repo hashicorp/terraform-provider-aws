@@ -9,10 +9,10 @@ import (
 )
 
 func init() {
-	acctest.RegisterServiceErrorCheckFunc(sagemaker.EndpointsID, testAccErrorCheckSkipSagemaker)
+	acctest.RegisterServiceErrorCheckFunc(sagemaker.EndpointsID, testAccErrorCheckSkip)
 }
 
-func testAccErrorCheckSkipSagemaker(t *testing.T) resource.ErrorCheckFunc {
+func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
 	return acctest.ErrorCheckSkipMessagesContaining(t,
 		"is not supported in region",
 		"is not supported for the chosen region",
@@ -21,13 +21,13 @@ func testAccErrorCheckSkipSagemaker(t *testing.T) resource.ErrorCheckFunc {
 
 // Tests are serialized as SagmMaker Domain resources are limited to 1 per account by default.
 // SageMaker UserProfile and App depend on the Domain resources and as such are also part of the serialized test suite.
-// Sagemaker Workteam tests must also be serialized
+// SageMaker Workteam tests must also be serialized
 func TestAccSageMaker_serial(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
 		"App": {
 			"basic":                 testAccApp_basic,
-			"disappears":            testAccApp_tags,
-			"tags":                  testAccApp_disappears,
+			"disappears":            testAccApp_disappears,
+			"tags":                  testAccApp_tags,
 			"resourceSpec":          testAccApp_resourceSpec,
 			"resourceSpecLifecycle": testAccApp_resourceSpecLifecycle,
 		},
@@ -45,6 +45,7 @@ func TestAccSageMaker_serial(t *testing.T) {
 			"kms":                                                    testAccDomain_kms,
 			"securityGroup":                                          testAccDomain_securityGroup,
 			"sharingSettings":                                        testAccDomain_sharingSettings,
+			"defaultUserSettingsUpdated":                             testAccDomain_defaultUserSettingsUpdated,
 		},
 		"FlowDefinition": {
 			"basic":                          testAccFlowDefinition_basic,

@@ -21,13 +21,13 @@ func TestAccAPIGatewayIntegrationResponse_basic(t *testing.T) {
 	resourceName := "aws_api_gateway_integration_response.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckIntegrationResponseDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIntegrationResponseDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIntegrationResponseConfig(rName),
+				Config: testAccIntegrationResponseConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIntegrationResponseExists(resourceName, &conf),
 					testAccCheckIntegrationResponseAttributes(&conf),
@@ -41,7 +41,7 @@ func TestAccAPIGatewayIntegrationResponse_basic(t *testing.T) {
 			},
 
 			{
-				Config: testAccIntegrationResponseUpdateConfig(rName),
+				Config: testAccIntegrationResponseConfig_update(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIntegrationResponseExists(resourceName, &conf),
 					testAccCheckIntegrationResponseAttributesUpdate(&conf),
@@ -69,13 +69,13 @@ func TestAccAPIGatewayIntegrationResponse_disappears(t *testing.T) {
 	resourceName := "aws_api_gateway_integration_response.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckIntegrationResponseDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIntegrationResponseDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIntegrationResponseConfig(rName),
+				Config: testAccIntegrationResponseConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIntegrationResponseExists(resourceName, &conf),
 					acctest.CheckResourceDisappears(acctest.Provider, tfapigateway.ResourceIntegrationResponse(), resourceName),
@@ -204,7 +204,7 @@ func testAccIntegrationResponseImportStateIdFunc(resourceName string) resource.I
 	}
 }
 
-func testAccIntegrationResponseConfig(rName string) string {
+func testAccIntegrationResponseConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
   name = "%s"
@@ -274,7 +274,7 @@ resource "aws_api_gateway_integration_response" "test" {
 `, rName)
 }
 
-func testAccIntegrationResponseUpdateConfig(rName string) string {
+func testAccIntegrationResponseConfig_update(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
   name = "%s"

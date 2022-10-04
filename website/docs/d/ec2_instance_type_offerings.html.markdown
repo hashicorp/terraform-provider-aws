@@ -1,5 +1,5 @@
 ---
-subcategory: "EC2"
+subcategory: "EC2 (Elastic Compute Cloud)"
 layout: "aws"
 page_title: "AWS: aws_ec2_instance_type_offerings"
 description: |-
@@ -50,3 +50,9 @@ In addition to all arguments above, the following attributes are exported:
 * `location_types` - List of location types.
 
 Note that the indexes of Instance Type Offering instance types, locations and location types correspond.
+
+## Timeouts
+
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+
+- `read` - (Default `20m`)

@@ -1,5 +1,5 @@
 ---
-subcategory: "Managed Workflows for Apache Airflow (MWAA)"
+subcategory: "MWAA (Managed Workflows for Apache Airflow)"
 layout: "aws"
 page_title: "AWS: aws_mwaa_environment"
 description: |-
@@ -136,15 +136,16 @@ The following arguments are supported:
 * `max_workers` - (Optional) The maximum number of workers that can be automatically scaled up. Value need to be between `1` and `25`. Will be `10` by default.
 * `min_workers` - (Optional) The minimum number of workers that you want to run in your environment. Will be `1` by default.
 * `name` - (Required) The name of the Apache Airflow Environment
-* `network_configuration` - (Required) Specifies the network configuration for your Apache Airflow Environment. This includes two private subnets as well as security groups for the Airflow environment. Each subnet requires internet connection, otherwise the deployment will fail. See [Network configuration](#network) below for details.
+* `network_configuration` - (Required) Specifies the network configuration for your Apache Airflow Environment. This includes two private subnets as well as security groups for the Airflow environment. Each subnet requires internet connection, otherwise the deployment will fail. See [Network configuration](#network-configuration) below for details.
 * `plugins_s3_object_version` - (Optional) The plugins.zip file version you want to use.
 * `plugins_s3_path` - (Optional) The relative path to the plugins.zip file on your Amazon S3 storage bucket. For example, plugins.zip. If a relative path is provided in the request, then plugins_s3_object_version is required. For more information, see [Importing DAGs on Amazon MWAA](https://docs.aws.amazon.com/mwaa/latest/userguide/configuring-dag-import.html).
 * `requirements_s3_object_version` - (Optional) The requirements.txt file version you want to use.
 * `requirements_s3_path` - (Optional) The relative path to the requirements.txt file on your Amazon S3 storage bucket. For example, requirements.txt. If a relative path is provided in the request, then requirements_s3_object_version is required. For more information, see [Importing DAGs on Amazon MWAA](https://docs.aws.amazon.com/mwaa/latest/userguide/configuring-dag-import.html).
+* `schedulers` - (Optional) The number of schedulers that you want to run in your environment. v2.0.2 and above accepts `2` - `5`, default `2`. v1.10.12 accepts `1`.
 * `source_bucket_arn` - (Required) The Amazon Resource Name (ARN) of your Amazon S3 storage bucket. For example, arn:aws:s3:::airflow-mybucketname.
 * `webserver_access_mode` - (Optional) Specifies whether the webserver should be accessible over the internet or via your specified VPC. Possible options: `PRIVATE_ONLY` (default) and `PUBLIC_ONLY`.
 * `weekly_maintenance_window_start` - (Optional) Specifies the start date for the weekly maintenance window.
-* `tags` - (Optional) A map of resource tags to associate with the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of resource tags to associate with the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### Logging configurations
 
@@ -179,7 +180,7 @@ In addition to all arguments above, the following attributes are exported:
 * `logging_configuration[0].<LOG_CONFIGURATION_TYPE>[0].cloud_watch_log_group_arn` - Provides the ARN for the CloudWatch group where the logs will be published
 * `service_role_arn` - The Service Role ARN of the Amazon MWAA Environment
 * `status` - The status of the Amazon MWAA Environment
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `webserver_url` - The webserver URL of the MWAA Environment
 
 

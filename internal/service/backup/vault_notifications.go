@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/backup"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -81,7 +81,7 @@ func resourceVaultNotificationsRead(d *schema.ResourceData, meta interface{}) er
 	}
 
 	resp, err := conn.GetBackupVaultNotifications(input)
-	if tfawserr.ErrMessageContains(err, backup.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, backup.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] Backup Vault Notifcations %s not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -109,7 +109,7 @@ func resourceVaultNotificationsDelete(d *schema.ResourceData, meta interface{}) 
 
 	_, err := conn.DeleteBackupVaultNotifications(input)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, backup.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, backup.ErrCodeResourceNotFoundException) {
 			return nil
 		}
 		return fmt.Errorf("error deleting Backup Vault Notifications (%s): %w", d.Id(), err)

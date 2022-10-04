@@ -1,5 +1,9 @@
 package s3
 
+// WARNING: This code is DEPRECATED and will be removed in a future release!!
+// DO NOT apply fixes or enhancements to the data source in this file.
+// INSTEAD, apply fixes and enhancements to the data source in "objects_data_source.go".
+
 import (
 	"fmt"
 
@@ -9,16 +13,15 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-const keyRequestPageSize = 1000
-
 func DataSourceBucketObjects() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourceBucketObjectsRead,
 
 		Schema: map[string]*schema.Schema{
 			"bucket": {
-				Type:     schema.TypeString,
-				Required: true,
+				Deprecated: "Use the aws_s3_objects data source instead",
+				Type:       schema.TypeString,
+				Required:   true,
 			},
 			"prefix": {
 				Type:     schema.TypeString,

@@ -3,7 +3,7 @@ package glue
 import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/glue"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -27,13 +27,35 @@ func FindDevEndpointByName(conn *glue.Glue, name string) (*glue.DevEndpoint, err
 	}
 
 	if output == nil || output.DevEndpoint == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.DevEndpoint, nil
+}
+
+func FindJobByName(conn *glue.Glue, name string) (*glue.Job, error) {
+	input := &glue.GetJobInput{
+		JobName: aws.String(name),
+	}
+
+	output, err := conn.GetJob(input)
+
+	if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
 		return nil, &resource.NotFoundError{
-			Message:     "Empty result",
+			LastError:   err,
 			LastRequest: input,
 		}
 	}
 
-	return output.DevEndpoint, nil
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.Job == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.Job, nil
 }
 
 // FindTableByName returns the Table corresponding to the specified name.
@@ -131,7 +153,7 @@ func FindPartitionByValues(conn *glue.Glue, id string) (*glue.Partition, error) 
 		return nil, err
 	}
 
-	if output == nil && output.Partition == nil {
+	if output == nil || output.Partition == nil {
 		return nil, nil
 	}
 

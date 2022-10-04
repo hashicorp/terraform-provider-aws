@@ -8,8 +8,8 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -17,18 +17,42 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
+func TestAccS3BucketNotification_eventbridge(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_s3_bucket_notification.notification"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBucketNotificationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketNotificationConfig_eventBridge(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketEventBridgeNotification("aws_s3_bucket.bucket")),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccS3BucketNotification_lambdaFunction(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_notification.notification"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBucketNotificationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBucketNotificationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketNotificationLambdaFunctionConfig(rName),
+				Config: testAccBucketNotificationConfig_lambdaFunction(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketLambdaFunctionConfiguration(
 						"aws_s3_bucket.bucket",
@@ -64,13 +88,13 @@ func TestAccS3BucketNotification_LambdaFunctionLambdaFunctionARN_alias(t *testin
 	resourceName := "aws_s3_bucket_notification.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBucketNotificationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBucketNotificationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketNotificationLambdaFunctionLambdaFunctionARNAliasConfig(rName),
+				Config: testAccBucketNotificationConfig_lambdaFunctionLambdaFunctionARNAlias(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketLambdaFunctionConfiguration(
 						"aws_s3_bucket.test",
@@ -95,13 +119,13 @@ func TestAccS3BucketNotification_queue(t *testing.T) {
 	resourceName := "aws_s3_bucket_notification.notification"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBucketNotificationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBucketNotificationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketNotificationQueueConfig(rName),
+				Config: testAccBucketNotificationConfig_queue(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketQueueNotification(
 						"aws_s3_bucket.bucket",
@@ -137,13 +161,13 @@ func TestAccS3BucketNotification_topic(t *testing.T) {
 	resourceName := "aws_s3_bucket_notification.notification"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBucketNotificationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBucketNotificationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketNotificationTopicConfig(rName),
+				Config: testAccBucketNotificationConfig_topic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketTopicNotification(
 						"aws_s3_bucket.bucket",
@@ -168,13 +192,13 @@ func TestAccS3BucketNotification_Topic_multiple(t *testing.T) {
 	resourceName := "aws_s3_bucket_notification.notification"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBucketNotificationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBucketNotificationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketNotificationTopicMultipleConfig(rName),
+				Config: testAccBucketNotificationConfig_topicMultiple(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketTopicNotification(
 						"aws_s3_bucket.bucket",
@@ -223,13 +247,13 @@ func TestAccS3BucketNotification_update(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, s3.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBucketNotificationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBucketNotificationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketNotificationTopicConfig(rName),
+				Config: testAccBucketNotificationConfig_topic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketTopicNotification(
 						"aws_s3_bucket.bucket",
@@ -241,7 +265,7 @@ func TestAccS3BucketNotification_update(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccBucketNotificationQueueConfig(rName),
+				Config: testAccBucketNotificationConfig_queue(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketQueueNotification(
 						"aws_s3_bucket.bucket",
@@ -278,12 +302,15 @@ func testAccCheckBucketNotificationDestroy(s *terraform.State) error {
 			out, err := conn.GetBucketNotificationConfiguration(&s3.GetBucketNotificationConfigurationRequest{
 				Bucket: aws.String(rs.Primary.ID),
 			})
+
+			if tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket) {
+				return nil
+			}
+
 			if err != nil {
-				if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == "NoSuchBucket" {
-					return nil
-				}
 				return resource.NonRetryableError(err)
 			}
+
 			if len(out.TopicConfigurations) > 0 {
 				return resource.RetryableError(fmt.Errorf("TopicConfigurations is exists: %v", out))
 			}
@@ -355,6 +382,31 @@ func testAccCheckBucketTopicNotification(n, i, t string, events []string, filter
 			}
 
 			return nil
+		})
+
+		return err
+	}
+}
+
+func testAccCheckBucketEventBridgeNotification(n string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs := s.RootModule().Resources[n]
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
+
+		err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+			out, err := conn.GetBucketNotificationConfiguration(&s3.GetBucketNotificationConfigurationRequest{
+				Bucket: aws.String(rs.Primary.ID),
+			})
+
+			if err != nil {
+				return resource.NonRetryableError(fmt.Errorf("GetBucketNotification error: %v", err))
+			}
+
+			if out.EventBridgeConfiguration == nil {
+				return resource.RetryableError(fmt.Errorf("No EventBridge configuration: %#v", out))
+			} else {
+				return nil
+			}
 		})
 
 		return err
@@ -475,7 +527,28 @@ func testAccCheckBucketLambdaFunctionConfiguration(n, i, t string, events []stri
 	}
 }
 
-func testAccBucketNotificationTopicMultipleConfig(rName string) string {
+func testAccBucketNotificationConfig_eventBridge(rName string) string {
+	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_s3_bucket" "bucket" {
+  bucket = %[1]q
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.bucket.id
+  acl    = "public-read"
+}
+
+resource "aws_s3_bucket_notification" "notification" {
+  bucket = aws_s3_bucket.bucket.id
+
+  eventbridge = true
+}
+`, rName)
+}
+
+func testAccBucketNotificationConfig_topicMultiple(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -505,6 +578,10 @@ POLICY
 
 resource "aws_s3_bucket" "bucket" {
   bucket = %[1]q
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.bucket.id
   acl    = "public-read"
 }
 
@@ -539,7 +616,7 @@ resource "aws_s3_bucket_notification" "notification" {
 `, rName)
 }
 
-func testAccBucketNotificationQueueConfig(rName string) string {
+func testAccBucketNotificationConfig_queue(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -568,6 +645,10 @@ POLICY
 
 resource "aws_s3_bucket" "bucket" {
   bucket = %[1]q
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.bucket.id
   acl    = "public-read"
 }
 
@@ -590,7 +671,7 @@ resource "aws_s3_bucket_notification" "notification" {
 `, rName)
 }
 
-func testAccBucketNotificationLambdaFunctionConfig(rName string) string {
+func testAccBucketNotificationConfig_lambdaFunction(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -627,11 +708,15 @@ resource "aws_lambda_function" "func" {
   function_name = %[1]q
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
-  runtime       = "nodejs12.x"
+  runtime       = "nodejs16.x"
 }
 
 resource "aws_s3_bucket" "bucket" {
   bucket = %[1]q
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.bucket.id
   acl    = "public-read"
 }
 
@@ -654,7 +739,7 @@ resource "aws_s3_bucket_notification" "notification" {
 `, rName)
 }
 
-func testAccBucketNotificationLambdaFunctionLambdaFunctionARNAliasConfig(rName string) string {
+func testAccBucketNotificationConfig_lambdaFunctionLambdaFunctionARNAlias(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -682,7 +767,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   handler       = "exports.example"
   role          = aws_iam_role.test.arn
-  runtime       = "nodejs12.x"
+  runtime       = "nodejs16.x"
 }
 
 resource "aws_lambda_alias" "test" {
@@ -701,8 +786,12 @@ resource "aws_lambda_permission" "test" {
 }
 
 resource "aws_s3_bucket" "test" {
-  acl    = "private"
   bucket = %[1]q
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.test.id
+  acl    = "private"
 }
 
 resource "aws_s3_bucket_notification" "test" {
@@ -717,7 +806,7 @@ resource "aws_s3_bucket_notification" "test" {
 `, rName)
 }
 
-func testAccBucketNotificationTopicConfig(rName string) string {
+func testAccBucketNotificationConfig_topic(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -749,6 +838,10 @@ POLICY
 
 resource "aws_s3_bucket" "bucket" {
   bucket = %[1]q
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.bucket.id
   acl    = "public-read"
 }
 

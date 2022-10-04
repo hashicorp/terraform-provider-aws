@@ -8,7 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/glacier"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -170,7 +170,7 @@ func resourceVaultRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	out, err := conn.DescribeVault(input)
-	if tfawserr.ErrMessageContains(err, glacier.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, glacier.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] Glaier Vault (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -183,7 +183,7 @@ func resourceVaultRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("name", out.VaultName)
 	d.Set("arn", out.VaultARN)
 
-	location, err := buildGlacierVaultLocation(awsClient.AccountID, d.Id())
+	location, err := buildVaultLocation(awsClient.AccountID, d.Id())
 	if err != nil {
 		return err
 	}
@@ -211,7 +211,7 @@ func resourceVaultRead(d *schema.ResourceData, meta interface{}) error {
 		VaultName: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrMessageContains(err, glacier.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, glacier.ErrCodeResourceNotFoundException) {
 		d.Set("access_policy", "")
 	} else if err != nil {
 		return fmt.Errorf("error getting access policy for Glacier Vault (%s): %w", d.Id(), err)
@@ -225,8 +225,8 @@ func resourceVaultRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("access_policy", policy)
 	}
 
-	notifications, err := getGlacierVaultNotification(conn, d.Id())
-	if tfawserr.ErrMessageContains(err, glacier.ErrCodeResourceNotFoundException, "") {
+	notifications, err := getVaultNotification(conn, d.Id())
+	if tfawserr.ErrCodeEquals(err, glacier.ErrCodeResourceNotFoundException) {
 		d.Set("notification", []map[string]interface{}{})
 	} else if pol != nil {
 		d.Set("notification", notifications)
@@ -319,14 +319,14 @@ func resourceVaultPolicyUpdate(conn *glacier.Glacier, d *schema.ResourceData) er
 	return nil
 }
 
-func buildGlacierVaultLocation(accountId, vaultName string) (string, error) {
+func buildVaultLocation(accountId, vaultName string) (string, error) {
 	if accountId == "" {
 		return "", errors.New("AWS account ID unavailable - failed to construct Vault location")
 	}
 	return fmt.Sprintf("/" + accountId + "/vaults/" + vaultName), nil
 }
 
-func getGlacierVaultNotification(conn *glacier.Glacier, vaultName string) ([]map[string]interface{}, error) {
+func getVaultNotification(conn *glacier.Glacier, vaultName string) ([]map[string]interface{}, error) {
 	request := &glacier.GetVaultNotificationsInput{
 		VaultName: aws.String(vaultName),
 	}

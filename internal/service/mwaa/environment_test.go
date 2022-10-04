@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/mwaa"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -22,13 +22,13 @@ func TestAccMWAAEnvironment_basic(t *testing.T) {
 	resourceName := "aws_mwaa_environment.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, mwaa.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEnvironmentDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, mwaa.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEnvironmentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEnvironmentBasicConfig(rName),
+				Config: testAccEnvironmentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentExists(resourceName, &environment),
 					resource.TestCheckResourceAttrSet(resourceName, "airflow_version"),
@@ -60,6 +60,7 @@ func TestAccMWAAEnvironment_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "network_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.security_group_ids.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.subnet_ids.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "schedulers", "2"),
 					resource.TestCheckResourceAttrSet(resourceName, "service_role_arn"),
 					acctest.CheckResourceAttrGlobalARNNoAccount(resourceName, "source_bucket_arn", "s3", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "status"),
@@ -84,13 +85,13 @@ func TestAccMWAAEnvironment_disappears(t *testing.T) {
 	resourceName := "aws_mwaa_environment.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, mwaa.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEnvironmentDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, mwaa.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEnvironmentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEnvironmentBasicConfig(rName),
+				Config: testAccEnvironmentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentExists(resourceName, &environment),
 					acctest.CheckResourceDisappears(acctest.Provider, tfmwaa.ResourceEnvironment(), resourceName),
@@ -108,13 +109,13 @@ func TestAccMWAAEnvironment_airflowOptions(t *testing.T) {
 	resourceName := "aws_mwaa_environment.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, mwaa.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEnvironmentDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, mwaa.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEnvironmentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEnvironmentAirflowConfigurationOptionsConfig(rName, "1", "16"),
+				Config: testAccEnvironmentConfig_airflowOptions(rName, "1", "16"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentExists(resourceName, &environment),
 					resource.TestCheckResourceAttr(resourceName, "airflow_configuration_options.%", "2"),
@@ -128,7 +129,7 @@ func TestAccMWAAEnvironment_airflowOptions(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccEnvironmentAirflowConfigurationOptionsConfig(rName, "2", "32"),
+				Config: testAccEnvironmentConfig_airflowOptions(rName, "2", "32"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentExists(resourceName, &environment),
 					resource.TestCheckResourceAttr(resourceName, "airflow_configuration_options.%", "2"),
@@ -137,7 +138,7 @@ func TestAccMWAAEnvironment_airflowOptions(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccEnvironmentBasicConfig(rName),
+				Config: testAccEnvironmentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentExists(resourceName, &environment),
 					resource.TestCheckResourceAttr(resourceName, "airflow_configuration_options.%", "0"),
@@ -154,13 +155,13 @@ func TestAccMWAAEnvironment_log(t *testing.T) {
 	resourceName := "aws_mwaa_environment.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, mwaa.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEnvironmentDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, mwaa.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEnvironmentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEnvironmentLoggingConfigurationConfig(rName, "true", mwaa.LoggingLevelCritical),
+				Config: testAccEnvironmentConfig_logging(rName, "true", mwaa.LoggingLevelCritical),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentExists(resourceName, &environment),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "1"),
@@ -197,7 +198,7 @@ func TestAccMWAAEnvironment_log(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccEnvironmentLoggingConfigurationConfig(rName, "false", mwaa.LoggingLevelInfo),
+				Config: testAccEnvironmentConfig_logging(rName, "false", mwaa.LoggingLevelInfo),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentExists(resourceName, &environment),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "1"),
@@ -239,13 +240,13 @@ func TestAccMWAAEnvironment_full(t *testing.T) {
 	resourceName := "aws_mwaa_environment.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, mwaa.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEnvironmentDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, mwaa.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEnvironmentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEnvironmentFullConfig(rName),
+				Config: testAccEnvironmentConfig_full(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentExists(resourceName, &environment),
 					resource.TestCheckResourceAttr(resourceName, "airflow_configuration_options.%", "2"),
@@ -287,6 +288,7 @@ func TestAccMWAAEnvironment_full(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.subnet_ids.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "plugins_s3_path", "plugins.zip"),
 					resource.TestCheckResourceAttr(resourceName, "requirements_s3_path", "requirements.txt"),
+					resource.TestCheckResourceAttr(resourceName, "schedulers", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "service_role_arn"),
 					acctest.CheckResourceAttrGlobalARNNoAccount(resourceName, "source_bucket_arn", "s3", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "status"),
@@ -311,19 +313,19 @@ func TestAccMWAAEnvironment_pluginsS3ObjectVersion(t *testing.T) {
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_mwaa_environment.test"
-	s3BucketObjectResourceName := "aws_s3_bucket_object.plugins"
+	s3ObjectResourceName := "aws_s3_object.plugins"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, mwaa.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEnvironmentDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, mwaa.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEnvironmentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEnvironmentPluginsS3ObjectVersionConfig(rName, "test"),
+				Config: testAccEnvironmentConfig_pluginsS3ObjectVersion(rName, "test"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentExists(resourceName, &environment),
-					resource.TestCheckResourceAttrPair(resourceName, "plugins_s3_object_version", s3BucketObjectResourceName, "version_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "plugins_s3_object_version", s3ObjectResourceName, "version_id"),
 				),
 			},
 			{
@@ -332,10 +334,10 @@ func TestAccMWAAEnvironment_pluginsS3ObjectVersion(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccEnvironmentPluginsS3ObjectVersionConfig(rName, "test-updated"),
+				Config: testAccEnvironmentConfig_pluginsS3ObjectVersion(rName, "test-updated"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentExists(resourceName, &environment),
-					resource.TestCheckResourceAttrPair(resourceName, "plugins_s3_object_version", s3BucketObjectResourceName, "version_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "plugins_s3_object_version", s3ObjectResourceName, "version_id"),
 				),
 			},
 			{
@@ -386,7 +388,7 @@ func testAccCheckEnvironmentDestroy(s *terraform.State) error {
 		})
 
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, mwaa.ErrCodeResourceNotFoundException, "") {
+			if tfawserr.ErrCodeEquals(err, mwaa.ErrCodeResourceNotFoundException) {
 				continue
 			}
 			return err
@@ -518,10 +520,17 @@ resource "aws_security_group" "test" {
 
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
-  acl    = "private"
+}
 
-  versioning {
-    enabled = true
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.test.id
+  acl    = "private"
+}
+
+resource "aws_s3_bucket_versioning" "test" {
+  bucket = aws_s3_bucket.test.id
+  versioning_configuration {
+    status = "Enabled"
   }
 }
 
@@ -532,7 +541,10 @@ resource "aws_s3_bucket_public_access_block" "test" {
   block_public_policy = true
 }
 
-resource "aws_s3_bucket_object" "dags" {
+resource "aws_s3_object" "dags" {
+  # Must have bucket versioning enabled first
+  depends_on = [aws_s3_bucket_versioning.test]
+
   bucket       = aws_s3_bucket.test.id
   acl          = "private"
   key          = "dags/"
@@ -579,13 +591,14 @@ resource "aws_iam_role_policy" "test" {
 POLICY
 }
 
+
 `, rName)
 }
 
-func testAccEnvironmentBasicConfig(rName string) string {
+func testAccEnvironmentConfig_basic(rName string) string {
 	return testAccEnvironmentBase(rName) + fmt.Sprintf(`
 resource "aws_mwaa_environment" "test" {
-  dag_s3_path        = aws_s3_bucket_object.dags.key
+  dag_s3_path        = aws_s3_object.dags.key
   execution_role_arn = aws_iam_role.test.arn
   name               = %[1]q
 
@@ -599,7 +612,7 @@ resource "aws_mwaa_environment" "test" {
 `, rName)
 }
 
-func testAccEnvironmentAirflowConfigurationOptionsConfig(rName, retries, parallelism string) string {
+func testAccEnvironmentConfig_airflowOptions(rName, retries, parallelism string) string {
 	return testAccEnvironmentBase(rName) + fmt.Sprintf(`
 resource "aws_mwaa_environment" "test" {
   airflow_configuration_options = {
@@ -607,7 +620,7 @@ resource "aws_mwaa_environment" "test" {
     "core.parallelism"          = %[3]q
   }
 
-  dag_s3_path        = aws_s3_bucket_object.dags.key
+  dag_s3_path        = aws_s3_object.dags.key
   execution_role_arn = aws_iam_role.test.arn
   name               = %[1]q
 
@@ -621,10 +634,10 @@ resource "aws_mwaa_environment" "test" {
 `, rName, retries, parallelism)
 }
 
-func testAccEnvironmentLoggingConfigurationConfig(rName, logEnabled, logLevel string) string {
+func testAccEnvironmentConfig_logging(rName, logEnabled, logLevel string) string {
 	return testAccEnvironmentBase(rName) + fmt.Sprintf(`
 resource "aws_mwaa_environment" "test" {
-  dag_s3_path        = aws_s3_bucket_object.dags.key
+  dag_s3_path        = aws_s3_object.dags.key
   execution_role_arn = aws_iam_role.test.arn
 
   logging_configuration {
@@ -666,7 +679,7 @@ resource "aws_mwaa_environment" "test" {
 `, rName, logEnabled, logLevel)
 }
 
-func testAccEnvironmentFullConfig(rName string) string {
+func testAccEnvironmentConfig_full(rName string) string {
 	return testAccEnvironmentBase(rName) + fmt.Sprintf(`
 resource "aws_mwaa_environment" "test" {
   airflow_configuration_options = {
@@ -675,7 +688,7 @@ resource "aws_mwaa_environment" "test" {
   }
 
   airflow_version    = "1.10.12"
-  dag_s3_path        = aws_s3_bucket_object.dags.key
+  dag_s3_path        = aws_s3_object.dags.key
   environment_class  = "mw1.medium"
   execution_role_arn = aws_iam_role.test.arn
   kms_key            = aws_kms_key.test.arn
@@ -716,8 +729,9 @@ resource "aws_mwaa_environment" "test" {
     subnet_ids         = aws_subnet.private[*].id
   }
 
-  plugins_s3_path                 = aws_s3_bucket_object.plugins.key
-  requirements_s3_path            = aws_s3_bucket_object.requirements.key
+  plugins_s3_path                 = aws_s3_object.plugins.key
+  requirements_s3_path            = aws_s3_object.requirements.key
+  schedulers                      = 1
   source_bucket_arn               = aws_s3_bucket.test.arn
   webserver_access_mode           = "PUBLIC_ONLY"
   weekly_maintenance_window_start = "SAT:03:00"
@@ -759,14 +773,14 @@ resource "aws_kms_key" "test" {
 POLICY
 }
 
-resource "aws_s3_bucket_object" "plugins" {
+resource "aws_s3_object" "plugins" {
   bucket  = aws_s3_bucket.test.id
   acl     = "private"
   key     = "plugins.zip"
   content = ""
 }
 
-resource "aws_s3_bucket_object" "requirements" {
+resource "aws_s3_object" "requirements" {
   bucket  = aws_s3_bucket.test.id
   acl     = "private"
   key     = "requirements.txt"
@@ -776,10 +790,10 @@ resource "aws_s3_bucket_object" "requirements" {
 `, rName)
 }
 
-func testAccEnvironmentPluginsS3ObjectVersionConfig(rName, content string) string {
+func testAccEnvironmentConfig_pluginsS3ObjectVersion(rName, content string) string {
 	return testAccEnvironmentBase(rName) + fmt.Sprintf(`
 resource "aws_mwaa_environment" "test" {
-  dag_s3_path        = aws_s3_bucket_object.dags.key
+  dag_s3_path        = aws_s3_object.dags.key
   execution_role_arn = aws_iam_role.test.arn
   name               = %[1]q
 
@@ -788,13 +802,16 @@ resource "aws_mwaa_environment" "test" {
     subnet_ids         = aws_subnet.private[*].id
   }
 
-  plugins_s3_path           = aws_s3_bucket_object.plugins.key
-  plugins_s3_object_version = aws_s3_bucket_object.plugins.version_id
+  plugins_s3_path           = aws_s3_object.plugins.key
+  plugins_s3_object_version = aws_s3_object.plugins.version_id
 
   source_bucket_arn = aws_s3_bucket.test.arn
 }
 
-resource "aws_s3_bucket_object" "plugins" {
+resource "aws_s3_object" "plugins" {
+  # Must have bucket versioning enabled first
+  depends_on = [aws_s3_bucket_versioning.test]
+
   bucket  = aws_s3_bucket.test.id
   acl     = "private"
   key     = "plugins.zip"

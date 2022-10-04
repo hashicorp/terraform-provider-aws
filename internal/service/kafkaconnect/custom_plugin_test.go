@@ -1,6 +1,7 @@
 package kafkaconnect_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -11,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfkafkaconnect "github.com/hashicorp/terraform-provider-aws/internal/service/kafkaconnect"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccKafkaConnectCustomPlugin_basic(t *testing.T) {
@@ -18,28 +20,54 @@ func TestAccKafkaConnectCustomPlugin_basic(t *testing.T) {
 	resourceName := "aws_mskconnect_custom_plugin.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(kafkaconnect.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, kafkaconnect.EndpointsID),
-		CheckDestroy: nil,
-		Providers:    acctest.Providers,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(kafkaconnect.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, kafkaconnect.EndpointsID),
+		CheckDestroy:             testAccCheckCustomPluginDestroy,
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCustomPluginConfigBasic(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Config: testAccCustomPluginConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCustomPluginExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "content_type", "ZIP"),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "latest_revision"),
+					resource.TestCheckResourceAttr(resourceName, "location.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "location.0.s3.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "location.0.s3.0.bucket_arn"),
-					resource.TestCheckResourceAttr(resourceName, "location.0.s3.0.file_key", rName),
+					resource.TestCheckResourceAttrSet(resourceName, "location.0.s3.0.file_key"),
 					resource.TestCheckResourceAttr(resourceName, "location.0.s3.0.object_version", ""),
-					resource.TestCheckResourceAttr(resourceName, "state", kafkaconnect.CustomPluginStateActive),
-					resource.TestCheckResourceAttr(resourceName, "content_type", kafkaconnect.CustomPluginContentTypeJar),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "state", "ACTIVE"),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccKafkaConnectCustomPlugin_disappears(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_mskconnect_custom_plugin.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(kafkaconnect.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, kafkaconnect.EndpointsID),
+		CheckDestroy:             testAccCheckCustomPluginDestroy,
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCustomPluginConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCustomPluginExists(resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfkafkaconnect.ResourceCustomPlugin(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -47,60 +75,25 @@ func TestAccKafkaConnectCustomPlugin_basic(t *testing.T) {
 
 func TestAccKafkaConnectCustomPlugin_description(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rDescription := sdkacctest.RandString(20)
 	resourceName := "aws_mskconnect_custom_plugin.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(kafkaconnect.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, kafkaconnect.EndpointsID),
-		CheckDestroy: nil,
-		Providers:    acctest.Providers,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(kafkaconnect.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, kafkaconnect.EndpointsID),
+		CheckDestroy:             testAccCheckCustomPluginDestroy,
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCustomPluginConfigDescription(rName, rDescription),
+				Config: testAccCustomPluginConfig_description(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCustomPluginExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "description", rDescription),
+					resource.TestCheckResourceAttr(resourceName, "description", "testing"),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
-func TestAccKafkaConnectCustomPlugin_contentType(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rNameUpdated := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_mskconnect_custom_plugin.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(kafkaconnect.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, kafkaconnect.EndpointsID),
-		CheckDestroy: nil,
-		Providers:    acctest.Providers,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccCustomPluginConfigBasic(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCustomPluginExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "content_type", kafkaconnect.CustomPluginContentTypeJar),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccCustomPluginConfigContentTypeZip(rNameUpdated),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCustomPluginExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "content_type", kafkaconnect.CustomPluginContentTypeZip),
-				),
 			},
 		},
 	})
@@ -111,16 +104,16 @@ func TestAccKafkaConnectCustomPlugin_objectVersion(t *testing.T) {
 	resourceName := "aws_mskconnect_custom_plugin.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(kafkaconnect.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, kafkaconnect.EndpointsID),
-		CheckDestroy: nil,
-		Providers:    acctest.Providers,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(kafkaconnect.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, kafkaconnect.EndpointsID),
+		CheckDestroy:             testAccCheckCustomPluginDestroy,
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCustomPluginConfigObjectVersion(rName),
+				Config: testAccCustomPluginConfig_objectVersion(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCustomPluginExists(resourceName),
-					testAccCheckCustomPluginObjectVersion(resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, "location.0.s3.0.object_version"),
 				),
 			},
 			{
@@ -140,108 +133,71 @@ func testAccCheckCustomPluginExists(name string) resource.TestCheckFunc {
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No MSK Custom Plugin ID is set")
+			return fmt.Errorf("No MSK Connect Custom Plugin ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaConnectConn
 
-		_, err := tfkafkaconnect.FindCustomPluginByARN(conn, rs.Primary.ID)
+		_, err := tfkafkaconnect.FindCustomPluginByARN(context.Background(), conn, rs.Primary.ID)
+
+		return err
+	}
+}
+
+func testAccCheckCustomPluginDestroy(s *terraform.State) error {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaConnectConn
+
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != "aws_mskconnect_custom_plugin" {
+			continue
+		}
+
+		_, err := tfkafkaconnect.FindCustomPluginByARN(context.Background(), conn, rs.Primary.ID)
+
+		if tfresource.NotFound(err) {
+			continue
+		}
 
 		if err != nil {
 			return err
 		}
 
-		return nil
+		return fmt.Errorf("MSK Connect Custom Plugin %s still exists", rs.Primary.ID)
 	}
+
+	return nil
 }
 
-func testAccCheckCustomPluginObjectVersion(name string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		plugin, ok := s.RootModule().Resources[name]
-		if !ok {
-			return fmt.Errorf("Not found: %s", name)
-		}
-
-		for _, rs := range s.RootModule().Resources {
-			if rs.Type == "aws_s3_bucket_object" {
-				pluginObjectVersion := plugin.Primary.Attributes["location.0.s3.0.object_version"]
-				objectVersionId := rs.Primary.Attributes["version_id"]
-
-				if !(pluginObjectVersion == objectVersionId) {
-					return fmt.Errorf("Plugin object version doesn't match object's version id: %s != %s", pluginObjectVersion, objectVersionId)
-				}
-
-				return nil
-			}
-		}
-
-		return fmt.Errorf("Couldn't find aws_s3_bucket_object resource to compare versions.")
-	}
-}
-
-func testAccCustomPluginConfigBasicS3ObjectZip(name string) string {
+func testAccCustomPluginBaseConfig(rName string, s3BucketVersioning bool) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
-  bucket = %[1]q
+  bucket        = %[1]q
+  force_destroy = true
 }
 
-resource "aws_s3_bucket_object" "test" {
+resource "aws_s3_bucket_acl" "test" {
   bucket = aws_s3_bucket.test.id
-  key    = %[1]q
-  source = "test-fixtures/activemq-connector.zip"
-}
-`, name)
+  acl    = "private"
 }
 
-func testAccCustomPluginConfigBasicS3ObjectJar(name string) string {
-	return fmt.Sprintf(`
-resource "aws_s3_bucket" "test" {
-  bucket = %[1]q
-}
+resource "aws_s3_bucket_versioning" "test" {
+  bucket = aws_s3_bucket_acl.test.bucket
 
-resource "aws_s3_bucket_object" "test" {
-  bucket = aws_s3_bucket.test.id
-  key    = %[1]q
-  source = "test-fixtures/mongodb-connector.jar"
-}
-`, name)
-}
-
-func testAccCustomPluginConfigBasic(name string) string {
-	return acctest.ConfigCompose(testAccCustomPluginConfigBasicS3ObjectJar(name), fmt.Sprintf(`
-resource "aws_mskconnect_custom_plugin" "test" {
-  name         = %[1]q
-  content_type = "JAR"
-
-  location {
-    s3 {
-      bucket_arn = aws_s3_bucket.test.arn
-      file_key   = aws_s3_bucket_object.test.key
-    }
+  versioning_configuration {
+    status = %[2]t ? "Enabled" : "Suspended"
   }
 }
-`, name))
+
+resource "aws_s3_object" "test" {
+  bucket = aws_s3_bucket_versioning.test.bucket
+  key    = "jcustenborder-kafka-connect-simulator-0.1.120.zip"
+  source = "test-fixtures/jcustenborder-kafka-connect-simulator-0.1.120.zip"
+}
+`, rName, s3BucketVersioning)
 }
 
-func testAccCustomPluginConfigDescription(name, description string) string {
-	return acctest.ConfigCompose(testAccCustomPluginConfigBasicS3ObjectJar(name), fmt.Sprintf(`
-resource "aws_mskconnect_custom_plugin" "test" {
-  name         = %[1]q
-  description  = %[2]q
-  content_type = "JAR"
-
-  location {
-    s3 {
-      bucket_arn = aws_s3_bucket.test.arn
-      file_key   = aws_s3_bucket_object.test.key
-    }
-  }
-}
-`, name, description))
-}
-
-func testAccCustomPluginConfigContentTypeZip(name string) string {
-	return acctest.ConfigCompose(testAccCustomPluginConfigBasicS3ObjectZip(name), fmt.Sprintf(`
+func testAccCustomPluginConfig_basic(rName string) string {
+	return acctest.ConfigCompose(testAccCustomPluginBaseConfig(rName, false), fmt.Sprintf(`
 resource "aws_mskconnect_custom_plugin" "test" {
   name         = %[1]q
   content_type = "ZIP"
@@ -249,40 +205,44 @@ resource "aws_mskconnect_custom_plugin" "test" {
   location {
     s3 {
       bucket_arn = aws_s3_bucket.test.arn
-      file_key   = aws_s3_bucket_object.test.key
+      file_key   = aws_s3_object.test.key
     }
   }
 }
-`, name))
+`, rName))
 }
 
-func testAccCustomPluginConfigObjectVersion(name string) string {
-	return fmt.Sprintf(`
-resource "aws_s3_bucket" "test" {
-  bucket = %[1]q
-
-  versioning {
-    enabled = true
-  }
-}
-
-resource "aws_s3_bucket_object" "test" {
-  bucket = aws_s3_bucket.test.id
-  key    = %[1]q
-  source = "test-fixtures/mongodb-connector.jar"
-}
-
+func testAccCustomPluginConfig_description(rName string) string {
+	return acctest.ConfigCompose(testAccCustomPluginBaseConfig(rName, false), fmt.Sprintf(`
 resource "aws_mskconnect_custom_plugin" "test" {
   name         = %[1]q
-  content_type = "JAR"
+  content_type = "ZIP"
+  description  = "testing"
+
+  location {
+    s3 {
+      bucket_arn = aws_s3_bucket.test.arn
+      file_key   = aws_s3_object.test.key
+    }
+  }
+}
+`, rName))
+}
+
+func testAccCustomPluginConfig_objectVersion(rName string) string {
+	return acctest.ConfigCompose(testAccCustomPluginBaseConfig(rName, true), fmt.Sprintf(`
+resource "aws_mskconnect_custom_plugin" "test" {
+  name         = %[1]q
+  content_type = "ZIP"
+  description  = "testing"
 
   location {
     s3 {
       bucket_arn     = aws_s3_bucket.test.arn
-      file_key       = aws_s3_bucket_object.test.key
-      object_version = aws_s3_bucket_object.test.version_id
+      file_key       = aws_s3_object.test.key
+      object_version = aws_s3_object.test.version_id
     }
   }
 }
-`, name)
+`, rName))
 }

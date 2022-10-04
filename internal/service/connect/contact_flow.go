@@ -9,7 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/connect"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
@@ -20,20 +20,16 @@ import (
 	"github.com/mitchellh/go-homedir"
 )
 
-const awsMutexConnectContactFlowKey = `aws_connect_contact_flow`
+const contactFlowMutexKey = `aws_connect_contact_flow`
 
 func ResourceContactFlow() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: resourceContactFlowCreate,
 		ReadContext:   resourceContactFlowRead,
 		UpdateContext: resourceContactFlowUpdate,
-		DeleteContext: schema.NoopContext,
+		DeleteContext: resourceContactFlowDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
-		},
-		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(connectContactFlowCreateTimeout),
-			Update: schema.DefaultTimeout(connectContactFlowUpdateTimeout),
 		},
 		CustomizeDiff: verify.SetTagsDiff,
 		Schema: map[string]*schema.Schema{
@@ -113,8 +109,8 @@ func resourceContactFlowCreate(ctx context.Context, d *schema.ResourceData, meta
 		// Grab an exclusive lock so that we're only reading one contact flow into
 		// memory at a time.
 		// See https://github.com/hashicorp/terraform/issues/9364
-		conns.GlobalMutexKV.Lock(awsMutexConnectContactFlowKey)
-		defer conns.GlobalMutexKV.Unlock(awsMutexConnectContactFlowKey)
+		conns.GlobalMutexKV.Lock(contactFlowMutexKey)
+		defer conns.GlobalMutexKV.Unlock(contactFlowMutexKey)
 		file, err := resourceContactFlowLoadFileContent(filename)
 		if err != nil {
 			return diag.FromErr(fmt.Errorf("unable to load %q: %w", filename, err))
@@ -159,7 +155,7 @@ func resourceContactFlowRead(ctx context.Context, d *schema.ResourceData, meta i
 		InstanceId:    aws.String(instanceID),
 	})
 
-	if !d.IsNewResource() && tfawserr.ErrMessageContains(err, connect.ErrCodeResourceNotFoundException, "") {
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, connect.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] Connect Contact Flow (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -230,8 +226,8 @@ func resourceContactFlowUpdate(ctx context.Context, d *schema.ResourceData, meta
 			// Grab an exclusive lock so that we're only reading one contact flow into
 			// memory at a time.
 			// See https://github.com/hashicorp/terraform/issues/9364
-			conns.GlobalMutexKV.Lock(awsMutexConnectContactFlowKey)
-			defer conns.GlobalMutexKV.Unlock(awsMutexConnectContactFlowKey)
+			conns.GlobalMutexKV.Lock(contactFlowMutexKey)
+			defer conns.GlobalMutexKV.Unlock(contactFlowMutexKey)
 			file, err := resourceContactFlowLoadFileContent(filename)
 			if err != nil {
 				return diag.FromErr(fmt.Errorf("unable to load %q: %w", filename, err))
@@ -258,31 +254,30 @@ func resourceContactFlowUpdate(ctx context.Context, d *schema.ResourceData, meta
 	return resourceContactFlowRead(ctx, d, meta)
 }
 
-//Contact Flows do not support deletion today. We will NoOp the Delete method. Users can rename their flows manually if they want.
-// func resourceContactFlowDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-// 	conn := meta.(*conns.AWSClient).ConnectConn
+func resourceContactFlowDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).ConnectConn
 
-// 	instanceID, contactFlowID, err := ContactFlowParseID(d.Id())
+	instanceID, contactFlowID, err := ContactFlowParseID(d.Id())
 
-// 	if err != nil {
-// 		return diag.FromErr(err)
-// 	}
+	if err != nil {
+		return diag.FromErr(err)
+	}
 
-// 	input := &connect.UpdateContactFlowNameInput{
-// 		ContactFlowId: aws.String(contactFlowID),
-// 		InstanceId:    aws.String(instanceID),
-// 		Name:          aws.String(fmt.Sprintf("%s:%s:%d", "zzTrash", d.Get("name").(string), time.Now().Unix())),
-// 		Description:   aws.String("DELETED"),
-// 	}
+	log.Printf("[DEBUG] Deleting Connect Contact Flow : %s", contactFlowID)
 
-// 	_, delerr := conn.UpdateContactFlowNameWithContext(ctx, input)
+	input := &connect.DeleteContactFlowInput{
+		ContactFlowId: aws.String(contactFlowID),
+		InstanceId:    aws.String(instanceID),
+	}
 
-// 	if delerr != nil {
-// 		return diag.FromErr(fmt.Errorf("Unable to delete contact flow: %s", delerr))
-// 	}
+	_, deleteContactFlowErr := conn.DeleteContactFlowWithContext(ctx, input)
 
-// 	return nil
-// }
+	if deleteContactFlowErr != nil {
+		return diag.FromErr(fmt.Errorf("error deleting Connect Contact Flow (%s): %w", d.Id(), deleteContactFlowErr))
+	}
+
+	return nil
+}
 
 func ContactFlowParseID(id string) (string, string, error) {
 	parts := strings.SplitN(id, ":", 2)

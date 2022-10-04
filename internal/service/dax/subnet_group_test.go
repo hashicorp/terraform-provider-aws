@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dax"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -19,13 +19,13 @@ func TestAccDAXSubnetGroup_basic(t *testing.T) {
 	resourceName := "aws_dax_subnet_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, dax.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSubnetGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, dax.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSubnetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDaxSubnetGroupConfig(rName),
+				Config: testAccSubnetGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetGroupExists("aws_dax_subnet_group.test"),
 					resource.TestCheckResourceAttr("aws_dax_subnet_group.test", "subnet_ids.#", "2"),
@@ -33,7 +33,7 @@ func TestAccDAXSubnetGroup_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccDaxSubnetGroupConfig_update(rName),
+				Config: testAccSubnetGroupConfig_update(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetGroupExists("aws_dax_subnet_group.test"),
 					resource.TestCheckResourceAttr("aws_dax_subnet_group.test", "description", "update"),
@@ -62,7 +62,7 @@ func testAccCheckSubnetGroupDestroy(s *terraform.State) error {
 			SubnetGroupNames: []*string{aws.String(rs.Primary.ID)},
 		})
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, dax.ErrCodeSubnetGroupNotFoundFault, "") {
+			if tfawserr.ErrCodeEquals(err, dax.ErrCodeSubnetGroupNotFoundFault) {
 				return nil
 			}
 			return err
@@ -88,7 +88,7 @@ func testAccCheckSubnetGroupExists(name string) resource.TestCheckFunc {
 	}
 }
 
-func testAccDaxSubnetGroupConfig(rName string) string {
+func testAccSubnetGroupConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
@@ -115,7 +115,7 @@ resource "aws_dax_subnet_group" "test" {
 `, rName)
 }
 
-func testAccDaxSubnetGroupConfig_update(rName string) string {
+func testAccSubnetGroupConfig_update(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"

@@ -29,7 +29,11 @@ The following arguments are supported:
 
 * `product_arn` - (Required) The ARN of the product that generates findings that you want to import into Security Hub - see below.
 
-Currently available products (remember to replace `${var.region}` as appropriate):
+Amazon maintains a list of [Product integrations in AWS Security Hub](https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-findings-providers.html) that changes over time. Any of the products on the linked [Available AWS service integrations](https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-internal-providers.html) or [Available third-party partner product integrations](https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-partner-providers.html) can be configured using `aws_securityhub_product_subscription`.
+
+Available products can also be listed by running the AWS CLI command `aws securityhub describe-products`.
+
+A subset of currently available products (remember to replace `${var.region}` as appropriate) includes:
 
 * `arn:aws:securityhub:${var.region}::product/aws/guardduty`
 * `arn:aws:securityhub:${var.region}::product/aws/inspector`

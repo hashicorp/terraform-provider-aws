@@ -66,12 +66,11 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-`aws_config_organization_custom_rule` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts)
-configuration options:
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
 
-* `create` - (Default `5m`) How long to wait for the rule to be created.
-* `delete` - (Default `5m`) How long to wait for the rule to be deleted.
-* `update` - (Default `5m`) How long to wait for the rule to be updated.
+* `create` - (Default `5m`)
+* `delete` - (Default `5m`)
+* `update` - (Default `5m`)
 
 ## Import
 

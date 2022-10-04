@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/mediastore"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -75,12 +75,12 @@ func resourceContainerPolicyRead(d *schema.ResourceData, meta interface{}) error
 
 	resp, err := conn.GetContainerPolicy(input)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, mediastore.ErrCodeContainerNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, mediastore.ErrCodeContainerNotFoundException) {
 			log.Printf("[WARN] MediaContainer Policy %q not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
 		}
-		if tfawserr.ErrMessageContains(err, mediastore.ErrCodePolicyNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, mediastore.ErrCodePolicyNotFoundException) {
 			log.Printf("[WARN] MediaContainer Policy %q not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -110,10 +110,10 @@ func resourceContainerPolicyDelete(d *schema.ResourceData, meta interface{}) err
 
 	_, err := conn.DeleteContainerPolicy(input)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, mediastore.ErrCodeContainerNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, mediastore.ErrCodeContainerNotFoundException) {
 			return nil
 		}
-		if tfawserr.ErrMessageContains(err, mediastore.ErrCodePolicyNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, mediastore.ErrCodePolicyNotFoundException) {
 			return nil
 		}
 		// if isAWSErr(err, mediastore.ErrCodeContainerInUseException, "Container must be ACTIVE in order to perform this operation") {

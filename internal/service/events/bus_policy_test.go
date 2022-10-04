@@ -20,20 +20,20 @@ func TestAccEventsBusPolicy_basic(t *testing.T) {
 	rstring := sdkacctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, eventbridge.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBusDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, eventbridge.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBusDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBusPolicyConfig(rstring),
+				Config: testAccBusPolicyConfig_basic(rstring),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBusPolicyExists(resourceName),
 					testAccBusPolicyDocument(resourceName),
 				),
 			},
 			{
-				Config: testAccBusPolicyUpdateConfig(rstring),
+				Config: testAccBusPolicyConfig_update(rstring),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBusPolicyExists(resourceName),
 					testAccBusPolicyDocument(resourceName),
@@ -53,20 +53,20 @@ func TestAccEventsBusPolicy_ignoreEquivalent(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, eventbridge.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBusDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, eventbridge.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBusDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBusPolicyOrderConfig(rName),
+				Config: testAccBusPolicyConfig_order(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBusPolicyExists(resourceName),
 					testAccBusPolicyDocument(resourceName),
 				),
 			},
 			{
-				Config:   testAccBusPolicyNewOrderConfig(rName),
+				Config:   testAccBusPolicyConfig_newOrder(rName),
 				PlanOnly: true,
 			},
 		},
@@ -78,13 +78,13 @@ func TestAccEventsBusPolicy_disappears(t *testing.T) {
 	rstring := sdkacctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, eventbridge.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBusDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, eventbridge.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBusDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBusPolicyConfig(rstring),
+				Config: testAccBusPolicyConfig_basic(rstring),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBusPolicyExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfevents.ResourceBusPolicy(), resourceName),
@@ -161,7 +161,7 @@ func testAccBusPolicyDocument(pr string) resource.TestCheckFunc {
 	}
 }
 
-func testAccBusPolicyConfig(name string) string {
+func testAccBusPolicyConfig_basic(name string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_event_bus" "test" {
   name = %[1]q
@@ -192,7 +192,7 @@ resource "aws_cloudwatch_event_bus_policy" "test" {
 `, name)
 }
 
-func testAccBusPolicyUpdateConfig(name string) string {
+func testAccBusPolicyConfig_update(name string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_event_bus" "test" {
   name = %[1]q
@@ -236,7 +236,7 @@ resource "aws_cloudwatch_event_bus_policy" "test" {
 `, name)
 }
 
-func testAccBusPolicyOrderConfig(rName string) string {
+func testAccBusPolicyConfig_order(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_event_bus" "test" {
   name = %[1]q
@@ -270,7 +270,7 @@ resource "aws_cloudwatch_event_bus_policy" "test" {
 `, rName)
 }
 
-func testAccBusPolicyNewOrderConfig(rName string) string {
+func testAccBusPolicyConfig_newOrder(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_event_bus" "test" {
   name = %[1]q

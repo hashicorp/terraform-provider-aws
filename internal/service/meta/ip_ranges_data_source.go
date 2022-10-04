@@ -160,10 +160,6 @@ func dataSourceIPRangesRead(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if len(ipPrefixes) == 0 && len(ipv6Prefixes) == 0 {
-		return fmt.Errorf("No IP ranges result from filters from (%s)", url)
-	}
-
 	sort.Strings(ipPrefixes)
 
 	if err := d.Set("cidr_blocks", ipPrefixes); err != nil {

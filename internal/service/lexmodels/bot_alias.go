@@ -10,7 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/lexmodelbuildingservice"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -20,9 +20,9 @@ import (
 )
 
 const (
-	LexBotAliasCreateTimeout = 1 * time.Minute
-	LexBotAliasUpdateTimeout = 1 * time.Minute
-	LexBotAliasDeleteTimeout = 5 * time.Minute
+	botAliasCreateTimeout = 1 * time.Minute
+	botAliasUpdateTimeout = 1 * time.Minute
+	botAliasDeleteTimeout = 5 * time.Minute
 )
 
 func ResourceBotAlias() *schema.Resource {
@@ -36,9 +36,9 @@ func ResourceBotAlias() *schema.Resource {
 		},
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(LexBotAliasCreateTimeout),
-			Update: schema.DefaultTimeout(LexBotAliasUpdateTimeout),
-			Delete: schema.DefaultTimeout(LexBotAliasDeleteTimeout),
+			Create: schema.DefaultTimeout(botAliasCreateTimeout),
+			Update: schema.DefaultTimeout(botAliasUpdateTimeout),
+			Delete: schema.DefaultTimeout(botAliasDeleteTimeout),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -50,12 +50,12 @@ func ResourceBotAlias() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateLexBotName,
+				ValidateFunc: validBotName,
 			},
 			"bot_version": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validateLexBotVersion,
+				ValidateFunc: validBotVersion,
 			},
 			"checksum": {
 				Type:     schema.TypeString,
@@ -81,7 +81,7 @@ func ResourceBotAlias() *schema.Resource {
 						"log_settings": {
 							Type:     schema.TypeSet,
 							Optional: true,
-							Elem:     lexLogSettings,
+							Elem:     logSettings,
 						},
 					},
 				},
@@ -104,13 +104,13 @@ func ResourceBotAlias() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validateLexBotAliasName,
+				ValidateFunc: validBotAliasName,
 			},
 		},
 	}
 }
 
-var validateLexBotAliasName = validation.All(
+var validBotAliasName = validation.All(
 	validation.StringLenBetween(1, 100),
 	validation.StringMatch(regexp.MustCompile(`^([A-Za-z]_?)+$`), ""),
 )
@@ -130,7 +130,7 @@ func resourceBotAliasCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("conversation_logs"); ok {
-		conversationLogs, err := expandLexConversationLogs(v)
+		conversationLogs, err := expandConversationLogs(v)
 		if err != nil {
 			return err
 		}
@@ -155,7 +155,7 @@ func resourceBotAliasCreate(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	})
 
-	if tfresource.TimedOut(err) { // nosemgrep: helper-schema-TimeoutError-check-doesnt-return-output
+	if tfresource.TimedOut(err) { // nosemgrep:ci.helper-schema-TimeoutError-check-doesnt-return-output
 		_, err = conn.PutBotAlias(input)
 	}
 
@@ -175,7 +175,7 @@ func resourceBotAliasRead(d *schema.ResourceData, meta interface{}) error {
 		BotName: aws.String(d.Get("bot_name").(string)),
 		Name:    aws.String(d.Get("name").(string)),
 	})
-	if tfawserr.ErrMessageContains(err, lexmodelbuildingservice.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, lexmodelbuildingservice.ErrCodeNotFoundException) {
 		log.Printf("[WARN] Bot alias (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -202,7 +202,7 @@ func resourceBotAliasRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("name", resp.Name)
 
 	if resp.ConversationLogs != nil {
-		d.Set("conversation_logs", flattenLexConversationLogs(resp.ConversationLogs))
+		d.Set("conversation_logs", flattenConversationLogs(resp.ConversationLogs))
 	}
 
 	return nil
@@ -223,7 +223,7 @@ func resourceBotAliasUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("conversation_logs"); ok {
-		conversationLogs, err := expandLexConversationLogs(v)
+		conversationLogs, err := expandConversationLogs(v)
 		if err != nil {
 			return err
 		}
@@ -272,7 +272,7 @@ func resourceBotAliasDelete(d *schema.ResourceData, meta interface{}) error {
 	err := resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
 		_, err := conn.DeleteBotAlias(input)
 
-		if tfawserr.ErrMessageContains(err, lexmodelbuildingservice.ErrCodeConflictException, "") {
+		if tfawserr.ErrCodeEquals(err, lexmodelbuildingservice.ErrCodeConflictException) {
 			return resource.RetryableError(fmt.Errorf("'%q': bot alias still deleting", d.Id()))
 		}
 		if err != nil {
@@ -290,7 +290,7 @@ func resourceBotAliasDelete(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error deleting bot alias '%s': %w", d.Id(), err)
 	}
 
-	_, err = waitLexBotAliasDeleted(conn, botAliasName, botName)
+	_, err = waitBotAliasDeleted(conn, botAliasName, botName)
 
 	return err
 }
@@ -307,7 +307,7 @@ func resourceBotAliasImport(d *schema.ResourceData, _ interface{}) ([]*schema.Re
 	return []*schema.ResourceData{d}, nil
 }
 
-var lexLogSettings = &schema.Resource{
+var logSettings = &schema.Resource{
 	Schema: map[string]*schema.Schema{
 		"destination": {
 			Type:         schema.TypeString,
@@ -342,19 +342,19 @@ var lexLogSettings = &schema.Resource{
 	},
 }
 
-func flattenLexConversationLogs(response *lexmodelbuildingservice.ConversationLogsResponse) (flattened []map[string]interface{}) {
+func flattenConversationLogs(response *lexmodelbuildingservice.ConversationLogsResponse) (flattened []map[string]interface{}) {
 	return []map[string]interface{}{
 		{
 			"iam_role_arn": aws.StringValue(response.IamRoleArn),
-			"log_settings": flattenLexLogSettings(response.LogSettings),
+			"log_settings": flattenLogSettings(response.LogSettings),
 		},
 	}
 }
 
-func expandLexConversationLogs(rawObject interface{}) (*lexmodelbuildingservice.ConversationLogsRequest, error) {
+func expandConversationLogs(rawObject interface{}) (*lexmodelbuildingservice.ConversationLogsRequest, error) {
 	request := rawObject.([]interface{})[0].(map[string]interface{})
 
-	logSettings, err := expandLexLogSettings(request["log_settings"].(*schema.Set).List())
+	logSettings, err := expandLogSettings(request["log_settings"].(*schema.Set).List())
 	if err != nil {
 		return nil, err
 	}
@@ -364,7 +364,7 @@ func expandLexConversationLogs(rawObject interface{}) (*lexmodelbuildingservice.
 	}, nil
 }
 
-func flattenLexLogSettings(responses []*lexmodelbuildingservice.LogSettingsResponse) (flattened []map[string]interface{}) {
+func flattenLogSettings(responses []*lexmodelbuildingservice.LogSettingsResponse) (flattened []map[string]interface{}) {
 	for _, response := range responses {
 		flattened = append(flattened, map[string]interface{}{
 			"destination":     response.Destination,
@@ -377,7 +377,7 @@ func flattenLexLogSettings(responses []*lexmodelbuildingservice.LogSettingsRespo
 	return
 }
 
-func expandLexLogSettings(rawValues []interface{}) ([]*lexmodelbuildingservice.LogSettingsRequest, error) {
+func expandLogSettings(rawValues []interface{}) ([]*lexmodelbuildingservice.LogSettingsRequest, error) {
 	requests := make([]*lexmodelbuildingservice.LogSettingsRequest, 0, len(rawValues))
 
 	for _, rawValue := range rawValues {

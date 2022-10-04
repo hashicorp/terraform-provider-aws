@@ -36,8 +36,8 @@ data "aws_mq_broker" "by_name" {
 
 The following arguments are supported:
 
-* `broker_id` - (Optional) The unique id of the mq broker.
-* `broker_name` - (Optional) The unique name of the mq broker.
+* `broker_id` - (Optional) Unique id of the mq broker.
+* `broker_name` - (Optional) Unique name of the mq broker.
 
 ## Attributes Reference
 

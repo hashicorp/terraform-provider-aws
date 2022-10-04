@@ -10,19 +10,19 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccConnectLambdaFunctionAssociationDataSource_basic(t *testing.T) {
+func testAccLambdaFunctionAssociationDataSource_basic(t *testing.T) {
 	rName := sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
 	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	resourceName := "aws_connect_lambda_function_association.test"
 	datasourceName := "data.aws_connect_lambda_function_association.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, connect.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLambdaFunctionAssociationDataSource_ConfigBasic(rName, rName2),
+				Config: testAccLambdaFunctionAssociationDataSourceConfig_basic(rName, rName2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "instance_id", resourceName, "instance_id"),
 					resource.TestCheckResourceAttrPair(datasourceName, "function_arn", resourceName, "function_arn"),
@@ -32,7 +32,7 @@ func TestAccConnectLambdaFunctionAssociationDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccLambdaFunctionAssociationDataSource_BaseConfig(rName string, rName2 string) string {
+func testAccLambdaFunctionAssociationDataSourceConfig_base(rName string, rName2 string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -78,8 +78,8 @@ resource "aws_connect_lambda_function_association" "test" {
 `, rName, rName2)
 }
 
-func testAccLambdaFunctionAssociationDataSource_ConfigBasic(rName string, rName2 string) string {
-	return fmt.Sprintf(testAccLambdaFunctionAssociationDataSource_BaseConfig(rName, rName2) + `
+func testAccLambdaFunctionAssociationDataSourceConfig_basic(rName string, rName2 string) string {
+	return fmt.Sprintf(testAccLambdaFunctionAssociationDataSourceConfig_base(rName, rName2) + `
 data "aws_connect_lambda_function_association" "test" {
   function_arn = aws_connect_lambda_function_association.test.function_arn
   instance_id  = aws_connect_instance.test.id

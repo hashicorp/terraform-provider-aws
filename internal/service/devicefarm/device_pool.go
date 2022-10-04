@@ -8,7 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/devicefarm"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -93,7 +93,7 @@ func resourceDevicePoolCreate(d *schema.ResourceData, meta interface{}) error {
 	input := &devicefarm.CreateDevicePoolInput{
 		Name:       aws.String(name),
 		ProjectArn: aws.String(d.Get("project_arn").(string)),
-		Rules:      expandAwsDevicefarmDevicePoolRules(d.Get("rule").(*schema.Set)),
+		Rules:      expandDevicePoolRules(d.Get("rule").(*schema.Set)),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -128,7 +128,7 @@ func resourceDevicePoolRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	devicePool, err := FindDevicepoolByArn(conn, d.Id())
+	devicePool, err := FindDevicePoolByARN(conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] DeviceFarm DevicePool (%s) not found, removing from state", d.Id())
@@ -146,14 +146,14 @@ func resourceDevicePoolRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("description", devicePool.Description)
 	d.Set("max_devices", devicePool.MaxDevices)
 
-	projectArn, err := decodeDevicefarmProjectArn(arn, meta)
+	projectArn, err := decodeProjectARN(arn, "devicepool", meta)
 	if err != nil {
 		return fmt.Errorf("error decoding project_arn (%s): %w", arn, err)
 	}
 
 	d.Set("project_arn", projectArn)
 
-	if err := d.Set("rule", flattenAwsDevicefarmDevicePoolRules(devicePool.Rules)); err != nil {
+	if err := d.Set("rule", flattenDevicePoolRules(devicePool.Rules)); err != nil {
 		return fmt.Errorf("error setting rule: %w", err)
 	}
 
@@ -194,7 +194,7 @@ func resourceDevicePoolUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if d.HasChange("rule") {
-			input.Rules = expandAwsDevicefarmDevicePoolRules(d.Get("rule").(*schema.Set))
+			input.Rules = expandDevicePoolRules(d.Get("rule").(*schema.Set))
 		}
 
 		if d.HasChange("max_devices") {
@@ -244,7 +244,7 @@ func resourceDevicePoolDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func expandAwsDevicefarmDevicePoolRules(s *schema.Set) []*devicefarm.Rule {
+func expandDevicePoolRules(s *schema.Set) []*devicefarm.Rule {
 	rules := make([]*devicefarm.Rule, 0)
 
 	for _, r := range s.List() {
@@ -268,7 +268,7 @@ func expandAwsDevicefarmDevicePoolRules(s *schema.Set) []*devicefarm.Rule {
 	return rules
 }
 
-func flattenAwsDevicefarmDevicePoolRules(list []*devicefarm.Rule) []map[string]interface{} {
+func flattenDevicePoolRules(list []*devicefarm.Rule) []map[string]interface{} {
 	if len(list) == 0 {
 		return nil
 	}
@@ -294,16 +294,16 @@ func flattenAwsDevicefarmDevicePoolRules(list []*devicefarm.Rule) []map[string]i
 	return result
 }
 
-func decodeDevicefarmProjectArn(id string, meta interface{}) (string, error) {
+func decodeProjectARN(id, typ string, meta interface{}) (string, error) {
 	poolArn, err := arn.Parse(id)
 	if err != nil {
 		return "", fmt.Errorf("Error parsing '%s': %w", id, err)
 	}
 
 	poolArnResouce := poolArn.Resource
-	parts := strings.Split(strings.TrimPrefix(poolArnResouce, "devicepool:"), "/")
+	parts := strings.Split(strings.TrimPrefix(poolArnResouce, fmt.Sprintf("%s:", typ)), "/")
 	if len(parts) != 2 {
-		return "", fmt.Errorf("Unexpected format of ID (%q), expected project-id/pool-id", poolArnResouce)
+		return "", fmt.Errorf("Unexpected format of ID (%q), expected project-id/%q-id", poolArnResouce, typ)
 	}
 
 	projectId := parts[0]

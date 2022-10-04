@@ -125,7 +125,7 @@ func resourceEndpointRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("creation_time", aws.TimeValue(endpoint.CreationTime).Format(time.RFC3339))
 	}
 
-	if err := d.Set("network_interfaces", flattenS3outpostsNetworkInterfaces(endpoint.NetworkInterfaces)); err != nil {
+	if err := d.Set("network_interfaces", flattenNetworkInterfaces(endpoint.NetworkInterfaces)); err != nil {
 		return fmt.Errorf("error setting network_interfaces: %w", err)
 	}
 
@@ -182,7 +182,7 @@ func resourceEndpointImportState(d *schema.ResourceData, meta interface{}) ([]*s
 	return []*schema.ResourceData{d}, nil
 }
 
-func flattenS3outpostsNetworkInterfaces(apiObjects []*s3outposts.NetworkInterface) []interface{} {
+func flattenNetworkInterfaces(apiObjects []*s3outposts.NetworkInterface) []interface{} {
 	var tfList []interface{}
 
 	for _, apiObject := range apiObjects {
@@ -190,13 +190,13 @@ func flattenS3outpostsNetworkInterfaces(apiObjects []*s3outposts.NetworkInterfac
 			continue
 		}
 
-		tfList = append(tfList, flattenS3outpostsNetworkInterface(apiObject))
+		tfList = append(tfList, flattenNetworkInterface(apiObject))
 	}
 
 	return tfList
 }
 
-func flattenS3outpostsNetworkInterface(apiObject *s3outposts.NetworkInterface) map[string]interface{} {
+func flattenNetworkInterface(apiObject *s3outposts.NetworkInterface) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}

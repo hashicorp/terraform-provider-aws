@@ -17,13 +17,13 @@ func testAccAccountAliasDataSource_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAccountAliasDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAccountAliasDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAccountAliasDataSourceConfig(rName),
+				Config: testAccAccountAliasDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "account_alias", resourceName, "account_alias"),
 				),
@@ -32,7 +32,7 @@ func testAccAccountAliasDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccAccountAliasDataSourceConfig(rName string) string {
+func testAccAccountAliasDataSourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_account_alias" "test" {
   account_alias = %[1]q

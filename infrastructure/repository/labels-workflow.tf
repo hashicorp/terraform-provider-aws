@@ -78,10 +78,14 @@ variable "workflow_labels" {
       color       = "8040c9", # color:terraform (link on white)
       description = "Introduces a new resource."
     },
+    "new-service" = {
+      color       = "ac72f0", # color:terraform (link on black)
+      description = "Introduces a new service."
+    },
     "pre-service-packages" = {
       color       = "ffec6e", # color:vault
       description = "Includes pre-Service Packages aspects."
-    },    
+    },
     "prerelease-tf-testing" = {
       color       = "60dea9", # color:nomad
       description = "Pertains to testing Terraform releases prior to release."
@@ -134,6 +138,10 @@ variable "workflow_labels" {
       color       = "008196", # color:lightest-darkest waypoint gradient
       description = "Managed by automation to categorize the size of a PR."
     },
+    "skaff" = {
+      color       = "63d0ff", # color:packer
+      description = "Issues and pull requested related to the skaff tool"
+    }
     "stale" = {
       color       = "828a90", # color:stale grey
       description = "Old or inactive issues managed by automation, if no further action taken these will get closed."

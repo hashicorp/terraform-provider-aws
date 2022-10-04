@@ -66,7 +66,7 @@ func dataSourceSessionContextRead(d *schema.ResourceData, meta interface{}) erro
 
 	var role *iam.Role
 
-	err = resource.Retry(PropagationTimeout, func() *resource.RetryError {
+	err = resource.Retry(propagationTimeout, func() *resource.RetryError {
 		var err error
 
 		role, err = FindRoleByName(conn, roleName)

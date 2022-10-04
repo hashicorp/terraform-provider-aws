@@ -1,5 +1,5 @@
 ---
-subcategory: "VPC"
+subcategory: "VPC IPAM (IP Address Manager)"
 layout: "aws"
 page_title: "AWS: aws_vpc_ipam_pool_cidr_allocation"
 description: |-
@@ -43,12 +43,49 @@ resource "aws_vpc_ipam" "example" {
 }
 ```
 
+With the `disallowed_cidrs` attribute:
+
+```terraform
+data "aws_region" "current" {}
+
+resource "aws_vpc_ipam_pool_cidr_allocation" "example" {
+  ipam_pool_id  = aws_vpc_ipam_pool.example.id
+  netmaskLength = 28
+
+  disallowed_cidrs = [
+    "172.2.0.0/28"
+  ]
+
+  depends_on = [
+    aws_vpc_ipam_pool_cidr.example
+  ]
+}
+
+resource "aws_vpc_ipam_pool_cidr" "example" {
+  ipam_pool_id = aws_vpc_ipam_pool.example.id
+  cidr         = "172.2.0.0/16"
+}
+
+resource "aws_vpc_ipam_pool" "example" {
+  address_family = "ipv4"
+  ipam_scope_id  = aws_vpc_ipam.example.private_default_scope_id
+  locale         = data.aws_region.current.name
+}
+
+resource "aws_vpc_ipam" "example" {
+  operating_regions {
+    region_name = data.aws_region.current.name
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
 
 * `cidr` - (Optional) The CIDR you want to assign to the pool.
 * `description` - (Optional) The description for the allocation.
+* `disallowed_cidrs` - (Optional) Exclude a particular CIDR range from being returned by the pool.
 * `ipam_pool_id` - (Required) The ID of the pool to which you want to assign a CIDR.
 * `netmask_length` - (Optional) The netmask length of the CIDR you would like to allocate to the IPAM pool. Valid Values: `0-32`.
 

@@ -11,7 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awsutil"
 	"github.com/aws/aws-sdk-go/service/sns"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -101,7 +101,7 @@ var (
 	}
 
 	subscriptionAttributeMap = attrmap.New(map[string]string{
-		"arn":                            SubscriptionAttributeNameSubscriptionArn,
+		"arn":                            SubscriptionAttributeNameSubscriptionARN,
 		"confirmation_was_authenticated": SubscriptionAttributeNameConfirmationWasAuthenticated,
 		"delivery_policy":                SubscriptionAttributeNameDeliveryPolicy,
 		"endpoint":                       SubscriptionAttributeNameEndpoint,
@@ -111,8 +111,8 @@ var (
 		"protocol":                       SubscriptionAttributeNameProtocol,
 		"raw_message_delivery":           SubscriptionAttributeNameRawMessageDelivery,
 		"redrive_policy":                 SubscriptionAttributeNameRedrivePolicy,
-		"subscription_role_arn":          SubscriptionAttributeNameSubscriptionRoleArn,
-		"topic_arn":                      SubscriptionAttributeNameTopicArn,
+		"subscription_role_arn":          SubscriptionAttributeNameSubscriptionRoleARN,
+		"topic_arn":                      SubscriptionAttributeNameTopicARN,
 	}, subscriptionSchema)
 )
 
@@ -133,7 +133,7 @@ func ResourceTopicSubscription() *schema.Resource {
 func resourceTopicSubscriptionCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SNSConn
 
-	attributes, err := subscriptionAttributeMap.ResourceDataToApiAttributesCreate(d)
+	attributes, err := subscriptionAttributeMap.ResourceDataToAPIAttributesCreate(d)
 
 	if err != nil {
 		return err
@@ -142,7 +142,7 @@ func resourceTopicSubscriptionCreate(d *schema.ResourceData, meta interface{}) e
 	// Endpoint, Protocol and TopicArn are not passed in Attributes.
 	delete(attributes, SubscriptionAttributeNameEndpoint)
 	delete(attributes, SubscriptionAttributeNameProtocol)
-	delete(attributes, SubscriptionAttributeNameTopicArn)
+	delete(attributes, SubscriptionAttributeNameTopicARN)
 
 	input := &sns.SubscribeInput{
 		Attributes:            aws.StringMap(attributes),
@@ -204,19 +204,13 @@ func resourceTopicSubscriptionRead(d *schema.ResourceData, meta interface{}) err
 
 	attributes := outputRaw.(map[string]string)
 
-	err = subscriptionAttributeMap.ApiAttributesToResourceData(attributes, d)
-
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return subscriptionAttributeMap.APIAttributesToResourceData(attributes, d)
 }
 
 func resourceTopicSubscriptionUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SNSConn
 
-	attributes, err := subscriptionAttributeMap.ResourceDataToApiAttributesUpdate(d)
+	attributes, err := subscriptionAttributeMap.ResourceDataToAPIAttributesUpdate(d)
 
 	if err != nil {
 		return err
@@ -240,7 +234,6 @@ func resourceTopicSubscriptionDelete(d *schema.ResourceData, meta interface{}) e
 	})
 
 	if tfawserr.ErrMessageContains(err, sns.ErrCodeInvalidParameterException, "Cannot unsubscribe a subscription that is pending confirmation") {
-		log.Printf("[WARN] Removing unconfirmed SNS Topic Subscription (%s) from Terraform state but failed to remove it from AWS!", d.Id())
 		return nil
 	}
 
@@ -359,13 +352,13 @@ type TopicSubscriptionRedrivePolicy struct {
 }
 
 func SuppressEquivalentTopicSubscriptionDeliveryPolicy(k, old, new string, d *schema.ResourceData) bool {
-	ob, err := normalizeSnsTopicSubscriptionDeliveryPolicy(old)
+	ob, err := normalizeTopicSubscriptionDeliveryPolicy(old)
 	if err != nil {
 		log.Print(err)
 		return false
 	}
 
-	nb, err := normalizeSnsTopicSubscriptionDeliveryPolicy(new)
+	nb, err := normalizeTopicSubscriptionDeliveryPolicy(new)
 	if err != nil {
 		log.Print(err)
 		return false
@@ -374,7 +367,7 @@ func SuppressEquivalentTopicSubscriptionDeliveryPolicy(k, old, new string, d *sc
 	return verify.JSONBytesEqual(ob, nb)
 }
 
-func normalizeSnsTopicSubscriptionDeliveryPolicy(policy string) ([]byte, error) {
+func normalizeTopicSubscriptionDeliveryPolicy(policy string) ([]byte, error) {
 	var deliveryPolicy TopicSubscriptionDeliveryPolicy
 
 	if err := json.Unmarshal([]byte(policy), &deliveryPolicy); err != nil {

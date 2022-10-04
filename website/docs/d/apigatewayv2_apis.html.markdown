@@ -1,5 +1,5 @@
 ---
-subcategory: "API Gateway v2 (WebSocket and HTTP APIs)"
+subcategory: "API Gateway V2"
 layout: "aws"
 page_title: "AWS: aws_apigatewayv2_apis"
 description: |-
@@ -22,9 +22,9 @@ data "aws_apigatewayv2_apis" "example" {
 
 The following arguments are supported:
 
-* `name` - (Optional) The API name.
-* `protocol_type` - (Optional) The API protocol.
-* `tags` - (Optional) A map of tags, each pair of which must exactly match
+* `name` - (Optional) API name.
+* `protocol_type` - (Optional) API protocol.
+* `tags` - (Optional) Map of tags, each pair of which must exactly match
   a pair on the desired APIs.
 
 ## Attributes Reference

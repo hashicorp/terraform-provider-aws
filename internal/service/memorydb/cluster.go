@@ -2,13 +2,13 @@ package memorydb
 
 import (
 	"context"
+	"fmt"
 	"log"
-	"regexp"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/memorydb"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -71,18 +71,9 @@ func ResourceCluster() *schema.Resource {
 				Computed: true,
 			},
 			"final_snapshot_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 255),
-					validation.StringDoesNotMatch(
-						regexp.MustCompile(`[-][-]`),
-						"The name may not contain two consecutive hyphens."),
-					validation.StringMatch(
-						// Similar to ElastiCache, MemoryDB normalises names to lowercase.
-						regexp.MustCompile(`^[a-z0-9-]*[a-z0-9]$`),
-						"Only lowercase alphanumeric characters and hyphens allowed. The name may not end with a hyphen."),
-				),
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validateResourceName(snapshotNameMaxLength),
 			},
 			"kms_key_arn": {
 				// The API will accept an ID, but return the ARN on every read.
@@ -106,16 +97,7 @@ func ResourceCluster() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name_prefix"},
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 40),
-					validation.StringDoesNotMatch(
-						regexp.MustCompile(`[-][-]`),
-						"The name may not contain two consecutive hyphens."),
-					validation.StringMatch(
-						// Similar to ElastiCache, MemoryDB normalises names to lowercase.
-						regexp.MustCompile(`^[a-z0-9-]*[a-z0-9]$`),
-						"Only lowercase alphanumeric characters and hyphens allowed. The name may not end with a hyphen."),
-				),
+				ValidateFunc:  validateResourceName(clusterNameMaxLength),
 			},
 			"name_prefix": {
 				Type:          schema.TypeString,
@@ -123,16 +105,7 @@ func ResourceCluster() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name"},
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 40-resource.UniqueIDSuffixLength),
-					validation.StringDoesNotMatch(
-						regexp.MustCompile(`[-][-]`),
-						"The name may not contain two consecutive hyphens."),
-					validation.StringMatch(
-						// Similar to ElastiCache, MemoryDB normalises names to lowercase.
-						regexp.MustCompile(`^[a-z0-9-]+$`),
-						"Only lowercase alphanumeric characters and hyphens allowed."),
-				),
+				ValidateFunc:  validateResourceNamePrefix(clusterNameMaxLength - resource.UniqueIDSuffixLength),
 			},
 			"node_type": {
 				Type:     schema.TypeString,
@@ -364,7 +337,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		return diag.Errorf("error creating MemoryDB Cluster (%s): %s", name, err)
 	}
 
-	if err := waitClusterAvailable(ctx, conn, name); err != nil {
+	if err := waitClusterAvailable(ctx, conn, name, d.Timeout(schema.TimeoutCreate)); err != nil {
 		return diag.Errorf("error waiting for MemoryDB Cluster (%s) to be created: %s", name, err)
 	}
 
@@ -450,9 +423,9 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			input.SnsTopicArn = aws.String(v)
 
 			if v == "" {
-				input.SnsTopicStatus = aws.String(clusterSnsTopicStatusInactive)
+				input.SnsTopicStatus = aws.String(ClusterSNSTopicStatusInactive)
 			} else {
-				input.SnsTopicStatus = aws.String(clusterSnsTopicStatusActive)
+				input.SnsTopicStatus = aws.String(ClusterSNSTopicStatusActive)
 			}
 		}
 
@@ -463,7 +436,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			return diag.Errorf("error updating MemoryDB Cluster (%s): %s", d.Id(), err)
 		}
 
-		if err := waitClusterAvailable(ctx, conn, d.Id()); err != nil {
+		if err := waitClusterAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return diag.Errorf("error waiting for MemoryDB Cluster (%s) to be modified: %s", d.Id(), err)
 		}
 
@@ -526,25 +499,11 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(cluster.Name)))
 	d.Set("node_type", cluster.NodeType)
 
-	// The configured value of num_replicas_per_shard cannot be read back, so
-	// assume that it's the same as that of the largest shard.
-	//
-	// For the sake of caution, limit this search to stable shards.
-	var maxNumberOfNodesPerShard int64
-	for _, shard := range cluster.Shards {
-		if aws.StringValue(shard.Status) != clusterShardStatusAvailable {
-			continue
-		}
-
-		n := aws.Int64Value(shard.NumberOfNodes)
-		if n > maxNumberOfNodesPerShard {
-			maxNumberOfNodesPerShard = n
-		}
+	numReplicasPerShard, err := deriveClusterNumReplicasPerShard(cluster)
+	if err != nil {
+		return diag.Errorf("error reading num_replicas_per_shard for MemoryDB Cluster (%s): %s", d.Id(), err)
 	}
-	if maxNumberOfNodesPerShard == 0 {
-		return diag.Errorf("error reading num_replicas_per_shard for MemoryDB Cluster (%s): no available shards found", d.Id())
-	}
-	d.Set("num_replicas_per_shard", maxNumberOfNodesPerShard-1)
+	d.Set("num_replicas_per_shard", numReplicasPerShard)
 
 	d.Set("num_shards", cluster.NumberOfShards)
 	d.Set("parameter_group_name", cluster.ParameterGroupName)
@@ -562,7 +521,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("snapshot_retention_limit", cluster.SnapshotRetentionLimit)
 	d.Set("snapshot_window", cluster.SnapshotWindow)
 
-	if aws.StringValue(cluster.SnsTopicStatus) == clusterSnsTopicStatusActive {
+	if aws.StringValue(cluster.SnsTopicStatus) == ClusterSNSTopicStatusActive {
 		d.Set("sns_topic_arn", cluster.SnsTopicArn)
 	} else {
 		d.Set("sns_topic_arn", "")
@@ -613,7 +572,7 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta int
 		return diag.Errorf("error deleting MemoryDB Cluster (%s): %s", d.Id(), err)
 	}
 
-	if err := waitClusterDeleted(ctx, conn, d.Id()); err != nil {
+	if err := waitClusterDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return diag.Errorf("error waiting for MemoryDB Cluster (%s) to be deleted: %s", d.Id(), err)
 	}
 
@@ -678,4 +637,30 @@ func flattenShards(shards []*memorydb.Shard) *schema.Set {
 	}
 
 	return shardSet
+}
+
+// deriveClusterNumReplicasPerShard determines the replicas per shard
+// configuration of a cluster. As this cannot directly be read back, we
+// assume that it's the same as that of the largest shard.
+//
+// For the sake of caution, this search is limited to stable shards.
+func deriveClusterNumReplicasPerShard(cluster *memorydb.Cluster) (int, error) {
+	var maxNumberOfNodesPerShard int64
+
+	for _, shard := range cluster.Shards {
+		if aws.StringValue(shard.Status) != ClusterShardStatusAvailable {
+			continue
+		}
+
+		n := aws.Int64Value(shard.NumberOfNodes)
+		if n > maxNumberOfNodesPerShard {
+			maxNumberOfNodesPerShard = n
+		}
+	}
+
+	if maxNumberOfNodesPerShard == 0 {
+		return 0, fmt.Errorf("no available shards found")
+	}
+
+	return int(maxNumberOfNodesPerShard - 1), nil
 }

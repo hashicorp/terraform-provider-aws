@@ -1,5 +1,5 @@
 ---
-subcategory: "Image Builder"
+subcategory: "EC2 Image Builder"
 layout: "aws"
 page_title: "AWS: aws_imagebuilder_image_recipe"
 description: |-
@@ -26,6 +26,16 @@ resource "aws_imagebuilder_image_recipe" "example" {
 
   component {
     component_arn = aws_imagebuilder_component.example.arn
+
+    parameter {
+      name  = "Parameter1"
+      value = "Value1"
+    }
+
+    parameter {
+      name  = "Parameter2"
+      value = "Value2"
+    }
   }
 
   name         = "example"
@@ -45,9 +55,11 @@ The following arguments are required:
 
 The following attributes are optional:
 
-* `block_device_mapping` - (Optional) Configuration block(s) with block device mappings for the the image recipe. Detailed below.
+* `block_device_mapping` - (Optional) Configuration block(s) with block device mappings for the image recipe. Detailed below.
 * `description` - (Optional) Description of the image recipe.
-* `tags` - (Optional) Key-value map of resource tags for the image recipe. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `systems_manager_agent` - (Optional) Configuration block for the Systems Manager Agent installed by default by Image Builder. Detailed below.
+* `tags` - (Optional) Key-value map of resource tags for the image recipe. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `user_data_base64` (Optional) Base64 encoded user data. Use this to provide commands or a command script to run when you launch your build instance.
 * `working_directory` - (Optional) The working directory to be used during build and test workflows.
 
 ### block_device_mapping
@@ -68,14 +80,29 @@ The following arguments are optional:
 * `iops` - (Optional) Number of Input/Output (I/O) operations per second to provision for an `io1` or `io2` volume.
 * `kms_key_id` - (Optional) Amazon Resource Name (ARN) of the Key Management Service (KMS) Key for encryption.
 * `snapshot_id` - (Optional) Identifier of the EC2 Volume Snapshot.
+* `throughput` - (Optional) For GP3 volumes only. The throughput in MiB/s that the volume supports.
 * `volume_size` - (Optional) Size of the volume, in GiB.
 * `volume_type` - (Optional) Type of the volume. For example, `gp2` or `io2`.
 
 ### component
 
-The following arguments are required:
+The `component` block supports the following arguments:
 
 * `component_arn` - (Required) Amazon Resource Name (ARN) of the Image Builder Component to associate.
+* `parameter` - (Optional) Configuration block(s) for parameters to configure the component. Detailed below.
+
+### parameter
+
+The following arguments are required:
+
+* `name` - (Required) The name of the component parameter.
+* `value` - (Required) The value for the named component parameter.
+
+### systems_manager_agent
+
+The following arguments are required:
+
+* `uninstall_after_build` - (Required) Whether to remove the Systems Manager Agent after the image has been built. Defaults to `false`.
 
 ## Attributes Reference
 
@@ -85,7 +112,7 @@ In addition to all arguments above, the following attributes are exported:
 * `date_created` - Date the image recipe was created.
 * `owner` - Owner of the image recipe.
 * `platform` - Platform of the image recipe.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 

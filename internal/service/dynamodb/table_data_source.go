@@ -6,11 +6,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func DataSourceTable() *schema.Resource {
@@ -258,7 +259,7 @@ func dataSourceTableRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("read_capacity", table.ProvisionedThroughput.ReadCapacityUnits)
 	}
 
-	if err := d.Set("attribute", flattenDynamoDbTableAttributeDefinitions(table.AttributeDefinitions)); err != nil {
+	if err := d.Set("attribute", flattenTableAttributeDefinitions(table.AttributeDefinitions)); err != nil {
 		return fmt.Errorf("error setting attribute: %w", err)
 	}
 
@@ -272,11 +273,11 @@ func dataSourceTableRead(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if err := d.Set("local_secondary_index", flattenDynamoDbTableLocalSecondaryIndex(table.LocalSecondaryIndexes)); err != nil {
+	if err := d.Set("local_secondary_index", flattenTableLocalSecondaryIndex(table.LocalSecondaryIndexes)); err != nil {
 		return fmt.Errorf("error setting local_secondary_index: %w", err)
 	}
 
-	if err := d.Set("global_secondary_index", flattenDynamoDbTableGlobalSecondaryIndex(table.GlobalSecondaryIndexes)); err != nil {
+	if err := d.Set("global_secondary_index", flattenTableGlobalSecondaryIndex(table.GlobalSecondaryIndexes)); err != nil {
 		return fmt.Errorf("error setting global_secondary_index: %w", err)
 	}
 
@@ -291,11 +292,11 @@ func dataSourceTableRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("stream_arn", table.LatestStreamArn)
 	d.Set("stream_label", table.LatestStreamLabel)
 
-	if err := d.Set("server_side_encryption", flattenDynamodDbTableServerSideEncryption(table.SSEDescription)); err != nil {
+	if err := d.Set("server_side_encryption", flattenTableServerSideEncryption(table.SSEDescription)); err != nil {
 		return fmt.Errorf("error setting server_side_encryption: %w", err)
 	}
 
-	if err := d.Set("replica", flattenDynamoDbReplicaDescriptions(table.Replicas)); err != nil {
+	if err := d.Set("replica", flattenReplicaDescriptions(table.Replicas)); err != nil {
 		return fmt.Errorf("error setting replica: %w", err)
 	}
 
@@ -308,12 +309,12 @@ func dataSourceTableRead(d *schema.ResourceData, meta interface{}) error {
 	pitrOut, err := conn.DescribeContinuousBackups(&dynamodb.DescribeContinuousBackupsInput{
 		TableName: aws.String(d.Id()),
 	})
-
-	if err != nil && !tfawserr.ErrCodeEquals(err, "UnknownOperationException") {
+	// When a Table is `ARCHIVED`, DescribeContinuousBackups returns `TableNotFoundException`
+	if err != nil && !tfawserr.ErrCodeEquals(err, "UnknownOperationException", dynamodb.ErrCodeTableNotFoundException) {
 		return fmt.Errorf("error describing DynamoDB Table (%s) Continuous Backups: %w", d.Id(), err)
 	}
 
-	if err := d.Set("point_in_time_recovery", flattenDynamoDbPitr(pitrOut)); err != nil {
+	if err := d.Set("point_in_time_recovery", flattenPITR(pitrOut)); err != nil {
 		return fmt.Errorf("error setting point_in_time_recovery: %w", err)
 	}
 
@@ -325,13 +326,13 @@ func dataSourceTableRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error describing DynamoDB Table (%s) Time to Live: %w", d.Id(), err)
 	}
 
-	if err := d.Set("ttl", flattenDynamoDbTtl(ttlOut)); err != nil {
+	if err := d.Set("ttl", flattenTTL(ttlOut)); err != nil {
 		return fmt.Errorf("error setting ttl: %w", err)
 	}
 
 	tags, err := ListTags(conn, d.Get("arn").(string))
-
-	if err != nil && !tfawserr.ErrMessageContains(err, "UnknownOperationException", "Tagging is not currently supported in DynamoDB Local.") {
+	// When a Table is `ARCHIVED`, ListTags returns `ResourceNotFoundException`
+	if err != nil && !(tfawserr.ErrMessageContains(err, "UnknownOperationException", "Tagging is not currently supported in DynamoDB Local.") || tfresource.NotFound(err)) {
 		return fmt.Errorf("error listing tags for DynamoDB Table (%s): %w", d.Get("arn").(string), err)
 	}
 

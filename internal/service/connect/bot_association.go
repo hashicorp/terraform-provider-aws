@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/connect"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -98,7 +98,7 @@ func resourceBotAssociationCreate(ctx context.Context, d *schema.ResourceData, m
 	*/
 
 	_, err := tfresource.RetryWhen(
-		connectBotAssociationCreateTimeout,
+		botAssociationCreateTimeout,
 		func() (interface{}, error) {
 			return conn.AssociateBotWithContext(ctx, input)
 		},

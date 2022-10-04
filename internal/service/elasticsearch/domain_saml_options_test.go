@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccElasticsearchDomainSamlOptions_basic(t *testing.T) {
+func TestAccElasticsearchDomainSAMLOptions_basic(t *testing.T) {
 	var domain elasticsearch.ElasticsearchDomainStatus
 
 	rName := sdkacctest.RandomWithPrefix("acc-test")
@@ -25,13 +25,13 @@ func TestAccElasticsearchDomainSamlOptions_basic(t *testing.T) {
 	esDomainResourceName := "aws_elasticsearch_domain.example"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, elasticsearch.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckESDomainSAMLOptionsDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elasticsearch.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckESDomainSAMLOptionsDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainSAMLOptionsConfig(rUserName, rName, idpEntityId),
+				Config: testAccDomainSAMLOptionsConfig_basic(rUserName, rName, idpEntityId),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(esDomainResourceName, &domain),
 					testAccCheckESDomainSAMLOptions(esDomainResourceName, resourceName),
@@ -50,7 +50,7 @@ func TestAccElasticsearchDomainSamlOptions_basic(t *testing.T) {
 	})
 }
 
-func TestAccElasticsearchDomainSamlOptions_disappears(t *testing.T) {
+func TestAccElasticsearchDomainSAMLOptions_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("acc-test")
 	rUserName := sdkacctest.RandomWithPrefix("es-master-user")
 	idpEntityId := fmt.Sprintf("https://%s", acctest.RandomDomainName())
@@ -59,13 +59,13 @@ func TestAccElasticsearchDomainSamlOptions_disappears(t *testing.T) {
 	esDomainResourceName := "aws_elasticsearch_domain.example"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, elasticsearch.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckESDomainSAMLOptionsDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elasticsearch.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckESDomainSAMLOptionsDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainSAMLOptionsConfig(rUserName, rName, idpEntityId),
+				Config: testAccDomainSAMLOptionsConfig_basic(rUserName, rName, idpEntityId),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckESDomainSAMLOptions(esDomainResourceName, resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfelasticsearch.ResourceDomainSAMLOptions(), resourceName),
@@ -75,7 +75,7 @@ func TestAccElasticsearchDomainSamlOptions_disappears(t *testing.T) {
 	})
 }
 
-func TestAccElasticsearchDomainSamlOptions_disappears_Domain(t *testing.T) {
+func TestAccElasticsearchDomainSAMLOptions_disappears_Domain(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("acc-test")
 	rUserName := sdkacctest.RandomWithPrefix("es-master-user")
 	idpEntityId := fmt.Sprintf("https://%s", acctest.RandomDomainName())
@@ -84,13 +84,13 @@ func TestAccElasticsearchDomainSamlOptions_disappears_Domain(t *testing.T) {
 	esDomainResourceName := "aws_elasticsearch_domain.example"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, elasticsearch.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckESDomainSAMLOptionsDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elasticsearch.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckESDomainSAMLOptionsDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainSAMLOptionsConfig(rUserName, rName, idpEntityId),
+				Config: testAccDomainSAMLOptionsConfig_basic(rUserName, rName, idpEntityId),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckESDomainSAMLOptions(esDomainResourceName, resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfelasticsearch.ResourceDomain(), esDomainResourceName),
@@ -101,7 +101,7 @@ func TestAccElasticsearchDomainSamlOptions_disappears_Domain(t *testing.T) {
 	})
 }
 
-func TestAccElasticsearchDomainSamlOptions_Update(t *testing.T) {
+func TestAccElasticsearchDomainSAMLOptions_Update(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("acc-test")
 	rUserName := sdkacctest.RandomWithPrefix("es-master-user")
 	idpEntityId := fmt.Sprintf("https://%s", acctest.RandomDomainName())
@@ -110,13 +110,13 @@ func TestAccElasticsearchDomainSamlOptions_Update(t *testing.T) {
 	esDomainResourceName := "aws_elasticsearch_domain.example"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, elasticsearch.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckESDomainSAMLOptionsDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elasticsearch.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckESDomainSAMLOptionsDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainSAMLOptionsConfig(rUserName, rName, idpEntityId),
+				Config: testAccDomainSAMLOptionsConfig_basic(rUserName, rName, idpEntityId),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "saml_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "saml_options.0.session_timeout_minutes", "60"),
@@ -124,7 +124,7 @@ func TestAccElasticsearchDomainSamlOptions_Update(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccDomainSAMLOptionsConfigUpdate(rUserName, rName, idpEntityId),
+				Config: testAccDomainSAMLOptionsConfig_update(rUserName, rName, idpEntityId),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "saml_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "saml_options.0.session_timeout_minutes", "180"),
@@ -135,7 +135,7 @@ func TestAccElasticsearchDomainSamlOptions_Update(t *testing.T) {
 	})
 }
 
-func TestAccElasticsearchDomainSamlOptions_Disabled(t *testing.T) {
+func TestAccElasticsearchDomainSAMLOptions_Disabled(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("acc-test")
 	rUserName := sdkacctest.RandomWithPrefix("es-master-user")
 	idpEntityId := fmt.Sprintf("https://%s", acctest.RandomDomainName())
@@ -144,13 +144,13 @@ func TestAccElasticsearchDomainSamlOptions_Disabled(t *testing.T) {
 	esDomainResourceName := "aws_elasticsearch_domain.example"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, elasticsearch.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckESDomainSAMLOptionsDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elasticsearch.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckESDomainSAMLOptionsDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainSAMLOptionsConfig(rUserName, rName, idpEntityId),
+				Config: testAccDomainSAMLOptionsConfig_basic(rUserName, rName, idpEntityId),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "saml_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "saml_options.0.session_timeout_minutes", "60"),
@@ -158,7 +158,7 @@ func TestAccElasticsearchDomainSamlOptions_Disabled(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccDomainSAMLOptionsConfigDisabled(rUserName, rName),
+				Config: testAccDomainSAMLOptionsConfig_disabled(rUserName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "saml_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "saml_options.0.session_timeout_minutes", "0"),
@@ -215,7 +215,7 @@ func testAccCheckESDomainSAMLOptions(esResource string, samlOptionsResource stri
 	}
 }
 
-func testAccDomainSAMLOptionsConfig(userName, domainName, idpEntityId string) string {
+func testAccDomainSAMLOptionsConfig_basic(userName, domainName, idpEntityId string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_user" "es_master_user" {
   name = %[1]q
@@ -272,7 +272,7 @@ resource "aws_elasticsearch_domain_saml_options" "main" {
 `, userName, domainName, idpEntityId)
 }
 
-func testAccDomainSAMLOptionsConfigUpdate(userName, domainName, idpEntityId string) string {
+func testAccDomainSAMLOptionsConfig_update(userName, domainName, idpEntityId string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_user" "es_master_user" {
   name = %[1]q
@@ -330,7 +330,7 @@ resource "aws_elasticsearch_domain_saml_options" "main" {
 `, userName, domainName, idpEntityId)
 }
 
-func testAccDomainSAMLOptionsConfigDisabled(userName string, domainName string) string {
+func testAccDomainSAMLOptionsConfig_disabled(userName string, domainName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_user" "es_master_user" {
   name = "%s"

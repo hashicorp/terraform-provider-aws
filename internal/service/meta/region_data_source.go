@@ -96,7 +96,7 @@ func FindRegionByEndpoint(endpoint string) (*endpoints.Region, error) {
 			}
 		}
 	}
-	return nil, fmt.Errorf("region not found for endpoint: %s", endpoint)
+	return nil, fmt.Errorf("region not found for endpoint %q", endpoint)
 }
 
 func FindRegionByName(name string) (*endpoints.Region, error) {
@@ -107,5 +107,5 @@ func FindRegionByName(name string) (*endpoints.Region, error) {
 			}
 		}
 	}
-	return nil, fmt.Errorf("region not found for name: %s", name)
+	return nil, fmt.Errorf("region not found for name %q", name)
 }

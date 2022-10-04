@@ -1,5 +1,5 @@
 ---
-subcategory: "SSM"
+subcategory: "SSM (Systems Manager)"
 layout: "aws"
 page_title: "AWS: aws_ssm_resource_data_sync"
 description: |-

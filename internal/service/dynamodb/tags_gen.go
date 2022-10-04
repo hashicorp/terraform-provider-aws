@@ -2,11 +2,13 @@
 package dynamodb
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbiface"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -17,8 +19,11 @@ import (
 // This function will optimise the handling over ListTags, if possible.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func GetTag(conn *dynamodb.DynamoDB, identifier string, key string) (*string, error) {
-	listTags, err := ListTags(conn, identifier)
+func GetTag(conn dynamodbiface.DynamoDBAPI, identifier string, key string) (*string, error) {
+	return GetTagWithContext(context.Background(), conn, identifier, key)
+}
+func GetTagWithContext(ctx context.Context, conn dynamodbiface.DynamoDBAPI, identifier string, key string) (*string, error) {
+	listTags, err := ListTagsWithContext(ctx, conn, identifier)
 
 	if err != nil {
 		return nil, err
@@ -34,12 +39,16 @@ func GetTag(conn *dynamodb.DynamoDB, identifier string, key string) (*string, er
 // ListTags lists dynamodb service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(conn *dynamodb.DynamoDB, identifier string) (tftags.KeyValueTags, error) {
+func ListTags(conn dynamodbiface.DynamoDBAPI, identifier string) (tftags.KeyValueTags, error) {
+	return ListTagsWithContext(context.Background(), conn, identifier)
+}
+
+func ListTagsWithContext(ctx context.Context, conn dynamodbiface.DynamoDBAPI, identifier string) (tftags.KeyValueTags, error) {
 	input := &dynamodb.ListTagsOfResourceInput{
 		ResourceArn: aws.String(identifier),
 	}
 
-	output, err := conn.ListTagsOfResource(input)
+	output, err := conn.ListTagsOfResourceWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
 		return nil, &resource.NotFoundError{
@@ -87,7 +96,10 @@ func KeyValueTags(tags []*dynamodb.Tag) tftags.KeyValueTags {
 // UpdateTags updates dynamodb service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(conn *dynamodb.DynamoDB, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+func UpdateTags(conn dynamodbiface.DynamoDBAPI, identifier string, oldTags interface{}, newTags interface{}) error {
+	return UpdateTagsWithContext(context.Background(), conn, identifier, oldTags, newTags)
+}
+func UpdateTagsWithContext(ctx context.Context, conn dynamodbiface.DynamoDBAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
 	oldTags := tftags.New(oldTagsMap)
 	newTags := tftags.New(newTagsMap)
 
@@ -97,10 +109,10 @@ func UpdateTags(conn *dynamodb.DynamoDB, identifier string, oldTagsMap interface
 			TagKeys:     aws.StringSlice(removedTags.IgnoreAWS().Keys()),
 		}
 
-		_, err := conn.UntagResource(input)
+		_, err := conn.UntagResourceWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
+			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -110,10 +122,10 @@ func UpdateTags(conn *dynamodb.DynamoDB, identifier string, oldTagsMap interface
 			Tags:        Tags(updatedTags.IgnoreAWS()),
 		}
 
-		_, err := conn.TagResource(input)
+		_, err := conn.TagResourceWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
+			return fmt.Errorf("tagging resource (%s): %w", identifier, err)
 		}
 	}
 

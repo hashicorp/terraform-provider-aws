@@ -1,5 +1,5 @@
 ---
-subcategory: "RDS"
+subcategory: "RDS (Relational Database)"
 layout: "aws"
 page_title: "AWS: aws_rds_cluster_role_association"
 description: |-
@@ -19,7 +19,7 @@ Manages a RDS DB Cluster association with an IAM Role. Example use cases:
 resource "aws_rds_cluster_role_association" "example" {
   db_cluster_identifier = aws_rds_cluster.example.id
   feature_name          = "S3_INTEGRATION"
-  role_arn              = aws_iam_role.example.id
+  role_arn              = aws_iam_role.example.arn
 }
 ```
 

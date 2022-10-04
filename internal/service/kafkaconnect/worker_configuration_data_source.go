@@ -1,17 +1,19 @@
 package kafkaconnect
 
 import (
-	"fmt"
+	"context"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kafkaconnect"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func DataSourceWorkerConfiguration() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceWorkerConfigurationRead,
+		ReadWithoutTimeout: dataSourceWorkerConfigurationRead,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -38,25 +40,20 @@ func DataSourceWorkerConfiguration() *schema.Resource {
 	}
 }
 
-func dataSourceWorkerConfigurationRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceWorkerConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).KafkaConnectConn
 
-	configName := d.Get("name")
+	name := d.Get("name")
+	var output []*kafkaconnect.WorkerConfigurationSummary
 
-	input := &kafkaconnect.ListWorkerConfigurationsInput{}
-
-	var config *kafkaconnect.WorkerConfigurationSummary
-
-	err := conn.ListWorkerConfigurationsPages(input, func(page *kafkaconnect.ListWorkerConfigurationsOutput, lastPage bool) bool {
+	err := conn.ListWorkerConfigurationsPagesWithContext(ctx, &kafkaconnect.ListWorkerConfigurationsInput{}, func(page *kafkaconnect.ListWorkerConfigurationsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
 
-		for _, configSummary := range page.WorkerConfigurations {
-			if aws.StringValue(configSummary.Name) == configName {
-				config = configSummary
-
-				return false
+		for _, v := range page.WorkerConfigurations {
+			if aws.StringValue(v.Name) == name {
+				output = append(output, v)
 			}
 		}
 
@@ -64,37 +61,37 @@ func dataSourceWorkerConfigurationRead(d *schema.ResourceData, meta interface{})
 	})
 
 	if err != nil {
-		return fmt.Errorf("error listing MSK Connect Worker Configurations: %w", err)
+		return diag.Errorf("error listing MSK Connect Worker Configurations: %s", err)
 	}
 
-	if config == nil {
-		return fmt.Errorf("error reading MSK Connect Worker Configuration (%s): no results found", configName)
+	if len(output) == 0 || output[0] == nil {
+		err = tfresource.NewEmptyResultError(name)
+	} else if count := len(output); count > 1 {
+		err = tfresource.NewTooManyResultsError(count, name)
 	}
-
-	describeInput := &kafkaconnect.DescribeWorkerConfigurationInput{
-		WorkerConfigurationArn: config.WorkerConfigurationArn,
-	}
-
-	describeOutput, err := conn.DescribeWorkerConfiguration(describeInput)
 
 	if err != nil {
-		return fmt.Errorf("error reading MSK Connect Worker Configuration (%s): %w", configName, err)
+		return diag.FromErr(tfresource.SingularDataSourceFindError("MSK Connect Worker Configuration", err))
+	}
+
+	arn := aws.StringValue(output[0].WorkerConfigurationArn)
+	config, err := FindWorkerConfigurationByARN(ctx, conn, arn)
+
+	if err != nil {
+		return diag.Errorf("error reading MSK Connect Worker Configuration (%s): %s", arn, err)
 	}
 
 	d.SetId(aws.StringValue(config.Name))
+
 	d.Set("arn", config.WorkerConfigurationArn)
 	d.Set("description", config.Description)
 	d.Set("name", config.Name)
 
 	if config.LatestRevision != nil {
 		d.Set("latest_revision", config.LatestRevision.Revision)
+		d.Set("properties_file_content", decodePropertiesFileContent(aws.StringValue(config.LatestRevision.PropertiesFileContent)))
 	} else {
 		d.Set("latest_revision", nil)
-	}
-
-	if describeOutput.LatestRevision != nil {
-		d.Set("properties_file_content", decodePropertiesFileContent(aws.StringValue(describeOutput.LatestRevision.PropertiesFileContent)))
-	} else {
 		d.Set("properties_file_content", nil)
 	}
 

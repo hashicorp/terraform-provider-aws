@@ -8,7 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/globalaccelerator"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -21,7 +21,7 @@ import (
 // Global Route53 Zone ID for Global Accelerators, exported as a
 // convenience attribute for Route53 aliases (see
 // https://docs.aws.amazon.com/Route53/latest/APIReference/API_AliasTarget.html).
-const globalAcceleratorRoute53ZoneID = "Z2BJ6XQ5FK7U4H"
+const route53ZoneID = "Z2BJ6XQ5FK7U4H"
 
 func ResourceAccelerator() *schema.Resource {
 	return &schema.Resource{
@@ -150,7 +150,7 @@ func resourceAcceleratorCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("attributes"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input := expandGlobalAcceleratorUpdateAcceleratorAttributesInput(v.([]interface{})[0].(map[string]interface{}))
+		input := expandUpdateAcceleratorAttributesInput(v.([]interface{})[0].(map[string]interface{}))
 		input.AcceleratorArn = aws.String(d.Id())
 
 		log.Printf("[DEBUG] Updating Global Accelerator Accelerator attributes: %s", input)
@@ -185,11 +185,11 @@ func resourceAcceleratorRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("enabled", accelerator.Enabled)
 	d.Set("dns_name", accelerator.DnsName)
-	d.Set("hosted_zone_id", globalAcceleratorRoute53ZoneID)
+	d.Set("hosted_zone_id", route53ZoneID)
 	d.Set("name", accelerator.Name)
 	d.Set("ip_address_type", accelerator.IpAddressType)
 
-	if err := d.Set("ip_sets", flattenGlobalAcceleratorIpSets(accelerator.IpSets)); err != nil {
+	if err := d.Set("ip_sets", flattenIPSets(accelerator.IpSets)); err != nil {
 		return fmt.Errorf("error setting ip_sets: %w", err)
 	}
 
@@ -199,7 +199,7 @@ func resourceAcceleratorRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error reading Global Accelerator Accelerator (%s) attributes: %w", d.Id(), err)
 	}
 
-	if err := d.Set("attributes", []interface{}{flattenGlobalAcceleratorAcceleratorAttributes(acceleratorAttributes)}); err != nil {
+	if err := d.Set("attributes", []interface{}{flattenAcceleratorAttributes(acceleratorAttributes)}); err != nil {
 		return fmt.Errorf("error setting attributes: %w", err)
 	}
 
@@ -250,9 +250,9 @@ func resourceAcceleratorUpdate(d *schema.ResourceData, meta interface{}) error {
 		o, n := d.GetChange("attributes")
 		if len(o.([]interface{})) > 0 && o.([]interface{})[0] != nil {
 			if len(n.([]interface{})) > 0 && n.([]interface{})[0] != nil {
-				oInput := expandGlobalAcceleratorUpdateAcceleratorAttributesInput(o.([]interface{})[0].(map[string]interface{}))
+				oInput := expandUpdateAcceleratorAttributesInput(o.([]interface{})[0].(map[string]interface{}))
 				oInput.AcceleratorArn = aws.String(d.Id())
-				nInput := expandGlobalAcceleratorUpdateAcceleratorAttributesInput(n.([]interface{})[0].(map[string]interface{}))
+				nInput := expandUpdateAcceleratorAttributesInput(n.([]interface{})[0].(map[string]interface{}))
 				nInput.AcceleratorArn = aws.String(d.Id())
 
 				// To change flow logs bucket and prefix attributes while flows are enabled, first disable flow logs.
@@ -337,7 +337,7 @@ func resourceAcceleratorDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func expandGlobalAcceleratorUpdateAcceleratorAttributesInput(tfMap map[string]interface{}) *globalaccelerator.UpdateAcceleratorAttributesInput {
+func expandUpdateAcceleratorAttributesInput(tfMap map[string]interface{}) *globalaccelerator.UpdateAcceleratorAttributesInput {
 	if tfMap == nil {
 		return nil
 	}
@@ -359,7 +359,7 @@ func expandGlobalAcceleratorUpdateAcceleratorAttributesInput(tfMap map[string]in
 	return apiObject
 }
 
-func flattenGlobalAcceleratorIpSet(apiObject *globalaccelerator.IpSet) map[string]interface{} {
+func flattenIPSet(apiObject *globalaccelerator.IpSet) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -377,7 +377,7 @@ func flattenGlobalAcceleratorIpSet(apiObject *globalaccelerator.IpSet) map[strin
 	return tfMap
 }
 
-func flattenGlobalAcceleratorIpSets(apiObjects []*globalaccelerator.IpSet) []interface{} {
+func flattenIPSets(apiObjects []*globalaccelerator.IpSet) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -389,13 +389,13 @@ func flattenGlobalAcceleratorIpSets(apiObjects []*globalaccelerator.IpSet) []int
 			continue
 		}
 
-		tfList = append(tfList, flattenGlobalAcceleratorIpSet(apiObject))
+		tfList = append(tfList, flattenIPSet(apiObject))
 	}
 
 	return tfList
 }
 
-func flattenGlobalAcceleratorAcceleratorAttributes(apiObject *globalaccelerator.AcceleratorAttributes) map[string]interface{} {
+func flattenAcceleratorAttributes(apiObject *globalaccelerator.AcceleratorAttributes) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}

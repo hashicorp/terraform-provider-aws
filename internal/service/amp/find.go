@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/prometheusservice"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -37,7 +37,7 @@ func FindAlertManagerDefinitionByID(ctx context.Context, conn *prometheusservice
 	return output.AlertManagerDefinition, nil
 }
 
-func nameAndWorkspaceIdFromRuleGroupNamespaceArn(arn string) (string, string, error) {
+func nameAndWorkspaceIDFromRuleGroupNamespaceARN(arn string) (string, string, error) {
 	parts := strings.Split(arn, "/")
 	if len(parts) != 3 {
 		return "", "", fmt.Errorf("error reading Prometheus Rule Group Namespace expected the arn to be like: arn:PARTITION:aps:REGION:ACCOUNT:rulegroupsnamespace/IDstring/namespace_name but got: %s", arn)
@@ -45,8 +45,8 @@ func nameAndWorkspaceIdFromRuleGroupNamespaceArn(arn string) (string, string, er
 	return parts[2], parts[1], nil
 }
 
-func FindRuleGroupNamespaceByArn(ctx context.Context, conn *prometheusservice.PrometheusService, arn string) (*prometheusservice.RuleGroupsNamespaceDescription, error) {
-	name, workspaceId, err := nameAndWorkspaceIdFromRuleGroupNamespaceArn(arn)
+func FindRuleGroupNamespaceByARN(ctx context.Context, conn *prometheusservice.PrometheusService, arn string) (*prometheusservice.RuleGroupsNamespaceDescription, error) {
+	name, workspaceId, err := nameAndWorkspaceIDFromRuleGroupNamespaceARN(arn)
 	if err != nil {
 		return nil, err
 	}
@@ -74,4 +74,29 @@ func FindRuleGroupNamespaceByArn(ctx context.Context, conn *prometheusservice.Pr
 	}
 
 	return output.RuleGroupsNamespace, nil
+}
+
+func FindWorkspaceByID(conn *prometheusservice.PrometheusService, id string) (*prometheusservice.WorkspaceDescription, error) {
+	input := &prometheusservice.DescribeWorkspaceInput{
+		WorkspaceId: aws.String(id),
+	}
+
+	output, err := conn.DescribeWorkspace(input)
+
+	if tfawserr.ErrCodeEquals(err, prometheusservice.ErrCodeResourceNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.Workspace == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.Workspace, nil
 }

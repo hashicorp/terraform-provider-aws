@@ -8,7 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/applicationautoscaling"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -115,9 +115,9 @@ func resourceScheduledActionPut(d *schema.ResourceData, meta interface{}) error 
 
 	needsPut := true
 	if d.IsNewResource() {
-		appautoscalingScheduledActionPopulateInputForCreate(input, d)
+		scheduledActionPopulateInputForCreate(input, d)
 	} else {
-		needsPut = appautoscalingScheduledActionPopulateInputForUpdate(input, d)
+		needsPut = scheduledActionPopulateInputForUpdate(input, d)
 	}
 
 	if needsPut {
@@ -146,7 +146,7 @@ func resourceScheduledActionPut(d *schema.ResourceData, meta interface{}) error 
 	return resourceScheduledActionRead(d, meta)
 }
 
-func appautoscalingScheduledActionPopulateInputForCreate(input *applicationautoscaling.PutScheduledActionInput, d *schema.ResourceData) {
+func scheduledActionPopulateInputForCreate(input *applicationautoscaling.PutScheduledActionInput, d *schema.ResourceData) {
 	input.Schedule = aws.String(d.Get("schedule").(string))
 	input.ScalableTargetAction = expandScalableTargetAction(d.Get("scalable_target_action").([]interface{}))
 	input.Timezone = aws.String(d.Get("timezone").(string))
@@ -161,7 +161,7 @@ func appautoscalingScheduledActionPopulateInputForCreate(input *applicationautos
 	}
 }
 
-func appautoscalingScheduledActionPopulateInputForUpdate(input *applicationautoscaling.PutScheduledActionInput, d *schema.ResourceData) bool {
+func scheduledActionPopulateInputForUpdate(input *applicationautoscaling.PutScheduledActionInput, d *schema.ResourceData) bool {
 	hasChange := false
 
 	if d.HasChange("schedule") {

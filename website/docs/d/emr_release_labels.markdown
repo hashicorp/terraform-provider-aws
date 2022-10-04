@@ -1,5 +1,5 @@
 ---
-subcategory: "Elastic Map Reduce (EMR)"
+subcategory: "EMR"
 layout: "aws"
 page_title: "AWS: aws_emr_release_labels"
 description: |-
@@ -34,4 +34,4 @@ data "aws_emr_release_labels" "example" {
 
 In addition to all arguments above, the following attributes are exported:
 
-* `release_labels` - The returned release labels.
+* `release_labels` - Returned release labels.
