@@ -107,6 +107,4 @@ func testAccPreCheckUnsetActiveRuleSet(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected PreCheck error: %s", err)
 	}
-
-	return
 }
