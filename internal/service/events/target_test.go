@@ -97,15 +97,9 @@ func TestAccEventsTarget_disappears(t *testing.T) {
 }
 
 func TestAccEventsTarget_eventBusName(t *testing.T) {
+	var v eventbridge.Target
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_event_target.test"
-
-	var v1, v2 eventbridge.Target
-	ruleName := sdkacctest.RandomWithPrefix("tf-acc-test-rule")
-	busName := sdkacctest.RandomWithPrefix("tf-acc-test-bus")
-	snsTopicName1 := sdkacctest.RandomWithPrefix("tf-acc-test-sns")
-	snsTopicName2 := sdkacctest.RandomWithPrefix("tf-acc-test-sns")
-	targetID1 := sdkacctest.RandomWithPrefix("tf-acc-test-target")
-	targetID2 := sdkacctest.RandomWithPrefix("tf-acc-test-target")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
@@ -114,12 +108,12 @@ func TestAccEventsTarget_eventBusName(t *testing.T) {
 		CheckDestroy:             testAccCheckTargetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTargetConfig_busName(ruleName, busName, snsTopicName1, targetID1),
+				Config: testAccTargetConfig_busName(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTargetExists(resourceName, &v1),
-					resource.TestCheckResourceAttr(resourceName, "rule", ruleName),
-					resource.TestCheckResourceAttr(resourceName, "event_bus_name", busName),
-					resource.TestCheckResourceAttr(resourceName, "target_id", targetID1),
+					testAccCheckTargetExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "rule", rName),
+					resource.TestCheckResourceAttr(resourceName, "event_bus_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "target_id", rName),
 				),
 			},
 			{
@@ -127,15 +121,6 @@ func TestAccEventsTarget_eventBusName(t *testing.T) {
 				ImportState:       true,
 				ImportStateIdFunc: testAccTargetImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
-			},
-			{
-				Config: testAccTargetConfig_busName(ruleName, busName, snsTopicName2, targetID2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTargetExists(resourceName, &v2),
-					resource.TestCheckResourceAttr(resourceName, "rule", ruleName),
-					resource.TestCheckResourceAttr(resourceName, "event_bus_name", busName),
-					resource.TestCheckResourceAttr(resourceName, "target_id", targetID2),
-				),
 			},
 		},
 	})
@@ -1005,7 +990,7 @@ resource "aws_sns_topic" "test" {
 `, rName)
 }
 
-func testAccTargetConfig_busName(ruleName, eventBusName, snsTopicName, targetID string) string {
+func testAccTargetConfig_busName(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_event_target" "test" {
   rule           = aws_cloudwatch_event_rule.test.name
@@ -1015,11 +1000,11 @@ resource "aws_cloudwatch_event_target" "test" {
 }
 
 resource "aws_sns_topic" "test" {
-  name = %[2]q
+  name = %[1]q
 }
 
 resource "aws_cloudwatch_event_rule" "test" {
-  name           = %[3]q
+  name           = %[1]q
   event_bus_name = aws_cloudwatch_event_bus.test.name
   event_pattern  = <<PATTERN
 {
@@ -1031,9 +1016,9 @@ PATTERN
 }
 
 resource "aws_cloudwatch_event_bus" "test" {
-  name = %[4]q
+  name = %[1]q
 }
-`, targetID, snsTopicName, ruleName, eventBusName)
+`, rName)
 }
 
 func testAccTargetConfig_busARN(ruleName, originEventBusName, targetID, destinationEventBusName, roleName, policyName string) string {
