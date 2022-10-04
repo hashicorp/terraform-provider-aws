@@ -432,6 +432,11 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_apigatewayv2_apis":   apigatewayv2.DataSourceAPIs(),
 			"aws_apigatewayv2_export": apigatewayv2.DataSourceExport(),
 
+			"aws_appconfig_configuration_profile":  appconfig.DataSourceConfigurationProfile(),
+			"aws_appconfig_configuration_profiles": appconfig.DataSourceConfigurationProfiles(),
+			"aws_appconfig_environment":            appconfig.DataSourceEnvironment(),
+			"aws_appconfig_environments":           appconfig.DataSourceEnvironments(),
+
 			"aws_appmesh_mesh":            appmesh.DataSourceMesh(),
 			"aws_appmesh_virtual_service": appmesh.DataSourceVirtualService(),
 
@@ -592,6 +597,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_vpc_endpoint_service":                       ec2.DataSourceVPCEndpointService(),
 			"aws_vpc_endpoint":                               ec2.DataSourceVPCEndpoint(),
 			"aws_vpc_ipam_pool":                              ec2.DataSourceIPAMPool(),
+			"aws_vpc_ipam_pool_cidrs":                        ec2.DataSourceIPAMPoolCIDRs(),
 			"aws_vpc_ipam_preview_next_cidr":                 ec2.DataSourceIPAMPreviewNextCIDR(),
 			"aws_vpc_peering_connection":                     ec2.DataSourceVPCPeeringConnection(),
 			"aws_vpc_peering_connections":                    ec2.DataSourceVPCPeeringConnections(),

@@ -385,7 +385,7 @@ The `statement` block supports the following arguments:
 * `byte_match_statement` - (Optional) Rule statement that defines a string match search for AWS WAF to apply to web requests. See [Byte Match Statement](#byte-match-statement) below for details.
 * `geo_match_statement` - (Optional) Rule statement used to identify web requests based on country of origin. See [GEO Match Statement](#geo-match-statement) below for details.
 * `ip_set_reference_statement` - (Optional) Rule statement used to detect web requests coming from particular IP addresses or address ranges. See [IP Set Reference Statement](#ip-set-reference-statement) below for details.
-* `label_match_statement` - (Optional) Rule statement that defines a string match search against labels that have been added to the web request by rules that have already run in the web ACL. See [Label Match Statement](#label-match-statement) below for details.  
+* `label_match_statement` - (Optional) Rule statement that defines a string match search against labels that have been added to the web request by rules that have already run in the web ACL. See [Label Match Statement](#label-match-statement) below for details.
 * `managed_rule_group_statement` - (Optional) Rule statement used to run the rules that are defined in a managed rule group.  This statement can not be nested. See [Managed Rule Group Statement](#managed-rule-group-statement) below for details.
 * `not_statement` - (Optional) Logical rule statement used to negate the results of another rule statement. See [NOT Statement](#not-statement) below for details.
 * `or_statement` - (Optional) Logical rule statement used to combine other rule statements with OR logic. See [OR Statement](#or-statement) below for details.
@@ -567,12 +567,13 @@ The part of a web request that you want AWS WAF to inspect. Include the single `
 
 The `field_to_match` block supports the following arguments:
 
-~> **NOTE:** Only one of `all_query_arguments`, `body`, `cookies`, `json_body`, `method`, `query_string`, `single_header`, `single_query_argument`, or `uri_path` can be specified.
+~> **NOTE:** Only one of `all_query_arguments`, `body`, `cookies`, `headers`, `json_body`, `method`, `query_string`, `single_header`, `single_query_argument`, or `uri_path` can be specified.
 An empty configuration block `{}` should be used when specifying `all_query_arguments`, `body`, `method`, or `query_string` attributes.
 
 * `all_query_arguments` - (Optional) Inspect all query arguments.
 * `body` - (Optional) Inspect the request body, which immediately follows the request headers.
-* `cookies` - (Optional) Inspect the request cookies.
+* `cookies` - (Optional) Inspect the cookies in the web request. See [Cookies](#cookies) below for details.
+* `headers` - (Optional) Inspect the request headers. See [Headers](#headers) below for details.
 * `json_body` - (Optional) Inspect the request body as JSON. See [JSON Body](#json-body) for details.
 * `method` - (Optional) Inspect the HTTP method. The method indicates the type of operation that the request is asking the origin to perform.
 * `query_string` - (Optional) Inspect the query string. This is the part of a URL that appears after a `?` character, if any.
@@ -600,6 +601,19 @@ The `ip_set_forwarded_ip_config` block supports the following arguments:
 * `fallback_behavior` - (Required) - Match status to assign to the web request if the request doesn't have a valid IP address in the specified position. Valid values include: `MATCH` or `NO_MATCH`.
 * `header_name` - (Required) - Name of the HTTP header to use for the IP address.
 * `position` - (Required) - Position in the header to search for the IP address. Valid values include: `FIRST`, `LAST`, or `ANY`. If `ANY` is specified and the header contains more than 10 IP addresses, AWS WAFv2 inspects the last 10.
+
+### Headers
+
+Inspect the request headers.
+
+The `headers` block supports the following arguments:
+
+* `match_pattern` - (Required) The filter to use to identify the subset of headers to inspect in a web request. The `match_pattern` block supports only one of the following arguments:
+    * `all` - An empty configuration block that is used for inspecting all headers.
+    * `included_headers` - An array of strings that will be used for inspecting headers that have a key that matches one of the provided values.
+    * `excluded_headers` - An array of strings that will be used for inspecting headers that do not have a key that matches one of the provided values.
+* `match_scope` - (Required) The parts of the headers to inspect with the rule inspection criteria. If you specify `All`, AWS WAF inspects both keys and values. Valid values include the following: `ALL`, `Key`, `Value`.
+* `oversize_handling` - (Required) Oversize handling tells AWS WAF what to do with a web request when the request component that the rule inspects is over the limits. Valid values include the following: `CONTINUE`, `MATCH`, `NO_MATCH`. See the AWS [documentation](https://docs.aws.amazon.com/waf/latest/developerguide/waf-rule-statement-oversize-handling.html) for more information.
 
 ### JSON Body
 
