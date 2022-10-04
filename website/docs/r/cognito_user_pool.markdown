@@ -232,7 +232,6 @@ The following arguments are required in the `software_token_mfa_configuration` c
 * `email_subject_by_link` - (Optional) Subject line for the email message template for sending a confirmation link to the user.
 * `sms_message` - (Optional) SMS message template. Must contain the `{####}` placeholder. Conflicts with `sms_verification_message` argument.
   
-
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:

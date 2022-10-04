@@ -14,7 +14,6 @@ Creates a WAFv2 Web ACL resource.
 
 This resource is based on `aws_wafv2_rule_group`, check the documentation of the `aws_wafv2_rule_group` resource to see examples of the various available statements.
 
-
 ### Managed Rule
 
 ```terraform
@@ -657,7 +656,6 @@ The `text_transformation` block supports the following arguments:
 
 * `priority` - (Required) Relative processing order for multiple transformations that are defined for a rule statement. AWS WAF processes all transformations, from lowest priority to highest, before inspecting the transformed content.
 * `type` - (Required) Transformation to apply, please refer to the Text Transformation [documentation](https://docs.aws.amazon.com/waf/latest/APIReference/API_TextTransformation.html) for more details.
-
 
 ### Visibility Configuration
 

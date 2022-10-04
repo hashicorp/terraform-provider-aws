@@ -14,7 +14,6 @@ Provides a resource to manage AWS Device Farm Network Profiles.
 
 ## Example Usage
 
-
 ```terraform
 resource "aws_devicefarm_project" "example" {
   name = "example"

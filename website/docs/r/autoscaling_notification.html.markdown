@@ -69,6 +69,5 @@ In addition to all arguments above, the following attributes are exported:
 * `notifications`
 * `topic_arn`
 
-
 [1]: https://docs.aws.amazon.com/AutoScaling/latest/APIReference/API_NotificationConfiguration.html
 [2]: https://docs.aws.amazon.com/AutoScaling/latest/APIReference/API_DescribeNotificationConfigurations.html
