@@ -1,23 +1,22 @@
 package mwaa_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/mwaa"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfmwaa "github.com/hashicorp/terraform-provider-aws/internal/service/mwaa"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccMWAAEnvironment_basic(t *testing.T) {
-	var environment mwaa.GetEnvironmentOutput
-
+	var environment mwaa.Environment
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_mwaa_environment.test"
 
@@ -79,8 +78,7 @@ func TestAccMWAAEnvironment_basic(t *testing.T) {
 }
 
 func TestAccMWAAEnvironment_disappears(t *testing.T) {
-	var environment mwaa.GetEnvironmentOutput
-
+	var environment mwaa.Environment
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_mwaa_environment.test"
 
@@ -103,8 +101,7 @@ func TestAccMWAAEnvironment_disappears(t *testing.T) {
 }
 
 func TestAccMWAAEnvironment_airflowOptions(t *testing.T) {
-	var environment mwaa.GetEnvironmentOutput
-
+	var environment mwaa.Environment
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_mwaa_environment.test"
 
@@ -149,8 +146,7 @@ func TestAccMWAAEnvironment_airflowOptions(t *testing.T) {
 }
 
 func TestAccMWAAEnvironment_log(t *testing.T) {
-	var environment mwaa.GetEnvironmentOutput
-
+	var environment mwaa.Environment
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_mwaa_environment.test"
 
@@ -234,8 +230,7 @@ func TestAccMWAAEnvironment_log(t *testing.T) {
 }
 
 func TestAccMWAAEnvironment_full(t *testing.T) {
-	var environment mwaa.GetEnvironmentOutput
-
+	var environment mwaa.Environment
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_mwaa_environment.test"
 
@@ -309,8 +304,7 @@ func TestAccMWAAEnvironment_full(t *testing.T) {
 }
 
 func TestAccMWAAEnvironment_pluginsS3ObjectVersion(t *testing.T) {
-	var environment mwaa.GetEnvironmentOutput
-
+	var environment mwaa.Environment
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_mwaa_environment.test"
 	s3ObjectResourceName := "aws_s3_object.plugins"
@@ -349,11 +343,11 @@ func TestAccMWAAEnvironment_pluginsS3ObjectVersion(t *testing.T) {
 	})
 }
 
-func testAccCheckEnvironmentExists(resourceName string, environment *mwaa.GetEnvironmentOutput) resource.TestCheckFunc {
+func testAccCheckEnvironmentExists(n string, v *mwaa.Environment) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", resourceName)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		if rs.Primary.ID == "" {
@@ -361,15 +355,14 @@ func testAccCheckEnvironmentExists(resourceName string, environment *mwaa.GetEnv
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).MWAAConn
-		resp, err := conn.GetEnvironment(&mwaa.GetEnvironmentInput{
-			Name: aws.String(rs.Primary.ID),
-		})
+
+		output, err := tfmwaa.FindEnvironmentByName(context.Background(), conn, rs.Primary.ID)
 
 		if err != nil {
-			return fmt.Errorf("Error getting MWAA Environment: %s", err.Error())
+			return err
 		}
 
-		*environment = *resp
+		*v = *output
 
 		return nil
 	}
@@ -383,18 +376,17 @@ func testAccCheckEnvironmentDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := conn.GetEnvironment(&mwaa.GetEnvironmentInput{
-			Name: aws.String(rs.Primary.ID),
-		})
+		_, err := tfmwaa.FindEnvironmentByName(context.Background(), conn, rs.Primary.ID)
+
+		if tfresource.NotFound(err) {
+			continue
+		}
 
 		if err != nil {
-			if tfawserr.ErrCodeEquals(err, mwaa.ErrCodeResourceNotFoundException) {
-				continue
-			}
 			return err
 		}
 
-		return fmt.Errorf("Expected MWAA Environment to be destroyed, %s found", rs.Primary.ID)
+		return fmt.Errorf("MWAA Environment %s still exists", rs.Primary.ID)
 	}
 
 	return nil

@@ -29,8 +29,15 @@ func ResourceEnvironment() *schema.Resource {
 		ReadWithoutTimeout:   resourceEnvironmentRead,
 		UpdateWithoutTimeout: resourceEnvironmentUpdate,
 		DeleteWithoutTimeout: resourceEnvironmentDelete,
+
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
+		},
+
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(120 * time.Minute),
+			Update: schema.DefaultTimeout(90 * time.Minute),
+			Delete: schema.DefaultTimeout(90 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -351,7 +358,7 @@ func resourceEnvironmentCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	d.SetId(aws.StringValue(input.Name))
 
-	if _, err := waitEnvironmentCreated(conn, d.Id()); err != nil {
+	if _, err := waitEnvironmentCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return diag.Errorf("error waiting for MWAA Environment (%s) creation: %v", d.Id(), err)
 	}
 
@@ -365,20 +372,16 @@ func resourceEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	log.Printf("[INFO] Reading MWAA Environment: %s", d.Id())
 
-	environment, err := findEnvironmentByName(conn, d.Id())
+	environment, err := FindEnvironmentByName(ctx, conn, d.Id())
 
-	if err != nil {
-		if tfawserr.ErrCodeEquals(err, mwaa.ErrCodeResourceNotFoundException) && !d.IsNewResource() {
-			log.Printf("[WARN] MWAA Environment %q not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
-
-		return diag.Errorf("error reading MWAA Environment (%s): %v", d.Id(), err)
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] MWAA Environment %s not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
 	}
 
-	if environment == nil {
-		return diag.Errorf("error reading MWAA Environment (%s): empty response", d.Id())
+	if err != nil {
+		return diag.Errorf("reading MWAA Environment (%s): %s", d.Id(), err)
 	}
 
 	d.Set("airflow_configuration_options", aws.StringValueMap(environment.AirflowConfigurationOptions))
@@ -429,12 +432,11 @@ func resourceEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceEnvironmentUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).MWAAConn
-
-	input := mwaa.UpdateEnvironmentInput{
-		Name: aws.String(d.Get("name").(string)),
-	}
-
 	if d.HasChangesExcept("tags", "tags_all") {
+		input := mwaa.UpdateEnvironmentInput{
+			Name: aws.String(d.Get("name").(string)),
+		}
+
 		if d.HasChange("airflow_configuration_options") {
 			options, ok := d.GetOk("airflow_configuration_options")
 			if !ok {
@@ -515,7 +517,7 @@ func resourceEnvironmentUpdate(ctx context.Context, d *schema.ResourceData, meta
 			return diag.Errorf("error updating MWAA Environment (%s): %v", d.Id(), err)
 		}
 
-		if _, err := waitEnvironmentUpdated(conn, d.Id()); err != nil {
+		if _, err := waitEnvironmentUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return diag.Errorf("error waiting for MWAA Environment (%s) update: %v", d.Id(), err)
 		}
 	}
@@ -523,7 +525,7 @@ func resourceEnvironmentUpdate(ctx context.Context, d *schema.ResourceData, meta
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTagsWithContext(ctx, conn, d.Get("arn").(string), o, n); err != nil {
 			return diag.Errorf("error updating MWAA Environment (%s) tags: %s", d.Get("arn").(string), err)
 		}
 	}
@@ -546,7 +548,7 @@ func resourceEnvironmentDelete(ctx context.Context, d *schema.ResourceData, meta
 		return diag.Errorf("error deleting MWAA Environment (%s): %v", d.Id(), err)
 	}
 
-	_, err = waitEnvironmentDeleted(conn, d.Id())
+	_, err = waitEnvironmentDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete))
 
 	if err != nil {
 		return diag.Errorf("error waiting for MWAA Environment (%s) deletion: %v", d.Id(), err)
@@ -575,6 +577,98 @@ func environmentModuleLoggingConfigurationSchema() *schema.Resource {
 			},
 		},
 	}
+}
+
+func FindEnvironmentByName(ctx context.Context, conn *mwaa.MWAA, name string) (*mwaa.Environment, error) {
+	input := &mwaa.GetEnvironmentInput{
+		Name: aws.String(name),
+	}
+
+	output, err := conn.GetEnvironmentWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, mwaa.ErrCodeResourceNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.Environment == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.Environment, nil
+}
+
+func statusEnvironment(ctx context.Context, conn *mwaa.MWAA, name string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		environment, err := FindEnvironmentByName(ctx, conn, name)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return environment, aws.StringValue(environment.Status), nil
+	}
+}
+
+func waitEnvironmentCreated(ctx context.Context, conn *mwaa.MWAA, name string, timeout time.Duration) (*mwaa.Environment, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{mwaa.EnvironmentStatusCreating},
+		Target:  []string{mwaa.EnvironmentStatusAvailable},
+		Refresh: statusEnvironment(ctx, conn, name),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if v, ok := outputRaw.(*mwaa.Environment); ok {
+		return v, err
+	}
+
+	return nil, err
+}
+
+func waitEnvironmentUpdated(ctx context.Context, conn *mwaa.MWAA, name string, timeout time.Duration) (*mwaa.Environment, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{mwaa.EnvironmentStatusUpdating},
+		Target:  []string{mwaa.EnvironmentStatusAvailable},
+		Refresh: statusEnvironment(ctx, conn, name),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if v, ok := outputRaw.(*mwaa.Environment); ok {
+		return v, err
+	}
+
+	return nil, err
+}
+
+func waitEnvironmentDeleted(ctx context.Context, conn *mwaa.MWAA, name string, timeout time.Duration) (*mwaa.Environment, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{mwaa.EnvironmentStatusDeleting},
+		Target:  []string{},
+		Refresh: statusEnvironment(ctx, conn, name),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if v, ok := outputRaw.(*mwaa.Environment); ok {
+		return v, err
+	}
+
+	return nil, err
 }
 
 func expandEnvironmentLoggingConfiguration(l []interface{}) *mwaa.LoggingConfigurationInput {
