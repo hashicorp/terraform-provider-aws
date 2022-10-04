@@ -66,6 +66,7 @@ func rootStatementSchema(level int) *schema.Schema {
 				"label_match_statement":                 labelMatchStatementSchema(),
 				"not_statement":                         statementSchema(level - 1),
 				"or_statement":                          statementSchema(level - 1),
+				"regex_match_statement":                 regexMatchStatementSchema(),
 				"regex_pattern_set_reference_statement": regexPatternSetReferenceStatementSchema(),
 				"size_constraint_statement":             sizeConstraintSchema(),
 				"sqli_match_statement":                  sqliMatchStatementSchema(),
@@ -95,6 +96,7 @@ func statementSchema(level int) *schema.Schema {
 								"label_match_statement":                 labelMatchStatementSchema(),
 								"not_statement":                         statementSchema(level - 1),
 								"or_statement":                          statementSchema(level - 1),
+								"regex_match_statement":                 regexMatchStatementSchema(),
 								"regex_pattern_set_reference_statement": regexPatternSetReferenceStatementSchema(),
 								"size_constraint_statement":             sizeConstraintSchema(),
 								"sqli_match_statement":                  sqliMatchStatementSchema(),
@@ -122,6 +124,7 @@ func statementSchema(level int) *schema.Schema {
 							"geo_match_statement":                   geoMatchStatementSchema(),
 							"ip_set_reference_statement":            ipSetReferenceStatementSchema(),
 							"label_match_statement":                 labelMatchStatementSchema(),
+							"regex_match_statement":                 regexMatchStatementSchema(),
 							"regex_pattern_set_reference_statement": regexPatternSetReferenceStatementSchema(),
 							"size_constraint_statement":             sizeConstraintSchema(),
 							"sqli_match_statement":                  sqliMatchStatementSchema(),
@@ -241,6 +244,28 @@ func labelMatchStatementSchema() *schema.Schema {
 					Required:     true,
 					ValidateFunc: validation.StringInSlice(wafv2.LabelMatchScope_Values(), false),
 				},
+			},
+		},
+	}
+}
+
+func regexMatchStatementSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"regex_string": {
+					Type:     schema.TypeString,
+					Required: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 512),
+						validation.StringIsValidRegExp,
+					),
+				},
+				"field_to_match":      fieldToMatchSchema(),
+				"text_transformation": textTransformationSchema(),
 			},
 		},
 	}
@@ -452,6 +477,7 @@ func textTransformationSchema() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeSet,
 		Required: true,
+		MinItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"priority": {
@@ -777,6 +803,7 @@ func webACLRootStatementSchema(level int) *schema.Schema {
 				"not_statement":                         statementSchema(level),
 				"or_statement":                          statementSchema(level),
 				"rate_based_statement":                  rateBasedStatementSchema(level),
+				"regex_match_statement":                 regexMatchStatementSchema(),
 				"regex_pattern_set_reference_statement": regexPatternSetReferenceStatementSchema(),
 				"rule_group_reference_statement":        ruleGroupReferenceStatementSchema(),
 				"size_constraint_statement":             sizeConstraintSchema(),
@@ -871,6 +898,7 @@ func scopeDownStatementSchema(level int) *schema.Schema {
 				"ip_set_reference_statement":            ipSetReferenceStatementSchema(),
 				"not_statement":                         statementSchema(level),
 				"or_statement":                          statementSchema(level),
+				"regex_match_statement":                 regexMatchStatementSchema(),
 				"regex_pattern_set_reference_statement": regexPatternSetReferenceStatementSchema(),
 				"size_constraint_statement":             sizeConstraintSchema(),
 				"sqli_match_statement":                  sqliMatchStatementSchema(),
