@@ -41,121 +41,52 @@ func ResourceTarget() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"event_bus_name": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validBusNameOrARN,
-				Default:      DefaultEventBusName,
-			},
-
-			"rule": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validateRuleName,
-			},
-
-			"target_id": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: validateTargetID,
-			},
-
 			"arn": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-
-			"input": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ValidateFunc: validation.All(
-					validation.StringIsJSON,
-					validation.StringLenBetween(0, 8192),
-				),
-				ConflictsWith: []string{"input_path", "input_transformer"},
-				// We could be normalizing the JSON here,
-				// but for built-in targets input may not be JSON
-			},
-
-			"input_path": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ValidateFunc:  validation.StringLenBetween(0, 256),
-				ConflictsWith: []string{"input", "input_transformer"},
-			},
-
-			"role_arn": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-
-			"run_command_targets": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 5,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"key": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringLenBetween(1, 128),
-						},
-						"values": {
-							Type:     schema.TypeList,
-							Required: true,
-							MaxItems: 50,
-							Elem: &schema.Schema{
-								Type:         schema.TypeString,
-								ValidateFunc: validation.StringLenBetween(1, 256),
-							},
-						},
-					},
-				},
-			},
-
-			"http_target": {
+			"batch_target": {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"header_parameters": {
-							Type:     schema.TypeMap,
-							Optional: true,
-							ValidateDiagFunc: allDiagFunc(
-								validation.MapKeyLenBetween(0, 512),
-								validation.MapKeyMatch(regexp.MustCompile(`^[!#$%&'*+-.^_|~0-9a-zA-Z]+$`), ""),
-								validation.MapValueLenBetween(0, 512),
-								validation.MapValueMatch(regexp.MustCompile(`^[ \t]*[\x20-\x7E]+([ \t]+[\x20-\x7E]+)*[ \t]*$`), ""),
-							),
-							Elem: &schema.Schema{Type: schema.TypeString},
+						"array_size": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							ValidateFunc: validation.IntBetween(2, 10000),
 						},
-						"query_string_parameters": {
-							Type:     schema.TypeMap,
-							Optional: true,
-							ValidateDiagFunc: allDiagFunc(
-								validation.MapKeyLenBetween(0, 512),
-								validation.MapKeyMatch(regexp.MustCompile(`[^\x00-\x1F\x7F]+`), ""),
-								validation.MapValueLenBetween(0, 512),
-								validation.MapValueMatch(regexp.MustCompile(`[^\x00-\x09\x0B\x0C\x0E-\x1F\x7F]+`), ""),
-							),
-							Elem: &schema.Schema{Type: schema.TypeString},
+						"job_attempts": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							ValidateFunc: validation.IntBetween(1, 10),
 						},
-						"path_parameter_values": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
+						"job_definition": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"job_name": {
+							Type:     schema.TypeString,
+							Required: true,
 						},
 					},
 				},
 			},
-
+			"dead_letter_config": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"arn": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: verify.ValidARN,
+						},
+					},
+				},
+			},
 			"ecs_target": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -210,6 +141,11 @@ func ResourceTarget() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
+									"assign_public_ip": {
+										Type:     schema.TypeBool,
+										Optional: true,
+										Default:  false,
+									},
 									"security_groups": {
 										Type:     schema.TypeSet,
 										Optional: true,
@@ -219,11 +155,6 @@ func ResourceTarget() *schema.Resource {
 										Type:     schema.TypeSet,
 										Required: true,
 										Elem:     &schema.Schema{Type: schema.TypeString},
-									},
-									"assign_public_ip": {
-										Type:     schema.TypeBool,
-										Optional: true,
-										Default:  false,
 									},
 								},
 							},
@@ -272,35 +203,90 @@ func ResourceTarget() *schema.Resource {
 					},
 				},
 			},
-
-			"batch_target": {
+			"event_bus_name": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validBusNameOrARN,
+				Default:      DefaultEventBusName,
+			},
+			"http_target": {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"job_definition": {
-							Type:     schema.TypeString,
-							Required: true,
+						"header_parameters": {
+							Type:     schema.TypeMap,
+							Optional: true,
+							ValidateDiagFunc: allDiagFunc(
+								validation.MapKeyLenBetween(0, 512),
+								validation.MapKeyMatch(regexp.MustCompile(`^[!#$%&'*+-.^_|~0-9a-zA-Z]+$`), ""),
+								validation.MapValueLenBetween(0, 512),
+								validation.MapValueMatch(regexp.MustCompile(`^[ \t]*[\x20-\x7E]+([ \t]+[\x20-\x7E]+)*[ \t]*$`), ""),
+							),
+							Elem: &schema.Schema{Type: schema.TypeString},
 						},
-						"job_name": {
-							Type:     schema.TypeString,
-							Required: true,
+						"path_parameter_values": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
-						"array_size": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							ValidateFunc: validation.IntBetween(2, 10000),
-						},
-						"job_attempts": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							ValidateFunc: validation.IntBetween(1, 10),
+						"query_string_parameters": {
+							Type:     schema.TypeMap,
+							Optional: true,
+							ValidateDiagFunc: allDiagFunc(
+								validation.MapKeyLenBetween(0, 512),
+								validation.MapKeyMatch(regexp.MustCompile(`[^\x00-\x1F\x7F]+`), ""),
+								validation.MapValueLenBetween(0, 512),
+								validation.MapValueMatch(regexp.MustCompile(`[^\x00-\x09\x0B\x0C\x0E-\x1F\x7F]+`), ""),
+							),
+							Elem: &schema.Schema{Type: schema.TypeString},
 						},
 					},
 				},
 			},
-
+			"input": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ValidateFunc: validation.All(
+					validation.StringIsJSON,
+					validation.StringLenBetween(0, 8192),
+				),
+				ConflictsWith: []string{"input_path", "input_transformer"},
+				// We could be normalizing the JSON here,
+				// but for built-in targets input may not be JSON
+			},
+			"input_path": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ValidateFunc:  validation.StringLenBetween(0, 256),
+				ConflictsWith: []string{"input", "input_transformer"},
+			},
+			"input_transformer": {
+				Type:          schema.TypeList,
+				Optional:      true,
+				MaxItems:      1,
+				ConflictsWith: []string{"input", "input_path"},
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"input_paths": {
+							Type:     schema.TypeMap,
+							Optional: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+							ValidateFunc: validation.All(
+								mapMaxItems(targetInputTransformerMaxInputPaths),
+								mapKeysDoNotMatch(regexp.MustCompile(`^AWS.*$`), "input_path must not start with \"AWS\""),
+							),
+						},
+						"input_template": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringLenBetween(1, 8192),
+						},
+					},
+				},
+			},
 			"kinesis_target": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -315,7 +301,6 @@ func ResourceTarget() *schema.Resource {
 					},
 				},
 			},
-
 			"redshift_target": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -354,46 +339,6 @@ func ResourceTarget() *schema.Resource {
 					},
 				},
 			},
-
-			"sqs_target": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"message_group_id": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-					},
-				},
-			},
-
-			"input_transformer": {
-				Type:          schema.TypeList,
-				Optional:      true,
-				MaxItems:      1,
-				ConflictsWith: []string{"input", "input_path"},
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"input_paths": {
-							Type:     schema.TypeMap,
-							Optional: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-							ValidateFunc: validation.All(
-								mapMaxItems(targetInputTransformerMaxInputPaths),
-								mapKeysDoNotMatch(regexp.MustCompile(`^AWS.*$`), "input_path must not start with \"AWS\""),
-							),
-						},
-						"input_template": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringLenBetween(1, 8192),
-						},
-					},
-				},
-			},
-
 			"retry_policy": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -413,20 +358,59 @@ func ResourceTarget() *schema.Resource {
 					},
 				},
 			},
-
-			"dead_letter_config": {
+			"role_arn": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: verify.ValidARN,
+			},
+			"rule": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validateRuleName,
+			},
+			"run_command_targets": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 5,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"key": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringLenBetween(1, 128),
+						},
+						"values": {
+							Type:     schema.TypeList,
+							Required: true,
+							MaxItems: 50,
+							Elem: &schema.Schema{
+								Type:         schema.TypeString,
+								ValidateFunc: validation.StringLenBetween(1, 256),
+							},
+						},
+					},
+				},
+			},
+			"sqs_target": {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"arn": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: verify.ValidARN,
+						"message_group_id": {
+							Type:     schema.TypeString,
+							Optional: true,
 						},
 					},
 				},
+			},
+			"target_id": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ForceNew:     true,
+				ValidateFunc: validateTargetID,
 			},
 		},
 	}
