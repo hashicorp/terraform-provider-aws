@@ -531,6 +531,7 @@ func textTransformationSchema() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeSet,
 		Required: true,
+		MinItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"priority": {
