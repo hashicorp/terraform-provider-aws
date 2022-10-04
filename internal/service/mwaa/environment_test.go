@@ -392,17 +392,8 @@ func testAccCheckEnvironmentDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccEnvironmentBase(rName string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+func testAccEnvironmentConfig_base(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 data "aws_partition" "current" {}
 
 resource "aws_vpc" "test" {
@@ -417,6 +408,10 @@ resource "aws_vpc" "test" {
 
 resource "aws_internet_gateway" "test" {
   vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_route_table" "public" {
@@ -425,6 +420,10 @@ resource "aws_route_table" "public" {
   route {
     cidr_block = "0.0.0.0/0"
     gateway_id = aws_internet_gateway.test.id
+  }
+
+  tags = {
+    Name = %[1]q
   }
 }
 
@@ -441,7 +440,7 @@ resource "aws_subnet" "private" {
   vpc_id            = aws_vpc.test.id
 
   tags = {
-    Name = "%[1]s-private-${count.index}"
+    Name = %[1]q
   }
 }
 
@@ -449,6 +448,10 @@ resource "aws_eip" "private" {
   count = 2
 
   vpc = true
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_nat_gateway" "private" {
@@ -456,6 +459,10 @@ resource "aws_nat_gateway" "private" {
 
   allocation_id = aws_eip.private[count.index].id
   subnet_id     = aws_subnet.public[count.index].id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_route_table" "private" {
@@ -466,6 +473,10 @@ resource "aws_route_table" "private" {
   route {
     cidr_block     = "0.0.0.0/0"
     nat_gateway_id = aws_nat_gateway.private[count.index].id
+  }
+
+  tags = {
+    Name = %[1]q
   }
 }
 
@@ -484,12 +495,13 @@ resource "aws_subnet" "public" {
   vpc_id            = aws_vpc.test.id
 
   tags = {
-    Name = "%[1]s-public-${count.index}"
+    Name = %[1]q
   }
 }
 
 resource "aws_security_group" "test" {
   vpc_id = aws_vpc.test.id
+  name   = %[1]q
 
   egress {
     from_port   = 0
@@ -582,13 +594,11 @@ resource "aws_iam_role_policy" "test" {
 }
 POLICY
 }
-
-
-`, rName)
+`, rName))
 }
 
 func testAccEnvironmentConfig_basic(rName string) string {
-	return testAccEnvironmentBase(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccEnvironmentConfig_base(rName), fmt.Sprintf(`
 resource "aws_mwaa_environment" "test" {
   dag_s3_path        = aws_s3_object.dags.key
   execution_role_arn = aws_iam_role.test.arn
@@ -601,11 +611,11 @@ resource "aws_mwaa_environment" "test" {
 
   source_bucket_arn = aws_s3_bucket.test.arn
 }
-`, rName)
+`, rName))
 }
 
 func testAccEnvironmentConfig_airflowOptions(rName, retries, parallelism string) string {
-	return testAccEnvironmentBase(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccEnvironmentConfig_base(rName), fmt.Sprintf(`
 resource "aws_mwaa_environment" "test" {
   airflow_configuration_options = {
     "core.default_task_retries" = %[2]q
@@ -623,11 +633,11 @@ resource "aws_mwaa_environment" "test" {
 
   source_bucket_arn = aws_s3_bucket.test.arn
 }
-`, rName, retries, parallelism)
+`, rName, retries, parallelism))
 }
 
 func testAccEnvironmentConfig_logging(rName, logEnabled, logLevel string) string {
-	return testAccEnvironmentBase(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccEnvironmentConfig_base(rName), fmt.Sprintf(`
 resource "aws_mwaa_environment" "test" {
   dag_s3_path        = aws_s3_object.dags.key
   execution_role_arn = aws_iam_role.test.arn
@@ -668,11 +678,11 @@ resource "aws_mwaa_environment" "test" {
 
   source_bucket_arn = aws_s3_bucket.test.arn
 }
-`, rName, logEnabled, logLevel)
+`, rName, logEnabled, logLevel))
 }
 
 func testAccEnvironmentConfig_full(rName string) string {
-	return testAccEnvironmentBase(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccEnvironmentConfig_base(rName), fmt.Sprintf(`
 resource "aws_mwaa_environment" "test" {
   airflow_configuration_options = {
     "core.default_task_retries" = 1
@@ -779,11 +789,11 @@ resource "aws_s3_object" "requirements" {
   content = ""
 }
 
-`, rName)
+`, rName))
 }
 
 func testAccEnvironmentConfig_pluginsS3ObjectVersion(rName, content string) string {
-	return testAccEnvironmentBase(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccEnvironmentConfig_base(rName), fmt.Sprintf(`
 resource "aws_mwaa_environment" "test" {
   dag_s3_path        = aws_s3_object.dags.key
   execution_role_arn = aws_iam_role.test.arn
@@ -809,5 +819,5 @@ resource "aws_s3_object" "plugins" {
   key     = "plugins.zip"
   content = %q
 }
-`, rName, content)
+`, rName, content))
 }
