@@ -3,13 +3,17 @@ package s3control
 import (
 	"context"
 	"fmt"
+	"log"
 	"strings"
 
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3control"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -61,7 +65,20 @@ func resourceStorageLensConfigurationCreate(ctx context.Context, d *schema.Resou
 	configID := d.Get("config_id").(string)
 	id := StorageLensConfigurationCreateResourceID(accountID, configID)
 
-	input := &s3control.PutStorageLensConfigurationInput{}
+	input := &s3control.PutStorageLensConfigurationInput{
+		AccountId: aws.String(accountID),
+		ConfigId:  aws.String(configID),
+	}
+
+	if len(tags) > 0 {
+		input.Tags = StorageLensTags(tags.IgnoreAWS())
+	}
+
+	_, err := conn.PutStorageLensConfigurationWithContext(ctx, input)
+
+	if err != nil {
+		return diag.Errorf("creating S3 Storage Lens Configuration (%s): %s", id, err)
+	}
 
 	d.SetId(id)
 
@@ -70,11 +87,45 @@ func resourceStorageLensConfigurationCreate(ctx context.Context, d *schema.Resou
 
 func resourceStorageLensConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).S3ControlConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	accountID, configID, err := StorageLensConfigurationParseResourceID(d.Id())
 
 	if err != nil {
 		return diag.FromErr(err)
+	}
+
+	output, err := FindStorageLensConfigurationByAccountIDAndConfigID(ctx, conn, accountID, configID)
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] S3 Storage Lens Configuration (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+
+	if err != nil {
+		return diag.Errorf("reading S3 Storage Lens Configuration (%s): %s", d.Id(), err)
+	}
+
+	d.Set("account_id", accountID)
+	d.Set("config_id", configID)
+
+	tags, err := storageLensConfigurationListTags(ctx, conn, accountID, configID)
+
+	if err != nil {
+		return diag.Errorf("listing tags for S3 Storage Lens Configuration (%s): %s", d.Id(), err)
+	}
+
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return diag.Errorf("setting tags: %s", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return diag.Errorf("setting tags_all: %s", err)
 	}
 
 	return nil
@@ -89,6 +140,14 @@ func resourceStorageLensConfigurationUpdate(ctx context.Context, d *schema.Resou
 		return diag.FromErr(err)
 	}
 
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
+
+		if err := storageLensConfigurationUpdateTags(ctx, conn, accountID, configID, o, n); err != nil {
+			return diag.Errorf("updating S3 Storage Lens Configuration (%s) tags: %s", d.Id(), err)
+		}
+	}
+
 	return resourceStorageLensConfigurationRead(ctx, d, meta)
 }
 
@@ -99,6 +158,20 @@ func resourceStorageLensConfigurationDelete(ctx context.Context, d *schema.Resou
 
 	if err != nil {
 		return diag.FromErr(err)
+	}
+
+	log.Printf("[DEBUG] Deleting S3 Storage Lens Configuration: %s", d.Id())
+	_, err = conn.DeleteStorageLensConfigurationWithContext(ctx, &s3control.DeleteStorageLensConfigurationInput{
+		AccountId: aws.String(accountID),
+		ConfigId:  aws.String(configID),
+	})
+
+	if tfawserr.ErrCodeEquals(err, errCodeNoSuchConfiguration) {
+		return nil
+	}
+
+	if err != nil {
+		return diag.Errorf("deleting S3 Storage Lens Configuration (%s): %s", d.Id(), err)
 	}
 
 	return nil

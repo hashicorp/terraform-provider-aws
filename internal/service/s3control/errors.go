@@ -6,5 +6,6 @@ const (
 	errCodeNoSuchAccessPoint            = "NoSuchAccessPoint"
 	errCodeNoSuchAccessPointPolicy      = "NoSuchAccessPointPolicy"
 	errCodeNoSuchAsyncRequest           = "NoSuchAsyncRequest"
+	errCodeNoSuchConfiguration          = "NoSuchConfiguration"
 	errCodeNoSuchMultiRegionAccessPoint = "NoSuchMultiRegionAccessPoint"
 )
