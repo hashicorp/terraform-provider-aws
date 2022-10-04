@@ -9,7 +9,7 @@ require (
 	github.com/hashicorp/go-changelog v0.0.0-20201005170154-56335215ce3a
 	github.com/katbyte/terrafmt v0.5.2
 	github.com/pavius/impi v0.0.3
-	github.com/rhysd/actionlint v1.6.19
+	github.com/rhysd/actionlint v1.6.20
 	github.com/terraform-linters/tflint v0.39.3
 )
 
