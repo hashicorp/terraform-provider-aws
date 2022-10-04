@@ -2,14 +2,17 @@ package events
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"math"
 	"regexp"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/eventbridge"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/go-cty/cty"
+	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -438,15 +441,14 @@ func resourceTargetCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	input := buildPutTargetInputStruct(d)
 
 	log.Printf("[DEBUG] Creating EventBridge Target: %s", input)
-	out, err := conn.PutTargetsWithContext(ctx, input)
+	output, err := conn.PutTargetsWithContext(ctx, input)
+
+	if err == nil && output != nil {
+		err = putTargetsError(output.FailedEntries)
+	}
 
 	if err != nil {
 		return diag.Errorf("creating EventBridge Target (%s): %s", id, err)
-	}
-
-	// TODO
-	if len(out.FailedEntries) > 0 {
-		return diag.Errorf("Creating EventBridge Target failed: %s", out.FailedEntries)
 	}
 
 	d.SetId(id)
@@ -549,7 +551,11 @@ func resourceTargetUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	input := buildPutTargetInputStruct(d)
 
 	log.Printf("[DEBUG] Updating EventBridge Target: %s", input)
-	_, err := conn.PutTargetsWithContext(ctx, input)
+	output, err := conn.PutTargetsWithContext(ctx, input)
+
+	if err == nil && output != nil {
+		err = putTargetsError(output.FailedEntries)
+	}
 
 	if err != nil {
 		return diag.Errorf("updating EventBridge Target (%s): %s", d.Id(), err)
@@ -573,6 +579,10 @@ func resourceTargetDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	log.Printf("[DEBUG] Deleting EventBridge Target: %s", d.Id())
 	output, err := conn.RemoveTargetsWithContext(ctx, input)
 
+	if err == nil && output != nil {
+		err = removeTargetsError(output.FailedEntries)
+	}
+
 	if tfawserr.ErrCodeEquals(err, eventbridge.ErrCodeResourceNotFoundException) {
 		return nil
 	}
@@ -581,13 +591,47 @@ func resourceTargetDelete(ctx context.Context, d *schema.ResourceData, meta inte
 		return diag.Errorf("deleting EventBridge Target (%s): %s", d.Id(), err)
 	}
 
-	// TODO
-	if output != nil && len(output.FailedEntries) > 0 && output.FailedEntries[0] != nil {
-		failedEntry := output.FailedEntries[0]
-		return diag.Errorf("error deleting EventBridge Target (%s): failure entry: %s: %s", d.Id(), aws.StringValue(failedEntry.ErrorCode), aws.StringValue(failedEntry.ErrorMessage))
+	return nil
+}
+
+func putTargetError(apiObject *eventbridge.PutTargetsResultEntry) error {
+	if apiObject == nil {
+		return nil
 	}
 
-	return nil
+	return awserr.New(aws.StringValue(apiObject.ErrorCode), aws.StringValue(apiObject.ErrorMessage), nil)
+}
+
+func putTargetsError(apiObjects []*eventbridge.PutTargetsResultEntry) error {
+	var errors *multierror.Error
+
+	for _, apiObject := range apiObjects {
+		if err := putTargetError(apiObject); err != nil {
+			errors = multierror.Append(errors, fmt.Errorf("%s: %w", aws.StringValue(apiObject.TargetId), err))
+		}
+	}
+
+	return errors.ErrorOrNil()
+}
+
+func removeTargetError(apiObject *eventbridge.RemoveTargetsResultEntry) error {
+	if apiObject == nil {
+		return nil
+	}
+
+	return awserr.New(aws.StringValue(apiObject.ErrorCode), aws.StringValue(apiObject.ErrorMessage), nil)
+}
+
+func removeTargetsError(apiObjects []*eventbridge.RemoveTargetsResultEntry) error {
+	var errors *multierror.Error
+
+	for _, apiObject := range apiObjects {
+		if err := removeTargetError(apiObject); err != nil {
+			errors = multierror.Append(errors, fmt.Errorf("%s: %w", aws.StringValue(apiObject.TargetId), err))
+		}
+	}
+
+	return errors.ErrorOrNil()
 }
 
 func buildPutTargetInputStruct(d *schema.ResourceData) *eventbridge.PutTargetsInput {
