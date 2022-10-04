@@ -21,15 +21,10 @@ import (
 )
 
 func TestAccEventsTarget_basic(t *testing.T) {
+	var v eventbridge.Target
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_event_target.test"
 	snsTopicResourceName := "aws_sns_topic.test"
-
-	var v1, v2 eventbridge.Target
-	ruleName := sdkacctest.RandomWithPrefix("tf-acc-test-rule")
-	snsTopicName1 := sdkacctest.RandomWithPrefix("tf-acc-test-sns")
-	snsTopicName2 := sdkacctest.RandomWithPrefix("tf-acc-test-sns")
-	targetID1 := sdkacctest.RandomWithPrefix("tf-acc-test-target")
-	targetID2 := sdkacctest.RandomWithPrefix("tf-acc-test-target")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
@@ -38,12 +33,12 @@ func TestAccEventsTarget_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckTargetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTargetConfig_basic(ruleName, snsTopicName1, targetID1),
+				Config: testAccTargetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTargetExists(resourceName, &v1),
-					resource.TestCheckResourceAttr(resourceName, "rule", ruleName),
+					testAccCheckTargetExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "rule", rName),
 					resource.TestCheckResourceAttr(resourceName, "event_bus_name", "default"),
-					resource.TestCheckResourceAttr(resourceName, "target_id", targetID1),
+					resource.TestCheckResourceAttr(resourceName, "target_id", rName),
 					resource.TestCheckResourceAttrPair(resourceName, "arn", snsTopicResourceName, "arn"),
 
 					resource.TestCheckResourceAttr(resourceName, "input", ""),
@@ -71,18 +66,31 @@ func TestAccEventsTarget_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccTargetConfig_basic(ruleName, snsTopicName2, targetID2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTargetExists(resourceName, &v2),
-					resource.TestCheckResourceAttr(resourceName, "rule", ruleName),
-					resource.TestCheckResourceAttr(resourceName, "event_bus_name", "default"),
-					resource.TestCheckResourceAttr(resourceName, "target_id", targetID2),
-					resource.TestCheckResourceAttrPair(resourceName, "arn", snsTopicResourceName, "arn"),
-				),
-			},
-			{
-				Config:   testAccTargetConfig_defaultBusName(ruleName, snsTopicName2, targetID2),
+				Config:   testAccTargetConfig_defaultBusName(rName),
 				PlanOnly: true,
+			},
+		},
+	})
+}
+
+func TestAccEventsTarget_disappears(t *testing.T) {
+	var v eventbridge.Target
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_cloudwatch_event_target.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, eventbridge.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTargetDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTargetConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTargetExists(resourceName, &v),
+					acctest.CheckResourceDisappears(acctest.Provider, tfevents.ResourceTarget(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -271,33 +279,6 @@ func TestAccEventsTarget_full(t *testing.T) {
 				ImportState:       true,
 				ImportStateIdFunc: testAccTargetImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
-func TestAccEventsTarget_disappears(t *testing.T) {
-	var v eventbridge.Target
-
-	ruleName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	snsTopicName := sdkacctest.RandomWithPrefix("tf-acc-test-sns")
-	targetID := sdkacctest.RandomWithPrefix("tf-acc-test-target")
-
-	resourceName := "aws_cloudwatch_event_target.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, eventbridge.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTargetDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccTargetConfig_basic(ruleName, snsTopicName, targetID),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTargetExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfevents.ResourceTarget(), resourceName),
-				),
-				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -984,29 +965,29 @@ func testAccTargetNoBusNameImportStateIdFunc(resourceName string) resource.Impor
 	}
 }
 
-func testAccTargetConfig_basic(ruleName, snsTopicName, targetID string) string {
+func testAccTargetConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_event_rule" "test" {
-  name                = "%s"
+  name                = %[1]q
   schedule_expression = "rate(1 hour)"
 }
 
 resource "aws_cloudwatch_event_target" "test" {
   rule      = aws_cloudwatch_event_rule.test.name
-  target_id = "%s"
+  target_id = %[1]q
   arn       = aws_sns_topic.test.arn
 }
 
 resource "aws_sns_topic" "test" {
-  name = "%s"
+  name = %[1]q
 }
-`, ruleName, targetID, snsTopicName)
+`, rName)
 }
 
-func testAccTargetConfig_defaultBusName(ruleName, snsTopicName, targetID string) string {
+func testAccTargetConfig_defaultBusName(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_event_rule" "test" {
-  name                = "%s"
+  name                = %[1]q
   event_bus_name      = "default"
   schedule_expression = "rate(1 hour)"
 }
@@ -1014,14 +995,14 @@ resource "aws_cloudwatch_event_rule" "test" {
 resource "aws_cloudwatch_event_target" "test" {
   rule           = aws_cloudwatch_event_rule.test.name
   event_bus_name = aws_cloudwatch_event_rule.test.event_bus_name
-  target_id      = "%s"
+  target_id      = %[1]q
   arn            = aws_sns_topic.test.arn
 }
 
 resource "aws_sns_topic" "test" {
-  name = "%s"
+  name = %[1]q
 }
-`, ruleName, targetID, snsTopicName)
+`, rName)
 }
 
 func testAccTargetConfig_busName(ruleName, eventBusName, snsTopicName, targetID string) string {
