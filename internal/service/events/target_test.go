@@ -424,10 +424,9 @@ func TestAccEventsTarget_ecs(t *testing.T) {
 }
 
 func TestAccEventsTarget_redshift(t *testing.T) {
-	resourceName := "aws_cloudwatch_event_target.test"
-	iamRoleResourceName := "aws_iam_role.test"
 	var v eventbridge.Target
-	rName := sdkacctest.RandomWithPrefix("tf_ecs_target")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_cloudwatch_event_target.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
@@ -439,7 +438,6 @@ func TestAccEventsTarget_redshift(t *testing.T) {
 				Config: testAccTargetConfig_redshift(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTargetExists(resourceName, &v),
-					resource.TestCheckResourceAttrPair(resourceName, "role_arn", iamRoleResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "redshift_target.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "redshift_target.0.database", "redshiftdb"),
 					resource.TestCheckResourceAttr(resourceName, "redshift_target.0.sql", "SELECT * FROM table"),
@@ -1560,9 +1558,45 @@ resource "aws_cloudwatch_event_target" "test" {
 }
 
 func testAccTargetConfig_redshift(rName string) string {
-	return acctest.ConfigCompose(testAccTargetECSBaseConfig(rName),
-		acctest.ConfigAvailableAZsNoOptIn(),
-		fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Action": "sts:AssumeRole",
+    "Principal": {
+      "Service": "events.${data.aws_partition.current.dns_suffix}"
+    },
+    "Effect": "Allow"
+  }]
+}
+EOF
+}
+
+resource "aws_redshift_subnet_group" "test" {
+  name       = %[1]q
+  subnet_ids = aws_subnet.test[*].id
+}
+
+resource "aws_internet_gateway" "test" {
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_cloudwatch_event_rule" "test" {
+  name = %[1]q
+
+  schedule_expression = "rate(5 minutes)"
+}
+
 resource "aws_cloudwatch_event_target" "test" {
   arn      = aws_redshift_cluster.test.arn
   rule     = aws_cloudwatch_event_rule.test.id
@@ -1574,18 +1608,24 @@ resource "aws_cloudwatch_event_target" "test" {
     statement_name = "NewStatement"
     db_user        = "someUser"
   }
+
+  target_id = %[1]q
 }
+
 resource "aws_redshift_cluster" "test" {
-  cluster_identifier                  = "tf-redshift-cluster-%d"
-  database_name                       = "mydb"
-  master_username                     = "foo_test"
+  cluster_identifier                  = %[1]q
+  cluster_subnet_group_name           = aws_redshift_subnet_group.test.name
+  database_name                       = "test"
+  master_username                     = "tfacctest"
   master_password                     = "Mustbe8characters"
   node_type                           = "dc2.large"
   automated_snapshot_retention_period = 0
   allow_version_upgrade               = false
   skip_final_snapshot                 = true
+
+  depends_on = [aws_internet_gateway.test]
 }
-`, 123))
+`, rName))
 }
 
 func testAccTargetConfig_ecsNoLaunchType(rName string) string {
