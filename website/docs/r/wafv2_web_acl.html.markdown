@@ -549,7 +549,7 @@ The `field_to_match` block supports the following arguments:
 An empty configuration block `{}` should be used when specifying `all_query_arguments`, `body`, `method`, or `query_string` attributes.
 
 * `all_query_arguments` - (Optional) Inspect all query arguments.
-* `body` - (Optional) Inspect the request body, which immediately follows the request headers. See [Body](#body) below for details.
+* `body` - (Optional) Inspect the request body, which immediately follows the request headers.
 * `cookies` - (Optional) Inspect the cookies in the web request. See [Cookies](#cookies) below for details.
 * `headers` - (Optional) Inspect the request headers. See [Headers](#headers) below for details.
 * `json_body` - (Optional) Inspect the request body as JSON. See [JSON Body](#json-body) for details.
