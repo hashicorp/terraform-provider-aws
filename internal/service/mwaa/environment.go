@@ -2,6 +2,7 @@ package mwaa
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"time"
 
@@ -615,6 +616,10 @@ func waitEnvironmentCreated(ctx context.Context, conn *mwaa.MWAA, name string, t
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if v, ok := outputRaw.(*mwaa.Environment); ok {
+		if v.LastUpdate != nil && v.LastUpdate.Error != nil {
+			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.StringValue(v.LastUpdate.Error.ErrorCode), aws.StringValue(v.LastUpdate.Error.ErrorMessage)))
+		}
+
 		return v, err
 	}
 
@@ -632,6 +637,10 @@ func waitEnvironmentUpdated(ctx context.Context, conn *mwaa.MWAA, name string, t
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if v, ok := outputRaw.(*mwaa.Environment); ok {
+		if v.LastUpdate != nil && v.LastUpdate.Error != nil {
+			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.StringValue(v.LastUpdate.Error.ErrorCode), aws.StringValue(v.LastUpdate.Error.ErrorMessage)))
+		}
+
 		return v, err
 	}
 
@@ -649,6 +658,10 @@ func waitEnvironmentDeleted(ctx context.Context, conn *mwaa.MWAA, name string, t
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if v, ok := outputRaw.(*mwaa.Environment); ok {
+		if v.LastUpdate != nil && v.LastUpdate.Error != nil {
+			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.StringValue(v.LastUpdate.Error.ErrorCode), aws.StringValue(v.LastUpdate.Error.ErrorMessage)))
+		}
+
 		return v, err
 	}
 
