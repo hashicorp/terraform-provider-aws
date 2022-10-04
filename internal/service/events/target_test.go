@@ -1,6 +1,7 @@
 package events_test
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"regexp"
@@ -16,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfevents "github.com/hashicorp/terraform-provider-aws/internal/service/events"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccEventsTarget_basic(t *testing.T) {
@@ -915,7 +917,7 @@ func TestAccEventsTarget_partnerEventBus(t *testing.T) {
 	})
 }
 
-func testAccCheckTargetExists(n string, rule *eventbridge.Target) resource.TestCheckFunc {
+func testAccCheckTargetExists(n string, v *eventbridge.Target) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -923,12 +925,14 @@ func testAccCheckTargetExists(n string, rule *eventbridge.Target) resource.TestC
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsConn
-		t, err := tfevents.FindTarget(conn, rs.Primary.Attributes["event_bus_name"], rs.Primary.Attributes["rule"], rs.Primary.Attributes["target_id"])
+
+		output, err := tfevents.FindTargetByThreePartKey(context.Background(), conn, rs.Primary.Attributes["event_bus_name"], rs.Primary.Attributes["rule"], rs.Primary.Attributes["target_id"])
+
 		if err != nil {
-			return fmt.Errorf("Event Target not found: %w", err)
+			return err
 		}
 
-		*rule = *t
+		*v = *output
 
 		return nil
 	}
@@ -942,11 +946,17 @@ func testAccCheckTargetDestroy(s *terraform.State) error {
 			continue
 		}
 
-		t, err := tfevents.FindTarget(conn, rs.Primary.Attributes["event_bus_name"], rs.Primary.Attributes["rule"], rs.Primary.Attributes["target_id"])
-		if err == nil {
-			return fmt.Errorf("EventBridge Target %q still exists: %s",
-				rs.Primary.ID, t)
+		_, err := tfevents.FindTargetByThreePartKey(context.Background(), conn, rs.Primary.Attributes["event_bus_name"], rs.Primary.Attributes["rule"], rs.Primary.Attributes["target_id"])
+
+		if tfresource.NotFound(err) {
+			continue
 		}
+
+		if err != nil {
+			return err
+		}
+
+		return fmt.Errorf("EventBridge Target %s still exists", rs.Primary.ID)
 	}
 
 	return nil

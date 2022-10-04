@@ -1,7 +1,7 @@
 package events
 
 import (
-	"fmt"
+	"context"
 	"log"
 	"math"
 	"regexp"
@@ -17,15 +17,16 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceTarget() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceTargetCreate,
-		Read:   resourceTargetRead,
-		Update: resourceTargetUpdate,
-		Delete: resourceTargetDelete,
+		CreateWithoutTimeout: resourceTargetCreate,
+		ReadWithoutTimeout:   resourceTargetRead,
+		UpdateWithoutTimeout: resourceTargetUpdate,
+		DeleteWithoutTimeout: resourceTargetDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: resourceTargetImport,
@@ -416,7 +417,7 @@ func ResourceTarget() *schema.Resource {
 	}
 }
 
-func resourceTargetCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceTargetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).EventsConn
 
 	rule := d.Get("rule").(string)
@@ -432,43 +433,43 @@ func resourceTargetCreate(d *schema.ResourceData, meta interface{}) error {
 	if v, ok := d.GetOk("event_bus_name"); ok {
 		busName = v.(string)
 	}
+	id := TargetCreateResourceID(busName, rule, targetID)
 
 	input := buildPutTargetInputStruct(d)
 
 	log.Printf("[DEBUG] Creating EventBridge Target: %s", input)
-	out, err := conn.PutTargets(input)
+	out, err := conn.PutTargetsWithContext(ctx, input)
+
 	if err != nil {
-		return fmt.Errorf("Creating EventBridge Target failed: %w", err)
+		return diag.Errorf("creating EventBridge Target (%s): %s", id, err)
 	}
 
+	// TODO
 	if len(out.FailedEntries) > 0 {
-		return fmt.Errorf("Creating EventBridge Target failed: %s", out.FailedEntries)
+		return diag.Errorf("Creating EventBridge Target failed: %s", out.FailedEntries)
 	}
 
-	id := TargetCreateResourceID(busName, rule, targetID)
 	d.SetId(id)
 
-	log.Printf("[INFO] EventBridge Target (%s) created", d.Id())
-
-	return resourceTargetRead(d, meta)
+	return resourceTargetRead(ctx, d, meta)
 }
 
-func resourceTargetRead(d *schema.ResourceData, meta interface{}) error {
+func resourceTargetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).EventsConn
 
 	busName := d.Get("event_bus_name").(string)
 
-	t, err := FindTarget(conn, busName, d.Get("rule").(string), d.Get("target_id").(string))
-	if err != nil {
-		if !d.IsNewResource() && (tfawserr.ErrCodeEquals(err, "ValidationException", eventbridge.ErrCodeResourceNotFoundException) ||
-			regexp.MustCompile(" not found$").MatchString(err.Error())) {
-			log.Printf("[WARN] EventBridge Target (%s) not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
-		return err
+	t, err := FindTargetByThreePartKey(ctx, conn, busName, d.Get("rule").(string), d.Get("target_id").(string))
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] EventBridge Target (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
 	}
-	log.Printf("[DEBUG] Found Event Target: %s", t)
+
+	if err != nil {
+		return diag.Errorf("reading EventBridge Target (%s): %s", d.Id(), err)
+	}
 
 	d.Set("arn", t.Arn)
 	d.Set("target_id", t.Id)
@@ -479,13 +480,13 @@ func resourceTargetRead(d *schema.ResourceData, meta interface{}) error {
 
 	if t.RunCommandParameters != nil {
 		if err := d.Set("run_command_targets", flattenTargetRunParameters(t.RunCommandParameters)); err != nil {
-			return fmt.Errorf("Error setting run_command_targets error: %w", err)
+			return diag.Errorf("setting run_command_targets: %s", err)
 		}
 	}
 
 	if t.HttpParameters != nil {
 		if err := d.Set("http_target", []interface{}{flattenTargetHTTPParameters(t.HttpParameters)}); err != nil {
-			return fmt.Errorf("error setting http_target: %w", err)
+			return diag.Errorf("setting http_target: %s", err)
 		}
 	} else {
 		d.Set("http_target", nil)
@@ -493,70 +494,71 @@ func resourceTargetRead(d *schema.ResourceData, meta interface{}) error {
 
 	if t.RedshiftDataParameters != nil {
 		if err := d.Set("redshift_target", flattenTargetRedshiftParameters(t.RedshiftDataParameters)); err != nil {
-			return fmt.Errorf("Error setting ecs_target error: %w", err)
+			return diag.Errorf("setting redshift_target: %s", err)
 		}
 	}
 
 	if t.EcsParameters != nil {
 		if err := d.Set("ecs_target", flattenTargetECSParameters(t.EcsParameters)); err != nil {
-			return fmt.Errorf("Error setting ecs_target error: %w", err)
+			return diag.Errorf("setting ecs_target: %s", err)
 		}
 	}
 
 	if t.BatchParameters != nil {
 		if err := d.Set("batch_target", flattenTargetBatchParameters(t.BatchParameters)); err != nil {
-			return fmt.Errorf("Error setting batch_target error: %w", err)
+			return diag.Errorf("setting batch_target: %s", err)
 		}
 	}
 
 	if t.KinesisParameters != nil {
 		if err := d.Set("kinesis_target", flattenTargetKinesisParameters(t.KinesisParameters)); err != nil {
-			return fmt.Errorf("Error setting kinesis_target error: %w", err)
+			return diag.Errorf("setting kinesis_target: %s", err)
 		}
 	}
 
 	if t.SqsParameters != nil {
 		if err := d.Set("sqs_target", flattenTargetSQSParameters(t.SqsParameters)); err != nil {
-			return fmt.Errorf("Error setting sqs_target error: %w", err)
+			return diag.Errorf("setting sqs_target: %s", err)
 		}
 	}
 
 	if t.InputTransformer != nil {
 		if err := d.Set("input_transformer", flattenInputTransformer(t.InputTransformer)); err != nil {
-			return fmt.Errorf("Error setting input_transformer error: %w", err)
+			return diag.Errorf("setting input_transformer: %s", err)
 		}
 	}
 
 	if t.RetryPolicy != nil {
 		if err := d.Set("retry_policy", flattenTargetRetryPolicy(t.RetryPolicy)); err != nil {
-			return fmt.Errorf("Error setting retry_policy error: #{err}")
+			return diag.Errorf("setting retry_policy: %s", err)
 		}
 	}
 
 	if t.DeadLetterConfig != nil {
 		if err := d.Set("dead_letter_config", flattenTargetDeadLetterConfig(t.DeadLetterConfig)); err != nil {
-			return fmt.Errorf("Error setting dead_letter_config error: #{err}")
+			return diag.Errorf("setting dead_letter_config: %s", err)
 		}
 	}
 
 	return nil
 }
 
-func resourceTargetUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceTargetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).EventsConn
 
 	input := buildPutTargetInputStruct(d)
 
 	log.Printf("[DEBUG] Updating EventBridge Target: %s", input)
-	_, err := conn.PutTargets(input)
+	_, err := conn.PutTargetsWithContext(ctx, input)
+
 	if err != nil {
-		return fmt.Errorf("error updating EventBridge Target (%s): %w", d.Id(), err)
+		return diag.Errorf("updating EventBridge Target (%s): %s", d.Id(), err)
 	}
 
-	return resourceTargetRead(d, meta)
+	return resourceTargetRead(ctx, d, meta)
 }
 
-func resourceTargetDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceTargetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).EventsConn
 
 	input := &eventbridge.RemoveTargetsInput{
@@ -568,17 +570,21 @@ func resourceTargetDelete(d *schema.ResourceData, meta interface{}) error {
 		input.EventBusName = aws.String(v.(string))
 	}
 
-	output, err := conn.RemoveTargets(input)
-	if err != nil {
-		if tfawserr.ErrCodeEquals(err, eventbridge.ErrCodeResourceNotFoundException) {
-			return nil
-		}
-		return fmt.Errorf("error deleting EventBridge Target (%s): %w", d.Id(), err)
+	log.Printf("[DEBUG] Deleting EventBridge Target: %s", d.Id())
+	output, err := conn.RemoveTargetsWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, eventbridge.ErrCodeResourceNotFoundException) {
+		return nil
 	}
 
+	if err != nil {
+		return diag.Errorf("deleting EventBridge Target (%s): %s", d.Id(), err)
+	}
+
+	// TODO
 	if output != nil && len(output.FailedEntries) > 0 && output.FailedEntries[0] != nil {
 		failedEntry := output.FailedEntries[0]
-		return fmt.Errorf("error deleting EventBridge Target (%s): failure entry: %s: %s", d.Id(), aws.StringValue(failedEntry.ErrorCode), aws.StringValue(failedEntry.ErrorMessage))
+		return diag.Errorf("error deleting EventBridge Target (%s): failure entry: %s: %s", d.Id(), aws.StringValue(failedEntry.ErrorCode), aws.StringValue(failedEntry.ErrorMessage))
 	}
 
 	return nil
