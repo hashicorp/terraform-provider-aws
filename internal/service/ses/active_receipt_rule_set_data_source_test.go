@@ -2,7 +2,6 @@ package ses_test
 
 import (
 	"fmt"
-	"os"
 	"regexp"
 	"testing"
 
@@ -39,12 +38,6 @@ func testAccActiveReceiptRuleSetDataSource_basic(t *testing.T) {
 }
 
 func testAccActiveReceiptRuleSetDataSource_noActiveRuleSet(t *testing.T) {
-	// Gate this test so active SES receipt rule sets are not de-activated unless
-	// explicitly intended
-	if os.Getenv("UNSET_ACTIVE_SES_RECEIPT_RULE_SET") == "" {
-		t.Skip("UNSET_ACTIVE_SES_RECEIPT_RULE_SET environment variable not set")
-	}
-
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
