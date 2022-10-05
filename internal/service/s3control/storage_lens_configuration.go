@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -132,6 +133,91 @@ func ResourceStorageLensConfiguration() *schema.Resource {
 															},
 														},
 													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+						"data_export": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"cloud_watch_metrics": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"enabled": {
+													Type:     schema.TypeBool,
+													Required: true,
+												},
+											},
+										},
+									},
+									"s3_bucket_destination": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"account_id": {
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: verify.ValidAccountID,
+												},
+												"arn": {
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: verify.ValidARN,
+												},
+												"encryption": {
+													Type:     schema.TypeList,
+													Optional: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"sse_kms": {
+																Type:     schema.TypeList,
+																Optional: true,
+																MaxItems: 1,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"key_id": {
+																			Type:         schema.TypeString,
+																			Required:     true,
+																			ValidateFunc: verify.ValidARN,
+																		},
+																	},
+																},
+															},
+															"sse_s3": {
+																Type:     schema.TypeList,
+																Optional: true,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{},
+																},
+															},
+														},
+													},
+												},
+												"format": {
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: validation.StringInSlice(s3control.Format_Values(), false),
+												},
+												"output_schema_version": {
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: validation.StringInSlice(s3control.OutputSchemaVersion_Values(), false),
+												},
+												"prefix": {
+													Type:     schema.TypeString,
+													Optional: true,
 												},
 											},
 										},
@@ -375,6 +461,10 @@ func expandStorageLensConfiguration(tfMap map[string]interface{}) *s3control.Sto
 		apiObject.AccountLevel = expandAccountLevel(v[0].(map[string]interface{}))
 	}
 
+	if v, ok := tfMap["data_export"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		apiObject.DataExport = expandStorageLensDataExport(v[0].(map[string]interface{}))
+	}
+
 	if v, ok := tfMap["enabled"].(bool); ok && v {
 		apiObject.IsEnabled = aws.Bool(v)
 	}
@@ -496,6 +586,114 @@ func expandSelectionCriteria(tfMap map[string]interface{}) *s3control.SelectionC
 	return apiObject
 }
 
+func expandStorageLensDataExport(tfMap map[string]interface{}) *s3control.StorageLensDataExport {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &s3control.StorageLensDataExport{}
+
+	if v, ok := tfMap["cloud_watch_metrics"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		apiObject.CloudWatchMetrics = expandCloudWatchMetrics(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["s3_bucket_destination"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		apiObject.S3BucketDestination = expandS3BucketDestination(v[0].(map[string]interface{}))
+	}
+
+	return apiObject
+}
+
+func expandCloudWatchMetrics(tfMap map[string]interface{}) *s3control.CloudWatchMetrics {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &s3control.CloudWatchMetrics{}
+
+	if v, ok := tfMap["enabled"].(bool); ok && v {
+		apiObject.IsEnabled = aws.Bool(v)
+	}
+
+	return apiObject
+}
+
+func expandS3BucketDestination(tfMap map[string]interface{}) *s3control.S3BucketDestination {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &s3control.S3BucketDestination{}
+
+	if v, ok := tfMap["account_id"].(string); ok && v != "" {
+		apiObject.AccountId = aws.String(v)
+	}
+
+	if v, ok := tfMap["arn"].(string); ok && v != "" {
+		apiObject.Arn = aws.String(v)
+	}
+
+	if v, ok := tfMap["encryption"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		apiObject.Encryption = expandStorageLensDataExportEncryption(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["format"].(string); ok && v != "" {
+		apiObject.Format = aws.String(v)
+	}
+
+	if v, ok := tfMap["output_schema_version"].(string); ok && v != "" {
+		apiObject.OutputSchemaVersion = aws.String(v)
+	}
+
+	if v, ok := tfMap["prefix"].(string); ok && v != "" {
+		apiObject.Prefix = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func expandStorageLensDataExportEncryption(tfMap map[string]interface{}) *s3control.StorageLensDataExportEncryption {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &s3control.StorageLensDataExportEncryption{}
+
+	if v, ok := tfMap["sse_kms"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		apiObject.SSEKMS = expandSSEKMS(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["sse_s3"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		apiObject.SSES3 = expandSSES3(v[0].(map[string]interface{}))
+	}
+
+	return apiObject
+}
+
+func expandSSEKMS(tfMap map[string]interface{}) *s3control.SSEKMS {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &s3control.SSEKMS{}
+
+	if v, ok := tfMap["key_id"].(string); ok && v != "" {
+		apiObject.KeyId = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func expandSSES3(tfMap map[string]interface{}) *s3control.SSES3 {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &s3control.SSES3{}
+
+	return apiObject
+}
+
 func expandExclude(tfMap map[string]interface{}) *s3control.Exclude {
 	if tfMap == nil {
 		return nil
@@ -541,6 +739,10 @@ func flattenStorageLensConfiguration(apiObject *s3control.StorageLensConfigurati
 
 	if v := apiObject.AccountLevel; v != nil {
 		tfMap["account_level"] = []interface{}{flattenAccountLevel(v)}
+	}
+
+	if v := apiObject.DataExport; v != nil {
+		tfMap["data_export"] = []interface{}{flattenStorageLensDataExport(v)}
 	}
 
 	if v := apiObject.IsEnabled; v != nil {
@@ -658,6 +860,114 @@ func flattenSelectionCriteria(apiObject *s3control.SelectionCriteria) map[string
 	if v := apiObject.MinStorageBytesPercentage; v != nil {
 		tfMap["min_storage_bytes_percentage"] = aws.Float64Value(v)
 	}
+
+	return tfMap
+}
+
+func flattenStorageLensDataExport(apiObject *s3control.StorageLensDataExport) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.CloudWatchMetrics; v != nil {
+		tfMap["cloud_watch_metrics"] = []interface{}{flattenCloudWatchMetrics(v)}
+	}
+
+	if v := apiObject.S3BucketDestination; v != nil {
+		tfMap["s3_bucket_destination"] = []interface{}{flattenS3BucketDestination(v)}
+	}
+
+	return tfMap
+}
+
+func flattenCloudWatchMetrics(apiObject *s3control.CloudWatchMetrics) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.IsEnabled; v != nil {
+		tfMap["enabled"] = aws.BoolValue(v)
+	}
+
+	return tfMap
+}
+
+func flattenS3BucketDestination(apiObject *s3control.S3BucketDestination) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.AccountId; v != nil {
+		tfMap["account_id"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.Arn; v != nil {
+		tfMap["arn"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.Encryption; v != nil {
+		tfMap["encryption"] = []interface{}{flattenStorageLensDataExportEncryption(v)}
+	}
+
+	if v := apiObject.Format; v != nil {
+		tfMap["format"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.OutputSchemaVersion; v != nil {
+		tfMap["output_schema_version"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.Prefix; v != nil {
+		tfMap["prefix"] = aws.StringValue(v)
+	}
+
+	return tfMap
+}
+
+func flattenStorageLensDataExportEncryption(apiObject *s3control.StorageLensDataExportEncryption) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.SSEKMS; v != nil {
+		tfMap["sse_kms"] = []interface{}{flattenSSEKMS(v)}
+	}
+
+	if v := apiObject.SSES3; v != nil {
+		tfMap["sse_s3"] = []interface{}{flattenSSES3(v)}
+	}
+
+	return tfMap
+}
+
+func flattenSSEKMS(apiObject *s3control.SSEKMS) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.KeyId; v != nil {
+		tfMap["key_id"] = aws.StringValue(v)
+	}
+
+	return tfMap
+}
+
+func flattenSSES3(apiObject *s3control.SSES3) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
 
 	return tfMap
 }

@@ -40,6 +40,7 @@ The following arguments are supported:
 The `storage_lens_configuration` block supports the following:
 
 * `account_level` (Required) The account-level configurations of the S3 Storage Lens configuration. See [Account Level](#account-level) below for more details.
+* `data_export` (Optional) Properties of S3 Storage Lens metrics export including the destination, schema and format. See [Data Export](#data-export) below for more details.
 * `enabled` (Required) Whether the S3 Storage Lens configuration is enabled.
 * `exclude` (Optional) What is excluded in this configuration. Conflicts with `include`. See [Exclude](#exclude) below for more details.
 * `include` (Optional) What is included in this configuration. Conflicts with `exclude`. See [Include](#include) below for more details.
@@ -84,6 +85,43 @@ The `selection_criteria` block supports the following:
 * `delimiter` (Optional) The delimiter of the selection criteria being used.
 * `max_depth` (Optional) The max depth of the selection criteria.
 * `min_storage_bytes_percentage` (Optional) The minimum number of storage bytes percentage whose metrics will be selected.
+
+### Data Export
+
+The `data_export` block supports the following:
+
+* `cloud_watch_metrics` (Optional) Amazon CloudWatch publishing for S3 Storage Lens metrics. See [Cloud Watch Metrics](#cloud-watch-metrics) below for more details.
+* `s3_bucket_destination` (Optional) The bucket where the S3 Storage Lens metrics export will be located. See [S3 Bucket Destination](#s3-bucket-destination) below for more details.
+
+### Cloud Watch Metrics
+
+The `cloud_watch_metrics` block supports the following:
+
+* `enabled` (Required) Whether CloudWatch publishing for S3 Storage Lens metrics is enabled.
+
+### S3 Bucket Destination
+
+The `s3_bucket_destination` block supports the following:
+
+* `account_id` (Required) The account ID of the owner of the S3 Storage Lens metrics export bucket.
+* `arn` (Required) The Amazon Resource Name (ARN) of the bucket.
+* `encryption` (Optional) Encryption of the metrics exports in this bucket. See [Encryption](#encryption) below for more details.
+* `format` (Required) The export format. Valid values: `CSV`, `Parquet`.
+* `output_schema_version` (Required) The schema version of the export file. Valid values: `V_1`.
+* `prefix` (Optional) The prefix of the destination bucket where the metrics export will be delivered.
+
+### Encryption
+
+The `encryption` block supports the following:
+
+* `sse_kms` (Optional) SSE-KMS encryption. See [SSE KMS](#sse-kms) below for more details.
+* `sse_s3` (Optional) SSE-S3 encryption. An empty configuration block `{}` should be used.
+
+### SSE KMS
+
+The `sse_kms` block supports the following:
+
+* `key_id` (Required) KMS key ARN.
 
 ### Exclude
 
