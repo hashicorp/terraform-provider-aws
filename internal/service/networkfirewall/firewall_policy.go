@@ -70,16 +70,6 @@ func ResourceFirewallPolicy() *schema.Resource {
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"priority": {
-										Type:         schema.TypeInt,
-										Optional:     true,
-										ValidateFunc: validation.IntAtLeast(1),
-									},
-									"resource_arn": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: verify.ValidARN,
-									},
 									"override": {
 										Type:     schema.TypeList,
 										MaxItems: 1,
@@ -93,6 +83,16 @@ func ResourceFirewallPolicy() *schema.Resource {
 												},
 											},
 										},
+									},
+									"priority": {
+										Type:         schema.TypeInt,
+										Optional:     true,
+										ValidateFunc: validation.IntAtLeast(1),
+									},
+									"resource_arn": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: verify.ValidARN,
 									},
 								},
 							},
