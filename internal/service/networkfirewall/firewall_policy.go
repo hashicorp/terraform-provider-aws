@@ -2,7 +2,6 @@ package networkfirewall
 
 import (
 	"context"
-	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -189,9 +188,9 @@ func resourceFirewallPolicyRead(ctx context.Context, d *schema.ResourceData, met
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	output, err := FindFirewallPolicy(ctx, conn, d.Id())
+	output, err := FindFirewallPolicyByARN(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, networkfirewall.ErrCodeResourceNotFoundException) {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] NetworkFirewall Firewall Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -199,13 +198,6 @@ func resourceFirewallPolicyRead(ctx context.Context, d *schema.ResourceData, met
 
 	if err != nil {
 		return diag.Errorf("reading NetworkFirewall Firewall Policy (%s): %s", d.Id(), err)
-	}
-
-	if output == nil {
-		return diag.FromErr(fmt.Errorf("error reading NetworkFirewall Firewall Policy (%s): empty output", d.Id()))
-	}
-	if output.FirewallPolicyResponse == nil {
-		return diag.FromErr(fmt.Errorf("error reading NetworkFirewall Firewall Policy (%s): empty output.FirewallPolicyResponse", d.Id()))
 	}
 
 	resp := output.FirewallPolicyResponse
@@ -287,61 +279,64 @@ func resourceFirewallPolicyDelete(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	if _, err := waitFirewallPolicyDeleted(ctx, conn, d.Id()); err != nil {
-		if tfawserr.ErrCodeEquals(err, networkfirewall.ErrCodeResourceNotFoundException) {
-			return nil
-		}
 		return diag.Errorf("waiting for NetworkFirewall Firewall Policy (%s) delete: %s", d.Id(), err)
 	}
 
 	return nil
 }
 
-func FindFirewallPolicy(ctx context.Context, conn *networkfirewall.NetworkFirewall, arn string) (*networkfirewall.DescribeFirewallPolicyOutput, error) {
+func FindFirewallPolicyByARN(ctx context.Context, conn *networkfirewall.NetworkFirewall, arn string) (*networkfirewall.DescribeFirewallPolicyOutput, error) {
 	input := &networkfirewall.DescribeFirewallPolicyInput{
 		FirewallPolicyArn: aws.String(arn),
 	}
+
 	output, err := conn.DescribeFirewallPolicyWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, networkfirewall.ErrCodeResourceNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return nil, err
 	}
+
+	if output == nil || output.FirewallPolicyResponse == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
 	return output, nil
 }
 
 func statusFirewallPolicy(ctx context.Context, conn *networkfirewall.NetworkFirewall, arn string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		input := &networkfirewall.DescribeFirewallPolicyInput{
-			FirewallPolicyArn: aws.String(arn),
-		}
+		output, err := FindFirewallPolicyByARN(ctx, conn, arn)
 
-		output, err := conn.DescribeFirewallPolicyWithContext(ctx, input)
-
-		if tfawserr.ErrCodeEquals(err, networkfirewall.ErrCodeResourceNotFoundException) {
-			return output, resourceStatusDeleted, nil
+		if tfresource.NotFound(err) {
+			return nil, "", nil
 		}
 
 		if err != nil {
-			return nil, resourceStatusUnknown, err
+			return nil, "", err
 		}
 
-		if output == nil || output.FirewallPolicyResponse == nil {
-			return nil, resourceStatusUnknown, nil
-		}
-
-		return output.FirewallPolicy, aws.StringValue(output.FirewallPolicyResponse.FirewallPolicyStatus), nil
+		return output, aws.StringValue(output.FirewallPolicyResponse.FirewallPolicyStatus), nil
 	}
 }
 
-func waitFirewallPolicyDeleted(ctx context.Context, conn *networkfirewall.NetworkFirewall, arn string) (*networkfirewall.FirewallPolicy, error) {
+func waitFirewallPolicyDeleted(ctx context.Context, conn *networkfirewall.NetworkFirewall, arn string) (*networkfirewall.DescribeFirewallPolicyOutput, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{networkfirewall.ResourceStatusDeleting},
-		Target:  []string{resourceStatusDeleted},
+		Target:  []string{},
 		Refresh: statusFirewallPolicy(ctx, conn, arn),
 		Timeout: firewallPolicyTimeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if v, ok := outputRaw.(*networkfirewall.FirewallPolicy); ok {
+	if v, ok := outputRaw.(*networkfirewall.DescribeFirewallPolicyOutput); ok {
 		return v, err
 	}
 
