@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -141,6 +142,25 @@ func ResourceStorageLensConfiguration() *schema.Resource {
 						"enabled": {
 							Type:     schema.TypeBool,
 							Required: true,
+						},
+						"exclude": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"buckets": {
+										Type:     schema.TypeSet,
+										Optional: true,
+										Elem:     &schema.Schema{Type: schema.TypeString},
+									},
+									"regions": {
+										Type:     schema.TypeSet,
+										Optional: true,
+										Elem:     &schema.Schema{Type: schema.TypeString},
+									},
+								},
+							},
 						},
 					},
 				},
@@ -340,6 +360,10 @@ func expandStorageLensConfiguration(tfMap map[string]interface{}) *s3control.Sto
 		apiObject.IsEnabled = aws.Bool(v)
 	}
 
+	if v, ok := tfMap["exclude"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		apiObject.Exclude = expandExclude(v[0].(map[string]interface{}))
+	}
+
 	return apiObject
 }
 
@@ -449,6 +473,24 @@ func expandSelectionCriteria(tfMap map[string]interface{}) *s3control.SelectionC
 	return apiObject
 }
 
+func expandExclude(tfMap map[string]interface{}) *s3control.Exclude {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &s3control.Exclude{}
+
+	if v, ok := tfMap["buckets"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.Buckets = flex.ExpandStringSet(v)
+	}
+
+	if v, ok := tfMap["regions"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.Regions = flex.ExpandStringSet(v)
+	}
+
+	return apiObject
+}
+
 func flattenStorageLensConfiguration(apiObject *s3control.StorageLensConfiguration) map[string]interface{} {
 	if apiObject == nil {
 		return nil
@@ -462,6 +504,10 @@ func flattenStorageLensConfiguration(apiObject *s3control.StorageLensConfigurati
 
 	if v := apiObject.IsEnabled; v != nil {
 		tfMap["enabled"] = aws.BoolValue(v)
+	}
+
+	if v := apiObject.Exclude; v != nil {
+		tfMap["exclude"] = []interface{}{flattenExclude(v)}
 	}
 
 	return tfMap
@@ -566,6 +612,24 @@ func flattenSelectionCriteria(apiObject *s3control.SelectionCriteria) map[string
 
 	if v := apiObject.MinStorageBytesPercentage; v != nil {
 		tfMap["min_storage_bytes_percentage"] = aws.Float64Value(v)
+	}
+
+	return tfMap
+}
+
+func flattenExclude(apiObject *s3control.Exclude) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.Buckets; v != nil {
+		tfMap["buckets"] = aws.StringValueSlice(v)
+	}
+
+	if v := apiObject.Regions; v != nil {
+		tfMap["regions"] = aws.StringValueSlice(v)
 	}
 
 	return tfMap

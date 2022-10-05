@@ -41,6 +41,7 @@ The `storage_lens_configuration` block supports the following:
 
 * `account_level` (Required) The account-level configurations of the S3 Storage Lens configuration. See [Account Level](#account-level) below for more details.
 * `enabled` (Required) Whether the S3 Storage Lens configuration is enabled.
+* `exclude` (Optional) What is excluded in this configuration. Conflicts with `include`. See [Exclude](#exclude) below for more details.
 
 ### Account Level
 
@@ -82,6 +83,13 @@ The `selection_criteria` block supports the following:
 * `delimiter` (Optional) The delimiter of the selection criteria being used.
 * `max_depth` (Optional) The max depth of the selection criteria.
 * `min_storage_bytes_percentage` (Optional) The minimum number of storage bytes percentage whose metrics will be selected.
+
+### Exclude
+
+The `exclude` block supports the following:
+
+* `buckets` (Optional) List of S3 bucket names.
+* `regions` (Optional) List of AWS Regions.
 
 ## Attributes Reference
 
