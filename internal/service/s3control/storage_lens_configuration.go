@@ -140,6 +140,20 @@ func ResourceStorageLensConfiguration() *schema.Resource {
 								},
 							},
 						},
+						"aws_org": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"arn": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: verify.ValidARN,
+									},
+								},
+							},
+						},
 						"data_export": {
 							Type:     schema.TypeList,
 							Optional: true,
@@ -461,6 +475,10 @@ func expandStorageLensConfiguration(tfMap map[string]interface{}) *s3control.Sto
 		apiObject.AccountLevel = expandAccountLevel(v[0].(map[string]interface{}))
 	}
 
+	if v, ok := tfMap["aws_org"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		apiObject.AwsOrg = expandStorageLensAwsOrg(v[0].(map[string]interface{}))
+	}
+
 	if v, ok := tfMap["data_export"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.DataExport = expandStorageLensDataExport(v[0].(map[string]interface{}))
 	}
@@ -581,6 +599,20 @@ func expandSelectionCriteria(tfMap map[string]interface{}) *s3control.SelectionC
 
 	if v, ok := tfMap["min_storage_bytes_percentage"].(float64); ok && v != 0.0 {
 		apiObject.MinStorageBytesPercentage = aws.Float64(v)
+	}
+
+	return apiObject
+}
+
+func expandStorageLensAwsOrg(tfMap map[string]interface{}) *s3control.StorageLensAwsOrg {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &s3control.StorageLensAwsOrg{}
+
+	if v, ok := tfMap["arn"].(string); ok && v != "" {
+		apiObject.Arn = aws.String(v)
 	}
 
 	return apiObject
@@ -741,6 +773,10 @@ func flattenStorageLensConfiguration(apiObject *s3control.StorageLensConfigurati
 		tfMap["account_level"] = []interface{}{flattenAccountLevel(v)}
 	}
 
+	if v := apiObject.AwsOrg; v != nil {
+		tfMap["aws_org"] = []interface{}{flattenStorageLensAwsOrg(v)}
+	}
+
 	if v := apiObject.DataExport; v != nil {
 		tfMap["data_export"] = []interface{}{flattenStorageLensDataExport(v)}
 	}
@@ -859,6 +895,20 @@ func flattenSelectionCriteria(apiObject *s3control.SelectionCriteria) map[string
 
 	if v := apiObject.MinStorageBytesPercentage; v != nil {
 		tfMap["min_storage_bytes_percentage"] = aws.Float64Value(v)
+	}
+
+	return tfMap
+}
+
+func flattenStorageLensAwsOrg(apiObject *s3control.StorageLensAwsOrg) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.Arn; v != nil {
+		tfMap["arn"] = aws.StringValue(v)
 	}
 
 	return tfMap

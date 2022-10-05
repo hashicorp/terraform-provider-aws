@@ -38,6 +38,7 @@ func TestAccS3ControlStorageLensConfiguration_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.bucket_level.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.bucket_level.0.activity_metrics.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.bucket_level.0.prefix_level.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.aws_org.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.data_export.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.exclude.#", "0"),

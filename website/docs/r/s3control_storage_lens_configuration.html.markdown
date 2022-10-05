@@ -40,6 +40,7 @@ The following arguments are supported:
 The `storage_lens_configuration` block supports the following:
 
 * `account_level` (Required) The account-level configurations of the S3 Storage Lens configuration. See [Account Level](#account-level) below for more details.
+* `aws_org` (Optional) The Amazon Web Services organization for the S3 Storage Lens configuration. See [AWS Org](#aws-org) below for more details.
 * `data_export` (Optional) Properties of S3 Storage Lens metrics export including the destination, schema and format. See [Data Export](#data-export) below for more details.
 * `enabled` (Required) Whether the S3 Storage Lens configuration is enabled.
 * `exclude` (Optional) What is excluded in this configuration. Conflicts with `include`. See [Exclude](#exclude) below for more details.
@@ -85,6 +86,12 @@ The `selection_criteria` block supports the following:
 * `delimiter` (Optional) The delimiter of the selection criteria being used.
 * `max_depth` (Optional) The max depth of the selection criteria.
 * `min_storage_bytes_percentage` (Optional) The minimum number of storage bytes percentage whose metrics will be selected.
+
+### AWS Org
+
+The `aws_org` block supports the following:
+
+* `arn` (Required) The Amazon Resource Name (ARN) of the Amazon Web Services organization.
 
 ### Data Export
 
