@@ -18,7 +18,7 @@ Terraform resource for managing an AWS IdentityStore Group.
 resource "aws_identitystore_group" "this" {
   display_name      = "Example group"
   description       = "Example description"
-  identity_store_id = tolist(data.aws_ssoadmin_instances.example.arns)[0]
+  identity_store_id = tolist(data.aws_ssoadmin_instances.example.identity_store_ids)[0]
 }
 ```
 

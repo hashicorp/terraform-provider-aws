@@ -7,29 +7,31 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
-	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/fwtypes"
 )
 
-// TODO: Remove
-var NewDataSourceARNType = newDataSourceARNType
-
 func init() {
-	registerDataSourceTypeFactory("aws_arn", newDataSourceARNType)
+	registerDataSourceFactory(newDataSourceARN)
 }
 
-// newDataSourceARNType instantiates a new DataSourceType for the aws_arn data source.
-func newDataSourceARNType(ctx context.Context) (provider.DataSourceType, error) {
-	return &dataSourceARNType{}, nil
+// newDataSourceARN instantiates a new DataSource for the aws_arn data source.
+func newDataSourceARN(ctx context.Context) (datasource.DataSource, error) {
+	return &dataSourceARN{}, nil
 }
 
-type dataSourceARNType struct{}
+type dataSourceARN struct{}
+
+// Metadata should return the full name of the data source, such as
+// examplecloud_thing.
+func (d *dataSourceARN) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
+	response.TypeName = "aws_arn"
+}
 
 // GetSchema returns the schema for this data source.
-func (t *dataSourceARNType) GetSchema(context.Context) (tfsdk.Schema, diag.Diagnostics) {
+func (d *dataSourceARN) GetSchema(context.Context) (tfsdk.Schema, diag.Diagnostics) {
 	schema := tfsdk.Schema{
 		Attributes: map[string]tfsdk.Attribute{
 			"account": {
@@ -67,12 +69,11 @@ func (t *dataSourceARNType) GetSchema(context.Context) (tfsdk.Schema, diag.Diagn
 	return schema, nil
 }
 
-// NewDataSource instantiates a new DataSource of this DataSourceType.
-func (t *dataSourceARNType) NewDataSource(ctx context.Context, provider provider.Provider) (datasource.DataSource, diag.Diagnostics) {
-	return &dataSourceARN{}, nil
+// Configure enables provider-level data or clients to be set in the
+// provider-defined DataSource type. It is separately executed for each
+// ReadDataSource RPC.
+func (d *dataSourceARN) Configure(_ context.Context, request datasource.ConfigureRequest, response *datasource.ConfigureResponse) { //nolint:unparam
 }
-
-type dataSourceARN struct{}
 
 // Read is called when the provider must read data source values in order to update state.
 // Config values should be read from the ReadRequest and new state values set on the ReadResponse.
