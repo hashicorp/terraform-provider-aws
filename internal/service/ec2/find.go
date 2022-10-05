@@ -4968,6 +4968,30 @@ func FindIPAMPoolCIDRs(conn *ec2.EC2, input *ec2.GetIpamPoolCidrsInput) ([]*ec2.
 	return output, nil
 }
 
+func FindIPAMPools(conn *ec2.EC2, input *ec2.DescribeIpamPoolsInput) ([]*ec2.IpamPool, error) {
+	var output []*ec2.IpamPool
+
+	err := conn.DescribeIpamPoolsPages(input, func(page *ec2.DescribeIpamPoolsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.IpamPools {
+			if v != nil {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
 func FindKeyPair(conn *ec2.EC2, input *ec2.DescribeKeyPairsInput) (*ec2.KeyPairInfo, error) {
 	output, err := FindKeyPairs(conn, input)
 

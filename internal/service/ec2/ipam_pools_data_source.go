@@ -1,0 +1,169 @@
+package ec2
+
+import (
+	"strings"
+	"time"
+
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+)
+
+func DataSourceIPAMPools() *schema.Resource {
+	return &schema.Resource{
+		Read: dataSourceIPAMPoolsRead,
+
+		Timeouts: &schema.ResourceTimeout{
+			Read: schema.DefaultTimeout(20 * time.Minute),
+		},
+
+		Schema: map[string]*schema.Schema{
+			"filter": DataSourceFiltersSchema(),
+			"ipam_pools": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"ipam_pool_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"arn": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"address_family": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"publicly_advertisable": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+						"allocation_default_netmask_length": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"allocation_max_netmask_length": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"allocation_min_netmask_length": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"allocation_resource_tags": tftags.TagsSchemaComputed(),
+						"auto_import": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+						"aws_service": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"description": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"id": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"ipam_scope_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"ipam_scope_type": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"locale": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"pool_depth": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"source_ipam_pool_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"state": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"tags": tftags.TagsSchemaComputed(),
+					},
+				},
+			},
+		},
+	}
+}
+
+func dataSourceIPAMPoolsRead(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*conns.AWSClient).EC2Conn
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+
+	input := &ec2.DescribeIpamPoolsInput{}
+
+	filters, filtersOk := d.GetOk("filter")
+	if filtersOk {
+		input.Filters = BuildFiltersDataSource(filters.(*schema.Set))
+	}
+
+	pools, err := FindIPAMPools(conn, input)
+
+	if err != nil {
+		return err
+	}
+
+	if len(pools) == 0 || pools[0] == nil {
+		return tfresource.SingularDataSourceFindError("EC2 VPC IPAM POOLS", tfresource.NewEmptyResultError(input))
+	}
+
+	d.Set("ipam_pools", flattenIPAMPools(pools, ignoreTagsConfig))
+	// pool = output.IpamPools[0]
+
+	d.SetId(meta.(*conns.AWSClient).Region)
+
+	return nil
+}
+
+func flattenIPAMPools(c []*ec2.IpamPool, ignoreTagsConfig *tftags.IgnoreConfig) []interface{} {
+	pools := []interface{}{}
+	for _, pool := range c {
+		pools = append(pools, flattenIPAMPool(pool, ignoreTagsConfig))
+	}
+	return pools
+}
+
+func flattenIPAMPool(p *ec2.IpamPool, ignoreTagsConfig *tftags.IgnoreConfig) map[string]interface{} {
+	pool := make(map[string]interface{})
+
+	pool["address_family"] = aws.StringValue(p.AddressFamily)
+	pool["allocation_default_netmask_length"] = aws.Int64Value(p.AllocationDefaultNetmaskLength)
+	pool["allocation_max_netmask_length"] = aws.Int64Value(p.AllocationMaxNetmaskLength)
+	pool["allocation_min_netmask_length"] = aws.Int64Value(p.AllocationMinNetmaskLength)
+	pool["allocation_resource_tags"] = KeyValueTags(tagsFromIPAMAllocationTags(p.AllocationResourceTags)).Map()
+	pool["arn"] = aws.StringValue(p.IpamPoolArn)
+	pool["auto_import"] = aws.BoolValue(p.AutoImport)
+	pool["aws_service"] = aws.StringValue(p.AwsService)
+	pool["description"] = aws.StringValue(p.Description)
+	pool["ipam_scope_id"] = strings.Split(aws.StringValue(p.IpamScopeArn), "/")[1]
+	pool["ipam_scope_type"] = aws.StringValue(p.IpamScopeType)
+	pool["locale"] = aws.StringValue(p.Locale)
+	pool["pool_depth"] = aws.Int64Value(p.PoolDepth)
+	pool["publicly_advertisable"] = aws.BoolValue(p.PubliclyAdvertisable)
+	pool["source_ipam_pool_id"] = aws.StringValue(p.SourceIpamPoolId)
+	pool["state"] = aws.StringValue(p.State)
+
+	if v := p.Tags; v != nil {
+		pool["tags"] = KeyValueTags(v).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()
+	}
+
+	return pool
+}
