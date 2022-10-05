@@ -4131,30 +4131,30 @@ resource "aws_wafv2_rule_group" "test" {
   scope    = "REGIONAL"
 
   rule {
-	name     = "rule-1"
-	priority = 1
+    name     = "rule-1"
+    priority = 1
 
-	action {
-	  count {}
-	}
+    action {
+      count {}
+    }
 
-	statement {
-	  rate_based_statement {
-		limit = 50000
-	  }
-	}
+    statement {
+      rate_based_statement {
+        limit = 50000
+      }
+    }
 
-	visibility_config {
-	  cloudwatch_metrics_enabled = false
-	  metric_name                = "friendly-rule-metric-name"
-	  sampled_requests_enabled   = false
-	}
+    visibility_config {
+      cloudwatch_metrics_enabled = false
+      metric_name                = "friendly-rule-metric-name"
+      sampled_requests_enabled   = false
+    }
   }
 
   visibility_config {
-	cloudwatch_metrics_enabled = false
-	metric_name                = "friendly-metric-name"
-	sampled_requests_enabled   = false
+    cloudwatch_metrics_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
   }
 }
 `, name)
@@ -4168,35 +4168,35 @@ resource "aws_wafv2_rule_group" "test" {
   scope    = "REGIONAL"
 
   rule {
-	name     = "rule-1"
-	priority = 1
+    name     = "rule-1"
+    priority = 1
 
-	action {
-	  count {}
-	}
+    action {
+      count {}
+    }
 
-	statement {
-	  rate_based_statement {
-		aggregate_key_type = "FORWARDED_IP"
-		forwarded_ip_config {
-		  fallback_behavior = %[2]q
-		  header_name       = %[3]q
-		}
-		limit = 50000
-	  }
-	}
+    statement {
+      rate_based_statement {
+        aggregate_key_type = "FORWARDED_IP"
+        forwarded_ip_config {
+          fallback_behavior = %[2]q
+          header_name       = %[3]q
+        }
+        limit = 50000
+      }
+    }
 
-	visibility_config {
-	  cloudwatch_metrics_enabled = false
-	  metric_name                = "friendly-rule-metric-name"
-	  sampled_requests_enabled   = false
-	}
+    visibility_config {
+      cloudwatch_metrics_enabled = false
+      metric_name                = "friendly-rule-metric-name"
+      sampled_requests_enabled   = false
+    }
   }
 
   visibility_config {
-	cloudwatch_metrics_enabled = false
-	metric_name                = "friendly-metric-name"
-	sampled_requests_enabled   = false
+    cloudwatch_metrics_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
   }
 }
 `, name, fallbackBehavior, headerName)
@@ -4210,37 +4210,37 @@ resource "aws_wafv2_rule_group" "test" {
   scope    = "REGIONAL"
 
   rule {
-	name     = "rule-1"
-	priority = 1
+    name     = "rule-1"
+    priority = 1
 
-	action {
-	  count {}
-	}
+    action {
+      count {}
+    }
 
-	statement {
-	  rate_based_statement {
-		limit              = 10000
-		aggregate_key_type = "IP"
+    statement {
+      rate_based_statement {
+        limit              = 10000
+        aggregate_key_type = "IP"
 
-		scope_down_statement {
-		  geo_match_statement {
-			country_codes = ["US", "NL"]
-		  }
-		}
-	  }
-	}
+        scope_down_statement {
+          geo_match_statement {
+            country_codes = ["US", "NL"]
+          }
+        }
+      }
+    }
 
-	visibility_config {
-	  cloudwatch_metrics_enabled = false
-	  metric_name                = "friendly-rule-metric-name"
-	  sampled_requests_enabled   = false
-	}
+    visibility_config {
+      cloudwatch_metrics_enabled = false
+      metric_name                = "friendly-rule-metric-name"
+      sampled_requests_enabled   = false
+    }
   }
 
   visibility_config {
-	cloudwatch_metrics_enabled = false
-	metric_name                = "friendly-metric-name"
-	sampled_requests_enabled   = false
+    cloudwatch_metrics_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
   }
 }
 `, name)
