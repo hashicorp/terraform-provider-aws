@@ -52,7 +52,7 @@ func ruleLabelsSchema() *schema.Schema {
 	}
 }
 
-func rootStatementSchema(level int) *schema.Schema {
+func ruleGroupRootStatementSchema(level int) *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		Required: true,
@@ -66,6 +66,7 @@ func rootStatementSchema(level int) *schema.Schema {
 				"label_match_statement":                 labelMatchStatementSchema(),
 				"not_statement":                         statementSchema(level - 1),
 				"or_statement":                          statementSchema(level - 1),
+				"rate_based_statement":                  rateBasedStatementSchema(level - 1),
 				"regex_match_statement":                 regexMatchStatementSchema(),
 				"regex_pattern_set_reference_statement": regexPatternSetReferenceStatementSchema(),
 				"size_constraint_statement":             sizeConstraintSchema(),
