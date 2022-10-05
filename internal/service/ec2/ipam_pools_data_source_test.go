@@ -57,7 +57,7 @@ resource "aws_vpc_ipam_pool" "test" {
 
 data "aws_vpc_ipam_pools" "test" {
   depends_on = [
-	aws_vpc_ipam_pool.test
+    aws_vpc_ipam_pool.test
   ]
 }
 `)
@@ -77,47 +77,47 @@ resource "aws_vpc_ipam_pool" "test" {
 }
 
 resource "aws_vpc_ipam_pool" "testtwo" {
-	address_family                    = "ipv4"
-	ipam_scope_id                     = aws_vpc_ipam.test.private_default_scope_id
-	allocation_resource_tags = {
-	  test = "2"
-	}
-	description = "testtwo"
+  address_family = "ipv4"
+  ipam_scope_id  = aws_vpc_ipam.test.private_default_scope_id
+  allocation_resource_tags = {
+    test = "2"
   }
+  description = "testtwo"
+}
 
-  resource "aws_vpc_ipam_pool" "testthree" {
-	address_family                    = "ipv4"
-	ipam_scope_id                     = aws_vpc_ipam.test.private_default_scope_id
-	allocation_default_netmask_length = 32
-	allocation_max_netmask_length     = 32
-	allocation_min_netmask_length     = 32
-	allocation_resource_tags = {
-	  test = "3"
-	}
-	description = "testthree"
-	tags = {
-		tagtest = 3
-	}
+resource "aws_vpc_ipam_pool" "testthree" {
+  address_family                    = "ipv4"
+  ipam_scope_id                     = aws_vpc_ipam.test.private_default_scope_id
+  allocation_default_netmask_length = 32
+  allocation_max_netmask_length     = 32
+  allocation_min_netmask_length     = 32
+  allocation_resource_tags = {
+    test = "3"
   }
+  description = "testthree"
+  tags = {
+    tagtest = 3
+  }
+}
 
 data "aws_vpc_ipam_pools" "test" {
   depends_on = [
-	aws_vpc_ipam_pool.test,
-	aws_vpc_ipam_pool.testtwo,
-	aws_vpc_ipam_pool.testthree
+    aws_vpc_ipam_pool.test,
+    aws_vpc_ipam_pool.testtwo,
+    aws_vpc_ipam_pool.testthree
   ]
 }
 
 data "aws_vpc_ipam_pools" "testtwo" {
-	filter {
-		name   = "description"
-		values = ["*three*"]
-	  }
-
-	depends_on = [
-	  aws_vpc_ipam_pool.test,
-	  aws_vpc_ipam_pool.testtwo,
-	  aws_vpc_ipam_pool.testthree
-	]
+  filter {
+    name   = "description"
+    values = ["*three*"]
   }
+
+  depends_on = [
+    aws_vpc_ipam_pool.test,
+    aws_vpc_ipam_pool.testtwo,
+    aws_vpc_ipam_pool.testthree
+  ]
+}
 `)
