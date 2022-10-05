@@ -87,7 +87,7 @@ The following arguments are supported:
 * `bucket` - (Required, Forces new resource) The name of the bucket.
 * `expected_bucket_owner` - (Optional, Forces new resource) The account ID of the expected bucket owner.
 * `object_lock_enabled` - (Optional, Forces new resource) Indicates whether this bucket has an Object Lock configuration enabled. Defaults to `Enabled`. Valid values: `Enabled`.
-* `rule` - (Required) Configuration block for specifying the Object Lock rule for the specified object [detailed below](#rule).
+* `rule` - (Optional) Configuration block for specifying the Object Lock rule for the specified object [detailed below](#rule).
 * `token` - (Optional) A token to allow Object Lock to be enabled for an existing bucket. You must contact AWS support for the bucket's "Object Lock token".
 The token is generated in the back-end when [versioning](https://docs.aws.amazon.com/AmazonS3/latest/userguide/manage-versioning-examples.html) is enabled on a bucket. For more details on versioning, see the [`aws_s3_bucket_versioning` resource](s3_bucket_versioning.html.markdown).
 

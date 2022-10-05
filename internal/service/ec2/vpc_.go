@@ -2,6 +2,7 @@ package ec2
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"strconv"
@@ -172,6 +173,10 @@ func resourceVPCCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+
+	if _, ok := d.GetOk("enable_classiclink"); ok {
+		return errors.New(`with the retirement of EC2-Classic no new VPCs can be created with ClassicLink enabled`)
+	}
 
 	input := &ec2.CreateVpcInput{
 		AmazonProvidedIpv6CidrBlock: aws.Bool(d.Get("assign_generated_ipv6_cidr_block").(bool)),

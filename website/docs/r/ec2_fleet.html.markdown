@@ -218,6 +218,7 @@ This configuration block supports the following:
 * `total_target_capacity` - (Required) The number of units to request, filled using `default_target_capacity_type`.
 * `on_demand_target_capacity` - (Optional) The number of On-Demand units to request.
 * `spot_target_capacity` - (Optional) The number of Spot units to request.
+* `target_capacity_unit_type` - (Optional) The unit for the target capacity. This can only be done with `instance_requirements` defined
 
 ## Attributes Reference
 

@@ -13,9 +13,9 @@ on:
       - .go-version
       - .ci/.markdownlinkcheck.json
       - .ci/.tflint.hcl
+      - .ci/tools/go.mod
       - .markdownlint.yml
       - website/docs/**
-      - tools/go.mod
 
 jobs:
   markdown-link-check-a-h-markdown:

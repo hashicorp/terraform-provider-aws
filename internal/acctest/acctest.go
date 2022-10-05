@@ -709,7 +709,7 @@ func PreCheckRegionNot(t *testing.T, regions ...string) {
 // PreCheckAlternateRegionIs checks that the alternate test region is the specified region.
 func PreCheckAlternateRegionIs(t *testing.T, region string) {
 	if curr := AlternateRegion(); curr != region {
-		t.Skipf("skipping tests; %s (%s) does not equal %s", conns.EnvVarDefaultRegion, curr, region)
+		t.Skipf("skipping tests; %s (%s) does not equal %s", conns.EnvVarAlternateRegion, curr, region)
 	}
 }
 
@@ -1921,6 +1921,38 @@ resource "aws_subnet" "test" {
   vpc_id            = aws_vpc.test.id
   availability_zone = data.aws_availability_zones.available.names[count.index]
   cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, subnetCount),
+	)
+}
+
+func ConfigVPCWithSubnetsIPv6(rName string, subnetCount int) string {
+	return ConfigCompose(
+		ConfigAvailableAZsNoOptInDefaultExclude(),
+		fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  assign_generated_ipv6_cidr_block = true
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "test" {
+  count = %[2]d
+
+  vpc_id            = aws_vpc.test.id
+  availability_zone = data.aws_availability_zones.available.names[count.index]
+  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)
+
+  ipv6_cidr_block                 = cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, count.index)
+  assign_ipv6_address_on_creation = true
 
   tags = {
     Name = %[1]q

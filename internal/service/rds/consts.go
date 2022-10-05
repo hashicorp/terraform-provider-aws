@@ -9,6 +9,21 @@ const (
 )
 
 const (
+	ClusterStatusAvailable                  = "available"
+	ClusterStatusBackingUp                  = "backing-up"
+	ClusterStatusConfiguringIAMDatabaseAuth = "configuring-iam-database-auth"
+	ClusterStatusCreating                   = "creating"
+	ClusterStatusDeleting                   = "deleting"
+	ClusterStatusMigrating                  = "migrating"
+	ClusterStatusModifying                  = "modifying"
+	ClusterStatusPreparingDataMigration     = "preparing-data-migration"
+	ClusterStatusRebooting                  = "rebooting"
+	ClusterStatusRenaming                   = "renaming"
+	ClusterStatusResettingMasterCredentials = "resetting-master-credentials"
+	ClusterStatusUpgrading                  = "upgrading"
+)
+
+const (
 	storageTypeStandard = "standard"
 	storageTypeGP2      = "gp2"
 	storageTypeIO1      = "io1"
@@ -38,26 +53,35 @@ const (
 
 // https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/accessing-monitoring.html#Overview.DBInstance.Status.
 const (
-	InstanceStatusAvailable                     = "available"
-	InstanceStatusBackingUp                     = "backing-up"
-	InstanceStatusConfiguringEnhancedMonitoring = "configuring-enhanced-monitoring"
-	InstanceStatusConfiguringIAMDatabaseAuth    = "configuring-iam-database-auth"
-	InstanceStatusConfiguringLogExports         = "configuring-log-exports"
-	InstanceStatusCreating                      = "creating"
-	InstanceStatusDeleting                      = "deleting"
-	InstanceStatusIncompatibleParameters        = "incompatible-parameters"
-	InstanceStatusIncompatibleRestore           = "incompatible-restore"
-	InstanceStatusMaintenance                   = "maintenance"
-	InstanceStatusModifying                     = "modifying"
-	InstanceStatusMovingToVPC                   = "moving-to-vpc"
-	InstanceStatusRebooting                     = "rebooting"
-	InstanceStatusRenaming                      = "renaming"
-	InstanceStatusResettingMasterCredentials    = "resetting-master-credentials"
-	InstanceStatusStarting                      = "starting"
-	InstanceStatusStopping                      = "stopping"
-	InstanceStatusStorageFull                   = "storage-full"
-	InstanceStatusStorageOptimization           = "storage-optimization"
-	InstanceStatusUpgrading                     = "upgrading"
+	InstanceStatusAvailable                                    = "available"
+	InstanceStatusBackingUp                                    = "backing-up"
+	InstanceStatusConfiguringEnhancedMonitoring                = "configuring-enhanced-monitoring"
+	InstanceStatusConfiguringIAMDatabaseAuth                   = "configuring-iam-database-auth"
+	InstanceStatusConfiguringLogExports                        = "configuring-log-exports"
+	InstanceStatusConvertingToVPC                              = "converting-to-vpc"
+	InstanceStatusCreating                                     = "creating"
+	InstanceStatusDeleting                                     = "deleting"
+	InstanceStatusFailed                                       = "failed"
+	InstanceStatusInaccessibleEncryptionCredentials            = "inaccessible-encryption-credentials"
+	InstanceStatusInaccessibleEncryptionCredentialsRecoverable = "inaccessible-encryption-credentials-recoverable"
+	InstanceStatusIncompatibleNetwork                          = "incompatible-network"
+	InstanceStatusIncompatibleOptionGroup                      = "incompatible-option-group"
+	InstanceStatusIncompatibleParameters                       = "incompatible-parameters"
+	InstanceStatusIncompatibleRestore                          = "incompatible-restore"
+	InstanceStatusInsufficentCapacity                          = "insufficient-capacity"
+	InstanceStatusMaintenance                                  = "maintenance"
+	InstanceStatusModifying                                    = "modifying"
+	InstanceStatusMovingToVPC                                  = "moving-to-vpc"
+	InstanceStatusRebooting                                    = "rebooting"
+	InstanceStatusResettingMasterCredentials                   = "resetting-master-credentials"
+	InstanceStatusRenaming                                     = "renaming"
+	InstanceStatusRestoreError                                 = "restore-error"
+	InstanceStatusStarting                                     = "starting"
+	InstanceStatusStopped                                      = "stopped"
+	InstanceStatusStopping                                     = "stopping"
+	InstanceStatusStorageFull                                  = "storage-full"
+	InstanceStatusStorageOptimization                          = "storage-optimization"
+	InstanceStatusUpgrading                                    = "upgrading"
 )
 
 const (
@@ -130,6 +154,7 @@ func ClusterExportableLogType_Values() []string {
 		ExportableLogTypeGeneral,
 		ExportableLogTypePostgreSQL,
 		ExportableLogTypeSlowQuery,
+		ExportableLogTypeUpgrade,
 	}
 }
 
@@ -146,6 +171,18 @@ func InstanceExportableLogType_Values() []string {
 		ExportableLogTypeSlowQuery,
 		ExportableLogTypeTrace,
 		ExportableLogTypeUpgrade,
+	}
+}
+
+const (
+	NetworkTypeDual = "DUAL"
+	NetworkTypeIPv4 = "IPV4"
+)
+
+func NetworkType_Values() []string {
+	return []string{
+		NetworkTypeDual,
+		NetworkTypeIPv4,
 	}
 }
 

@@ -124,7 +124,7 @@ func ResourceCodePipeline() *schema.Resource { // nosemgrep:ci.codepipeline-in-f
 									"configuration": {
 										Type:     schema.TypeMap,
 										Optional: true,
-										ValidateDiagFunc: allDiagFunc(
+										ValidateDiagFunc: verify.ValidAllDiag(
 											validation.MapKeyLenBetween(1, 50),
 											validation.MapKeyLenBetween(1, 1000),
 										),
@@ -680,15 +680,4 @@ func hashGitHubToken(token string) string {
 	}
 	sum := sha256.Sum256([]byte(token))
 	return gitHubTokenHashPrefix + hex.EncodeToString(sum[:])
-}
-
-// https://github.com/hashicorp/terraform-plugin-sdk/issues/780.
-func allDiagFunc(validators ...schema.SchemaValidateDiagFunc) schema.SchemaValidateDiagFunc {
-	return func(i interface{}, k cty.Path) diag.Diagnostics {
-		var diags diag.Diagnostics
-		for _, validator := range validators {
-			diags = append(diags, validator(i, k)...)
-		}
-		return diags
-	}
 }

@@ -21,7 +21,7 @@ data "aws_organizations_organizational_units" "ou" {
 
 ## Argument Reference
 
-* `parent_id` - (Required) The parent ID of the organizational unit.
+* `parent_id` - (Required) Parent ID of the organizational unit.
 
 ## Attributes Reference
 

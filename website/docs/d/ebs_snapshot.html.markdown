@@ -50,21 +50,21 @@ several valid keys, for a full reference, check out
 
 In addition to all arguments above, the following attributes are exported:
 
-* `arn` - Amazon Resource Name (ARN) of the EBS Snapshot.
-* `id` - The snapshot ID (e.g., snap-59fcb34e).
-* `snapshot_id` - The snapshot ID (e.g., snap-59fcb34e).
-* `description` - A description for the snapshot
-* `owner_id` - The AWS account ID of the EBS snapshot owner.
+* `arn` - ARN of the EBS Snapshot.
+* `id` - Snapshot ID (e.g., snap-59fcb34e).
+* `snapshot_id` - Snapshot ID (e.g., snap-59fcb34e).
+* `description` - Description for the snapshot
+* `owner_id` - AWS account ID of the EBS snapshot owner.
 * `owner_alias` - Value from an Amazon-maintained list (`amazon`, `aws-marketplace`, `microsoft`) of snapshot owners.
-* `volume_id` - The volume ID (e.g., vol-59fcb34e).
+* `volume_id` - Volume ID (e.g., vol-59fcb34e).
 * `encrypted` - Whether the snapshot is encrypted.
-* `volume_size` - The size of the drive in GiBs.
-* `kms_key_id` - The ARN for the KMS encryption key.
+* `volume_size` - Size of the drive in GiBs.
+* `kms_key_id` - ARN for the KMS encryption key.
 * `data_encryption_key_id` - The data encryption key identifier for the snapshot.
-* `state` - The snapshot state.
-* `storage_tier` - The storage tier in which the snapshot is stored.
-* `outpost_arn` - The ARN of the Outpost on which the snapshot is stored.
-* `tags` - A map of tags for the resource.
+* `state` - Snapshot state.
+* `storage_tier` - Storage tier in which the snapshot is stored.
+* `outpost_arn` - ARN of the Outpost on which the snapshot is stored.
+* `tags` - Map of tags for the resource.
 
 ## Timeouts
 

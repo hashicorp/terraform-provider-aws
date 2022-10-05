@@ -10,6 +10,11 @@ description: |-
 
 Provides a resource to issue a certificate using AWS Certificate Manager Private Certificate Authority (ACM PCA).
 
+Certificates created using `aws_acmpca_certificate` are not eligible for automatic renewal,
+and must be replaced instead.
+To issue a renewable certificate using an ACM PCA, create a [`aws_acm_certificate`](acm_certificate.html)
+with the parameter `certificate_authority_arn`.
+
 ## Example Usage
 
 ### Basic
@@ -56,11 +61,12 @@ resource "tls_cert_request" "csr" {
 
 The following arguments are supported:
 
-* `certificate_authority_arn` - (Required) Amazon Resource Name (ARN) of the certificate authority.
+* `certificate_authority_arn` - (Required) ARN of the certificate authority.
 * `certificate_signing_request` - (Required) Certificate Signing Request in PEM format.
-* `signing_algorithm` - (Required) Algorithm to use to sign certificate requests. Valid values: `SHA256WITHRSA`, `SHA256WITHECDSA`, `SHA384WITHRSA`, `SHA384WITHECDSA`, `SHA512WITHRSA`, `SHA512WITHECDSA`
+* `signing_algorithm` - (Required) Algorithm to use to sign certificate requests. Valid values: `SHA256WITHRSA`, `SHA256WITHECDSA`, `SHA384WITHRSA`, `SHA384WITHECDSA`, `SHA512WITHRSA`, `SHA512WITHECDSA`.
 * `validity` - (Required) Configures end of the validity period for the certificate. See [validity block](#validity-block) below.
-* `template_arn` - (Optional) The template to use when issuing a certificate. See [ACM PCA Documentation](https://docs.aws.amazon.com/acm-pca/latest/userguide/UsingTemplates.html) for more information.
+* `template_arn` - (Optional) Template to use when issuing a certificate.
+  See [ACM PCA Documentation](https://docs.aws.amazon.com/privateca/latest/userguide/UsingTemplates.html) for more information.
 
 ### validity block
 
@@ -72,9 +78,9 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `arn` - Amazon Resource Name (ARN) of the certificate.
-* `certificate` - The PEM-encoded certificate value.
-* `certificate_chain` - The PEM-encoded certificate chain that includes any intermediate certificates and chains up to root CA.
+* `arn` - ARN of the certificate.
+* `certificate` - PEM-encoded certificate value.
+* `certificate_chain` - PEM-encoded certificate chain that includes any intermediate certificates and chains up to root CA.
 
 ## Import
 

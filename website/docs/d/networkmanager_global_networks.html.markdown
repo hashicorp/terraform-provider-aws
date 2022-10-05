@@ -28,4 +28,4 @@ data "aws_networkmanager_global_networks" "example" {
 
 In addition to all arguments above, the following attributes are exported:
 
-* `ids` - The IDs of the global networks.
+* `ids` - IDs of the global networks.

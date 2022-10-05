@@ -23,7 +23,8 @@ func TestAccSESActiveReceiptRuleSet_serial(t *testing.T) {
 			"disappears": testAccActiveReceiptRuleSet_disappears,
 		},
 		"DataSource": {
-			"basic": testAccActiveReceiptRuleSetDataSource_basic,
+			"basic":           testAccActiveReceiptRuleSetDataSource_basic,
+			"noActiveRuleSet": testAccActiveReceiptRuleSetDataSource_noActiveRuleSet,
 		},
 	}
 

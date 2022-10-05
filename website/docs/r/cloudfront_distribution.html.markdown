@@ -342,7 +342,7 @@ See the [CloudFront User Guide](https://docs.aws.amazon.com/AmazonCloudFront/lat
 * `cookies` (Required) - The [forwarded values cookies](#cookies-arguments)
     that specifies how CloudFront handles cookies (maximum one).
 
-* `headers` (Optional) - Specifies the Headers, if any, that you want
+* `headers` (Optional) - Headers, if any, that you want
     CloudFront to vary upon for this cache behavior. Specify `*` to include all
     headers.
 
@@ -415,7 +415,7 @@ resource "aws_cloudfront_distribution" "example" {
 
 ##### Cookies Arguments
 
-* `forward` (Required) - Specifies whether you want CloudFront to forward
+* `forward` (Required) - Whether you want CloudFront to forward
     cookies to the origin that is associated with this cache behavior. You can
     specify `all`, `none` or `whitelist`. If `whitelist`, you must include the
     subsequent `whitelisted_names`
@@ -472,6 +472,8 @@ argument should not be specified.
 * `custom_header` (Optional) - One or more sub-resources with `name` and
     `value` parameters that specify header data that will be sent to the origin
     (multiples allowed).
+
+* `origin_access_control_id` (Optional) - The unique identifier of an origin access control for this origin.
 
 * `origin_id` (Required) - A unique identifier for the origin.
 
