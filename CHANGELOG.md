@@ -32,6 +32,7 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * data-source/aws_iam_policy_document: Better handling when invalid JSON passed to `override_policy_documents` ([#27055](https://github.com/hashicorp/terraform-provider-aws/issues/27055))
+* data-source/aws_ses_active_receipt_rule_set: Prevent crash when no receipt rule set is active ([#27073](https://github.com/hashicorp/terraform-provider-aws/issues/27073))
 * resource/aws_keyspaces_table: Change `schema_definition.clustering_key` and `schema_definition.partition_key` to lists in order to respect configured orderings ([#26812](https://github.com/hashicorp/terraform-provider-aws/issues/26812))
 * resource/aws_rolesanywhere_profile: Correctly handle updates to `enabled` and `session_policy` ([#26858](https://github.com/hashicorp/terraform-provider-aws/issues/26858))
 * resource/aws_rolesanywhere_trust_anchor: Correctly handle updates to `enabled` ([#26858](https://github.com/hashicorp/terraform-provider-aws/issues/26858))
