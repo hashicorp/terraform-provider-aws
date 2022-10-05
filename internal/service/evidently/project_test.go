@@ -1,10 +1,10 @@
 package evidently_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudwatchevidently"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfcloudwatchevidently "github.com/hashicorp/terraform-provider-aws/internal/service/evidently"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccEvidentlyProject_basic(t *testing.T) {
@@ -356,38 +357,43 @@ func testAccCheckProjectDestroy(s *terraform.State) error {
 			continue
 		}
 
-		resp, err := tfcloudwatchevidently.FindProjectByName(conn, rs.Primary.ID)
+		_, err := tfcloudwatchevidently.FindProjectByName(context.Background(), conn, rs.Primary.ID)
 
-		if err == nil {
-			if aws.StringValue(resp.Name) == rs.Primary.ID {
-				return fmt.Errorf("Project '%s' was not deleted properly", rs.Primary.ID)
-			}
+		if tfresource.NotFound(err) {
+			continue
 		}
-	}
-
-	return nil
-}
-
-func testAccCheckProjectExists(name string, project *cloudwatchevidently.Project) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
-
-		if !ok {
-			return fmt.Errorf("Not found: %s", name)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No cloudwatchevidently Project ID is set")
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EvidentlyConn
-		resp, err := tfcloudwatchevidently.FindProjectByName(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		*project = *resp
+		return fmt.Errorf("CloudWatch Evidently Project %s still exists", rs.Primary.ID)
+	}
+
+	return nil
+}
+
+func testAccCheckProjectExists(n string, v *cloudwatchevidently.Project) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No CloudWatch Evidently Project ID is set")
+		}
+
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EvidentlyConn
+
+		output, err := tfcloudwatchevidently.FindProjectByName(context.Background(), conn, rs.Primary.ID)
+
+		if err != nil {
+			return err
+		}
+
+		*v = *output
 
 		return nil
 	}

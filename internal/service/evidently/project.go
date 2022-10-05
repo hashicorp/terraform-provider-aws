@@ -14,18 +14,21 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceProject() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceProjectCreate,
-		ReadContext:   resourceProjectRead,
-		UpdateContext: resourceProjectUpdate,
-		DeleteContext: resourceProjectDelete,
+		CreateWithoutTimeout: resourceProjectCreate,
+		ReadWithoutTimeout:   resourceProjectRead,
+		UpdateWithoutTimeout: resourceProjectUpdate,
+		DeleteWithoutTimeout: resourceProjectDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
+
 		Schema: map[string]*schema.Schema{
 			"active_experiment_count": {
 				Type:     schema.TypeInt,
@@ -137,6 +140,7 @@ func ResourceProject() *schema.Resource {
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
 		},
+
 		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
@@ -147,7 +151,6 @@ func resourceProjectCreate(ctx context.Context, d *schema.ResourceData, meta int
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("name").(string)
-
 	input := &cloudwatchevidently.CreateProjectInput{
 		Name: aws.String(name),
 	}
@@ -164,15 +167,11 @@ func resourceProjectCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
-	log.Printf("[DEBUG] Creating CloudWatch Evidently Project %s", input)
+	log.Printf("[DEBUG] Creating CloudWatch Evidently Project: %s", input)
 	output, err := conn.CreateProjectWithContext(ctx, input)
 
 	if err != nil {
 		return diag.Errorf("creating CloudWatch Evidently Project (%s): %s", name, err)
-	}
-
-	if output == nil {
-		return diag.Errorf("creating CloudWatch Evidently Project (%s): empty output", name)
 	}
 
 	d.SetId(aws.StringValue(output.Project.Name))
@@ -185,30 +184,20 @@ func resourceProjectRead(ctx context.Context, d *schema.ResourceData, meta inter
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	name := d.Id()
+	project, err := FindProjectByName(ctx, conn, d.Id())
 
-	resp, err := conn.GetProjectWithContext(ctx, &cloudwatchevidently.GetProjectInput{
-		Project: aws.String(name),
-	})
-
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, cloudwatchevidently.ErrCodeResourceNotFoundException) {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] CloudWatch Evidently Project (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return diag.Errorf("getting CloudWatch Evidently Project (%s): %s", d.Id(), err)
+		return diag.Errorf("reading CloudWatch Evidently Project (%s): %s", d.Id(), err)
 	}
-
-	if resp == nil || resp.Project == nil {
-		return diag.Errorf("getting CloudWatch Evidently Project (%s): empty response", d.Id())
-	}
-
-	project := resp.Project
 
 	if err := d.Set("data_delivery", flattenDataDelivery(project.DataDelivery)); err != nil {
-		return diag.FromErr(err)
+		return diag.Errorf("setting data_delivery: %s", err)
 	}
 
 	d.Set("active_experiment_count", project.ActiveExperimentCount)
@@ -223,7 +212,7 @@ func resourceProjectRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("name", project.Name)
 	d.Set("status", project.Status)
 
-	tags := KeyValueTags(resp.Project.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(project.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -240,8 +229,6 @@ func resourceProjectRead(ctx context.Context, d *schema.ResourceData, meta inter
 func resourceProjectUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).EvidentlyConn
 
-	name := d.Id()
-
 	// Project has 2 update APIs
 	// UpdateProjectWithContext: Updates the description of an existing project.
 	// UpdateProjectDataDeliveryWithContext: Updates the data storage options for this project.
@@ -249,17 +236,17 @@ func resourceProjectUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	if d.HasChanges("description") {
 		_, err := conn.UpdateProjectWithContext(ctx, &cloudwatchevidently.UpdateProjectInput{
 			Description: aws.String(d.Get("description").(string)),
-			Project:     aws.String(name),
+			Project:     aws.String(d.Id()),
 		})
 
 		if err != nil {
-			return diag.Errorf("updating Project Description (%s): %s", d.Id(), err)
+			return diag.Errorf("updating CloudWatch Evidently Project (%s): %s", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("data_delivery") {
 		input := &cloudwatchevidently.UpdateProjectDataDeliveryInput{
-			Project: aws.String(name),
+			Project: aws.String(d.Id()),
 		}
 
 		dataDelivery := d.Get("data_delivery").([]interface{})
@@ -280,15 +267,17 @@ func resourceProjectUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 
 		_, err := conn.UpdateProjectDataDeliveryWithContext(ctx, input)
+
 		if err != nil {
-			return diag.Errorf("updating Project (%s): %s", d.Id(), err)
+			return diag.Errorf("updating CloudWatch Evidently Project (%s) data delivery: %s", d.Id(), err)
 		}
 	}
 
 	// updates to tags
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+
+		if err := UpdateTagsWithContext(ctx, conn, d.Get("arn").(string), o, n); err != nil {
 			return diag.Errorf("updating tags: %s", err)
 		}
 	}
@@ -299,14 +288,17 @@ func resourceProjectUpdate(ctx context.Context, d *schema.ResourceData, meta int
 func resourceProjectDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).EvidentlyConn
 
-	name := d.Id()
-
+	log.Printf("[DEBUG] Deleting CloudWatch Evidently Project: %s", d.Id())
 	_, err := conn.DeleteProjectWithContext(ctx, &cloudwatchevidently.DeleteProjectInput{
-		Project: aws.String(name),
+		Project: aws.String(d.Id()),
 	})
 
+	if tfawserr.ErrCodeEquals(err, cloudwatchevidently.ErrCodeResourceNotFoundException) {
+		return nil
+	}
+
 	if err != nil {
-		return diag.Errorf("deleting Project (%s): %s", name, err)
+		return diag.Errorf("deleting CloudWatch Evidently Project (%s): %s", d.Id(), err)
 	}
 
 	return nil
