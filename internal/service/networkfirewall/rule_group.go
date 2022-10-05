@@ -168,7 +168,7 @@ func ResourceRuleGroup() *schema.Resource {
 										Optional: true,
 									},
 									"stateful_rule": {
-										Type:     schema.TypeSet,
+										Type:     schema.TypeList,
 										Optional: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
@@ -749,8 +749,8 @@ func expandRuleGroup(l []interface{}) *networkfirewall.RuleGroup {
 			if v, ok := rsMap["rules_string"].(string); ok && v != "" {
 				rulesSource.RulesString = aws.String(v)
 			}
-			if v, ok := rsMap["stateful_rule"].(*schema.Set); ok && v.Len() > 0 {
-				rulesSource.StatefulRules = expandStatefulRules(v.List())
+			if v, ok := rsMap["stateful_rule"].([]interface{}); ok && len(v) > 0 {
+				rulesSource.StatefulRules = expandStatefulRules(v)
 			}
 			if v, ok := rsMap["stateless_rules_and_custom_actions"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 				rulesSource.StatelessRulesAndCustomActions = expandStatelessRulesAndCustomActions(v)
