@@ -126,7 +126,6 @@ func dataSourceIPAMPoolsRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.Set("ipam_pools", flattenIPAMPools(pools, ignoreTagsConfig))
-	// pool = output.IpamPools[0]
 
 	d.SetId(meta.(*conns.AWSClient).Region)
 
