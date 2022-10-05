@@ -162,6 +162,25 @@ func ResourceStorageLensConfiguration() *schema.Resource {
 								},
 							},
 						},
+						"include": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"buckets": {
+										Type:     schema.TypeSet,
+										Optional: true,
+										Elem:     &schema.Schema{Type: schema.TypeString},
+									},
+									"regions": {
+										Type:     schema.TypeSet,
+										Optional: true,
+										Elem:     &schema.Schema{Type: schema.TypeString},
+									},
+								},
+							},
+						},
 					},
 				},
 			},
@@ -364,6 +383,10 @@ func expandStorageLensConfiguration(tfMap map[string]interface{}) *s3control.Sto
 		apiObject.Exclude = expandExclude(v[0].(map[string]interface{}))
 	}
 
+	if v, ok := tfMap["include"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		apiObject.Include = expandInclude(v[0].(map[string]interface{}))
+	}
+
 	return apiObject
 }
 
@@ -491,6 +514,24 @@ func expandExclude(tfMap map[string]interface{}) *s3control.Exclude {
 	return apiObject
 }
 
+func expandInclude(tfMap map[string]interface{}) *s3control.Include {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &s3control.Include{}
+
+	if v, ok := tfMap["buckets"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.Buckets = flex.ExpandStringSet(v)
+	}
+
+	if v, ok := tfMap["regions"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.Regions = flex.ExpandStringSet(v)
+	}
+
+	return apiObject
+}
+
 func flattenStorageLensConfiguration(apiObject *s3control.StorageLensConfiguration) map[string]interface{} {
 	if apiObject == nil {
 		return nil
@@ -508,6 +549,10 @@ func flattenStorageLensConfiguration(apiObject *s3control.StorageLensConfigurati
 
 	if v := apiObject.Exclude; v != nil {
 		tfMap["exclude"] = []interface{}{flattenExclude(v)}
+	}
+
+	if v := apiObject.Include; v != nil {
+		tfMap["include"] = []interface{}{flattenInclude(v)}
 	}
 
 	return tfMap
@@ -618,6 +663,24 @@ func flattenSelectionCriteria(apiObject *s3control.SelectionCriteria) map[string
 }
 
 func flattenExclude(apiObject *s3control.Exclude) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.Buckets; v != nil {
+		tfMap["buckets"] = aws.StringValueSlice(v)
+	}
+
+	if v := apiObject.Regions; v != nil {
+		tfMap["regions"] = aws.StringValueSlice(v)
+	}
+
+	return tfMap
+}
+
+func flattenInclude(apiObject *s3control.Include) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
