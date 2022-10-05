@@ -18,13 +18,13 @@ func TestAccIPAMPoolsDataSource_basic(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIPAMPoolsDataSourceConfig_Basic,
+				Config: testAccIPAMPoolsDataSourceConfig_basic,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "ipam_pools.#", "1"),
 				),
 			},
 			{
-				Config: testAccIPAMPoolsDataSourceConfig_BasicTwoPools,
+				Config: testAccIPAMPoolsDataSourceConfig_basicTwoPools,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "ipam_pools.#", "3"),
 					resource.TestCheckResourceAttr(dataSourceNameTwo, "ipam_pools.#", "1"),
@@ -41,7 +41,7 @@ func TestAccIPAMPoolsDataSource_basic(t *testing.T) {
 	})
 }
 
-var testAccIPAMPoolsDataSourceConfig_Basic = acctest.ConfigCompose(testAccIPAMPoolConfig_base, `
+var testAccIPAMPoolsDataSourceConfig_basic = acctest.ConfigCompose(testAccIPAMPoolConfig_base, `
 resource "aws_vpc_ipam_pool" "test" {
   address_family                    = "ipv4"
   ipam_scope_id                     = aws_vpc_ipam.test.private_default_scope_id
@@ -62,7 +62,7 @@ data "aws_vpc_ipam_pools" "test" {
 }
 `)
 
-var testAccIPAMPoolsDataSourceConfig_BasicTwoPools = acctest.ConfigCompose(testAccIPAMPoolConfig_base, `
+var testAccIPAMPoolsDataSourceConfig_basicTwoPools = acctest.ConfigCompose(testAccIPAMPoolConfig_base, `
 resource "aws_vpc_ipam_pool" "test" {
   address_family                    = "ipv4"
   ipam_scope_id                     = aws_vpc_ipam.test.private_default_scope_id
