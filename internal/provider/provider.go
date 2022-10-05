@@ -91,6 +91,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/emrcontainers"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/emrserverless"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/events"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/evidently"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/firehose"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/fis"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/fms"
@@ -1515,6 +1516,8 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_emrcontainers_virtual_cluster": emrcontainers.ResourceVirtualCluster(),
 
 			"aws_emrserverless_application": emrserverless.ResourceApplication(),
+
+			"aws_evidently_project": evidently.ResourceProject(),
 
 			"aws_kinesis_firehose_delivery_stream": firehose.ResourceDeliveryStream(),
 
