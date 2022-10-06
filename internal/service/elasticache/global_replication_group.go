@@ -60,6 +60,11 @@ func ResourceGlobalReplicationGroup() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
+			"automatic_failover_enabled": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Computed: true,
+			},
 			"cache_node_type": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -256,6 +261,14 @@ func resourceGlobalReplicationGroupCreate(d *schema.ResourceData, meta interface
 		return fmt.Errorf("waiting for ElastiCache Global Replication Group (%s) creation: %w", d.Id(), err)
 	}
 
+	if v := d.Get("automatic_failover_enabled").(bool); v == flattenGlobalReplicationGroupAutomaticFailoverEnabled(globalReplicationGroup.Members) {
+		log.Printf("[DEBUG] Not updating ElastiCache Global Replication Group (%s) automatic failover: no change from %t", d.Id(), v)
+	} else {
+		if err := updateGlobalReplicationGroup(conn, d.Id(), globalReplicationAutomaticFailoverUpdater(v)); err != nil {
+			return fmt.Errorf("updating ElastiCache Global Replication Group (%s) automatic failover on creation: %w", d.Id(), err)
+		}
+	}
+
 	if v, ok := d.GetOk("cache_node_type"); ok {
 		if v.(string) == aws.StringValue(globalReplicationGroup.CacheNodeType) {
 			log.Printf("[DEBUG] Not updating ElastiCache Global Replication Group (%s) node type: no change from %q", d.Id(), v)
@@ -337,6 +350,8 @@ func resourceGlobalReplicationGroupRead(d *schema.ResourceData, meta interface{}
 		return fmt.Errorf("reading ElastiCache Replication Group: %w", err)
 	}
 
+	d.Set("automatic_failover_enabled", flattenGlobalReplicationGroupAutomaticFailoverEnabled(globalReplicationGroup.Members))
+
 	d.Set("primary_replication_group_id", flattenGlobalReplicationGroupPrimaryGroupID(globalReplicationGroup.Members))
 
 	return nil
@@ -346,6 +361,19 @@ type globalReplicationGroupUpdater func(input *elasticache.ModifyGlobalReplicati
 
 func resourceGlobalReplicationGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ElastiCacheConn
+
+	// Only one field can be changed per request
+	if d.HasChange("cache_node_type") {
+		if err := updateGlobalReplicationGroup(conn, d.Id(), globalReplicationGroupNodeTypeUpdater(d.Get("cache_node_type").(string))); err != nil {
+			return fmt.Errorf("updating ElastiCache Global Replication Group (%s) node type: %w", d.Id(), err)
+		}
+	}
+
+	if d.HasChange("automatic_failover_enabled") {
+		if err := updateGlobalReplicationGroup(conn, d.Id(), globalReplicationAutomaticFailoverUpdater(d.Get("automatic_failover_enabled").(bool))); err != nil {
+			return fmt.Errorf("updating ElastiCache Global Replication Group (%s) automatic failover: %w", d.Id(), err)
+		}
+	}
 
 	if d.HasChange("engine_version") {
 		o, n := d.GetChange("engine_version")
@@ -365,13 +393,6 @@ func resourceGlobalReplicationGroupUpdate(d *schema.ResourceData, meta interface
 			if err != nil {
 				return fmt.Errorf("updating ElastiCache Global Replication Group (%s): %w", d.Id(), err)
 			}
-		}
-	}
-
-	// Only one field can be changed per request
-	if d.HasChange("cache_node_type") {
-		if err := updateGlobalReplicationGroup(conn, d.Id(), globalReplicationGroupNodeTypeUpdater(d.Get("cache_node_type").(string))); err != nil {
-			return fmt.Errorf("updating ElastiCache Global Replication Group (%s) node type: %w", d.Id(), err)
 		}
 	}
 
@@ -400,6 +421,12 @@ func globalReplicationGroupEngineVersionMajorUpdater(version, paramGroupName str
 	return func(input *elasticache.ModifyGlobalReplicationGroupInput) {
 		input.EngineVersion = aws.String(version)
 		input.CacheParameterGroupName = aws.String(paramGroupName)
+	}
+}
+
+func globalReplicationAutomaticFailoverUpdater(enabled bool) globalReplicationGroupUpdater {
+	return func(input *elasticache.ModifyGlobalReplicationGroupInput) {
+		input.AutomaticFailoverEnabled = aws.Bool(enabled)
 	}
 }
 
@@ -477,6 +504,15 @@ func DeleteGlobalReplicationGroup(conn *elasticache.ElastiCache, id string, read
 	}
 
 	return nil
+}
+
+func flattenGlobalReplicationGroupAutomaticFailoverEnabled(members []*elasticache.GlobalReplicationGroupMember) bool {
+	if len(members) == 0 {
+		return false
+	}
+
+	member := members[0]
+	return aws.StringValue(member.AutomaticFailover) == elasticache.AutomaticFailoverStatusEnabled
 }
 
 func flattenGlobalReplicationGroupPrimaryGroupID(members []*elasticache.GlobalReplicationGroupMember) string {

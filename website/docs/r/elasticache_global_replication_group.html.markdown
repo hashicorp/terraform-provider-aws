@@ -100,6 +100,8 @@ resource "aws_elasticache_replication_group" "secondary" {
 
 The following arguments are supported:
 
+* `automatic_failover_enabled` - (Optional) Specifies whether read-only replicas will be automatically promoted to read/write primary if the existing primary fails.
+  When creating, by default the Global Replication Group inherits the automatic failover setting of the primary replication group.
 * `cache_node_type` - (Optional) The instance class used.
   See AWS documentation for information on [supported node types](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/CacheNodes.SupportedTypes.html)
   and [guidance on selecting node types](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/nodes-select-size.html).
