@@ -50,7 +50,8 @@ func TestAccAWSOpsworksCustomLayer_basic(t *testing.T) {
 			{
 				Config: testAccAwsOpsworksCustomLayerConfigNoVpcCreate(stackName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSOpsworksCustomLayerExists("aws_opsworks_custom_layer.tf-acc", &opslayer),
+					testAccCheckAWSOpsworksCustomLayerExists(
+						"aws_opsworks_custom_layer.tf-acc", &opslayer),
 					testAccCheckAWSOpsworksCreateLayerAttributes(&opslayer, stackName),
 					resource.TestCheckResourceAttr(
 						"aws_opsworks_custom_layer.tf-acc", "name", stackName,
@@ -163,68 +164,6 @@ func TestAccAWSOpsworksCustomLayer_basic(t *testing.T) {
 			},
 		},
 	})
-}
-
-func TestAccAWSOpsworksCustomLayer_autoscaling(t *testing.T) {
-	stackName := fmt.Sprintf("tf-%d", acctest.RandInt())
-	var opslayer opsworks.Layer
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAwsOpsworksCustomLayerDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAwsOpsworksCustomLayerAutoscalingGroup(stackName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSOpsworksCustomLayerExists("aws_opsworks_custom_layer.tf-acc", &opslayer),
-					testAccCheckAWSOpsworksCreateLayerAttributes(&opslayer, stackName),
-					resource.TestCheckResourceAttr(
-						"aws_opsworks_custom_layer.tf-acc", "name", stackName,
-					),
-					resource.TestCheckResourceAttr(
-						"aws_opsworks_custom_layer.tf-acc", "load_based_autoscaling.0.enable", "true",
-					),
-					resource.TestCheckResourceAttr(
-						"aws_opsworks_custom_layer.tf-acc", "load_based_autoscaling.0.downscaling.0.cpu_threshold", "20",
-					),
-					resource.TestCheckResourceAttr(
-						"aws_opsworks_custom_layer.tf-acc", "load_based_autoscaling.0.downscaling.0.ignore_metrics_time", "15",
-					),
-					resource.TestCheckResourceAttr(
-						"aws_opsworks_custom_layer.tf-acc", "load_based_autoscaling.0.downscaling.0.instance_count", "2",
-					),
-					resource.TestCheckResourceAttr(
-						"aws_opsworks_custom_layer.tf-acc", "load_based_autoscaling.0.downscaling.0.load_threshold", "5",
-					),
-					resource.TestCheckResourceAttr(
-						"aws_opsworks_custom_layer.tf-acc", "load_based_autoscaling.0.downscaling.0.memory_threshold", "20",
-					),
-					resource.TestCheckResourceAttr(
-						"aws_opsworks_custom_layer.tf-acc", "load_based_autoscaling.0.downscaling.0.thresholds_wait_time", "30",
-					),
-					resource.TestCheckResourceAttr(
-						"aws_opsworks_custom_layer.tf-acc", "load_based_autoscaling.0.upscaling.0.cpu_threshold", "80",
-					),
-					resource.TestCheckResourceAttr(
-						"aws_opsworks_custom_layer.tf-acc", "load_based_autoscaling.0.upscaling.0.ignore_metrics_time", "15",
-					),
-					resource.TestCheckResourceAttr(
-						"aws_opsworks_custom_layer.tf-acc", "load_based_autoscaling.0.upscaling.0.instance_count", "3",
-					),
-					resource.TestCheckResourceAttr(
-						"aws_opsworks_custom_layer.tf-acc", "load_based_autoscaling.0.upscaling.0.load_threshold", "10",
-					),
-					resource.TestCheckResourceAttr(
-						"aws_opsworks_custom_layer.tf-acc", "load_based_autoscaling.0.upscaling.0.memory_threshold", "80",
-					),
-					resource.TestCheckResourceAttr(
-						"aws_opsworks_custom_layer.tf-acc", "load_based_autoscaling.0.upscaling.0.thresholds_wait_time", "30",
-					),
-				),
-			},
-		},
-	})
-
 }
 
 func testAccCheckAWSOpsworksCustomLayerExists(
@@ -377,26 +316,26 @@ resource "aws_security_group" "tf-ops-acc-layer2" {
 func testAccAwsOpsworksCustomLayerConfigNoVpcCreate(name string) string {
 	return fmt.Sprintf(`
 resource "aws_opsworks_custom_layer" "tf-acc" {
-  stack_id               = "${aws_opsworks_stack.tf-acc.id}"
-  name                   = "%s"
-  short_name             = "tf-ops-acc-custom-layer"
+  stack_id = "${aws_opsworks_stack.tf-acc.id}"
+  name = "%s"
+  short_name = "tf-ops-acc-custom-layer"
   auto_assign_public_ips = true
   custom_security_group_ids = [
     "${aws_security_group.tf-ops-acc-layer1.id}",
     "${aws_security_group.tf-ops-acc-layer2.id}",
   ]
-  drain_elb_on_shutdown     = true
+  drain_elb_on_shutdown = true
   instance_shutdown_timeout = 300
   system_packages = [
     "git",
     "golang",
   ]
   ebs_volume {
-    type            = "gp2"
+    type = "gp2"
     number_of_disks = 2
-    mount_point     = "/home"
-    size            = 100
-    raid_level      = 0
+    mount_point = "/home"
+    size = 100
+    raid_level = 0
   }
 }
 
@@ -449,24 +388,23 @@ func testAccAwsOpsworksCustomLayerConfigUpdate(name string) string {
 resource "aws_security_group" "tf-ops-acc-layer3" {
   name = "tf-ops-acc-layer-%[1]s"
   ingress {
-    from_port   = 8
-    to_port     = -1
-    protocol    = "icmp"
+    from_port = 8
+    to_port = -1
+    protocol = "icmp"
     cidr_blocks = ["0.0.0.0/0"]
   }
 }
-
 resource "aws_opsworks_custom_layer" "tf-acc" {
-  stack_id               = "${aws_opsworks_stack.tf-acc.id}"
-  name                   = "%[1]s"
-  short_name             = "tf-ops-acc-custom-layer"
+  stack_id = "${aws_opsworks_stack.tf-acc.id}"
+  name = "%[1]s"
+  short_name = "tf-ops-acc-custom-layer"
   auto_assign_public_ips = true
   custom_security_group_ids = [
     "${aws_security_group.tf-ops-acc-layer1.id}",
     "${aws_security_group.tf-ops-acc-layer2.id}",
     "${aws_security_group.tf-ops-acc-layer3.id}",
   ]
-  drain_elb_on_shutdown     = false
+  drain_elb_on_shutdown = false
   instance_shutdown_timeout = 120
   system_packages = [
     "git",
@@ -474,74 +412,21 @@ resource "aws_opsworks_custom_layer" "tf-acc" {
     "subversion",
   ]
   ebs_volume {
-    type            = "gp2"
+    type = "gp2"
     number_of_disks = 2
-    mount_point     = "/home"
-    size            = 100
-    raid_level      = 0
+    mount_point = "/home"
+    size = 100
+    raid_level = 0
   }
   ebs_volume {
-    type            = "io1"
+    type = "io1"
     number_of_disks = 4
-    mount_point     = "/var"
-    size            = 100
-    raid_level      = 1
-    iops            = 3000
+    mount_point = "/var"
+    size = 100
+    raid_level = 1
+    iops = 3000
   }
   custom_json = "{\"layer_key\": \"layer_value2\"}"
-}
-
-%s
-
-%s 
-`, name, testAccAwsOpsworksStackConfigNoVpcCreate(name), testAccAwsOpsworksCustomLayerSecurityGroups(name))
-}
-
-func testAccAwsOpsworksCustomLayerAutoscalingGroup(name string) string {
-	return fmt.Sprintf(`
-resource "aws_opsworks_custom_layer" "tf-acc" {
-  stack_id               = "${aws_opsworks_stack.tf-acc.id}"
-  name                   = "%s"
-  short_name             = "tf-ops-acc-custom-layer"
-  auto_assign_public_ips = true
-  custom_security_group_ids = [
-    "${aws_security_group.tf-ops-acc-layer1.id}",
-    "${aws_security_group.tf-ops-acc-layer2.id}",
-  ]
-  drain_elb_on_shutdown     = true
-  instance_shutdown_timeout = 300
-  system_packages = [
-    "git",
-    "golang",
-  ]
-  ebs_volume {
-    type            = "gp2"
-    number_of_disks = 2
-    mount_point     = "/home"
-    size            = 100
-    raid_level      = 0
-  }
-
-  load_based_autoscaling {
-    enable = true
-    downscaling {
-      cpu_threshold        = 20
-      ignore_metrics_time  = 15
-      instance_count       = 2
-      load_threshold       = 5
-      memory_threshold     = 20
-      thresholds_wait_time = 30
-    }
-
-    upscaling {
-      cpu_threshold        = 80
-      ignore_metrics_time  = 15
-      instance_count       = 3
-      load_threshold       = 10
-      memory_threshold     = 80
-      thresholds_wait_time = 30
-    }
-  }
 }
 
 %s
