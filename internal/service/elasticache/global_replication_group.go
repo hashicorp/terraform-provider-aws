@@ -184,7 +184,7 @@ func customizeDiffGlobalReplicationGroupEngineVersionErrorOnDowngrade(_ context.
 		return nil
 	}
 
-	return fmt.Errorf(`Downgrading Elasticache Global Replication Group (%s) engine version requires replacement
+	return fmt.Errorf(`Downgrading ElastiCache Global Replication Group (%s) engine version requires replacement
 of the Global Replication Group and all Replication Group members. The AWS provider cannot handle this internally.
 
 Please use the "-replace" option on the terraform plan and apply commands (see https://www.terraform.io/cli/commands/plan#replace-address).`, diff.Id())

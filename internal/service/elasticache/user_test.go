@@ -183,7 +183,7 @@ func testAccCheckUserDestroyWithProvider(s *terraform.State, provider *schema.Pr
 		}
 
 		if user != nil {
-			return fmt.Errorf("Elasticache User (%s) still exists", rs.Primary.ID)
+			return fmt.Errorf("ElastiCache User (%s) still exists", rs.Primary.ID)
 		}
 	}
 

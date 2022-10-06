@@ -41,7 +41,7 @@ func ResourceSubnetGroup() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 				StateFunc: func(val interface{}) string {
-					// Elasticache normalizes subnet names to lowercase,
+					// ElastiCache normalizes subnet names to lowercase,
 					// so we have to do this too or else we can end up
 					// with non-converging diffs.
 					return strings.ToLower(val.(string))
@@ -115,7 +115,7 @@ func resourceSubnetGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// Assign the group name as the resource ID
-	// Elasticache always retains the name in lower case, so we have to
+	// ElastiCache always retains the name in lower case, so we have to
 	// mimic that or else we won't be able to refresh a resource whose
 	// name contained uppercase characters.
 	d.SetId(strings.ToLower(name))
@@ -150,7 +150,7 @@ func resourceSubnetGroupRead(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		if ec2err, ok := err.(awserr.Error); ok && ec2err.Code() == "CacheSubnetGroupNotFoundFault" {
 			// Update state to indicate the db subnet no longer exists.
-			log.Printf("[WARN] Elasticache Subnet Group (%s) not found, removing from state", d.Id())
+			log.Printf("[WARN] ElastiCache Subnet Group (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
 		}
@@ -189,7 +189,7 @@ func resourceSubnetGroupRead(d *schema.ResourceData, meta interface{}) error {
 
 	// tags not supported in all partitions
 	if err != nil {
-		log.Printf("[WARN] failed listing tags for Elasticache Subnet Group (%s): %s", d.Id(), err)
+		log.Printf("[WARN] failed listing tags for ElastiCache Subnet Group (%s): %s", d.Id(), err)
 	}
 
 	if tags != nil {
