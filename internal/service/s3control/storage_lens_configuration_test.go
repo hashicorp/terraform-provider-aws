@@ -178,6 +178,41 @@ func TestAccS3ControlStorageLensConfiguration_update(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
+			{
+				Config: testAccStorageLensConfigurationConfig_allAttributesUpdated(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckStorageLensConfigurationExists(resourceName, &v),
+					acctest.CheckResourceAttrAccountID(resourceName, "account_id"),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "s3", fmt.Sprintf("storage-lens/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.activity_metrics.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.activity_metrics.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.bucket_level.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.bucket_level.0.activity_metrics.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.bucket_level.0.activity_metrics.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.account_level.0.bucket_level.0.prefix_level.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.aws_org.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.data_export.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.data_export.0.cloud_watch_metrics.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.data_export.0.cloud_watch_metrics.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.data_export.0.s3_bucket_destination.#", "1"),
+					acctest.CheckResourceAttrAccountID(resourceName, "storage_lens_configuration.0.data_export.0.s3_bucket_destination.0.account_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "storage_lens_configuration.0.data_export.0.s3_bucket_destination.0.arn"),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.data_export.0.s3_bucket_destination.0.encryption.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.data_export.0.s3_bucket_destination.0.encryption.0.sse_kms.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.data_export.0.s3_bucket_destination.0.encryption.0.sse_s3.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.data_export.0.s3_bucket_destination.0.format", "Parquet"),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.data_export.0.s3_bucket_destination.0.output_schema_version", "V_1"),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.data_export.0.s3_bucket_destination.0.prefix", ""),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.exclude.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.include.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.include.0.buckets.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.0.include.0.regions.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+				),
+			},
 		},
 	})
 }
@@ -355,6 +390,57 @@ resource "aws_s3control_storage_lens_configuration" "test" {
     exclude {
       buckets = [aws_s3_bucket.test[1].arn, aws_s3_bucket.test[2].arn]
       regions = ["eu-south-1"]
+    }
+  }
+}
+`, rName)
+}
+
+func testAccStorageLensConfigurationConfig_allAttributesUpdated(rName string) string {
+	return fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+
+resource "aws_s3_bucket" "test" {
+  count = 3
+}
+
+resource "aws_s3control_storage_lens_configuration" "test" {
+  config_id = %[1]q
+
+  storage_lens_configuration {
+    enabled = true
+
+    account_level {
+      activity_metrics {
+        enabled = true
+      }
+
+      bucket_level {
+        activity_metrics {
+          enabled = true
+        }
+      }
+    }
+
+    data_export {
+      cloud_watch_metrics {
+        enabled = true
+      }
+
+      s3_bucket_destination {
+        account_id            = data.aws_caller_identity.current.account_id
+        arn                   = aws_s3_bucket.test[0].arn
+        format                = "Parquet"
+        output_schema_version = "V_1"
+
+        encryption {
+          sse_s3 {}
+        }
+      }
+    }
+
+    include {
+      buckets = [aws_s3_bucket.test[1].arn]
     }
   }
 }
