@@ -732,7 +732,7 @@ func expandSelectionCriteria(tfMap map[string]interface{}) *types.SelectionCrite
 	return apiObject
 }
 
-func expandStorageLensAwsOrg(tfMap map[string]interface{}) *types.StorageLensAwsOrg {
+func expandStorageLensAwsOrg(tfMap map[string]interface{}) *types.StorageLensAwsOrg { // nosemgrep:ci.aws-in-func-name
 	if tfMap == nil {
 		return nil
 	}
@@ -1007,7 +1007,7 @@ func flattenSelectionCriteria(apiObject *types.SelectionCriteria) map[string]int
 	return tfMap
 }
 
-func flattenStorageLensAwsOrg(apiObject *types.StorageLensAwsOrg) map[string]interface{} {
+func flattenStorageLensAwsOrg(apiObject *types.StorageLensAwsOrg) map[string]interface{} { // nosemgrep:ci.aws-in-func-name
 	if apiObject == nil {
 		return nil
 	}
