@@ -146,18 +146,18 @@ func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta
 	resp, err := conn.CreateCertificateWithContext(ctx, &req)
 
 	if err != nil {
-		return names.DiagError(names.Lightsail, lightsail.OperationTypeCreateCertificate, ResCertificate, d.Get("name").(string), err)
+		return create.DiagError(names.Lightsail, lightsail.OperationTypeCreateCertificate, ResCertificate, d.Get("name").(string), err)
 	}
 
 	if len(resp.Operations) == 0 {
-		return names.DiagError(names.Lightsail, lightsail.OperationTypeCreateCertificate, ResCertificate, d.Get("name").(string), errors.New("No operations found for CreateCertificate request"))
+		return create.DiagError(names.Lightsail, lightsail.OperationTypeCreateCertificate, ResCertificate, d.Get("name").(string), errors.New("No operations found for CreateCertificate request"))
 	}
 
 	op := resp.Operations[0]
 
 	err = waitOperation(conn, op.Id)
 	if err != nil {
-		return names.DiagError(names.Lightsail, lightsail.OperationTypeCreateCertificate, ResCertificate, d.Get("name").(string), errors.New("Error waiting for Create Certificate request operation"))
+		return create.DiagError(names.Lightsail, lightsail.OperationTypeCreateCertificate, ResCertificate, d.Get("name").(string), errors.New("Error waiting for Create Certificate request operation"))
 	}
 
 	d.SetId(d.Get("name").(string))
@@ -173,13 +173,13 @@ func resourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta i
 	certificate, err := FindCertificateByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		names.LogNotFoundRemoveState(names.CE, names.ErrActionReading, ResCertificate, d.Id())
+		create.LogNotFoundRemoveState(names.CE, create.ErrActionReading, ResCertificate, d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return names.DiagError(names.CE, names.ErrActionReading, ResCertificate, d.Id(), err)
+		return create.DiagError(names.CE, create.ErrActionReading, ResCertificate, d.Id(), err)
 	}
 
 	d.Set("arn", certificate.Arn)
@@ -193,11 +193,11 @@ func resourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return names.DiagError(names.Lightsail, names.ErrActionReading, ResCertificate, d.Id(), err)
+		return create.DiagError(names.Lightsail, create.ErrActionReading, ResCertificate, d.Id(), err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return names.DiagError(names.Lightsail, names.ErrActionReading, ResCertificate, d.Id(), err)
+		return create.DiagError(names.Lightsail, create.ErrActionReading, ResCertificate, d.Id(), err)
 	}
 
 	return nil
@@ -210,7 +210,7 @@ func resourceCertificateUpdate(ctx context.Context, d *schema.ResourceData, meta
 		o, n := d.GetChange("tags")
 
 		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return names.DiagError(names.Lightsail, names.ErrActionUpdating, ResCertificate, d.Id(), err)
+			return create.DiagError(names.Lightsail, create.ErrActionUpdating, ResCertificate, d.Id(), err)
 		}
 	}
 
@@ -218,7 +218,7 @@ func resourceCertificateUpdate(ctx context.Context, d *schema.ResourceData, meta
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return names.DiagError(names.Lightsail, names.ErrActionUpdating, ResCertificate, d.Id(), err)
+			return create.DiagError(names.Lightsail, create.ErrActionUpdating, ResCertificate, d.Id(), err)
 		}
 	}
 
@@ -237,7 +237,7 @@ func resourceCertificateDelete(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if err != nil {
-		return names.DiagError(names.CE, names.ErrActionDeleting, ResCertificate, d.Id(), err)
+		return create.DiagError(names.CE, create.ErrActionDeleting, ResCertificate, d.Id(), err)
 	}
 
 	op := resp.Operations[0]
@@ -245,7 +245,7 @@ func resourceCertificateDelete(ctx context.Context, d *schema.ResourceData, meta
 	err = waitOperation(conn, op.Id)
 
 	if err != nil {
-		return names.DiagError(names.Lightsail, lightsail.OperationTypeDeleteCertificate, ResCertificate, d.Id(), err)
+		return create.DiagError(names.Lightsail, lightsail.OperationTypeDeleteCertificate, ResCertificate, d.Id(), err)
 	}
 
 	return nil
