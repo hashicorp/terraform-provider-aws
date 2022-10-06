@@ -1,6 +1,7 @@
 package opsworks
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strconv"
@@ -8,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/opsworks"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
@@ -332,17 +334,17 @@ func (lt *opsworksLayerType) SchemaResource() *schema.Resource {
 	}
 
 	return &schema.Resource{
-		Create: func(d *schema.ResourceData, meta interface{}) error {
-			return lt.Create(d, meta)
+		CreateWithoutTimeout: func(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+			return lt.Create(ctx, d, meta)
 		},
-		Read: func(d *schema.ResourceData, meta interface{}) error {
-			return lt.Read(d, meta)
+		ReadWithoutTimeout: func(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+			return lt.Read(ctx, d, meta)
 		},
-		Update: func(d *schema.ResourceData, meta interface{}) error {
-			return lt.Update(d, meta)
+		UpdateWithoutTimeout: func(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+			return lt.Update(ctx, d, meta)
 		},
-		Delete: func(d *schema.ResourceData, meta interface{}) error {
-			return lt.Delete(d, meta)
+		DeleteWithoutTimeout: func(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+			return lt.Delete(ctx, d, meta)
 		},
 
 		Importer: &schema.ResourceImporter{
@@ -355,7 +357,7 @@ func (lt *opsworksLayerType) SchemaResource() *schema.Resource {
 	}
 }
 
-func (lt *opsworksLayerType) Create(d *schema.ResourceData, meta interface{}) error {
+func (lt *opsworksLayerType) Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).OpsWorksConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
@@ -363,7 +365,7 @@ func (lt *opsworksLayerType) Create(d *schema.ResourceData, meta interface{}) er
 	attributes, err := lt.Attributes.resourceDataToAPIAttributes(d)
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	name := d.Get("name").(string)
@@ -441,34 +443,34 @@ func (lt *opsworksLayerType) Create(d *schema.ResourceData, meta interface{}) er
 
 	if v, ok := d.GetOk("ecs_cluster_arn"); ok {
 		arn := v.(string)
-		_, err := conn.RegisterEcsCluster(&opsworks.RegisterEcsClusterInput{
+		_, err := conn.RegisterEcsClusterWithContext(ctx, &opsworks.RegisterEcsClusterInput{
 			EcsClusterArn: aws.String(arn),
 			StackId:       input.StackId,
 		})
 
 		if err != nil {
-			return fmt.Errorf("registering OpsWorks Layer (%s) ECS Cluster (%s): %w", name, arn, err)
+			return diag.Errorf("registering OpsWorks Layer (%s) ECS Cluster (%s): %s", name, arn, err)
 		}
 	}
 
 	log.Printf("[DEBUG] Creating OpsWorks Layer: %s", input)
-	output, err := conn.CreateLayer(input)
+	output, err := conn.CreateLayerWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("creating OpsWorks Layer (%s): %w", name, err)
+		return diag.Errorf("creating OpsWorks Layer (%s): %s", name, err)
 	}
 
 	d.SetId(aws.StringValue(output.LayerId))
 
 	if v, ok := d.GetOk("elastic_load_balancer"); ok {
 		v := v.(string)
-		_, err := conn.AttachElasticLoadBalancer(&opsworks.AttachElasticLoadBalancerInput{
+		_, err := conn.AttachElasticLoadBalancerWithContext(ctx, &opsworks.AttachElasticLoadBalancerInput{
 			ElasticLoadBalancerName: aws.String(v),
 			LayerId:                 output.LayerId,
 		})
 
 		if err != nil {
-			return fmt.Errorf("attaching OpsWorks Layer (%s) load balancer (%s): %w", d.Id(), v, err)
+			return diag.Errorf("attaching OpsWorks Layer (%s) load balancer (%s): %s", d.Id(), v, err)
 		}
 	}
 
@@ -476,19 +478,19 @@ func (lt *opsworksLayerType) Create(d *schema.ResourceData, meta interface{}) er
 		layer, err := FindLayerByID(conn, d.Id())
 
 		if err != nil {
-			return fmt.Errorf("reading OpsWorks Layer (%s): %w", d.Id(), err)
+			return diag.Errorf("reading OpsWorks Layer (%s): %s", d.Id(), err)
 		}
 
 		arn := aws.StringValue(layer.Arn)
-		if err := UpdateTags(conn, arn, nil, tags); err != nil {
-			return fmt.Errorf("adding OpsWorks Layer (%s) tags: %w", arn, err)
+		if err := UpdateTagsWithContext(ctx, conn, arn, nil, tags); err != nil {
+			return diag.Errorf("adding OpsWorks Layer (%s) tags: %s", arn, err)
 		}
 	}
 
-	return lt.Read(d, meta)
+	return lt.Read(ctx, d, meta)
 }
 
-func (lt *opsworksLayerType) Read(d *schema.ResourceData, meta interface{}) error {
+func (lt *opsworksLayerType) Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).OpsWorksConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -502,7 +504,7 @@ func (lt *opsworksLayerType) Read(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	if err != nil {
-		return fmt.Errorf("reading OpsWorks Layer (%s): %w", d.Id(), err)
+		return diag.Errorf("reading OpsWorks Layer (%s): %s", d.Id(), err)
 	}
 
 	arn := aws.StringValue(layer.Arn)
@@ -512,7 +514,7 @@ func (lt *opsworksLayerType) Read(d *schema.ResourceData, meta interface{}) erro
 	d.Set("auto_healing", layer.EnableAutoHealing)
 	if layer.CloudWatchLogsConfiguration != nil {
 		if err := d.Set("cloudwatch_configuration", []interface{}{flattenCloudWatchLogsConfiguration(layer.CloudWatchLogsConfiguration)}); err != nil {
-			return fmt.Errorf("setting cloudwatch_configuration: %w", err)
+			return diag.Errorf("setting cloudwatch_configuration: %s", err)
 		}
 	} else {
 		d.Set("cloudwatch_configuration", nil)
@@ -536,7 +538,7 @@ func (lt *opsworksLayerType) Read(d *schema.ResourceData, meta interface{}) erro
 	} else {
 		policy, err := structure.NormalizeJsonString(aws.StringValue(layer.CustomJson))
 		if err != nil {
-			return fmt.Errorf("policy contains an invalid JSON: %w", err)
+			return diag.Errorf("policy contains an invalid JSON: %s", err)
 		}
 		d.Set("custom_json", policy)
 	}
@@ -549,7 +551,7 @@ func (lt *opsworksLayerType) Read(d *schema.ResourceData, meta interface{}) erro
 		d.Set("instance_shutdown_timeout", layer.LifecycleEventConfiguration.Shutdown.ExecutionTimeout)
 	}
 	if err := d.Set("ebs_volume", flattenVolumeConfigurations(layer.VolumeConfigurations)); err != nil {
-		return fmt.Errorf("setting ebs_volume: %w", err)
+		return diag.Errorf("setting ebs_volume: %s", err)
 	}
 	d.Set("install_updates_on_boot", layer.InstallUpdatesOnBoot)
 	d.Set("name", layer.Name)
@@ -561,7 +563,7 @@ func (lt *opsworksLayerType) Read(d *schema.ResourceData, meta interface{}) erro
 	d.Set("use_ebs_optimized_instances", layer.UseEbsOptimizedInstances)
 
 	if err := lt.Attributes.apiAttributesToResourceData(aws.StringValueMap(layer.Attributes), d); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	loadBalancer, err := findElasticLoadBalancerByLayerID(conn, d.Id())
@@ -571,30 +573,30 @@ func (lt *opsworksLayerType) Read(d *schema.ResourceData, meta interface{}) erro
 	} else if tfresource.NotFound(err) {
 		d.Set("elastic_load_balancer", nil)
 	} else {
-		return fmt.Errorf("reading OpsWorks Layer (%s) load balancers: %w", d.Id(), err)
+		return diag.Errorf("reading OpsWorks Layer (%s) load balancers: %s", d.Id(), err)
 	}
 
 	tags, err := ListTags(conn, arn)
 
 	if err != nil {
-		return fmt.Errorf("listing tags for OpsWorks Layer (%s): %w", arn, err)
+		return diag.Errorf("listing tags for OpsWorks Layer (%s): %s", arn, err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("setting tags: %w", err)
+		return diag.Errorf("setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("setting tags_all: %w", err)
+		return diag.Errorf("setting tags_all: %s", err)
 	}
 
 	return nil
 }
 
-func (lt *opsworksLayerType) Update(d *schema.ResourceData, meta interface{}) error {
+func (lt *opsworksLayerType) Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).OpsWorksConn
 
 	if d.HasChangesExcept("elastic_load_balancer", "tags", "tags_all") {
@@ -606,7 +608,7 @@ func (lt *opsworksLayerType) Update(d *schema.ResourceData, meta interface{}) er
 			attributes, err := lt.Attributes.resourceDataToAPIAttributes(d)
 
 			if err != nil {
-				return err
+				return diag.FromErr(err)
 			}
 
 			input.Attributes = aws.StringMap(attributes)
@@ -704,10 +706,10 @@ func (lt *opsworksLayerType) Update(d *schema.ResourceData, meta interface{}) er
 		}
 
 		log.Printf("[DEBUG] Updating OpsWorks Layer: %s", input)
-		_, err := conn.UpdateLayer(input)
+		_, err := conn.UpdateLayerWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("updating OpsWorks Layer (%s): %w", d.Id(), err)
+			return diag.Errorf("updating OpsWorks Layer (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -715,24 +717,24 @@ func (lt *opsworksLayerType) Update(d *schema.ResourceData, meta interface{}) er
 		o, n := d.GetChange("elastic_load_balancer")
 
 		if v := o.(string); v != "" {
-			_, err := conn.DetachElasticLoadBalancer(&opsworks.DetachElasticLoadBalancerInput{
+			_, err := conn.DetachElasticLoadBalancerWithContext(ctx, &opsworks.DetachElasticLoadBalancerInput{
 				ElasticLoadBalancerName: aws.String(v),
 				LayerId:                 aws.String(d.Id()),
 			})
 
 			if err != nil {
-				return fmt.Errorf("detaching OpsWorks Layer (%s) load balancer (%s): %w", d.Id(), v, err)
+				return diag.Errorf("detaching OpsWorks Layer (%s) load balancer (%s): %s", d.Id(), v, err)
 			}
 		}
 
 		if v := n.(string); v != "" {
-			_, err := conn.AttachElasticLoadBalancer(&opsworks.AttachElasticLoadBalancerInput{
+			_, err := conn.AttachElasticLoadBalancerWithContext(ctx, &opsworks.AttachElasticLoadBalancerInput{
 				ElasticLoadBalancerName: aws.String(v),
 				LayerId:                 aws.String(d.Id()),
 			})
 
 			if err != nil {
-				return fmt.Errorf("attaching OpsWorks Layer (%s) load balancer (%s): %w", d.Id(), v, err)
+				return diag.Errorf("attaching OpsWorks Layer (%s) load balancer (%s): %s", d.Id(), v, err)
 			}
 		}
 	}
@@ -741,19 +743,19 @@ func (lt *opsworksLayerType) Update(d *schema.ResourceData, meta interface{}) er
 		o, n := d.GetChange("tags_all")
 
 		arn := d.Get("arn").(string)
-		if err := UpdateTags(conn, arn, o, n); err != nil {
-			return fmt.Errorf("updating OpsWorks Layer (%s) tags: %w", arn, err)
+		if err := UpdateTagsWithContext(ctx, conn, arn, o, n); err != nil {
+			return diag.Errorf("updating OpsWorks Layer (%s) tags: %s", arn, err)
 		}
 	}
 
-	return lt.Read(d, meta)
+	return lt.Read(ctx, d, meta)
 }
 
-func (lt *opsworksLayerType) Delete(d *schema.ResourceData, meta interface{}) error {
+func (lt *opsworksLayerType) Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).OpsWorksConn
 
 	log.Printf("[DEBUG] Deleting OpsWorks Layer: %s", d.Id())
-	_, err := conn.DeleteLayer(&opsworks.DeleteLayerInput{
+	_, err := conn.DeleteLayerWithContext(ctx, &opsworks.DeleteLayerInput{
 		LayerId: aws.String(d.Id()),
 	})
 
@@ -762,17 +764,17 @@ func (lt *opsworksLayerType) Delete(d *schema.ResourceData, meta interface{}) er
 	}
 
 	if err != nil {
-		return fmt.Errorf("deleting OpsWorks Layer (%s): %w", d.Id(), err)
+		return diag.Errorf("deleting OpsWorks Layer (%s): %s", d.Id(), err)
 	}
 
 	if v, ok := d.GetOk("ecs_cluster_arn"); ok {
 		arn := v.(string)
-		_, err := conn.DeregisterEcsCluster(&opsworks.DeregisterEcsClusterInput{
+		_, err := conn.DeregisterEcsClusterWithContext(ctx, &opsworks.DeregisterEcsClusterInput{
 			EcsClusterArn: aws.String(arn),
 		})
 
 		if err != nil {
-			return fmt.Errorf("deregistering OpsWorks Layer (%s) ECS Cluster (%s): %w", d.Id(), arn, err)
+			return diag.Errorf("deregistering OpsWorks Layer (%s) ECS Cluster (%s): %s", d.Id(), arn, err)
 		}
 	}
 
