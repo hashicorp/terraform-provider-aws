@@ -309,7 +309,7 @@ func ResourceStorageLensConfiguration() *schema.Resource {
 }
 
 func resourceStorageLensConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3ControlConn
+	conn := s3controlv2.NewFromConfig(*meta.(*conns.AWSClient).Config)
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -320,7 +320,7 @@ func resourceStorageLensConfigurationCreate(ctx context.Context, d *schema.Resou
 	configID := d.Get("config_id").(string)
 	id := StorageLensConfigurationCreateResourceID(accountID, configID)
 
-	input := &s3control.PutStorageLensConfigurationInput{
+	input := &s3controlv2.PutStorageLensConfigurationInput{
 		AccountId: aws.String(accountID),
 		ConfigId:  aws.String(configID),
 	}
@@ -334,8 +334,8 @@ func resourceStorageLensConfigurationCreate(ctx context.Context, d *schema.Resou
 		input.Tags = StorageLensTags(tags.IgnoreAWS())
 	}
 
-	log.Printf("[DEBUG] Creating S3 Storage Lens Configuration: %s", input)
-	_, err := conn.PutStorageLensConfigurationWithContext(ctx, input)
+	log.Printf("[DEBUG] Creating S3 Storage Lens Configuration: %#v", input)
+	_, err := conn.PutStorageLensConfiguration(ctx, input)
 
 	if err != nil {
 		return diag.Errorf("creating S3 Storage Lens Configuration (%s): %s", id, err)
@@ -347,7 +347,7 @@ func resourceStorageLensConfigurationCreate(ctx context.Context, d *schema.Resou
 }
 
 func resourceStorageLensConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3ControlConn
+	conn := s3controlv2.NewFromConfig(*meta.(*conns.AWSClient).Config)
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -357,8 +357,7 @@ func resourceStorageLensConfigurationRead(ctx context.Context, d *schema.Resourc
 		return diag.FromErr(err)
 	}
 
-	connv2 := s3controlv2.NewFromConfig(*meta.(*conns.AWSClient).Config)
-	output, err := FindStorageLensConfigurationByAccountIDAndConfigID(ctx, connv2, accountID, configID)
+	output, err := FindStorageLensConfigurationByAccountIDAndConfigID(ctx, conn, accountID, configID)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] S3 Storage Lens Configuration (%s) not found, removing from state", d.Id())
@@ -398,7 +397,7 @@ func resourceStorageLensConfigurationRead(ctx context.Context, d *schema.Resourc
 }
 
 func resourceStorageLensConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3ControlConn
+	conn := s3controlv2.NewFromConfig(*meta.(*conns.AWSClient).Config)
 
 	accountID, configID, err := StorageLensConfigurationParseResourceID(d.Id())
 
@@ -407,7 +406,7 @@ func resourceStorageLensConfigurationUpdate(ctx context.Context, d *schema.Resou
 	}
 
 	if d.HasChangesExcept("tags", "tags_all") {
-		input := &s3control.PutStorageLensConfigurationInput{
+		input := &s3controlv2.PutStorageLensConfigurationInput{
 			AccountId: aws.String(accountID),
 			ConfigId:  aws.String(configID),
 		}
@@ -417,8 +416,8 @@ func resourceStorageLensConfigurationUpdate(ctx context.Context, d *schema.Resou
 			input.StorageLensConfiguration.Id = aws.String(configID)
 		}
 
-		log.Printf("[DEBUG] Updating S3 Storage Lens Configuration: %s", input)
-		_, err := conn.PutStorageLensConfigurationWithContext(ctx, input)
+		log.Printf("[DEBUG] Updating S3 Storage Lens Configuration: %#v", input)
+		_, err := conn.PutStorageLensConfiguration(ctx, input)
 
 		if err != nil {
 			return diag.Errorf("updating S3 Storage Lens Configuration (%s): %s", d.Id(), err)
@@ -508,12 +507,93 @@ func FindStorageLensConfigurationByAccountIDAndConfigID(ctx context.Context, con
 	return output.StorageLensConfiguration, nil
 }
 
-func expandStorageLensConfiguration(tfMap map[string]interface{}) *s3control.StorageLensConfiguration {
+func StorageLensTags(tags tftags.KeyValueTags) []types.StorageLensTag {
+	result := make([]types.StorageLensTag, 0, len(tags))
+
+	for k, v := range tags.Map() {
+		tag := types.StorageLensTag{
+			Key:   aws.String(k),
+			Value: aws.String(v),
+		}
+
+		result = append(result, tag)
+	}
+
+	return result
+}
+
+func KeyValueTagsFromStorageLensTags(tags []types.StorageLensTag) tftags.KeyValueTags {
+	m := make(map[string]*string, len(tags))
+
+	for _, tag := range tags {
+		m[aws.StringValue(tag.Key)] = tag.Value
+	}
+
+	return tftags.New(m)
+}
+
+func storageLensConfigurationListTags(ctx context.Context, conn *s3controlv2.Client, accountID, configID string) (tftags.KeyValueTags, error) {
+	input := &s3controlv2.GetStorageLensConfigurationTaggingInput{
+		AccountId: aws.String(accountID),
+		ConfigId:  aws.String(configID),
+	}
+
+	output, err := conn.GetStorageLensConfigurationTagging(ctx, input)
+
+	if err != nil {
+		return tftags.New(nil), err
+	}
+
+	return KeyValueTagsFromStorageLensTags(output.Tags), nil
+}
+
+func storageLensConfigurationUpdateTags(ctx context.Context, conn *s3controlv2.Client, accountID, configID string, oldTagsMap interface{}, newTagsMap interface{}) error {
+	oldTags := tftags.New(oldTagsMap)
+	newTags := tftags.New(newTagsMap)
+
+	// We need to also consider any existing ignored tags.
+	allTags, err := storageLensConfigurationListTags(ctx, conn, accountID, configID)
+
+	if err != nil {
+		return fmt.Errorf("listing tags: %s", err)
+	}
+
+	ignoredTags := allTags.Ignore(oldTags).Ignore(newTags)
+
+	if len(newTags)+len(ignoredTags) > 0 {
+		input := &s3controlv2.PutStorageLensConfigurationTaggingInput{
+			AccountId: aws.String(accountID),
+			ConfigId:  aws.String(configID),
+			Tags:      StorageLensTags(newTags.Merge(ignoredTags)),
+		}
+
+		_, err := conn.PutStorageLensConfigurationTagging(ctx, input)
+
+		if err != nil {
+			return fmt.Errorf("setting tags: %s", err)
+		}
+	} else if len(oldTags) > 0 && len(ignoredTags) == 0 {
+		input := &s3controlv2.DeleteStorageLensConfigurationTaggingInput{
+			AccountId: aws.String(accountID),
+			ConfigId:  aws.String(configID),
+		}
+
+		_, err := conn.DeleteStorageLensConfigurationTagging(ctx, input)
+
+		if err != nil {
+			return fmt.Errorf("deleting tags: %s", err)
+		}
+	}
+
+	return nil
+}
+
+func expandStorageLensConfiguration(tfMap map[string]interface{}) *types.StorageLensConfiguration {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &s3control.StorageLensConfiguration{}
+	apiObject := &types.StorageLensConfiguration{}
 
 	if v, ok := tfMap["account_level"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.AccountLevel = expandAccountLevel(v[0].(map[string]interface{}))
@@ -528,7 +608,7 @@ func expandStorageLensConfiguration(tfMap map[string]interface{}) *s3control.Sto
 	}
 
 	if v, ok := tfMap["enabled"].(bool); ok {
-		apiObject.IsEnabled = aws.Bool(v)
+		apiObject.IsEnabled = v
 	}
 
 	if v, ok := tfMap["exclude"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
@@ -542,12 +622,12 @@ func expandStorageLensConfiguration(tfMap map[string]interface{}) *s3control.Sto
 	return apiObject
 }
 
-func expandAccountLevel(tfMap map[string]interface{}) *s3control.AccountLevel {
+func expandAccountLevel(tfMap map[string]interface{}) *types.AccountLevel {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &s3control.AccountLevel{}
+	apiObject := &types.AccountLevel{}
 
 	if v, ok := tfMap["activity_metrics"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.ActivityMetrics = expandActivityMetrics(v[0].(map[string]interface{}))
@@ -556,32 +636,32 @@ func expandAccountLevel(tfMap map[string]interface{}) *s3control.AccountLevel {
 	if v, ok := tfMap["bucket_level"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.BucketLevel = expandBucketLevel(v[0].(map[string]interface{}))
 	} else {
-		apiObject.BucketLevel = &s3control.BucketLevel{}
+		apiObject.BucketLevel = &types.BucketLevel{}
 	}
 
 	return apiObject
 }
 
-func expandActivityMetrics(tfMap map[string]interface{}) *s3control.ActivityMetrics {
+func expandActivityMetrics(tfMap map[string]interface{}) *types.ActivityMetrics {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &s3control.ActivityMetrics{}
+	apiObject := &types.ActivityMetrics{}
 
 	if v, ok := tfMap["enabled"].(bool); ok {
-		apiObject.IsEnabled = aws.Bool(v)
+		apiObject.IsEnabled = v
 	}
 
 	return apiObject
 }
 
-func expandBucketLevel(tfMap map[string]interface{}) *s3control.BucketLevel {
+func expandBucketLevel(tfMap map[string]interface{}) *types.BucketLevel {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &s3control.BucketLevel{}
+	apiObject := &types.BucketLevel{}
 
 	if v, ok := tfMap["activity_metrics"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.ActivityMetrics = expandActivityMetrics(v[0].(map[string]interface{}))
@@ -594,12 +674,12 @@ func expandBucketLevel(tfMap map[string]interface{}) *s3control.BucketLevel {
 	return apiObject
 }
 
-func expandPrefixLevel(tfMap map[string]interface{}) *s3control.PrefixLevel {
+func expandPrefixLevel(tfMap map[string]interface{}) *types.PrefixLevel {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &s3control.PrefixLevel{}
+	apiObject := &types.PrefixLevel{}
 
 	if v, ok := tfMap["storage_metrics"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.StorageMetrics = expandPrefixLevelStorageMetrics(v[0].(map[string]interface{}))
@@ -608,15 +688,15 @@ func expandPrefixLevel(tfMap map[string]interface{}) *s3control.PrefixLevel {
 	return apiObject
 }
 
-func expandPrefixLevelStorageMetrics(tfMap map[string]interface{}) *s3control.PrefixLevelStorageMetrics {
+func expandPrefixLevelStorageMetrics(tfMap map[string]interface{}) *types.PrefixLevelStorageMetrics {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &s3control.PrefixLevelStorageMetrics{}
+	apiObject := &types.PrefixLevelStorageMetrics{}
 
 	if v, ok := tfMap["enabled"].(bool); ok {
-		apiObject.IsEnabled = aws.Bool(v)
+		apiObject.IsEnabled = v
 	}
 
 	if v, ok := tfMap["selection_criteria"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
@@ -626,34 +706,34 @@ func expandPrefixLevelStorageMetrics(tfMap map[string]interface{}) *s3control.Pr
 	return apiObject
 }
 
-func expandSelectionCriteria(tfMap map[string]interface{}) *s3control.SelectionCriteria {
+func expandSelectionCriteria(tfMap map[string]interface{}) *types.SelectionCriteria {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &s3control.SelectionCriteria{}
+	apiObject := &types.SelectionCriteria{}
 
 	if v, ok := tfMap["delimiter"].(string); ok && v != "" {
 		apiObject.Delimiter = aws.String(v)
 	}
 
 	if v, ok := tfMap["max_depth"].(int); ok && v != 0 {
-		apiObject.MaxDepth = aws.Int64(int64(v))
+		apiObject.MaxDepth = int32(v)
 	}
 
 	if v, ok := tfMap["min_storage_bytes_percentage"].(float64); ok && v != 0.0 {
-		apiObject.MinStorageBytesPercentage = aws.Float64(v)
+		apiObject.MinStorageBytesPercentage = v
 	}
 
 	return apiObject
 }
 
-func expandStorageLensAwsOrg(tfMap map[string]interface{}) *s3control.StorageLensAwsOrg {
+func expandStorageLensAwsOrg(tfMap map[string]interface{}) *types.StorageLensAwsOrg {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &s3control.StorageLensAwsOrg{}
+	apiObject := &types.StorageLensAwsOrg{}
 
 	if v, ok := tfMap["arn"].(string); ok && v != "" {
 		apiObject.Arn = aws.String(v)
@@ -662,12 +742,12 @@ func expandStorageLensAwsOrg(tfMap map[string]interface{}) *s3control.StorageLen
 	return apiObject
 }
 
-func expandStorageLensDataExport(tfMap map[string]interface{}) *s3control.StorageLensDataExport {
+func expandStorageLensDataExport(tfMap map[string]interface{}) *types.StorageLensDataExport {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &s3control.StorageLensDataExport{}
+	apiObject := &types.StorageLensDataExport{}
 
 	if v, ok := tfMap["cloud_watch_metrics"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.CloudWatchMetrics = expandCloudWatchMetrics(v[0].(map[string]interface{}))
@@ -680,26 +760,26 @@ func expandStorageLensDataExport(tfMap map[string]interface{}) *s3control.Storag
 	return apiObject
 }
 
-func expandCloudWatchMetrics(tfMap map[string]interface{}) *s3control.CloudWatchMetrics {
+func expandCloudWatchMetrics(tfMap map[string]interface{}) *types.CloudWatchMetrics {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &s3control.CloudWatchMetrics{}
+	apiObject := &types.CloudWatchMetrics{}
 
 	if v, ok := tfMap["enabled"].(bool); ok {
-		apiObject.IsEnabled = aws.Bool(v)
+		apiObject.IsEnabled = v
 	}
 
 	return apiObject
 }
 
-func expandS3BucketDestination(tfMap map[string]interface{}) *s3control.S3BucketDestination {
+func expandS3BucketDestination(tfMap map[string]interface{}) *types.S3BucketDestination {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &s3control.S3BucketDestination{}
+	apiObject := &types.S3BucketDestination{}
 
 	if v, ok := tfMap["account_id"].(string); ok && v != "" {
 		apiObject.AccountId = aws.String(v)
@@ -714,11 +794,11 @@ func expandS3BucketDestination(tfMap map[string]interface{}) *s3control.S3Bucket
 	}
 
 	if v, ok := tfMap["format"].(string); ok && v != "" {
-		apiObject.Format = aws.String(v)
+		apiObject.Format = types.Format(v)
 	}
 
 	if v, ok := tfMap["output_schema_version"].(string); ok && v != "" {
-		apiObject.OutputSchemaVersion = aws.String(v)
+		apiObject.OutputSchemaVersion = types.OutputSchemaVersion(v)
 	}
 
 	if v, ok := tfMap["prefix"].(string); ok && v != "" {
@@ -728,30 +808,30 @@ func expandS3BucketDestination(tfMap map[string]interface{}) *s3control.S3Bucket
 	return apiObject
 }
 
-func expandStorageLensDataExportEncryption(tfMap map[string]interface{}) *s3control.StorageLensDataExportEncryption {
+func expandStorageLensDataExportEncryption(tfMap map[string]interface{}) *types.StorageLensDataExportEncryption {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &s3control.StorageLensDataExportEncryption{}
+	apiObject := &types.StorageLensDataExportEncryption{}
 
 	if v, ok := tfMap["sse_kms"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.SSEKMS = expandSSEKMS(v[0].(map[string]interface{}))
 	}
 
 	if v, ok := tfMap["sse_s3"].([]interface{}); ok && len(v) > 0 {
-		apiObject.SSES3 = &s3control.SSES3{}
+		apiObject.SSES3 = &types.SSES3{}
 	}
 
 	return apiObject
 }
 
-func expandSSEKMS(tfMap map[string]interface{}) *s3control.SSEKMS {
+func expandSSEKMS(tfMap map[string]interface{}) *types.SSEKMS {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &s3control.SSEKMS{}
+	apiObject := &types.SSEKMS{}
 
 	if v, ok := tfMap["key_id"].(string); ok && v != "" {
 		apiObject.KeyId = aws.String(v)
@@ -760,37 +840,37 @@ func expandSSEKMS(tfMap map[string]interface{}) *s3control.SSEKMS {
 	return apiObject
 }
 
-func expandExclude(tfMap map[string]interface{}) *s3control.Exclude {
+func expandExclude(tfMap map[string]interface{}) *types.Exclude {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &s3control.Exclude{}
+	apiObject := &types.Exclude{}
 
 	if v, ok := tfMap["buckets"].(*schema.Set); ok && v.Len() > 0 {
-		apiObject.Buckets = flex.ExpandStringSet(v)
+		apiObject.Buckets = flex.ExpandStringValueSet(v)
 	}
 
 	if v, ok := tfMap["regions"].(*schema.Set); ok && v.Len() > 0 {
-		apiObject.Regions = flex.ExpandStringSet(v)
+		apiObject.Regions = flex.ExpandStringValueSet(v)
 	}
 
 	return apiObject
 }
 
-func expandInclude(tfMap map[string]interface{}) *s3control.Include {
+func expandInclude(tfMap map[string]interface{}) *types.Include {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &s3control.Include{}
+	apiObject := &types.Include{}
 
 	if v, ok := tfMap["buckets"].(*schema.Set); ok && v.Len() > 0 {
-		apiObject.Buckets = flex.ExpandStringSet(v)
+		apiObject.Buckets = flex.ExpandStringValueSet(v)
 	}
 
 	if v, ok := tfMap["regions"].(*schema.Set); ok && v.Len() > 0 {
-		apiObject.Regions = flex.ExpandStringSet(v)
+		apiObject.Regions = flex.ExpandStringValueSet(v)
 	}
 
 	return apiObject
