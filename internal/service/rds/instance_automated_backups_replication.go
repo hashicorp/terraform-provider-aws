@@ -3,6 +3,7 @@ package rds
 import (
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
@@ -13,11 +14,21 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+const (
+	InstanceAutomatedBackupsReplicationCreateTimeout = 75 * time.Minute
+	InstanceAutomatedBackupsReplicationDeleteTimeout = 75 * time.Minute
+)
+
 func ResourceInstanceAutomatedBackupsReplication() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceInstanceAutomatedBackupsReplicationCreate,
 		Read:   resourceInstanceAutomatedBackupsReplicationRead,
 		Delete: resourceInstanceAutomatedBackupsReplicationDelete,
+
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(InstanceAutomatedBackupsReplicationCreateTimeout),
+			Delete: schema.DefaultTimeout(InstanceAutomatedBackupsReplicationDeleteTimeout),
+		},
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -132,7 +143,7 @@ func resourceInstanceAutomatedBackupsReplicationDelete(d *schema.ResourceData, m
 	})
 
 	if err != nil {
-		return fmt.Errorf("error stopping RDS instance automated backups replication (%s): %w", d.Id(), err)
+		return fmt.Errorf("stopping RDS instance automated backups replication (%s): %w", d.Id(), err)
 	}
 
 	// Create a new client to the source region.

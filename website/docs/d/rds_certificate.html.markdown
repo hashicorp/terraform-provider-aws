@@ -29,7 +29,7 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `arn` - Amazon Resource Name (ARN) of the certificate.
+* `arn` - ARN of the certificate.
 * `certificate_type` - Type of certificate. For example, `CA`.
 * `customer_override` - Boolean whether there is an override for the default certificate identifier.
 * `customer_override_valid_till` - If there is an override for the default certificate identifier, when the override expires.

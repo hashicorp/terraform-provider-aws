@@ -19,10 +19,10 @@ func TestAccLogsDestinationPolicy_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDestinationPolicyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDestinationPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDestinationPolicyConfig_basic(rName),
@@ -59,7 +59,7 @@ func testAccCheckDestinationPolicyDestroy(s *terraform.State) error {
 		_, exists, err := tflogs.LookupDestination(conn, rs.Primary.ID, nil)
 
 		if err != nil {
-			return fmt.Errorf("error reading CloudWatch Log Destination (%s): %w", rs.Primary.ID, err)
+			return fmt.Errorf("reading CloudWatch Log Destination (%s): %w", rs.Primary.ID, err)
 		}
 
 		if exists {

@@ -16,12 +16,16 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+const (
+	ResNameDatabase = "Database"
+)
+
 func ResourceDatabase() *schema.Resource {
 	return &schema.Resource{
-		Create: ResourceDatabaseCreate,
-		Read:   ResourceDatabaseRead,
-		Update: ResourceDatabaseUpdate,
-		Delete: ResourceDatabaseDelete,
+		Create: resourceDatabaseCreate,
+		Read:   resourceDatabaseRead,
+		Update: resourceDatabaseUpdate,
+		Delete: resourceDatabaseDelete,
 		Importer: &schema.ResourceImporter{
 			State: ResourceDatabaseImport,
 		},
@@ -175,7 +179,7 @@ func ResourceDatabase() *schema.Resource {
 	}
 }
 
-func ResourceDatabaseCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceDatabaseCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).LightsailConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
@@ -268,10 +272,10 @@ func ResourceDatabaseCreate(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("Error waiting for Relational Database (%s) to become available: %s", d.Id(), err)
 	}
 
-	return ResourceDatabaseRead(d, meta)
+	return resourceDatabaseRead(d, meta)
 }
 
-func ResourceDatabaseRead(d *schema.ResourceData, meta interface{}) error {
+func resourceDatabaseRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).LightsailConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -329,7 +333,7 @@ func ResourceDatabaseRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func ResourceDatabaseDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceDatabaseDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).LightsailConn
 
 	// Some Operations can complete before the Database enters the Available state. Added a waiter to make sure the Database is available before continuing.
@@ -378,7 +382,7 @@ func ResourceDatabaseImport(
 	return []*schema.ResourceData{d}, nil
 }
 
-func ResourceDatabaseUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceDatabaseUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).LightsailConn
 	requestUpdate := false
 
@@ -467,5 +471,5 @@ func ResourceDatabaseUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	return ResourceDatabaseRead(d, meta)
+	return resourceDatabaseRead(d, meta)
 }

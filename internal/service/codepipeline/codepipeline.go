@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -30,7 +31,7 @@ const (
 	gitHubActionConfigurationOAuthToken = "OAuthToken"
 )
 
-func ResourceCodePipeline() *schema.Resource { // nosemgrep:codepipeline-in-func-name
+func ResourceCodePipeline() *schema.Resource { // nosemgrep:ci.codepipeline-in-func-name
 	return &schema.Resource{
 		Create: resourceCreate,
 		Read:   resourceRead,
@@ -538,13 +539,13 @@ func resourceRead(d *schema.ResourceData, meta interface{}) error {
 	})
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, codepipeline.ErrCodePipelineNotFoundException) {
-		names.LogNotFoundRemoveState(names.CodePipeline, names.ErrActionReading, resPipeline, d.Id())
+		create.LogNotFoundRemoveState(names.CodePipeline, create.ErrActionReading, ResNamePipeline, d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return names.Error(names.CodePipeline, names.ErrActionReading, resPipeline, d.Id(), err)
+		return create.Error(names.CodePipeline, create.ErrActionReading, ResNamePipeline, d.Id(), err)
 	}
 
 	metadata := resp.Metadata

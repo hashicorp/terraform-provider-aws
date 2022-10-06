@@ -123,7 +123,7 @@ func ResourceVPCEndpointService() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
-					ValidateFunc: validation.StringInSlice([]string{"ipv4", "ipv6"}, false),
+					ValidateFunc: validation.StringInSlice(ec2.ServiceConnectivityType_Values(), false),
 				},
 			},
 			"tags":     tftags.TagsSchema(),
@@ -276,24 +276,14 @@ func resourceVPCEndpointServiceUpdate(d *schema.ResourceData, meta interface{}) 
 			input.AcceptanceRequired = aws.Bool(d.Get("acceptance_required").(bool))
 		}
 
-		if d.HasChange("gateway_load_balancer_arns") {
-			setVPCEndpointServiceUpdateLists(d, "gateway_load_balancer_arns",
-				&input.AddGatewayLoadBalancerArns, &input.RemoveGatewayLoadBalancerArns)
-		}
-
-		if d.HasChange("network_load_balancer_arns") {
-			setVPCEndpointServiceUpdateLists(d, "network_load_balancer_arns",
-				&input.AddNetworkLoadBalancerArns, &input.RemoveNetworkLoadBalancerArns)
-		}
+		input.AddGatewayLoadBalancerArns, input.RemoveGatewayLoadBalancerArns = flattenAddAndRemoveStringLists(d, "gateway_load_balancer_arns")
+		input.AddNetworkLoadBalancerArns, input.RemoveNetworkLoadBalancerArns = flattenAddAndRemoveStringLists(d, "network_load_balancer_arns")
 
 		if d.HasChange("private_dns_name") {
 			input.PrivateDnsName = aws.String(d.Get("private_dns_name").(string))
 		}
 
-		if d.HasChange("supported_ip_address_types") {
-			setVPCEndpointServiceUpdateLists(d, "supported_ip_address_types",
-				&input.AddSupportedIpAddressTypes, &input.RemoveSupportedIpAddressTypes)
-		}
+		input.AddSupportedIpAddressTypes, input.RemoveSupportedIpAddressTypes = flattenAddAndRemoveStringLists(d, "supported_ip_address_types")
 
 		log.Printf("[DEBUG] Updating EC2 VPC Endpoint Service: %s", input)
 		_, err := conn.ModifyVpcEndpointServiceConfiguration(input)
@@ -312,8 +302,7 @@ func resourceVPCEndpointServiceUpdate(d *schema.ResourceData, meta interface{}) 
 			ServiceId: aws.String(d.Id()),
 		}
 
-		setVPCEndpointServiceUpdateLists(d, "allowed_principals",
-			&input.AddAllowedPrincipals, &input.RemoveAllowedPrincipals)
+		input.AddAllowedPrincipals, input.RemoveAllowedPrincipals = flattenAddAndRemoveStringLists(d, "allowed_principals")
 
 		if _, err := conn.ModifyVpcEndpointServicePermissions(input); err != nil {
 			return fmt.Errorf("modifying EC2 VPC Endpoint Service (%s) permissions: %w", d.Id(), err)
@@ -356,22 +345,6 @@ func resourceVPCEndpointServiceDelete(d *schema.ResourceData, meta interface{}) 
 	}
 
 	return nil
-}
-
-func setVPCEndpointServiceUpdateLists(d *schema.ResourceData, key string, a, r *[]*string) {
-	o, n := d.GetChange(key)
-	os := o.(*schema.Set)
-	ns := n.(*schema.Set)
-
-	add := flex.ExpandStringSet(ns.Difference(os))
-	if len(add) > 0 {
-		*a = add
-	}
-
-	remove := flex.ExpandStringSet(os.Difference(ns))
-	if len(remove) > 0 {
-		*r = remove
-	}
 }
 
 func flattenAllowedPrincipal(apiObject *ec2.AllowedPrincipal) *string {

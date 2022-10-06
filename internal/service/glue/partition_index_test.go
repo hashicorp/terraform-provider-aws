@@ -19,10 +19,10 @@ func TestAccGluePartitionIndex_basic(t *testing.T) {
 	resourceName := "aws_glue_partition_index.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, glue.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckPartitionIndexDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPartitionIndexDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config:  testAccPartitionIndexConfig_basic(rName),
@@ -50,10 +50,10 @@ func TestAccGluePartitionIndex_disappears(t *testing.T) {
 	resourceName := "aws_glue_partition_index.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, glue.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckPartitionIndexDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPartitionIndexDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config:  testAccPartitionIndexConfig_basic(rName),
@@ -74,10 +74,10 @@ func TestAccGluePartitionIndex_Disappears_table(t *testing.T) {
 	resourceName := "aws_glue_partition_index.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, glue.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckPartitionIndexDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPartitionIndexDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config:  testAccPartitionIndexConfig_basic(rName),
@@ -98,10 +98,10 @@ func TestAccGluePartitionIndex_Disappears_database(t *testing.T) {
 	resourceName := "aws_glue_partition_index.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, glue.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckPartitionIndexDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPartitionIndexDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config:  testAccPartitionIndexConfig_basic(rName),

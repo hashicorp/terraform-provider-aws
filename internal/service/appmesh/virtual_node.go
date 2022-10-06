@@ -1077,7 +1077,7 @@ func resourceVirtualNodeCreate(d *schema.ResourceData, meta interface{}) error {
 	resp, err := conn.CreateVirtualNode(req)
 
 	if err != nil {
-		return fmt.Errorf("error creating App Mesh virtual node: %w", err)
+		return fmt.Errorf("creating App Mesh virtual node: %w", err)
 	}
 
 	d.SetId(aws.StringValue(resp.VirtualNode.Metadata.Uid))
@@ -1127,16 +1127,16 @@ func resourceVirtualNodeRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading App Mesh Virtual Node: %w", err)
+		return fmt.Errorf("reading App Mesh Virtual Node: %w", err)
 	}
 
 	if resp == nil || resp.VirtualNode == nil {
-		return fmt.Errorf("error reading App Mesh Virtual Node: empty response")
+		return fmt.Errorf("reading App Mesh Virtual Node: empty response")
 	}
 
 	if aws.StringValue(resp.VirtualNode.Status.Status) == appmesh.VirtualNodeStatusCodeDeleted {
 		if d.IsNewResource() {
-			return fmt.Errorf("error reading App Mesh Virtual Node: %s after creation", aws.StringValue(resp.VirtualNode.Status.Status))
+			return fmt.Errorf("reading App Mesh Virtual Node: %s after creation", aws.StringValue(resp.VirtualNode.Status.Status))
 		}
 
 		log.Printf("[WARN] App Mesh Virtual Node (%s) not found, removing from state", d.Id())
@@ -1154,24 +1154,24 @@ func resourceVirtualNodeRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("resource_owner", resp.VirtualNode.Metadata.ResourceOwner)
 	err = d.Set("spec", flattenVirtualNodeSpec(resp.VirtualNode.Spec))
 	if err != nil {
-		return fmt.Errorf("error setting spec: %w", err)
+		return fmt.Errorf("setting spec: %w", err)
 	}
 
 	tags, err := ListTags(conn, arn)
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for App Mesh virtual node (%s): %w", arn, err)
+		return fmt.Errorf("listing tags for App Mesh virtual node (%s): %w", arn, err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return fmt.Errorf("setting tags: %w", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return fmt.Errorf("setting tags_all: %w", err)
 	}
 
 	return nil
@@ -1195,7 +1195,7 @@ func resourceVirtualNodeUpdate(d *schema.ResourceData, meta interface{}) error {
 		_, err := conn.UpdateVirtualNode(req)
 
 		if err != nil {
-			return fmt.Errorf("error updating App Mesh virtual node (%s): %w", d.Id(), err)
+			return fmt.Errorf("updating App Mesh virtual node (%s): %w", d.Id(), err)
 		}
 	}
 
@@ -1204,7 +1204,7 @@ func resourceVirtualNodeUpdate(d *schema.ResourceData, meta interface{}) error {
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(conn, arn, o, n); err != nil {
-			return fmt.Errorf("error updating App Mesh virtual node (%s) tags: %w", arn, err)
+			return fmt.Errorf("updating App Mesh virtual node (%s) tags: %w", arn, err)
 		}
 	}
 
@@ -1225,7 +1225,7 @@ func resourceVirtualNodeDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting App Mesh virtual node (%s): %w", d.Id(), err)
+		return fmt.Errorf("deleting App Mesh virtual node (%s): %w", d.Id(), err)
 	}
 
 	return nil
@@ -1234,7 +1234,7 @@ func resourceVirtualNodeDelete(d *schema.ResourceData, meta interface{}) error {
 func resourceVirtualNodeImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	parts := strings.Split(d.Id(), "/")
 	if len(parts) != 2 {
-		return []*schema.ResourceData{}, fmt.Errorf("Wrong format of resource: %s. Please follow 'mesh-name/virtual-node-name'", d.Id())
+		return []*schema.ResourceData{}, fmt.Errorf("wrong format of import ID (%s), use: 'mesh-name/virtual-node-name'", d.Id())
 	}
 
 	mesh := parts[0]

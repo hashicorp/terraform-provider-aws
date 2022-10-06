@@ -16,7 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func testAccThesaurus_basic(t *testing.T) {
+func TestAccKendraThesaurus_basic(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -30,9 +30,9 @@ func testAccThesaurus_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService(names.KendraEndpointID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, names.KendraEndpointID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckThesaurusDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckThesaurusDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccThesaurusConfig_basic(rName),
@@ -45,6 +45,7 @@ func testAccThesaurus_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "source_s3_path.0.bucket", "aws_s3_bucket.test", "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "source_s3_path.0.key", "aws_s3_object.test", "key"),
 					resource.TestCheckResourceAttrSet(resourceName, "status"),
+					resource.TestCheckResourceAttrSet(resourceName, "thesaurus_id"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "kendra", regexp.MustCompile(`index/.+/thesaurus/.+$`)),
 				),
 			},
@@ -57,7 +58,7 @@ func testAccThesaurus_basic(t *testing.T) {
 	})
 }
 
-func testAccThesaurus_disappears(t *testing.T) {
+func TestAccKendraThesaurus_disappears(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -71,9 +72,9 @@ func testAccThesaurus_disappears(t *testing.T) {
 			acctest.PreCheckPartitionHasService(names.KendraEndpointID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, names.KendraEndpointID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckThesaurusDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckThesaurusDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccThesaurusConfig_basic(rName),
@@ -87,7 +88,7 @@ func testAccThesaurus_disappears(t *testing.T) {
 	})
 }
 
-func testAccThesaurus_tags(t *testing.T) {
+func TestAccKendraThesaurus_tags(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -101,9 +102,9 @@ func testAccThesaurus_tags(t *testing.T) {
 			acctest.PreCheckPartitionHasService(names.KendraEndpointID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, names.KendraEndpointID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckThesaurusDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckThesaurusDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccThesaurusConfig_tags1(rName, "key1", "value1"),
@@ -139,7 +140,7 @@ func testAccThesaurus_tags(t *testing.T) {
 	})
 }
 
-func testAccThesaurus_description(t *testing.T) {
+func TestAccKendraThesaurus_description(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -147,15 +148,15 @@ func testAccThesaurus_description(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_kendra_thesaurus.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(names.KendraEndpointID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, names.KendraEndpointID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckThesaurusDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckThesaurusDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccThesaurusConfig_description(rName, "description1"),
@@ -187,7 +188,7 @@ func testAccThesaurus_description(t *testing.T) {
 	})
 }
 
-func testAccThesaurus_name(t *testing.T) {
+func TestAccKendraThesaurus_name(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -196,15 +197,15 @@ func testAccThesaurus_name(t *testing.T) {
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_kendra_thesaurus.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(names.KendraEndpointID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, names.KendraEndpointID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckThesaurusDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckThesaurusDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccThesaurusConfig_basic(rName1),
@@ -229,7 +230,7 @@ func testAccThesaurus_name(t *testing.T) {
 	})
 }
 
-func testAccThesaurus_roleARN(t *testing.T) {
+func TestAccKendraThesaurus_roleARN(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -237,15 +238,15 @@ func testAccThesaurus_roleARN(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_kendra_thesaurus.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(names.KendraEndpointID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, names.KendraEndpointID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckThesaurusDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckThesaurusDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccThesaurusConfig_basic(rName),
@@ -270,7 +271,7 @@ func testAccThesaurus_roleARN(t *testing.T) {
 	})
 }
 
-func testAccThesaurus_sourceS3Path(t *testing.T) {
+func TestAccKendraThesaurus_sourceS3Path(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -278,15 +279,15 @@ func testAccThesaurus_sourceS3Path(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_kendra_thesaurus.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(names.KendraEndpointID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, names.KendraEndpointID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckThesaurusDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckThesaurusDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccThesaurusConfig_basic(rName),
@@ -326,7 +327,7 @@ func testAccCheckThesaurusDestroy(s *terraform.State) error {
 			return err
 		}
 
-		_, err = tfkendra.FindThesaurusByID(context.TODO(), conn, id, indexId)
+		_, err = tfkendra.FindThesaurusByID(context.Background(), conn, id, indexId)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -358,7 +359,7 @@ func testAccCheckThesaurusExists(name string) resource.TestCheckFunc {
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).KendraConn
 
-		_, err = tfkendra.FindThesaurusByID(context.TODO(), conn, id, indexId)
+		_, err = tfkendra.FindThesaurusByID(context.Background(), conn, id, indexId)
 
 		if err != nil {
 			return fmt.Errorf("Error describing Kendra Thesaurus: %s", err.Error())

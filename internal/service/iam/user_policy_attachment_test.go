@@ -22,10 +22,10 @@ func TestAccIAMUserPolicyAttachment_basic(t *testing.T) {
 	policyName3 := fmt.Sprintf("test-policy-%s", sdkacctest.RandString(10))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, iam.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckUserPolicyAttachmentDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserPolicyAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserPolicyAttachmentConfig_attach(rName, policyName1),

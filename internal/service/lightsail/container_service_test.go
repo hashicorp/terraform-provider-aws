@@ -26,9 +26,9 @@ func TestAccLightsailContainerService_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService(lightsail.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, lightsail.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckContainerServiceDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, lightsail.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckContainerServiceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccContainerServiceConfig_basic(rName),
@@ -75,9 +75,9 @@ func TestAccLightsailContainerService_disappears(t *testing.T) {
 			acctest.PreCheckPartitionHasService(lightsail.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, lightsail.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckContainerServiceDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, lightsail.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckContainerServiceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccContainerServiceConfig_basic(rName),
@@ -102,9 +102,9 @@ func TestAccLightsailContainerService_Name(t *testing.T) {
 			acctest.PreCheckPartitionHasService(lightsail.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, lightsail.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckContainerServiceDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, lightsail.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckContainerServiceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccContainerServiceConfig_basic(rName1),
@@ -134,9 +134,9 @@ func TestAccLightsailContainerService_IsDisabled(t *testing.T) {
 			acctest.PreCheckPartitionHasService(lightsail.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, lightsail.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckContainerServiceDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, lightsail.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckContainerServiceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccContainerServiceConfig_basic(rName),
@@ -166,9 +166,9 @@ func TestAccLightsailContainerService_Power(t *testing.T) {
 			acctest.PreCheckPartitionHasService(lightsail.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, lightsail.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckContainerServiceDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, lightsail.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckContainerServiceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccContainerServiceConfig_basic(rName),
@@ -197,9 +197,9 @@ func TestAccLightsailContainerService_PublicDomainNames(t *testing.T) {
 			acctest.PreCheckPartitionHasService(lightsail.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, lightsail.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckContainerServiceDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, lightsail.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckContainerServiceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccContainerServiceConfig_publicDomainNames(rName),
@@ -219,9 +219,9 @@ func TestAccLightsailContainerService_Scale(t *testing.T) {
 			acctest.PreCheckPartitionHasService(lightsail.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, lightsail.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckContainerServiceDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, lightsail.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckContainerServiceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccContainerServiceConfig_basic(rName),
@@ -252,9 +252,9 @@ func TestAccLightsailContainerService_tags(t *testing.T) {
 			acctest.PreCheckPartitionHasService(lightsail.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, lightsail.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckContainerServiceDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, lightsail.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckContainerServiceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccContainerServiceConfig_tags1(rName, "key1", "value1"),
@@ -298,7 +298,7 @@ func testAccCheckContainerServiceDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := tflightsail.FindContainerServiceByName(context.TODO(), conn, r.Primary.ID)
+		_, err := tflightsail.FindContainerServiceByName(context.Background(), conn, r.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -325,12 +325,9 @@ func testAccCheckContainerServiceExists(resourceName string) resource.TestCheckF
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn
 
-		_, err := tflightsail.FindContainerServiceByName(context.TODO(), conn, rs.Primary.ID)
-		if err != nil {
-			return err
-		}
+		_, err := tflightsail.FindContainerServiceByName(context.Background(), conn, rs.Primary.ID)
 
-		return nil
+		return err
 	}
 }
 

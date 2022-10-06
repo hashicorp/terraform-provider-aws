@@ -21,9 +21,9 @@ func testAccOrganizationAdminAccount_basic(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckOrganizationsAccount(t)
 		},
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckOrganizationAdminAccountDestroy,
-		ErrorCheck:        testAccErrorCheckSkipOrganizationAdminAccount(t),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOrganizationAdminAccountDestroy,
+		ErrorCheck:               testAccErrorCheckSkipOrganizationAdminAccount(t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrganizationAdminAccountConfig_basic(),
@@ -49,9 +49,9 @@ func testAccOrganizationAdminAccount_disappears(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckOrganizationsAccount(t)
 		},
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckOrganizationAdminAccountDestroy,
-		ErrorCheck:        testAccErrorCheckSkipOrganizationAdminAccount(t),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOrganizationAdminAccountDestroy,
+		ErrorCheck:               testAccErrorCheckSkipOrganizationAdminAccount(t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrganizationAdminAccountConfig_basic(),

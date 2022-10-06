@@ -124,7 +124,7 @@ func resourceStreamDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting CloudWatch Log Stream (%s): %w", d.Id(), err)
+		return fmt.Errorf("deleting CloudWatch Log Stream (%s): %w", d.Id(), err)
 	}
 
 	return nil
@@ -133,7 +133,7 @@ func resourceStreamDelete(d *schema.ResourceData, meta interface{}) error {
 func resourceStreamImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	parts := strings.Split(d.Id(), ":")
 	if len(parts) != 2 {
-		return []*schema.ResourceData{}, fmt.Errorf("Wrong format of resource: %s. Please follow 'log-group-name:log-stream-name'", d.Id())
+		return []*schema.ResourceData{}, fmt.Errorf("wrong format of import ID (%s), use: 'log-group-name:log-stream-name'", d.Id())
 	}
 
 	logGroupName := parts[0]

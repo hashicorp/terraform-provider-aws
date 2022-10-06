@@ -300,11 +300,7 @@ func testAccCheckTagExists(resourceName string) resource.TestCheckFunc {
 
 		_, err = tf{{ .ServicePackage }}.GetTag(conn, identifier, key)
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 `

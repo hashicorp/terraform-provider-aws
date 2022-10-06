@@ -55,7 +55,7 @@ func ResourceCertificateAuthority() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			// https://docs.aws.amazon.com/acm-pca/latest/APIReference/API_CertificateAuthorityConfiguration.html
+			// https://docs.aws.amazon.com/privateca/latest/APIReference/API_CertificateAuthorityConfiguration.html
 			"certificate_authority_configuration": {
 				Type:     schema.TypeList,
 				Required: true,
@@ -86,7 +86,7 @@ func ResourceCertificateAuthority() *schema.Resource {
 								acmpca.SigningAlgorithmSha512withrsa,
 							}, false),
 						},
-						// https://docs.aws.amazon.com/acm-pca/latest/APIReference/API_ASN1Subject.html
+						// https://docs.aws.amazon.com/privateca/latest/APIReference/API_ASN1Subject.html
 						"subject": {
 							Type:     schema.TypeList,
 							Required: true,
@@ -199,7 +199,7 @@ func ResourceCertificateAuthority() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			// https://docs.aws.amazon.com/acm-pca/latest/APIReference/API_RevocationConfiguration.html
+			// https://docs.aws.amazon.com/privateca/latest/APIReference/API_RevocationConfiguration.html
 			"revocation_configuration": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -212,7 +212,7 @@ func ResourceCertificateAuthority() *schema.Resource {
 				},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						// https://docs.aws.amazon.com/acm-pca/latest/APIReference/API_CrlConfiguration.html
+						// https://docs.aws.amazon.com/privateca/latest/APIReference/API_CrlConfiguration.html
 						"crl_configuration": {
 							Type:     schema.TypeList,
 							Optional: true,
@@ -251,6 +251,31 @@ func ResourceCertificateAuthority() *schema.Resource {
 										Optional:     true,
 										Computed:     true,
 										ValidateFunc: validation.StringInSlice(acmpca.S3ObjectAcl_Values(), false),
+									},
+								},
+							},
+						},
+						// https://docs.aws.amazon.com/privateca/latest/APIReference/API_OcspConfiguration.html
+						"ocsp_configuration": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+								if old == "1" && new == "0" {
+									return true
+								}
+								return false
+							},
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"enabled": {
+										Type:     schema.TypeBool,
+										Required: true,
+									},
+									"ocsp_custom_cname": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validation.StringLenBetween(0, 253),
 									},
 								},
 							},
@@ -630,15 +655,34 @@ func expandCrlConfiguration(l []interface{}) *acmpca.CrlConfiguration {
 	return config
 }
 
-func expandRevocationConfiguration(l []interface{}) *acmpca.RevocationConfiguration {
+func expandOcspConfiguration(l []interface{}) *acmpca.OcspConfiguration {
 	if len(l) == 0 {
 		return nil
 	}
 
 	m := l[0].(map[string]interface{})
 
+	config := &acmpca.OcspConfiguration{
+		Enabled: aws.Bool(m["enabled"].(bool)),
+	}
+
+	if v, ok := m["ocsp_custom_cname"]; ok && v.(string) != "" {
+		config.OcspCustomCname = aws.String(v.(string))
+	}
+
+	return config
+}
+
+func expandRevocationConfiguration(l []interface{}) *acmpca.RevocationConfiguration {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
 	config := &acmpca.RevocationConfiguration{
-		CrlConfiguration: expandCrlConfiguration(m["crl_configuration"].([]interface{})),
+		CrlConfiguration:  expandCrlConfiguration(m["crl_configuration"].([]interface{})),
+		OcspConfiguration: expandOcspConfiguration(m["ocsp_configuration"].([]interface{})),
 	}
 
 	return config
@@ -698,13 +742,27 @@ func flattenCrlConfiguration(config *acmpca.CrlConfiguration) []interface{} {
 	return []interface{}{m}
 }
 
+func flattenOcspConfiguration(config *acmpca.OcspConfiguration) []interface{} {
+	if config == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"enabled":           aws.BoolValue(config.Enabled),
+		"ocsp_custom_cname": aws.StringValue(config.OcspCustomCname),
+	}
+
+	return []interface{}{m}
+}
+
 func flattenRevocationConfiguration(config *acmpca.RevocationConfiguration) []interface{} {
 	if config == nil {
 		return []interface{}{}
 	}
 
 	m := map[string]interface{}{
-		"crl_configuration": flattenCrlConfiguration(config.CrlConfiguration),
+		"crl_configuration":  flattenCrlConfiguration(config.CrlConfiguration),
+		"ocsp_configuration": flattenOcspConfiguration(config.OcspConfiguration),
 	}
 
 	return []interface{}{m}

@@ -67,7 +67,7 @@ The following arguments are optional:
 * `private_ips_count` - (Optional) Number of secondary private IPs to assign to the ENI. The total number of private IPs will be 1 + `private_ips_count`, as a primary private IP will be assiged to an ENI by default.
 * `security_groups` - (Optional) List of security group IDs to assign to the ENI.
 * `source_dest_check` - (Optional) Whether to enable source destination checking for the ENI. Default true.
-* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### Attachment
 
@@ -85,7 +85,7 @@ In addition to all arguments above, the following attributes are exported:
 * `mac_address` - MAC address of the network interface.
 * `owner_id` - AWS account ID of the owner of the network interface.
 * `private_dns_name` - Private DNS name of the network interface (IPv4).
-* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 

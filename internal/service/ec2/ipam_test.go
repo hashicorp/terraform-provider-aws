@@ -8,7 +8,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -24,10 +23,10 @@ func TestAccIPAM_basic(t *testing.T) {
 	resourceName := "aws_vpc_ipam.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccIPAMPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckIPAMDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccIPAMPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIPAMDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIPAMConfig_base,
@@ -50,7 +49,6 @@ func TestAccIPAM_basic(t *testing.T) {
 }
 
 func TestAccIPAM_modify(t *testing.T) {
-	var providers []*schema.Provider
 	resourceName := "aws_vpc_ipam.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -59,9 +57,9 @@ func TestAccIPAM_modify(t *testing.T) {
 			testAccIPAMPreCheck(t)
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.FactoriesMultipleRegion(&providers, 2),
-		CheckDestroy:      testAccCheckIPAMDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(t, 2),
+		CheckDestroy:             testAccCheckIPAMDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIPAMConfig_base,
@@ -100,10 +98,10 @@ func TestAccIPAM_cascade(t *testing.T) {
 	resourceName := "aws_vpc_ipam.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccIPAMPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckIPAMDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccIPAMPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIPAMDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIPAMConfig_cascade(),
@@ -130,10 +128,10 @@ func TestAccIPAM_tags(t *testing.T) {
 	resourceName := "aws_vpc_ipam.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccIPAMPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckIPAMDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccIPAMPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIPAMDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIPAMConfig_tags("key1", "value1"),
@@ -180,7 +178,7 @@ func testAccCheckIPAMDestroy(s *terraform.State) error {
 			if tfresource.NotFound(err) {
 				return nil
 			}
-			return fmt.Errorf("error waiting for IPAM to be deleted: %w", err)
+			return fmt.Errorf("waiting for IPAM to be deleted: %w", err)
 		}
 	}
 

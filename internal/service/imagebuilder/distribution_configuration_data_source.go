@@ -137,6 +137,58 @@ func DataSourceDistributionConfiguration() *schema.Resource {
 								},
 							},
 						},
+						"fast_launch_configuration": {
+							Type:     schema.TypeSet,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"account_id": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"enabled": {
+										Type:     schema.TypeBool,
+										Computed: true,
+									},
+									"launch_template": {
+										Type:     schema.TypeSet,
+										Computed: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"launch_template_id": {
+													Type:     schema.TypeString,
+													Computed: true,
+												},
+												"launch_template_name": {
+													Type:     schema.TypeString,
+													Computed: true,
+												},
+												"launch_template_version": {
+													Type:     schema.TypeString,
+													Computed: true,
+												},
+											},
+										},
+									},
+									"max_parallel_launches": {
+										Type:     schema.TypeInt,
+										Computed: true,
+									},
+									"snapshot_configuration": {
+										Type:     schema.TypeSet,
+										Computed: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"target_resource_count": {
+													Type:     schema.TypeInt,
+													Computed: true,
+												},
+											},
+										},
+									},
+								},
+							},
+						},
 						"launch_template_configuration": {
 							Type:     schema.TypeSet,
 							Computed: true,

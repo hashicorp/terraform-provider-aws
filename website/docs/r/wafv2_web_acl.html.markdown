@@ -268,7 +268,7 @@ The following arguments are supported:
 * `name` - (Required) Friendly name of the WebACL.
 * `rule` - (Optional) Rule blocks used to identify the web requests that you want to `allow`, `block`, or `count`. See [Rules](#rules) below for details.
 * `scope` - (Required) Specifies whether this is for an AWS CloudFront distribution or for a regional application. Valid values are `CLOUDFRONT` or `REGIONAL`. To work with CloudFront, you must also specify the region `us-east-1` (N. Virginia) on the AWS provider.
-* `tags` - (Optional) Map of key-value pairs to associate with the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Map of key-value pairs to associate with the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `visibility_config` - (Required) Defines and enables Amazon CloudWatch metrics and web request sample collection. See [Visibility Configuration](#visibility-configuration) below for details.
 
 ### Custom Response Body
@@ -310,6 +310,7 @@ The `action` block supports the following arguments:
 
 * `allow` - (Optional) Instructs AWS WAF to allow the web request. See [Allow](#action) below for details.
 * `block` - (Optional) Instructs AWS WAF to block the web request. See [Block](#block) below for details.
+* `captcha` - (Optional) Instructs AWS WAF to run a Captcha check against the web request. See [Captcha](#captcha) below for details.
 * `count` - (Optional) Instructs AWS WAF to count the web request and allow it. See [Count](#count) below for details.
 
 ### Override Action
@@ -332,6 +333,12 @@ The `allow` block supports the following arguments:
 The `block` block supports the following arguments:
 
 * `custom_response` - (Optional) Defines a custom response for the web request. See [Custom Response](#custom-response) below for details.
+
+### Captcha
+
+The `captcha` block supports the following arguments:
+
+* `custom_request_handling` - (Optional) Defines custom handling for the web request. See [Custom Request Handling](#custom-request-handling) below for details.
 
 ### Count
 
@@ -538,11 +545,13 @@ The part of a web request that you want AWS WAF to inspect. Include the single `
 
 The `field_to_match` block supports the following arguments:
 
-~> **NOTE:** Only one of `all_query_arguments`, `body`, `method`, `query_string`, `single_header`, `single_query_argument`, or `uri_path` can be specified.
+~> **NOTE:** Only one of `all_query_arguments`, `body`, `cookies`, `json_body`, `method`, `query_string`, `single_header`, `single_query_argument`, or `uri_path` can be specified.
 An empty configuration block `{}` should be used when specifying `all_query_arguments`, `body`, `method`, or `query_string` attributes.
 
 * `all_query_arguments` - (Optional) Inspect all query arguments.
 * `body` - (Optional) Inspect the request body, which immediately follows the request headers.
+* `cookies` - (Optional) Inspect the request cookies.
+* `json_body` - (Optional) Inspect the request body as JSON. See [JSON Body](#json-body) for details.
 * `method` - (Optional) Inspect the HTTP method. The method indicates the type of operation that the request is asking the origin to perform.
 * `query_string` - (Optional) Inspect the query string. This is the part of a URL that appears after a `?` character, if any.
 * `single_header` - (Optional) Inspect a single header. See [Single Header](#single-header) below for details.
@@ -570,6 +579,15 @@ The `ip_set_forwarded_ip_config` block supports the following arguments:
 * `header_name` - (Required) - Name of the HTTP header to use for the IP address.
 * `position` - (Required) - Position in the header to search for the IP address. Valid values include: `FIRST`, `LAST`, or `ANY`. If `ANY` is specified and the header contains more than 10 IP addresses, AWS WAFv2 inspects the last 10.
 
+### JSON Body
+
+The `json_body` block supports the following arguments:
+
+* `invalid_fallback_behavior` - (Optional) What to do when JSON parsing fails. Defaults to evaluating up to the first parsing failure. Valid values are `EVALUATE_AS_STRING`, `MATCH` and `NO_MATCH`.
+* `match_pattern` - (Required) The patterns to look for in the JSON body. You must specify exactly one setting: either `all` or `included_paths`. See [JsonMatchPattern](https://docs.aws.amazon.com/waf/latest/APIReference/API_JsonMatchPattern.html) for details.
+* `match_scope` - (Required) The parts of the JSON to match against using the `match_pattern`. Valid values are `ALL`, `KEY` and `VALUE`.
+* `oversize_handling` - (Optional) What to do if the body is larger than can be inspected. Valid values are `CONTINUE` (default), `MATCH` and `NO_MATCH`.
+
 ### Single Header
 
 Inspect a single header. Provide the name of the header to inspect, for example, `User-Agent` or `Referer` (provided as lowercase strings).
@@ -585,6 +603,17 @@ Inspect a single query argument. Provide the name of the query argument to inspe
 The `single_query_argument` block supports the following arguments:
 
 * `name` - (Optional) Name of the query header to inspect. This setting must be provided as lower case characters.
+
+### Cookies
+
+Inspect the cookies in the web request. You can specify the parts of the cookies to inspect and you can narrow the set of cookies to inspect by including or excluding specific keys.
+This is used to indicate the web request component to inspect, in the [FieldToMatch](https://docs.aws.amazon.com/waf/latest/APIReference/API_FieldToMatch.html) specification.
+
+The `cookies` block supports the following arguments:
+
+* `match_pattern` - (Required) The filter to use to identify the subset of cookies to inspect in a web request. You must specify exactly one setting: either `all`, `included_cookies` or `excluded_cookies`. More details: [CookieMatchPattern](https://docs.aws.amazon.com/waf/latest/APIReference/API_CookieMatchPattern.html)
+* `match_scope` - (Required) The parts of the cookies to inspect with the rule inspection criteria. If you specify All, AWS WAF inspects both keys and values. Valid values: `ALL`, `KEY`, `VALUE`
+* `oversize_handling` - (Required) What AWS WAF should do if the cookies of the request are larger than AWS WAF can inspect. AWS WAF does not support inspecting the entire contents of request cookies when they exceed 8 KB (8192 bytes) or 200 total cookies. The underlying host service forwards a maximum of 200 cookies and at most 8 KB of cookie contents to AWS WAF. Valid values: `CONTINUE`, `MATCH`, `NO_MATCH`
 
 ### Text Transformation
 
@@ -609,7 +638,7 @@ In addition to all arguments above, the following attributes are exported:
 * `arn` - The ARN of the WAF WebACL.
 * `capacity` - Web ACL capacity units (WCUs) currently being used by this web ACL.
 * `id` - The ID of the WAF WebACL.
-* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 

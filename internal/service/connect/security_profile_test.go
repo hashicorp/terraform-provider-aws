@@ -15,22 +15,6 @@ import (
 	tfconnect "github.com/hashicorp/terraform-provider-aws/internal/service/connect"
 )
 
-//Serialized acceptance tests due to Connect account limits (max 2 parallel tests)
-func TestAccConnectSecurityProfile_serial(t *testing.T) {
-	testCases := map[string]func(t *testing.T){
-		"basic":              testAccSecurityProfile_basic,
-		"disappears":         testAccSecurityProfile_disappears,
-		"update_permissions": testAccSecurityProfile_updatePermissions,
-	}
-
-	for name, tc := range testCases {
-		tc := tc
-		t.Run(name, func(t *testing.T) {
-			tc(t)
-		})
-	}
-}
-
 func testAccSecurityProfile_basic(t *testing.T) {
 	var v connect.DescribeSecurityProfileOutput
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
@@ -38,10 +22,10 @@ func testAccSecurityProfile_basic(t *testing.T) {
 	resourceName := "aws_connect_security_profile.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, connect.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckSecurityProfileDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSecurityProfileDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSecurityProfileConfig_basic(rName, rName2, "Created"),
@@ -87,10 +71,10 @@ func testAccSecurityProfile_updatePermissions(t *testing.T) {
 	resourceName := "aws_connect_security_profile.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, connect.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckSecurityProfileDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSecurityProfileDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSecurityProfileConfig_basic(rName, rName2, "TestPermissionsUpdate"),
@@ -130,6 +114,56 @@ func testAccSecurityProfile_updatePermissions(t *testing.T) {
 	})
 }
 
+func testAccSecurityProfile_updateTags(t *testing.T) {
+	var v connect.DescribeSecurityProfileOutput
+	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	description := "tags"
+
+	resourceName := "aws_connect_security_profile.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSecurityProfileDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSecurityProfileConfig_basic(rName, rName2, description),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSecurityProfileExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", "Test Security Profile"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccSecurityProfileConfig_tags(rName, rName2, description),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSecurityProfileExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", "Test Security Profile"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "Value2a"),
+				),
+			},
+			{
+				Config: testAccSecurityProfileConfig_tagsUpdated(rName, rName2, description),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSecurityProfileExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", "Test Security Profile"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "Value2b"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "Value3"),
+				),
+			},
+		},
+	})
+}
+
 func testAccSecurityProfile_disappears(t *testing.T) {
 	var v connect.DescribeSecurityProfileOutput
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
@@ -137,10 +171,10 @@ func testAccSecurityProfile_disappears(t *testing.T) {
 	resourceName := "aws_connect_security_profile.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, connect.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckSecurityProfileDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSecurityProfileDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSecurityProfileConfig_basic(rName, rName2, "Disappear"),
@@ -221,7 +255,7 @@ func testAccCheckSecurityProfileDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccSecurityProfileBaseConfig(rName string) string {
+func testAccSecurityProfileConfig_base(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_connect_instance" "test" {
   identity_management_type = "CONNECT_MANAGED"
@@ -234,7 +268,7 @@ resource "aws_connect_instance" "test" {
 
 func testAccSecurityProfileConfig_basic(rName, rName2, label string) string {
 	return acctest.ConfigCompose(
-		testAccSecurityProfileBaseConfig(rName),
+		testAccSecurityProfileConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_connect_security_profile" "test" {
   instance_id = aws_connect_instance.test.id
@@ -250,7 +284,7 @@ resource "aws_connect_security_profile" "test" {
 
 func testAccSecurityProfileConfig_permissions(rName, rName2, label string) string {
 	return acctest.ConfigCompose(
-		testAccSecurityProfileBaseConfig(rName),
+		testAccSecurityProfileConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_connect_security_profile" "test" {
   instance_id = aws_connect_instance.test.id
@@ -264,6 +298,41 @@ resource "aws_connect_security_profile" "test" {
 
   tags = {
     "Name" = "Test Security Profile"
+  }
+}
+`, rName2, label))
+}
+
+func testAccSecurityProfileConfig_tags(rName, rName2, label string) string {
+	return acctest.ConfigCompose(
+		testAccSecurityProfileConfig_base(rName),
+		fmt.Sprintf(`
+resource "aws_connect_security_profile" "test" {
+  instance_id = aws_connect_instance.test.id
+  name        = %[1]q
+  description = %[2]q
+
+  tags = {
+    "Name" = "Test Security Profile"
+    "Key2" = "Value2a"
+  }
+}
+`, rName2, label))
+}
+
+func testAccSecurityProfileConfig_tagsUpdated(rName, rName2, label string) string {
+	return acctest.ConfigCompose(
+		testAccSecurityProfileConfig_base(rName),
+		fmt.Sprintf(`
+resource "aws_connect_security_profile" "test" {
+  instance_id = aws_connect_instance.test.id
+  name        = %[1]q
+  description = %[2]q
+
+  tags = {
+    "Name" = "Test Security Profile"
+    "Key2" = "Value2b"
+    "Key3" = "Value3"
   }
 }
 `, rName2, label))

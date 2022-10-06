@@ -74,7 +74,7 @@ func resourceLFTagCreate(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := conn.CreateLFTag(input)
 	if err != nil {
-		return fmt.Errorf("Error creating Lake Formation LF-Tag: %w", err)
+		return fmt.Errorf("error creating Lake Formation LF-Tag: %w", err)
 	}
 
 	d.SetId(fmt.Sprintf("%s:%s", catalogID, tagKey))
@@ -96,14 +96,16 @@ func resourceLFTagRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	output, err := conn.GetLFTag(input)
-	if err != nil {
+	if !d.IsNewResource() {
 		if tfawserr.ErrCodeEquals(err, lakeformation.ErrCodeEntityNotFoundException) {
 			log.Printf("[WARN] Lake Formation LF-Tag (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
 		}
+	}
 
-		return fmt.Errorf("Error reading Lake Formation LF-Tag: %s", err.Error())
+	if err != nil {
+		return fmt.Errorf("error reading Lake Formation LF-Tag: %s", err.Error())
 	}
 
 	d.Set("key", output.TagKey)
@@ -142,7 +144,7 @@ func resourceLFTagUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	_, err = conn.UpdateLFTag(input)
 	if err != nil {
-		return fmt.Errorf("Error updating Lake Formation LF-Tag (%s): %w", d.Id(), err)
+		return fmt.Errorf("error updating Lake Formation LF-Tag (%s): %w", d.Id(), err)
 	}
 
 	return resourceLFTagRead(d, meta)
@@ -163,7 +165,7 @@ func resourceLFTagDelete(d *schema.ResourceData, meta interface{}) error {
 
 	_, err = conn.DeleteLFTag(input)
 	if err != nil {
-		return fmt.Errorf("Error deleting Lake Formation LF-Tag (%s): %w", d.Id(), err)
+		return fmt.Errorf("error deleting Lake Formation LF-Tag (%s): %w", d.Id(), err)
 	}
 
 	return nil
@@ -172,7 +174,7 @@ func resourceLFTagDelete(d *schema.ResourceData, meta interface{}) error {
 func ReadLFTagID(id string) (catalogID string, tagKey string, err error) {
 	idParts := strings.Split(id, ":")
 	if len(idParts) != 2 {
-		return "", "", fmt.Errorf("Unexpected format of ID (%q), expected CATALOG-ID:TAG-KEY", id)
+		return "", "", fmt.Errorf("unexpected format of ID (%q), expected CATALOG-ID:TAG-KEY", id)
 	}
 	return idParts[0], idParts[1], nil
 }

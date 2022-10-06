@@ -174,7 +174,7 @@ func resourceWorkforceCreate(d *schema.ResourceData, meta interface{}) error {
 	_, err := conn.CreateWorkforce(input)
 
 	if err != nil {
-		return fmt.Errorf("error creating SageMaker Workforce (%s): %w", name, err)
+		return fmt.Errorf("creating SageMaker Workforce (%s): %w", name, err)
 	}
 
 	d.SetId(name)
@@ -194,7 +194,7 @@ func resourceWorkforceRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading SageMaker Workforce (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading SageMaker Workforce (%s): %w", d.Id(), err)
 	}
 
 	d.Set("arn", workforce.WorkforceArn)
@@ -202,17 +202,17 @@ func resourceWorkforceRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("workforce_name", workforce.WorkforceName)
 
 	if err := d.Set("cognito_config", flattenWorkforceCognitoConfig(workforce.CognitoConfig)); err != nil {
-		return fmt.Errorf("error setting cognito_config : %w", err)
+		return fmt.Errorf("setting cognito_config : %w", err)
 	}
 
 	if workforce.OidcConfig != nil {
 		if err := d.Set("oidc_config", flattenWorkforceOIDCConfig(workforce.OidcConfig, d.Get("oidc_config.0.client_secret").(string))); err != nil {
-			return fmt.Errorf("error setting oidc_config: %w", err)
+			return fmt.Errorf("setting oidc_config: %w", err)
 		}
 	}
 
 	if err := d.Set("source_ip_config", flattenWorkforceSourceIPConfig(workforce.SourceIpConfig)); err != nil {
-		return fmt.Errorf("error setting source_ip_config: %w", err)
+		return fmt.Errorf("setting source_ip_config: %w", err)
 	}
 
 	return nil
@@ -237,7 +237,7 @@ func resourceWorkforceUpdate(d *schema.ResourceData, meta interface{}) error {
 	_, err := conn.UpdateWorkforce(input)
 
 	if err != nil {
-		return fmt.Errorf("error updating SageMaker Workforce (%s): %w", d.Id(), err)
+		return fmt.Errorf("updating SageMaker Workforce (%s): %w", d.Id(), err)
 	}
 
 	return resourceWorkforceRead(d, meta)
@@ -256,7 +256,7 @@ func resourceWorkforceDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting SageMaker Workforce (%s): %w", d.Id(), err)
+		return fmt.Errorf("deleting SageMaker Workforce (%s): %w", d.Id(), err)
 	}
 
 	return nil

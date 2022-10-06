@@ -22,10 +22,10 @@ func TestAccSSOAdminPermissionSetInlinePolicy_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckInstances(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ssoadmin.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckPermissionSetInlinePolicyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckInstances(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ssoadmin.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPermissionSetInlinePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPermissionSetInlinePolicyConfig_basic(rName),
@@ -51,10 +51,10 @@ func TestAccSSOAdminPermissionSetInlinePolicy_update(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckInstances(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ssoadmin.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckPermissionSetInlinePolicyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckInstances(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ssoadmin.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPermissionSetInlinePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPermissionSetInlinePolicyConfig_basic(rName),
@@ -83,10 +83,10 @@ func TestAccSSOAdminPermissionSetInlinePolicy_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckInstances(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ssoadmin.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckPermissionSetInlinePolicyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckInstances(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ssoadmin.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPermissionSetInlinePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPermissionSetInlinePolicyConfig_basic(rName),
@@ -106,10 +106,10 @@ func TestAccSSOAdminPermissionSetInlinePolicy_Disappears_permissionSet(t *testin
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckInstances(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ssoadmin.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckPermissionSetInlinePolicyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckInstances(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ssoadmin.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPermissionSetInlinePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPermissionSetInlinePolicyConfig_basic(rName),

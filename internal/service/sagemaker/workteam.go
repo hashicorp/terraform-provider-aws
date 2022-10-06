@@ -156,7 +156,7 @@ func resourceWorkteamCreate(d *schema.ResourceData, meta interface{}) error {
 	}, "ValidationException")
 
 	if err != nil {
-		return fmt.Errorf("error creating SageMaker Workteam (%s): %w", name, err)
+		return fmt.Errorf("creating SageMaker Workteam (%s): %w", name, err)
 	}
 
 	d.SetId(name)
@@ -178,7 +178,7 @@ func resourceWorkteamRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading SageMaker Workteam (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading SageMaker Workteam (%s): %w", d.Id(), err)
 	}
 
 	arn := aws.StringValue(workteam.WorkteamArn)
@@ -188,28 +188,28 @@ func resourceWorkteamRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("workteam_name", workteam.WorkteamName)
 
 	if err := d.Set("member_definition", flattenWorkteamMemberDefinition(workteam.MemberDefinitions)); err != nil {
-		return fmt.Errorf("error setting member_definition: %w", err)
+		return fmt.Errorf("setting member_definition: %w", err)
 	}
 
 	if err := d.Set("notification_configuration", flattenWorkteamNotificationConfiguration(workteam.NotificationConfiguration)); err != nil {
-		return fmt.Errorf("error setting notification_configuration: %w", err)
+		return fmt.Errorf("setting notification_configuration: %w", err)
 	}
 
 	tags, err := ListTags(conn, arn)
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for SageMaker Workteam (%s): %w", d.Id(), err)
+		return fmt.Errorf("listing tags for SageMaker Workteam (%s): %w", d.Id(), err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return fmt.Errorf("setting tags: %w", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return fmt.Errorf("setting tags_all: %w", err)
 	}
 
 	return nil
@@ -236,7 +236,7 @@ func resourceWorkteamUpdate(d *schema.ResourceData, meta interface{}) error {
 		_, err := conn.UpdateWorkteam(input)
 
 		if err != nil {
-			return fmt.Errorf("error updating SageMaker Workteam (%s): %w", d.Id(), err)
+			return fmt.Errorf("updating SageMaker Workteam (%s): %w", d.Id(), err)
 		}
 	}
 
@@ -244,7 +244,7 @@ func resourceWorkteamUpdate(d *schema.ResourceData, meta interface{}) error {
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating SageMaker Workteam (%s) tags: %w", d.Id(), err)
+			return fmt.Errorf("updating SageMaker Workteam (%s) tags: %w", d.Id(), err)
 		}
 	}
 
@@ -264,7 +264,7 @@ func resourceWorkteamDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting SageMaker Workteam (%s): %w", d.Id(), err)
+		return fmt.Errorf("deleting SageMaker Workteam (%s): %w", d.Id(), err)
 	}
 
 	return nil

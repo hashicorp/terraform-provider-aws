@@ -39,7 +39,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `send_email_notification` - (Optional) Specifies whether a welcome email is sent to a user after the user is created in the user pool.
+* `send_email_notification` - (Optional) Whether a welcome email is sent to a user after the user is created in the user pool.
 
 
 ## Attributes Reference

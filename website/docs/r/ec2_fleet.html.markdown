@@ -39,7 +39,7 @@ The following arguments are supported:
 * `on_demand_options` - (Optional) Nested argument containing On-Demand configurations. Defined below.
 * `replace_unhealthy_instances` - (Optional) Whether EC2 Fleet should replace unhealthy instances. Defaults to `false`.
 * `spot_options` - (Optional) Nested argument containing Spot configurations. Defined below.
-* `tags` - (Optional) Map of Fleet tags. To tag instances at launch, specify the tags in the Launch Template. If configured with a provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Map of Fleet tags. To tag instances at launch, specify the tags in the Launch Template. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `terminate_instances` - (Optional) Whether to terminate instances for an EC2 Fleet if it is deleted successfully. Defaults to `false`.
 * `terminate_instances_with_expiration` - (Optional) Whether running instances should be terminated when the EC2 Fleet expires. Defaults to `false`.
 * `type` - (Optional) The type of request. Indicates whether the EC2 Fleet only requests the target capacity, or also attempts to maintain it. Valid values: `maintain`, `request`. Defaults to `maintain`.
@@ -218,6 +218,7 @@ This configuration block supports the following:
 * `total_target_capacity` - (Required) The number of units to request, filled using `default_target_capacity_type`.
 * `on_demand_target_capacity` - (Optional) The number of On-Demand units to request.
 * `spot_target_capacity` - (Optional) The number of Spot units to request.
+* `target_capacity_unit_type` - (Optional) The unit for the target capacity. This can only be done with `instance_requirements` defined
 
 ## Attributes Reference
 
@@ -225,15 +226,15 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - Fleet identifier
 * `arn` - The ARN of the fleet
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
-`aws_ec2_fleet` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
 
-* `create` - (Default `10m`) How long to wait for a fleet to be active.
-* `update` - (Default `10m`) How long to wait for a fleet to be modified.
-* `delete` - (Default `10m`) How long to wait for a fleet to be deleted. If `terminate_instances` is `true`, how long to wait for instances to terminate.
+* `create` - (Default `10m`)
+* `update` - (Default `10m`)
+* `delete` - (Default `10m`)
 
 ## Import
 

@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -107,25 +108,25 @@ func resourceUserPoolDomainRead(d *schema.ResourceData, meta interface{}) error 
 		Domain: aws.String(d.Id()),
 	})
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, cognitoidentityprovider.ErrCodeResourceNotFoundException) {
-		names.LogNotFoundRemoveState(names.CognitoIDP, names.ErrActionReading, ResUserPoolDomain, d.Id())
+		create.LogNotFoundRemoveState(names.CognitoIDP, create.ErrActionReading, ResNameUserPoolDomain, d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return names.Error(names.CognitoIDP, names.ErrActionReading, ResUserPoolDomain, d.Id(), err)
+		return create.Error(names.CognitoIDP, create.ErrActionReading, ResNameUserPoolDomain, d.Id(), err)
 	}
 
 	desc := domain.DomainDescription
 
 	if !d.IsNewResource() && desc.Status == nil {
-		names.LogNotFoundRemoveState(names.CognitoIDP, names.ErrActionReading, ResUserPoolDomain, d.Id())
+		create.LogNotFoundRemoveState(names.CognitoIDP, create.ErrActionReading, ResNameUserPoolDomain, d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if d.IsNewResource() && desc.Status == nil {
-		return names.Error(names.CognitoIDP, names.ErrActionReading, ResUserPoolDomain, d.Id(), errors.New("not found after creation"))
+		return create.Error(names.CognitoIDP, create.ErrActionReading, ResNameUserPoolDomain, d.Id(), errors.New("not found after creation"))
 	}
 
 	d.Set("domain", d.Id())

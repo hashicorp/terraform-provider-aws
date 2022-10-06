@@ -115,7 +115,7 @@ func resourceDelegationSetDelete(d *schema.ResourceData, meta interface{}) error
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting Route53 reusable delegation set (%s): %w", d.Id(), err)
+		return fmt.Errorf("deleting Route53 reusable delegation set (%s): %w", d.Id(), err)
 	}
 
 	return nil

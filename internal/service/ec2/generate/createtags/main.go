@@ -176,7 +176,7 @@ func CreateTags(conn {{ .ClientType }}, identifier string{{ if .TagResTypeElem }
 	{{- end }}
 
 	if err != nil {
-		return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
+		return fmt.Errorf("tagging resource (%s): %w", identifier, err)
 	}
 	{{- if .TagOpBatchSize }}
 	}

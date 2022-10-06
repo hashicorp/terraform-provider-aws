@@ -1,0 +1,49 @@
+// ListTags lists {{ .ServicePackage }} service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func ListTags(ctx context.Context, conn {{ .ClientType }}, identifier string{{ if .TagResTypeElem }}, resourceType string{{ end }}) (tftags.KeyValueTags, error) {
+	input := &{{ .TagPackage  }}.{{ .ListTagsOp }}Input{
+		{{- if .ListTagsInFiltIDName }}
+		Filters: []*{{ .AWSService  }}.Filter{
+			{
+				Name:   aws.String("{{ .ListTagsInFiltIDName }}"),
+				Values: []*string{aws.String(identifier)},
+			},
+		},
+		{{- else }}
+		{{- if .ListTagsInIDNeedSlice }}
+		{{ .ListTagsInIDElem }}: aws.StringSlice([]string{identifier}),
+		{{- else }}
+		{{ .ListTagsInIDElem }}: aws.String(identifier),
+		{{- end }}
+		{{- if .TagResTypeElem }}
+		{{ .TagResTypeElem }}:         aws.String(resourceType),
+		{{- end }}
+		{{- end }}
+	}
+
+	output, err := conn.{{ .ListTagsOp }}(ctx, input)
+
+	{{ if and ( .ParentNotFoundErrCode ) ( .ParentNotFoundErrMsg ) }}
+			var *types.ResourceNotFoundException
+			if tfawserr.ErrMessageContains(err, "{{ .ParentNotFoundErrCode }}", "{{ .ParentNotFoundErrMsg }}") {
+				return nil, &resource.NotFoundError{
+					LastError:   err,
+					LastRequest: input,
+				}
+			}
+	{{- else if ( .ParentNotFoundErrCode ) }}
+			if tfawserr.ErrCodeEquals(err, "{{ .ParentNotFoundErrCode }}") {
+				return nil, &resource.NotFoundError{
+					LastError:   err,
+					LastRequest: input,
+				}
+			}
+	{{- end }}
+
+	if err != nil {
+		return tftags.New(nil), err
+	}
+
+	return KeyValueTags(output.{{ .ListTagsOutTagsElem }}{{ if .TagTypeIDElem }}, identifier{{ if .TagResTypeElem }}, resourceType{{ end }}{{ end }}), nil
+}

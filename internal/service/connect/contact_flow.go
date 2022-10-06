@@ -31,10 +31,6 @@ func ResourceContactFlow() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
-		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(contactFlowCreateTimeout),
-			Update: schema.DefaultTimeout(contactFlowUpdateTimeout),
-		},
 		CustomizeDiff: verify.SetTagsDiff,
 		Schema: map[string]*schema.Schema{
 			"arn": {

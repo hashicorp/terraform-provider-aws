@@ -59,7 +59,7 @@ The following arguments are supported:
 * `name` - (Required) The name of the user hierarchy group. Must not be more than 100 characters.
 * `parent_group_id` - (Optional) The identifier for the parent hierarchy group. The user hierarchy is created at level one if the parent group ID is null.
 * `tags` - (Optional) Tags to apply to the hierarchy group. If configured with a provider
-[`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+[`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 
 ## Attributes Reference
@@ -72,7 +72,7 @@ In addition to all arguments above, the following attributes are exported:
 * `id` - The identifier of the hosting Amazon Connect Instance and identifier of the hierarchy group
 separated by a colon (`:`).
 * `level_id` - The identifier of the level in the hierarchy group.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 A `hierarchy_path` block supports the following attributes:
 

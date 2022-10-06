@@ -35,6 +35,7 @@ In addition to all arguments above, the following attributes are exported:
 * `rule` - Configuration block for the Cost Category rules used to categorize costs. See below.
 * `rule_version` - Rule schema version in this particular Cost Category.
 * `split_charge_rule` - Configuration block for the split charge rules used to allocate your charges between your Cost Category values. See below.
+* `tags` - Resource tags.
 
 ### `rule`
 

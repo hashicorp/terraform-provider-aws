@@ -55,7 +55,7 @@ Upgrade topics:
 
 -> Before upgrading to version 2.0.0 or later, it is recommended to upgrade to the most recent 1.X version of the provider (version 1.60.0) and ensure that your environment successfully runs [`terraform plan`](https://www.terraform.io/docs/commands/plan.html) without unexpected changes or deprecation notices.
 
-It is recommended to use [version constraints when configuring Terraform providers](https://www.terraform.io/docs/configuration/providers.html#provider-versions). If you are following that recommendation, update the version constraints in your Terraform configuration and run [`terraform init`](https://www.terraform.io/docs/commands/init.html) to download the new version.
+We recommend using [version constraints when configuring Terraform providers](https://www.terraform.io/docs/configuration/providers.html#provider-versions). If you are following that recommendation, update the version constraints in your Terraform configuration and run [`terraform init`](https://www.terraform.io/docs/commands/init.html) to download the new version.
 
 Update to latest 1.X version:
 
@@ -188,7 +188,7 @@ resource "aws_rds_cluster" "example" {
 
 ### arn and qualified_arn Attribute Behavior Changes
 
-The `arn` attribute now always returns the unqualified (no `:QUALIFIER` or `:VERSION` suffix) Amazon Resource Name (ARN) value and the `qualified_arn` attribute now always returns the qualified (includes `:QUALIFIER` or `:VERSION` suffix) ARN value. Previously by default, the `arn` attribute included `:$LATEST` suffix when not setting the optional `qualifier` argument, which was not compatible with many other resources. To restore the previous default behavior, set the `qualifier` argument to `$LATEST` and reference the `qualified_arn` attribute.
+The `arn` attribute now always returns the unqualified (no `:QUALIFIER` or `:VERSION` suffix) ARN value and the `qualified_arn` attribute now always returns the qualified (includes `:QUALIFIER` or `:VERSION` suffix) ARN value. Previously by default, the `arn` attribute included `:$LATEST` suffix when not setting the optional `qualifier` argument, which was not compatible with many other resources. To restore the previous default behavior, set the `qualifier` argument to `$LATEST` and reference the `qualified_arn` attribute.
 
 ## Data Source: aws_region
 

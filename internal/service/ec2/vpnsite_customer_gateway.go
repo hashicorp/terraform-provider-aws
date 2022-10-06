@@ -84,7 +84,7 @@ func resourceCustomerGatewayCreate(d *schema.ResourceData, meta interface{}) err
 
 	input := &ec2.CreateCustomerGatewayInput{
 		BgpAsn:            aws.Int64(i64BgpAsn),
-		PublicIp:          aws.String(d.Get("ip_address").(string)),
+		IpAddress:         aws.String(d.Get("ip_address").(string)),
 		TagSpecifications: tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeCustomerGateway),
 		Type:              aws.String(d.Get("type").(string)),
 	}

@@ -153,7 +153,7 @@ The following arguments are supported:
 * `security_group_names` - (Optional) A list of security group names to associate with. If you are creating Instances in a VPC, use
   `vpc_security_group_ids` instead.
 * `tag_specifications` - (Optional) The tags to apply to the resources during launch. See [Tag Specifications](#tag-specifications) below for more details.
-* `tags` - (Optional) A map of tags to assign to the launch template. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the launch template. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `update_default_version` - (Optional) Whether to update Default Version each update. Conflicts with `default_version`.
 * `user_data` - (Optional) The base64-encoded user data to provide when launching the instance.
 * `vpc_security_group_ids` - (Optional) A list of security group IDs to associate with. Conflicts with `network_interfaces.security_groups`
@@ -403,7 +403,7 @@ The `metadata_options` block supports the following:
 * `http_tokens` - (Optional) Whether or not the metadata service requires session tokens, also referred to as _Instance Metadata Service Version 2 (IMDSv2)_. Can be `"optional"` or `"required"`. (Default: `"optional"`).
 * `http_put_response_hop_limit` - (Optional) The desired HTTP PUT response hop limit for instance metadata requests. The larger the number, the further instance metadata requests can travel. Can be an integer from `1` to `64`. (Default: `1`).
 * `http_protocol_ipv6` - (Optional) Enables or disables the IPv6 endpoint for the instance metadata service. (Default: `disabled`).
-* `instance_metadata_tags` - (optional) Enables or disables access to instance tags from the instance metadata service. (Default: `disabled`).
+* `instance_metadata_tags` - (Optional) Enables or disables access to instance tags from the instance metadata service. (Default: `disabled`).
 
 For more information, see the documentation on the [Instance Metadata Service](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-instance-metadata.html).
 
@@ -481,7 +481,7 @@ In addition to all arguments above, the following attributes are exported:
 * `arn` - Amazon Resource Name (ARN) of the launch template.
 * `id` - The ID of the launch template.
 * `latest_version` - The latest version of the launch template.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 

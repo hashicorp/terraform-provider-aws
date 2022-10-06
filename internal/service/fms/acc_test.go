@@ -40,13 +40,19 @@ func testAccPreCheckAdmin(t *testing.T) {
 	// Since we are outside the scope of the Terraform configuration we must
 	// call Configure() to properly initialize the provider configuration.
 	testAccProviderAdminConfigure.Do(func() {
-		testAccProviderAdmin = provider.Provider()
+		ctx := context.Background()
+		var err error
+		testAccProviderAdmin, err = provider.New(ctx)
+
+		if err != nil {
+			t.Fatal(err)
+		}
 
 		config := map[string]interface{}{
 			"region": testAccGetAdminRegion(),
 		}
 
-		diags := testAccProviderAdmin.Configure(context.Background(), terraform.NewResourceConfigRaw(config))
+		diags := testAccProviderAdmin.Configure(ctx, terraform.NewResourceConfigRaw(config))
 
 		if diags != nil && diags.HasError() {
 			for _, d := range diags {

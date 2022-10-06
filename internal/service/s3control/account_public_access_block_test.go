@@ -49,10 +49,10 @@ func testAccAccountPublicAccessBlock_basic(t *testing.T) {
 	resourceName := "aws_s3_account_public_access_block.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, s3control.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAccountPublicAccessBlockDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, s3control.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAccountPublicAccessBlockDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccountPublicAccessBlockConfig_basic(),
@@ -79,10 +79,10 @@ func testAccAccountPublicAccessBlock_disappears(t *testing.T) {
 	resourceName := "aws_s3_account_public_access_block.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, s3control.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAccountPublicAccessBlockDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, s3control.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAccountPublicAccessBlockDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccountPublicAccessBlockConfig_basic(),
@@ -101,10 +101,10 @@ func testAccAccountPublicAccessBlock_AccountID(t *testing.T) {
 	resourceName := "aws_s3_account_public_access_block.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, s3control.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAccountPublicAccessBlockDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, s3control.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAccountPublicAccessBlockDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccountPublicAccessBlockConfig_id(),
@@ -127,10 +127,10 @@ func testAccAccountPublicAccessBlock_BlockPublicACLs(t *testing.T) {
 	resourceName := "aws_s3_account_public_access_block.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, s3control.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAccountPublicAccessBlockDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, s3control.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAccountPublicAccessBlockDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccountPublicAccessBlockConfig_acls(true),
@@ -167,10 +167,10 @@ func testAccAccountPublicAccessBlock_BlockPublicPolicy(t *testing.T) {
 	resourceName := "aws_s3_account_public_access_block.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, s3control.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAccountPublicAccessBlockDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, s3control.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAccountPublicAccessBlockDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccountPublicAccessBlockConfig_policy(true),
@@ -207,10 +207,10 @@ func testAccAccountPublicAccessBlock_IgnorePublicACLs(t *testing.T) {
 	resourceName := "aws_s3_account_public_access_block.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, s3control.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAccountPublicAccessBlockDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, s3control.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAccountPublicAccessBlockDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccountPublicAccessBlockConfig_ignoreACLs(true),
@@ -247,10 +247,10 @@ func testAccAccountPublicAccessBlock_RestrictPublicBuckets(t *testing.T) {
 	resourceName := "aws_s3_account_public_access_block.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, s3control.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAccountPublicAccessBlockDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, s3control.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAccountPublicAccessBlockDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccountPublicAccessBlockConfig_restrictBuckets(true),

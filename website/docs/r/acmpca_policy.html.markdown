@@ -62,7 +62,7 @@ EOF
 
 The following arguments are supported:
 
-* `resource_arn` - (Required) Amazon Resource Name (ARN) of the private CA to associate with the policy.
+* `resource_arn` - (Required) ARN of the private CA to associate with the policy.
 * `policy` - (Required) JSON-formatted IAM policy to attach to the specified private CA resource.
 
 ## Attributes Reference

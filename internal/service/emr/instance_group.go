@@ -9,6 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/emr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
@@ -69,11 +70,6 @@ func ResourceInstanceGroup() *schema.Resource {
 					return json
 				},
 			},
-			"ebs_optimized": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				ForceNew: true,
-			},
 			"ebs_config": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -107,10 +103,15 @@ func ResourceInstanceGroup() *schema.Resource {
 				},
 				Set: resourceClusterEBSHashConfig,
 			},
+			"ebs_optimized": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				ForceNew: true,
+			},
 			"instance_count": {
 				Type:     schema.TypeInt,
 				Optional: true,
-				Default:  1,
+				Computed: true,
 			},
 			"instance_type": {
 				Type:     schema.TypeString,
@@ -141,7 +142,6 @@ func resourceInstanceGroupCreate(d *schema.ResourceData, meta interface{}) error
 	groupConfig := &emr.InstanceGroupConfig{
 		EbsConfiguration: readEBSConfig(d),
 		InstanceRole:     aws.String(instanceRole),
-		InstanceCount:    aws.Int64(int64(d.Get("instance_count").(int))),
 		InstanceType:     aws.String(d.Get("instance_type").(string)),
 		Name:             aws.String(d.Get("name").(string)),
 	}
@@ -164,6 +164,12 @@ func resourceInstanceGroupCreate(d *schema.ResourceData, meta interface{}) error
 		if err != nil {
 			return fmt.Errorf("Error reading EMR configurations_json: %s", err)
 		}
+	}
+
+	if v, ok := d.GetOk("instance_count"); ok {
+		groupConfig.InstanceCount = aws.Int64(int64(v.(int)))
+	} else {
+		groupConfig.InstanceCount = aws.Int64(1)
 	}
 
 	groupConfig.Market = aws.String(emr.MarketTypeOnDemand)
@@ -208,6 +214,11 @@ func resourceInstanceGroupRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
+		if tfawserr.ErrMessageContains(err, emr.ErrCodeInvalidRequestException, "is not valid") {
+			log.Printf("[DEBUG] EMR Cluster corresponding to Instance Group (%s) not found, removing", d.Id())
+			d.SetId("")
+			return nil
+		}
 		return fmt.Errorf("error reading EMR Instance Group (%s): %s", d.Id(), err)
 	}
 

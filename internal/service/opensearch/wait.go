@@ -147,9 +147,6 @@ func waitForDomainDelete(conn *opensearchservice.OpenSearchService, domainName s
 	}
 
 	_, err = stateConf.WaitForState()
-	if err != nil {
-		return err
-	}
 
-	return nil
+	return err
 }

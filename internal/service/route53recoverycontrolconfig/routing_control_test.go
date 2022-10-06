@@ -19,10 +19,10 @@ func testAccRoutingControl_basic(t *testing.T) {
 	resourceName := "aws_route53recoverycontrolconfig_routing_control.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(r53rcc.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, r53rcc.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRoutingControlDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(r53rcc.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, r53rcc.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRoutingControlDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRoutingControlConfig_inDefaultPanel(rName),
@@ -49,10 +49,10 @@ func testAccRoutingControl_disappears(t *testing.T) {
 	resourceName := "aws_route53recoverycontrolconfig_routing_control.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(r53rcc.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, r53rcc.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRoutingControlDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(r53rcc.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, r53rcc.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRoutingControlDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRoutingControlConfig_inDefaultPanel(rName),
@@ -71,10 +71,10 @@ func testAccRoutingControl_nonDefaultControlPanel(t *testing.T) {
 	resourceName := "aws_route53recoverycontrolconfig_routing_control.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(r53rcc.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, r53rcc.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRoutingControlDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(r53rcc.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, r53rcc.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRoutingControlDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRoutingControlConfig_inNonDefaultPanel(rName),

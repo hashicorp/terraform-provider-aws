@@ -34,7 +34,7 @@ resource "aws_lambda_function" "test_lambda" {
   function_name = "lambda_function_name"
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.handler"
-  runtime       = "nodejs12.x"
+  runtime       = "nodejs16.x"
 }
 
 resource "aws_iam_role" "iam_for_lambda" {
@@ -84,7 +84,7 @@ resource "aws_lambda_function" "func" {
   function_name = "lambda_called_from_sns"
   role          = aws_iam_role.default.arn
   handler       = "exports.handler"
-  runtime       = "python3.6"
+  runtime       = "python3.7"
 }
 
 resource "aws_iam_role" "default" {
@@ -155,7 +155,7 @@ resource "aws_lambda_function" "logging" {
   function_name = "lambda_called_from_cloudwatch_logs"
   handler       = "exports.handler"
   role          = aws_iam_role.default.arn
-  runtime       = "python3.6"
+  runtime       = "python3.7"
 }
 
 resource "aws_iam_role" "default" {

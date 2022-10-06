@@ -39,9 +39,9 @@ func TestAccAppStreamFleet_basic(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckHasIAMRole(t, "AmazonAppStreamServiceAccess")
 		},
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckFleetDestroy,
-		ErrorCheck:        acctest.ErrorCheck(t, appstream.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFleetDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, appstream.EndpointsID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFleetConfig_basic(rName, instanceType),
@@ -74,9 +74,9 @@ func TestAccAppStreamFleet_disappears(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckHasIAMRole(t, "AmazonAppStreamServiceAccess")
 		},
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckFleetDestroy,
-		ErrorCheck:        acctest.ErrorCheck(t, appstream.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFleetDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, appstream.EndpointsID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFleetConfig_basic(rName, instanceType),
@@ -105,9 +105,9 @@ func TestAccAppStreamFleet_completeWithStop(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckHasIAMRole(t, "AmazonAppStreamServiceAccess")
 		},
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckFleetDestroy,
-		ErrorCheck:        acctest.ErrorCheck(t, appstream.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFleetDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, appstream.EndpointsID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFleetConfig_complete(rName, description, fleetType, instanceType),
@@ -157,9 +157,9 @@ func TestAccAppStreamFleet_completeWithoutStop(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckHasIAMRole(t, "AmazonAppStreamServiceAccess")
 		},
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckFleetDestroy,
-		ErrorCheck:        acctest.ErrorCheck(t, appstream.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFleetDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, appstream.EndpointsID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFleetConfig_completeNoStopping(rName, description, fleetType, instanceType, displayName),
@@ -210,9 +210,9 @@ func TestAccAppStreamFleet_withTags(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckHasIAMRole(t, "AmazonAppStreamServiceAccess")
 		},
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckFleetDestroy,
-		ErrorCheck:        acctest.ErrorCheck(t, appstream.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFleetDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, appstream.EndpointsID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFleetConfig_tags(rName, description, fleetType, instanceType, displayName),
@@ -253,6 +253,52 @@ func TestAccAppStreamFleet_withTags(t *testing.T) {
 	})
 }
 
+func TestAccAppStreamFleet_emptyDomainJoin(t *testing.T) {
+	var fleetOutput appstream.Fleet
+	resourceName := "aws_appstream_fleet.test"
+	instanceType := "stream.standard.small"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckHasIAMRole(t, "AmazonAppStreamServiceAccess")
+		},
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFleetDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, appstream.EndpointsID),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFleetConfig_emptyDomainJoin(rName, instanceType, `""`),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFleetExists(resourceName, &fleetOutput),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "instance_type", instanceType),
+					resource.TestCheckResourceAttr(resourceName, "state", appstream.FleetStateRunning),
+					resource.TestCheckResourceAttr(resourceName, "stream_view", appstream.StreamViewApp),
+					acctest.CheckResourceAttrRFC3339(resourceName, "created_time"),
+				),
+			},
+			{
+				Config: testAccFleetConfig_emptyDomainJoin(rName, instanceType, "null"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFleetExists(resourceName, &fleetOutput),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "instance_type", instanceType),
+					resource.TestCheckResourceAttr(resourceName, "state", appstream.FleetStateRunning),
+					resource.TestCheckResourceAttr(resourceName, "stream_view", appstream.StreamViewApp),
+					acctest.CheckResourceAttrRFC3339(resourceName, "created_time"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckFleetExists(resourceName string, appStreamFleet *appstream.Fleet) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
@@ -267,7 +313,7 @@ func testAccCheckFleetExists(resourceName string, appStreamFleet *appstream.Flee
 			return err
 		}
 
-		if resp == nil && len(resp.Fleets) == 0 {
+		if resp == nil || len(resp.Fleets) == 0 {
 			return fmt.Errorf("appstream fleet %q does not exist", rs.Primary.ID)
 		}
 
@@ -437,4 +483,24 @@ resource "aws_appstream_fleet" "test" {
   }
 }
 `, name, description, fleetType, instanceType, displayName))
+}
+
+func testAccFleetConfig_emptyDomainJoin(name, instanceType, empty string) string {
+	// "Amazon-AppStream2-Sample-Image-02-04-2019" is not available in GovCloud
+	return fmt.Sprintf(`
+resource "aws_appstream_fleet" "test" {
+  name          = %[1]q
+  image_name    = "Amazon-AppStream2-Sample-Image-02-04-2019"
+  instance_type = %[2]q
+
+  compute_capacity {
+    desired_instances = 1
+  }
+
+  domain_join_info {
+    directory_name                         = %[3]s
+    organizational_unit_distinguished_name = %[3]s
+  }
+}
+`, name, instanceType, empty)
 }
