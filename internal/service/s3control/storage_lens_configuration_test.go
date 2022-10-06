@@ -326,6 +326,7 @@ resource "aws_s3control_storage_lens_configuration" "test" {
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
+// lintignore:AWSAT003
 func testAccStorageLensConfigurationConfig_allAttributes(rName string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
