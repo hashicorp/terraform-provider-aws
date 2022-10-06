@@ -6,16 +6,16 @@ import (
 	"log"
 	"strings"
 
-	s3controlv2 "github.com/aws/aws-sdk-go-v2/service/s3control"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/s3control"
 	"github.com/aws/aws-sdk-go-v2/service/s3control/types"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/s3control"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -224,14 +224,14 @@ func ResourceStorageLensConfiguration() *schema.Resource {
 													},
 												},
 												"format": {
-													Type:         schema.TypeString,
-													Required:     true,
-													ValidateFunc: validation.StringInSlice(s3control.Format_Values(), false),
+													Type:             schema.TypeString,
+													Required:         true,
+													ValidateDiagFunc: enum.Validate[types.Format](),
 												},
 												"output_schema_version": {
-													Type:         schema.TypeString,
-													Required:     true,
-													ValidateFunc: validation.StringInSlice(s3control.OutputSchemaVersion_Values(), false),
+													Type:             schema.TypeString,
+													Required:         true,
+													ValidateDiagFunc: enum.Validate[types.OutputSchemaVersion](),
 												},
 												"prefix": {
 													Type:     schema.TypeString,
@@ -309,7 +309,7 @@ func ResourceStorageLensConfiguration() *schema.Resource {
 }
 
 func resourceStorageLensConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := s3controlv2.NewFromConfig(*meta.(*conns.AWSClient).Config)
+	conn := s3control.NewFromConfig(*meta.(*conns.AWSClient).Config)
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -320,7 +320,7 @@ func resourceStorageLensConfigurationCreate(ctx context.Context, d *schema.Resou
 	configID := d.Get("config_id").(string)
 	id := StorageLensConfigurationCreateResourceID(accountID, configID)
 
-	input := &s3controlv2.PutStorageLensConfigurationInput{
+	input := &s3control.PutStorageLensConfigurationInput{
 		AccountId: aws.String(accountID),
 		ConfigId:  aws.String(configID),
 	}
@@ -347,7 +347,7 @@ func resourceStorageLensConfigurationCreate(ctx context.Context, d *schema.Resou
 }
 
 func resourceStorageLensConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := s3controlv2.NewFromConfig(*meta.(*conns.AWSClient).Config)
+	conn := s3control.NewFromConfig(*meta.(*conns.AWSClient).Config)
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -397,7 +397,7 @@ func resourceStorageLensConfigurationRead(ctx context.Context, d *schema.Resourc
 }
 
 func resourceStorageLensConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := s3controlv2.NewFromConfig(*meta.(*conns.AWSClient).Config)
+	conn := s3control.NewFromConfig(*meta.(*conns.AWSClient).Config)
 
 	accountID, configID, err := StorageLensConfigurationParseResourceID(d.Id())
 
@@ -406,7 +406,7 @@ func resourceStorageLensConfigurationUpdate(ctx context.Context, d *schema.Resou
 	}
 
 	if d.HasChangesExcept("tags", "tags_all") {
-		input := &s3controlv2.PutStorageLensConfigurationInput{
+		input := &s3control.PutStorageLensConfigurationInput{
 			AccountId: aws.String(accountID),
 			ConfigId:  aws.String(configID),
 		}
@@ -436,7 +436,7 @@ func resourceStorageLensConfigurationUpdate(ctx context.Context, d *schema.Resou
 }
 
 func resourceStorageLensConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := s3controlv2.NewFromConfig(*meta.(*conns.AWSClient).Config)
+	conn := s3control.NewFromConfig(*meta.(*conns.AWSClient).Config)
 
 	accountID, configID, err := StorageLensConfigurationParseResourceID(d.Id())
 
@@ -445,7 +445,7 @@ func resourceStorageLensConfigurationDelete(ctx context.Context, d *schema.Resou
 	}
 
 	log.Printf("[DEBUG] Deleting S3 Storage Lens Configuration: %s", d.Id())
-	_, err = conn.DeleteStorageLensConfiguration(ctx, &s3controlv2.DeleteStorageLensConfigurationInput{
+	_, err = conn.DeleteStorageLensConfiguration(ctx, &s3control.DeleteStorageLensConfigurationInput{
 		AccountId: aws.String(accountID),
 		ConfigId:  aws.String(configID),
 	})
@@ -480,8 +480,8 @@ func StorageLensConfigurationParseResourceID(id string) (string, string, error) 
 	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected account-id%[2]sconfig-id", id, storageLensConfigurationResourceIDSeparator)
 }
 
-func FindStorageLensConfigurationByAccountIDAndConfigID(ctx context.Context, conn *s3controlv2.Client, accountID, configID string) (*types.StorageLensConfiguration, error) {
-	input := &s3controlv2.GetStorageLensConfigurationInput{
+func FindStorageLensConfigurationByAccountIDAndConfigID(ctx context.Context, conn *s3control.Client, accountID, configID string) (*types.StorageLensConfiguration, error) {
+	input := &s3control.GetStorageLensConfigurationInput{
 		AccountId: aws.String(accountID),
 		ConfigId:  aws.String(configID),
 	}
@@ -526,14 +526,14 @@ func KeyValueTagsFromStorageLensTags(tags []types.StorageLensTag) tftags.KeyValu
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
-		m[aws.StringValue(tag.Key)] = tag.Value
+		m[aws.ToString(tag.Key)] = tag.Value
 	}
 
 	return tftags.New(m)
 }
 
-func storageLensConfigurationListTags(ctx context.Context, conn *s3controlv2.Client, accountID, configID string) (tftags.KeyValueTags, error) {
-	input := &s3controlv2.GetStorageLensConfigurationTaggingInput{
+func storageLensConfigurationListTags(ctx context.Context, conn *s3control.Client, accountID, configID string) (tftags.KeyValueTags, error) {
+	input := &s3control.GetStorageLensConfigurationTaggingInput{
 		AccountId: aws.String(accountID),
 		ConfigId:  aws.String(configID),
 	}
@@ -547,7 +547,7 @@ func storageLensConfigurationListTags(ctx context.Context, conn *s3controlv2.Cli
 	return KeyValueTagsFromStorageLensTags(output.Tags), nil
 }
 
-func storageLensConfigurationUpdateTags(ctx context.Context, conn *s3controlv2.Client, accountID, configID string, oldTagsMap interface{}, newTagsMap interface{}) error {
+func storageLensConfigurationUpdateTags(ctx context.Context, conn *s3control.Client, accountID, configID string, oldTagsMap interface{}, newTagsMap interface{}) error {
 	oldTags := tftags.New(oldTagsMap)
 	newTags := tftags.New(newTagsMap)
 
@@ -561,7 +561,7 @@ func storageLensConfigurationUpdateTags(ctx context.Context, conn *s3controlv2.C
 	ignoredTags := allTags.Ignore(oldTags).Ignore(newTags)
 
 	if len(newTags)+len(ignoredTags) > 0 {
-		input := &s3controlv2.PutStorageLensConfigurationTaggingInput{
+		input := &s3control.PutStorageLensConfigurationTaggingInput{
 			AccountId: aws.String(accountID),
 			ConfigId:  aws.String(configID),
 			Tags:      StorageLensTags(newTags.Merge(ignoredTags)),
@@ -573,7 +573,7 @@ func storageLensConfigurationUpdateTags(ctx context.Context, conn *s3controlv2.C
 			return fmt.Errorf("setting tags: %s", err)
 		}
 	} else if len(oldTags) > 0 && len(ignoredTags) == 0 {
-		input := &s3controlv2.DeleteStorageLensConfigurationTaggingInput{
+		input := &s3control.DeleteStorageLensConfigurationTaggingInput{
 			AccountId: aws.String(accountID),
 			ConfigId:  aws.String(configID),
 		}
@@ -994,7 +994,7 @@ func flattenSelectionCriteria(apiObject *types.SelectionCriteria) map[string]int
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Delimiter; v != nil {
-		tfMap["delimiter"] = aws.StringValue(v)
+		tfMap["delimiter"] = aws.ToString(v)
 	}
 
 	tfMap["max_depth"] = apiObject.MaxDepth
@@ -1011,7 +1011,7 @@ func flattenStorageLensAwsOrg(apiObject *types.StorageLensAwsOrg) map[string]int
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Arn; v != nil {
-		tfMap["arn"] = aws.StringValue(v)
+		tfMap["arn"] = aws.ToString(v)
 	}
 
 	return tfMap
@@ -1055,11 +1055,11 @@ func flattenS3BucketDestination(apiObject *types.S3BucketDestination) map[string
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.AccountId; v != nil {
-		tfMap["account_id"] = aws.StringValue(v)
+		tfMap["account_id"] = aws.ToString(v)
 	}
 
 	if v := apiObject.Arn; v != nil {
-		tfMap["arn"] = aws.StringValue(v)
+		tfMap["arn"] = aws.ToString(v)
 	}
 
 	if v := apiObject.Encryption; v != nil {
@@ -1070,7 +1070,7 @@ func flattenS3BucketDestination(apiObject *types.S3BucketDestination) map[string
 	tfMap["output_schema_version"] = apiObject.OutputSchemaVersion
 
 	if v := apiObject.Prefix; v != nil {
-		tfMap["prefix"] = aws.StringValue(v)
+		tfMap["prefix"] = aws.ToString(v)
 	}
 
 	return tfMap
@@ -1102,7 +1102,7 @@ func flattenSSEKMS(apiObject *types.SSEKMS) map[string]interface{} {
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.KeyId; v != nil {
-		tfMap["key_id"] = aws.StringValue(v)
+		tfMap["key_id"] = aws.ToString(v)
 	}
 
 	return tfMap
