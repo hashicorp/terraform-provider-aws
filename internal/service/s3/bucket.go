@@ -768,7 +768,7 @@ func resourceBucketCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err := ValidBucketName(bucket, awsRegion); err != nil {
-		return fmt.Errorf("error validating S3 Bucket (%s) name: %w", bucket, err)
+		return fmt.Errorf("validating S3 Bucket (%s) name: %w", bucket, err)
 	}
 
 	// S3 Object Lock is not supported on all partitions.
@@ -819,7 +819,7 @@ func resourceBucketUpdate(d *schema.ResourceData, meta interface{}) error {
 			return nil, terr
 		}, s3.ErrCodeNoSuchBucket)
 		if err != nil {
-			return fmt.Errorf("error updating S3 Bucket (%s) tags: %s", d.Id(), err)
+			return fmt.Errorf("updating S3 Bucket (%s) tags: %s", d.Id(), err)
 		}
 	}
 
@@ -827,19 +827,19 @@ func resourceBucketUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("policy") {
 		if err := resourceBucketInternalPolicyUpdate(conn, d); err != nil {
-			return fmt.Errorf("error updating S3 Bucket (%s) Policy: %w", d.Id(), err)
+			return fmt.Errorf("updating S3 Bucket (%s) Policy: %w", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("cors_rule") {
 		if err := resourceBucketInternalCorsUpdate(conn, d); err != nil {
-			return fmt.Errorf("error updating S3 Bucket (%s) CORS Rules: %w", d.Id(), err)
+			return fmt.Errorf("updating S3 Bucket (%s) CORS Rules: %w", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("website") {
 		if err := resourceBucketInternalWebsiteUpdate(conn, d); err != nil {
-			return fmt.Errorf("error updating S3 Bucket (%s) Website: %w", d.Id(), err)
+			return fmt.Errorf("updating S3 Bucket (%s) Website: %w", d.Id(), err)
 		}
 	}
 
@@ -850,67 +850,67 @@ func resourceBucketUpdate(d *schema.ResourceData, meta interface{}) error {
 			if versioning := expandVersioningWhenIsNewResource(v); versioning != nil {
 				err := resourceBucketInternalVersioningUpdate(conn, d.Id(), versioning, d.Timeout(schema.TimeoutUpdate))
 				if err != nil {
-					return fmt.Errorf("error updating (new) S3 Bucket (%s) Versioning: %w", d.Id(), err)
+					return fmt.Errorf("updating (new) S3 Bucket (%s) Versioning: %w", d.Id(), err)
 				}
 			}
 		} else {
 			if err := resourceBucketInternalVersioningUpdate(conn, d.Id(), expandVersioning(v), d.Timeout(schema.TimeoutUpdate)); err != nil {
-				return fmt.Errorf("error updating S3 Bucket (%s) Versioning: %w", d.Id(), err)
+				return fmt.Errorf("updating S3 Bucket (%s) Versioning: %w", d.Id(), err)
 			}
 		}
 	}
 
 	if d.HasChange("acl") && !d.IsNewResource() {
 		if err := resourceBucketInternalACLUpdate(conn, d); err != nil {
-			return fmt.Errorf("error updating S3 Bucket (%s) ACL: %w", d.Id(), err)
+			return fmt.Errorf("updating S3 Bucket (%s) ACL: %w", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("grant") {
 		if err := resourceBucketInternalGrantsUpdate(conn, d); err != nil {
-			return fmt.Errorf("error updating S3 Bucket (%s) Grants: %w", d.Id(), err)
+			return fmt.Errorf("updating S3 Bucket (%s) Grants: %w", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("logging") {
 		if err := resourceBucketInternalLoggingUpdate(conn, d); err != nil {
-			return fmt.Errorf("error updating S3 Bucket (%s) Logging: %w", d.Id(), err)
+			return fmt.Errorf("updating S3 Bucket (%s) Logging: %w", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("lifecycle_rule") {
 		if err := resourceBucketInternalLifecycleUpdate(conn, d); err != nil {
-			return fmt.Errorf("error updating S3 Bucket (%s) Lifecycle Rules: %w", d.Id(), err)
+			return fmt.Errorf("updating S3 Bucket (%s) Lifecycle Rules: %w", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("acceleration_status") {
 		if err := resourceBucketInternalAccelerationUpdate(conn, d); err != nil {
-			return fmt.Errorf("error updating S3 Bucket (%s) Acceleration Status: %w", d.Id(), err)
+			return fmt.Errorf("updating S3 Bucket (%s) Acceleration Status: %w", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("request_payer") {
 		if err := resourceBucketInternalRequestPayerUpdate(conn, d); err != nil {
-			return fmt.Errorf("error updating S3 Bucket (%s) Request Payer: %w", d.Id(), err)
+			return fmt.Errorf("updating S3 Bucket (%s) Request Payer: %w", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("replication_configuration") {
 		if err := resourceBucketInternalReplicationConfigurationUpdate(conn, d); err != nil {
-			return fmt.Errorf("error updating S3 Bucket (%s) Replication configuration: %w", d.Id(), err)
+			return fmt.Errorf("updating S3 Bucket (%s) Replication configuration: %w", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("server_side_encryption_configuration") {
 		if err := resourceBucketInternalServerSideEncryptionConfigurationUpdate(conn, d); err != nil {
-			return fmt.Errorf("error updating S3 Bucket (%s) Server-side Encryption configuration: %w", d.Id(), err)
+			return fmt.Errorf("updating S3 Bucket (%s) Server-side Encryption configuration: %w", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("object_lock_configuration") {
 		if err := resourceBucketInternalObjectLockConfigurationUpdate(conn, d); err != nil {
-			return fmt.Errorf("error updating S3 Bucket (%s) Object Lock configuration: %w", d.Id(), err)
+			return fmt.Errorf("updating S3 Bucket (%s) Object Lock configuration: %w", d.Id(), err)
 		}
 	}
 
@@ -985,7 +985,7 @@ func resourceBucketRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil && !tfawserr.ErrCodeEquals(err, ErrCodeNoSuchBucketPolicy, ErrCodeNotImplemented) {
-		return fmt.Errorf("error getting S3 bucket (%s) policy: %w", d.Id(), err)
+		return fmt.Errorf("getting S3 bucket (%s) policy: %w", d.Id(), err)
 	}
 
 	if output, ok := pol.(*s3.GetBucketPolicyOutput); ok {
@@ -1012,12 +1012,12 @@ func resourceBucketRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error getting S3 Bucket (%s) ACL: %w", d.Id(), err)
+		return fmt.Errorf("getting S3 Bucket (%s) ACL: %w", d.Id(), err)
 	}
 
 	if aclOutput, ok := apResponse.(*s3.GetBucketAclOutput); ok {
 		if err := d.Set("grant", flattenGrants(aclOutput)); err != nil {
-			return fmt.Errorf("error setting grant %s", err)
+			return fmt.Errorf("setting grant %s", err)
 		}
 	} else {
 		d.Set("grant", nil)
@@ -1040,12 +1040,12 @@ func resourceBucketRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil && !tfawserr.ErrCodeEquals(err, ErrCodeNoSuchCORSConfiguration, ErrCodeNotImplemented, ErrCodeXNotImplemented) {
-		return fmt.Errorf("error getting S3 Bucket CORS configuration: %s", err)
+		return fmt.Errorf("getting S3 Bucket CORS configuration: %s", err)
 	}
 
 	if output, ok := corsResponse.(*s3.GetBucketCorsOutput); ok {
 		if err := d.Set("cors_rule", flattenBucketCorsRules(output.CORSRules)); err != nil {
-			return fmt.Errorf("error setting cors_rule: %w", err)
+			return fmt.Errorf("setting cors_rule: %w", err)
 		}
 	} else {
 		d.Set("cors_rule", nil)
@@ -1073,7 +1073,7 @@ func resourceBucketRead(d *schema.ResourceData, meta interface{}) error {
 		ErrCodeNoSuchWebsiteConfiguration,
 		ErrCodeXNotImplemented,
 	) {
-		return fmt.Errorf("error getting S3 Bucket website configuration: %w", err)
+		return fmt.Errorf("getting S3 Bucket website configuration: %w", err)
 	}
 
 	if ws, ok := wsResponse.(*s3.GetBucketWebsiteOutput); ok {
@@ -1082,7 +1082,7 @@ func resourceBucketRead(d *schema.ResourceData, meta interface{}) error {
 			return err
 		}
 		if err := d.Set("website", website); err != nil {
-			return fmt.Errorf("error setting website: %w", err)
+			return fmt.Errorf("setting website: %w", err)
 		}
 	} else {
 		d.Set("website", nil)
@@ -1106,12 +1106,12 @@ func resourceBucketRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error getting S3 Bucket versioning (%s): %w", d.Id(), err)
+		return fmt.Errorf("getting S3 Bucket versioning (%s): %w", d.Id(), err)
 	}
 
 	if versioning, ok := versioningResponse.(*s3.GetBucketVersioningOutput); ok {
 		if err := d.Set("versioning", flattenVersioning(versioning)); err != nil {
-			return fmt.Errorf("error setting versioning: %w", err)
+			return fmt.Errorf("setting versioning: %w", err)
 		}
 	}
 
@@ -1134,7 +1134,7 @@ func resourceBucketRead(d *schema.ResourceData, meta interface{}) error {
 
 	// Amazon S3 Transfer Acceleration might not be supported in the region
 	if err != nil && !tfawserr.ErrCodeEquals(err, ErrCodeMethodNotAllowed, ErrCodeUnsupportedArgument, ErrCodeNotImplemented) {
-		return fmt.Errorf("error getting S3 Bucket (%s) accelerate configuration: %w", d.Id(), err)
+		return fmt.Errorf("getting S3 Bucket (%s) accelerate configuration: %w", d.Id(), err)
 	}
 
 	if accelerate, ok := accelerateResponse.(*s3.GetBucketAccelerateConfigurationOutput); ok {
@@ -1159,7 +1159,7 @@ func resourceBucketRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil && !tfawserr.ErrCodeEquals(err, ErrCodeNotImplemented) {
-		return fmt.Errorf("error getting S3 Bucket request payment: %s", err)
+		return fmt.Errorf("getting S3 Bucket request payment: %s", err)
 	}
 
 	if payer, ok := payerResponse.(*s3.GetBucketRequestPaymentOutput); ok {
@@ -1183,12 +1183,12 @@ func resourceBucketRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil && !tfawserr.ErrCodeEquals(err, ErrCodeNotImplemented) {
-		return fmt.Errorf("error getting S3 Bucket logging: %s", err)
+		return fmt.Errorf("getting S3 Bucket logging: %s", err)
 	}
 
 	if logging, ok := loggingResponse.(*s3.GetBucketLoggingOutput); ok {
 		if err := d.Set("logging", flattenBucketLoggingEnabled(logging.LoggingEnabled)); err != nil {
-			return fmt.Errorf("error setting logging: %s", err)
+			return fmt.Errorf("setting logging: %s", err)
 		}
 	} else {
 		d.Set("logging", nil)
@@ -1212,12 +1212,12 @@ func resourceBucketRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil && !tfawserr.ErrCodeEquals(err, ErrCodeNoSuchLifecycleConfiguration) {
-		return fmt.Errorf("error getting S3 Bucket (%s) Lifecycle Configuration: %w", d.Id(), err)
+		return fmt.Errorf("getting S3 Bucket (%s) Lifecycle Configuration: %w", d.Id(), err)
 	}
 
 	if lifecycle, ok := lifecycleResponse.(*s3.GetBucketLifecycleConfigurationOutput); ok {
 		if err := d.Set("lifecycle_rule", flattenBucketLifecycleRules(lifecycle.Rules)); err != nil {
-			return fmt.Errorf("error setting lifecycle_rule: %s", err)
+			return fmt.Errorf("setting lifecycle_rule: %s", err)
 		}
 	} else {
 		d.Set("lifecycle_rule", nil)
@@ -1241,12 +1241,12 @@ func resourceBucketRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil && !tfawserr.ErrCodeEquals(err, ErrCodeReplicationConfigurationNotFound) {
-		return fmt.Errorf("error getting S3 Bucket replication: %w", err)
+		return fmt.Errorf("getting S3 Bucket replication: %w", err)
 	}
 
 	if replication, ok := replicationResponse.(*s3.GetBucketReplicationOutput); ok {
 		if err := d.Set("replication_configuration", flattenBucketReplicationConfiguration(replication.ReplicationConfiguration)); err != nil {
-			return fmt.Errorf("error setting replication_configuration: %w", err)
+			return fmt.Errorf("setting replication_configuration: %w", err)
 		}
 	} else {
 		// Still need to set for the non-existent case
@@ -1271,12 +1271,12 @@ func resourceBucketRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil && !tfawserr.ErrMessageContains(err, ErrCodeServerSideEncryptionConfigurationNotFound, "encryption configuration was not found") {
-		return fmt.Errorf("error getting S3 Bucket encryption: %w", err)
+		return fmt.Errorf("getting S3 Bucket encryption: %w", err)
 	}
 
 	if encryption, ok := encryptionResponse.(*s3.GetBucketEncryptionOutput); ok {
 		if err := d.Set("server_side_encryption_configuration", flattenServerSideEncryptionConfiguration(encryption.ServerSideEncryptionConfiguration)); err != nil {
-			return fmt.Errorf("error setting server_side_encryption_configuration: %w", err)
+			return fmt.Errorf("setting server_side_encryption_configuration: %w", err)
 		}
 	} else {
 		d.Set("server_side_encryption_configuration", nil)
@@ -1301,7 +1301,7 @@ func resourceBucketRead(d *schema.ResourceData, meta interface{}) error {
 	// Object lock not supported in all partitions (extra guard, also guards in read func)
 	if err != nil && !tfawserr.ErrCodeEquals(err, ErrCodeMethodNotAllowed, ErrCodeNotImplemented, ErrCodeObjectLockConfigurationNotFound) {
 		if meta.(*conns.AWSClient).Partition == endpoints.AwsPartitionID || meta.(*conns.AWSClient).Partition == endpoints.AwsUsGovPartitionID {
-			return fmt.Errorf("error getting S3 Bucket (%s) Object Lock configuration: %w", d.Id(), err)
+			return fmt.Errorf("getting S3 Bucket (%s) Object Lock configuration: %w", d.Id(), err)
 		}
 	}
 
@@ -1312,7 +1312,7 @@ func resourceBucketRead(d *schema.ResourceData, meta interface{}) error {
 	if output, ok := resp.(*s3.GetObjectLockConfigurationOutput); ok && output.ObjectLockConfiguration != nil {
 		d.Set("object_lock_enabled", aws.StringValue(output.ObjectLockConfiguration.ObjectLockEnabled) == s3.ObjectLockEnabledEnabled)
 		if err := d.Set("object_lock_configuration", flattenObjectLockConfiguration(output.ObjectLockConfiguration)); err != nil {
-			return fmt.Errorf("error setting object_lock_configuration: %w", err)
+			return fmt.Errorf("setting object_lock_configuration: %w", err)
 		}
 	} else {
 		d.Set("object_lock_enabled", nil)
@@ -1346,7 +1346,7 @@ func resourceBucketRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error getting S3 Bucket location: %s", err)
+		return fmt.Errorf("getting S3 Bucket location: %s", err)
 	}
 
 	region := discoveredRegion.(string)
@@ -1408,24 +1408,24 @@ func resourceBucketRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for S3 Bucket (%s): %s", d.Id(), err)
+		return fmt.Errorf("listing tags for S3 Bucket (%s): %s", d.Id(), err)
 	}
 
 	tags, ok := tagsRaw.(tftags.KeyValueTags)
 
 	if !ok {
-		return fmt.Errorf("error listing tags for S3 Bucket (%s): unable to convert tags", d.Id())
+		return fmt.Errorf("listing tags for S3 Bucket (%s): unable to convert tags", d.Id())
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return fmt.Errorf("setting tags: %w", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return fmt.Errorf("setting tags_all: %w", err)
 	}
 
 	arn := arn.ARN{
@@ -1441,7 +1441,7 @@ func resourceBucketRead(d *schema.ResourceData, meta interface{}) error {
 func resourceBucketDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).S3Conn
 
-	log.Printf("[DEBUG] Deleting S3 Bucket: %s", d.Id())
+	log.Printf("[INFO] Deleting S3 Bucket: %s", d.Id())
 	_, err := conn.DeleteBucketWithContext(ctx, &s3.DeleteBucketInput{
 		Bucket: aws.String(d.Id()),
 	})
@@ -1629,7 +1629,7 @@ func resourceBucketInternalCorsUpdate(conn *s3.S3, d *schema.ResourceData) error
 		}, s3.ErrCodeNoSuchBucket)
 
 		if err != nil {
-			return fmt.Errorf("error deleting S3 Bucket (%s) CORS: %w", d.Id(), err)
+			return fmt.Errorf("deleting S3 Bucket (%s) CORS: %w", d.Id(), err)
 		}
 
 		return nil
@@ -1690,7 +1690,7 @@ func resourceBucketInternalGrantsUpdate(conn *s3.S3, d *schema.ResourceData) err
 		log.Printf("[DEBUG] S3 bucket: %s, Grants fallback to canned ACL", d.Id())
 
 		if err := resourceBucketInternalACLUpdate(conn, d); err != nil {
-			return fmt.Errorf("error fallback to canned ACL, %s", err)
+			return fmt.Errorf("fallback to canned ACL, %s", err)
 		}
 
 		return nil
@@ -1703,13 +1703,13 @@ func resourceBucketInternalGrantsUpdate(conn *s3.S3, d *schema.ResourceData) err
 	}, s3.ErrCodeNoSuchBucket)
 
 	if err != nil {
-		return fmt.Errorf("error getting S3 Bucket (%s) ACL: %s", d.Id(), err)
+		return fmt.Errorf("getting S3 Bucket (%s) ACL: %s", d.Id(), err)
 	}
 
 	output := resp.(*s3.GetBucketAclOutput)
 
 	if output == nil {
-		return fmt.Errorf("error getting S3 Bucket (%s) ACL: empty output", d.Id())
+		return fmt.Errorf("getting S3 Bucket (%s) ACL: empty output", d.Id())
 	}
 
 	input := &s3.PutBucketAclInput{
@@ -1738,7 +1738,7 @@ func resourceBucketInternalLifecycleUpdate(conn *s3.S3, d *schema.ResourceData) 
 		_, err := conn.DeleteBucketLifecycle(input)
 
 		if err != nil {
-			return fmt.Errorf("error removing S3 Bucket (%s) lifecycle: %w", d.Id(), err)
+			return fmt.Errorf("removing S3 Bucket (%s) lifecycle: %w", d.Id(), err)
 		}
 
 		return nil
@@ -1793,7 +1793,7 @@ func resourceBucketInternalLifecycleUpdate(conn *s3.S3, d *schema.ResourceData) 
 			if val, ok := e["date"].(string); ok && val != "" {
 				t, err := time.Parse(time.RFC3339, fmt.Sprintf("%sT00:00:00Z", val))
 				if err != nil {
-					return fmt.Errorf("Error Parsing AWS S3 Bucket Lifecycle Expiration Date: %s", err.Error())
+					return fmt.Errorf("parsing AWS S3 Bucket Lifecycle Expiration Date: %s", err.Error())
 				}
 				i.Date = aws.Time(t)
 			} else if val, ok := e["days"].(int); ok && val > 0 {
@@ -1826,7 +1826,7 @@ func resourceBucketInternalLifecycleUpdate(conn *s3.S3, d *schema.ResourceData) 
 				if val, ok := transition["date"].(string); ok && val != "" {
 					t, err := time.Parse(time.RFC3339, fmt.Sprintf("%sT00:00:00Z", val))
 					if err != nil {
-						return fmt.Errorf("Error Parsing AWS S3 Bucket Lifecycle Expiration Date: %s", err.Error())
+						return fmt.Errorf("parsing AWS S3 Bucket Lifecycle Expiration Date: %s", err.Error())
 					}
 					i.Date = aws.Time(t)
 				} else if val, ok := transition["days"].(int); ok && val >= 0 {
@@ -1942,7 +1942,7 @@ func resourceBucketInternalPolicyUpdate(conn *s3.S3, d *schema.ResourceData) err
 		}, s3.ErrCodeNoSuchBucket)
 
 		if err != nil {
-			return fmt.Errorf("error deleting S3 Bucket (%s) policy: %w", d.Id(), err)
+			return fmt.Errorf("deleting S3 Bucket (%s) policy: %w", d.Id(), err)
 		}
 
 		return nil
@@ -1982,7 +1982,7 @@ func resourceBucketInternalReplicationConfigurationUpdate(conn *s3.S3, d *schema
 		_, err := conn.DeleteBucketReplication(input)
 
 		if err != nil {
-			return fmt.Errorf("error removing S3 Bucket (%s) Replication: %w", d.Id(), err)
+			return fmt.Errorf("removing S3 Bucket (%s) Replication: %w", d.Id(), err)
 		}
 
 		return nil
@@ -2053,7 +2053,7 @@ func resourceBucketInternalServerSideEncryptionConfigurationUpdate(conn *s3.S3, 
 		_, err := conn.DeleteBucketEncryption(input)
 
 		if err != nil {
-			return fmt.Errorf("error removing S3 Bucket (%s) Server-side Encryption: %w", d.Id(), err)
+			return fmt.Errorf("removing S3 Bucket (%s) Server-side Encryption: %w", d.Id(), err)
 		}
 
 		return nil
@@ -2132,7 +2132,7 @@ func resourceBucketInternalWebsiteUpdate(conn *s3.S3, d *schema.ResourceData) er
 		}, s3.ErrCodeNoSuchBucket)
 
 		if err != nil {
-			return fmt.Errorf("error deleting S3 Bucket (%s) Website: %w", d.Id(), err)
+			return fmt.Errorf("deleting S3 Bucket (%s) Website: %w", d.Id(), err)
 		}
 
 		d.Set("website_endpoint", "")
@@ -2143,7 +2143,7 @@ func resourceBucketInternalWebsiteUpdate(conn *s3.S3, d *schema.ResourceData) er
 
 	websiteConfig, err := expandWebsiteConfiguration(ws)
 	if err != nil {
-		return fmt.Errorf("error expanding S3 Bucket (%s) website configuration: %w", d.Id(), err)
+		return fmt.Errorf("expanding S3 Bucket (%s) website configuration: %w", d.Id(), err)
 	}
 
 	input := &s3.PutBucketWebsiteInput{
@@ -3117,7 +3117,7 @@ func flattenBucketWebsite(ws *s3.GetBucketWebsiteOutput) ([]interface{}, error) 
 	if v := ws.RoutingRules; v != nil {
 		rr, err := normalizeRoutingRules(v)
 		if err != nil {
-			return nil, fmt.Errorf("error while marshaling routing rules: %w", err)
+			return nil, fmt.Errorf("while marshaling routing rules: %w", err)
 		}
 		m["routing_rules"] = rr
 	}
