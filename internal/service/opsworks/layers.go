@@ -475,7 +475,7 @@ func (lt *opsworksLayerType) Create(ctx context.Context, d *schema.ResourceData,
 	}
 
 	if len(tags) > 0 {
-		layer, err := FindLayerByID(conn, d.Id())
+		layer, err := FindLayerByID(ctx, conn, d.Id())
 
 		if err != nil {
 			return diag.Errorf("reading OpsWorks Layer (%s): %s", d.Id(), err)
@@ -495,7 +495,7 @@ func (lt *opsworksLayerType) Read(ctx context.Context, d *schema.ResourceData, m
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	layer, err := FindLayerByID(conn, d.Id())
+	layer, err := FindLayerByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] OpsWorks Layer %s not found, removing from state", d.Id())
@@ -566,7 +566,7 @@ func (lt *opsworksLayerType) Read(ctx context.Context, d *schema.ResourceData, m
 		return diag.FromErr(err)
 	}
 
-	loadBalancer, err := findElasticLoadBalancerByLayerID(conn, d.Id())
+	loadBalancer, err := findElasticLoadBalancerByLayerID(ctx, conn, d.Id())
 
 	if err == nil {
 		d.Set("elastic_load_balancer", loadBalancer.ElasticLoadBalancerName)
@@ -781,12 +781,12 @@ func (lt *opsworksLayerType) Delete(ctx context.Context, d *schema.ResourceData,
 	return nil
 }
 
-func FindLayerByID(conn *opsworks.OpsWorks, id string) (*opsworks.Layer, error) {
+func FindLayerByID(ctx context.Context, conn *opsworks.OpsWorks, id string) (*opsworks.Layer, error) {
 	input := &opsworks.DescribeLayersInput{
 		LayerIds: aws.StringSlice([]string{id}),
 	}
 
-	output, err := conn.DescribeLayers(input)
+	output, err := conn.DescribeLayersWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, opsworks.ErrCodeResourceNotFoundException) {
 		return nil, &resource.NotFoundError{
@@ -810,12 +810,12 @@ func FindLayerByID(conn *opsworks.OpsWorks, id string) (*opsworks.Layer, error) 
 	return output.Layers[0], nil
 }
 
-func findElasticLoadBalancerByLayerID(conn *opsworks.OpsWorks, id string) (*opsworks.ElasticLoadBalancer, error) {
+func findElasticLoadBalancerByLayerID(ctx context.Context, conn *opsworks.OpsWorks, id string) (*opsworks.ElasticLoadBalancer, error) {
 	input := &opsworks.DescribeElasticLoadBalancersInput{
 		LayerIds: aws.StringSlice([]string{id}),
 	}
 
-	output, err := conn.DescribeElasticLoadBalancers(input)
+	output, err := conn.DescribeElasticLoadBalancersWithContext(ctx, input)
 
 	if err != nil {
 		return nil, err
