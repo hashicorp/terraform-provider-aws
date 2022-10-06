@@ -437,7 +437,7 @@ func resourceStorageLensConfigurationUpdate(ctx context.Context, d *schema.Resou
 }
 
 func resourceStorageLensConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3ControlConn
+	conn := s3controlv2.NewFromConfig(*meta.(*conns.AWSClient).Config)
 
 	accountID, configID, err := StorageLensConfigurationParseResourceID(d.Id())
 
@@ -446,7 +446,7 @@ func resourceStorageLensConfigurationDelete(ctx context.Context, d *schema.Resou
 	}
 
 	log.Printf("[DEBUG] Deleting S3 Storage Lens Configuration: %s", d.Id())
-	_, err = conn.DeleteStorageLensConfigurationWithContext(ctx, &s3control.DeleteStorageLensConfigurationInput{
+	_, err = conn.DeleteStorageLensConfiguration(ctx, &s3controlv2.DeleteStorageLensConfigurationInput{
 		AccountId: aws.String(accountID),
 		ConfigId:  aws.String(configID),
 	})
