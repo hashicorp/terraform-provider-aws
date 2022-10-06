@@ -2,11 +2,14 @@ package s3control
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
+	nethttp "net/http"
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/transport/http"
 	"github.com/aws/aws-sdk-go-v2/service/s3control"
 	"github.com/aws/aws-sdk-go-v2/service/s3control/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -489,7 +492,8 @@ func FindStorageLensConfigurationByAccountIDAndConfigID(ctx context.Context, con
 	output, err := conn.GetStorageLensConfiguration(ctx, input)
 
 	// No types.NoSuchConfiguration defined.
-	if tfawserr.ErrCodeEquals(err, errCodeNoSuchConfiguration) {
+	var re *http.ResponseError
+	if errors.As(err, &re) && re.Response.StatusCode == nethttp.StatusNotFound {
 		return nil, &resource.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
