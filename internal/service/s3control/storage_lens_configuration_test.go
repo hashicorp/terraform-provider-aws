@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"testing"
 
+	s3controlv2 "github.com/aws/aws-sdk-go-v2/service/s3control"
 	"github.com/aws/aws-sdk-go/service/s3control"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -16,7 +17,6 @@ import (
 )
 
 func TestAccS3ControlStorageLensConfiguration_basic(t *testing.T) {
-	var v s3control.StorageLensConfiguration
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3control_storage_lens_configuration.test"
 
@@ -29,7 +29,7 @@ func TestAccS3ControlStorageLensConfiguration_basic(t *testing.T) {
 			{
 				Config: testAccStorageLensConfigurationConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckStorageLensConfigurationExists(resourceName, &v),
+					testAccCheckStorageLensConfigurationExists(resourceName),
 					acctest.CheckResourceAttrAccountID(resourceName, "account_id"),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "s3", fmt.Sprintf("storage-lens/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.#", "1"),
@@ -56,7 +56,6 @@ func TestAccS3ControlStorageLensConfiguration_basic(t *testing.T) {
 }
 
 func TestAccS3ControlStorageLensConfiguration_disappears(t *testing.T) {
-	var v s3control.StorageLensConfiguration
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3control_storage_lens_configuration.test"
 
@@ -69,7 +68,7 @@ func TestAccS3ControlStorageLensConfiguration_disappears(t *testing.T) {
 			{
 				Config: testAccStorageLensConfigurationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStorageLensConfigurationExists(resourceName, &v),
+					testAccCheckStorageLensConfigurationExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfs3control.ResourceStorageLensConfiguration(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -79,7 +78,6 @@ func TestAccS3ControlStorageLensConfiguration_disappears(t *testing.T) {
 }
 
 func TestAccS3ControlStorageLensConfiguration_tags(t *testing.T) {
-	var v s3control.StorageLensConfiguration
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3control_storage_lens_configuration.test"
 
@@ -92,7 +90,7 @@ func TestAccS3ControlStorageLensConfiguration_tags(t *testing.T) {
 			{
 				Config: testAccStorageLensConfigurationConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStorageLensConfigurationExists(resourceName, &v),
+					testAccCheckStorageLensConfigurationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -105,7 +103,7 @@ func TestAccS3ControlStorageLensConfiguration_tags(t *testing.T) {
 			{
 				Config: testAccStorageLensConfigurationConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStorageLensConfigurationExists(resourceName, &v),
+					testAccCheckStorageLensConfigurationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -114,7 +112,7 @@ func TestAccS3ControlStorageLensConfiguration_tags(t *testing.T) {
 			{
 				Config: testAccStorageLensConfigurationConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStorageLensConfigurationExists(resourceName, &v),
+					testAccCheckStorageLensConfigurationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -124,7 +122,6 @@ func TestAccS3ControlStorageLensConfiguration_tags(t *testing.T) {
 }
 
 func TestAccS3ControlStorageLensConfiguration_update(t *testing.T) {
-	var v s3control.StorageLensConfiguration
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3control_storage_lens_configuration.test"
 
@@ -137,7 +134,7 @@ func TestAccS3ControlStorageLensConfiguration_update(t *testing.T) {
 			{
 				Config: testAccStorageLensConfigurationConfig_allAttributes(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckStorageLensConfigurationExists(resourceName, &v),
+					testAccCheckStorageLensConfigurationExists(resourceName),
 					acctest.CheckResourceAttrAccountID(resourceName, "account_id"),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "s3", fmt.Sprintf("storage-lens/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.#", "1"),
@@ -181,7 +178,7 @@ func TestAccS3ControlStorageLensConfiguration_update(t *testing.T) {
 			{
 				Config: testAccStorageLensConfigurationConfig_allAttributesUpdated(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckStorageLensConfigurationExists(resourceName, &v),
+					testAccCheckStorageLensConfigurationExists(resourceName),
 					acctest.CheckResourceAttrAccountID(resourceName, "account_id"),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "s3", fmt.Sprintf("storage-lens/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "storage_lens_configuration.#", "1"),
@@ -218,7 +215,7 @@ func TestAccS3ControlStorageLensConfiguration_update(t *testing.T) {
 }
 
 func testAccCheckStorageLensConfigurationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlConn
+	conn := s3controlv2.NewFromConfig(*acctest.Provider.Meta().(*conns.AWSClient).Config)
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_s3control_object_lambda_access_point" {
@@ -247,7 +244,7 @@ func testAccCheckStorageLensConfigurationDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckStorageLensConfigurationExists(n string, v *s3control.StorageLensConfiguration) resource.TestCheckFunc {
+func testAccCheckStorageLensConfigurationExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -264,17 +261,11 @@ func testAccCheckStorageLensConfigurationExists(n string, v *s3control.StorageLe
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlConn
+		conn := s3controlv2.NewFromConfig(*acctest.Provider.Meta().(*conns.AWSClient).Config)
 
-		output, err := tfs3control.FindStorageLensConfigurationByAccountIDAndConfigID(context.Background(), conn, accountID, configID)
+		_, err = tfs3control.FindStorageLensConfigurationByAccountIDAndConfigID(context.Background(), conn, accountID, configID)
 
-		if err != nil {
-			return err
-		}
-
-		*v = *output
-
-		return nil
+		return err
 	}
 }
 

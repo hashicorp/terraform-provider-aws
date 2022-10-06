@@ -1,8 +1,6 @@
 package s3control
 
 import (
-	"context"
-
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3control"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -264,30 +262,4 @@ func FindObjectLambdaAccessPointPolicyAndStatusByAccountIDAndName(conn *s3contro
 	}
 
 	return policy, output2.PolicyStatus, nil
-}
-
-func FindStorageLensConfigurationByAccountIDAndConfigID(ctx context.Context, conn *s3control.S3Control, accountID, configID string) (*s3control.StorageLensConfiguration, error) {
-	input := &s3control.GetStorageLensConfigurationInput{
-		AccountId: aws.String(accountID),
-		ConfigId:  aws.String(configID),
-	}
-
-	output, err := conn.GetStorageLensConfigurationWithContext(ctx, input)
-
-	if tfawserr.ErrCodeEquals(err, errCodeNoSuchConfiguration) {
-		return nil, &resource.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil || output.StorageLensConfiguration == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return output.StorageLensConfiguration, nil
 }
