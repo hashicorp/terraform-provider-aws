@@ -88,7 +88,7 @@ func SharedRegionalSweepClientWithContext(ctx context.Context, region string) (i
 	client, diags := conf.ConfigureProvider(ctx, &conns.AWSClient{})
 
 	if diags.HasError() {
-		return nil, fmt.Errorf("error getting AWS client: %#v", diags)
+		return nil, fmt.Errorf("getting AWS client: %#v", diags)
 	}
 
 	SweeperClients[region] = client
@@ -248,7 +248,7 @@ func DeleteResource(resource *schema.Resource, d *schema.ResourceData, meta inte
 
 		for i := range diags {
 			if diags[i].Severity == diag.Error {
-				return fmt.Errorf("error deleting resource: %s", diags[i].Summary)
+				return fmt.Errorf("deleting resource: %s", diags[i].Summary)
 			}
 		}
 
