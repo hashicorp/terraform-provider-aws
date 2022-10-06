@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_lambda_function: fix Osaka ap-northeast-3 lambda function creation, failing due to code signer service not available in the region.
+``` 

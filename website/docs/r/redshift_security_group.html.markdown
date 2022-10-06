@@ -1,4 +1,5 @@
 ---
+subcategory: "Redshift"
 layout: "aws"
 page_title: "AWS: aws_redshift_security_group"
 description: |-
@@ -7,11 +8,14 @@ description: |-
 
 # Resource: aws_redshift_security_group
 
-Creates a new Amazon Redshift security group. You use security groups to control access to non-VPC clusters
+Creates a new Amazon Redshift security group. You use security groups to control access to non-VPC clusters.
+
+!> **WARNING:** With the retirement of EC2-Classic the `aws_redshift_security_group` resource has been deprecated and will be removed in a future version. Any existing resources can be removed from [Terraform state](https://www.terraform.io/language/state) using the [`terraform state rm`](https://www.terraform.io/cli/commands/state/rm#command-state-rm) command.
+
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_redshift_security_group" "default" {
   name = "redshift-sg"
 
@@ -44,7 +48,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Redshift security groups can be imported using the `name`, e.g.
+Redshift security groups can be imported using the `name`, e.g.,
 
 ```
 $ terraform import aws_redshift_security_group.testgroup1 redshift_test_group

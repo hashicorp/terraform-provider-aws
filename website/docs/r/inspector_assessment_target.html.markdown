@@ -1,4 +1,5 @@
 ---
+subcategory: "Inspector"
 layout: "aws"
 page_title: "AWS: aws_inspector_assessment_target"
 description: |-
@@ -11,7 +12,7 @@ Provides a Inspector assessment target
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_inspector_resource_group" "bar" {
   tags = {
     Name = "foo"
@@ -21,7 +22,7 @@ resource "aws_inspector_resource_group" "bar" {
 
 resource "aws_inspector_assessment_target" "foo" {
   name               = "assessment target"
-  resource_group_arn = "${aws_inspector_resource_group.bar.arn}"
+  resource_group_arn = aws_inspector_resource_group.bar.arn
 }
 ```
 
@@ -40,7 +41,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Inspector Assessment Targets can be imported via their Amazon Resource Name (ARN), e.g.
+Inspector Assessment Targets can be imported via their Amazon Resource Name (ARN), e.g.,
 
 ```sh
 $ terraform import aws_inspector_assessment_target.example arn:aws:inspector:us-east-1:123456789012:target/0-xxxxxxx

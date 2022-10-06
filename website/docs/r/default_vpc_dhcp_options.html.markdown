@@ -1,4 +1,5 @@
 ---
+subcategory: "VPC (Virtual Private Cloud)"
 layout: "aws"
 page_title: "AWS: aws_default_vpc_dhcp_options"
 description: |-
@@ -22,7 +23,7 @@ into management.
 
 Basic usage with tags:
 
-```hcl
+```terraform
 resource "aws_default_vpc_dhcp_options" "default" {
   tags = {
     Name = "Default DHCP Option Set"
@@ -38,7 +39,8 @@ The following arguments are still supported:
 
 * `netbios_name_servers` - (Optional) List of NETBIOS name servers.
 * `netbios_node_type` - (Optional) The NetBIOS node type (1, 2, 4, or 8). AWS recommends to specify 2 since broadcast and multicast are not supported in their network. For more information about these node types, see [RFC 2132](http://www.ietf.org/rfc/rfc2132.txt).
-* `tags` - (Optional) A mapping of tags to assign to the resource.
+* `owner_id` - The ID of the AWS account that owns the DHCP options set.
+* `tags` - (Optional) A map of tags to assign to the resource.
 
 ### Removing `aws_default_vpc_dhcp_options` from your configuration
 
@@ -52,4 +54,12 @@ You can resume managing the DHCP Options Set via the AWS Console.
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the DHCP Options Set.
-* `owner_id` - The ID of the AWS account that owns the DHCP options set.
+* `arn` - The ARN of the DHCP Options Set.
+
+## Import
+
+VPC DHCP Options can be imported using the `dhcp options id`, e.g.,
+
+```
+$ terraform import aws_default_vpc_dhcp_options.default_options dopt-d9070ebb
+```

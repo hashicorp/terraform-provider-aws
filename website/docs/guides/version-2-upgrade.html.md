@@ -1,4 +1,5 @@
 ---
+subcategory: ""
 layout: "aws"
 page_title: "Terraform AWS Provider Version 2 Upgrade Guide"
 description: |-
@@ -9,7 +10,7 @@ description: |-
 
 Version 2.0.0 of the AWS provider for Terraform is a major release and includes some changes that you will need to consider when upgrading. This guide is intended to help with that process and focuses only on changes from version 1.60.0 to version 2.0.0.
 
-Most of the changes outlined in this guide have been previously marked as deprecated in the Terraform plan/apply output throughout previous provider releases. These changes, such as deprecation notices, can always be found in the [Terraform AWS Provider CHANGELOG](https://github.com/terraform-providers/terraform-provider-aws/blob/master/CHANGELOG.md).
+Most of the changes outlined in this guide have been previously marked as deprecated in the Terraform plan/apply output throughout previous provider releases. These changes, such as deprecation notices, can always be found in the [Terraform AWS Provider CHANGELOG](https://github.com/hashicorp/terraform-provider-aws/blob/main/CHANGELOG.md).
 
 Upgrade topics:
 
@@ -54,11 +55,11 @@ Upgrade topics:
 
 -> Before upgrading to version 2.0.0 or later, it is recommended to upgrade to the most recent 1.X version of the provider (version 1.60.0) and ensure that your environment successfully runs [`terraform plan`](https://www.terraform.io/docs/commands/plan.html) without unexpected changes or deprecation notices.
 
-It is recommended to use [version constraints when configuring Terraform providers](https://www.terraform.io/docs/configuration/providers.html#provider-versions). If you are following that recommendation, update the version constraints in your Terraform configuration and run [`terraform init`](https://www.terraform.io/docs/commands/init.html) to download the new version.
+We recommend using [version constraints when configuring Terraform providers](https://www.terraform.io/docs/configuration/providers.html#provider-versions). If you are following that recommendation, update the version constraints in your Terraform configuration and run [`terraform init`](https://www.terraform.io/docs/commands/init.html) to download the new version.
 
 Update to latest 1.X version:
 
-```hcl
+```terraform
 provider "aws" {
   # ... other configuration ...
 
@@ -68,7 +69,7 @@ provider "aws" {
 
 Update to latest 2.X version:
 
-```hcl
+```terraform
 provider "aws" {
   # ... other configuration ...
 
@@ -86,7 +87,7 @@ The provider will now return an error to ensure operators understand the implica
 
 If necessary, the AWS account ID lookup logic can be skipped via:
 
-```hcl
+```terraform
 provider "aws" {
   # ... other configuration ...
 
@@ -124,16 +125,16 @@ Switch your Terraform configuration to the `name` argument instead.
 
 ### Data Source Removal and Migrating to aws_kms_secrets Data Source
 
-The implementation of the `aws_kms_secret` data source, prior to Terraform AWS provider version 2.0.0, used dynamic attribute behavior which is not supported with Terraform 0.12 and beyond (full details available in [this GitHub issue](https://github.com/terraform-providers/terraform-provider-aws/issues/5144)).
+The implementation of the `aws_kms_secret` data source, prior to Terraform AWS provider version 2.0.0, used dynamic attribute behavior which is not supported with Terraform 0.12 and beyond (full details available in [this GitHub issue](https://github.com/hashicorp/terraform-provider-aws/issues/5144)).
 
 Terraform configuration migration steps:
 
 * Change the data source type from `aws_kms_secret` to `aws_kms_secrets`
-* Change any attribute reference (e.g. `"${data.aws_kms_secret.example.ATTRIBUTE}"`) from `.ATTRIBUTE` to `.plaintext["ATTRIBUTE"]`
+* Change any attribute reference (e.g., `"${data.aws_kms_secret.example.ATTRIBUTE}"`) from `.ATTRIBUTE` to `.plaintext["ATTRIBUTE"]`
 
 As an example, lets take the below sample configuration and migrate it.
 
-```hcl
+```terraform
 # Below example configuration will not be supported in Terraform AWS provider version 2.0.0
 
 data "aws_kms_secret" "example" {
@@ -161,7 +162,7 @@ Notice that the `aws_kms_secret` data source previously was taking the two `secr
 
 Updating the sample configuration from above:
 
-```hcl
+```terraform
 data "aws_kms_secrets" "example" {
   secret {
     # ... potentially other configuration ...
@@ -187,7 +188,7 @@ resource "aws_rds_cluster" "example" {
 
 ### arn and qualified_arn Attribute Behavior Changes
 
-The `arn` attribute now always returns the unqualified (no `:QUALIFIER` or `:VERSION` suffix) Amazon Resource Name (ARN) value and the `qualified_arn` attribute now always returns the qualified (includes `:QUALIFIER` or `:VERSION` suffix) ARN value. Previously by default, the `arn` attribute included `:$LATEST` suffix when not setting the optional `qualifier` argument, which was not compatible with many other resources. To restore the previous default behavior, set the `qualifier` argument to `$LATEST` and reference the `qualified_arn` attribute.
+The `arn` attribute now always returns the unqualified (no `:QUALIFIER` or `:VERSION` suffix) ARN value and the `qualified_arn` attribute now always returns the qualified (includes `:QUALIFIER` or `:VERSION` suffix) ARN value. Previously by default, the `arn` attribute included `:$LATEST` suffix when not setting the optional `qualifier` argument, which was not compatible with many other resources. To restore the previous default behavior, set the `qualifier` argument to `$LATEST` and reference the `qualified_arn` attribute.
 
 ## Data Source: aws_region
 
@@ -206,7 +207,7 @@ Since the API Gateway usage plans feature was launched on August 11, 2016, usage
 
 For example, given this previous configuration:
 
-```hcl
+```terraform
 resource "aws_api_gateway_rest_api" "example" {
   name = "example"
 }
@@ -228,7 +229,7 @@ resource "aws_api_gateway_api_key" "example" {
 
 An updated configuration:
 
-```hcl
+```terraform
 resource "aws_api_gateway_rest_api" "example" {
   name = "example"
 }
@@ -243,7 +244,7 @@ resource "aws_api_gateway_api_key" "example" {
 }
 
 resource "aws_api_gateway_usage_plan" "example" {
-  name         = "example"
+  name = "example"
 
   api_stages {
     api_id = "${aws_api_gateway_rest_api.example.id}"
@@ -266,7 +267,7 @@ Switch your Terraform configuration to the `request_parameters` argument instead
 
 For example, given this previous configuration:
 
-```hcl
+```terraform
 resource "aws_api_gateway_integration" "example" {
   # ... other configuration ...
 
@@ -280,7 +281,7 @@ PARAMS
 
 An updated configuration:
 
-```hcl
+```terraform
 resource "aws_api_gateway_integration" "example" {
   # ... other configuration ...
 
@@ -298,7 +299,7 @@ Switch your Terraform configuration to the `response_parameters` argument instea
 
 For example, given this previous configuration:
 
-```hcl
+```terraform
 resource "aws_api_gateway_integration_response" "example" {
   # ... other configuration ...
 
@@ -312,7 +313,7 @@ PARAMS
 
 An updated configuration:
 
-```hcl
+```terraform
 resource "aws_api_gateway_integration_response" "example" {
   # ... other configuration ...
 
@@ -330,7 +331,7 @@ Switch your Terraform configuration to the `request_parameters` argument instead
 
 For example, given this previous configuration:
 
-```hcl
+```terraform
 resource "aws_api_gateway_method" "example" {
   # ... other configuration ...
 
@@ -345,13 +346,13 @@ PARAMS
 
 An updated configuration:
 
-```hcl
+```terraform
 resource "aws_api_gateway_method" "example" {
   # ... other configuration ...
 
   request_parameters = {
     "method.request.header.Content-Type" = false
-    "method.request.querystring.page" = true
+    "method.request.querystring.page"    = true
   }
 }
 ```
@@ -364,7 +365,7 @@ Switch your Terraform configuration to the `response_parameters` argument instea
 
 For example, given this previous configuration:
 
-```hcl
+```terraform
 resource "aws_api_gateway_method_response" "example" {
   # ... other configuration ...
 
@@ -378,7 +379,7 @@ PARAMS
 
 An updated configuration:
 
-```hcl
+```terraform
 resource "aws_api_gateway_method_response" "example" {
   # ... other configuration ...
 
@@ -402,7 +403,7 @@ The following arguments have been moved into a nested argument named `step_scali
 
 For example, given this previous configuration:
 
-```hcl
+```terraform
 resource "aws_appautoscaling_policy" "example" {
   # ... other configuration ...
 
@@ -419,7 +420,7 @@ resource "aws_appautoscaling_policy" "example" {
 
 An updated configuration:
 
-```hcl
+```terraform
 resource "aws_appautoscaling_policy" "example" {
   # ... other configuration ...
 
@@ -444,7 +445,7 @@ Switch your Terraform configuration to the `min_adjustment_magnitude` argument i
 
 For example, given this previous configuration:
 
-```hcl
+```terraform
 resource "aws_autoscaling_policy" "example" {
   # ... other configuration ...
 
@@ -454,7 +455,7 @@ resource "aws_autoscaling_policy" "example" {
 
 An updated configuration:
 
-```hcl
+```terraform
 resource "aws_autoscaling_policy" "example" {
   # ... other configuration ...
 
@@ -476,7 +477,7 @@ Switch your Terraform configuration to the `ordered_cache_behavior` argument ins
 
 For example, given this previous configuration:
 
-```hcl
+```terraform
 resource "aws_cloudfront_distribution" "example" {
   # ... other configuration ...
 
@@ -492,7 +493,7 @@ resource "aws_cloudfront_distribution" "example" {
 
 An updated configuration:
 
-```hcl
+```terraform
 resource "aws_cloudfront_distribution" "example" {
   # ... other configuration ...
 
@@ -531,28 +532,28 @@ Default connections have been removed as part of LAG creation. To migrate your T
 
 For example, given this previous configuration:
 
-```hcl
+```terraform
 resource "aws_dx_lag" "example" {
   name                  = "example"
   connections_bandwidth = "1Gbps"
-  location              = "EqSe2"
+  location              = "EqSe2-EQ"
   number_of_connections = 1
 }
 ```
 
 An updated configuration:
 
-```hcl
+```terraform
 resource "aws_dx_connection" "example" {
   name      = "example"
   bandwidth = "1Gbps"
-  location  = "EqSe2"
+  location  = "EqSe2-EQ"
 }
 
 resource "aws_dx_lag" "example" {
   name                  = "example"
   connections_bandwidth = "1Gbps"
-  location              = "EqSe2"
+  location              = "EqSe2-EQ"
 }
 
 resource "aws_dx_connection_association" "example" {
@@ -569,7 +570,7 @@ Switch your Terraform configuration to the `ordered_placement_strategy` argument
 
 For example, given this previous configuration:
 
-```hcl
+```terraform
 resource "aws_ecs_service" "example" {
   # ... other configuration ...
 
@@ -585,7 +586,7 @@ resource "aws_ecs_service" "example" {
 
 An updated configuration:
 
-```hcl
+```terraform
 resource "aws_ecs_service" "example" {
   # ... other configuration ...
 
@@ -607,7 +608,7 @@ Switch your Terraform configuration to the `creation_token` argument instead.
 
 For example, given this previous configuration:
 
-```hcl
+```terraform
 resource "aws_efs_file_system" "example" {
   # ... other configuration ...
 
@@ -617,7 +618,7 @@ resource "aws_efs_file_system" "example" {
 
 An updated configuration:
 
-```hcl
+```terraform
 resource "aws_efs_file_system" "example" {
   # ... other configuration ...
 
@@ -633,7 +634,7 @@ Switch your Terraform configuration to the `preferred_availability_zones` argume
 
 For example, given this previous configuration:
 
-```hcl
+```terraform
 resource "aws_elasticache_cluster" "example" {
   # ... other configuration ...
 
@@ -643,7 +644,7 @@ resource "aws_elasticache_cluster" "example" {
 
 An updated configuration:
 
-```hcl
+```terraform
 resource "aws_elasticache_cluster" "example" {
   # ... other configuration ...
 
@@ -687,7 +688,7 @@ Switch your Terraform configuration to the `subnet_ids` argument instead.
 
 For example, given this previous configuration:
 
-```hcl
+```terraform
 resource "aws_network_acl" "example" {
   # ... other configuration ...
 
@@ -697,7 +698,7 @@ resource "aws_network_acl" "example" {
 
 An updated configuration:
 
-```hcl
+```terraform
 resource "aws_network_acl" "example" {
   # ... other configuration ...
 
@@ -717,7 +718,7 @@ The following arguments have been moved into a nested argument named `logging`:
 
 For example, given this previous configuration:
 
-```hcl
+```terraform
 resource "aws_redshift_cluster" "example" {
   # ... other configuration ...
 
@@ -729,14 +730,14 @@ resource "aws_redshift_cluster" "example" {
 
 An updated configuration:
 
-```hcl
+```terraform
 resource "aws_redshift_cluster" "example" {
   # ... other configuration ...
 
   logging {
-    bucket_name    = "example"
-    enable         = true
-    s3_key_prefix  = "example"
+    bucket_name   = "example"
+    enable        = true
+    s3_key_prefix = "example"
   }
 }
 ```
@@ -746,7 +747,7 @@ resource "aws_redshift_cluster" "example" {
 ### Import Change
 
 Previously, importing this resource resulted in an `aws_route` resource for each route, in
-addition to the `aws_route_table`, in the Terraform state. Support for importing `aws_route` resources has been added and importing this resource only adds the `aws_route_table` 
+addition to the `aws_route_table`, in the Terraform state. Support for importing `aws_route` resources has been added and importing this resource only adds the `aws_route_table`
 resource, with in-line routes, to the state.
 
 ## Resource: aws_route53_record
@@ -757,7 +758,7 @@ The resource now requires existing Route 53 Records to be imported into the Terr
 
 For example, if the `www.example.com` Route 53 Record in the `example.com` Route 53 Hosted Zone existed previously and this new Terraform configuration was introduced:
 
-```hcl
+```terraform
 resource "aws_route53_record" "www" {
   # ... other configuration ...
   name = "www.example.com"
@@ -782,7 +783,7 @@ Switch your Terraform configuration to `vpc` configuration block(s) instead.
 
 For example, given this previous configuration:
 
-```hcl
+```terraform
 resource "aws_route53_zone" "example" {
   # ... other configuration ...
 
@@ -792,7 +793,7 @@ resource "aws_route53_zone" "example" {
 
 An updated configuration:
 
-```hcl
+```terraform
 resource "aws_route53_zone" "example" {
   # ... other configuration ...
 
@@ -810,7 +811,7 @@ Switch your Terraform configuration to the `byte_match_tuples` argument instead.
 
 For example, given this previous configuration:
 
-```hcl
+```terraform
 resource "aws_wafregional_byte_match_set" "example" {
   # ... other configuration ...
 
@@ -826,7 +827,7 @@ resource "aws_wafregional_byte_match_set" "example" {
 
 An updated configuration:
 
-```hcl
+```terraform
 resource "aws_wafregional_byte_match_set" "example" {
   # ... other configuration ...
 

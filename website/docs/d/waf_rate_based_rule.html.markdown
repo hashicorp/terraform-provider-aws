@@ -1,7 +1,7 @@
 ---
+subcategory: "WAF Classic"
 layout: "aws"
 page_title: "AWS: aws_waf_rate_based_rule"
-sidebar_current: "docs-aws-datasource-waf-rate-based-rule"
 description: |-
   Retrieves an AWS WAF rate based rule id.
 ---
@@ -12,7 +12,7 @@ description: |-
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_waf_rate_based_rule" "example" {
   name = "tfWAFRateBasedRule"
 }
@@ -23,9 +23,9 @@ data "aws_waf_rate_based_rule" "example" {
 
 The following arguments are supported:
 
-* `name` - (Required) The name of the WAF rate based rule.
+* `name` - (Required) Name of the WAF rate based rule.
 
 ## Attributes Reference
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - The ID of the WAF rate based rule.
+* `id` - ID of the WAF rate based rule.

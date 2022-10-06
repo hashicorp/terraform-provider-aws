@@ -1,4 +1,5 @@
 ---
+subcategory: "ELB Classic"
 layout: "aws"
 page_title: "AWS: aws_elb"
 description: |-
@@ -17,14 +18,14 @@ with it, etc.
 
 ## Example Usage
 
-```hcl
+```terraform
 variable "lb_name" {
-  type    = "string"
+  type    = string
   default = ""
 }
 
 data "aws_elb" "test" {
-  name = "${var.lb_name}"
+  name = var.lb_name
 }
 ```
 
@@ -32,7 +33,7 @@ data "aws_elb" "test" {
 
 The following arguments are supported:
 
-* `name` - (Required) The unique name of the load balancer.
+* `name` - (Required) Unique name of the load balancer.
 
 ## Attributes Reference
 

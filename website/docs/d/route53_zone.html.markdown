@@ -1,4 +1,5 @@
 ---
+subcategory: "Route 53"
 layout: "aws"
 page_title: "AWS: aws_route53_zone"
 description: |-
@@ -16,14 +17,14 @@ This data source allows to find a Hosted Zone ID given Hosted Zone name and cert
 The following example shows how to get a Hosted Zone from its name and from this data how to create a Record Set.
 
 
-```hcl
+```terraform
 data "aws_route53_zone" "selected" {
   name         = "test.com."
   private_zone = true
 }
 
 resource "aws_route53_record" "www" {
-  zone_id = "${data.aws_route53_zone.selected.zone_id}"
+  zone_id = data.aws_route53_zone.selected.zone_id
   name    = "www.${data.aws_route53_zone.selected.name}"
   type    = "A"
   ttl     = "300"
@@ -37,13 +38,13 @@ The arguments of this data source act as filters for querying the available
 Hosted Zone. You have to use `zone_id` or `name`, not both of them. The given filter must match exactly one
 Hosted Zone. If you use `name` field for private Hosted Zone, you need to add `private_zone` field to `true`
 
-* `zone_id` - (Optional) The Hosted Zone id of the desired Hosted Zone.
+* `zone_id` - (Optional) Hosted Zone id of the desired Hosted Zone.
 
-* `name` - (Optional) The Hosted Zone name of the desired Hosted Zone.
+* `name` - (Optional) Hosted Zone name of the desired Hosted Zone.
 * `private_zone` - (Optional) Used with `name` field to get a private Hosted Zone.
 * `vpc_id` - (Optional) Used with `name` field to get a private Hosted Zone associated with the vpc_id (in this case, private_zone is not mandatory).
-* `tags` - (Optional) Used with `name` field. A mapping of tags, each pair of which must exactly match
-a pair on the desired Hosted Zone.
+* `tags` - (Optional) Used with `name` field. A map of tags, each pair of which must exactly match a pair on the desired Hosted Zone.
+
 ## Attributes Reference
 
 All of the argument attributes are also exported as
@@ -53,9 +54,10 @@ the selected Hosted Zone.
 
 The following attribute is additionally exported:
 
+* `arn` - ARN of the Hosted Zone.
 * `caller_reference` - Caller Reference of the Hosted Zone.
-* `comment` - The comment field of the Hosted Zone.
-* `name_servers` - The list of DNS name servers for the Hosted Zone.
+* `comment` - Comment field of the Hosted Zone.
+* `name_servers` - List of DNS name servers for the Hosted Zone.
 * `resource_record_set_count` - The number of Record Set in the Hosted Zone.
-* `linked_service_principal` - The service that created the Hosted Zone (e.g. `servicediscovery.amazonaws.com`).
-* `linked_service_description` - The description provided by the service that created the Hosted Zone (e.g. `arn:aws:servicediscovery:us-east-1:1234567890:namespace/ns-xxxxxxxxxxxxxxxx`).
+* `linked_service_principal` - The service that created the Hosted Zone (e.g., `servicediscovery.amazonaws.com`).
+* `linked_service_description` - The description provided by the service that created the Hosted Zone (e.g., `arn:aws:servicediscovery:us-east-1:1234567890:namespace/ns-xxxxxxxxxxxxxxxx`).

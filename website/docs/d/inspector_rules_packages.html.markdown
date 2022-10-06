@@ -1,4 +1,5 @@
 ---
+subcategory: "Inspector"
 layout: "aws"
 page_title: "AWS: aws_inspector_rules_packages"
 description: |-
@@ -13,11 +14,11 @@ configured in the provider.
 
 ## Example Usage
 
-```hcl
+```terraform
 # Declare the data source
 data "aws_inspector_rules_packages" "rules" {}
 
-# e.g. Use in aws_inspector_assessment_template
+# e.g., Use in aws_inspector_assessment_template
 resource "aws_inspector_resource_group" "group" {
   tags = {
     test = "test"
@@ -26,15 +27,15 @@ resource "aws_inspector_resource_group" "group" {
 
 resource "aws_inspector_assessment_target" "assessment" {
   name               = "test"
-  resource_group_arn = "${aws_inspector_resource_group.group.arn}"
+  resource_group_arn = aws_inspector_resource_group.group.arn
 }
 
 resource "aws_inspector_assessment_template" "assessment" {
   name       = "Test"
-  target_arn = "${aws_inspector_assessment_target.assessment.arn}"
+  target_arn = aws_inspector_assessment_target.assessment.arn
   duration   = "60"
 
-  rules_package_arns = ["${data.aws_inspector_rules_packages.rules.arns}"]
+  rules_package_arns = data.aws_inspector_rules_packages.rules.arns
 }
 ```
 
@@ -42,4 +43,5 @@ resource "aws_inspector_assessment_template" "assessment" {
 
 In addition to all arguments above, the following attributes are exported:
 
-* `arns` - A list of the AWS Inspector Rules Packages arns available in the AWS region.
+* `id` - AWS Region.
+* `arns` - List of the AWS Inspector Rules Packages arns available in the AWS region.

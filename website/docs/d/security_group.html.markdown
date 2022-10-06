@@ -1,4 +1,5 @@
 ---
+subcategory: "VPC (Virtual Private Cloud)"
 layout: "aws"
 page_title: "AWS: aws_security_group"
 description: |-
@@ -18,15 +19,15 @@ VPC that the security group belongs to.
 The following example shows how one might accept a Security Group id as a variable
 and use this data source to obtain the data necessary to create a subnet.
 
-```hcl
+```terraform
 variable "security_group_id" {}
 
 data "aws_security_group" "selected" {
-  id = "${var.security_group_id}"
+  id = var.security_group_id
 }
 
 resource "aws_subnet" "subnet" {
-  vpc_id     = "${data.aws_security_group.selected.vpc_id}"
+  vpc_id     = data.aws_security_group.selected.vpc_id
   cidr_block = "10.0.1.0/24"
 }
 ```
@@ -40,19 +41,19 @@ security group whose data will be exported as attributes.
 
 * `filter` - (Optional) Custom filter block as described below.
 
-* `id` - (Optional) The id of the specific security group to retrieve.
+* `id` - (Optional) Id of the specific security group to retrieve.
 
-* `name` - (Optional) The name that the desired security group must have.
+* `name` - (Optional) Name that the desired security group must have.
 
-* `tags` - (Optional) A mapping of tags, each pair of which must exactly match
+* `tags` - (Optional) Map of tags, each pair of which must exactly match
   a pair on the desired security group.
 
-* `vpc_id` - (Optional) The id of the VPC that the desired security group belongs to.
+* `vpc_id` - (Optional) Id of the VPC that the desired security group belongs to.
 
 More complex filters can be expressed using one or more `filter` sub-blocks,
 which take the following arguments:
 
-* `name` - (Required) The name of the field to filter by, as defined by
+* `name` - (Required) Name of the field to filter by, as defined by
   [the underlying AWS API](http://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeSecurityGroups.html).
 
 * `values` - (Required) Set of values that are accepted for the given field.
@@ -67,7 +68,13 @@ the selected Security Group.
 
 The following fields are also exported:
 
-* `description` - The description of the security group.
-* `arn` - The computed ARN of the security group.
+* `description` - Description of the security group.
+* `arn` - Computed ARN of the security group.
 
 ~> **Note:** The [default security group for a VPC](http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_SecurityGroups.html#DefaultSecurityGroup) has the name `default`.
+
+## Timeouts
+
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+
+- `read` - (Default `20m`)

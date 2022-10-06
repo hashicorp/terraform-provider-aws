@@ -1,4 +1,5 @@
 ---
+subcategory: "WAF Classic Regional"
 layout: "aws"
 page_title: "AWS: aws_wafregional_ipset"
 description: |-
@@ -11,7 +12,7 @@ description: |-
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_wafregional_ipset" "example" {
   name = "tfWAFRegionalIPSet"
 }
@@ -21,9 +22,9 @@ data "aws_wafregional_ipset" "example" {
 
 The following arguments are supported:
 
-* `name` - (Required) The name of the WAF Regional IP set.
+* `name` - (Required) Name of the WAF Regional IP set.
 
 ## Attributes Reference
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - The ID of the WAF Regional IP set.
+* `id` - ID of the WAF Regional IP set.

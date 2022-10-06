@@ -1,4 +1,5 @@
 ---
+subcategory: "S3 (Simple Storage)"
 layout: "aws"
 page_title: "AWS: aws_s3_bucket_inventory"
 description: |-
@@ -13,7 +14,7 @@ Provides a S3 bucket [inventory configuration](https://docs.aws.amazon.com/Amazo
 
 ### Add inventory configuration
 
-```hcl
+```terraform
 resource "aws_s3_bucket" "test" {
   bucket = "my-tf-test-bucket"
 }
@@ -23,7 +24,7 @@ resource "aws_s3_bucket" "inventory" {
 }
 
 resource "aws_s3_bucket_inventory" "test" {
-  bucket = "${aws_s3_bucket.test.id}"
+  bucket = aws_s3_bucket.test.id
   name   = "EntireBucketDaily"
 
   included_object_versions = "All"
@@ -35,15 +36,15 @@ resource "aws_s3_bucket_inventory" "test" {
   destination {
     bucket {
       format     = "ORC"
-      bucket_arn = "${aws_s3_bucket.inventory.arn}"
+      bucket_arn = aws_s3_bucket.inventory.arn
     }
   }
 }
 ```
 
-### Add inventory configuration with S3 bucket object prefix
+### Add inventory configuration with S3 object prefix
 
-```hcl
+```terraform
 resource "aws_s3_bucket" "test" {
   bucket = "my-tf-test-bucket"
 }
@@ -53,7 +54,7 @@ resource "aws_s3_bucket" "inventory" {
 }
 
 resource "aws_s3_bucket_inventory" "test-prefix" {
-  bucket = "${aws_s3_bucket.test.id}"
+  bucket = aws_s3_bucket.test.id
   name   = "DocumentsWeekly"
 
   included_object_versions = "All"
@@ -69,7 +70,7 @@ resource "aws_s3_bucket_inventory" "test-prefix" {
   destination {
     bucket {
       format     = "ORC"
-      bucket_arn = "${aws_s3_bucket.inventory.arn}"
+      bucket_arn = aws_s3_bucket.inventory.arn
       prefix     = "inventory"
     }
   }
@@ -80,22 +81,22 @@ resource "aws_s3_bucket_inventory" "test-prefix" {
 
 The following arguments are supported:
 
-* `bucket` - (Required) The name of the bucket to put inventory configuration.
+* `bucket` - (Required) The name of the source bucket that inventory lists the objects for.
 * `name` - (Required) Unique identifier of the inventory configuration for the bucket.
-* `included_object_versions` - (Required) Object filtering that accepts a prefix (documented below). Can be `All` or `Current`.
-* `schedule` - (Required) Contains the frequency for generating inventory results (documented below).
-* `destination` - (Required) Destination bucket where inventory list files are written (documented below).
-* `enabled` - (Optional, Default: true) Specifies whether the inventory is enabled or disabled.
-* `filter` - (Optional) Object filtering that accepts a prefix (documented below).
-* `optional_fields` - (Optional) Contains the optional fields that are included in the inventory results.
+* `included_object_versions` - (Required) Object versions to include in the inventory list. Valid values: `All`, `Current`.
+* `schedule` - (Required) Specifies the schedule for generating inventory results (documented below).
+* `destination` - (Required) Contains information about where to publish the inventory results (documented below).
+* `enabled` - (Optional, Default: `true`) Specifies whether the inventory is enabled or disabled.
+* `filter` - (Optional) Specifies an inventory filter. The inventory only includes objects that meet the filter's criteria (documented below).
+* `optional_fields` - (Optional) List of optional fields that are included in the inventory results. Please refer to the S3 [documentation](https://docs.aws.amazon.com/AmazonS3/latest/API/API_InventoryConfiguration.html#AmazonS3-Type-InventoryConfiguration-OptionalFields) for more details.
 
 The `filter` configuration supports the following:
 
-* `prefix` - (Optional) Object prefix for filtering (singular).
+* `prefix` - (Optional) The prefix that an object must have to be included in the inventory results.
 
 The `schedule` configuration supports the following:
 
-* `frequency` - (Required) Specifies how frequently inventory results are produced. Can be `Daily` or `Weekly`.
+* `frequency` - (Required) Specifies how frequently inventory results are produced. Valid values: `Daily`, `Weekly`.
 
 The `destination` configuration supports the following:
 
@@ -118,9 +119,13 @@ The `sse_kms` configuration supports the following:
 
 * `key_id` - (Required) The ARN of the KMS customer master key (CMK) used to encrypt the inventory file.
 
+## Attributes Reference
+
+No additional attributes are exported.
+
 ## Import
 
-S3 bucket inventory configurations can be imported using `bucket:inventory`, e.g.
+S3 bucket inventory configurations can be imported using `bucket:inventory`, e.g.,
 
 ```sh
 $ terraform import aws_s3_bucket_inventory.my-bucket-entire-bucket my-bucket:EntireBucket

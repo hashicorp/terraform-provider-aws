@@ -1,4 +1,5 @@
 ---
+subcategory: "SDB (SimpleDB)"
 layout: "aws"
 page_title: "AWS: aws_simpledb_domain"
 description: |-
@@ -11,7 +12,7 @@ Provides a SimpleDB domain resource
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_simpledb_domain" "users" {
   name = "users"
 }
@@ -31,7 +32,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-SimpleDB Domains can be imported using the `name`, e.g.
+SimpleDB Domains can be imported using the `name`, e.g.,
 
 ```
 $ terraform import aws_simpledb_domain.users users

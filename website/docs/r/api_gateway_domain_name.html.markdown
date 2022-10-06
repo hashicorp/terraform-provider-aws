@@ -1,4 +1,5 @@
 ---
+subcategory: "API Gateway"
 layout: "aws"
 page_title: "AWS: aws_api_gateway_domain_name"
 description: |-
@@ -28,57 +29,65 @@ the `regional_domain_name` attribute.
 
 ~> **Note:** API Gateway requires the use of AWS Certificate Manager (ACM) certificates instead of Identity and Access Management (IAM) certificates in regions that support ACM. Regions that support ACM can be found in the [Regions and Endpoints Documentation](https://docs.aws.amazon.com/general/latest/gr/rande.html#acm_region). To import an existing private key and certificate into ACM or request an ACM certificate, see the [`aws_acm_certificate` resource](/docs/providers/aws/r/acm_certificate.html).
 
+~> **Note:** The `aws_api_gateway_domain_name` resource expects dependency on the `aws_acm_certificate_validation` as
+only verified certificates can be used. This can be made either explicitly by adding the
+`depends_on = [aws_acm_certificate_validation.cert]` attribute. Or implicitly by referring certificate ARN
+from the validation resource where it will be available after the resource creation:
+`regional_certificate_arn = aws_acm_certificate_validation.cert.certificate_arn`.
+
 ~> **Note:** All arguments including the private key will be stored in the raw state as plain-text.
-[Read more about sensitive data in state](/docs/state/sensitive-data.html).
+[Read more about sensitive data in state](https://www.terraform.io/docs/state/sensitive-data.html).
 
 ## Example Usage
 
+An end-to-end example of a REST API configured with OpenAPI can be found in the [`/examples/api-gateway-rest-api-openapi` directory within the GitHub repository](https://github.com/hashicorp/terraform-provider-aws/tree/main/examples/api-gateway-rest-api-openapi).
+
 ### Edge Optimized (ACM Certificate)
 
-```hcl
+```terraform
 resource "aws_api_gateway_domain_name" "example" {
-  certificate_arn = "${aws_acm_certificate_validation.example.certificate_arn}"
+  certificate_arn = aws_acm_certificate_validation.example.certificate_arn
   domain_name     = "api.example.com"
 }
 
 # Example DNS record using Route53.
 # Route53 is not specifically required; any DNS host can be used.
 resource "aws_route53_record" "example" {
-  name    = "${aws_api_gateway_domain_name.example.domain_name}"
+  name    = aws_api_gateway_domain_name.example.domain_name
   type    = "A"
-  zone_id = "${aws_route53_zone.example.id}"
+  zone_id = aws_route53_zone.example.id
 
   alias {
     evaluate_target_health = true
-    name                   = "${aws_api_gateway_domain_name.example.cloudfront_domain_name}"
-    zone_id                = "${aws_api_gateway_domain_name.example.cloudfront_zone_id}"
+    name                   = aws_api_gateway_domain_name.example.cloudfront_domain_name
+    zone_id                = aws_api_gateway_domain_name.example.cloudfront_zone_id
   }
 }
 ```
 
 ### Edge Optimized (IAM Certificate)
 
-```hcl
+```terraform
 resource "aws_api_gateway_domain_name" "example" {
   domain_name = "api.example.com"
 
   certificate_name        = "example-api"
-  certificate_body        = "${file("${path.module}/example.com/example.crt")}"
-  certificate_chain       = "${file("${path.module}/example.com/ca.crt")}"
-  certificate_private_key = "${file("${path.module}/example.com/example.key")}"
+  certificate_body        = file("${path.module}/example.com/example.crt")
+  certificate_chain       = file("${path.module}/example.com/ca.crt")
+  certificate_private_key = file("${path.module}/example.com/example.key")
 }
 
 # Example DNS record using Route53.
 # Route53 is not specifically required; any DNS host can be used.
 resource "aws_route53_record" "example" {
-  zone_id = "${aws_route53_zone.example.id}" # See aws_route53_zone for how to create this
+  zone_id = aws_route53_zone.example.id # See aws_route53_zone for how to create this
 
-  name = "${aws_api_gateway_domain_name.example.domain_name}"
+  name = aws_api_gateway_domain_name.example.domain_name
   type = "A"
 
   alias {
-    name                   = "${aws_api_gateway_domain_name.example.cloudfront_domain_name}"
-    zone_id                = "${aws_api_gateway_domain_name.example.cloudfront_zone_id}"
+    name                   = aws_api_gateway_domain_name.example.cloudfront_domain_name
+    zone_id                = aws_api_gateway_domain_name.example.cloudfront_zone_id
     evaluate_target_health = true
   }
 }
@@ -86,10 +95,10 @@ resource "aws_route53_record" "example" {
 
 ### Regional (ACM Certificate)
 
-```hcl
+```terraform
 resource "aws_api_gateway_domain_name" "example" {
   domain_name              = "api.example.com"
-  regional_certificate_arn = "${aws_acm_certificate_validation.example.certificate_arn}"
+  regional_certificate_arn = aws_acm_certificate_validation.example.certificate_arn
 
   endpoint_configuration {
     types = ["REGIONAL"]
@@ -99,25 +108,25 @@ resource "aws_api_gateway_domain_name" "example" {
 # Example DNS record using Route53.
 # Route53 is not specifically required; any DNS host can be used.
 resource "aws_route53_record" "example" {
-  name    = "${aws_api_gateway_domain_name.example.domain_name}"
+  name    = aws_api_gateway_domain_name.example.domain_name
   type    = "A"
-  zone_id = "${aws_route53_zone.example.id}"
+  zone_id = aws_route53_zone.example.id
 
   alias {
     evaluate_target_health = true
-    name                   = "${aws_api_gateway_domain_name.example.regional_domain_name}"
-    zone_id                = "${aws_api_gateway_domain_name.example.regional_zone_id}"
+    name                   = aws_api_gateway_domain_name.example.regional_domain_name
+    zone_id                = aws_api_gateway_domain_name.example.regional_zone_id
   }
 }
 ```
 
 ### Regional (IAM Certificate)
 
-```hcl
+```terraform
 resource "aws_api_gateway_domain_name" "example" {
-  certificate_body          = "${file("${path.module}/example.com/example.crt")}"
-  certificate_chain         = "${file("${path.module}/example.com/ca.crt")}"
-  certificate_private_key   = "${file("${path.module}/example.com/example.key")}"
+  certificate_body          = file("${path.module}/example.com/example.crt")
+  certificate_chain         = file("${path.module}/example.com/ca.crt")
+  certificate_private_key   = file("${path.module}/example.com/example.key")
   domain_name               = "api.example.com"
   regional_certificate_name = "example-api"
 
@@ -129,14 +138,14 @@ resource "aws_api_gateway_domain_name" "example" {
 # Example DNS record using Route53.
 # Route53 is not specifically required; any DNS host can be used.
 resource "aws_route53_record" "example" {
-  name    = "${aws_api_gateway_domain_name.example.domain_name}"
+  name    = aws_api_gateway_domain_name.example.domain_name
   type    = "A"
-  zone_id = "${aws_route53_zone.example.id}"
+  zone_id = aws_route53_zone.example.id
 
   alias {
     evaluate_target_health = true
-    name                   = "${aws_api_gateway_domain_name.example.regional_domain_name}"
-    zone_id                = "${aws_api_gateway_domain_name.example.regional_zone_id}"
+    name                   = aws_api_gateway_domain_name.example.regional_domain_name
+    zone_id                = aws_api_gateway_domain_name.example.regional_zone_id
   }
 }
 ```
@@ -145,52 +154,51 @@ resource "aws_route53_record" "example" {
 
 The following arguments are supported:
 
-* `domain_name` - (Required) The fully-qualified domain name to register
-* `endpoint_configuration` - (Optional) Configuration block defining API endpoint information including type. Defined below.
-* `security_policy` - (Optional) The Transport Layer Security (TLS) version + cipher suite for this DomainName. The valid values are `TLS_1_0` and `TLS_1_2`. Must be configured to perform drift detection.
+* `domain_name` - (Required) Fully-qualified domain name to register.
+* `endpoint_configuration` - (Optional) Configuration block defining API endpoint information including type. See below.
+* `mutual_tls_authentication` - (Optional) Mutual TLS authentication configuration for the domain name. See below.
+* `ownership_verification_certificate_arn` - (Optional) ARN of the AWS-issued certificate used to validate custom domain ownership (when `certificate_arn` is issued via an ACM Private CA or `mutual_tls_authentication` is configured with an ACM-imported certificate.)
+* `security_policy` - (Optional) Transport Layer Security (TLS) version + cipher suite for this DomainName. Valid values are `TLS_1_0` and `TLS_1_2`. Must be configured to perform drift detection.
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 When referencing an AWS-managed certificate, the following arguments are supported:
 
-* `certificate_arn` - (Optional) The ARN for an AWS-managed certificate. AWS Certificate Manager is the only supported source. Used when an edge-optimized domain name is desired. Conflicts with `certificate_name`, `certificate_body`, `certificate_chain`, `certificate_private_key`, `regional_certificate_arn`, and `regional_certificate_name`.
-* `regional_certificate_arn` - (Optional) The ARN for an AWS-managed certificate. AWS Certificate Manager is the only supported source. Used when a regional domain name is desired. Conflicts with `certificate_arn`, `certificate_name`, `certificate_body`, `certificate_chain`, and `certificate_private_key`.
+* `certificate_arn` - (Optional) ARN for an AWS-managed certificate. AWS Certificate Manager is the only supported source. Used when an edge-optimized domain name is desired. Conflicts with `certificate_name`, `certificate_body`, `certificate_chain`, `certificate_private_key`, `regional_certificate_arn`, and `regional_certificate_name`.
+* `regional_certificate_arn` - (Optional) ARN for an AWS-managed certificate. AWS Certificate Manager is the only supported source. Used when a regional domain name is desired. Conflicts with `certificate_arn`, `certificate_name`, `certificate_body`, `certificate_chain`, and `certificate_private_key`.
 
 When uploading a certificate, the following arguments are supported:
 
-* `certificate_name` - (Optional) The unique name to use when registering this
-  certificate as an IAM server certificate. Conflicts with `certificate_arn`, `regional_certificate_arn`, and
-  `regional_certificate_name`. Required if `certificate_arn` is not set.
-* `certificate_body` - (Optional) The certificate issued for the domain name
-  being registered, in PEM format. Only valid for `EDGE` endpoint configuration type. Conflicts with `certificate_arn`, `regional_certificate_arn`, and
-  `regional_certificate_name`.
-* `certificate_chain` - (Optional) The certificate for the CA that issued the
-  certificate, along with any intermediate CA certificates required to
-  create an unbroken chain to a certificate trusted by the intended API clients. Only valid for `EDGE` endpoint configuration type. Conflicts with `certificate_arn`,
-  `regional_certificate_arn`, and `regional_certificate_name`.
-* `certificate_private_key` - (Optional) The private key associated with the
-  domain certificate given in `certificate_body`. Only valid for `EDGE` endpoint configuration type. Conflicts with `certificate_arn`, `regional_certificate_arn`, and `regional_certificate_name`.
-* `regional_certificate_name` - (Optional) The user-friendly name of the certificate that will be used by regional endpoint for this domain name. Conflicts with `certificate_arn`, `certificate_name`, `certificate_body`, `certificate_chain`, and
-  `certificate_private_key`.
+* `certificate_body` - (Optional) Certificate issued for the domain name being registered, in PEM format. Only valid for `EDGE` endpoint configuration type. Conflicts with `certificate_arn`, `regional_certificate_arn`, and `regional_certificate_name`.
+* `certificate_chain` - (Optional) Certificate for the CA that issued the certificate, along with any intermediate CA certificates required to create an unbroken chain to a certificate trusted by the intended API clients. Only valid for `EDGE` endpoint configuration type. Conflicts with `certificate_arn`, `regional_certificate_arn`, and `regional_certificate_name`.
+* `certificate_name` - (Optional) Unique name to use when registering this certificate as an IAM server certificate. Conflicts with `certificate_arn`, `regional_certificate_arn`, and `regional_certificate_name`. Required if `certificate_arn` is not set.
+* `certificate_private_key` - (Optional) Private key associated with the domain certificate given in `certificate_body`. Only valid for `EDGE` endpoint configuration type. Conflicts with `certificate_arn`, `regional_certificate_arn`, and `regional_certificate_name`.
+* `regional_certificate_name` - (Optional) User-friendly name of the certificate that will be used by regional endpoint for this domain name. Conflicts with `certificate_arn`, `certificate_name`, `certificate_body`, `certificate_chain`, and `certificate_private_key`.
 
 ### endpoint_configuration
 
-* `types` - (Required) A list of endpoint types. This resource currently only supports managing a single value. Valid values: `EDGE` or `REGIONAL`. If unspecified, defaults to `EDGE`. Must be declared as `REGIONAL` in non-Commercial partitions. Refer to the [documentation](https://docs.aws.amazon.com/apigateway/latest/developerguide/create-regional-api.html) for more information on the difference between edge-optimized and regional APIs.
+* `types` - (Required) List of endpoint types. This resource currently only supports managing a single value. Valid values: `EDGE` or `REGIONAL`. If unspecified, defaults to `EDGE`. Must be declared as `REGIONAL` in non-Commercial partitions. Refer to the [documentation](https://docs.aws.amazon.com/apigateway/latest/developerguide/create-regional-api.html) for more information on the difference between edge-optimized and regional APIs.
+
+### mutual_tls_authentication
+
+* `truststore_uri` - (Required) Amazon S3 URL that specifies the truststore for mutual TLS authentication, for example, `s3://bucket-name/key-name`. The truststore can contain certificates from public or private certificate authorities. To update the truststore, upload a new version to S3, and then update your custom domain name to use the new version.
+* `truststore_version` - (Optional) Version of the S3 object that contains the truststore. To specify a version, you must have versioning enabled for the S3 bucket.
 
 ## Attributes Reference
 
-In addition to the arguments, the following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
-* `id` - The internal id assigned to this domain name by API Gateway.
-* `certificate_upload_date` - The upload date associated with the domain certificate.
-* `cloudfront_domain_name` - The hostname created by Cloudfront to represent
-  the distribution that implements this domain name mapping.
-* `cloudfront_zone_id` - For convenience, the hosted zone ID (`Z2FDTNDATAQYW2`)
-  that can be used to create a Route53 alias record for the distribution.
-* `regional_domain_name` - The hostname for the custom domain's regional endpoint.
-* `regional_zone_id` - The hosted zone ID that can be used to create a Route53 alias record for the regional endpoint.
+* `arn` - ARN of domain name.
+* `certificate_upload_date` - Upload date associated with the domain certificate.
+* `cloudfront_domain_name` - Hostname created by Cloudfront to represent the distribution that implements this domain name mapping.
+* `cloudfront_zone_id` - For convenience, the hosted zone ID (`Z2FDTNDATAQYW2`) that can be used to create a Route53 alias record for the distribution.
+* `id` - Internal identifier assigned to this domain name by API Gateway.
+* `regional_domain_name` - Hostname for the custom domain's regional endpoint.
+* `regional_zone_id` - Hosted zone ID that can be used to create a Route53 alias record for the regional endpoint.
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
-API Gateway domain names can be imported using their `name`, e.g.
+API Gateway domain names can be imported using their `name`, e.g.,
 
 ```
 $ terraform import aws_api_gateway_domain_name.example dev.example.com

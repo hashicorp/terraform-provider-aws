@@ -1,4 +1,5 @@
 ---
+subcategory: "CloudTrail"
 layout: "aws"
 page_title: "AWS: aws_cloudtrail_service_account"
 description: |-
@@ -12,13 +13,16 @@ in a given region for the purpose of allowing CloudTrail to store trail data in 
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_cloudtrail_service_account" "main" {}
 
 resource "aws_s3_bucket" "bucket" {
   bucket        = "tf-cloudtrail-logging-test-bucket"
   force_destroy = true
+}
 
+resource "aws_s3_bucket_policy" "allow_cloudtrail_logging" {
+  bucket = aws_s3_bucket.bucket.id
   policy = <<EOF
 {
   "Version": "2008-10-17",
@@ -55,5 +59,5 @@ Defaults to the region from the AWS provider configuration.
 
 ## Attributes Reference
 
-* `id` - The ID of the AWS CloudTrail service account in the selected region.
-* `arn` - The ARN of the AWS CloudTrail service account in the selected region.
+* `id` - ID of the AWS CloudTrail service account in the selected region.
+* `arn` - ARN of the AWS CloudTrail service account in the selected region.

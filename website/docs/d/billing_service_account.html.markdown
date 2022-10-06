@@ -1,4 +1,5 @@
 ---
+subcategory: "Meta Data Sources"
 layout: "aws"
 page_title: "AWS: aws_billing_service_account"
 description: |-
@@ -7,17 +8,24 @@ description: |-
 
 # Data Source: aws_billing_service_account
 
-Use this data source to get the Account ID of the [AWS Billing and Cost Management Service Account](http://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/billing-getting-started.html#step-2) for the purpose of whitelisting in S3 bucket policy.
+Use this data source to get the Account ID of the [AWS Billing and Cost Management Service Account](http://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/billing-getting-started.html#step-2) for the purpose of permitting in S3 bucket policy.
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_billing_service_account" "main" {}
 
 resource "aws_s3_bucket" "billing_logs" {
   bucket = "my-billing-tf-test-bucket"
-  acl    = "private"
+}
 
+resource "aws_s3_bucket_acl" "billing_logs_acl" {
+  bucket = aws_s3_bucket.billing_logs.id
+  acl    = "private"
+}
+
+resource "aws_s3_bucket_policy" "allow_billing_logging" {
+  bucket = aws_s3_bucket.billing_logs.id
   policy = <<POLICY
 {
   "Id": "Policy",
@@ -53,8 +61,7 @@ POLICY
 }
 ```
 
-
 ## Attributes Reference
 
-* `id` - The ID of the AWS billing service account.
-* `arn` - The ARN of the AWS billing service account.
+* `id` - ID of the AWS billing service account.
+* `arn` - ARN of the AWS billing service account.

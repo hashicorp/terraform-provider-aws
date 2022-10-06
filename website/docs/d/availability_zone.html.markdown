@@ -1,4 +1,5 @@
 ---
+subcategory: "EC2 (Elastic Compute Cloud)"
 layout: "aws"
 page_title: "AWS: aws_availability_zone"
 description: |-
@@ -12,7 +13,7 @@ in the current region.
 
 This can be used both to validate an availability zone given in a variable
 and to split the AZ name into its component parts of an AWS region and an
-AZ identifier letter. The latter may be useful e.g. for implementing a
+AZ identifier letter. The latter may be useful e.g., for implementing a
 consistent subnet numbering scheme across several regions by mapping both
 the region and the subnet letter to network numbers.
 
@@ -24,7 +25,7 @@ which provides a list of the available zones.
 The following example shows how this data source might be used to derive
 VPC and subnet CIDR prefixes systematically for an availability zone.
 
-```hcl
+```terraform
 variable "region_number" {
   # Arbitrary mapping of region name to number to use in
   # a VPC's CIDR prefix.
@@ -57,13 +58,13 @@ data "aws_availability_zone" "example" {
 
 # Create a VPC for the region associated with the AZ
 resource "aws_vpc" "example" {
-  cidr_block = "${cidrsubnet("10.0.0.0/8", 4, var.region_number[data.aws_availability_zone.example.region])}"
+  cidr_block = cidrsubnet("10.0.0.0/8", 4, var.region_number[data.aws_availability_zone.example.region])
 }
 
 # Create a subnet for the AZ within the regional VPC
 resource "aws_subnet" "example" {
-  vpc_id     = "${aws_vpc.example.id}"
-  cidr_block = "${cidrsubnet(aws_vpc.example.cidr_block, 4, var.az_number[data.aws_availability_zone.example.name_suffix])}"
+  vpc_id     = aws_vpc.example.id
+  cidr_block = cidrsubnet(aws_vpc.example.cidr_block, 4, var.az_number[data.aws_availability_zone.example.name_suffix])
 }
 ```
 
@@ -73,29 +74,36 @@ The arguments of this data source act as filters for querying the available
 availability zones. The given filters must match exactly one availability
 zone whose data will be exported as attributes.
 
-* `name` - (Optional) The full name of the availability zone to select.
+* `all_availability_zones` - (Optional) Set to `true` to include all Availability Zones and Local Zones regardless of your opt in status.
+* `filter` - (Optional) Configuration block(s) for filtering. Detailed below.
+* `name` - (Optional) Full name of the availability zone to select.
+* `state` - (Optional) Specific availability zone state to require. May be any of `"available"`, `"information"` or `"impaired"`.
+* `zone_id` - (Optional) Zone ID of the availability zone to select.
 
-* `state` - (Optional) A specific availability zone state to require. May
-  be any of `"available"`, `"information"` or `"impaired"`.
+### filter Configuration Block
 
-* `zone_id` - (Optional) The zone ID of the availability zone to select.
+The following arguments are supported by the `filter` configuration block:
 
-All reasonable uses of this data source will specify `name`, since `state`
-alone would match a single AZ only in a region that itself has only one AZ.
+* `name` - (Required) Name of the filter field. Valid values can be found in the [EC2 DescribeAvailabilityZones API Reference](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeAvailabilityZones.html).
+* `values` - (Required) Set of values that are accepted for the given filter field. Results will be selected if any given value matches.
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-* `name` - The name of the selected availability zone.
+* `group_name` - For Availability Zones, this is the same value as the Region name. For Local Zones, the name of the associated group, for example `us-west-2-lax-1`.
+* `name_suffix` - Part of the AZ name that appears after the region name, uniquely identifying the AZ within its region.
+For Availability Zones this is usually a single letter, for example `a` for the `us-west-2a` zone.
+For Local and Wavelength Zones this is a longer string, for example `wl1-sfo-wlz-1` for the `us-west-2-wl1-sfo-wlz-1` zone.
+* `network_border_group` - The name of the location from which the address is advertised.
+* `opt_in_status` - For Availability Zones, this always has the value of `opt-in-not-required`. For Local Zones, this is the opt in status. The possible values are `opted-in` and `not-opted-in`.
+* `parent_zone_id` - ID of the zone that handles some of the Local Zone or Wavelength Zone control plane operations, such as API calls.
+* `parent_zone_name` - Name of the zone that handles some of the Local Zone or Wavelength Zone control plane operations, such as API calls.
+* `region` - Region where the selected availability zone resides. This is always the region selected on the provider, since this data source searches only within that region.
+* `zone_type` - Type of zone. Values are `availability-zone`, `local-zone`, and `wavelength-zone`.
 
-* `region` - The region where the selected availability zone resides.
-  This is always the region selected on the provider, since this data source
-  searches only within that region.
+## Timeouts
 
-* `name_suffix` - The part of the AZ name that appears after the region name,
-  uniquely identifying the AZ within its region.
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
 
-* `state` - The current state of the AZ.
-
-* `zone_id` - (Optional) The zone ID of the selected availability zone.
+- `read` - (Default `20m`)

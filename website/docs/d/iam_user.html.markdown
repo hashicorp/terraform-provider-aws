@@ -1,4 +1,5 @@
 ---
+subcategory: "IAM (Identity & Access Management)"
 layout: "aws"
 page_title: "AWS: aws_iam_user"
 description: |-
@@ -13,7 +14,7 @@ properties without having to hard code ARNs or unique IDs as input.
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_iam_user" "example" {
   user_name = "an_example_user_name"
 }
@@ -21,12 +22,13 @@ data "aws_iam_user" "example" {
 
 ## Argument Reference
 
-* `user_name` - (Required) The friendly IAM user name to match.
+* `user_name` - (Required) Friendly IAM user name to match.
 
 ## Attributes Reference
 
-* `arn` - The Amazon Resource Name (ARN) assigned by AWS for this user.
+* `arn` - ARN assigned by AWS for this user.
 * `path` - Path in which this user was created.
 * `permissions_boundary` - The ARN of the policy that is used to set the permissions boundary for the user.
-* `user_id` - The unique ID assigned by AWS for this user.
-* `user_name` - The name associated to this User
+* `user_id` - Unique ID assigned by AWS for this user.
+* `user_name` - Name associated to this User
+* `tags` - Map of key-value pairs associated with the user.

@@ -1,4 +1,5 @@
 ---
+subcategory: "KMS (Key Management)"
 layout: "aws"
 page_title: "AWS: aws_kms_secrets"
 description: |-
@@ -13,7 +14,7 @@ Decrypt multiple secrets from data encrypted with the AWS KMS service.
 
 ## Example Usage
 
-If you do not already have a `CiphertextBlob` from encrypting a KMS secret, you can use the below commands to obtain one using the [AWS CLI kms encrypt](https://docs.aws.amazon.com/cli/latest/reference/kms/encrypt.html) command. This requires you to have your AWS CLI setup correctly and replace the `--key-id` with your own. Alternatively you can use `--plaintext 'password'` instead of reading from a file.
+If you do not already have a `CiphertextBlob` from encrypting a KMS secret, you can use the below commands to obtain one using the [AWS CLI kms encrypt](https://docs.aws.amazon.com/cli/latest/reference/kms/encrypt.html) command. This requires you to have your AWS CLI setup correctly and replace the `--key-id` with your own. Alternatively you can use `--plaintext 'master-password'` (CLIv1) or `--plaintext fileb://<(echo -n 'master-password')` (CLIv2) instead of reading from a file.
 
 -> If you have a newline character at the end of your file, it will be decrypted with this newline character intact. For most use cases this is undesirable and leads to incorrect passwords or invalid values, as well as possible changes in the plan. Be sure to use `echo -n` if necessary.
 
@@ -25,7 +26,7 @@ AQECAHgaPa0J8WadplGCqqVAr4HNvDaFSQ+NaiwIBhmm6qDSFwAAAGIwYAYJKoZIhvcNAQcGoFMwUQIB
 
 That encrypted output can now be inserted into Terraform configurations without exposing the plaintext secret directly.
 
-```hcl
+```terraform
 data "aws_kms_secrets" "example" {
   secret {
     # ... potentially other configuration ...
@@ -46,8 +47,8 @@ data "aws_kms_secrets" "example" {
 
 resource "aws_rds_cluster" "example" {
   # ... other configuration ...
-  master_password = "${data.aws_kms_secrets.example.plaintext["master_password"]}"
-  master_username = "${data.aws_kms_secrets.example.plaintext["master_username"]}"
+  master_password = data.aws_kms_secrets.example.plaintext["master_password"]
+  master_username = data.aws_kms_secrets.example.plaintext["master_username"]
 }
 ```
 
@@ -61,7 +62,7 @@ The following arguments are supported:
 
 Each `secret` supports the following arguments:
 
-* `name` - (Required) The name to export this secret under in the attributes.
+* `name` - (Required) Name to export this secret under in the attributes.
 * `payload` - (Required) Base64 encoded payload, as returned from a KMS encrypt operation.
 * `context` - (Optional) An optional mapping that makes up the Encryption Context for the secret.
 * `grant_tokens` (Optional) An optional list of Grant Tokens for the secret.

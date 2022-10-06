@@ -1,4 +1,5 @@
 ---
+subcategory: "VPC (Virtual Private Cloud)"
 layout: "aws"
 page_title: "AWS: aws_network_acls"
 description: |-
@@ -11,22 +12,22 @@ description: |-
 
 The following shows outputing all network ACL ids in a vpc.
 
-```hcl
+```terraform
 data "aws_network_acls" "example" {
-  vpc_id = "${var.vpc_id}"
+  vpc_id = var.vpc_id
 }
 
 output "example" {
-  value = "${data.aws_network_acls.example.ids}"
+  value = data.aws_network_acls.example.ids
 }
 ```
 
 The following example retrieves a list of all network ACL ids in a VPC with a custom
 tag of `Tier` set to a value of "Private".
 
-```hcl
+```terraform
 data "aws_network_acls" "example" {
-  vpc_id = "${var.vpc_id}"
+  vpc_id = var.vpc_id
 
   tags = {
     Tier = "Private"
@@ -37,22 +38,22 @@ data "aws_network_acls" "example" {
 The following example retrieves a network ACL id in a VPC which associated
 with specific subnet.
 
-```hcl
+```terraform
 data "aws_network_acls" "example" {
-  vpc_id = "${var.vpc_id}"
+  vpc_id = var.vpc_id
 
   filter {
     name   = "association.subnet-id"
-    values = ["${aws_subnet.test.id}"]
+    values = [aws_subnet.test.id]
   }
 }
 ```
 
 ## Argument Reference
 
-* `vpc_id` - (Optional) The VPC ID that you want to filter from.
+* `vpc_id` - (Optional) VPC ID that you want to filter from.
 
-* `tags` - (Optional) A mapping of tags, each pair of which must exactly match
+* `tags` - (Optional) Map of tags, each pair of which must exactly match
   a pair on the desired network ACLs.
 
 * `filter` - (Optional) Custom filter block as described below.
@@ -60,7 +61,7 @@ data "aws_network_acls" "example" {
 More complex filters can be expressed using one or more `filter` sub-blocks,
 which take the following arguments:
 
-* `name` - (Required) The name of the field to filter by, as defined by
+* `name` - (Required) Name of the field to filter by, as defined by
   [the underlying AWS API](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeNetworkAcls.html).
 
 * `values` - (Required) Set of values that are accepted for the given field.
@@ -68,4 +69,11 @@ which take the following arguments:
 
 ## Attributes Reference
 
-* `ids` - A list of all the network ACL ids found. This data source will fail if none are found.
+* `id` - AWS Region.
+* `ids` - List of all the network ACL ids found.
+
+## Timeouts
+
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+
+- `read` - (Default `20m`)

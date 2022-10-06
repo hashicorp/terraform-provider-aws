@@ -1,4 +1,5 @@
 ---
+subcategory: "ELB Classic"
 layout: "aws"
 page_title: "AWS: aws_elb_hosted_zone_id"
 description: |-
@@ -12,17 +13,17 @@ in a given region for the purpose of using in an AWS Route53 Alias.
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_elb_hosted_zone_id" "main" {}
 
 resource "aws_route53_record" "www" {
-  zone_id = "${aws_route53_zone.primary.zone_id}"
+  zone_id = aws_route53_zone.primary.zone_id
   name    = "example.com"
   type    = "A"
 
   alias {
-    name                   = "${aws_elb.main.dns_name}"
-    zone_id                = "${data.aws_elb_hosted_zone_id.main.id}"
+    name                   = aws_elb.main.dns_name
+    zone_id                = data.aws_elb_hosted_zone_id.main.id
     evaluate_target_health = true
   }
 }
@@ -36,4 +37,4 @@ resource "aws_route53_record" "www" {
 
 ## Attributes Reference
 
-* `id` - The ID of the AWS ELB HostedZoneId in the selected region.
+* `id` - ID of the AWS ELB HostedZoneId in the selected region.

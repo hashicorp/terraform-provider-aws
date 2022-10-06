@@ -1,4 +1,5 @@
 ---
+subcategory: "KMS (Key Management)"
 layout: "aws"
 page_title: "AWS: aws_kms_alias"
 description: |-
@@ -13,7 +14,7 @@ without having to hard code the ARN as input.
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_kms_alias" "s3" {
   name = "alias/aws/s3"
 }
@@ -21,10 +22,11 @@ data "aws_kms_alias" "s3" {
 
 ## Argument Reference
 
-* `name` - (Required) The display name of the alias. The name must start with the word "alias" followed by a forward slash (alias/)
+* `name` - (Required) Display name of the alias. The name must start with the word "alias" followed by a forward slash (alias/)
 
 ## Attributes Reference
 
-* `arn` - The Amazon Resource Name(ARN) of the key alias.
+* `arn` - Amazon Resource Name(ARN) of the key alias.
+* `id` - Amazon Resource Name(ARN) of the key alias.
 * `target_key_id` - Key identifier pointed to by the alias.
 * `target_key_arn` - ARN pointed to by the alias.

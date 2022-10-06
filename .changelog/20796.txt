@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_launch_template: add support for `http_protocol_ipv6` to `metadata_options`.
+```
+
+```release-note:enhancement
+resource/aws_launch_template: add plan time validation to `spot_options.block_duration_minutes`
+```

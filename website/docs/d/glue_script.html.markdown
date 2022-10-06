@@ -1,4 +1,5 @@
 ---
+subcategory: "Glue"
 layout: "aws"
 page_title: "AWS: aws_glue_script"
 description: |-
@@ -13,7 +14,7 @@ Use this data source to generate a Glue script from a Directed Acyclic Graph (DA
 
 ### Generate Python Script
 
-```hcl
+```terraform
 data "aws_glue_script" "example" {
   language = "PYTHON"
 
@@ -109,13 +110,13 @@ data "aws_glue_script" "example" {
 }
 
 output "python_script" {
-  value = "${data.aws_glue_script.example.python_script}"
+  value = data.aws_glue_script.example.python_script
 }
 ```
 
 ### Generate Scala Code
 
-```hcl
+```terraform
 data "aws_glue_script" "example" {
   language = "SCALA"
 
@@ -211,36 +212,37 @@ data "aws_glue_script" "example" {
 }
 
 output "scala_code" {
-  value = "${data.aws_glue_script.example.scala_code}"
+  value = data.aws_glue_script.example.scala_code
 }
 ```
 
 ## Argument Reference
 
-* `dag_edge` - (Required) A list of the edges in the DAG. Defined below.
-* `dag_node` - (Required) A list of the nodes in the DAG. Defined below.
-* `language` - (Optional) The programming language of the resulting code from the DAG. Defaults to `PYTHON`. Valid values are `PYTHON` and `SCALA`.
+* `dag_edge` - (Required) List of the edges in the DAG. Defined below.
+* `dag_node` - (Required) List of the nodes in the DAG. Defined below.
+* `language` - (Optional) Programming language of the resulting code from the DAG. Defaults to `PYTHON`. Valid values are `PYTHON` and `SCALA`.
 
 ### dag_edge Argument Reference
 
-* `source` - (Required) The ID of the node at which the edge starts.
-* `target` - (Required) The ID of the node at which the edge ends.
-* `target_parameter` - (Optional) The target of the edge.
+* `source` - (Required) ID of the node at which the edge starts.
+* `target` - (Required) ID of the node at which the edge ends.
+* `target_parameter` - (Optional) Target of the edge.
 
 ### dag_node Argument Reference
 
 * `args` - (Required) Nested configuration an argument or property of a node. Defined below.
-* `id` - (Required) A node identifier that is unique within the node's graph.
-* `node_type` - (Required) The type of node this is.
-* `line_number` - (Optional) The line number of the node.
+* `id` - (Required) Node identifier that is unique within the node's graph.
+* `node_type` - (Required) Type of node this is.
+* `line_number` - (Optional) Line number of the node.
 
 #### args Argument Reference
 
-* `name` - (Required) The name of the argument or property.
-* `value` - (Required) The value of the argument or property.
+* `name` - (Required) Name of the argument or property.
+* `value` - (Required) Value of the argument or property.
 * `param` - (Optional) Boolean if the value is used as a parameter. Defaults to `false`.
 
 ## Attributes Reference
 
-* `python_script` - The Python script generated from the DAG when the `language` argument is set to `PYTHON`.
-* `scala_code` - The Scala code generated from the DAG when the `language` argument is set to `SCALA`.
+* `id` - AWS Region.
+* `python_script` - Python script generated from the DAG when the `language` argument is set to `PYTHON`.
+* `scala_code` - Scala code generated from the DAG when the `language` argument is set to `SCALA`.

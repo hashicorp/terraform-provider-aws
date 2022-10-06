@@ -1,4 +1,5 @@
 ---
+subcategory: "DynamoDB Accelerator (DAX)"
 layout: "aws"
 page_title: "AWS: aws_dax_parameter_group"
 description: |-
@@ -11,7 +12,7 @@ Provides a DAX Parameter Group resource.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_dax_parameter_group" "example" {
   name = "example"
 
@@ -52,7 +53,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-DAX Parameter Group can be imported using the `name`, e.g.
+DAX Parameter Group can be imported using the `name`, e.g.,
 
 ```
 $ terraform import aws_dax_parameter_group.example my_dax_pg

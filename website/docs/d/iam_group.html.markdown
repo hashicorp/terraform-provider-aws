@@ -1,4 +1,5 @@
 ---
+subcategory: "IAM (Identity & Access Management)"
 layout: "aws"
 page_title: "AWS: aws_iam_group"
 description: |-
@@ -13,7 +14,7 @@ properties without having to hard code ARNs as input.
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_iam_group" "example" {
   group_name = "an_example_group_name"
 }
@@ -21,12 +22,18 @@ data "aws_iam_group" "example" {
 
 ## Argument Reference
 
-* `group_name` - (Required) The friendly IAM group name to match.
+* `group_name` - (Required) Friendly IAM group name to match.
 
 ## Attributes Reference
 
-* `arn` - The Amazon Resource Name (ARN) specifying the group.
+* `arn` - Group ARN.
+* `group_id` - Stable and unique string identifying the group.
+* `path` - Path to the group.
+* `users` - List of objects containing group member information. See below.
 
-* `path` - The path to the group.
+### `users`
 
-* `group_id` - The stable and unique string identifying the group.
+* `arn` - User ARN.
+* `path` - Path to the IAM user.
+* `user_id` - Stable and unique string identifying the IAM user.
+* `user_name` - Name of the IAM user.

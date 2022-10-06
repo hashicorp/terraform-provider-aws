@@ -1,4 +1,5 @@
 ---
+subcategory: "S3 (Simple Storage)"
 layout: "aws"
 page_title: "AWS: aws_canonical_user_id"
 description: |-
@@ -11,13 +12,15 @@ description: |-
 The Canonical User ID data source allows access to the [canonical user ID](http://docs.aws.amazon.com/general/latest/gr/acct-identifiers.html)
 for the effective account in which Terraform is working.  
 
+~> **NOTE:** To use this data source, you must have the `s3:ListAllMyBuckets` permission.
+
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_canonical_user_id" "current" {}
 
 output "canonical_user_id" {
-  value = "${data.aws_canonical_user_id.current.id}"
+  value = data.aws_canonical_user_id.current.id
 }
 ```
 
@@ -29,6 +32,6 @@ There are no arguments available for this data source.
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - The canonical user ID associated with the AWS account.
+* `id` - Canonical user ID associated with the AWS account.
 
-* `display_name` - The human-friendly name linked to the canonical user ID. The bucket owner's display name. **NOTE:** [This value](https://docs.aws.amazon.com/AmazonS3/latest/API/RESTServiceGET.html) is only included in the response in the US East (N. Virginia), US West (N. California), US West (Oregon), Asia Pacific (Singapore), Asia Pacific (Sydney), Asia Pacific (Tokyo), EU (Ireland), and South America (São Paulo) regions.
+* `display_name` - Human-friendly name linked to the canonical user ID. The bucket owner's display name. **NOTE:** [This value](https://docs.aws.amazon.com/AmazonS3/latest/API/RESTServiceGET.html) is only included in the response in the US East (N. Virginia), US West (N. California), US West (Oregon), Asia Pacific (Singapore), Asia Pacific (Sydney), Asia Pacific (Tokyo), EU (Ireland), and South America (São Paulo) regions.
