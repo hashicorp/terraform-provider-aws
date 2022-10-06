@@ -52,7 +52,7 @@ type opsworksLayerType struct {
 	CustomShortName  bool
 }
 
-func (lt *opsworksLayerType) SchemaResource() *schema.Resource {
+func (lt *opsworksLayerType) resourceSchema() *schema.Resource {
 	resourceSchema := map[string]*schema.Schema{
 		"arn": {
 			Type:     schema.TypeString,
