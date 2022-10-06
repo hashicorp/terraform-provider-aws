@@ -280,7 +280,7 @@ resource "aws_lightsail_certificate" "test" {
 `, rName, domainName)
 }
 
-func testAccCertificateConfig_SubjectAlternativeNames(rName string, domainName string, san string) string {
+func testAccCertificateConfig_subjectAlternativeNames(rName string, domainName string, san string) string {
 	return fmt.Sprintf(`
 resource "aws_lightsail_certificate" "test" {
   name                      = %[1]q
@@ -290,7 +290,7 @@ resource "aws_lightsail_certificate" "test" {
 `, rName, domainName, san)
 }
 
-func testAccCertificateConfig_Tags1(resourceName string, domainName string, tagKey1, tagValue1 string) string {
+func testAccCertificateConfig_tags1(resourceName string, domainName string, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_lightsail_certificate" "test" {
   name        = %[1]q
@@ -302,7 +302,7 @@ resource "aws_lightsail_certificate" "test" {
 `, resourceName, domainName, tagKey1, tagValue1)
 }
 
-func testAccCertificateConfig_Tags2(resourceName, domainName string, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccCertificateConfig_tags2(resourceName, domainName string, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_lightsail_certificate" "test" {
   name        = %[1]q
