@@ -56,7 +56,7 @@ func TestAccLightsailCertificate_basic(t *testing.T) {
 	})
 }
 
-func TestAccLightsailCertificate_SubjectAlternativeNames(t *testing.T) {
+func TestAccLightsailCertificate_subjectAlternativeNames(t *testing.T) {
 	var certificate lightsail.Certificate
 	resourceName := "aws_lightsail_certificate.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -74,7 +74,7 @@ func TestAccLightsailCertificate_SubjectAlternativeNames(t *testing.T) {
 		CheckDestroy:             testAccCheckCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCertificateConfig_SubjectAlternativeNames(rName, domainName, subjectAlternativeName),
+				Config: testAccCertificateConfig_subjectAlternativeNames(rName, domainName, subjectAlternativeName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateExists(resourceName, &certificate),
 					resource.TestCheckResourceAttr(resourceName, "subject_alternative_names.#", "2"),
@@ -106,7 +106,7 @@ func TestAccLightsailCertificate_DomainValidationOptions(t *testing.T) {
 		CheckDestroy:             testAccCheckCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCertificateConfig_SubjectAlternativeNames(rName, domainName, subjectAlternativeName),
+				Config: testAccCertificateConfig_subjectAlternativeNames(rName, domainName, subjectAlternativeName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateExists(resourceName, &certificate),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "domain_validation_options.*", map[string]string{
@@ -123,7 +123,7 @@ func TestAccLightsailCertificate_DomainValidationOptions(t *testing.T) {
 	})
 }
 
-func TestAccLightsailCertificate_Tags(t *testing.T) {
+func TestAccLightsailCertificate_tags(t *testing.T) {
 	var certificate lightsail.Certificate
 	resourceName := "aws_lightsail_certificate.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -140,7 +140,7 @@ func TestAccLightsailCertificate_Tags(t *testing.T) {
 		CheckDestroy:             testAccCheckCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCertificateConfig_Tags1(rName, domainName, "key1", "value1"),
+				Config: testAccCertificateConfig_tags1(rName, domainName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCertificateExists(resourceName, &certificate),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -153,7 +153,7 @@ func TestAccLightsailCertificate_Tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccCertificateConfig_Tags2(rName, domainName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccCertificateConfig_tags2(rName, domainName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCertificateExists(resourceName, &certificate),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -162,7 +162,7 @@ func TestAccLightsailCertificate_Tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccCertificateConfig_Tags1(rName, domainName, "key2", "value2"),
+				Config: testAccCertificateConfig_tags1(rName, domainName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCertificateExists(resourceName, &certificate),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
