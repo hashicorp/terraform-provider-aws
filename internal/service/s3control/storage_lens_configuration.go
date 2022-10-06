@@ -708,8 +708,8 @@ func expandStorageLensDataExportEncryption(tfMap map[string]interface{}) *s3cont
 		apiObject.SSEKMS = expandSSEKMS(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["sse_s3"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.SSES3 = expandSSES3(v[0].(map[string]interface{}))
+	if v, ok := tfMap["sse_s3"].([]interface{}); ok && len(v) > 0 {
+		apiObject.SSES3 = &s3control.SSES3{}
 	}
 
 	return apiObject
@@ -725,16 +725,6 @@ func expandSSEKMS(tfMap map[string]interface{}) *s3control.SSEKMS {
 	if v, ok := tfMap["key_id"].(string); ok && v != "" {
 		apiObject.KeyId = aws.String(v)
 	}
-
-	return apiObject
-}
-
-func expandSSES3(tfMap map[string]interface{}) *s3control.SSES3 {
-	if tfMap == nil {
-		return nil
-	}
-
-	apiObject := &s3control.SSES3{}
 
 	return apiObject
 }
