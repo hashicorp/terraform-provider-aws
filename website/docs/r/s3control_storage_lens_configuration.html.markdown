@@ -134,14 +134,14 @@ The `sse_kms` block supports the following:
 
 The `exclude` block supports the following:
 
-* `buckets` (Optional) List of S3 bucket names.
+* `buckets` (Optional) List of S3 bucket ARNs.
 * `regions` (Optional) List of AWS Regions.
 
 ### Include
 
 The `include` block supports the following:
 
-* `buckets` (Optional) List of S3 bucket names.
+* `buckets` (Optional) List of S3 bucket ARNs.
 * `regions` (Optional) List of AWS Regions.
 
 ## Attributes Reference

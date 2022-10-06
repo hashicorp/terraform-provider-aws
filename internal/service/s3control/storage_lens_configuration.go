@@ -122,8 +122,9 @@ func ResourceStorageLensConfiguration() *schema.Resource {
 																						Optional: true,
 																					},
 																					"min_storage_bytes_percentage": {
-																						Type:     schema.TypeFloat,
-																						Optional: true,
+																						Type:         schema.TypeFloat,
+																						Optional:     true,
+																						ValidateFunc: validation.FloatBetween(1.0, 100),
 																					},
 																				},
 																			},
@@ -252,12 +253,18 @@ func ResourceStorageLensConfiguration() *schema.Resource {
 									"buckets": {
 										Type:     schema.TypeSet,
 										Optional: true,
-										Elem:     &schema.Schema{Type: schema.TypeString},
+										Elem: &schema.Schema{
+											Type:         schema.TypeString,
+											ValidateFunc: verify.ValidARN,
+										},
 									},
 									"regions": {
 										Type:     schema.TypeSet,
 										Optional: true,
-										Elem:     &schema.Schema{Type: schema.TypeString},
+										Elem: &schema.Schema{
+											Type:         schema.TypeString,
+											ValidateFunc: verify.ValidRegionName,
+										},
 									},
 								},
 							},
@@ -271,12 +278,18 @@ func ResourceStorageLensConfiguration() *schema.Resource {
 									"buckets": {
 										Type:     schema.TypeSet,
 										Optional: true,
-										Elem:     &schema.Schema{Type: schema.TypeString},
+										Elem: &schema.Schema{
+											Type:         schema.TypeString,
+											ValidateFunc: verify.ValidARN,
+										},
 									},
 									"regions": {
 										Type:     schema.TypeSet,
 										Optional: true,
-										Elem:     &schema.Schema{Type: schema.TypeString},
+										Elem: &schema.Schema{
+											Type:         schema.TypeString,
+											ValidateFunc: verify.ValidRegionName,
+										},
 									},
 								},
 							},
@@ -483,7 +496,7 @@ func expandStorageLensConfiguration(tfMap map[string]interface{}) *s3control.Sto
 		apiObject.DataExport = expandStorageLensDataExport(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["enabled"].(bool); ok && v {
+	if v, ok := tfMap["enabled"].(bool); ok {
 		apiObject.IsEnabled = aws.Bool(v)
 	}
 
@@ -525,7 +538,7 @@ func expandActivityMetrics(tfMap map[string]interface{}) *s3control.ActivityMetr
 
 	apiObject := &s3control.ActivityMetrics{}
 
-	if v, ok := tfMap["enabled"].(bool); ok && v {
+	if v, ok := tfMap["enabled"].(bool); ok {
 		apiObject.IsEnabled = aws.Bool(v)
 	}
 
@@ -557,7 +570,7 @@ func expandPrefixLevel(tfMap map[string]interface{}) *s3control.PrefixLevel {
 
 	apiObject := &s3control.PrefixLevel{}
 
-	if v, ok := tfMap["activity_metrics"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+	if v, ok := tfMap["storage_metrics"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.StorageMetrics = expandPrefixLevelStorageMetrics(v[0].(map[string]interface{}))
 	}
 
@@ -571,7 +584,7 @@ func expandPrefixLevelStorageMetrics(tfMap map[string]interface{}) *s3control.Pr
 
 	apiObject := &s3control.PrefixLevelStorageMetrics{}
 
-	if v, ok := tfMap["enabled"].(bool); ok && v {
+	if v, ok := tfMap["enabled"].(bool); ok {
 		apiObject.IsEnabled = aws.Bool(v)
 	}
 
@@ -643,7 +656,7 @@ func expandCloudWatchMetrics(tfMap map[string]interface{}) *s3control.CloudWatch
 
 	apiObject := &s3control.CloudWatchMetrics{}
 
-	if v, ok := tfMap["enabled"].(bool); ok && v {
+	if v, ok := tfMap["enabled"].(bool); ok {
 		apiObject.IsEnabled = aws.Bool(v)
 	}
 
