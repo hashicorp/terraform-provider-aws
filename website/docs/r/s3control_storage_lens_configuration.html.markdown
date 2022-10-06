@@ -102,7 +102,7 @@ The `bucket_level` block supports the following:
 
 The `prefix_level` block supports the following:
 
-* `storage_metrics` (Optional) Prefix-level storage metrics for S3 Storage Lens. See [Prefix Level Storage Metrics](#prefix-level-storage-metrics) below for more details.
+* `storage_metrics` (Required) Prefix-level storage metrics for S3 Storage Lens. See [Prefix Level Storage Metrics](#prefix-level-storage-metrics) below for more details.
 
 ### Prefix Level Storage Metrics
 

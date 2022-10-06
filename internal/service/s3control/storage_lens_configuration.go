@@ -105,7 +105,7 @@ func ResourceStorageLensConfiguration() *schema.Resource {
 														Schema: map[string]*schema.Schema{
 															"storage_metrics": {
 																Type:     schema.TypeList,
-																Optional: true,
+																Required: true,
 																MaxItems: 1,
 																Elem: &schema.Resource{
 																	Schema: map[string]*schema.Schema{
