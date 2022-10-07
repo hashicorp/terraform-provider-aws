@@ -4,6 +4,7 @@ FEATURES:
 
 * **New Resource:** `aws_comprehend_document_classifier` ([#26951](https://github.com/hashicorp/terraform-provider-aws/issues/26951))
 * **New Resource:** `aws_s3control_storage_lens_configuration` ([#27097](https://github.com/hashicorp/terraform-provider-aws/issues/27097))
+* **New Resource:** `aws_transfer_tag` ([#27131](https://github.com/hashicorp/terraform-provider-aws/issues/27131))
 
 ENHANCEMENTS:
 
