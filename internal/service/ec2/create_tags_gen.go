@@ -9,6 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go/service/ec2/ec2iface"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -20,11 +21,11 @@ const eventualConsistencyTimeout = 5 * time.Minute
 // CreateTags creates ec2 service tags for new resources.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func CreateTags(conn *ec2.EC2, identifier string, tagsMap interface{}) error {
+func CreateTags(conn ec2iface.EC2API, identifier string, tagsMap interface{}) error {
 	return CreateTagsWithContext(context.Background(), conn, identifier, tagsMap)
 }
 
-func CreateTagsWithContext(ctx context.Context, conn *ec2.EC2, identifier string, tagsMap interface{}) error {
+func CreateTagsWithContext(ctx context.Context, conn ec2iface.EC2API, identifier string, tagsMap interface{}) error {
 	tags := tftags.New(tagsMap)
 	input := &ec2.CreateTagsInput{
 		Resources: aws.StringSlice([]string{identifier}),

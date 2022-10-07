@@ -35,9 +35,10 @@ func usage() {
 }
 
 type TemplateData struct {
-	AWSService     string
-	ClientType     string
-	ServicePackage string
+	AWSService             string
+	AWSServiceIfacePackage string
+	ClientType             string
+	ServicePackage         string
 
 	CreateTagsFunc        string
 	ParentNotFoundError   string
@@ -63,9 +64,10 @@ func main() {
 	}
 
 	templateData := TemplateData{
-		AWSService:     "ec2",
-		ServicePackage: "ec2",
-		ClientType:     "*ec2.EC2",
+		AWSService:             "ec2",
+		AWSServiceIfacePackage: "ec2/ec2iface",
+		ClientType:             "ec2iface.EC2API",
+		ServicePackage:         "ec2",
 
 		CreateTagsFunc:        *createTagsFunc,
 		RetryCreateOnNotFound: *retryCreateOnNotFound,
