@@ -17,14 +17,14 @@ import (
 
 const eventualConsistencyTimeout = 5 * time.Minute
 
-// CreateTags creates {{ .ServicePackage }} service tags for new resources.
+// {{ .CreateTagsFunc }} creates {{ .ServicePackage }} service tags for new resources.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func CreateTags(conn {{ .ClientType }}, identifier string{{ if .TagResTypeElem }}, resourceType string{{ end }}, tagsMap interface{}) error {
-	return CreateTagsWithContext(context.Background(), conn, identifier{{ if .TagResTypeElem }}, resourceType{{ end }}, tagsMap)
+func {{ .CreateTagsFunc }}(conn {{ .ClientType }}, identifier string{{ if .TagResTypeElem }}, resourceType string{{ end }}, tagsMap interface{}) error {
+	return {{ .CreateTagsFunc }}WithContext(context.Background(), conn, identifier{{ if .TagResTypeElem }}, resourceType{{ end }}, tagsMap)
 }
 
-func CreateTagsWithContext(ctx context.Context, conn {{ .ClientType }}, identifier string{{ if .TagResTypeElem }}, resourceType string{{ end }}, tagsMap interface{}) error {
+func {{ .CreateTagsFunc }}WithContext(ctx context.Context, conn {{ .ClientType }}, identifier string{{ if .TagResTypeElem }}, resourceType string{{ end }}, tagsMap interface{}) error {
 	tags := tftags.New(tagsMap)
 
 	{{- if .TagOpBatchSize }}

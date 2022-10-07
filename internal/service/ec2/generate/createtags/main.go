@@ -14,9 +14,8 @@ import (
 	"text/template"
 )
 
-const filename = `create_tags_gen.go`
-
 var (
+	createTagsFunc        = flag.String("CreateTagsFunc", "CreateTags", "createTagsFunc")
 	retryCreateOnNotFound = flag.Bool("RetryCreateOnNotFound", true, "retry create if resource not found")
 	tagOp                 = flag.String("TagOp", "CreateTags", "tag function")
 	tagOpBatchSize        = flag.String("TagOpBatchSize", "", "tag function batch size")
@@ -40,6 +39,7 @@ type TemplateData struct {
 	ClientType     string
 	ServicePackage string
 
+	CreateTagsFunc        string
 	ParentNotFoundError   string
 	RetryCreateOnNotFound bool
 	TagInCustomVal        string
@@ -57,10 +57,17 @@ func main() {
 	flag.Usage = usage
 	flag.Parse()
 
+	filename := `create_tags_gen.go`
+	if args := flag.Args(); len(args) > 0 {
+		filename = args[0]
+	}
+
 	templateData := TemplateData{
-		AWSService:            "ec2",
-		ServicePackage:        "ec2",
-		ClientType:            "*ec2.EC2",
+		AWSService:     "ec2",
+		ServicePackage: "ec2",
+		ClientType:     "*ec2.EC2",
+
+		CreateTagsFunc:        *createTagsFunc,
 		RetryCreateOnNotFound: *retryCreateOnNotFound,
 		TagInCustomVal:        *tagInCustomVal,
 		TagInIDElem:           *tagInIDElem,
