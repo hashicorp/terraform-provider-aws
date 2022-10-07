@@ -286,12 +286,14 @@ func (lt *opsworksLayerType) resourceSchema() *schema.Resource {
 		"load_based_auto_scaling": {
 			Type:     schema.TypeList,
 			Optional: true,
+			Computed: true,
 			MaxItems: 1,
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
 					"downscaling": {
 						Type:     schema.TypeList,
 						Optional: true,
+						Computed: true,
 						MaxItems: 1,
 						Elem: &schema.Resource{
 							Schema: map[string]*schema.Schema{
@@ -304,12 +306,12 @@ func (lt *opsworksLayerType) resourceSchema() *schema.Resource {
 								"cpu_threshold": {
 									Type:     schema.TypeFloat,
 									Optional: true,
-									Default:  -1,
+									Default:  30.0,
 								},
 								"ignore_metrics_time": {
 									Type:         schema.TypeInt,
 									Optional:     true,
-									Default:      1,
+									Default:      10,
 									ValidateFunc: validation.IntBetween(1, 100),
 								},
 								"instance_count": {
@@ -320,17 +322,15 @@ func (lt *opsworksLayerType) resourceSchema() *schema.Resource {
 								"load_threshold": {
 									Type:     schema.TypeFloat,
 									Optional: true,
-									Default:  -1,
 								},
 								"memory_threshold": {
 									Type:     schema.TypeFloat,
 									Optional: true,
-									Default:  -1,
 								},
 								"thresholds_wait_time": {
 									Type:         schema.TypeInt,
 									Optional:     true,
-									Default:      1,
+									Default:      10,
 									ValidateFunc: validation.IntBetween(1, 100),
 								},
 							},
@@ -343,6 +343,7 @@ func (lt *opsworksLayerType) resourceSchema() *schema.Resource {
 					"upscaling": {
 						Type:     schema.TypeList,
 						Optional: true,
+						Computed: true,
 						MaxItems: 1,
 						Elem: &schema.Resource{
 							Schema: map[string]*schema.Schema{
@@ -355,12 +356,12 @@ func (lt *opsworksLayerType) resourceSchema() *schema.Resource {
 								"cpu_threshold": {
 									Type:     schema.TypeFloat,
 									Optional: true,
-									Default:  -1,
+									Default:  80.0,
 								},
 								"ignore_metrics_time": {
 									Type:         schema.TypeInt,
 									Optional:     true,
-									Default:      1,
+									Default:      5,
 									ValidateFunc: validation.IntBetween(1, 100),
 								},
 								"instance_count": {
@@ -371,17 +372,15 @@ func (lt *opsworksLayerType) resourceSchema() *schema.Resource {
 								"load_threshold": {
 									Type:     schema.TypeFloat,
 									Optional: true,
-									Default:  -1,
 								},
 								"memory_threshold": {
 									Type:     schema.TypeFloat,
 									Optional: true,
-									Default:  -1,
 								},
 								"thresholds_wait_time": {
 									Type:         schema.TypeInt,
 									Optional:     true,
-									Default:      1,
+									Default:      5,
 									ValidateFunc: validation.IntBetween(1, 100),
 								},
 							},
