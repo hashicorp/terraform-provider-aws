@@ -63,6 +63,7 @@ jobs:
       - run: cd .ci/tools && go install github.com/katbyte/terrafmt
       - run: cd .ci/tools && go install github.com/terraform-linters/tflint
       - run: tflint -c .ci/.tflint.hcl --init
+
   validate-testsa:
     name: Validate Tests 1 of 2
     needs: [validate-init]
@@ -92,10 +93,11 @@ jobs:
       - run: find ~/ -type d -name .tflint.d
       - run: ls -hal ~/.tflint.d
       - run: ls -hal ~/.tflint.d/plugins
-      - run: echo -n "File count $( find ./internal -type f -regextype egrep -regex ${{ env.TEST_FILES_PARTITION2 }} | wc -l | xargs )"
+      - run: echo -n "File count $( find ./internal -type f -regextype egrep -regex ${{ env.TEST_FILES_PARTITION1 }} | wc -l | xargs )"
       - run: |
           find ./internal -type f -regextype egrep -regex ${{ env.TEST_FILES_PARTITION1 }} \
             | .ci/scripts/validate-terraform.sh
+
   validate-testsb:
     name: Validate Tests 2 of 2
     needs: [validate-init]
