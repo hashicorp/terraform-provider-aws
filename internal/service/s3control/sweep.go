@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/s3control"
+	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
@@ -51,6 +52,7 @@ func sweepAccessPoints(region string) error {
 		AccountId: aws.String(accountID),
 	}
 	sweepResources := make([]sweep.Sweepable, 0)
+	var sweeperErrs *multierror.Error
 
 	err = conn.ListAccessPointsPages(input, func(page *s3control.ListAccessPointsOutput, lastPage bool) bool {
 		if page == nil {
@@ -61,7 +63,7 @@ func sweepAccessPoints(region string) error {
 			r := ResourceAccessPoint()
 			d := r.Data(nil)
 			if id, err := AccessPointCreateResourceID(aws.StringValue(v.AccessPointArn)); err != nil {
-				log.Printf("[ERROR] %s", err)
+				sweeperErrs = multierror.Append(sweeperErrs, err)
 				continue
 			} else {
 				d.SetId(id)
@@ -75,7 +77,7 @@ func sweepAccessPoints(region string) error {
 
 	if sweep.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping S3 Access Point sweep for %s: %s", region, err)
-		return nil
+		return sweeperErrs.ErrorOrNil()
 	}
 
 	if err != nil {
@@ -85,10 +87,10 @@ func sweepAccessPoints(region string) error {
 	err = sweep.SweepOrchestrator(sweepResources)
 
 	if err != nil {
-		return fmt.Errorf("error sweeping S3 Access Points (%s): %w", region, err)
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping S3 Access Points (%s): %w", region, err))
 	}
 
-	return nil
+	return sweeperErrs.ErrorOrNil()
 }
 
 func sweepMultiRegionAccessPoints(region string) error {
