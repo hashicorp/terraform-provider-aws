@@ -66,7 +66,7 @@ The following arguments are supported:
 * `instance_id` - (Optional) The instance ID to apply an SSM document to. Use `targets` with key `InstanceIds` for document schema versions 2.0 and above.
 * `output_location` - (Optional) An output location block. Output Location is documented below.
 * `parameters` - (Optional) A block of arbitrary string parameters to pass to the SSM document.
-* `schedule_expression` - (Optional) A cron expression when the association will be applied to the target(s).
+* `schedule_expression` - (Optional) A cron or rate expression that specifies a schedule when the association runs. Example values: `"cron(0 2 ? * SUN *)"`, `"cron(30 23 * * ? *)"` or `"rate(7 days)"`. See [AWS reference documentation](https://docs.aws.amazon.com/systems-manager/latest/userguide/reference-cron-and-rate-expressions.html).
 * `targets` - (Optional) A block containing the targets of the SSM association. Targets are documented below. AWS currently supports a maximum of 5 targets.
 * `compliance_severity` - (Optional) The compliance severity for the association. Can be one of the following: `UNSPECIFIED`, `LOW`, `MEDIUM`, `HIGH` or `CRITICAL`
 * `max_concurrency` - (Optional) The maximum number of targets allowed to run the association at the same time. You can specify a number, for example 10, or a percentage of the target set, for example 10%.
