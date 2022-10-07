@@ -8,9 +8,9 @@ description: |-
 
 # Resource: aws_transfer_tag
 
-Manages an individual Transfer Family resource tag. This resource should only be used in cases where Transfer Family resources are created outside Terraform (e.g., Servers without AWS Management Console).
+Manages an individual Transfer Family resource tag. This resource should only be used in cases where Transfer Family resources are created outside Terraform (e.g., Servers without AWS Management Console) or the tag key has the `aws:` prefix.
 
-~> **NOTE:** This tagging resource should not be combined with the Terraform resource for managing the parent resource. For example, using `aws_transfer_server` and `aws_transfer_tag` to manage tags of the same ASG will cause a perpetual difference where the `aws_transfer_server` resource will try to remove the tag being added by the `aws_transfer_tag` resource.
+~> **NOTE:** This tagging resource should not be combined with the Terraform resource for managing the parent resource. For example, using `aws_transfer_server` and `aws_transfer_tag` to manage tags of the same server will cause a perpetual difference where the `aws_transfer_server` resource will try to remove the tag being added by the `aws_transfer_tag` resource.
 
 ~> **NOTE:** This tagging resource does not use the [provider `ignore_tags` configuration](/docs/providers/aws/index.html#ignore_tags).
 
@@ -21,10 +21,16 @@ resource "aws_transfer_server" "example" {
   identity_provider_type = "SERVICE_MANAGED"
 }
 
-resource "aws_transfer_tag" "example" {
+resource "aws_transfer_tag" "zone_id" {
   resource_arn = aws_transfer_server.example.arn
-  key          = "testkey"
-  value        = "testvalue"
+  key          = "aws:transfer:route53HostedZoneId"
+  value        = "/hostedzone/MyHostedZoneId"
+}
+
+resource "aws_transfer_tag" "hostname" {
+  resource_arn = aws_transfer_server.example.arn
+  key          = "aws:transfer:customHostname"
+  value        = "example.com"
 }
 ```
 
