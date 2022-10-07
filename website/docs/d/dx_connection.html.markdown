@@ -33,4 +33,5 @@ In addition to all arguments above, the following attributes are exported:
 * `location` - AWS Direct Connect location where the connection is located.
 * `owner_account_id` - ID of the AWS account that owns the connection.
 * `provider_name` - Name of the service provider associated with the connection.
+* `vlan_id` - The VLAN ID.
 * `tags` - Map of tags for the resource.
