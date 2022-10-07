@@ -3,6 +3,7 @@
 package ecs_test
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/service/ecs"
@@ -29,7 +30,7 @@ func testAccCheckTagDestroy(s *terraform.State) error {
 			return err
 		}
 
-		_, err = tfecs.GetTag(conn, identifier, key)
+		_, err = tfecs.GetTagWithContext(context.Background(), conn, identifier, key)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -64,7 +65,7 @@ func testAccCheckTagExists(resourceName string) resource.TestCheckFunc {
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ECSConn
 
-		_, err = tfecs.GetTag(conn, identifier, key)
+		_, err = tfecs.GetTagWithContext(context.Background(), conn, identifier, key)
 
 		return err
 	}
