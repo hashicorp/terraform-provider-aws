@@ -1,10 +1,12 @@
 package codepipeline
 
 import (
+	"context"
 	"crypto/sha256"
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"log"
 	"regexp"
 	"strings"
 
@@ -17,12 +19,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
@@ -33,10 +33,10 @@ const (
 
 func ResourceCodePipeline() *schema.Resource { // nosemgrep:ci.codepipeline-in-func-name
 	return &schema.Resource{
-		Create: resourceCreate,
-		Read:   resourceRead,
-		Update: resourceUpdate,
-		Delete: resourceDelete,
+		CreateWithoutTimeout: resourceCreate,
+		ReadWithoutTimeout:   resourceRead,
+		UpdateWithoutTimeout: resourceUpdate,
+		DeleteWithoutTimeout: resourceDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -209,15 +209,18 @@ func ResourceCodePipeline() *schema.Resource { // nosemgrep:ci.codepipeline-in-f
 	}
 }
 
-func resourceCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).CodePipelineConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
+	name := d.Get("name").(string)
 	pipeline, err := expand(d)
+
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
+
 	params := &codepipeline.CreatePipelineInput{
 		Pipeline: pipeline,
 		Tags:     Tags(tags.IgnoreAWS()),
@@ -227,7 +230,7 @@ func resourceCreate(d *schema.ResourceData, meta interface{}) error {
 	err = resource.Retry(propagationTimeout, func() *resource.RetryError {
 		var err error
 
-		resp, err = conn.CreatePipeline(params)
+		resp, err = conn.CreatePipelineWithContext(ctx, params)
 
 		if tfawserr.ErrMessageContains(err, codepipeline.ErrCodeInvalidStructureException, "not authorized") {
 			return resource.RetryableError(err)
@@ -240,18 +243,18 @@ func resourceCreate(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	})
 	if tfresource.TimedOut(err) {
-		resp, err = conn.CreatePipeline(params)
+		resp, err = conn.CreatePipelineWithContext(ctx, params)
 	}
 	if err != nil {
-		return fmt.Errorf("Error creating CodePipeline: %w", err)
+		return diag.Errorf("creating CodePipeline (%s): %s", name, err)
 	}
 	if resp.Pipeline == nil {
-		return fmt.Errorf("Error creating CodePipeline: invalid response from AWS")
+		return diag.Errorf("creating CodePipeline: invalid response from AWS")
 	}
 
 	d.SetId(aws.StringValue(resp.Pipeline.Name))
 
-	return resourceRead(d, meta)
+	return resourceRead(ctx, d, meta)
 }
 
 func expand(d *schema.ResourceData) (*codepipeline.PipelineDeclaration, error) {
@@ -528,23 +531,23 @@ func flattenActionsInputArtifacts(artifacts []*codepipeline.InputArtifact) []str
 	return values
 }
 
-func resourceRead(d *schema.ResourceData, meta interface{}) error {
+func resourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).CodePipelineConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	resp, err := conn.GetPipeline(&codepipeline.GetPipelineInput{
+	resp, err := conn.GetPipelineWithContext(ctx, &codepipeline.GetPipelineInput{
 		Name: aws.String(d.Id()),
 	})
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, codepipeline.ErrCodePipelineNotFoundException) {
-		create.LogNotFoundRemoveState(names.CodePipeline, create.ErrActionReading, ResNamePipeline, d.Id())
+		log.Printf("[WARN] CodePipeline %s not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return create.Error(names.CodePipeline, create.ErrActionReading, ResNamePipeline, d.Id(), err)
+		return diag.Errorf("reading CodePipeline (%s): %s", d.Id(), err)
 	}
 
 	metadata := resp.Metadata
@@ -552,16 +555,16 @@ func resourceRead(d *schema.ResourceData, meta interface{}) error {
 
 	if pipeline.ArtifactStore != nil {
 		if err := d.Set("artifact_store", flattenArtifactStore(pipeline.ArtifactStore)); err != nil {
-			return err
+			return diag.Errorf("setting artifact_store: %s", err)
 		}
 	} else if pipeline.ArtifactStores != nil {
 		if err := d.Set("artifact_store", flattenArtifactStores(pipeline.ArtifactStores)); err != nil {
-			return err
+			return diag.Errorf("setting artifact_store: %s", err)
 		}
 	}
 
 	if err := d.Set("stage", flattenStages(pipeline.Stages, d)); err != nil {
-		return err
+		return diag.Errorf("setting stage: %s", err)
 	}
 
 	arn := aws.StringValue(metadata.PipelineArn)
@@ -569,41 +572,43 @@ func resourceRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("name", pipeline.Name)
 	d.Set("role_arn", pipeline.RoleArn)
 
-	tags, err := ListTags(conn, arn)
+	tags, err := ListTagsWithContext(ctx, conn, arn)
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for CodePipeline (%s): %w", arn, err)
+		return diag.Errorf("listing tags for CodePipeline (%s): %s", arn, err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return diag.Errorf("setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return diag.Errorf("setting tags_all: %s", err)
 	}
 
 	return nil
 }
 
-func resourceUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).CodePipelineConn
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		pipeline, err := expand(d)
+
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
+
 		params := &codepipeline.UpdatePipelineInput{
 			Pipeline: pipeline,
 		}
-		_, err = conn.UpdatePipeline(params)
+		_, err = conn.UpdatePipelineWithContext(ctx, params)
 
 		if err != nil {
-			return fmt.Errorf("[ERROR] Error updating CodePipeline (%s): %w", d.Id(), err)
+			return diag.Errorf("updating CodePipeline (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -611,18 +616,19 @@ func resourceUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, arn, o, n); err != nil {
-			return fmt.Errorf("error updating CodePipeline (%s) tags: %w", arn, err)
+		if err := UpdateTagsWithContext(ctx, conn, arn, o, n); err != nil {
+			return diag.Errorf("updating CodePipeline (%s) tags: %s", arn, err)
 		}
 	}
 
-	return resourceRead(d, meta)
+	return resourceRead(ctx, d, meta)
 }
 
-func resourceDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).CodePipelineConn
 
-	_, err := conn.DeletePipeline(&codepipeline.DeletePipelineInput{
+	log.Printf("[INFO] Deleting CodePipeline: %s", d.Id())
+	_, err := conn.DeletePipelineWithContext(ctx, &codepipeline.DeletePipelineInput{
 		Name: aws.String(d.Id()),
 	})
 
@@ -631,10 +637,10 @@ func resourceDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting CodePipeline (%s): %w", d.Id(), err)
+		return diag.Errorf("deleting CodePipeline (%s): %s", d.Id(), err)
 	}
 
-	return err
+	return nil
 }
 
 func resourceValidateActionProvider(i interface{}, path cty.Path) diag.Diagnostics {
