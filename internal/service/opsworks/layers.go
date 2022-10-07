@@ -283,6 +283,113 @@ func (lt *opsworksLayerType) resourceSchema() *schema.Resource {
 			Optional: true,
 			Default:  true,
 		},
+		"load_based_auto_scaling": {
+			Type:     schema.TypeList,
+			Optional: true,
+			MaxItems: 1,
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					"downscaling": {
+						Type:     schema.TypeList,
+						Optional: true,
+						MaxItems: 1,
+						Elem: &schema.Resource{
+							Schema: map[string]*schema.Schema{
+								"alarms": {
+									Type:     schema.TypeList,
+									Optional: true,
+									Elem:     &schema.Schema{Type: schema.TypeString},
+									MaxItems: 5,
+								},
+								"cpu_threshold": {
+									Type:     schema.TypeFloat,
+									Optional: true,
+									Default:  -1,
+								},
+								"ignore_metrics_time": {
+									Type:         schema.TypeInt,
+									Optional:     true,
+									Default:      1,
+									ValidateFunc: validation.IntBetween(1, 100),
+								},
+								"instance_count": {
+									Type:     schema.TypeInt,
+									Optional: true,
+									Default:  1,
+								},
+								"load_threshold": {
+									Type:     schema.TypeFloat,
+									Optional: true,
+									Default:  -1,
+								},
+								"memory_threshold": {
+									Type:     schema.TypeFloat,
+									Optional: true,
+									Default:  -1,
+								},
+								"thresholds_wait_time": {
+									Type:         schema.TypeInt,
+									Optional:     true,
+									Default:      1,
+									ValidateFunc: validation.IntBetween(1, 100),
+								},
+							},
+						},
+					},
+					"enable": {
+						Type:     schema.TypeBool,
+						Optional: true,
+					},
+					"upscaling": {
+						Type:     schema.TypeList,
+						Optional: true,
+						MaxItems: 1,
+						Elem: &schema.Resource{
+							Schema: map[string]*schema.Schema{
+								"alarms": {
+									Type:     schema.TypeList,
+									Optional: true,
+									Elem:     &schema.Schema{Type: schema.TypeString},
+									MaxItems: 5,
+								},
+								"cpu_threshold": {
+									Type:     schema.TypeFloat,
+									Optional: true,
+									Default:  -1,
+								},
+								"ignore_metrics_time": {
+									Type:         schema.TypeInt,
+									Optional:     true,
+									Default:      1,
+									ValidateFunc: validation.IntBetween(1, 100),
+								},
+								"instance_count": {
+									Type:     schema.TypeInt,
+									Optional: true,
+									Default:  1,
+								},
+								"load_threshold": {
+									Type:     schema.TypeFloat,
+									Optional: true,
+									Default:  -1,
+								},
+								"memory_threshold": {
+									Type:     schema.TypeFloat,
+									Optional: true,
+									Default:  -1,
+								},
+								"thresholds_wait_time": {
+									Type:         schema.TypeInt,
+									Optional:     true,
+									Default:      1,
+									ValidateFunc: validation.IntBetween(1, 100),
+								},
+							},
+						},
+					},
+				},
+			},
+		},
 		"system_packages": {
 			Type:     schema.TypeSet,
 			Optional: true,
@@ -466,11 +573,22 @@ func (lt *opsworksLayerType) Create(ctx context.Context, d *schema.ResourceData,
 		v := v.(string)
 		_, err := conn.AttachElasticLoadBalancerWithContext(ctx, &opsworks.AttachElasticLoadBalancerInput{
 			ElasticLoadBalancerName: aws.String(v),
-			LayerId:                 output.LayerId,
+			LayerId:                 aws.String(d.Id()),
 		})
 
 		if err != nil {
 			return diag.Errorf("attaching OpsWorks Layer (%s) load balancer (%s): %s", d.Id(), v, err)
+		}
+	}
+
+	if v, ok := d.GetOk("load_based_auto_scaling"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input := expandSetLoadBasedAutoScalingInput(v.([]interface{})[0].(map[string]interface{}))
+		input.LayerId = aws.String(d.Id())
+
+		_, err := conn.SetLoadBasedAutoScalingWithContext(ctx, input)
+
+		if err != nil {
+			return diag.Errorf("setting OpsWorks Layer (%s) load-based auto scaling configuration: %s", d.Id(), err)
 		}
 	}
 
@@ -576,6 +694,18 @@ func (lt *opsworksLayerType) Read(ctx context.Context, d *schema.ResourceData, m
 		return diag.Errorf("reading OpsWorks Layer (%s) load balancers: %s", d.Id(), err)
 	}
 
+	loadBasedAutoScalingConfiguration, err := findLoadBasedAutoScalingConfigurationByLayerID(ctx, conn, d.Id())
+
+	if err == nil {
+		if err := d.Set("load_based_auto_scaling", []interface{}{flattenLoadBasedAutoScalingConfiguration(loadBasedAutoScalingConfiguration)}); err != nil {
+			return diag.Errorf("setting load_based_auto_scaling: %s", err)
+		}
+	} else if tfresource.NotFound(err) {
+		d.Set("load_based_auto_scaling", nil)
+	} else {
+		return diag.Errorf("reading OpsWorks Layer (%s) load-based auto scaling configurations: %s", d.Id(), err)
+	}
+
 	tags, err := ListTags(conn, arn)
 
 	if err != nil {
@@ -599,7 +729,7 @@ func (lt *opsworksLayerType) Read(ctx context.Context, d *schema.ResourceData, m
 func (lt *opsworksLayerType) Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).OpsWorksConn
 
-	if d.HasChangesExcept("elastic_load_balancer", "tags", "tags_all") {
+	if d.HasChangesExcept("elastic_load_balancer", "load_based_auto_scaling", "tags", "tags_all") {
 		input := &opsworks.UpdateLayerInput{
 			LayerId: aws.String(d.Id()),
 		}
@@ -739,6 +869,17 @@ func (lt *opsworksLayerType) Update(ctx context.Context, d *schema.ResourceData,
 		}
 	}
 
+	if d.HasChange("load_based_auto_scaling") {
+		input := expandSetLoadBasedAutoScalingInput(d.Get("load_based_auto_scaling").([]interface{})[0].(map[string]interface{}))
+		input.LayerId = aws.String(d.Id())
+
+		_, err := conn.SetLoadBasedAutoScalingWithContext(ctx, input)
+
+		if err != nil {
+			return diag.Errorf("setting OpsWorks Layer (%s) load-based auto scaling configuration: %s", d.Id(), err)
+		}
+	}
+
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
@@ -830,6 +971,28 @@ func findElasticLoadBalancerByLayerID(ctx context.Context, conn *opsworks.OpsWor
 	}
 
 	return output.ElasticLoadBalancers[0], nil
+}
+
+func findLoadBasedAutoScalingConfigurationByLayerID(ctx context.Context, conn *opsworks.OpsWorks, id string) (*opsworks.LoadBasedAutoScalingConfiguration, error) {
+	input := &opsworks.DescribeLoadBasedAutoScalingInput{
+		LayerIds: aws.StringSlice([]string{id}),
+	}
+
+	output, err := conn.DescribeLoadBasedAutoScalingWithContext(ctx, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || len(output.LoadBasedAutoScalingConfigurations) == 0 || output.LoadBasedAutoScalingConfigurations[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output.LoadBasedAutoScalingConfigurations); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return output.LoadBasedAutoScalingConfigurations[0], nil
 }
 
 func (m opsworksLayerTypeAttributeMap) apiAttributesToResourceData(apiAttributes map[string]string, d *schema.ResourceData) error {
@@ -1192,4 +1355,124 @@ func flattenVolumeConfigurations(apiObjects []*opsworks.VolumeConfiguration) []i
 	}
 
 	return tfList
+}
+
+func expandSetLoadBasedAutoScalingInput(tfMap map[string]interface{}) *opsworks.SetLoadBasedAutoScalingInput {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &opsworks.SetLoadBasedAutoScalingInput{}
+
+	if v, ok := tfMap["downscaling"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		apiObject.DownScaling = expandAutoScalingThresholds(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["enable"].(bool); ok {
+		apiObject.Enable = aws.Bool(v)
+	}
+
+	if v, ok := tfMap["upscaling"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		apiObject.UpScaling = expandAutoScalingThresholds(v[0].(map[string]interface{}))
+	}
+
+	return apiObject
+}
+
+func expandAutoScalingThresholds(tfMap map[string]interface{}) *opsworks.AutoScalingThresholds {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &opsworks.AutoScalingThresholds{}
+
+	if v, ok := tfMap["alarms"].([]interface{}); ok && len(v) > 0 {
+		apiObject.Alarms = flex.ExpandStringList(v)
+	}
+
+	if v, ok := tfMap["cpu_threshold"].(float64); ok && v != 0.0 {
+		apiObject.CpuThreshold = aws.Float64(v)
+	}
+
+	if v, ok := tfMap["ignore_metrics_time"].(int); ok && v != 0 {
+		apiObject.IgnoreMetricsTime = aws.Int64(int64(v))
+	}
+
+	if v, ok := tfMap["instance_count"].(int); ok && v != 0 {
+		apiObject.InstanceCount = aws.Int64(int64(v))
+	}
+
+	if v, ok := tfMap["load_threshold"].(float64); ok && v != 0.0 {
+		apiObject.LoadThreshold = aws.Float64(v)
+	}
+
+	if v, ok := tfMap["memory_threshold"].(float64); ok && v != 0.0 {
+		apiObject.MemoryThreshold = aws.Float64(v)
+	}
+
+	if v, ok := tfMap["thresholds_wait_time"].(int); ok && v != 0 {
+		apiObject.ThresholdsWaitTime = aws.Int64(int64(v))
+	}
+
+	return apiObject
+}
+
+func flattenLoadBasedAutoScalingConfiguration(apiObject *opsworks.LoadBasedAutoScalingConfiguration) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.DownScaling; v != nil {
+		tfMap["downscaling"] = []interface{}{flattenAutoScalingThresholds(v)}
+	}
+
+	if v := apiObject.Enable; v != nil {
+		tfMap["enable"] = aws.BoolValue(v)
+	}
+
+	if v := apiObject.UpScaling; v != nil {
+		tfMap["upscaling"] = []interface{}{flattenAutoScalingThresholds(v)}
+	}
+
+	return tfMap
+}
+
+func flattenAutoScalingThresholds(apiObject *opsworks.AutoScalingThresholds) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.Alarms; v != nil {
+		tfMap["alarms"] = aws.StringValueSlice(v)
+	}
+
+	if v := apiObject.CpuThreshold; v != nil {
+		tfMap["cpu_threshold"] = aws.Float64Value(v)
+	}
+
+	if v := apiObject.IgnoreMetricsTime; v != nil {
+		tfMap["ignore_metrics_time"] = aws.Int64Value(v)
+	}
+
+	if v := apiObject.InstanceCount; v != nil {
+		tfMap["instance_count"] = aws.Int64Value(v)
+	}
+
+	if v := apiObject.LoadThreshold; v != nil {
+		tfMap["load_threshold"] = aws.Float64Value(v)
+	}
+
+	if v := apiObject.MemoryThreshold; v != nil {
+		tfMap["memory_threshold"] = aws.Float64Value(v)
+	}
+
+	if v := apiObject.ThresholdsWaitTime; v != nil {
+		tfMap["thresholds_wait_time"] = aws.Int64Value(v)
+	}
+
+	return tfMap
 }
