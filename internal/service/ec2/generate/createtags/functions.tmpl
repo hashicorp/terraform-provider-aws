@@ -3,6 +3,7 @@
 package {{ .ServicePackage }}
 
 import (
+    "context"
 	"fmt"
 	"time"
 
@@ -14,12 +15,16 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
-const EventualConsistencyTimeout = 5 * time.Minute
+const eventualConsistencyTimeout = 5 * time.Minute
 
 // CreateTags creates {{ .ServicePackage }} service tags for new resources.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
 func CreateTags(conn {{ .ClientType }}, identifier string{{ if .TagResTypeElem }}, resourceType string{{ end }}, tagsMap interface{}) error {
+	return CreateTagsWithContext(context.Background(), conn, identifier{{ if .TagResTypeElem }}, resourceType{{ end }}, tagsMap)
+}
+
+func CreateTagsWithContext(ctx context.Context, conn {{ .ClientType }}, identifier string{{ if .TagResTypeElem }}, resourceType string{{ end }}, tagsMap interface{}) error {
 	tags := tftags.New(tagsMap)
 
 	{{- if .TagOpBatchSize }}
@@ -45,15 +50,15 @@ func CreateTags(conn {{ .ClientType }}, identifier string{{ if .TagResTypeElem }
 
 	{{- if .RetryCreateOnNotFound }}
 
-	_, err := tfresource.RetryWhenNotFound(EventualConsistencyTimeout, func() (interface{}, error) {
-		output, err := conn.{{ .TagOp }}(input)
+	_, err := tfresource.RetryWhenNotFoundContext(ctx, eventualConsistencyTimeout, func() (interface{}, error) {
+		output, err := conn.{{ .TagOp }}WithContext(ctx, input)
 
 		{{ .ParentNotFoundError }}
 
 		return output, err
 	})
 	{{- else }}
-	_, err := conn.{{ .TagOp }}(input)
+	_, err := conn.{{ .TagOp }}WithContext(ctx, input)
 	{{- end }}
 
 	if err != nil {
