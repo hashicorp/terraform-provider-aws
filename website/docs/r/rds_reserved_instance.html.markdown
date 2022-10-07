@@ -36,7 +36,7 @@ resource "aws_rds_reserved_instance" "example" {
 
 The following arguments are required:
 
-* `offering_id` - (Required) ID of the Reserved DB instance offering to purchase. To determine an `offering_id`, see the [`aws_rds_reserved_instance_offering`](/docs/providers/aws/r/rds_reserved_instance_offering.html) data source.
+* `offering_id` - (Required) ID of the Reserved DB instance offering to purchase. To determine an `offering_id`, see the `aws_rds_reserved_instance_offering` data source.
 
 The following arguments are optional:
 
