@@ -47,7 +47,7 @@ var (
 	tagResTypeElem        = flag.String("TagResTypeElem", "", "tagResTypeElem")
 	tagType               = flag.String("TagType", "Tag", "tagType")
 	tagType2              = flag.String("TagType2", "", "tagType")
-	TagTypeAddBoolElem    = flag.String("TagTypeAddBoolElem", "", "TagTypeAddBoolElem")
+	tagTypeAddBoolElem    = flag.String("TagTypeAddBoolElem", "", "TagTypeAddBoolElem")
 	tagTypeIDElem         = flag.String("TagTypeIDElem", "", "tagTypeIDElem")
 	tagTypeKeyElem        = flag.String("TagTypeKeyElem", "Key", "tagTypeKeyElem")
 	tagTypeValElem        = flag.String("TagTypeValElem", "Value", "tagTypeValElem")
@@ -55,6 +55,7 @@ var (
 	untagInNeedTagKeyType = flag.String("UntagInNeedTagKeyType", "", "untagInNeedTagKeyType")
 	untagInTagsElem       = flag.String("UntagInTagsElem", "TagKeys", "untagInTagsElem")
 	untagOp               = flag.String("UntagOp", "UntagResource", "untagOp")
+	updateTagsFunc        = flag.String("UpdateTagsFunc", "UpdateTags", "updateTagsFunc")
 
 	parentNotFoundErrCode = flag.String("ParentNotFoundErrCode", "", "Parent 'NotFound' Error Code")
 	parentNotFoundErrMsg  = flag.String("ParentNotFoundErrMsg", "", "Parent 'NotFound' Error Message")
@@ -150,6 +151,7 @@ type TemplateData struct {
 	UntagInNeedTagType      bool
 	UntagInTagsElem         string
 	UntagOp                 string
+	UpdateTagsFunc          string
 
 	// The following are specific to writing import paths in the `headerBody`;
 	// to include the package, set the corresponding field's value to true
@@ -240,8 +242,8 @@ func main() {
 		TagResTypeElem:          *tagResTypeElem,
 		TagType:                 *tagType,
 		TagType2:                *tagType2,
-		TagTypeAddBoolElem:      *TagTypeAddBoolElem,
-		TagTypeAddBoolElemSnake: ToSnakeCase(*TagTypeAddBoolElem),
+		TagTypeAddBoolElem:      *tagTypeAddBoolElem,
+		TagTypeAddBoolElemSnake: ToSnakeCase(*tagTypeAddBoolElem),
 		TagTypeIDElem:           *tagTypeIDElem,
 		TagTypeKeyElem:          *tagTypeKeyElem,
 		TagTypeValElem:          *tagTypeValElem,
@@ -250,6 +252,7 @@ func main() {
 		UntagInNeedTagType:      *untagInNeedTagType,
 		UntagInTagsElem:         *untagInTagsElem,
 		UntagOp:                 *untagOp,
+		UpdateTagsFunc:          *updateTagsFunc,
 	}
 
 	templateBody := NewTemplateBody(*sdkVersion, *kvtValues)
