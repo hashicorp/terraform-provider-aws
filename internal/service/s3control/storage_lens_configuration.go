@@ -12,7 +12,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws/transport/http"
 	"github.com/aws/aws-sdk-go-v2/service/s3control"
 	"github.com/aws/aws-sdk-go-v2/service/s3control/types"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -450,10 +449,6 @@ func resourceStorageLensConfigurationDelete(ctx context.Context, d *schema.Resou
 		AccountId: aws.String(accountID),
 		ConfigId:  aws.String(configID),
 	})
-
-	if tfawserr.ErrCodeEquals(err, errCodeNoSuchConfiguration) {
-		return nil
-	}
 
 	if err != nil {
 		return diag.Errorf("deleting S3 Storage Lens Configuration (%s): %s", d.Id(), err)
