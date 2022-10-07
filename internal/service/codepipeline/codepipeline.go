@@ -37,6 +37,7 @@ func ResourceCodePipeline() *schema.Resource { // nosemgrep:ci.codepipeline-in-f
 		Read:   resourceRead,
 		Update: resourceUpdate,
 		Delete: resourceDelete,
+
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -46,36 +47,11 @@ func ResourceCodePipeline() *schema.Resource { // nosemgrep:ci.codepipeline-in-f
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
-			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 100),
-					validation.StringMatch(regexp.MustCompile(`[A-Za-z0-9.@\-_]+`), ""),
-				),
-			},
-
-			"role_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: verify.ValidARN,
-			},
 			"artifact_store": {
 				Type:     schema.TypeSet,
 				Required: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"location": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"type": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringInSlice(codepipeline.ArtifactStoreType_Values(), false),
-						},
 						"encryption_key": {
 							Type:     schema.TypeList,
 							MaxItems: 1,
@@ -94,13 +70,36 @@ func ResourceCodePipeline() *schema.Resource { // nosemgrep:ci.codepipeline-in-f
 								},
 							},
 						},
+						"location": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
 						"region": {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
 						},
+						"type": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringInSlice(codepipeline.ArtifactStoreType_Values(), false),
+						},
 					},
 				},
+			},
+			"name": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(1, 100),
+					validation.StringMatch(regexp.MustCompile(`[A-Za-z0-9.@\-_]+`), ""),
+				),
+			},
+			"role_arn": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: verify.ValidARN,
 			},
 			"stage": {
 				Type:     schema.TypeList,
@@ -108,19 +107,16 @@ func ResourceCodePipeline() *schema.Resource { // nosemgrep:ci.codepipeline-in-f
 				Required: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"name": {
-							Type:     schema.TypeString,
-							Required: true,
-							ValidateFunc: validation.All(
-								validation.StringLenBetween(1, 100),
-								validation.StringMatch(regexp.MustCompile(`[A-Za-z0-9.@\-_]+`), ""),
-							),
-						},
 						"action": {
 							Type:     schema.TypeList,
 							Required: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
+									"category": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.StringInSlice(codepipeline.ActionCategory_Values(), false),
+									},
 									"configuration": {
 										Type:     schema.TypeMap,
 										Optional: true,
@@ -131,35 +127,7 @@ func ResourceCodePipeline() *schema.Resource { // nosemgrep:ci.codepipeline-in-f
 										Elem:             &schema.Schema{Type: schema.TypeString},
 										DiffSuppressFunc: suppressStageActionConfiguration,
 									},
-									"category": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validation.StringInSlice(codepipeline.ActionCategory_Values(), false),
-									},
-									"owner": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validation.StringInSlice(codepipeline.ActionOwner_Values(), false),
-									},
-									"provider": {
-										Type:             schema.TypeString,
-										Required:         true,
-										ValidateDiagFunc: resourceValidateActionProvider,
-									},
-									"version": {
-										Type:     schema.TypeString,
-										Required: true,
-										ValidateFunc: validation.All(
-											validation.StringLenBetween(1, 9),
-											validation.StringMatch(regexp.MustCompile(`[0-9A-Za-z_-]+`), ""),
-										),
-									},
 									"input_artifacts": {
-										Type:     schema.TypeList,
-										Optional: true,
-										Elem:     &schema.Schema{Type: schema.TypeString},
-									},
-									"output_artifacts": {
 										Type:     schema.TypeList,
 										Optional: true,
 										Elem:     &schema.Schema{Type: schema.TypeString},
@@ -172,6 +140,34 @@ func ResourceCodePipeline() *schema.Resource { // nosemgrep:ci.codepipeline-in-f
 											validation.StringMatch(regexp.MustCompile(`[A-Za-z0-9.@\-_]+`), ""),
 										),
 									},
+									"namespace": {
+										Type:     schema.TypeString,
+										Optional: true,
+										ValidateFunc: validation.All(
+											validation.StringLenBetween(1, 100),
+											validation.StringMatch(regexp.MustCompile(`[A-Za-z0-9@\-_]+`), ""),
+										),
+									},
+									"output_artifacts": {
+										Type:     schema.TypeList,
+										Optional: true,
+										Elem:     &schema.Schema{Type: schema.TypeString},
+									},
+									"owner": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.StringInSlice(codepipeline.ActionOwner_Values(), false),
+									},
+									"provider": {
+										Type:             schema.TypeString,
+										Required:         true,
+										ValidateDiagFunc: resourceValidateActionProvider,
+									},
+									"region": {
+										Type:     schema.TypeString,
+										Optional: true,
+										Computed: true,
+									},
 									"role_arn": {
 										Type:         schema.TypeString,
 										Optional:     true,
@@ -183,21 +179,24 @@ func ResourceCodePipeline() *schema.Resource { // nosemgrep:ci.codepipeline-in-f
 										Computed:     true,
 										ValidateFunc: validation.IntBetween(1, 999),
 									},
-									"region": {
+									"version": {
 										Type:     schema.TypeString,
-										Optional: true,
-										Computed: true,
-									},
-									"namespace": {
-										Type:     schema.TypeString,
-										Optional: true,
+										Required: true,
 										ValidateFunc: validation.All(
-											validation.StringLenBetween(1, 100),
-											validation.StringMatch(regexp.MustCompile(`[A-Za-z0-9@\-_]+`), ""),
+											validation.StringLenBetween(1, 9),
+											validation.StringMatch(regexp.MustCompile(`[0-9A-Za-z_-]+`), ""),
 										),
 									},
 								},
 							},
+						},
+						"name": {
+							Type:     schema.TypeString,
+							Required: true,
+							ValidateFunc: validation.All(
+								validation.StringLenBetween(1, 100),
+								validation.StringMatch(regexp.MustCompile(`[A-Za-z0-9.@\-_]+`), ""),
+							),
 						},
 					},
 				},
