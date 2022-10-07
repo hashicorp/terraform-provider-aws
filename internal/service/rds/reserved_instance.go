@@ -60,7 +60,6 @@ func ResourceReservedInstance() *schema.Resource {
 			"instance_count": {
 				Type:     schema.TypeInt,
 				Optional: true,
-				Computed: true,
 				ForceNew: true,
 				Default:  1,
 			},
