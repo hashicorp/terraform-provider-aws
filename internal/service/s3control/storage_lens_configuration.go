@@ -337,7 +337,6 @@ func resourceStorageLensConfigurationCreate(ctx context.Context, d *schema.Resou
 		input.Tags = StorageLensTags(tags.IgnoreAWS())
 	}
 
-	log.Printf("[DEBUG] Creating S3 Storage Lens Configuration: %#v", input)
 	_, err := conn.PutStorageLensConfiguration(ctx, input)
 
 	if err != nil {
@@ -419,7 +418,6 @@ func resourceStorageLensConfigurationUpdate(ctx context.Context, d *schema.Resou
 			input.StorageLensConfiguration.Id = aws.String(configID)
 		}
 
-		log.Printf("[DEBUG] Updating S3 Storage Lens Configuration: %#v", input)
 		_, err := conn.PutStorageLensConfiguration(ctx, input)
 
 		if err != nil {
