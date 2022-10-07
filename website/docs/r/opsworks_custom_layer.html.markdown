@@ -83,7 +83,7 @@ lifecycle events, if custom cookbooks are enabled on the layer's stack:
 * `multiline_start_pattern` - (Optional) Specifies the pattern for identifying the start of a log message.
 * `time_zone` - (Optional) Specifies the time zone of log event time stamps.
 
-# Load Based AutoScaling
+### Load Based AutoScaling
 
 * `downscaling` - (Optional) The downscaling settings, as defined below, used for load-based autoscaling
 * `enable` - (Optional) Whether load-based auto scaling is enabled for the layer.
