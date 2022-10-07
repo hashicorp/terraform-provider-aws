@@ -217,3 +217,9 @@ const (
 const (
 	ResNameTags = "Tags"
 )
+
+const (
+	ReservedInstanceStateActive         = "active"
+	ReservedInstanceStateRetired        = "retired"
+	ReservedInstanceStatePaymentPending = "payment-pending"
+)

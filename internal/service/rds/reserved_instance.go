@@ -2,6 +2,7 @@ package rds
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"time"
 
@@ -30,6 +31,11 @@ func ResourceReservedInstance() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(30 * time.Minute),
+			Update: schema.DefaultTimeout(10 * time.Minute),
+			Delete: schema.DefaultTimeout(1 * time.Minute),
+		},
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
@@ -53,8 +59,10 @@ func ResourceReservedInstance() *schema.Resource {
 			},
 			"instance_count": {
 				Type:     schema.TypeInt,
-				Required: true,
+				Optional: true,
+				Computed: true,
 				ForceNew: true,
+				Default:  1,
 			},
 			"lease_id": {
 				Type:     schema.TypeString,
@@ -95,7 +103,7 @@ func ResourceReservedInstance() *schema.Resource {
 			},
 			"reservation_id": {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 				ForceNew: true,
 			},
 			"start_time": {
@@ -124,9 +132,15 @@ func resourceReservedInstanceCreate(ctx context.Context, d *schema.ResourceData,
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &rds.PurchaseReservedDBInstancesOfferingInput{
-		DBInstanceCount:               aws.Int64(d.Get("instance_cout").(int64)),
 		ReservedDBInstancesOfferingId: aws.String(d.Get("offering_id").(string)),
-		ReservedDBInstanceId:          aws.String(d.Get("instance_id").(string)),
+	}
+
+	if v, ok := d.Get("instance_count").(int); ok && v > 0 {
+		input.DBInstanceCount = aws.Int64(int64(d.Get("instance_count").(int)))
+	}
+
+	if v, ok := d.Get("reservation_id").(string); ok && v != "" {
+		input.ReservedDBInstanceId = aws.String(v)
 	}
 
 	if len(tags) > 0 {
@@ -134,12 +148,15 @@ func resourceReservedInstanceCreate(ctx context.Context, d *schema.ResourceData,
 	}
 
 	resp, err := conn.PurchaseReservedDBInstancesOfferingWithContext(ctx, input)
-
 	if err != nil {
-		return create.DiagError(names.RDS, create.ErrActionCreating, ResNameReservedInstance, d.Id(), err)
+		return create.DiagError(names.RDS, create.ErrActionCreating, ResNameReservedInstance, fmt.Sprintf("offering_id: %s, reservation_id: %s", d.Get("offering_id").(string), d.Get("reservation_id").(string)), err)
 	}
 
 	d.SetId(aws.ToString(resp.ReservedDBInstance.ReservedDBInstanceId))
+
+	if err := waitReservedInstanceCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return create.DiagError(names.RDS, create.ErrActionWaitingForCreation, ResNameReservedInstance, d.Id(), err)
+	}
 
 	return resourceReservedInstanceRead(ctx, d, meta)
 }
