@@ -1,41 +1,28 @@
 ---
 subcategory: "Comprehend"
 layout: "aws"
-page_title: "AWS: aws_comprehend_entity_recognizer"
+page_title: "AWS: aws_comprehend_document_classifier"
 description: |-
-  Terraform resource for managing an AWS Comprehend Entity Recognizer.
+  Terraform resource for managing an AWS Comprehend Document Classifier.
 ---
 
-# Resource: aws_comprehend_entity_recognizer
+# Resource: aws_comprehend_document_classifier
 
-Terraform resource for managing an AWS Comprehend Entity Recognizer.
+Terraform resource for managing an AWS Comprehend Document Classifier.
 
 ## Example Usage
 
 ### Basic Usage
 
 ```terraform
-resource "aws_comprehend_entity_recognizer" "example" {
+resource "aws_comprehend_document_classifier" "example" {
   name = "example"
 
   data_access_role_arn = aws_iam_role.example.arn
 
   language_code = "en"
   input_data_config {
-    entity_types {
-      type = "ENTITY_1"
-    }
-    entity_types {
-      type = "ENTITY_2"
-    }
-
-    documents {
-      s3_uri = "s3://${aws_s3_bucket.documents.bucket}/${aws_s3_object.documents.id}"
-    }
-
-    entity_list {
-      s3_uri = "s3://${aws_s3_bucket.entities.bucket}/${aws_s3_object.entities.id}"
-    }
+    s3_uri = "s3://${aws_s3_bucket.test.bucket}/${aws_s3_object.documents.id}"
   }
 
   depends_on = [
@@ -61,16 +48,22 @@ The following arguments are required:
   See the [`input_data_config` Configuration Block](#input_data_config-configuration-block) section below.
 * `language_code` - (Required) Two-letter language code for the language.
   One of `en`, `es`, `fr`, `it`, `de`, or `pt`.
-* `name` - (Required) Name for the Entity Recognizer.
+* `name` - (Required) Name for the Document Classifier.
   Has a maximum length of 63 characters.
   Can contain upper- and lower-case letters, numbers, and hypen (`-`).
 
 The following arguments are optional:
 
-* `model_kms_key_id` - (Optional) The ID or ARN of a KMS Key used to encrypt trained Entity Recognizers.
+* `mode` - (Optional, Default: `MULTI_CLASS`) The document classification mode.
+  One of `MULTI_CLASS` or `MULTI_LABEL`.
+  `MULTI_CLASS` is also known as "Single Label" in the AWS Console.
+* `model_kms_key_id` - (Optional) KMS Key used to encrypt trained Document Classifiers.
+  Can be a KMS Key ID or a KMS Key ARN.
+* `output_data_config` - (Optional) Configuration for the output results of training.
+  See the [`output_data_config` Configuration Block](#output_data_config-configuration-block) section below.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` Configuration Block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `version_name` - (Optional) Name for the version of the Entity Recognizer.
-  Each version must have a unique name within the Entity Recognizer.
+* `version_name` - (Optional) Name for the version of the Document Classifier.
+  Each version must have a unique name within the Document Classifier.
   If omitted, Terraform will assign a random, unique version name.
   If explicitly set to `""`, no version name will be set.
   Has a maximum length of 63 characters.
@@ -80,34 +73,24 @@ The following arguments are optional:
   Has a maximum length of 37 characters.
   Can contain upper- and lower-case letters, numbers, and hypen (`-`).
   Conflicts with `version_name`.
-* `volume_kms_key_id` - (Optional) ID or ARN of a KMS Key used to encrypt storage volumes during job processing.
-* `vpc_config` - (Optional) Configuration parameters for VPC to contain Entity Recognizer resources.
+* `volume_kms_key_id` - (Optional) KMS Key used to encrypt storage volumes during job processing.
+  Can be a KMS Key ID or a KMS Key ARN.
+* `vpc_config` - (Optional) Configuration parameters for VPC to contain Document Classifier resources.
   See the [`vpc_config` Configuration Block](#vpc_config-configuration-block) section below.
 
 ### `input_data_config` Configuration Block
 
-* `annotations` - (Optional) Specifies location of the document annotation data.
-  See the [`annotations` Configuration Block](#annotations-configuration-block) section below.
-  One of `annotations` or `entity_list` is required.
 * `augmented_manifests` - (Optional) List of training datasets produced by Amazon SageMaker Ground Truth.
   Used if `data_format` is `AUGMENTED_MANIFEST`.
   See the [`augmented_manifests` Configuration Block](#augmented_manifests-configuration-block) section below.
 * `data_format` - (Optional, Default: `COMPREHEND_CSV`) The format for the training data.
   One of `COMPREHEND_CSV` or `AUGMENTED_MANIFEST`.
-* `documents` - (Optional) Specifies a collection of training documents.
+* `label_delimiter` - (Optional) Delimiter between labels when training a multi-label classifier.
+  Valid values are `|`, `~`, `!`, `@`, `#`, `$`, `%`, `^`, `*`, `-`, `_`, `+`, `=`, `\`, `:`, `;`, `>`, `?`, `/`, `<space>`, and `<tab>`.
+  Default is `|`.
+* `s3_uri` - (Optional) Location of training documents.
   Used if `data_format` is `COMPREHEND_CSV`.
-  See the [`documents` Configuration Block](#documents-configuration-block) section below.
-* `entity_list` - (Optional) Specifies location of the entity list data.
-  See the [`entity_list` Configuration Block](#entity_list-configuration-block) section below.
-  One of `entity_list` or `annotations` is required.
-* `entity_types` - (Required) Set of entity types to be recognized.
-  Has a maximum of 25 items.
-  See the [`entity_types` Configuration Block](#entity_types-configuration-block) section below.
-
-### `annotations` Configuration Block
-
-* `s3_uri` - (Required) Location of training annotations.
-* `test_s3uri` - (Optional) Location of test annotations.
+* `test_s3uri` - (Optional) Location of test documents.
 
 ### `augmented_manifests` Configuration Block
 
@@ -120,21 +103,13 @@ The following arguments are optional:
 * `split` - (Optional, Default: `TRAIN`) Purpose of data in augmented manifest.
   One of `TRAIN` or `TEST`.
 
-### `documents` Configuration Block
+### `output_data_config` Configuration Block
 
-* `input_format` - (Optional, Default: `ONE_DOC_PER_LINE`) Specifies how the input files should be processed.
-  One of `ONE_DOC_PER_LINE` or `ONE_DOC_PER_FILE`.
-* `s3_uri` - (Required) Location of training documents.
-* `test_s3uri` - (Optional) Location of test documents.
-
-### `entity_list` Configuration Block
-
-* `s3_uri` - (Required) Location of entity list.
-
-### `entity_types` Configuration Block
-
-* `type` - (Required) An entity type to be matched by the Entity Recognizer.
-  Cannot contain a newline (`\n`), carriage return (`\r`), or tab (`\t`).
+* `kms_key_id` - (Optional) KMS Key used to encrypt the output documents.
+  Can be a KMS Key ID, a KMS Key ARN, a KMS Alias name, or a KMS Alias ARN.
+* `output_s3_uri` - (Computed) Full path for the output documents.
+* `s3_uri` - (Required) Destination path for the output documents.
+  The full path to the output file will be returned in `output_s3_uri`.
 
 ### `vpc_config` Configuration Block
 
@@ -145,12 +120,12 @@ The following arguments are optional:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `arn` - ARN of the Entity Recognizer version.
+* `arn` - ARN of the Document Classifier version.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 
 ## Timeouts
 
-`aws_comprehend_entity_recognizer` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+`aws_comprehend_document_classifier` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
 
 * `create` - (Optional, Default: `60m`)
 * `update` - (Optional, Default: `60m`)
@@ -158,8 +133,8 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Comprehend Entity Recognizer can be imported using the ARN, e.g.,
+Comprehend Document Classifier can be imported using the ARN, e.g.,
 
 ```
-$ terraform import aws_comprehend_entity_recognizer.example arn:aws:comprehend:us-west-2:123456789012:entity-recognizer/example
+$ terraform import aws_comprehend_document_classifier.example arn:aws:comprehend:us-west-2:123456789012:document_classifier/example
 ```
