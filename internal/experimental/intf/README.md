@@ -1,6 +1,5 @@
-# Experimental ProviderData And ServiceData Interfaces
+# Experimental ServiceData Interface
 
-This package contains experimental `ProviderData` and `ServiceData` interfaces:
+This package contains experimental `ServiceData` interface:
 
-* `ProviderData` is the interface implemented by the (primary) provider's `Meta` value (currently [`conns.AWSClient`](../../conns/awsclient.go))
 * `ServiceData` is implemented by a structure defined in each service package
