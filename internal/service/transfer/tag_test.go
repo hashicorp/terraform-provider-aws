@@ -95,7 +95,7 @@ func TestAccTransferTag_value(t *testing.T) {
 	})
 }
 
-func TestAccTransferTag_aws(t *testing.T) {
+func TestAccTransferTag_system(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_transfer_tag.test"
 
