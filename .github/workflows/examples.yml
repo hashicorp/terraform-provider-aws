@@ -57,8 +57,11 @@ jobs:
           path: ~/.tflint.d/plugins
           key: ${{ runner.os }}-tflint-${{ hashFiles('.ci/.tflint.hcl') }}
 
+      - run: tflint --config .ci/.tflint.hcl --init
+
       - name: terraform
         run: |
+          exit_code=0
           TFLINT_CONFIG="$(pwd -P)/.ci/.tflint.hcl"
           for DIR in $(find ./examples -type f -name '*.tf' -exec dirname {} \; | sort -u); do
             pushd "$DIR"
@@ -80,7 +83,9 @@ jobs:
               --enable-rule=terraform_deprecated_index \
               --enable-rule=terraform_unused_declarations \
               --enable-rule=terraform_comment_syntax \
-              --enable-rule=terraform_required_version
+              --enable-rule=terraform_required_version \
+              || exit_code=1
             set -e
             popd
           done
+          exit $exit_code
