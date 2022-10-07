@@ -2,6 +2,7 @@
 package conns
 
 import (
+	awsv2 "github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/comprehend"
 	"github.com/aws/aws-sdk-go-v2/service/fis"
 	"github.com/aws/aws-sdk-go-v2/service/identitystore"
@@ -312,6 +313,7 @@ import (
 
 type AWSClient struct {
 	AccountID                 string
+	Config                    *awsv2.Config
 	DefaultTagsConfig         *tftags.DefaultConfig
 	DNSSuffix                 string
 	IgnoreTagsConfig          *tftags.IgnoreConfig

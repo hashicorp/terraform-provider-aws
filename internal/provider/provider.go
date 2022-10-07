@@ -1195,7 +1195,8 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_cognito_user_pool_domain":           cognitoidp.ResourceUserPoolDomain(),
 			"aws_cognito_user_pool_ui_customization": cognitoidp.ResourceUserPoolUICustomization(),
 
-			"aws_comprehend_entity_recognizer": comprehend.ResourceEntityRecognizer(),
+			"aws_comprehend_document_classifier": comprehend.ResourceDocumentClassifier(),
+			"aws_comprehend_entity_recognizer":   comprehend.ResourceEntityRecognizer(),
 
 			"aws_config_aggregate_authorization":       configservice.ResourceAggregateAuthorization(),
 			"aws_config_config_rule":                   configservice.ResourceConfigRule(),
@@ -1966,6 +1967,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_s3control_multi_region_access_point_policy":  s3control.ResourceMultiRegionAccessPointPolicy(),
 			"aws_s3control_object_lambda_access_point":        s3control.ResourceObjectLambdaAccessPoint(),
 			"aws_s3control_object_lambda_access_point_policy": s3control.ResourceObjectLambdaAccessPointPolicy(),
+			"aws_s3control_storage_lens_configuration":        s3control.ResourceStorageLensConfiguration(),
 
 			"aws_s3outposts_endpoint": s3outposts.ResourceEndpoint(),
 
