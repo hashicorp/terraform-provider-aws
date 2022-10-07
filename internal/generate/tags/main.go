@@ -32,6 +32,7 @@ var (
 	untagInNeedTagType = flag.Bool("UntagInNeedTagType", false, "whether Untag input needs tag type")
 	updateTags         = flag.Bool("UpdateTags", false, "whether to generate UpdateTags")
 
+	listTagsFunc          = flag.String("ListTagsFunc", "ListTags", "listTagsFunc")
 	listTagsInFiltIDName  = flag.String("ListTagsInFiltIDName", "", "listTagsInFiltIDName")
 	listTagsInIDElem      = flag.String("ListTagsInIDElem", "ResourceArn", "listTagsInIDElem")
 	listTagsInIDNeedSlice = flag.String("ListTagsInIDNeedSlice", "", "listTagsInIDNeedSlice")
@@ -122,6 +123,7 @@ type TemplateData struct {
 	ClientType             string
 	ServicePackage         string
 
+	ListTagsFunc            string
 	ListTagsInFiltIDName    string
 	ListTagsInIDElem        string
 	ListTagsInIDNeedSlice   string
@@ -224,6 +226,7 @@ func main() {
 		StrConvPkg:      awsPkg == "autoscaling",
 		TfResourcePkg:   *getTag,
 
+		ListTagsFunc:            *listTagsFunc,
 		ListTagsInFiltIDName:    *listTagsInFiltIDName,
 		ListTagsInIDElem:        *listTagsInIDElem,
 		ListTagsInIDNeedSlice:   *listTagsInIDNeedSlice,
