@@ -20,8 +20,6 @@ import (
 )
 
 const (
-	filename = `tags_gen.go`
-
 	sdkV1 = 1
 	sdkV2 = 2
 )
@@ -168,6 +166,11 @@ func main() {
 	flag.Usage = usage
 	flag.Parse()
 
+	filename := `tags_gen.go`
+	if args := flag.Args(); len(args) > 0 {
+		filename = args[0]
+	}
+
 	if *sdkVersion != sdkV1 && *sdkVersion != sdkV2 {
 		log.Fatalf("AWS SDK Go Version %d not supported", *sdkVersion)
 	}
@@ -258,31 +261,31 @@ func main() {
 			templateData.AWSService = ""
 			templateData.TagPackage = ""
 		}
-		writeTemplate(templateBody.header, "header", templateData)
+		writeTemplate(filename, templateBody.header, "header", templateData)
 	}
 
 	if *getTag {
-		writeTemplate(templateBody.getTag, "gettag", templateData)
+		writeTemplate(filename, templateBody.getTag, "gettag", templateData)
 	}
 
 	if *listTags {
-		writeTemplate(templateBody.listTags, "listtags", templateData)
+		writeTemplate(filename, templateBody.listTags, "listtags", templateData)
 	}
 
 	if *serviceTagsMap {
-		writeTemplate(templateBody.serviceTagsMap, "servicetagsmap", templateData)
+		writeTemplate(filename, templateBody.serviceTagsMap, "servicetagsmap", templateData)
 	}
 
 	if *serviceTagsSlice {
-		writeTemplate(templateBody.serviceTagsSlice, "servicetagsslice", templateData)
+		writeTemplate(filename, templateBody.serviceTagsSlice, "servicetagsslice", templateData)
 	}
 
 	if *updateTags {
-		writeTemplate(templateBody.updateTags, "updatetags", templateData)
+		writeTemplate(filename, templateBody.updateTags, "updatetags", templateData)
 	}
 }
 
-func writeTemplate(body string, templateName string, td TemplateData) {
+func writeTemplate(filename, body, templateName string, td TemplateData) {
 	// If the file doesn't exist, create it, or append to the file
 	f, err := os.OpenFile(filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
