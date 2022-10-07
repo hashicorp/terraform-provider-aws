@@ -261,11 +261,13 @@ func resourceGlobalReplicationGroupCreate(d *schema.ResourceData, meta interface
 		return fmt.Errorf("waiting for ElastiCache Global Replication Group (%s) creation: %w", d.Id(), err)
 	}
 
-	if v := d.Get("automatic_failover_enabled").(bool); v == flattenGlobalReplicationGroupAutomaticFailoverEnabled(globalReplicationGroup.Members) {
-		log.Printf("[DEBUG] Not updating ElastiCache Global Replication Group (%s) automatic failover: no change from %t", d.Id(), v)
-	} else {
-		if err := updateGlobalReplicationGroup(conn, d.Id(), globalReplicationAutomaticFailoverUpdater(v)); err != nil {
-			return fmt.Errorf("updating ElastiCache Global Replication Group (%s) automatic failover on creation: %w", d.Id(), err)
+	if v, ok := d.GetOk("automatic_failover_enabled"); ok {
+		if v := v.(bool); v == flattenGlobalReplicationGroupAutomaticFailoverEnabled(globalReplicationGroup.Members) {
+			log.Printf("[DEBUG] Not updating ElastiCache Global Replication Group (%s) automatic failover: no change from %t", d.Id(), v)
+		} else {
+			if err := updateGlobalReplicationGroup(conn, d.Id(), globalReplicationAutomaticFailoverUpdater(v)); err != nil {
+				return fmt.Errorf("updating ElastiCache Global Replication Group (%s) automatic failover on creation: %w", d.Id(), err)
+			}
 		}
 	}
 
