@@ -52,9 +52,9 @@ func resourceTagCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	value := d.Get("value").(string)
 
 	{{ if eq .ServicePackage "ec2" }}
-	if err := CreateTagsWithContext(ctx, conn, identifier, map[string]string{key: value}); err != nil {
+	if err := {{ .CreateTagsFunc }}WithContext(ctx, conn, identifier, map[string]string{key: value}); err != nil {
 	{{- else }}
-	if err := UpdateTagsWithContext(ctx, conn, identifier, nil, map[string]string{key: value}); err != nil {
+	if err := {{ .UpdateTagsFunc }}WithContext(ctx, conn, identifier, nil, map[string]string{key: value}); err != nil {
 	{{- end }}
 		return diag.Errorf("creating %s resource (%s) tag (%s): %s", {{ .ServicePackage }}.ServiceID, identifier, key, err)
 	}
@@ -72,7 +72,7 @@ func resourceTagRead(ctx context.Context, d *schema.ResourceData, meta interface
 		return diag.FromErr(err)
 	}
 
-	value, err := GetTagWithContext(ctx, conn, identifier, key)
+	value, err := {{ .GetTagFunc }}WithContext(ctx, conn, identifier, key)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] %s resource (%s) tag (%s) not found, removing from state", {{ .ServicePackage }}.ServiceID, identifier, key)
@@ -99,7 +99,7 @@ func resourceTagUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 		return diag.FromErr(err)
 	}
 
-	if err := UpdateTagsWithContext(ctx, conn, identifier, nil, map[string]string{key: d.Get("value").(string)}); err != nil {
+	if err := {{ .UpdateTagsFunc }}WithContext(ctx, conn, identifier, nil, map[string]string{key: d.Get("value").(string)}); err != nil {
 		return diag.Errorf("updating %s resource (%s) tag (%s): %s", {{ .ServicePackage }}.ServiceID, identifier, key, err)
 	}
 
@@ -114,7 +114,7 @@ func resourceTagDelete(ctx context.Context, d *schema.ResourceData, meta interfa
 		return diag.FromErr(err)
 	}
 
-	if err := UpdateTagsWithContext(ctx, conn, identifier, map[string]string{key: d.Get("value").(string)}, nil); err != nil {
+	if err := {{ .UpdateTagsFunc }}WithContext(ctx, conn, identifier, map[string]string{key: d.Get("value").(string)}, nil); err != nil {
 		return diag.Errorf("deleting %s resource (%s) tag (%s): %s", {{ .ServicePackage }}.ServiceID, identifier, key, err)
 	}
 
