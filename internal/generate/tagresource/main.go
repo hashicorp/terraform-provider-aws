@@ -17,7 +17,10 @@ import (
 )
 
 var (
-	idAttribName = flag.String("IDAttribName", "resource_arn", "idAttribName")
+	createTagsFunc = flag.String("CreateTagsFunc", "CreateTags", "createTagsFunc")
+	getTagFunc     = flag.String("GetTagFunc", "GetTag", "getTagFunc")
+	idAttribName   = flag.String("IDAttribName", "resource_arn", "idAttribName")
+	updateTagsFunc = flag.String("UpdateTagsFunc", "UpdateTags", "updateTagsFunc")
 )
 
 func usage() {
@@ -32,7 +35,10 @@ type TemplateData struct {
 	AWSServiceUpper string
 	ServicePackage  string
 
-	IDAttribName string
+	CreateTagsFunc string
+	GetTagFunc     string
+	IDAttribName   string
+	UpdateTagsFunc string
 }
 
 func main() {
@@ -57,7 +63,11 @@ func main() {
 		AWSService:      awsService,
 		AWSServiceUpper: u,
 		ServicePackage:  servicePackage,
-		IDAttribName:    *idAttribName,
+
+		CreateTagsFunc: *createTagsFunc,
+		GetTagFunc:     *getTagFunc,
+		IDAttribName:   *idAttribName,
+		UpdateTagsFunc: *updateTagsFunc,
 	}
 
 	resourceFilename := "tag_gen.go"

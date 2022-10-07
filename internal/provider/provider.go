@@ -2123,6 +2123,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_transfer_access":   transfer.ResourceAccess(),
 			"aws_transfer_server":   transfer.ResourceServer(),
 			"aws_transfer_ssh_key":  transfer.ResourceSSHKey(),
+			"aws_transfer_tag":      transfer.ResourceTag(),
 			"aws_transfer_user":     transfer.ResourceUser(),
 			"aws_transfer_workflow": transfer.ResourceWorkflow(),
 
