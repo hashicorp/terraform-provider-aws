@@ -11,20 +11,20 @@ import (
 
 var sd = &serviceData{}
 
-func registerDataSourceFactory(factory func(context.Context) (datasource.DataSource, error)) {
-	sd.dataSourceFactories = append(sd.dataSourceFactories, factory)
+func registerFWDataSourceFactory(factory func(context.Context) (datasource.DataSource, error)) {
+	sd.fwDataSourceFactories = append(sd.fwDataSourceFactories, factory)
 }
 
 var ServiceData intf.ServiceData = sd
 
 type serviceData struct {
-	dataSourceFactories []func(context.Context) (datasource.DataSource, error)
+	fwDataSourceFactories []func(context.Context) (datasource.DataSource, error)
 }
 
-func (d *serviceData) Configure(ctx context.Context, providerData intf.ProviderData) error {
+func (d *serviceData) Configure(ctx context.Context, meta any) error {
 	return nil
 }
 
-func (d *serviceData) DataSources(ctx context.Context) []func(context.Context) (datasource.DataSource, error) {
-	return d.dataSourceFactories
+func (d *serviceData) FrameworkDataSources(ctx context.Context) []func(context.Context) (datasource.DataSource, error) {
+	return d.fwDataSourceFactories
 }

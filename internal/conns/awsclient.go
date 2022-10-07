@@ -1,10 +1,7 @@
 package conns
 
 import (
-	"context"
 	"fmt"
-
-	"github.com/hashicorp/terraform-provider-aws/internal/experimental/intf"
 )
 
 // PartitionHostname returns a hostname with the provider domain suffix for the partition
@@ -19,8 +16,4 @@ func (client *AWSClient) PartitionHostname(prefix string) string {
 // The prefix should not contain a trailing period.
 func (client *AWSClient) RegionalHostname(prefix string) string {
 	return fmt.Sprintf("%s.%s.%s", prefix, client.Region, client.DNSSuffix)
-}
-
-func (client *AWSClient) Services(_ context.Context) map[string]intf.ServiceData {
-	return client.ServiceMap
 }
