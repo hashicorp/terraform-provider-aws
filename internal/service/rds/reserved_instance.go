@@ -217,11 +217,9 @@ func resourceReservedInstanceUpdate(ctx context.Context, d *schema.ResourceData,
 	}
 
 	return resourceReservedInstanceRead(ctx, d, meta)
-
 }
 
 func resourceReservedInstanceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-
 	// Reservations cannot be deleted. Removing from state.
 	log.Printf("[DEBUG] %s %s cannot be deleted. Removing from state.: %s", names.RDS, ResNameReservedInstance, d.Id())
 

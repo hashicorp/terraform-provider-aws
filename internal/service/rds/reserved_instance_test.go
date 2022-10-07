@@ -99,6 +99,7 @@ data "aws_rds_reserved_instance_offering" "test" {
   offering_type       = "All Upfront"
   product_description = "mysql"
 }
+
 resource "aws_rds_reserved_instance" "test" {
   offering_id    = data.aws_rds_reserved_instance_offering.test.offering_id
   reservation_id = %[1]q

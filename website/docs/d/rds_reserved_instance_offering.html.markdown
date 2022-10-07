@@ -8,7 +8,7 @@ description: |-
 
 # Data Source: aws_rds_reserved_instance_offering
 
-Information about single RDS Reserved Instance Offering.
+Information about a single RDS Reserved Instance Offering.
 
 ## Example Usage
 
@@ -26,17 +26,17 @@ data "aws_rds_reserved_instance_offering" "test" {
 
 The following arguments are supported:
 
-* `db_instance_class` - (Required) The DB instance class for the reserved DB instance.
-* `duration` - (Required) The duration of the reservation in seconds.
-* `multi_az` - (Required) Indicates if the reservation applies to Multi-AZ deployments.
-* `offering_type` - (Required) The offering type of this reserved DB instance.
-* `product_description` - (Required) The description of the reserved DB instance.
+* `db_instance_class` - (Required) DB instance class for the reserved DB instance.
+* `duration` - (Required) Duration of the reservation in seconds.
+* `multi_az` - (Required) Whether the reservation applies to Multi-AZ deployments.
+* `offering_type` - (Required) Offering type of this reserved DB instance.
+* `product_description` - (Required) Description of the reserved DB instance.
 
 ## Attribute Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - The unique identifier for the reservation. Same as `offering_id`.
-* `currency_code` - The currency code for the reserved DB instance.
-* `fixed_price` - The fixed price charged for this reserved DB instance.
-* `offering_id` - The unique identifier for the reservation.
+* `id` - Unique identifier for the reservation. Same as `offering_id`.
+* `currency_code` - Currency code for the reserved DB instance.
+* `fixed_price` - Fixed price charged for this reserved DB instance.
+* `offering_id` - Unique identifier for the reservation.
