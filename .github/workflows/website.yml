@@ -33,6 +33,7 @@ jobs:
           file-extension: ".markdown"
           base-branch: "main"
           check-modified-files-only: "no"
+
   markdown-link-check-i-z-markdown:
     runs-on: ubuntu-latest
     steps:
@@ -48,6 +49,7 @@ jobs:
           file-extension: ".markdown"
           base-branch: "main"
           check-modified-files-only: "no"
+
   markdown-link-check-md:
     runs-on: ubuntu-latest
     steps:
@@ -62,6 +64,7 @@ jobs:
           file-extension: ".md"
           base-branch: "main"
           check-modified-files-only: "yes"
+
   markdown-lint:
     runs-on: ubuntu-latest
     steps:
@@ -69,6 +72,7 @@ jobs:
       - uses: avto-dev/markdown-lint@v1
         with:
           args: "website/docs"
+
   misspell:
     runs-on: ubuntu-latest
     steps:
@@ -84,6 +88,7 @@ jobs:
           key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
       - run: cd .ci/tools && go install github.com/client9/misspell/cmd/misspell
       - run: misspell -error -source text website/
+
   terrafmt:
     runs-on: ubuntu-latest
     steps:
@@ -99,6 +104,7 @@ jobs:
           key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
       - run: cd .ci/tools && go install github.com/katbyte/terrafmt
       - run: terrafmt diff ./website --check --pattern '*.markdown'
+
   validate-terraform:
     runs-on: ubuntu-latest
     steps:
@@ -112,8 +118,8 @@ jobs:
         with:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
-      - run: cd .ci/tools && go install github.com/katbyte/terrafmt
 
+      - run: cd .ci/tools && go install github.com/katbyte/terrafmt
       - run: cd .ci/tools && go install github.com/terraform-linters/tflint
 
       - uses: actions/cache@v3
@@ -180,10 +186,10 @@ jobs:
 
             # We need to capture the output and error code here. We don't want to exit on the first error
             set +e
-            ./.ci/scripts/validate-terraform-file.sh -c .ci/.tflint.hcl "$filename" "${rules[@]}"
-            lint_exitcode=$?
+            ./.ci/scripts/validate-terraform-file.sh "$filename" "${rules[@]}" || exit_code=1
+            # lint_exitcode=$?
             set -e
-            if [ $lint_exitcode -ne 0 ]; then exit_code=1; fi
+            # if [ $lint_exitcode -ne 0 ]; then exit_code=1; fi
           done < <(find ./website/docs -type f \( -name '*.md' -o -name '*.markdown' \) | sort -u)
 
           exit $exit_code
