@@ -97,7 +97,7 @@ func UpdateTagsWithContext(ctx context.Context, conn transferiface.TransferAPI, 
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &transfer.UntagResourceInput{
 			Arn:     aws.String(identifier),
-			TagKeys: aws.StringSlice(removedTags.Keys()),
+			TagKeys: aws.StringSlice(removedTags.IgnoreAWS().Keys()),
 		}
 
 		_, err := conn.UntagResourceWithContext(ctx, input)
@@ -110,7 +110,7 @@ func UpdateTagsWithContext(ctx context.Context, conn transferiface.TransferAPI, 
 	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
 		input := &transfer.TagResourceInput{
 			Arn:  aws.String(identifier),
-			Tags: Tags(updatedTags),
+			Tags: Tags(updatedTags.IgnoreAWS()),
 		}
 
 		_, err := conn.TagResourceWithContext(ctx, input)
