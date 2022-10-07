@@ -470,7 +470,7 @@ resource "aws_opsworks_custom_layer" "test" {
   instance_shutdown_timeout = 300
 
   load_based_auto_scaling {
-	enable = %[2]t
+    enable = %[2]t
 
     downscaling {
       cpu_threshold        = 20
