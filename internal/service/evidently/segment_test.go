@@ -53,6 +53,31 @@ func TestAccEvidentlySegment_basic(t *testing.T) {
 	})
 }
 
+func TestAccEvidentlySegment_disappears(t *testing.T) {
+	var segment cloudwatchevidently.Segment
+
+	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	pattern := "{\"Price\":[{\"numeric\":[\">\",10,\"<=\",20]}]}"
+	resourceName := "aws_evidently_segment.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudwatchevidently.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSegmentDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSegmentConfig_basic(rName, pattern),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSegmentExists(resourceName, &segment),
+					acctest.CheckResourceDisappears(acctest.Provider, tfcloudwatchevidently.ResourceSegment(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccCheckSegmentDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EvidentlyConn
 	for _, rs := range s.RootModule().Resources {
