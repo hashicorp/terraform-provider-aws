@@ -1135,7 +1135,7 @@ resource "aws_vpc" "test" {
 func testAccVPCConfig_enableNetworkAddressUsageMetrics(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
-  cidr_block         = "10.2.0.0/16"
+  cidr_block                           = "10.2.0.0/16"
   enable_network_address_usage_metrics = true
 
   tags = {
