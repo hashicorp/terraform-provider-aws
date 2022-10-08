@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_vpc: Add new attribute named `enable_network_address_usage_metrics`.
+```
