@@ -53,6 +53,38 @@ func TestAccEvidentlySegment_basic(t *testing.T) {
 	})
 }
 
+func TestAccEvidentlySegment_description(t *testing.T) {
+	var segment cloudwatchevidently.Segment
+
+	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	description := "exmaple description"
+	resourceName := "aws_evidently_segment.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(cloudwatchevidently.EndpointsID, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, cloudwatchevidently.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSegmentDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSegmentConfig_description(rName, description),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSegmentExists(resourceName, &segment),
+					resource.TestCheckResourceAttr(resourceName, "description", description),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccEvidentlySegment_tags(t *testing.T) {
 	var segment cloudwatchevidently.Segment
 
@@ -188,6 +220,16 @@ resource "aws_evidently_segment" "test" {
   pattern = %[2]q
 }
 `, rName, pattern)
+}
+
+func testAccSegmentConfig_description(rName, description string) string {
+	return fmt.Sprintf(`
+resource "aws_evidently_segment" "test" {
+  name        = %[1]q
+  pattern     = "{\"Price\":[{\"numeric\":[\">\",10,\"<=\",20]}]}"
+  description = %[2]q
+}
+`, rName, description)
 }
 
 func testAccSegmentConfig_tags1(rName, tag, value string) string {
