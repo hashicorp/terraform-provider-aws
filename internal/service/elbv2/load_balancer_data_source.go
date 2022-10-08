@@ -31,40 +31,33 @@ func DataSourceLoadBalancer() *schema.Resource {
 				Computed:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-
 			"arn_suffix": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"name": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-
 			"internal": {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-
 			"load_balancer_type": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"security_groups": {
 				Type:     schema.TypeSet,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Computed: true,
 			},
-
 			"subnets": {
 				Type:     schema.TypeSet,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Computed: true,
 			},
-
 			"subnet_mapping": {
 				Type:     schema.TypeSet,
 				Computed: true,
@@ -93,7 +86,6 @@ func DataSourceLoadBalancer() *schema.Resource {
 					},
 				},
 			},
-
 			"access_logs": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -114,67 +106,54 @@ func DataSourceLoadBalancer() *schema.Resource {
 					},
 				},
 			},
-
 			"enable_deletion_protection": {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-
 			"enable_http2": {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-
 			"enable_waf_fail_open": {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-
 			"idle_timeout": {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-
 			"drop_invalid_header_fields": {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-
 			"preserve_host_header": {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-
 			"vpc_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"zone_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"dns_name": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"ip_address_type": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"customer_owned_ipv4_pool": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"desync_mitigation_mode": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"tags": tftags.TagsSchemaComputed(),
 		},
 	}
