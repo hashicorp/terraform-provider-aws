@@ -8,6 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudwatchevidently"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -22,6 +23,7 @@ func ResourceSegment() *schema.Resource {
 		CreateWithoutTimeout: resourceSegmentCreate,
 		ReadWithoutTimeout:   resourceSegmentRead,
 		UpdateWithoutTimeout: resourceSegmentUpdate,
+		DeleteWithoutTimeout: resourceSegmentDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -159,4 +161,23 @@ func resourceSegmentUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	return resourceSegmentRead(ctx, d, meta)
+}
+
+func resourceSegmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).EvidentlyConn
+
+	log.Printf("[DEBUG] Deleting CloudWatch Evidently Segment: %s", d.Id())
+	_, err := conn.DeleteSegmentWithContext(ctx, &cloudwatchevidently.DeleteSegmentInput{
+		Segment: aws.String(d.Id()),
+	})
+
+	if tfawserr.ErrCodeEquals(err, cloudwatchevidently.ErrCodeResourceNotFoundException) {
+		return nil
+	}
+
+	if err != nil {
+		return diag.Errorf("deleting CloudWatch Evidently Segment (%s): %s", d.Id(), err)
+	}
+
+	return nil
 }
