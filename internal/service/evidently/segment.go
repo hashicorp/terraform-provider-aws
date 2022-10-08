@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/cloudwatchevidently"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -18,7 +19,8 @@ import (
 
 func ResourceSegment() *schema.Resource {
 	return &schema.Resource{
-		ReadWithoutTimeout: resourceSegmentRead,
+		CreateWithoutTimeout: resourceSegmentCreate,
+		ReadWithoutTimeout:   resourceSegmentRead,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -70,6 +72,37 @@ func ResourceSegment() *schema.Resource {
 
 		CustomizeDiff: verify.SetTagsDiff,
 	}
+}
+
+func resourceSegmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).EvidentlyConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+
+	name := d.Get("name").(string)
+	input := &cloudwatchevidently.CreateSegmentInput{
+		Name:    aws.String(name),
+		Pattern: aws.String(d.Get("pattern").(string)),
+	}
+
+	if v, ok := d.GetOk("description"); ok {
+		input.Description = aws.String(v.(string))
+	}
+
+	if len(tags) > 0 {
+		input.Tags = Tags(tags.IgnoreAWS())
+	}
+
+	log.Printf("[DEBUG] Creating CloudWatch Evidently Segment: %s", input)
+	output, err := conn.CreateSegmentWithContext(ctx, input)
+
+	if err != nil {
+		return diag.Errorf("creating CloudWatch Evidently Segment (%s): %s", name, err)
+	}
+
+	d.SetId(aws.StringValue(output.Segment.Name))
+
+	return resourceSegmentRead(ctx, d, meta)
 }
 
 func resourceSegmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
