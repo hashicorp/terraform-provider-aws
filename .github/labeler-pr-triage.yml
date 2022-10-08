@@ -407,7 +407,7 @@ service/elb:
   - 'website/**/proxy_protocol_policy*'
 service/elbv2:
   - 'internal/service/elbv2/**/*'
-  - 'website/**/lb\.*'
+  - 'website/**/lbs?\.*'
   - 'website/**/lb_listener*'
   - 'website/**/lb_target_group*'
   - 'website/**/lb_hosted*'
