@@ -91,6 +91,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/emrcontainers"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/emrserverless"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/events"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/evidently"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/firehose"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/fis"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/fms"
@@ -823,16 +824,17 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_ses_domain_identity":         ses.DataSourceDomainIdentity(),
 			"aws_ses_email_identity":          ses.DataSourceEmailIdentity(),
 
-			"aws_db_cluster_snapshot":       rds.DataSourceClusterSnapshot(),
-			"aws_db_event_categories":       rds.DataSourceEventCategories(),
-			"aws_db_instance":               rds.DataSourceInstance(),
-			"aws_db_proxy":                  rds.DataSourceProxy(),
-			"aws_db_snapshot":               rds.DataSourceSnapshot(),
-			"aws_db_subnet_group":           rds.DataSourceSubnetGroup(),
-			"aws_rds_certificate":           rds.DataSourceCertificate(),
-			"aws_rds_cluster":               rds.DataSourceCluster(),
-			"aws_rds_engine_version":        rds.DataSourceEngineVersion(),
-			"aws_rds_orderable_db_instance": rds.DataSourceOrderableInstance(),
+			"aws_db_cluster_snapshot":            rds.DataSourceClusterSnapshot(),
+			"aws_db_event_categories":            rds.DataSourceEventCategories(),
+			"aws_db_instance":                    rds.DataSourceInstance(),
+			"aws_db_proxy":                       rds.DataSourceProxy(),
+			"aws_db_snapshot":                    rds.DataSourceSnapshot(),
+			"aws_db_subnet_group":                rds.DataSourceSubnetGroup(),
+			"aws_rds_certificate":                rds.DataSourceCertificate(),
+			"aws_rds_cluster":                    rds.DataSourceCluster(),
+			"aws_rds_engine_version":             rds.DataSourceEngineVersion(),
+			"aws_rds_orderable_db_instance":      rds.DataSourceOrderableInstance(),
+			"aws_rds_reserved_instance_offering": rds.DataSourceReservedOffering(),
 
 			"aws_redshift_cluster":             redshift.DataSourceCluster(),
 			"aws_redshift_cluster_credentials": redshift.DataSourceClusterCredentials(),
@@ -1194,7 +1196,8 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_cognito_user_pool_domain":           cognitoidp.ResourceUserPoolDomain(),
 			"aws_cognito_user_pool_ui_customization": cognitoidp.ResourceUserPoolUICustomization(),
 
-			"aws_comprehend_entity_recognizer": comprehend.ResourceEntityRecognizer(),
+			"aws_comprehend_document_classifier": comprehend.ResourceDocumentClassifier(),
+			"aws_comprehend_entity_recognizer":   comprehend.ResourceEntityRecognizer(),
 
 			"aws_config_aggregate_authorization":       configservice.ResourceAggregateAuthorization(),
 			"aws_config_config_rule":                   configservice.ResourceConfigRule(),
@@ -1515,6 +1518,8 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_emrcontainers_virtual_cluster": emrcontainers.ResourceVirtualCluster(),
 
 			"aws_emrserverless_application": emrserverless.ResourceApplication(),
+
+			"aws_evidently_project": evidently.ResourceProject(),
 
 			"aws_kinesis_firehose_delivery_stream": firehose.ResourceDeliveryStream(),
 
@@ -1864,6 +1869,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_rds_cluster_parameter_group":               rds.ResourceClusterParameterGroup(),
 			"aws_rds_cluster_role_association":              rds.ResourceClusterRoleAssociation(),
 			"aws_rds_global_cluster":                        rds.ResourceGlobalCluster(),
+			"aws_rds_reserved_instance":                     rds.ResourceReservedInstance(),
 
 			"aws_redshift_authentication_profile":        redshift.ResourceAuthenticationProfile(),
 			"aws_redshift_cluster":                       redshift.ResourceCluster(),
@@ -1963,6 +1969,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_s3control_multi_region_access_point_policy":  s3control.ResourceMultiRegionAccessPointPolicy(),
 			"aws_s3control_object_lambda_access_point":        s3control.ResourceObjectLambdaAccessPoint(),
 			"aws_s3control_object_lambda_access_point_policy": s3control.ResourceObjectLambdaAccessPointPolicy(),
+			"aws_s3control_storage_lens_configuration":        s3control.ResourceStorageLensConfiguration(),
 
 			"aws_s3outposts_endpoint": s3outposts.ResourceEndpoint(),
 
@@ -2118,6 +2125,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_transfer_access":   transfer.ResourceAccess(),
 			"aws_transfer_server":   transfer.ResourceServer(),
 			"aws_transfer_ssh_key":  transfer.ResourceSSHKey(),
+			"aws_transfer_tag":      transfer.ResourceTag(),
 			"aws_transfer_user":     transfer.ResourceUser(),
 			"aws_transfer_workflow": transfer.ResourceWorkflow(),
 

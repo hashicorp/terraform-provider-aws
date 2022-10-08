@@ -33,7 +33,7 @@ func expandRule(m map[string]interface{}) *wafv2.Rule {
 		Name:             aws.String(m["name"].(string)),
 		Priority:         aws.Int64(int64(m["priority"].(int))),
 		Action:           expandRuleAction(m["action"].([]interface{})),
-		Statement:        expandRootStatement(m["statement"].([]interface{})),
+		Statement:        expandRuleGroupRootStatement(m["statement"].([]interface{})),
 		VisibilityConfig: expandVisibilityConfig(m["visibility_config"].([]interface{})),
 	}
 
@@ -271,7 +271,7 @@ func expandVisibilityConfig(l []interface{}) *wafv2.VisibilityConfig {
 	return configuration
 }
 
-func expandRootStatement(l []interface{}) *wafv2.Statement {
+func expandRuleGroupRootStatement(l []interface{}) *wafv2.Statement {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -331,6 +331,14 @@ func expandStatement(m map[string]interface{}) *wafv2.Statement {
 
 	if v, ok := m["or_statement"]; ok {
 		statement.OrStatement = expandOrStatement(v.([]interface{}))
+	}
+
+	if v, ok := m["rate_based_statement"]; ok {
+		statement.RateBasedStatement = expandRateBasedStatement(v.([]interface{}))
+	}
+
+	if v, ok := m["regex_match_statement"]; ok {
+		statement.RegexMatchStatement = expandRegexMatchStatement(v.([]interface{}))
 	}
 
 	if v, ok := m["regex_pattern_set_reference_statement"]; ok {
@@ -672,6 +680,20 @@ func expandOrStatement(l []interface{}) *wafv2.OrStatement {
 	}
 }
 
+func expandRegexMatchStatement(l []interface{}) *wafv2.RegexMatchStatement {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	return &wafv2.RegexMatchStatement{
+		RegexString:         aws.String(m["regex_string"].(string)),
+		FieldToMatch:        expandFieldToMatch(m["field_to_match"].([]interface{})),
+		TextTransformations: expandTextTransformations(m["text_transformation"].(*schema.Set).List()),
+	}
+}
+
 func expandRegexPatternSetReferenceStatement(l []interface{}) *wafv2.RegexPatternSetReferenceStatement {
 	if len(l) == 0 || l[0] == nil {
 		return nil
@@ -893,6 +915,10 @@ func expandWebACLStatement(m map[string]interface{}) *wafv2.Statement {
 		statement.RateBasedStatement = expandRateBasedStatement(v.([]interface{}))
 	}
 
+	if v, ok := m["regex_match_statement"]; ok {
+		statement.RegexMatchStatement = expandRegexMatchStatement(v.([]interface{}))
+	}
+
 	if v, ok := m["regex_pattern_set_reference_statement"]; ok {
 		statement.RegexPatternSetReferenceStatement = expandRegexPatternSetReferenceStatement(v.([]interface{}))
 	}
@@ -1036,7 +1062,7 @@ func flattenRules(r []*wafv2.Rule) interface{} {
 		m["name"] = aws.StringValue(rule.Name)
 		m["priority"] = int(aws.Int64Value(rule.Priority))
 		m["rule_label"] = flattenRuleLabels(rule.RuleLabels)
-		m["statement"] = flattenRootStatement(rule.Statement)
+		m["statement"] = flattenRuleGroupRootStatement(rule.Statement)
 		m["visibility_config"] = flattenVisibilityConfig(rule.VisibilityConfig)
 		out[i] = m
 	}
@@ -1209,7 +1235,7 @@ func flattenRuleLabels(l []*wafv2.Label) []interface{} {
 	return out
 }
 
-func flattenRootStatement(s *wafv2.Statement) interface{} {
+func flattenRuleGroupRootStatement(s *wafv2.Statement) interface{} {
 	if s == nil {
 		return []interface{}{}
 	}
@@ -1259,6 +1285,14 @@ func flattenStatement(s *wafv2.Statement) map[string]interface{} {
 
 	if s.OrStatement != nil {
 		m["or_statement"] = flattenOrStatement(s.OrStatement)
+	}
+
+	if s.RateBasedStatement != nil {
+		m["rate_based_statement"] = flattenRateBasedStatement(s.RateBasedStatement)
+	}
+
+	if s.RegexMatchStatement != nil {
+		m["regex_match_statement"] = flattenRegexMatchStatement(s.RegexMatchStatement)
 	}
 
 	if s.RegexPatternSetReferenceStatement != nil {
@@ -1544,6 +1578,20 @@ func flattenOrStatement(a *wafv2.OrStatement) interface{} {
 	return []interface{}{m}
 }
 
+func flattenRegexMatchStatement(r *wafv2.RegexMatchStatement) interface{} {
+	if r == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"regex_string":        aws.StringValue(r.RegexString),
+		"field_to_match":      flattenFieldToMatch(r.FieldToMatch),
+		"text_transformation": flattenTextTransformations(r.TextTransformations),
+	}
+
+	return []interface{}{m}
+}
+
 func flattenRegexPatternSetReferenceStatement(r *wafv2.RegexPatternSetReferenceStatement) interface{} {
 	if r == nil {
 		return []interface{}{}
@@ -1698,6 +1746,10 @@ func flattenWebACLStatement(s *wafv2.Statement) map[string]interface{} {
 
 	if s.RateBasedStatement != nil {
 		m["rate_based_statement"] = flattenRateBasedStatement(s.RateBasedStatement)
+	}
+
+	if s.RegexMatchStatement != nil {
+		m["regex_match_statement"] = flattenRegexMatchStatement(s.RegexMatchStatement)
 	}
 
 	if s.RegexPatternSetReferenceStatement != nil {

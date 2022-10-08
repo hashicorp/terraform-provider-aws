@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"github.com/hashicorp/terraform-provider-aws/internal/experimental/intf"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/fwtypes"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/medialive"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -318,9 +318,8 @@ func (p *fwprovider) DataSources(ctx context.Context) []func() datasource.DataSo
 	var dataSources []func() datasource.DataSource
 
 	// TODO Wrap the returned type to add standard context, logging etc.
-	providerData := p.Primary.Meta().(intf.ProviderData)
-	for serviceID, data := range providerData.Services(ctx) {
-		for _, v := range data.DataSources(ctx) {
+	for serviceID, data := range p.Primary.Meta().(*conns.AWSClient).ServiceMap {
+		for _, v := range data.FrameworkDataSources(ctx) {
 			v, err := v(ctx)
 
 			if err != nil {

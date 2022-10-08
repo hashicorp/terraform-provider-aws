@@ -14,7 +14,7 @@ import (
 )
 
 func init() {
-	registerDataSourceFactory(newDataSourceARN)
+	registerFWDataSourceFactory(newDataSourceARN)
 }
 
 // newDataSourceARN instantiates a new DataSource for the aws_arn data source.
@@ -80,35 +80,33 @@ func (d *dataSourceARN) Configure(_ context.Context, request datasource.Configur
 func (d *dataSourceARN) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
 	tflog.Trace(ctx, "dataSourceARN.Read enter")
 
-	var config dataSourceARNData
+	var data dataSourceARNData
 
-	response.Diagnostics.Append(request.Config.Get(ctx, &config)...)
+	response.Diagnostics.Append(request.Config.Get(ctx, &data)...)
 
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	state := config
-	arn := &state.ARN.Value
+	arn := &data.ARN.Value
 	id := arn.String()
 
-	state.Account = &arn.AccountID
-	state.ID = &id
-	state.Partition = &arn.Partition
-	state.Region = &arn.Region
-	state.Resource = &arn.Resource
-	state.Service = &arn.Service
+	data.Account = types.String{Value: arn.AccountID}
+	data.ID = types.String{Value: id}
+	data.Partition = types.String{Value: arn.Partition}
+	data.Region = types.String{Value: arn.Region}
+	data.Resource = types.String{Value: arn.Resource}
+	data.Service = types.String{Value: arn.Service}
 
-	response.Diagnostics.Append(response.State.Set(ctx, &state)...)
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-// TODO: Generate this structure definition.
 type dataSourceARNData struct {
-	Account   *string     `tfsdk:"account"`
-	ARN       fwtypes.ARN `tfsdk:"arn"`
-	ID        *string     `tfsdk:"id"`
-	Partition *string     `tfsdk:"partition"`
-	Region    *string     `tfsdk:"region"`
-	Resource  *string     `tfsdk:"resource"`
-	Service   *string     `tfsdk:"service"`
+	Account   types.String `tfsdk:"account"`
+	ARN       fwtypes.ARN  `tfsdk:"arn"`
+	ID        types.String `tfsdk:"id"`
+	Partition types.String `tfsdk:"partition"`
+	Region    types.String `tfsdk:"region"`
+	Resource  types.String `tfsdk:"resource"`
+	Service   types.String `tfsdk:"service"`
 }

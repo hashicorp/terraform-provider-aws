@@ -20,8 +20,8 @@ github.com/apparentlymart/go-textseg/v12 v12.0.0/go.mod h1:S/4uRK2UtaQttw1GenVJE
 github.com/apparentlymart/go-textseg/v13 v13.0.0 h1:Y+KvPE1NYz0xl601PVImeQfFyEy6iT90AvPUL1NNfNw=
 github.com/apparentlymart/go-textseg/v13 v13.0.0/go.mod h1:ZK2fH7c4NqDTLtiYLvIkEghdlcqw7yxLeM89kiTRPUo=
 github.com/armon/go-socks5 v0.0.0-20160902184237-e75332964ef5/go.mod h1:wHh0iHkYZB8zMSxRWpUBQtwG5a7fFgvEO+odwuTv2gs=
-github.com/aws/aws-sdk-go v1.44.110 h1:unno3l2FYQo6p0wYCp9gUk8YNzhOxqSktM0Y1vukl9k=
-github.com/aws/aws-sdk-go v1.44.110/go.mod h1:y4AeaBuwd2Lk+GepC1E9v0qOiTws0MIWAX4oIKwKHZo=
+github.com/aws/aws-sdk-go v1.44.113 h1:ZBrxWP9A2cUpVrzr7o6p1koBXNfBkJ6E94cUkIyBWt4=
+github.com/aws/aws-sdk-go v1.44.113/go.mod h1:y4AeaBuwd2Lk+GepC1E9v0qOiTws0MIWAX4oIKwKHZo=
 github.com/aws/aws-sdk-go-v2 v1.16.3/go.mod h1:ytwTPBG6fXTZLxxeeCCWj2/EMYp/xDUgX+OET6TLNNU=
 github.com/aws/aws-sdk-go-v2 v1.16.16 h1:M1fj4FE2lB4NzRb9Y0xdWsn2P0+2UHVxwKyOa4YJNjk=
 github.com/aws/aws-sdk-go-v2 v1.16.16/go.mod h1:SwiyXi/1zTUZ6KIAmLK5V5ll8SiURNUYOqTerZPaF9k=
@@ -52,6 +52,8 @@ github.com/aws/aws-sdk-go-v2/service/inspector2 v1.8.1 h1:Q4OBuhQrSt1/T8hyy5nwux
 github.com/aws/aws-sdk-go-v2/service/inspector2 v1.8.1/go.mod h1:ijgzkrNZIbIzkWFET1RpQ1G46eFYmdoEx8yh6OUuXso=
 github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.9.4 h1:b16QW0XWl0jWjLABFc1A+uh145Oqv+xDcObNk0iQgUk=
 github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.9.4/go.mod h1:uKkN7qmSIsNJVyMtxNQoCEYMvFEXbOg9fwCJPdfp2u8=
+github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.13.17 h1:HfVVR1vItaG6le+Bpw6P4midjBDMKnjMyZnw9MXYUcE=
+github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.13.17/go.mod h1:YqMdV+gEKCQ59NrB7rzrJdALeBIsYiVi8Inj3+KcqHI=
 github.com/aws/aws-sdk-go-v2/service/kendra v1.35.0 h1:nOHdZFfH438FwUfAVQePSXlVD3Rux20n8KxJeGYlabY=
 github.com/aws/aws-sdk-go-v2/service/kendra v1.35.0/go.mod h1:vpAlARGh4pK3T2oNoW6osfGCEMGy3JDKJJfcnlzv+aM=
 github.com/aws/aws-sdk-go-v2/service/medialive v1.23.1 h1:CWizhnzbsBRLUB0p9t4FAL7B8ZTwsJD/4GSTHbrppUU=
@@ -60,6 +62,8 @@ github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.0.10 h1:FYBnb1z07t3qpAFddD
 github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.0.10/go.mod h1:61Oc8W4jS9kp9xNyrBkzir82bq5AV7moeXLkHR6nzLY=
 github.com/aws/aws-sdk-go-v2/service/route53domains v1.12.17 h1:Y/ay2+KWFoPBWP5p4VnWi7uCnZe+C6kdTlYUZC1w30U=
 github.com/aws/aws-sdk-go-v2/service/route53domains v1.12.17/go.mod h1:8kD6U3g33wPkjgM8boZrrVeXT6kmaWKf0nHquE2wWVU=
+github.com/aws/aws-sdk-go-v2/service/s3control v1.24.0 h1:sUzmjWeHc74jxbxuqlCj21Np3pspePMPJGXgjanQujQ=
+github.com/aws/aws-sdk-go-v2/service/s3control v1.24.0/go.mod h1:OGlbj8zUJ6BavucCjkjcvmBxFaYcuRW8easK//ktnx4=
 github.com/aws/aws-sdk-go-v2/service/sesv2 v1.13.18 h1:Efm2CjXDoWK1NOu+w2+Ik0xne0BKDtq6T5ti/+9/NiQ=
 github.com/aws/aws-sdk-go-v2/service/sesv2 v1.13.18/go.mod h1:y+PVz3TeQYhlvP7NbmYDXuwflXBbK1s5I2O7SVTiWyw=
 github.com/aws/aws-sdk-go-v2/service/sso v1.11.4 h1:Uw5wBybFQ1UeA9ts0Y07gbv0ncZnIAyw858tDW0NP2o=
@@ -186,8 +190,8 @@ github.com/hashicorp/terraform-exec v0.17.3 h1:MX14Kvnka/oWGmIkyuyvL6POx25ZmKrjl
 github.com/hashicorp/terraform-exec v0.17.3/go.mod h1:+NELG0EqQekJzhvikkeQsOAZpsw0cv/03rbeQJqscAI=
 github.com/hashicorp/terraform-json v0.14.0 h1:sh9iZ1Y8IFJLx+xQiKHGud6/TSUCM0N8e17dKDpqV7s=
 github.com/hashicorp/terraform-json v0.14.0/go.mod h1:5A9HIWPkk4e5aeeXIBbkcOvaZbIYnAIkEyqP2pNSckM=
-github.com/hashicorp/terraform-plugin-framework v0.13.0 h1:tGnqttzZwU3FKc+HasHr2Yi5L81FcQbdc8zQhbBD9jQ=
-github.com/hashicorp/terraform-plugin-framework v0.13.0/go.mod h1:wcZdk4+Uef6Ng+BiBJjGAcIPlIs5bhlEV/TA1k6Xkq8=
+github.com/hashicorp/terraform-plugin-framework v0.14.0 h1:Mwj55u+Jc/QGM6fLBPCe1P+ZF3cuYs6wbCdB15lx/Dg=
+github.com/hashicorp/terraform-plugin-framework v0.14.0/go.mod h1:wcZdk4+Uef6Ng+BiBJjGAcIPlIs5bhlEV/TA1k6Xkq8=
 github.com/hashicorp/terraform-plugin-framework-validators v0.5.0 h1:eD79idhnJOBajkUMEbm0c8dOyOb/F49STbUEVojT6F4=
 github.com/hashicorp/terraform-plugin-framework-validators v0.5.0/go.mod h1:NfGgclDM3FZqvNVppPKE2aHI1JAyT002ypPRya7ch3I=
 github.com/hashicorp/terraform-plugin-go v0.14.0 h1:ttnSlS8bz3ZPYbMb84DpcPhY4F5DsQtcAS7cHo8uvP4=

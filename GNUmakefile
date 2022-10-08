@@ -78,6 +78,7 @@ gen:
 
 sweep:
 	# make sweep SWEEPARGS=-sweep-run=aws_example_thing
+	# set SWEEPARGS=-sweep-allow-failures to continue after first failure
 	@echo "WARNING: This will destroy infrastructure. Use only in development accounts."
 	$(GO_VER) test $(SWEEP_DIR) -v -tags=sweep -sweep=$(SWEEP) $(SWEEPARGS) -timeout 60m
 

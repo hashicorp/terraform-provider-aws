@@ -74,9 +74,12 @@ func ResourceRegexPatternSet() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"regex_string": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringLenBetween(1, 200),
+							Type:     schema.TypeString,
+							Required: true,
+							ValidateFunc: validation.All(
+								validation.StringLenBetween(1, 200),
+								validation.StringIsValidRegExp,
+							),
 						},
 					},
 				},

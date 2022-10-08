@@ -8,6 +8,6 @@ import (
 
 // ServiceData is data about a service.
 type ServiceData interface {
-	Configure(context.Context, ProviderData) error
-	DataSources(context.Context) []func(context.Context) (datasource.DataSource, error)
+	Configure(context.Context, any) error
+	FrameworkDataSources(context.Context) []func(context.Context) (datasource.DataSource, error)
 }

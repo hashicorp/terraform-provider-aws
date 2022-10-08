@@ -76,6 +76,7 @@ val services = mapOf(
     "emrcontainers" to ServiceSpec("EMR Containers"),
     "emrserverless" to ServiceSpec("EMR Serverless"),
     "events" to ServiceSpec("EventBridge"),
+    "evidently" to ServiceSpec("CloudWatch Evidently"),
     "firehose" to ServiceSpec("Kinesis Firehose"),
     "fis" to ServiceSpec("FIS (Fault Injection Simulator)"),
     "fms" to ServiceSpec("FMS (Firewall Manager)"),

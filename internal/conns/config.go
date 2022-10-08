@@ -190,6 +190,7 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 	c.clientConns(client, sess)
 
 	client.AccountID = accountID
+	client.Config = &cfg
 	client.DefaultTagsConfig = c.DefaultTagsConfig
 	client.DNSSuffix = DNSSuffix
 	client.IgnoreTagsConfig = c.IgnoreTagsConfig

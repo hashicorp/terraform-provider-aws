@@ -16,11 +16,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-const (
-	// There is no constant in the SDK for this resource type
-	resourceTypeCapacityReservation = "capacity-reservation"
-)
-
 func ResourceCapacityReservation() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceCapacityReservationCreate,
@@ -121,7 +116,7 @@ func resourceCapacityReservationCreate(d *schema.ResourceData, meta interface{})
 		InstanceCount:     aws.Int64(int64(d.Get("instance_count").(int))),
 		InstancePlatform:  aws.String(d.Get("instance_platform").(string)),
 		InstanceType:      aws.String(d.Get("instance_type").(string)),
-		TagSpecifications: tagSpecificationsFromKeyValueTags(tags, resourceTypeCapacityReservation),
+		TagSpecifications: tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeCapacityReservation),
 	}
 
 	if v, ok := d.GetOk("ebs_optimized"); ok {
