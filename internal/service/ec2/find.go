@@ -2428,6 +2428,8 @@ func FindVPCAttribute(conn *ec2.EC2, vpcID string, attribute string) (bool, erro
 		v = output.EnableDnsHostnames
 	case ec2.VpcAttributeNameEnableDnsSupport:
 		v = output.EnableDnsSupport
+	case ec2.VpcAttributeNameEnableNetworkAddressUsageMetrics:
+		v = output.EnableNetworkAddressUsageMetrics
 	default:
 		return false, fmt.Errorf("unsupported VPC attribute: %s", attribute)
 	}
