@@ -41,6 +41,7 @@ func ResourceSegment() *schema.Resource {
 			"description": {
 				Type:         schema.TypeString,
 				Optional:     true,
+				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 160),
 			},
 			"experiment_count": {
@@ -67,6 +68,7 @@ func ResourceSegment() *schema.Resource {
 			"pattern": {
 				Type:         schema.TypeString,
 				Required:     true,
+				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 1024),
 			},
 			"tags":     tftags.TagsSchema(),
