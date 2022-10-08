@@ -57,7 +57,7 @@ func TestAccEvidentlySegment_description(t *testing.T) {
 	var segment cloudwatchevidently.Segment
 
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
-	description := "exmaple description"
+	description := "example description"
 	resourceName := "aws_evidently_segment.test"
 
 	resource.ParallelTest(t, resource.TestCase{
