@@ -21,6 +21,7 @@ func ResourceSegment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSegmentCreate,
 		ReadWithoutTimeout:   resourceSegmentRead,
+		UpdateWithoutTimeout: resourceSegmentUpdate,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -143,4 +144,19 @@ func resourceSegmentRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	return nil
+}
+
+func resourceSegmentUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).EvidentlyConn
+
+	// updates to tags
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
+
+		if err := UpdateTagsWithContext(ctx, conn, d.Get("arn").(string), o, n); err != nil {
+			return diag.Errorf("updating tags: %s", err)
+		}
+	}
+
+	return resourceSegmentRead(ctx, d, meta)
 }
