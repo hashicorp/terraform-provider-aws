@@ -95,7 +95,7 @@ func ResourceDefaultVPC() *schema.Resource {
 			"enable_network_address_usage_metrics": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  false,
+				Default:  true,
 			},
 			"existing_default_vpc": {
 				Type:     schema.TypeBool,
