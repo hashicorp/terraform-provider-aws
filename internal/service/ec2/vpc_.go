@@ -107,6 +107,7 @@ func ResourceVPC() *schema.Resource {
 			"enable_network_address_usage_metrics": {
 				Type:     schema.TypeBool,
 				Optional: true,
+				Computed: true,
 			},
 			"instance_tenancy": {
 				Type:         schema.TypeString,
