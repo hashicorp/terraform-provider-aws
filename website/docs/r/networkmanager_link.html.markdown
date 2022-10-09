@@ -15,7 +15,7 @@ Creates a link for a site.
 ```terraform
 resource "aws_networkmanager_link" "example" {
   global_network_id = aws_networkmanager_global_network.example.id
-  site_id           = aws_networkmanager_global_site.example.id
+  site_id           = aws_networkmanager_site.example.id
 
   bandwidth {
     upload_speed   = 10
