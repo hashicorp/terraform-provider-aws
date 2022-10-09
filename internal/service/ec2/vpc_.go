@@ -601,7 +601,7 @@ func modifyVPCAttributesOnCreate(conn *ec2.EC2, d *schema.ResourceData, vpcInfo 
 	}
 
 	if new, old := d.Get("enable_network_address_usage_metrics").(bool), vpcInfo.enableNetworkAddressUsageMetrics; old != new {
-		if err := modifyVPCDNSSupport(conn, d.Id(), new); err != nil {
+		if err := modifyVPCNetworkAddressUsageMetrics(conn, d.Id(), new); err != nil {
 			return err
 		}
 	}
