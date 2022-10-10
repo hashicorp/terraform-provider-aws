@@ -1374,9 +1374,6 @@ func resourceChannelCreate(ctx context.Context, d *schema.ResourceData, meta int
 		RequestId: aws.String(resource.UniqueId()),
 	}
 
-	if v, ok := d.GetOk("complex_argument"); ok && len(v.([]interface{})) > 0 {
-		in.ComplexArguments = expandComplexArguments(v.([]interface{}))
-	}
 	if v, ok := d.GetOk("maintenance"); ok && len(v.(map[string]interface{})) > 0 {
 		in.Maintenance = expandChannelMaintenanceCreate(v.(map[string]interface{}))
 	}
@@ -1424,9 +1421,6 @@ func resourceChannelRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("arn", out.Arn)
 	d.Set("name", out.Name)
 
-	if err := d.Set("complex_argument", flattenComplexArguments(out.ComplexArguments)); err != nil {
-		return create.DiagError(names.MediaLive, create.ErrActionSetting, ResNameChannel, d.Id(), err)
-	}
 	if err := d.Set("maintenance", flattenChannelMaintenance(out.Maintenance)); err != nil {
 		return create.DiagError(names.MediaLive, create.ErrActionSetting, ResNameChannel, d.Id(), err)
 	}
@@ -1609,85 +1603,6 @@ func FindChannelByID(ctx context.Context, conn *medialive.Client, id string) (*m
 	}
 
 	return out, nil
-}
-
-func flattenComplexArgument(apiObject *medialive.ComplexArgument) map[string]interface{} {
-	if apiObject == nil {
-		return nil
-	}
-
-	m := map[string]interface{}{}
-
-	if v := apiObject.SubFieldOne; v != nil {
-		m["sub_field_one"] = aws.ToString(v)
-	}
-
-	if v := apiObject.SubFieldTwo; v != nil {
-		m["sub_field_two"] = aws.ToString(v)
-	}
-
-	return m
-}
-
-func flattenComplexArguments(apiObjects []*medialive.ComplexArgument) []interface{} {
-	if len(apiObjects) == 0 {
-		return nil
-	}
-
-	var l []interface{}
-
-	for _, apiObject := range apiObjects {
-		if apiObject == nil {
-			continue
-		}
-
-		l = append(l, flattenComplexArgument(apiObject))
-	}
-
-	return l
-}
-
-func expandComplexArgument(tfMap map[string]interface{}) *medialive.ComplexArgument {
-	if tfMap == nil {
-		return nil
-	}
-
-	a := &medialive.ComplexArgument{}
-
-	if v, ok := tfMap["sub_field_one"].(string); ok && v != "" {
-		a.SubFieldOne = aws.String(v)
-	}
-
-	if v, ok := tfMap["sub_field_two"].(string); ok && v != "" {
-		a.SubFieldTwo = aws.String(v)
-	}
-
-	return a
-}
-
-func expandComplexArguments(tfList []interface{}) []*medialive.ComplexArgument {
-
-	var s []*medialive.ComplexArgument
-
-	// s := make([]*medialive.ComplexArgument, 0)
-
-	for _, r := range tfList {
-		m, ok := r.(map[string]interface{})
-
-		if !ok {
-			continue
-		}
-
-		a := expandComplexArgument(m)
-
-		if a == nil {
-			continue
-		}
-
-		s = append(s, a)
-	}
-
-	return s
 }
 
 func expandChannelMaintenanceCreate(tfMap map[string]interface{}) *types.MaintenanceCreateSettings {
