@@ -23,7 +23,7 @@ resource "aws_codepipeline_custom_action_type" "example" {
     maximum_count = 1
     minimum_count = 0
   }
-  provider_name = "example"
+	provider_name = "example"
   version = "1"
 }
 ```

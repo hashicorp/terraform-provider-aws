@@ -376,10 +376,7 @@ func flattenAwsCodePipelineActionConfigurationProperty(acps []*codepipeline.Acti
 		m["queryable"] = aws.BoolValue(acp.Queryable)
 		m["required"] = aws.BoolValue(acp.Required)
 		m["secret"] = aws.BoolValue(acp.Secret)
-		// Currently AWS doesn't return type
-		if acp.Type != nil {
-			m["type"] = aws.StringValue(acp.Type)
-		}
+		m["type"] = aws.StringValue(acp.Type)
 		result = append(result, m)
 	}
 	return result
