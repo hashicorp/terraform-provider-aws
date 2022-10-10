@@ -1,18 +1,18 @@
 ---
+subcategory: "ELB Classic"
 layout: "aws"
 page_title: "AWS: aws_load_balancer_policy"
-sidebar_current: "docs-aws-resource-load-balancer-policy"
 description: |-
   Provides a load balancer policy, which can be attached to an ELB listener or backend server.
 ---
 
-# aws_load_balancer_policy
+# Resource: aws_load_balancer_policy
 
 Provides a load balancer policy, which can be attached to an ELB listener or backend server.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_elb" "wu-tang" {
   name               = "wu-tang"
   availability_zones = ["us-east-1a"]
@@ -31,29 +31,31 @@ resource "aws_elb" "wu-tang" {
 }
 
 resource "aws_load_balancer_policy" "wu-tang-ca-pubkey-policy" {
-  load_balancer_name = "${aws_elb.wu-tang.name}"
+  load_balancer_name = aws_elb.wu-tang.name
   policy_name        = "wu-tang-ca-pubkey-policy"
   policy_type_name   = "PublicKeyPolicyType"
 
+  # The public key of a CA certificate file can be extracted with:
+  # $ cat wu-tang-ca.pem | openssl x509 -pubkey -noout | grep -v '\-\-\-\-' | tr -d '\n' > wu-tang-pubkey
   policy_attribute {
     name  = "PublicKey"
-    value = "${file("wu-tang-pubkey")}"
+    value = file("wu-tang-pubkey")
   }
 }
 
 resource "aws_load_balancer_policy" "wu-tang-root-ca-backend-auth-policy" {
-  load_balancer_name = "${aws_elb.wu-tang.name}"
+  load_balancer_name = aws_elb.wu-tang.name
   policy_name        = "wu-tang-root-ca-backend-auth-policy"
   policy_type_name   = "BackendServerAuthenticationPolicyType"
 
   policy_attribute {
     name  = "PublicKeyPolicyName"
-    value = "${aws_load_balancer_policy.wu-tang-root-ca-pubkey-policy.policy_name}"
+    value = aws_load_balancer_policy.wu-tang-root-ca-pubkey-policy.policy_name
   }
 }
 
 resource "aws_load_balancer_policy" "wu-tang-ssl" {
-  load_balancer_name = "${aws_elb.wu-tang.name}"
+  load_balancer_name = aws_elb.wu-tang.name
   policy_name        = "wu-tang-ssl"
   policy_type_name   = "SSLNegotiationPolicyType"
 
@@ -68,32 +70,35 @@ resource "aws_load_balancer_policy" "wu-tang-ssl" {
   }
 }
 
+resource "aws_load_balancer_policy" "wu-tang-ssl-tls-1-1" {
+  load_balancer_name = aws_elb.wu-tang.name
+  policy_name        = "wu-tang-ssl"
+  policy_type_name   = "SSLNegotiationPolicyType"
+
+  policy_attribute {
+    name  = "Reference-Security-Policy"
+    value = "ELBSecurityPolicy-TLS-1-1-2017-01"
+  }
+}
+
 resource "aws_load_balancer_backend_server_policy" "wu-tang-backend-auth-policies-443" {
-  load_balancer_name = "${aws_elb.wu-tang.name}"
+  load_balancer_name = aws_elb.wu-tang.name
   instance_port      = 443
 
   policy_names = [
-    "${aws_load_balancer_policy.wu-tang-root-ca-backend-auth-policy.policy_name}",
+    aws_load_balancer_policy.wu-tang-root-ca-backend-auth-policy.policy_name,
   ]
 }
 
 resource "aws_load_balancer_listener_policy" "wu-tang-listener-policies-443" {
-  load_balancer_name = "${aws_elb.wu-tang.name}"
+  load_balancer_name = aws_elb.wu-tang.name
   load_balancer_port = 443
 
   policy_names = [
-    "${aws_load_balancer_policy.wu-tang-ssl.policy_name}",
+    aws_load_balancer_policy.wu-tang-ssl.policy_name,
   ]
 }
 ```
-
-Where the file `pubkey` in the current directory contains only the _public key_ of the certificate.
-
-```shell
-cat wu-tang-ca.pem | openssl x509 -pubkey -noout | grep -v '\-\-\-\-' | tr -d '\n' > wu-tang-pubkey
-```
-
-This example shows how to enable backend authentication for an ELB as well as customize the TLS settings.
 
 ## Argument Reference
 

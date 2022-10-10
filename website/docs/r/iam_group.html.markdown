@@ -1,18 +1,20 @@
 ---
+subcategory: "IAM (Identity & Access Management)"
 layout: "aws"
 page_title: "AWS: aws_iam_group"
-sidebar_current: "docs-aws-resource-iam-group"
 description: |-
   Provides an IAM group.
 ---
 
-# aws_iam_group
+# Resource: aws_iam_group
 
 Provides an IAM group.
 
+~> **NOTE on user management:** Using `aws_iam_group_membership` or `aws_iam_user_group_membership` resources in addition to manually managing user/group membership using the console may lead to configuration drift or conflicts. For this reason, it's recommended to either manage membership entirely with Terraform or entirely within the AWS console.
+
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_iam_group" "developers" {
   name = "developers"
   path = "/users/"
@@ -40,7 +42,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-IAM Groups can be imported using the `name`, e.g.
+IAM Groups can be imported using the `name`, e.g.,
 
 ```
 $ terraform import aws_iam_group.developers developers

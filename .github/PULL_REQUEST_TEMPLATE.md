@@ -1,25 +1,42 @@
-<!--- See what makes a good Pull Request at : https://github.com/terraform-providers/terraform-provider-aws/blob/master/.github/CONTRIBUTING.md#pull-requests --->
+<!---
+See what makes a good Pull Request at: https://hashicorp.github.io/terraform-provider-aws/raising-a-pull-request/
+--->
+### Description
+<!---
+Please provide a helpful description of what change this pull request will introduce.
+--->
 
-<!--- Please keep this note for the community --->
 
-### Community Note
+### Relations
+<!---
+If your pull request fully resolves and should automatically close the linked issue, use Closes. Otherwise, use Relates.
 
-* Please vote on this pull request by adding a 👍 [reaction](https://blog.github.com/2016-03-10-add-reactions-to-pull-requests-issues-and-comments/) to the original pull request comment to help the community and maintainers prioritize this request
-* Please do not leave "+1" comments, they generate extra noise for pull request followers and do not help prioritize the request
+For Example:
 
-<!--- Thank you for keeping this note for the community --->
+Relates #0000
+or 
+Closes #0000
+--->
 
-Fixes #0000
+Closes #0000
 
-Changes proposed in this pull request:
+### References
+<!---
+Optionally, provide any helpful references that may help the reviewer(s).
+--->
 
-* Change 1
-* Change 2
 
-Output from acceptance testing:
+### Output from Acceptance Testing
+<!--
+Replace TestAccXXX with a pattern that matches the tests affected by this PR.
+
+Replace ec2 with the service package corresponding to your tests.
+
+For more information on the `-run` flag, see the `go test` documentation at https://tip.golang.org/cmd/go/#hdr-Testing_flags.
+-->
 
 ```
-$ make testacc TESTARGS='-run=TestAccXXX'
+$ make testacc TESTS=TestAccXXX PKG=ec2
 
 ...
 ```

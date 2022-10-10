@@ -1,22 +1,22 @@
 ---
+subcategory: "OpsWorks"
 layout: "aws"
 page_title: "AWS: aws_opsworks_application"
-sidebar_current: "docs-aws-resource-opsworks-application"
 description: |-
   Provides an OpsWorks application resource.
 ---
 
-# aws_opsworks_application
+# Resource: aws_opsworks_application
 
 Provides an OpsWorks application resource.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_opsworks_application" "foo-app" {
   name        = "foobar application"
   short_name  = "foobar"
-  stack_id    = "${aws_opsworks_stack.main.id}"
+  stack_id    = aws_opsworks_stack.main.id
   type        = "rails"
   description = "This is a Rails application"
 
@@ -40,8 +40,8 @@ resource "aws_opsworks_application" "foo-app" {
   enable_ssl = true
 
   ssl_configuration {
-    private_key = "${file("./foobar.key")}"
-    certificate = "${file("./foobar.crt")}"
+    private_key = file("./foobar.key")
+    certificate = file("./foobar.crt")
   }
 
   document_root         = "public"
@@ -56,7 +56,7 @@ The following arguments are supported:
 
 * `name` - (Required) A human-readable name for the application.
 * `short_name` - (Required) A short, machine-readable name for the application. This can only be defined on resource creation and ignored on resource update.
-* `stack_id` - (Required) The id of the stack the application will belong to.
+* `stack_id` - (Required) ID of the stack the application will belong to.
 * `type` - (Required) Opsworks application type. One of `aws-flow-ruby`, `java`, `rails`, `php`, `nodejs`, `static` or `other`.
 * `description` - (Optional) A description of the app.
 * `environment` - (Optional) Object to define environment variables.  Object is described below.
@@ -77,8 +77,8 @@ An `app_source` block supports the following arguments (can only be defined once
 * `type` - (Required) The type of source to use. For example, "archive".
 * `url` - (Required) The URL where the app resource can be found.
 * `username` - (Optional) Username to use when authenticating to the source.
-* `password` - (Optional) Password to use when authenticating to the source.
-* `ssh_key` - (Optional) SSH key to use when authenticating to the source.
+* `password` - (Optional) Password to use when authenticating to the source. Terraform cannot perform drift detection of this configuration.
+* `ssh_key` - (Optional) SSH key to use when authenticating to the source. Terraform cannot perform drift detection of this configuration.
 * `revision` - (Optional) For sources that are version-aware, the revision to use.
 
 An `environment` block supports the following arguments:
@@ -98,3 +98,11 @@ A `ssl_configuration` block supports the following arguments (can only be define
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - The id of the application.
+
+## Import
+
+Opsworks Application can be imported using the `id`, e.g.,
+
+```
+$ terraform import aws_opsworks_application.test <id>
+```

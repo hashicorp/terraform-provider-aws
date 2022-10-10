@@ -1,18 +1,18 @@
 ---
+subcategory: "Redshift"
 layout: "aws"
 page_title: "AWS: aws_redshift_parameter_group"
-sidebar_current: "docs-aws-resource-redshift-parameter-group"
 description: |-
   Provides a Redshift Cluster parameter group resource.
 ---
 
-# aws_redshift_parameter_group
+# Resource: aws_redshift_parameter_group
 
 Provides a Redshift Cluster parameter group resource.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_redshift_parameter_group" "bar" {
   name   = "parameter-group-test-terraform"
   family = "redshift-1.0"
@@ -47,6 +47,7 @@ Parameter blocks support the following:
 
 * `name` - (Required) The name of the Redshift parameter.
 * `value` - (Required) The value of the Redshift parameter.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 You can read more about the parameters that Redshift supports in the [documentation](http://docs.aws.amazon.com/redshift/latest/mgmt/working-with-parameter-groups.html)
 
@@ -54,11 +55,13 @@ You can read more about the parameters that Redshift supports in the [documentat
 
 In addition to all arguments above, the following attributes are exported:
 
+* `arn` - Amazon Resource Name (ARN) of parameter group
 * `id` - The Redshift parameter group name.
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
-Redshift Parameter Groups can be imported using the `name`, e.g.
+Redshift Parameter Groups can be imported using the `name`, e.g.,
 
 ```
 $ terraform import aws_redshift_parameter_group.paramgroup1 parameter-group-test-terraform

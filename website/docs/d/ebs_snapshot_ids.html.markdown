@@ -1,7 +1,7 @@
 ---
+subcategory: "EBS (EC2)"
 layout: "aws"
 page_title: "AWS: aws_ebs_snapshot_ids"
-sidebar_current: "docs-aws-datasource-ebs-snapshot-ids"
 description: |-
   Provides a list of EBS snapshot IDs.
 ---
@@ -13,7 +13,7 @@ criteria.
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_ebs_snapshot_ids" "ebs_volumes" {
   owners = ["self"]
 
@@ -43,7 +43,13 @@ several valid keys, for a full reference, check out
 
 ## Attributes Reference
 
-`ids` is set to the list of EBS snapshot IDs, sorted by creation time in
-descending order.
+* `id` - AWS Region.
+* `ids` - Set of EBS snapshot IDs, sorted by creation time in descending order.
+
+## Timeouts
+
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+
+- `read` - (Default `20m`)
 
 [1]: http://docs.aws.amazon.com/cli/latest/reference/ec2/describe-snapshots.html

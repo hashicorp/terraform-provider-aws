@@ -1,0 +1,15 @@
+```release-note:note
+resource/aws_ec2_client_vpn_network_association: The `security_groups` argument has been deprecated. Use the `security_group_ids` argument of the `aws_ec2_client_vpn_endpoint` resource instead
+```
+
+```release-note:enhancement
+resource/aws_ec2_client_vpn_endpoint: Add `security_group_ids` and `vpc_id` arguments
+```
+
+```release-note:enhancement
+data-source/aws_ec2_client_vpn_endpoint: Add `security_group_ids` and `vpc_id` attributes
+```
+
+```release-note:note
+resource/aws_ec2_client_vpn_route: Add [custom `timeouts`](https://www.terraform.io/docs/language/resources/syntax.html#operation-timeouts) block
+```

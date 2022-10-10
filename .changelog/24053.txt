@@ -1,0 +1,7 @@
+```release-note:new-resource
+aws_lambda_function_url
+```
+
+```release-note:new-data-source
+aws_lambda_function_url
+```

@@ -1,12 +1,12 @@
 ---
+subcategory: "Elastic Beanstalk"
 layout: "aws"
 page_title: "AWS: aws_elastic_beanstalk_environment"
-sidebar_current: "docs-aws-resource-elastic-beanstalk-environment"
 description: |-
   Provides an Elastic Beanstalk Environment Resource
 ---
 
-# aws_elastic_beanstalk_environment
+# Resource: aws_elastic_beanstalk_environment
 
 Provides an Elastic Beanstalk Environment Resource. Elastic Beanstalk allows
 you to deploy and manage applications in the AWS cloud without worrying about
@@ -17,7 +17,7 @@ Environments are often things such as `development`, `integration`, or
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_elastic_beanstalk_application" "tftest" {
   name        = "tf-test-name"
   description = "tf-test-desc"
@@ -25,7 +25,7 @@ resource "aws_elastic_beanstalk_application" "tftest" {
 
 resource "aws_elastic_beanstalk_environment" "tfenvtest" {
   name                = "tf-test-name"
-  application         = "${aws_elastic_beanstalk_application.tftest.name}"
+  application         = aws_elastic_beanstalk_application.tftest.name
   solution_stack_name = "64bit Amazon Linux 2015.03 v2.0.3 running Go 1.4"
 }
 ```
@@ -52,7 +52,7 @@ off of. Example stacks can be found in the [Amazon API documentation][1]
   template to use in deployment
 * `platform_arn` – (Optional) The [ARN][2] of the Elastic Beanstalk [Platform][3]
   to use in deployment
-* `wait_for_ready_timeout` - (Default: `20m`) The maximum
+* `wait_for_ready_timeout` - (Default `20m`) The maximum
   [duration](https://golang.org/pkg/time/#ParseDuration) that Terraform should
   wait for an Elastic Beanstalk Environment to be in a ready state before timing
   out.
@@ -62,7 +62,7 @@ for any `create` or `update` action. Minimum `10s`, maximum `180s`. Omit this to
 use the default behavior, which is an exponential backoff
 * `version_label` - (Optional) The name of the Elastic Beanstalk Application Version
 to use in deployment.
-* `tags` – (Optional) A set of tags to apply to the Environment.
+* `tags` - (Optional) A set of tags to apply to the Environment. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 
 ## Option Settings
@@ -79,7 +79,7 @@ The `setting` and `all_settings` mappings support the following format:
 
 ### Example With Options
 
-```hcl
+```terraform
 resource "aws_elastic_beanstalk_application" "tftest" {
   name        = "tf-test-name"
   description = "tf-test-desc"
@@ -87,7 +87,7 @@ resource "aws_elastic_beanstalk_application" "tftest" {
 
 resource "aws_elastic_beanstalk_environment" "tfenvtest" {
   name                = "tf-test-name"
-  application         = "${aws_elastic_beanstalk_application.tftest.name}"
+  application         = aws_elastic_beanstalk_application.tftest.name
   solution_stack_name = "64bit Amazon Linux 2015.03 v2.0.3 running Go 1.4"
 
   setting {
@@ -112,18 +112,20 @@ In addition to all arguments above, the following attributes are exported:
 * `name` - Name of the Elastic Beanstalk Environment.
 * `description` - Description of the Elastic Beanstalk Environment.
 * `tier` - The environment tier specified.
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `application` – The Elastic Beanstalk Application specified for this environment.
 * `setting` – Settings specifically set for this Environment.
-* `all_settings` – List of all option settings configured in the Environment. These
+* `all_settings` – List of all option settings configured in this Environment. These
   are a combination of default settings and their overrides from `setting` in
   the configuration.
-* `cname` - Fully qualified DNS name for the Environment.
-* `autoscaling_groups` - The autoscaling groups used by this environment.
-* `instances` - Instances used by this environment.
-* `launch_configurations` - Launch configurations in use by this environment.
-* `load_balancers` - Elastic load balancers in use by this environment.
-* `queues` - SQS queues in use by this environment.
-* `triggers` - Autoscaling triggers in use by this environment.
+* `cname` - Fully qualified DNS name for this Environment.
+* `autoscaling_groups` - The autoscaling groups used by this Environment.
+* `instances` - Instances used by this Environment.
+* `launch_configurations` - Launch configurations in use by this Environment.
+* `load_balancers` - Elastic load balancers in use by this Environment.
+* `queues` - SQS queues in use by this Environment.
+* `triggers` - Autoscaling triggers in use by this Environment.
+* `endpoint_url` - The URL to the Load Balancer for this Environment
 
 
 
@@ -133,7 +135,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Elastic Beanstalk Environments can be imported using the `id`, e.g.
+Elastic Beanstalk Environments can be imported using the `id`, e.g.,
 
 ```
 $ terraform import aws_elastic_beanstalk_environment.prodenv e-rpqsewtp2j

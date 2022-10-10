@@ -1,7 +1,7 @@
 ---
+subcategory: "SNS (Simple Notification)"
 layout: "aws"
 page_title: "AWS: aws_sns_topic"
-sidebar_current: "docs-aws-datasource-sns-topic"
 description: |-
   Get information on a Amazon Simple Notification Service (SNS) Topic
 ---
@@ -14,7 +14,7 @@ without having to hard code the ARNs as input.
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_sns_topic" "example" {
   name = "an_example_topic"
 }
@@ -22,8 +22,11 @@ data "aws_sns_topic" "example" {
 
 ## Argument Reference
 
-* `name` - (Required) The friendly name of the topic to match.
+* `name` - (Required) Friendly name of the topic to match.
 
 ## Attributes Reference
 
-* `arn` - Set to the ARN of the found topic, suitable for referencing in other resources that support SNS topics.
+In addition to all arguments above, the following attributes are exported:
+
+* `arn` - ARN of the found topic, suitable for referencing in other resources that support SNS topics.
+* `id` - ARN of the found topic, suitable for referencing in other resources that support SNS topics.

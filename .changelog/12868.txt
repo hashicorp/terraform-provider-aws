@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_dlm_lifecycle_policy: Add `cross_region_copy_rule` argument in the `schedule` configuration block
+```

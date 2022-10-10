@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_instance: Correctly delete instance on destroy when `disable_api_termination` is `true`
+```

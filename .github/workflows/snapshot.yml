@@ -1,0 +1,42 @@
+name: Snapshot
+
+on:
+  schedule:
+    - cron: '15 5 * * *'
+  workflow_dispatch:
+
+jobs:
+  goreleaser:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-go@v3
+        with:
+          go-version-file: .go-version
+      - uses: actions/cache@v3
+        continue-on-error: true
+        timeout-minutes: 2
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
+      - name: goreleaser release
+        uses: goreleaser/goreleaser-action@v3
+        with:
+          args: release --rm-dist --skip-sign --snapshot --timeout 2h
+      - name: artifact naming
+        id: naming
+        run: |
+          case $GITHUB_REF in
+          refs/heads/*)
+            ARTIFACT="${GITHUB_REF#refs/heads/}";;
+          refs/pull/*)
+            ARTIFACT="pr-${GITHUB_REF#refs/pull/}"
+            ARTIFACT="${ARTIFACT%/merge}";;
+          *)
+            ARTIFACT="${GITHUB_REF}";;
+          esac
+          echo "::set-output name=artifact::$ARTIFACT-$(date -u +'%Y-%m-%dT%H-%M')"
+      - uses: actions/upload-artifact@v3
+        with:
+          name: ${{steps.naming.outputs.artifact}}
+          path: dist/*.zip

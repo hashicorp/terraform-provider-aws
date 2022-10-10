@@ -1,7 +1,7 @@
 ---
+subcategory: "Lambda"
 layout: "aws"
 page_title: "AWS: aws_lambda_invocation"
-sidebar_current: "docs-aws-datasource-lambda-invocation"
 description: |-
   Invoke AWS Lambda Function as data source
 ---
@@ -14,9 +14,9 @@ invocation type.
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_lambda_invocation" "example" {
-  function_name = "${aws_lambda_function.lambda_function_test.function_name}"
+  function_name = aws_lambda_function.lambda_function_test.function_name
 
   input = <<JSON
 {
@@ -27,22 +27,17 @@ JSON
 }
 
 output "result_entry" {
-  value = "${data.aws_lambda_invocation.result_map["key1"]}"
-}
-
-output "result" {
-  value = "${data.aws_lambda_invocation.result}"
+  value = jsondecode(data.aws_lambda_invocation.example.result)["key1"]
 }
 ```
 
 ## Argument Reference
 
- * `function_name` - (Required) The name of the lambda function.
- * `input` - (Required) A string in JSON format that is passed as payload to the lambda function.
- * `qualifier` - (Optional) The qualifier (a.k.a version) of the lambda function. Defaults
+* `function_name` - (Required) Name of the lambda function.
+* `input` - (Required) String in JSON format that is passed as payload to the lambda function.
+* `qualifier` - (Optional) Qualifier (a.k.a version) of the lambda function. Defaults
  to `$LATEST`.
 
 ## Attributes Reference
 
- * `result` - A result of the lambda function invocation.
- * `result_map` - This field is set only if result is a map of primitive types.
+* `result` - String result of the lambda function invocation.

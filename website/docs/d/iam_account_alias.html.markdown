@@ -1,7 +1,7 @@
 ---
+subcategory: "IAM (Identity & Access Management)"
 layout: "aws"
 page_title: "AWS: aws_iam_account_alias"
-sidebar_current: "docs-aws-datasource-iam-account-alias"
 description: |-
   Provides the account alias for the AWS account associated with the provider
   connection to AWS.
@@ -14,11 +14,11 @@ for the effective account in which Terraform is working.
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_iam_account_alias" "current" {}
 
 output "account_id" {
-  value = "${data.aws_iam_account_alias.current.account_alias}"
+  value = data.aws_iam_account_alias.current.account_alias
 }
 ```
 
@@ -30,4 +30,5 @@ There are no arguments available for this data source.
 
 In addition to all arguments above, the following attributes are exported:
 
-* `account_alias` - The alias associated with the AWS account.
+* `account_alias` - Alias associated with the AWS account.
+* `id` - Alias associated with the AWS account.

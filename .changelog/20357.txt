@@ -1,0 +1,7 @@
+```release-note:bug
+aws/resource_aws_instance: Fix state refresh when launch template was deleted
+```
+
+```release-note:bug
+aws/resource_aws_instance: Fix running `terraform plan` with with `skip_credentials_validation=true`
+```

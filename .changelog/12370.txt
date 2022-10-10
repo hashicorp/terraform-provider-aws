@@ -1,0 +1,7 @@
+```release-note:new-resource
+aws_rds_cluster_role_association
+```
+
+```release-note:enhancement
+aws_rds_cluster: Set `iam_roles` as Computed to prevent drift when the `aws_rds_cluster_role_association` resource is used
+```

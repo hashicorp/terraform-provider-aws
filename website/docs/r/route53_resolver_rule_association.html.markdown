@@ -1,21 +1,21 @@
 ---
+subcategory: "Route 53 Resolver"
 layout: "aws"
 page_title: "AWS: aws_route53_resolver_rule_association"
-sidebar_current: "docs-aws-resource-route53-resolver-rule-association"
 description: |-
   Provides a Route53 Resolver rule association.
 ---
 
-# aws_route53_resolver_rule_association
+# Resource: aws_route53_resolver_rule_association
 
 Provides a Route53 Resolver rule association.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_route53_resolver_rule_association" "example" {
-  resolver_rule_id = "${aws_route53_resolver_rule.sys.id}"
-  vpc_id           = "${aws_vpc.foo.id}"
+  resolver_rule_id = aws_route53_resolver_rule.sys.id
+  vpc_id           = aws_vpc.foo.id
 }
 ```
 
@@ -35,7 +35,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Route53 Resolver rule associations can be imported using the `id`, e.g.
+Route53 Resolver rule associations can be imported using the `id`, e.g.,
 
 ```
 $ terraform import aws_route53_resolver_rule_association.example rslvr-rrassoc-97242eaf88example

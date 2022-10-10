@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_chime_voice_connector_logging: Add `enable_media_metric_logs` argument
+```

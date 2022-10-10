@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_route: On route creation with high custom creation timeout configured, the aws_route resource does no longer give up before the create timeout is exceeded (previously it was giving up after 20 not found checks).
+```

@@ -1,37 +1,37 @@
 ---
+subcategory: "IAM (Identity & Access Management)"
 layout: "aws"
 page_title: "AWS: aws_iam_policy"
-sidebar_current: "docs-aws-resource-iam-policy"
 description: |-
   Provides an IAM policy.
 ---
 
-# aws_iam_policy
+# Resource: aws_iam_policy
 
 Provides an IAM policy.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_iam_policy" "policy" {
   name        = "test_policy"
   path        = "/"
   description = "My test policy"
 
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": [
-        "ec2:Describe*"
-      ],
-      "Effect": "Allow",
-      "Resource": "*"
-    }
-  ]
-}
-EOF
+  # Terraform's "jsonencode" function converts a
+  # Terraform expression result to valid JSON syntax.
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = [
+          "ec2:Describe*",
+        ]
+        Effect   = "Allow"
+        Resource = "*"
+      },
+    ]
+  })
 }
 ```
 
@@ -44,22 +44,25 @@ The following arguments are supported:
 * `name_prefix` - (Optional, Forces new resource) Creates a unique name beginning with the specified prefix. Conflicts with `name`.
 * `path` - (Optional, default "/") Path in which to create the policy.
   See [IAM Identifiers](https://docs.aws.amazon.com/IAM/latest/UserGuide/Using_Identifiers.html) for more information.
-* `policy` - (Required) The policy document. This is a JSON formatted string. For more information about building AWS IAM policy documents with Terraform, see the [AWS IAM Policy Document Guide](/docs/providers/aws/guides/iam-policy-documents.html)
+* `policy` - (Required) The policy document. This is a JSON formatted string. For more information about building AWS IAM policy documents with Terraform, see the [AWS IAM Policy Document Guide](https://learn.hashicorp.com/terraform/aws/iam-policy)
+* `tags` - (Optional) Map of resource tags for the IAM Policy. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - The policy's ID.
+* `id` - The ARN assigned by AWS to this policy.
 * `arn` - The ARN assigned by AWS to this policy.
 * `description` - The description of the policy.
 * `name` - The name of the policy.
 * `path` - The path of the policy in IAM.
 * `policy` - The policy document.
+* `policy_id` - The policy's ID.
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
-IAM Policies can be imported using the `arn`, e.g.
+IAM Policies can be imported using the `arn`, e.g.,
 
 ```
 $ terraform import aws_iam_policy.administrator arn:aws:iam::123456789012:policy/UsersManageOwnCredentials

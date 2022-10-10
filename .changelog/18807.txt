@@ -1,0 +1,3 @@
+```release-note:new-resource
+aws_network_acl_association
+```

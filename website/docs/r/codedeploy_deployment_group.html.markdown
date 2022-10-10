@@ -1,12 +1,12 @@
 ---
+subcategory: "CodeDeploy"
 layout: "aws"
 page_title: "AWS: aws_codedeploy_deployment_group"
-sidebar_current: "docs-aws-resource-codedeploy-deployment-group"
 description: |-
   Provides a CodeDeploy deployment group.
 ---
 
-# aws_codedeploy_deployment_group
+# Resource: aws_codedeploy_deployment_group
 
 Provides a CodeDeploy Deployment Group for a CodeDeploy Application
 
@@ -14,7 +14,7 @@ Provides a CodeDeploy Deployment Group for a CodeDeploy Application
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_iam_role" "example" {
   name = "example-role"
 
@@ -37,7 +37,7 @@ EOF
 
 resource "aws_iam_role_policy_attachment" "AWSCodeDeployRole" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSCodeDeployRole"
-  role       = "${aws_iam_role.example.name}"
+  role       = aws_iam_role.example.name
 }
 
 resource "aws_codedeploy_app" "example" {
@@ -49,9 +49,9 @@ resource "aws_sns_topic" "example" {
 }
 
 resource "aws_codedeploy_deployment_group" "example" {
-  app_name              = "${aws_codedeploy_app.example.name}"
+  app_name              = aws_codedeploy_app.example.name
   deployment_group_name = "example-group"
-  service_role_arn      = "${aws_iam_role.example.arn}"
+  service_role_arn      = aws_iam_role.example.arn
 
   ec2_tag_set {
     ec2_tag_filter {
@@ -70,7 +70,7 @@ resource "aws_codedeploy_deployment_group" "example" {
   trigger_configuration {
     trigger_events     = ["DeploymentFailure"]
     trigger_name       = "example-trigger"
-    trigger_target_arn = "${aws_sns_topic.example.arn}"
+    trigger_target_arn = aws_sns_topic.example.arn
   }
 
   auto_rollback_configuration {
@@ -87,17 +87,17 @@ resource "aws_codedeploy_deployment_group" "example" {
 
 ### Blue Green Deployments with ECS
 
-```hcl
+```terraform
 resource "aws_codedeploy_app" "example" {
   compute_platform = "ECS"
   name             = "example"
 }
 
 resource "aws_codedeploy_deployment_group" "example" {
-  app_name               = "${aws_codedeploy_app.example.name}"
+  app_name               = aws_codedeploy_app.example.name
   deployment_config_name = "CodeDeployDefault.ECSAllAtOnce"
   deployment_group_name  = "example"
-  service_role_arn       = "${aws_iam_role.example.arn}"
+  service_role_arn       = aws_iam_role.example.arn
 
   auto_rollback_configuration {
     enabled = true
@@ -121,22 +121,22 @@ resource "aws_codedeploy_deployment_group" "example" {
   }
 
   ecs_service {
-    cluster_name = "${aws_ecs_cluster.example.name}"
-    service_name = "${aws_ecs_service.example.name}"
+    cluster_name = aws_ecs_cluster.example.name
+    service_name = aws_ecs_service.example.name
   }
 
   load_balancer_info {
     target_group_pair_info {
       prod_traffic_route {
-        listener_arns = ["${aws_lb_listener.example.arn}"]
+        listener_arns = [aws_lb_listener.example.arn]
       }
 
       target_group {
-        name = "${aws_lb_target_group.blue.name}"
+        name = aws_lb_target_group.blue.name
       }
 
       target_group {
-        name = "${aws_lb_target_group.green.name}"
+        name = aws_lb_target_group.green.name
       }
     }
   }
@@ -145,15 +145,15 @@ resource "aws_codedeploy_deployment_group" "example" {
 
 ### Blue Green Deployments with Servers and Classic ELB
 
-```hcl
+```terraform
 resource "aws_codedeploy_app" "example" {
   name = "example-app"
 }
 
 resource "aws_codedeploy_deployment_group" "example" {
-  app_name              = "${aws_codedeploy_app.example.name}"
+  app_name              = aws_codedeploy_app.example.name
   deployment_group_name = "example-group"
-  service_role_arn      = "${aws_iam_role.example.arn}"
+  service_role_arn      = aws_iam_role.example.arn
 
   deployment_style {
     deployment_option = "WITH_TRAFFIC_CONTROL"
@@ -162,7 +162,7 @@ resource "aws_codedeploy_deployment_group" "example" {
 
   load_balancer_info {
     elb_info {
-      name = "${aws_elb.example.name}"
+      name = aws_elb.example.name
     }
   }
 
@@ -202,6 +202,7 @@ The following arguments are supported:
 * `load_balancer_info` - (Optional) Single configuration block of the load balancer to use in a blue/green deployment (documented below).
 * `on_premises_instance_tag_filter` - (Optional) On premise tag filters associated with the group. See the AWS docs for details.
 * `trigger_configuration` - (Optional) Configuration block(s) of the triggers for the deployment group (documented below).
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### alarm_configuration Argument Reference
 
@@ -210,8 +211,8 @@ You can configure a deployment to stop when a **CloudWatch** alarm detects that 
 * `alarms` - (Optional) A list of alarms configured for the deployment group. _A maximum of 10 alarms can be added to a deployment group_.
 * `enabled` - (Optional) Indicates whether the alarm configuration is enabled. This option is useful when you want to temporarily deactivate alarm monitoring for a deployment group without having to add the same alarms again later.
 * `ignore_poll_alarm_failure` - (Optional) Indicates whether a deployment should continue if information about the current state of alarms cannot be retrieved from CloudWatch. The default value is `false`.
-  * `true`: The deployment will proceed even if alarm status information can't be retrieved.
-  * `false`: The deployment will stop if alarm status information can't be retrieved.
+    * `true`: The deployment will proceed even if alarm status information can't be retrieved.
+    * `false`: The deployment will stop if alarm status information can't be retrieved.
 
 _Only one `alarm_configuration` is allowed_.
 
@@ -222,7 +223,7 @@ You can configure a deployment group to automatically rollback when a deployment
 * `enabled` - (Optional) Indicates whether a defined automatic rollback configuration is currently enabled for this Deployment Group. If you enable automatic rollback, you must specify at least one event type.
 * `events` - (Optional) The event type or types that trigger a rollback. Supported types are `DEPLOYMENT_FAILURE` and `DEPLOYMENT_STOP_ON_ALARM`.
 
-_Only one `auto_rollback_ configuration` is allowed_.
+_Only one `auto_rollback_configuration` is allowed_.
 
 ### blue_green_deployment_config Argument Reference
 
@@ -237,29 +238,29 @@ _Only one `blue_green_deployment_config` is allowed_.
 You can configure how traffic is rerouted to instances in a replacement environment in a blue/green deployment. `deployment_ready_option` supports the following:
 
 * `action_on_timeout` - (Optional) When to reroute traffic from an original environment to a replacement environment in a blue/green deployment.
-  * `CONTINUE_DEPLOYMENT`: Register new instances with the load balancer immediately after the new application revision is installed on the instances in the replacement environment.
-  * `STOP_DEPLOYMENT`: Do not register new instances with load balancer unless traffic is rerouted manually. If traffic is not rerouted manually before the end of the specified wait period, the deployment status is changed to Stopped.
+    * `CONTINUE_DEPLOYMENT`: Register new instances with the load balancer immediately after the new application revision is installed on the instances in the replacement environment.
+    * `STOP_DEPLOYMENT`: Do not register new instances with load balancer unless traffic is rerouted manually. If traffic is not rerouted manually before the end of the specified wait period, the deployment status is changed to Stopped.
 * `wait_time_in_minutes` - (Optional) The number of minutes to wait before the status of a blue/green deployment changed to Stopped if rerouting is not started manually. Applies only to the `STOP_DEPLOYMENT` option for `action_on_timeout`.
 
 You can configure how instances will be added to the replacement environment in a blue/green deployment. `green_fleet_provisioning_option` supports the following:
 
 * `action` - (Optional) The method used to add instances to a replacement environment.
-  * `DISCOVER_EXISTING`: Use instances that already exist or will be created manually.
-  * `COPY_AUTO_SCALING_GROUP`: Use settings from a specified **Auto Scaling** group to define and create instances in a new Auto Scaling group. _Exactly one Auto Scaling group must be specified_ when selecting `COPY_AUTO_SCALING_GROUP`. Use `autoscaling_groups` to specify the Auto Scaling group.
+    * `DISCOVER_EXISTING`: Use instances that already exist or will be created manually.
+    * `COPY_AUTO_SCALING_GROUP`: Use settings from a specified **Auto Scaling** group to define and create instances in a new Auto Scaling group. _Exactly one Auto Scaling group must be specified_ when selecting `COPY_AUTO_SCALING_GROUP`. Use `autoscaling_groups` to specify the Auto Scaling group.
 
 You can configure how instances in the original environment are terminated when a blue/green deployment is successful. `terminate_blue_instances_on_deployment_success` supports the following:
 
 * `action` - (Optional) The action to take on instances in the original environment after a successful blue/green deployment.
-  * `TERMINATE`: Instances are terminated after a specified wait time.
-  * `KEEP_ALIVE`: Instances are left running after they are deregistered from the load balancer and removed from the deployment group.
+    * `TERMINATE`: Instances are terminated after a specified wait time.
+    * `KEEP_ALIVE`: Instances are left running after they are deregistered from the load balancer and removed from the deployment group.
 * `termination_wait_time_in_minutes` - (Optional) The number of minutes to wait after a successful blue/green deployment before terminating instances from the original environment.
 
 ### deployment_style Argument Reference
 
 You can configure the type of deployment, either in-place or blue/green, you want to run and whether to route deployment traffic behind a load balancer. `deployment_style` supports the following:
 
-* `deployment_option` - (Optional) Indicates whether to route deployment traffic behind a load balancer. Valid Values are `WITH_TRAFFIC_CONTROL` or `WITHOUT_TRAFFIC_CONTROL`.
-* `deployment_type` - (Optional) Indicates whether to run an in-place deployment or a blue/green deployment. Valid Values are `IN_PLACE` or `BLUE_GREEN`.
+* `deployment_option` - (Optional) Indicates whether to route deployment traffic behind a load balancer. Valid Values are `WITH_TRAFFIC_CONTROL` or `WITHOUT_TRAFFIC_CONTROL`. Default is `WITHOUT_TRAFFIC_CONTROL`.
+* `deployment_type` - (Optional) Indicates whether to run an in-place deployment or a blue/green deployment. Valid Values are `IN_PLACE` or `BLUE_GREEN`. Default is `IN_PLACE`.
 
 _Only one `deployment_style` is allowed_.
 
@@ -276,6 +277,13 @@ Multiple occurrences of `ec2_tag_filter` are allowed, where any instance that ma
 ### ec2_tag_set Argument Reference
 
 You can form a tag group by putting a set of tag filters into `ec2_tag_set`. If multiple tag groups are specified, any instance that matches to at least one tag filter of every tag group is selected.
+
+### ecs_service Argument Reference
+
+Each `ecs_service` configuration block supports the following:
+
+* `cluster_name` - (Required) The name of the ECS cluster.
+* `service_name` - (Required) The name of the ECS service.
 
 ### load_balancer_info Argument Reference
 
@@ -323,9 +331,9 @@ The `test_traffic_route` configuration block supports the following:
 
 * `listener_arns` - (Required) List of Amazon Resource Names (ARNs) of the load balancer listeners.
 
-### on_premises_tag_filter Argument Reference
+### on_premises_instance_tag_filter Argument Reference
 
-The `on_premises_tag_filter` configuration block supports the following:
+The `on_premises_instance_tag_filter` configuration block supports the following:
 
 * `key` - (Optional) The key of the tag filter.
 * `type` - (Optional) The type of the tag filter, either `KEY_ONLY`, `VALUE_ONLY`, or `KEY_AND_VALUE`.
@@ -343,11 +351,15 @@ Add triggers to a Deployment Group to receive notifications about events related
 
 In addition to all arguments above, the following attributes are exported:
 
+* `arn` - The ARN of the CodeDeploy deployment group.
 * `id` - Application name and deployment group name.
+* `compute_platform` - The destination platform type for the deployment.
+* `deployment_group_id` - The ID of the CodeDeploy deployment group.
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
-CodeDeploy Deployment Groups can be imported by their `app_name`, a colon, and `deployment_group_name`, e.g.
+CodeDeploy Deployment Groups can be imported by their `app_name`, a colon, and `deployment_group_name`, e.g.,
 
 ```
 $ terraform import aws_codedeploy_deployment_group.example my-application:my-deployment-group

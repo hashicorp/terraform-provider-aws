@@ -1,4 +1,5 @@
 ---
+subcategory: "Cognito IDP (Identity Provider)"
 layout: "aws"
 page_title: "AWS: aws_cognito_identity_provider"
 side_bar_current: "docs-aws-resource-cognito-identity-provider"
@@ -6,20 +7,20 @@ description: |-
   Provides a Cognito User Identity Provider resource.
 ---
 
-# aws_cognito_identity_provider
+# Resource: aws_cognito_identity_provider
 
 Provides a Cognito User Identity Provider resource.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_cognito_user_pool" "example" {
   name                     = "example-pool"
   auto_verified_attributes = ["email"]
 }
 
 resource "aws_cognito_identity_provider" "example_provider" {
-  user_pool_id  = "${aws_cognito_user_pool.example.id}"
+  user_pool_id  = aws_cognito_user_pool.example.id
   provider_name = "Google"
   provider_type = "Google"
 
@@ -47,10 +48,14 @@ The following arguments are supported:
 * `idp_identifiers` (Optional) - The list of identity providers.
 * `provider_details` (Optional) - The map of identity details, such as access token
 
+## Attributes Reference
+
+No additional attributes are exported.
+
 ## Import
 
-`aws_cognito_identity_provider` resources can be imported using their User Pool ID and Provider Name, e.g.
+`aws_cognito_identity_provider` resources can be imported using their User Pool ID and Provider Name, e.g.,
 
 ```
-$ terraform import aws_cognito_identity_provider.example xxx_yyyyy:example
+$ terraform import aws_cognito_identity_provider.example us-west-2_abc123:CorpAD
 ```
