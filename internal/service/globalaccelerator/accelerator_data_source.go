@@ -58,6 +58,12 @@ func DataSourceAccelerator() *schema.Resource {
 					},
 				},
 			},
+			"ip_addresses": {
+				Type:     schema.TypeList,
+				Optional: true,
+				ForceNew: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
 			"attributes": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -131,6 +137,7 @@ func dataSourceAcceleratorRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("name", accelerator.Name)
 	d.Set("ip_address_type", accelerator.IpAddressType)
 	d.Set("ip_sets", flattenIPSets(accelerator.IpSets))
+	d.Set("ip_addresses", flattenIPSetsToStringList(accelerator.IpSets))
 
 	acceleratorAttributes, err := FindAcceleratorAttributesByARN(conn, d.Id())
 	if err != nil {

@@ -85,6 +85,12 @@ func ResourceAccelerator() *schema.Resource {
 					},
 				},
 			},
+			"ip_addresses": {
+				Type:     schema.TypeList,
+				Optional: true,
+				ForceNew: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
 			"attributes": {
 				Type:             schema.TypeList,
 				Optional:         true,
@@ -134,6 +140,10 @@ func resourceAcceleratorCreate(d *schema.ResourceData, meta interface{}) error {
 
 	if v, ok := d.GetOk("ip_address_type"); ok {
 		input.IpAddressType = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("ip_addresses"); ok {
+		input.IpAddresses = expandIpAddresses(v.([]interface{}))
 	}
 
 	log.Printf("[DEBUG] Creating Global Accelerator Accelerator: %s", input)
@@ -337,6 +347,15 @@ func resourceAcceleratorDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
+func expandIpAddresses(ipAddresses []interface{}) []*string {
+	out := make([]*string, len(ipAddresses))
+	for i, raw := range ipAddresses {
+		out[i] = aws.String(raw.(string))
+	}
+
+	return out
+}
+
 func expandUpdateAcceleratorAttributesInput(tfMap map[string]interface{}) *globalaccelerator.UpdateAcceleratorAttributesInput {
 	if tfMap == nil {
 		return nil
@@ -390,6 +409,26 @@ func flattenIPSets(apiObjects []*globalaccelerator.IpSet) []interface{} {
 		}
 
 		tfList = append(tfList, flattenIPSet(apiObject))
+	}
+
+	return tfList
+}
+
+func flattenIPSetsToStringList(apiObjects []*globalaccelerator.IpSet) []string {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	tfList := make([]string, 0)
+
+	for _, apiObject := range apiObjects {
+		if apiObject == nil {
+			continue
+		}
+
+		for _, ipAddress := range apiObject.IpAddresses {
+			tfList = append(tfList, *ipAddress)
+		}
 	}
 
 	return tfList
