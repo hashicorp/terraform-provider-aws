@@ -31,12 +31,12 @@ const (
 	gitHubActionConfigurationOAuthToken = "OAuthToken"
 )
 
-func ResourceCodePipeline() *schema.Resource { // nosemgrep:ci.codepipeline-in-func-name
+func ResourcePipeline() *schema.Resource {
 	return &schema.Resource{
-		CreateWithoutTimeout: resourceCreate,
-		ReadWithoutTimeout:   resourceRead,
-		UpdateWithoutTimeout: resourceUpdate,
-		DeleteWithoutTimeout: resourceDelete,
+		CreateWithoutTimeout: resourcePipelineCreate,
+		ReadWithoutTimeout:   resourcePipelineRead,
+		UpdateWithoutTimeout: resourcePipelineUpdate,
+		DeleteWithoutTimeout: resourcePipelineDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -209,7 +209,7 @@ func ResourceCodePipeline() *schema.Resource { // nosemgrep:ci.codepipeline-in-f
 	}
 }
 
-func resourceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePipelineCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).CodePipelineConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
@@ -254,10 +254,10 @@ func resourceCreate(ctx context.Context, d *schema.ResourceData, meta interface{
 
 	d.SetId(aws.StringValue(resp.Pipeline.Name))
 
-	return resourceRead(ctx, d, meta)
+	return resourcePipelineRead(ctx, d, meta)
 }
 
-func resourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePipelineRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).CodePipelineConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -318,7 +318,7 @@ func resourceRead(ctx context.Context, d *schema.ResourceData, meta interface{})
 	return nil
 }
 
-func resourceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePipelineUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).CodePipelineConn
 
 	if d.HasChangesExcept("tags", "tags_all") {
@@ -347,10 +347,10 @@ func resourceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{
 		}
 	}
 
-	return resourceRead(ctx, d, meta)
+	return resourcePipelineRead(ctx, d, meta)
 }
 
-func resourceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePipelineDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).CodePipelineConn
 
 	log.Printf("[INFO] Deleting CodePipeline: %s", d.Id())

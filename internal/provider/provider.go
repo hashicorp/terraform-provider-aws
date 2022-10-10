@@ -1172,7 +1172,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_codedeploy_deployment_config": deploy.ResourceDeploymentConfig(),
 			"aws_codedeploy_deployment_group":  deploy.ResourceDeploymentGroup(),
 
-			"aws_codepipeline":         codepipeline.ResourceCodePipeline(),
+			"aws_codepipeline":         codepipeline.ResourcePipeline(),
 			"aws_codepipeline_webhook": codepipeline.ResourceWebhook(),
 
 			"aws_codestarconnections_connection": codestarconnections.ResourceConnection(),
