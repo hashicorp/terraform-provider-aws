@@ -6,16 +6,15 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/codepipeline"
 	"github.com/aws/aws-sdk-go/service/codestarconnections"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfcodepipeline "github.com/hashicorp/terraform-provider-aws/internal/service/codepipeline"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccCodePipeline_basic(t *testing.T) {
@@ -551,7 +550,7 @@ func TestAccCodePipeline_withGitHubV1SourceAction(t *testing.T) {
 	})
 }
 
-func testAccCheckExists(n string, pipeline *codepipeline.PipelineDeclaration) resource.TestCheckFunc {
+func testAccCheckExists(n string, v *codepipeline.PipelineDeclaration) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -564,14 +563,13 @@ func testAccCheckExists(n string, pipeline *codepipeline.PipelineDeclaration) re
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CodePipelineConn
 
-		out, err := conn.GetPipeline(&codepipeline.GetPipelineInput{
-			Name: aws.String(rs.Primary.ID),
-		})
+		output, err := tfcodepipeline.FindPipelineByName(context.Background(), conn, rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
 
-		*pipeline = *out.Pipeline
+		*v = *output.Pipeline
 
 		return nil
 	}
@@ -585,17 +583,17 @@ func testAccCheckDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := conn.GetPipeline(&codepipeline.GetPipelineInput{
-			Name: aws.String(rs.Primary.ID),
-		})
+		_, err := tfcodepipeline.FindPipelineByName(context.Background(), conn, rs.Primary.ID)
 
-		if err == nil {
-			return fmt.Errorf("Expected AWS CodePipeline to be gone, but was still found")
-		}
-		if tfawserr.ErrCodeEquals(err, "PipelineNotFoundException") {
+		if tfresource.NotFound(err) {
 			continue
 		}
-		return err
+
+		if err != nil {
+			return err
+		}
+
+		return fmt.Errorf("CodePipeline %s still exists", rs.Primary.ID)
 	}
 
 	return nil

@@ -262,11 +262,9 @@ func resourcePipelineRead(ctx context.Context, d *schema.ResourceData, meta inte
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	resp, err := conn.GetPipelineWithContext(ctx, &codepipeline.GetPipelineInput{
-		Name: aws.String(d.Id()),
-	})
+	output, err := FindPipelineByName(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, codepipeline.ErrCodePipelineNotFoundException) {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] CodePipeline %s not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -276,8 +274,8 @@ func resourcePipelineRead(ctx context.Context, d *schema.ResourceData, meta inte
 		return diag.Errorf("reading CodePipeline (%s): %s", d.Id(), err)
 	}
 
-	metadata := resp.Metadata
-	pipeline := resp.Pipeline
+	metadata := output.Metadata
+	pipeline := output.Pipeline
 
 	if pipeline.ArtifactStore != nil {
 		if err := d.Set("artifact_store", flattenArtifactStore(pipeline.ArtifactStore)); err != nil {
@@ -367,6 +365,31 @@ func resourcePipelineDelete(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	return nil
+}
+
+func FindPipelineByName(ctx context.Context, conn *codepipeline.CodePipeline, name string) (*codepipeline.GetPipelineOutput, error) {
+	input := &codepipeline.GetPipelineInput{
+		Name: aws.String(name),
+	}
+
+	output, err := conn.GetPipelineWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, codepipeline.ErrCodePipelineNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.Metadata == nil || output.Pipeline == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
 }
 
 func expand(d *schema.ResourceData) (*codepipeline.PipelineDeclaration, error) {
