@@ -32,12 +32,13 @@ func TestAccIPAMPoolsDataSource_basic(t *testing.T) {
 
 					// DS 2 filters on 1 specific pool to validate attributes
 					resource.TestCheckResourceAttr(dataSourceNameTwo, "ipam_pools.#", "1"),
+
 					resource.TestCheckResourceAttrPair(dataSourceNameTwo, "ipam_pools.0.address_family", resourceName, "address_family"),
-					resource.TestCheckResourceAttrPair(dataSourceNameTwo, "ipam_pools.0.arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceNameTwo, "ipam_pools.0.allocation_default_netmask_length", resourceName, "allocation_default_netmask_length"),
 					resource.TestCheckResourceAttrPair(dataSourceNameTwo, "ipam_pools.0.allocation_max_netmask_length", resourceName, "allocation_max_netmask_length"),
 					resource.TestCheckResourceAttrPair(dataSourceNameTwo, "ipam_pools.0.allocation_min_netmask_length", resourceName, "allocation_min_netmask_length"),
 					resource.TestCheckResourceAttrPair(dataSourceNameTwo, "ipam_pools.0.allocation_resource_tags.%", resourceName, "allocation_resource_tags.%"),
+					resource.TestCheckResourceAttrPair(dataSourceNameTwo, "ipam_pools.0.arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceNameTwo, "ipam_pools.0.auto_import", resourceName, "auto_import"),
 					resource.TestCheckResourceAttrPair(dataSourceNameTwo, "ipam_pools.0.description", resourceName, "description"),
 					resource.TestCheckResourceAttrPair(dataSourceNameTwo, "ipam_pools.0.aws_service", resourceName, "aws_service"),
@@ -47,7 +48,26 @@ func TestAccIPAMPoolsDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceNameTwo, "ipam_pools.0.pool_depth", resourceName, "pool_depth"),
 					resource.TestCheckResourceAttrPair(dataSourceNameTwo, "ipam_pools.0.publicly_advertisable", resourceName, "publicly_advertisable"),
 					resource.TestCheckResourceAttrPair(dataSourceNameTwo, "ipam_pools.0.source_ipam_pool_id", resourceName, "source_ipam_pool_id"),
+
 					resource.TestCheckResourceAttr(dataSourceNameTwo, "ipam_pools.0.tags.tagtest", "3"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccIPAMPoolsDataSource_empty(t *testing.T) {
+	dataSourceName := "data.aws_vpc_ipam_pools.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); testAccIPAMPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIPAMPoolsDataSourceConfig_empty,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(dataSourceName, "ipam_pools.#", "0"),
 				),
 			},
 		},
@@ -133,5 +153,14 @@ data "aws_vpc_ipam_pools" "testtwo" {
     aws_vpc_ipam_pool.testtwo,
     aws_vpc_ipam_pool.testthree
   ]
+}
+`)
+
+var testAccIPAMPoolsDataSourceConfig_empty = acctest.ConfigCompose(`
+data "aws_vpc_ipam_pools" "test" {
+  filter {
+    name   = "description"
+    values = ["*none*"]
+  }
 }
 `)

@@ -8,7 +8,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func DataSourceIPAMPools() *schema.Resource {
@@ -17,7 +16,7 @@ func DataSourceIPAMPools() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"filter": DataSourceFiltersSchema(),
-			// computed
+
 			"ipam_pools": {
 				Type:     schema.TypeSet,
 				Computed: true,
@@ -132,10 +131,6 @@ func dataSourceIPAMPoolsRead(d *schema.ResourceData, meta interface{}) error {
 
 	if err != nil {
 		return err
-	}
-
-	if len(pools) == 0 || pools[0] == nil {
-		return tfresource.SingularDataSourceFindError("EC2 VPC IPAM POOLS", tfresource.NewEmptyResultError(input))
 	}
 
 	d.Set("ipam_pools", flattenIPAMPools(pools, ignoreTagsConfig))

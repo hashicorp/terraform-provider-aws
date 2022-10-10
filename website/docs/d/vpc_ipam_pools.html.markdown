@@ -3,22 +3,18 @@ subcategory: "VPC IPAM (IP Address Manager)"
 layout: "aws"
 page_title: "AWS: aws_vpc_ipam_pools"
 description: |-
-    Returns details about the first IPAM pool that matches search parameters provided.
+    Returns details about IPAM pools that match the search parameters provided.
 ---
 
 # Data Source: aws_vpc_ipam_pools
 
-`aws_vpc_ipam_pools` provides details IPAM pools.
+`aws_vpc_ipam_pools` provides details about IPAM pools.
 
-This resource can prove useful when an ipam pool was created in another root
-module and you need the pool's id as an input variable. For example, pools
+This resource can prove useful when IPAM pools are created in another root
+module and you need the pool ids as input variables. For example, pools
 can be shared via RAM and used to create vpcs with CIDRs from that pool.
 
 ## Example Usage
-
-The following example shows an account that has only 1 pool, perhaps shared
-via RAM, and using that pool id to create a VPC with a CIDR derived from
-AWS IPAM.
 
 ```terraform
 data "aws_vpc_ipam_pools" "test" {
@@ -43,12 +39,7 @@ IPAM Pools in the current region.
 
 ## Attributes Reference
 
-All of the argument attributes except `filter` blocks are also exported as
-result attributes. This data source will complete the data by populating
-any fields that are not included in the configuration with the data for
-the selected VPC.
-
-The following attribute is additionally exported:
+In addition to all of the arguments above, the following attributes are exported:
 
 * `ipam_pools` - List of IPAM pools and their attributes. See below for details
 
@@ -71,9 +62,3 @@ The following attributes are available on each pool entry found.
 * `locale` - Locale is the Region where your pool is available for allocations. You can only create pools with locales that match the operating Regions of the IPAM. You can only create VPCs from a pool whose locale matches the VPC's Region.
 * `source_ipam_pool_id` - ID of the source IPAM pool.
 * `tags` - Map of tags to assigned to the resource.
-
-## Timeouts
-
-[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
-
-- `read` - (Default `20m`)
