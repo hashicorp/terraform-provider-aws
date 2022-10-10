@@ -957,8 +957,6 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 		params.AutoTerminationPolicy = expandAutoTerminationPolicy(v.([]interface{}))
 	}
 
-	log.Printf("[DEBUG] EMR Cluster create options: %s", params)
-
 	var resp *emr.RunJobFlowOutput
 	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
 		var err error
