@@ -12,7 +12,7 @@ Provides a CodeDeploy CustomActionType
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_codepipeline_custom_action_type" "example" {
   category = "Build"
 
@@ -75,9 +75,9 @@ The `settings` object supports the following:
 * `tags` - (Optional) Map of tags to assign to this resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `version` - (Required) The version identifier of the custom action.
 
-## Attribute Reference
+## Attributes Reference
 
-The following arguments are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - Composed of category, provider and version. For example, `Build:terraform:1`
 * `arn` - The action ARN.
