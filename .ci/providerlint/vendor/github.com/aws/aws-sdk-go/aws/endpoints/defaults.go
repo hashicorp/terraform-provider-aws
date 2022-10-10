@@ -11717,6 +11717,9 @@ var awsPartition = partition{
 					Region: "eu-west-3",
 				}: endpoint{},
 				endpointKey{
+					Region: "me-central-1",
+				}: endpoint{},
+				endpointKey{
 					Region: "me-south-1",
 				}: endpoint{},
 				endpointKey{
@@ -25602,10 +25605,30 @@ var awsPartition = partition{
 					Region: "eu-west-2",
 				}: endpoint{},
 				endpointKey{
+					Region: "fips-us-east-1",
+				}: endpoint{
+
+					Deprecated: boxedTrue,
+				},
+				endpointKey{
+					Region: "fips-us-west-2",
+				}: endpoint{
+
+					Deprecated: boxedTrue,
+				},
+				endpointKey{
 					Region: "us-east-1",
 				}: endpoint{},
 				endpointKey{
+					Region:  "us-east-1",
+					Variant: fipsVariant,
+				}: endpoint{},
+				endpointKey{
 					Region: "us-west-2",
+				}: endpoint{},
+				endpointKey{
+					Region:  "us-west-2",
+					Variant: fipsVariant,
 				}: endpoint{},
 			},
 		},
@@ -28476,6 +28499,14 @@ var awsusgovPartition = partition{
 			},
 		},
 		"cloudtrail": service{
+			Defaults: endpointDefaults{
+				defaultKey{}: endpoint{},
+				defaultKey{
+					Variant: fipsVariant,
+				}: endpoint{
+					Hostname: "cloudtrail.us-gov-west-1.amazonaws.com",
+				},
+			},
 			Endpoints: serviceEndpoints{
 				endpointKey{
 					Region: "fips-us-gov-east-1",
