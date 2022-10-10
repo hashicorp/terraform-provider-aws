@@ -414,26 +414,6 @@ func flattenIPSets(apiObjects []*globalaccelerator.IpSet) []interface{} {
 	return tfList
 }
 
-func flattenIPSetsToStringList(apiObjects []*globalaccelerator.IpSet) []string {
-	if len(apiObjects) == 0 {
-		return nil
-	}
-
-	tfList := make([]string, 0)
-
-	for _, apiObject := range apiObjects {
-		if apiObject == nil {
-			continue
-		}
-
-		for _, ipAddress := range apiObject.IpAddresses {
-			tfList = append(tfList, *ipAddress)
-		}
-	}
-
-	return tfList
-}
-
 func flattenAcceleratorAttributes(apiObject *globalaccelerator.AcceleratorAttributes) map[string]interface{} {
 	if apiObject == nil {
 		return nil
