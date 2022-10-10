@@ -320,9 +320,9 @@ func resourcePipelineUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 	}
 
-	arn := d.Get("arn").(string)
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
+		arn := d.Get("arn").(string)
 
 		if err := UpdateTagsWithContext(ctx, conn, arn, o, n); err != nil {
 			return diag.Errorf("updating CodePipeline (%s) tags: %s", arn, err)
