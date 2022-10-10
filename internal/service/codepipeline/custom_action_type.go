@@ -24,6 +24,7 @@ func ResourceCustomActionType() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCustomActionTypeCreate,
 		ReadWithoutTimeout:   resourceCustomActionTypeRead,
+		UpdateWithoutTimeout: resourceCustomActionTypeUpdate,
 		DeleteWithoutTimeout: resourceCustomActionTypeDelete,
 
 		Importer: &schema.ResourceImporter{
@@ -126,11 +127,11 @@ func ResourceCustomActionType() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"provider": {
+			"provider_name": {
 				Type:         schema.TypeString,
 				ForceNew:     true,
 				Required:     true,
-				ValidateFunc: validation.StringLenBetween(1, 25),
+				ValidateFunc: validation.StringLenBetween(1, 35),
 			},
 			"settings": {
 				Type:     schema.TypeList,
@@ -179,7 +180,7 @@ func resourceCustomActionTypeCreate(ctx context.Context, d *schema.ResourceData,
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	category := d.Get("category").(string)
-	provider := d.Get("provider").(string)
+	provider := d.Get("provider_name").(string)
 	version := d.Get("version").(string)
 	id := CustomActionTypeCreateResourceID(category, provider, version)
 	input := &codepipeline.CreateCustomActionTypeInput{
@@ -247,7 +248,7 @@ func resourceCustomActionTypeRead(ctx context.Context, d *schema.ResourceData, m
 		Service:   codepipeline.ServiceName,
 		Region:    meta.(*conns.AWSClient).Region,
 		AccountID: meta.(*conns.AWSClient).AccountID,
-		Resource:  fmt.Sprintf("actiontype:%s:%s:%s:%s", codepipeline.ActionOwnerCustom, category, provider, version),
+		Resource:  fmt.Sprintf("actiontype:%s/%s/%s/%s", codepipeline.ActionOwnerCustom, category, provider, version),
 	}.String()
 	d.Set("arn", arn)
 	d.Set("category", actionType.Id.Category)
@@ -270,7 +271,9 @@ func resourceCustomActionTypeRead(ctx context.Context, d *schema.ResourceData, m
 	}
 	d.Set("owner", actionType.Id.Owner)
 	d.Set("provider_name", actionType.Id.Provider)
-	if actionType.Settings != nil {
+	if actionType.Settings != nil &&
+		// Service can return empty ({}) Settings.
+		(actionType.Settings.EntityUrlTemplate != nil || actionType.Settings.ExecutionUrlTemplate != nil || actionType.Settings.RevisionUrlTemplate != nil || actionType.Settings.ThirdPartyConfigurationUrl != nil) {
 		if err := d.Set("settings", []interface{}{flattenActionTypeSettings(actionType.Settings)}); err != nil {
 			return diag.Errorf("setting settings: %s", err)
 		}
@@ -299,6 +302,21 @@ func resourceCustomActionTypeRead(ctx context.Context, d *schema.ResourceData, m
 	return nil
 }
 
+func resourceCustomActionTypeUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).CodePipelineConn
+
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
+		arn := d.Get("arn").(string)
+
+		if err := UpdateTagsWithContext(ctx, conn, arn, o, n); err != nil {
+			return diag.Errorf("updating CodePipeline Custom Action Type (%s) tags: %s", arn, err)
+		}
+	}
+
+	return resourceCustomActionTypeRead(ctx, d, meta)
+}
+
 func resourceCustomActionTypeDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).CodePipelineConn
 
@@ -320,13 +338,13 @@ func resourceCustomActionTypeDelete(ctx context.Context, d *schema.ResourceData,
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting CodePipeline (%s): %s", d.Id(), err)
+		return diag.Errorf("deleting CodePipeline Custom Action Type (%s): %s", d.Id(), err)
 	}
 
 	return nil
 }
 
-const customActionTypeResourceIDSeparator = ":"
+const customActionTypeResourceIDSeparator = "/"
 
 func CustomActionTypeCreateResourceID(category, provider, version string) string {
 	parts := []string{category, provider, version}
@@ -455,11 +473,11 @@ func expandArtifactDetails(tfMap map[string]interface{}) *codepipeline.ArtifactD
 
 	apiObject := &codepipeline.ArtifactDetails{}
 
-	if v, ok := tfMap["maximum_count"].(int); ok && v != 0 {
+	if v, ok := tfMap["maximum_count"].(int); ok {
 		apiObject.MaximumCount = aws.Int64(int64(v))
 	}
 
-	if v, ok := tfMap["minimum_count"].(int); ok && v != 0 {
+	if v, ok := tfMap["minimum_count"].(int); ok {
 		apiObject.MinimumCount = aws.Int64(int64(v))
 	}
 

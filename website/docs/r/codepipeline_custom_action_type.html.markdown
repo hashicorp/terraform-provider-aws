@@ -26,8 +26,8 @@ resource "aws_codepipeline_custom_action_type" "example" {
     minimum_count = 0
   }
 
-  provider = "example"
-  version = "1"
+  provider_name = "example"
+  version       = "1"
 }
 ```
 
@@ -62,7 +62,7 @@ The `output_artifact_details` object supports the following:
 * `maximum_count` - (Required) The maximum number of artifacts allowed for the action type. Min: 0, Max: 5
 * `minimum_count` - (Required) The minimum number of artifacts allowed for the action type. Min: 0, Max: 5
 
-* `provider` - (Required) The provider of the service used in the custom action
+* `provider_name` - (Required) The provider of the service used in the custom action
 * `settings` - (Optional) The settings for an action type.
 
 The `settings` object supports the following:
