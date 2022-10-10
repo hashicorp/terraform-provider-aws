@@ -31,7 +31,7 @@ func TestAccCodePipelineCustomActionType_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckCustomActionTypeDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCustomActionType_basic(rName),
+				Config: testAccCustomActionTypeConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCustomActionTypeExists(resourceName, &v),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "codepipeline", fmt.Sprintf("actiontype:Custom/Test/%s/1", rName)),
@@ -74,7 +74,7 @@ func TestAccCodePipelineCustomActionType_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckCustomActionTypeDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCustomActionType_basic(rName),
+				Config: testAccCustomActionTypeConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCustomActionTypeExists(resourceName, &v),
 					acctest.CheckResourceDisappears(acctest.Provider, tfcodepipeline.ResourceCustomActionType(), resourceName),
@@ -100,7 +100,7 @@ func TestAccCodePipelineCustomActionType_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckCustomActionTypeDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCustomActionType_tags1(rName, "key1", "value1"),
+				Config: testAccCustomActionTypeConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCustomActionTypeExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -113,7 +113,7 @@ func TestAccCodePipelineCustomActionType_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccCustomActionType_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccCustomActionTypeConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCustomActionTypeExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -122,7 +122,7 @@ func TestAccCodePipelineCustomActionType_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccCustomActionType_tags1(rName, "key2", "value2"),
+				Config: testAccCustomActionTypeConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCustomActionTypeExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -148,7 +148,7 @@ func TestAccCodePipelineCustomActionType_allAttributes(t *testing.T) {
 		CheckDestroy:             testAccCheckCustomActionTypeDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCustomActionType_allAttributes(rName),
+				Config: testAccCustomActionTypeConfig_allAttributes(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCustomActionTypeExists(resourceName, &v),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "codepipeline", fmt.Sprintf("actiontype:Custom/Test/%s/1", rName)),
@@ -259,7 +259,7 @@ func testAccCheckCustomActionTypeDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCustomActionType_basic(rName string) string {
+func testAccCustomActionTypeConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_codepipeline_custom_action_type" "test" {
   category = "Test"
@@ -280,7 +280,7 @@ resource "aws_codepipeline_custom_action_type" "test" {
 `, rName)
 }
 
-func testAccCustomActionType_tags1(rName, tagKey1, tagValue1 string) string {
+func testAccCustomActionTypeConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_codepipeline_custom_action_type" "test" {
   category = "Test"
@@ -305,7 +305,7 @@ resource "aws_codepipeline_custom_action_type" "test" {
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccCustomActionType_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccCustomActionTypeConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_codepipeline_custom_action_type" "test" {
   category = "Test"
@@ -331,7 +331,7 @@ resource "aws_codepipeline_custom_action_type" "test" {
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
-func testAccCustomActionType_allAttributes(rName string) string {
+func testAccCustomActionTypeConfig_allAttributes(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_codepipeline_custom_action_type" "test" {
   category = "Test"
