@@ -2217,6 +2217,49 @@ rules:
           patterns:
             - pattern-regex: "(?i)cloudwatchevents"
     severity: WARNING
+  - id: cloudwatchevidently-in-func-name
+    languages:
+      - go
+    message: Do not use "cloudwatchevidently" in func name inside evidently package
+    paths:
+      include:
+        - internal/service/evidently
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)cloudwatchevidently"
+            - pattern-not-regex: ^TestAcc.*
+    severity: WARNING
+  - id: cloudwatchevidently-in-const-name
+    languages:
+      - go
+    message: Do not use "cloudwatchevidently" in const name inside evidently package
+    paths:
+      include:
+        - internal/service/evidently
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)cloudwatchevidently"
+    severity: WARNING
+  - id: cloudwatchevidently-in-var-name
+    languages:
+      - go
+    message: Do not use "cloudwatchevidently" in var name inside evidently package
+    paths:
+      include:
+        - internal/service/evidently
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)cloudwatchevidently"
+    severity: WARNING
   - id: cloudwatchlog-in-func-name
     languages:
       - go
@@ -2997,4 +3040,34 @@ rules:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)ConfigService"
+    severity: WARNING
+  - id: configservice-in-var-name
+    languages:
+      - go
+    message: Do not use "ConfigService" in var name inside configservice package
+    paths:
+      include:
+        - internal/service/configservice
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)ConfigService"
+    severity: WARNING
+  - id: connect-in-func-name
+    languages:
+      - go
+    message: Do not use "Connect" in func name inside connect package
+    paths:
+      include:
+        - internal/service/connect
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)Connect"
+            - pattern-not-regex: .*uickConnect.*
+            - pattern-not-regex: ^TestAcc.*
     severity: WARNING

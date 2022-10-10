@@ -3,12 +3,16 @@ package fwprovider
 import (
 	"context"
 
+	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/provider"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/fwtypes"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/medialive"
-	"github.com/hashicorp/terraform-provider-aws/internal/service/meta"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -166,7 +170,7 @@ func (p *fwprovider) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnost
 			"assume_role": {
 				Attributes: map[string]tfsdk.Attribute{
 					"duration": {
-						Type:        DurationType,
+						Type:        fwtypes.DurationType,
 						Optional:    true,
 						Description: "The duration, between 15 minutes and 12 hours, of the role session. Valid time units are ns, us (or µs), ms, s, h, or m.",
 					},
@@ -223,7 +227,7 @@ func (p *fwprovider) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnost
 			"assume_role_with_web_identity": {
 				Attributes: map[string]tfsdk.Attribute{
 					"duration": {
-						Type:        DurationType,
+						Type:        fwtypes.DurationType,
 						Optional:    true,
 						Description: "The duration, between 15 minutes and 12 hours, of the role session. Valid time units are ns, us (or µs), ms, s, h, or m.",
 					},
@@ -300,36 +304,55 @@ func (p *fwprovider) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnost
 // provider configuration block.
 func (p *fwprovider) Configure(ctx context.Context, request provider.ConfigureRequest, response *provider.ConfigureResponse) {
 	// Provider's parsed configuration (its instance state) is available through the primary provider's Meta() method.
+	v := p.Primary.Meta()
+	response.DataSourceData = v
+	response.ResourceData = v
 }
 
-// GetResources returns a mapping of resource names to type
-// implementations.
-func (p *fwprovider) GetResources(ctx context.Context) (map[string]provider.ResourceType, diag.Diagnostics) {
-	var diags diag.Diagnostics
-	resources := make(map[string]provider.ResourceType)
+// DataSources returns a slice of functions to instantiate each DataSource
+// implementation.
+//
+// The data source type name is determined by the DataSource implementing
+// the Metadata method. All data sources must have unique names.
+func (p *fwprovider) DataSources(ctx context.Context) []func() datasource.DataSource {
+	var dataSources []func() datasource.DataSource
 
-	resources["aws_medialive_multiplex_program"] = medialive.NewResourceMultiplexProgramType(ctx, p.Primary)
+	// TODO Wrap the returned type to add standard context, logging etc.
+	for serviceID, data := range p.Primary.Meta().(*conns.AWSClient).ServiceMap {
+		for _, v := range data.FrameworkDataSources(ctx) {
+			v, err := v(ctx)
 
-	return resources, diags
-}
+			if err != nil {
+				tflog.Warn(ctx, "creating data source", map[string]interface{}{
+					"service_id": serviceID,
+					"error":      err.Error(),
+				})
 
-// GetDataSources returns a mapping of data source name to types
-// implementations.
-func (p *fwprovider) GetDataSources(ctx context.Context) (map[string]provider.DataSourceType, diag.Diagnostics) {
-	var diags diag.Diagnostics
-	dataSources := make(map[string]provider.DataSourceType)
+				continue
+			}
 
-	// TODO: This should be done via service-level self-registration and initializatin in the primary provider.
-	t, err := meta.NewDataSourceARNType(ctx)
-
-	if err != nil {
-		diags.AddError("UhOh", err.Error())
-		return nil, diags
+			dataSources = append(dataSources, func() datasource.DataSource {
+				return v
+			})
+		}
 	}
 
-	dataSources["aws_arn"] = t
+	return dataSources
+}
 
-	return dataSources, diags
+// Resources returns a slice of functions to instantiate each Resource
+// implementation.
+//
+// The resource type name is determined by the Resource implementing
+// the Metadata method. All resources must have unique names.
+func (p *fwprovider) Resources(ctx context.Context) []func() resource.Resource {
+	var resources []func() resource.Resource
+
+	resources = append(resources, func() resource.Resource {
+		return medialive.NewResourceMultiplexProgram(ctx)
+	})
+
+	return resources
 }
 
 func endpointsBlock() tfsdk.Block {

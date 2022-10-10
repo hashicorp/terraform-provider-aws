@@ -1,7 +1,7 @@
-// ListTags lists {{ .ServicePackage }} service tags.
+// {{ .ListTagsFunc }} lists {{ .ServicePackage }} service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(ctx context.Context, conn {{ .ClientType }}, identifier string{{ if .TagResTypeElem }}, resourceType string{{ end }}) (tftags.KeyValueTags, error) {
+func {{ .ListTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifier string{{ if .TagResTypeElem }}, resourceType string{{ end }}) (tftags.KeyValueTags, error) {
 	input := &{{ .TagPackage  }}.{{ .ListTagsOp }}Input{
 		{{- if .ListTagsInFiltIDName }}
 		Filters: []*{{ .AWSService  }}.Filter{

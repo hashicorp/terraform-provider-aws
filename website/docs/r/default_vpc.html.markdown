@@ -38,6 +38,7 @@ The arguments of an `aws_default_vpc` differ slightly from those of [`aws_vpc`](
 
 * The `cidr_block` and `instance_tenancy` arguments become computed attributes
 * The default value for `enable_dns_hostnames` is `true`
+* The default value for `enable_network_address_usage_metrics` is `true`
 
 The following additional arguments are supported:
 

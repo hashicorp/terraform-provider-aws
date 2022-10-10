@@ -67,6 +67,7 @@ func init() {
 			"aws_glue_crawler",
 			"aws_glue_job",
 			"aws_instance",
+			"aws_iot_topic_rule_destination",
 			"aws_lambda_function",
 			"aws_launch_configuration",
 			"aws_redshift_cluster",
@@ -848,6 +849,9 @@ func roleNameFilter(name string) bool {
 	// exhaustive list.
 	prefixes := []string{
 		"another_rds",
+		"aws_batch_service_role",
+		"aws_elastictranscoder_pipeline_tf_test",
+		"batch_tf_batch_target-",
 		"codepipeline-",
 		"cognito_authenticated_",
 		"cognito_unauthenticated_",

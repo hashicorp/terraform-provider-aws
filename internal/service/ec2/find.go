@@ -2428,6 +2428,8 @@ func FindVPCAttribute(conn *ec2.EC2, vpcID string, attribute string) (bool, erro
 		v = output.EnableDnsHostnames
 	case ec2.VpcAttributeNameEnableDnsSupport:
 		v = output.EnableDnsSupport
+	case ec2.VpcAttributeNameEnableNetworkAddressUsageMetrics:
+		v = output.EnableNetworkAddressUsageMetrics
 	default:
 		return false, fmt.Errorf("unsupported VPC attribute: %s", attribute)
 	}
@@ -3307,6 +3309,76 @@ func FindVPNConnectionRouteByVPNConnectionIDAndCIDR(conn *ec2.EC2, vpnConnection
 	return nil, &resource.NotFoundError{
 		LastError: fmt.Errorf("EC2 VPN Connection (%s) Route (%s) not found", vpnConnectionID, cidrBlock),
 	}
+}
+
+func FindTrafficMirrorTarget(conn *ec2.EC2, input *ec2.DescribeTrafficMirrorTargetsInput) (*ec2.TrafficMirrorTarget, error) {
+	output, err := FindTrafficMirrorTargets(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(output) == 0 || output[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return output[0], nil
+}
+
+func FindTrafficMirrorTargets(conn *ec2.EC2, input *ec2.DescribeTrafficMirrorTargetsInput) ([]*ec2.TrafficMirrorTarget, error) {
+	var output []*ec2.TrafficMirrorTarget
+
+	err := conn.DescribeTrafficMirrorTargetsPages(input, func(page *ec2.DescribeTrafficMirrorTargetsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.TrafficMirrorTargets {
+			if v != nil {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidTrafficMirrorTargetIdNotFound) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
+func FindTrafficMirrorTargetByID(conn *ec2.EC2, id string) (*ec2.TrafficMirrorTarget, error) {
+	input := &ec2.DescribeTrafficMirrorTargetsInput{
+		TrafficMirrorTargetIds: aws.StringSlice([]string{id}),
+	}
+
+	output, err := FindTrafficMirrorTarget(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Eventual consistency check.
+	if aws.StringValue(output.TrafficMirrorTargetId) != id {
+		return nil, &resource.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
 }
 
 func FindTransitGateway(conn *ec2.EC2, input *ec2.DescribeTransitGatewaysInput) (*ec2.TransitGateway, error) {
@@ -4865,6 +4937,37 @@ func FindInternetGatewayAttachment(conn *ec2.EC2, internetGatewayID, vpcID strin
 	}
 
 	return attachment, nil
+}
+
+func FindIPAMPoolCIDRs(conn *ec2.EC2, input *ec2.GetIpamPoolCidrsInput) ([]*ec2.IpamPoolCidr, error) {
+	var output []*ec2.IpamPoolCidr
+
+	err := conn.GetIpamPoolCidrsPages(input, func(page *ec2.GetIpamPoolCidrsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.IpamPoolCidrs {
+			if v != nil {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, InvalidIPAMPoolIDNotFound) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
 }
 
 func FindKeyPair(conn *ec2.EC2, input *ec2.DescribeKeyPairsInput) (*ec2.KeyPairInfo, error) {

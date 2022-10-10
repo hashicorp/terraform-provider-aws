@@ -59,7 +59,7 @@ func TestAccLambdaProvisionedConcurrencyConfig_Disappears_lambdaFunction(t *test
 			{
 				Config: testAccProvisionedConcurrencyConfigConfig_concurrentExecutions(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFunctionExists(lambdaFunctionResourceName, rName, &function),
+					testAccCheckFunctionExists(lambdaFunctionResourceName, &function),
 					testAccCheckProvisionedConcurrencyExistsConfig(resourceName),
 					testAccCheckFunctionDisappears(&function),
 				),
@@ -300,7 +300,7 @@ resource "aws_lambda_function" "test" {
   role          = aws_iam_role.test.arn
   handler       = "lambdapinpoint.handler"
   publish       = true
-  runtime       = "nodejs12.x"
+  runtime       = "nodejs16.x"
 
   depends_on = [aws_iam_role_policy_attachment.test]
 }

@@ -55,7 +55,7 @@ func sweepCapacityProviders(region string) error {
 	conn := client.(*conns.AWSClient).ECSConn
 	input := &ecs.DescribeCapacityProvidersInput{}
 	var sweeperErrs *multierror.Error
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = describeCapacityProvidersPages(conn, input, func(page *ecs.DescribeCapacityProvidersOutput, lastPage bool) bool {
 		if page == nil {
@@ -142,7 +142,7 @@ func sweepServices(region string) error {
 	conn := client.(*conns.AWSClient).ECSConn
 
 	var sweeperErrs *multierror.Error
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = conn.ListClustersPages(&ecs.ListClustersInput{}, func(page *ecs.ListClustersOutput, lastPage bool) bool {
 		if page == nil {

@@ -1,6 +1,7 @@
 package sqs_test
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"strconv"
@@ -770,7 +771,7 @@ func testAccCheckQueueExists(resourceName string, v *map[string]string) resource
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SQSConn
 
-		output, err := tfsqs.FindQueueAttributesByURL(conn, rs.Primary.ID)
+		output, err := tfsqs.FindQueueAttributesByURL(context.Background(), conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -790,7 +791,7 @@ func testAccCheckQueueDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := tfsqs.FindQueueAttributesByURL(conn, rs.Primary.ID)
+		_, err := tfsqs.FindQueueAttributesByURL(context.Background(), conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue

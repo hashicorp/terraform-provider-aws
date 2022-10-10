@@ -295,8 +295,8 @@ func resourceTableReplicaReadReplica(d *schema.ResourceData, meta interface{}) e
 	pitrOut, err := conn.DescribeContinuousBackups(&dynamodb.DescribeContinuousBackupsInput{
 		TableName: aws.String(tableName),
 	})
-
-	if err != nil && !tfawserr.ErrCodeEquals(err, "UnknownOperationException") {
+	// When a Table is `ARCHIVED`, DescribeContinuousBackups returns `TableNotFoundException`
+	if err != nil && !tfawserr.ErrCodeEquals(err, "UnknownOperationException", dynamodb.ErrCodeTableNotFoundException) {
 		return create.Error(names.DynamoDB, create.ErrActionReading, ResNameTableReplica, d.Id(), fmt.Errorf("continuous backups: %w", err))
 	}
 
@@ -310,8 +310,8 @@ func resourceTableReplicaReadReplica(d *schema.ResourceData, meta interface{}) e
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	tags, err := ListTags(conn, d.Get("arn").(string))
-
-	if err != nil && !tfawserr.ErrMessageContains(err, "UnknownOperationException", "Tagging is not currently supported in DynamoDB Local.") {
+	// When a Table is `ARCHIVED`, ListTags returns `ResourceNotFoundException`
+	if err != nil && !(tfawserr.ErrMessageContains(err, "UnknownOperationException", "Tagging is not currently supported in DynamoDB Local.") || tfresource.NotFound(err)) {
 		return create.Error(names.DynamoDB, create.ErrActionReading, ResNameTableReplica, d.Id(), fmt.Errorf("tags: %w", err))
 	}
 

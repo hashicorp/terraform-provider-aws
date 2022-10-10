@@ -4,22 +4,30 @@
 package dynamodb
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"sync"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func init() {
 	resource.AddTestSweepers("aws_dynamodb_table", &resource.Sweeper{
 		Name: "aws_dynamodb_table",
 		F:    sweepTables,
+	})
+
+	resource.AddTestSweepers("aws_dynamodb_backup", &resource.Sweeper{
+		Name: "aws_dynamodb_backup",
+		F:    sweepBackups,
 	})
 }
 
@@ -31,7 +39,7 @@ func sweepTables(region string) error {
 	}
 
 	conn := client.(*conns.AWSClient).DynamoDBConn
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 	var g multierror.Group
 	var mutex = &sync.Mutex{}
@@ -50,13 +58,11 @@ func sweepTables(region string) error {
 
 			// read concurrently and gather errors
 			g.Go(func() error {
-				// Need to Read first to fill in byte_match_tuples attribute
+				// Need to Read first to fill in `replica` attribute
 				err := r.Read(d, client)
 
 				if err != nil {
-					sweeperErr := fmt.Errorf("error reading DynamoDB Table (%s): %w", id, err)
-					log.Printf("[ERROR] %s", sweeperErr)
-					return sweeperErr
+					return err
 				}
 
 				// In case it was already deleted
@@ -93,4 +99,89 @@ func sweepTables(region string) error {
 	}
 
 	return errs.ErrorOrNil()
+}
+
+func sweepBackups(region string) error {
+	client, err := sweep.SharedRegionalSweepClient(region)
+
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+
+	conn := client.(*conns.AWSClient).DynamoDBConn
+	sweepables := make([]sweep.Sweepable, 0)
+	var errs *multierror.Error
+	var g multierror.Group
+
+	input := &dynamodb.ListBackupsInput{
+		BackupType: aws.String(dynamodb.BackupTypeFilterAll),
+	}
+	err = listBackupsPages(conn, input, func(page *dynamodb.ListBackupsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, backup := range page.BackupSummaries {
+			if aws.StringValue(backup.BackupType) == dynamodb.BackupTypeFilterSystem {
+				log.Printf("[DEBUG] Skipping DynamoDB Backup %q, cannot delete %q backups", aws.StringValue(backup.BackupArn), dynamodb.BackupTypeFilterSystem)
+				continue
+			}
+
+			sweepables = append(sweepables, backupSweeper{
+				conn: conn,
+				arn:  backup.BackupArn,
+			})
+		}
+
+		return !lastPage
+	})
+
+	if err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("listing DynamoDB Backups for %s: %w", region, err))
+	}
+
+	if err = g.Wait().ErrorOrNil(); err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("reading DynamoDB Backups: %w", err))
+	}
+
+	if err = sweep.SweepOrchestrator(sweepables); err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("sweeping DynamoDB Backups for %s: %w", region, err))
+	}
+
+	if sweep.SkipSweepError(errs.ErrorOrNil()) {
+		log.Printf("[WARN] Skipping DynamoDB Backups sweep for %s: %s", region, errs)
+		return nil
+	}
+
+	return errs.ErrorOrNil()
+}
+
+type backupSweeper struct {
+	conn *dynamodb.DynamoDB
+	arn  *string
+}
+
+func (bs backupSweeper) Delete(ctx context.Context, rc sweep.RetryConfig) error {
+	input := &dynamodb.DeleteBackupInput{
+		BackupArn: bs.arn,
+	}
+	err := tfresource.RetryConfigContext(ctx, rc.Delay, rc.DelayRand, rc.MinTimeout, rc.PollInterval, rc.Timeout, func() *resource.RetryError {
+		_, err := bs.conn.DeleteBackupWithContext(ctx, input)
+		if tfawserr.ErrCodeEquals(err, dynamodb.ErrCodeBackupNotFoundException) {
+			return nil
+		}
+		if tfawserr.ErrCodeEquals(err, dynamodb.ErrCodeBackupInUseException, dynamodb.ErrCodeLimitExceededException) {
+			return resource.RetryableError(err)
+		}
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+
+		return nil
+	})
+	if tfresource.TimedOut(err) {
+		_, err = bs.conn.DeleteBackupWithContext(ctx, input)
+	}
+
+	return err
 }
