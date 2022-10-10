@@ -954,6 +954,302 @@ func ResourceChannel() *schema.Resource {
 																Computed:         true,
 																ValidateDiagFunc: enum.Validate[types.InputLossActionForHlsOut](),
 															},
+															"iv_in_manifest": {
+																Type:             schema.TypeString,
+																Optional:         true,
+																Computed:         true,
+																ValidateDiagFunc: enum.Validate[types.HlsIvInManifest](),
+															},
+															"iv_source": {
+																Type:             schema.TypeString,
+																Optional:         true,
+																Computed:         true,
+																ValidateDiagFunc: enum.Validate[types.HlsIvSource](),
+															},
+															"keep_segment": {
+																Type:     schema.TypeInt,
+																Optional: true,
+																Computed: true,
+															},
+															"key_format": {
+																Type:     schema.TypeString,
+																Optional: true,
+																Computed: true,
+															},
+															"key_format_versions": {
+																Type:     schema.TypeString,
+																Optional: true,
+																Computed: true,
+															},
+															"manifest_compression": {
+																Type:             schema.TypeString,
+																Optional:         true,
+																Computed:         true,
+																ValidateDiagFunc: enum.Validate[types.HlsManifestCompression](),
+															},
+															"manifest_duration_format": {
+																Type:             schema.TypeString,
+																Optional:         true,
+																Computed:         true,
+																ValidateDiagFunc: enum.Validate[types.HlsManifestDurationFormat](),
+															},
+															"min_segment_length": {
+																Type:     schema.TypeInt,
+																Optional: true,
+																Computed: true,
+															},
+															"mode": {
+																Type:             schema.TypeString,
+																Optional:         true,
+																Computed:         true,
+																ValidateDiagFunc: enum.Validate[types.HlsMode](),
+															},
+															"program_date_time": {
+																Type:             schema.TypeString,
+																Optional:         true,
+																Computed:         true,
+																ValidateDiagFunc: enum.Validate[types.HlsProgramDateTime](),
+															},
+															"program_date_time_clock": {
+																Type:             schema.TypeString,
+																Optional:         true,
+																Computed:         true,
+																ValidateDiagFunc: enum.Validate[types.HlsProgramDateTimeClock](),
+															},
+															"program_date_time_period": {
+																Type:     schema.TypeInt,
+																Optional: true,
+																Computed: true,
+															},
+															"redundant_manifest": {
+																Type:             schema.TypeString,
+																Optional:         true,
+																Computed:         true,
+																ValidateDiagFunc: enum.Validate[types.HlsRedundantManifest](),
+															},
+															"segment_length": {
+																Type:     schema.TypeInt,
+																Optional: true,
+																Computed: true,
+															},
+															"segments_per_subdirectory": {
+																Type:     schema.TypeInt,
+																Optional: true,
+																Computed: true,
+															},
+															"stream_inf_resolution": {
+																Type:             schema.TypeString,
+																Optional:         true,
+																Computed:         true,
+																ValidateDiagFunc: enum.Validate[types.HlsStreamInfResolution](),
+															},
+															"time_metadata_id3_frame": {
+																Type:             schema.TypeString,
+																Optional:         true,
+																Computed:         true,
+																ValidateDiagFunc: enum.Validate[types.HlsTimedMetadataId3Frame](),
+															},
+															"timestamp_delta_milliseconds": {
+																Type:     schema.TypeInt,
+																Optional: true,
+																Computed: true,
+															},
+															"ts_file_mode": {
+																Type:             schema.TypeString,
+																Optional:         true,
+																Computed:         true,
+																ValidateDiagFunc: enum.Validate[types.HlsTsFileMode](),
+															},
+														},
+													},
+												},
+												"media_package_group_settings": {
+													Type:     schema.TypeList,
+													Optional: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"destination": func() *schema.Schema {
+																return destinationSchema()
+															}(),
+														},
+													},
+												},
+												"ms_smooth_group_settings": {
+													Type:     schema.TypeList,
+													Optional: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"destination": func() *schema.Schema {
+																return destinationSchema()
+															}(),
+															"acquisition_point_id": {
+																Type:     schema.TypeString,
+																Optional: true,
+																Computed: true,
+															},
+															"audio_only_timecodec_control": {
+																Type:             schema.TypeString,
+																Optional:         true,
+																Computed:         true,
+																ValidateDiagFunc: enum.Validate[types.SmoothGroupAudioOnlyTimecodeControl](),
+															},
+															"certificate_mode": {
+																Type:             schema.TypeString,
+																Optional:         true,
+																Computed:         true,
+																ValidateDiagFunc: enum.Validate[types.SmoothGroupCertificateMode](),
+															},
+															"connection_retry_interval": {
+																Type:     schema.TypeInt,
+																Optional: true,
+																Computed: true,
+															},
+															"event_id": {
+																Type:     schema.TypeInt,
+																Optional: true,
+																Computed: true,
+															},
+															"event_id_mode": {
+																Type:             schema.TypeString,
+																Optional:         true,
+																Computed:         true,
+																ValidateDiagFunc: enum.Validate[types.SmoothGroupEventIdMode](),
+															},
+															"event_stop_behavior": {
+																Type:             schema.TypeString,
+																Optional:         true,
+																Computed:         true,
+																ValidateDiagFunc: enum.Validate[types.SmoothGroupEventStopBehavior](),
+															},
+															"filecache_duration": func() *schema.Schema {
+																return filecacheDurationSchema()
+															}(),
+															"fragment_length": {
+																Type:     schema.TypeInt,
+																Optional: true,
+																Computed: true,
+															},
+															"input_loss_action": {
+																Type:             schema.TypeString,
+																Optional:         true,
+																Computed:         true,
+																ValidateDiagFunc: enum.Validate[types.InputLossActionForMsSmoothOut](),
+															},
+															"num_retries": func() *schema.Schema {
+																return numRetriesSchema()
+															}(),
+															"restart_delay": func() *schema.Schema {
+																return restartDelaySchema()
+															}(),
+															"segmentation_mode": {
+																Type:             schema.TypeString,
+																Optional:         true,
+																Computed:         true,
+																ValidateDiagFunc: enum.Validate[types.SmoothGroupSegmentationMode](),
+															},
+															"send_delay_ms": {
+																Type:     schema.TypeInt,
+																Optional: true,
+																Computed: true,
+															},
+															"sparse_track_type": {
+																Type:             schema.TypeString,
+																Optional:         true,
+																Computed:         true,
+																ValidateDiagFunc: enum.Validate[types.SmoothGroupSparseTrackType](),
+															},
+															"stream_manifest_behavior": {
+																Type:             schema.TypeString,
+																Optional:         true,
+																Computed:         true,
+																ValidateDiagFunc: enum.Validate[types.SmoothGroupStreamManifestBehavior](),
+															},
+															"timestamp_offset": {
+																Type:     schema.TypeString,
+																Optional: true,
+																Computed: true,
+															},
+															"timestamp_offset_mode": {
+																Type:             schema.TypeString,
+																Optional:         true,
+																Computed:         true,
+																ValidateDiagFunc: enum.Validate[types.SmoothGroupTimestampOffsetMode](),
+															},
+														},
+													},
+												},
+												"rtmp_group_settings": {
+													Type:     schema.TypeList,
+													Optional: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"ad_markers": {
+																Type:             schema.TypeList,
+																Optional:         true,
+																Elem:             &schema.Schema{Type: schema.TypeString},
+																ValidateDiagFunc: enum.Validate[types.RtmpAdMarkers](),
+															},
+															"authentication_scheme": {
+																Type:             schema.TypeString,
+																Optional:         true,
+																Computed:         true,
+																ValidateDiagFunc: enum.Validate[types.AuthenticationScheme](),
+															},
+															"cache_full_behavior": {
+																Type:             schema.TypeString,
+																Optional:         true,
+																Computed:         true,
+																ValidateDiagFunc: enum.Validate[types.RtmpCacheFullBehavior](),
+															},
+															"cache_length": {
+																Type:     schema.TypeInt,
+																Optional: true,
+																Computed: true,
+															},
+															"caption_data": {
+																Type:             schema.TypeString,
+																Optional:         true,
+																Computed:         true,
+																ValidateDiagFunc: enum.Validate[types.RtmpCaptionData](),
+															},
+															"input_loss_action": {
+																Type:             schema.TypeString,
+																Optional:         true,
+																Computed:         true,
+																ValidateDiagFunc: enum.Validate[types.InputLossActionForRtmpOut](),
+															},
+															"restart_delay": func() *schema.Schema {
+																return restartDelaySchema()
+															}(),
+														},
+													},
+												},
+												"udp_group_settings": {
+													Type:     schema.TypeList,
+													Optional: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"input_loss_action": {
+																Type:             schema.TypeString,
+																Optional:         true,
+																Computed:         true,
+																ValidateDiagFunc: enum.Validate[types.InputLossActionForUdpOut](),
+															},
+															"timed_metadata_id3_frame": {
+																Type:             schema.TypeString,
+																Optional:         true,
+																Computed:         true,
+																ValidateDiagFunc: enum.Validate[types.UdpTimedMetadataId3Frame](),
+															},
+															"timed_metadata_id3_period": {
+																Type:     schema.TypeInt,
+																Optional: true,
+																Computed: true,
+															},
 														},
 													},
 												},
