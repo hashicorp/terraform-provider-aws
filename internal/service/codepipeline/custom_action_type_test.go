@@ -339,20 +339,20 @@ resource "aws_codepipeline_custom_action_type" "test" {
   configuration_property {
     key       = true
     name      = "pk"
-	queryable = true
-	required  = true
-	secret    = false
-	type      = "Number"
+    queryable = true
+    required  = true
+    secret    = false
+    type      = "Number"
   }
 
   configuration_property {
-	description = "Date of birth"
+    description = "Date of birth"
     key         = false
     name        = "dob"
-	queryable   = false
-	required    = false
-	secret      = true
-	type        = "String"
+    queryable   = false
+    required    = false
+    secret      = true
+    type        = "String"
   }
 
   input_artifact_details {
@@ -369,8 +369,8 @@ resource "aws_codepipeline_custom_action_type" "test" {
   version       = "1"
 
   settings {
-	entity_url_template   = "https://example.com/entity"
-	revision_url_template = "https://example.com/configuration"
+    entity_url_template   = "https://example.com/entity"
+    revision_url_template = "https://example.com/configuration"
   }
 }
 `, rName)
