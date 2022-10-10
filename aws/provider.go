@@ -373,7 +373,6 @@ func Provider() terraform.ResourceProvider {
 			"aws_codebuild_project":                            resourceAwsCodeBuildProject(),
 			"aws_codebuild_webhook":                            resourceAwsCodeBuildWebhook(),
 			"aws_codepipeline":                                 resourceAwsCodePipeline(),
-			"aws_codepipeline_custom_action_type":              resourceAwsCodePipelineCustomActionType(),
 			"aws_codepipeline_webhook":                         resourceAwsCodePipelineWebhook(),
 			"aws_cur_report_definition":                        resourceAwsCurReportDefinition(),
 			"aws_customer_gateway":                             resourceAwsCustomerGateway(),
