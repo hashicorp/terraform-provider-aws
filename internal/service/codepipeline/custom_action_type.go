@@ -252,7 +252,7 @@ func resourceCustomActionTypeRead(ctx context.Context, d *schema.ResourceData, m
 	}.String()
 	d.Set("arn", arn)
 	d.Set("category", actionType.Id.Category)
-	if err := d.Set("configuration_property", flattenActionConfigurationProperties(actionType.ActionConfigurationProperties)); err != nil {
+	if err := d.Set("configuration_property", flattenActionConfigurationProperties(d, actionType.ActionConfigurationProperties)); err != nil {
 		return diag.Errorf("setting configuration_property: %s", err)
 	}
 	if actionType.InputArtifactDetails != nil {
@@ -510,7 +510,7 @@ func expandActionTypeSettings(tfMap map[string]interface{}) *codepipeline.Action
 	return apiObject
 }
 
-func flattenActionConfigurationProperty(apiObject *codepipeline.ActionConfigurationProperty) map[string]interface{} {
+func flattenActionConfigurationProperty(d *schema.ResourceData, i int, apiObject *codepipeline.ActionConfigurationProperty) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -543,24 +543,28 @@ func flattenActionConfigurationProperty(apiObject *codepipeline.ActionConfigurat
 
 	if v := apiObject.Type; v != nil {
 		tfMap["type"] = aws.StringValue(v)
+	} else {
+		// The AWS API does not return Type.
+		key := fmt.Sprintf("configuration_property.%d.type", i)
+		tfMap["type"] = d.Get(key).(string)
 	}
 
 	return tfMap
 }
 
-func flattenActionConfigurationProperties(apiObjects []*codepipeline.ActionConfigurationProperty) []interface{} {
+func flattenActionConfigurationProperties(d *schema.ResourceData, apiObjects []*codepipeline.ActionConfigurationProperty) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
 	var tfList []interface{}
 
-	for _, apiObject := range apiObjects {
+	for i, apiObject := range apiObjects {
 		if apiObject == nil {
 			continue
 		}
 
-		tfList = append(tfList, flattenActionConfigurationProperty(apiObject))
+		tfList = append(tfList, flattenActionConfigurationProperty(d, i, apiObject))
 	}
 
 	return tfList

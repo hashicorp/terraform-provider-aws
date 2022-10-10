@@ -133,6 +133,71 @@ func TestAccCodePipelineCustomActionType_tags(t *testing.T) {
 	})
 }
 
+func TestAccCodePipelineCustomActionType_allAttributes(t *testing.T) {
+	var v codepipeline.ActionType
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_codepipeline_custom_action_type.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(codestarconnections.EndpointsID, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, codepipeline.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCustomActionTypeDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCustomActionType_allAttributes(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckCustomActionTypeExists(resourceName, &v),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "codepipeline", fmt.Sprintf("actiontype:Custom/Test/%s/1", rName)),
+					resource.TestCheckResourceAttr(resourceName, "category", "Test"),
+					resource.TestCheckResourceAttr(resourceName, "configuration_property.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "configuration_property.0.description", ""),
+					resource.TestCheckResourceAttr(resourceName, "configuration_property.0.key", "true"),
+					resource.TestCheckResourceAttr(resourceName, "configuration_property.0.name", "pk"),
+					resource.TestCheckResourceAttr(resourceName, "configuration_property.0.queryable", "true"),
+					resource.TestCheckResourceAttr(resourceName, "configuration_property.0.required", "true"),
+					resource.TestCheckResourceAttr(resourceName, "configuration_property.0.secret", "false"),
+					resource.TestCheckResourceAttr(resourceName, "configuration_property.0.type", "Number"),
+					resource.TestCheckResourceAttr(resourceName, "configuration_property.1.description", "Date of birth"),
+					resource.TestCheckResourceAttr(resourceName, "configuration_property.1.key", "false"),
+					resource.TestCheckResourceAttr(resourceName, "configuration_property.1.name", "dob"),
+					resource.TestCheckResourceAttr(resourceName, "configuration_property.1.queryable", "false"),
+					resource.TestCheckResourceAttr(resourceName, "configuration_property.1.required", "false"),
+					resource.TestCheckResourceAttr(resourceName, "configuration_property.1.secret", "true"),
+					resource.TestCheckResourceAttr(resourceName, "configuration_property.1.type", "String"),
+					resource.TestCheckResourceAttr(resourceName, "input_artifact_details.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "input_artifact_details.0.maximum_count", "3"),
+					resource.TestCheckResourceAttr(resourceName, "input_artifact_details.0.minimum_count", "2"),
+					resource.TestCheckResourceAttr(resourceName, "output_artifact_details.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "output_artifact_details.0.maximum_count", "5"),
+					resource.TestCheckResourceAttr(resourceName, "output_artifact_details.0.minimum_count", "4"),
+					resource.TestCheckResourceAttr(resourceName, "owner", "Custom"),
+					resource.TestCheckResourceAttr(resourceName, "provider_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "settings.0.entity_url_template", "https://example.com/entity"),
+					resource.TestCheckResourceAttr(resourceName, "settings.0.execution_url_template", ""),
+					resource.TestCheckResourceAttr(resourceName, "settings.0.revision_url_template", "https://example.com/configuration"),
+					resource.TestCheckResourceAttr(resourceName, "settings.0.third_party_configuration_url", ""),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "version", "1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"configuration_property.0.type",
+					"configuration_property.1.type",
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckCustomActionTypeExists(n string, v *codepipeline.ActionType) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -264,4 +329,49 @@ resource "aws_codepipeline_custom_action_type" "test" {
   }
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+}
+
+func testAccCustomActionType_allAttributes(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_codepipeline_custom_action_type" "test" {
+  category = "Test"
+
+  configuration_property {
+    key       = true
+    name      = "pk"
+	queryable = true
+	required  = true
+	secret    = false
+	type      = "Number"
+  }
+
+  configuration_property {
+	description = "Date of birth"
+    key         = false
+    name        = "dob"
+	queryable   = false
+	required    = false
+	secret      = true
+	type        = "String"
+  }
+
+  input_artifact_details {
+    maximum_count = 3
+    minimum_count = 2
+  }
+
+  output_artifact_details {
+    maximum_count = 5
+    minimum_count = 4
+  }
+
+  provider_name = %[1]q
+  version       = "1"
+
+  settings {
+	entity_url_template   = "https://example.com/entity"
+	revision_url_template = "https://example.com/configuration"
+  }
+}
+`, rName)
 }
