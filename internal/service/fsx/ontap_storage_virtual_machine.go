@@ -255,7 +255,6 @@ func resourceOntapStorageVirtualMachineCreate(d *schema.ResourceData, meta inter
 		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
-	log.Printf("[DEBUG] Creating FSx ONTAP Storage Virtual Machine: %s", input)
 	result, err := conn.CreateStorageVirtualMachine(input)
 
 	if err != nil {
