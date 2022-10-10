@@ -6,7 +6,7 @@ description: |-
   Provides a CodePipeline CustomActionType.
 ---
 
-# aws_codepipeline_custom_action_type
+# Resource: aws_codepipeline_custom_action_type
 
 Provides a CodeDeploy CustomActionType
 
