@@ -1374,12 +1374,11 @@ func resourceChannelCreate(ctx context.Context, d *schema.ResourceData, meta int
 		RequestId: aws.String(resource.UniqueId()),
 	}
 
-	if v, ok := d.GetOk("max_size"); ok {
-		in.MaxSize = aws.Int64(int64(v.(int)))
-	}
-
 	if v, ok := d.GetOk("complex_argument"); ok && len(v.([]interface{})) > 0 {
 		in.ComplexArguments = expandComplexArguments(v.([]interface{}))
+	}
+	if v, ok := d.GetOk("maintenance"); ok && len(v.(map[string]interface{})) > 0 {
+		in.Maintenance = expandChannelMaintenanceCreate(v.(map[string]interface{}))
 	}
 
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
@@ -1428,6 +1427,9 @@ func resourceChannelRead(ctx context.Context, d *schema.ResourceData, meta inter
 	if err := d.Set("complex_argument", flattenComplexArguments(out.ComplexArguments)); err != nil {
 		return create.DiagError(names.MediaLive, create.ErrActionSetting, ResNameChannel, d.Id(), err)
 	}
+	if err := d.Set("maintenance", flattenChannelMaintenance(out.Maintenance)); err != nil {
+		return create.DiagError(names.MediaLive, create.ErrActionSetting, ResNameChannel, d.Id(), err)
+	}
 
 	tags, err := ListTags(ctx, conn, aws.ToString(out.Arn))
 	if err != nil {
@@ -1458,9 +1460,22 @@ func resourceChannelUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		ChannelId: aws.String(d.Id()),
 	}
 
-	if d.HasChanges("an_argument") {
-		in.Name = aws.String(d.Get("name").(string))
+	if d.HasChanges(
+		"name",
+		"maintenance",
+	) {
 		update = true
+
+		in.Name = aws.String(d.Get("name").(string))
+
+		if v, ok := d.GetOk("maintenance"); ok {
+			configs := v.([]interface{})
+			config, ok := configs[0].(map[string]interface{})
+
+			if ok && config != nil {
+				in.Maintenance = expandChannelMaintenanceUpdate(config)
+			}
+		}
 	}
 
 	if !update {
@@ -1673,4 +1688,56 @@ func expandComplexArguments(tfList []interface{}) []*medialive.ComplexArgument {
 	}
 
 	return s
+}
+
+func expandChannelMaintenanceCreate(tfMap map[string]interface{}) *types.MaintenanceCreateSettings {
+	if tfMap == nil {
+		return nil
+	}
+
+	mcs := &types.MaintenanceCreateSettings{}
+	if v, ok := tfMap["maintenance_day"].(string); ok && v != "" {
+		mcs.MaintenanceDay = types.MaintenanceDay(v)
+	}
+	if v, ok := tfMap["maintenance_start_time"].(string); ok && v != "" {
+		mcs.MaintenanceStartTime = aws.String(v)
+	}
+
+	return mcs
+}
+
+func expandChannelMaintenanceUpdate(tfMap map[string]interface{}) *types.MaintenanceUpdateSettings {
+	if tfMap == nil {
+		return nil
+	}
+
+	mud := &types.MaintenanceUpdateSettings{}
+	if v, ok := tfMap["maintenance_day"].(string); ok && v != "" {
+		mud.MaintenanceDay = types.MaintenanceDay(v)
+	}
+	if v, ok := tfMap["maintenance_start_time"].(string); ok && v != "" {
+		mud.MaintenanceStartTime = aws.String(v)
+	}
+	// This field is only available in the update struct. Should it be included in the base schema?
+	// if v, ok := tfMap["maintenance_scheduled_date"].(string); ok && v != "" {
+	// 	mud.MaintenanceScheduledDate = aws.String(v)
+	// }
+
+	return mud
+}
+
+func flattenChannelMaintenance(apiObject *types.MaintenanceStatus) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{}
+	if v := apiObject.MaintenanceDay; v != "" {
+		m["maintenance_day"] = string(v)
+	}
+	if v := apiObject.MaintenanceStartTime; v != nil {
+		m["maintenance_start_time"] = aws.ToString(v)
+	}
+
+	return m
 }
