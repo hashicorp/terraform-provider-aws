@@ -72,6 +72,7 @@ The `settings` object supports the following:
 * `revision_url_template` - (Optional) The URL returned to the AWS CodePipeline console that contains a link to the page where customers can update or change the configuration of the external action.
 * `third_party_configuration_url` - (Optional) The URL of a sign-up page where users can sign up for an external service and perform initial configuration of the action provided by that service.
 
+* `tags` - (Optional) Map of tags to assign to this resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `version` - (Required) The version identifier of the custom action.
 
 ## Attribute Reference
@@ -81,6 +82,7 @@ The following arguments are exported:
 * `id` - Composed of category, provider and version. For example, `Build:terraform:1`
 * `arn` - The action ARN.
 * `owner` - The creator of the action being called.
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
