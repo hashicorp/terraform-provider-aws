@@ -8,7 +8,7 @@ description: |-
 
 # Resource: aws_db_parameter_group
 
-Provides an RDS DB parameter group resource .Documentation of the available parameters for various RDS engines can be found at:
+Provides an RDS DB parameter group resource. Documentation of the available parameters for various RDS engines can be found at:
 
 * [Aurora MySQL Parameters](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/AuroraMySQL.Reference.html)
 * [Aurora PostgreSQL Parameters](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/AuroraPostgreSQL.Reference.html)
@@ -20,8 +20,8 @@ Provides an RDS DB parameter group resource .Documentation of the available para
 
 ~> **NOTE:** After applying your changes, you may encounter a perpetual diff in your Terraform plan
 output for a `parameter` whose `value` remains unchanged but whose `apply_method` is changing
-(e.g. from `immediate` to `pending-reboot`, or `pending-reboot` to `immediate`).  If only the
-apply method of a parameter is changing, the AWS API will not register this change.  To change
+(e.g., from `immediate` to `pending-reboot`, or `pending-reboot` to `immediate`). If only the
+apply method of a parameter is changing, the AWS API will not register this change. To change
 the `apply_method` of a parameter, its value must also change.
 
 ## Example Usage
