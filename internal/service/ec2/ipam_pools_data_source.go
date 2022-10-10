@@ -2,7 +2,6 @@ package ec2
 
 import (
 	"strings"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -16,50 +15,46 @@ func DataSourceIPAMPools() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourceIPAMPoolsRead,
 
-		Timeouts: &schema.ResourceTimeout{
-			Read: schema.DefaultTimeout(20 * time.Minute),
-		},
-
 		Schema: map[string]*schema.Schema{
 			"filter": DataSourceFiltersSchema(),
+			// computed
 			"ipam_pools": {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"ipam_pool_id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
 						"arn": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+
 						"address_family": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"publicly_advertisable": {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
+
 						"allocation_default_netmask_length": {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
+
 						"allocation_max_netmask_length": {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
+
 						"allocation_min_netmask_length": {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
+
 						"allocation_resource_tags": tftags.TagsSchemaComputed(),
+
 						"auto_import": {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
+
 						"aws_service": {
 							Type:     schema.TypeString,
 							Computed: true,
@@ -68,34 +63,52 @@ func DataSourceIPAMPools() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+
 						"id": {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
+
 						"ipam_scope_id": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+
 						"ipam_scope_type": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+
+						"ipam_pool_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+
 						"locale": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+
+						"publicly_advertisable": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+
 						"pool_depth": {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
+
 						"source_ipam_pool_id": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+
 						"state": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+
 						"tags": tftags.TagsSchemaComputed(),
 					},
 				},
