@@ -7,6 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/service/codepipeline"
 	"github.com/aws/aws-sdk-go/service/codestarconnections"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -17,6 +18,7 @@ import (
 
 func TestAccCodePipelineCustomActionType_basic(t *testing.T) {
 	var v codepipeline.ActionType
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codepipeline_custom_action_type.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -29,10 +31,10 @@ func TestAccCodePipelineCustomActionType_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckCustomActionTypeDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCustomActionType_basic(),
+				Config: testAccCustomActionType_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCustomActionTypeExists(resourceName, &v),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "codepipeline", "actiontype:Custom/Test/CodeDeploy/1"),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "codepipeline", fmt.Sprintf("actiontype:Custom/Test/%s/1", rName)),
 					resource.TestCheckResourceAttr(resourceName, "category", "Test"),
 					resource.TestCheckResourceAttr(resourceName, "configuration_property.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "input_artifact_details.#", "1"),
@@ -42,7 +44,7 @@ func TestAccCodePipelineCustomActionType_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "output_artifact_details.0.maximum_count", "4"),
 					resource.TestCheckResourceAttr(resourceName, "output_artifact_details.0.minimum_count", "1"),
 					resource.TestCheckResourceAttr(resourceName, "owner", "Custom"),
-					resource.TestCheckResourceAttr(resourceName, "provider_name", "CodeDeploy"),
+					resource.TestCheckResourceAttr(resourceName, "provider_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "settings.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "version", "1"),
@@ -52,6 +54,80 @@ func TestAccCodePipelineCustomActionType_basic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccCodePipelineCustomActionType_disappears(t *testing.T) {
+	var v codepipeline.ActionType
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_codepipeline_custom_action_type.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(codestarconnections.EndpointsID, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, codepipeline.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCustomActionTypeDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCustomActionType_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckCustomActionTypeExists(resourceName, &v),
+					acctest.CheckResourceDisappears(acctest.Provider, tfcodepipeline.ResourceCustomActionType(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccCodePipelineCustomActionType_tags(t *testing.T) {
+	var v codepipeline.ActionType
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_codepipeline_custom_action_type.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(codestarconnections.EndpointsID, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, codepipeline.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCustomActionTypeDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCustomActionType_tags1(rName, "key1", "value1"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckCustomActionTypeExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccCustomActionType_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckCustomActionTypeExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccCustomActionType_tags1(rName, "key2", "value2"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckCustomActionTypeExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
 			},
 		},
 	})
@@ -118,8 +194,8 @@ func testAccCheckCustomActionTypeDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCustomActionType_basic() string {
-	return `
+func testAccCustomActionType_basic(rName string) string {
+	return fmt.Sprintf(`
 resource "aws_codepipeline_custom_action_type" "test" {
   category = "Test"
 
@@ -133,8 +209,59 @@ resource "aws_codepipeline_custom_action_type" "test" {
     minimum_count = 1
   }
 
-  provider_name = "CodeDeploy"
+  provider_name = %[1]q
   version       = "1"
 }
-`
+`, rName)
+}
+
+func testAccCustomActionType_tags1(rName, tagKey1, tagValue1 string) string {
+	return fmt.Sprintf(`
+resource "aws_codepipeline_custom_action_type" "test" {
+  category = "Test"
+
+  input_artifact_details {
+    maximum_count = 5
+    minimum_count = 0
+  }
+
+  output_artifact_details {
+    maximum_count = 4
+    minimum_count = 1
+  }
+
+  provider_name = %[1]q
+  version       = "1"
+
+  tags = {
+    %[2]q = %[3]q
+  }
+}
+`, rName, tagKey1, tagValue1)
+}
+
+func testAccCustomActionType_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return fmt.Sprintf(`
+resource "aws_codepipeline_custom_action_type" "test" {
+  category = "Test"
+
+  input_artifact_details {
+    maximum_count = 5
+    minimum_count = 0
+  }
+
+  output_artifact_details {
+    maximum_count = 4
+    minimum_count = 1
+  }
+
+  provider_name = %[1]q
+  version       = "1"
+
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+}
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
