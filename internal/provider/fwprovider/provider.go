@@ -318,6 +318,7 @@ func (p *fwprovider) DataSources(ctx context.Context) []func() datasource.DataSo
 	var dataSources []func() datasource.DataSource
 
 	// TODO Wrap the returned type to add standard context, logging etc.
+	// 	tflog.Trace(ctx, "dataSourceARN.Read enter")
 	for serviceID, data := range p.Primary.Meta().(*conns.AWSClient).ServiceMap {
 		for _, v := range data.FrameworkDataSources(ctx) {
 			v, err := v(ctx)

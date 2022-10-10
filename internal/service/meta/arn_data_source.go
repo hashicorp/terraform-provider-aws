@@ -9,7 +9,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/fwtypes"
 )
 
@@ -22,7 +21,9 @@ func newDataSourceARN(ctx context.Context) (datasource.DataSource, error) {
 	return &dataSourceARN{}, nil
 }
 
-type dataSourceARN struct{}
+type dataSourceARN struct {
+	meta any
+}
 
 // Metadata should return the full name of the data source, such as
 // examplecloud_thing.
@@ -73,13 +74,12 @@ func (d *dataSourceARN) GetSchema(context.Context) (tfsdk.Schema, diag.Diagnosti
 // provider-defined DataSource type. It is separately executed for each
 // ReadDataSource RPC.
 func (d *dataSourceARN) Configure(_ context.Context, request datasource.ConfigureRequest, response *datasource.ConfigureResponse) { //nolint:unparam
+	d.meta = request.ProviderData
 }
 
 // Read is called when the provider must read data source values in order to update state.
 // Config values should be read from the ReadRequest and new state values set on the ReadResponse.
 func (d *dataSourceARN) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
-	tflog.Trace(ctx, "dataSourceARN.Read enter")
-
 	var data dataSourceARNData
 
 	response.Diagnostics.Append(request.Config.Get(ctx, &data)...)
