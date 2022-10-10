@@ -550,6 +550,54 @@ func TestAccCodePipeline_withGitHubV1SourceAction(t *testing.T) {
 	})
 }
 
+func TestAccCodePipeline_ecr(t *testing.T) {
+	var p codepipeline.PipelineDeclaration
+	name := sdkacctest.RandString(10)
+	resourceName := "aws_codepipeline.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			testAccPreCheckSupported(t)
+			acctest.PreCheckPartitionHasService(codestarconnections.EndpointsID, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, codepipeline.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCodePipelineConfig_ecr(name),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckExists(resourceName, &p),
+					resource.TestCheckResourceAttr(resourceName, "stage.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "stage.0.name", "Source"),
+					resource.TestCheckResourceAttr(resourceName, "stage.0.action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "stage.0.action.0.name", "Source"),
+					resource.TestCheckResourceAttr(resourceName, "stage.0.action.0.category", "Source"),
+					resource.TestCheckResourceAttr(resourceName, "stage.0.action.0.owner", "AWS"),
+					resource.TestCheckResourceAttr(resourceName, "stage.0.action.0.provider", "ECR"),
+					resource.TestCheckResourceAttr(resourceName, "stage.0.action.0.version", "1"),
+					resource.TestCheckResourceAttr(resourceName, "stage.0.action.0.input_artifacts.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "stage.0.action.0.output_artifacts.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "stage.0.action.0.output_artifacts.0", "test"),
+					resource.TestCheckResourceAttr(resourceName, "stage.0.action.0.configuration.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "stage.0.action.0.configuration.RepositoryName", "my-image-repo"),
+					resource.TestCheckResourceAttr(resourceName, "stage.0.action.0.configuration.ImageTag", "latest"),
+					resource.TestCheckResourceAttr(resourceName, "stage.0.action.0.role_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, "stage.0.action.0.run_order", "1"),
+					resource.TestCheckResourceAttr(resourceName, "stage.0.action.0.region", ""),
+					resource.TestCheckResourceAttr(resourceName, "stage.1.name", "Build"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckExists(n string, v *codepipeline.PipelineDeclaration) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -1552,4 +1600,61 @@ resource "aws_codepipeline" "test" {
   }
 }
 `, rName, githubToken))
+}
+
+func testAccCodePipelineConfig_ecr(rName string) string { // nosemgrep:ci.codepipeline-in-func-name
+	return acctest.ConfigCompose(
+		testAccS3DefaultBucket(rName),
+		testAccServiceIAMRole(rName),
+		fmt.Sprintf(`
+resource "aws_codepipeline" "test" {
+  name     = "test-pipeline-%[1]s"
+  role_arn = aws_iam_role.codepipeline_role.arn
+
+  artifact_store {
+    location = aws_s3_bucket.test.bucket
+    type     = "S3"
+
+    encryption_key {
+      id   = "1234"
+      type = "KMS"
+    }
+  }
+
+  stage {
+    name = "Source"
+
+    action {
+      name             = "Source"
+      category         = "Source"
+      owner            = "AWS"
+      provider         = "ECR"
+      version          = "1"
+      output_artifacts = ["test"]
+
+      configuration = {
+        RepositoryName = "my-image-repo"
+        ImageTag       = "latest"
+      }
+    }
+  }
+
+  stage {
+    name = "Build"
+
+    action {
+      name            = "Build"
+      category        = "Build"
+      owner           = "AWS"
+      provider        = "CodeBuild"
+      input_artifacts = ["test"]
+      version         = "1"
+
+      configuration = {
+        ProjectName = "test"
+      }
+    }
+  }
+}
+`, rName))
 }
