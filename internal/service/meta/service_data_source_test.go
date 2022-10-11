@@ -48,7 +48,7 @@ func TestInvertStringSlice(t *testing.T) {
 }
 
 func TestAccMetaService_basic(t *testing.T) {
-	dataSourceName := "data.aws_service.default"
+	dataSourceName := "data.aws_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
@@ -161,7 +161,7 @@ func TestAccMetaService_unsupported(t *testing.T) {
 
 func testAccServiceDataSourceConfig_basic() string {
 	return fmt.Sprintf(`
-data "aws_service" "default" {
+data "aws_service" "test" {
   service_id = %[1]q
 }
 `, ec2.EndpointsID)
