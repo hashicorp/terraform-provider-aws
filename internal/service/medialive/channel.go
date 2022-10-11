@@ -1379,6 +1379,9 @@ func resourceChannelCreate(ctx context.Context, d *schema.ResourceData, meta int
 	if v, ok := d.GetOk("cdi_input_specification"); ok && len(v.([]interface{})) > 0 {
 		in.CdiInputSpecification = expandChannelCdiInputSpecification(v.([]interface{}))
 	}
+	if v, ok := d.GetOk("destinations"); ok && len(v.([]interface{})) > 0 {
+		in.Destinations = expandChannelDestinations(v.([]interface{}))
+	}
 	if v, ok := d.GetOk("input_specification"); ok && len(v.([]interface{})) > 0 {
 		in.InputSpecification = expandChannelInputSpecification(v.([]interface{}))
 	}
@@ -1435,6 +1438,9 @@ func resourceChannelRead(ctx context.Context, d *schema.ResourceData, meta inter
 	if err := d.Set("cdi_input_specification", flattenChannelCdiInputSpecification(out.CdiInputSpecification)); err != nil {
 		return create.DiagError(names.MediaLive, create.ErrActionSetting, ResNameChannel, d.Id(), err)
 	}
+	if err := d.Set("destinations", flattenChannelDestinations(out.Destinations)); err != nil {
+		return create.DiagError(names.MediaLive, create.ErrActionSetting, ResNameChannel, d.Id(), err)
+	}
 	if err := d.Set("input_specification", flattenChannelInputSpecification(out.InputSpecification)); err != nil {
 		return create.DiagError(names.MediaLive, create.ErrActionSetting, ResNameChannel, d.Id(), err)
 	}
@@ -1477,6 +1483,7 @@ func resourceChannelUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	if d.HasChanges(
 		"name",
 		"cdi_input_specification",
+		"destinations",
 		"input_specification",
 		"maintenance",
 	) {
@@ -1485,6 +1492,9 @@ func resourceChannelUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		in.Name = aws.String(d.Get("name").(string))
 		if v, ok := d.GetOk("cdi_input_specification"); ok {
 			in.CdiInputSpecification = expandChannelCdiInputSpecification(v.([]interface{}))
+		}
+		if v, ok := d.GetOk("destinations"); ok {
+			in.Destinations = expandChannelDestinations(v.([]interface{}))
 		}
 		if v, ok := d.GetOk("input_specification"); ok {
 			in.InputSpecification = expandChannelInputSpecification(v.([]interface{}))
@@ -1651,6 +1661,180 @@ func flattenChannelCdiInputSpecification(apiObject *types.CdiInputSpecification)
 	}
 
 	return []interface{}{m}
+}
+
+func expandChannelDestinations(tfList []interface{}) []types.OutputDestination {
+	if tfList == nil {
+		return nil
+	}
+
+	var destinations []types.OutputDestination
+	for _, v := range tfList {
+		m, ok := v.(map[string]interface{})
+		if !ok {
+			continue
+		}
+
+		var d types.OutputDestination
+		if v, ok := m["id"].(string); ok {
+			d.Id = aws.String(v)
+		}
+		if v, ok := m["media_package_settings"].([]interface{}); ok {
+			d.MediaPackageSettings = expandChannelDestinationsMediaPackageSettings(v)
+		}
+		if v, ok := m["multiplex_settings"].([]interface{}); ok {
+			d.MultiplexSettings = expandChannelDestinationsMultiplexSettings(v)
+		}
+		if v, ok := m["settings"].([]interface{}); ok {
+			d.Settings = expandChannelDestinationsSettings(v)
+		}
+
+		destinations = append(destinations, d)
+	}
+
+	return destinations
+}
+
+func expandChannelDestinationsMediaPackageSettings(tfList []interface{}) []types.MediaPackageOutputDestinationSettings {
+	if tfList == nil {
+		return nil
+	}
+
+	var settings []types.MediaPackageOutputDestinationSettings
+	for _, v := range tfList {
+		m, ok := v.(map[string]interface{})
+		if !ok {
+			continue
+		}
+
+		var s types.MediaPackageOutputDestinationSettings
+		if v, ok := m["channel_id"].(string); ok {
+			s.ChannelId = aws.String(v)
+		}
+
+		settings = append(settings, s)
+	}
+
+	return settings
+}
+
+func expandChannelDestinationsMultiplexSettings(tfList []interface{}) *types.MultiplexProgramChannelDestinationSettings {
+	if tfList == nil {
+		return nil
+	}
+	m := tfList[0].(map[string]interface{})
+
+	settings := &types.MultiplexProgramChannelDestinationSettings{}
+	if v, ok := m["multiplex_id"].(string); ok && v != "" {
+		settings.MultiplexId = aws.String(v)
+	}
+	if v, ok := m["program_name"].(string); ok && v != "" {
+		settings.ProgramName = aws.String(v)
+	}
+
+	return settings
+}
+
+func expandChannelDestinationsSettings(tfList []interface{}) []types.OutputDestinationSettings {
+	if tfList == nil {
+		return nil
+	}
+
+	var settings []types.OutputDestinationSettings
+	for _, v := range tfList {
+		m, ok := v.(map[string]interface{})
+		if !ok {
+			continue
+		}
+
+		var s types.OutputDestinationSettings
+		if v, ok := m["password_param"].(string); ok {
+			s.PasswordParam = aws.String(v)
+		}
+		if v, ok := m["stream_name"].(string); ok {
+			s.StreamName = aws.String(v)
+		}
+		if v, ok := m["url"].(string); ok {
+			s.Url = aws.String(v)
+		}
+		if v, ok := m["username"].(string); ok {
+			s.Username = aws.String(v)
+		}
+
+		settings = append(settings, s)
+	}
+
+	return settings
+}
+
+func flattenChannelDestinations(apiObject []types.OutputDestination) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	var tfList []interface{}
+	for _, v := range apiObject {
+		m := map[string]interface{}{
+			"id":                     aws.ToString(v.Id),
+			"media_package_settings": flattenChannelDestinationsMediaPackageSettings(v.MediaPackageSettings),
+			"multiplex_settings":     flattenChannelDestinationsMultiplexSettings(v.MultiplexSettings),
+			"settings":               flattenChannelDestinationsSettings(v.Settings),
+		}
+
+		tfList = append(tfList, m)
+	}
+
+	return tfList
+}
+
+func flattenChannelDestinationsMediaPackageSettings(apiObject []types.MediaPackageOutputDestinationSettings) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	var tfList []interface{}
+	for _, v := range apiObject {
+		m := map[string]interface{}{
+			"channel_id": aws.ToString(v.ChannelId),
+		}
+
+		tfList = append(tfList, m)
+	}
+
+	return tfList
+}
+
+func flattenChannelDestinationsMultiplexSettings(apiObject *types.MultiplexProgramChannelDestinationSettings) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"multiplex_id": aws.ToString(apiObject.MultiplexId),
+		"program_name": aws.ToString(apiObject.ProgramName),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenChannelDestinationsSettings(apiObject []types.OutputDestinationSettings) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	var tfList []interface{}
+	for _, v := range apiObject {
+		m := map[string]interface{}{
+			"password_param": aws.ToString(v.PasswordParam),
+			"stream_name":    aws.ToString(v.StreamName),
+			"url":            aws.ToString(v.Url),
+			"username":       aws.ToString(v.Username),
+		}
+
+		tfList = append(tfList, m)
+	}
+
+	return tfList
 }
 
 func expandChannelInputSpecification(tfList []interface{}) *types.InputSpecification {
