@@ -605,7 +605,7 @@ func ResourceChannel() *schema.Resource {
 								},
 							},
 						},
-						"output_groups": {
+						"output_group": {
 							Type:     schema.TypeSet,
 							Required: true,
 							Elem: &schema.Resource{
@@ -1265,6 +1265,317 @@ func ResourceChannel() *schema.Resource {
 										Type:     schema.TypeString,
 										Optional: true,
 										Computed: true,
+									},
+								},
+							},
+						},
+						"timecode_config": {
+							Type:     schema.TypeList,
+							Required: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"source": {
+										Type:             schema.TypeString,
+										Required:         true,
+										ValidateDiagFunc: enum.Validate[types.TimecodeConfigSource](),
+									},
+									"sync_threshold": {
+										Type:     schema.TypeInt,
+										Optional: true,
+									},
+								},
+							},
+						},
+						"video_description": {
+							Type:     schema.TypeSet,
+							Required: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"name": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+									"codec_settings": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"frame_capture_settings": {
+													Type:     schema.TypeList,
+													Optional: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"capture_interval": {
+																Type:     schema.TypeInt,
+																Optional: true,
+																Computed: true,
+															},
+															"capture_interval_units": {
+																Type:             schema.TypeString,
+																Optional:         true,
+																Computed:         true,
+																ValidateDiagFunc: enum.Validate[types.FrameCaptureIntervalUnit](),
+															},
+														},
+													},
+												},
+												"h_264_settings": {
+													Type:     schema.TypeList,
+													Optional: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"adaptive_quantization": {
+																Type:             schema.TypeString,
+																Optional:         true,
+																Computed:         true,
+																ValidateDiagFunc: enum.Validate[types.H264AdaptiveQuantization](),
+															},
+															"afd_signaling": {
+																Type:             schema.TypeString,
+																Optional:         true,
+																Computed:         true,
+																ValidateDiagFunc: enum.Validate[types.AfdSignaling](),
+															},
+															"bitrate": {
+																Type:     schema.TypeInt,
+																Optional: true,
+																Computed: true,
+															},
+															"buf_fill_pct": {
+																Type:     schema.TypeInt,
+																Optional: true,
+																Computed: true,
+															},
+															"buf_size": {
+																Type:     schema.TypeInt,
+																Optional: true,
+																Computed: true,
+															},
+															"color_metadata": {
+																Type:             schema.TypeString,
+																Optional:         true,
+																Computed:         true,
+																ValidateDiagFunc: enum.Validate[types.H264ColorMetadata](),
+															},
+															"entropy_encoding": {
+																Type:             schema.TypeString,
+																Optional:         true,
+																Computed:         true,
+																ValidateDiagFunc: enum.Validate[types.H264EntropyEncoding](),
+															},
+															"filter_settings": {
+																Type:     schema.TypeList,
+																Optional: true,
+																MaxItems: 1,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"temporal_filter_settings": {
+																			Type:     schema.TypeList,
+																			Optional: true,
+																			MaxItems: 1,
+																			Elem: &schema.Resource{
+																				Schema: map[string]*schema.Schema{
+																					"post_filter_sharpening": {
+																						Type:             schema.TypeString,
+																						Optional:         true,
+																						ValidateDiagFunc: enum.Validate[types.TemporalFilterPostFilterSharpening](),
+																					},
+																					"strength": {
+																						Type:             schema.TypeString,
+																						Optional:         true,
+																						ValidateDiagFunc: enum.Validate[types.TemporalFilterStrength](),
+																					},
+																				},
+																			},
+																		},
+																	},
+																},
+															},
+															"fixed_afd": {
+																Type:             schema.TypeString,
+																Optional:         true,
+																Computed:         true,
+																ValidateDiagFunc: enum.Validate[types.FixedAfd](),
+															},
+															"flicker_aq": {
+																Type:             schema.TypeString,
+																Optional:         true,
+																Computed:         true,
+																ValidateDiagFunc: enum.Validate[types.H264FlickerAq](),
+															},
+															"force_field_pictures": {
+																Type:             schema.TypeString,
+																Optional:         true,
+																Computed:         true,
+																ValidateDiagFunc: enum.Validate[types.H264ForceFieldPictures](),
+															},
+															"framerate_control": {
+																Type:             schema.TypeString,
+																Optional:         true,
+																Computed:         true,
+																ValidateDiagFunc: enum.Validate[types.H264FramerateControl](),
+															},
+															"framerate_denominator": {
+																Type:     schema.TypeInt,
+																Optional: true,
+																Computed: true,
+															},
+															"gop_b_reference": {
+																Type:             schema.TypeString,
+																Optional:         true,
+																Computed:         true,
+																ValidateDiagFunc: enum.Validate[types.H264GopBReference](),
+															},
+															"gop_closed_cadence": {
+																Type:     schema.TypeInt,
+																Optional: true,
+																Computed: true,
+															},
+															"gop_num_b_frames": {
+																Type:     schema.TypeInt,
+																Optional: true,
+																Computed: true,
+															},
+															"gop_size": {
+																Type:     schema.TypeFloat,
+																Optional: true,
+																Computed: true,
+															},
+															"gop_size_units": {
+																Type:             schema.TypeString,
+																Optional:         true,
+																Computed:         true,
+																ValidateDiagFunc: enum.Validate[types.H264GopSizeUnits](),
+															},
+															"level": {
+																Type:             schema.TypeString,
+																Optional:         true,
+																Computed:         true,
+																ValidateDiagFunc: enum.Validate[types.H264Level](),
+															},
+															"look_ahead_rate_control": {
+																Type:             schema.TypeString,
+																Optional:         true,
+																Computed:         true,
+																ValidateDiagFunc: enum.Validate[types.H264LookAheadRateControl](),
+															},
+															"max_bitrate": {
+																Type:     schema.TypeInt,
+																Optional: true,
+																Computed: true,
+															},
+															"min_i_interval": {
+																Type:     schema.TypeInt,
+																Optional: true,
+																Computed: true,
+															},
+															"num_ref_frames": {
+																Type:     schema.TypeInt,
+																Optional: true,
+																Computed: true,
+															},
+															"par_control": {
+																Type:             schema.TypeString,
+																Optional:         true,
+																Computed:         true,
+																ValidateDiagFunc: enum.Validate[types.H264ParControl](),
+															},
+															"par_denominator": {
+																Type:     schema.TypeInt,
+																Optional: true,
+																Computed: true,
+															},
+															"par_numerator": {
+																Type:     schema.TypeInt,
+																Optional: true,
+																Computed: true,
+															},
+															"profile": {
+																Type:             schema.TypeString,
+																Optional:         true,
+																Computed:         true,
+																ValidateDiagFunc: enum.Validate[types.H264Profile](),
+															},
+															"quality_level": {
+																Type:             schema.TypeString,
+																Optional:         true,
+																Computed:         true,
+																ValidateDiagFunc: enum.Validate[types.H264QualityLevel](),
+															},
+															"qvbr_quality_level": {
+																Type:     schema.TypeInt,
+																Optional: true,
+																Computed: true,
+															},
+															"rate_control_mode": {
+																Type:             schema.TypeString,
+																Optional:         true,
+																Computed:         true,
+																ValidateDiagFunc: enum.Validate[types.H264RateControlMode](),
+															},
+															"scan_type": {
+																Type:             schema.TypeString,
+																Optional:         true,
+																Computed:         true,
+																ValidateDiagFunc: enum.Validate[types.H264ScanType](),
+															},
+															"scene_change_detect": {
+																Type:             schema.TypeString,
+																Optional:         true,
+																Computed:         true,
+																ValidateDiagFunc: enum.Validate[types.H264SceneChangeDetect](),
+															},
+															"slices": {
+																Type:     schema.TypeInt,
+																Optional: true,
+																Computed: true,
+															},
+															"softness": {
+																Type:     schema.TypeInt,
+																Optional: true,
+																Computed: true,
+															},
+															"spatial_aq": {
+																Type:             schema.TypeString,
+																Optional:         true,
+																Computed:         true,
+																ValidateDiagFunc: enum.Validate[types.H264SpatialAq](),
+															},
+															"subgop_length": {
+																Type:             schema.TypeString,
+																Optional:         true,
+																Computed:         true,
+																ValidateDiagFunc: enum.Validate[types.H264SubGopLength](),
+															},
+															"syntax": {
+																Type:             schema.TypeString,
+																Optional:         true,
+																Computed:         true,
+																ValidateDiagFunc: enum.Validate[types.H264Syntax](),
+															},
+															"temporal_aq": {
+																Type:             schema.TypeString,
+																Optional:         true,
+																Computed:         true,
+																ValidateDiagFunc: enum.Validate[types.H264TemporalAq](),
+															},
+															"timecode_insertion": {
+																Type:             schema.TypeString,
+																Optional:         true,
+																Computed:         true,
+																ValidateDiagFunc: enum.Validate[types.H264TimecodeInsertionBehavior](),
+															},
+														},
+													},
+												},
+												// TODO h_265_settings
+												// TODO mgeg2_settings
+											},
+										},
 									},
 								},
 							},
