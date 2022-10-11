@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -143,7 +144,7 @@ func resourceAcceleratorCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("ip_addresses"); ok {
-		input.IpAddresses = expandIPAddresses(v.([]interface{}))
+		input.IpAddresses = flex.ExpandStringList(v.([]interface{}))
 	}
 
 	log.Printf("[DEBUG] Creating Global Accelerator Accelerator: %s", input)
@@ -345,15 +346,6 @@ func resourceAcceleratorDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	return nil
-}
-
-func expandIPAddresses(ipAddresses []interface{}) []*string {
-	out := make([]*string, len(ipAddresses))
-	for i, raw := range ipAddresses {
-		out[i] = aws.String(raw.(string))
-	}
-
-	return out
 }
 
 func expandUpdateAcceleratorAttributesInput(tfMap map[string]interface{}) *globalaccelerator.UpdateAcceleratorAttributesInput {
