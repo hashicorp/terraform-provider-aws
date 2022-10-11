@@ -765,7 +765,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 			// "aws_partition":    meta.DataSourcePartition(), // Now implemented using Terraform Plugin Framework.
 			// "aws_region":  meta.DataSourceRegion(), // Now implemented using Terraform Plugin Framework.
 			// "aws_regions": meta.DataSourceRegions(), // Now implemented using Terraform Plugin Framework.
-			//"aws_service": meta.DataSourceService(), // Now implemented using Terraform Plugin Framework.
+			// "aws_service": meta.DataSourceService(), // Now implemented using Terraform Plugin Framework.
 
 			"aws_memorydb_acl":             memorydb.DataSourceACL(),
 			"aws_memorydb_cluster":         memorydb.DataSourceCluster(),

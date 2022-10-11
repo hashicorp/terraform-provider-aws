@@ -91,6 +91,8 @@ func (d *dataSourceRegions) Read(ctx context.Context, request datasource.ReadReq
 
 	if err != nil {
 		response.Diagnostics.AddError("reading Regions", err.Error())
+
+		return
 	}
 
 	var names []string
