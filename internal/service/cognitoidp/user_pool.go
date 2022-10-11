@@ -489,6 +489,23 @@ func ResourceUserPool() *schema.Resource {
 			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
+			"user_attribute_update_settings": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"attributes_require_verification_before_update": {
+							Type:     schema.TypeSet,
+							Required: true,
+							Elem: &schema.Schema{
+								Type:         schema.TypeString,
+								ValidateFunc: validation.StringInSlice(cognitoidentityprovider.VerifiedAttributeType_Values(), false),
+							},
+						},
+					},
+				},
+			},
 			"username_attributes": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -682,6 +699,15 @@ func resourceUserPoolCreate(d *schema.ResourceData, meta interface{}) error {
 
 	if v, ok := d.GetOk("username_attributes"); ok {
 		params.UsernameAttributes = flex.ExpandStringSet(v.(*schema.Set))
+	}
+
+	if v, ok := d.GetOk("user_attribute_update_settings"); ok {
+		configs := v.([]interface{})
+		config, ok := configs[0].(map[string]interface{})
+
+		if ok && config != nil {
+			params.UserAttributeUpdateSettings = expandUserPoolUserAttributeUpdateSettings(config)
+		}
 	}
 
 	if v, ok := d.GetOk("username_configuration"); ok {
@@ -886,6 +912,10 @@ func resourceUserPoolRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("failed setting sms_configuration: %w", err)
 	}
 
+	if err := d.Set("user_attribute_update_settings", flattenUserPoolUserAttributeUpdateSettings(userPool.UserAttributeUpdateSettings)); err != nil {
+		return fmt.Errorf("failed setting user_attribute_update_settings: %w", err)
+	}
+
 	if userPool.UsernameAttributes != nil {
 		d.Set("username_attributes", flex.FlattenStringSet(userPool.UsernameAttributes))
 	}
@@ -1019,6 +1049,7 @@ func resourceUserPoolUpdate(d *schema.ResourceData, meta interface{}) error {
 		"sms_verification_message",
 		"tags",
 		"tags_all",
+		"user_attribute_update_settings",
 		"user_pool_add_ons",
 		"verification_message_template",
 		"account_recovery_setting",
@@ -1097,6 +1128,22 @@ func resourceUserPoolUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		if v, ok := d.GetOk("sms_configuration"); ok {
 			params.SmsConfiguration = expandSMSConfiguration(v.([]interface{}))
+		}
+
+		if v, ok := d.GetOk("user_attribute_update_settings"); ok {
+			configs := v.([]interface{})
+			config, ok := configs[0].(map[string]interface{})
+
+			if ok && config != nil {
+				params.UserAttributeUpdateSettings = expandUserPoolUserAttributeUpdateSettings(config)
+			}
+		}
+		if d.HasChange("user_attribute_update_settings") && params.UserAttributeUpdateSettings == nil {
+			// An empty array must be sent to disable this setting if previously enabled. A nil
+			// UserAttibutesUpdateSetting param will result in no modifications.
+			params.UserAttributeUpdateSettings = &cognitoidentityprovider.UserAttributeUpdateSettingsType{
+				AttributesRequireVerificationBeforeUpdate: []*string{},
+			}
 		}
 
 		if v, ok := d.GetOk("user_pool_add_ons"); ok {
@@ -2224,4 +2271,28 @@ func expandUserPoolEmailConfig(emailConfig []interface{}) *cognitoidentityprovid
 	}
 
 	return emailConfigurationType
+}
+
+func expandUserPoolUserAttributeUpdateSettings(config map[string]interface{}) *cognitoidentityprovider.UserAttributeUpdateSettingsType {
+	userAttributeUpdateSettings := &cognitoidentityprovider.UserAttributeUpdateSettingsType{}
+	if v, ok := config["attributes_require_verification_before_update"]; ok {
+		userAttributeUpdateSettings.AttributesRequireVerificationBeforeUpdate = flex.ExpandStringSet(v.(*schema.Set))
+	}
+
+	return userAttributeUpdateSettings
+}
+
+func flattenUserPoolUserAttributeUpdateSettings(u *cognitoidentityprovider.UserAttributeUpdateSettingsType) []map[string]interface{} {
+	if u == nil {
+		return nil
+	}
+	// If this setting is enabled then disabled, the API returns a nested empty slice instead of nil
+	if u != nil && len(u.AttributesRequireVerificationBeforeUpdate) == 0 {
+		return nil
+	}
+
+	m := map[string]interface{}{}
+	m["attributes_require_verification_before_update"] = flex.FlattenStringSet(u.AttributesRequireVerificationBeforeUpdate)
+
+	return []map[string]interface{}{m}
 }
