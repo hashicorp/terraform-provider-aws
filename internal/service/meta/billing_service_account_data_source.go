@@ -22,7 +22,7 @@ func newDataSourceBillingServiceAccount(context.Context) (datasource.DataSource,
 }
 
 type dataSourceBillingServiceAccount struct {
-	meta any
+	meta *conns.AWSClient
 }
 
 // Metadata should return the full name of the data source, such as
@@ -54,7 +54,7 @@ func (d *dataSourceBillingServiceAccount) GetSchema(context.Context) (tfsdk.Sche
 // provider-defined DataSource type. It is separately executed for each
 // ReadDataSource RPC.
 func (d *dataSourceBillingServiceAccount) Configure(_ context.Context, request datasource.ConfigureRequest, response *datasource.ConfigureResponse) {
-	d.meta = request.ProviderData
+	d.meta = request.ProviderData.(*conns.AWSClient)
 }
 
 // Read is called when the provider must read data source values in order to update state.
@@ -72,7 +72,7 @@ func (d *dataSourceBillingServiceAccount) Read(ctx context.Context, request data
 	const billingAccountID = "386209384616"
 
 	arn := arn.ARN{
-		Partition: d.meta.(*conns.AWSClient).Partition,
+		Partition: d.meta.Partition,
 		Service:   "iam",
 		AccountID: billingAccountID,
 		Resource:  "root",

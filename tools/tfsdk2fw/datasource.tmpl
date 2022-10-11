@@ -10,10 +10,11 @@ import (
     "github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
     "github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func init() {
-    // registerFWDataSourceFactory(newDataSource{{ .Name }})
+    registerFWDataSourceFactory(newDataSource{{ .Name }})
 }
 
 // newDataSource{{ .Name }} instantiates a new DataSource for the {{ .TFTypeName }} data source.
@@ -22,7 +23,7 @@ func newDataSource{{ .Name }}(context.Context) (datasource.DataSource, error) {
 }
 
 type dataSource{{ .Name }} struct {
-	meta any
+	meta *conns.AWSClient
 }
 
 // Metadata should return the full name of the data source, such as
@@ -42,7 +43,7 @@ func (d *dataSource{{ .Name }}) GetSchema(context.Context) (tfsdk.Schema, diag.D
 // provider-defined DataSource type. It is separately executed for each
 // ReadDataSource RPC.
 func (d *dataSource{{ .Name }}) Configure(_ context.Context, request datasource.ConfigureRequest, response *datasource.ConfigureResponse) {
-	d.meta = request.ProviderData
+	d.meta = request.ProviderData.(*conns.AWSClient)
 }
 
 // Read is called when the provider must read data source values in order to update state.

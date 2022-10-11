@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/fwtypes"
 )
 
@@ -22,7 +23,7 @@ func newDataSourceARN(context.Context) (datasource.DataSource, error) {
 }
 
 type dataSourceARN struct {
-	meta any
+	meta *conns.AWSClient
 }
 
 // Metadata should return the full name of the data source, such as
@@ -74,7 +75,7 @@ func (d *dataSourceARN) GetSchema(context.Context) (tfsdk.Schema, diag.Diagnosti
 // provider-defined DataSource type. It is separately executed for each
 // ReadDataSource RPC.
 func (d *dataSourceARN) Configure(_ context.Context, request datasource.ConfigureRequest, response *datasource.ConfigureResponse) { //nolint:unparam
-	d.meta = request.ProviderData
+	d.meta = request.ProviderData.(*conns.AWSClient)
 }
 
 // Read is called when the provider must read data source values in order to update state.

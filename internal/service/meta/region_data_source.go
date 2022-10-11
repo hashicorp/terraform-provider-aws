@@ -23,7 +23,7 @@ func newDataSourceRegion(context.Context) (datasource.DataSource, error) {
 }
 
 type dataSourceRegion struct {
-	meta any
+	meta *conns.AWSClient
 }
 
 // Metadata should return the full name of the data source, such as
@@ -65,7 +65,7 @@ func (d *dataSourceRegion) GetSchema(context.Context) (tfsdk.Schema, diag.Diagno
 // provider-defined DataSource type. It is separately executed for each
 // ReadDataSource RPC.
 func (d *dataSourceRegion) Configure(_ context.Context, request datasource.ConfigureRequest, response *datasource.ConfigureResponse) {
-	d.meta = request.ProviderData
+	d.meta = request.ProviderData.(*conns.AWSClient)
 }
 
 // Read is called when the provider must read data source values in order to update state.
@@ -117,7 +117,7 @@ func (d *dataSourceRegion) Read(ctx context.Context, request datasource.ReadRequ
 
 	// Default to provider current region if no other filters matched
 	if region == nil {
-		matchingRegion, err := FindRegionByName(d.meta.(*conns.AWSClient).Region)
+		matchingRegion, err := FindRegionByName(d.meta.Region)
 
 		if err != nil {
 			// TODO

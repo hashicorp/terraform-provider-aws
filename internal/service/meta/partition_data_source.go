@@ -20,7 +20,7 @@ func newDataSourcePartition(context.Context) (datasource.DataSource, error) {
 }
 
 type dataSourcePartition struct {
-	meta any
+	meta *conns.AWSClient
 }
 
 // Metadata should return the full name of the data source, such as
@@ -60,7 +60,7 @@ func (d *dataSourcePartition) GetSchema(context.Context) (tfsdk.Schema, diag.Dia
 // provider-defined DataSource type. It is separately executed for each
 // ReadDataSource RPC.
 func (d *dataSourcePartition) Configure(_ context.Context, request datasource.ConfigureRequest, response *datasource.ConfigureResponse) {
-	d.meta = request.ProviderData
+	d.meta = request.ProviderData.(*conns.AWSClient)
 }
 
 // Read is called when the provider must read data source values in order to update state.
@@ -74,10 +74,10 @@ func (d *dataSourcePartition) Read(ctx context.Context, request datasource.ReadR
 		return
 	}
 
-	data.DNSSuffix = types.String{Value: d.meta.(*conns.AWSClient).DNSSuffix}
-	data.ID = types.String{Value: d.meta.(*conns.AWSClient).Partition}
-	data.Partition = types.String{Value: d.meta.(*conns.AWSClient).Partition}
-	data.ReverseDNSPrefix = types.String{Value: d.meta.(*conns.AWSClient).ReverseDNSPrefix}
+	data.DNSSuffix = types.String{Value: d.meta.DNSSuffix}
+	data.ID = types.String{Value: d.meta.Partition}
+	data.Partition = types.String{Value: d.meta.Partition}
+	data.ReverseDNSPrefix = types.String{Value: d.meta.ReverseDNSPrefix}
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
