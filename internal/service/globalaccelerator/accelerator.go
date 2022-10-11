@@ -143,7 +143,7 @@ func resourceAcceleratorCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("ip_addresses"); ok {
-		input.IpAddresses = expandIpAddresses(v.([]interface{}))
+		input.IpAddresses = expandIPAddresses(v.([]interface{}))
 	}
 
 	log.Printf("[DEBUG] Creating Global Accelerator Accelerator: %s", input)
@@ -347,7 +347,7 @@ func resourceAcceleratorDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func expandIpAddresses(ipAddresses []interface{}) []*string {
+func expandIPAddresses(ipAddresses []interface{}) []*string {
 	out := make([]*string, len(ipAddresses))
 	for i, raw := range ipAddresses {
 		out[i] = aws.String(raw.(string))

@@ -98,7 +98,7 @@ func TestAccGlobalAcceleratorAccelerator_byoip(t *testing.T) {
 	matches := 0
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t); testAccCheckByoipExists(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t); testAccCheckBYOIPExists(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, globalaccelerator.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAcceleratorDestroy,
@@ -330,7 +330,7 @@ func testAccPreCheck(t *testing.T) {
 	}
 }
 
-func testAccCheckByoipExists(t *testing.T) {
+func testAccCheckBYOIPExists(t *testing.T) {
 	requestedAddr := os.Getenv("GLOBALACCELERATOR_BYOIP_IPV4_ADDRESS")
 
 	if requestedAddr == "" {
@@ -430,8 +430,8 @@ resource "aws_globalaccelerator_accelerator" "test" {
 func testAccAcceleratorConfig_byoip(rName string, ipAddress string) string {
 	return fmt.Sprintf(`
 resource "aws_globalaccelerator_accelerator" "test" {
-  name            = %[1]q
-  ip_addresses    = [%[2]q]
+  name         = %[1]q
+  ip_addresses = [%[2]q]
 }
 `, rName, ipAddress)
 }
