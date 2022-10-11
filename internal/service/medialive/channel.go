@@ -1577,6 +1577,11 @@ func ResourceChannel() *schema.Resource {
 											},
 										},
 									},
+									"height": {
+										Type:     schema.TypeInt,
+										Optional: true,
+										Computed: true,
+									},
 								},
 							},
 						},

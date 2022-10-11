@@ -165,7 +165,7 @@ resource "aws_security_group" "test" {
 }
 
 resource "aws_medialive_channel" "test" {
-  channel_name             = %[1]q
+  channel_name            = %[1]q
   engine_type             = "ActiveMediaLive"
   host_instance_type      = "medialive.t2.micro"
   security_groups         = [aws_security_group.test.id]
