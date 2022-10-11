@@ -598,6 +598,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_vpc_endpoint_service":                       ec2.DataSourceVPCEndpointService(),
 			"aws_vpc_endpoint":                               ec2.DataSourceVPCEndpoint(),
 			"aws_vpc_ipam_pool":                              ec2.DataSourceIPAMPool(),
+			"aws_vpc_ipam_pools":                             ec2.DataSourceIPAMPools(),
 			"aws_vpc_ipam_pool_cidrs":                        ec2.DataSourceIPAMPoolCIDRs(),
 			"aws_vpc_ipam_preview_next_cidr":                 ec2.DataSourceIPAMPreviewNextCIDR(),
 			"aws_vpc_peering_connection":                     ec2.DataSourceVPCPeeringConnection(),
