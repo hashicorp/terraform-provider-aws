@@ -370,7 +370,7 @@ func ResourceService() *schema.Resource {
 									"image_identifier": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ValidateFunc: validation.StringMatch(regexp.MustCompile(`([0-9]{12}.dkr.ecr.[a-z\-]+-[0-9]{1}.amazonaws.com\/.*)|(^public\.ecr\.aws\/.+\/.+)`), ""),
+										ValidateFunc: validation.StringMatch(regexp.MustCompile(`([0-9]{12}\.dkr\.ecr\.[a-z\-]+-[0-9]{1}\.amazonaws\.com\/.*)|(^public\.ecr\.aws\/.+\/.+)`), ""),
 									},
 									"image_repository_type": {
 										Type:         schema.TypeString,
