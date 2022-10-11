@@ -276,7 +276,7 @@ In the provider, all parameters for assuming an IAM role are set in the `assume_
 See the assume role documentation [section on web identities](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-role.html#cli-configure-role-oidc) for more information.
 
 |Setting|Provider|[Environment Variable][envvars]|[Shared Config][config]|
-|-------|--------|-----------------------|
+|-------|--------|--------|-----------------------|
 |Role ARN|`role_arn`|`AWS_ROLE_ARN`|`role_arn`|
 |Web Identity Token|`web_identity_token`|N/A|N/A|
 |Web Identity Token File|`web_identity_token_file`|`AWS_WEB_IDENTITY_TOKEN_FILE`|`web_identity_token_file`|
