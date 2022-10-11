@@ -1394,7 +1394,6 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 			input.VpcSecurityGroupIds = flex.ExpandStringSet(v)
 		}
 
-		log.Printf("[DEBUG] Creating RDS DB Instance: %s", input)
 		outputRaw, err := tfresource.RetryWhen(propagationTimeout,
 			func() (interface{}, error) {
 				return conn.CreateDBInstance(input)
