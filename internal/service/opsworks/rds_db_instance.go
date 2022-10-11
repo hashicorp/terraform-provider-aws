@@ -105,7 +105,6 @@ func resourceRDSDBInstanceUpdate(d *schema.ResourceData, meta interface{}) error
 		input.DbUser = aws.String(d.Get("db_user").(string))
 	}
 
-	log.Printf("[DEBUG] Updating OpsWorks RDS DB Instance: %s", input)
 	_, err := client.UpdateRdsDbInstance(input)
 
 	if err != nil {
