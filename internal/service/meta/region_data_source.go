@@ -85,8 +85,7 @@ func (d *dataSourceRegion) Read(ctx context.Context, request datasource.ReadRequ
 		matchingRegion, err := FindRegionByEndpoint(data.Endpoint.Value)
 
 		if err != nil {
-			// TODO
-			response.Diagnostics.AddError("", "")
+			response.Diagnostics.AddError("finding Region by endpoint", err.Error())
 
 			return
 		}
@@ -98,16 +97,13 @@ func (d *dataSourceRegion) Read(ctx context.Context, request datasource.ReadRequ
 		matchingRegion, err := FindRegionByName(data.Name.Value)
 
 		if err != nil {
-			// TODO
-			response.Diagnostics.AddError("", "")
+			response.Diagnostics.AddError("finding Region by name", err.Error())
 
 			return
 		}
 
 		if region != nil && region.ID() != matchingRegion.ID() {
-			// TODO
-			// "multiple regions matched; use additional constraints to reduce matches to a single region"
-			response.Diagnostics.AddError("", "")
+			response.Diagnostics.AddError("multiple Regions matched", "use additional constraints to reduce matches to a single Region")
 
 			return
 		}
@@ -120,8 +116,7 @@ func (d *dataSourceRegion) Read(ctx context.Context, request datasource.ReadRequ
 		matchingRegion, err := FindRegionByName(d.meta.Region)
 
 		if err != nil {
-			// TODO
-			response.Diagnostics.AddError("", "")
+			response.Diagnostics.AddError("finding Region by name", err.Error())
 
 			return
 		}
@@ -132,8 +127,7 @@ func (d *dataSourceRegion) Read(ctx context.Context, request datasource.ReadRequ
 	regionEndpointEC2, err := region.ResolveEndpoint(endpoints.Ec2ServiceID)
 
 	if err != nil {
-		// TODO
-		response.Diagnostics.AddError("", "")
+		response.Diagnostics.AddError("resolving EC2 endpoint", err.Error())
 
 		return
 	}
