@@ -51,7 +51,6 @@ func ResourceObject() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"acl": {
 				Type:         schema.TypeString,
-				Default:      s3.ObjectCannedACLPrivate,
 				Optional:     true,
 				ValidateFunc: validation.StringInSlice(s3.ObjectCannedACL_Values(), false),
 			},
@@ -464,10 +463,13 @@ func resourceObjectUpload(d *schema.ResourceData, meta interface{}) error {
 	key := d.Get("key").(string)
 
 	input := &s3manager.UploadInput{
-		ACL:    aws.String(d.Get("acl").(string)),
 		Body:   body,
 		Bucket: aws.String(bucket),
 		Key:    aws.String(key),
+	}
+
+	if v, ok := d.GetOk("acl"); ok {
+		input.ACL = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("storage_class"); ok {
