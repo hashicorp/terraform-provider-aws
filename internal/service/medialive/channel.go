@@ -1743,7 +1743,7 @@ func resourceChannelCreate(ctx context.Context, d *schema.ResourceData, meta int
 		in.Maintenance = expandChannelMaintenanceCreate(v.([]interface{}))
 	}
 	if v, ok := d.GetOk("vpc"); ok && len(v.([]interface{})) > 0 {
-		in.Vpc = expandChannelVpc(v.([]interface{}))
+		in.Vpc = expandChannelVPC(v.([]interface{}))
 	}
 
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
@@ -1801,7 +1801,7 @@ func resourceChannelRead(ctx context.Context, d *schema.ResourceData, meta inter
 	if err := d.Set("maintenance", flattenChannelMaintenance(out.Maintenance)); err != nil {
 		return create.DiagError(names.MediaLive, create.ErrActionSetting, ResNameChannel, d.Id(), err)
 	}
-	if err := d.Set("vpc", flattenChannelVpc(out.Vpc)); err != nil {
+	if err := d.Set("vpc", flattenChannelVPC(out.Vpc)); err != nil {
 		return create.DiagError(names.MediaLive, create.ErrActionSetting, ResNameChannel, d.Id(), err)
 	}
 
@@ -2278,7 +2278,7 @@ func flattenChannelMaintenance(apiObject *types.MaintenanceStatus) []interface{}
 	return []interface{}{m}
 }
 
-func expandChannelVpc(tfList []interface{}) *types.VpcOutputSettings {
+func expandChannelVPC(tfList []interface{}) *types.VpcOutputSettings {
 	if tfList == nil {
 		return nil
 	}
@@ -2298,7 +2298,7 @@ func expandChannelVpc(tfList []interface{}) *types.VpcOutputSettings {
 	return settings
 }
 
-func flattenChannelVpc(apiObject *types.VpcOutputSettingsDescription) []interface{} {
+func flattenChannelVPC(apiObject *types.VpcOutputSettingsDescription) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
