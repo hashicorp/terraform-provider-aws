@@ -1607,7 +1607,23 @@ func ResourceChannel() *schema.Resource {
 								},
 							},
 						},
+						// TODO avail_blanking
+						// TODO avail_configuration
+						// TODO blackout_slate
+						// TODO caption_descriptions
+						// TODO feature_activations
+						// TODO global_configuration
+						// TODO motion_graphics_configuration
+						// TODO nielsen_configuration
 					},
+				},
+			},
+			"input_attachment": {
+				Type:     schema.TypeSet,
+				Required: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{},
+					// TODO finish input_attachment schema
 				},
 			},
 			"input_specification": {
