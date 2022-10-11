@@ -103,8 +103,8 @@ The following arguments are optional:
 In addition to all arguments above, the following attributes are exported:
 
 * `external_ids` - A list of identifiers issued to this resource by an external identity provider.
-   * `id` - The identifier issued to this resource by an external identity provider.
-   * `issuer` - The issuer for an external identifier.
+    * `id` - The identifier issued to this resource by an external identity provider.
+    * `issuer` - The issuer for an external identifier.
 * `user_id` - The identifier for this user in the identity store.
 
 ## Import
