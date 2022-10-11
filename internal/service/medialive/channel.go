@@ -1257,9 +1257,13 @@ func ResourceChannel() *schema.Resource {
 											},
 										},
 									},
-									"outputs": {
+									"output": {
 										Type:     schema.TypeSet,
 										Required: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{},
+											// TODO complete output schema
+										},
 									},
 									"name": {
 										Type:     schema.TypeString,

@@ -1,5 +1,5 @@
 ---
-subcategory: "MediaLive"
+subcategory: "Elemental MediaLive"
 layout: "aws"
 page_title: "AWS: aws_medialive_channel"
 description: |-
