@@ -763,7 +763,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_default_tags": meta.DataSourceDefaultTags(),
 			"aws_ip_ranges":    meta.DataSourceIPRanges(),
 			// "aws_partition":    meta.DataSourcePartition(), // Now implemented using Terraform Plugin Framework.
-			"aws_region":  meta.DataSourceRegion(),
+			// "aws_region":  meta.DataSourceRegion(), // Now implemented using Terraform Plugin Framework.
 			"aws_regions": meta.DataSourceRegions(),
 			"aws_service": meta.DataSourceService(),
 
