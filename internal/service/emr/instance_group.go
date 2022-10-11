@@ -432,46 +432,6 @@ func readEBSConfig(d *schema.ResourceData) *emr.EbsConfiguration {
 	return result
 }
 
-// marshalWithoutNil returns a JSON document of v stripped of any null properties
-func marshalWithoutNil(v interface{}) ([]byte, error) {
-	//removeNil is a helper for stripping nil values
-	removeNil := func(data map[string]interface{}) map[string]interface{} {
-
-		m := make(map[string]interface{})
-		for k, v := range data {
-			if v == nil {
-				continue
-			}
-
-			switch v := v.(type) {
-			case map[string]interface{}:
-				m[k] = removeNil(v)
-			default:
-				m[k] = v
-			}
-		}
-
-		return m
-	}
-
-	b, err := json.Marshal(v)
-	if err != nil {
-		return nil, err
-	}
-
-	var rules []map[string]interface{}
-	if err := json.Unmarshal(b, &rules); err != nil {
-		return nil, err
-	}
-
-	var cleanRules []map[string]interface{}
-	for _, rule := range rules {
-		cleanRules = append(cleanRules, removeNil(rule))
-	}
-
-	return json.Marshal(cleanRules)
-}
-
 func waitForInstanceGroupStateRunning(conn *emr.EMR, clusterID string, instanceGroupID string, timeout time.Duration) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
