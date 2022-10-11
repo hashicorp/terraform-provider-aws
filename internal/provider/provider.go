@@ -762,10 +762,10 @@ func New(_ context.Context) (*schema.Provider, error) {
 			// "aws_billing_service_account": meta.DataSourceBillingServiceAccount(), // Now implemented using Terraform Plugin Framework.
 			"aws_default_tags": meta.DataSourceDefaultTags(),
 			"aws_ip_ranges":    meta.DataSourceIPRanges(),
-			"aws_partition":    meta.DataSourcePartition(),
-			"aws_region":       meta.DataSourceRegion(),
-			"aws_regions":      meta.DataSourceRegions(),
-			"aws_service":      meta.DataSourceService(),
+			// "aws_partition":    meta.DataSourcePartition(), // Now implemented using Terraform Plugin Framework.
+			"aws_region":  meta.DataSourceRegion(),
+			"aws_regions": meta.DataSourceRegions(),
+			"aws_service": meta.DataSourceService(),
 
 			"aws_memorydb_acl":             memorydb.DataSourceACL(),
 			"aws_memorydb_cluster":         memorydb.DataSourceCluster(),
