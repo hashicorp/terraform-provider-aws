@@ -1582,6 +1582,28 @@ func ResourceChannel() *schema.Resource {
 										Optional: true,
 										Computed: true,
 									},
+									"respond_to_afd": {
+										Type:             schema.TypeString,
+										Optional:         true,
+										Computed:         true,
+										ValidateDiagFunc: enum.Validate[types.VideoDescriptionRespondToAfd](),
+									},
+									"scaling_behavior": {
+										Type:             schema.TypeString,
+										Optional:         true,
+										Computed:         true,
+										ValidateDiagFunc: enum.Validate[types.VideoDescriptionScalingBehavior](),
+									},
+									"sharpness": {
+										Type:     schema.TypeInt,
+										Optional: true,
+										Computed: true,
+									},
+									"width": {
+										Type:     schema.TypeInt,
+										Optional: true,
+										Computed: true,
+									},
 								},
 							},
 						},
