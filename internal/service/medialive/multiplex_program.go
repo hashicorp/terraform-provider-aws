@@ -138,7 +138,9 @@ func (m *multiplexProgram) GetSchema(context.Context) (tfsdk.Schema, diag.Diagno
 }
 
 func (m *multiplexProgram) Configure(_ context.Context, request resource.ConfigureRequest, response *resource.ConfigureResponse) {
-	m.meta = request.ProviderData.(*conns.AWSClient)
+	if v, ok := request.ProviderData.(*conns.AWSClient); ok {
+		m.meta = v
+	}
 }
 
 func (m *multiplexProgram) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
