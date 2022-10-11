@@ -1376,6 +1376,9 @@ func resourceChannelCreate(ctx context.Context, d *schema.ResourceData, meta int
 		RequestId: aws.String(resource.UniqueId()),
 	}
 
+	if v, ok := d.GetOk("cdi_input_specification"); ok && len(v.(map[string]interface{})) > 0 {
+		in.CdiInputSpecification = expandChannelCdiInputSpecification(v.(map[string]interface{}))
+	}
 	if v, ok := d.GetOk("maintenance"); ok && len(v.(map[string]interface{})) > 0 {
 		in.Maintenance = expandChannelMaintenanceCreate(v.(map[string]interface{}))
 	}
@@ -1426,6 +1429,9 @@ func resourceChannelRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("arn", out.Arn)
 	d.Set("name", out.Name)
 
+	if err := d.Set("cdi_input_specification", flattenChannelCdiInputSpecification(out.CdiInputSpecification)); err != nil {
+		return create.DiagError(names.MediaLive, create.ErrActionSetting, ResNameChannel, d.Id(), err)
+	}
 	if err := d.Set("maintenance", flattenChannelMaintenance(out.Maintenance)); err != nil {
 		return create.DiagError(names.MediaLive, create.ErrActionSetting, ResNameChannel, d.Id(), err)
 	}
@@ -1464,11 +1470,21 @@ func resourceChannelUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 	if d.HasChanges(
 		"name",
+		"cdi_input_specification",
 		"maintenance",
 	) {
 		update = true
 
 		in.Name = aws.String(d.Get("name").(string))
+
+		if v, ok := d.GetOk("cdi_input_specification"); ok {
+			configs := v.([]interface{})
+			config, ok := configs[0].(map[string]interface{})
+
+			if ok && config != nil {
+				in.CdiInputSpecification = expandChannelCdiInputSpecification(config)
+			}
+		}
 
 		if v, ok := d.GetOk("maintenance"); ok {
 			configs := v.([]interface{})
@@ -1611,6 +1627,32 @@ func FindChannelByID(ctx context.Context, conn *medialive.Client, id string) (*m
 	}
 
 	return out, nil
+}
+
+func expandChannelCdiInputSpecification(tfMap map[string]interface{}) *types.CdiInputSpecification {
+	if tfMap == nil {
+		return nil
+	}
+
+	spec := &types.CdiInputSpecification{}
+	if v, ok := tfMap["resolution"].(string); ok && v != "" {
+		spec.Resolution = types.CdiInputResolution(v)
+	}
+
+	return spec
+}
+
+func flattenChannelCdiInputSpecification(apiObject *types.CdiInputSpecification) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{}
+	if v := apiObject.Resolution; v != "" {
+		m["resolution"] = string(v)
+	}
+
+	return m
 }
 
 func expandChannelMaintenanceCreate(tfMap map[string]interface{}) *types.MaintenanceCreateSettings {
