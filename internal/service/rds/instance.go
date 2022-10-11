@@ -849,7 +849,6 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 			input.VpcSecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
 		}
 
-		log.Printf("[DEBUG] Creating RDS DB Instance: %s", input)
 		_, err := tfresource.RetryWhen(propagationTimeout,
 			func() (interface{}, error) {
 				return conn.RestoreDBInstanceFromS3(input)
@@ -1434,7 +1433,6 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 	if requiresModifyDbInstance {
 		modifyDbInstanceInput.DBInstanceIdentifier = aws.String(d.Id())
 
-		log.Printf("[INFO] Modifying RDS DB Instance: %s", modifyDbInstanceInput)
 		_, err := conn.ModifyDBInstance(modifyDbInstanceInput)
 
 		if err != nil {
@@ -1775,7 +1773,6 @@ func resourceInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 			}
 		}
 
-		log.Printf("[DEBUG] Updating DB Instance: %s", input)
 		_, err := tfresource.RetryWhen(d.Timeout(schema.TimeoutUpdate),
 			func() (interface{}, error) {
 				return conn.ModifyDBInstance(input)
