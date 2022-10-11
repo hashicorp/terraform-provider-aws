@@ -1376,14 +1376,14 @@ func resourceChannelCreate(ctx context.Context, d *schema.ResourceData, meta int
 		RequestId: aws.String(resource.UniqueId()),
 	}
 
-	if v, ok := d.GetOk("cdi_input_specification"); ok && len(v.(map[string]interface{})) > 0 {
-		in.CdiInputSpecification = expandChannelCdiInputSpecification(v.(map[string]interface{}))
+	if v, ok := d.GetOk("cdi_input_specification"); ok && len(v.([]interface{})) > 0 {
+		in.CdiInputSpecification = expandChannelCdiInputSpecification(v.([]interface{}))
 	}
-	if v, ok := d.GetOk("maintenance"); ok && len(v.(map[string]interface{})) > 0 {
-		in.Maintenance = expandChannelMaintenanceCreate(v.(map[string]interface{}))
+	if v, ok := d.GetOk("maintenance"); ok && len(v.([]interface{})) > 0 {
+		in.Maintenance = expandChannelMaintenanceCreate(v.([]interface{}))
 	}
-	if v, ok := d.GetOk("vpc"); ok && len(v.(map[string]interface{})) > 0 {
-		in.Vpc = expandChannelVpc(v.(map[string]interface{}))
+	if v, ok := d.GetOk("vpc"); ok && len(v.([]interface{})) > 0 {
+		in.Vpc = expandChannelVpc(v.([]interface{}))
 	}
 
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
@@ -1476,23 +1476,11 @@ func resourceChannelUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		update = true
 
 		in.Name = aws.String(d.Get("name").(string))
-
 		if v, ok := d.GetOk("cdi_input_specification"); ok {
-			configs := v.([]interface{})
-			config, ok := configs[0].(map[string]interface{})
-
-			if ok && config != nil {
-				in.CdiInputSpecification = expandChannelCdiInputSpecification(config)
-			}
+			in.CdiInputSpecification = expandChannelCdiInputSpecification(v.([]interface{}))
 		}
-
 		if v, ok := d.GetOk("maintenance"); ok {
-			configs := v.([]interface{})
-			config, ok := configs[0].(map[string]interface{})
-
-			if ok && config != nil {
-				in.Maintenance = expandChannelMaintenanceUpdate(config)
-			}
+			in.Maintenance = expandChannelMaintenanceUpdate(v.([]interface{}))
 		}
 	}
 
@@ -1629,116 +1617,115 @@ func FindChannelByID(ctx context.Context, conn *medialive.Client, id string) (*m
 	return out, nil
 }
 
-func expandChannelCdiInputSpecification(tfMap map[string]interface{}) *types.CdiInputSpecification {
-	if tfMap == nil {
+func expandChannelCdiInputSpecification(tfList []interface{}) *types.CdiInputSpecification {
+	if tfList == nil {
 		return nil
 	}
+	m := tfList[0].(map[string]interface{})
 
 	spec := &types.CdiInputSpecification{}
-	if v, ok := tfMap["resolution"].(string); ok && v != "" {
+	if v, ok := m["resolution"].(string); ok && v != "" {
 		spec.Resolution = types.CdiInputResolution(v)
 	}
 
 	return spec
 }
 
-func flattenChannelCdiInputSpecification(apiObject *types.CdiInputSpecification) map[string]interface{} {
+func flattenChannelCdiInputSpecification(apiObject *types.CdiInputSpecification) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{}
-	if v := apiObject.Resolution; v != "" {
-		m["resolution"] = string(v)
+	m := map[string]interface{}{
+		"resolution": string(apiObject.Resolution),
 	}
 
-	return m
+	return []interface{}{m}
 }
 
-func expandChannelMaintenanceCreate(tfMap map[string]interface{}) *types.MaintenanceCreateSettings {
-	if tfMap == nil {
+func expandChannelMaintenanceCreate(tfList []interface{}) *types.MaintenanceCreateSettings {
+	if tfList == nil {
 		return nil
 	}
+	m := tfList[0].(map[string]interface{})
 
-	mcs := &types.MaintenanceCreateSettings{}
-	if v, ok := tfMap["maintenance_day"].(string); ok && v != "" {
-		mcs.MaintenanceDay = types.MaintenanceDay(v)
+	settings := &types.MaintenanceCreateSettings{}
+	if v, ok := m["maintenance_day"].(string); ok && v != "" {
+		settings.MaintenanceDay = types.MaintenanceDay(v)
 	}
-	if v, ok := tfMap["maintenance_start_time"].(string); ok && v != "" {
-		mcs.MaintenanceStartTime = aws.String(v)
+	if v, ok := m["maintenance_start_time"].(string); ok && v != "" {
+		settings.MaintenanceStartTime = aws.String(v)
 	}
 
-	return mcs
+	return settings
 }
 
-func expandChannelMaintenanceUpdate(tfMap map[string]interface{}) *types.MaintenanceUpdateSettings {
-	if tfMap == nil {
+func expandChannelMaintenanceUpdate(tfList []interface{}) *types.MaintenanceUpdateSettings {
+	if tfList == nil {
 		return nil
 	}
+	m := tfList[0].(map[string]interface{})
 
-	mud := &types.MaintenanceUpdateSettings{}
-	if v, ok := tfMap["maintenance_day"].(string); ok && v != "" {
-		mud.MaintenanceDay = types.MaintenanceDay(v)
+	settings := &types.MaintenanceUpdateSettings{}
+	if v, ok := m["maintenance_day"].(string); ok && v != "" {
+		settings.MaintenanceDay = types.MaintenanceDay(v)
 	}
-	if v, ok := tfMap["maintenance_start_time"].(string); ok && v != "" {
-		mud.MaintenanceStartTime = aws.String(v)
+	if v, ok := m["maintenance_start_time"].(string); ok && v != "" {
+		settings.MaintenanceStartTime = aws.String(v)
 	}
-	// This field is only available in the update struct. Should it be included in the base schema?
-	// if v, ok := tfMap["maintenance_scheduled_date"].(string); ok && v != "" {
-	// 	mud.MaintenanceScheduledDate = aws.String(v)
+	// NOTE: This field is only available in the update struct. To allow users to set a scheduled
+	// date on update, it may be worth adding to the base schema.
+	// if v, ok := m["maintenance_scheduled_date"].(string); ok && v != "" {
+	// 	settings.MaintenanceScheduledDate = aws.String(v)
 	// }
 
-	return mud
+	return settings
 }
 
-func flattenChannelMaintenance(apiObject *types.MaintenanceStatus) map[string]interface{} {
+func flattenChannelMaintenance(apiObject *types.MaintenanceStatus) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{}
-	if v := apiObject.MaintenanceDay; v != "" {
-		m["maintenance_day"] = string(v)
-	}
-	if v := apiObject.MaintenanceStartTime; v != nil {
-		m["maintenance_start_time"] = aws.ToString(v)
+	m := map[string]interface{}{
+		"maintenance_day":        string(apiObject.MaintenanceDay),
+		"maintenance_start_time": aws.ToString(apiObject.MaintenanceStartTime),
+		// "maintenance_scheduled_date": "",
 	}
 
-	return m
+	return []interface{}{m}
 }
 
-func expandChannelVpc(tfMap map[string]interface{}) *types.VpcOutputSettings {
-	if tfMap == nil {
+func expandChannelVpc(tfList []interface{}) *types.VpcOutputSettings {
+	if tfList == nil {
 		return nil
 	}
+	m := tfList[0].(map[string]interface{})
 
 	settings := &types.VpcOutputSettings{}
-	if v, ok := tfMap["security_group_ids"].([]string); ok && len(v) > 0 {
+	if v, ok := m["security_group_ids"].([]string); ok && len(v) > 0 {
 		settings.SecurityGroupIds = v
 	}
-	if v, ok := tfMap["subnet_ids"].([]string); ok && len(v) > 0 {
+	if v, ok := m["subnet_ids"].([]string); ok && len(v) > 0 {
 		settings.SubnetIds = v
 	}
-	if v, ok := tfMap["public_address_allocation_ids"].([]string); ok && len(v) > 0 {
+	if v, ok := m["public_address_allocation_ids"].([]string); ok && len(v) > 0 {
 		settings.PublicAddressAllocationIds = v
 	}
 
 	return settings
 }
 
-func flattenChannelVpc(apiObject *types.VpcOutputSettingsDescription) map[string]interface{} {
+func flattenChannelVpc(apiObject *types.VpcOutputSettingsDescription) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{}
-	if v := apiObject.SecurityGroupIds; len(v) > 0 {
-		m["security_group_ids"] = flex.FlattenStringValueList(v)
+	m := map[string]interface{}{
+		"security_group_ids": flex.FlattenStringValueList(apiObject.SecurityGroupIds),
+		"subnet_ids":         flex.FlattenStringValueList(apiObject.SubnetIds),
+		// public_address_allocation_ids is not included in the output struct
 	}
-	if v := apiObject.SubnetIds; len(v) > 0 {
-		m["subnet_ids"] = flex.FlattenStringValueList(v)
-	}
-	// public_address_allocation_ids is not included in the output struct
 
-	return m
+	return []interface{}{m}
 }
