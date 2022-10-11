@@ -1379,6 +1379,9 @@ func resourceChannelCreate(ctx context.Context, d *schema.ResourceData, meta int
 	if v, ok := d.GetOk("cdi_input_specification"); ok && len(v.([]interface{})) > 0 {
 		in.CdiInputSpecification = expandChannelCdiInputSpecification(v.([]interface{}))
 	}
+	if v, ok := d.GetOk("input_specification"); ok && len(v.([]interface{})) > 0 {
+		in.InputSpecification = expandChannelInputSpecification(v.([]interface{}))
+	}
 	if v, ok := d.GetOk("maintenance"); ok && len(v.([]interface{})) > 0 {
 		in.Maintenance = expandChannelMaintenanceCreate(v.([]interface{}))
 	}
@@ -1432,6 +1435,9 @@ func resourceChannelRead(ctx context.Context, d *schema.ResourceData, meta inter
 	if err := d.Set("cdi_input_specification", flattenChannelCdiInputSpecification(out.CdiInputSpecification)); err != nil {
 		return create.DiagError(names.MediaLive, create.ErrActionSetting, ResNameChannel, d.Id(), err)
 	}
+	if err := d.Set("input_specification", flattenChannelInputSpecification(out.InputSpecification)); err != nil {
+		return create.DiagError(names.MediaLive, create.ErrActionSetting, ResNameChannel, d.Id(), err)
+	}
 	if err := d.Set("maintenance", flattenChannelMaintenance(out.Maintenance)); err != nil {
 		return create.DiagError(names.MediaLive, create.ErrActionSetting, ResNameChannel, d.Id(), err)
 	}
@@ -1471,6 +1477,7 @@ func resourceChannelUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	if d.HasChanges(
 		"name",
 		"cdi_input_specification",
+		"input_specification",
 		"maintenance",
 	) {
 		update = true
@@ -1478,6 +1485,9 @@ func resourceChannelUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		in.Name = aws.String(d.Get("name").(string))
 		if v, ok := d.GetOk("cdi_input_specification"); ok {
 			in.CdiInputSpecification = expandChannelCdiInputSpecification(v.([]interface{}))
+		}
+		if v, ok := d.GetOk("input_specification"); ok {
+			in.InputSpecification = expandChannelInputSpecification(v.([]interface{}))
 		}
 		if v, ok := d.GetOk("maintenance"); ok {
 			in.Maintenance = expandChannelMaintenanceUpdate(v.([]interface{}))
@@ -1638,6 +1648,40 @@ func flattenChannelCdiInputSpecification(apiObject *types.CdiInputSpecification)
 
 	m := map[string]interface{}{
 		"resolution": string(apiObject.Resolution),
+	}
+
+	return []interface{}{m}
+}
+
+func expandChannelInputSpecification(tfList []interface{}) *types.InputSpecification {
+	if tfList == nil {
+		return nil
+	}
+	m := tfList[0].(map[string]interface{})
+
+	spec := &types.InputSpecification{}
+	if v, ok := m["codec"].(string); ok && v != "" {
+		spec.Codec = types.InputCodec(v)
+	}
+	if v, ok := m["maximum_bitrate"].(string); ok && v != "" {
+		spec.MaximumBitrate = types.InputMaximumBitrate(v)
+	}
+	if v, ok := m["input_resolution"].(string); ok && v != "" {
+		spec.Resolution = types.InputResolution(v)
+	}
+
+	return spec
+}
+
+func flattenChannelInputSpecification(apiObject *types.InputSpecification) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"codec":            string(apiObject.Codec),
+		"maximum_bitrate":  string(apiObject.MaximumBitrate),
+		"input_resolution": string(apiObject.Resolution),
 	}
 
 	return []interface{}{m}
