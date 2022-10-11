@@ -17,7 +17,7 @@ func init() {
 }
 
 // newDataSourceARN instantiates a new DataSource for the aws_arn data source.
-func newDataSourceARN(ctx context.Context) (datasource.DataSource, error) {
+func newDataSourceARN(context.Context) (datasource.DataSource, error) {
 	return &dataSourceARN{}, nil
 }
 
