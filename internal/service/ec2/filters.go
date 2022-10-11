@@ -1,10 +1,13 @@
 package ec2
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -102,6 +105,29 @@ func CustomFiltersSchema() *schema.Schema {
 	}
 }
 
+// CustomFiltersBlock is the Plugin Framework variant of CustomFiltersSchema.
+func CustomFiltersBlock() tfsdk.Block {
+	return tfsdk.Block{
+		Attributes: map[string]tfsdk.Attribute{
+			"name": {
+				Type:     types.StringType,
+				Required: true,
+			},
+			"values": {
+				Type:     types.SetType{ElemType: types.StringType},
+				Required: true,
+			},
+		},
+		NestingMode: tfsdk.BlockNestingModeSet,
+	}
+}
+
+// customFilterData represents a single configured filter.
+type customFilterData struct {
+	Name   types.String `tfsdk:"name"`
+	Values types.Set    `tfsdk:"values"`
+}
+
 // BuildCustomFilterList takes the set value extracted from a schema
 // attribute conforming to the schema returned by CustomFiltersSchema,
 // and transforms it into a []*ec2.Filter representing the same filter
@@ -135,4 +161,47 @@ func BuildCustomFilterList(filterSet *schema.Set) []*ec2.Filter {
 	}
 
 	return filters
+}
+
+func BuildCustomFilters(ctx context.Context, filterSet types.Set) []*ec2.Filter {
+	if filterSet.IsNull() || filterSet.IsNull() {
+		return nil
+	}
+
+	var filters []*ec2.Filter
+
+	for _, v := range filterSet.Elems {
+		var data customFilterData
+
+		if tfsdk.ValueAs(ctx, v, &data).HasError() {
+			continue
+		}
+
+		if data.Name.IsNull() || data.Name.IsUnknown() {
+			continue
+		}
+
+		if v := expandStringSet(ctx, data.Values); v != nil {
+			filters = append(filters, &ec2.Filter{
+				Name:   aws.String(data.Name.Value),
+				Values: v,
+			})
+		}
+	}
+
+	return filters
+}
+
+func expandStringSet(ctx context.Context, configured types.Set) []*string {
+	if configured.IsNull() || configured.IsNull() {
+		return nil
+	}
+
+	var set []*string
+
+	if configured.ElementsAs(ctx, &set, false).HasError() {
+		return nil
+	}
+
+	return set
 }
