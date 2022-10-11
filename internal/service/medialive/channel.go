@@ -709,10 +709,12 @@ func ResourceChannel() *schema.Resource {
 																return destinationSchema()
 															}(),
 															"ad_markers": {
-																Type:             schema.TypeList,
-																Optional:         true,
-																ValidateDiagFunc: enum.Validate[types.HlsAdMarkers](),
-																Elem:             &schema.Schema{Type: schema.TypeString},
+																Type:     schema.TypeList,
+																Optional: true,
+																Elem: &schema.Schema{
+																	Type:             schema.TypeString,
+																	ValidateDiagFunc: enum.Validate[types.HlsAdMarkers](),
+																},
 															},
 															"base_url_content": {
 																Type:     schema.TypeString,
@@ -1188,10 +1190,12 @@ func ResourceChannel() *schema.Resource {
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
 															"ad_markers": {
-																Type:             schema.TypeList,
-																Optional:         true,
-																Elem:             &schema.Schema{Type: schema.TypeString},
-																ValidateDiagFunc: enum.Validate[types.RtmpAdMarkers](),
+																Type:     schema.TypeList,
+																Optional: true,
+																Elem: &schema.Schema{
+																	Type:             schema.TypeString,
+																	ValidateDiagFunc: enum.Validate[types.RtmpAdMarkers](),
+																},
 															},
 															"authentication_scheme": {
 																Type:             schema.TypeString,
