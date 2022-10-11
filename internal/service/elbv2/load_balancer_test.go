@@ -2432,7 +2432,7 @@ resource "aws_lb" "lb_test" {
 }
 
 resource "aws_eip" "lb" {
-  count = "2"
+  count = 2
 }
 `, rName))
 }
