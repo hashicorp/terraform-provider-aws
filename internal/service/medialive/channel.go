@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -1332,6 +1333,7 @@ func ResourceChannel() *schema.Resource {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
+				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"subnet_ids": {
@@ -1376,6 +1378,9 @@ func resourceChannelCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 	if v, ok := d.GetOk("maintenance"); ok && len(v.(map[string]interface{})) > 0 {
 		in.Maintenance = expandChannelMaintenanceCreate(v.(map[string]interface{}))
+	}
+	if v, ok := d.GetOk("vpc"); ok && len(v.(map[string]interface{})) > 0 {
+		in.Vpc = expandChannelVpc(v.(map[string]interface{}))
 	}
 
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
@@ -1422,6 +1427,9 @@ func resourceChannelRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("name", out.Name)
 
 	if err := d.Set("maintenance", flattenChannelMaintenance(out.Maintenance)); err != nil {
+		return create.DiagError(names.MediaLive, create.ErrActionSetting, ResNameChannel, d.Id(), err)
+	}
+	if err := d.Set("vpc", flattenChannelVpc(out.Vpc)); err != nil {
 		return create.DiagError(names.MediaLive, create.ErrActionSetting, ResNameChannel, d.Id(), err)
 	}
 
@@ -1653,6 +1661,42 @@ func flattenChannelMaintenance(apiObject *types.MaintenanceStatus) map[string]in
 	if v := apiObject.MaintenanceStartTime; v != nil {
 		m["maintenance_start_time"] = aws.ToString(v)
 	}
+
+	return m
+}
+
+func expandChannelVpc(tfMap map[string]interface{}) *types.VpcOutputSettings {
+	if tfMap == nil {
+		return nil
+	}
+
+	settings := &types.VpcOutputSettings{}
+	if v, ok := tfMap["security_group_ids"].([]string); ok && len(v) > 0 {
+		settings.SecurityGroupIds = v
+	}
+	if v, ok := tfMap["subnet_ids"].([]string); ok && len(v) > 0 {
+		settings.SubnetIds = v
+	}
+	if v, ok := tfMap["public_address_allocation_ids"].([]string); ok && len(v) > 0 {
+		settings.PublicAddressAllocationIds = v
+	}
+
+	return settings
+}
+
+func flattenChannelVpc(apiObject *types.VpcOutputSettingsDescription) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{}
+	if v := apiObject.SecurityGroupIds; len(v) > 0 {
+		m["security_group_ids"] = flex.FlattenStringValueList(v)
+	}
+	if v := apiObject.SubnetIds; len(v) > 0 {
+		m["subnet_ids"] = flex.FlattenStringValueList(v)
+	}
+	// public_address_allocation_ids is not included in the output struct
 
 	return m
 }
