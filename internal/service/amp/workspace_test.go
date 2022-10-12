@@ -2,6 +2,7 @@ package amp_test
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -132,6 +133,70 @@ func TestAccAMPWorkspace_tags(t *testing.T) {
 	})
 }
 
+func TestAccAMPWorkspace_loggingConfiguration(t *testing.T) {
+	resourceName := "aws_prometheus_workspace.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWorkspaceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWorkspaceConfig_loggingConfig("somelogname"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWorkspaceExists(resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, "cloudwatch_log_group_arn"),
+					testAccCheckLogGrouparnInLoggingConfig(resourceName, "somelogname"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccWorkspaceConfig_loggingConfig("otherlogname"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWorkspaceExists(resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, "cloudwatch_log_group_arn"),
+					testAccCheckLogGrouparnInLoggingConfig(resourceName, "otherlogname"),
+				),
+			},
+		},
+	})
+}
+
+func testAccCheckLogGrouparnInLoggingConfig(resource string, logGroupName string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[resource]
+		if !ok {
+			return fmt.Errorf("Not found: %s", resource)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No AMP Workspace ID is set")
+		}
+
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AMPConn
+
+		req := &prometheusservice.DescribeLoggingConfigurationInput{
+			WorkspaceId: aws.String(rs.Primary.ID),
+		}
+		loggingConfig, err := conn.DescribeLoggingConfiguration(req)
+		if err != nil {
+			return err
+		}
+		if loggingConfig == nil {
+			return fmt.Errorf("Got nil account ?!")
+		}
+		if !strings.Contains(*loggingConfig.LoggingConfiguration.LogGroupArn, logGroupName) {
+			return fmt.Errorf("used logGroupArn %s does not contain configured logGroupArn: %s", *loggingConfig.LoggingConfiguration.LogGroupArn, logGroupName)
+		}
+		return nil
+	}
+}
+
 func testAccCheckWorkspaceExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -181,6 +246,17 @@ func testAccCheckWorkspaceDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func testAccWorkspaceConfig_loggingConfig(logGroupName string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudwatch_log_group" "test" {
+  name = "%s"
+}
+resource "aws_prometheus_workspace" "test" {
+  cloudwatch_log_group_arn = "${aws_cloudwatch_log_group.test.arn}:*"
+}
+`, logGroupName)
 }
 
 func testAccWorkspaceConfig_alias(randName string) string {

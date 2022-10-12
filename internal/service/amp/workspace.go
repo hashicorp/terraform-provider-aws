@@ -3,8 +3,6 @@ package amp
 import (
 	"context"
 	"fmt"
-	"log"
-
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/prometheusservice"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -13,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"log"
 )
 
 func ResourceWorkspace() *schema.Resource {
@@ -39,6 +38,11 @@ func ResourceWorkspace() *schema.Resource {
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"cloudwatch_log_group_arn": {
+				Type:         schema.TypeString,
+				ValidateFunc: verify.ValidARN,
+				Optional:     true,
 			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
@@ -75,6 +79,17 @@ func resourceWorkspaceRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("alias", ws.Alias)
 	d.Set("arn", ws.Arn)
 	d.Set("prometheus_endpoint", ws.PrometheusEndpoint)
+
+	loggingConfig, err := conn.DescribeLoggingConfigurationWithContext(ctx, &prometheusservice.DescribeLoggingConfigurationInput{WorkspaceId: aws.String(d.Id())})
+	if err != nil {
+		if tfawserr.ErrCodeEquals(err, prometheusservice.ErrCodeResourceNotFoundException) {
+			d.Set("cloudwatch_log_group_arn", "")
+		} else {
+			return diag.FromErr(fmt.Errorf("error reading Prometheus logging coniguration for workspace (%s): %w", d.Id(), err))
+		}
+	} else {
+		d.Set("cloudwatch_log_group_arn", *loggingConfig.LoggingConfiguration.LogGroupArn)
+	}
 
 	tags, err := ListTags(conn, *ws.Arn)
 
@@ -144,6 +159,13 @@ func resourceWorkspaceCreate(ctx context.Context, d *schema.ResourceData, meta i
 
 	if _, err := waitWorkspaceCreated(ctx, conn, d.Id()); err != nil {
 		return diag.FromErr(fmt.Errorf("error waiting for Workspace (%s) to be created: %w", d.Id(), err))
+	}
+
+	if v, ok := d.GetOk("cloudwatch_log_group_arn"); ok {
+		_, err := conn.CreateLoggingConfigurationWithContext(ctx, &prometheusservice.CreateLoggingConfigurationInput{WorkspaceId: aws.String(d.Id()), LogGroupArn: aws.String(v.(string))})
+		if err != nil {
+			return diag.FromErr(fmt.Errorf("error creating Logging Configuration (log group arn: %s) for Workspace (%s): %w", v.(string), d.Id(), err))
+		}
 	}
 
 	return resourceWorkspaceRead(ctx, d, meta)
