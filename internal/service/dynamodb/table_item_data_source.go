@@ -23,6 +23,7 @@ package dynamodb
 
 import (
 	"context"
+	"fmt"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -93,7 +94,7 @@ func DataSourceTableItem() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"table_name": { // TIP: Add all your arguments and attributes.
+			"table_name": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -129,7 +130,9 @@ func dataSourceTableItemRead(ctx context.Context, d *schema.ResourceData, meta i
 	tableName := d.Get("table_name").(string)
 	key, err := ExpandTableItemAttributes(d.Get("key").(string))
 
-	log.Printf("[DEBUG] DynamoDB item get: %s", tableName)
+	id := buildTableItemDataSourceID(tableName, key)
+
+	log.Printf("[DEBUG] DynamoDB item get: %s | %s", tableName, id)
 
 	in := &dynamodb.GetItemInput{
 		TableName:      aws.String(tableName),
@@ -146,9 +149,14 @@ func dataSourceTableItemRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	out, err := conn.GetItem(in)
 
-	id := buildTableItemDataSourceID(tableName, key)
+	fmt.Println(in.String())
+	fmt.Println(out.String())
 
 	if err != nil {
+		return create.DiagError(names.DynamoDB, create.ErrActionReading, DSNameTableItem, id, err)
+	}
+
+	if out.Item == nil {
 		return create.DiagError(names.DynamoDB, create.ErrActionReading, DSNameTableItem, id, err)
 	}
 
@@ -176,6 +184,10 @@ func dataSourceTableItemRead(ctx context.Context, d *schema.ResourceData, meta i
 	//    a JSON. AWS may return the JSON in a slightly different order but it
 	//    is equivalent to what is already set. In that case, you may check if
 	//    it is equivalent before setting the different JSON
+
+	d.Set("projection_expression", in.ProjectionExpression)
+	d.Set("expression_attribute_names", aws.StringValueMap(in.ExpressionAttributeNames))
+	d.Set("table_name", tableName)
 
 	itemAttrs, err := flattenTableItemAttributes(out.Item)
 
