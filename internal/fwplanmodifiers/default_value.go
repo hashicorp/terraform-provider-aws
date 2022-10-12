@@ -6,6 +6,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
 type defaultValue struct {
@@ -13,10 +14,14 @@ type defaultValue struct {
 }
 
 // DefaultValue return an AttributePlanModifier that sets the specified value if the planned value is Null.
-func DefaultValue(val attr.Value) tfsdk.AttributePlanModifier {
+func DefaultValue(value attr.Value) tfsdk.AttributePlanModifier {
 	return defaultValue{
-		value: val,
+		value: value,
 	}
+}
+
+func DefaultStringValue(value string) tfsdk.AttributePlanModifier {
+	return DefaultValue(types.String{Value: value})
 }
 
 func (m defaultValue) Description(context.Context) string {
