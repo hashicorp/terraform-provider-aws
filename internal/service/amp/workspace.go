@@ -3,6 +3,8 @@ package amp
 import (
 	"context"
 	"fmt"
+	"log"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/prometheusservice"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -11,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	"log"
 )
 
 func ResourceWorkspace() *schema.Resource {
@@ -88,7 +89,7 @@ func resourceWorkspaceRead(ctx context.Context, d *schema.ResourceData, meta int
 			return diag.FromErr(fmt.Errorf("error reading Prometheus logging coniguration for workspace (%s): %w", d.Id(), err))
 		}
 	} else {
-		d.Set("cloudwatch_log_group_arn", *loggingConfig.LoggingConfiguration.LogGroupArn)
+		d.Set("cloudwatch_log_group_arn", loggingConfig.LoggingConfiguration.LogGroupArn)
 	}
 
 	tags, err := ListTags(conn, *ws.Arn)
@@ -131,6 +132,14 @@ func resourceWorkspaceUpdate(ctx context.Context, d *schema.ResourceData, meta i
 
 	if _, err := conn.UpdateWorkspaceAliasWithContext(ctx, req); err != nil {
 		return diag.FromErr(fmt.Errorf("error updating Prometheus WorkSpace (%s): %w", d.Id(), err))
+	}
+
+	if d.HasChange("cloudwatch_log_group_arn") {
+		_, n := d.GetChange("cloudwatch_log_group_arn")
+		_, err := conn.UpdateLoggingConfigurationWithContext(ctx, &prometheusservice.UpdateLoggingConfigurationInput{WorkspaceId: aws.String(d.Id()), LogGroupArn: aws.String(n.(string))})
+		if err != nil {
+			return diag.FromErr(fmt.Errorf("error updating Logging Configuration (log group arn: %s) for Workspace (%s): %w", n.(string), d.Id(), err))
+		}
 	}
 
 	return resourceWorkspaceRead(ctx, d, meta)
