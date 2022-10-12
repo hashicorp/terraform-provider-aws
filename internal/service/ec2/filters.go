@@ -164,7 +164,7 @@ func BuildCustomFilterList(filterSet *schema.Set) []*ec2.Filter {
 }
 
 func BuildCustomFilters(ctx context.Context, filterSet types.Set) []*ec2.Filter {
-	if filterSet.IsNull() || filterSet.IsNull() {
+	if filterSet.IsNull() || filterSet.IsUnknown() {
 		return nil
 	}
 
@@ -193,7 +193,7 @@ func BuildCustomFilters(ctx context.Context, filterSet types.Set) []*ec2.Filter 
 }
 
 func expandStringSet(ctx context.Context, configured types.Set) []*string {
-	if configured.IsNull() || configured.IsNull() {
+	if configured.IsNull() || configured.IsUnknown() {
 		return nil
 	}
 

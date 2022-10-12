@@ -113,10 +113,34 @@ type dataSourceRegionsData struct {
 	Names      types.Set    `tfsdk:"names"`
 }
 
-func flattenStringValueSet(list []string) types.Set {
-	elems := make([]attr.Value, len(list))
+func expandStringValueSet(ctx context.Context, set types.Set) []string {
+	if set.IsNull() || set.IsUnknown() {
+		return nil
+	}
 
-	for i, v := range list {
+	var vs []string
+
+	if set.ElementsAs(ctx, &vs, false).HasError() {
+		return nil
+	}
+
+	return vs
+}
+
+func flattenStringValueList(vs []string) types.List {
+	elems := make([]attr.Value, len(vs))
+
+	for i, v := range vs {
+		elems[i] = types.String{Value: v}
+	}
+
+	return types.List{ElemType: types.StringType, Elems: elems}
+}
+
+func flattenStringValueSet(vs []string) types.Set {
+	elems := make([]attr.Value, len(vs))
+
+	for i, v := range vs {
 		elems[i] = types.String{Value: v}
 	}
 
