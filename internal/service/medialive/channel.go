@@ -1261,12 +1261,43 @@ func ResourceChannel() *schema.Resource {
 											},
 										},
 									},
-									"output": {
-										Type:     schema.TypeSet,
+									"outputs": {
+										Type:     schema.TypeList,
 										Required: true,
 										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{},
-											// TODO complete output schema.
+											Schema: map[string]*schema.Schema{
+												"output_settings": {
+													Type:     schema.TypeList,
+													Required: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														// TODO complete output_settings schema
+														Schema: map[string]*schema.Schema{},
+													},
+												},
+												"audio_description_names": {
+													Type:     schema.TypeSet,
+													Optional: true,
+													Elem: &schema.Schema{
+														Type: schema.TypeString,
+													},
+												},
+												"caption_description_names": {
+													Type:     schema.TypeSet,
+													Optional: true,
+													Elem: &schema.Schema{
+														Type: schema.TypeString,
+													},
+												},
+												"output_name": {
+													Type:     schema.TypeString,
+													Optional: true,
+												},
+												"video_description_name": {
+													Type:     schema.TypeString,
+													Optional: true,
+												},
+											},
 										},
 									},
 									"name": {
