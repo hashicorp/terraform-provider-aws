@@ -16,7 +16,7 @@ Creates a Global Accelerator accelerator.
 resource "aws_globalaccelerator_accelerator" "example" {
   name            = "Example"
   ip_address_type = "IPV4"
-  ip_addresses    = [ "1.2.3.4" ]
+  ip_addresses    = ["1.2.3.4"]
   enabled         = true
 
   attributes {
