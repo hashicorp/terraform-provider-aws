@@ -146,3 +146,13 @@ func flattenStringValueSet(vs []string) types.Set {
 
 	return types.Set{ElemType: types.StringType, Elems: elems}
 }
+
+func flattenStringValueMap(m map[string]string) types.Map {
+	elems := make(map[string]attr.Value, len(m))
+
+	for k, v := range m {
+		elems[k] = types.String{Value: v}
+	}
+
+	return types.Map{ElemType: types.StringType, Elems: elems}
+}

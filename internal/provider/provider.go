@@ -760,7 +760,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 
 			// "aws_arn":                     meta.DataSourceARN(), // Now implemented using Terraform Plugin Framework.
 			// "aws_billing_service_account": meta.DataSourceBillingServiceAccount(), // Now implemented using Terraform Plugin Framework.
-			"aws_default_tags": meta.DataSourceDefaultTags(),
+			// "aws_default_tags": meta.DataSourceDefaultTags(), // Now implemented using Terraform Plugin Framework.
 			// "aws_ip_ranges":    meta.DataSourceIPRanges(), // Now implemented using Terraform Plugin Framework.
 			// "aws_partition":    meta.DataSourcePartition(), // Now implemented using Terraform Plugin Framework.
 			// "aws_region":  meta.DataSourceRegion(), // Now implemented using Terraform Plugin Framework.
