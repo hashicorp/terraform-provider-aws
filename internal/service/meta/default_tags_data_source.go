@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
@@ -74,7 +75,7 @@ func (d *dataSourceDefaultTags) Read(ctx context.Context, request datasource.Rea
 
 	data.ID = types.String{Value: d.meta.Partition}
 	if tags != nil {
-		data.Tags = flattenStringValueMap(tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map())
+		data.Tags = flex.FlattenFrameworkStringValueMap(ctx, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map())
 	} else {
 		data.Tags = types.Map{ElemType: types.StringType, Null: true}
 	}

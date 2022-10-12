@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"golang.org/x/exp/slices"
 )
 
@@ -134,8 +135,8 @@ func (d *dataSourceIPRanges) Read(ctx context.Context, request datasource.ReadRe
 		return
 	}
 
-	regions := expandStringValueSet(ctx, data.Regions)
-	services := expandStringValueSet(ctx, data.Services)
+	regions := flex.ExpandFrameworkStringValueSet(ctx, data.Regions)
+	services := flex.ExpandFrameworkStringValueSet(ctx, data.Services)
 	matchFilter := func(region, service string) bool {
 		matchRegion := len(regions) == 0 || slices.Contains(regions, strings.ToLower(region))
 		matchService := slices.Contains(services, strings.ToLower(service))
@@ -165,8 +166,8 @@ func (d *dataSourceIPRanges) Read(ctx context.Context, request datasource.ReadRe
 
 	data.CreateDate = types.String{Value: ipRanges.CreateDate}
 	data.ID = types.String{Value: ipRanges.SyncToken}
-	data.IPv4CIDRBlocks = flattenStringValueList(ipv4Prefixes)
-	data.IPv6CIDRBlocks = flattenStringValueList(ipv6Prefixes)
+	data.IPv4CIDRBlocks = flex.FlattenFrameworkStringValueList(ctx, ipv4Prefixes)
+	data.IPv6CIDRBlocks = flex.FlattenFrameworkStringValueList(ctx, ipv6Prefixes)
 	data.SyncToken = types.Int64{Value: int64(syncToken)}
 	data.URL = types.String{Value: url}
 

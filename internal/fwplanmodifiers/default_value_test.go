@@ -270,7 +270,7 @@ func TestDefaultValue(t *testing.T) {
 	for name, test := range tests {
 		name, test := name, test
 		t.Run(name, func(t *testing.T) {
-			ctx := context.TODO()
+			ctx := context.Background()
 			request := tfsdk.ModifyAttributePlanRequest{
 				AttributePath:  path.Root("test"),
 				AttributePlan:  test.plannedValue,

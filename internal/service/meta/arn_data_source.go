@@ -92,10 +92,9 @@ func (d *dataSourceARN) Read(ctx context.Context, request datasource.ReadRequest
 	}
 
 	arn := &data.ARN.Value
-	id := arn.String()
 
 	data.Account = types.String{Value: arn.AccountID}
-	data.ID = types.String{Value: id}
+	data.ID = types.String{Value: arn.String()}
 	data.Partition = types.String{Value: arn.Partition}
 	data.Region = types.String{Value: arn.Region}
 	data.Resource = types.String{Value: arn.Resource}

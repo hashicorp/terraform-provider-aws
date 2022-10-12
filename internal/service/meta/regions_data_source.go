@@ -5,12 +5,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 )
 
@@ -101,7 +101,7 @@ func (d *dataSourceRegions) Read(ctx context.Context, request datasource.ReadReq
 	}
 
 	data.ID = types.String{Value: d.meta.Partition}
-	data.Names = flattenStringValueSet(names)
+	data.Names = flex.FlattenFrameworkStringValueSet(ctx, names)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -111,48 +111,4 @@ type dataSourceRegionsData struct {
 	Filters    types.Set    `tfsdk:"filter"`
 	ID         types.String `tfsdk:"id"`
 	Names      types.Set    `tfsdk:"names"`
-}
-
-func expandStringValueSet(ctx context.Context, set types.Set) []string {
-	if set.IsNull() || set.IsUnknown() {
-		return nil
-	}
-
-	var vs []string
-
-	if set.ElementsAs(ctx, &vs, false).HasError() {
-		return nil
-	}
-
-	return vs
-}
-
-func flattenStringValueList(vs []string) types.List {
-	elems := make([]attr.Value, len(vs))
-
-	for i, v := range vs {
-		elems[i] = types.String{Value: v}
-	}
-
-	return types.List{ElemType: types.StringType, Elems: elems}
-}
-
-func flattenStringValueSet(vs []string) types.Set {
-	elems := make([]attr.Value, len(vs))
-
-	for i, v := range vs {
-		elems[i] = types.String{Value: v}
-	}
-
-	return types.Set{ElemType: types.StringType, Elems: elems}
-}
-
-func flattenStringValueMap(m map[string]string) types.Map {
-	elems := make(map[string]attr.Value, len(m))
-
-	for k, v := range m {
-		elems[k] = types.String{Value: v}
-	}
-
-	return types.Map{ElemType: types.StringType, Elems: elems}
 }

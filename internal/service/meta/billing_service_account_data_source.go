@@ -79,6 +79,7 @@ func (d *dataSourceBillingServiceAccount) Read(ctx context.Context, request data
 		AccountID: billingAccountID,
 		Resource:  "root",
 	}
+
 	data.ARN = fwtypes.ARN{Value: arn}
 	data.ID = types.String{Value: billingAccountID}
 
