@@ -2439,10 +2439,6 @@ func sweepIPAMs(region string) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error listing IPAMs (%s): %w", region, err)
-	}
-
-	if err != nil {
 		return fmt.Errorf("error sweeping IPAMs (%s): %w", region, err)
 	}
 
