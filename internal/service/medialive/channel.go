@@ -202,7 +202,8 @@ func ResourceChannel() *schema.Resource {
 																			Optional: true,
 																		},
 																		"video_black_threshold_msec": {
-																			Type: schema.TypeInt,
+																			Type:     schema.TypeInt,
+																			Optional: true,
 																		},
 																	},
 																},
