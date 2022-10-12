@@ -3,6 +3,7 @@ package ec2_test
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -34,6 +35,10 @@ func TestAccIPAM_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "operating_regions.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "scope_count", "2"),
+					resource.TestMatchResourceAttr(resourceName, "private_default_scope_id", regexp.MustCompile(`^ipam-scope-[\da-f]+`)),
+					resource.TestMatchResourceAttr(resourceName, "public_default_scope_id", regexp.MustCompile(`^ipam-scope-[\da-f]+`)),
+					resource.TestMatchResourceAttr(resourceName, "default_resource_discovery_association_id", regexp.MustCompile(`^ipam-res-disco-assoc-[\da-f]+`)),
+					resource.TestMatchResourceAttr(resourceName, "default_resource_discovery_id", regexp.MustCompile(`^ipam-res-disco-[\da-f]+`)),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
