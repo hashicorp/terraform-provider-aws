@@ -5,13 +5,13 @@ go 1.17
 require (
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.23.0
 	github.com/hashicorp/terraform-provider-aws v1.60.1-0.20220322001452-8f7a597d0c24
-	github.com/mitchellh/cli v1.1.2
+	github.com/mitchellh/cli v1.1.4
 )
 
 require (
 	github.com/Masterminds/goutils v1.1.0 // indirect
-	github.com/Masterminds/semver v1.5.0 // indirect
-	github.com/Masterminds/sprig v2.22.0+incompatible // indirect
+	github.com/Masterminds/semver/v3 v3.1.1 // indirect
+	github.com/Masterminds/sprig/v3 v3.2.0 // indirect
 	github.com/ProtonMail/go-crypto v0.0.0-20210428141323-04723f9f07d7 // indirect
 	github.com/agext/levenshtein v1.2.2 // indirect
 	github.com/apparentlymart/go-textseg/v13 v13.0.0 // indirect
@@ -89,6 +89,7 @@ require (
 	github.com/oklog/run v1.0.0 // indirect
 	github.com/posener/complete v1.1.1 // indirect
 	github.com/shopspring/decimal v1.3.1 // indirect
+	github.com/spf13/cast v1.3.1 // indirect
 	github.com/vmihailenco/msgpack v4.0.4+incompatible // indirect
 	github.com/vmihailenco/msgpack/v4 v4.3.12 // indirect
 	github.com/vmihailenco/tagparser v0.1.2 // indirect

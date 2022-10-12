@@ -19,7 +19,7 @@ func init() {
 }
 
 // newDataSourceRegions instantiates a new DataSource for the aws_regions data source.
-func newDataSourceRegions(context.Context) (datasource.DataSource, error) {
+func newDataSourceRegions(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &dataSourceRegions{}, nil
 }
 

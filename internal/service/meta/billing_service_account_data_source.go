@@ -17,7 +17,7 @@ func init() {
 }
 
 // newDataSourceBillingServiceAccount instantiates a new DataSource for the aws_billing_service_account data source.
-func newDataSourceBillingServiceAccount(context.Context) (datasource.DataSource, error) {
+func newDataSourceBillingServiceAccount(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &dataSourceBillingServiceAccount{}, nil
 }
 
