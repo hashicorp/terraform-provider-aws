@@ -35,7 +35,7 @@ type dataSourceIPRanges struct {
 
 // Metadata should return the full name of the data source, such as
 // examplecloud_thing.
-func (d *dataSourceIPRanges) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) {
+func (d *dataSourceIPRanges) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
 	response.TypeName = "aws_ip_ranges"
 }
 

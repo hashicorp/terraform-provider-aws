@@ -29,7 +29,7 @@ type dataSourceDefaultTags struct {
 
 // Metadata should return the full name of the data source, such as
 // examplecloud_thing.
-func (d *dataSourceDefaultTags) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) {
+func (d *dataSourceDefaultTags) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
 	response.TypeName = "aws_default_tags"
 }
 
