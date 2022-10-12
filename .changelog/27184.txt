@@ -3,5 +3,5 @@ data-source/aws_identitystore_user: Change the type of `external_ids` to a strin
 ```
 
 ```release-note:bug
-aws_identitystore_user: Change the type of `external_ids` to a string instead of a bool.
+resource/aws_identitystore_user: Change the type of `external_ids` to a string instead of a bool.
 ```
