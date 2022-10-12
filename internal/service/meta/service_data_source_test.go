@@ -2,7 +2,6 @@ package meta_test
 
 import (
 	"fmt"
-	"reflect"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws/endpoints"
@@ -14,38 +13,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfmeta "github.com/hashicorp/terraform-provider-aws/internal/service/meta"
 )
-
-func TestInvertStringSlice(t *testing.T) {
-	testCases := []struct {
-		Name     string
-		Input    []string
-		Expected []string
-	}{
-		{
-			Name:     "DNS Suffix",
-			Input:    []string{"amazonaws", "com", "cn"},
-			Expected: []string{"cn", "com", "amazonaws"},
-		},
-		{
-			Name:     "Ordered List",
-			Input:    []string{"abc", "bcd", "cde", "xyz", "zzz"},
-			Expected: []string{"zzz", "xyz", "cde", "bcd", "abc"},
-		},
-		{
-			Name:     "Unordered List",
-			Input:    []string{"abc", "zzz", "bcd", "xyz", "cde"},
-			Expected: []string{"cde", "xyz", "bcd", "zzz", "abc"},
-		},
-	}
-
-	for _, testCase := range testCases {
-		t.Run(testCase.Name, func(t *testing.T) {
-			if !reflect.DeepEqual(tfmeta.InvertStringSlice(testCase.Input), testCase.Expected) {
-				t.Errorf("got %v, expected %v", tfmeta.InvertStringSlice(testCase.Input), testCase.Expected)
-			}
-		})
-	}
-}
 
 func TestAccMetaService_basic(t *testing.T) {
 	dataSourceName := "data.aws_service.test"

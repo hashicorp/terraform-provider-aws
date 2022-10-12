@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/slices"
 )
 
 func init() {
@@ -118,7 +119,7 @@ func (d *dataSourceService) Read(ctx context.Context, request datasource.ReadReq
 
 	if !data.DNSName.IsNull() {
 		v := data.DNSName.Value
-		serviceParts := InvertStringSlice(strings.Split(v, "."))
+		serviceParts := slices.Reversed(strings.Split(v, "."))
 		n := len(serviceParts)
 
 		if n < 4 {
@@ -144,12 +145,12 @@ func (d *dataSourceService) Read(ctx context.Context, request datasource.ReadReq
 
 	if data.ReverseDNSPrefix.IsNull() || data.ReverseDNSPrefix.IsUnknown() {
 		dnsParts := strings.Split(d.meta.DNSSuffix, ".")
-		data.ReverseDNSPrefix = types.String{Value: strings.Join(InvertStringSlice(dnsParts), ".")}
+		data.ReverseDNSPrefix = types.String{Value: strings.Join(slices.Reversed(dnsParts), ".")}
 	}
 
 	reverseDNSName := fmt.Sprintf("%s.%s.%s", data.ReverseDNSPrefix.Value, data.Region.Value, data.ServiceID.Value)
 	data.ReverseDNSName = types.String{Value: reverseDNSName}
-	data.DNSName = types.String{Value: strings.ToLower(strings.Join(InvertStringSlice(strings.Split(reverseDNSName, ".")), "."))}
+	data.DNSName = types.String{Value: strings.ToLower(strings.Join(slices.Reversed(strings.Split(reverseDNSName, ".")), "."))}
 
 	data.Supported = types.Bool{Value: true}
 	if partition, ok := endpoints.PartitionForRegion(endpoints.DefaultPartitions(), data.Region.Value); ok {
@@ -176,13 +177,4 @@ type dataSourceServiceData struct {
 	ReverseDNSPrefix types.String `tfsdk:"reverse_dns_prefix"`
 	ServiceID        types.String `tfsdk:"service_id"`
 	Supported        types.Bool   `tfsdk:"supported"`
-}
-
-// InvertStringSlice returns inverted string slice without sorting slice like sort.Reverse()
-func InvertStringSlice(slice []string) []string {
-	inverse := make([]string, 0)
-	for i := 0; i < len(slice); i++ {
-		inverse = append(inverse, slice[len(slice)-i-1])
-	}
-	return inverse
 }
