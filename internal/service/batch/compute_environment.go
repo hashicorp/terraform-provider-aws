@@ -87,7 +87,7 @@ func ResourceComputeEnvironment() *schema.Resource {
 							Optional: true,
 							Computed: true,
 							ForceNew: true,
-							MaxItems: 1,
+							MaxItems: 2,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"image_id_override": {
