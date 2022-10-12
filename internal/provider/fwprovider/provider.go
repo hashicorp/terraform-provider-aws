@@ -2,6 +2,9 @@ package fwprovider
 
 import (
 	"context"
+	"fmt"
+	"reflect"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -317,8 +320,6 @@ func (p *fwprovider) Configure(ctx context.Context, request provider.ConfigureRe
 func (p *fwprovider) DataSources(ctx context.Context) []func() datasource.DataSource {
 	var dataSources []func() datasource.DataSource
 
-	// TODO Wrap the returned type to add standard context, logging etc.
-	// 	tflog.Trace(ctx, "dataSourceARN.Read enter")
 	for serviceID, data := range p.Primary.Meta().(*conns.AWSClient).ServiceMap {
 		for _, v := range data.FrameworkDataSources(ctx) {
 			v, err := v(ctx)
@@ -333,7 +334,7 @@ func (p *fwprovider) DataSources(ctx context.Context) []func() datasource.DataSo
 			}
 
 			dataSources = append(dataSources, func() datasource.DataSource {
-				return v
+				return newWrappedDataSource(v)
 			})
 		}
 	}
@@ -371,4 +372,34 @@ func endpointsBlock() tfsdk.Block {
 		Attributes:  endpointsAttributes,
 		NestingMode: tfsdk.BlockNestingModeSet,
 	}
+}
+
+// wrappedDataSource wraps a data source, adding common functionality.
+type wrappedDataSource struct {
+	inner    datasource.DataSourceWithConfigure
+	typeName string
+}
+
+func newWrappedDataSource(inner datasource.DataSourceWithConfigure) datasource.DataSource {
+	return &wrappedDataSource{inner: inner, typeName: strings.TrimPrefix(reflect.TypeOf(inner).String(), "*")}
+}
+
+func (w *wrappedDataSource) Metadata(ctx context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) {
+	w.inner.Metadata(ctx, request, response)
+}
+
+func (w *wrappedDataSource) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnostics) {
+	return w.inner.GetSchema(ctx)
+}
+
+func (w *wrappedDataSource) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
+	tflog.Debug(ctx, fmt.Sprintf("%s.Read enter", w.typeName))
+
+	w.inner.Read(ctx, request, response)
+
+	tflog.Debug(ctx, fmt.Sprintf("%s.Read exit", w.typeName))
+}
+
+func (w *wrappedDataSource) Configure(ctx context.Context, request datasource.ConfigureRequest, response *datasource.ConfigureResponse) {
+	w.inner.Configure(ctx, request, response)
 }
