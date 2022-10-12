@@ -100,7 +100,7 @@ func (d *dataSourceService) Read(ctx context.Context, request datasource.ReadReq
 		return
 	}
 
-	if !data.ReverseDNSName.IsNull() && !data.ReverseDNSName.IsUnknown() {
+	if !data.ReverseDNSName.IsNull() {
 		v := data.ReverseDNSName.Value
 		serviceParts := strings.Split(v, ".")
 		n := len(serviceParts)
@@ -116,7 +116,7 @@ func (d *dataSourceService) Read(ctx context.Context, request datasource.ReadReq
 		data.ServiceID = types.String{Value: serviceParts[n-1]}
 	}
 
-	if !data.DNSName.IsNull() && !data.DNSName.IsUnknown() {
+	if !data.DNSName.IsNull() {
 		v := data.DNSName.Value
 		serviceParts := InvertStringSlice(strings.Split(v, "."))
 		n := len(serviceParts)
@@ -132,11 +132,11 @@ func (d *dataSourceService) Read(ctx context.Context, request datasource.ReadReq
 		data.ServiceID = types.String{Value: serviceParts[n-1]}
 	}
 
-	if data.Region.IsNull() || data.Region.IsUnknown() {
+	if data.Region.IsNull() {
 		data.Region = types.String{Value: d.meta.Region}
 	}
 
-	if data.ServiceID.IsNull() || data.ServiceID.IsUnknown() {
+	if data.ServiceID.IsNull() {
 		response.Diagnostics.AddError("service ID not provided directly or through a DNS name", "")
 
 		return

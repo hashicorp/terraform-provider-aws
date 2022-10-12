@@ -4,10 +4,50 @@ import (
 	"context"
 	"testing"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
+
+func TestExpandFrameworkStringSet(t *testing.T) {
+	t.Parallel()
+
+	type testCase struct {
+		input    types.Set
+		expected []*string
+	}
+	tests := map[string]testCase{
+		"two elements": {
+			input: types.Set{ElemType: types.StringType, Elems: []attr.Value{
+				types.String{Value: "GET"},
+				types.String{Value: "HEAD"},
+			}},
+			expected: []*string{aws.String("GET"), aws.String("HEAD")},
+		},
+		"zero elements": {
+			input:    types.Set{ElemType: types.StringType, Elems: []attr.Value{}},
+			expected: []*string{},
+		},
+		"invalid element type": {
+			input: types.Set{ElemType: types.Int64Type, Elems: []attr.Value{
+				types.Int64{Value: 42},
+			}},
+			expected: nil,
+		},
+	}
+
+	for name, test := range tests {
+		name, test := name, test
+		t.Run(name, func(t *testing.T) {
+			got := ExpandFrameworkStringSet(context.Background(), test.input)
+
+			if diff := cmp.Diff(got, test.expected); diff != "" {
+				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+			}
+		})
+	}
+}
 
 func TestExpandFrameworkStringValueSet(t *testing.T) {
 	t.Parallel()

@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
 // BuildTagFilterList takes a []*ec2.Tag and produces a []*ec2.Filter that
@@ -181,7 +182,7 @@ func BuildCustomFilters(ctx context.Context, filterSet types.Set) []*ec2.Filter 
 			continue
 		}
 
-		if v := expandStringSet(ctx, data.Values); v != nil {
+		if v := flex.ExpandFrameworkStringSet(ctx, data.Values); v != nil {
 			filters = append(filters, &ec2.Filter{
 				Name:   aws.String(data.Name.Value),
 				Values: v,
@@ -190,18 +191,4 @@ func BuildCustomFilters(ctx context.Context, filterSet types.Set) []*ec2.Filter 
 	}
 
 	return filters
-}
-
-func expandStringSet(ctx context.Context, configured types.Set) []*string {
-	if configured.IsNull() || configured.IsUnknown() {
-		return nil
-	}
-
-	var set []*string
-
-	if configured.ElementsAs(ctx, &set, false).HasError() {
-		return nil
-	}
-
-	return set
 }

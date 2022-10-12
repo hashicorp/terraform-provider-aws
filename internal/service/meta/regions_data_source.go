@@ -83,7 +83,7 @@ func (d *dataSourceRegions) Read(ctx context.Context, request datasource.ReadReq
 		Filters: tfec2.BuildCustomFilters(ctx, data.Filters),
 	}
 
-	if !data.AllRegions.IsNull() && !data.AllRegions.IsUnknown() {
+	if !data.AllRegions.IsNull() {
 		input.AllRegions = aws.Bool(data.AllRegions.Value)
 	}
 
