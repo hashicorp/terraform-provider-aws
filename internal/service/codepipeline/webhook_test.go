@@ -19,7 +19,7 @@ import (
 const envVarGithubTokenUsageWebhook = "token with GitHub permissions to repository for CodePipeline webhook creation"
 
 func TestAccCodePipelineWebhook_basic(t *testing.T) {
-	githubToken := envvar.SkipIfEnvVarEmpty(t, envvar.EnvVarGithubToken, envVarGithubTokenUsageWebhook)
+	githubToken := envvar.SkipIfEmpty(t, envvar.GithubToken, envVarGithubTokenUsageWebhook)
 
 	var v codepipeline.ListWebhookItem
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -89,7 +89,7 @@ func TestAccCodePipelineWebhook_basic(t *testing.T) {
 }
 
 func TestAccCodePipelineWebhook_ipAuth(t *testing.T) {
-	githubToken := envvar.SkipIfEnvVarEmpty(t, envvar.EnvVarGithubToken, envVarGithubTokenUsageWebhook)
+	githubToken := envvar.SkipIfEmpty(t, envvar.GithubToken, envVarGithubTokenUsageWebhook)
 
 	var v codepipeline.ListWebhookItem
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -124,7 +124,7 @@ func TestAccCodePipelineWebhook_ipAuth(t *testing.T) {
 }
 
 func TestAccCodePipelineWebhook_unauthenticated(t *testing.T) {
-	githubToken := envvar.SkipIfEnvVarEmpty(t, envvar.EnvVarGithubToken, envVarGithubTokenUsageWebhook)
+	githubToken := envvar.SkipIfEmpty(t, envvar.GithubToken, envVarGithubTokenUsageWebhook)
 
 	var v codepipeline.ListWebhookItem
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -157,7 +157,7 @@ func TestAccCodePipelineWebhook_unauthenticated(t *testing.T) {
 }
 
 func TestAccCodePipelineWebhook_tags(t *testing.T) {
-	githubToken := envvar.SkipIfEnvVarEmpty(t, envvar.EnvVarGithubToken, envVarGithubTokenUsageWebhook)
+	githubToken := envvar.SkipIfEmpty(t, envvar.GithubToken, envVarGithubTokenUsageWebhook)
 
 	var v1, v2, v3 codepipeline.ListWebhookItem
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -221,7 +221,7 @@ func TestAccCodePipelineWebhook_tags(t *testing.T) {
 }
 
 func TestAccCodePipelineWebhook_disappears(t *testing.T) {
-	githubToken := envvar.SkipIfEnvVarEmpty(t, envvar.EnvVarGithubToken, envVarGithubTokenUsageWebhook)
+	githubToken := envvar.SkipIfEmpty(t, envvar.GithubToken, envVarGithubTokenUsageWebhook)
 
 	var v codepipeline.ListWebhookItem
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -250,7 +250,7 @@ func TestAccCodePipelineWebhook_disappears(t *testing.T) {
 }
 
 func TestAccCodePipelineWebhook_UpdateAuthentication_secretToken(t *testing.T) {
-	githubToken := envvar.SkipIfEnvVarEmpty(t, envvar.EnvVarGithubToken, envVarGithubTokenUsageWebhook)
+	githubToken := envvar.SkipIfEmpty(t, envvar.GithubToken, envVarGithubTokenUsageWebhook)
 
 	var v1, v2 codepipeline.ListWebhookItem
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

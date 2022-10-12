@@ -152,7 +152,7 @@ provider %[1]q {
   region     = %[4]q
   secret_key = %[5]q
 }
-`, acctest.ProviderNameAlternate, os.Getenv(envvar.EnvVarAlternateAccessKeyId), os.Getenv(envvar.EnvVarAlternateProfile), acctest.AlternateRegion(), os.Getenv(envvar.EnvVarAlternateSecretAccessKey))
+`, acctest.ProviderNameAlternate, os.Getenv(envvar.AlternateAccessKeyId), os.Getenv(envvar.AlternateProfile), acctest.AlternateRegion(), os.Getenv(envvar.AlternateSecretAccessKey))
 }
 
 func testAccTransitGatewayPeeringAttachmentAccepterConfig_base(rName string) string {

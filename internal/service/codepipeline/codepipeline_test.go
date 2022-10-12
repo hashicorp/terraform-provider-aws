@@ -476,7 +476,7 @@ func TestAccCodePipeline_withNamespace(t *testing.T) {
 }
 
 func TestAccCodePipeline_withGitHubV1SourceAction(t *testing.T) {
-	githubToken := envvar.SkipIfEnvVarEmpty(t, envvar.EnvVarGithubToken, "token with GitHub permissions to repository for CodePipeline source configuration")
+	githubToken := envvar.SkipIfEmpty(t, envvar.GithubToken, "token with GitHub permissions to repository for CodePipeline source configuration")
 
 	var v codepipeline.PipelineDeclaration
 	name := sdkacctest.RandString(10)

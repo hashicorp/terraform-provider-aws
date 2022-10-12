@@ -89,7 +89,7 @@ func testAccMember_disappears(t *testing.T) {
 func testAccMember_invitationDisableEmailNotification(t *testing.T) {
 	var macie2Output macie2.GetMemberOutput
 	resourceName := "aws_macie2_member.member"
-	email := envvar.SkipIfEnvVarEmpty(t, envVarAlternateEmail, envVarAlternateEmailMessageError)
+	email := envvar.SkipIfEmpty(t, envVarAlternateEmail, envVarAlternateEmailMessageError)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -130,7 +130,7 @@ func testAccMember_invite(t *testing.T) {
 	var macie2Output macie2.GetMemberOutput
 	resourceName := "aws_macie2_member.member"
 	dataSourceAlternate := "data.aws_caller_identity.member"
-	email := envvar.SkipIfEnvVarEmpty(t, envVarAlternateEmail, envVarAlternateEmailMessageError)
+	email := envvar.SkipIfEmpty(t, envVarAlternateEmail, envVarAlternateEmailMessageError)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -184,7 +184,7 @@ func testAccMember_inviteRemoved(t *testing.T) {
 	var macie2Output macie2.GetMemberOutput
 	resourceName := "aws_macie2_member.member"
 	dataSourceAlternate := "data.aws_caller_identity.member"
-	email := envvar.SkipIfEnvVarEmpty(t, envVarAlternateEmail, envVarAlternateEmailMessageError)
+	email := envvar.SkipIfEmpty(t, envVarAlternateEmail, envVarAlternateEmailMessageError)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -238,7 +238,7 @@ func testAccMember_status(t *testing.T) {
 	var macie2Output macie2.GetMemberOutput
 	resourceName := "aws_macie2_member.member"
 	dataSourceAlternate := "data.aws_caller_identity.member"
-	email := envvar.SkipIfEnvVarEmpty(t, envVarAlternateEmail, envVarAlternateEmailMessageError)
+	email := envvar.SkipIfEmpty(t, envVarAlternateEmail, envVarAlternateEmailMessageError)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {

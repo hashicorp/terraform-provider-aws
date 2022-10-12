@@ -16,7 +16,7 @@ import (
 
 func testAccInvitationAccepter_basic(t *testing.T) {
 	resourceName := "aws_macie2_invitation_accepter.member"
-	email := envvar.SkipIfEnvVarEmpty(t, envVarPrincipalEmail, envVarPrincipalEmailMessageError)
+	email := envvar.SkipIfEmpty(t, envVarPrincipalEmail, envVarPrincipalEmailMessageError)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {

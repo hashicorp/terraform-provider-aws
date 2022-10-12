@@ -203,10 +203,10 @@ func PreCheck(t *testing.T) {
 	// Since we are outside the scope of the Terraform configuration we must
 	// call Configure() to properly initialize the provider configuration.
 	testAccProviderConfigure.Do(func() {
-		envvar.FailIfAllEnvVarEmpty(t, []string{envvar.EnvVarProfile, envvar.EnvVarAccessKeyId, envvar.EnvVarContainerCredentialsFullURI}, "credentials for running acceptance testing")
+		envvar.FailIfAllEmpty(t, []string{envvar.Profile, envvar.AccessKeyId, envvar.ContainerCredentialsFullURI}, "credentials for running acceptance testing")
 
-		if os.Getenv(envvar.EnvVarAccessKeyId) != "" {
-			envvar.FailIfEnvVarEmpty(t, envvar.EnvVarSecretAccessKey, "static credentials value when using "+envvar.EnvVarAccessKeyId)
+		if os.Getenv(envvar.AccessKeyId) != "" {
+			envvar.FailIfEmpty(t, envvar.SecretAccessKey, "static credentials value when using "+envvar.AccessKeyId)
 		}
 
 		// Setting the AWS_DEFAULT_REGION environment variable here allows all tests to omit
@@ -217,7 +217,7 @@ func PreCheck(t *testing.T) {
 		//   * AWS_DEFAULT_REGION is required and checked above (should mention us-west-2 default)
 		//   * Region is automatically handled via shared AWS configuration file and still verified
 		region := Region()
-		os.Setenv(envvar.EnvVarDefaultRegion, region)
+		os.Setenv(envvar.DefaultRegion, region)
 
 		err := Provider.Configure(context.Background(), terraform.NewResourceConfigRaw(nil))
 		if err != nil {
@@ -594,15 +594,15 @@ func AccountID() string {
 }
 
 func Region() string {
-	return envvar.GetEnvVarWithDefault(envvar.EnvVarDefaultRegion, endpoints.UsWest2RegionID)
+	return envvar.GetWithDefault(envvar.DefaultRegion, endpoints.UsWest2RegionID)
 }
 
 func AlternateRegion() string {
-	return envvar.GetEnvVarWithDefault(envvar.EnvVarAlternateRegion, endpoints.UsEast1RegionID)
+	return envvar.GetWithDefault(envvar.AlternateRegion, endpoints.UsEast1RegionID)
 }
 
 func ThirdRegion() string {
-	return envvar.GetEnvVarWithDefault(envvar.EnvVarThirdRegion, endpoints.UsEast2RegionID)
+	return envvar.GetWithDefault(envvar.ThirdRegion, endpoints.UsEast2RegionID)
 }
 
 func Partition() string {
@@ -642,10 +642,10 @@ func thirdRegionPartition() string {
 }
 
 func PreCheckAlternateAccount(t *testing.T) {
-	envvar.SkipIfAllEnvVarEmpty(t, []string{envvar.EnvVarAlternateProfile, envvar.EnvVarAlternateAccessKeyId}, "credentials for running acceptance testing in alternate AWS account")
+	envvar.SkipIfAllEmpty(t, []string{envvar.AlternateProfile, envvar.AlternateAccessKeyId}, "credentials for running acceptance testing in alternate AWS account")
 
-	if os.Getenv(envvar.EnvVarAlternateAccessKeyId) != "" {
-		envvar.SkipIfEnvVarEmpty(t, envvar.EnvVarAlternateSecretAccessKey, "static credentials value when using "+envvar.EnvVarAlternateAccessKeyId)
+	if os.Getenv(envvar.AlternateAccessKeyId) != "" {
+		envvar.SkipIfEmpty(t, envvar.AlternateSecretAccessKey, "static credentials value when using "+envvar.AlternateAccessKeyId)
 	}
 }
 
@@ -659,11 +659,11 @@ func PreCheckPartitionHasService(serviceId string, t *testing.T) {
 
 func PreCheckMultipleRegion(t *testing.T, regions int) {
 	if Region() == AlternateRegion() {
-		t.Fatalf("%s and %s must be set to different values for acceptance tests", envvar.EnvVarDefaultRegion, envvar.EnvVarAlternateRegion)
+		t.Fatalf("%s and %s must be set to different values for acceptance tests", envvar.DefaultRegion, envvar.AlternateRegion)
 	}
 
 	if Partition() != alternateRegionPartition() {
-		t.Fatalf("%s partition (%s) does not match %s partition (%s)", envvar.EnvVarAlternateRegion, alternateRegionPartition(), envvar.EnvVarDefaultRegion, Partition())
+		t.Fatalf("%s partition (%s) does not match %s partition (%s)", envvar.AlternateRegion, alternateRegionPartition(), envvar.DefaultRegion, Partition())
 	}
 
 	if regions >= 3 {
@@ -672,15 +672,15 @@ func PreCheckMultipleRegion(t *testing.T, regions int) {
 		}
 
 		if Region() == ThirdRegion() {
-			t.Fatalf("%s and %s must be set to different values for acceptance tests", envvar.EnvVarDefaultRegion, envvar.EnvVarThirdRegion)
+			t.Fatalf("%s and %s must be set to different values for acceptance tests", envvar.DefaultRegion, envvar.ThirdRegion)
 		}
 
 		if AlternateRegion() == ThirdRegion() {
-			t.Fatalf("%s and %s must be set to different values for acceptance tests", envvar.EnvVarAlternateRegion, envvar.EnvVarThirdRegion)
+			t.Fatalf("%s and %s must be set to different values for acceptance tests", envvar.AlternateRegion, envvar.ThirdRegion)
 		}
 
 		if Partition() != thirdRegionPartition() {
-			t.Fatalf("%s partition (%s) does not match %s partition (%s)", envvar.EnvVarThirdRegion, thirdRegionPartition(), envvar.EnvVarDefaultRegion, Partition())
+			t.Fatalf("%s partition (%s) does not match %s partition (%s)", envvar.ThirdRegion, thirdRegionPartition(), envvar.DefaultRegion, Partition())
 		}
 	}
 
@@ -694,7 +694,7 @@ func PreCheckMultipleRegion(t *testing.T, regions int) {
 // PreCheckRegion checks that the test region is the specified region.
 func PreCheckRegion(t *testing.T, region string) {
 	if curr := Region(); curr != region {
-		t.Skipf("skipping tests; %s (%s) does not equal %s", envvar.EnvVarDefaultRegion, curr, region)
+		t.Skipf("skipping tests; %s (%s) does not equal %s", envvar.DefaultRegion, curr, region)
 	}
 }
 
@@ -702,7 +702,7 @@ func PreCheckRegion(t *testing.T, region string) {
 func PreCheckRegionNot(t *testing.T, regions ...string) {
 	for _, region := range regions {
 		if curr := Region(); curr == region {
-			t.Skipf("skipping tests; %s (%s) not supported", envvar.EnvVarDefaultRegion, curr)
+			t.Skipf("skipping tests; %s (%s) not supported", envvar.DefaultRegion, curr)
 		}
 	}
 }
@@ -710,7 +710,7 @@ func PreCheckRegionNot(t *testing.T, regions ...string) {
 // PreCheckAlternateRegionIs checks that the alternate test region is the specified region.
 func PreCheckAlternateRegionIs(t *testing.T, region string) {
 	if curr := AlternateRegion(); curr != region {
-		t.Skipf("skipping tests; %s (%s) does not equal %s", envvar.EnvVarAlternateRegion, curr, region)
+		t.Skipf("skipping tests; %s (%s) does not equal %s", envvar.AlternateRegion, curr, region)
 	}
 }
 
@@ -859,7 +859,7 @@ provider %[1]q {
   profile    = %[3]q
   secret_key = %[4]q
 }
-`, ProviderNameAlternate, os.Getenv(envvar.EnvVarAlternateAccessKeyId), os.Getenv(envvar.EnvVarAlternateProfile), os.Getenv(envvar.EnvVarAlternateSecretAccessKey))
+`, ProviderNameAlternate, os.Getenv(envvar.AlternateAccessKeyId), os.Getenv(envvar.AlternateProfile), os.Getenv(envvar.AlternateSecretAccessKey))
 }
 
 // Deprecated: Use ConfigMultipleRegionProvider instead
@@ -1231,7 +1231,7 @@ provider "aws" {
 }
 
 func PreCheckAssumeRoleARN(t *testing.T) {
-	envvar.SkipIfEnvVarEmpty(t, envvar.EnvVarAccAssumeRoleARN, "Amazon Resource Name (ARN) of existing IAM Role to assume for testing restricted permissions")
+	envvar.SkipIfEmpty(t, envvar.AccAssumeRoleARN, "Amazon Resource Name (ARN) of existing IAM Role to assume for testing restricted permissions")
 }
 
 func ConfigAssumeRolePolicy(policy string) string {
@@ -1243,7 +1243,7 @@ provider "aws" {
     policy   = %q
   }
 }
-`, os.Getenv(envvar.EnvVarAccAssumeRoleARN), policy)
+`, os.Getenv(envvar.AccAssumeRoleARN), policy)
 }
 
 const testAccProviderConfigBase = `

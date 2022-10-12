@@ -46,13 +46,13 @@ func SharedRegionalSweepClientWithContext(ctx context.Context, region string) (i
 		return client, nil
 	}
 
-	_, _, err := envvar.RequireOneOfEnvVar([]string{envvar.EnvVarProfile, envvar.EnvVarAccessKeyId, envvar.EnvVarContainerCredentialsFullURI}, "credentials for running sweepers")
+	_, _, err := envvar.RequireOneOf([]string{envvar.Profile, envvar.AccessKeyId, envvar.ContainerCredentialsFullURI}, "credentials for running sweepers")
 	if err != nil {
 		return nil, err
 	}
 
-	if os.Getenv(envvar.EnvVarAccessKeyId) != "" {
-		_, err := envvar.RequireEnvVar(envvar.EnvVarSecretAccessKey, "static credentials value when using "+envvar.EnvVarAccessKeyId)
+	if os.Getenv(envvar.AccessKeyId) != "" {
+		_, err := envvar.Require(envvar.SecretAccessKey, "static credentials value when using "+envvar.AccessKeyId)
 		if err != nil {
 			return nil, err
 		}
@@ -64,23 +64,23 @@ func SharedRegionalSweepClientWithContext(ctx context.Context, region string) (i
 		SuppressDebugLog: true,
 	}
 
-	if role := os.Getenv(envvar.EnvVarAssumeRoleARN); role != "" {
+	if role := os.Getenv(envvar.AssumeRoleARN); role != "" {
 		conf.AssumeRole.RoleARN = role
 
 		conf.AssumeRole.Duration = time.Duration(defaultSweeperAssumeRoleDurationSeconds) * time.Second
-		if v := os.Getenv(envvar.EnvVarAssumeRoleDuration); v != "" {
+		if v := os.Getenv(envvar.AssumeRoleDuration); v != "" {
 			d, err := strconv.Atoi(v)
 			if err != nil {
-				return nil, fmt.Errorf("environment variable %s: %w", envvar.EnvVarAssumeRoleDuration, err)
+				return nil, fmt.Errorf("environment variable %s: %w", envvar.AssumeRoleDuration, err)
 			}
 			conf.AssumeRole.Duration = time.Duration(d) * time.Second
 		}
 
-		if v := os.Getenv(envvar.EnvVarAssumeRoleExternalID); v != "" {
+		if v := os.Getenv(envvar.AssumeRoleExternalID); v != "" {
 			conf.AssumeRole.ExternalID = v
 		}
 
-		if v := os.Getenv(envvar.EnvVarAssumeRoleSessionName); v != "" {
+		if v := os.Getenv(envvar.AssumeRoleSessionName); v != "" {
 			conf.AssumeRole.SessionName = v
 		}
 	}

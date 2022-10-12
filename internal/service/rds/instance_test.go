@@ -6674,7 +6674,7 @@ provider "awsalternateaccountsameregion" {
 provider "awssameaccountalternateregion" {
   region = %[3]q
 }
-`, os.Getenv(envvar.EnvVarAlternateAccessKeyId), os.Getenv(envvar.EnvVarAlternateProfile), acctest.AlternateRegion(), os.Getenv(envvar.EnvVarAlternateSecretAccessKey))
+`, os.Getenv(envvar.AlternateAccessKeyId), os.Getenv(envvar.AlternateProfile), acctest.AlternateRegion(), os.Getenv(envvar.AlternateSecretAccessKey))
 }
 
 func testAccInstanceConfig_ReplicateSourceDB_DBSubnetGroupName_ramShared(rName string) string {
