@@ -758,15 +758,6 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_location_tracker_association":  location.DataSourceTrackerAssociation(),
 			"aws_location_tracker_associations": location.DataSourceTrackerAssociations(),
 
-			// "aws_arn":                     meta.DataSourceARN(), // Now implemented using Terraform Plugin Framework.
-			// "aws_billing_service_account": meta.DataSourceBillingServiceAccount(), // Now implemented using Terraform Plugin Framework.
-			// "aws_default_tags": meta.DataSourceDefaultTags(), // Now implemented using Terraform Plugin Framework.
-			// "aws_ip_ranges":    meta.DataSourceIPRanges(), // Now implemented using Terraform Plugin Framework.
-			// "aws_partition":    meta.DataSourcePartition(), // Now implemented using Terraform Plugin Framework.
-			// "aws_region":  meta.DataSourceRegion(), // Now implemented using Terraform Plugin Framework.
-			// "aws_regions": meta.DataSourceRegions(), // Now implemented using Terraform Plugin Framework.
-			// "aws_service": meta.DataSourceService(), // Now implemented using Terraform Plugin Framework.
-
 			"aws_memorydb_acl":             memorydb.DataSourceACL(),
 			"aws_memorydb_cluster":         memorydb.DataSourceCluster(),
 			"aws_memorydb_parameter_group": memorydb.DataSourceParameterGroup(),
