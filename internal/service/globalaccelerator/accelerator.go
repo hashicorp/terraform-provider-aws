@@ -30,6 +30,7 @@ func ResourceAccelerator() *schema.Resource {
 		Read:   resourceAcceleratorRead,
 		Update: resourceAcceleratorUpdate,
 		Delete: resourceAcceleratorDelete,
+
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -40,58 +41,6 @@ func ResourceAccelerator() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 255),
-					validation.StringMatch(regexp.MustCompile(`^[0-9A-Za-z-]+$`), "only alphanumeric characters and hyphens are allowed"),
-					validation.StringDoesNotMatch(regexp.MustCompile(`^-`), "cannot start with a hyphen"),
-					validation.StringDoesNotMatch(regexp.MustCompile(`-$`), "cannot end with a hyphen"),
-				),
-			},
-			"ip_address_type": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      globalaccelerator.IpAddressTypeIpv4,
-				ValidateFunc: validation.StringInSlice(globalaccelerator.IpAddressType_Values(), false),
-			},
-			"enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
-			},
-			"dns_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"hosted_zone_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"ip_sets": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"ip_addresses": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"ip_family": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
-				},
-			},
-			"ip_addresses": {
-				Type:     schema.TypeList,
-				Optional: true,
-				ForceNew: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
 			"attributes": {
 				Type:             schema.TypeList,
 				Optional:         true,
@@ -117,8 +66,59 @@ func ResourceAccelerator() *schema.Resource {
 					},
 				},
 			},
-			"tags": tftags.TagsSchema(),
-
+			"dns_name": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"enabled": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  true,
+			},
+			"hosted_zone_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"ip_address_type": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      globalaccelerator.IpAddressTypeIpv4,
+				ValidateFunc: validation.StringInSlice(globalaccelerator.IpAddressType_Values(), false),
+			},
+			"ip_addresses": {
+				Type:     schema.TypeList,
+				Optional: true,
+				ForceNew: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"ip_sets": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"ip_addresses": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+						"ip_family": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
+			"name": {
+				Type:     schema.TypeString,
+				Required: true,
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(1, 255),
+					validation.StringMatch(regexp.MustCompile(`^[0-9A-Za-z-]+$`), "only alphanumeric characters and hyphens are allowed"),
+					validation.StringDoesNotMatch(regexp.MustCompile(`^-`), "cannot start with a hyphen"),
+					validation.StringDoesNotMatch(regexp.MustCompile(`-$`), "cannot end with a hyphen"),
+				),
+			},
+			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
 		},
 
@@ -133,9 +133,9 @@ func resourceAcceleratorCreate(d *schema.ResourceData, meta interface{}) error {
 
 	name := d.Get("name").(string)
 	input := &globalaccelerator.CreateAcceleratorInput{
-		Name:             aws.String(name),
-		IdempotencyToken: aws.String(resource.UniqueId()),
 		Enabled:          aws.Bool(d.Get("enabled").(bool)),
+		IdempotencyToken: aws.String(resource.UniqueId()),
+		Name:             aws.String(name),
 		Tags:             Tags(tags.IgnoreAWS()),
 	}
 
@@ -143,7 +143,7 @@ func resourceAcceleratorCreate(d *schema.ResourceData, meta interface{}) error {
 		input.IpAddressType = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("ip_addresses"); ok {
+	if v, ok := d.GetOk("ip_addresses"); ok && len(v.([]interface{})) > 0 {
 		input.IpAddresses = flex.ExpandStringList(v.([]interface{}))
 	}
 
