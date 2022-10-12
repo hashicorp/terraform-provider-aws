@@ -19,7 +19,7 @@ func TestAccIPAMPoolCIDR_basic(t *testing.T) {
 	cidr_range := "10.0.0.0/24"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccIPAMPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckIPAMProvisionedPoolCIDRDestroy,
