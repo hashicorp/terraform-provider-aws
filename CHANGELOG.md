@@ -16,7 +16,6 @@ ENHANCEMENTS:
 * resource/aws_dx_connection: Add `vlan_id` attribute ([#27148](https://github.com/hashicorp/terraform-provider-aws/issues/27148))
 * resource/aws_opsworks_custom_layer: Add `load_based_auto_scaling` argument ([#10962](https://github.com/hashicorp/terraform-provider-aws/issues/10962))
 * resource/aws_vpc: Add `enable_network_address_usage_metrics` argument ([#27165](https://github.com/hashicorp/terraform-provider-aws/issues/27165))
-* resource/aws_prometheus_workspace: Add `cloudwatch_log_group_arn` argument ([#26444](https://github.com/hashicorp/terraform-provider-aws/issues/26444))
 
 ## 4.34.0 (October  6, 2022)
 
