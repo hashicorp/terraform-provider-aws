@@ -102,7 +102,6 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		UserName: aws.String(userName),
 	}
 
-	log.Printf("[DEBUG] Creating MemoryDB User: %s", input)
 	_, err := conn.CreateUserWithContext(ctx, input)
 
 	if err != nil {

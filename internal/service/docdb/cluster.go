@@ -445,7 +445,6 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 			createOpts.StorageEncrypted = aws.Bool(attr.(bool))
 		}
 
-		log.Printf("[DEBUG] DocDB Cluster create options: %s", createOpts)
 		var resp *docdb.CreateDBClusterOutput
 		err := resource.Retry(propagationTimeout, func() *resource.RetryError {
 			var err error

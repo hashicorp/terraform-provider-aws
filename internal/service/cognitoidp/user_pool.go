@@ -749,7 +749,6 @@ func resourceUserPoolCreate(d *schema.ResourceData, meta interface{}) error {
 	if len(tags) > 0 {
 		params.UserPoolTags = Tags(tags.IgnoreAWS())
 	}
-	log.Printf("[DEBUG] Creating Cognito User Pool: %s", params)
 
 	// IAM roles & policies can take some time to propagate and be attached
 	// to the User Pool
@@ -1186,8 +1185,6 @@ func resourceUserPoolUpdate(d *schema.ResourceData, meta interface{}) error {
 		if len(tags) > 0 {
 			params.UserPoolTags = Tags(tags.IgnoreAWS())
 		}
-
-		log.Printf("[DEBUG] Updating Cognito User Pool: %s", params)
 
 		// IAM roles & policies can take some time to propagate and be attached
 		// to the User Pool.

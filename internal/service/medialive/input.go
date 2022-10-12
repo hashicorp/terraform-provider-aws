@@ -334,7 +334,6 @@ func resourceInputUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			in.Sources = expandSources(d.Get("sources").(*schema.Set).List())
 		}
 
-		log.Printf("[DEBUG] Updating MediaLive Input (%s): %#v", d.Id(), in)
 		out, err := conn.UpdateInput(ctx, in)
 		if err != nil {
 			return create.DiagError(names.MediaLive, create.ErrActionUpdating, ResNameInput, d.Id(), err)
