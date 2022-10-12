@@ -353,41 +353,9 @@ func init() {
 		},
 	})
 
-	resource.AddTestSweepers("aws_vpc_ipam_pool_cidr_allocation", &resource.Sweeper{
-		Name: "aws_vpc_ipam_pool_cidr_allocation",
-		F:    sweepIPAMs,
-	})
-
-	resource.AddTestSweepers("aws_vpc_ipam_pool_cidr", &resource.Sweeper{
-		Name: "aws_vpc_ipam_pool_cidr",
-		F:    sweepIPAMs,
-		Dependencies: []string{
-			"aws_vpc_ipam_pool_cidr_allocation",
-		},
-	})
-
-	resource.AddTestSweepers("aws_vpc_ipam_pool", &resource.Sweeper{
-		Name: "aws_vpc_ipam_pool",
-		F:    sweepIPAMs,
-		Dependencies: []string{
-			"aws_vpc_ipam_pool_cidr",
-		},
-	})
-
-	resource.AddTestSweepers("aws_vpc_ipam_scope", &resource.Sweeper{
-		Name: "aws_vpc_ipam_scope",
-		F:    sweepIPAMs,
-		Dependencies: []string{
-			"aws_vpc_ipam_pool",
-		},
-	})
-
 	resource.AddTestSweepers("aws_vpc_ipam", &resource.Sweeper{
 		Name: "aws_vpc_ipam",
 		F:    sweepIPAMs,
-		Dependencies: []string{
-			"aws_vpc_ipam_scope",
-		},
 	})
 
 	resource.AddTestSweepers("aws_ami", &resource.Sweeper{
