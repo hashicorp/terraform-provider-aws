@@ -1266,7 +1266,7 @@ func ResourceChannel() *schema.Resource {
 										Required: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{},
-											// TODO complete output schema
+											// TODO complete output schema.
 										},
 									},
 									"name": {
@@ -1630,8 +1630,457 @@ func ResourceChannel() *schema.Resource {
 				Type:     schema.TypeSet,
 				Required: true,
 				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{},
-					// TODO finish input_attachment schema
+					Schema: map[string]*schema.Schema{
+						"automatic_input_failover_settings": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"secondary_input_id": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+									"error_clear_time_msec": {
+										Type:     schema.TypeInt,
+										Optional: true,
+									},
+									"failover_condition": {
+										Type:     schema.TypeSet,
+										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"failover_condition_settings": {
+													Type:     schema.TypeList,
+													Optional: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"audio_silence_settings": {
+																Type:     schema.TypeList,
+																Optional: true,
+																MaxItems: 1,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"audio_selector_name": {
+																			Type:     schema.TypeString,
+																			Required: true,
+																		},
+																		"audio_silence_threshold_msec": {
+																			Type:     schema.TypeInt,
+																			Optional: true,
+																		},
+																	},
+																},
+															},
+															"input_loss_settings": {
+																Type:     schema.TypeList,
+																Optional: true,
+																MaxItems: 1,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"input_loss_threshold_msec": {
+																			Type:     schema.TypeInt,
+																			Optional: true,
+																		},
+																	},
+																},
+															},
+															"video_black_settings": {
+																Type:     schema.TypeList,
+																Optional: true,
+																MaxItems: 1,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"black_detect_threshold": {
+																			Type:     schema.TypeFloat,
+																			Optional: true,
+																		},
+																		"video_black_threshold_msec": {
+																			Type: schema.TypeInt,
+																		},
+																	},
+																},
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+									"input_preference": {
+										Type:             schema.TypeString,
+										Optional:         true,
+										ValidateDiagFunc: enum.Validate[types.InputPreference](),
+									},
+								},
+							},
+						},
+						"input_attachment_name": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"input_id": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"input_settings": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"audio_selector": {
+										Type:     schema.TypeSet,
+										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"name": {
+													Type:     schema.TypeString,
+													Required: true,
+												},
+												"selector_settings": {
+													Type:     schema.TypeList,
+													Optional: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"audio_hls_rendition_selection": {
+																Type:     schema.TypeList,
+																Optional: true,
+																MaxItems: 1,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"group_id": {
+																			Type:     schema.TypeString,
+																			Required: true,
+																		},
+																		"name": {
+																			Type:     schema.TypeString,
+																			Required: true,
+																		},
+																	},
+																},
+															},
+															"audio_language_selection": {
+																Type:     schema.TypeList,
+																Optional: true,
+																MaxItems: 1,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"language_code": {
+																			Type:     schema.TypeString,
+																			Required: true,
+																		},
+																		"language_selection_policy": {
+																			Type:             schema.TypeString,
+																			Optional:         true,
+																			ValidateDiagFunc: enum.Validate[types.AudioLanguageSelectionPolicy](),
+																		},
+																	},
+																},
+															},
+															"audio_pid_selection": {
+																Type:     schema.TypeList,
+																Optional: true,
+																MaxItems: 1,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"pid": {
+																			Type:     schema.TypeInt,
+																			Required: true,
+																		},
+																	},
+																},
+															},
+															"audio_track_selection": {
+																Type:     schema.TypeList,
+																Optional: true,
+																MaxItems: 1,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"track": {
+																			Type:     schema.TypeSet,
+																			Required: true,
+																			Elem: &schema.Resource{
+																				Schema: map[string]*schema.Schema{
+																					"track": {
+																						Type:     schema.TypeInt,
+																						Required: true,
+																					},
+																				},
+																			},
+																		},
+																	},
+																},
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+									"caption_selector": {
+										Type:     schema.TypeSet,
+										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"name": {
+													Type:     schema.TypeString,
+													Required: true,
+												},
+												"language_code": {
+													Type:     schema.TypeString,
+													Optional: true,
+												},
+												"selector_settings": {
+													Type:     schema.TypeList,
+													Optional: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"ancillary_source_settings": {
+																Type:     schema.TypeList,
+																Optional: true,
+																MaxItems: 1,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"source_ancillary_channel_number": {
+																			Type:     schema.TypeInt,
+																			Optional: true,
+																		},
+																	},
+																},
+															},
+															"dvb_tdt_settings": {
+																Type:     schema.TypeList,
+																Optional: true,
+																MaxItems: 1,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"ocr_language": {
+																			Type:             schema.TypeString,
+																			Optional:         true,
+																			ValidateDiagFunc: enum.Validate[types.DvbSubOcrLanguage](),
+																		},
+																		"pid": {
+																			Type:     schema.TypeInt,
+																			Optional: true,
+																		},
+																	},
+																},
+															},
+															"embedded_source_settings": {
+																Type:     schema.TypeList,
+																Optional: true,
+																MaxItems: 1,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"convert_608_to_708": {
+																			Type:             schema.TypeString,
+																			Optional:         true,
+																			ValidateDiagFunc: enum.Validate[types.EmbeddedConvert608To708](),
+																		},
+																		"scte_20_detection": {
+																			Type:             schema.TypeString,
+																			Optional:         true,
+																			ValidateDiagFunc: enum.Validate[types.EmbeddedScte20Detection](),
+																		},
+																		"source_608_channel_number": {
+																			Type:     schema.TypeInt,
+																			Optional: true,
+																		},
+																		"source_608_track_number": {
+																			Type:     schema.TypeInt,
+																			Optional: true,
+																		},
+																	},
+																},
+															},
+															"scte_20_source_settings": {
+																Type:     schema.TypeList,
+																Optional: true,
+																MaxItems: 1,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"convert_608_to_708": {
+																			Type:             schema.TypeString,
+																			Optional:         true,
+																			ValidateDiagFunc: enum.Validate[types.Scte20Convert608To708](),
+																		},
+																		"source_608_channel_number": {
+																			Type:     schema.TypeInt,
+																			Optional: true,
+																		},
+																	},
+																},
+															},
+															"scte_27_source_settings": {
+																Type:     schema.TypeList,
+																Optional: true,
+																MaxItems: 1,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"ocr_language": {
+																			Type:             schema.TypeString,
+																			Optional:         true,
+																			ValidateDiagFunc: enum.Validate[types.Scte27OcrLanguage](),
+																		},
+																		"pid": {
+																			Type:     schema.TypeInt,
+																			Optional: true,
+																		},
+																	},
+																},
+															},
+															"teletext_source_settings": {
+																Type:     schema.TypeList,
+																Optional: true,
+																MaxItems: 1,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"output_rectangle": {
+																			Type:     schema.TypeList,
+																			Optional: true,
+																			MaxItems: 1,
+																			Elem: &schema.Resource{
+																				Schema: map[string]*schema.Schema{
+																					"height": {
+																						Type:     schema.TypeFloat,
+																						Required: true,
+																					},
+																					"left_offset": {
+																						Type:     schema.TypeFloat,
+																						Required: true,
+																					},
+																					"top_offset": {
+																						Type:     schema.TypeFloat,
+																						Required: true,
+																					},
+																					"width": {
+																						Type:     schema.TypeFloat,
+																						Required: true,
+																					},
+																				},
+																			},
+																		},
+																		"page_number": {
+																			Type:     schema.TypeString,
+																			Optional: true,
+																		},
+																	},
+																},
+															},
+														},
+													},
+												},
+												"deblock_filter": {
+													Type:             schema.TypeString,
+													Optional:         true,
+													ValidateDiagFunc: enum.Validate[types.InputDeblockFilter](),
+												},
+												"denoise_filter": {
+													Type:             schema.TypeString,
+													Optional:         true,
+													ValidateDiagFunc: enum.Validate[types.InputDenoiseFilter](),
+												},
+												"filter_strength": {
+													Type:             schema.TypeInt,
+													Optional:         true,
+													ValidateDiagFunc: validation.ToDiagFunc(validation.IntBetween(1, 5)),
+												},
+												"input_filter": {
+													Type:             schema.TypeString,
+													Optional:         true,
+													Computed:         true,
+													ValidateDiagFunc: enum.Validate[types.InputFilter](),
+												},
+												"network_input_settings": {
+													Type:     schema.TypeList,
+													Optional: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"hls_input_settings": {
+																Type:     schema.TypeList,
+																Optional: true,
+																MaxItems: 1,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"bandwidth": {
+																			Type:     schema.TypeInt,
+																			Optional: true,
+																		},
+																		"buffer_segments": {
+																			Type:     schema.TypeInt,
+																			Optional: true,
+																		},
+																		"retries": {
+																			Type:     schema.TypeInt,
+																			Optional: true,
+																		},
+																		"retry_interval": {
+																			Type:     schema.TypeInt,
+																			Optional: true,
+																		},
+																		"scte_35_source": {
+																			Type:             schema.TypeString,
+																			Optional:         true,
+																			ValidateDiagFunc: enum.Validate[types.HlsScte35SourceType](),
+																		},
+																	},
+																},
+															},
+															"server_validation": {
+																Type:             schema.TypeString,
+																Optional:         true,
+																ValidateDiagFunc: enum.Validate[types.NetworkInputServerValidation](),
+															},
+														},
+													},
+												},
+												"scte_35_pid": {
+													Type:     schema.TypeInt,
+													Optional: true,
+												},
+												"smpte_2038_data_preference": {
+													Type:             schema.TypeString,
+													Optional:         true,
+													ValidateDiagFunc: enum.Validate[types.Smpte2038DataPreference](),
+												},
+												"source_end_behavior": {
+													Type:             schema.TypeString,
+													Optional:         true,
+													ValidateDiagFunc: enum.Validate[types.InputSourceEndBehavior](),
+												},
+												"video_selector": {
+													Type:     schema.TypeList,
+													Optional: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"color_space": {
+																Type:             schema.TypeString,
+																Optional:         true,
+																ValidateDiagFunc: enum.Validate[types.VideoSelectorColorSpace](),
+															},
+															// TODO implement color_space_settings
+															"color_space_usage": {
+																Type:             schema.TypeString,
+																Optional:         true,
+																ValidateDiagFunc: enum.Validate[types.VideoSelectorColorSpaceUsage](),
+															},
+															// TODO implement selector_settings
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
 				},
 			},
 			"input_specification": {
