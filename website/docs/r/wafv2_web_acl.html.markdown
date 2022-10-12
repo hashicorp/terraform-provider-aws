@@ -385,11 +385,12 @@ The `statement` block supports the following arguments:
 * `byte_match_statement` - (Optional) Rule statement that defines a string match search for AWS WAF to apply to web requests. See [Byte Match Statement](#byte-match-statement) below for details.
 * `geo_match_statement` - (Optional) Rule statement used to identify web requests based on country of origin. See [GEO Match Statement](#geo-match-statement) below for details.
 * `ip_set_reference_statement` - (Optional) Rule statement used to detect web requests coming from particular IP addresses or address ranges. See [IP Set Reference Statement](#ip-set-reference-statement) below for details.
-* `label_match_statement` - (Optional) Rule statement that defines a string match search against labels that have been added to the web request by rules that have already run in the web ACL. See [Label Match Statement](#label-match-statement) below for details.  
+* `label_match_statement` - (Optional) Rule statement that defines a string match search against labels that have been added to the web request by rules that have already run in the web ACL. See [Label Match Statement](#label-match-statement) below for details.
 * `managed_rule_group_statement` - (Optional) Rule statement used to run the rules that are defined in a managed rule group.  This statement can not be nested. See [Managed Rule Group Statement](#managed-rule-group-statement) below for details.
 * `not_statement` - (Optional) Logical rule statement used to negate the results of another rule statement. See [NOT Statement](#not-statement) below for details.
 * `or_statement` - (Optional) Logical rule statement used to combine other rule statements with OR logic. See [OR Statement](#or-statement) below for details.
 * `rate_based_statement` - (Optional) Rate-based rule tracks the rate of requests for each originating `IP address`, and triggers the rule action when the rate exceeds a limit that you specify on the number of requests in any `5-minute` time span. This statement can not be nested. See [Rate Based Statement](#rate-based-statement) below for details.
+* `regex_match_statement` - (Optional) Rule statement used to search web request components for a match against a single regular expression. See [Regex Match Statement](#regex-match-statement) below for details.
 * `regex_pattern_set_reference_statement` - (Optional) Rule statement used to search web request components for matches with regular expressions. See [Regex Pattern Set Reference Statement](#regex-pattern-set-reference-statement) below for details.
 * `rule_group_reference_statement` - (Optional) Rule statement used to run the rules that are defined in an WAFv2 Rule Group. See [Rule Group Reference Statement](#rule-group-reference-statement) below for details.
 * `size_constraint_statement` - (Optional) Rule statement that compares a number of bytes against the size of a request component, using a comparison operator, such as greater than (>) or less than (<). See [Size Constraint Statement](#size-constraint-statement) below for more details.
@@ -413,8 +414,9 @@ The `byte_match_statement` block supports the following arguments:
 * `field_to_match` - (Optional) Part of a web request that you want AWS WAF to inspect. See [Field to Match](#field-to-match) below for details.
 * `positional_constraint` - (Required) Area within the portion of a web request that you want AWS WAF to search for `search_string`. Valid values include the following: `EXACTLY`, `STARTS_WITH`, `ENDS_WITH`, `CONTAINS`, `CONTAINS_WORD`. See the AWS [documentation](https://docs.aws.amazon.com/waf/latest/APIReference/API_ByteMatchStatement.html) for more information.
 * `search_string` - (Required) String value that you want AWS WAF to search for. AWS WAF searches only in the part of web requests that you designate for inspection in `field_to_match`. The maximum length of the value is 50 bytes.
-* `text_transformation` - (Required) Text transformations eliminate some of the unusual formatting that attackers use in web requests in an effort to bypass detection. See [Text Transformation](#text-transformation) below for details.
-
+* `text_transformation` - (Required) Text transformations eliminate some of the unusual formatting that attackers use in web requests in an effort to bypass detection.
+  At least one required.
+  See [Text Transformation](#text-transformation) below for details.
 
 ### GEO Match Statement
 
@@ -482,6 +484,18 @@ The `rate_based_statement` block supports the following arguments:
 * `limit` - (Required) Limit on requests per 5-minute period for a single originating IP address.
 * `scope_down_statement` - (Optional) Optional nested statement that narrows the scope of the rate-based statement to matching web requests. This can be any nestable statement, and you can nest statements at any level below this scope-down statement. See [Statement](#statement) above for details.
 
+### Regex Match Statement
+
+A rule statement used to search web request components for a match against a single regular expression.
+
+The `regex_match_statement` block supports the following arguments:
+
+* `regex_string` - (Required) String representing the regular expression. Minimum of `1` and maximum of `512` characters.
+* `field_to_match` - (Required) The part of a web request that you want AWS WAF to inspect. See [Field to Match](#field-to-match) below for details.
+* `text_transformation` - (Required) Text transformations eliminate some of the unusual formatting that attackers use in web requests in an effort to bypass detection.
+  At least one required.
+  See [Text Transformation](#text-transformation) below for details.
+
 ### Regex Pattern Set Reference Statement
 
 A rule statement used to search web request components for matches with regular expressions. To use this, create a `aws_wafv2_regex_pattern_set` that specifies the expressions that you want to detect, then use the `ARN` of that set in this statement. A web request matches the pattern set rule statement if the request component matches any of the patterns in the set.
@@ -490,7 +504,9 @@ The `regex_pattern_set_reference_statement` block supports the following argumen
 
 * `arn` - (Required) The Amazon Resource Name (ARN) of the Regex Pattern Set that this statement references.
 * `field_to_match` - (Optional) Part of a web request that you want AWS WAF to inspect. See [Field to Match](#field-to-match) below for details.
-* `text_transformation` - (Required) Text transformations eliminate some of the unusual formatting that attackers use in web requests in an effort to bypass detection. See [Text Transformation](#text-transformation) below for details.
+* `text_transformation` - (Required) Text transformations eliminate some of the unusual formatting that attackers use in web requests in an effort to bypass detection.
+  At least one required.
+  See [Text Transformation](#text-transformation) below for details.
 
 ### Rule Group Reference Statement
 
@@ -513,7 +529,9 @@ The `size_constraint_statement` block supports the following arguments:
 * `comparison_operator` - (Required) Operator to use to compare the request part to the size setting. Valid values include: `EQ`, `NE`, `LE`, `LT`, `GE`, or `GT`.
 * `field_to_match` - (Optional) Part of a web request that you want AWS WAF to inspect. See [Field to Match](#field-to-match) below for details.
 * `size` - (Required) Size, in bytes, to compare to the request part, after any transformations. Valid values are integers between 0 and 21474836480, inclusive.
-* `text_transformation` - (Required) Text transformations eliminate some of the unusual formatting that attackers use in web requests in an effort to bypass detection. See [Text Transformation](#text-transformation) below for details.
+* `text_transformation` - (Required) Text transformations eliminate some of the unusual formatting that attackers use in web requests in an effort to bypass detection.
+  At least one required.
+  See [Text Transformation](#text-transformation) below for details.
 
 ### SQL Injection Match Statement
 
@@ -522,7 +540,9 @@ An SQL injection match condition identifies the part of web requests, such as th
 The `sqli_match_statement` block supports the following arguments:
 
 * `field_to_match` - (Optional) Part of a web request that you want AWS WAF to inspect. See [Field to Match](#field-to-match) below for details.
-* `text_transformation` - (Required) Text transformations eliminate some of the unusual formatting that attackers use in web requests in an effort to bypass detection. See [Text Transformation](#text-transformation) below for details.
+* `text_transformation` - (Required) Text transformations eliminate some of the unusual formatting that attackers use in web requests in an effort to bypass detection.
+  At least one required.
+  See [Text Transformation](#text-transformation) below for details.
 
 ### XSS Match Statement
 
@@ -531,7 +551,9 @@ The XSS match statement provides the location in requests that you want AWS WAF 
 The `xss_match_statement` block supports the following arguments:
 
 * `field_to_match` - (Optional) Part of a web request that you want AWS WAF to inspect. See [Field to Match](#field-to-match) below for details.
-* `text_transformation` - (Required) Text transformations eliminate some of the unusual formatting that attackers use in web requests in an effort to bypass detection. See [Text Transformation](#text-transformation) below for details.
+* `text_transformation` - (Required) Text transformations eliminate some of the unusual formatting that attackers use in web requests in an effort to bypass detection.
+  At least one required.
+  See [Text Transformation](#text-transformation) below for details.
 
 ### Excluded Rule
 
@@ -545,12 +567,13 @@ The part of a web request that you want AWS WAF to inspect. Include the single `
 
 The `field_to_match` block supports the following arguments:
 
-~> **NOTE:** Only one of `all_query_arguments`, `body`, `cookies`, `json_body`, `method`, `query_string`, `single_header`, `single_query_argument`, or `uri_path` can be specified.
+~> **NOTE:** Only one of `all_query_arguments`, `body`, `cookies`, `headers`, `json_body`, `method`, `query_string`, `single_header`, `single_query_argument`, or `uri_path` can be specified.
 An empty configuration block `{}` should be used when specifying `all_query_arguments`, `body`, `method`, or `query_string` attributes.
 
 * `all_query_arguments` - (Optional) Inspect all query arguments.
 * `body` - (Optional) Inspect the request body, which immediately follows the request headers.
-* `cookies` - (Optional) Inspect the request cookies.
+* `cookies` - (Optional) Inspect the cookies in the web request. See [Cookies](#cookies) below for details.
+* `headers` - (Optional) Inspect the request headers. See [Headers](#headers) below for details.
 * `json_body` - (Optional) Inspect the request body as JSON. See [JSON Body](#json-body) for details.
 * `method` - (Optional) Inspect the HTTP method. The method indicates the type of operation that the request is asking the origin to perform.
 * `query_string` - (Optional) Inspect the query string. This is the part of a URL that appears after a `?` character, if any.
@@ -578,6 +601,19 @@ The `ip_set_forwarded_ip_config` block supports the following arguments:
 * `fallback_behavior` - (Required) - Match status to assign to the web request if the request doesn't have a valid IP address in the specified position. Valid values include: `MATCH` or `NO_MATCH`.
 * `header_name` - (Required) - Name of the HTTP header to use for the IP address.
 * `position` - (Required) - Position in the header to search for the IP address. Valid values include: `FIRST`, `LAST`, or `ANY`. If `ANY` is specified and the header contains more than 10 IP addresses, AWS WAFv2 inspects the last 10.
+
+### Headers
+
+Inspect the request headers.
+
+The `headers` block supports the following arguments:
+
+* `match_pattern` - (Required) The filter to use to identify the subset of headers to inspect in a web request. The `match_pattern` block supports only one of the following arguments:
+    * `all` - An empty configuration block that is used for inspecting all headers.
+    * `included_headers` - An array of strings that will be used for inspecting headers that have a key that matches one of the provided values.
+    * `excluded_headers` - An array of strings that will be used for inspecting headers that do not have a key that matches one of the provided values.
+* `match_scope` - (Required) The parts of the headers to inspect with the rule inspection criteria. If you specify `All`, AWS WAF inspects both keys and values. Valid values include the following: `ALL`, `Key`, `Value`.
+* `oversize_handling` - (Required) Oversize handling tells AWS WAF what to do with a web request when the request component that the rule inspects is over the limits. Valid values include the following: `CONTINUE`, `MATCH`, `NO_MATCH`. See the AWS [documentation](https://docs.aws.amazon.com/waf/latest/developerguide/waf-rule-statement-oversize-handling.html) for more information.
 
 ### JSON Body
 

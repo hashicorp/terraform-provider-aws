@@ -2,9 +2,11 @@
 package conns
 
 import (
+	awsv2 "github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/comprehend"
 	"github.com/aws/aws-sdk-go-v2/service/fis"
 	"github.com/aws/aws-sdk-go-v2/service/identitystore"
+	"github.com/aws/aws-sdk-go-v2/service/inspector2"
 	"github.com/aws/aws-sdk-go-v2/service/kendra"
 	"github.com/aws/aws-sdk-go-v2/service/medialive"
 	"github.com/aws/aws-sdk-go-v2/service/rolesanywhere"
@@ -84,6 +86,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/connectcontactlens"
 	"github.com/aws/aws-sdk-go/service/connectparticipant"
 	"github.com/aws/aws-sdk-go/service/connectwisdomservice"
+	"github.com/aws/aws-sdk-go/service/controltower"
 	"github.com/aws/aws-sdk-go/service/costandusagereportservice"
 	"github.com/aws/aws-sdk-go/service/costexplorer"
 	"github.com/aws/aws-sdk-go/service/customerprofiles"
@@ -144,7 +147,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/aws/aws-sdk-go/service/imagebuilder"
 	"github.com/aws/aws-sdk-go/service/inspector"
-	"github.com/aws/aws-sdk-go/service/inspector2"
 	"github.com/aws/aws-sdk-go/service/iot"
 	"github.com/aws/aws-sdk-go/service/iot1clickdevicesservice"
 	"github.com/aws/aws-sdk-go/service/iot1clickprojects"
@@ -305,12 +307,13 @@ import (
 	"github.com/aws/aws-sdk-go/service/workspaces"
 	"github.com/aws/aws-sdk-go/service/workspacesweb"
 	"github.com/aws/aws-sdk-go/service/xray"
-	"github.com/hashicorp/terraform-provider-aws/internal/intf"
+	"github.com/hashicorp/terraform-provider-aws/internal/experimental/intf"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 type AWSClient struct {
 	AccountID                 string
+	Config                    *awsv2.Config
 	DefaultTagsConfig         *tftags.DefaultConfig
 	DNSSuffix                 string
 	IgnoreTagsConfig          *tftags.IgnoreConfig
@@ -392,6 +395,7 @@ type AWSClient struct {
 	ConnectConn                      *connect.Connect
 	ConnectContactLensConn           *connectcontactlens.ConnectContactLens
 	ConnectParticipantConn           *connectparticipant.ConnectParticipant
+	ControlTowerConn                 *controltower.ControlTower
 	CustomerProfilesConn             *customerprofiles.CustomerProfiles
 	DAXConn                          *dax.DAX
 	DLMConn                          *dlm.DLM
@@ -457,7 +461,7 @@ type AWSClient struct {
 	IdentityStoreConn                *identitystore.Client
 	ImageBuilderConn                 *imagebuilder.Imagebuilder
 	InspectorConn                    *inspector.Inspector
-	Inspector2Conn                   *inspector2.Inspector2
+	Inspector2Conn                   *inspector2.Client
 	IoTConn                          *iot.IoT
 	IoT1ClickDevicesConn             *iot1clickdevicesservice.IoT1ClickDevicesService
 	IoT1ClickProjectsConn            *iot1clickprojects.IoT1ClickProjects

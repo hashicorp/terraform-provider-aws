@@ -27,7 +27,7 @@ resource "aws_ami" "example" {
   name                = "terraform-example"
   virtualization_type = "hvm"
   root_device_name    = "/dev/xvda"
-
+  imds_support        = "v2.0" # Enforce usage of IMDSv2. You can safely remove this line if your application explicitly doesn't support it.
   ebs_block_device {
     device_name = "/dev/xvda"
     snapshot_id = "snap-xxxxxxxx"
@@ -56,6 +56,7 @@ The following arguments are supported:
   should be attached to created instances. The structure of this block is described below.
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `tpm_support` - (Optional) If the image is configured for NitroTPM support, the value is `v2.0`. For more information, see [NitroTPM](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/nitrotpm.html) in the Amazon Elastic Compute Cloud User Guide.
+* `imds_support` - (Optional) If EC2 instances started from this image should require the use of the Instance Metadata Service V2 (IMDSv2), set this argument to `v2.0`. For more information, see [Configure instance metadata options for new instances](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/configuring-IMDS-new-instances.html#configure-IMDS-new-instances-ami-configuration).
 
 When `virtualization_type` is "paravirtual" the following additional arguments apply:
 

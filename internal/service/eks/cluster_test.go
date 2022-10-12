@@ -18,6 +18,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+const (
+	clusterVersionUpgradeInitial = "1.21"
+	clusterVersionUpgradeUpdated = "1.22"
+)
+
 func TestAccEKSCluster_basic(t *testing.T) {
 	var cluster eks.Cluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -173,14 +178,14 @@ func TestAccEKSCluster_Encryption_versionUpdate(t *testing.T) {
 		CheckDestroy:             testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_encryptionVersion(rName, "1.19"),
+				Config: testAccClusterConfig_encryptionVersion(rName, clusterVersionUpgradeInitial),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &cluster1),
 					resource.TestCheckResourceAttr(resourceName, "encryption_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "encryption_config.0.provider.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "encryption_config.0.provider.0.key_arn", kmsKeyResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "encryption_config.0.resources.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "version", "1.19"),
+					resource.TestCheckResourceAttr(resourceName, "version", clusterVersionUpgradeInitial),
 				),
 			},
 			{
@@ -189,7 +194,7 @@ func TestAccEKSCluster_Encryption_versionUpdate(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccClusterConfig_encryptionVersion(rName, "1.20"),
+				Config: testAccClusterConfig_encryptionVersion(rName, clusterVersionUpgradeUpdated),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &cluster2),
 					testAccCheckClusterNotRecreated(&cluster1, &cluster2),
@@ -197,7 +202,7 @@ func TestAccEKSCluster_Encryption_versionUpdate(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "encryption_config.0.provider.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "encryption_config.0.provider.0.key_arn", kmsKeyResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "encryption_config.0.resources.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "version", "1.20"),
+					resource.TestCheckResourceAttr(resourceName, "version", clusterVersionUpgradeUpdated),
 				),
 			},
 		},
@@ -216,10 +221,10 @@ func TestAccEKSCluster_version(t *testing.T) {
 		CheckDestroy:             testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_version(rName, "1.19"),
+				Config: testAccClusterConfig_version(rName, clusterVersionUpgradeInitial),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &cluster1),
-					resource.TestCheckResourceAttr(resourceName, "version", "1.19"),
+					resource.TestCheckResourceAttr(resourceName, "version", clusterVersionUpgradeInitial),
 				),
 			},
 			{
@@ -228,11 +233,11 @@ func TestAccEKSCluster_version(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccClusterConfig_version(rName, "1.20"),
+				Config: testAccClusterConfig_version(rName, clusterVersionUpgradeUpdated),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &cluster2),
 					testAccCheckClusterNotRecreated(&cluster1, &cluster2),
-					resource.TestCheckResourceAttr(resourceName, "version", "1.20"),
+					resource.TestCheckResourceAttr(resourceName, "version", clusterVersionUpgradeUpdated),
 				),
 			},
 		},
@@ -594,6 +599,36 @@ func TestAccEKSCluster_Network_ipFamily(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "kubernetes_network_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "kubernetes_network_config.0.ip_family", "ipv4"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccEKSCluster_Outpost_create(t *testing.T) {
+	var cluster eks.Cluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_eks_cluster.test"
+	controlPlaneInstanceType := "m5d.large"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, eks.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_outpost(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(resourceName, &cluster),
+					resource.TestCheckResourceAttr(resourceName, "outpost_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "outpost_config.0.control_plane_instance_type", controlPlaneInstanceType),
+					resource.TestCheckResourceAttr(resourceName, "outpost_config.0.outpost_arns.#", "1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -1005,4 +1040,37 @@ resource "aws_eks_cluster" "test" {
   depends_on = [aws_iam_role_policy_attachment.test-AmazonEKSClusterPolicy]
 }
 `, rName, ipFamily))
+}
+
+func testAccClusterConfig_outpost(rName string) string {
+	return acctest.ConfigCompose(testAccClusterConfig_Base(rName), fmt.Sprintf(`
+data "aws_iam_role" "test" {
+  name = "AmazonEKSLocalOutpostClusterRole"
+}
+
+data "aws_outposts_outposts" "test" {}
+
+data "aws_subnets" test {
+  filter {
+    name   = "outpost-arn"
+    values = [tolist(data.aws_outposts_outposts.test.arns)[0]]
+  }
+}
+
+resource "aws_eks_cluster" "test" {
+  name     = %[1]q
+  role_arn = data.aws_iam_role.test.arn
+
+  outpost_config {
+    control_plane_instance_type = "m5d.large"
+    outpost_arns                = [tolist(data.aws_outposts_outposts.test.arns)[0]]
+  }
+
+  vpc_config {
+    endpoint_private_access = true
+    endpoint_public_access  = false
+    subnet_ids              = [tolist(data.aws_subnets.test.ids)[0]]
+  }
+}
+`, rName))
 }

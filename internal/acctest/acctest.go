@@ -1008,7 +1008,7 @@ func DeleteResource(resource *schema.Resource, d *schema.ResourceData, meta inte
 
 		for i := range diags {
 			if diags[i].Severity == diag.Error {
-				return fmt.Errorf("error deleting resource: %s", diags[i].Summary)
+				return fmt.Errorf("deleting resource: %s", diags[i].Summary)
 			}
 		}
 

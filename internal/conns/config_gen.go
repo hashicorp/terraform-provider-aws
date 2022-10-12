@@ -76,6 +76,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/connectcontactlens"
 	"github.com/aws/aws-sdk-go/service/connectparticipant"
 	"github.com/aws/aws-sdk-go/service/connectwisdomservice"
+	"github.com/aws/aws-sdk-go/service/controltower"
 	"github.com/aws/aws-sdk-go/service/costandusagereportservice"
 	"github.com/aws/aws-sdk-go/service/costexplorer"
 	"github.com/aws/aws-sdk-go/service/customerprofiles"
@@ -135,7 +136,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/aws/aws-sdk-go/service/imagebuilder"
 	"github.com/aws/aws-sdk-go/service/inspector"
-	"github.com/aws/aws-sdk-go/service/inspector2"
 	"github.com/aws/aws-sdk-go/service/iot"
 	"github.com/aws/aws-sdk-go/service/iot1clickdevicesservice"
 	"github.com/aws/aws-sdk-go/service/iot1clickprojects"
@@ -361,6 +361,7 @@ func (c *Config) clientConns(client *AWSClient, sess *session.Session) {
 	client.ConnectConn = connect.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.Connect])}))
 	client.ConnectContactLensConn = connectcontactlens.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.ConnectContactLens])}))
 	client.ConnectParticipantConn = connectparticipant.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.ConnectParticipant])}))
+	client.ControlTowerConn = controltower.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.ControlTower])}))
 	client.CustomerProfilesConn = customerprofiles.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.CustomerProfiles])}))
 	client.DAXConn = dax.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.DAX])}))
 	client.DLMConn = dlm.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.DLM])}))
@@ -423,7 +424,6 @@ func (c *Config) clientConns(client *AWSClient, sess *session.Session) {
 	client.IVSConn = ivs.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.IVS])}))
 	client.ImageBuilderConn = imagebuilder.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.ImageBuilder])}))
 	client.InspectorConn = inspector.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.Inspector])}))
-	client.Inspector2Conn = inspector2.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.Inspector2])}))
 	client.IoTConn = iot.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.IoT])}))
 	client.IoT1ClickDevicesConn = iot1clickdevicesservice.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.IoT1ClickDevices])}))
 	client.IoT1ClickProjectsConn = iot1clickprojects.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.IoT1ClickProjects])}))

@@ -137,6 +137,7 @@ provider "aws" {
   <li><code>connect</code></li>
   <li><code>connectcontactlens</code></li>
   <li><code>connectparticipant</code></li>
+  <li><code>controltower</code></li>
   <li><code>cur</code> (or <code>costandusagereportservice</code>)</li>
   <li><code>customerprofiles</code></li>
   <li><code>databrew</code> (or <code>gluedatabrew</code>)</li>
@@ -202,7 +203,7 @@ provider "aws" {
   <li><code>identitystore</code></li>
   <li><code>imagebuilder</code></li>
   <li><code>inspector</code></li>
-  <li><code>inspector2</code></li>
+  <li><code>inspector2</code> (or <code>inspectorv2</code>)</li>
   <li><code>iot</code></li>
   <li><code>iot1clickdevices</code> (or <code>iot1clickdevicesservice</code>)</li>
   <li><code>iot1clickprojects</code></li>

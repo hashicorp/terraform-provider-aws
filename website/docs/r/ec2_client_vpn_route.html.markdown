@@ -47,7 +47,7 @@ The following arguments are supported:
 
 * `client_vpn_endpoint_id` - (Required) The ID of the Client VPN endpoint.
 * `destination_cidr_block` - (Required) The IPv4 address range, in CIDR notation, of the route destination.
-* `description` - (Optional) A brief description of the authorization rule.
+* `description` - (Optional) A brief description of the route.
 * `target_vpc_subnet_id` - (Required) The ID of the Subnet to route the traffic through. It must already be attached to the Client VPN.
 
 ## Attributes Reference

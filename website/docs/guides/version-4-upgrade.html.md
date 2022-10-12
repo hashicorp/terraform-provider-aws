@@ -908,7 +908,7 @@ resource "aws_s3_bucket" "example" {
 }
 
 resource "aws_s3_bucket_policy" "example" {
-  bucket = aws_s3_bucket.accesslogs_bucket.id
+  bucket = aws_s3_bucket.example.id
   policy = <<EOF
 {
   "Id": "Policy1446577137248",
@@ -2207,9 +2207,9 @@ You will get the following error after upgrading:
 ```
 │ Error: Value for unconfigurable attribute
 │
-│   with aws_s3_bucket.accesslogs_bucket,
-│   on main.tf line 1, in resource "aws_s3_bucket" "accesslogs_bucket":
-│    1: resource "aws_s3_bucket" "accesslogs_bucket" {
+│   with aws_s3_bucket.example,
+│   on main.tf line 1, in resource "aws_s3_bucket" "example":
+│    1: resource "aws_s3_bucket" "example" {
 │
 │ Can't configure a value for "policy": its value will be decided automatically based on the result of applying this configuration.
 ```
@@ -2225,7 +2225,7 @@ resource "aws_s3_bucket" "example" {
 }
 
 resource "aws_s3_bucket_policy" "example" {
-  bucket = aws_s3_bucket.accesslogs_bucket.id
+  bucket = aws_s3_bucket.example.id
   policy = <<EOF
 {
   "Id": "Policy1446577137248",
@@ -2304,9 +2304,9 @@ You will get the following error after upgrading:
 ```
 │ Error: Value for unconfigurable attribute
 │
-│   with aws_s3_bucket.source,
-│   on main.tf line 1, in resource "aws_s3_bucket" "source":
-│    1: resource "aws_s3_bucket" "source" {
+│   with aws_s3_bucket.example,
+│   on main.tf line 1, in resource "aws_s3_bucket" "example":
+│    1: resource "aws_s3_bucket" "example" {
 │
 │ Can't configure a value for "replication_configuration": its value will be decided automatically based on the result of applying this configuration.
 ```
@@ -2323,7 +2323,7 @@ resource "aws_s3_bucket" "example" {
 }
 
 resource "aws_s3_bucket_replication_configuration" "example" {
-  bucket = aws_s3_bucket.source.id
+  bucket = aws_s3_bucket.example.id
   role   = aws_iam_role.replication.arn
 
   rule {
