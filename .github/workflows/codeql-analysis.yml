@@ -3,12 +3,6 @@
 name: "Code Scanning - Action"
 
 on:
-  push:
-    branches: [main]
-  pull_request:
-    paths:
-      - internal/**
-      - .github/workflows/codeql-analysis.yml
   schedule:
     #        ┌───────────── minute (0 - 59)
     #        │  ┌───────────── hour (0 - 23)
