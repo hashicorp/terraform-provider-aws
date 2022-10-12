@@ -14,7 +14,7 @@ import (
 )
 
 func init() {
-	registerFWDataSourceFactory(newDataSourceARN)
+	registerFrameworkDataSourceFactory(newDataSourceARN)
 }
 
 // newDataSourceARN instantiates a new DataSource for the aws_arn data source.

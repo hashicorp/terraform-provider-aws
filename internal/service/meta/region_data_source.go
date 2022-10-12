@@ -14,7 +14,7 @@ import (
 )
 
 func init() {
-	registerFWDataSourceFactory(newDataSourceRegion)
+	registerFrameworkDataSourceFactory(newDataSourceRegion)
 }
 
 // newDataSourceRegion instantiates a new DataSource for the aws_region data source.

@@ -15,7 +15,7 @@ import (
 )
 
 func init() {
-	registerFWDataSourceFactory(newDataSourceDefaultTags)
+	registerFrameworkDataSourceFactory(newDataSourceDefaultTags)
 }
 
 // newDataSourceDefaultTags instantiates a new DataSource for the aws_default_tags data source.

@@ -13,7 +13,7 @@ import (
 )
 
 func init() {
-	registerFWDataSourceFactory(newDataSourceBillingServiceAccount)
+	registerFrameworkDataSourceFactory(newDataSourceBillingServiceAccount)
 }
 
 // newDataSourceBillingServiceAccount instantiates a new DataSource for the aws_billing_service_account data source.

@@ -11,7 +11,7 @@ import (
 
 var sd = &serviceData{}
 
-func registerFWDataSourceFactory(factory func(context.Context) (datasource.DataSource, error)) {
+func registerFrameworkDataSourceFactory(factory func(context.Context) (datasource.DataSource, error)) {
 	sd.fwDataSourceFactories = append(sd.fwDataSourceFactories, factory)
 }
 

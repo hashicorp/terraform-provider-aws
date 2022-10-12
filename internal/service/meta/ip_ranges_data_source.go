@@ -21,7 +21,7 @@ import (
 )
 
 func init() {
-	registerFWDataSourceFactory(newDataSourceIPRanges)
+	registerFrameworkDataSourceFactory(newDataSourceIPRanges)
 }
 
 // newDataSourceIPRanges instantiates a new DataSource for the aws_ip_ranges data source.

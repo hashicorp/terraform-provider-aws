@@ -14,7 +14,7 @@ import (
 )
 
 func init() {
-    registerFWDataSourceFactory(newDataSource{{ .Name }})
+    registerFrameworkDataSourceFactory(newDataSource{{ .Name }})
 }
 
 // newDataSource{{ .Name }} instantiates a new DataSource for the {{ .TFTypeName }} data source.
