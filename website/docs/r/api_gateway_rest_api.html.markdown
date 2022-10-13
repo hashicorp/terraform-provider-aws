@@ -71,7 +71,6 @@ resource "aws_api_gateway_stage" "example" {
 ### OpenAPI Specification with Private Endpoints
 Using `put_rest_api_mode` = `merge` when importing the OpenAPI Specification, the AWS control plane will not delete all existing literal properties that are not explicitly set in the OpenAPI definition. Impacted API Gateway properties: ApiKeySourceType, BinaryMediaTypes, Description, EndpointConfiguration, MinimumCompressionSize, Name, Policy).
 
-
 ```terraform
 data "aws_availability_zones" "available" {
   state = "available"

@@ -81,7 +81,6 @@ resource "aws_wafv2_web_acl_association" "example" {
 }
 ```
 
-
 ## Argument Reference
 
 The following arguments are supported:

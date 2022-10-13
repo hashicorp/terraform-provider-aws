@@ -201,7 +201,6 @@ This configuration block supports the following:
 * `instance_pools_to_use_count` - (Optional) Number of Spot pools across which to allocate your target Spot capacity. Valid only when Spot `allocation_strategy` is set to `lowestPrice`. Default: `1`.
 * `maintenance_strategies` - (Optional) Nested argument containing maintenance strategies for managing your Spot Instances that are at an elevated risk of being interrupted. Defined below.
 
-
 ### maintenance_strategies
 
 * `capacity_rebalance` - (Optional) Nested argument containing the capacity rebalance for your fleet request. Defined below.
@@ -209,8 +208,6 @@ This configuration block supports the following:
 ### capacity_rebalance
 
 * `replacement_strategy` - (Optional) The replacement strategy to use. Only available for fleets of `type` set to `maintain`. Valid values: `launch`.
-
-
 
 ### target_capacity_specification
 

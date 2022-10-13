@@ -273,7 +273,6 @@ The `launch_template_config` block supports the following:
 
 * `replacement_strategy` - (Optional) The replacement strategy to use. Only available for spot fleets with `fleet_type` set to `maintain`. Valid values: `launch`.
 
-
 ### Overrides
 
 * `availability_zone` - (Optional) The availability zone in which to place the request.

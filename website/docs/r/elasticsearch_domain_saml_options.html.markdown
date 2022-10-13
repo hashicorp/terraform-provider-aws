@@ -64,7 +64,6 @@ The following arguments are optional:
 * `session_timeout_minutes` - (Optional) Duration of a session in minutes after a user logs in. Default is 60. Maximum value is 1,440.
 * `subject_key` - (Optional) Custom SAML attribute to use for user names. Default is an empty string - `""`. This will cause Elasticsearch to use the `NameID` element of the `Subject`, which is the default location for name identifiers in the SAML specification.
 
-
 #### idp
 
 * `entity_id` - (Required) The unique Entity ID of the application in SAML Identity Provider.

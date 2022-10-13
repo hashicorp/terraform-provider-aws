@@ -325,4 +325,3 @@ $ terraform import aws_appflow_connector_profile.profile arn:aws:appflow:us-west
 
 [1]: https://docs.aws.amazon.com/appflow/1.0/APIReference/Welcome.html
 [2]: https://docs.aws.amazon.com/appflow/1.0/APIReference/API_CreateConnectorProfile.html
-

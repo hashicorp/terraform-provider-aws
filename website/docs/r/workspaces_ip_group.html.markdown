@@ -63,4 +63,3 @@ WorkSpaces IP groups can be imported using their GroupID, e.g.,
 ```
 $ terraform import aws_workspaces_ip_group.example wsipg-488lrtl3k
 ```
-

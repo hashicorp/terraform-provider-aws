@@ -473,7 +473,6 @@ Each `tag_specifications` block supports the following:
 * `resource_type` - The type of resource to tag.
 * `tags` - A map of tags to assign to the resource.
 
-
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:

@@ -752,7 +752,6 @@ number of configuration problems. See the [AWS Docs on Load Balancer
 Troubleshooting](https://docs.aws.amazon.com/ElasticLoadBalancing/latest/DeveloperGuide/elb-troubleshooting.html)
 for more information.
 
-
 ## Import
 
 Auto Scaling Groups can be imported using the `name`, e.g.,
