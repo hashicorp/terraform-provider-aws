@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/envvar"
 	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -6673,7 +6674,7 @@ provider "awsalternateaccountsameregion" {
 provider "awssameaccountalternateregion" {
   region = %[3]q
 }
-`, os.Getenv(conns.EnvVarAlternateAccessKeyId), os.Getenv(conns.EnvVarAlternateProfile), acctest.AlternateRegion(), os.Getenv(conns.EnvVarAlternateSecretAccessKey))
+`, os.Getenv(envvar.AlternateAccessKeyId), os.Getenv(envvar.AlternateProfile), acctest.AlternateRegion(), os.Getenv(envvar.AlternateSecretAccessKey))
 }
 
 func testAccInstanceConfig_ReplicateSourceDB_DBSubnetGroupName_ramShared(rName string) string {

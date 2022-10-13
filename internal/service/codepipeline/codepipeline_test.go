@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/envvar"
 	tfcodepipeline "github.com/hashicorp/terraform-provider-aws/internal/service/codepipeline"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -475,7 +476,7 @@ func TestAccCodePipeline_withNamespace(t *testing.T) {
 }
 
 func TestAccCodePipeline_withGitHubV1SourceAction(t *testing.T) {
-	githubToken := conns.SkipIfEnvVarEmpty(t, conns.EnvVarGithubToken, "token with GitHub permissions to repository for CodePipeline source configuration")
+	githubToken := envvar.SkipIfEmpty(t, envvar.GithubToken, "token with GitHub permissions to repository for CodePipeline source configuration")
 
 	var v codepipeline.PipelineDeclaration
 	name := sdkacctest.RandString(10)

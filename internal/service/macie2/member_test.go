@@ -11,15 +11,16 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/envvar"
 	tfmacie2 "github.com/hashicorp/terraform-provider-aws/internal/service/macie2"
 )
 
 const (
-	EnvVarPrincipalEmail             = "AWS_MACIE2_ACCOUNT_EMAIL"
-	EnvVarAlternateEmail             = "AWS_MACIE2_ALTERNATE_ACCOUNT_EMAIL"
-	EnvVarPrincipalEmailMessageError = "Environment variable AWS_MACIE2_ACCOUNT_EMAIL is not set. " +
+	envVarPrincipalEmail             = "AWS_MACIE2_ACCOUNT_EMAIL"
+	envVarAlternateEmail             = "AWS_MACIE2_ALTERNATE_ACCOUNT_EMAIL"
+	envVarPrincipalEmailMessageError = "Environment variable AWS_MACIE2_ACCOUNT_EMAIL is not set. " +
 		"To properly test inviting Macie member account must be provided."
-	EnvVarAlternateEmailMessageError = "Environment variable AWS_MACIE2_ALTERNATE_ACCOUNT_EMAIL is not set. " +
+	envVarAlternateEmailMessageError = "Environment variable AWS_MACIE2_ALTERNATE_ACCOUNT_EMAIL is not set. " +
 		"To properly test inviting Macie member account must be provided."
 )
 
@@ -88,7 +89,7 @@ func testAccMember_disappears(t *testing.T) {
 func testAccMember_invitationDisableEmailNotification(t *testing.T) {
 	var macie2Output macie2.GetMemberOutput
 	resourceName := "aws_macie2_member.member"
-	email := conns.SkipIfEnvVarEmpty(t, EnvVarAlternateEmail, EnvVarAlternateEmailMessageError)
+	email := envvar.SkipIfEmpty(t, envVarAlternateEmail, envVarAlternateEmailMessageError)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -129,7 +130,7 @@ func testAccMember_invite(t *testing.T) {
 	var macie2Output macie2.GetMemberOutput
 	resourceName := "aws_macie2_member.member"
 	dataSourceAlternate := "data.aws_caller_identity.member"
-	email := conns.SkipIfEnvVarEmpty(t, EnvVarAlternateEmail, EnvVarAlternateEmailMessageError)
+	email := envvar.SkipIfEmpty(t, envVarAlternateEmail, envVarAlternateEmailMessageError)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -183,7 +184,7 @@ func testAccMember_inviteRemoved(t *testing.T) {
 	var macie2Output macie2.GetMemberOutput
 	resourceName := "aws_macie2_member.member"
 	dataSourceAlternate := "data.aws_caller_identity.member"
-	email := conns.SkipIfEnvVarEmpty(t, EnvVarAlternateEmail, EnvVarAlternateEmailMessageError)
+	email := envvar.SkipIfEmpty(t, envVarAlternateEmail, envVarAlternateEmailMessageError)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -237,7 +238,7 @@ func testAccMember_status(t *testing.T) {
 	var macie2Output macie2.GetMemberOutput
 	resourceName := "aws_macie2_member.member"
 	dataSourceAlternate := "data.aws_caller_identity.member"
-	email := conns.SkipIfEnvVarEmpty(t, EnvVarAlternateEmail, EnvVarAlternateEmailMessageError)
+	email := envvar.SkipIfEmpty(t, envVarAlternateEmail, envVarAlternateEmailMessageError)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
