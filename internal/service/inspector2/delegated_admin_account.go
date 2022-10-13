@@ -33,7 +33,6 @@ func ResourceDelegatedAdminAccount() *schema.Resource {
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(15 * time.Second),
-			Update: schema.DefaultTimeout(15 * time.Second),
 			Delete: schema.DefaultTimeout(15 * time.Second),
 		},
 
