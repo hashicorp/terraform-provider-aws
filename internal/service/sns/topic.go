@@ -345,7 +345,7 @@ func resourceTopicRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return diag.Errorf("setting tags_all: %w", err)
+		return diag.Errorf("setting tags_all: %s", err)
 	}
 
 	return nil
