@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/configservice"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -89,13 +90,13 @@ func resourceAggregateAuthorizationRead(d *schema.ResourceData, meta interface{}
 
 	aggregateAuthorizations, err := DescribeAggregateAuthorizations(conn)
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		names.LogNotFoundRemoveState(names.ConfigService, names.ErrActionReading, "Aggregate Authorization", d.Id())
+		create.LogNotFoundRemoveState(names.ConfigService, create.ErrActionReading, ResNameAggregateAuthorization, d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return names.Error(names.ConfigService, names.ErrActionReading, "Aggregate Authorization", d.Id(), err)
+		return create.Error(names.ConfigService, create.ErrActionReading, ResNameAggregateAuthorization, d.Id(), err)
 	}
 
 	var aggregationAuthorization *configservice.AggregationAuthorization
@@ -107,13 +108,13 @@ func resourceAggregateAuthorizationRead(d *schema.ResourceData, meta interface{}
 	}
 
 	if !d.IsNewResource() && aggregationAuthorization == nil {
-		names.LogNotFoundRemoveState(names.ConfigService, names.ErrActionReading, "Aggregate Authorization", d.Id())
+		create.LogNotFoundRemoveState(names.ConfigService, create.ErrActionReading, ResNameAggregateAuthorization, d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if d.IsNewResource() && aggregationAuthorization == nil {
-		return names.Error(names.ConfigService, names.ErrActionReading, "Aggregate Authorization", d.Id(), errors.New("not found after creation"))
+		return create.Error(names.ConfigService, create.ErrActionReading, ResNameAggregateAuthorization, d.Id(), errors.New("not found after creation"))
 	}
 
 	d.Set("arn", aggregationAuthorization.AggregationAuthorizationArn)

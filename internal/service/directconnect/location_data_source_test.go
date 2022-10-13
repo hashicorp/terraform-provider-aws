@@ -12,13 +12,14 @@ func TestAccDirectConnectLocationDataSource_basic(t *testing.T) {
 	dsResourceName := "data.aws_dx_location.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, directconnect.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, directconnect.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLocationDataSourceConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet(dsResourceName, "available_macsec_port_speeds.#"),
 					resource.TestCheckResourceAttrSet(dsResourceName, "available_port_speeds.#"),
 					resource.TestCheckResourceAttrSet(dsResourceName, "available_providers.#"),
 					resource.TestCheckResourceAttrSet(dsResourceName, "location_code"),

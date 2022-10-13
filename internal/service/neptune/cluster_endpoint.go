@@ -98,7 +98,7 @@ func resourceClusterEndpointCreate(d *schema.ResourceData, meta interface{}) err
 
 	out, err := conn.CreateDBClusterEndpoint(input)
 	if err != nil {
-		return fmt.Errorf("error creating Neptune Cluster Endpoint: %w", err)
+		return fmt.Errorf("creating Neptune Cluster Endpoint: %w", err)
 	}
 
 	clusterId := aws.StringValue(out.DBClusterIdentifier)
@@ -107,7 +107,7 @@ func resourceClusterEndpointCreate(d *schema.ResourceData, meta interface{}) err
 
 	_, err = WaitDBClusterEndpointAvailable(conn, d.Id())
 	if err != nil {
-		return fmt.Errorf("error waiting for Neptune Cluster Endpoint (%q) to be Available: %w", d.Id(), err)
+		return fmt.Errorf("waiting for Neptune Cluster Endpoint (%q) to be Available: %w", d.Id(), err)
 	}
 
 	return resourceClusterEndpointRead(d, meta)
@@ -127,7 +127,7 @@ func resourceClusterEndpointRead(d *schema.ResourceData, meta interface{}) error
 	}
 
 	if err != nil {
-		return fmt.Errorf("error describing Neptune Cluster Endpoint (%s): %w", d.Id(), err)
+		return fmt.Errorf("describing Neptune Cluster Endpoint (%s): %w", d.Id(), err)
 	}
 
 	d.Set("cluster_endpoint_identifier", resp.DBClusterEndpointIdentifier)
@@ -145,18 +145,18 @@ func resourceClusterEndpointRead(d *schema.ResourceData, meta interface{}) error
 		tags, err := ListTags(conn, arn)
 
 		if err != nil {
-			return fmt.Errorf("error listing tags for Neptune Cluster Endpoint (%s): %w", arn, err)
+			return fmt.Errorf("listing tags for Neptune Cluster Endpoint (%s): %w", arn, err)
 		}
 
 		tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 		//lintignore:AWSR002
 		if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-			return fmt.Errorf("error setting tags: %w", err)
+			return fmt.Errorf("setting tags: %w", err)
 		}
 
 		if err := d.Set("tags_all", tags.Map()); err != nil {
-			return fmt.Errorf("error setting tags_all: %w", err)
+			return fmt.Errorf("setting tags_all: %w", err)
 		}
 	} else {
 		d.Set("tags", nil)
@@ -188,12 +188,12 @@ func resourceClusterEndpointUpdate(d *schema.ResourceData, meta interface{}) err
 
 		_, err := conn.ModifyDBClusterEndpoint(req)
 		if err != nil {
-			return fmt.Errorf("error updating Neptune Cluster Endpoint (%q): %w", d.Id(), err)
+			return fmt.Errorf("updating Neptune Cluster Endpoint (%q): %w", d.Id(), err)
 		}
 
 		_, err = WaitDBClusterEndpointAvailable(conn, d.Id())
 		if err != nil {
-			return fmt.Errorf("error waiting for Neptune Cluster Endpoint (%q) to be Available: %w", d.Id(), err)
+			return fmt.Errorf("waiting for Neptune Cluster Endpoint (%q) to be Available: %w", d.Id(), err)
 		}
 	}
 
@@ -202,7 +202,7 @@ func resourceClusterEndpointUpdate(d *schema.ResourceData, meta interface{}) err
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating Neptune Cluster Endpoint (%s) tags: %w", d.Get("arn").(string), err)
+			return fmt.Errorf("updating Neptune Cluster Endpoint (%s) tags: %w", d.Get("arn").(string), err)
 		}
 	}
 
@@ -230,7 +230,7 @@ func resourceClusterEndpointDelete(d *schema.ResourceData, meta interface{}) err
 		if tfawserr.ErrCodeEquals(err, neptune.ErrCodeDBClusterEndpointNotFoundFault) {
 			return nil
 		}
-		return fmt.Errorf("error waiting for Neptune Cluster Endpoint (%q) to be Deleted: %w", d.Id(), err)
+		return fmt.Errorf("waiting for Neptune Cluster Endpoint (%q) to be Deleted: %w", d.Id(), err)
 	}
 
 	return nil

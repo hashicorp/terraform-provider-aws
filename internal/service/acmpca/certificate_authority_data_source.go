@@ -42,14 +42,14 @@ func DataSourceCertificateAuthority() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			// https://docs.aws.amazon.com/acm-pca/latest/APIReference/API_RevocationConfiguration.html
+			// https://docs.aws.amazon.com/privateca/latest/APIReference/API_RevocationConfiguration.html
 			"revocation_configuration": {
 				Type:     schema.TypeList,
 				Optional: true,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						// https://docs.aws.amazon.com/acm-pca/latest/APIReference/API_CrlConfiguration.html
+						// https://docs.aws.amazon.com/privateca/latest/APIReference/API_CrlConfiguration.html
 						"crl_configuration": {
 							Type:     schema.TypeList,
 							Optional: true,
@@ -79,6 +79,24 @@ func DataSourceCertificateAuthority() *schema.Resource {
 								},
 							},
 						},
+						// https://docs.aws.amazon.com/privateca/latest/APIReference/API_OcspConfiguration.html
+						"ocsp_configuration": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"enabled": {
+										Type:     schema.TypeBool,
+										Computed: true,
+									},
+									"ocsp_custom_cname": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+								},
+							},
+						},
 					},
 				},
 			},
@@ -102,10 +120,10 @@ func DataSourceCertificateAuthority() *schema.Resource {
 func dataSourceCertificateAuthorityRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ACMPCAConn
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-	certificateAuthorityArn := d.Get("arn").(string)
+	certificateAuthorityARN := d.Get("arn").(string)
 
 	describeCertificateAuthorityInput := &acmpca.DescribeCertificateAuthorityInput{
-		CertificateAuthorityArn: aws.String(certificateAuthorityArn),
+		CertificateAuthorityArn: aws.String(certificateAuthorityARN),
 	}
 
 	log.Printf("[DEBUG] Reading ACM PCA Certificate Authority: %s", describeCertificateAuthorityInput)
@@ -133,7 +151,7 @@ func dataSourceCertificateAuthorityRead(d *schema.ResourceData, meta interface{}
 	d.Set("type", certificateAuthority.Type)
 
 	getCertificateAuthorityCertificateInput := &acmpca.GetCertificateAuthorityCertificateInput{
-		CertificateAuthorityArn: aws.String(certificateAuthorityArn),
+		CertificateAuthorityArn: aws.String(certificateAuthorityARN),
 	}
 
 	log.Printf("[DEBUG] Reading ACM PCA Certificate Authority Certificate: %s", getCertificateAuthorityCertificateInput)
@@ -155,7 +173,7 @@ func dataSourceCertificateAuthorityRead(d *schema.ResourceData, meta interface{}
 	}
 
 	getCertificateAuthorityCsrInput := &acmpca.GetCertificateAuthorityCsrInput{
-		CertificateAuthorityArn: aws.String(certificateAuthorityArn),
+		CertificateAuthorityArn: aws.String(certificateAuthorityARN),
 	}
 
 	log.Printf("[DEBUG] Reading ACM PCA Certificate Authority Certificate Signing Request: %s", getCertificateAuthorityCsrInput)
@@ -170,17 +188,17 @@ func dataSourceCertificateAuthorityRead(d *schema.ResourceData, meta interface{}
 		d.Set("certificate_signing_request", getCertificateAuthorityCsrOutput.Csr)
 	}
 
-	tags, err := ListTags(conn, certificateAuthorityArn)
+	tags, err := ListTags(conn, certificateAuthorityARN)
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for ACM PCA Certificate Authority (%s): %w", certificateAuthorityArn, err)
+		return fmt.Errorf("error listing tags for ACM PCA Certificate Authority (%s): %w", certificateAuthorityARN, err)
 	}
 
 	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %w", err)
 	}
 
-	d.SetId(certificateAuthorityArn)
+	d.SetId(certificateAuthorityARN)
 
 	return nil
 }

@@ -52,13 +52,50 @@ The `schedule_frequency` object supports the following:
 
 The `s3_job_definition` object supports the following:
 
-* `bucket_definitions` -  (Optional) An array of objects, one for each AWS account that owns buckets to analyze. Each object specifies the account ID for an account and one or more buckets to analyze for the account. (documented below)
+* `bucket_criteria` - (Optional) The property- and tag-based conditions that determine which S3 buckets to include or exclude from the analysis. Conflicts with `bucket_definitions`. (documented below)
+* `bucket_definitions` -  (Optional) An array of objects, one for each AWS account that owns buckets to analyze. Each object specifies the account ID for an account and one or more buckets to analyze for the account. Conflicts with `bucket_criteria`. (documented below)
 * `scoping` -  (Optional) The property- and tag-based conditions that determine which objects to include or exclude from the analysis. (documented below)
+
+### bucket_criteria Configuration Block
+
+The `bucket_criteria` object supports the following:
+
+* `excludes` -  (Optional) The property- or tag-based conditions that determine which S3 buckets to exclude from the analysis. (documented below)
+* `includes` -  (Optional) The property- or tag-based conditions that determine which S3 buckets to include in the analysis. (documented below)
+
+The `excludes` and `includes` object supports the following:
+
+* `and` -  (Optional) An array of conditions, one for each condition that determines which S3 buckets to include or exclude from the job. (documented below)
+
+The `and` object supports the following:
+
+* `simple_criterion` -  (Optional) A property-based condition that defines a property, operator, and one or more values for including or excluding an S3 buckets from the job. (documented below)
+* `tag_criterion` -  (Optional) A tag-based condition that defines the operator and tag keys or tag key and value pairs for including or excluding an S3 buckets from the job. (documented below)
+
+The `simple_criterion` object supports the following:
+
+* `comparator` -  (Required) The operator to use in a condition. Valid combination of values are available in the [AWS Documentation](https://docs.aws.amazon.com/macie/latest/APIReference/jobs.html#jobs-model-jobcomparator)
+* `key` -  (Required) The object property to use in the condition. Valid combination of values are available in the [AWS Documentation](https://docs.aws.amazon.com/macie/latest/APIReference/jobs.html#jobs-model-simplecriterionkeyforjob)
+* `values` -  (Required) An array that lists the values to use in the condition. Valid combination of values are available in the [AWS Documentation](https://docs.aws.amazon.com/macie/latest/APIReference/jobs.html#jobs-model-simplecriterionforjob)
+
+The `tag_criterion` object supports the following:
+
+* `comparator` -  (Required) The operator to use in the condition. Valid combination and values are available in the [AWS Documentation](https://docs.aws.amazon.com/macie/latest/APIReference/jobs.html#jobs-model-jobcomparator)
+* `tag_values` -  (Required) The  tag key and value pairs to use in the condition. One or more blocks are allowed. (documented below)
+
+The `tag_values` object supports the following:
+
+* `key` - (Required) The tag key.
+* `value` - (Required) The tag value.
+
+### bucket_definitions Configuration Block
 
 The `bucket_definitions` object supports the following:
 
 * `account_id` -  (Required) The unique identifier for the AWS account that owns the buckets.
 * `buckets` -  (Required) An array that lists the names of the buckets.
+
+### scoping Configuration Block
 
 The `scoping` object supports the following:
 
@@ -71,8 +108,8 @@ The `excludes` and `includes` object supports the following:
 
 The `and` object supports the following:
 
-* `simple_scope_term` -  (Optional) A property-based condition that defines a property, operator, and one or more values for including or excluding an object from the job.  (documented below)
-* `tag_scope_term` -  (Optional) A tag-based condition that defines the operator and tag keys or tag key and value pairs for including or excluding an object from the job.  (documented below)
+* `simple_scope_term` -  (Optional) A property-based condition that defines a property, operator, and one or more values for including or excluding an object from the job. (documented below)
+* `tag_scope_term` -  (Optional) A tag-based condition that defines the operator and tag keys or tag key and value pairs for including or excluding an object from the job. (documented below)
 
 The `simple_scope_term` object supports the following:
 
@@ -84,8 +121,8 @@ The `tag_scope_term` object supports the following:
 
 * `comparator` -  (Optional) The operator to use in the condition.
 * `tag_values` -  (Optional) The tag keys or tag key and value pairs to use in the condition.
-* `key` -  (Optional) The tag key to use in the condition.
-* `target` -  (Optional) The type of object to apply the condition to.
+* `key` -  (Required) The tag key to use in the condition. The only valid value is `TAG`.
+* `target` -  (Required) The type of object to apply the condition to. The only valid value is `S3_OBJECT`.
 
 
 ## Attributes Reference

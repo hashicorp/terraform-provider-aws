@@ -63,7 +63,7 @@ func UpdateTagsWithContext(ctx context.Context, conn glacieriface.GlacierAPI, id
 		_, err := conn.RemoveTagsFromVaultWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
+			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -76,7 +76,7 @@ func UpdateTagsWithContext(ctx context.Context, conn glacieriface.GlacierAPI, id
 		_, err := conn.AddTagsToVaultWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
+			return fmt.Errorf("tagging resource (%s): %w", identifier, err)
 		}
 	}
 

@@ -78,7 +78,7 @@ The following arguments are supported:
   Defined below.
 * `tags` - (Optional) Map of container service tags. To tag at launch, specify the tags in the Launch Template. If
   configured with a provider
-  [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block)
+  [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block)
   present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attributes Reference
@@ -98,17 +98,17 @@ In addition to all arguments above, the following attributes are exported:
 * `resource_type` - The Lightsail resource type of the container service (i.e., ContainerService).
 * `state` - The current state of the container service.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider
-  [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block).
+  [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `url` - The publicly accessible URL of the container service. If no public endpoint is specified in the
   currentDeployment, this URL returns a 404 response.
 
 ## Timeouts
 
-`aws_lightsail_container_service` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
 
-* `create` - (Optional, Default: `30m`)
-* `update` - (Optional, Default: `30m`)
-* `delete` - (Optional, Default: `30m`)
+* `create` - (Default `30m`)
+* `update` - (Default `30m`)
+* `delete` - (Default `30m`)
 
 ## Import
 

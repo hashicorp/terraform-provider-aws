@@ -260,7 +260,7 @@ func resourceClusterInstanceCreate(d *schema.ResourceData, meta interface{}) err
 		resp, err = conn.CreateDBInstance(createOpts)
 	}
 	if err != nil {
-		return fmt.Errorf("error creating Neptune Instance: %s", err)
+		return fmt.Errorf("creating Neptune Instance: %s", err)
 	}
 
 	d.SetId(aws.StringValue(resp.DBInstance.DBInstanceIdentifier))
@@ -362,18 +362,18 @@ func resourceClusterInstanceRead(d *schema.ResourceData, meta interface{}) error
 	tags, err := ListTags(conn, d.Get("arn").(string))
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for Neptune Cluster Instance (%s): %s", d.Get("arn").(string), err)
+		return fmt.Errorf("listing tags for Neptune Cluster Instance (%s): %s", d.Get("arn").(string), err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return fmt.Errorf("setting tags: %w", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return fmt.Errorf("setting tags_all: %w", err)
 	}
 
 	return nil
@@ -459,7 +459,7 @@ func resourceClusterInstanceUpdate(d *schema.ResourceData, meta interface{}) err
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating Neptune Cluster Instance (%s) tags: %s", d.Get("arn").(string), err)
+			return fmt.Errorf("updating Neptune Cluster Instance (%s) tags: %s", d.Get("arn").(string), err)
 		}
 	}
 
@@ -478,7 +478,7 @@ func resourceClusterInstanceDelete(d *schema.ResourceData, meta interface{}) err
 		if tfawserr.ErrCodeEquals(err, neptune.ErrCodeDBInstanceNotFoundFault) {
 			return nil
 		}
-		return fmt.Errorf("error deleting Neptune cluster instance %q: %s", d.Id(), err)
+		return fmt.Errorf("deleting Neptune cluster instance %q: %s", d.Id(), err)
 	}
 
 	log.Println("[INFO] Waiting for Neptune Cluster Instance to be destroyed")

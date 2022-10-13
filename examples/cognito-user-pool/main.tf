@@ -31,7 +31,7 @@ resource "aws_lambda_function" "main" {
   function_name = "terraform-example"
   role          = aws_iam_role.main.arn
   handler       = "exports.example"
-  runtime       = "nodejs10.x"
+  runtime       = "nodejs16.x"
 }
 
 resource "aws_iam_role" "cidp" {

@@ -182,10 +182,10 @@ func TestAccSNSPlatformApplication_basic(t *testing.T) {
 
 		t.Run(platform.Name, func(*testing.T) {
 			resource.ParallelTest(t, resource.TestCase{
-				PreCheck:          func() { acctest.PreCheck(t) },
-				ErrorCheck:        acctest.ErrorCheck(t, sns.EndpointsID),
-				ProviderFactories: acctest.ProviderFactories,
-				CheckDestroy:      testAccCheckPlatformApplicationDestroy,
+				PreCheck:                 func() { acctest.PreCheck(t) },
+				ErrorCheck:               acctest.ErrorCheck(t, sns.EndpointsID),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				CheckDestroy:             testAccCheckPlatformApplicationDestroy,
 				Steps: []resource.TestStep{
 					{
 						Config: testAccPlatformApplicationConfig_basic(name, platform),
@@ -233,10 +233,10 @@ func TestAccSNSPlatformApplication_basicAttributes(t *testing.T) {
 					name := fmt.Sprintf("tf-acc-%d", sdkacctest.RandInt())
 
 					resource.ParallelTest(t, resource.TestCase{
-						PreCheck:          func() { acctest.PreCheck(t) },
-						ErrorCheck:        acctest.ErrorCheck(t, sns.EndpointsID),
-						ProviderFactories: acctest.ProviderFactories,
-						CheckDestroy:      testAccCheckPlatformApplicationDestroy,
+						PreCheck:                 func() { acctest.PreCheck(t) },
+						ErrorCheck:               acctest.ErrorCheck(t, sns.EndpointsID),
+						ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+						CheckDestroy:             testAccCheckPlatformApplicationDestroy,
 						Steps: []resource.TestStep{
 							{
 								Config: testAccPlatformApplicationConfig_basicAttribute(name, platform, tc.AttributeKey, tc.AttributeValue),
@@ -284,10 +284,10 @@ func TestAccSNSPlatformApplication_iamRoleAttributes(t *testing.T) {
 					name := fmt.Sprintf("tf-acc-%d", sdkacctest.RandInt())
 
 					resource.ParallelTest(t, resource.TestCase{
-						PreCheck:          func() { acctest.PreCheck(t) },
-						ErrorCheck:        acctest.ErrorCheck(t, sns.EndpointsID),
-						ProviderFactories: acctest.ProviderFactories,
-						CheckDestroy:      testAccCheckPlatformApplicationDestroy,
+						PreCheck:                 func() { acctest.PreCheck(t) },
+						ErrorCheck:               acctest.ErrorCheck(t, sns.EndpointsID),
+						ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+						CheckDestroy:             testAccCheckPlatformApplicationDestroy,
 						Steps: []resource.TestStep{
 							{
 								Config: testAccPlatformApplicationConfig_iamRoleAttribute(name, platform, tc, iamRoleName1),
@@ -337,10 +337,10 @@ func TestAccSNSPlatformApplication_snsTopicAttributes(t *testing.T) {
 					name := fmt.Sprintf("tf-acc-%d", sdkacctest.RandInt())
 
 					resource.ParallelTest(t, resource.TestCase{
-						PreCheck:          func() { acctest.PreCheck(t) },
-						ErrorCheck:        acctest.ErrorCheck(t, sns.EndpointsID),
-						ProviderFactories: acctest.ProviderFactories,
-						CheckDestroy:      testAccCheckPlatformApplicationDestroy,
+						PreCheck:                 func() { acctest.PreCheck(t) },
+						ErrorCheck:               acctest.ErrorCheck(t, sns.EndpointsID),
+						ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+						CheckDestroy:             testAccCheckPlatformApplicationDestroy,
 						Steps: []resource.TestStep{
 							{
 								Config: testAccPlatformApplicationConfig_topicAttribute(name, platform, tc, snsTopicName1),

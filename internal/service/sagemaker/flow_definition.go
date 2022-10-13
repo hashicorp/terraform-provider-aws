@@ -255,7 +255,7 @@ func resourceFlowDefinitionCreate(d *schema.ResourceData, meta interface{}) erro
 	if v, ok := d.GetOk("human_loop_activation_config"); ok && (len(v.([]interface{})) > 0) {
 		loopConfig, err := expandFlowDefinitionHumanLoopActivationConfig(v.([]interface{}))
 		if err != nil {
-			return fmt.Errorf("error creating SageMaker Flow Definition Human Loop Activation Config (%s): %w", name, err)
+			return fmt.Errorf("creating SageMaker Flow Definition Human Loop Activation Config (%s): %w", name, err)
 		}
 		input.HumanLoopActivationConfig = loopConfig
 	}
@@ -274,13 +274,13 @@ func resourceFlowDefinitionCreate(d *schema.ResourceData, meta interface{}) erro
 	}, "ValidationException")
 
 	if err != nil {
-		return fmt.Errorf("error creating SageMaker Flow Definition (%s): %w", name, err)
+		return fmt.Errorf("creating SageMaker Flow Definition (%s): %w", name, err)
 	}
 
 	d.SetId(name)
 
 	if _, err := WaitFlowDefinitionActive(conn, d.Id()); err != nil {
-		return fmt.Errorf("error waiting for SageMaker Flow Definition (%s) to become active: %w", d.Id(), err)
+		return fmt.Errorf("waiting for SageMaker Flow Definition (%s) to become active: %w", d.Id(), err)
 	}
 
 	return resourceFlowDefinitionRead(d, meta)
@@ -300,7 +300,7 @@ func resourceFlowDefinitionRead(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading SageMaker Flow Definition (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading SageMaker Flow Definition (%s): %w", d.Id(), err)
 	}
 
 	arn := aws.StringValue(flowDefinition.FlowDefinitionArn)
@@ -309,36 +309,36 @@ func resourceFlowDefinitionRead(d *schema.ResourceData, meta interface{}) error 
 	d.Set("flow_definition_name", flowDefinition.FlowDefinitionName)
 
 	if err := d.Set("human_loop_activation_config", flattenFlowDefinitionHumanLoopActivationConfig(flowDefinition.HumanLoopActivationConfig)); err != nil {
-		return fmt.Errorf("error setting human_loop_activation_config: %w", err)
+		return fmt.Errorf("setting human_loop_activation_config: %w", err)
 	}
 
 	if err := d.Set("human_loop_config", flattenFlowDefinitionHumanLoopConfig(flowDefinition.HumanLoopConfig)); err != nil {
-		return fmt.Errorf("error setting human_loop_config: %w", err)
+		return fmt.Errorf("setting human_loop_config: %w", err)
 	}
 
 	if err := d.Set("human_loop_request_source", flattenFlowDefinitionHumanLoopRequestSource(flowDefinition.HumanLoopRequestSource)); err != nil {
-		return fmt.Errorf("error setting human_loop_request_source: %w", err)
+		return fmt.Errorf("setting human_loop_request_source: %w", err)
 	}
 
 	if err := d.Set("output_config", flattenFlowDefinitionOutputConfig(flowDefinition.OutputConfig)); err != nil {
-		return fmt.Errorf("error setting output_config: %w", err)
+		return fmt.Errorf("setting output_config: %w", err)
 	}
 
 	tags, err := ListTags(conn, arn)
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for SageMaker Flow Definition (%s): %w", d.Id(), err)
+		return fmt.Errorf("listing tags for SageMaker Flow Definition (%s): %w", d.Id(), err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return fmt.Errorf("setting tags: %w", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return fmt.Errorf("setting tags_all: %w", err)
 	}
 
 	return nil
@@ -351,7 +351,7 @@ func resourceFlowDefinitionUpdate(d *schema.ResourceData, meta interface{}) erro
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating SageMaker Flow Definition (%s) tags: %w", d.Id(), err)
+			return fmt.Errorf("updating SageMaker Flow Definition (%s) tags: %w", d.Id(), err)
 		}
 	}
 
@@ -371,11 +371,11 @@ func resourceFlowDefinitionDelete(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting SageMaker Flow Definition (%s): %w", d.Id(), err)
+		return fmt.Errorf("deleting SageMaker Flow Definition (%s): %w", d.Id(), err)
 	}
 
 	if _, err := WaitFlowDefinitionDeleted(conn, d.Id()); err != nil {
-		return fmt.Errorf("error waiting for SageMaker Flow Definition (%s) to delete: %w", d.Id(), err)
+		return fmt.Errorf("waiting for SageMaker Flow Definition (%s) to delete: %w", d.Id(), err)
 	}
 
 	return nil

@@ -85,7 +85,7 @@ func GetEnvVarWithDefault(variable string, defaultValue string) string {
 
 // RequireOneOfEnvVar verifies that at least one environment variable is non-empty or returns an error.
 //
-// If at lease one environment variable is non-empty, returns the first name and value.
+// If at least one environment variable is non-empty, returns the first name and value.
 func RequireOneOfEnvVar(names []string, usageMessage string) (string, string, error) {
 	for _, variable := range names {
 		value := os.Getenv(variable)
@@ -111,7 +111,7 @@ func RequireEnvVar(name string, usageMessage string) (string, error) {
 
 // FailIfAllEnvVarEmpty verifies that at least one environment variable is non-empty or fails the test.
 //
-// If at lease one environment variable is non-empty, returns the first name and value.
+// If at least one environment variable is non-empty, returns the first name and value.
 func FailIfAllEnvVarEmpty(t testing.T, names []string, usageMessage string) (string, string) {
 	t.Helper()
 
@@ -156,7 +156,7 @@ func SkipIfEnvVarEmpty(t testing.T, name string, usageMessage string) string {
 
 // SkipIfAllEnvVarEmpty verifies that at least one environment variable is non-empty or skips the test.
 //
-// If at lease one environment variable is non-empty, returns the first name and value.
+// If at least one environment variable is non-empty, returns the first name and value.
 func SkipIfAllEnvVarEmpty(t testing.T, names []string, usageMessage string) (string, string) {
 	t.Helper()
 

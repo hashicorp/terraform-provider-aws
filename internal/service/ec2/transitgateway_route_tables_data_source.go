@@ -2,6 +2,7 @@ package ec2
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -13,6 +14,10 @@ import (
 func DataSourceTransitGatewayRouteTables() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourceTransitGatewayRouteTablesRead,
+
+		Timeouts: &schema.ResourceTimeout{
+			Read: schema.DefaultTimeout(20 * time.Minute),
+		},
 
 		Schema: map[string]*schema.Schema{
 			"filter": DataSourceFiltersSchema(),
@@ -46,7 +51,7 @@ func dataSourceTransitGatewayRouteTablesRead(d *schema.ResourceData, meta interf
 	output, err := FindTransitGatewayRouteTables(conn, input)
 
 	if err != nil {
-		return fmt.Errorf("error reading EC2 Transit Gateway Route Tables: %w", err)
+		return fmt.Errorf("reading EC2 Transit Gateway Route Tables: %w", err)
 	}
 
 	var routeTableIDs []string

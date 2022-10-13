@@ -128,6 +128,12 @@ func ResourceOpenzfsVolume() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"record_size_kib": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Default:      128,
+				ValidateFunc: validation.IntInSlice([]int{4, 8, 16, 32, 64, 128, 256, 512, 1024}),
+			},
 			"storage_capacity_quota_gib": {
 				Type:         schema.TypeInt,
 				Optional:     true,
@@ -209,6 +215,10 @@ func resourceOepnzfsVolumeCreate(d *schema.ResourceData, meta interface{}) error
 		input.OpenZFSConfiguration.ReadOnly = aws.Bool(v.(bool))
 	}
 
+	if v, ok := d.GetOk("record_size_kib"); ok {
+		input.OpenZFSConfiguration.RecordSizeKiB = aws.Int64(int64(v.(int)))
+	}
+
 	if v, ok := d.GetOk("storage_capacity_quota_gib"); ok {
 		input.OpenZFSConfiguration.StorageCapacityQuotaGiB = aws.Int64(int64(v.(int)))
 	}
@@ -286,6 +296,7 @@ func resourceOpenzfsVolumeRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("name", volume.Name)
 	d.Set("parent_volume_id", openzfsConfig.ParentVolumeId)
 	d.Set("read_only", openzfsConfig.ReadOnly)
+	d.Set("record_size_kib", openzfsConfig.RecordSizeKiB)
 	d.Set("storage_capacity_quota_gib", openzfsConfig.StorageCapacityQuotaGiB)
 	d.Set("storage_capacity_reservation_gib", openzfsConfig.StorageCapacityReservationGiB)
 	d.Set("volume_type", volume.VolumeType)
@@ -355,6 +366,10 @@ func resourceOpenzfsVolumeUpdate(d *schema.ResourceData, meta interface{}) error
 
 		if d.HasChange("read_only") {
 			input.OpenZFSConfiguration.ReadOnly = aws.Bool(d.Get("read_only").(bool))
+		}
+
+		if d.HasChange("record_size_kib") {
+			input.OpenZFSConfiguration.RecordSizeKiB = aws.Int64(int64(d.Get("record_size_kib").(int)))
 		}
 
 		if d.HasChange("storage_capacity_quota_gib") {

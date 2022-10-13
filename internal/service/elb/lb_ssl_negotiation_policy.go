@@ -133,7 +133,7 @@ func resourceSSLNegotiationPolicyRead(d *schema.ResourceData, meta interface{}) 
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("error retrieving ELB Classic (%s) SSL Negotiation Policy: %w", lbName, err)
+		return fmt.Errorf("retrieving ELB Classic (%s) SSL Negotiation Policy: %w", lbName, err)
 	}
 
 	if len(getResp.PolicyDescriptions) != 1 {
@@ -156,7 +156,7 @@ func resourceSSLNegotiationPolicyRead(d *schema.ResourceData, meta interface{}) 
 	// policyDesc := getResp.PolicyDescriptions[0]
 	// attributes := FlattenPolicyAttributes(policyDesc.PolicyAttributeDescriptions)
 	// if err := d.Set("attribute", attributes); err != nil {
-	// 	return fmt.Errorf("error setting attribute: %s", err)
+	// 	return fmt.Errorf("setting attribute: %s", err)
 	// }
 
 	return nil
@@ -206,7 +206,7 @@ func SSLNegotiationPolicyParseID(id string) (string, int, string, error) {
 
 	port, err := strconv.Atoi(parts[1])
 	if err != nil {
-		return "", 0, "", fmt.Errorf("error parsing SSL negotiation policy resource ID port: %w", err)
+		return "", 0, "", fmt.Errorf("parsing SSL negotiation policy resource ID port: %w", err)
 	}
 
 	return parts[0], port, parts[2], nil

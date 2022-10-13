@@ -35,10 +35,6 @@ func StatusNotebookInstance(conn *sagemaker.SageMaker, notebookName string) reso
 			return nil, "", err
 		}
 
-		if aws.StringValue(output.NotebookInstanceStatus) == sagemaker.NotebookInstanceStatusFailed {
-			return output, sagemaker.NotebookInstanceStatusFailed, fmt.Errorf("%s", aws.StringValue(output.FailureReason))
-		}
-
 		return output, aws.StringValue(output.NotebookInstanceStatus), nil
 	}
 }

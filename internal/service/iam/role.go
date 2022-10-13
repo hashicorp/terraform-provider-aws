@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -43,44 +44,20 @@ func ResourceRole() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
-			"unique_id": {
+			"assume_role_policy": {
+				Type:             schema.TypeString,
+				Required:         true,
+				ValidateFunc:     validation.StringIsJSON,
+				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
+				StateFunc: func(v interface{}) string {
+					json, _ := structure.NormalizeJsonString(v)
+					return json
+				},
+			},
+			"create_date": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
-			"name": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{"name_prefix"},
-				ValidateFunc:  validResourceName(roleNameMaxLen),
-			},
-
-			"name_prefix": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{"name"},
-				ValidateFunc:  validResourceName(roleNamePrefixMaxLen),
-			},
-
-			"path": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      "/",
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(0, 512),
-			},
-
-			"permissions_boundary": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-
 			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -90,35 +67,11 @@ func ResourceRole() *schema.Resource {
 					validation.StringMatch(regexp.MustCompile(`[\p{L}\p{M}\p{Z}\p{S}\p{N}\p{P}]*`), `must satisfy regular expression pattern: [\p{L}\p{M}\p{Z}\p{S}\p{N}\p{P}]*)`),
 				),
 			},
-
-			"assume_role_policy": {
-				Type:             schema.TypeString,
-				Required:         true,
-				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
-				ValidateFunc:     validation.StringIsJSON,
-			},
-
 			"force_detach_policies": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
 			},
-
-			"create_date": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"max_session_duration": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Default:      3600,
-				ValidateFunc: validation.IntBetween(3600, 43200),
-			},
-
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
-
 			"inline_policy": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -149,7 +102,6 @@ func ResourceRole() *schema.Resource {
 					return !inlinePoliciesActualDiff(d)
 				},
 			},
-
 			"managed_policy_arns": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -159,14 +111,53 @@ func ResourceRole() *schema.Resource {
 					ValidateFunc: verify.ValidARN,
 				},
 			},
+			"max_session_duration": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Default:      3600,
+				ValidateFunc: validation.IntBetween(3600, 43200),
+			},
+			"name": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"name_prefix"},
+				ValidateFunc:  validResourceName(roleNameMaxLen),
+			},
+			"name_prefix": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"name"},
+				ValidateFunc:  validResourceName(roleNamePrefixMaxLen),
+			},
+			"path": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      "/",
+				ForceNew:     true,
+				ValidateFunc: validation.StringLenBetween(0, 512),
+			},
+			"permissions_boundary": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: verify.ValidARN,
+			},
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
+			"unique_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceRoleImport(
-	d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceRoleImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	d.Set("force_detach_policies", false)
 	return []*schema.ResourceData{d}, nil
 }
@@ -176,37 +167,43 @@ func resourceRoleCreate(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
+	assumeRolePolicy, err := structure.NormalizeJsonString(d.Get("assume_role_policy").(string))
+
+	if err != nil {
+		return fmt.Errorf("assume_role_policy (%s) is invalid JSON: %w", assumeRolePolicy, err)
+	}
+
 	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
-	request := &iam.CreateRoleInput{
+	input := &iam.CreateRoleInput{
+		AssumeRolePolicyDocument: aws.String(assumeRolePolicy),
 		Path:                     aws.String(d.Get("path").(string)),
 		RoleName:                 aws.String(name),
-		AssumeRolePolicyDocument: aws.String(d.Get("assume_role_policy").(string)),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
-		request.Description = aws.String(v.(string))
+		input.Description = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("max_session_duration"); ok {
-		request.MaxSessionDuration = aws.Int64(int64(v.(int)))
+		input.MaxSessionDuration = aws.Int64(int64(v.(int)))
 	}
 
 	if v, ok := d.GetOk("permissions_boundary"); ok {
-		request.PermissionsBoundary = aws.String(v.(string))
+		input.PermissionsBoundary = aws.String(v.(string))
 	}
 
 	if len(tags) > 0 {
-		request.Tags = Tags(tags.IgnoreAWS())
+		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
-	output, err := retryCreateRole(conn, request)
+	output, err := retryCreateRole(conn, input)
 
 	// Some partitions (i.e., ISO) may not support tag-on-create
-	if request.Tags != nil && meta.(*conns.AWSClient).Partition != endpoints.AwsPartitionID && verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
+	if input.Tags != nil && verify.ErrorISOUnsupported(conn.PartitionID, err) {
 		log.Printf("[WARN] failed creating IAM Role (%s) with tags: %s. Trying create without tags.", name, err)
-		request.Tags = nil
+		input.Tags = nil
 
-		output, err = retryCreateRole(conn, request)
+		output, err = retryCreateRole(conn, input)
 	}
 
 	if err != nil {
@@ -232,11 +229,11 @@ func resourceRoleCreate(d *schema.ResourceData, meta interface{}) error {
 	d.SetId(roleName)
 
 	// Some partitions (i.e., ISO) may not support tag-on-create, attempt tag after create
-	if request.Tags == nil && len(tags) > 0 && meta.(*conns.AWSClient).Partition != endpoints.AwsPartitionID {
+	if input.Tags == nil && len(tags) > 0 && meta.(*conns.AWSClient).Partition != endpoints.AwsPartitionID {
 		err := roleUpdateTags(conn, d.Id(), nil, tags)
 
 		// If default tags only, log and continue. Otherwise, error.
-		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
+		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.ErrorISOUnsupported(conn.PartitionID, err) {
 			log.Printf("[WARN] failed adding tags after create for IAM Role (%s): %s", d.Id(), err)
 			return resourceRoleRead(d, meta)
 		}
@@ -276,9 +273,7 @@ func resourceRoleRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.Set("arn", role.Arn)
-	if err := d.Set("create_date", role.CreateDate.Format(time.RFC3339)); err != nil {
-		return err
-	}
+	d.Set("create_date", role.CreateDate.Format(time.RFC3339))
 	d.Set("description", role.Description)
 	d.Set("max_session_duration", role.MaxSessionDuration)
 	d.Set("name", role.RoleName)
@@ -289,13 +284,19 @@ func resourceRoleRead(d *schema.ResourceData, meta interface{}) error {
 	}
 	d.Set("unique_id", role.RoleId)
 
-	assumeRolePolicy, err := url.QueryUnescape(*role.AssumeRolePolicyDocument)
+	assumeRolePolicy, err := url.QueryUnescape(aws.StringValue(role.AssumeRolePolicyDocument))
+
 	if err != nil {
 		return err
 	}
-	if err := d.Set("assume_role_policy", assumeRolePolicy); err != nil {
+
+	policyToSet, err := verify.PolicyToSet(d.Get("assume_role_policy").(string), assumeRolePolicy)
+
+	if err != nil {
 		return err
 	}
+
+	d.Set("assume_role_policy", policyToSet)
 
 	inlinePolicies, err := readRoleInlinePolicies(aws.StringValue(role.RoleName), meta)
 	if err != nil {
@@ -337,15 +338,21 @@ func resourceRoleUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IAMConn
 
 	if d.HasChange("assume_role_policy") {
-		assumeRolePolicyInput := &iam.UpdateAssumeRolePolicyInput{
-			RoleName:       aws.String(d.Id()),
-			PolicyDocument: aws.String(d.Get("assume_role_policy").(string)),
+		assumeRolePolicy, err := structure.NormalizeJsonString(d.Get("assume_role_policy").(string))
+
+		if err != nil {
+			return fmt.Errorf("assume_role_policy (%s) is invalid JSON: %w", assumeRolePolicy, err)
 		}
 
-		_, err := tfresource.RetryWhen(
+		input := &iam.UpdateAssumeRolePolicyInput{
+			RoleName:       aws.String(d.Id()),
+			PolicyDocument: aws.String(assumeRolePolicy),
+		}
+
+		_, err = tfresource.RetryWhen(
 			propagationTimeout,
 			func() (interface{}, error) {
-				return conn.UpdateAssumeRolePolicy(assumeRolePolicyInput)
+				return conn.UpdateAssumeRolePolicy(input)
 			},
 			func(err error) (bool, error) {
 				if tfawserr.ErrMessageContains(err, iam.ErrCodeMalformedPolicyDocumentException, "Invalid principal in policy") {
@@ -362,12 +369,12 @@ func resourceRoleUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("description") {
-		roleDescriptionInput := &iam.UpdateRoleDescriptionInput{
+		input := &iam.UpdateRoleDescriptionInput{
 			RoleName:    aws.String(d.Id()),
 			Description: aws.String(d.Get("description").(string)),
 		}
 
-		_, err := conn.UpdateRoleDescription(roleDescriptionInput)
+		_, err := conn.UpdateRoleDescription(input)
 
 		if err != nil {
 			return fmt.Errorf("error updating IAM Role (%s) description: %w", d.Id(), err)
@@ -375,12 +382,12 @@ func resourceRoleUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("max_session_duration") {
-		roleMaxDurationInput := &iam.UpdateRoleInput{
+		input := &iam.UpdateRoleInput{
 			RoleName:           aws.String(d.Id()),
 			MaxSessionDuration: aws.Int64(int64(d.Get("max_session_duration").(int))),
 		}
 
-		_, err := conn.UpdateRole(roleMaxDurationInput)
+		_, err := conn.UpdateRole(input)
 
 		if err != nil {
 			return fmt.Errorf("error updating IAM Role (%s) MaxSessionDuration: %s", d.Id(), err)
@@ -485,7 +492,7 @@ func resourceRoleUpdate(d *schema.ResourceData, meta interface{}) error {
 		err := roleUpdateTags(conn, d.Id(), o, n)
 
 		// Some partitions may not support tagging, giving error
-		if meta.(*conns.AWSClient).Partition != endpoints.AwsPartitionID && verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
+		if meta.(*conns.AWSClient).Partition != endpoints.AwsPartitionID && verify.ErrorISOUnsupported(conn.PartitionID, err) {
 			log.Printf("[WARN] failed updating tags for IAM Role %s: %s", d.Id(), err)
 			return resourceRoleRead(d, meta)
 		}
@@ -744,16 +751,22 @@ func expandRoleInlinePolicy(roleName string, tfMap map[string]interface{}) *iam.
 		return nil
 	}
 
-	apiObject := &iam.PutRolePolicyInput{
-		RoleName: aws.String(roleName),
-	}
+	apiObject := &iam.PutRolePolicyInput{}
+
+	namePolicy := false
 
 	if v, ok := tfMap["name"].(string); ok && v != "" {
 		apiObject.PolicyName = aws.String(v)
+		namePolicy = true
 	}
 
 	if v, ok := tfMap["policy"].(string); ok && v != "" {
 		apiObject.PolicyDocument = aws.String(v)
+		namePolicy = true
+	}
+
+	if namePolicy {
+		apiObject.RoleName = aws.String(roleName)
 	}
 
 	return apiObject
@@ -851,12 +864,14 @@ func readRoleInlinePolicies(roleName string, meta interface{}) ([]*iam.PutRolePo
 		apiObjects = append(apiObjects, apiObject)
 	}
 
-	if len(apiObjects) == 0 {
-		apiObjects = append(apiObjects, &iam.PutRolePolicyInput{
-			PolicyDocument: aws.String(""),
-			PolicyName:     aws.String(""),
-		})
-	}
+	/*
+		if len(apiObjects) == 0 {
+			apiObjects = append(apiObjects, &iam.PutRolePolicyInput{
+				PolicyDocument: aws.String(""),
+				PolicyName:     aws.String(""),
+			})
+		}
+	*/
 
 	return apiObjects, nil
 }
@@ -877,22 +892,28 @@ func inlinePoliciesActualDiff(d *schema.ResourceData) bool {
 	osPolicies := expandRoleInlinePolicies(roleName, os.List())
 	nsPolicies := expandRoleInlinePolicies(roleName, ns.List())
 
-	return !inlinePoliciesEquivalent(osPolicies, nsPolicies)
+	return !inlinePoliciesEquivalent(nsPolicies, osPolicies)
 }
 
-func inlinePoliciesEquivalent(one, two []*iam.PutRolePolicyInput) bool {
-	if one == nil && two == nil {
+func inlinePoliciesEquivalent(readPolicies, configPolicies []*iam.PutRolePolicyInput) bool {
+	if readPolicies == nil && configPolicies == nil {
 		return true
 	}
 
-	if len(one) != len(two) {
+	if len(readPolicies) == 0 && len(configPolicies) == 1 {
+		if equivalent, err := awspolicy.PoliciesAreEquivalent(`{}`, aws.StringValue(configPolicies[0].PolicyDocument)); err == nil && equivalent {
+			return true
+		}
+	}
+
+	if len(readPolicies) != len(configPolicies) {
 		return false
 	}
 
 	matches := 0
 
-	for _, policyOne := range one {
-		for _, policyTwo := range two {
+	for _, policyOne := range readPolicies {
+		for _, policyTwo := range configPolicies {
 			if aws.StringValue(policyOne.PolicyName) == aws.StringValue(policyTwo.PolicyName) {
 				matches++
 				if equivalent, err := awspolicy.PoliciesAreEquivalent(aws.StringValue(policyOne.PolicyDocument), aws.StringValue(policyTwo.PolicyDocument)); err != nil || !equivalent {
@@ -903,5 +924,5 @@ func inlinePoliciesEquivalent(one, two []*iam.PutRolePolicyInput) bool {
 		}
 	}
 
-	return matches == len(one)
+	return matches == len(readPolicies)
 }

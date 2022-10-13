@@ -29,13 +29,13 @@ data "aws_ssm_parameters_by_path" "foo" {
 
 The following arguments are supported:
 
-* `path` - (Required) The prefix path of the parameter.
+* `path` - (Required) Prefix path of the parameter.
 * `with_decryption` - (Optional) Whether to return decrypted `SecureString` value. Defaults to `true`.
 * `recursive` - (Optional) Whether to recursively return parameters under `path`. Defaults to `false`.
 
 In addition to all arguments above, the following attributes are exported:
 
-* `arns` - The ARNs of the parameters.
-* `names` - The names of the parameters.
-* `types` - The types of the parameters.
-* `values` - The value of the parameters.
+* `arns` - ARNs of the parameters.
+* `names` - Names of the parameters.
+* `types` - Types of the parameters.
+* `values` - Value of the parameters.

@@ -2,7 +2,6 @@ package configservice
 
 import (
 	"errors"
-	"fmt"
 	"log"
 	"time"
 
@@ -12,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -173,13 +173,13 @@ func resourceOrganizationCustomRuleCreate(d *schema.ResourceData, meta interface
 	_, err := conn.PutOrganizationConfigRule(input)
 
 	if err != nil {
-		return fmt.Errorf("error creating Config Organization Custom Rule (%s): %s", name, err)
+		return create.Error(names.ConfigService, create.ErrActionCreating, ResNameOrganizationCustomRule, name, err)
 	}
 
 	d.SetId(name)
 
 	if err := waitForOrganizationRuleStatusCreateSuccessful(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return fmt.Errorf("error waiting for Config Organization Custom Rule (%s) creation: %s", d.Id(), err)
+		return create.Error(names.ConfigService, create.ErrActionWaitingForCreation, ResNameOrganizationCustomRule, d.Id(), err)
 	}
 
 	return resourceOrganizationCustomRuleRead(d, meta)
@@ -197,7 +197,7 @@ func resourceOrganizationCustomRuleRead(d *schema.ResourceData, meta interface{}
 	}
 
 	if err != nil {
-		return fmt.Errorf("error describing Config Organization Custom Rule (%s): %s", d.Id(), err)
+		return create.Error(names.ConfigService, create.ErrActionReading, ResNameOrganizationCustomRule, d.Id(), err)
 	}
 
 	if !d.IsNewResource() && rule == nil {
@@ -207,22 +207,22 @@ func resourceOrganizationCustomRuleRead(d *schema.ResourceData, meta interface{}
 	}
 
 	if d.IsNewResource() && rule == nil {
-		return names.Error(names.ConfigService, names.ErrActionReading, "Organization Custom Rule", d.Id(), errors.New("empty rule after creation"))
+		return create.Error(names.ConfigService, create.ErrActionReading, ResNameOrganizationCustomRule, d.Id(), errors.New("empty rule after creation"))
 	}
 
 	if rule.OrganizationManagedRuleMetadata != nil {
-		return fmt.Errorf("expected Config Organization Custom Rule, found Config Organization Custom Rule: %s", d.Id())
+		return create.Error(names.ConfigService, create.ErrActionReading, ResNameOrganizationCustomRule, d.Id(), errors.New("expected Organization Custom Rule, found Organization Managed Rule"))
 	}
 
 	if rule.OrganizationCustomRuleMetadata == nil {
-		return fmt.Errorf("error describing Config Organization Custom Rule (%s): empty metadata", d.Id())
+		return create.Error(names.ConfigService, create.ErrActionReading, ResNameOrganizationCustomRule, d.Id(), errors.New("empty metadata"))
 	}
 
 	d.Set("arn", rule.OrganizationConfigRuleArn)
 	d.Set("description", rule.OrganizationCustomRuleMetadata.Description)
 
 	if err := d.Set("excluded_accounts", aws.StringValueSlice(rule.ExcludedAccounts)); err != nil {
-		return fmt.Errorf("error setting excluded_accounts: %s", err)
+		return create.Error(names.ConfigService, create.ErrActionSetting, ResNameOrganizationCustomRule, d.Id(), err)
 	}
 
 	d.Set("input_parameters", rule.OrganizationCustomRuleMetadata.InputParameters)
@@ -232,14 +232,14 @@ func resourceOrganizationCustomRuleRead(d *schema.ResourceData, meta interface{}
 	d.Set("resource_id_scope", rule.OrganizationCustomRuleMetadata.ResourceIdScope)
 
 	if err := d.Set("resource_types_scope", aws.StringValueSlice(rule.OrganizationCustomRuleMetadata.ResourceTypesScope)); err != nil {
-		return fmt.Errorf("error setting resource_types_scope: %s", err)
+		return create.Error(names.ConfigService, create.ErrActionSetting, ResNameOrganizationCustomRule, d.Id(), err)
 	}
 
 	d.Set("tag_key_scope", rule.OrganizationCustomRuleMetadata.TagKeyScope)
 	d.Set("tag_value_scope", rule.OrganizationCustomRuleMetadata.TagValueScope)
 
 	if err := d.Set("trigger_types", aws.StringValueSlice(rule.OrganizationCustomRuleMetadata.OrganizationConfigRuleTriggerTypes)); err != nil {
-		return fmt.Errorf("error setting trigger_types: %s", err)
+		return create.Error(names.ConfigService, create.ErrActionSetting, ResNameOrganizationCustomRule, d.Id(), err)
 	}
 
 	return nil
@@ -291,11 +291,11 @@ func resourceOrganizationCustomRuleUpdate(d *schema.ResourceData, meta interface
 	_, err := conn.PutOrganizationConfigRule(input)
 
 	if err != nil {
-		return fmt.Errorf("error updating Config Organization Custom Rule (%s): %s", d.Id(), err)
+		return create.Error(names.ConfigService, create.ErrActionUpdating, ResNameOrganizationCustomRule, d.Id(), err)
 	}
 
 	if err := waitForOrganizationRuleStatusUpdateSuccessful(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-		return fmt.Errorf("error waiting for Config Organization Custom Rule (%s) update: %s", d.Id(), err)
+		return create.Error(names.ConfigService, create.ErrActionWaitingForUpdate, ResNameOrganizationCustomRule, d.Id(), err)
 	}
 
 	return resourceOrganizationCustomRuleRead(d, meta)
@@ -311,11 +311,11 @@ func resourceOrganizationCustomRuleDelete(d *schema.ResourceData, meta interface
 	_, err := conn.DeleteOrganizationConfigRule(input)
 
 	if err != nil {
-		return fmt.Errorf("error deleting Config Organization Custom Rule (%s): %s", d.Id(), err)
+		return create.Error(names.ConfigService, create.ErrActionDeleting, ResNameOrganizationCustomRule, d.Id(), err)
 	}
 
 	if err := waitForOrganizationRuleStatusDeleteSuccessful(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return fmt.Errorf("error waiting for Config Organization Custom Rule (%s) deletion: %s", d.Id(), err)
+		return create.Error(names.ConfigService, create.ErrActionWaitingForDeletion, ResNameOrganizationCustomRule, d.Id(), err)
 	}
 
 	return nil

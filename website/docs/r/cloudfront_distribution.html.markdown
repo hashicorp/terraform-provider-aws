@@ -45,7 +45,7 @@ locals {
 resource "aws_cloudfront_distribution" "s3_distribution" {
   origin {
     domain_name = aws_s3_bucket.b.bucket_regional_domain_name
-    origin_id   = local.s3_origin_id
+    origin_id   = locals.s3_origin_id
 
     s3_origin_config {
       origin_access_identity = "origin-access-identity/cloudfront/ABCDEFG1234567"
@@ -222,7 +222,7 @@ of several sub-resources - these resources are laid out below.
 * `is_ipv6_enabled` (Optional) - Whether the IPv6 is enabled for the distribution.
 
 * `http_version` (Optional) - The maximum HTTP version to support on the
-    distribution. Allowed values are `http1.1` and `http2`. The default is
+    distribution. Allowed values are `http1.1`, `http2`, `http2and3` and `http3`. The default is
     `http2`.
 
 * `logging_config` (Optional) - The [logging
@@ -245,7 +245,7 @@ of several sub-resources - these resources are laid out below.
 * `restrictions` (Required) - The [restriction
     configuration](#restrictions-arguments) for this distribution (maximum one).
 
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 * `viewer_certificate` (Required) - The [SSL
     configuration](#viewer-certificate-arguments) for this distribution (maximum
@@ -342,7 +342,7 @@ See the [CloudFront User Guide](https://docs.aws.amazon.com/AmazonCloudFront/lat
 * `cookies` (Required) - The [forwarded values cookies](#cookies-arguments)
     that specifies how CloudFront handles cookies (maximum one).
 
-* `headers` (Optional) - Specifies the Headers, if any, that you want
+* `headers` (Optional) - Headers, if any, that you want
     CloudFront to vary upon for this cache behavior. Specify `*` to include all
     headers.
 
@@ -415,7 +415,7 @@ resource "aws_cloudfront_distribution" "example" {
 
 ##### Cookies Arguments
 
-* `forward` (Required) - Specifies whether you want CloudFront to forward
+* `forward` (Required) - Whether you want CloudFront to forward
     cookies to the origin that is associated with this cache behavior. You can
     specify `all`, `none` or `whitelist`. If `whitelist`, you must include the
     subsequent `whitelisted_names`
@@ -472,6 +472,8 @@ argument should not be specified.
 * `custom_header` (Optional) - One or more sub-resources with `name` and
     `value` parameters that specify header data that will be sent to the origin
     (multiples allowed).
+
+* `origin_access_control_id` (Optional) - The unique identifier of an origin access control for this origin.
 
 * `origin_id` (Required) - A unique identifier for the origin.
 
@@ -593,7 +595,7 @@ In addition to all arguments above, the following attributes are exported:
     distribution's information is fully propagated throughout the Amazon
     CloudFront system.
 
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 * `trusted_key_groups` - List of nested attributes for active trusted key groups, if the distribution is set up to serve private content with signed URLs
     * `enabled` - `true` if any of the key groups have public keys that CloudFront can use to verify the signatures of signed URLs and signed cookies

@@ -155,7 +155,7 @@ func resourceMetricFilterRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("name", mf.FilterName)
 	d.Set("pattern", mf.FilterPattern)
 	if err := d.Set("metric_transformation", flattenMetricTransformations(mf.MetricTransformations)); err != nil {
-		return fmt.Errorf("error setting metric_transformation: %w", err)
+		return fmt.Errorf("setting metric_transformation: %w", err)
 	}
 
 	return nil

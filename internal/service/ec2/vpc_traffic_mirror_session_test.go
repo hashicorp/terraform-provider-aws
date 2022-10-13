@@ -31,9 +31,9 @@ func TestAccVPCTrafficMirrorSession_basic(t *testing.T) {
 			acctest.PreCheck(t)
 			testAccPreCheckTrafficMirrorSession(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTrafficMirrorSessionDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTrafficMirrorSessionDestroy,
 		Steps: []resource.TestStep{
 			//create
 			{
@@ -92,9 +92,9 @@ func TestAccVPCTrafficMirrorSession_tags(t *testing.T) {
 			acctest.PreCheck(t)
 			testAccPreCheckTrafficMirrorSession(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTrafficMirrorSessionDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTrafficMirrorSessionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCTrafficMirrorSessionConfig_tags1(rName, "key1", "value1", session),
@@ -141,9 +141,9 @@ func TestAccVPCTrafficMirrorSession_disappears(t *testing.T) {
 			acctest.PreCheck(t)
 			testAccPreCheckTrafficMirrorSession(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTrafficMirrorSessionDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTrafficMirrorSessionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCTrafficMirrorSessionConfig_basic(rName, session),
@@ -178,7 +178,7 @@ func testAccCheckTrafficMirrorSessionExists(name string, session *ec2.TrafficMir
 			return err
 		}
 
-		if 0 == len(out.TrafficMirrorSessions) {
+		if len(out.TrafficMirrorSessions) == 0 {
 			return fmt.Errorf("Traffic mirror session %s not found", rs.Primary.ID)
 		}
 

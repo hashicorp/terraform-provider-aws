@@ -83,12 +83,12 @@ resource "aws_appflow_connector_profile" "example" {
 
 The AppFlow connector profile argument layout is a complex structure. The following top-level arguments are supports:
 
-* `name ` (Required) - The name of the connector profile. The name is unique for each `ConnectorProfile` in your AWS account.
+* `name ` (Required) - Name of the connector profile. The name is unique for each `ConnectorProfile` in your AWS account.
 * `connection_mode` (Required) - Indicates the connection mode and specifies whether it is public or private. Private flows use AWS PrivateLink to route data over AWS infrastructure without exposing it to the public internet. One of: `Public`, `Private`.
 * `connector_label` (Optional) - The label of the connector. The label is unique for each ConnectorRegistration in your AWS account. Only needed if calling for `CustomConnector` connector type.
 * `connector_profile_config` (Required) - Defines the connector-specific configuration and credentials. See [Connector Profile Config](#connector-profile-config) for more details.
 * `connector_type` (Required) - The type of connector. One of: `Amplitude`, `CustomConnector`, `CustomerProfiles`, `Datadog`, `Dynatrace`, `EventBridge`, `Googleanalytics`, `Honeycode`, `Infornexus`, `LookoutMetrics`, `Marketo`, `Redshift`, `S3`, `Salesforce`, `SAPOData`, `Servicenow`, `Singular`, `Slack`, `Snowflake`, `Trendmicro`, `Upsolver`, `Veeva`, `Zendesk`.
-* `kms_arn` (Optional) - The ARN (Amazon Resource Name) of the Key Management Service (KMS) key you provide for encryption. This is required if you do not want to use the Amazon AppFlow-managed KMS key. If you don't provide anything here, Amazon AppFlow uses the Amazon AppFlow-managed KMS key.
+* `kms_arn` (Optional) - ARN (Amazon Resource Name) of the Key Management Service (KMS) key you provide for encryption. This is required if you do not want to use the Amazon AppFlow-managed KMS key. If you don't provide anything here, Amazon AppFlow uses the Amazon AppFlow-managed KMS key.
 
 ### Connector Profile Config
 
@@ -99,41 +99,41 @@ The AppFlow connector profile argument layout is a complex structure. The follow
 
 * `amplitude` (Optional) - The connector-specific credentials required when using Amplitude. See [Amplitude Connector Profile Credentials](#amplitude-connector-profile-credentials) for more details.
 * `custom_connector` (Optional) - The connector-specific profile credentials required when using the custom connector. See [Custom Connector Profile Credentials](#custom-connector-profile-credentials) for more details.
-* `datadog` (Optional) - The connector-specific credentials required when using Datadog. See [Datadog Connector Profile Credentials](#datadog-connector-profile-credentials) for more details.
+* `datadog` (Optional) - Connector-specific credentials required when using Datadog. See [Datadog Connector Profile Credentials](#datadog-connector-profile-credentials) for more details.
 * `dynatrace` (Optional) - The connector-specific credentials required when using Dynatrace. See [Dynatrace Connector Profile Credentials](#dynatrace-connector-profile-credentials) for more details.
 * `google_analytics` (Optional) - The connector-specific credentials required when using Google Analytics. See [Google Analytics Connector Profile Credentials](#google-analytics-connector-profile-credentials) for more details.
 * `honeycode` (Optional) - The connector-specific credentials required when using Amazon Honeycode. See [Honeycode Connector Profile Credentials](#honeycode-connector-profile-credentials) for more details.
 * `infor_nexus` (Optional) - The connector-specific credentials required when using Infor Nexus. See [Infor Nexus Connector Profile Credentials](#infor-nexus-connector-profile-credentials) for more details.
-* `marketo` (Optional) - The connector-specific credentials required when using Marketo. See [Marketo Connector Profile Credentials](#marketo-connector-profile-credentials) for more details.
-* `redshift` (Optional) - The connector-specific credentials required when using Amazon Redshift. See [Redshift Connector Profile Credentials](#redshift-connector-profile-credentials) for more details.
+* `marketo` (Optional) - Connector-specific credentials required when using Marketo. See [Marketo Connector Profile Credentials](#marketo-connector-profile-credentials) for more details.
+* `redshift` (Optional) - Connector-specific credentials required when using Amazon Redshift. See [Redshift Connector Profile Credentials](#redshift-connector-profile-credentials) for more details.
 * `salesforce` (Optional) - The connector-specific credentials required when using Salesforce. See [Salesforce Connector Profile Credentials](#salesforce-connector-profile-credentials) for more details.
 * `sapo_data` (Optional) - The connector-specific credentials required when using SAPOData. See [SAPOData Connector Profile Credentials](#sapodata-connector-profile-credentials) for more details.
 * `service_now` (Optional) - The connector-specific credentials required when using ServiceNow. See [ServiceNow Connector Profile Credentials](#servicenow-connector-profile-credentials) for more details.
-* `singular` (Optional) - The connector-specific credentials required when using Singular. See [Singular Connector Profile Credentials](#singular-connector-profile-credentials) for more details.
-* `slack` (Optional) - The connector-specific credentials required when using Slack. See [Slack Connector Profile Credentials](#amplitude-connector-profile-credentials) for more details.
+* `singular` (Optional) - Connector-specific credentials required when using Singular. See [Singular Connector Profile Credentials](#singular-connector-profile-credentials) for more details.
+* `slack` (Optional) - Connector-specific credentials required when using Slack. See [Slack Connector Profile Credentials](#amplitude-connector-profile-credentials) for more details.
 * `snowflake` (Optional) - The connector-specific credentials required when using Snowflake. See [Snowflake Connector Profile Credentials](#snowflake-connector-profile-credentials) for more details.
 * `trendmicro` (Optional) - The connector-specific credentials required when using Trend Micro. See [Trend Micro Connector Profile Credentials](#trendmicro-connector-profile-credentials) for more details.
-* `veeva` (Optional) - The connector-specific credentials required when using Veeva. See [Veeva Connector Profile Credentials](#veeva-connector-profile-credentials) for more details.
-* `zendesk` (Optional) - The connector-specific credentials required when using Zendesk. See [Zendesk Connector Profile Credentials](#zendesk-connector-profile-credentials) for more details.
+* `veeva` (Optional) - Connector-specific credentials required when using Veeva. See [Veeva Connector Profile Credentials](#veeva-connector-profile-credentials) for more details.
+* `zendesk` (Optional) - Connector-specific credentials required when using Zendesk. See [Zendesk Connector Profile Credentials](#zendesk-connector-profile-credentials) for more details.
 
 #### Amplitude Connector Profile Credentials
 
-* `api_key` (Required) - A unique alphanumeric identifier used to authenticate a user, developer, or calling program to your API.
+* `api_key` (Required) - Unique alphanumeric identifier used to authenticate a user, developer, or calling program to your API.
 * `secret_key` (Required) - The Secret Access Key portion of the credentials.
 
 #### Custom Connector Profile Credentials
 
-* `api_key` (Optional) - The API keys required for the authentication of the user.
+* `api_key` (Optional) - API keys required for the authentication of the user.
     * `api_key` (Required) - The API key required for API key authentication.
     * `api_secret_key` (Optional) - The API secret key required for API key authentication.
 * `authentication_type` (Required) - The authentication type that the custom connector uses for authenticating while creating a connector profile. One of: `APIKEY`, `BASIC`, `CUSTOM`, `OAUTH2`.
-* `basic` (Optional) - The basic credentials that are required for the authentication of the user.
+* `basic` (Optional) - Basic credentials that are required for the authentication of the user.
     * `password` (Required) - The password to use to connect to a resource.
     * `username` (Required) - The username to use to connect to a resource.
 * `custom` (Optional) - If the connector uses the custom authentication mechanism, this holds the required credentials.
     * `credentials_map` (Optional) - A map that holds custom authentication credentials.
     * `custom_authentication_type` (Required) - The custom authentication type that the connector uses.
-* `oauth2` (Optional) - The OAuth 2.0 credentials required for the authentication of the user.
+* `oauth2` (Optional) - OAuth 2.0 credentials required for the authentication of the user.
     * `access_token` (Optional) - The access token used to access the connector on your behalf.
     * `client_id` (Optional) - The identifier for the desired client.
     * `client_secret` (Optional) - The client secret used by the OAuth client to authenticate to the authorization server.
@@ -142,7 +142,7 @@ The AppFlow connector profile argument layout is a complex structure. The follow
 
 #### Datadog Connector Profile Credentials
 
-* `api_key` (Required) - A unique alphanumeric identifier used to authenticate a user, developer, or calling program to your API.
+* `api_key` (Required) - Unique alphanumeric identifier used to authenticate a user, developer, or calling program to your API.
 * `application_key` (Required) - Application keys, in conjunction with your API key, give you full access to Datadog’s programmatic API. Application keys are associated with the user account that created them. The application key is used to log all requests made to the API.
 
 #### Dynatrace Connector Profile Credentials
@@ -166,9 +166,9 @@ The AppFlow connector profile argument layout is a complex structure. The follow
 #### Infor Nexus Connector Profile Credentials
 
 * `access_key_id` (Required) - The Access Key portion of the credentials.
-* `datakey` (Required) - The encryption keys used to encrypt data.
+* `datakey` (Required) - Encryption keys used to encrypt data.
 * `secret_access_key` (Required) - The secret key used to sign requests.
-* `user_id` (Required) - The identifier for the user.
+* `user_id` (Required) - Identifier for the user.
 
 #### Marketo Connector Profile Credentials
 
@@ -179,8 +179,8 @@ The AppFlow connector profile argument layout is a complex structure. The follow
 
 #### Redshift Connector Profile Credentials
 
-* `password` (Required) - The password that corresponds to the user name.
-* `username` (Required) - The name of the user.
+* `password` (Required) - Password that corresponds to the user name.
+* `username` (Required) - Name of the user.
 
 #### Salesforce Connector Profile Credentials
 
@@ -203,12 +203,12 @@ The AppFlow connector profile argument layout is a complex structure. The follow
 
 #### ServiceNow Connector Profile Credentials
 
-* `password` (Required) - The password that corresponds to the user name.
-* `username` (Required) - The name of the user.
+* `password` (Required) - Password that corresponds to the user name.
+* `username` (Required) - Name of the user.
 
 #### Singular Connector Profile Credentials
 
-* `api_key` (Required) - A unique alphanumeric identifier used to authenticate a user, developer, or calling program to your API.
+* `api_key` (Required) - Unique alphanumeric identifier used to authenticate a user, developer, or calling program to your API.
 
 #### Slack Connector Profile Credentials
 
@@ -219,8 +219,8 @@ The AppFlow connector profile argument layout is a complex structure. The follow
 
 #### Snowflake Connector Profile Credentials
 
-* `password` (Required) - The password that corresponds to the user name.
-* `username` (Required) - The name of the user.
+* `password` (Required) - Password that corresponds to the user name.
+* `username` (Required) - Name of the user.
 
 #### Trendmicro Connector Profile Credentials
 
@@ -228,8 +228,8 @@ The AppFlow connector profile argument layout is a complex structure. The follow
 
 #### Veeva Connector Profile Credentials
 
-* `password` (Required) - The password that corresponds to the user name.
-* `username` (Required) - The name of the user.
+* `password` (Required) - Password that corresponds to the user name.
+* `username` (Required) - Name of the user.
 
 #### Zendesk Connector Profile Credentials
 
@@ -246,18 +246,18 @@ The AppFlow connector profile argument layout is a complex structure. The follow
 ### Connector Profile Properties
 
 * `custom_connector` (Optional) - The connector-specific profile properties required when using the custom connector. See [Custom Connector Profile Properties](#custom-connector-profile-properties) for more details.
-* `datadog` (Optional) - The connector-specific properties required when using Datadog. See [Generic Connector Profile Properties](#generic-connector-profile-properties) for more details.
+* `datadog` (Optional) - Connector-specific properties required when using Datadog. See [Generic Connector Profile Properties](#generic-connector-profile-properties) for more details.
 * `dynatrace` (Optional) - The connector-specific properties required when using Dynatrace. See [Generic Connector Profile Properties](#generic-connector-profile-properties) for more details.
 * `infor_nexus` (Optional) - The connector-specific properties required when using Infor Nexus. See [Generic Connector Profile Properties](#generic-connector-profile-properties) for more details.
-* `marketo` (Optional) - The connector-specific properties required when using Marketo. See [Generic Connector Profile Properties](#generic-connector-profile-properties) for more details.
-* `redshift` (Optional) - The connector-specific properties required when using Amazon Redshift. See [Redshift Connector Profile Properties](#redshift-connector-profile-properties) for more details.
+* `marketo` (Optional) - Connector-specific properties required when using Marketo. See [Generic Connector Profile Properties](#generic-connector-profile-properties) for more details.
+* `redshift` (Optional) - Connector-specific properties required when using Amazon Redshift. See [Redshift Connector Profile Properties](#redshift-connector-profile-properties) for more details.
 * `salesforce` (Optional) - The connector-specific properties required when using Salesforce. See [Salesforce Connector Profile Properties](#salesforce-connector-profile-properties) for more details.
 * `sapo_data` (Optional) - The connector-specific properties required when using SAPOData. See [SAPOData Connector Profile Properties](#sapodata-connector-profile-properties) for more details.
 * `service_now` (Optional) - The connector-specific properties required when using ServiceNow. See [Generic Connector Profile Properties](#generic-connector-profile-properties) for more details.
-* `slack` (Optional) - The connector-specific properties required when using Slack. See [Generic Connector Profile Properties](#generic-connector-profile-properties) for more details.
+* `slack` (Optional) - Connector-specific properties required when using Slack. See [Generic Connector Profile Properties](#generic-connector-profile-properties) for more details.
 * `snowflake` (Optional) - The connector-specific properties required when using Snowflake. See [Snowflake Connector Profile Properties](#snowflake-connector-profile-properties) for more details.
-* `veeva` (Optional) - The connector-specific properties required when using Veeva. See [Generic Connector Profile Properties](#generic-connector-profile-properties) for more details.
-* `zendesk` (Optional) - The connector-specific properties required when using Zendesk. See [Generic Connector Profile Properties](#generic-connector-profile-properties) for more details.
+* `veeva` (Optional) - Connector-specific properties required when using Veeva. See [Generic Connector Profile Properties](#generic-connector-profile-properties) for more details.
+* `zendesk` (Optional) - Connector-specific properties required when using Zendesk. See [Generic Connector Profile Properties](#generic-connector-profile-properties) for more details.
 
 #### Custom Connector Profile Properties
 
@@ -278,7 +278,7 @@ Datadog, Dynatrace, Infor Nexus, Marketo, ServiceNow, Slack, Veeva, and Zendesk 
 * `bucket_name` (Required) - A name for the associated Amazon S3 bucket.
 * `bucket_prefix` (Optional) - The object key for the destination bucket in which Amazon AppFlow places the files.
 * `database_url` (Required) - The JDBC URL of the Amazon Redshift cluster.
-* `role_arn` (Required) - The Amazon Resource Name (ARN) of the IAM role.
+* `role_arn` (Required) - ARN of the IAM role.
 
 #### Salesforce Connector Profile Properties
 
@@ -304,16 +304,16 @@ Datadog, Dynatrace, Infor Nexus, Marketo, ServiceNow, Slack, Veeva, and Zendesk 
 * `bucket_name` (Required) - The name of the Amazon S3 bucket associated with Snowflake.
 * `bucket_prefix` (Optional) - The bucket path that refers to the Amazon S3 bucket associated with Snowflake.
 * `private_link_service_name` (Optional) - The Snowflake Private Link service name to be used for private data transfers.
-* `region` (Optional) - The AWS Region of the Snowflake account.
-* `stage` (Required) - The name of the Amazon S3 stage that was created while setting up an Amazon S3 stage in the Snowflake account. This is written in the following format: `<Database>.<Schema>.<Stage Name>`.
+* `region` (Optional) - AWS Region of the Snowflake account.
+* `stage` (Required) - Name of the Amazon S3 stage that was created while setting up an Amazon S3 stage in the Snowflake account. This is written in the following format: `<Database>.<Schema>.<Stage Name>`.
 * `warehouse` (Required) - The name of the Snowflake warehouse.
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-* `arn` - The Amazon Resource Name (ARN) of the connector profile.
-* `credentials_arn` - The Amazon Resource Name (ARN) of the connector profile credentials.
+* `arn` - ARN of the connector profile.
+* `credentials_arn` - ARN of the connector profile credentials.
 
 ## Import
 

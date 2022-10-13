@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -165,13 +166,13 @@ func resourceNotificationRuleRead(d *schema.ResourceData, meta interface{}) erro
 	})
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, codestarnotifications.ErrCodeResourceNotFoundException) {
-		names.LogNotFoundRemoveState(names.CodeStarNotifications, names.ErrActionReading, ResNotificationRule, d.Id())
+		create.LogNotFoundRemoveState(names.CodeStarNotifications, create.ErrActionReading, ResNotificationRule, d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return names.Error(names.CodeStarNotifications, names.ErrActionReading, ResNotificationRule, d.Id(), err)
+		return create.Error(names.CodeStarNotifications, create.ErrActionReading, ResNotificationRule, d.Id(), err)
 	}
 
 	d.Set("arn", rule.Arn)

@@ -117,13 +117,7 @@ func resourceTopicPolicyDelete(d *schema.ResourceData, meta interface{}) error {
 	// It is impossible to delete a policy or set to empty
 	// (confirmed by AWS Support representative)
 	// so we instead set it back to the default one.
-	err := putTopicPolicy(conn, d.Id(), defaultTopicPolicy(d.Id(), d.Get("owner").(string)))
-
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return putTopicPolicy(conn, d.Id(), defaultTopicPolicy(d.Id(), d.Get("owner").(string)))
 }
 
 func defaultTopicPolicy(topicArn, accountId string) string {

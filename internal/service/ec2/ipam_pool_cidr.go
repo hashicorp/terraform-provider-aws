@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -207,6 +208,10 @@ func WaitIPAMPoolCIDRAvailable(conn *ec2.EC2, id string, timeout time.Duration) 
 	outputRaw, err := stateConf.WaitForState()
 
 	if output, ok := outputRaw.(*ec2.IpamPoolCidr); ok {
+		if failureReason := output.FailureReason; failureReason != nil {
+			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.StringValue(failureReason.Code), aws.StringValue(failureReason.Message)))
+		}
+
 		return output, err
 	}
 
@@ -225,6 +230,10 @@ func WaitIPAMPoolCIDRDeleted(conn *ec2.EC2, id string, timeout time.Duration) (*
 	outputRaw, err := stateConf.WaitForState()
 
 	if output, ok := outputRaw.(*ec2.IpamPoolCidr); ok {
+		if failureReason := output.FailureReason; failureReason != nil {
+			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.StringValue(failureReason.Code), aws.StringValue(failureReason.Message)))
+		}
+
 		return output, err
 	}
 

@@ -43,7 +43,7 @@ The following arguments are supported:
 * `name` - (Required) The unique name of the report plan. The name must be between 1 and 256 characters, starting with a letter, and consisting of letters, numbers, and underscores.
 * `report_delivery_channel` - (Required) An object that contains information about where and how to deliver your reports, specifically your Amazon S3 bucket name, S3 key prefix, and the formats of your reports. Detailed below.
 * `report_setting` - (Required) An object that identifies the report template for the report. Reports are built using a report template. Detailed below.
-* `tags` - (Optional) Metadata that you can assign to help organize the report plans you create. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Metadata that you can assign to help organize the report plans you create. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### Report Delivery Channel Arguments
 For **report_delivery_channel** the following attributes are supported:
@@ -67,7 +67,7 @@ In addition to all arguments above, the following attributes are exported:
 * `creation_time` - The date and time that a report plan is created, in Unix format and Coordinated Universal Time (UTC).
 * `deployment_status` - The deployment status of a report plan. The statuses are: `CREATE_IN_PROGRESS` | `UPDATE_IN_PROGRESS` | `DELETE_IN_PROGRESS` | `COMPLETED`.
 * `id` - The id of the backup report plan.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
