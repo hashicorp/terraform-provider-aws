@@ -17,10 +17,11 @@ import (
 
 func ResourceWorkspace() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceWorkspaceCreate,
-		ReadContext:   resourceWorkspaceRead,
-		UpdateContext: resourceWorkspaceUpdate,
-		DeleteContext: resourceWorkspaceDelete,
+		CreateWithoutTimeout: resourceWorkspaceCreate,
+		ReadWithoutTimeout:   resourceWorkspaceRead,
+		UpdateWithoutTimeout: resourceWorkspaceUpdate,
+		DeleteWithoutTimeout: resourceWorkspaceDelete,
+
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

@@ -16,10 +16,11 @@ import (
 
 func ResourceAlertManagerDefinition() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceAlertManagerDefinitionCreate,
-		ReadContext:   resourceAlertManagerDefinitionRead,
-		UpdateContext: resourceAlertManagerDefinitionUpdate,
-		DeleteContext: resourceAlertManagerDefinitionDelete,
+		CreateWithoutTimeout: resourceAlertManagerDefinitionCreate,
+		ReadWithoutTimeout:   resourceAlertManagerDefinitionRead,
+		UpdateWithoutTimeout: resourceAlertManagerDefinitionUpdate,
+		DeleteWithoutTimeout: resourceAlertManagerDefinitionDelete,
+
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},

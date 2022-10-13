@@ -16,10 +16,11 @@ import (
 
 func ResourceRuleGroupNamespace() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceRuleGroupNamespaceCreate,
-		ReadContext:   resourceRuleGroupNamespaceRead,
-		UpdateContext: resourceRuleGroupNamespaceUpdate,
-		DeleteContext: resourceRuleGroupNamespaceDelete,
+		CreateWithoutTimeout: resourceRuleGroupNamespaceCreate,
+		ReadWithoutTimeout:   resourceRuleGroupNamespaceRead,
+		UpdateWithoutTimeout: resourceRuleGroupNamespaceUpdate,
+		DeleteWithoutTimeout: resourceRuleGroupNamespaceDelete,
+
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
