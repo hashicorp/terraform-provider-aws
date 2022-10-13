@@ -699,6 +699,9 @@ func resourceChannelCreate(ctx context.Context, d *schema.ResourceData, meta int
 	if v, ok := d.GetOk("destinations"); ok && len(v.([]interface{})) > 0 {
 		in.Destinations = expandChannelDestinations(v.([]interface{}))
 	}
+	if v, ok := d.GetOk("encoder_settings"); ok && len(v.([]interface{})) > 0 {
+		in.EncoderSettings = expandChannelEncoderSettings(v.([]interface{}))
+	}
 	if v, ok := d.GetOk("input_specification"); ok && len(v.([]interface{})) > 0 {
 		in.InputSpecification = expandChannelInputSpecification(v.([]interface{}))
 	}
@@ -758,6 +761,9 @@ func resourceChannelRead(ctx context.Context, d *schema.ResourceData, meta inter
 	if err := d.Set("destinations", flattenChannelDestinations(out.Destinations)); err != nil {
 		return create.DiagError(names.MediaLive, create.ErrActionSetting, ResNameChannel, d.Id(), err)
 	}
+	if err := d.Set("encoder_settings", flattenChannelEncoderSettings(out.EncoderSettings)); err != nil {
+		return create.DiagError(names.MediaLive, create.ErrActionSetting, ResNameChannel, d.Id(), err)
+	}
 	if err := d.Set("input_specification", flattenChannelInputSpecification(out.InputSpecification)); err != nil {
 		return create.DiagError(names.MediaLive, create.ErrActionSetting, ResNameChannel, d.Id(), err)
 	}
@@ -801,6 +807,7 @@ func resourceChannelUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		"name",
 		"cdi_input_specification",
 		"destinations",
+		"encoder_settings",
 		"input_specification",
 		"maintenance",
 	) {
@@ -812,6 +819,9 @@ func resourceChannelUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 		if v, ok := d.GetOk("destinations"); ok {
 			in.Destinations = expandChannelDestinations(v.([]interface{}))
+		}
+		if v, ok := d.GetOk("encoder_settings"); ok {
+			in.EncoderSettings = expandChannelEncoderSettings(v.([]interface{}))
 		}
 		if v, ok := d.GetOk("input_specification"); ok {
 			in.InputSpecification = expandChannelInputSpecification(v.([]interface{}))

@@ -1,6 +1,7 @@
 package medialive
 
 import (
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/medialive/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -12,7 +13,7 @@ var channelEncoderSettingsSchema = schema.Schema{
 	MaxItems: 1,
 	Elem: &schema.Resource{
 		Schema: map[string]*schema.Schema{
-			"audio_description": {
+			"audio_descriptions": {
 				Type:     schema.TypeSet,
 				Required: true,
 				Elem: &schema.Resource{
@@ -50,6 +51,12 @@ var channelEncoderSettingsSchema = schema.Schema{
 									},
 								},
 							},
+						},
+						"audio_type": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							Computed:         true,
+							ValidateDiagFunc: enum.Validate[types.AudioType](),
 						},
 						"audio_type_control": {
 							Type:             schema.TypeString,
@@ -481,7 +488,7 @@ var channelEncoderSettingsSchema = schema.Schema{
 					},
 				},
 			},
-			"output_group": {
+			"output_groups": {
 				Type:     schema.TypeSet,
 				Required: true,
 				Elem: &schema.Resource{
@@ -1202,7 +1209,7 @@ var channelEncoderSettingsSchema = schema.Schema{
 					},
 				},
 			},
-			"video_description": {
+			"video_descriptions": {
 				Type:     schema.TypeSet,
 				Required: true,
 				Elem: &schema.Resource{
@@ -1532,4 +1539,214 @@ var channelEncoderSettingsSchema = schema.Schema{
 			// TODO nielsen_configuration
 		},
 	},
+}
+
+func expandChannelEncoderSettings(tfList []interface{}) *types.EncoderSettings {
+	if tfList == nil {
+		return nil
+	}
+	m := tfList[0].(map[string]interface{})
+
+	var settings types.EncoderSettings
+	if v, ok := m["audio_descriptions"].([]interface{}); ok && len(v) > 0 {
+		settings.AudioDescriptions = expandChannelEncoderSettingsAudioDescriptions(v)
+	}
+	if v, ok := m["output_groups"].([]interface{}); ok && len(v) > 0 {
+		settings.OutputGroups = expandChannelEncoderSettingsOutputGroups(v)
+	}
+	if v, ok := m["timecode_config"].([]interface{}); ok && len(v) > 0 {
+		settings.TimecodeConfig = expandChannelEncoderSettingsTimecodeConfig(v)
+	}
+	if v, ok := m["video_descriptions"].([]interface{}); ok && len(v) > 0 {
+		settings.VideoDescriptions = expandChannelEncoderSettingsVideoDescriptions(v)
+	}
+	if v, ok := m["avail_blanking"].([]interface{}); ok && len(v) > 0 {
+		settings.AvailBlanking = nil // TODO expandChannelEncoderSettingsAvailBlanking(v)
+	}
+	if v, ok := m["avail_configuration"].([]interface{}); ok && len(v) > 0 {
+		settings.AvailConfiguration = nil // TODO expandChannelEncoderSettingsAvailConfiguration(v)
+	}
+	if v, ok := m["blackout_slate"].([]interface{}); ok && len(v) > 0 {
+		settings.BlackoutSlate = nil // TODO expandChannelEncoderSettingsBlackoutSlate(v)
+	}
+	if v, ok := m["caption_descriptions"].([]interface{}); ok && len(v) > 0 {
+		settings.CaptionDescriptions = nil // TODO expandChannelEncoderSettingsCaptionDescriptions(v)
+	}
+	if v, ok := m["feature_activations"].([]interface{}); ok && len(v) > 0 {
+		settings.FeatureActivations = nil // TODO expandChannelEncoderSettingsFeatureActivations(v)
+	}
+	if v, ok := m["global_configuration"].([]interface{}); ok && len(v) > 0 {
+		settings.GlobalConfiguration = nil // TODO expandChannelEncoderSettingsGlobalConfiguration(v)
+	}
+	if v, ok := m["motion_graphics_configuration"].([]interface{}); ok && len(v) > 0 {
+		settings.MotionGraphicsConfiguration = nil // TODO expandChannelEncoderSettingsMotionGraphicsConfiguration(v)
+	}
+	if v, ok := m["nielsen_configuration"].([]interface{}); ok && len(v) > 0 {
+		settings.NielsenConfiguration = nil // TODO expandChannelEncoderSettingsNielsenConfiguration(v)
+	}
+
+	return &settings
+}
+
+func expandChannelEncoderSettingsAudioDescriptions(tfList []interface{}) []types.AudioDescription {
+	if tfList == nil {
+		return nil
+	}
+
+	var audioDesc []types.AudioDescription
+	for _, tfItem := range tfList {
+		m, ok := tfItem.(map[string]interface{})
+		if !ok {
+			continue
+		}
+
+		var a types.AudioDescription
+		if v, ok := m["audio_selector_name"].(string); ok && v != "" {
+			a.AudioSelectorName = aws.String(v)
+		}
+		if v, ok := m["name"].(string); ok && v != "" {
+			a.Name = aws.String(v)
+		}
+		if v, ok := m["audio_normalization_settings"].([]interface{}); ok && len(v) > 0 {
+			a.AudioNormalizationSettings = nil // TODO expandChannelEncoderSettingsAudioDescriptionsAudioNormalizationSettings(v)
+		}
+		if v, ok := m["audio_type"].(string); ok && v != "" {
+			a.AudioType = types.AudioType(v)
+		}
+		if v, ok := m["audio_type_control"].(string); ok && v != "" {
+			a.AudioTypeControl = types.AudioDescriptionAudioTypeControl(v)
+		}
+		if v, ok := m["audio_watermark_settings"].([]interface{}); ok && len(v) > 0 {
+			a.AudioWatermarkingSettings = nil // TODO expandChannelEncoderSettingsAudioDescriptionsAudioWatermarkSettings(v)
+		}
+		if v, ok := m["codec_settings"].([]interface{}); ok && len(v) > 0 {
+			a.CodecSettings = nil // TODO expandChannelEncoderSettingsAudioDescriptionsCodecSettings(v)
+		}
+		if v, ok := m["language_code"].(string); ok && v != "" {
+			a.LanguageCode = aws.String(v)
+		}
+		if v, ok := m["language_code_control"].(string); ok && v != "" {
+			a.LanguageCodeControl = types.AudioDescriptionLanguageCodeControl(v)
+		}
+		if v, ok := m["remix_settings"].([]interface{}); ok && len(v) > 0 {
+			a.RemixSettings = nil // TODO expandChannelEncoderSettingsAudioDescriptionsRemixSettings(v)
+		}
+		if v, ok := m["stream_name"].(string); ok && v != "" {
+			a.StreamName = aws.String(v)
+		}
+
+		audioDesc = append(audioDesc, a)
+	}
+
+	return audioDesc
+}
+
+func expandChannelEncoderSettingsOutputGroups(tfList []interface{}) []types.OutputGroup {
+	if tfList == nil {
+		return nil
+	}
+
+	var outputGroups []types.OutputGroup
+	for _, tfItem := range tfList {
+		m, ok := tfItem.(map[string]interface{})
+		if !ok {
+			continue
+		}
+
+		var o types.OutputGroup
+		if v, ok := m["output_group_settings"].([]interface{}); ok && len(v) > 0 {
+			o.OutputGroupSettings = nil // TODO expandChannelEncoderSettingsOutputGroupsOutputGroupSettings(v)
+		}
+		if v, ok := m["outputs"].([]interface{}); ok && len(v) > 0 {
+			o.Outputs = nil // TODO expandChannelEncoderSettingsOutputGroupsOutputs(v)
+		}
+		if v, ok := m["name"].(string); ok && v != "" {
+			o.Name = aws.String(v)
+		}
+
+		outputGroups = append(outputGroups, o)
+	}
+
+	return outputGroups
+}
+
+func expandChannelEncoderSettingsTimecodeConfig(tfList []interface{}) *types.TimecodeConfig {
+	if tfList == nil {
+		return nil
+	}
+	m := tfList[0].(map[string]interface{})
+
+	var config types.TimecodeConfig
+	if v, ok := m["source"].(string); ok && v != "" {
+		config.Source = types.TimecodeConfigSource(v)
+	}
+	if v, ok := m["sync_threshold"].(int32); ok {
+		config.SyncThreshold = v
+	}
+
+	return &config
+}
+
+func expandChannelEncoderSettingsVideoDescriptions(tfList []interface{}) []types.VideoDescription {
+	if tfList == nil {
+		return nil
+	}
+
+	var videoDesc []types.VideoDescription
+	for _, tfItem := range tfList {
+		m, ok := tfItem.(map[string]interface{})
+		if !ok {
+			continue
+		}
+
+		var d types.VideoDescription
+		if v, ok := m["name"].(string); ok && v != "" {
+			d.Name = aws.String(v)
+		}
+		if v, ok := m["codec_settings"].([]interface{}); ok && len(v) > 0 {
+			d.CodecSettings = nil // TODO expandChannelEncoderSettingsVideoDescriptionsCodecSettings(v)
+		}
+		if v, ok := m["height"].(int32); ok {
+			d.Height = v
+		}
+		if v, ok := m["respond_to_afd"].(string); ok && v != "" {
+			d.RespondToAfd = types.VideoDescriptionRespondToAfd(v)
+		}
+		if v, ok := m["scaling_behavior"].(string); ok && v != "" {
+			d.ScalingBehavior = types.VideoDescriptionScalingBehavior(v)
+		}
+		if v, ok := m["sharpness"].(int32); ok {
+			d.Sharpness = v
+		}
+		if v, ok := m["width"].(int32); ok {
+			d.Width = v
+		}
+
+		videoDesc = append(videoDesc, d)
+	}
+
+	return videoDesc
+}
+
+func flattenChannelEncoderSettings(apiObject *types.EncoderSettings) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"audio_descriptions": nil, // TODO
+		"output_groups":      nil, // TODO
+		"timecode_config":    nil, // TODO
+		"video_descriptions": nil, // TODO
+		// TODO avail_blanking
+		// TODO avail_configuration
+		// TODO blackout_slate
+		// TODO caption_descriptions
+		// TODO feature_activations
+		// TODO global_configuration
+		// TODO motion_graphics_configuration
+		// TODO nielsen_configuration
+	}
+
+	return []interface{}{m}
 }
