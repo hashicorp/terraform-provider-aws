@@ -255,7 +255,7 @@ func resourceTopicCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	if input.Tags != nil && verify.ErrorISOUnsupported(conn.PartitionID, err) {
 		log.Printf("[WARN] failed creating SNS Topic (%s) with tags: %s. Trying create without tags.", name, err)
 		input.Tags = nil
-		output, err = conn.CreateTopic(input)
+		output, err = conn.CreateTopicWithContext(ctx, input)
 	}
 
 	if err != nil {
