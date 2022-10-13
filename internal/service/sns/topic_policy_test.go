@@ -1,6 +1,7 @@
 package sns_test
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"testing"
@@ -166,7 +167,7 @@ func testAccCheckTopicPolicyDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := tfsns.FindTopicAttributesByARN(conn, rs.Primary.ID)
+		_, err := tfsns.FindTopicAttributesByARN(context.Background(), conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue

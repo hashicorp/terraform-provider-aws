@@ -1,6 +1,7 @@
 package sns_test
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"testing"
@@ -614,7 +615,7 @@ func testAccCheckTopicDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := tfsns.FindTopicAttributesByARN(conn, rs.Primary.ID)
+		_, err := tfsns.FindTopicAttributesByARN(context.Background(), conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -643,7 +644,7 @@ func testAccCheckTopicExists(n string, v *map[string]string) resource.TestCheckF
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SNSConn
 
-		output, err := tfsns.FindTopicAttributesByARN(conn, rs.Primary.ID)
+		output, err := tfsns.FindTopicAttributesByARN(context.Background(), conn, rs.Primary.ID)
 
 		if err != nil {
 			return err

@@ -1,6 +1,7 @@
 package sns_test
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/url"
@@ -492,7 +493,7 @@ func testAccCheckTopicSubscriptionDestroy(s *terraform.State) error {
 			continue
 		}
 
-		output, err := tfsns.FindSubscriptionAttributesByARN(conn, rs.Primary.ID)
+		output, err := tfsns.FindSubscriptionAttributesByARN(context.Background(), conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -525,7 +526,7 @@ func testAccCheckTopicSubscriptionExists(n string, v *map[string]string) resourc
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SNSConn
 
-		output, err := tfsns.FindSubscriptionAttributesByARN(conn, rs.Primary.ID)
+		output, err := tfsns.FindSubscriptionAttributesByARN(context.Background(), conn, rs.Primary.ID)
 
 		if err != nil {
 			return err

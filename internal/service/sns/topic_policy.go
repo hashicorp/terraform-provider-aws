@@ -78,7 +78,7 @@ func resourceTopicPolicyUpsert(ctx context.Context, d *schema.ResourceData, meta
 func resourceTopicPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).SNSConn
 
-	attributes, err := FindTopicAttributesByARN(conn, d.Id())
+	attributes, err := FindTopicAttributesByARN(ctx, conn, d.Id())
 
 	var policy string
 

@@ -179,7 +179,7 @@ func resourceTopicSubscriptionCreate(ctx context.Context, d *schema.ResourceData
 	}
 
 	if waitForConfirmation {
-		if _, err := waitSubscriptionConfirmed(conn, d.Id(), timeout); err != nil {
+		if _, err := waitSubscriptionConfirmed(ctx, conn, d.Id(), timeout); err != nil {
 			return diag.Errorf("waiting for SNS Topic Subscription (%s) confirmation: %s", d.Id(), err)
 		}
 	}
@@ -191,7 +191,7 @@ func resourceTopicSubscriptionRead(ctx context.Context, d *schema.ResourceData, 
 	conn := meta.(*conns.AWSClient).SNSConn
 
 	outputRaw, err := tfresource.RetryWhenNewResourceNotFoundContext(ctx, subscriptionCreateTimeout, func() (interface{}, error) {
-		return FindSubscriptionAttributesByARN(conn, d.Id())
+		return FindSubscriptionAttributesByARN(ctx, conn, d.Id())
 	}, d.IsNewResource())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -243,7 +243,7 @@ func resourceTopicSubscriptionDelete(ctx context.Context, d *schema.ResourceData
 		return diag.Errorf("deleting SNS Topic Subscription (%s): %s", d.Id(), err)
 	}
 
-	if _, err := waitSubscriptionDeleted(conn, d.Id()); err != nil {
+	if _, err := waitSubscriptionDeleted(ctx, conn, d.Id()); err != nil {
 		return diag.Errorf("waiting for SNS Topic Subscription (%s) delete: %s", d.Id(), err)
 	}
 
