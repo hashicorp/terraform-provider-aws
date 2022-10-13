@@ -66,11 +66,12 @@ func ResourceStack() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"enabled": {
 							Type:     schema.TypeBool,
-							Optional: true,
+							Required: true,
 						},
 						"settings_group": {
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringLenBetween(1, 100),
 						},
 					},
 				},
@@ -182,6 +183,8 @@ func ResourceStack() *schema.Resource {
 			"tags":     tftags.TagsSchemaForceNew(),
 			"tags_all": tftags.TagsSchemaComputed(),
 		},
+
+		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 

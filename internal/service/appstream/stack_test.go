@@ -28,10 +28,23 @@ func TestAccAppStreamStack_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStackConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckStackExists(resourceName, &stackOutput),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					acctest.CheckResourceAttrRFC3339(resourceName, "created_time"),
+					resource.TestCheckResourceAttr(resourceName, "access_endpoints.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "application_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "application_settings.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "application_settings.0.settings_group", ""),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, "display_name", ""),
+					resource.TestCheckResourceAttr(resourceName, "embed_host_domains.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "feedback_url", ""),
+					resource.TestCheckResourceAttr(resourceName, "redirect_url", ""),
+					resource.TestCheckResourceAttr(resourceName, "storage_connectors.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "user_settings.#", "7"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "0"),
 				),
 			},
 			{
@@ -56,7 +69,7 @@ func TestAccAppStreamStack_disappears(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStackConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckStackExists(resourceName, &stackOutput),
 					acctest.CheckResourceDisappears(acctest.Provider, tfappstream.ResourceStack(), resourceName),
 				),
@@ -81,16 +94,30 @@ func TestAccAppStreamStack_complete(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStackConfig_complete(rName, description),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckStackExists(resourceName, &stackOutput),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					acctest.CheckResourceAttrRFC3339(resourceName, "created_time"),
 					resource.TestCheckResourceAttr(resourceName, "description", description),
+					resource.TestCheckResourceAttr(resourceName, "embed_host_domains.#", "2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "embed_host_domains.*", "example.com"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "embed_host_domains.*", "subdomain.example.com"),
+					resource.TestCheckResourceAttr(resourceName, "access_endpoints.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "application_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "application_settings.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "application_settings.0.settings_group", "SettingsGroup"),
+					resource.TestCheckResourceAttr(resourceName, "display_name", ""),
+					resource.TestCheckResourceAttr(resourceName, "feedback_url", ""),
+					resource.TestCheckResourceAttr(resourceName, "redirect_url", ""),
+					resource.TestCheckResourceAttr(resourceName, "storage_connectors.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "user_settings.#", "4"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "0"),
 				),
 			},
 			{
 				Config: testAccStackConfig_complete(rName, descriptionUpdated),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckStackExists(resourceName, &stackOutput),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					acctest.CheckResourceAttrRFC3339(resourceName, "created_time"),
@@ -124,7 +151,7 @@ func TestAccAppStreamStack_withTags(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStackConfig_complete(rName, description),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckStackExists(resourceName, &stackOutput),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					acctest.CheckResourceAttrRFC3339(resourceName, "created_time"),
@@ -133,7 +160,7 @@ func TestAccAppStreamStack_withTags(t *testing.T) {
 			},
 			{
 				Config: testAccStackConfig_tags(rName, descriptionUpdated),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckStackExists(resourceName, &stackOutput),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					acctest.CheckResourceAttrRFC3339(resourceName, "created_time"),
