@@ -252,7 +252,7 @@ of several sub-resources - these resources are laid out below.
     one).
 
 * `web_acl_id` (Optional) - A unique identifier that specifies the AWS WAF web ACL,
-    if any, to associate with this distribution.  
+    if any, to associate with this distribution.
     To specify a web ACL created using the latest version of AWS WAF (WAFv2), use the ACL ARN,
     for example `aws_wafv2_web_acl.example.arn`. To specify a web
     ACL created using AWS WAF Classic, use the ACL ID, for example `aws_waf_web_acl.example.id`.
@@ -315,7 +315,7 @@ of several sub-resources - these resources are laid out below.
 
 * `realtime_log_config_arn` (Optional) - The ARN of the [real-time log configuration](cloudfront_realtime_log_config.html)
     that is attached to this cache behavior.
-  
+
 * `response_headers_policy_id` (Optional) - The identifier for a response headers policy.
 
 * `smooth_streaming` (Optional) - Indicates whether you want to distribute
@@ -464,7 +464,7 @@ argument should not be specified.
 
 * `custom_origin_config` - The [CloudFront custom
     origin](#custom-origin-config-arguments) configuration information. If an S3
-    origin is required, use `s3_origin_config` instead.
+    origin is required, use `origin_access_control_id` or `s3_origin_config` instead.
 
 * `domain_name` (Required) - The DNS domain name of either the S3 bucket, or
     web site of your custom origin.
