@@ -308,6 +308,10 @@ func resourcePlatformApplicationDelete(ctx context.Context, d *schema.ResourceDa
 		PlatformApplicationArn: aws.String(d.Id()),
 	})
 
+	if tfawserr.ErrCodeEquals(err, sns.ErrCodeNotFoundException) {
+		return nil
+	}
+
 	if err != nil {
 		return diag.Errorf("deleting SNS Platform Application (%s): %s", d.Id(), err)
 	}
