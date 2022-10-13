@@ -113,17 +113,20 @@ func ResourceContainerService() *schema.Resource {
 			"private_registry_access": {
 				Type:     schema.TypeList,
 				Optional: true,
+				Computed: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"ecr_image_puller_role": {
-							Type:     schema.TypeSet,
-							Required: true,
+							Type:     schema.TypeList,
+							Optional: true,
+							Computed: true,
+							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"is_active": {
 										Type:     schema.TypeBool,
-										Required: true,
+										Optional: true,
 									},
 								},
 							},
