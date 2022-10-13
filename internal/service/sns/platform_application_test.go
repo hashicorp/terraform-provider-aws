@@ -383,10 +383,10 @@ func TestAccSNSPlatformApplication_basicApnsWithTokenCredentials(t *testing.T) {
 
 		t.Run(platform.Name, func(*testing.T) {
 			resource.ParallelTest(t, resource.TestCase{
-				PreCheck:     func() { acctest.PreCheck(t) },
-				ErrorCheck:   acctest.ErrorCheck(t, sns.EndpointsID),
-				Providers:    acctest.Providers,
-				CheckDestroy: testAccCheckPlatformApplicationDestroy,
+				PreCheck:                 func() { acctest.PreCheck(t) },
+				ErrorCheck:               acctest.ErrorCheck(t, sns.EndpointsID),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				CheckDestroy:             testAccCheckPlatformApplicationDestroy,
 				Steps: []resource.TestStep{
 					{
 						Config: testAccPlatformApplicationConfig_basicApnsWithTokenCredentials(name, platform, applePlatformTeamId, applePlatformBundleId),
