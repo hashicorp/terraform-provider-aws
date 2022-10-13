@@ -1,3 +1,7 @@
+```release-note:enhancement
+resource/aws_elasticache_subnet_group: Refactor `resourceSubnetGroupRead` to use `FindCacheSubnetGroupByName`.
+```
+
 ```release-note:new-data-source
 aws_elasticache_subnet_group
 ```
