@@ -1193,7 +1193,19 @@ func channelEncoderSettingsSchema() *schema.Schema {
 															},
 														},
 													},
-													"frame_capture_output_settings": {}, // TODO
+													"frame_capture_output_settings": {
+														Type:     schema.TypeList,
+														MaxItems: 1,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"name_modifier": {
+																	Type:     schema.TypeString,
+																	Optional: true,
+																	Computed: true,
+																},
+															},
+														},
+													},
 													"hls_output_settings":           {}, // TODO
 													"media_package_output_settings": {}, // TODO
 													"ms_smooth_output_settings":     {}, // TODO
