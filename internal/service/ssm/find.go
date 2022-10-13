@@ -99,7 +99,7 @@ func FindServiceSettingByARN(conn *ssm.SSM, arn string) (*ssm.ServiceSetting, er
 	}
 
 	if output == nil || output.ServiceSetting == nil {
-		return nil, fmt.Errorf("finding %s: empty result", arn)
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
 	return output.ServiceSetting, nil

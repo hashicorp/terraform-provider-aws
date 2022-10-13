@@ -58,6 +58,10 @@ func statusServiceSetting(conn *ssm.SSM, arn string) resource.StateRefreshFunc {
 			return nil, "", nil
 		}
 
+		if err != nil {
+			return nil, "", err
+		}
+
 		return output, aws.StringValue(output.Status), nil
 	}
 }
