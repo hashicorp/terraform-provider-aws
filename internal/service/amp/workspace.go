@@ -114,7 +114,7 @@ func resourceWorkspaceRead(ctx context.Context, d *schema.ResourceData, meta int
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	ws, err := FindWorkspaceByID(conn, d.Id())
+	ws, err := FindWorkspaceByID(ctx, conn, d.Id())
 
 	if tfresource.NotFound(err) && !d.IsNewResource() {
 		log.Printf("[WARN] Prometheus Workspace (%s) not found, removing from state", d.Id())

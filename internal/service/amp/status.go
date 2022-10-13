@@ -43,7 +43,7 @@ func statusRuleGroupNamespace(ctx context.Context, conn *prometheusservice.Prome
 
 func statusWorkspace(ctx context.Context, conn *prometheusservice.PrometheusService, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindWorkspaceByID(conn, id)
+		output, err := FindWorkspaceByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

@@ -49,7 +49,7 @@ func dataSourceWorkspaceRead(ctx context.Context, d *schema.ResourceData, meta i
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	workspaceID := d.Get("workspace_id").(string)
-	workspace, err := FindWorkspaceByID(conn, workspaceID)
+	workspace, err := FindWorkspaceByID(ctx, conn, workspaceID)
 
 	if err != nil {
 		return diag.Errorf("reading AMP Workspace (%s): %s", workspaceID, err)
