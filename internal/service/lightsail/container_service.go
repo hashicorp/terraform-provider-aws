@@ -234,7 +234,7 @@ func resourceContainerServiceRead(ctx context.Context, d *schema.ResourceData, m
 	if err := d.Set("public_domain_names", flattenContainerServicePublicDomainNames(cs.PublicDomainNames)); err != nil {
 		return diag.Errorf("error setting public_domain_names for Lightsail Container Service (%s): %s", d.Id(), err)
 	}
-	if err := d.Set("private_registry_access", flattenPrivateRegistryAccess(cs.PrivateRegistryAccess)); err != nil {
+	if err := d.Set("private_registry_access", []interface{}{flattenPrivateRegistryAccess(cs.PrivateRegistryAccess)}); err != nil {
 		return diag.Errorf("error setting private_registry_access for Lightsail Container Service (%s): %s", d.Id(), err)
 	}
 	d.Set("arn", cs.Arn)
@@ -389,7 +389,7 @@ func flattenPrivateRegistryAccess(apiObject *lightsail.PrivateRegistryAccess) ma
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.EcrImagePullerRole; v != nil {
-		tfMap["ecr_image_puller_role"] = flattenEcrImagePullerRole(v)
+		tfMap["ecr_image_puller_role"] = []interface{}{flattenEcrImagePullerRole(v)}
 	}
 
 	return tfMap
