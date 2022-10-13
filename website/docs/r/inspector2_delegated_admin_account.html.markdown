@@ -15,7 +15,10 @@ Terraform resource for managing an AWS Inspector V2 Delegated Admin Account.
 ### Basic Usage
 
 ```terraform
-resource "aws_inspector2_delegated_admin_account" "example" {
+data "aws_caller_identity" "current" {}
+
+resource "aws_inspector2_delegated_admin_account" "test" {
+  account_id = data.aws_caller_identity.current.account_id
 }
 ```
 
@@ -23,18 +26,13 @@ resource "aws_inspector2_delegated_admin_account" "example" {
 
 The following arguments are required:
 
-* `example_arg` - (Required) Concise argument description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
-
-The following arguments are optional:
-
-* `optional_arg` - (Optional) Concise argument description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
+* `account_id` - (Required) Account to enable as delegated admin account.
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-* `arn` - ARN of the Delegated Admin Account. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
-* `example_attribute` - Concise description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
+* `relationship_status` - Status of this delegated admin account.
 
 ## Timeouts
 
@@ -46,8 +44,8 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Inspector V2 Delegated Admin Account can be imported using the `example_id_arg`, e.g.,
+Inspector V2 Delegated Admin Account can be imported using the `account_id`, e.g.,
 
 ```
-$ terraform import aws_inspector2_delegated_admin_account.example rft-8012925589
+$ terraform import aws_inspector2_delegated_admin_account.example 012345678901
 ```
