@@ -142,44 +142,21 @@ func resourceSubnetGroupRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	req := &elasticache.DescribeCacheSubnetGroupsInput{
-		CacheSubnetGroupName: aws.String(d.Get("name").(string)),
-	}
+	group, err := FindCacheSubnetGroupByName(conn, d.Id())
 
-	res, err := conn.DescribeCacheSubnetGroups(req)
 	if err != nil {
-		if ec2err, ok := err.(awserr.Error); ok && ec2err.Code() == "CacheSubnetGroupNotFoundFault" {
-			// Update state to indicate the db subnet no longer exists.
-			log.Printf("[WARN] ElastiCache Subnet Group (%s) not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
-		return err
-	}
-	if len(res.CacheSubnetGroups) == 0 {
-		return fmt.Errorf("Error missing %v", d.Get("name"))
+		return fmt.Errorf("error finding ElastiCache Subnet Group: %w", err)
 	}
 
-	var group *elasticache.CacheSubnetGroup
-	for _, g := range res.CacheSubnetGroups {
-		log.Printf("[DEBUG] %v %v", g.CacheSubnetGroupName, d.Id())
-		if aws.StringValue(g.CacheSubnetGroupName) == d.Id() {
-			group = g
-		}
-	}
-	if group == nil {
-		return fmt.Errorf("Error retrieving cache subnet group: %v", res)
-	}
-
-	ids := make([]string, len(group.Subnets))
-	for i, s := range group.Subnets {
-		ids[i] = aws.StringValue(s.SubnetIdentifier)
+	var subnetIds []*string
+	for _, subnet := range group.Subnets {
+		subnetIds = append(subnetIds, subnet.SubnetIdentifier)
 	}
 
 	d.Set("arn", group.ARN)
 	d.Set("name", group.CacheSubnetGroupName)
 	d.Set("description", group.CacheSubnetGroupDescription)
-	d.Set("subnet_ids", ids)
+	d.Set("subnet_ids", subnetIds)
 
 	tags, err := ListTags(conn, d.Get("arn").(string))
 
