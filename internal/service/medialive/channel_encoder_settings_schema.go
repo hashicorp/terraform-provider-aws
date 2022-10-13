@@ -1746,6 +1746,7 @@ func hlsSettingsSchema() *schema.Schema {
 			Schema: map[string]*schema.Schema{
 				"audio_only_hls_settings": {
 					Type:     schema.TypeList,
+					Optional: true,
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
@@ -1756,6 +1757,7 @@ func hlsSettingsSchema() *schema.Schema {
 							},
 							"audio_only_image": {
 								Type:     schema.TypeList,
+								Optional: true,
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
@@ -1793,6 +1795,7 @@ func hlsSettingsSchema() *schema.Schema {
 				},
 				"fmp4_hls_settings": {
 					Type:     schema.TypeList,
+					Optional: true,
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
@@ -1826,6 +1829,7 @@ func hlsSettingsSchema() *schema.Schema {
 				// },
 				"standard_hls_settings": {
 					Type:     schema.TypeList,
+					Optional: true,
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
