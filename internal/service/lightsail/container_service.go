@@ -110,6 +110,27 @@ func ResourceContainerService() *schema.Resource {
 					},
 				},
 			},
+			"private_registry_access": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"ecr_image_puller_role": {
+							Type:     schema.TypeSet,
+							Required: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"is_active": {
+										Type:     schema.TypeBool,
+										Required: true,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 			"resource_type": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -147,6 +168,10 @@ func resourceContainerServiceCreate(ctx context.Context, d *schema.ResourceData,
 
 	if v, ok := d.GetOk("public_domain_names"); ok {
 		input.PublicDomainNames = expandContainerServicePublicDomainNames(v.([]interface{}))
+	}
+
+	if v, ok := d.GetOk("private_registry_access"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.PrivateRegistryAccess = expandPrivateRegistryAccess(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	if len(tags) > 0 {
@@ -208,6 +233,9 @@ func resourceContainerServiceRead(ctx context.Context, d *schema.ResourceData, m
 
 	if err := d.Set("public_domain_names", flattenContainerServicePublicDomainNames(cs.PublicDomainNames)); err != nil {
 		return diag.Errorf("error setting public_domain_names for Lightsail Container Service (%s): %s", d.Id(), err)
+	}
+	if err := d.Set("private_registry_access", flattenPrivateRegistryAccess(cs.PrivateRegistryAccess)); err != nil {
+		return diag.Errorf("error setting private_registry_access for Lightsail Container Service (%s): %s", d.Id(), err)
 	}
 	d.Set("arn", cs.Arn)
 	d.Set("availability_zone", cs.Location.AvailabilityZone)
@@ -323,6 +351,62 @@ func expandContainerServicePublicDomainNames(rawPublicDomainNames []interface{})
 	}
 
 	return resultMap
+}
+
+func expandPrivateRegistryAccess(tfMap map[string]interface{}) *lightsail.PrivateRegistryAccessRequest {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &lightsail.PrivateRegistryAccessRequest{}
+
+	if v, ok := tfMap["ecr_image_puller_role"]; ok {
+		apiObject.EcrImagePullerRole = expandEcrImagePullerRole(v.([]interface{})[0].(map[string]interface{}))
+	}
+
+	return apiObject
+}
+
+func expandEcrImagePullerRole(tfMap map[string]interface{}) *lightsail.ContainerServiceECRImagePullerRoleRequest {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &lightsail.ContainerServiceECRImagePullerRoleRequest{}
+
+	if v, ok := tfMap["is_active"].(bool); ok {
+		apiObject.IsActive = aws.Bool(v)
+	}
+
+	return apiObject
+}
+
+func flattenPrivateRegistryAccess(apiObject *lightsail.PrivateRegistryAccess) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.EcrImagePullerRole; v != nil {
+		tfMap["ecr_image_puller_role"] = flattenEcrImagePullerRole(v)
+	}
+
+	return tfMap
+}
+
+func flattenEcrImagePullerRole(apiObject *lightsail.ContainerServiceECRImagePullerRole) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.IsActive; v != nil {
+		tfMap["is_active"] = aws.BoolValue(v)
+	}
+
+	return tfMap
 }
 
 func flattenContainerServicePublicDomainNames(domainNames map[string][]*string) []interface{} {
