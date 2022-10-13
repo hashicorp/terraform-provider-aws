@@ -38,6 +38,7 @@ The following arguments are required:
 The following arguments are optional:
 
 * `user_ids` - (Optional) The list of user IDs that belong to the user group.
+* `tags` - (Optional) A list of tags to be added to this resource. A tag is a key-value pair.
 
 ## Attributes Reference
 
