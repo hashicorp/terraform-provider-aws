@@ -1151,70 +1151,7 @@ func channelEncoderSettingsSchema() *schema.Schema {
 								Required: true,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"output_settings": {
-											Type:     schema.TypeList,
-											Required: true,
-											MaxItems: 1,
-											Elem: &schema.Resource{
-												Schema: map[string]*schema.Schema{
-													"archive_output_settings": {
-														Type:     schema.TypeList,
-														MaxItems: 1,
-														Elem: &schema.Resource{
-															Schema: map[string]*schema.Schema{
-																"container_settings": {
-																	Type:     schema.TypeList,
-																	Required: true,
-																	MaxItems: 1,
-																	Elem: &schema.Resource{
-																		Schema: map[string]*schema.Schema{
-																			"m2ts_settings": m2tsSettingsSchema(),
-																			// This is in the API and Go SDK docs, but has no exported fields.
-																			// "raw_settings": {
-																			// 	Type:     schema.TypeList,
-																			// 	MaxItems: 1,
-																			// 	Elem: &schema.Resource{
-																			// 		Schema: map[string]*schema.Schema{},
-																			// 	},
-																			// },
-																		},
-																	},
-																},
-																"extension": {
-																	Type:     schema.TypeString,
-																	Optional: true,
-																	Computed: true,
-																},
-																"name_modifier": {
-																	Type:     schema.TypeString,
-																	Optional: true,
-																	Computed: true,
-																},
-															},
-														},
-													},
-													"frame_capture_output_settings": {
-														Type:     schema.TypeList,
-														MaxItems: 1,
-														Elem: &schema.Resource{
-															Schema: map[string]*schema.Schema{
-																"name_modifier": {
-																	Type:     schema.TypeString,
-																	Optional: true,
-																	Computed: true,
-																},
-															},
-														},
-													},
-													"hls_output_settings":           {}, // TODO
-													"media_package_output_settings": {}, // TODO
-													"ms_smooth_output_settings":     {}, // TODO
-													"multiplex_output_settings":     {}, // TODO
-													"rtmp_output_settings":          {}, // TODO
-													"udp_output_settings":           {}, // TODO
-												},
-											},
-										},
+										"output_settings": outputSettingsSchema(),
 										"audio_description_names": {
 											Type:     schema.TypeSet,
 											Optional: true,
@@ -1594,6 +1531,72 @@ func channelEncoderSettingsSchema() *schema.Schema {
 				// TODO global_configuration
 				// TODO motion_graphics_configuration
 				// TODO nielsen_configuration
+			},
+		},
+	}
+}
+func outputSettingsSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Required: true,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"archive_output_settings": {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"container_settings": {
+								Type:     schema.TypeList,
+								Required: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"m2ts_settings": m2tsSettingsSchema(),
+										// This is in the API and Go SDK docs, but has no exported fields.
+										// "raw_settings": {
+										// 	Type:     schema.TypeList,
+										// 	MaxItems: 1,
+										// 	Elem: &schema.Resource{
+										// 		Schema: map[string]*schema.Schema{},
+										// 	},
+										// },
+									},
+								},
+							},
+							"extension": {
+								Type:     schema.TypeString,
+								Optional: true,
+								Computed: true,
+							},
+							"name_modifier": {
+								Type:     schema.TypeString,
+								Optional: true,
+								Computed: true,
+							},
+						},
+					},
+				},
+				"frame_capture_output_settings": {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"name_modifier": {
+								Type:     schema.TypeString,
+								Optional: true,
+								Computed: true,
+							},
+						},
+					},
+				},
+				"hls_output_settings":           {}, // TODO
+				"media_package_output_settings": {}, // TODO
+				"ms_smooth_output_settings":     {}, // TODO
+				"multiplex_output_settings":     {}, // TODO
+				"rtmp_output_settings":          {}, // TODO
+				"udp_output_settings":           {}, // TODO
 			},
 		},
 	}
