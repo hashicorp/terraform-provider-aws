@@ -1688,7 +1688,48 @@ func outputSettingsSchema() *schema.Schema {
 					Optional: true,
 					MaxItems: 1,
 					Elem: &schema.Resource{
-						Schema: map[string]*schema.Schema{}, // TODO
+						Schema: map[string]*schema.Schema{
+							"container_settings": {
+								Type:     schema.TypeList,
+								Required: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"m2ts_settings": m2tsSettingsSchema(),
+									}},
+							},
+							"destination": destinationSchema(),
+							"buffer_msec": {
+								Type:     schema.TypeInt,
+								Optional: true,
+								Computed: true,
+							},
+							"fec_output_settings": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"column_depth": {
+											Type:     schema.TypeInt,
+											Optional: true,
+											Computed: true,
+										},
+										"include_fec": {
+											Type:             schema.TypeString,
+											Optional:         true,
+											Computed:         true,
+											ValidateDiagFunc: enum.Validate[types.FecOutputIncludeFec](),
+										},
+										"row_length": {
+											Type:     schema.TypeInt,
+											Optional: true,
+											Computed: true,
+										},
+									},
+								},
+							},
+						},
 					},
 				},
 			},
