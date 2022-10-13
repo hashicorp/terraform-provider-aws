@@ -4,11 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"net/url"
 	"reflect"
 	"regexp"
 	"strconv"
-	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws/arn"
@@ -110,8 +108,8 @@ func TestAccSNSTopicSubscription_basic(t *testing.T) {
 func TestAccSNSTopicSubscription_filterPolicy(t *testing.T) {
 	var attributes map[string]string
 	resourceName := "aws_sns_topic_subscription.test"
-	filterPolicy1 := `{"key1": ["val1"], "key2": ["val2"]}`
-	filterPolicy2 := `{"key3": ["val3"], "key4": ["val4"]}`
+	filterPolicy1 := `{"key1":["val1"],"key2":["val2"]}`
+	filterPolicy2 := `{"key3":["val3"],"key4":["val4"]}`
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -590,42 +588,6 @@ func testAccCheckTopicSubscriptionRedrivePolicyAttribute(attributes *map[string]
 	}
 }
 
-const passwordObfuscationPattern = "****"
-
-// returns the endpoint with obfuscated password, if any
-func obfuscateEndpoint(t *testing.T, endpoint string) string {
-	res, err := url.Parse(endpoint)
-	if err != nil {
-		t.Errorf("error parsing URL: %s", err)
-	}
-
-	var obfuscatedEndpoint = res.String()
-
-	// If the user is defined, we try to get the username and password, if defined.
-	// Then, we update the user with the obfuscated version.
-	if res.User != nil {
-		if password, ok := res.User.Password(); ok {
-			obfuscatedEndpoint = strings.Replace(obfuscatedEndpoint, password, passwordObfuscationPattern, 1)
-		}
-	}
-	return obfuscatedEndpoint
-}
-
-func TestObfuscateEndpointPassword(t *testing.T) {
-	checks := map[string]string{
-		"https://example.com/myroute":                   "https://example.com/myroute",
-		"https://username@example.com/myroute":          "https://username@example.com/myroute",      // nosemgrep:ci.email-address
-		"https://username:password@example.com/myroute": "https://username:****@example.com/myroute", // nosemgrep:ci.email-address
-	}
-	for endpoint, expected := range checks {
-		out := obfuscateEndpoint(t, endpoint)
-
-		if expected != out {
-			t.Fatalf("Expected %v, got %v", expected, out)
-		}
-	}
-}
-
 func testAccTopicSubscriptionConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_sns_topic" "test" {
@@ -634,6 +596,8 @@ resource "aws_sns_topic" "test" {
 
 resource "aws_sqs_queue" "test" {
   name = %[1]q
+
+  sqs_managed_sse_enabled = true
 }
 
 resource "aws_sns_topic_subscription" "test" {
@@ -652,6 +616,8 @@ resource "aws_sns_topic" "test" {
 
 resource "aws_sqs_queue" "test" {
   name = %[1]q
+
+  sqs_managed_sse_enabled = true
 }
 
 resource "aws_sns_topic_subscription" "test" {
@@ -671,6 +637,8 @@ resource "aws_sns_topic" "test" {
 
 resource "aws_sqs_queue" "test" {
   name = %[1]q
+
+  sqs_managed_sse_enabled = true
 }
 
 resource "aws_sns_topic_subscription" "test" {
@@ -690,10 +658,14 @@ resource "aws_sns_topic" "test" {
 
 resource "aws_sqs_queue" "test" {
   name = %[1]q
+
+  sqs_managed_sse_enabled = true
 }
 
 resource "aws_sqs_queue" "test_dlq" {
   name = %[2]q
+
+  sqs_managed_sse_enabled = true
 }
 
 resource "aws_sns_topic_subscription" "test" {
@@ -713,6 +685,8 @@ resource "aws_sns_topic" "test" {
 
 resource "aws_sqs_queue" "test" {
   name = %[1]q
+
+  sqs_managed_sse_enabled = true
 }
 
 resource "aws_sns_topic_subscription" "test" {
