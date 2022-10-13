@@ -4,6 +4,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/medialive/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 )
 
@@ -1155,8 +1156,51 @@ func channelEncoderSettingsSchema() *schema.Schema {
 											Required: true,
 											MaxItems: 1,
 											Elem: &schema.Resource{
-												// TODO complete output_settings schema
-												Schema: map[string]*schema.Schema{},
+												Schema: map[string]*schema.Schema{
+													"archive_output_settings": {
+														Type:     schema.TypeList,
+														MaxItems: 1,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"container_settings": {
+																	Type:     schema.TypeList,
+																	Required: true,
+																	MaxItems: 1,
+																	Elem: &schema.Resource{
+																		Schema: map[string]*schema.Schema{
+																			"m2ts_settings": m2tsSettingsSchema(),
+																			// This is in the API and Go SDK docs, but has no exported fields.
+																			// "raw_settings": {
+																			// 	Type:     schema.TypeList,
+																			// 	MaxItems: 1,
+																			// 	Elem: &schema.Resource{
+																			// 		Schema: map[string]*schema.Schema{},
+																			// 	},
+																			// },
+																		},
+																	},
+																},
+																"extension": {
+																	Type:     schema.TypeString,
+																	Optional: true,
+																	Computed: true,
+																},
+																"name_modifier": {
+																	Type:     schema.TypeString,
+																	Optional: true,
+																	Computed: true,
+																},
+															},
+														},
+													},
+													"frame_capture_output_settings": {}, // TODO
+													"hls_output_settings":           {}, // TODO
+													"media_package_output_settings": {}, // TODO
+													"ms_smooth_output_settings":     {}, // TODO
+													"multiplex_output_settings":     {}, // TODO
+													"rtmp_output_settings":          {}, // TODO
+													"udp_output_settings":           {}, // TODO
+												},
 											},
 										},
 										"audio_description_names": {
@@ -1538,6 +1582,324 @@ func channelEncoderSettingsSchema() *schema.Schema {
 				// TODO global_configuration
 				// TODO motion_graphics_configuration
 				// TODO nielsen_configuration
+			},
+		},
+	}
+}
+
+func m2tsSettingsSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"absent_input_audio_behavior": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ValidateDiagFunc: enum.Validate[types.M2tsAbsentInputAudioBehavior](),
+				},
+				"arib": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ValidateDiagFunc: enum.Validate[types.M2tsArib](),
+				},
+				"arib_captions_pid": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"arib_captions_pid_control": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ValidateDiagFunc: enum.Validate[types.M2tsAribCaptionsPidControl](),
+				},
+				"audio_buffer_model": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ValidateDiagFunc: enum.Validate[types.M2tsAudioBufferModel](),
+				},
+				"audio_frames_per_pes": {
+					Type:     schema.TypeInt,
+					Optional: true,
+					Computed: true,
+				},
+				"audio_pids": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"audio_stream_type": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ValidateDiagFunc: enum.Validate[types.M2tsAudioStreamType](),
+				},
+				"bitrate": {
+					Type:     schema.TypeInt,
+					Optional: true,
+					Computed: true,
+				},
+				"buffer_model": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ValidateDiagFunc: enum.Validate[types.M2tsBufferModel](),
+				},
+				"cc_descriptor": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ValidateDiagFunc: enum.Validate[types.M2tsCcDescriptor](),
+				},
+				"dvb_nit_settings": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"network_id": {
+								Type:     schema.TypeInt,
+								Required: true,
+							},
+							"network_name": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							"rep_interval": {
+								Type:     schema.TypeInt,
+								Optional: true,
+								Computed: true,
+							},
+						},
+					},
+				},
+				"dvb_sdt_settings": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"output_sdt": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Computed:         true,
+								ValidateDiagFunc: enum.Validate[types.DvbSdtOutputSdt](),
+							},
+							"rep_interval": {
+								Type:     schema.TypeInt,
+								Optional: true,
+								Computed: true,
+							},
+							"service_name": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								Computed:     true,
+								ValidateFunc: validation.StringLenBetween(1, 256),
+							},
+							"service_provider_name": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								Computed:     true,
+								ValidateFunc: validation.StringLenBetween(1, 256),
+							},
+						},
+					},
+				},
+				"dvb_sub_pids": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"dvb_tdt_settings": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"rep_interval": {
+								Type:     schema.TypeInt,
+								Optional: true,
+								Computed: true,
+							},
+						},
+					},
+				},
+				"dvb_teletext_pid": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"ebif": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ValidateDiagFunc: enum.Validate[types.M2tsEbifControl](),
+				},
+				"ebp_audio_interval": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ValidateDiagFunc: enum.Validate[types.M2tsAudioInterval](),
+				},
+				"ebp_lookahead_ms": {
+					Type:     schema.TypeInt,
+					Optional: true,
+					Computed: true,
+				},
+				"ebp_placement": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ValidateDiagFunc: enum.Validate[types.M2tsEbpPlacement](),
+				},
+				"ecm_pid": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"es_rate_in_pes": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ValidateDiagFunc: enum.Validate[types.M2tsEsRateInPes](),
+				},
+				"etv_platform_pid": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"etv_signal_pid": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"fragment_time": {
+					Type:     schema.TypeFloat,
+					Optional: true,
+					Computed: true,
+				},
+				"klv": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ValidateDiagFunc: enum.Validate[types.M2tsKlv](),
+				},
+				"klv_data_pids": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"nielsen_id3_behavior": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ValidateDiagFunc: enum.Validate[types.M2tsNielsenId3Behavior](),
+				},
+				"null_packet_bitrate": {
+					Type:     schema.TypeFloat,
+					Optional: true,
+					Computed: true,
+				},
+				"pat_interval": {
+					Type:     schema.TypeInt,
+					Optional: true,
+					Computed: true,
+				},
+				"pcr_control": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ValidateDiagFunc: enum.Validate[types.M2tsPcrControl](),
+				},
+				"pcr_period": {
+					Type:     schema.TypeInt,
+					Optional: true,
+					Computed: true,
+				},
+				"pcr_pid": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"pmt_interval": {
+					Type:     schema.TypeInt,
+					Optional: true,
+					Computed: true,
+				},
+				"pmt_pid": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"program_num": {
+					Type:     schema.TypeInt,
+					Optional: true,
+					Computed: true,
+				},
+				"rate_mode": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ValidateDiagFunc: enum.Validate[types.M2tsRateMode](),
+				},
+				"scte27_pids": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"scte35_control": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ValidateDiagFunc: enum.Validate[types.M2tsScte35Control](),
+				},
+				"scte35_pid": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"segmentation_markers": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ValidateDiagFunc: enum.Validate[types.M2tsSegmentationMarkers](),
+				},
+				"segmentation_style": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ValidateDiagFunc: enum.Validate[types.M2tsSegmentationStyle](),
+				},
+				"segmentation_time": {
+					Type:     schema.TypeFloat,
+					Optional: true,
+					Computed: true,
+				},
+				"timed_metadata_behavior": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ValidateDiagFunc: enum.Validate[types.M2tsTimedMetadataBehavior](),
+				},
+				"timed_metadata_pid": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"transport_stream_id": {
+					Type:     schema.TypeInt,
+					Optional: true,
+					Computed: true,
+				},
+				"video_pid": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
 			},
 		},
 	}
