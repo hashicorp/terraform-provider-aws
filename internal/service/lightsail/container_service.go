@@ -364,13 +364,13 @@ func expandPrivateRegistryAccess(tfMap map[string]interface{}) *lightsail.Privat
 	apiObject := &lightsail.PrivateRegistryAccessRequest{}
 
 	if v, ok := tfMap["ecr_image_puller_role"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.EcrImagePullerRole = expandEcrImagePullerRole(v[0].(map[string]interface{}))
+		apiObject.EcrImagePullerRole = expandECRImagePullerRole(v[0].(map[string]interface{}))
 	}
 
 	return apiObject
 }
 
-func expandEcrImagePullerRole(tfMap map[string]interface{}) *lightsail.ContainerServiceECRImagePullerRoleRequest {
+func expandECRImagePullerRole(tfMap map[string]interface{}) *lightsail.ContainerServiceECRImagePullerRoleRequest {
 	if tfMap == nil {
 		return nil
 	}
@@ -392,13 +392,13 @@ func flattenPrivateRegistryAccess(apiObject *lightsail.PrivateRegistryAccess) ma
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.EcrImagePullerRole; v != nil {
-		tfMap["ecr_image_puller_role"] = []interface{}{flattenEcrImagePullerRole(v)}
+		tfMap["ecr_image_puller_role"] = []interface{}{flattenECRImagePullerRole(v)}
 	}
 
 	return tfMap
 }
 
-func flattenEcrImagePullerRole(apiObject *lightsail.ContainerServiceECRImagePullerRole) map[string]interface{} {
+func flattenECRImagePullerRole(apiObject *lightsail.ContainerServiceECRImagePullerRole) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
