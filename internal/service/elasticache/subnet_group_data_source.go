@@ -1,20 +1,18 @@
 package elasticache
 
 import (
-	"context"
+	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func DataSourceSubnetGroup() *schema.Resource {
 	return &schema.Resource{
-		ReadWithoutTimeout: dataSourceSubnetGroupRead,
+		Read: dataSourceSubnetGroupRead,
 
 		Schema: map[string]*schema.Schema{
 			"description": {
@@ -41,16 +39,16 @@ func DataSourceSubnetGroup() *schema.Resource {
 	}
 }
 
-func dataSourceSubnetGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceSubnetGroupRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ElastiCacheConn
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	name := d.Get("name").(string)
 
-	group, err := FindCacheSubnetGroupByName(ctx, conn, name)
+	group, err := FindCacheSubnetGroupByName(conn, name)
 
 	if err != nil {
-		return diag.FromErr(tfresource.SingularDataSourceFindError("ElastiCache Subnet Group", err))
+		return fmt.Errorf("error finding ElastiCache Subnet Group (%s): %w", group, err)
 	}
 
 	d.SetId(aws.StringValue(group.CacheSubnetGroupName))
@@ -68,11 +66,11 @@ func dataSourceSubnetGroupRead(ctx context.Context, d *schema.ResourceData, meta
 	tags, err := ListTags(conn, d.Get("arn").(string))
 
 	if err != nil {
-		return diag.Errorf("error listing tags for ElastiCache Subnet Group (%s): %s", d.Id(), err)
+		return fmt.Errorf("error listing tags for ElastiCache Subnet Group (%s): %w", group, err)
 	}
 
 	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return diag.Errorf("error setting tags: %s", err)
+		return fmt.Errorf("error setting tags: (%s)", err)
 	}
 
 	return nil
