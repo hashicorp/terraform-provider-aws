@@ -473,7 +473,7 @@ argument should not be specified.
     `value` parameters that specify header data that will be sent to the origin
     (multiples allowed).
 
-* `origin_access_control_id` (Optional) - The unique identifier of an origin access control for this origin.
+* `origin_access_control_id` (Optional) - The unique identifier of a [CloudFront origin access control][8] for this origin.
 
 * `origin_id` (Required) - A unique identifier for the origin.
 
@@ -513,8 +513,7 @@ argument should not be specified.
 
 ##### S3 Origin Config Arguments
 
-* `origin_access_identity` (Optional) - The [CloudFront origin access
-  identity][5] to associate with the origin.
+* `origin_access_identity` (Required) - The [CloudFront origin access identity][5] to associate with the origin.
 
 #### Origin Group Arguments
 
@@ -631,6 +630,7 @@ In addition to all arguments above, the following attributes are exported:
 [5]: /docs/providers/aws/r/cloudfront_origin_access_identity.html
 [6]: https://aws.amazon.com/certificate-manager/
 [7]: http://docs.aws.amazon.com/Route53/latest/APIReference/CreateAliasRRSAPI.html
+[8]: /docs/providers/aws/r/cloudfront_origin_access_control.html
 
 ## Import
 
