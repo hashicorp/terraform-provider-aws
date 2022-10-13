@@ -1615,11 +1615,36 @@ func outputSettingsSchema() *schema.Schema {
 						},
 					},
 				},
-				"media_package_output_settings": {}, // TODO
-				"ms_smooth_output_settings":     {}, // TODO
-				"multiplex_output_settings":     {}, // TODO
-				"rtmp_output_settings":          {}, // TODO
-				"udp_output_settings":           {}, // TODO
+				// This is in the API and Go SDK docs, but has no exported fields.
+				// "media_package_output_settings": {
+				// 	Type:     schema.TypeList,
+				// 	MaxItems: 1,
+				// 	Elem: &schema.Resource{
+				// 		Schema: map[string]*schema.Schema{},
+				// 	},
+				// },
+				"ms_smooth_output_settings": {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"h265_packaging_type": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Computed:         true,
+								ValidateDiagFunc: enum.Validate[types.MsSmoothH265PackagingType](),
+							},
+							"name_modifier": {
+								Type:     schema.TypeString,
+								Optional: true,
+								Computed: true,
+							},
+						},
+					},
+				},
+				"multiplex_output_settings": {}, // TODO
+				"rtmp_output_settings":      {}, // TODO
+				"udp_output_settings":       {}, // TODO
 			},
 		},
 	}
