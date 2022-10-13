@@ -449,7 +449,7 @@ func putTopicAttributes(ctx context.Context, conn *sns.SNS, arn string, attribut
 			continue
 		}
 
-		err := putTopicAttribute(conn, arn, name, value)
+		err := putTopicAttribute(ctx, conn, arn, name, value)
 
 		if err != nil {
 			return err
@@ -459,20 +459,19 @@ func putTopicAttributes(ctx context.Context, conn *sns.SNS, arn string, attribut
 	return nil
 }
 
-func putTopicAttribute(conn *sns.SNS, arn string, name, value string) error {
+func putTopicAttribute(ctx context.Context, conn *sns.SNS, arn string, name, value string) error {
 	input := &sns.SetTopicAttributesInput{
 		AttributeName:  aws.String(name),
 		AttributeValue: aws.String(value),
 		TopicArn:       aws.String(arn),
 	}
 
-	log.Printf("[DEBUG] Setting SNS Topic attribute: %s", input)
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(topicPutAttributeTimeout, func() (interface{}, error) {
-		return conn.SetTopicAttributes(input)
+	_, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, topicPutAttributeTimeout, func() (interface{}, error) {
+		return conn.SetTopicAttributesWithContext(ctx, input)
 	}, sns.ErrCodeInvalidParameterException)
 
 	if err != nil {
-		return fmt.Errorf("error setting SNS Topic (%s) attribute (%s): %w", arn, name, err)
+		return fmt.Errorf("setting SNS Topic (%s) attribute (%s): %w", arn, name, err)
 	}
 
 	return nil
