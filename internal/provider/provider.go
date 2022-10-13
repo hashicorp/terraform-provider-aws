@@ -1634,6 +1634,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_inspector_resource_group":      inspector.ResourceResourceGroup(),
 
 			"aws_inspector2_organization_configuration": inspector2.ResourceOrganizationConfiguration(),
+			"aws_inspector2_delegated_admin_account":    inspector2.ResourceDelegatedAdminAccount(),
 
 			"aws_iot_authorizer":                 iot.ResourceAuthorizer(),
 			"aws_iot_certificate":                iot.ResourceCertificate(),
