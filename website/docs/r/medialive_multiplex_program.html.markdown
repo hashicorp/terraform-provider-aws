@@ -77,9 +77,14 @@ The following arguments are optional:
 ### Video Settings
 
 `constant_bitrate` - (Optional) Constant bitrate value.
-`statemux_settings` - (Optional) Statemux settings. See [Statemux Settings](#statemux-settings) for more details.
+`statmux_settings` - (Optional) Statmux settings. See [Statmux Settings](#statmux-settings) for more details.
 
+<<<<<<< HEAD
 ### Statemux Settings
+=======
+
+### Statmux Settings
+>>>>>>> 2e089fee39 (Use proper name for networking term Statmux)
 
 * `minimum_bitrate` - (Optional) Minimum bitrate.
 * `maximum_bitrate` - (Optional) Maximum bitrate.

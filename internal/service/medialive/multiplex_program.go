@@ -116,7 +116,7 @@ func (m *multiplexProgram) GetSchema(context.Context) (tfsdk.Schema, diag.Diagno
 							},
 						},
 						Blocks: map[string]tfsdk.Block{
-							"statemux_settings": {
+							"statmux_settings": {
 								NestingMode: tfsdk.BlockNestingModeList,
 								MaxItems:    1,
 								Attributes: map[string]tfsdk.Attribute{
