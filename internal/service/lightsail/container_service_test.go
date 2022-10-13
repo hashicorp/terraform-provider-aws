@@ -189,7 +189,7 @@ func TestAccLightsailContainerService_Power(t *testing.T) {
 }
 
 func TestAccLightsailContainerService_PublicDomainNames(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -202,7 +202,34 @@ func TestAccLightsailContainerService_PublicDomainNames(t *testing.T) {
 		CheckDestroy:             testAccCheckContainerServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccContainerServiceConfig_publicDomainNames(rName),
+				Config:      testAccContainerServiceConfig_publicDomainNames(resourceName),
+				ExpectError: regexp.MustCompile(`do not exist`),
+			},
+		},
+	})
+}
+
+func TestAccLightsailContainerService_PrivateRegistryAccess(t *testing.T) {
+	resourceName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(lightsail.EndpointsID, t)
+			testAccPreCheck(t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, lightsail.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckContainerServiceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccContainerServiceConfig_privateRegistryAccess(resourceName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckContainerServiceExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "private_registry_access.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "private_registry_access.0.ecr_image_puller_role.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "private_registry_access.0.ecr_image_puller_role.0.is_active", "true"),
+				),
 				ExpectError: regexp.MustCompile(`do not exist`),
 			},
 		},
@@ -376,6 +403,22 @@ resource "aws_lightsail_container_service" "test" {
         "nonexisting1.com",
         "nonexisting2.com",
       ]
+    }
+  }
+}
+`, rName)
+}
+
+func testAccContainerServiceConfig_privateRegistryAccess(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_lightsail_container_service" "test" {
+  name  = %q
+  power = "nano"
+  scale = 1
+
+  private_registry_access {
+    ecr_image_puller_role {
+      is_active = true
     }
   }
 }
