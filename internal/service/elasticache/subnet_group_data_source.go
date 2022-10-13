@@ -33,8 +33,7 @@ func DataSourceSubnetGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			"tags": tftags.TagsSchema(),
 		},
 	}
 }
