@@ -17,7 +17,7 @@ Terraform resource for managing an AWS Inspector V2 Delegated Admin Account.
 ```terraform
 data "aws_caller_identity" "current" {}
 
-resource "aws_inspector2_delegated_admin_account" "test" {
+resource "aws_inspector2_delegated_admin_account" "example" {
   account_id = data.aws_caller_identity.current.account_id
 }
 ```
