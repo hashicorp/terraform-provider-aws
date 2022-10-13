@@ -30,20 +30,13 @@ func ResourcePlatformApplication() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"name": {
+			"apple_platform_bundle_id": {
 				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Optional: true,
 			},
-			"platform": {
+			"apple_platform_team_id": {
 				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"platform_credential": {
-				Type:      schema.TypeString,
-				Required:  true,
-				Sensitive: true,
+				Optional: true,
 			},
 			"arn": {
 				Type:     schema.TypeString,
@@ -69,6 +62,21 @@ func ResourcePlatformApplication() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"name": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
+			"platform": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
+			"platform_credential": {
+				Type:      schema.TypeString,
+				Required:  true,
+				Sensitive: true,
+			},
 			"platform_principal": {
 				Type:      schema.TypeString,
 				Optional:  true,
@@ -79,14 +87,6 @@ func ResourcePlatformApplication() *schema.Resource {
 				Optional: true,
 			},
 			"success_feedback_sample_rate": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"apple_platform_team_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"apple_platform_bundle_id": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
