@@ -4,8 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"strings"
 	"testing"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/inspector2"
@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfinspector2 "github.com/hashicorp/terraform-provider-aws/internal/service/inspector2"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -41,6 +42,7 @@ func testAccOrganizationConfiguration_basic(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(names.Inspector2EndpointID, t)
 			testAccPreCheck(t)
+			acctest.PreCheckOrganizationManagementAccount(t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.Inspector2EndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -66,6 +68,7 @@ func testAccOrganizationConfiguration_disappears(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(names.Inspector2EndpointID, t)
 			testAccPreCheck(t)
+			acctest.PreCheckOrganizationManagementAccount(t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.Inspector2EndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -91,6 +94,7 @@ func testAccOrganizationConfiguration_ec2ECR(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(names.Inspector2EndpointID, t)
 			testAccPreCheck(t)
+			acctest.PreCheckOrganizationManagementAccount(t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.Inspector2EndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -112,21 +116,82 @@ func testAccCheckOrganizationConfigurationDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).Inspector2Conn
 	ctx := context.Background()
 
+	enabledDelAdAcct := false
+
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_inspector2_organization_configuration" {
 			continue
 		}
 
 		out, err := conn.DescribeOrganizationConfiguration(ctx, &inspector2.DescribeOrganizationConfigurationInput{})
+
+		if errs.MessageContains(err, "AccessDenied", "Invoking account does not") {
+			if err := testEnableDelegatedAdminAccount(ctx, conn, acctest.AccountID()); err != nil {
+				return err
+			}
+
+			enabledDelAdAcct = true
+
+			out, err = conn.DescribeOrganizationConfiguration(ctx, &inspector2.DescribeOrganizationConfigurationInput{})
+		}
+
 		if err != nil {
+			if enabledDelAdAcct {
+				if err := testDisableDelegatedAdminAccount(ctx, conn, acctest.AccountID()); err != nil {
+					return err
+				}
+			}
+
 			return create.Error(names.Inspector2, create.ErrActionCheckingDestroyed, tfinspector2.ResNameOrganizationConfiguration, rs.Primary.ID, err)
 		}
 
 		if out != nil && out.AutoEnable != nil && !aws.ToBool(out.AutoEnable.Ec2) && !aws.ToBool(out.AutoEnable.Ecr) {
+			if enabledDelAdAcct {
+				if err := testDisableDelegatedAdminAccount(ctx, conn, acctest.AccountID()); err != nil {
+					return err
+				}
+			}
+
 			return nil
 		}
 
+		if enabledDelAdAcct {
+			if err := testDisableDelegatedAdminAccount(ctx, conn, acctest.AccountID()); err != nil {
+				return err
+			}
+		}
+
 		return create.Error(names.Inspector2, create.ErrActionCheckingDestroyed, tfinspector2.ResNameOrganizationConfiguration, rs.Primary.ID, errors.New("not destroyed"))
+	}
+
+	return nil
+}
+
+func testEnableDelegatedAdminAccount(ctx context.Context, conn *inspector2.Client, accountID string) error {
+	_, err := conn.EnableDelegatedAdminAccount(ctx, &inspector2.EnableDelegatedAdminAccountInput{
+		DelegatedAdminAccountId: aws.String(accountID),
+	})
+	if err != nil {
+		return err
+	}
+
+	if err := tfinspector2.WaitDelegatedAdminAccountEnabled(ctx, conn, accountID, time.Minute*2); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func testDisableDelegatedAdminAccount(ctx context.Context, conn *inspector2.Client, accountID string) error {
+	_, err := conn.DisableDelegatedAdminAccount(ctx, &inspector2.DisableDelegatedAdminAccountInput{
+		DelegatedAdminAccountId: aws.String(accountID),
+	})
+	if err != nil {
+		return err
+	}
+
+	if err := tfinspector2.WaitDelegatedAdminAccountDisabled(ctx, conn, accountID, time.Minute*2); err != nil {
+		return err
 	}
 
 	return nil
@@ -155,33 +220,21 @@ func testAccCheckOrganizationConfigurationExists(name string) resource.TestCheck
 	}
 }
 
-func testAccPreCheck(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).Inspector2Conn
-	ctx := context.Background()
-
-	_, err := conn.DescribeOrganizationConfiguration(ctx, &inspector2.DescribeOrganizationConfigurationInput{})
-
-	if acctest.PreCheckSkipError(err) {
-		t.Skipf("skipping acceptance testing: %s", err)
-	}
-
-	if err != nil && strings.Contains(err.Error(), "Invoking account does not") {
-		// does not have code AccessDeniedException despite having that in the text
-		t.Skipf("to run this test, enable this account as a Delegated Admin Account: %s", err)
-	}
-
-	if err != nil {
-		t.Fatalf("unexpected PreCheck error: %s", err)
-	}
-}
-
 func testAccOrganizationConfigurationConfig_basic(ec2, ecr bool) string {
 	return fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+
+resource "aws_inspector2_delegated_admin_account" "test" {
+  account_id = data.aws_caller_identity.current.account_id
+}
+
 resource "aws_inspector2_organization_configuration" "test" {
   auto_enable {
     ec2 = %[1]t
     ecr = %[2]t
   }
+
+  depends_on = [aws_inspector2_delegated_admin_account.test]
 }
 `, ec2, ecr)
 }

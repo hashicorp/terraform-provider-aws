@@ -24,8 +24,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	awsdiag "github.com/hashicorp/terraform-provider-aws/internal/diag"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -369,7 +369,7 @@ func resourceDocumentClassifierUpdate(ctx context.Context, d *schema.ResourceDat
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
-			return awsdiag.AppendErrorf(diags, "updating tags for Comprehend Document Classifier (%s): %s", d.Id(), err)
+			return errs.AppendErrorf(diags, "updating tags for Comprehend Document Classifier (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -568,7 +568,7 @@ func documentClassifierPublishVersion(ctx context.Context, conn *comprehend.Clie
 			ec2Conn := awsClient.EC2Conn
 			enis, err := findNetworkInterfaces(waitCtx, ec2Conn, in.VpcConfig.SecurityGroupIds, in.VpcConfig.Subnets)
 			if err != nil {
-				diags = awsdiag.AppendWarningf(diags, "waiting for Amazon Comprehend Document Classifier (%s) %s: %s", d.Id(), tobe, err)
+				diags = errs.AppendWarningf(diags, "waiting for Amazon Comprehend Document Classifier (%s) %s: %s", d.Id(), tobe, err)
 				return nil
 			}
 			initialENIIds := make(map[string]bool, len(enis))
@@ -578,11 +578,11 @@ func documentClassifierPublishVersion(ctx context.Context, conn *comprehend.Clie
 
 			newENI, err := waitNetworkInterfaceCreated(waitCtx, ec2Conn, initialENIIds, in.VpcConfig.SecurityGroupIds, in.VpcConfig.Subnets, d.Timeout(schema.TimeoutCreate))
 			if errors.Is(err, context.Canceled) {
-				diags = awsdiag.AppendWarningf(diags, "waiting for Amazon Comprehend Document Classifier (%s) %s: %s", d.Id(), tobe, "ENI not found")
+				diags = errs.AppendWarningf(diags, "waiting for Amazon Comprehend Document Classifier (%s) %s: %s", d.Id(), tobe, "ENI not found")
 				return nil
 			}
 			if err != nil {
-				diags = awsdiag.AppendWarningf(diags, "waiting for Amazon Comprehend Document Classifier (%s) %s: %s", d.Id(), tobe, err)
+				diags = errs.AppendWarningf(diags, "waiting for Amazon Comprehend Document Classifier (%s) %s: %s", d.Id(), tobe, err)
 				return nil
 			}
 
@@ -598,7 +598,7 @@ func documentClassifierPublishVersion(ctx context.Context, conn *comprehend.Clie
 				},
 			})
 			if err != nil {
-				diags = awsdiag.AppendWarningf(diags, "waiting for Amazon Comprehend Document Classifier (%s) %s: %s", d.Id(), tobe, err)
+				diags = errs.AppendWarningf(diags, "waiting for Amazon Comprehend Document Classifier (%s) %s: %s", d.Id(), tobe, err)
 				return nil
 			}
 
@@ -608,7 +608,7 @@ func documentClassifierPublishVersion(ctx context.Context, conn *comprehend.Clie
 
 	err = g.Wait().ErrorOrNil()
 	if err != nil {
-		diags = awsdiag.AppendErrorf(diags, "waiting for Amazon Comprehend Document Classifier (%s) %s: %s", d.Id(), tobe, err)
+		diags = errs.AppendErrorf(diags, "waiting for Amazon Comprehend Document Classifier (%s) %s: %s", d.Id(), tobe, err)
 	}
 
 	return diags
