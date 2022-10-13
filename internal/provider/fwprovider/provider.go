@@ -380,7 +380,7 @@ type wrappedDataSource struct {
 	typeName string
 }
 
-func newWrappedDataSource(inner datasource.DataSourceWithConfigure) datasource.DataSource {
+func newWrappedDataSource(inner datasource.DataSourceWithConfigure) datasource.DataSourceWithConfigure {
 	return &wrappedDataSource{inner: inner, typeName: strings.TrimPrefix(reflect.TypeOf(inner).String(), "*")}
 }
 
