@@ -1662,7 +1662,25 @@ func outputSettingsSchema() *schema.Schema {
 					Optional: true,
 					MaxItems: 1,
 					Elem: &schema.Resource{
-						Schema: map[string]*schema.Schema{}, // TODO
+						Schema: map[string]*schema.Schema{
+							"destination": destinationSchema(),
+							"certficate_mode": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Computed:         true,
+								ValidateDiagFunc: enum.Validate[types.RtmpOutputCertificateMode](),
+							},
+							"connection_retry_interval": {
+								Type:     schema.TypeInt,
+								Optional: true,
+								Computed: true,
+							},
+							"num_retries": {
+								Type:     schema.TypeInt,
+								Optional: true,
+								Computed: true,
+							},
+						},
 					},
 				},
 				"udp_output_settings": {
