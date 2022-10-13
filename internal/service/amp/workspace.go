@@ -2,7 +2,6 @@ package amp
 
 import (
 	"context"
-	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -89,11 +88,21 @@ func resourceWorkspaceCreate(ctx context.Context, d *schema.ResourceData, meta i
 		return diag.Errorf("waiting for Prometheus Workspace (%s) create: %w", d.Id(), err)
 	}
 
-	// TODO
-	if v, ok := d.GetOk("cloudwatch_log_group_arn"); ok {
-		_, err := conn.CreateLoggingConfigurationWithContext(ctx, &prometheusservice.CreateLoggingConfigurationInput{WorkspaceId: aws.String(d.Id()), LogGroupArn: aws.String(v.(string))})
+	if v, ok := d.GetOk("logging_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		tfMap := v.([]interface{})[0].(map[string]interface{})
+		input := &prometheusservice.CreateLoggingConfigurationInput{
+			LogGroupArn: aws.String(tfMap["log_group_arn"].(string)),
+			WorkspaceId: aws.String(d.Id()),
+		}
+
+		_, err := conn.CreateLoggingConfigurationWithContext(ctx, input)
+
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("error creating Logging Configuration (log group arn: %s) for Workspace (%s): %w", v.(string), d.Id(), err))
+			return diag.Errorf("creating Prometheus Workspace (%s) logging configuration: %s", d.Id(), err)
+		}
+
+		if _, err := waitLoggingConfigurationCreated(ctx, conn, d.Id()); err != nil {
+			return diag.Errorf("waiting for Prometheus Workspace (%s) logging configuration create: %w", d.Id(), err)
 		}
 	}
 
@@ -122,16 +131,16 @@ func resourceWorkspaceRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("arn", arn)
 	d.Set("prometheus_endpoint", ws.PrometheusEndpoint)
 
-	// TODO
-	loggingConfig, err := conn.DescribeLoggingConfigurationWithContext(ctx, &prometheusservice.DescribeLoggingConfigurationInput{WorkspaceId: aws.String(d.Id())})
-	if err != nil {
-		if tfawserr.ErrCodeEquals(err, prometheusservice.ErrCodeResourceNotFoundException) {
-			d.Set("cloudwatch_log_group_arn", "")
-		} else {
-			return diag.FromErr(fmt.Errorf("error reading Prometheus logging coniguration for workspace (%s): %w", d.Id(), err))
-		}
+	loggingConfiguration, err := FindLoggingConfigurationByWorkspaceID(ctx, conn, d.Id())
+
+	if tfresource.NotFound(err) {
+		d.Set("logging_configuration", nil)
+	} else if err != nil {
+		return diag.Errorf("reading Prometheus Workspace (%s) logging configuration: %s", d.Id(), err)
 	} else {
-		d.Set("cloudwatch_log_group_arn", loggingConfig.LoggingConfiguration.LogGroupArn)
+		if err := d.Set("logging_configuration", []interface{}{flattenLoggingConfigurationMetadata(loggingConfiguration)}); err != nil {
+			return diag.Errorf("setting logging_configuration: %s", err)
+		}
 	}
 
 	tags, err := ListTagsWithContext(ctx, conn, arn)
@@ -173,21 +182,44 @@ func resourceWorkspaceUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		}
 	}
 
+	if d.HasChange("logging_configuration") {
+		if v, ok := d.GetOk("logging_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			tfMap := v.([]interface{})[0].(map[string]interface{})
+			input := &prometheusservice.UpdateLoggingConfigurationInput{
+				LogGroupArn: aws.String(tfMap["log_group_arn"].(string)),
+				WorkspaceId: aws.String(d.Id()),
+			}
+
+			_, err := conn.UpdateLoggingConfigurationWithContext(ctx, input)
+
+			if err != nil {
+				return diag.Errorf("updating Prometheus Workspace (%s) logging configuration: %s", d.Id(), err)
+			}
+
+			if _, err := waitLoggingConfigurationUpdated(ctx, conn, d.Id()); err != nil {
+				return diag.Errorf("waiting for Prometheus Workspace (%s) logging configuration update: %w", d.Id(), err)
+			}
+		} else {
+			_, err := conn.DeleteLoggingConfigurationWithContext(ctx, &prometheusservice.DeleteLoggingConfigurationInput{
+				WorkspaceId: aws.String(d.Id()),
+			})
+
+			if err != nil {
+				return diag.Errorf("deleting Prometheus Workspace (%s) logging configuration: %s", d.Id(), err)
+			}
+
+			if _, err := waitLoggingConfigurationDeleted(ctx, conn, d.Id()); err != nil {
+				return diag.Errorf("waiting for Prometheus Workspace (%s) logging configuration delete: %w", d.Id(), err)
+			}
+		}
+	}
+
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 		arn := d.Get("arn").(string)
 
 		if err := UpdateTagsWithContext(ctx, conn, arn, o, n); err != nil {
-			return diag.FromErr(fmt.Errorf("updating Prometheus Workspace (%s) tags: %s", arn, err))
-		}
-	}
-
-	// TODO
-	if d.HasChange("cloudwatch_log_group_arn") {
-		_, n := d.GetChange("cloudwatch_log_group_arn")
-		_, err := conn.UpdateLoggingConfigurationWithContext(ctx, &prometheusservice.UpdateLoggingConfigurationInput{WorkspaceId: aws.String(d.Id()), LogGroupArn: aws.String(n.(string))})
-		if err != nil {
-			return diag.FromErr(fmt.Errorf("error updating Logging Configuration (log group arn: %s) for Workspace (%s): %w", n.(string), d.Id(), err))
+			return diag.Errorf("updating Prometheus Workspace (%s) tags: %s", arn, err)
 		}
 	}
 
@@ -215,4 +247,18 @@ func resourceWorkspaceDelete(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	return nil
+}
+
+func flattenLoggingConfigurationMetadata(apiObject *prometheusservice.LoggingConfigurationMetadata) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.LogGroupArn; v != nil {
+		tfMap["log_group_arn"] = aws.StringValue(v)
+	}
+
+	return tfMap
 }

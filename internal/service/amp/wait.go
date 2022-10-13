@@ -176,3 +176,62 @@ func waitWorkspaceUpdated(ctx context.Context, conn *prometheusservice.Prometheu
 
 	return nil, err
 }
+
+func waitLoggingConfigurationCreated(ctx context.Context, conn *prometheusservice.PrometheusService, workspaceID string) (*prometheusservice.LoggingConfigurationMetadata, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{prometheusservice.LoggingConfigurationStatusCodeCreating},
+		Target:  []string{prometheusservice.LoggingConfigurationStatusCodeActive},
+		Refresh: statusLoggingConfiguration(ctx, conn, workspaceID),
+		Timeout: workspaceTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*prometheusservice.LoggingConfigurationMetadata); ok {
+		if statusCode := aws.StringValue(output.Status.StatusCode); statusCode == prometheusservice.LoggingConfigurationStatusCodeCreationFailed {
+			tfresource.SetLastError(err, errors.New(aws.StringValue(output.Status.StatusReason)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitLoggingConfigurationDeleted(ctx context.Context, conn *prometheusservice.PrometheusService, workspaceID string) (*prometheusservice.LoggingConfigurationMetadata, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{prometheusservice.LoggingConfigurationStatusCodeDeleting},
+		Target:  []string{},
+		Refresh: statusLoggingConfiguration(ctx, conn, workspaceID),
+		Timeout: workspaceTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*prometheusservice.LoggingConfigurationMetadata); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitLoggingConfigurationUpdated(ctx context.Context, conn *prometheusservice.PrometheusService, workspaceID string) (*prometheusservice.LoggingConfigurationMetadata, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{prometheusservice.LoggingConfigurationStatusCodeUpdating},
+		Target:  []string{prometheusservice.LoggingConfigurationStatusCodeActive},
+		Refresh: statusLoggingConfiguration(ctx, conn, workspaceID),
+		Timeout: workspaceTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*prometheusservice.LoggingConfigurationMetadata); ok {
+		if statusCode := aws.StringValue(output.Status.StatusCode); statusCode == prometheusservice.LoggingConfigurationStatusCodeUpdateFailed {
+			tfresource.SetLastError(err, errors.New(aws.StringValue(output.Status.StatusReason)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}

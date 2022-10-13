@@ -56,3 +56,19 @@ func statusWorkspace(ctx context.Context, conn *prometheusservice.PrometheusServ
 		return output, aws.StringValue(output.Status.StatusCode), nil
 	}
 }
+
+func statusLoggingConfiguration(ctx context.Context, conn *prometheusservice.PrometheusService, workspaceID string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindLoggingConfigurationByWorkspaceID(ctx, conn, workspaceID)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.Status.StatusCode), nil
+	}
+}

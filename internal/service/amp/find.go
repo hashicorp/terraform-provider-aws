@@ -100,3 +100,28 @@ func FindWorkspaceByID(conn *prometheusservice.PrometheusService, id string) (*p
 
 	return output.Workspace, nil
 }
+
+func FindLoggingConfigurationByWorkspaceID(ctx context.Context, conn *prometheusservice.PrometheusService, id string) (*prometheusservice.LoggingConfigurationMetadata, error) {
+	input := &prometheusservice.DescribeLoggingConfigurationInput{
+		WorkspaceId: aws.String(id),
+	}
+
+	output, err := conn.DescribeLoggingConfigurationWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, prometheusservice.ErrCodeResourceNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.LoggingConfiguration == nil || output.LoggingConfiguration.Status == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.LoggingConfiguration, nil
+}
