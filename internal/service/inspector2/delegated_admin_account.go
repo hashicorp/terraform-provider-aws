@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -127,10 +128,40 @@ func resourceDelegatedAdminAccountDelete(ctx context.Context, d *schema.Resource
 	return nil
 }
 
+type DelegatedAccountStatus string
+
+// Enum values for DelegatedAccountStatus
+const (
+	DelegatedAccountStatusDisableInProgress DelegatedAccountStatus = "DISABLE_IN_PROGRESS"
+	DelegatedAccountStatusEnableInProgress  DelegatedAccountStatus = "ENABLE_IN_PROGRESS"
+	DelegatedAccountStatusEnabling          DelegatedAccountStatus = "ENABLING"
+)
+
+// Values returns all known values for DelegatedAccountStatus.
+func (DelegatedAccountStatus) Values() []DelegatedAccountStatus {
+	return []DelegatedAccountStatus{
+		DelegatedAccountStatusDisableInProgress,
+		DelegatedAccountStatusEnableInProgress,
+		DelegatedAccountStatusEnabling,
+		DelegatedAccountStatus(types.RelationshipStatusAccountSuspended),
+		DelegatedAccountStatus(types.RelationshipStatusCannotCreateDetectorInOrgMaster),
+		DelegatedAccountStatus(types.RelationshipStatusCreated),
+		DelegatedAccountStatus(types.RelationshipStatusDeleted),
+		DelegatedAccountStatus(types.RelationshipStatusDisabled),
+		DelegatedAccountStatus(types.RelationshipStatusEmailVerificationFailed),
+		DelegatedAccountStatus(types.RelationshipStatusEmailVerificationInProgress),
+		DelegatedAccountStatus(types.RelationshipStatusEnabled),
+		DelegatedAccountStatus(types.RelationshipStatusInvited),
+		DelegatedAccountStatus(types.RelationshipStatusRegionDisabled),
+		DelegatedAccountStatus(types.RelationshipStatusRemoved),
+		DelegatedAccountStatus(types.RelationshipStatusResigned),
+	}
+}
+
 func WaitDelegatedAdminAccountEnabled(ctx context.Context, conn *inspector2.Client, accountID string, timeout time.Duration) error {
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{"DISABLE_IN_PROGRESS", "ENABLE_IN_PROGRESS", "ENABLING", ""},
-		Target:  []string{string(types.RelationshipStatusEnabled)},
+		Pending: enum.Slice(DelegatedAccountStatusDisableInProgress, DelegatedAccountStatusEnableInProgress, DelegatedAccountStatusEnabling),
+		Target:  enum.Slice(types.RelationshipStatusEnabled),
 		Refresh: statusDelegatedAdminAccount(ctx, conn, accountID),
 		Timeout: timeout,
 	}
@@ -142,7 +173,7 @@ func WaitDelegatedAdminAccountEnabled(ctx context.Context, conn *inspector2.Clie
 
 func WaitDelegatedAdminAccountDisabled(ctx context.Context, conn *inspector2.Client, accountID string, timeout time.Duration) error {
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{"DISABLE_IN_PROGRESS", string(types.RelationshipStatusCreated), string(types.RelationshipStatusEnabled)},
+		Pending: enum.Slice(DelegatedAccountStatusDisableInProgress, DelegatedAccountStatus(types.RelationshipStatusCreated), DelegatedAccountStatus(types.RelationshipStatusEnabled)),
 		Target:  []string{},
 		Refresh: statusDelegatedAdminAccount(ctx, conn, accountID),
 		Timeout: timeout,
