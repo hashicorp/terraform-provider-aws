@@ -1,6 +1,7 @@
 package sns
 
 import (
+	"context"
 	"crypto/sha256"
 	"fmt"
 	"log"
@@ -10,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/sns"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -18,13 +20,15 @@ import (
 
 func ResourcePlatformApplication() *schema.Resource {
 	return &schema.Resource{
-		Create: resourcePlatformApplicationCreate,
-		Read:   resourcePlatformApplicationRead,
-		Update: resourcePlatformApplicationUpdate,
-		Delete: resourcePlatformApplicationDelete,
+		CreateWithoutTimeout: resourcePlatformApplicationCreate,
+		ReadWithoutTimeout:   resourcePlatformApplicationRead,
+		UpdateWithoutTimeout: resourcePlatformApplicationUpdate,
+		DeleteWithoutTimeout: resourcePlatformApplicationDelete,
+
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
+
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:     schema.TypeString,
@@ -90,7 +94,7 @@ func ResourcePlatformApplication() *schema.Resource {
 	}
 }
 
-func resourcePlatformApplicationCreate(d *schema.ResourceData, meta interface{}) error {
+func resourcePlatformApplicationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).SNSConn
 
 	attributes := make(map[string]*string)
@@ -112,25 +116,104 @@ func resourcePlatformApplicationCreate(d *schema.ResourceData, meta interface{})
 		}
 	}
 
-	req := &sns.CreatePlatformApplicationInput{
+	input := &sns.CreatePlatformApplicationInput{
 		Name:       aws.String(name),
 		Platform:   aws.String(platform),
 		Attributes: attributes,
 	}
 
-	log.Printf("[DEBUG] SNS create application: %s", req)
+	output, err := conn.CreatePlatformApplicationWithContext(ctx, input)
 
-	output, err := conn.CreatePlatformApplication(req)
 	if err != nil {
-		return fmt.Errorf("Error creating SNS platform application: %s", err)
+		return diag.Errorf("creating SNS Platform Application (%s): %s", name, err)
 	}
 
 	d.SetId(aws.StringValue(output.PlatformApplicationArn))
 
-	return resourcePlatformApplicationUpdate(d, meta)
+	return resourcePlatformApplicationUpdate(ctx, d, meta)
 }
 
-func resourcePlatformApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourcePlatformApplicationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).SNSConn
+
+	// There is no SNS Describe/GetPlatformApplication to fetch attributes like name and platform
+	// We will use the ID, which should be a platform application ARN, to:
+	//  * Validate its an appropriate ARN on import
+	//  * Parse out the name and platform
+	arn, name, platform, err := DecodePlatformApplicationID(d.Id())
+
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	d.Set("arn", arn)
+	d.Set("name", name)
+	d.Set("platform", platform)
+
+	input := &sns.GetPlatformApplicationAttributesInput{
+		PlatformApplicationArn: aws.String(arn),
+	}
+
+	output, err := conn.GetPlatformApplicationAttributesWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, sns.ErrCodeNotFoundException) {
+		log.Printf("[WARN] SNS Platform Application (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+
+	if err != nil {
+		return diag.Errorf("reading SNS Platform Application (%s) attributes: %s", d.Id(), err)
+	}
+
+	if output == nil || output.Attributes == nil {
+		return diag.Errorf("reading SNS Platform Application (%s) attributes: empty response", d.Id())
+	}
+
+	if v, ok := output.Attributes["EventDeliveryFailure"]; ok {
+		d.Set("event_delivery_failure_topic_arn", v)
+	}
+
+	if v, ok := output.Attributes["EventEndpointCreated"]; ok {
+		d.Set("event_endpoint_created_topic_arn", v)
+	}
+
+	if v, ok := output.Attributes["EventEndpointDeleted"]; ok {
+		d.Set("event_endpoint_deleted_topic_arn", v)
+	}
+
+	if v, ok := output.Attributes["EventEndpointUpdated"]; ok {
+		d.Set("event_endpoint_updated_topic_arn", v)
+	}
+
+	if v, ok := output.Attributes["FailureFeedbackRoleArn"]; ok {
+		d.Set("failure_feedback_role_arn", v)
+	}
+
+	if v, ok := output.Attributes["PlatformPrincipal"]; ok {
+		d.Set("platform_principal", v)
+	}
+
+	if v, ok := output.Attributes["SuccessFeedbackRoleArn"]; ok {
+		d.Set("success_feedback_role_arn", v)
+	}
+
+	if v, ok := output.Attributes["SuccessFeedbackSampleRate"]; ok {
+		d.Set("success_feedback_sample_rate", v)
+	}
+
+	if v, ok := output.Attributes["ApplePlatformTeamID"]; ok {
+		d.Set("apple_platform_team_id", v)
+	}
+
+	if v, ok := output.Attributes["ApplePlatformBundleID"]; ok {
+		d.Set("apple_platform_bundle_id", v)
+	}
+
+	return nil
+}
+
+func resourcePlatformApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).SNSConn
 
 	attributes := make(map[string]*string)
@@ -197,7 +280,7 @@ func resourcePlatformApplicationUpdate(d *schema.ResourceData, meta interface{})
 	}
 
 	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
-		_, err := conn.SetPlatformApplicationAttributes(req)
+		_, err := conn.SetPlatformApplicationAttributesWithContext(ctx, req)
 		if err != nil {
 			if tfawserr.ErrMessageContains(err, sns.ErrCodeInvalidParameterException, "is not a valid role to allow SNS to write to Cloudwatch Logs") {
 				return resource.RetryableError(err)
@@ -211,99 +294,25 @@ func resourcePlatformApplicationUpdate(d *schema.ResourceData, meta interface{})
 	}
 
 	if err != nil {
-		return fmt.Errorf("Error updating SNS platform application: %s", err)
+		return diag.Errorf("updating SNS Platform Application (%s): %s", d.Id(), err)
 	}
 
-	return resourcePlatformApplicationRead(d, meta)
+	return resourcePlatformApplicationRead(ctx, d, meta)
 }
 
-func resourcePlatformApplicationRead(d *schema.ResourceData, meta interface{}) error {
+func resourcePlatformApplicationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).SNSConn
 
-	// There is no SNS Describe/GetPlatformApplication to fetch attributes like name and platform
-	// We will use the ID, which should be a platform application ARN, to:
-	//  * Validate its an appropriate ARN on import
-	//  * Parse out the name and platform
-	arn, name, platform, err := DecodePlatformApplicationID(d.Id())
-	if err != nil {
-		return err
-	}
-
-	d.Set("arn", arn)
-	d.Set("name", name)
-	d.Set("platform", platform)
-
-	input := &sns.GetPlatformApplicationAttributesInput{
-		PlatformApplicationArn: aws.String(arn),
-	}
-
-	output, err := conn.GetPlatformApplicationAttributes(input)
-
-	if tfawserr.ErrCodeEquals(err, sns.ErrCodeNotFoundException) {
-		log.Printf("[WARN] SNS Platform Application (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
-	}
+	log.Printf("[DEBUG] Deleting SNS Platform Application: %s", d.Id())
+	_, err := conn.DeletePlatformApplicationWithContext(ctx, &sns.DeletePlatformApplicationInput{
+		PlatformApplicationArn: aws.String(d.Id()),
+	})
 
 	if err != nil {
-		return fmt.Errorf("error getting SNS Platform Application (%s) attributes: %w", d.Id(), err)
-	}
-
-	if output == nil || output.Attributes == nil {
-		return fmt.Errorf("error getting SNS Platform Application (%s) attributes: empty response", d.Id())
-	}
-
-	if v, ok := output.Attributes["EventDeliveryFailure"]; ok {
-		d.Set("event_delivery_failure_topic_arn", v)
-	}
-
-	if v, ok := output.Attributes["EventEndpointCreated"]; ok {
-		d.Set("event_endpoint_created_topic_arn", v)
-	}
-
-	if v, ok := output.Attributes["EventEndpointDeleted"]; ok {
-		d.Set("event_endpoint_deleted_topic_arn", v)
-	}
-
-	if v, ok := output.Attributes["EventEndpointUpdated"]; ok {
-		d.Set("event_endpoint_updated_topic_arn", v)
-	}
-
-	if v, ok := output.Attributes["FailureFeedbackRoleArn"]; ok {
-		d.Set("failure_feedback_role_arn", v)
-	}
-
-	if v, ok := output.Attributes["PlatformPrincipal"]; ok {
-		d.Set("platform_principal", v)
-	}
-
-	if v, ok := output.Attributes["SuccessFeedbackRoleArn"]; ok {
-		d.Set("success_feedback_role_arn", v)
-	}
-
-	if v, ok := output.Attributes["SuccessFeedbackSampleRate"]; ok {
-		d.Set("success_feedback_sample_rate", v)
-	}
-
-	if v, ok := output.Attributes["ApplePlatformTeamID"]; ok {
-		d.Set("apple_platform_team_id", v)
-	}
-
-	if v, ok := output.Attributes["ApplePlatformBundleID"]; ok {
-		d.Set("apple_platform_bundle_id", v)
+		return diag.Errorf("deleting SNS Platform Application (%s): %s", d.Id(), err)
 	}
 
 	return nil
-}
-
-func resourcePlatformApplicationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SNSConn
-
-	log.Printf("[DEBUG] SNS Delete Application: %s", d.Id())
-	_, err := conn.DeletePlatformApplication(&sns.DeletePlatformApplicationInput{
-		PlatformApplicationArn: aws.String(d.Id()),
-	})
-	return err
 }
 
 func DecodePlatformApplicationID(input string) (arnS, name, platform string, err error) {
