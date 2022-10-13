@@ -94,7 +94,7 @@ func FindWorkspaceByID(conn *prometheusservice.PrometheusService, id string) (*p
 		return nil, err
 	}
 
-	if output == nil || output.Workspace == nil {
+	if output == nil || output.Workspace == nil || output.Workspace.Status == nil {
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
