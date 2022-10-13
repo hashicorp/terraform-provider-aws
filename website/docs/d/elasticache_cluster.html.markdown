@@ -8,7 +8,7 @@ description: |-
 
 # Data Source: aws_elasticache_cluster
 
-Use this data source to get information about an Elasticache Cluster
+Use this data source to get information about an ElastiCache Cluster
 
 ## Example Usage
 
