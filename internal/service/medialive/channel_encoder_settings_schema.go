@@ -1544,6 +1544,7 @@ func outputSettingsSchema() *schema.Schema {
 			Schema: map[string]*schema.Schema{
 				"archive_output_settings": {
 					Type:     schema.TypeList,
+					Optional: true,
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
@@ -1580,6 +1581,7 @@ func outputSettingsSchema() *schema.Schema {
 				},
 				"frame_capture_output_settings": {
 					Type:     schema.TypeList,
+					Optional: true,
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
@@ -1593,6 +1595,7 @@ func outputSettingsSchema() *schema.Schema {
 				},
 				"hls_output_settings": {
 					Type:     schema.TypeList,
+					Optional: true,
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
@@ -1618,6 +1621,7 @@ func outputSettingsSchema() *schema.Schema {
 				// This is in the API and Go SDK docs, but has no exported fields.
 				// "media_package_output_settings": {
 				// 	Type:     schema.TypeList,
+				//  Optional: true,
 				// 	MaxItems: 1,
 				// 	Elem: &schema.Resource{
 				// 		Schema: map[string]*schema.Schema{},
@@ -1625,6 +1629,7 @@ func outputSettingsSchema() *schema.Schema {
 				// },
 				"ms_smooth_output_settings": {
 					Type:     schema.TypeList,
+					Optional: true,
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
@@ -1642,9 +1647,32 @@ func outputSettingsSchema() *schema.Schema {
 						},
 					},
 				},
-				"multiplex_output_settings": {}, // TODO
-				"rtmp_output_settings":      {}, // TODO
-				"udp_output_settings":       {}, // TODO
+				"multiplex_output_settings": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"destination": destinationSchema(),
+						},
+					},
+				},
+				"rtmp_output_settings": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{}, // TODO
+					},
+				},
+				"udp_output_settings": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{}, // TODO
+					},
+				},
 			},
 		},
 	}
