@@ -32,9 +32,8 @@ func TestAccSNSTopicPolicy_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicExists("aws_sns_topic.test", &attributes),
 					resource.TestCheckResourceAttrPair(resourceName, "arn", "aws_sns_topic.test", "arn"),
-					resource.TestMatchResourceAttr(resourceName, "policy",
-						regexp.MustCompile(fmt.Sprintf("\"Sid\":\"%[1]s\"", rName))),
 					acctest.CheckResourceAttrAccountID(resourceName, "owner"),
+					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile(fmt.Sprintf("\"Sid\":\"%[1]s\"", rName))),
 				),
 			},
 			{
@@ -61,8 +60,7 @@ func TestAccSNSTopicPolicy_updated(t *testing.T) {
 				Config: testAccTopicPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicExists("aws_sns_topic.test", &attributes),
-					resource.TestMatchResourceAttr(resourceName, "policy",
-						regexp.MustCompile(fmt.Sprintf("\"Sid\":\"%[1]s\"", rName))),
+					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile(fmt.Sprintf("\"Sid\":\"%[1]s\"", rName))),
 				),
 			},
 			{
@@ -74,10 +72,8 @@ func TestAccSNSTopicPolicy_updated(t *testing.T) {
 				Config: testAccTopicPolicyConfig_updated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicExists("aws_sns_topic.test", &attributes),
-					resource.TestMatchResourceAttr(resourceName, "policy",
-						regexp.MustCompile(fmt.Sprintf("\"Sid\":\"%[1]s\"", rName))),
-					resource.TestMatchResourceAttr(resourceName, "policy",
-						regexp.MustCompile("SNS:DeleteTopic")),
+					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile(fmt.Sprintf("\"Sid\":\"%[1]s\"", rName))),
+					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile("SNS:DeleteTopic")),
 				),
 			},
 		},
@@ -146,8 +142,7 @@ func TestAccSNSTopicPolicy_ignoreEquivalent(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicExists("aws_sns_topic.test", &attributes),
 					resource.TestCheckResourceAttrPair(resourceName, "arn", "aws_sns_topic.test", "arn"),
-					resource.TestMatchResourceAttr(resourceName, "policy",
-						regexp.MustCompile(fmt.Sprintf("\"Sid\":\"%[1]s\"", rName))),
+					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile(fmt.Sprintf("\"Sid\":\"%[1]s\"", rName))),
 					acctest.CheckResourceAttrAccountID(resourceName, "owner"),
 				),
 			},
