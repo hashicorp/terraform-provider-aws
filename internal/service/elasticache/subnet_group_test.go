@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
 )
 
 func TestAccElastiCacheSubnetGroup_basic(t *testing.T) {
@@ -169,22 +170,17 @@ func testAccCheckSubnetGroupExists(n string, csg *elasticache.CacheSubnetGroup) 
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn
-		resp, err := conn.DescribeCacheSubnetGroups(&elasticache.DescribeCacheSubnetGroupsInput{
-			CacheSubnetGroupName: aws.String(rs.Primary.ID),
-		})
+
+		group, err := tfelasticache.FindCacheSubnetGroupByName(conn, rs.Primary.ID)
+
 		if err != nil {
-			return fmt.Errorf("CacheSubnetGroup error: %w", err)
+			return fmt.Errorf("error finding ElastiCache Subnet Group: %w", err)
 		}
 
-		for _, c := range resp.CacheSubnetGroups {
-			if rs.Primary.ID == *c.CacheSubnetGroupName {
-				*csg = *c
-			}
+		if rs.Primary.ID == *group.CacheSubnetGroupName {
+			*csg = *group
 		}
 
-		if csg == nil {
-			return fmt.Errorf("cache subnet group not found")
-		}
 		return nil
 	}
 }
