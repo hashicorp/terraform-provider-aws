@@ -96,7 +96,6 @@ The following arguments are supported:
   [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block)
   present, tags with matching keys will overwrite those defined at the provider-level.
 
-
 ### Private Registry Access
 
 The `private_registry_access` block supports the following arguments:
