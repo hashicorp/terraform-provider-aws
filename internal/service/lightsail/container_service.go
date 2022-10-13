@@ -360,8 +360,8 @@ func expandPrivateRegistryAccess(tfMap map[string]interface{}) *lightsail.Privat
 
 	apiObject := &lightsail.PrivateRegistryAccessRequest{}
 
-	if v, ok := tfMap["ecr_image_puller_role"]; ok {
-		apiObject.EcrImagePullerRole = expandEcrImagePullerRole(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := tfMap["ecr_image_puller_role"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		apiObject.EcrImagePullerRole = expandEcrImagePullerRole(v[0].(map[string]interface{}))
 	}
 
 	return apiObject
