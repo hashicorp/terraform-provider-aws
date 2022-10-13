@@ -7,7 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 )
 
-// Messager is a simple interface for types with Unwrap() returning an error.
+// Messager is a simple interface for types with ErrorMessage().
 type Messager interface {
 	ErrorMessage() string
 }
