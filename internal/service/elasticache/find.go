@@ -1,6 +1,7 @@
 package elasticache
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -248,4 +249,33 @@ func FindParameterGroupByName(conn *elasticache.ElastiCache, name string) (*elas
 	default:
 		return nil, tfresource.NewTooManyResultsError(count, input)
 	}
+}
+
+func FindCacheSubnetGroupByName(ctx context.Context, conn *elasticache.ElastiCache, name string) (*elasticache.CacheSubnetGroup, error) {
+	input := elasticache.DescribeCacheSubnetGroupsInput{
+		CacheSubnetGroupName: aws.String(name),
+	}
+
+	output, err := conn.DescribeCacheSubnetGroupsWithContext(ctx, &input)
+
+	if tfawserr.ErrCodeEquals(err, elasticache.ErrCodeCacheSubnetGroupNotFoundFault) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || len(output.CacheSubnetGroups) == 0 || output.CacheSubnetGroups[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output.CacheSubnetGroups); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return output.CacheSubnetGroups[0], nil
 }
