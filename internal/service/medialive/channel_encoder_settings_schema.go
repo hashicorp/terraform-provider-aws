@@ -1591,12 +1591,238 @@ func outputSettingsSchema() *schema.Schema {
 						},
 					},
 				},
-				"hls_output_settings":           {}, // TODO
+				"hls_output_settings": {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"hls_settings": hlsSettingsSchema(),
+							"h265_packaging_type": {
+								Type:     schema.TypeString,
+								Optional: true,
+								Computed: true,
+							},
+							"name_modifier": {
+								Type:     schema.TypeString,
+								Optional: true,
+								Computed: true,
+							},
+							"segment_modifier": {
+								Type:     schema.TypeString,
+								Optional: true,
+								Computed: true,
+							},
+						},
+					},
+				},
 				"media_package_output_settings": {}, // TODO
 				"ms_smooth_output_settings":     {}, // TODO
 				"multiplex_output_settings":     {}, // TODO
 				"rtmp_output_settings":          {}, // TODO
 				"udp_output_settings":           {}, // TODO
+			},
+		},
+	}
+}
+
+func hlsSettingsSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Required: true,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"audio_only_hls_settings": {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"audio_group_id": {
+								Type:     schema.TypeString,
+								Optional: true,
+								Computed: true,
+							},
+							"audio_only_image": {
+								Type:     schema.TypeList,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"uri": {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+										"password_param": {
+											Type:     schema.TypeString,
+											Optional: true,
+											Computed: true,
+										},
+										"username": {
+											Type:     schema.TypeString,
+											Optional: true,
+											Computed: true,
+										},
+									},
+								},
+							},
+							"audio_track_type": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Computed:         true,
+								ValidateDiagFunc: enum.Validate[types.AudioOnlyHlsTrackType](),
+							},
+							"segment_type": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Computed:         true,
+								ValidateDiagFunc: enum.Validate[types.AudioOnlyHlsSegmentType](),
+							},
+						},
+					},
+				},
+				"fmp4_hls_settings": {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"audio_rendition_sets": {
+								Type:     schema.TypeString,
+								Optional: true,
+								Computed: true,
+							},
+							"nielsen_id3_behavior": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Computed:         true,
+								ValidateDiagFunc: enum.Validate[types.Fmp4NielsenId3Behavior](),
+							},
+							"timed_metadata_behavior": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Computed:         true,
+								ValidateDiagFunc: enum.Validate[types.Fmp4TimedMetadataBehavior](),
+							},
+						},
+					},
+				},
+				// This is in the API and Go SDK docs, but has no exported fields.
+				// "frame_capture_hls_settings": {
+				// 	Type:     schema.TypeList,
+				// 	MaxItems: 1,
+				// 	Elem: &schema.Resource{
+				// 		Schema: map[string]*schema.Schema{},
+				// 	},
+				// },
+				"standard_hls_settings": {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"m3u8_settings": {
+								Type:     schema.TypeList,
+								Required: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"audio_frames_per_pes": {
+											Type:     schema.TypeInt,
+											Optional: true,
+											Computed: true,
+										},
+										"audio_pids": {
+											Type:     schema.TypeString,
+											Optional: true,
+											Computed: true,
+										},
+										"ecm_pid": {
+											Type:     schema.TypeString,
+											Optional: true,
+											Computed: true,
+										},
+										"nielsen_id3_behavior": {
+											Type:             schema.TypeString,
+											Optional:         true,
+											Computed:         true,
+											ValidateDiagFunc: enum.Validate[types.M3u8NielsenId3Behavior](),
+										},
+										"pat_interval": {
+											Type:     schema.TypeInt,
+											Optional: true,
+											Computed: true,
+										},
+										"pcr_control": {
+											Type:             schema.TypeString,
+											Optional:         true,
+											Computed:         true,
+											ValidateDiagFunc: enum.Validate[types.M3u8PcrControl](),
+										},
+										"pcr_period": {
+											Type:     schema.TypeInt,
+											Optional: true,
+											Computed: true,
+										},
+										"pcr_pid": {
+											Type:     schema.TypeString,
+											Optional: true,
+											Computed: true,
+										},
+										"pmt_interval": {
+											Type:     schema.TypeInt,
+											Optional: true,
+											Computed: true,
+										},
+										"pmt_pid": {
+											Type:     schema.TypeString,
+											Optional: true,
+											Computed: true,
+										},
+										"program_num": {
+											Type:     schema.TypeInt,
+											Optional: true,
+											Computed: true,
+										},
+										"scte35_behavior": {
+											Type:             schema.TypeString,
+											Optional:         true,
+											Computed:         true,
+											ValidateDiagFunc: enum.Validate[types.M3u8Scte35Behavior](),
+										},
+										"scte35_pid": {
+											Type:     schema.TypeString,
+											Optional: true,
+											Computed: true,
+										},
+										"timed_metadata_behavior": {
+											Type:             schema.TypeString,
+											Optional:         true,
+											Computed:         true,
+											ValidateDiagFunc: enum.Validate[types.M3u8TimedMetadataBehavior](),
+										},
+										"timed_metadata_pid": {
+											Type:     schema.TypeString,
+											Optional: true,
+											Computed: true,
+										},
+										"transport_stream_id": {
+											Type:     schema.TypeInt,
+											Optional: true,
+											Computed: true,
+										},
+										"video_pid": {
+											Type:     schema.TypeString,
+											Optional: true,
+											Computed: true,
+										},
+									},
+								},
+							},
+							"audio_rendition_sets": {
+								Type:     schema.TypeString,
+								Optional: true,
+								Computed: true,
+							},
+						},
+					},
+				},
 			},
 		},
 	}
