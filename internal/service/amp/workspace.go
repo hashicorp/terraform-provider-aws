@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/prometheusservice"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -26,7 +27,13 @@ func ResourceWorkspace() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 
-		CustomizeDiff: verify.SetTagsDiff,
+		CustomizeDiff: customdiff.Sequence(
+			// Once set, alias cannot be unset.
+			customdiff.ForceNewIfChange("alias", func(_ context.Context, old, new, meta interface{}) bool {
+				return old.(string) != "" && new.(string) == ""
+			}),
+			verify.SetTagsDiff,
+		),
 
 		Schema: map[string]*schema.Schema{
 			"alias": {
@@ -85,7 +92,7 @@ func resourceWorkspaceCreate(ctx context.Context, d *schema.ResourceData, meta i
 	d.SetId(aws.StringValue(result.WorkspaceId))
 
 	if _, err := waitWorkspaceCreated(ctx, conn, d.Id()); err != nil {
-		return diag.Errorf("waiting for Prometheus Workspace (%s) create: %w", d.Id(), err)
+		return diag.Errorf("waiting for Prometheus Workspace (%s) create: %s", d.Id(), err)
 	}
 
 	if v, ok := d.GetOk("logging_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -102,7 +109,7 @@ func resourceWorkspaceCreate(ctx context.Context, d *schema.ResourceData, meta i
 		}
 
 		if _, err := waitLoggingConfigurationCreated(ctx, conn, d.Id()); err != nil {
-			return diag.Errorf("waiting for Prometheus Workspace (%s) logging configuration create: %w", d.Id(), err)
+			return diag.Errorf("waiting for Prometheus Workspace (%s) logging configuration create: %s", d.Id(), err)
 		}
 	}
 
@@ -178,7 +185,7 @@ func resourceWorkspaceUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		}
 
 		if _, err := waitWorkspaceUpdated(ctx, conn, d.Id()); err != nil {
-			return diag.Errorf("waiting for Prometheus Workspace (%s) update: %w", d.Id(), err)
+			return diag.Errorf("waiting for Prometheus Workspace (%s) update: %s", d.Id(), err)
 		}
 	}
 
@@ -197,7 +204,7 @@ func resourceWorkspaceUpdate(ctx context.Context, d *schema.ResourceData, meta i
 			}
 
 			if _, err := waitLoggingConfigurationUpdated(ctx, conn, d.Id()); err != nil {
-				return diag.Errorf("waiting for Prometheus Workspace (%s) logging configuration update: %w", d.Id(), err)
+				return diag.Errorf("waiting for Prometheus Workspace (%s) logging configuration update: %s", d.Id(), err)
 			}
 		} else {
 			_, err := conn.DeleteLoggingConfigurationWithContext(ctx, &prometheusservice.DeleteLoggingConfigurationInput{
@@ -209,7 +216,7 @@ func resourceWorkspaceUpdate(ctx context.Context, d *schema.ResourceData, meta i
 			}
 
 			if _, err := waitLoggingConfigurationDeleted(ctx, conn, d.Id()); err != nil {
-				return diag.Errorf("waiting for Prometheus Workspace (%s) logging configuration delete: %w", d.Id(), err)
+				return diag.Errorf("waiting for Prometheus Workspace (%s) logging configuration delete: %s", d.Id(), err)
 			}
 		}
 	}

@@ -13,12 +13,25 @@ Manages an Amazon Managed Service for Prometheus (AMP) Workspace.
 ## Example Usage
 
 ```terraform
-resource "aws_prometheus_workspace" "demo" {
-  alias = "prometheus-test"
+resource "aws_prometheus_workspace" "example" {
+  alias = "example"
 
   tags = {
     Environment = "production"
-    Owner       = "abhi"
+  }
+}
+```
+
+### CloudWatch Logging
+
+```terraform
+resource "aws_cloudwatch_log_group" "example" {
+  name = "example"
+}
+
+resource "aws_prometheus_workspace" "example" {
+  logging_configuration {
+    log_group_arn = "${aws_cloudwatch_log_group.example.arn}:*"
   }
 }
 ```
