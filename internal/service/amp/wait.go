@@ -24,7 +24,7 @@ func waitAlertManagerDefinitionCreated(ctx context.Context, conn *prometheusserv
 		Timeout: workspaceTimeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*prometheusservice.AlertManagerDefinitionDescription); ok {
 		if statusCode := aws.StringValue(output.Status.StatusCode); statusCode == prometheusservice.AlertManagerDefinitionStatusCodeCreationFailed {
@@ -45,7 +45,7 @@ func waitAlertManagerDefinitionUpdated(ctx context.Context, conn *prometheusserv
 		Timeout: workspaceTimeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*prometheusservice.AlertManagerDefinitionDescription); ok {
 		if statusCode := aws.StringValue(output.Status.StatusCode); statusCode == prometheusservice.AlertManagerDefinitionStatusCodeUpdateFailed {
@@ -66,7 +66,7 @@ func waitAlertManagerDefinitionDeleted(ctx context.Context, conn *prometheusserv
 		Timeout: workspaceTimeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*prometheusservice.AlertManagerDefinitionDescription); ok {
 		return output, err
@@ -83,7 +83,7 @@ func waitRuleGroupNamespaceDeleted(ctx context.Context, conn *prometheusservice.
 		Timeout: workspaceTimeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*prometheusservice.RuleGroupsNamespaceDescription); ok {
 		return output, err
@@ -100,7 +100,7 @@ func waitRuleGroupNamespaceCreated(ctx context.Context, conn *prometheusservice.
 		Timeout: workspaceTimeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*prometheusservice.RuleGroupsNamespaceDescription); ok {
 		return output, err
@@ -117,7 +117,7 @@ func waitRuleGroupNamespaceUpdated(ctx context.Context, conn *prometheusservice.
 		Timeout: workspaceTimeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*prometheusservice.RuleGroupsNamespaceDescription); ok {
 		return output, err
