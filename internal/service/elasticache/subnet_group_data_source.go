@@ -22,7 +22,6 @@ func DataSourceSubnetGroup() *schema.Resource {
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
-				ForceNew: true,
 			},
 			"subnet_ids": {
 				Type:     schema.TypeSet,
