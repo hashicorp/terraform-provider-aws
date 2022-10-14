@@ -89,10 +89,10 @@ var (
 		"event_endpoint_created_topic_arn": PlatformApplicationAttributeNameEventEndpointCreated,
 		"event_endpoint_deleted_topic_arn": PlatformApplicationAttributeNameEventEndpointDeleted,
 		"event_endpoint_updated_topic_arn": PlatformApplicationAttributeNameEventEndpointUpdated,
-		"failure_feedback_role_arn":        PlatformApplicationAttributeNameFailureFeedbackRoleArn,
+		"failure_feedback_role_arn":        PlatformApplicationAttributeNameFailureFeedbackRoleARN,
 		"platform_credential":              PlatformApplicationAttributeNamePlatformCredential,
 		"platform_principal":               PlatformApplicationAttributeNamePlatformPrincipal,
-		"success_feedback_role_arn":        PlatformApplicationAttributeNameSuccessFeedbackRoleArn,
+		"success_feedback_role_arn":        PlatformApplicationAttributeNameSuccessFeedbackRoleARN,
 		"success_feedback_sample_rate":     PlatformApplicationAttributeNameSuccessFeedbackSampleRate,
 	}, platformApplicationSchema).WithSkipUpdate("apple_platform_bundle_id").WithSkipUpdate("apple_platform_team_id").WithSkipUpdate("platform_credential").WithSkipUpdate("platform_principal")
 )

@@ -14,10 +14,10 @@ const (
 	PlatformApplicationAttributeNameEventEndpointCreated       = "EventEndpointCreated"
 	PlatformApplicationAttributeNameEventEndpointDeleted       = "EventEndpointDeleted"
 	PlatformApplicationAttributeNameEventEndpointUpdated       = "EventEndpointUpdated"
-	PlatformApplicationAttributeNameFailureFeedbackRoleArn     = "FailureFeedbackRoleArn"
+	PlatformApplicationAttributeNameFailureFeedbackRoleARN     = "FailureFeedbackRoleArn"
 	PlatformApplicationAttributeNamePlatformCredential         = "PlatformCredential"
 	PlatformApplicationAttributeNamePlatformPrincipal          = "PlatformPrincipal"
-	PlatformApplicationAttributeNameSuccessFeedbackRoleArn     = "SuccessFeedbackRoleArn"
+	PlatformApplicationAttributeNameSuccessFeedbackRoleARN     = "SuccessFeedbackRoleArn"
 	PlatformApplicationAttributeNameSuccessFeedbackSampleRate  = "SuccessFeedbackSampleRate"
 )
 
