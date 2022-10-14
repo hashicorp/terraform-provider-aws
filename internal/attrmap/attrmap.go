@@ -19,6 +19,7 @@ type attributeInfo struct {
 	tfOptional       bool
 	isIAMPolicy      bool
 	missingSetToNil  bool
+	skipUpdate       bool
 }
 
 type AttributeMap map[string]attributeInfo
@@ -147,6 +148,10 @@ func (m AttributeMap) ResourceDataToAPIAttributesUpdate(d *schema.ResourceData) 
 	apiAttributes := map[string]string{}
 
 	for tfAttributeName, attributeInfo := range m {
+		if attributeInfo.skipUpdate {
+			continue
+		}
+
 		// Purely Computed values aren't specified on update.
 		if attributeInfo.tfComputed && !attributeInfo.tfOptional {
 			continue
@@ -217,6 +222,16 @@ func (m AttributeMap) WithMissingSetToNil(tfAttributeName string) AttributeMap {
 		}
 	} else if attributeInfo, ok := m[tfAttributeName]; ok {
 		attributeInfo.missingSetToNil = true
+	}
+
+	return m
+}
+
+// WithSkipUpdate marks the specified Terraform attribute as skipping update handling.
+// This method is intended to be chained with other similar helper methods in a builder pattern.
+func (m AttributeMap) WithSkipUpdate(tfAttributeName string) AttributeMap {
+	if attributeInfo, ok := m[tfAttributeName]; ok {
+		attributeInfo.skipUpdate = true
 	}
 
 	return m

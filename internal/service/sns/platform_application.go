@@ -94,7 +94,7 @@ var (
 		"platform_principal":               PlatformApplicationAttributeNamePlatformPrincipal,
 		"success_feedback_role_arn":        PlatformApplicationAttributeNameSuccessFeedbackRoleArn,
 		"success_feedback_sample_rate":     PlatformApplicationAttributeNameSuccessFeedbackSampleRate,
-	}, platformApplicationSchema)
+	}, platformApplicationSchema).WithSkipUpdate("apple_platform_bundle_id").WithSkipUpdate("apple_platform_team_id").WithSkipUpdate("platform_credential").WithSkipUpdate("platform_principal")
 )
 
 func ResourcePlatformApplication() *schema.Resource {
@@ -182,42 +182,18 @@ func resourcePlatformApplicationRead(ctx context.Context, d *schema.ResourceData
 func resourcePlatformApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).SNSConn
 
-	attributes := make(map[string]*string)
+	attributes, err := platformApplicationAttributeMap.ResourceDataToAPIAttributesUpdate(d)
 
-	if d.HasChange("event_delivery_failure_topic_arn") {
-		attributes["EventDeliveryFailure"] = aws.String(d.Get("event_delivery_failure_topic_arn").(string))
+	if err != nil {
+		return diag.FromErr(err)
 	}
 
-	if d.HasChange("event_endpoint_created_topic_arn") {
-		attributes["EventEndpointCreated"] = aws.String(d.Get("event_endpoint_created_topic_arn").(string))
-	}
-
-	if d.HasChange("event_endpoint_deleted_topic_arn") {
-		attributes["EventEndpointDeleted"] = aws.String(d.Get("event_endpoint_deleted_topic_arn").(string))
-	}
-
-	if d.HasChange("event_endpoint_updated_topic_arn") {
-		attributes["EventEndpointUpdated"] = aws.String(d.Get("event_endpoint_updated_topic_arn").(string))
-	}
-
-	if d.HasChange("failure_feedback_role_arn") {
-		attributes["FailureFeedbackRoleArn"] = aws.String(d.Get("failure_feedback_role_arn").(string))
-	}
-
-	if d.HasChange("success_feedback_role_arn") {
-		attributes["SuccessFeedbackRoleArn"] = aws.String(d.Get("success_feedback_role_arn").(string))
-	}
-
-	if d.HasChange("success_feedback_sample_rate") {
-		attributes["SuccessFeedbackSampleRate"] = aws.String(d.Get("success_feedback_sample_rate").(string))
-	}
-
-	if d.HasChanges("platform_credential", "platform_principal", "apple_platform_team_id", "apple_platform_bundle_id") {
+	if d.HasChanges("apple_platform_bundle_id", "apple_platform_team_id", "platform_credential", "platform_principal") {
 		// If APNS platform was configured with token-based authentication then the only way to update them
 		// is to update all 4 attributes as they must be specified together in the request.
 		if d.HasChanges("apple_platform_team_id", "apple_platform_bundle_id") {
-			attributes["ApplePlatformTeamID"] = aws.String(d.Get("apple_platform_team_id").(string))
-			attributes["ApplePlatformBundleID"] = aws.String(d.Get("apple_platform_bundle_id").(string))
+			attributes[PlatformApplicationAttributeNameApplePlatformTeamID] = d.Get("apple_platform_team_id").(string)
+			attributes[PlatformApplicationAttributeNameApplePlatformBundleID] = d.Get("apple_platform_bundle_id").(string)
 		}
 
 		// Prior to version 3.0.0 of the Terraform AWS Provider, the platform_credential and platform_principal
@@ -230,22 +206,22 @@ func resourcePlatformApplicationUpdate(ctx context.Context, d *schema.ResourceDa
 			return nil
 		}
 
-		attributes["PlatformCredential"] = aws.String(d.Get("platform_credential").(string))
+		attributes[PlatformApplicationAttributeNamePlatformCredential] = d.Get("platform_credential").(string)
 		// If the platform requires a principal it must also be specified, even if it didn't change
 		// since credential is stored as a hash, the only way to update principal is to update both
 		// as they must be specified together in the request.
 		if v, ok := d.GetOk("platform_principal"); ok {
-			attributes["PlatformPrincipal"] = aws.String(v.(string))
+			attributes[PlatformApplicationAttributeNamePlatformPrincipal] = v.(string)
 		}
 	}
 
 	// Make API call to update attributes
 	input := &sns.SetPlatformApplicationAttributesInput{
-		Attributes:             attributes,
+		Attributes:             aws.StringMap(attributes),
 		PlatformApplicationArn: aws.String(d.Id()),
 	}
 
-	_, err := tfresource.RetryWhenAWSErrMessageContainsContext(ctx, propagationTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryWhenAWSErrMessageContainsContext(ctx, propagationTimeout, func() (interface{}, error) {
 		return conn.SetPlatformApplicationAttributesWithContext(ctx, input)
 	}, sns.ErrCodeInvalidParameterException, "is not a valid role to allow SNS to write to Cloudwatch Logs")
 
