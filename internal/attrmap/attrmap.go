@@ -18,6 +18,7 @@ type attributeInfo struct {
 	tfComputed       bool
 	tfOptional       bool
 	isIAMPolicy      bool
+	missingSetToNil  bool
 }
 
 type AttributeMap map[string]attributeInfo
@@ -84,7 +85,7 @@ func (m AttributeMap) APIAttributesToResourceData(apiAttributes map[string]strin
 			if err := d.Set(tfAttributeName, tfAttributeValue); err != nil {
 				return fmt.Errorf("error setting %s: %w", tfAttributeName, err)
 			}
-		} else {
+		} else if attributeInfo.missingSetToNil {
 			d.Set(tfAttributeName, nil)
 		}
 	}
@@ -201,6 +202,21 @@ func (m AttributeMap) APIAttributeNames() []string {
 func (m AttributeMap) WithIAMPolicyAttribute(tfAttributeName string) AttributeMap {
 	if attributeInfo, ok := m[tfAttributeName]; ok {
 		attributeInfo.isIAMPolicy = true
+	}
+
+	return m
+}
+
+// WithMissingSetToNil marks the specified Terraform attribute as being set to nil if it's missing after reading the API.
+// An attribute name of "*" means all attributes get marked.
+// This method is intended to be chained with other similar helper methods in a builder pattern.
+func (m AttributeMap) WithMissingSetToNil(tfAttributeName string) AttributeMap {
+	if tfAttributeName == "*" {
+		for _, attributeInfo := range m {
+			attributeInfo.missingSetToNil = true
+		}
+	} else if attributeInfo, ok := m[tfAttributeName]; ok {
+		attributeInfo.missingSetToNil = true
 	}
 
 	return m

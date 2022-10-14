@@ -122,7 +122,7 @@ var (
 		"delivery_status_success_sampling_rate": "DeliveryStatusSuccessSamplingRate",
 		"monthly_spend_limit":                   "MonthlySpendLimit",
 		"usage_report_s3_bucket":                "UsageReportS3Bucket",
-	}, smsPreferencesSchema)
+	}, smsPreferencesSchema).WithMissingSetToNil("*")
 )
 
 func ResourceSMSPreferences() *schema.Resource {

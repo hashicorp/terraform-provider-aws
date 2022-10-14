@@ -115,7 +115,7 @@ var (
 		"redrive_policy":                 SubscriptionAttributeNameRedrivePolicy,
 		"subscription_role_arn":          SubscriptionAttributeNameSubscriptionRoleARN,
 		"topic_arn":                      SubscriptionAttributeNameTopicARN,
-	}, subscriptionSchema)
+	}, subscriptionSchema).WithMissingSetToNil("*")
 )
 
 func ResourceTopicSubscription() *schema.Resource {
