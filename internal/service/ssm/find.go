@@ -94,6 +94,13 @@ func FindServiceSettingByID(conn *ssm.SSM, id string) (*ssm.ServiceSetting, erro
 
 	output, err := conn.GetServiceSetting(input)
 
+	if tfawserr.ErrCodeContains(err, ssm.ErrCodeServiceSettingNotFound) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return nil, err
 	}
