@@ -21,6 +21,12 @@ const (
 )
 
 const (
+	PlatfomAPNS        = "APNS"
+	PlatfomAPNSSandbox = "APNS_SANDBOX"
+	PlatfomGCM         = "GCM"
+)
+
+const (
 	SubscriptionProtocolApplication = "application"
 	SubscriptionProtocolEmail       = "email"
 	SubscriptionProtocolEmailJSON   = "email-json"

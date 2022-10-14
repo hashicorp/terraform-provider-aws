@@ -168,6 +168,50 @@ func TestDecodePlatformApplicationID(t *testing.T) {
 	}
 }
 
+func TestAccSNSPlatformApplication_GCM_basic(t *testing.T) {
+	key := "GCM_API_KEY"
+	apiKey := os.Getenv(key)
+	if apiKey == "" {
+		t.Skipf("Environment variable %s is not set", key)
+	}
+
+	resourceName := "aws_sns_platform_application.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sns.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPlatformApplicationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPlatformApplicationConfig_gcmBasic(rName, apiKey),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckPlatformApplicationExists(resourceName),
+					resource.TestCheckNoResourceAttr(resourceName, "apple_platform_bundle_id"),
+					resource.TestCheckNoResourceAttr(resourceName, "apple_platform_team_id"),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "sns", fmt.Sprintf("app/GCM/%s", rName)),
+					resource.TestCheckNoResourceAttr(resourceName, "event_delivery_failure_topic_arn"),
+					resource.TestCheckNoResourceAttr(resourceName, "event_endpoint_created_topic_arn"),
+					resource.TestCheckNoResourceAttr(resourceName, "event_endpoint_deleted_topic_arn"),
+					resource.TestCheckNoResourceAttr(resourceName, "event_endpoint_updated_topic_arn"),
+					resource.TestCheckNoResourceAttr(resourceName, "failure_feedback_role_arn"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "platform", "GCM"),
+					resource.TestCheckNoResourceAttr(resourceName, "success_feedback_role_arn"),
+					resource.TestCheckNoResourceAttr(resourceName, "success_feedback_sample_rate"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"platform_credential", "platform_principal"},
+			},
+		},
+	})
+}
+
 func TestAccSNSPlatformApplication_basic(t *testing.T) {
 	platforms := testAccPlatformApplicationPlatformFromEnv(t, "certificate")
 	resourceName := "aws_sns_platform_application.test"
@@ -460,6 +504,16 @@ func testAccCheckPlatformApplicationDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func testAccPlatformApplicationConfig_gcmBasic(rName, credentials string) string {
+	return fmt.Sprintf(`
+resource "aws_sns_platform_application" "test" {
+  name                = %[1]q
+  platform            = "GCM"
+  platform_credential = %[2]q
+}
+`, rName, credentials)
 }
 
 func testAccPlatformApplicationConfig_basic(name string, platform *testAccPlatformApplicationPlatform) string {
