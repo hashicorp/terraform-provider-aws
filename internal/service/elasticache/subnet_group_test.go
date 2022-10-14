@@ -4,20 +4,20 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elasticache"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccElastiCacheSubnetGroup_basic(t *testing.T) {
 	var csg elasticache.CacheSubnetGroup
 	resourceName := "aws_elasticache_subnet_group.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
@@ -26,11 +26,14 @@ func TestAccElastiCacheSubnetGroup_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckSubnetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSubnetGroupConfig_basic(sdkacctest.RandInt()),
-				Check: resource.ComposeTestCheckFunc(
+				Config: testAccSubnetGroupConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSubnetGroupExists(resourceName, &csg),
-					resource.TestCheckResourceAttr(
-						resourceName, "description", "Managed by Terraform"),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "description", "Managed by Terraform"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
@@ -141,24 +144,24 @@ func testAccCheckSubnetGroupDestroy(s *terraform.State) error {
 		if rs.Type != "aws_elasticache_subnet_group" {
 			continue
 		}
-		res, err := conn.DescribeCacheSubnetGroups(&elasticache.DescribeCacheSubnetGroupsInput{
-			CacheSubnetGroupName: aws.String(rs.Primary.ID),
-		})
+
+		_, err := tfelasticache.FindCacheSubnetGroupByName(conn, rs.Primary.ID)
+
+		if tfresource.NotFound(err) {
+			continue
+		}
+
 		if err != nil {
-			// Verify the error is what we want
-			if tfawserr.ErrCodeEquals(err, elasticache.ErrCodeCacheSubnetGroupNotFoundFault) {
-				continue
-			}
 			return err
 		}
-		if len(res.CacheSubnetGroups) > 0 {
-			return fmt.Errorf("still exist.")
-		}
+
+		return fmt.Errorf("ElastiCache Subnet Group %s still exists", rs.Primary.ID)
 	}
+
 	return nil
 }
 
-func testAccCheckSubnetGroupExists(n string, csg *elasticache.CacheSubnetGroup) resource.TestCheckFunc {
+func testAccCheckSubnetGroupExists(n string, v *elasticache.CacheSubnetGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -166,20 +169,18 @@ func testAccCheckSubnetGroupExists(n string, csg *elasticache.CacheSubnetGroup) 
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No cache subnet group ID is set")
+			return fmt.Errorf("No ElastiCache Subnet Group ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn
 
-		group, err := tfelasticache.FindCacheSubnetGroupByName(conn, rs.Primary.ID)
+		output, err := tfelasticache.FindCacheSubnetGroupByName(conn, rs.Primary.ID)
 
 		if err != nil {
-			return fmt.Errorf("error finding ElastiCache Subnet Group: %w", err)
+			return nil
 		}
 
-		if rs.Primary.ID == *group.CacheSubnetGroupName {
-			*csg = *group
-		}
+		*v = *output
 
 		return nil
 	}
@@ -205,34 +206,16 @@ func testAccCheckSubnetGroupAttrs(csg *elasticache.CacheSubnetGroup, n string, c
 	}
 }
 
-func testAccSubnetGroupConfig_basic(rInt int) string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
-resource "aws_vpc" "foo" {
-  cidr_block = "192.168.0.0/16"
-
-  tags = {
-    Name = "terraform-testacc-elasticache-subnet-group"
-  }
-}
-
-resource "aws_subnet" "foo" {
-  vpc_id            = aws_vpc.foo.id
-  cidr_block        = "192.168.0.0/20"
-  availability_zone = data.aws_availability_zones.available.names[0]
-
-  tags = {
-    Name = "tf-acc-elasticache-subnet-group"
-  }
-}
-
+func testAccSubnetGroupConfig_basic(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 1), fmt.Sprintf(`
 resource "aws_elasticache_subnet_group" "test" {
   # Including uppercase letters in this name to ensure
   # that we correctly handle the fact that the API
   # normalizes names to lowercase.
-  name       = "tf-TEST-cache-subnet-%03d"
-  subnet_ids = [aws_subnet.foo.id]
+  name       = upper(%[1]q)
+  subnet_ids = aws_subnet.test[*].id
 }
-`, rInt))
+`, rName))
 }
 
 func testAccSubnetGroupConfig_updatePre(rInt int) string {
