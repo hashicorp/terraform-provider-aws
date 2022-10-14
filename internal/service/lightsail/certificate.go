@@ -24,10 +24,11 @@ import (
 
 func ResourceCertificate() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceCertificateCreate,
-		ReadContext:   resourceCertificateRead,
-		UpdateContext: resourceCertificateUpdate,
-		DeleteContext: resourceCertificateDelete,
+		CreateWithoutTimeout: resourceCertificateCreate,
+		ReadWithoutTimeout:   resourceCertificateRead,
+		UpdateWithoutTimeout: resourceCertificateUpdate,
+		DeleteWithoutTimeout: resourceCertificateDelete,
+
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -103,6 +104,7 @@ func ResourceCertificate() *schema.Resource {
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
 		},
+
 		CustomizeDiff: customdiff.Sequence(
 			func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
 				// Lightsail automatically adds the domain_name value to the list of SANs. Mimic Lightsail's behavior
