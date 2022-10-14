@@ -199,7 +199,7 @@ func testAccCheckSubnetGroupExists(n string, v *elasticache.CacheSubnetGroup) re
 		output, err := tfelasticache.FindCacheSubnetGroupByName(conn, rs.Primary.ID)
 
 		if err != nil {
-			return nil
+			return err
 		}
 
 		*v = *output
