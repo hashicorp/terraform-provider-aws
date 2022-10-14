@@ -336,14 +336,14 @@ func resourceStackRead(ctx context.Context, d *schema.ResourceData, meta interfa
 			return diag.FromErr(fmt.Errorf("error setting `%s` for AppStream Stack (%s): %w", "access_endpoints", d.Id(), err))
 		}
 		if err = d.Set("application_settings", flattenApplicationSettings(v.ApplicationSettings)); err != nil {
-			return diag.FromErr(fmt.Errorf("error setting `%s` for AppStream Stack (%s): %w", "user_settings", d.Id(), err))
+			return diag.FromErr(fmt.Errorf("error setting `%s` for AppStream Stack (%s): %w", "application_settings", d.Id(), err))
 		}
 		d.Set("arn", v.Arn)
 		d.Set("created_time", aws.TimeValue(v.CreatedTime).Format(time.RFC3339))
 		d.Set("description", v.Description)
 		d.Set("display_name", v.DisplayName)
 		if err = d.Set("embed_host_domains", flex.FlattenStringList(v.EmbedHostDomains)); err != nil {
-			return diag.FromErr(fmt.Errorf("error setting `%s` for AppStream Stack (%s): %w", "user_settings", d.Id(), err))
+			return diag.FromErr(fmt.Errorf("error setting `%s` for AppStream Stack (%s): %w", "embed_host_domains", d.Id(), err))
 		}
 		d.Set("feedback_url", v.FeedbackURL)
 		d.Set("name", v.Name)
