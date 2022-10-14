@@ -277,10 +277,11 @@ func ResourceTable() *schema.Resource {
 				},
 			},
 			"import_table": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				ForceNew: false,
+				Type:          schema.TypeList,
+				Optional:      true,
+				MaxItems:      1,
+				ForceNew:      false,
+				ConflictsWith: []string{"restore_source_name"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"client_token": {
@@ -353,8 +354,9 @@ func ResourceTable() *schema.Resource {
 				ValidateFunc: verify.ValidUTCTimestamp,
 			},
 			"restore_source_name": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:          schema.TypeString,
+				Optional:      true,
+				ConflictsWith: []string{"import_table"},
 			},
 			"restore_to_latest_time": {
 				Type:     schema.TypeBool,
