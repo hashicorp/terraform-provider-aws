@@ -212,6 +212,72 @@ func TestAccSNSPlatformApplication_GCM_basic(t *testing.T) {
 	})
 }
 
+func TestAccSNSPlatformApplication_GCM_allAttributes(t *testing.T) {
+	key := "GCM_API_KEY"
+	apiKey := os.Getenv(key)
+	if apiKey == "" {
+		t.Skipf("Environment variable %s is not set", key)
+	}
+
+	resourceName := "aws_sns_platform_application.test"
+	topic0ResourceName := "aws_sns_topic.test.0"
+	topic1ResourceName := "aws_sns_topic.test.1"
+	role0ResourceName := "aws_iam_role.test.0"
+	role1ResourceName := "aws_iam_role.test.1"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sns.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPlatformApplicationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPlatformApplicationConfig_gcmAllAttributes(rName, apiKey, 0),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckPlatformApplicationExists(resourceName),
+					resource.TestCheckNoResourceAttr(resourceName, "apple_platform_bundle_id"),
+					resource.TestCheckNoResourceAttr(resourceName, "apple_platform_team_id"),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "sns", fmt.Sprintf("app/GCM/%s", rName)),
+					resource.TestCheckResourceAttrPair(resourceName, "event_delivery_failure_topic_arn", topic0ResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "event_endpoint_created_topic_arn", topic1ResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "event_endpoint_deleted_topic_arn", topic0ResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "event_endpoint_updated_topic_arn", topic1ResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "failure_feedback_role_arn", role0ResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "platform", "GCM"),
+					resource.TestCheckResourceAttrPair(resourceName, "success_feedback_role_arn", role1ResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "success_feedback_sample_rate", "25"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"platform_credential", "platform_principal"},
+			},
+			{
+				Config: testAccPlatformApplicationConfig_gcmAllAttributes(rName, apiKey, 1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckPlatformApplicationExists(resourceName),
+					resource.TestCheckNoResourceAttr(resourceName, "apple_platform_bundle_id"),
+					resource.TestCheckNoResourceAttr(resourceName, "apple_platform_team_id"),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "sns", fmt.Sprintf("app/GCM/%s", rName)),
+					resource.TestCheckResourceAttrPair(resourceName, "event_delivery_failure_topic_arn", topic1ResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "event_endpoint_created_topic_arn", topic0ResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "event_endpoint_deleted_topic_arn", topic1ResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "event_endpoint_updated_topic_arn", topic0ResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "failure_feedback_role_arn", role1ResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "platform", "GCM"),
+					resource.TestCheckResourceAttrPair(resourceName, "success_feedback_role_arn", role0ResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "success_feedback_sample_rate", "50"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccSNSPlatformApplication_basic(t *testing.T) {
 	platforms := testAccPlatformApplicationPlatformFromEnv(t, "certificate")
 	resourceName := "aws_sns_platform_application.test"
@@ -514,6 +580,65 @@ resource "aws_sns_platform_application" "test" {
   platform_credential = %[2]q
 }
 `, rName, credentials)
+}
+
+func testAccPlatformApplicationConfig_gcmAllAttributes(rName, credentials string, idx int) string {
+	return fmt.Sprintf(`
+resource "aws_sns_topic" "test" {
+  count = 2
+
+  name = "%[1]s-${count.index}"
+}
+
+data "aws_partition" "current" {}
+
+resource "aws_iam_role" "test" {
+  count = 2
+
+  name = "%[1]s-${count.index}"
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": {
+    "Effect": "Allow",
+    "Principal": {
+      "Service": "sns.${data.aws_partition.current.dns_suffix}"
+    },
+    "Action": "sts:AssumeRole"
+  }
+}
+EOF
+}
+
+resource "aws_iam_role_policy_attachment" "test" {
+  count = 2
+
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/CloudWatchLogsFullAccess"
+  role       = aws_iam_role.test[count.index].id
+}
+
+locals {
+  index_a = %[3]d == 0 ? 0 : 1
+  index_b = %[3]d == 0 ? 1 : 0
+}
+
+resource "aws_sns_platform_application" "test" {
+  name                = %[1]q
+  platform            = "GCM"
+  platform_credential = %[2]q
+
+  event_delivery_failure_topic_arn = aws_sns_topic.test[local.index_a].arn
+  event_endpoint_created_topic_arn = aws_sns_topic.test[local.index_b].arn
+  event_endpoint_deleted_topic_arn = aws_sns_topic.test[local.index_a].arn
+  event_endpoint_updated_topic_arn = aws_sns_topic.test[local.index_b].arn
+
+  failure_feedback_role_arn = aws_iam_role.test[local.index_a].arn
+  success_feedback_role_arn = aws_iam_role.test[local.index_b].arn
+
+  success_feedback_sample_rate = 25 + %[3]d * 25
+}
+`, rName, credentials, idx)
 }
 
 func testAccPlatformApplicationConfig_basic(name string, platform *testAccPlatformApplicationPlatform) string {
