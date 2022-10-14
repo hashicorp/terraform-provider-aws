@@ -12,7 +12,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/sns"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/attrmap"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -91,6 +90,7 @@ var (
 		"event_endpoint_deleted_topic_arn": PlatformApplicationAttributeNameEventEndpointDeleted,
 		"event_endpoint_updated_topic_arn": PlatformApplicationAttributeNameEventEndpointUpdated,
 		"failure_feedback_role_arn":        PlatformApplicationAttributeNameFailureFeedbackRoleArn,
+		"platform_credential":              PlatformApplicationAttributeNamePlatformCredential,
 		"platform_principal":               PlatformApplicationAttributeNamePlatformPrincipal,
 		"success_feedback_role_arn":        PlatformApplicationAttributeNameSuccessFeedbackRoleArn,
 		"success_feedback_sample_rate":     PlatformApplicationAttributeNameSuccessFeedbackSampleRate,
@@ -115,40 +115,30 @@ func ResourcePlatformApplication() *schema.Resource {
 func resourcePlatformApplicationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).SNSConn
 
-	attributes := make(map[string]*string)
+	attributes, err := platformApplicationAttributeMap.ResourceDataToAPIAttributesCreate(d)
+
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
 	name := d.Get("name").(string)
-	platform := d.Get("platform").(string)
-
-	attributes["PlatformCredential"] = aws.String(d.Get("platform_credential").(string))
-	if v, ok := d.GetOk("platform_principal"); ok {
-		attributes["PlatformPrincipal"] = aws.String(v.(string))
-	}
-
-	if platform == "APNS" || platform == "APNS_SANDBOX" {
-		applePlatformTeamId, applePlatformTeamIdOk := d.GetOk("apple_platform_team_id")
-		applePlatformBundleId, applePlatformBundleIdOk := d.GetOk("apple_platform_bundle_id")
-
-		if applePlatformTeamIdOk && applePlatformBundleIdOk {
-			attributes["ApplePlatformTeamID"] = aws.String(applePlatformTeamId.(string))
-			attributes["ApplePlatformBundleID"] = aws.String(applePlatformBundleId.(string))
-		}
-	}
-
 	input := &sns.CreatePlatformApplicationInput{
+		Attributes: aws.StringMap(attributes),
 		Name:       aws.String(name),
-		Platform:   aws.String(platform),
-		Attributes: attributes,
+		Platform:   aws.String(d.Get("platform").(string)),
 	}
 
-	output, err := conn.CreatePlatformApplicationWithContext(ctx, input)
+	outputRaw, err := tfresource.RetryWhenAWSErrMessageContainsContext(ctx, propagationTimeout, func() (interface{}, error) {
+		return conn.CreatePlatformApplicationWithContext(ctx, input)
+	}, sns.ErrCodeInvalidParameterException, "is not a valid role to allow SNS to write to Cloudwatch Logs")
 
 	if err != nil {
 		return diag.Errorf("creating SNS Platform Application (%s): %s", name, err)
 	}
 
-	d.SetId(aws.StringValue(output.PlatformApplicationArn))
+	d.SetId(aws.StringValue(outputRaw.(*sns.CreatePlatformApplicationOutput).PlatformApplicationArn))
 
-	return resourcePlatformApplicationUpdate(ctx, d, meta)
+	return resourcePlatformApplicationRead(ctx, d, meta)
 }
 
 func resourcePlatformApplicationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -180,44 +170,10 @@ func resourcePlatformApplicationRead(ctx context.Context, d *schema.ResourceData
 	d.Set("name", name)
 	d.Set("platform", platform)
 
-	if v, ok := attributes["EventDeliveryFailure"]; ok {
-		d.Set("event_delivery_failure_topic_arn", v)
-	}
+	err = platformApplicationAttributeMap.APIAttributesToResourceData(attributes, d)
 
-	if v, ok := attributes["EventEndpointCreated"]; ok {
-		d.Set("event_endpoint_created_topic_arn", v)
-	}
-
-	if v, ok := attributes["EventEndpointDeleted"]; ok {
-		d.Set("event_endpoint_deleted_topic_arn", v)
-	}
-
-	if v, ok := attributes["EventEndpointUpdated"]; ok {
-		d.Set("event_endpoint_updated_topic_arn", v)
-	}
-
-	if v, ok := attributes["FailureFeedbackRoleArn"]; ok {
-		d.Set("failure_feedback_role_arn", v)
-	}
-
-	if v, ok := attributes["PlatformPrincipal"]; ok {
-		d.Set("platform_principal", v)
-	}
-
-	if v, ok := attributes["SuccessFeedbackRoleArn"]; ok {
-		d.Set("success_feedback_role_arn", v)
-	}
-
-	if v, ok := attributes["SuccessFeedbackSampleRate"]; ok {
-		d.Set("success_feedback_sample_rate", v)
-	}
-
-	if v, ok := attributes["ApplePlatformTeamID"]; ok {
-		d.Set("apple_platform_team_id", v)
-	}
-
-	if v, ok := attributes["ApplePlatformBundleID"]; ok {
-		d.Set("apple_platform_bundle_id", v)
+	if err != nil {
+		return diag.FromErr(err)
 	}
 
 	return nil
@@ -284,24 +240,14 @@ func resourcePlatformApplicationUpdate(ctx context.Context, d *schema.ResourceDa
 	}
 
 	// Make API call to update attributes
-	req := &sns.SetPlatformApplicationAttributesInput{
-		PlatformApplicationArn: aws.String(d.Id()),
+	input := &sns.SetPlatformApplicationAttributesInput{
 		Attributes:             attributes,
+		PlatformApplicationArn: aws.String(d.Id()),
 	}
 
-	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
-		_, err := conn.SetPlatformApplicationAttributesWithContext(ctx, req)
-		if err != nil {
-			if tfawserr.ErrMessageContains(err, sns.ErrCodeInvalidParameterException, "is not a valid role to allow SNS to write to Cloudwatch Logs") {
-				return resource.RetryableError(err)
-			}
-			return resource.NonRetryableError(err)
-		}
-		return nil
-	})
-	if tfresource.TimedOut(err) {
-		_, err = conn.SetPlatformApplicationAttributes(req)
-	}
+	_, err := tfresource.RetryWhenAWSErrMessageContainsContext(ctx, propagationTimeout, func() (interface{}, error) {
+		return conn.SetPlatformApplicationAttributesWithContext(ctx, input)
+	}, sns.ErrCodeInvalidParameterException, "is not a valid role to allow SNS to write to Cloudwatch Logs")
 
 	if err != nil {
 		return diag.Errorf("updating SNS Platform Application (%s): %s", d.Id(), err)
