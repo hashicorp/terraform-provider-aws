@@ -47,6 +47,29 @@ func TestAccElastiCacheSubnetGroup_basic(t *testing.T) {
 	})
 }
 
+func TestAccElastiCacheSubnetGroup_disappears(t *testing.T) {
+	var csg elasticache.CacheSubnetGroup
+	resourceName := "aws_elasticache_subnet_group.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSubnetGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSubnetGroupConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSubnetGroupExists(resourceName, &csg),
+					acctest.CheckResourceDisappears(acctest.Provider, tfelasticache.ResourceSubnetGroup(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func TestAccElastiCacheSubnetGroup_update(t *testing.T) {
 	var csg elasticache.CacheSubnetGroup
 	resourceName := "aws_elasticache_subnet_group.test"
