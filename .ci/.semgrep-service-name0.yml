@@ -3071,3 +3071,18 @@ rules:
             - pattern-not-regex: .*uickConnect.*
             - pattern-not-regex: ^TestAcc.*
     severity: WARNING
+  - id: connect-in-test-name
+    languages:
+      - go
+    message: Include "Connect" in test name
+    paths:
+      include:
+        - internal/service/connect/*_test.go
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-not-regex: "^TestAccConnect"
+            - pattern-regex: ^TestAcc.*
+    severity: WARNING

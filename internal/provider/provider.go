@@ -171,6 +171,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/servicediscovery"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/servicequotas"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/ses"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/sesv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/sfn"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/shield"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/signer"
@@ -2059,6 +2060,8 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_ses_receipt_rule":                 ses.ResourceReceiptRule(),
 			"aws_ses_receipt_rule_set":             ses.ResourceReceiptRuleSet(),
 			"aws_ses_template":                     ses.ResourceTemplate(),
+
+			"aws_sesv2_configuration_set": sesv2.ResourceConfigurationSet(),
 
 			"aws_sfn_activity":      sfn.ResourceActivity(),
 			"aws_sfn_state_machine": sfn.ResourceStateMachine(),

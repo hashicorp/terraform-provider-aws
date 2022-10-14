@@ -156,6 +156,7 @@ val services = mapOf(
     "servicediscovery" to ServiceSpec("Cloud Map", vpcLock = true),
     "servicequotas" to ServiceSpec("Service Quotas"),
     "ses" to ServiceSpec("SES (Simple Email)"),
+    "sesv2" to ServiceSpec("SESv2 (Simple Email V2)"),
     "sfn" to ServiceSpec("SFN (Step Functions)"),
     "shield" to ServiceSpec("Shield"),
     "signer" to ServiceSpec("Signer"),
