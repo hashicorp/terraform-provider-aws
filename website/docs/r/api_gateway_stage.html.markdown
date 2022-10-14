@@ -125,6 +125,7 @@ For more information on configuring the log format rules visit the AWS [document
 
 ### Canary Settings
 
+* `deployment_id` - (Required) The identifier of the deployment that the stage points to.
 * `percent_traffic` - (Optional) Percent `0.0` - `100.0` of traffic to divert to the canary deployment.
 * `stage_variable_overrides` - (Optional) Map of overridden stage `variables` (including new variables) for the canary deployment.
 * `use_stage_cache` - (Optional) Whether the canary deployment uses the stage cache. Defaults to false.

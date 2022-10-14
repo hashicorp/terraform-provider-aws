@@ -487,6 +487,7 @@ func TestAccAPIGatewayStage_canarySettings(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStageExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "variables.one", "1"),
+					resource.TestCheckResourceAttr(resourceName, "canary_settings.0.deployment_id", "abcde12345"),
 					resource.TestCheckResourceAttr(resourceName, "canary_settings.0.percent_traffic", "33.33"),
 					resource.TestCheckResourceAttr(resourceName, "canary_settings.0.stage_variable_overrides.one", "3"),
 					resource.TestCheckResourceAttr(resourceName, "canary_settings.0.use_stage_cache", "true"),
@@ -510,6 +511,7 @@ func TestAccAPIGatewayStage_canarySettings(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStageExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "variables.one", "1"),
+					resource.TestCheckResourceAttr(resourceName, "canary_settings.0.deployment_id", "12345abcde"),
 					resource.TestCheckResourceAttr(resourceName, "canary_settings.0.percent_traffic", "66.66"),
 					resource.TestCheckResourceAttr(resourceName, "canary_settings.0.stage_variable_overrides.four", "5"),
 					resource.TestCheckResourceAttr(resourceName, "canary_settings.0.use_stage_cache", "false"),
@@ -890,6 +892,7 @@ resource "aws_api_gateway_stage" "test" {
   deployment_id = aws_api_gateway_deployment.dev.id
 
   canary_settings {
+	deployment_id = "abcde12345"
     percent_traffic = "33.33"
     stage_variable_overrides = {
       one = "3"
@@ -912,6 +915,7 @@ resource "aws_api_gateway_stage" "test" {
   deployment_id = aws_api_gateway_deployment.dev.id
 
   canary_settings {
+	deployment_id = "12345abcde"
     percent_traffic = "66.66"
     stage_variable_overrides = {
       four = "5"

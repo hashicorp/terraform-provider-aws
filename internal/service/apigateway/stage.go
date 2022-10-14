@@ -87,6 +87,10 @@ func ResourceStage() *schema.Resource {
 							Type:     schema.TypeBool,
 							Optional: true,
 						},
+						"deployment_id": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
 					},
 				},
 			},
@@ -186,7 +190,7 @@ func resourceStageCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("canary_settings"); ok {
-		input.CanarySettings = expandStageCanarySettings(v.([]interface{}), deploymentId)
+		input.CanarySettings = expandStageCanarySettings(v.([]interface{}))
 	}
 
 	if len(tags) > 0 {
@@ -359,14 +363,6 @@ func resourceStageUpdate(d *schema.ResourceData, meta interface{}) error {
 				Path:  aws.String("/deploymentId"),
 				Value: aws.String(d.Get("deployment_id").(string)),
 			})
-
-			if _, ok := d.GetOk("canary_settings"); ok {
-				operations = append(operations, &apigateway.PatchOperation{
-					Op:    aws.String(apigateway.OpReplace),
-					Path:  aws.String("/canarySettings/deploymentId"),
-					Value: aws.String(d.Get("deployment_id").(string)),
-				})
-			}
 		}
 		if d.HasChange("description") {
 			operations = append(operations, &apigateway.PatchOperation{
@@ -502,15 +498,17 @@ func flattenAccessLogSettings(accessLogSettings *apigateway.AccessLogSettings) [
 	return result
 }
 
-func expandStageCanarySettings(l []interface{}, deploymentId string) *apigateway.CanarySettings {
+func expandStageCanarySettings(l []interface{}) *apigateway.CanarySettings {
 	if len(l) == 0 {
 		return nil
 	}
 
 	m := l[0].(map[string]interface{})
 
-	canarySettings := &apigateway.CanarySettings{
-		DeploymentId: aws.String(deploymentId),
+	canarySettings := &apigateway.CanarySettings{}
+
+	if v, ok := m["deployment_id"].(string); ok {
+		canarySettings.DeploymentId = aws.String(v)
 	}
 
 	if v, ok := m["percent_traffic"].(float64); ok {
@@ -543,6 +541,7 @@ func flattenCanarySettings(canarySettings *apigateway.CanarySettings) []interfac
 
 	settings["percent_traffic"] = canarySettings.PercentTraffic
 	settings["use_stage_cache"] = canarySettings.UseStageCache
+	settings["deployment_id"] = canarySettings.DeploymentId
 
 	return []interface{}{settings}
 }
@@ -564,7 +563,18 @@ func appendCanarySettingsPatchOperations(operations []*apigateway.PatchOperation
 			"percent_traffic":          0.0,
 			"stage_variable_overrides": make(map[string]interface{}),
 			"use_stage_cache":          false,
+			"deployment_id":            "",
 		}
+	}
+
+	oldDeploymentId := oldSettings["deployment_id"].(string)
+	newDeploymentId := newSettings["deployment_id"].(string)
+	if oldDeploymentId != newDeploymentId {
+		operations = append(operations, &apigateway.PatchOperation{
+			Op:    aws.String(apigateway.OpReplace),
+			Path:  aws.String("/canarySettings/deploymentId"),
+			Value: aws.String(fmt.Sprintf("%s", newDeploymentId)),
+		})
 	}
 
 	oldOverrides := oldSettings["stage_variable_overrides"].(map[string]interface{})
