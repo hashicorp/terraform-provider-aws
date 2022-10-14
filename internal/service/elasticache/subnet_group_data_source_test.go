@@ -18,7 +18,7 @@ func testAccPreCheck(t *testing.T) {
 }
 
 func TestAccElastiCacheSubnetGroupDataSource_basic(t *testing.T) {
-	rName := "tf-test-" + sdkacctest.RandString(8)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_subnet_group.test"
 	dataSourceName := "data.aws_elasticache_subnet_group.test"
 
@@ -34,10 +34,7 @@ func TestAccElastiCacheSubnetGroupDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "description", resourceName, "description"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "name", resourceName, "name"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "subnet_ids.#", resourceName, "subnet_ids.#"),
-					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "subnet_ids.*", resourceName, "subnet_ids.0"),
-					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "subnet_ids.*", resourceName, "subnet_ids.0"),
-					resource.TestCheckResourceAttr(dataSourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "tags.Test", resourceName, "tags.Test"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "tags.%", resourceName, "tags.%"),
 				),
 			},
 		},
@@ -45,21 +42,18 @@ func TestAccElastiCacheSubnetGroupDataSource_basic(t *testing.T) {
 }
 
 func testAccSubnetGroupDataSourceConfig_basic(rName string) string {
-	return acctest.ConfigCompose(
-		acctest.ConfigVPCWithSubnets(rName, 2),
-		fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
 resource "aws_elasticache_subnet_group" "test" {
   name       = %[1]q
   subnet_ids = aws_subnet.test.*.id
 
   tags = {
-    Test = "test"
+    Name = %[1]q
   }
 }
 
 data "aws_elasticache_subnet_group" "test" {
   name = aws_elasticache_subnet_group.test.name
 }
-`, rName),
-	)
+`, rName))
 }
