@@ -276,6 +276,76 @@ func ResourceTable() *schema.Resource {
 					},
 				},
 			},
+			"import_table": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				ForceNew: false,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"client_token": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"input_compression_type": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringInSlice(dynamodb.InputCompressionType_Values(), false),
+						},
+						"input_format": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringInSlice(dynamodb.InputFormat_Values(), false),
+						},
+						"input_format_options": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"csv": {
+										Type:     schema.TypeSet,
+										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"delimiter": {
+													Type:     schema.TypeString,
+													Optional: true,
+												},
+												"header_list": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Elem:     &schema.Schema{Type: schema.TypeString},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+						"s3_bucket_source": {
+							Type:     schema.TypeSet,
+							Required: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"s3_bucket": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+									"s3_bucket_owner": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"s3_key_prefix": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 			"restore_date_time": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -476,6 +546,83 @@ func resourceTableCreate(d *schema.ResourceData, meta interface{}) error {
 
 		if output == nil || output.TableDescription == nil {
 			return errors.New("error creating DynamoDB Table: empty response")
+		}
+
+	} else if vit, ok := d.GetOk("import_table"); ok && len(vit.([]interface{})) > 0 && vit.([]interface{})[0] != nil {
+		input := expandImportTable(vit.([]interface{})[0].(map[string]interface{}))
+
+		tcp := &dynamodb.TableCreationParameters{
+			TableName:   aws.String(d.Get("name").(string)),
+			BillingMode: aws.String(d.Get("billing_mode").(string)),
+			KeySchema:   expandKeySchema(keySchemaMap),
+		}
+
+		capacityMap := map[string]interface{}{
+			"write_capacity": d.Get("write_capacity"),
+			"read_capacity":  d.Get("read_capacity"),
+		}
+
+		billingMode := d.Get("billing_mode").(string)
+
+		tcp.ProvisionedThroughput = expandProvisionedThroughput(capacityMap, billingMode)
+
+		if v, ok := d.GetOk("attribute"); ok {
+			aSet := v.(*schema.Set)
+			tcp.AttributeDefinitions = expandAttributes(aSet.List())
+		}
+
+		if v, ok := d.GetOk("server_side_encryption"); ok {
+			tcp.SSESpecification = expandEncryptAtRestOptions(v.([]interface{}))
+		}
+
+		if v, ok := d.GetOk("global_secondary_index"); ok {
+			globalSecondaryIndexes := []*dynamodb.GlobalSecondaryIndex{}
+			gsiSet := v.(*schema.Set)
+
+			for _, gsiObject := range gsiSet.List() {
+				gsi := gsiObject.(map[string]interface{})
+				if err := validateGSIProvisionedThroughput(gsi, billingMode); err != nil {
+					return create.Error(names.DynamoDB, create.ErrActionCreating, ResNameTable, d.Get("name").(string), err)
+				}
+
+				gsiObject := expandGlobalSecondaryIndex(gsi, billingMode)
+				globalSecondaryIndexes = append(globalSecondaryIndexes, gsiObject)
+			}
+			tcp.GlobalSecondaryIndexes = globalSecondaryIndexes
+		}
+
+		input.TableCreationParameters = tcp
+
+		var output *dynamodb.ImportTableOutput
+		err := resource.Retry(createTableTimeout, func() *resource.RetryError {
+			var err error
+			output, err = conn.ImportTable(input)
+			if err != nil {
+				if tfawserr.ErrCodeEquals(err, "ThrottlingException") {
+					return resource.RetryableError(err)
+				}
+				if tfawserr.ErrMessageContains(err, dynamodb.ErrCodeLimitExceededException, "can be created, updated, or deleted simultaneously") {
+					return resource.RetryableError(err)
+				}
+				if tfawserr.ErrMessageContains(err, dynamodb.ErrCodeLimitExceededException, "indexed tables that can be created simultaneously") {
+					return resource.RetryableError(err)
+				}
+
+				return resource.NonRetryableError(err)
+			}
+			return nil
+		})
+
+		if tfresource.TimedOut(err) {
+			output, err = conn.ImportTable(input)
+		}
+
+		if err != nil {
+			return create.Error(names.DynamoDB, create.ErrActionCreating, ResNameTable, d.Get("name").(string), err)
+		}
+
+		if output == nil || output.ImportTableDescription == nil {
+			return errors.New("error importing DynamoDB Table: empty response")
 		}
 
 	} else {
@@ -1767,6 +1914,33 @@ func expandLocalSecondaryIndexes(cfg []interface{}, keySchemaM map[string]interf
 	return indexes
 }
 
+func expandImportTable(data map[string]interface{}) *dynamodb.ImportTableInput {
+	a := &dynamodb.ImportTableInput{}
+
+	if v, ok := data["client_token"].(string); ok {
+		a.ClientToken = aws.String(v)
+	}
+
+	if v, ok := data["input_compression_type"].(string); ok {
+		a.InputCompressionType = aws.String(v)
+	}
+
+	if v, ok := data["input_format"].(string); ok {
+		a.InputFormat = aws.String(v)
+	}
+
+	if v, ok := data["input_format_options"]; ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		a.InputFormatOptions = expandInputFormatOptions(v.([]interface{})[0].(map[string]interface{}))
+	}
+
+	if v, ok := data["s3_bucket_source"]; ok {
+		s3bSet := v.(*schema.Set)
+		a.S3BucketSource = expandS3BucketSource(s3bSet.List()[0].(map[string]interface{}))
+	}
+
+	return a
+}
+
 func expandGlobalSecondaryIndex(data map[string]interface{}, billingMode string) *dynamodb.GlobalSecondaryIndex {
 	return &dynamodb.GlobalSecondaryIndex{
 		IndexName:             aws.String(data["name"].(string)),
@@ -1855,6 +2029,50 @@ func expandEncryptAtRestOptions(vOptions []interface{}) *dynamodb.SSESpecificati
 	options.Enabled = aws.Bool(enabled)
 
 	return options
+}
+
+func expandInputFormatOptions(data map[string]interface{}) *dynamodb.InputFormatOptions {
+	if data == nil {
+		return nil
+	}
+
+	a := &dynamodb.InputFormatOptions{}
+
+	if v, ok := data["csv"].(map[string]interface{}); ok && v != nil {
+		a.Csv = &dynamodb.CsvOptions{}
+
+		if s, ok := v["delimiter"].(string); ok && s != "" {
+			a.Csv.Delimiter = aws.String(s)
+		}
+
+		if s, ok := v["header_list"].([]interface{}); ok && s != nil {
+			a.Csv.HeaderList = flex.ExpandStringList(s)
+		}
+	}
+
+	return a
+}
+
+func expandS3BucketSource(data map[string]interface{}) *dynamodb.S3BucketSource {
+	if data == nil {
+		return nil
+	}
+
+	a := &dynamodb.S3BucketSource{}
+
+	if s, ok := data["s3_bucket"].(string); ok && s != "" {
+		a.S3Bucket = aws.String(s)
+	}
+
+	if s, ok := data["s3_bucket_owner"].(string); ok && s != "" {
+		a.S3BucketOwner = aws.String(s)
+	}
+
+	if s, ok := data["s3_key_prefix"].(string); ok && s != "" {
+		a.S3KeyPrefix = aws.String(s)
+	}
+
+	return a
 }
 
 // validators
