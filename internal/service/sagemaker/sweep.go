@@ -245,18 +245,17 @@ func sweepCodeRepositories(region string) error {
 		return fmt.Errorf("getting client: %s", err)
 	}
 	conn := client.(*conns.AWSClient).SageMakerConn
+	var sweeperErrs *multierror.Error
 
 	err = conn.ListCodeRepositoriesPages(&sagemaker.ListCodeRepositoriesInput{}, func(page *sagemaker.ListCodeRepositoriesOutput, lastPage bool) bool {
 		for _, instance := range page.CodeRepositorySummaryList {
-			name := aws.StringValue(instance.CodeRepositoryName)
+			r := ResourceCodeRepository()
+			d := r.Data(nil)
+			d.SetId(aws.StringValue(instance.CodeRepositoryName))
 
-			input := &sagemaker.DeleteCodeRepositoryInput{
-				CodeRepositoryName: instance.CodeRepositoryName,
-			}
-
-			log.Printf("[INFO] Deleting SageMaker Code Repository: %s", name)
-			if _, err := conn.DeleteCodeRepository(input); err != nil {
-				log.Printf("[ERROR] Error deleting SageMaker Code Repository (%s): %s", name, err)
+			err := r.Delete(d, client)
+			if err != nil {
+				sweeperErrs = multierror.Append(sweeperErrs, err)
 				continue
 			}
 		}
@@ -266,14 +265,14 @@ func sweepCodeRepositories(region string) error {
 
 	if sweep.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping SageMaker Code Repository sweep for %s: %s", region, err)
-		return nil
+		return sweeperErrs.ErrorOrNil()
 	}
 
 	if err != nil {
-		return fmt.Errorf("retrieving SageMaker Code Repositories: %w", err)
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("retrieving SageMaker Code Repositories: %w", err))
 	}
 
-	return nil
+	return sweeperErrs.ErrorOrNil()
 }
 
 func sweepDeviceFleets(region string) error {
@@ -403,7 +402,6 @@ func sweepEndpointConfigurations(region string) error {
 	}
 	err = conn.ListEndpointConfigsPages(req, func(page *sagemaker.ListEndpointConfigsOutput, lastPage bool) bool {
 		for _, endpointConfig := range page.EndpointConfigs {
-
 			r := ResourceEndpointConfiguration()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(endpointConfig.EndpointConfigName))
@@ -468,18 +466,17 @@ func sweepFeatureGroups(region string) error {
 		return fmt.Errorf("getting client: %s", err)
 	}
 	conn := client.(*conns.AWSClient).SageMakerConn
+	var sweeperErrs *multierror.Error
 
 	err = conn.ListFeatureGroupsPages(&sagemaker.ListFeatureGroupsInput{}, func(page *sagemaker.ListFeatureGroupsOutput, lastPage bool) bool {
 		for _, group := range page.FeatureGroupSummaries {
-			name := aws.StringValue(group.FeatureGroupName)
+			r := ResourceFeatureGroup()
+			d := r.Data(nil)
+			d.SetId(aws.StringValue(group.FeatureGroupName))
 
-			input := &sagemaker.DeleteFeatureGroupInput{
-				FeatureGroupName: group.FeatureGroupName,
-			}
-
-			log.Printf("[INFO] Deleting SageMaker Feature Group: %s", name)
-			if _, err := conn.DeleteFeatureGroup(input); err != nil {
-				log.Printf("[ERROR] Error deleting SageMaker Feature Group (%s): %s", name, err)
+			err := r.Delete(d, client)
+			if err != nil {
+				sweeperErrs = multierror.Append(sweeperErrs, err)
 				continue
 			}
 		}
@@ -489,14 +486,14 @@ func sweepFeatureGroups(region string) error {
 
 	if sweep.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping SageMaker Feature Group sweep for %s: %s", region, err)
-		return nil
+		return sweeperErrs.ErrorOrNil()
 	}
 
 	if err != nil {
-		return fmt.Errorf("retrieving SageMaker Feature Groups: %w", err)
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("retrieving SageMaker Feature Groups: %w", err))
 	}
 
-	return nil
+	return sweeperErrs.ErrorOrNil()
 }
 
 func sweepFlowDefinitions(region string) error {
@@ -579,18 +576,17 @@ func sweepImages(region string) error {
 		return fmt.Errorf("getting client: %s", err)
 	}
 	conn := client.(*conns.AWSClient).SageMakerConn
+	var sweeperErrs *multierror.Error
 
 	err = conn.ListImagesPages(&sagemaker.ListImagesInput{}, func(page *sagemaker.ListImagesOutput, lastPage bool) bool {
-		for _, Image := range page.Images {
-			name := aws.StringValue(Image.ImageName)
+		for _, image := range page.Images {
+			r := ResourceImage()
+			d := r.Data(nil)
+			d.SetId(aws.StringValue(image.ImageName))
 
-			input := &sagemaker.DeleteImageInput{
-				ImageName: Image.ImageName,
-			}
-
-			log.Printf("[INFO] Deleting SageMaker Image: %s", name)
-			if _, err := conn.DeleteImage(input); err != nil {
-				log.Printf("[ERROR] Error deleting SageMaker Image (%s): %s", name, err)
+			err := r.Delete(d, client)
+			if err != nil {
+				sweeperErrs = multierror.Append(sweeperErrs, err)
 				continue
 			}
 		}
@@ -600,14 +596,14 @@ func sweepImages(region string) error {
 
 	if sweep.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping SageMaker Image sweep for %s: %s", region, err)
-		return nil
+		return sweeperErrs.ErrorOrNil()
 	}
 
 	if err != nil {
-		return fmt.Errorf("retrieving SageMaker Images: %w", err)
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("retrieving SageMaker Images: %w", err))
 	}
 
-	return nil
+	return sweeperErrs.ErrorOrNil()
 }
 
 func sweepModelPackageGroups(region string) error {
@@ -616,18 +612,17 @@ func sweepModelPackageGroups(region string) error {
 		return fmt.Errorf("getting client: %s", err)
 	}
 	conn := client.(*conns.AWSClient).SageMakerConn
+	var sweeperErrs *multierror.Error
 
 	err = conn.ListModelPackageGroupsPages(&sagemaker.ListModelPackageGroupsInput{}, func(page *sagemaker.ListModelPackageGroupsOutput, lastPage bool) bool {
-		for _, ModelPackageGroup := range page.ModelPackageGroupSummaryList {
-			name := aws.StringValue(ModelPackageGroup.ModelPackageGroupName)
+		for _, modelPackageGroup := range page.ModelPackageGroupSummaryList {
+			r := ResourceModelPackageGroup()
+			d := r.Data(nil)
+			d.SetId(aws.StringValue(modelPackageGroup.ModelPackageGroupName))
 
-			input := &sagemaker.DeleteModelPackageGroupInput{
-				ModelPackageGroupName: ModelPackageGroup.ModelPackageGroupName,
-			}
-
-			log.Printf("[INFO] Deleting SageMaker Model Package Group: %s", name)
-			if _, err := conn.DeleteModelPackageGroup(input); err != nil {
-				log.Printf("[ERROR] Error deleting SageMaker Model Package Group (%s): %s", name, err)
+			err := r.Delete(d, client)
+			if err != nil {
+				sweeperErrs = multierror.Append(sweeperErrs, err)
 				continue
 			}
 		}
@@ -637,14 +632,14 @@ func sweepModelPackageGroups(region string) error {
 
 	if sweep.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping SageMaker Model Package Group sweep for %s: %s", region, err)
-		return nil
+		return sweeperErrs.ErrorOrNil()
 	}
 
 	if err != nil {
-		return fmt.Errorf("retrieving SageMaker Model Package Groups: %w", err)
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("retrieving SageMaker Model Package Groups: %w", err))
 	}
 
-	return nil
+	return sweeperErrs.ErrorOrNil()
 }
 
 func sweepModels(region string) error {
@@ -689,39 +684,38 @@ func sweepNotebookInstanceLifecycleConfiguration(region string) error {
 		return fmt.Errorf("getting client: %s", err)
 	}
 	conn := client.(*conns.AWSClient).SageMakerConn
+	var sweeperErrs *multierror.Error
 
 	input := &sagemaker.ListNotebookInstanceLifecycleConfigsInput{}
 	err = conn.ListNotebookInstanceLifecycleConfigsPages(input, func(page *sagemaker.ListNotebookInstanceLifecycleConfigsOutput, lastPage bool) bool {
-		if len(page.NotebookInstanceLifecycleConfigs) == 0 {
-			log.Printf("[INFO] No SageMaker Notebook Instance Lifecycle Configuration to sweep")
-			return false
-		}
 		for _, lifecycleConfig := range page.NotebookInstanceLifecycleConfigs {
 			name := aws.StringValue(lifecycleConfig.NotebookInstanceLifecycleConfigName)
 			if !strings.HasPrefix(name, sweep.ResourcePrefix) {
-				log.Printf("[INFO] Skipping SageMaker Notebook Instance Lifecycle Configuration: %s", name)
+				log.Printf("[INFO] Skipping SageMaker Notebook Instance Lifecycle Configuration (%s): not in allow list", name)
 				continue
 			}
 
-			log.Printf("[INFO] Deleting SageMaker Notebook Instance Lifecycle Configuration: %s", name)
-			_, err := conn.DeleteNotebookInstanceLifecycleConfig(&sagemaker.DeleteNotebookInstanceLifecycleConfigInput{
-				NotebookInstanceLifecycleConfigName: aws.String(name),
-			})
+			r := ResourceNotebookInstanceLifeCycleConfiguration()
+			d := r.Data(nil)
+			d.SetId(aws.StringValue(lifecycleConfig.NotebookInstanceLifecycleConfigName))
+
+			err := r.Delete(d, client)
 			if err != nil {
-				log.Printf("[ERROR] Failed to delete SageMaker Notebook Instance Lifecycle Configuration %s: %s", name, err)
+				sweeperErrs = multierror.Append(sweeperErrs, err)
+				continue
 			}
 		}
 		return !lastPage
 	})
+	if sweep.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping SageMaker Notebook Instance Lifecycle Configuration sweep for %s: %s", region, err)
+		return nil
+	}
 	if err != nil {
-		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping SageMaker Notebook Instance Lifecycle Configuration sweep for %s: %s", region, err)
-			return nil
-		}
-		return fmt.Errorf("retrieving SageMaker Notebook Instance Lifecycle Configuration: %s", err)
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("retrieving SageMaker Notebook Instance Lifecycle Configuration: %s", err))
 	}
 
-	return nil
+	return sweeperErrs.ErrorOrNil()
 }
 
 func sweepNotebookInstances(region string) error {
