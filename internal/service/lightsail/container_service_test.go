@@ -227,9 +227,9 @@ func TestAccLightsailContainerService_PrivateRegistryAccess(t *testing.T) {
 				Config: testAccContainerServiceConfig_privateRegistryAccess(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerServiceExists(resourceName),
-					resource.TestCheckResourceAttr(rName, "private_registry_access.#", "1"),
-					resource.TestCheckResourceAttr(rName, "private_registry_access.0.ecr_image_puller_role.#", "1"),
-					resource.TestCheckResourceAttr(rName, "private_registry_access.0.ecr_image_puller_role.0.is_active", "true"),
+					resource.TestCheckResourceAttr(resourceName, "private_registry_access.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "private_registry_access.0.ecr_image_puller_role.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "private_registry_access.0.ecr_image_puller_role.0.is_active", "true"),
 				),
 			},
 		},
