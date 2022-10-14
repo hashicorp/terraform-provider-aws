@@ -261,7 +261,7 @@ func TestAccSNSPlatformApplication_GCM_allAttributes(t *testing.T) {
 		CheckDestroy:             testAccCheckPlatformApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPlatformApplicationConfig_gcmAllAttributes(rName, apiKey, 0),
+				Config: testAccPlatformApplicationConfig_gcmAllAttributes(rName, apiKey),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPlatformApplicationExists(resourceName),
 					resource.TestCheckNoResourceAttr(resourceName, "apple_platform_bundle_id"),
@@ -285,7 +285,7 @@ func TestAccSNSPlatformApplication_GCM_allAttributes(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"platform_credential", "platform_principal"},
 			},
 			{
-				Config: testAccPlatformApplicationConfig_gcmAllAttributes(rName, apiKey, 1),
+				Config: testAccPlatformApplicationConfig_gcmAllAttributesUpdated(rName, apiKey),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPlatformApplicationExists(resourceName),
 					resource.TestCheckNoResourceAttr(resourceName, "apple_platform_bundle_id"),
@@ -506,7 +506,7 @@ resource "aws_sns_platform_application" "test" {
 `, rName, credentials)
 }
 
-func testAccPlatformApplicationConfig_gcmAllAttributes(rName, credentials string, idx int) string {
+func testAccPlatformApplicationConfig_gcmAllAttributesBase(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_sns_topic" "test" {
   count = 2
@@ -541,28 +541,47 @@ resource "aws_iam_role_policy_attachment" "test" {
   policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/CloudWatchLogsFullAccess"
   role       = aws_iam_role.test[count.index].id
 }
-
-locals {
-  index_a = %[3]d == 0 ? 0 : 1
-  index_b = %[3]d == 0 ? 1 : 0
+`, rName)
 }
 
+func testAccPlatformApplicationConfig_gcmAllAttributes(rName, credentials string) string {
+	return acctest.ConfigCompose(testAccPlatformApplicationConfig_gcmAllAttributesBase(rName), fmt.Sprintf(`
 resource "aws_sns_platform_application" "test" {
   name                = %[1]q
   platform            = "GCM"
   platform_credential = %[2]q
 
-  event_delivery_failure_topic_arn = aws_sns_topic.test[local.index_a].arn
-  event_endpoint_created_topic_arn = aws_sns_topic.test[local.index_b].arn
-  event_endpoint_deleted_topic_arn = aws_sns_topic.test[local.index_a].arn
-  event_endpoint_updated_topic_arn = aws_sns_topic.test[local.index_b].arn
+  event_delivery_failure_topic_arn = aws_sns_topic.test[0].arn
+  event_endpoint_created_topic_arn = aws_sns_topic.test[1].arn
+  event_endpoint_deleted_topic_arn = aws_sns_topic.test[0].arn
+  event_endpoint_updated_topic_arn = aws_sns_topic.test[1].arn
 
-  failure_feedback_role_arn = aws_iam_role.test[local.index_a].arn
-  success_feedback_role_arn = aws_iam_role.test[local.index_b].arn
+  failure_feedback_role_arn = aws_iam_role.test[0].arn
+  success_feedback_role_arn = aws_iam_role.test[1].arn
 
-  success_feedback_sample_rate = 25 + %[3]d * 25
+  success_feedback_sample_rate = 25
 }
-`, rName, credentials, idx)
+`, rName, credentials))
+}
+
+func testAccPlatformApplicationConfig_gcmAllAttributesUpdated(rName, credentials string) string {
+	return acctest.ConfigCompose(testAccPlatformApplicationConfig_gcmAllAttributesBase(rName), fmt.Sprintf(`
+resource "aws_sns_platform_application" "test" {
+  name                = %[1]q
+  platform            = "GCM"
+  platform_credential = %[2]q
+
+  event_delivery_failure_topic_arn = aws_sns_topic.test[1].arn
+  event_endpoint_created_topic_arn = aws_sns_topic.test[0].arn
+  event_endpoint_deleted_topic_arn = aws_sns_topic.test[1].arn
+  event_endpoint_updated_topic_arn = aws_sns_topic.test[0].arn
+
+  failure_feedback_role_arn = aws_iam_role.test[1].arn
+  success_feedback_role_arn = aws_iam_role.test[0].arn
+
+  success_feedback_sample_rate = 50
+}
+`, rName, credentials))
 }
 
 func testAccPlatformApplicationConfig_basic(name string, platform *testAccPlatformApplicationPlatform) string {
