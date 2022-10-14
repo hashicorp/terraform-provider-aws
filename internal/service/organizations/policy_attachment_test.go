@@ -218,10 +218,7 @@ func testAccCheckPolicyAttachmentPolicyRemoved(resourceName string) resource.Tes
 		}
 		log.Printf("[DEBUG] Delete policy outside of TF %s", deleteInput)
 		_, err = conn.DeletePolicy(deleteInput)
-		if err != nil {
-			return err
-		}
-		return nil
+		return err
 	}
 }
 
