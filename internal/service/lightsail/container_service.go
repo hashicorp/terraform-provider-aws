@@ -128,6 +128,10 @@ func ResourceContainerService() *schema.Resource {
 										Type:     schema.TypeBool,
 										Optional: true,
 									},
+									"principal_arn": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
 								},
 							},
 						},
@@ -407,6 +411,10 @@ func flattenECRImagePullerRole(apiObject *lightsail.ContainerServiceECRImagePull
 
 	if v := apiObject.IsActive; v != nil {
 		tfMap["is_active"] = aws.BoolValue(v)
+	}
+
+	if v := apiObject.PrincipalArn; v != nil {
+		tfMap["principal_arn"] = aws.StringValue(v)
 	}
 
 	return tfMap

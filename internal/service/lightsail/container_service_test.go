@@ -230,6 +230,7 @@ func TestAccLightsailContainerService_PrivateRegistryAccess(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "private_registry_access.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "private_registry_access.0.ecr_image_puller_role.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "private_registry_access.0.ecr_image_puller_role.0.is_active", "true"),
+					resource.TestCheckResourceAttrSet(resourceName, "private_registry_access.0.ecr_image_puller_role.0.principal_arn"),
 				),
 			},
 		},
