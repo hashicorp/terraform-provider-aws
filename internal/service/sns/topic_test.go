@@ -41,7 +41,7 @@ func TestAccSNSTopic_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTopicConfig_nameGenerated,
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTopicExists(resourceName, &attributes),
 					resource.TestCheckResourceAttr(resourceName, "application_failure_feedback_role_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "application_success_feedback_role_arn", ""),

@@ -59,13 +59,13 @@ func (m AttributeMap) APIAttributesToResourceData(apiAttributes map[string]strin
 				tfAttributeValue, err = strconv.ParseBool(v)
 
 				if err != nil {
-					return fmt.Errorf("error parsing %s value (%s) into boolean: %w", tfAttributeName, v, err)
+					return fmt.Errorf("parsing %s value (%s) into boolean: %w", tfAttributeName, v, err)
 				}
 			case schema.TypeInt:
 				tfAttributeValue, err = strconv.Atoi(v)
 
 				if err != nil {
-					return fmt.Errorf("error parsing %s value (%s) into integer: %w", tfAttributeName, v, err)
+					return fmt.Errorf("parsing %s value (%s) into integer: %w", tfAttributeName, v, err)
 				}
 			case schema.TypeString:
 				tfAttributeValue = v
@@ -84,7 +84,7 @@ func (m AttributeMap) APIAttributesToResourceData(apiAttributes map[string]strin
 			}
 
 			if err := d.Set(tfAttributeName, tfAttributeValue); err != nil {
-				return fmt.Errorf("error setting %s: %w", tfAttributeName, err)
+				return fmt.Errorf("setting %s: %w", tfAttributeName, err)
 			}
 		} else if attributeInfo.missingSetToNil {
 			d.Set(tfAttributeName, nil)
@@ -207,6 +207,7 @@ func (m AttributeMap) APIAttributeNames() []string {
 func (m AttributeMap) WithIAMPolicyAttribute(tfAttributeName string) AttributeMap {
 	if attributeInfo, ok := m[tfAttributeName]; ok {
 		attributeInfo.isIAMPolicy = true
+		m[tfAttributeName] = attributeInfo
 	}
 
 	return m
@@ -217,11 +218,13 @@ func (m AttributeMap) WithIAMPolicyAttribute(tfAttributeName string) AttributeMa
 // This method is intended to be chained with other similar helper methods in a builder pattern.
 func (m AttributeMap) WithMissingSetToNil(tfAttributeName string) AttributeMap {
 	if tfAttributeName == "*" {
-		for _, attributeInfo := range m {
+		for k, attributeInfo := range m {
 			attributeInfo.missingSetToNil = true
+			m[k] = attributeInfo
 		}
 	} else if attributeInfo, ok := m[tfAttributeName]; ok {
 		attributeInfo.missingSetToNil = true
+		m[tfAttributeName] = attributeInfo
 	}
 
 	return m
@@ -232,6 +235,7 @@ func (m AttributeMap) WithMissingSetToNil(tfAttributeName string) AttributeMap {
 func (m AttributeMap) WithSkipUpdate(tfAttributeName string) AttributeMap {
 	if attributeInfo, ok := m[tfAttributeName]; ok {
 		attributeInfo.skipUpdate = true
+		m[tfAttributeName] = attributeInfo
 	}
 
 	return m
