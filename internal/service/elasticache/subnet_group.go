@@ -31,6 +31,10 @@ func ResourceSubnetGroup() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -52,10 +56,6 @@ func ResourceSubnetGroup() *schema.Resource {
 				Required: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Set:      schema.HashString,
-			},
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
 			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
@@ -144,8 +144,14 @@ func resourceSubnetGroupRead(d *schema.ResourceData, meta interface{}) error {
 
 	group, err := FindCacheSubnetGroupByName(conn, d.Id())
 
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] ElastiCache Subnet Group (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+
 	if err != nil {
-		return fmt.Errorf("error finding ElastiCache Subnet Group: %w", err)
+		return fmt.Errorf("reading ElastiCache Subnet Group (%s): %w", d.Id(), err)
 	}
 
 	var subnetIds []*string

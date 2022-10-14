@@ -15,6 +15,10 @@ func DataSourceSubnetGroup() *schema.Resource {
 		Read: dataSourceSubnetGroupRead,
 
 		Schema: map[string]*schema.Schema{
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"description": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -27,10 +31,6 @@ func DataSourceSubnetGroup() *schema.Resource {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
 			},
 			"tags": tftags.TagsSchema(),
 		},
@@ -46,7 +46,7 @@ func dataSourceSubnetGroupRead(d *schema.ResourceData, meta interface{}) error {
 	group, err := FindCacheSubnetGroupByName(conn, name)
 
 	if err != nil {
-		return fmt.Errorf("error finding ElastiCache Subnet Group (%s): %w", group, err)
+		return fmt.Errorf("reading ElastiCache Subnet Group (%s): %w", name, err)
 	}
 
 	d.SetId(aws.StringValue(group.CacheSubnetGroupName))
@@ -64,11 +64,11 @@ func dataSourceSubnetGroupRead(d *schema.ResourceData, meta interface{}) error {
 	tags, err := ListTags(conn, d.Get("arn").(string))
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for ElastiCache Subnet Group (%s): %w", group, err)
+		return fmt.Errorf("listing tags for ElastiCache Subnet Group (%s): %w", d.Id(), err)
 	}
 
 	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: (%s)", err)
+		return fmt.Errorf("setting tags: %w", err)
 	}
 
 	return nil
