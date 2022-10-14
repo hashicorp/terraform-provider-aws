@@ -87,9 +87,9 @@ func FindPatchGroup(conn *ssm.SSM, patchGroup, baselineId string) (*ssm.PatchGro
 	return result, err
 }
 
-func FindServiceSettingByARN(conn *ssm.SSM, arn string) (*ssm.ServiceSetting, error) {
+func FindServiceSettingByID(conn *ssm.SSM, id string) (*ssm.ServiceSetting, error) {
 	input := &ssm.GetServiceSettingInput{
-		SettingId: aws.String(arn),
+		SettingId: aws.String(id),
 	}
 
 	output, err := conn.GetServiceSetting(input)

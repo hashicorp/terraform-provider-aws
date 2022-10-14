@@ -81,7 +81,7 @@ func testAccServiceSettingExists(n string, res *ssm.ServiceSetting) resource.Tes
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn
 
-		output, err := tfssm.FindServiceSettingByARN(conn, rs.Primary.Attributes["setting_id"])
+		output, err := tfssm.FindServiceSettingByID(conn, rs.Primary.Attributes["setting_id"])
 
 		if err != nil {
 			return create.Error(names.SSM, create.ErrActionReading, tfssm.ResNameServiceSetting, rs.Primary.Attributes["setting_id"], err)
