@@ -110,6 +110,11 @@ func resourcePolicyAttachmentRead(d *schema.ResourceData, meta interface{}) erro
 			d.SetId("")
 			return nil
 		}
+		if tfawserr.ErrCodeEquals(err, organizations.ErrCodePolicyNotFoundException) {
+			log.Printf("[WARN] Policy does not exist, removing from state: %s", d.Id())
+			d.SetId("")
+			return nil
+		}
 		return err
 	}
 

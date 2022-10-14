@@ -61,6 +61,7 @@ func TestAccOrganizations_serial(t *testing.T) {
 			"Account":            testAccPolicyAttachment_Account,
 			"OrganizationalUnit": testAccPolicyAttachment_OrganizationalUnit,
 			"Root":               testAccPolicyAttachment_Root,
+			"BUG27231":           testAccPolicyAttachment_BUG27231,
 		},
 		"DelegatedAdministrator": {
 			"basic":      testAccDelegatedAdministrator_basic,
