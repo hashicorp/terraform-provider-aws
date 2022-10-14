@@ -85,6 +85,7 @@ The following arguments are optional:
 * `enabled` - (Required) Whether application settings should be persisted.
 * `settings_group` - (Optional) Name of the settings group.
   Required when `enabled` is `true`.
+  Can be up to 100 characters.
 
 ### `storage_connectors`
 
