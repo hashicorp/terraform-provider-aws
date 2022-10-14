@@ -205,7 +205,7 @@ func resourceConfigurationSetRead(ctx context.Context, d *schema.ResourceData, m
 
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
-		Service:   "sesv2",
+		Service:   "ses",
 		Region:    meta.(*conns.AWSClient).Region,
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("configuration-set/%s", d.Id()),

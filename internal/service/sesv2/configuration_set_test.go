@@ -33,7 +33,7 @@ func TestAccSESV2ConfigurationSet_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationSetExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration_set_name", rName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "sesv2", regexp.MustCompile(`configuration-set/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ses", regexp.MustCompile(`configuration-set/.+`)),
 				),
 			},
 			{
