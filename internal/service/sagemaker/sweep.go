@@ -179,9 +179,7 @@ func sweepAppImagesConfig(region string) error {
 			d.SetId(name)
 			err = r.Delete(d, client)
 			if err != nil {
-				sweeperErr := fmt.Errorf("deleting SageMaker App Image Config (%s): %w", name, err)
-				log.Printf("[ERROR] %s", sweeperErr)
-				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+				sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("deleting SageMaker App Image Config (%s): %w", name, err))
 				continue
 			}
 		}
@@ -218,10 +216,9 @@ func sweepApps(region string) error {
 			d.Set("app_type", app.AppType)
 			d.Set("domain_id", app.DomainId)
 			d.Set("user_profile_name", app.UserProfileName)
-			err := r.Delete(d, client)
 
+			err := r.Delete(d, client)
 			if err != nil {
-				log.Printf("[ERROR] %s", err)
 				sweeperErrs = multierror.Append(sweeperErrs, err)
 				continue
 			}
@@ -273,7 +270,7 @@ func sweepCodeRepositories(region string) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("Error retrieving SageMaker Code Repositorys: %w", err)
+		return fmt.Errorf("retrieving SageMaker Code Repositories: %w", err)
 	}
 
 	return nil
@@ -294,9 +291,9 @@ func sweepDeviceFleets(region string) error {
 			r := ResourceDeviceFleet()
 			d := r.Data(nil)
 			d.SetId(name)
+
 			err := r.Delete(d, client)
 			if err != nil {
-				log.Printf("[ERROR] %s", err)
 				sweeperErrs = multierror.Append(sweeperErrs, err)
 				continue
 			}
@@ -332,9 +329,9 @@ func sweepDeviceFleets(region string) error {
 // 			r := ResourceDeviceFleet()
 // 			d := r.Data(nil)
 // 			d.SetId(name)
+
 // 			err := r.Delete(d, client)
 // 			if err != nil {
-// 				log.Printf("[ERROR] %s", err)
 // 				sweeperErrs = multierror.Append(sweeperErrs, err)
 // 				continue
 // 			}
@@ -370,9 +367,9 @@ func sweepDomains(region string) error {
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(domain.DomainId))
 			d.Set("retention_policy.0.home_efs_file_system", "Delete")
+
 			err = r.Delete(d, client)
 			if err != nil {
-				log.Printf("[ERROR] %s", err)
 				sweeperErrs = multierror.Append(sweeperErrs, err)
 				continue
 			}
@@ -410,9 +407,9 @@ func sweepEndpointConfigurations(region string) error {
 			r := ResourceEndpointConfiguration()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(endpointConfig.EndpointConfigName))
+
 			err := r.Delete(d, client)
 			if err != nil {
-				log.Printf("[ERROR] %s", err)
 				sweeperErrs = multierror.Append(sweeperErrs, err)
 				continue
 			}
@@ -458,9 +455,7 @@ func sweepEndpoints(region string) error {
 			EndpointName: endpoint.EndpointName,
 		})
 		if err != nil {
-			return fmt.Errorf(
-				"error deleting SageMaker Endpoint (%s): %s",
-				*endpoint.EndpointName, err)
+			return fmt.Errorf("deleting SageMaker Endpoint (%s): %s", aws.StringValue(endpoint.EndpointName), err)
 		}
 	}
 
@@ -498,7 +493,7 @@ func sweepFeatureGroups(region string) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("Error retrieving SageMaker Feature Groups: %w", err)
+		return fmt.Errorf("retrieving SageMaker Feature Groups: %w", err)
 	}
 
 	return nil
@@ -518,9 +513,9 @@ func sweepFlowDefinitions(region string) error {
 			r := ResourceFlowDefinition()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(flowDefinition.FlowDefinitionName))
+
 			err := r.Delete(d, client)
 			if err != nil {
-				log.Printf("[ERROR] %s", err)
 				sweeperErrs = multierror.Append(sweeperErrs, err)
 				continue
 			}
@@ -555,9 +550,9 @@ func sweepHumanTaskUIs(region string) error {
 			r := ResourceHumanTaskUI()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(humanTaskUi.HumanTaskUiName))
+
 			err := r.Delete(d, client)
 			if err != nil {
-				log.Printf("[ERROR] %s", err)
 				sweeperErrs = multierror.Append(sweeperErrs, err)
 				continue
 			}
@@ -609,7 +604,7 @@ func sweepImages(region string) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("Error retrieving SageMaker Images: %w", err)
+		return fmt.Errorf("retrieving SageMaker Images: %w", err)
 	}
 
 	return nil
@@ -646,7 +641,7 @@ func sweepModelPackageGroups(region string) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("Error retrieving SageMaker Model Package Groups: %w", err)
+		return fmt.Errorf("retrieving SageMaker Model Package Groups: %w", err)
 	}
 
 	return nil
@@ -666,9 +661,9 @@ func sweepModels(region string) error {
 			r := ResourceModel()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(model.ModelName))
+
 			err = r.Delete(d, client)
 			if err != nil {
-				log.Printf("[ERROR] %s", err)
 				sweeperErrs = multierror.Append(sweeperErrs, err)
 				continue
 			}
@@ -744,9 +739,9 @@ func sweepNotebookInstances(region string) error {
 			r := ResourceNotebookInstance()
 			d := r.Data(nil)
 			d.SetId(name)
+
 			err = r.Delete(d, client)
 			if err != nil {
-				log.Printf("[ERROR] %s", err)
 				sweeperErrs = multierror.Append(sweeperErrs, err)
 				continue
 			}
@@ -781,9 +776,9 @@ func sweepStudioLifecyclesConfig(region string) error {
 			r := ResourceStudioLifecycleConfig()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(config.StudioLifecycleConfigName))
+
 			err := r.Delete(d, client)
 			if err != nil {
-				log.Printf("[ERROR] %s", err)
 				sweeperErrs = multierror.Append(sweeperErrs, err)
 				continue
 			}
@@ -820,10 +815,9 @@ func sweepUserProfiles(region string) error {
 			d.SetId(aws.StringValue(userProfile.UserProfileName))
 			d.Set("user_profile_name", userProfile.UserProfileName)
 			d.Set("domain_id", userProfile.DomainId)
-			err := r.Delete(d, client)
 
+			err := r.Delete(d, client)
 			if err != nil {
-				log.Printf("[ERROR] %s", err)
 				sweeperErrs = multierror.Append(sweeperErrs, err)
 				continue
 			}
@@ -858,9 +852,9 @@ func sweepWorkforces(region string) error {
 			r := ResourceWorkforce()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(workforce.WorkforceName))
+
 			err := r.Delete(d, client)
 			if err != nil {
-				log.Printf("[ERROR] %s", err)
 				sweeperErrs = multierror.Append(sweeperErrs, err)
 				continue
 			}
@@ -895,9 +889,9 @@ func sweepWorkteams(region string) error {
 			r := ResourceWorkteam()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(workteam.WorkteamName))
+
 			err := r.Delete(d, client)
 			if err != nil {
-				log.Printf("[ERROR] %s", err)
 				sweeperErrs = multierror.Append(sweeperErrs, err)
 				continue
 			}
@@ -933,9 +927,9 @@ func sweepProjects(region string) error {
 			r := ResourceProject()
 			d := r.Data(nil)
 			d.SetId(name)
+
 			err := r.Delete(d, client)
 			if err != nil {
-				log.Printf("[ERROR] %s", err)
 				sweeperErrs = multierror.Append(sweeperErrs, err)
 				continue
 			}
