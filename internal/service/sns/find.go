@@ -10,6 +10,31 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+func FindPlatformApplicationAttributesByARN(ctx context.Context, conn *sns.SNS, arn string) (map[string]string, error) {
+	input := &sns.GetPlatformApplicationAttributesInput{
+		PlatformApplicationArn: aws.String(arn),
+	}
+
+	output, err := conn.GetPlatformApplicationAttributesWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, sns.ErrCodeNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || len(output.Attributes) == 0 {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return aws.StringValueMap(output.Attributes), nil
+}
+
 func FindSubscriptionAttributesByARN(ctx context.Context, conn *sns.SNS, arn string) (map[string]string, error) {
 	input := &sns.GetSubscriptionAttributesInput{
 		SubscriptionArn: aws.String(arn),

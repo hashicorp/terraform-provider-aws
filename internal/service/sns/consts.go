@@ -7,6 +7,20 @@ const (
 )
 
 const (
+	PlatformApplicationAttributeNameAppleCertificateExpiryDate = "AppleCertificateExpiryDate"
+	PlatformApplicationAttributeNameApplePlatformBundleID      = "ApplePlatformBundleID"
+	PlatformApplicationAttributeNameApplePlatformTeamID        = "ApplePlatformTeamID"
+	PlatformApplicationAttributeNameEventDeliveryFailure       = "EventDeliveryFailure"
+	PlatformApplicationAttributeNameEventEndpointCreated       = "EventEndpointCreated"
+	PlatformApplicationAttributeNameEventEndpointDeleted       = "EventEndpointDeleted"
+	PlatformApplicationAttributeNameEventEndpointUpdated       = "EventEndpointUpdated"
+	PlatformApplicationAttributeNameFailureFeedbackRoleArn     = "FailureFeedbackRoleArn"
+	PlatformApplicationAttributeNamePlatformPrincipal          = "PlatformPrincipal"
+	PlatformApplicationAttributeNameSuccessFeedbackRoleArn     = "SuccessFeedbackRoleArn"
+	PlatformApplicationAttributeNameSuccessFeedbackSampleRate  = "SuccessFeedbackSampleRate"
+)
+
+const (
 	SubscriptionProtocolApplication = "application"
 	SubscriptionProtocolEmail       = "email"
 	SubscriptionProtocolEmailJSON   = "email-json"

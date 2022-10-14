@@ -1,23 +1,22 @@
 package sns_test
 
 import (
+	"context"
 	"fmt"
-	"log"
 	"os"
 	"regexp"
 	"strconv"
 	"strings"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sns"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfsns "github.com/hashicorp/terraform-provider-aws/internal/service/sns"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 /**
@@ -420,25 +419,20 @@ func TestAccSNSPlatformApplication_basicApnsWithTokenCredentials(t *testing.T) {
 	}
 }
 
-func testAccCheckPlatformApplicationExists(name string) resource.TestCheckFunc {
+func testAccCheckPlatformApplicationExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", name)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("missing ID: %s", name)
+			return fmt.Errorf("No SNS Platform Application ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SNSConn
 
-		input := &sns.GetPlatformApplicationAttributesInput{
-			PlatformApplicationArn: aws.String(rs.Primary.ID),
-		}
-
-		log.Printf("[DEBUG] Reading SNS Platform Application attributes: %s", input)
-		_, err := conn.GetPlatformApplicationAttributes(input)
+		_, err := tfsns.FindPlatformApplicationAttributesByARN(context.Background(), conn, rs.Primary.ID)
 
 		return err
 	}
@@ -452,19 +446,19 @@ func testAccCheckPlatformApplicationDestroy(s *terraform.State) error {
 			continue
 		}
 
-		input := &sns.GetPlatformApplicationAttributesInput{
-			PlatformApplicationArn: aws.String(rs.Primary.ID),
+		_, err := tfsns.FindPlatformApplicationAttributesByARN(context.Background(), conn, rs.Primary.ID)
+
+		if tfresource.NotFound(err) {
+			continue
 		}
 
-		log.Printf("[DEBUG] Reading SNS Platform Application attributes: %s", input)
-		_, err := conn.GetPlatformApplicationAttributes(input)
 		if err != nil {
-			if tfawserr.ErrCodeEquals(err, sns.ErrCodeNotFoundException) {
-				return nil
-			}
 			return err
 		}
+
+		return fmt.Errorf("SNS Platform Application %s still exists", rs.Primary.ID)
 	}
+
 	return nil
 }
 

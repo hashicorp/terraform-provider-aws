@@ -14,8 +14,87 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/attrmap"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+)
+
+var (
+	platformApplicationSchema = map[string]*schema.Schema{
+		"apple_platform_bundle_id": {
+			Type:     schema.TypeString,
+			Optional: true,
+		},
+		"apple_platform_team_id": {
+			Type:     schema.TypeString,
+			Optional: true,
+		},
+		"arn": {
+			Type:     schema.TypeString,
+			Computed: true,
+		},
+		"event_delivery_failure_topic_arn": {
+			Type:     schema.TypeString,
+			Optional: true,
+		},
+		"event_endpoint_created_topic_arn": {
+			Type:     schema.TypeString,
+			Optional: true,
+		},
+		"event_endpoint_deleted_topic_arn": {
+			Type:     schema.TypeString,
+			Optional: true,
+		},
+		"event_endpoint_updated_topic_arn": {
+			Type:     schema.TypeString,
+			Optional: true,
+		},
+		"failure_feedback_role_arn": {
+			Type:     schema.TypeString,
+			Optional: true,
+		},
+		"name": {
+			Type:     schema.TypeString,
+			Required: true,
+			ForceNew: true,
+		},
+		"platform": {
+			Type:     schema.TypeString,
+			Required: true,
+			ForceNew: true,
+		},
+		"platform_credential": {
+			Type:      schema.TypeString,
+			Required:  true,
+			Sensitive: true,
+		},
+		"platform_principal": {
+			Type:      schema.TypeString,
+			Optional:  true,
+			Sensitive: true,
+		},
+		"success_feedback_role_arn": {
+			Type:     schema.TypeString,
+			Optional: true,
+		},
+		"success_feedback_sample_rate": {
+			Type:     schema.TypeString,
+			Optional: true,
+		},
+	}
+
+	platformApplicationAttributeMap = attrmap.New(map[string]string{
+		"apple_platform_bundle_id":         PlatformApplicationAttributeNameApplePlatformBundleID,
+		"apple_platform_team_id":           PlatformApplicationAttributeNameApplePlatformTeamID,
+		"event_delivery_failure_topic_arn": PlatformApplicationAttributeNameEventDeliveryFailure,
+		"event_endpoint_created_topic_arn": PlatformApplicationAttributeNameEventEndpointCreated,
+		"event_endpoint_deleted_topic_arn": PlatformApplicationAttributeNameEventEndpointDeleted,
+		"event_endpoint_updated_topic_arn": PlatformApplicationAttributeNameEventEndpointUpdated,
+		"failure_feedback_role_arn":        PlatformApplicationAttributeNameFailureFeedbackRoleArn,
+		"platform_principal":               PlatformApplicationAttributeNamePlatformPrincipal,
+		"success_feedback_role_arn":        PlatformApplicationAttributeNameSuccessFeedbackRoleArn,
+		"success_feedback_sample_rate":     PlatformApplicationAttributeNameSuccessFeedbackSampleRate,
+	}, platformApplicationSchema)
 )
 
 func ResourcePlatformApplication() *schema.Resource {
@@ -29,68 +108,7 @@ func ResourcePlatformApplication() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"apple_platform_bundle_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"apple_platform_team_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"event_delivery_failure_topic_arn": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"event_endpoint_created_topic_arn": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"event_endpoint_deleted_topic_arn": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"event_endpoint_updated_topic_arn": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"failure_feedback_role_arn": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"platform": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"platform_credential": {
-				Type:      schema.TypeString,
-				Required:  true,
-				Sensitive: true,
-			},
-			"platform_principal": {
-				Type:      schema.TypeString,
-				Optional:  true,
-				Sensitive: true,
-			},
-			"success_feedback_role_arn": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"success_feedback_sample_rate": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-		},
+		Schema: platformApplicationSchema,
 	}
 }
 
@@ -146,67 +164,59 @@ func resourcePlatformApplicationRead(ctx context.Context, d *schema.ResourceData
 		return diag.FromErr(err)
 	}
 
-	d.Set("arn", arn)
-	d.Set("name", name)
-	d.Set("platform", platform)
+	attributes, err := FindPlatformApplicationAttributesByARN(ctx, conn, d.Id())
 
-	input := &sns.GetPlatformApplicationAttributesInput{
-		PlatformApplicationArn: aws.String(arn),
-	}
-
-	output, err := conn.GetPlatformApplicationAttributesWithContext(ctx, input)
-
-	if tfawserr.ErrCodeEquals(err, sns.ErrCodeNotFoundException) {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] SNS Platform Application (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return diag.Errorf("reading SNS Platform Application (%s) attributes: %s", d.Id(), err)
+		return diag.Errorf("reading SNS Platform Application (%s): %s", d.Id(), err)
 	}
 
-	if output == nil || output.Attributes == nil {
-		return diag.Errorf("reading SNS Platform Application (%s) attributes: empty response", d.Id())
-	}
+	d.Set("arn", arn)
+	d.Set("name", name)
+	d.Set("platform", platform)
 
-	if v, ok := output.Attributes["EventDeliveryFailure"]; ok {
+	if v, ok := attributes["EventDeliveryFailure"]; ok {
 		d.Set("event_delivery_failure_topic_arn", v)
 	}
 
-	if v, ok := output.Attributes["EventEndpointCreated"]; ok {
+	if v, ok := attributes["EventEndpointCreated"]; ok {
 		d.Set("event_endpoint_created_topic_arn", v)
 	}
 
-	if v, ok := output.Attributes["EventEndpointDeleted"]; ok {
+	if v, ok := attributes["EventEndpointDeleted"]; ok {
 		d.Set("event_endpoint_deleted_topic_arn", v)
 	}
 
-	if v, ok := output.Attributes["EventEndpointUpdated"]; ok {
+	if v, ok := attributes["EventEndpointUpdated"]; ok {
 		d.Set("event_endpoint_updated_topic_arn", v)
 	}
 
-	if v, ok := output.Attributes["FailureFeedbackRoleArn"]; ok {
+	if v, ok := attributes["FailureFeedbackRoleArn"]; ok {
 		d.Set("failure_feedback_role_arn", v)
 	}
 
-	if v, ok := output.Attributes["PlatformPrincipal"]; ok {
+	if v, ok := attributes["PlatformPrincipal"]; ok {
 		d.Set("platform_principal", v)
 	}
 
-	if v, ok := output.Attributes["SuccessFeedbackRoleArn"]; ok {
+	if v, ok := attributes["SuccessFeedbackRoleArn"]; ok {
 		d.Set("success_feedback_role_arn", v)
 	}
 
-	if v, ok := output.Attributes["SuccessFeedbackSampleRate"]; ok {
+	if v, ok := attributes["SuccessFeedbackSampleRate"]; ok {
 		d.Set("success_feedback_sample_rate", v)
 	}
 
-	if v, ok := output.Attributes["ApplePlatformTeamID"]; ok {
+	if v, ok := attributes["ApplePlatformTeamID"]; ok {
 		d.Set("apple_platform_team_id", v)
 	}
 
-	if v, ok := output.Attributes["ApplePlatformBundleID"]; ok {
+	if v, ok := attributes["ApplePlatformBundleID"]; ok {
 		d.Set("apple_platform_bundle_id", v)
 	}
 
