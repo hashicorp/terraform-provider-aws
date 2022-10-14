@@ -58,7 +58,7 @@ resource "aws_lightsail_container_service" "my_container_service" {
 ### Private Registry Access
 
 ```terraform
-resource "aws_lightsail_container_service" "my_container_service" {
+resource "aws_lightsail_container_service" "default" {
   # ... other configuration ...
 
   private_registry_access {
@@ -66,6 +66,29 @@ resource "aws_lightsail_container_service" "my_container_service" {
       is_active = true
     }
   }
+}
+
+resource "aws_ecr_repository_policy" "default" {
+  repository = aws_ecr_repository.default.name
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowLightsailPull",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "${aws_lightsail_container_service.default.private_registry_access[0].ecr_image_puller_role[0].principal_arn}"
+      },
+      "Action": [
+        "ecr:BatchGetImage",
+        "ecr:GetDownloadUrlForLayer"
+      ]
+    }
+  ]
+}
+EOF
 }
 ```
 
