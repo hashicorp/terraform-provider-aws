@@ -44,6 +44,11 @@ func init() {
 			"aws_sns_platform_application",
 		},
 	})
+
+	resource.AddTestSweepers("aws_sns_topic_subscription", &resource.Sweeper{
+		Name: "aws_sns_topic_subscription",
+		F:    sweepTopicSubscriptions,
+	})
 }
 
 func sweepPlatformApplications(region string) error {
@@ -78,6 +83,12 @@ func sweepPlatformApplications(region string) error {
 
 	if err != nil {
 		return fmt.Errorf("error listing SNS Platform Applications: %w", err)
+	}
+
+	err = sweep.SweepOrchestrator(sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping SNS Platform Applications (%s): %w", region, err)
 	}
 
 	return nil
@@ -115,6 +126,60 @@ func sweepTopics(region string) error {
 
 	if err != nil {
 		return fmt.Errorf("error listing SNS Topics: %w", err)
+	}
+
+	err = sweep.SweepOrchestrator(sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping SNS Topics (%s): %w", region, err)
+	}
+
+	return nil
+}
+
+func sweepTopicSubscriptions(region string) error {
+	client, err := sweep.SharedRegionalSweepClient(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %w", err)
+	}
+	input := &sns.ListSubscriptionsInput{}
+	conn := client.(*conns.AWSClient).SNSConn
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	err = conn.ListSubscriptionsPages(input, func(page *sns.ListSubscriptionsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.Subscriptions {
+			arn := aws.StringValue(v.SubscriptionArn)
+
+			if arn == "PendingConfirmation" {
+				continue
+			}
+
+			r := ResourceTopicSubscription()
+			d := r.Data(nil)
+			d.SetId(arn)
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+
+		return !lastPage
+	})
+
+	if sweep.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping SNS Topic Subscriptions sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error listing SNS Topic Subscriptions: %w", err)
+	}
+
+	err = sweep.SweepOrchestrator(sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping SNS Topic Subscriptions (%s): %w", region, err)
 	}
 
 	return nil
