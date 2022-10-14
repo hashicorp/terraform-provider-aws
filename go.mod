@@ -4,7 +4,7 @@ go 1.18
 
 require (
 	github.com/ProtonMail/go-crypto v0.0.0-20210428141323-04723f9f07d7
-	github.com/aws/aws-sdk-go v1.44.114
+	github.com/aws/aws-sdk-go v1.44.115
 	github.com/aws/aws-sdk-go-v2 v1.16.16
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.12.17
 	github.com/aws/aws-sdk-go-v2/service/comprehend v1.19.0
