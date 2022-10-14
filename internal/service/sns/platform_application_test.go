@@ -212,7 +212,7 @@ func TestAccSNSPlatformApplication_GCM_basic(t *testing.T) {
 	})
 }
 
-func TestAccSNSPlatformApplication_GCM_disappears(t *testing.T) {
+func TestAccSNSPlatformApplication_disappears(t *testing.T) {
 	key := "GCM_API_KEY"
 	apiKey := os.Getenv(key)
 	if apiKey == "" {
