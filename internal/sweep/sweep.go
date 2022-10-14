@@ -226,6 +226,10 @@ func SkipSweepError(err error) bool {
 	if tfawserr.ErrMessageContains(err, "UnknownOperationException", "Operation is disabled in this region") {
 		return true
 	}
+	// For example from us-east-1 SageMaker
+	if tfawserr.ErrMessageContains(err, "UnknownOperationException", "The requested operation is not supported in the called region") {
+		return true
+	}
 	// For example from us-west-2 ECR public repository
 	if tfawserr.ErrMessageContains(err, "UnsupportedCommandException", "command is only supported in") {
 		return true
