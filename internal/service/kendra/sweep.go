@@ -26,7 +26,7 @@ func init() {
 func sweepIndex(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
-		return fmt.Errorf("Error getting client: %w", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 
 	ctx := context.Background()
@@ -41,33 +41,25 @@ func sweepIndex(region string) error {
 		page, err := pages.NextPage(ctx)
 
 		if sweep.SkipSweepError(err) {
-			log.Println("[WARN] Skipping Kendra Indices sweep for %s: %s", region, err)
-			return nil
+			log.Printf("[WARN] Skipping Kendra Indices sweep for %s: %s", region, err)
+			return errs.ErrorOrNil()
 		}
 
 		if err != nil {
-			return fmt.Errorf("error retrieving Kendra Indices: %w", err)
+			return multierror.Append(errs, fmt.Errorf("retrieving Kendra Indices: %w", err))
 		}
 
 		for _, index := range page.IndexConfigurationSummaryItems {
-			id := aws.ToString(index.Id)
-			log.Printf("[INFO] Deleting Kendra Index: %s", id)
-
 			r := ResourceIndex()
 			d := r.Data(nil)
-			d.SetId(id)
+			d.SetId(aws.ToString(index.Id))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 	}
 
 	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error sweeping Kendra Indices for %s: %w", region, err))
-	}
-
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping Kendra Indices sweep for %s: %s", region, errs)
-		return nil
+		errs = multierror.Append(errs, fmt.Errorf("sweeping Kendra Indices for %s: %w", region, err))
 	}
 
 	return errs.ErrorOrNil()
