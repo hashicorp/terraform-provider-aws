@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func testAccConfigurationRecorder_basic(t *testing.T) {
+func TestAccConfigServiceConfigurationRecorder_basic(t *testing.T) {
 	var cr configservice.ConfigurationRecorder
 	rInt := sdkacctest.RandInt()
 	expectedName := fmt.Sprintf("tf-acc-test-%d", rInt)
@@ -40,7 +40,7 @@ func testAccConfigurationRecorder_basic(t *testing.T) {
 	})
 }
 
-func TestAccConfigurationRecorder_allParams(t *testing.T) {
+func TestAccConfigServiceConfigurationRecorder_allParams(t *testing.T) {
 	var cr configservice.ConfigurationRecorder
 	rInt := sdkacctest.RandInt()
 	expectedName := fmt.Sprintf("tf-acc-test-%d", rInt)
@@ -68,24 +68,6 @@ func TestAccConfigurationRecorder_allParams(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "recording_group.0.resource_types.#", "2"),
 				),
 			},
-		},
-	})
-}
-
-func testAccConfigurationRecorder_importBasic(t *testing.T) {
-	resourceName := "aws_config_configuration_recorder.foo"
-	rInt := sdkacctest.RandInt()
-
-	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, configservice.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConfigurationRecorderDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccConfigurationRecorderConfig_basic(rInt),
-			},
-
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
