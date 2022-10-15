@@ -171,6 +171,75 @@ func TestAccELBV2TargetGroupDataSource_backwardsCompatibility(t *testing.T) {
 	})
 }
 
+func TestAccELBV2TargetGroupDataSource_tags(t *testing.T) {
+	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resourceTg1 := "aws_lb_target_group.test1"
+	resourceTg2 := "aws_lb_target_group.test2"
+
+	dataSourceMatchFirstTag := "data.aws_lb_target_group.tag_match_first"
+	dataSourceMatchSecondTag := "data.aws_lb_target_group.tag_match_second"
+	dataSourceMatchFirstTagAndName := "data.aws_lb_target_group.tag_and_arn_match_first"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTargetGroupDataSourceConfig_tags(rName1, rName2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(dataSourceMatchFirstTag, "name", resourceTg1, "name"),
+					resource.TestCheckResourceAttrPair(dataSourceMatchFirstTag, "arn", resourceTg1, "arn"),
+					resource.TestCheckResourceAttrPair(dataSourceMatchFirstTag, "arn_suffix", resourceTg1, "arn_suffix"),
+					resource.TestCheckResourceAttrPair(dataSourceMatchFirstTag, "id", resourceTg1, "id"),
+					resource.TestCheckResourceAttrPair(dataSourceMatchFirstTag, "load_balancing_algorithm_type", resourceTg1, "load_balancing_algorithm_type"),
+					resource.TestCheckResourceAttrPair(dataSourceMatchFirstTag, "load_balancing_algorithm_type", resourceTg1, "load_balancing_algorithm_type"),
+					resource.TestCheckResourceAttrPair(dataSourceMatchFirstTag, "health_check.#", resourceTg1, "health_check.#"),
+					resource.TestCheckResourceAttrPair(dataSourceMatchFirstTag, "health_check.0.path", resourceTg1, "health_check.0.path"),
+					resource.TestCheckResourceAttrPair(dataSourceMatchFirstTag, "health_check.0.port", resourceTg1, "health_check.0.port"),
+					resource.TestCheckResourceAttrPair(dataSourceMatchFirstTag, "health_check.0.protocol", resourceTg1, "health_check.0.protocol"),
+					resource.TestCheckResourceAttrPair(dataSourceMatchFirstTag, "health_check.0.healthy_threshold", resourceTg1, "health_check.0.healthy_threshold"),
+					resource.TestCheckResourceAttrPair(dataSourceMatchFirstTag, "health_check.0.matcher", resourceTg1, "health_check.0.matcher"),
+					resource.TestCheckResourceAttr(dataSourceMatchFirstTag, "tags.%", "1"),
+					resource.TestCheckResourceAttrPair(dataSourceMatchFirstTag, "tags.Name", resourceTg1, "tags.Name"),
+
+					resource.TestCheckResourceAttrPair(dataSourceMatchSecondTag, "name", resourceTg2, "name"),
+					resource.TestCheckResourceAttrPair(dataSourceMatchSecondTag, "arn", resourceTg2, "arn"),
+					resource.TestCheckResourceAttrPair(dataSourceMatchSecondTag, "arn_suffix", resourceTg2, "arn_suffix"),
+					resource.TestCheckResourceAttrPair(dataSourceMatchSecondTag, "id", resourceTg2, "id"),
+					resource.TestCheckResourceAttrPair(dataSourceMatchSecondTag, "load_balancing_algorithm_type", resourceTg2, "load_balancing_algorithm_type"),
+					resource.TestCheckResourceAttrPair(dataSourceMatchSecondTag, "load_balancing_algorithm_type", resourceTg2, "load_balancing_algorithm_type"),
+					resource.TestCheckResourceAttrPair(dataSourceMatchSecondTag, "health_check.#", resourceTg2, "health_check.#"),
+					resource.TestCheckResourceAttrPair(dataSourceMatchSecondTag, "health_check.0.path", resourceTg2, "health_check.0.path"),
+					resource.TestCheckResourceAttrPair(dataSourceMatchSecondTag, "health_check.0.port", resourceTg2, "health_check.0.port"),
+					resource.TestCheckResourceAttrPair(dataSourceMatchSecondTag, "health_check.0.protocol", resourceTg2, "health_check.0.protocol"),
+					resource.TestCheckResourceAttrPair(dataSourceMatchSecondTag, "health_check.0.healthy_threshold", resourceTg2, "health_check.0.healthy_threshold"),
+					resource.TestCheckResourceAttrPair(dataSourceMatchSecondTag, "health_check.0.matcher", resourceTg2, "health_check.0.matcher"),
+					resource.TestCheckResourceAttr(dataSourceMatchSecondTag, "tags.%", "1"),
+					resource.TestCheckResourceAttrPair(dataSourceMatchSecondTag, "tags.Name", resourceTg2, "tags.Name"),
+
+					resource.TestCheckResourceAttrPair(dataSourceMatchFirstTagAndName, "name", resourceTg1, "name"),
+					resource.TestCheckResourceAttrPair(dataSourceMatchFirstTagAndName, "arn", resourceTg1, "arn"),
+					resource.TestCheckResourceAttrPair(dataSourceMatchFirstTagAndName, "arn_suffix", resourceTg1, "arn_suffix"),
+					resource.TestCheckResourceAttrPair(dataSourceMatchFirstTagAndName, "id", resourceTg1, "id"),
+					resource.TestCheckResourceAttrPair(dataSourceMatchFirstTagAndName, "load_balancing_algorithm_type", resourceTg1, "load_balancing_algorithm_type"),
+					resource.TestCheckResourceAttrPair(dataSourceMatchFirstTagAndName, "load_balancing_algorithm_type", resourceTg1, "load_balancing_algorithm_type"),
+					resource.TestCheckResourceAttrPair(dataSourceMatchFirstTagAndName, "health_check.#", resourceTg1, "health_check.#"),
+					resource.TestCheckResourceAttrPair(dataSourceMatchFirstTagAndName, "health_check.0.path", resourceTg1, "health_check.0.path"),
+					resource.TestCheckResourceAttrPair(dataSourceMatchFirstTagAndName, "health_check.0.port", resourceTg1, "health_check.0.port"),
+					resource.TestCheckResourceAttrPair(dataSourceMatchFirstTagAndName, "health_check.0.protocol", resourceTg1, "health_check.0.protocol"),
+					resource.TestCheckResourceAttrPair(dataSourceMatchFirstTagAndName, "health_check.0.healthy_threshold", resourceTg1, "health_check.0.healthy_threshold"),
+					resource.TestCheckResourceAttrPair(dataSourceMatchFirstTagAndName, "health_check.0.matcher", resourceTg1, "health_check.0.matcher"),
+					resource.TestCheckResourceAttr(dataSourceMatchFirstTagAndName, "tags.%", "1"),
+					resource.TestCheckResourceAttrPair(dataSourceMatchFirstTagAndName, "tags.Name", resourceTg1, "tags.Name"),
+				),
+			},
+		},
+	})
+}
+
 func testAccTargetGroupDataSourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lb_listener" "front_end" {
@@ -522,4 +591,46 @@ data "aws_alb_target_group" "alb_tg_test_with_name" {
   name = aws_alb_target_group.test.name
 }
 `, rName)
+}
+
+func testAccTargetGroupDataSourceConfig_tags(rName1, rName2 string) string {
+	return fmt.Sprintf(`
+resource "aws_lb_target_group" "test1" {
+  name        = %[1]q
+  target_type = "lambda"
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_lb_target_group" "test2" {
+  name        = %[2]q
+  target_type = "lambda"
+  tags = {
+    Name = %[2]q
+  }
+}
+
+data "aws_lb_target_group" "tag_match_first" {
+  tags = {
+    Name = %[1]q
+  }
+  depends_on = [aws_lb_target_group.test1, aws_lb_target_group.test2]
+}
+
+data "aws_lb_target_group" "tag_match_second" {
+  tags = {
+    Name = %[2]q
+  }
+  depends_on = [aws_lb_target_group.test1, aws_lb_target_group.test2]
+}
+
+data "aws_lb_target_group" "tag_and_arn_match_first" {
+  arn = aws_lb_target_group.test1.arn
+  tags = {
+    Name = %[1]q
+  }
+  depends_on = [aws_lb_target_group.test1, aws_lb_target_group.test2]
+}
+`, rName1, rName2)
 }
