@@ -40,7 +40,7 @@ func testAccConfigurationRecorder_basic(t *testing.T) {
 	})
 }
 
-func testAccConfigurationRecorder_allParams(t *testing.T) {
+func TestAccConfigurationRecorder_allParams(t *testing.T) {
 	var cr configservice.ConfigurationRecorder
 	rInt := sdkacctest.RandInt()
 	expectedName := fmt.Sprintf("tf-acc-test-%d", rInt)
@@ -61,6 +61,7 @@ func testAccConfigurationRecorder_allParams(t *testing.T) {
 					testAccCheckConfigurationRecorderName(resourceName, expectedName, &cr),
 					acctest.CheckResourceAttrGlobalARN(resourceName, "role_arn", "iam", fmt.Sprintf("role/%s", expectedRoleName)),
 					resource.TestCheckResourceAttr(resourceName, "name", expectedName),
+					resource.TestCheckResourceAttr(resourceName, "retention_period", "35"),
 					resource.TestCheckResourceAttr(resourceName, "recording_group.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "recording_group.0.all_supported", "false"),
 					resource.TestCheckResourceAttr(resourceName, "recording_group.0.include_global_resource_types", "false"),
@@ -228,8 +229,9 @@ resource "aws_config_delivery_channel" "foo" {
 func testAccConfigurationRecorderConfig_allParams(randInt int) string {
 	return fmt.Sprintf(`
 resource "aws_config_configuration_recorder" "foo" {
-  name     = "tf-acc-test-%d"
-  role_arn = aws_iam_role.r.arn
+  name             = "tf-acc-test-%d"
+  role_arn         = aws_iam_role.r.arn
+  retention_period = 35
 
   recording_group {
     all_supported                 = false

@@ -48,6 +48,7 @@ The following arguments are supported:
 * `name` - (Optional) The name of the recorder. Defaults to `default`. Changing it recreates the resource.
 * `role_arn` - (Required) Amazon Resource Name (ARN) of the IAM role. Used to make read or write requests to the delivery channel and to describe the AWS resources associated with the account. See [AWS Docs](http://docs.aws.amazon.com/config/latest/developerguide/iamrole-permissions.html) for more details.
 * `recording_group` - (Optional) Recording group - see below.
+* `retention_period` - (Optional) Retention period in days.
 
 ### `recording_group`
 

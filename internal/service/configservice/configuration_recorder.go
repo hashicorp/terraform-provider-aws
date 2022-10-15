@@ -15,6 +15,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+const (
+	DefaultRetentionConfigurationName = "default"
+)
+
 func ResourceConfigurationRecorder() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceConfigurationRecorderPut,
@@ -33,11 +37,6 @@ func ResourceConfigurationRecorder() *schema.Resource {
 				ForceNew:     true,
 				Default:      "default",
 				ValidateFunc: validation.StringLenBetween(0, 256),
-			},
-			"role_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: verify.ValidARN,
 			},
 			"recording_group": {
 				Type:     schema.TypeList,
@@ -64,6 +63,16 @@ func ResourceConfigurationRecorder() *schema.Resource {
 					},
 				},
 			},
+			"retention_period": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				ValidateFunc: validation.IntBetween(30, 2557),
+			},
+			"role_arn": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: verify.ValidARN,
+			},
 		},
 	}
 }
@@ -84,9 +93,27 @@ func resourceConfigurationRecorderPut(d *schema.ResourceData, meta interface{}) 
 	input := configservice.PutConfigurationRecorderInput{
 		ConfigurationRecorder: &recorder,
 	}
+
 	_, err := conn.PutConfigurationRecorder(&input)
 	if err != nil {
 		return fmt.Errorf("Creating Configuration Recorder failed: %s", err)
+	}
+
+	oldRp, newRp := d.GetChange("retention_period")
+	if newRp.(int) == 0 && oldRp.(int) != 0 {
+		_, err = conn.DeleteRetentionConfiguration(&configservice.DeleteRetentionConfigurationInput{
+			RetentionConfigurationName: aws.String(DefaultRetentionConfigurationName),
+		})
+		if err != nil {
+			return fmt.Errorf("Creating Configuration Recorder failed: %s", err)
+		}
+	} else if newRp.(int) != 0 {
+		_, err = conn.PutRetentionConfiguration(&configservice.PutRetentionConfigurationInput{
+			RetentionPeriodInDays: aws.Int64(int64(newRp.(int))),
+		})
+		if err != nil {
+			return fmt.Errorf("Creating Configuration Recorder failed: %s", err)
+		}
 	}
 
 	d.SetId(name)
@@ -140,6 +167,16 @@ func resourceConfigurationRecorderRead(d *schema.ResourceData, meta interface{})
 		}
 	}
 
+	res, err := conn.DescribeRetentionConfigurations(&configservice.DescribeRetentionConfigurationsInput{
+		RetentionConfigurationNames: aws.StringSlice([]string{DefaultRetentionConfigurationName}),
+	})
+	if err != nil && !tfawserr.ErrCodeEquals(err, configservice.ErrCodeNoSuchRetentionConfigurationException) {
+		return create.Error(names.ConfigService, create.ErrActionReading, ResNameConfigurationRecorder, d.Id(), err)
+	}
+	if len(res.RetentionConfigurations) > 0 {
+		d.Set("retention_period", res.RetentionConfigurations[0].RetentionPeriodInDays)
+	}
+
 	return nil
 }
 
@@ -151,6 +188,14 @@ func resourceConfigurationRecorderDelete(d *schema.ResourceData, meta interface{
 	_, err := conn.DeleteConfigurationRecorder(&input)
 	if err != nil {
 		if !tfawserr.ErrCodeEquals(err, configservice.ErrCodeNoSuchConfigurationRecorderException) {
+			return fmt.Errorf("Deleting Configuration Recorder failed: %s", err)
+		}
+	}
+	_, err = conn.DeleteRetentionConfiguration(&configservice.DeleteRetentionConfigurationInput{
+		RetentionConfigurationName: aws.String(DefaultRetentionConfigurationName),
+	})
+	if err != nil {
+		if !tfawserr.ErrCodeEquals(err, configservice.ErrCodeNoSuchRetentionConfigurationException) {
 			return fmt.Errorf("Deleting Configuration Recorder failed: %s", err)
 		}
 	}
