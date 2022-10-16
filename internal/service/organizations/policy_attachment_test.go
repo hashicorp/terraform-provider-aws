@@ -281,30 +281,3 @@ resource "aws_organizations_policy_attachment" "test" {
 }
 `, rName)
 }
-
-func testAccPolicyAttachmentConfig_bug27231(rName string) string {
-	return fmt.Sprintf(`
-data "aws_organizations_organization" "test" {}
-
-resource "aws_organizations_policy" "test" {
-
-  content = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": {
-    "Effect": "Allow",
-    "Action": "*",
-    "Resource": "*"
-  }
-}
-EOF
-
-  name = %[1]q
-}
-
-resource "aws_organizations_policy_attachment" "test" {
-  policy_id = aws_organizations_policy.test.id
-  target_id = data.aws_organizations_organization.test.roots[0].id
-}
-`, rName)
-}
