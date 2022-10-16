@@ -2,11 +2,9 @@ package organizations_test
 
 import (
 	"fmt"
-	"log"
 	"strconv"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/organizations"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
@@ -116,23 +114,23 @@ func testAccPolicyAttachment_Root(t *testing.T) {
 	})
 }
 
-func testAccPolicyAttachment_BUG27231(t *testing.T) {
+func testAccPolicyAttachment_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_organizations_policy_attachment.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckOrganizationManagementAccount(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, organizations.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPolicyAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:             testAccPolicyAttachmentConfig_bug27231(rName),
-				ExpectNonEmptyPlan: true,
+				Config: testAccPolicyAttachmentConfig_organizationalUnit(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyAttachmentExists(resourceName),
-					testAccCheckPolicyAttachmentPolicyRemoved(resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tforganizations.ResourcePolicyAttachment(), resourceName),
 				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -171,38 +169,6 @@ func testAccCheckPolicyAttachmentDestroy(s *terraform.State) error {
 
 	return nil
 
-}
-
-func testAccCheckPolicyAttachmentPolicyRemoved(resourceName string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
-		if !ok {
-			return fmt.Errorf("Not found: %s", resourceName)
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).OrganizationsConn
-
-		targetID, policyID, err := tforganizations.DecodePolicyAttachmentID(rs.Primary.ID)
-		if err != nil {
-			return err
-		}
-		detachInput := &organizations.DetachPolicyInput{
-			PolicyId: aws.String(policyID),
-			TargetId: aws.String(targetID),
-		}
-		log.Printf("[DEBUG] Detach policy outside of TF %s", detachInput)
-		_, err = conn.DetachPolicy(detachInput)
-		if err != nil {
-			return err
-		}
-
-		deleteInput := &organizations.DeletePolicyInput{
-			PolicyId: aws.String(policyID),
-		}
-		log.Printf("[DEBUG] Delete policy outside of TF %s", deleteInput)
-		_, err = conn.DeletePolicy(deleteInput)
-		return err
-	}
 }
 
 func testAccCheckPolicyAttachmentExists(n string) resource.TestCheckFunc {
