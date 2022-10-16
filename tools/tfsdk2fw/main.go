@@ -177,12 +177,13 @@ func (m *migrator) generateTemplateData() (*templateData, error) {
 	}
 
 	templateData := &templateData{
-		ImportFrameworkAttr: emitter.ImportFrameworkAttr,
-		Name:                m.Name,
-		PackageName:         m.PackageName,
-		Schema:              sbSchema.String(),
-		Struct:              sbStruct.String(),
-		TFTypeName:          m.TFTypeName,
+		ImportFrameworkAttr:          emitter.ImportFrameworkAttr,
+		ImportProviderFrameworkTypes: emitter.ImportProviderFrameworkTypes,
+		Name:                         m.Name,
+		PackageName:                  m.PackageName,
+		Schema:                       sbSchema.String(),
+		Struct:                       sbStruct.String(),
+		TFTypeName:                   m.TFTypeName,
 	}
 
 	return templateData, nil
@@ -193,10 +194,11 @@ func (m *migrator) infof(format string, a ...interface{}) {
 }
 
 type emitter struct {
-	Ui                  cli.Ui
-	SchemaWriter        io.Writer
-	StructWriter        io.Writer
-	ImportFrameworkAttr bool
+	Ui                           cli.Ui
+	SchemaWriter                 io.Writer
+	StructWriter                 io.Writer
+	ImportFrameworkAttr          bool
+	ImportProviderFrameworkTypes bool
 }
 
 // emitSchemaForResource generates the Plugin Framework code for a Plugin SDK Resource and emits the generated code to the emitter's Writer.
@@ -348,10 +350,20 @@ func (e *emitter) emitAttributeProperty(path []string, property *schema.Schema) 
 		}
 
 	case schema.TypeString:
-		fprintf(e.SchemaWriter, "Type:types.StringType,\n")
+		if path[len(path)-1] == "arn" {
+			e.ImportProviderFrameworkTypes = true
 
-		if topLevelAttribute {
-			fprintf(e.StructWriter, "types.String")
+			fprintf(e.SchemaWriter, "Type:fwtypes.ARNType,\n")
+
+			if topLevelAttribute {
+				fprintf(e.StructWriter, "fwtypes.ARN")
+			}
+		} else {
+			fprintf(e.SchemaWriter, "Type:types.StringType,\n")
+
+			if topLevelAttribute {
+				fprintf(e.StructWriter, "types.String")
+			}
 		}
 
 	//
@@ -728,12 +740,13 @@ func unsupportedTypeError(path []string, typ string) error {
 }
 
 type templateData struct {
-	ImportFrameworkAttr bool
-	Name                string // e.g. Instance
-	PackageName         string // e.g. ec2
-	Schema              string
-	Struct              string
-	TFTypeName          string // e.g. aws_instance
+	ImportFrameworkAttr          bool
+	ImportProviderFrameworkTypes bool
+	Name                         string // e.g. Instance
+	PackageName                  string // e.g. ec2
+	Schema                       string
+	Struct                       string
+	TFTypeName                   string // e.g. aws_instance
 }
 
 //go:embed datasource.tmpl

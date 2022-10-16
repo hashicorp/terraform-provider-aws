@@ -42,6 +42,16 @@ func TestToCamelCase(t *testing.T) {
 			Value:         "something_id",
 			ExpectedValue: "SomethingID",
 		},
+		{
+			TestName:      "ARN",
+			Value:         "arn",
+			ExpectedValue: "ARN",
+		},
+		{
+			TestName:      "something ARN",
+			Value:         "something_arn",
+			ExpectedValue: "SomethingARN",
+		},
 	}
 
 	for _, testCase := range testCases {
