@@ -126,7 +126,7 @@ The following arguments are supported:
 
 * `name` - (Required) The fully qualified name for the directory, such as `corp.example.com`
 * `password` - (Required) The password for the directory administrator or connector user.
-* `size` - (Required for `SimpleAD` and `ADConnector`) The size of the directory (`Small` or `Large` are accepted values).
+* `size` - (Required for `SimpleAD` and `ADConnector` types, do not use with `MicrosoftAD`) The size of the directory (`Small` or `Large` are accepted values).
 * `vpc_settings` - (Required for `SimpleAD` and `MicrosoftAD`) VPC related information about the directory. Fields documented below.
 * `connect_settings` - (Required for `ADConnector`) Connector related information about the directory. Fields documented below.
 * `alias` - (Optional) The alias for the directory (must be unique amongst all aliases in AWS). Required for `enable_sso`.
@@ -135,7 +135,7 @@ The following arguments are supported:
 * `short_name` - (Optional) The short name of the directory, such as `CORP`.
 * `enable_sso` - (Optional) Whether to enable single-sign on for the directory. Requires `alias`. Defaults to `false`.
 * `type` (Optional) - The directory type (`SimpleAD`, `ADConnector` or `MicrosoftAD` are accepted values). Defaults to `SimpleAD`.
-* `edition` - (Optional) The MicrosoftAD edition (`Standard` or `Enterprise`). Defaults to `Enterprise` (applies to MicrosoftAD type only).
+* `edition` - (Optional, `applies to MicrosoftAD` type only) The MicrosoftAD edition (`Standard` or `Enterprise`). Defaults to `Enterprise`.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 **vpc_settings** supports the following:
