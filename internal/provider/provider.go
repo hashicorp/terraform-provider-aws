@@ -898,8 +898,6 @@ func New(_ context.Context) (*schema.Provider, error) {
 
 			"aws_storagegateway_local_disk": storagegateway.DataSourceLocalDisk(),
 
-			"aws_caller_identity": sts.DataSourceCallerIdentity(),
-
 			"aws_transfer_server": transfer.DataSourceServer(),
 
 			"aws_waf_ipset":                 waf.DataSourceIPSet(),
@@ -2177,6 +2175,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 		// ServiceData is used before configuration to determine the provider's exported resources and data sources.
 		ServiceMap: map[string]intf.ServiceData{
 			"meta": meta.ServiceData,
+			"sts":  sts.ServiceData,
 		},
 	}
 
