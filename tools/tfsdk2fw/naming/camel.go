@@ -29,7 +29,14 @@ func ToCamelCase(s string) string {
 		}
 	}
 
-	return c.String()
+	s = c.String()
+
+	// Replace 'Id' suffix with 'ID'."
+	if strings.HasSuffix(s, "Id") {
+		s = strings.TrimSuffix(s, "Id") + "ID"
+	}
+
+	return s
 }
 
 func isCapitalLetter(ch byte) bool {
