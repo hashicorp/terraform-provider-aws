@@ -5,12 +5,14 @@ package sts
 import (
 	"context"
 
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/fwtypes"
 )
 
 func init() {
@@ -41,7 +43,7 @@ func (d *dataSourceCallerIdentity) GetSchema(context.Context) (tfsdk.Schema, dia
 				Computed: true,
 			},
 			"arn": {
-				Type:     types.StringType,
+				Type:     fwtypes.ARNType,
 				Computed: true,
 			},
 			"id": {
@@ -89,7 +91,11 @@ func (d *dataSourceCallerIdentity) Read(ctx context.Context, request datasource.
 
 	accountID := aws.StringValue(output.Account)
 	data.AccountID = types.String{Value: accountID}
-	data.Arn = types.String{Value: aws.StringValue(output.Arn)}
+	if v, err := arn.Parse(aws.StringValue(output.Arn)); err != nil {
+		response.Diagnostics.AddError("parsing ARN", err.Error())
+	} else {
+		data.ARN = fwtypes.ARN{Value: v}
+	}
 	data.ID = types.String{Value: accountID}
 	data.UserID = types.String{Value: aws.StringValue(output.UserId)}
 
@@ -98,7 +104,7 @@ func (d *dataSourceCallerIdentity) Read(ctx context.Context, request datasource.
 
 type dataSourceCallerIdentityData struct {
 	AccountID types.String `tfsdk:"account_id"`
-	Arn       types.String `tfsdk:"arn"`
+	ARN       fwtypes.ARN  `tfsdk:"arn"`
 	ID        types.String `tfsdk:"id"`
 	UserID    types.String `tfsdk:"user_id"`
 }
