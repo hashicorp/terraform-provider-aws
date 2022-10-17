@@ -63,7 +63,6 @@ The following arguments are optional:
 * `split_charge_rule` - (Optional) Configuration block for the split charge rules used to allocate your charges between your Cost Category values. See below.
 * `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-
 ### `rule`
 
 * `inherited_value` - (Optional) Configuration block for the value the line item is categorized as if the line item contains the matched dimension. See below.

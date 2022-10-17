@@ -57,7 +57,6 @@ the selected VPC.
 
 The following attribute is additionally exported:
 
-
 * `address_family` - IP protocol assigned to this pool.
 * `publicly_advertisable` - Defines whether or not IPv6 pool space is publicly ∂advertisable over the internet.
 * `allocation_default_netmask_length` - A default netmask length for allocations added to this pool. If, for example, the CIDR assigned to this pool is 10.0.0.0/8 and you enter 16 here, new allocations will default to 10.0.0.0/16.

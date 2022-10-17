@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/envvar"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -45,13 +46,13 @@ func SharedRegionalSweepClientWithContext(ctx context.Context, region string) (i
 		return client, nil
 	}
 
-	_, _, err := conns.RequireOneOfEnvVar([]string{conns.EnvVarProfile, conns.EnvVarAccessKeyId, conns.EnvVarContainerCredentialsFullURI}, "credentials for running sweepers")
+	_, _, err := envvar.RequireOneOf([]string{envvar.Profile, envvar.AccessKeyId, envvar.ContainerCredentialsFullURI}, "credentials for running sweepers")
 	if err != nil {
 		return nil, err
 	}
 
-	if os.Getenv(conns.EnvVarAccessKeyId) != "" {
-		_, err := conns.RequireEnvVar(conns.EnvVarSecretAccessKey, "static credentials value when using "+conns.EnvVarAccessKeyId)
+	if os.Getenv(envvar.AccessKeyId) != "" {
+		_, err := envvar.Require(envvar.SecretAccessKey, "static credentials value when using "+envvar.AccessKeyId)
 		if err != nil {
 			return nil, err
 		}
@@ -63,23 +64,23 @@ func SharedRegionalSweepClientWithContext(ctx context.Context, region string) (i
 		SuppressDebugLog: true,
 	}
 
-	if role := os.Getenv(conns.EnvVarAssumeRoleARN); role != "" {
+	if role := os.Getenv(envvar.AssumeRoleARN); role != "" {
 		conf.AssumeRole.RoleARN = role
 
 		conf.AssumeRole.Duration = time.Duration(defaultSweeperAssumeRoleDurationSeconds) * time.Second
-		if v := os.Getenv(conns.EnvVarAssumeRoleDuration); v != "" {
+		if v := os.Getenv(envvar.AssumeRoleDuration); v != "" {
 			d, err := strconv.Atoi(v)
 			if err != nil {
-				return nil, fmt.Errorf("environment variable %s: %w", conns.EnvVarAssumeRoleDuration, err)
+				return nil, fmt.Errorf("environment variable %s: %w", envvar.AssumeRoleDuration, err)
 			}
 			conf.AssumeRole.Duration = time.Duration(d) * time.Second
 		}
 
-		if v := os.Getenv(conns.EnvVarAssumeRoleExternalID); v != "" {
+		if v := os.Getenv(envvar.AssumeRoleExternalID); v != "" {
 			conf.AssumeRole.ExternalID = v
 		}
 
-		if v := os.Getenv(conns.EnvVarAssumeRoleSessionName); v != "" {
+		if v := os.Getenv(envvar.AssumeRoleSessionName); v != "" {
 			conf.AssumeRole.SessionName = v
 		}
 	}

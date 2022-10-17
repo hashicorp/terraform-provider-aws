@@ -1471,7 +1471,6 @@ func resourceConnectorProfileUpdate(ctx context.Context, d *schema.ResourceData,
 		ConnectorProfileName:   aws.String(name),
 	}
 
-	log.Printf("[DEBUG] Updating AppFlow Connector Profile (%s): %#v", d.Id(), updateConnectorProfileInput)
 	_, err := conn.UpdateConnectorProfile(&updateConnectorProfileInput)
 
 	if err != nil {

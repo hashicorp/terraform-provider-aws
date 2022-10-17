@@ -174,6 +174,3 @@ In addition to all arguments above, the following attributes are exported:
 $ terraform import aws_{service}_tag.example arn:aws:{service}:us-east-1:123456789012:{thing}/example,Name
 ```
 ``````
-
-
-

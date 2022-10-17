@@ -1,4 +1,4 @@
-package conns
+package envvar
 
 import (
 	"os"
@@ -15,7 +15,7 @@ func TestGetWithDefault(t *testing.T) {
 
 		os.Unsetenv(envVar)
 
-		got := GetEnvVarWithDefault(envVar, want)
+		got := GetWithDefault(envVar, want)
 
 		if got != want {
 			t.Fatalf("expected %s, got %s", want, got)
@@ -28,7 +28,7 @@ func TestGetWithDefault(t *testing.T) {
 		os.Setenv(envVar, "")
 		defer os.Unsetenv(envVar)
 
-		got := GetEnvVarWithDefault(envVar, want)
+		got := GetWithDefault(envVar, want)
 
 		if got != want {
 			t.Fatalf("expected %s, got %s", want, got)
@@ -41,7 +41,7 @@ func TestGetWithDefault(t *testing.T) {
 		os.Setenv(envVar, want)
 		defer os.Unsetenv(envVar)
 
-		got := GetEnvVarWithDefault(envVar, "default")
+		got := GetWithDefault(envVar, "default")
 
 		if got != want {
 			t.Fatalf("expected %s, got %s", want, got)
@@ -59,7 +59,7 @@ func TestRequireOneOf(t *testing.T) {
 			os.Unsetenv(envVar)
 		}
 
-		_, _, err := RequireOneOfEnvVar(envVars, "usage")
+		_, _, err := RequireOneOf(envVars, "usage")
 
 		if err == nil {
 			t.Fatal("expected error")
@@ -71,7 +71,7 @@ func TestRequireOneOf(t *testing.T) {
 		os.Setenv(envVar2, "")
 		defer unsetEnvVars(envVars)
 
-		_, _, err := RequireOneOfEnvVar(envVars, "usage")
+		_, _, err := RequireOneOf(envVars, "usage")
 
 		if err == nil {
 			t.Fatal("expected error")
@@ -85,7 +85,7 @@ func TestRequireOneOf(t *testing.T) {
 		os.Setenv(envVar2, wantValue)
 		defer unsetEnvVars(envVars)
 
-		gotName, gotValue, err := RequireOneOfEnvVar(envVars, "usage")
+		gotName, gotValue, err := RequireOneOf(envVars, "usage")
 
 		if err != nil {
 			t.Fatalf("unexpected error: %s", err)
@@ -107,7 +107,7 @@ func TestRequireOneOf(t *testing.T) {
 		os.Setenv(envVar2, "other")
 		defer unsetEnvVars(envVars)
 
-		gotName, gotValue, err := RequireOneOfEnvVar(envVars, "usage")
+		gotName, gotValue, err := RequireOneOf(envVars, "usage")
 
 		if err != nil {
 			t.Fatalf("unexpected error: %s", err)
@@ -129,7 +129,7 @@ func TestRequire(t *testing.T) {
 	t.Run("missing", func(t *testing.T) {
 		os.Unsetenv(envVar)
 
-		_, err := RequireEnvVar(envVar, "usage")
+		_, err := Require(envVar, "usage")
 
 		if err == nil {
 			t.Fatal("expected error")
@@ -140,7 +140,7 @@ func TestRequire(t *testing.T) {
 		os.Setenv(envVar, "")
 		defer os.Unsetenv(envVar)
 
-		_, err := RequireEnvVar(envVar, "usage")
+		_, err := Require(envVar, "usage")
 
 		if err == nil {
 			t.Fatal("expected error")
@@ -153,7 +153,7 @@ func TestRequire(t *testing.T) {
 		os.Setenv(envVar, want)
 		defer os.Unsetenv(envVar)
 
-		got, err := RequireEnvVar(envVar, "usage")
+		got, err := Require(envVar, "usage")
 
 		if err != nil {
 			t.Fatalf("unexpected error: %s", err)
@@ -177,7 +177,7 @@ func TestTestFailIfAllEmpty(t *testing.T) {
 			os.Unsetenv(envVar)
 		}
 
-		FailIfAllEnvVarEmpty(&testingiface.RuntimeT{}, envVars, "usage")
+		FailIfAllEmpty(&testingiface.RuntimeT{}, envVars, "usage")
 
 		t.Fatal("expected to fail previously")
 	})
@@ -189,7 +189,7 @@ func TestTestFailIfAllEmpty(t *testing.T) {
 		os.Setenv(envVar2, "")
 		defer unsetEnvVars(envVars)
 
-		FailIfAllEnvVarEmpty(&testingiface.RuntimeT{}, envVars, "usage")
+		FailIfAllEmpty(&testingiface.RuntimeT{}, envVars, "usage")
 
 		t.Fatal("expected to fail previously")
 	})
@@ -201,7 +201,7 @@ func TestTestFailIfAllEmpty(t *testing.T) {
 		os.Setenv(envVar2, wantValue)
 		defer unsetEnvVars(envVars)
 
-		gotName, gotValue := FailIfAllEnvVarEmpty(&testingiface.RuntimeT{}, envVars, "usage")
+		gotName, gotValue := FailIfAllEmpty(&testingiface.RuntimeT{}, envVars, "usage")
 
 		if gotName != envVar2 {
 			t.Fatalf("expected name: %s, got: %s", envVar2, gotName)
@@ -219,7 +219,7 @@ func TestTestFailIfAllEmpty(t *testing.T) {
 		os.Setenv(envVar2, "other")
 		defer unsetEnvVars(envVars)
 
-		gotName, gotValue := FailIfAllEnvVarEmpty(&testingiface.RuntimeT{}, envVars, "usage")
+		gotName, gotValue := FailIfAllEmpty(&testingiface.RuntimeT{}, envVars, "usage")
 
 		if gotName != envVar1 {
 			t.Fatalf("expected name: %s, got: %s", envVar1, gotName)
@@ -239,7 +239,7 @@ func TestTestFailIfEmpty(t *testing.T) {
 
 		os.Unsetenv(envVar)
 
-		FailIfEnvVarEmpty(&testingiface.RuntimeT{}, envVar, "usage")
+		FailIfEmpty(&testingiface.RuntimeT{}, envVar, "usage")
 
 		t.Fatal("expected to fail previously")
 	})
@@ -250,7 +250,7 @@ func TestTestFailIfEmpty(t *testing.T) {
 		os.Setenv(envVar, "")
 		defer os.Unsetenv(envVar)
 
-		FailIfEnvVarEmpty(&testingiface.RuntimeT{}, envVar, "usage")
+		FailIfEmpty(&testingiface.RuntimeT{}, envVar, "usage")
 
 		t.Fatal("expected to fail previously")
 	})
@@ -261,7 +261,7 @@ func TestTestFailIfEmpty(t *testing.T) {
 		os.Setenv(envVar, want)
 		defer os.Unsetenv(envVar)
 
-		got := FailIfEnvVarEmpty(&testingiface.RuntimeT{}, envVar, "usage")
+		got := FailIfEmpty(&testingiface.RuntimeT{}, envVar, "usage")
 
 		if got != want {
 			t.Fatalf("expected value: %s, got: %s", want, got)
@@ -277,7 +277,7 @@ func TestTestSkipIfEmpty(t *testing.T) {
 
 		os.Unsetenv(envVar)
 
-		SkipIfEnvVarEmpty(mockT, envVar, "usage")
+		SkipIfEmpty(mockT, envVar, "usage")
 
 		if !mockT.Skipped() {
 			t.Fatal("expected to skip previously")
@@ -290,7 +290,7 @@ func TestTestSkipIfEmpty(t *testing.T) {
 		os.Setenv(envVar, "")
 		defer os.Unsetenv(envVar)
 
-		SkipIfEnvVarEmpty(mockT, envVar, "usage")
+		SkipIfEmpty(mockT, envVar, "usage")
 
 		if !mockT.Skipped() {
 			t.Fatal("expected to skip previously")
@@ -303,7 +303,7 @@ func TestTestSkipIfEmpty(t *testing.T) {
 		os.Setenv(envVar, want)
 		defer os.Unsetenv(envVar)
 
-		got := SkipIfEnvVarEmpty(&testingiface.RuntimeT{}, envVar, "usage")
+		got := SkipIfEmpty(&testingiface.RuntimeT{}, envVar, "usage")
 
 		if got != want {
 			t.Fatalf("expected value: %s, got: %s", want, got)

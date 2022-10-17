@@ -398,10 +398,10 @@ func resourceBrokerCreate(d *schema.ResourceData, meta interface{}) error {
 		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
-	log.Printf("[INFO] Creating MQ Broker: %s", input)
 	out, err := conn.CreateBroker(&input)
+
 	if err != nil {
-		return err
+		return fmt.Errorf("creating MQ Broker (%s): %w", name, err)
 	}
 
 	d.SetId(aws.StringValue(out.BrokerId))

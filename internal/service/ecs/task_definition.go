@@ -1208,6 +1208,12 @@ func expandContainerDefinitions(rawDefinitions string) ([]*ecs.ContainerDefiniti
 		return nil, fmt.Errorf("Error decoding JSON: %s", err)
 	}
 
+	for i, c := range definitions {
+		if c == nil {
+			return nil, fmt.Errorf("invalid container definition supplied at index (%d)", i)
+		}
+	}
+
 	return definitions, nil
 }
 

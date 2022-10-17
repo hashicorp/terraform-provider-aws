@@ -171,6 +171,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/servicediscovery"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/servicequotas"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/ses"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/sesv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/sfn"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/shield"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/signer"
@@ -598,6 +599,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_vpc_endpoint_service":                       ec2.DataSourceVPCEndpointService(),
 			"aws_vpc_endpoint":                               ec2.DataSourceVPCEndpoint(),
 			"aws_vpc_ipam_pool":                              ec2.DataSourceIPAMPool(),
+			"aws_vpc_ipam_pools":                             ec2.DataSourceIPAMPools(),
 			"aws_vpc_ipam_pool_cidrs":                        ec2.DataSourceIPAMPoolCIDRs(),
 			"aws_vpc_ipam_preview_next_cidr":                 ec2.DataSourceIPAMPreviewNextCIDR(),
 			"aws_vpc_peering_connection":                     ec2.DataSourceVPCPeeringConnection(),
@@ -632,6 +634,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 
 			"aws_elasticache_cluster":           elasticache.DataSourceCluster(),
 			"aws_elasticache_replication_group": elasticache.DataSourceReplicationGroup(),
+			"aws_elasticache_subnet_group":      elasticache.DataSourceSubnetGroup(),
 			"aws_elasticache_user":              elasticache.DataSourceUser(),
 
 			"aws_elastic_beanstalk_application":    elasticbeanstalk.DataSourceApplication(),
@@ -1162,8 +1165,9 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_codedeploy_deployment_config": deploy.ResourceDeploymentConfig(),
 			"aws_codedeploy_deployment_group":  deploy.ResourceDeploymentGroup(),
 
-			"aws_codepipeline":         codepipeline.ResourceCodePipeline(),
-			"aws_codepipeline_webhook": codepipeline.ResourceWebhook(),
+			"aws_codepipeline":                    codepipeline.ResourcePipeline(),
+			"aws_codepipeline_custom_action_type": codepipeline.ResourceCustomActionType(),
+			"aws_codepipeline_webhook":            codepipeline.ResourceWebhook(),
 
 			"aws_codestarconnections_connection": codestarconnections.ResourceConnection(),
 			"aws_codestarconnections_host":       codestarconnections.ResourceHost(),
@@ -1621,6 +1625,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_inspector_resource_group":      inspector.ResourceResourceGroup(),
 
 			"aws_inspector2_organization_configuration": inspector2.ResourceOrganizationConfiguration(),
+			"aws_inspector2_delegated_admin_account":    inspector2.ResourceDelegatedAdminAccount(),
 
 			"aws_iot_authorizer":                 iot.ResourceAuthorizer(),
 			"aws_iot_certificate":                iot.ResourceCertificate(),
@@ -1701,6 +1706,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_licensemanager_association":           licensemanager.ResourceAssociation(),
 			"aws_licensemanager_license_configuration": licensemanager.ResourceLicenseConfiguration(),
 
+			"aws_lightsail_certificate":                          lightsail.ResourceCertificate(),
 			"aws_lightsail_container_service":                    lightsail.ResourceContainerService(),
 			"aws_lightsail_container_service_deployment_version": lightsail.ResourceContainerServiceDeploymentVersion(),
 			"aws_lightsail_database":                             lightsail.ResourceDatabase(),
@@ -2045,6 +2051,8 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_ses_receipt_rule":                 ses.ResourceReceiptRule(),
 			"aws_ses_receipt_rule_set":             ses.ResourceReceiptRuleSet(),
 			"aws_ses_template":                     ses.ResourceTemplate(),
+
+			"aws_sesv2_configuration_set": sesv2.ResourceConfigurationSet(),
 
 			"aws_sfn_activity":      sfn.ResourceActivity(),
 			"aws_sfn_state_machine": sfn.ResourceStateMachine(),
