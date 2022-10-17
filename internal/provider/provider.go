@@ -663,8 +663,6 @@ func New(_ context.Context) (*schema.Provider, error) {
 
 			"aws_fsx_openzfs_snapshot": fsx.DataSourceOpenzfsSnapshot(),
 
-			"aws_globalaccelerator_accelerator": globalaccelerator.DataSourceAccelerator(),
-
 			"aws_glue_connection":                       glue.DataSourceConnection(),
 			"aws_glue_data_catalog_encryption_settings": glue.DataSourceDataCatalogEncryptionSettings(),
 			"aws_glue_script":                           glue.DataSourceScript(),
@@ -2180,8 +2178,9 @@ func New(_ context.Context) (*schema.Provider, error) {
 
 		// ServiceData is used before configuration to determine the provider's exported resources and data sources.
 		ServiceMap: map[string]intf.ServiceData{
-			"meta": meta.ServiceData,
-			"sts":  sts.ServiceData,
+			"globalaccelerator": globalaccelerator.ServiceData,
+			"meta":              meta.ServiceData,
+			"sts":               sts.ServiceData,
 		},
 	}
 
