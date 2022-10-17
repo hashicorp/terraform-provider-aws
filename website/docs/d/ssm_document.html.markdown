@@ -34,7 +34,6 @@ data "aws_ssm_document" "test" {
 }
 ```
 
-
 ## Argument Reference
 
 The following arguments are supported:

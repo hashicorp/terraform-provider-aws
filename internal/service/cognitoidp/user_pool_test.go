@@ -1414,6 +1414,43 @@ func TestAccCognitoIDPUserPool_disappears(t *testing.T) {
 	})
 }
 
+func TestAccCognitoIDPUserPool_withUserAttributeUpdateSettings(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_cognito_user_pool.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserPoolDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccUserPoolConfig_userAttributeUpdateSettings(rName, "invalid_value"),
+				ExpectError: regexp.MustCompile("expected user_attribute_update_settings.0.attributes_require_verification_before_update.0 to be one of"),
+			},
+			{
+				Config: testAccUserPoolConfig_userAttributeUpdateSettings(rName, cognitoidentityprovider.VerifiedAttributeTypeEmail),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckUserPoolExists(resourceName, nil),
+					resource.TestCheckResourceAttr(resourceName, "auto_verified_attributes.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "auto_verified_attributes.0", cognitoidentityprovider.VerifiedAttributeTypeEmail),
+					resource.TestCheckResourceAttr(resourceName, "user_attribute_update_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "user_attribute_update_settings.0.attributes_require_verification_before_update.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "user_attribute_update_settings.0.attributes_require_verification_before_update.0", cognitoidentityprovider.VerifiedAttributeTypeEmail),
+				),
+			},
+			{
+				Config: testAccUserPoolConfig_name(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckUserPoolExists(resourceName, nil),
+					resource.TestCheckResourceAttr(resourceName, "auto_verified_attributes.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "user_attribute_update_settings.#", "0"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckUserPoolDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn
 
@@ -2338,4 +2375,18 @@ resource "aws_cognito_user_pool" "test" {
   }
 }
 `, name, mfaconfig, smsAuthMsg)
+}
+
+func testAccUserPoolConfig_userAttributeUpdateSettings(name, attr string) string {
+	return fmt.Sprintf(`
+resource "aws_cognito_user_pool" "test" {
+  name = %[1]q
+
+  auto_verified_attributes = ["%[2]s"]
+
+  user_attribute_update_settings {
+    attributes_require_verification_before_update = ["%[2]s"]
+  }
+}
+`, name, attr)
 }

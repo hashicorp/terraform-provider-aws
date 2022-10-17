@@ -41,10 +41,7 @@ func FindAliasByName(conn *kms.KMS, name string) (*kms.AliasListEntry, error) {
 	return output, nil
 }
 
-func FindCustomKeyStoreByID(ctx context.Context, conn *kms.KMS, id string) (*kms.CustomKeyStoresListEntry, error) {
-	in := &kms.DescribeCustomKeyStoresInput{
-		CustomKeyStoreId: aws.String(id),
-	}
+func FindCustomKeyStoreByID(ctx context.Context, conn *kms.KMS, in *kms.DescribeCustomKeyStoresInput) (*kms.CustomKeyStoresListEntry, error) {
 	out, err := conn.DescribeCustomKeyStoresWithContext(ctx, in)
 
 	if tfawserr.ErrCodeEquals(err, kms.ErrCodeCustomKeyStoreNotFoundException) {

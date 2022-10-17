@@ -2203,6 +2203,64 @@ rules:
           patterns:
             - pattern-regex: "(?i)Events"
     severity: WARNING
+  - id: evidently-in-func-name
+    languages:
+      - go
+    message: Do not use "Evidently" in func name inside evidently package
+    paths:
+      include:
+        - internal/service/evidently
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)Evidently"
+            - pattern-not-regex: ^TestAcc.*
+    severity: WARNING
+  - id: evidently-in-test-name
+    languages:
+      - go
+    message: Include "Evidently" in test name
+    paths:
+      include:
+        - internal/service/evidently/*_test.go
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-not-regex: "^TestAccEvidently"
+            - pattern-regex: ^TestAcc.*
+    severity: WARNING
+  - id: evidently-in-const-name
+    languages:
+      - go
+    message: Do not use "Evidently" in const name inside evidently package
+    paths:
+      include:
+        - internal/service/evidently
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)Evidently"
+    severity: WARNING
+  - id: evidently-in-var-name
+    languages:
+      - go
+    message: Do not use "Evidently" in var name inside evidently package
+    paths:
+      include:
+        - internal/service/evidently
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)Evidently"
+    severity: WARNING
   - id: firehose-in-func-name
     languages:
       - go
@@ -3014,19 +3072,4 @@ rules:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)ImageBuilder"
-    severity: WARNING
-  - id: inspector-in-func-name
-    languages:
-      - go
-    message: Do not use "Inspector" in func name inside inspector package
-    paths:
-      include:
-        - internal/service/inspector
-    patterns:
-      - pattern: func $NAME( ... ) { ... }
-      - metavariable-pattern:
-          metavariable: $NAME
-          patterns:
-            - pattern-regex: "(?i)Inspector"
-            - pattern-not-regex: ^TestAcc.*
     severity: WARNING

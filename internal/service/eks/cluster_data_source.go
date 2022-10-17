@@ -77,6 +77,10 @@ func DataSourceCluster() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+						"service_ipv6_cidr": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 					},
 				},
 			},

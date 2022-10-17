@@ -48,7 +48,9 @@ output "identity-oidc-issuer" {
     * `oidc` - Nested attribute containing [OpenID Connect](https://openid.net/connect/) identity provider information for the cluster.
         * `issuer` - Issuer URL for the OpenID Connect identity provider.
 * `kubernetes_network_config` - Nested list containing Kubernetes Network Configuration.
-    * `service_ipv4_cidr` - The CIDR block to assign Kubernetes service IP addresses from.
+    * `ip_family` - `ipv4` or `ipv6`.
+    * `service_ipv4_cidr` - The CIDR block to assign Kubernetes pod and service IP addresses from if `ipv4` was specified when the cluster was created.
+    * `service_ipv6_cidr` - The CIDR block to assign Kubernetes pod and service IP addresses from if `ipv6` was specified when the cluster was created. Kubernetes assigns service addresses from the unique local address range (fc00::/7) because you can't specify a custom IPv6 CIDR block when you create the cluster.
 * `outpost_config` - Contains Outpost Configuration.
     * `control_plane_instance_type` - The Amazon EC2 instance type for all Kubernetes control plane instances.
     * `outpost_arns` - List of ARNs of the Outposts hosting the EKS cluster. Only a single ARN is supported currently.

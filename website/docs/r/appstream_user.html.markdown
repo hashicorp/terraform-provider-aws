@@ -44,7 +44,6 @@ In addition to all arguments above, the following attributes are exported:
 * `id` - Unique ID of the appstream user.
 * `status` - Status of the user in the user pool.
 
-
 ## Import
 
 `aws_appstream_user` can be imported using the `user_name` and `authentication_type` separated by a slash (`/`), e.g.,

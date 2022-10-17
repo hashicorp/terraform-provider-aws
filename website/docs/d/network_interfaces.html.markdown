@@ -70,7 +70,6 @@ which take the following arguments:
 * `id` - AWS Region.
 * `ids` - List of all the network interface ids found.
 
-
 ## Timeouts
 
 [Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):

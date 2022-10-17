@@ -78,7 +78,6 @@ This quarter most of our efforts will be focused on enhancements and stability i
 - [Cognito User Pool: cannot modify or remove schema items](https://github.com/hashicorp/terraform-provider-aws/issues/21654)
 - [Support for SES domain and email identity default configuration set](https://github.com/hashicorp/terraform-provider-aws/issues/21129)
 
-
 ## Research Topics
 
 Research topics include features, architectural changes, and ideas that we are pursuing in the longer term that may significantly impact the core user experience of the AWS provider. Research topics are discovery only and are not guaranteed to be included in a future release.

@@ -78,6 +78,7 @@ gen:
 
 sweep:
 	# make sweep SWEEPARGS=-sweep-run=aws_example_thing
+	# set SWEEPARGS=-sweep-allow-failures to continue after first failure
 	@echo "WARNING: This will destroy infrastructure. Use only in development accounts."
 	$(GO_VER) test $(SWEEP_DIR) -v -tags=sweep -sweep=$(SWEEP) $(SWEEPARGS) -timeout 60m
 
@@ -92,7 +93,7 @@ testacc: fmtcheck
 		echo "For example if updating internal/service/acm/certificate.go, use the test names in internal/service/acm/certificate_test.go starting with TestAcc and up to the underscore:"; \
 		echo "make testacc TESTS=TestAccACMCertificate_ PKG=acm"; \
 		echo ""; \
-		echo "See the contributing guide for more information: https://github.com/hashicorp/terraform-provider-aws/blob/main/docs/contributing/running-and-writing-acceptance-tests.md"; \
+		echo "See the contributing guide for more information: https://hashicorp.github.io/terraform-provider-aws/running-and-writing-acceptance-tests"; \
 		exit 1; \
 	fi
 	TF_ACC=1 $(GO_VER) test ./$(PKG_NAME)/... -v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) $(RUNARGS) $(TESTARGS) -timeout $(ACCTEST_TIMEOUT)
@@ -140,7 +141,10 @@ docs-lint-fix:
 docscheck:
 	@tfproviderdocs check \
 		-allowed-resource-subcategories-file website/allowed-subcategories.txt \
-		-ignore-side-navigation-data-sources aws_alb,aws_alb_listener,aws_alb_target_group,aws_kms_secret \
+		-enable-contents-check \
+		-ignore-file-missing-data-sources aws_alb,aws_alb_listener,aws_alb_target_group \
+		-ignore-file-missing-resources aws_alb,aws_alb_listener,aws_alb_listener_certificate,aws_alb_listener_rule,aws_alb_target_group,aws_alb_target_group_attachment \
+		-provider-name=aws \
 		-require-resource-subcategory
 	@misspell -error -source text CHANGELOG.md .changelog
 

@@ -16,7 +16,7 @@ Terraform resource for managing an AWS KMS (Key Management) Custom Key Store.
 
 ```terraform
 resource "aws_kms_custom_key_store" "test" {
-  cloud_hsm_cluster_id  = var.clous_hsm_cluster_id
+  cloud_hsm_cluster_id  = var.cloud_hsm_cluster_id
   custom_key_store_name = "kms-custom-key-store-test"
   key_store_password    = "noplaintextpasswords1"
 

@@ -5,6 +5,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/globalaccelerator"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 // FindAcceleratorByARN returns the accelerator corresponding to the specified ARN.
@@ -34,10 +35,7 @@ func FindAccelerator(conn *globalaccelerator.GlobalAccelerator, input *globalacc
 	}
 
 	if output == nil || output.Accelerator == nil {
-		return nil, &resource.NotFoundError{
-			Message:     "Empty result",
-			LastRequest: input,
-		}
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
 	return output.Accelerator, nil
@@ -70,10 +68,7 @@ func FindAcceleratorAttributes(conn *globalaccelerator.GlobalAccelerator, input 
 	}
 
 	if output == nil || output.AcceleratorAttributes == nil {
-		return nil, &resource.NotFoundError{
-			Message:     "Empty result",
-			LastRequest: input,
-		}
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
 	return output.AcceleratorAttributes, nil
@@ -106,10 +101,7 @@ func FindEndpointGroup(conn *globalaccelerator.GlobalAccelerator, input *globala
 	}
 
 	if output == nil || output.EndpointGroup == nil {
-		return nil, &resource.NotFoundError{
-			Message:     "Empty result",
-			LastRequest: input,
-		}
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
 	return output.EndpointGroup, nil
@@ -142,10 +134,7 @@ func FindListener(conn *globalaccelerator.GlobalAccelerator, input *globalaccele
 	}
 
 	if output == nil || output.Listener == nil {
-		return nil, &resource.NotFoundError{
-			Message:     "Empty result",
-			LastRequest: input,
-		}
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
 	return output.Listener, nil

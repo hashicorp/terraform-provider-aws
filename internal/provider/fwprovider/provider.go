@@ -3,12 +3,17 @@ package fwprovider
 import (
 	"context"
 	"fmt"
+	"reflect"
+	"strings"
 
+	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/provider"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/experimental/intf"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/fwtypes"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/medialive"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -302,46 +307,54 @@ func (p *fwprovider) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnost
 // provider configuration block.
 func (p *fwprovider) Configure(ctx context.Context, request provider.ConfigureRequest, response *provider.ConfigureResponse) {
 	// Provider's parsed configuration (its instance state) is available through the primary provider's Meta() method.
+	v := p.Primary.Meta()
+	response.DataSourceData = v
+	response.ResourceData = v
 }
 
-// GetResources returns a mapping of resource names to type
-// implementations.
-func (p *fwprovider) GetResources(ctx context.Context) (map[string]provider.ResourceType, diag.Diagnostics) {
-	var diags diag.Diagnostics
-	resources := make(map[string]provider.ResourceType)
+// DataSources returns a slice of functions to instantiate each DataSource
+// implementation.
+//
+// The data source type name is determined by the DataSource implementing
+// the Metadata method. All data sources must have unique names.
+func (p *fwprovider) DataSources(ctx context.Context) []func() datasource.DataSource {
+	var dataSources []func() datasource.DataSource
 
-	resources["aws_medialive_multiplex_program"] = medialive.NewResourceMultiplexProgramType(ctx, p.Primary)
+	for serviceID, data := range p.Primary.Meta().(*conns.AWSClient).ServiceMap {
+		for _, v := range data.FrameworkDataSources(ctx) {
+			v, err := v(ctx)
 
-	return resources, diags
-}
+			if err != nil {
+				tflog.Warn(ctx, "creating data source", map[string]interface{}{
+					"service_id": serviceID,
+					"error":      err.Error(),
+				})
 
-// GetDataSources returns a mapping of data source name to types
-// implementations.
-func (p *fwprovider) GetDataSources(ctx context.Context) (map[string]provider.DataSourceType, diag.Diagnostics) {
-	var diags diag.Diagnostics
-	dataSources := make(map[string]provider.DataSourceType)
-
-	// TODO Better error messages.
-	// TODO Wrap the returned type to add standard context, logging etc.
-	providerData := p.Primary.Meta().(intf.ProviderData)
-	for serviceID, data := range providerData.Services(ctx) {
-		dsTypes, err := data.DataSources(ctx)
-
-		if err != nil {
-			diags.AddError(fmt.Sprintf("data sources for service (%s)", serviceID), err.Error())
-			return nil, diags
-		}
-
-		for name, dsType := range dsTypes {
-			if _, ok := dataSources[name]; ok {
-				diags.AddError(fmt.Sprintf("service (%s) data source (%s) already registered", serviceID, name), "")
-			} else {
-				dataSources[name] = dsType
+				continue
 			}
+
+			dataSources = append(dataSources, func() datasource.DataSource {
+				return newWrappedDataSource(v)
+			})
 		}
 	}
 
-	return dataSources, diags
+	return dataSources
+}
+
+// Resources returns a slice of functions to instantiate each Resource
+// implementation.
+//
+// The resource type name is determined by the Resource implementing
+// the Metadata method. All resources must have unique names.
+func (p *fwprovider) Resources(ctx context.Context) []func() resource.Resource {
+	var resources []func() resource.Resource
+
+	resources = append(resources, func() resource.Resource {
+		return medialive.NewResourceMultiplexProgram(ctx)
+	})
+
+	return resources
 }
 
 func endpointsBlock() tfsdk.Block {
@@ -359,4 +372,34 @@ func endpointsBlock() tfsdk.Block {
 		Attributes:  endpointsAttributes,
 		NestingMode: tfsdk.BlockNestingModeSet,
 	}
+}
+
+// wrappedDataSource wraps a data source, adding common functionality.
+type wrappedDataSource struct {
+	inner    datasource.DataSourceWithConfigure
+	typeName string
+}
+
+func newWrappedDataSource(inner datasource.DataSourceWithConfigure) datasource.DataSourceWithConfigure {
+	return &wrappedDataSource{inner: inner, typeName: strings.TrimPrefix(reflect.TypeOf(inner).String(), "*")}
+}
+
+func (w *wrappedDataSource) Metadata(ctx context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) {
+	w.inner.Metadata(ctx, request, response)
+}
+
+func (w *wrappedDataSource) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Diagnostics) {
+	return w.inner.GetSchema(ctx)
+}
+
+func (w *wrappedDataSource) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
+	tflog.Debug(ctx, fmt.Sprintf("%s.Read enter", w.typeName))
+
+	w.inner.Read(ctx, request, response)
+
+	tflog.Debug(ctx, fmt.Sprintf("%s.Read exit", w.typeName))
+}
+
+func (w *wrappedDataSource) Configure(ctx context.Context, request datasource.ConfigureRequest, response *datasource.ConfigureResponse) {
+	w.inner.Configure(ctx, request, response)
 }

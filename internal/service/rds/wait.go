@@ -546,3 +546,21 @@ func waitDBProxyUpdated(conn *rds.RDS, name string, timeout time.Duration) (*rds
 
 	return nil, err
 }
+
+func waitReservedInstanceCreated(ctx context.Context, conn *rds.RDS, id string, timeout time.Duration) error {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{
+			ReservedInstanceStatePaymentPending,
+		},
+		Target:         []string{ReservedInstanceStateActive},
+		Refresh:        statusReservedInstance(ctx, conn, id),
+		NotFoundChecks: 5,
+		Timeout:        timeout,
+		MinTimeout:     10 * time.Second,
+		Delay:          30 * time.Second,
+	}
+
+	_, err := stateConf.WaitForState()
+
+	return err
+}

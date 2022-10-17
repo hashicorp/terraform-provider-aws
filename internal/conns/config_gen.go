@@ -254,7 +254,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/servicediscovery"
 	"github.com/aws/aws-sdk-go/service/servicequotas"
 	"github.com/aws/aws-sdk-go/service/ses"
-	"github.com/aws/aws-sdk-go/service/sesv2"
 	"github.com/aws/aws-sdk-go/service/sfn"
 	"github.com/aws/aws-sdk-go/service/signer"
 	"github.com/aws/aws-sdk-go/service/simpledb"
@@ -530,7 +529,6 @@ func (c *Config) clientConns(client *AWSClient, sess *session.Session) {
 	client.S3ControlConn = s3control.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.S3Control])}))
 	client.S3OutpostsConn = s3outposts.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.S3Outposts])}))
 	client.SESConn = ses.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.SES])}))
-	client.SESV2Conn = sesv2.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.SESV2])}))
 	client.SFNConn = sfn.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.SFN])}))
 	client.SMSConn = sms.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.SMS])}))
 	client.SNSConn = sns.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.SNS])}))
