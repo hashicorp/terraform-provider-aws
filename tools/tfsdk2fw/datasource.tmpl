@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
     "github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	{{if .ImportProviderFrameworkTypes }}"github.com/hashicorp/terraform-provider-aws/internal/fwtypes"{{- end}}
 )
 
 func init() {
@@ -60,10 +61,11 @@ func (d *dataSource{{ .Name }}) Read(ctx context.Context, request datasource.Rea
 	}
 
     // TODO
+	data.ID = types.String{Value: "TODO"}
 
     response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
 type dataSource{{ .Name }}Data struct {
-    // TODO
+    {{ .Struct }}
 }

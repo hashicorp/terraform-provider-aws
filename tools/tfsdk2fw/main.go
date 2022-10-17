@@ -16,6 +16,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
+	"github.com/hashicorp/terraform-provider-aws/tools/tfsdk2fw/naming"
 	"github.com/mitchellh/cli"
 )
 
@@ -176,12 +177,13 @@ func (m *migrator) generateTemplateData() (*templateData, error) {
 	}
 
 	templateData := &templateData{
-		ImportFrameworkAttr: emitter.ImportFrameworkAttr,
-		Name:                m.Name,
-		PackageName:         m.PackageName,
-		Schema:              sbSchema.String(),
-		Struct:              sbStruct.String(),
-		TFTypeName:          m.TFTypeName,
+		ImportFrameworkAttr:          emitter.ImportFrameworkAttr,
+		ImportProviderFrameworkTypes: emitter.ImportProviderFrameworkTypes,
+		Name:                         m.Name,
+		PackageName:                  m.PackageName,
+		Schema:                       sbSchema.String(),
+		Struct:                       sbStruct.String(),
+		TFTypeName:                   m.TFTypeName,
 	}
 
 	return templateData, nil
@@ -192,10 +194,11 @@ func (m *migrator) infof(format string, a ...interface{}) {
 }
 
 type emitter struct {
-	Ui                  cli.Ui
-	SchemaWriter        io.Writer
-	StructWriter        io.Writer
-	ImportFrameworkAttr bool
+	Ui                           cli.Ui
+	SchemaWriter                 io.Writer
+	StructWriter                 io.Writer
+	ImportFrameworkAttr          bool
+	ImportProviderFrameworkTypes bool
 }
 
 // emitSchemaForResource generates the Plugin Framework code for a Plugin SDK Resource and emits the generated code to the emitter's Writer.
@@ -239,6 +242,8 @@ func (e *emitter) emitSchemaForResource(resource *schema.Resource) error {
 // and emits the generated code to the emitter's Writer.
 // Property names are sorted prior to code generation to reduce diffs.
 func (e *emitter) emitAttributesAndBlocks(path []string, schema map[string]*schema.Schema) error {
+	topLevelAttribute := len(path) == 0
+
 	// At this point we are emitting code for a tfsdk.Block or Schema.
 	names := make([]string, 0)
 	for name := range schema {
@@ -261,10 +266,18 @@ func (e *emitter) emitAttributesAndBlocks(path []string, schema map[string]*sche
 
 		fprintf(e.SchemaWriter, "%q:", name)
 
+		if topLevelAttribute {
+			fprintf(e.StructWriter, "%s ", naming.ToCamelCase(name))
+		}
+
 		err := e.emitAttributeProperty(append(path, name), property)
 
 		if err != nil {
 			return err
+		}
+
+		if topLevelAttribute {
+			fprintf(e.StructWriter, " `tfsdk:%q`\n", name)
 		}
 
 		fprintf(e.SchemaWriter, ",\n")
@@ -306,6 +319,8 @@ func (e *emitter) emitAttributesAndBlocks(path []string, schema map[string]*sche
 // emitAttributeProperty generates the Plugin Framework code for a Plugin SDK Attribute's property
 // and emits the generated code to the emitter's Writer.
 func (e *emitter) emitAttributeProperty(path []string, property *schema.Schema) error {
+	topLevelAttribute := len(path) == 1
+
 	// At this point we are emitting code for the values of a tfsdk.Schema's Attributes (map[string]tfsdk.Attribute).
 	fprintf(e.SchemaWriter, "{\n")
 
@@ -316,14 +331,40 @@ func (e *emitter) emitAttributeProperty(path []string, property *schema.Schema) 
 	case schema.TypeBool:
 		fprintf(e.SchemaWriter, "Type:types.BoolType,\n")
 
+		if topLevelAttribute {
+			fprintf(e.StructWriter, "types.Bool")
+		}
+
 	case schema.TypeFloat:
 		fprintf(e.SchemaWriter, "Type:types.Float64Type,\n")
+
+		if topLevelAttribute {
+			fprintf(e.StructWriter, "types.Float64")
+		}
 
 	case schema.TypeInt:
 		fprintf(e.SchemaWriter, "Type:types.Int64Type,\n")
 
+		if topLevelAttribute {
+			fprintf(e.StructWriter, "types.Int64")
+		}
+
 	case schema.TypeString:
-		fprintf(e.SchemaWriter, "Type:types.StringType,\n")
+		if path[len(path)-1] == "arn" {
+			e.ImportProviderFrameworkTypes = true
+
+			fprintf(e.SchemaWriter, "Type:fwtypes.ARNType,\n")
+
+			if topLevelAttribute {
+				fprintf(e.StructWriter, "fwtypes.ARN")
+			}
+		} else {
+			fprintf(e.SchemaWriter, "Type:types.StringType,\n")
+
+			if topLevelAttribute {
+				fprintf(e.StructWriter, "types.String")
+			}
+		}
 
 	//
 	// Complex types.
@@ -335,12 +376,21 @@ func (e *emitter) emitAttributeProperty(path []string, property *schema.Schema) 
 		case schema.TypeList:
 			aggregateType = "types.ListType"
 			typeName = "list"
+			if topLevelAttribute {
+				fprintf(e.StructWriter, "types.List")
+			}
 		case schema.TypeMap:
 			aggregateType = "types.MapType"
 			typeName = "map"
+			if topLevelAttribute {
+				fprintf(e.StructWriter, "types.Map")
+			}
 		case schema.TypeSet:
 			aggregateType = "types.SetType"
 			typeName = "set"
+			if topLevelAttribute {
+				fprintf(e.StructWriter, "types.Set")
+			}
 		}
 
 		switch v := property.Elem.(type) {
@@ -690,12 +740,13 @@ func unsupportedTypeError(path []string, typ string) error {
 }
 
 type templateData struct {
-	ImportFrameworkAttr bool
-	Name                string // e.g. Instance
-	PackageName         string // e.g. ec2
-	Schema              string
-	Struct              string
-	TFTypeName          string // e.g. aws_instance
+	ImportFrameworkAttr          bool
+	ImportProviderFrameworkTypes bool
+	Name                         string // e.g. Instance
+	PackageName                  string // e.g. ec2
+	Schema                       string
+	Struct                       string
+	TFTypeName                   string // e.g. aws_instance
 }
 
 //go:embed datasource.tmpl
