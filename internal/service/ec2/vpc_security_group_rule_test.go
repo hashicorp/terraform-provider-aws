@@ -302,46 +302,6 @@ func TestAccVPCSecurityGroupRule_Ingress_ipv6(t *testing.T) {
 	})
 }
 
-func TestAccVPCSecurityGroupRule_Ingress_classic(t *testing.T) {
-	var group ec2.SecurityGroup
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_security_group_rule.test"
-	sgResourceName := "aws_security_group.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckEC2Classic(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSecurityGroupDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccVPCSecurityGroupRuleConfig_ingressClassic(rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSecurityGroupEC2ClassicExists(sgResourceName, &group),
-					resource.TestCheckResourceAttr(resourceName, "cidr_blocks.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "cidr_blocks.0", "10.0.0.0/8"),
-					resource.TestCheckNoResourceAttr(resourceName, "description"),
-					resource.TestCheckResourceAttr(resourceName, "from_port", "80"),
-					resource.TestCheckResourceAttr(resourceName, "ipv6_cidr_blocks.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "protocol", "tcp"),
-					resource.TestCheckResourceAttr(resourceName, "prefix_list_ids.#", "0"),
-					resource.TestCheckResourceAttrPair(resourceName, "security_group_id", sgResourceName, "id"),
-					resource.TestCheckResourceAttr(resourceName, "self", "false"),
-					resource.TestCheckNoResourceAttr(resourceName, "source_security_group_id"),
-					resource.TestCheckResourceAttr(resourceName, "to_port", "8000"),
-					resource.TestCheckResourceAttr(resourceName, "type", "ingress"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateIdFunc: testAccSecurityGroupRuleImportStateIdFunc(resourceName),
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
 func TestAccVPCSecurityGroupRule_egress(t *testing.T) {
 	var group ec2.SecurityGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1478,6 +1438,59 @@ func TestAccVPCSecurityGroupRule_Ingress_prefixListAndSource(t *testing.T) {
 	})
 }
 
+func TestAccVPCSecurityGroupRule_protocolChange(t *testing.T) {
+	var group ec2.SecurityGroup
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_security_group_rule.test"
+	resourceName2 := "aws_security_group_rule.test2"
+	sgName := "aws_security_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckManagedPrefixList(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSecurityGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCSecurityGroupRuleConfig_protocolChange(rName, "tcp"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckSecurityGroupExists(sgName, &group),
+					resource.TestCheckResourceAttr(resourceName, "cidr_blocks.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "protocol", "tcp"),
+					resource.TestCheckResourceAttr(resourceName, "type", "ingress"),
+					resource.TestCheckResourceAttr(resourceName2, "cidr_blocks.#", "1"),
+					resource.TestCheckResourceAttr(resourceName2, "protocol", "tcp"),
+					resource.TestCheckResourceAttr(resourceName2, "type", "ingress"),
+				),
+			},
+			{
+				Config: testAccVPCSecurityGroupRuleConfig_protocolChange(rName, "udp"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckSecurityGroupExists(sgName, &group),
+					resource.TestCheckResourceAttr(resourceName, "cidr_blocks.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "protocol", "udp"),
+					resource.TestCheckResourceAttr(resourceName, "type", "ingress"),
+					resource.TestCheckResourceAttr(resourceName2, "cidr_blocks.#", "1"),
+					resource.TestCheckResourceAttr(resourceName2, "protocol", "udp"),
+					resource.TestCheckResourceAttr(resourceName2, "type", "ingress"),
+				),
+			},
+			{
+				Config: testAccVPCSecurityGroupRuleConfig_protocolChange(rName, "tcp"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckSecurityGroupExists(sgName, &group),
+					resource.TestCheckResourceAttr(resourceName, "cidr_blocks.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "protocol", "tcp"),
+					resource.TestCheckResourceAttr(resourceName, "type", "ingress"),
+					resource.TestCheckResourceAttr(resourceName2, "cidr_blocks.#", "1"),
+					resource.TestCheckResourceAttr(resourceName2, "protocol", "tcp"),
+					resource.TestCheckResourceAttr(resourceName2, "type", "ingress"),
+				),
+			},
+		},
+	})
+}
+
 func testAccSecurityGroupRuleImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
 	return func(s *terraform.State) (string, error) {
 		rs, ok := s.RootModule().Resources[resourceName]
@@ -1675,28 +1688,6 @@ resource "aws_security_group_rule" "test" {
   self              = true
 }
 `, rName)
-}
-
-func testAccVPCSecurityGroupRuleConfig_ingressClassic(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigEC2ClassicRegionProvider(), fmt.Sprintf(`
-resource "aws_security_group" "test" {
-  name = %[1]q
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_security_group_rule" "test" {
-  type        = "ingress"
-  protocol    = "tcp"
-  from_port   = 80
-  to_port     = 8000
-  cidr_blocks = ["10.0.0.0/8"]
-
-  security_group_id = aws_security_group.test.id
-}
-`, rName))
 }
 
 func testAccVPCSecurityGroupRuleConfig_egress(rName string) string {
@@ -2629,4 +2620,43 @@ resource "aws_security_group_rule" "test" {
   security_group_id = aws_security_group.test[0].id
 }
 `, rName)
+}
+
+func testAccVPCSecurityGroupRuleConfig_protocolChange(rName, protocol string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_security_group" "test" {
+  vpc_id = aws_vpc.test.id
+  name   = %[1]q
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_security_group_rule" "test" {
+  type              = "ingress"
+  from_port         = 9443
+  to_port           = 9443
+  protocol          = %[2]q
+  cidr_blocks       = [aws_vpc.test.cidr_block]
+  security_group_id = aws_security_group.test.id
+}
+
+resource "aws_security_group_rule" "test2" {
+  type              = "ingress"
+  from_port         = 8989
+  to_port           = 8989
+  protocol          = %[2]q
+  cidr_blocks       = [aws_vpc.test.cidr_block]
+  security_group_id = aws_security_group.test.id
+}
+`, rName, protocol)
 }

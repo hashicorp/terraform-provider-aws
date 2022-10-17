@@ -18,7 +18,7 @@ func TestAccIPAMPool_basic(t *testing.T) {
 	resourceName := "aws_vpc_ipam_pool.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccIPAMPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckIPAMPoolDestroy,
@@ -60,7 +60,7 @@ func TestAccIPAMPool_tags(t *testing.T) {
 	resourceName := "aws_vpc_ipam_pool.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccIPAMPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckIPAMPoolDestroy,
@@ -101,7 +101,7 @@ func TestAccIPAMPool_ipv6Basic(t *testing.T) {
 	resourceName := "aws_vpc_ipam_pool.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccIPAMPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckIPAMPoolDestroy,

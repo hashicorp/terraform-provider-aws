@@ -73,7 +73,6 @@ by removing the corresponding `aws_dx_hosted_public_virtual_interface` resource 
 Removing a `aws_dx_hosted_public_virtual_interface_accepter` resource from your configuration will remove it
 from your statefile and management, **but will not delete the Direct Connect virtual interface.**
 
-
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:

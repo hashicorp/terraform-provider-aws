@@ -1,6 +1,7 @@
 package opsworks_test
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/service/opsworks"
@@ -25,7 +26,7 @@ func testAccCheckLayerExists(n string, v *opsworks.Layer) resource.TestCheckFunc
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksConn
 
-		output, err := tfopsworks.FindLayerByID(conn, rs.Primary.ID)
+		output, err := tfopsworks.FindLayerByID(context.Background(), conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -45,7 +46,7 @@ func testAccCheckLayerDestroy(resourceType string, s *terraform.State) error {
 			continue
 		}
 
-		_, err := tfopsworks.FindLayerByID(conn, rs.Primary.ID)
+		_, err := tfopsworks.FindLayerByID(context.Background(), conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue

@@ -64,6 +64,7 @@ Environment variables (beyond standard AWS Go SDK ones) used by acceptance testi
 | `EVENT_BRIDGE_PARTNER_EVENT_SOURCE_NAME` | Amazon EventBridge partner event source name. |
 | `GCM_API_KEY` | API Key for Google Cloud Messaging in Pinpoint and SNS Platform Application testing. |
 | `GITHUB_TOKEN` | GitHub token for CodePipeline testing. |
+| `GLOBALACCERATOR_BYOIP_IPV4_ADDRESS` | IPv4 address from a BYOIP CIDR of AWS Account used for testing Global Accelerator's BYOIP accelerator. |
 | `GRAFANA_SSO_GROUP_ID` | AWS SSO group ID for Grafana testing. |
 | `GRAFANA_SSO_USER_ID` | AWS SSO user ID for Grafana testing. |
 | `MACIE_MEMBER_ACCOUNT_ID` | Identifier of AWS Account for Macie Member testing. **DEPRECATED:** Should be replaced with standard alternate account handling for tests. |

@@ -93,7 +93,7 @@ resource "aws_ec2_fleet" "example" {
 
 This configuration block supports the following:
 
-~> **NOTE**: Both `memory_mib.min` and `vcpu_count.min` must be specified.
+~> **NOTE:** Both `memory_mib.min` and `vcpu_count.min` must be specified.
 
 * `accelerator_count` - (Optional) Block describing the minimum and maximum number of accelerators (GPUs, FPGAs, or AWS Inferentia chips). Default is no minimum or maximum.
     * `min` - (Optional) Minimum.
@@ -140,7 +140,7 @@ This configuration block supports the following:
 * `burstable_performance` - (Optional) Indicate whether burstable performance instance types should be `included`, `excluded`, or `required`. Default is `excluded`.
 * `cpu_manufacturers` (Optional) List of CPU manufacturer names. Default is any manufacturer.
 
-    ~> **NOTE**: Don't confuse the CPU hardware manufacturer with the CPU hardware architecture. Instances will be launched with a compatible CPU architecture based on the Amazon Machine Image (AMI) that you specify in your launch template.
+    ~> **NOTE:** Don't confuse the CPU hardware manufacturer with the CPU hardware architecture. Instances will be launched with a compatible CPU architecture based on the Amazon Machine Image (AMI) that you specify in your launch template.
 
     ```
     Valid names:
@@ -201,7 +201,6 @@ This configuration block supports the following:
 * `instance_pools_to_use_count` - (Optional) Number of Spot pools across which to allocate your target Spot capacity. Valid only when Spot `allocation_strategy` is set to `lowestPrice`. Default: `1`.
 * `maintenance_strategies` - (Optional) Nested argument containing maintenance strategies for managing your Spot Instances that are at an elevated risk of being interrupted. Defined below.
 
-
 ### maintenance_strategies
 
 * `capacity_rebalance` - (Optional) Nested argument containing the capacity rebalance for your fleet request. Defined below.
@@ -210,14 +209,13 @@ This configuration block supports the following:
 
 * `replacement_strategy` - (Optional) The replacement strategy to use. Only available for fleets of `type` set to `maintain`. Valid values: `launch`.
 
-
-
 ### target_capacity_specification
 
 * `default_target_capacity_type` - (Required) Default target capacity type. Valid values: `on-demand`, `spot`.
 * `total_target_capacity` - (Required) The number of units to request, filled using `default_target_capacity_type`.
 * `on_demand_target_capacity` - (Optional) The number of On-Demand units to request.
 * `spot_target_capacity` - (Optional) The number of Spot units to request.
+* `target_capacity_unit_type` - (Optional) The unit for the target capacity. This can only be done with `instance_requirements` defined
 
 ## Attributes Reference
 

@@ -34,16 +34,23 @@ func ResourcePolicy() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"alarm_arns": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 				// https://github.com/boto/botocore/blob/9f322b1/botocore/data/autoscaling/2011-01-01/service-2.json#L1862-L1873
 				ValidateFunc: validation.StringLenBetween(0, 255),
-			},
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
 			},
 			"policy_type": {
 				Type:     schema.TypeString,
@@ -148,15 +155,9 @@ func ResourcePolicy() *schema.Resource {
 										Required: true,
 									},
 									"statistic": {
-										Type:     schema.TypeString,
-										Required: true,
-										ValidateFunc: validation.StringInSlice([]string{
-											applicationautoscaling.MetricStatisticAverage,
-											applicationautoscaling.MetricStatisticMinimum,
-											applicationautoscaling.MetricStatisticMaximum,
-											applicationautoscaling.MetricStatisticSampleCount,
-											applicationautoscaling.MetricStatisticSum,
-										}, false),
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.StringInSlice(applicationautoscaling.MetricStatistic_Values(), false),
 									},
 									"unit": {
 										Type:     schema.TypeString,
@@ -164,6 +165,11 @@ func ResourcePolicy() *schema.Resource {
 									},
 								},
 							},
+						},
+						"disable_scale_in": {
+							Type:     schema.TypeBool,
+							Default:  false,
+							Optional: true,
 						},
 						"predefined_metric_specification": {
 							Type:          schema.TypeList,
@@ -183,11 +189,6 @@ func ResourcePolicy() *schema.Resource {
 									},
 								},
 							},
-						},
-						"disable_scale_in": {
-							Type:     schema.TypeBool,
-							Default:  false,
-							Optional: true,
 						},
 						"scale_in_cooldown": {
 							Type:     schema.TypeInt,
@@ -284,6 +285,11 @@ func resourcePolicyRead(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[DEBUG] Read ApplicationAutoScaling policy: %s, SP: %s, Obj: %s", d.Get("name"), d.Get("name"), p)
 
+	var alarmARNs = make([]string, 0, len(p.Alarms))
+	for _, alarm := range p.Alarms {
+		alarmARNs = append(alarmARNs, aws.StringValue(alarm.AlarmARN))
+	}
+	d.Set("alarm_arns", alarmARNs)
 	d.Set("arn", p.PolicyARN)
 	d.Set("name", p.PolicyName)
 	d.Set("policy_type", p.PolicyType)

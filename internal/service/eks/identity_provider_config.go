@@ -8,7 +8,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/eks"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -92,7 +91,7 @@ func ResourceIdentityProviderConfig() *schema.Resource {
 							Type:     schema.TypeMap,
 							Optional: true,
 							ForceNew: true,
-							ValidateDiagFunc: allDiagFunc(
+							ValidateDiagFunc: verify.ValidAllDiag(
 								validation.MapKeyLenBetween(1, 63),
 								validation.MapValueLenBetween(1, 253),
 							),
@@ -122,17 +121,6 @@ func ResourceIdentityProviderConfig() *schema.Resource {
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
 		},
-	}
-}
-
-// https://github.com/hashicorp/terraform-plugin-sdk/issues/780.
-func allDiagFunc(validators ...schema.SchemaValidateDiagFunc) schema.SchemaValidateDiagFunc {
-	return func(i interface{}, k cty.Path) diag.Diagnostics {
-		var diags diag.Diagnostics
-		for _, validator := range validators {
-			diags = append(diags, validator(i, k)...)
-		}
-		return diags
 	}
 }
 

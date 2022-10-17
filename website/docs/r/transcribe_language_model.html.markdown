@@ -95,7 +95,6 @@ The following arguments are required:
 * `s3_uri` - (Required) S3 URI where training data is located.
 * `tuning_data_s3_uri` - (Optional) S3 URI where tuning data is located.
 
-
 The following arguments are optional:
 
 * `tags` - (Optional) A map of tags to assign to the LanguageModel. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.

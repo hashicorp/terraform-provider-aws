@@ -33,28 +33,36 @@ func DataSourcePolicyDocument() *schema.Resource {
 				Computed: true,
 			},
 			"override_json": {
-				Type:       schema.TypeString,
-				Optional:   true,
-				Deprecated: "Use the attribute \"override_policy_documents\" instead.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringIsJSON,
+				Deprecated:   "Use the attribute \"override_policy_documents\" instead.",
 			},
 			"override_policy_documents": {
 				Type:     schema.TypeList,
 				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: validation.StringIsJSON,
+				},
 			},
 			"policy_id": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
 			"source_json": {
-				Type:       schema.TypeString,
-				Optional:   true,
-				Deprecated: "Use the attribute \"source_policy_documents\" instead.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringIsJSON,
+				Deprecated:   "Use the attribute \"source_policy_documents\" instead.",
 			},
 			"source_policy_documents": {
 				Type:     schema.TypeList,
 				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: validation.StringIsJSON,
+				},
 			},
 			"statement": {
 				Type:     schema.TypeList,
@@ -136,6 +144,10 @@ func dataSourcePolicyDocumentRead(d *schema.ResourceData, meta interface{}) erro
 
 		// merge sourceDocs in order specified
 		for sourceJSONIndex, sourceJSON := range v.([]interface{}) {
+			if sourceJSON == nil {
+				continue
+			}
+
 			sourceDoc := &IAMPolicyDoc{}
 			if err := json.Unmarshal([]byte(sourceJSON.(string)), sourceDoc); err != nil {
 				return err
@@ -249,6 +261,9 @@ func dataSourcePolicyDocumentRead(d *schema.ResourceData, meta interface{}) erro
 	// merge override_policy_documents policies into mergedDoc in order specified
 	if v, ok := d.GetOk("override_policy_documents"); ok && len(v.([]interface{})) > 0 {
 		for _, overrideJSON := range v.([]interface{}) {
+			if overrideJSON == nil {
+				continue
+			}
 			overrideDoc := &IAMPolicyDoc{}
 			if err := json.Unmarshal([]byte(overrideJSON.(string)), overrideDoc); err != nil {
 				return err

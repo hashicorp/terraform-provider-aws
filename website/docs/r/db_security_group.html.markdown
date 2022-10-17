@@ -13,6 +13,8 @@ EC2-Classic Platform. For instances inside a VPC, use the
 [`aws_db_instance.vpc_security_group_ids`](/docs/providers/aws/r/db_instance.html#vpc_security_group_ids)
 attribute instead.
 
+!> **WARNING:** With the retirement of EC2-Classic the `aws_db_security_group` resource has been deprecated and will be removed in a future version. Any existing resources can be removed from [Terraform state](https://www.terraform.io/language/state) using the [`terraform state rm`](https://www.terraform.io/cli/commands/state/rm#command-state-rm) command.
+
 ## Example Usage
 
 ```terraform

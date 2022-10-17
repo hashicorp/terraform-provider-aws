@@ -10,7 +10,6 @@ description: |-
 
 Generates an Route53 traffic policy document in JSON format for use with resources that expect policy documents such as [`aws_route53_traffic_policy`](/docs/providers/aws/r/route53_traffic_policy.html).
 
-
 ## Example Usage
 
 ### Basic Example
@@ -65,14 +64,12 @@ The following arguments are optional:
 * `start_rule` (Optional) - A rule to be as the starting point for the traffic policy.
 * `version` (Optional) - Version of the traffic policy format.
 
-
 ### `endpoint`
 
 * `id` - (Required) ID of an endpoint you want to assign.
 * `type` - (Optional) Type of the endpoint. Valid values are `value` , `cloudfront` , `elastic-load-balancer`, `s3-website`
 * `region` - (Optional) To route traffic to an Amazon S3 bucket that is configured as a website endpoint, specify the region in which you created the bucket for `region`.
 * `value` - (Optional) Value of the `type`.
-
 
 ### `rule`
 
@@ -126,7 +123,6 @@ The following arguments are optional:
 
 * `endpoint_reference` - (Optional) References to an endpoint.
 * `health_check` - (Optional) If you want to associate a health check with the endpoint or rule.
-
 
 ## Attributes Reference
 

@@ -9,7 +9,6 @@ issues:
 linters:
   disable-all: true
   enable:
-    - deadcode
     - errcheck
     - exportloopref
     - gofmt
@@ -22,11 +21,10 @@ linters:
     - nilerr
     - nolintlint
     - staticcheck
-    - structcheck
     - stylecheck
     - unconvert
     - unparam
-    - varcheck
+    - unused
     - vet
 
 linters-settings:
@@ -56,7 +54,7 @@ linters-settings:
           - strconv.ParseInt
           - strings.SplitN
   nolintlint:
-    allow-unused: true # Because of the disabled rules with Go 1.18
+    allow-unused: false
     allow-leading-space: false
     require-explanation: true
     require-specific: true

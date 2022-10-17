@@ -107,7 +107,6 @@ data "aws_iam_policy_document" "inline_policy" {
 
 This example creates an IAM role with what appears to be empty IAM `inline_policy` argument instead of using `inline_policy` as a configuration block. The result is that if someone were to add an inline policy out-of-band, on the next apply, Terraform will remove that policy.
 
-
 ```terraform
 resource "aws_iam_role" "example" {
   name               = "yak_role"

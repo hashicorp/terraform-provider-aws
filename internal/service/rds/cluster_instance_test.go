@@ -45,6 +45,7 @@ func TestAccRDSClusterInstance_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "dbi_resource_id"),
 					resource.TestCheckResourceAttr(resourceName, "engine", "aurora"),
 					resource.TestCheckResourceAttrSet(resourceName, "engine_version"),
+					resource.TestCheckResourceAttr(resourceName, "network_type", "IPV4"),
 					resource.TestCheckResourceAttrSet(resourceName, "preferred_backup_window"),
 					resource.TestCheckResourceAttrSet(resourceName, "preferred_maintenance_window"),
 				),

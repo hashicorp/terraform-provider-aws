@@ -36,7 +36,7 @@ The caps enforced are as follows:
 | Appconfig | AppConfig | caps0 |
 | Appmesh | AppMesh | caps0 |
 | Appsync | AppSync | caps0 |
-| Arn | ARN | caps2 |
+| Arn | ARN | caps1 |
 | Asg | ASG | caps2 |
 | Asn | ASN | caps2 |
 | Autoscaling | AutoScaling | caps0 |
@@ -91,7 +91,7 @@ The caps enforced are as follows:
 | Haproxy | HAProxy | caps0 |
 | Hsm | HSM | caps2 |
 | Http | HTTP | caps1 |
-| Https | HTTPS | caps1 |
+| Https | HTTPS | caps0 |
 | Hvm | HVM | caps2 |
 | Iam | IAM | caps2 |
 | Iot | IoT | caps2 |
@@ -101,7 +101,7 @@ The caps enforced are as follows:
 | Iscsi | iSCSI | caps1 |
 | Jdbc | JDBC | caps1 |
 | Json | JSON | caps1 |
-| Kms | KMS | caps3 |
+| Kms | KMS | caps2 |
 | Mfa | MFA | caps3 |
 | Msk | MSK | caps3 |
 | Mwaa | MWAA | caps1 |
@@ -144,7 +144,6 @@ The caps enforced are as follows:
 | Vpn | VPN | caps3 |
 | Waf | WAF | caps3 |
 | Wafv2 | WAFV2 | caps1 |
-| Workgroup | WorkGroup | caps0 |
 | Worklink | WorkLink | caps0 |
 | Workspaces | WorkSpaces | caps0 |
 | Xray | XRay | caps1 |

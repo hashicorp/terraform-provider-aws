@@ -39,5 +39,5 @@ func ResourceJavaAppLayer() *schema.Resource {
 		},
 	}
 
-	return layerType.SchemaResource()
+	return layerType.resourceSchema()
 }

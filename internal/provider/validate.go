@@ -29,3 +29,8 @@ var validAssumeRoleSessionName = validation.All(
 	validation.StringLenBetween(2, 64),
 	validation.StringMatch(regexp.MustCompile(`[\w+=,.@\-]*`), ""),
 )
+
+var validAssumeRoleSourceIdentity = validation.All(
+	validation.StringLenBetween(2, 64),
+	validation.StringMatch(regexp.MustCompile(`[\w+=,.@\-]*`), ""),
+)

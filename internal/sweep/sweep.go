@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/envvar"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -45,13 +46,13 @@ func SharedRegionalSweepClientWithContext(ctx context.Context, region string) (i
 		return client, nil
 	}
 
-	_, _, err := conns.RequireOneOfEnvVar([]string{conns.EnvVarProfile, conns.EnvVarAccessKeyId, conns.EnvVarContainerCredentialsFullURI}, "credentials for running sweepers")
+	_, _, err := envvar.RequireOneOf([]string{envvar.Profile, envvar.AccessKeyId, envvar.ContainerCredentialsFullURI}, "credentials for running sweepers")
 	if err != nil {
 		return nil, err
 	}
 
-	if os.Getenv(conns.EnvVarAccessKeyId) != "" {
-		_, err := conns.RequireEnvVar(conns.EnvVarSecretAccessKey, "static credentials value when using "+conns.EnvVarAccessKeyId)
+	if os.Getenv(envvar.AccessKeyId) != "" {
+		_, err := envvar.Require(envvar.SecretAccessKey, "static credentials value when using "+envvar.AccessKeyId)
 		if err != nil {
 			return nil, err
 		}
@@ -63,36 +64,41 @@ func SharedRegionalSweepClientWithContext(ctx context.Context, region string) (i
 		SuppressDebugLog: true,
 	}
 
-	if role := os.Getenv(conns.EnvVarAssumeRoleARN); role != "" {
+	if role := os.Getenv(envvar.AssumeRoleARN); role != "" {
 		conf.AssumeRole.RoleARN = role
 
 		conf.AssumeRole.Duration = time.Duration(defaultSweeperAssumeRoleDurationSeconds) * time.Second
-		if v := os.Getenv(conns.EnvVarAssumeRoleDuration); v != "" {
+		if v := os.Getenv(envvar.AssumeRoleDuration); v != "" {
 			d, err := strconv.Atoi(v)
 			if err != nil {
-				return nil, fmt.Errorf("environment variable %s: %w", conns.EnvVarAssumeRoleDuration, err)
+				return nil, fmt.Errorf("environment variable %s: %w", envvar.AssumeRoleDuration, err)
 			}
 			conf.AssumeRole.Duration = time.Duration(d) * time.Second
 		}
 
-		if v := os.Getenv(conns.EnvVarAssumeRoleExternalID); v != "" {
+		if v := os.Getenv(envvar.AssumeRoleExternalID); v != "" {
 			conf.AssumeRole.ExternalID = v
 		}
 
-		if v := os.Getenv(conns.EnvVarAssumeRoleSessionName); v != "" {
+		if v := os.Getenv(envvar.AssumeRoleSessionName); v != "" {
 			conf.AssumeRole.SessionName = v
 		}
 	}
 
 	// configures a default client for the region, using the above env vars
-	client, diags := conf.Client(ctx)
+	client, diags := conf.ConfigureProvider(ctx, &conns.AWSClient{})
+
 	if diags.HasError() {
-		return nil, fmt.Errorf("error getting AWS client: %#v", diags)
+		return nil, fmt.Errorf("getting AWS client: %#v", diags)
 	}
 
 	SweeperClients[region] = client
 
 	return client, nil
+}
+
+type Sweepable interface {
+	Delete(ctx context.Context, rc RetryConfig) error
 }
 
 type SweepResource struct {
@@ -109,37 +115,56 @@ func NewSweepResource(resource *schema.Resource, d *schema.ResourceData, meta in
 	}
 }
 
-func SweepOrchestrator(sweepResources []*SweepResource) error {
-	return SweepOrchestratorWithContext(context.Background(), sweepResources, 0*time.Millisecond, 0*time.Millisecond, 0*time.Millisecond, 0*time.Millisecond, SweepThrottlingRetryTimeout)
+type RetryConfig struct {
+	Delay        time.Duration
+	DelayRand    time.Duration
+	MinTimeout   time.Duration
+	PollInterval time.Duration
+	Timeout      time.Duration
 }
 
-func SweepOrchestratorWithContext(ctx context.Context, sweepResources []*SweepResource, delay time.Duration, delayRand time.Duration, minTimeout time.Duration, pollInterval time.Duration, timeout time.Duration) error {
-	var g multierror.Group
+func (sr *SweepResource) Delete(ctx context.Context, rc RetryConfig) error {
+	err := tfresource.RetryConfigContext(ctx, rc.Delay, rc.DelayRand, rc.MinTimeout, rc.PollInterval, rc.Timeout, func() *resource.RetryError {
+		err := DeleteResource(sr.resource, sr.d, sr.meta)
 
-	for _, sweepResource := range sweepResources {
-		sweepResource := sweepResource
-
-		g.Go(func() error {
-			err := tfresource.RetryConfigContext(ctx, delay, delayRand, minTimeout, pollInterval, timeout, func() *resource.RetryError {
-				err := DeleteResource(sweepResource.resource, sweepResource.d, sweepResource.meta)
-
-				if err != nil {
-					if strings.Contains(err.Error(), "Throttling") {
-						log.Printf("[INFO] While sweeping resource (%s), encountered throttling error (%s). Retrying...", sweepResource.d.Id(), err)
-						return resource.RetryableError(err)
-					}
-
-					return resource.NonRetryableError(err)
-				}
-
-				return nil
-			})
-
-			if tfresource.TimedOut(err) {
-				err = DeleteResource(sweepResource.resource, sweepResource.d, sweepResource.meta)
+		if err != nil {
+			if strings.Contains(err.Error(), "Throttling") {
+				log.Printf("[INFO] While sweeping resource (%s), encountered throttling error (%s). Retrying...", sr.d.Id(), err)
+				return resource.RetryableError(err)
 			}
 
-			return err
+			return resource.NonRetryableError(err)
+		}
+
+		return nil
+	})
+
+	if tfresource.TimedOut(err) {
+		err = DeleteResource(sr.resource, sr.d, sr.meta)
+	}
+
+	return err
+
+}
+
+func SweepOrchestrator(sweepables []Sweepable) error {
+	return SweepOrchestratorWithContext(context.Background(), sweepables, 0*time.Millisecond, 0*time.Millisecond, 0*time.Millisecond, 0*time.Millisecond, SweepThrottlingRetryTimeout)
+}
+
+func SweepOrchestratorWithContext(ctx context.Context, sweepables []Sweepable, delay time.Duration, delayRand time.Duration, minTimeout time.Duration, pollInterval time.Duration, timeout time.Duration) error {
+	var g multierror.Group
+
+	for _, sweepable := range sweepables {
+		sweepable := sweepable
+
+		g.Go(func() error {
+			return sweepable.Delete(ctx, RetryConfig{
+				Delay:        delay,
+				DelayRand:    delayRand,
+				MinTimeout:   minTimeout,
+				PollInterval: pollInterval,
+				Timeout:      timeout,
+			})
 		})
 	}
 
@@ -224,7 +249,7 @@ func DeleteResource(resource *schema.Resource, d *schema.ResourceData, meta inte
 
 		for i := range diags {
 			if diags[i].Severity == diag.Error {
-				return fmt.Errorf("error deleting resource: %s", diags[i].Summary)
+				return fmt.Errorf("deleting resource: %s", diags[i].Summary)
 			}
 		}
 

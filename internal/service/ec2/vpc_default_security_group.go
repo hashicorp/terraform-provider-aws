@@ -117,7 +117,7 @@ func resourceDefaultSecurityGroupCreate(d *schema.ResourceData, meta interface{}
 		}
 	}
 
-	if err := forceRevokeSecurityGroupRules(conn, d.Id()); err != nil {
+	if err := forceRevokeSecurityGroupRules(conn, d.Id(), false); err != nil {
 		return err
 	}
 

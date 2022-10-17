@@ -8,9 +8,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/feature/ec2/imds"
 	"github.com/aws/aws-sdk-go-v2/service/comprehend"
 	"github.com/aws/aws-sdk-go-v2/service/fis"
+	"github.com/aws/aws-sdk-go-v2/service/identitystore"
+	"github.com/aws/aws-sdk-go-v2/service/inspector2"
 	"github.com/aws/aws-sdk-go-v2/service/kendra"
+	"github.com/aws/aws-sdk-go-v2/service/medialive"
 	"github.com/aws/aws-sdk-go-v2/service/rolesanywhere"
 	"github.com/aws/aws-sdk-go-v2/service/route53domains"
+	"github.com/aws/aws-sdk-go-v2/service/sesv2"
 	"github.com/aws/aws-sdk-go-v2/service/transcribe"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
@@ -82,8 +86,8 @@ type Config struct {
 	UseFIPSEndpoint                bool
 }
 
-// Client configures and returns a fully initialized AWSClient
-func (c *Config) Client(ctx context.Context) (interface{}, diag.Diagnostics) {
+// ConfigureProvider configures the provided provider Meta (instance data).
+func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWSClient, diag.Diagnostics) {
 	awsbaseConfig := awsbase.Config{
 		AccessKey:                     c.AccessKey,
 		APNInfo:                       StdUserAgentProducts(c.TerraformVersion),
@@ -183,9 +187,10 @@ func (c *Config) Client(ctx context.Context) (interface{}, diag.Diagnostics) {
 		DNSSuffix = p.DNSSuffix()
 	}
 
-	client := c.clientConns(sess)
+	c.clientConns(client, sess)
 
 	client.AccountID = accountID
+	client.Config = &cfg
 	client.DefaultTagsConfig = c.DefaultTagsConfig
 	client.DNSSuffix = DNSSuffix
 	client.IgnoreTagsConfig = c.IgnoreTagsConfig
@@ -207,9 +212,27 @@ func (c *Config) Client(ctx context.Context) (interface{}, diag.Diagnostics) {
 		}
 	})
 
+	client.IdentityStoreConn = identitystore.NewFromConfig(cfg, func(o *identitystore.Options) {
+		if endpoint := c.Endpoints[names.IdentityStore]; endpoint != "" {
+			o.EndpointResolver = identitystore.EndpointResolverFromURL(endpoint)
+		}
+	})
+
+	client.Inspector2Conn = inspector2.NewFromConfig(cfg, func(o *inspector2.Options) {
+		if endpoint := c.Endpoints[names.Inspector2]; endpoint != "" {
+			o.EndpointResolver = inspector2.EndpointResolverFromURL(endpoint)
+		}
+	})
+
 	client.KendraConn = kendra.NewFromConfig(cfg, func(o *kendra.Options) {
 		if endpoint := c.Endpoints[names.Kendra]; endpoint != "" {
 			o.EndpointResolver = kendra.EndpointResolverFromURL(endpoint)
+		}
+	})
+
+	client.MediaLiveConn = medialive.NewFromConfig(cfg, func(o *medialive.Options) {
+		if endpoint := c.Endpoints[names.MediaLive]; endpoint != "" {
+			o.EndpointResolver = medialive.EndpointResolverFromURL(endpoint)
 		}
 	})
 
@@ -225,6 +248,12 @@ func (c *Config) Client(ctx context.Context) (interface{}, diag.Diagnostics) {
 		} else if partition == endpoints.AwsPartitionID {
 			// Route 53 Domains is only available in AWS Commercial us-east-1 Region.
 			o.Region = endpoints.UsEast1RegionID
+		}
+	})
+
+	client.SESV2Conn = sesv2.NewFromConfig(cfg, func(o *sesv2.Options) {
+		if endpoint := c.Endpoints[names.SESV2]; endpoint != "" {
+			o.EndpointResolver = sesv2.EndpointResolverFromURL(endpoint)
 		}
 	})
 

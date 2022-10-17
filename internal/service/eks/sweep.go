@@ -58,7 +58,7 @@ func sweepAddon(region string) error {
 	conn := client.(*conns.AWSClient).EKSConn
 	input := &eks.ListClustersInput{}
 	var sweeperErrs *multierror.Error
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = conn.ListClustersPagesWithContext(ctx, input, func(page *eks.ListClustersOutput, lastPage bool) bool {
 		if page == nil {
@@ -123,7 +123,7 @@ func sweepClusters(region string) error {
 	}
 	conn := client.(*conns.AWSClient).EKSConn
 	input := &eks.ListClustersInput{}
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = conn.ListClustersPages(input, func(page *eks.ListClustersOutput, lastPage bool) bool {
 		if page == nil {
@@ -167,7 +167,7 @@ func sweepFargateProfiles(region string) error {
 	conn := client.(*conns.AWSClient).EKSConn
 	input := &eks.ListClustersInput{}
 	var sweeperErrs *multierror.Error
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = conn.ListClustersPages(input, func(page *eks.ListClustersOutput, lastPage bool) bool {
 		if page == nil {
@@ -234,7 +234,7 @@ func sweepIdentityProvidersConfig(region string) error {
 	conn := client.(*conns.AWSClient).EKSConn
 	input := &eks.ListClustersInput{}
 	var sweeperErrs *multierror.Error
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = conn.ListClustersPagesWithContext(ctx, input, func(page *eks.ListClustersOutput, lastPage bool) bool {
 		if page == nil {
@@ -300,7 +300,7 @@ func sweepNodeGroups(region string) error {
 	conn := client.(*conns.AWSClient).EKSConn
 	input := &eks.ListClustersInput{}
 	var sweeperErrs *multierror.Error
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = conn.ListClustersPages(input, func(page *eks.ListClustersOutput, lastPage bool) bool {
 		if page == nil {
