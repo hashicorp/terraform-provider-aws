@@ -1093,9 +1093,10 @@ func checkKeysAgainstSchemaFlags(k string, keys []string, topSchemaMap schemaMap
 	return nil
 }
 
+var validFieldNameRe = regexp.MustCompile("^[a-z0-9_]+$")
+
 func isValidFieldName(name string) bool {
-	re := regexp.MustCompile("^[a-z0-9_]+$")
-	return re.MatchString(name)
+	return validFieldNameRe.MatchString(name)
 }
 
 // resourceDiffer is an interface that is used by the private diff functions.
