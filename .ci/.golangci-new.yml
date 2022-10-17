@@ -6,10 +6,7 @@ issues:
 linters:
   disable-all: true
   enable:
-    - asciicheck
     - gocritic
-    - typecheck
-    - vetshadow
 
 run:
   timeout: 75m
