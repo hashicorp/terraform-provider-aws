@@ -143,7 +143,7 @@ func TestAccGlobalAcceleratorEndpointGroup_ALBEndpoint_clientIP(t *testing.T) {
 				),
 			},
 			{
-				Config: acctest.ConfigVPCWithSubnets(rName, 2),
+				Config: acctest.ConfigVPCWithSubnets(rName, 2), // nosemgrep:ci.test-config-funcs-correct-form
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExists(vpcResourceName, &vpc),
 					testAccCheckEndpointGroupDeleteSecurityGroup(&vpc),
@@ -195,7 +195,7 @@ func TestAccGlobalAcceleratorEndpointGroup_instanceEndpoint(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: acctest.ConfigVPCWithSubnets(rName, 1),
+				Config: acctest.ConfigVPCWithSubnets(rName, 1), // nosemgrep:ci.test-config-funcs-correct-form
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExists(vpcResourceName, &vpc),
 					testAccCheckEndpointGroupDeleteSecurityGroup(&vpc),
