@@ -25,6 +25,27 @@ resource "aws_evidently_segment" "example" {
 }
 ```
 
+### With JSON object in pattern
+
+```terraform
+resource "aws_evidently_segment" "example" {
+  name    = "example"
+  pattern = <<JSON
+  {
+    "Price": [
+      {
+        "numeric": [">",10,"<=",20]
+      }
+    ]
+  }
+  JSON
+
+  tags = {
+    "Key1" = "example Segment"
+  }
+}
+```
+
 ### With Description
 
 ```terraform
