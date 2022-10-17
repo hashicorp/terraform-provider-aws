@@ -654,7 +654,7 @@ func FindBrokerByID(conn *mq.MQ, id string) (*mq.DescribeBrokerResponse, error) 
 	return output, nil
 }
 
-func StatusBroker(conn *mq.MQ, id string) resource.StateRefreshFunc {
+func statusBrokerState(conn *mq.MQ, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindBrokerByID(conn, id)
 
@@ -678,7 +678,7 @@ func WaitBrokerCreated(conn *mq.MQ, id string, timeout time.Duration) (*mq.Descr
 		},
 		Target:  []string{mq.BrokerStateRunning},
 		Timeout: timeout,
-		Refresh: StatusBroker(conn, id),
+		Refresh: statusBrokerState(conn, id),
 	}
 	outputRaw, err := stateConf.WaitForState()
 
@@ -699,7 +699,7 @@ func WaitBrokerDeleted(conn *mq.MQ, id string, timeout time.Duration) (*mq.Descr
 		},
 		Target:  []string{},
 		Timeout: timeout,
-		Refresh: StatusBroker(conn, id),
+		Refresh: statusBrokerState(conn, id),
 	}
 	outputRaw, err := stateConf.WaitForState()
 
@@ -717,7 +717,7 @@ func WaitBrokerRebooted(conn *mq.MQ, id string, timeout time.Duration) (*mq.Desc
 		},
 		Target:  []string{mq.BrokerStateRunning},
 		Timeout: timeout,
-		Refresh: StatusBroker(conn, id),
+		Refresh: statusBrokerState(conn, id),
 	}
 	outputRaw, err := stateConf.WaitForState()
 
