@@ -3,9 +3,11 @@ package ec2_test
 import (
 	"fmt"
 	"strings"
+	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -71,4 +73,63 @@ func testAccCheckVPCAssociationIPv6CIDRPrefix(association *ec2.VpcIpv6CidrBlockA
 
 		return nil
 	}
+}
+
+func TestAccVPCIPv6CIDRBlockAssociation_basic(t *testing.T) {
+	var associationSecondary, associationTertiary ec2.VpcIpv6CidrBlockAssociation
+	resource1Name := "aws_vpc_ipv6_cidr_block_association.secondary_cidr"
+	resource2Name := "aws_vpc_ipv6_cidr_block_association.tertiary_cidr"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVPCIPv6CIDRBlockAssociationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCIPv6CIDRBlockAssociationConfig_amazon_provided(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVPCIPv6CIDRBlockAssociationExists(resource1Name, &associationSecondary),
+					testAccCheckVPCIPv6CIDRBlockAssociationExists(resource2Name, &associationTertiary),
+				),
+			},
+			{
+				ResourceName:      resource1Name,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				ResourceName:      resource2Name,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccVPCIPv6CIDRBlockAssociationConfig_amazon_provided(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.1.0.0/16"
+
+	assign_generated_ipv6_cidr_block = true
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_vpc_ipv6_cidr_block_association" "secondary_cidr" {
+  vpc_id = aws_vpc.test.id
+
+	assign_generated_ipv6_cidr_block = true
+}
+
+resource "aws_vpc_ipv6_cidr_block_association" "tertiary_cidr" {
+  vpc_id = aws_vpc.test.id
+
+	assign_generated_ipv6_cidr_block = true
+}
+`, rName)
 }
