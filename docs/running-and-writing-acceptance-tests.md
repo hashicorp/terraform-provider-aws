@@ -1569,7 +1569,6 @@ POLICY
     - `acctest.CheckResourceAttrRegionalARNAccountID()` verifies than an ARN matches a specific account ID and the current region of the test execution with an exact resource value
     - `acctest.CheckResourceAttrGlobalARNAccountID()` verifies than an ARN matches a specific account ID with an exact resource value
 
-
 Here's an example of using `aws_partition` and `data.aws_partition.current.partition`:
 
 ```terraform

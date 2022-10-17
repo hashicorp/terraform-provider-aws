@@ -31,7 +31,7 @@ while IFS= read -r block ; do
 
     # We need to capture the output and error code here. We don't want to exit on the first error
     set +e
-    tflint_output=$(tflint -c .ci/.tflint.hcl "${rules[@]}" "$tf" 2>&1)
+    tflint_output=$(tflint --config .ci/.tflint.hcl "${rules[@]}" "$tf" 2>&1)
     tflint_exitcode=$?
     set -e
 

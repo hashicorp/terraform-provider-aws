@@ -176,7 +176,6 @@ The following arguments are supported:
 * `stage` (Minimum of at least two `stage` blocks is required) A stage block. Stages are documented below.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-
 An `artifact_store` block supports the following arguments:
 
 * `location` - (Required) The location where AWS CodePipeline stores artifacts for a pipeline; currently only `S3` is supported.

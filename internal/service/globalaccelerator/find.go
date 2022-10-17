@@ -37,10 +37,7 @@ func FindAccelerator(conn *globalaccelerator.GlobalAccelerator, input *globalacc
 	}
 
 	if output == nil || output.Accelerator == nil {
-		return nil, &resource.NotFoundError{
-			Message:     "Empty result",
-			LastRequest: input,
-		}
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
 	return output.Accelerator, nil
@@ -73,10 +70,7 @@ func FindAcceleratorAttributes(conn *globalaccelerator.GlobalAccelerator, input 
 	}
 
 	if output == nil || output.AcceleratorAttributes == nil {
-		return nil, &resource.NotFoundError{
-			Message:     "Empty result",
-			LastRequest: input,
-		}
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
 	return output.AcceleratorAttributes, nil

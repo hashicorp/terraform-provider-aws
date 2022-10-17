@@ -9,7 +9,6 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/codepipeline"
-	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
@@ -24,27 +23,23 @@ func init() {
 
 func sweepPipelines(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
-
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-
+	input := &codepipeline.ListPipelinesInput{}
 	conn := client.(*conns.AWSClient).CodePipelineConn
 	sweepResources := make([]sweep.Sweepable, 0)
-	var errs *multierror.Error
-
-	input := &codepipeline.ListPipelinesInput{}
 
 	err = conn.ListPipelinesPages(input, func(page *codepipeline.ListPipelinesOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
 
-		for _, pipeline := range page.Pipelines {
-			r := ResourceCodePipeline()
+		for _, v := range page.Pipelines {
+			r := ResourcePipeline()
 			d := r.Data(nil)
 
-			d.SetId(aws.StringValue(pipeline.Name))
+			d.SetId(aws.StringValue(v.Name))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
@@ -52,18 +47,20 @@ func sweepPipelines(region string) error {
 		return !lastPage
 	})
 
-	if err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error listing Codepipeline Pipeline for %s: %w", region, err))
-	}
-
-	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error sweeping Codepipeline Pipeline for %s: %w", region, err))
-	}
-
-	if sweep.SkipSweepError(errs.ErrorOrNil()) {
-		log.Printf("[WARN] Skipping Codepipeline Pipeline sweep for %s: %s", region, errs)
+	if sweep.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping Codepipeline Pipeline sweep for %s: %s", region, err)
 		return nil
 	}
 
-	return errs.ErrorOrNil()
+	if err != nil {
+		return fmt.Errorf("error listing Codepipeline Pipelines (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestrator(sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping Codepipeline Pipelines (%s): %w", region, err)
+	}
+
+	return nil
 }

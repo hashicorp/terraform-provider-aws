@@ -1,21 +1,38 @@
-## 4.35.0 (Unreleased)
+## 4.36.0 (Unreleased)
+## 4.35.0 (October 17, 2022)
 
 FEATURES:
 
 * **New Data Source:** `aws_rds_reserved_instance_offering` ([#26025](https://github.com/hashicorp/terraform-provider-aws/issues/26025))
+* **New Data Source:** `aws_vpc_ipam_pools` ([#27101](https://github.com/hashicorp/terraform-provider-aws/issues/27101))
+* **New Resource:** `aws_codepipeline_custom_action_type` ([#8123](https://github.com/hashicorp/terraform-provider-aws/issues/8123))
 * **New Resource:** `aws_comprehend_document_classifier` ([#26951](https://github.com/hashicorp/terraform-provider-aws/issues/26951))
+* **New Resource:** `aws_inspector2_delegated_admin_account` ([#27229](https://github.com/hashicorp/terraform-provider-aws/issues/27229))
 * **New Resource:** `aws_rds_reserved_instance` ([#26025](https://github.com/hashicorp/terraform-provider-aws/issues/26025))
 * **New Resource:** `aws_s3control_storage_lens_configuration` ([#27097](https://github.com/hashicorp/terraform-provider-aws/issues/27097))
+* **New Resource:** `aws_sesv2_configuration_set` ([#27056](https://github.com/hashicorp/terraform-provider-aws/issues/27056))
 * **New Resource:** `aws_transfer_tag` ([#27131](https://github.com/hashicorp/terraform-provider-aws/issues/27131))
 
 ENHANCEMENTS:
 
 * data-source/aws_dx_connection: Add `vlan_id` attribute ([#27148](https://github.com/hashicorp/terraform-provider-aws/issues/27148))
 * data-source/aws_vpc: Add `enable_network_address_usage_metrics` attribute ([#27165](https://github.com/hashicorp/terraform-provider-aws/issues/27165))
+* resource/aws_cognito_user_pool: Add `user_attribute_update_settings` attribute ([#27129](https://github.com/hashicorp/terraform-provider-aws/issues/27129))
 * resource/aws_default_vpc: Add `enable_network_address_usage_metrics` argument ([#27165](https://github.com/hashicorp/terraform-provider-aws/issues/27165))
 * resource/aws_dx_connection: Add `vlan_id` attribute ([#27148](https://github.com/hashicorp/terraform-provider-aws/issues/27148))
+* resource/aws_elasticache_global_replication_group: Add support for updating `cache_node_type` and `automatic_failover_enabled`. ([#27134](https://github.com/hashicorp/terraform-provider-aws/issues/27134))
+* resource/aws_globalaccelerator_accelerator: Add `ip_addresses` argument in support of [BYOIP addresses](https://docs.aws.amazon.com/global-accelerator/latest/dg/using-byoip.html) ([#27181](https://github.com/hashicorp/terraform-provider-aws/issues/27181))
 * resource/aws_opsworks_custom_layer: Add `load_based_auto_scaling` argument ([#10962](https://github.com/hashicorp/terraform-provider-aws/issues/10962))
+* resource/aws_prometheus_workspace: Add `logging_configuration` argument ([#27213](https://github.com/hashicorp/terraform-provider-aws/issues/27213))
 * resource/aws_vpc: Add `enable_network_address_usage_metrics` argument ([#27165](https://github.com/hashicorp/terraform-provider-aws/issues/27165))
+
+BUG FIXES:
+
+* data-source/aws_identitystore_user: Change the type of `external_ids` to a string instead of a bool. ([#27184](https://github.com/hashicorp/terraform-provider-aws/issues/27184))
+* resource/aws_ecs_task_definition: Prevent panic when supplying a `null` value in `container_definitions` ([#27263](https://github.com/hashicorp/terraform-provider-aws/issues/27263))
+* resource/aws_identitystore_user: Change the type of `external_ids` to a string instead of a bool. ([#27184](https://github.com/hashicorp/terraform-provider-aws/issues/27184))
+* resource/aws_organizations_policy_attachment: Handle missing policy when reading policy attachment ([#27238](https://github.com/hashicorp/terraform-provider-aws/issues/27238))
+* resource/aws_ssm_service_setting: Prevent panic during status read ([#27232](https://github.com/hashicorp/terraform-provider-aws/issues/27232))
 
 ## 4.34.0 (October  6, 2022)
 
