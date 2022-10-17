@@ -129,7 +129,7 @@ func resourceDedicatedIPPoolRead(ctx context.Context, d *schema.ResourceData, me
 	}.String()
 	d.Set("arn", poolNameARN)
 
-	d.Set("dedicated_ips", flattenDedicatedIps(out.DedicatedIps))
+	d.Set("dedicated_ips", flattenDedicatedIPs(out.DedicatedIps))
 
 	tags, err := ListTags(ctx, conn, d.Get("arn").(string))
 	if err != nil {
@@ -208,7 +208,7 @@ func FindDedicatedIPPoolByID(ctx context.Context, conn *sesv2.Client, id string)
 	return out, nil
 }
 
-func flattenDedicatedIps(apiObjects []types.DedicatedIp) []interface{} {
+func flattenDedicatedIPs(apiObjects []types.DedicatedIp) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
