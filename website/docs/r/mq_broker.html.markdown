@@ -174,10 +174,9 @@ In addition to all arguments above, the following attributes are exported:
 
 [Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
 
-- `create` - (Default `30m`)
-- `update` - (Default `30m`)
-- `delete` - (Default `30m`)
-any cleanup task during the destroying process.
+* `create` - (Default `30m`)
+* `update` - (Default `30m`)
+* `delete` - (Default `30m`)
 
 ## Import
 
