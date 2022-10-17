@@ -147,7 +147,6 @@ func resourceSegmentRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 	tags := KeyValueTags(segment.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
-	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
 		return diag.Errorf("setting tags: %s", err)
 	}
@@ -162,7 +161,6 @@ func resourceSegmentRead(ctx context.Context, d *schema.ResourceData, meta inter
 func resourceSegmentUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).EvidentlyConn
 
-	// updates to tags
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
