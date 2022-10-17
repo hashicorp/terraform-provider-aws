@@ -378,17 +378,17 @@ func testAccCheckBYOIPExists(t *testing.T) {
 	}
 }
 
-func testAccCheckAcceleratorExists(name string) resource.TestCheckFunc {
+func testAccCheckAcceleratorExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).GlobalAcceleratorConn
 
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", name)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ID is set")
+			return fmt.Errorf("No Global Accelerator Accelerator ID is set")
 		}
 
 		_, err := tfglobalaccelerator.FindAcceleratorByARN(conn, rs.Primary.ID)
