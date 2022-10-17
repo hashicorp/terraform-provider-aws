@@ -1,7 +1,7 @@
 ---
+subcategory: "Config"
 layout: "aws"
 page_title: "AWS: aws_config_organization_custom_rule"
-sidebar_current: "docs-aws-resource-config-organization-managed-rule"
 description: |-
   Manages a Config Organization Custom Rule
 ---
@@ -16,10 +16,10 @@ Manages a Config Organization Custom Rule. More information about these rules ca
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_lambda_permission" "example" {
   action        = "lambda:InvokeFunction"
-  function_name = "${aws_lambda_function.example.arn}"
+  function_name = aws_lambda_function.example.arn
   principal     = "config.amazonaws.com"
   statement_id  = "AllowExecutionFromConfig"
 }
@@ -30,9 +30,12 @@ resource "aws_organizations_organization" "example" {
 }
 
 resource "aws_config_organization_custom_rule" "example" {
-  depends_on = ["aws_lambda_permission.example", "aws_organizations_organization.example"]
+  depends_on = [
+    aws_lambda_permission.example,
+    aws_organizations_organization.example,
+  ]
 
-  lambda_function_arn = "${aws_lambda_function.example.arn}"
+  lambda_function_arn = aws_lambda_function.example.arn
   name                = "example"
   trigger_types       = ["ConfigurationItemChangeNotification"]
 }
@@ -54,7 +57,6 @@ The following arguments are supported:
 * `tag_key_scope` - (Optional, Required if `tag_value_scope` is configured) Tag key of AWS resources to evaluate
 * `tag_value_scope` - (Optional) Tag value of AWS resources to evaluate
 
-
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
@@ -63,16 +65,15 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-`aws_config_organization_custom_rule` provides the following [Timeouts](/docs/configuration/resources.html#timeouts)
-configuration options:
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
 
-* `create` - (Default `5m`) How long to wait for the rule to be created.
-* `delete` - (Default `5m`) How long to wait for the rule to be deleted.
-* `update` - (Default `5m`) How long to wait for the rule to be updated.
+* `create` - (Default `5m`)
+* `delete` - (Default `5m`)
+* `update` - (Default `5m`)
 
 ## Import
 
-Config Organization Custom Rules can be imported using the name, e.g.
+Config Organization Custom Rules can be imported using the name, e.g.,
 
 ```
 $ terraform import aws_config_organization_custom_rule.example example

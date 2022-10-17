@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_s3_bucket: Add the delete_marker_replication_status argument for V2 replication configurations
+```

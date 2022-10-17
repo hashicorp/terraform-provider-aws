@@ -1,7 +1,7 @@
 ---
+subcategory: "ELB (Elastic Load Balancing)"
 layout: "aws"
 page_title: "AWS: aws_lb"
-sidebar_current: "docs-aws-datasource-lb-x"
 description: |-
   Provides a Load Balancer data source.
 ---
@@ -18,20 +18,20 @@ with it, etc.
 
 ## Example Usage
 
-```hcl
+```terraform
 variable "lb_arn" {
-  type    = "string"
+  type    = string
   default = ""
 }
 
 variable "lb_name" {
-  type    = "string"
+  type    = string
   default = ""
 }
 
 data "aws_lb" "test" {
-  arn  = "${var.lb_arn}"
-  name = "${var.lb_name}"
+  arn  = var.lb_arn
+  name = var.lb_name
 }
 ```
 
@@ -39,12 +39,19 @@ data "aws_lb" "test" {
 
 The following arguments are supported:
 
-* `arn` - (Optional) The full ARN of the load balancer.
-* `name` - (Optional) The unique name of the load balancer.
+* `arn` - (Optional) Full ARN of the load balancer.
+* `name` - (Optional) Unique name of the load balancer.
+* `tags` - (Optional) Mapping of tags, each pair of which must exactly match a pair on the desired load balancer.
 
-~> **NOTE**: When both `arn` and `name` are specified, `arn` takes precedence.
+~> **NOTE:** When both `arn` and `name` are specified, `arn` takes precedence. `tags` has lowest precedence.
 
 ## Attributes Reference
 
 See the [LB Resource](/docs/providers/aws/r/lb.html) for details on the
 returned attributes - they are identical.
+
+## Timeouts
+
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+
+- `read` - (Default `20m`)

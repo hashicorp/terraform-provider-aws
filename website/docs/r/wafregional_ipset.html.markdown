@@ -1,7 +1,7 @@
 ---
+subcategory: "WAF Classic Regional"
 layout: "aws"
 page_title: "AWS: aws_wafregional_ipset"
-sidebar_current: "docs-aws-resource-wafregional-ipset"
 description: |-
   Provides a AWS WAF Regional IPSet resource for use with ALB.
 ---
@@ -12,7 +12,7 @@ Provides a WAF Regional IPSet Resource for use with Application Load Balancer.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_wafregional_ipset" "ipset" {
   name = "tfIPSet"
 
@@ -44,7 +44,6 @@ The following arguments are supported:
 * `type` - (Required) The string like IPV4 or IPV6.
 * `value` - (Required) The CIDR notation.
 
-
 ## Remarks
 
 ## Attributes Reference
@@ -56,7 +55,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-WAF Regional IPSets can be imported using their ID, e.g.
+WAF Regional IPSets can be imported using their ID, e.g.,
 
 ```
 $ terraform import aws_wafregional_ipset.example a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc

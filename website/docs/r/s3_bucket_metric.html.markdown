@@ -1,7 +1,7 @@
 ---
+subcategory: "S3 (Simple Storage)"
 layout: "aws"
 page_title: "AWS: aws_s3_bucket_metric"
-sidebar_current: "docs-aws-resource-s3-bucket-metric"
 description: |-
   Provides a S3 bucket metrics configuration resource.
 ---
@@ -14,26 +14,26 @@ Provides a S3 bucket [metrics configuration](http://docs.aws.amazon.com/AmazonS3
 
 ### Add metrics configuration for entire S3 bucket
 
-```hcl
+```terraform
 resource "aws_s3_bucket" "example" {
   bucket = "example"
 }
 
 resource "aws_s3_bucket_metric" "example-entire-bucket" {
-  bucket = "${aws_s3_bucket.example.bucket}"
+  bucket = aws_s3_bucket.example.bucket
   name   = "EntireBucket"
 }
 ```
 
-### Add metrics configuration with S3 bucket object filter
+### Add metrics configuration with S3 object filter
 
-```hcl
+```terraform
 resource "aws_s3_bucket" "example" {
   bucket = "example"
 }
 
 resource "aws_s3_bucket_metric" "example-filtered" {
-  bucket = "${aws_s3_bucket.example.bucket}"
+  bucket = aws_s3_bucket.example.bucket
   name   = "ImportantBlueDocuments"
 
   filter {
@@ -52,17 +52,23 @@ resource "aws_s3_bucket_metric" "example-filtered" {
 The following arguments are supported:
 
 * `bucket` - (Required) The name of the bucket to put metric configuration.
-* `name` - (Required) Unique identifier of the metrics configuration for the bucket.
+* `name` - (Required) Unique identifier of the metrics configuration for the bucket. Must be less than or equal to 64 characters in length.
 * `filter` - (Optional) [Object filtering](http://docs.aws.amazon.com/AmazonS3/latest/dev/metrics-configurations.html#metrics-configurations-filter) that accepts a prefix, tags, or a logical AND of prefix and tags (documented below).
 
 The `filter` metric configuration supports the following:
 
+~> **NOTE:** At least one of `prefix` or `tags` is required when specifying a `filter`
+
 * `prefix` - (Optional) Object prefix for filtering (singular).
 * `tags` - (Optional) Object tags for filtering (up to 10).
 
+## Attributes Reference
+
+No additional attributes are exported.
+
 ## Import
 
-S3 bucket metric configurations can be imported using `bucket:metric`, e.g.
+S3 bucket metric configurations can be imported using `bucket:metric`, e.g.,
 
 ```
 $ terraform import aws_s3_bucket_metric.my-bucket-entire-bucket my-bucket:EntireBucket

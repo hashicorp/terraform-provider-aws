@@ -1,0 +1,7 @@
+```release-note:new-resource
+ aws_medialive_input_security_group
+```
+
+```release-note:new-resource
+ aws_medialive_input
+```

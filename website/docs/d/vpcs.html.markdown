@@ -1,7 +1,7 @@
 ---
+subcategory: "VPC (Virtual Private Cloud)"
 layout: "aws"
 page_title: "AWS: aws_vpcs"
-sidebar_current: "docs-aws-datasource-vpcs"
 description: |-
     Provides a list of VPC Ids in a region
 ---
@@ -16,7 +16,7 @@ The following example retrieves a list of VPC Ids with a custom tag of `service`
 
 The following shows outputing all VPC Ids.
 
-```hcl
+```terraform
 data "aws_vpcs" "foo" {
   tags = {
     service = "production"
@@ -24,32 +24,37 @@ data "aws_vpcs" "foo" {
 }
 
 output "foo" {
-  value = "${data.aws_vpcs.foo.ids}"
+  value = data.aws_vpcs.foo.ids
 }
 ```
 
 An example use case would be interpolate the `aws_vpcs` output into `count` of an aws_flow_log resource.
 
-```hcl
+```terraform
 data "aws_vpcs" "foo" {}
 
+data "aws_vpc" "foo" {
+  count = length(data.aws_vpcs.foo.ids)
+  id    = tolist(data.aws_vpcs.foo.ids)[count.index]
+}
+
 resource "aws_flow_log" "test_flow_log" {
-  count = "${length(data.aws_vpcs.foo.ids)}"
+  count = length(data.aws_vpcs.foo.ids)
 
   # ...
-  vpc_id = "${element(data.aws_vpcs.foo.ids, count.index)}"
+  vpc_id = data.aws_vpc.foo[count.index].id
 
   # ...
 }
 
 output "foo" {
-  value = "${data.aws_vpcs.foo.ids}"
+  value = data.aws_vpcs.foo.ids
 }
 ```
 
 ## Argument Reference
 
-* `tags` - (Optional) A mapping of tags, each pair of which must exactly match
+* `tags` - (Optional) Map of tags, each pair of which must exactly match
   a pair on the desired vpcs.
 
 * `filter` - (Optional) Custom filter block as described below.
@@ -57,7 +62,7 @@ output "foo" {
 More complex filters can be expressed using one or more `filter` sub-blocks,
 which take the following arguments:
 
-* `name` - (Required) The name of the field to filter by, as defined by
+* `name` - (Required) Name of the field to filter by, as defined by
   [the underlying AWS API](http://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeVpcs.html).
 
 * `values` - (Required) Set of values that are accepted for the given field.
@@ -65,4 +70,11 @@ which take the following arguments:
 
 ## Attributes Reference
 
-* `ids` - A list of all the VPC Ids found. This data source will fail if none are found.
+* `id` - AWS Region.
+* `ids` - List of all the VPC Ids found.
+
+## Timeouts
+
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+
+- `read` - (Default `20m`)

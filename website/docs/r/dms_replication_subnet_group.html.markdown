@@ -1,7 +1,7 @@
 ---
+subcategory: "DMS (Database Migration)"
 layout: "aws"
 page_title: "AWS: aws_dms_replication_subnet_group"
-sidebar_current: "docs-aws-resource-dms-replication-subnet-group"
 description: |-
   Provides a DMS (Data Migration Service) subnet group resource.
 ---
@@ -12,7 +12,7 @@ Provides a DMS (Data Migration Service) replication subnet group resource. DMS r
 
 ## Example Usage
 
-```hcl
+```terraform
 # Create a new replication subnet group
 resource "aws_dms_replication_subnet_group" "test" {
   replication_subnet_group_description = "Test replication subnet group"
@@ -39,17 +39,18 @@ The following arguments are supported:
     - Must not be "default".
 
 * `subnet_ids` - (Required) A list of the EC2 subnet IDs for the subnet group.
-* `tags` - (Optional) A mapping of tags to assign to the resource.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `vpc_id` - The ID of the VPC the subnet group is in.
 
 ## Import
 
-Replication subnet groups can be imported using the `replication_subnet_group_id`, e.g.
+Replication subnet groups can be imported using the `replication_subnet_group_id`, e.g.,
 
 ```
 $ terraform import aws_dms_replication_subnet_group.test test-dms-replication-subnet-group-tf

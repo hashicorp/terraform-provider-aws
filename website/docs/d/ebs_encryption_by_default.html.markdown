@@ -1,7 +1,7 @@
 ---
+subcategory: "EBS (EC2)"
 layout: "aws"
 page_title: "AWS: aws_ebs_encryption_by_default"
-sidebar_current: "docs-aws-ebs-encryption-by-default"
 description: |-
   Checks whether default EBS encryption is enabled for your AWS account in the current AWS region.
 ---
@@ -12,8 +12,8 @@ Provides a way to check whether default EBS encryption is enabled for your AWS a
 
 ## Example Usage
 
-```hcl
-data "aws_ebs_encryption_by_default" "current" { }
+```terraform
+data "aws_ebs_encryption_by_default" "current" {}
 ```
 
 ## Attributes Reference
@@ -21,3 +21,10 @@ data "aws_ebs_encryption_by_default" "current" { }
 The following attributes are exported:
 
 * `enabled` - Whether or not default EBS encryption is enabled. Returns as `true` or `false`.
+* `id` - Region of default EBS encryption.
+
+## Timeouts
+
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+
+- `read` - (Default `20m`)

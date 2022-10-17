@@ -1,0 +1,11 @@
+```release-note:new-resource
+aws_datapipeline_pipeline_definition
+```
+
+```release-note:new-data-source
+aws_datapipeline_pipeline_definition
+```
+
+```release-note:new-data-source
+aws_datapipeline_pipeline
+```

@@ -1,7 +1,7 @@
 ---
+subcategory: "RDS (Relational Database)"
 layout: "aws"
 page_title: "AWS: aws_db_option_group"
-sidebar_current: "docs-aws-resource-db-option-group"
 description: |-
   Provides an RDS DB option group resource.
 ---
@@ -9,6 +9,7 @@ description: |-
 # Resource: aws_db_option_group
 
 Provides an RDS DB option group resource. Documentation of the available options for various RDS engines can be found at:
+
 * [MariaDB Options](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Appendix.MariaDB.Options.html)
 * [Microsoft SQL Server Options](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Appendix.SQLServer.Options.html)
 * [MySQL Options](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Appendix.MySQL.Options.html)
@@ -16,7 +17,7 @@ Provides an RDS DB option group resource. Documentation of the available options
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_db_option_group" "example" {
   name                     = "option-group-test-terraform"
   option_group_description = "Terraform Option Group"
@@ -37,7 +38,7 @@ resource "aws_db_option_group" "example" {
 
     option_settings {
       name  = "IAM_ROLE_ARN"
-      value = "${aws_iam_role.example.arn}"
+      value = aws_iam_role.example.arn
     }
   }
 
@@ -47,7 +48,15 @@ resource "aws_db_option_group" "example" {
 }
 ```
 
-~> **Note**: Any modifications to the `db_option_group` are set to happen immediately as we default to applying immediately.
+~> **Note:** Any modifications to the `aws_db_option_group` are set to happen immediately as we default to applying immediately.
+
+~> **WARNING:** You can perform a destroy on a `aws_db_option_group`, as long as it is not associated with any Amazon RDS resource. An option group can be associated with a DB instance, a manual DB snapshot, or an automated DB snapshot.
+
+If you try to delete an option group that is associated with an Amazon RDS resource, an error similar to the following is returned:
+
+> An error occurred (InvalidOptionGroupStateFault) when calling the DeleteOptionGroup operation: The option group 'optionGroupName' cannot be deleted because it is in use.
+
+More information about this can be found [here](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_WorkingWithOptionGroups.html#USER_WorkingWithOptionGroups.Delete).
 
 ## Argument Reference
 
@@ -59,14 +68,14 @@ The following arguments are supported:
 * `engine_name` - (Required) Specifies the name of the engine that this option group should be associated with.
 * `major_engine_version` - (Required) Specifies the major version of the engine that this option group should be associated with.
 * `option` - (Optional) A list of Options to apply.
-* `tags` - (Optional) A mapping of tags to assign to the resource.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 Option blocks support the following:
 
-* `option_name` - (Required) The Name of the Option (e.g. MEMCACHED).
+* `option_name` - (Required) The Name of the Option (e.g., MEMCACHED).
 * `option_settings` - (Optional) A list of option settings to apply.
-* `port` - (Optional) The Port number when connecting to the Option (e.g. 11211).
-* `version` - (Optional) The version of the option (e.g. 13.1.0.0).
+* `port` - (Optional) The Port number when connecting to the Option (e.g., 11211).
+* `version` - (Optional) The version of the option (e.g., 13.1.0.0).
 * `db_security_group_memberships` - (Optional) A list of DB Security Groups for which the option is enabled.
 * `vpc_security_group_memberships` - (Optional) A list of VPC Security Groups for which the option is enabled.
 
@@ -81,18 +90,18 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - The db option group name.
 * `arn` - The ARN of the db option group.
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
-`aws_db_option_group` provides the following
-[Timeouts](/docs/configuration/resources.html#timeouts) configuration options:
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
 
-- `delete` - (Default `15 minutes`)
+- `delete` - (Default `15m`)
 
 ## Import
 
-DB Option groups can be imported using the `name`, e.g.
+DB Option groups can be imported using the `name`, e.g.,
 
 ```
-$ terraform import aws_db_option_group.bar mysql-option-group
+$ terraform import aws_db_option_group.example mysql-option-group
 ```

@@ -1,7 +1,7 @@
 ---
+subcategory: "Transit Gateway"
 layout: "aws"
 page_title: "AWS: aws_ec2_transit_gateway"
-sidebar_current: "docs-aws-datasource-ec2-transit-gateway-x"
 description: |-
   Get information on an EC2 Transit Gateway
 ---
@@ -14,7 +14,7 @@ Get information on an EC2 Transit Gateway.
 
 ### By Filter
 
-```hcl
+```terraform
 data "aws_ec2_transit_gateway" "example" {
   filter {
     name   = "options.amazon-side-asn"
@@ -25,7 +25,7 @@ data "aws_ec2_transit_gateway" "example" {
 
 ### By Identifier
 
-```hcl
+```terraform
 data "aws_ec2_transit_gateway" "example" {
   id = "tgw-12345678"
 }
@@ -40,7 +40,7 @@ The following arguments are supported:
 
 ### filter Argument Reference
 
-* `name` - (Required) Name of the filter.
+* `name` - (Required) Name of the field to filter by, as defined by the [underlying AWS API](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeTransitGateways.html).
 * `values` - (Required) List of one or more values for the filter.
 
 ## Attribute Reference
@@ -48,15 +48,23 @@ The following arguments are supported:
 In addition to all arguments above, the following attributes are exported:
 
 * `amazon_side_asn` - Private Autonomous System Number (ASN) for the Amazon side of a BGP session
-* `arn` - EC2 Transit Gateway Amazon Resource Name (ARN)
+* `arn` - EC2 Transit Gateway ARN
 * `association_default_route_table_id` - Identifier of the default association route table
-* `auto_accept_shared_attachments` - Whether resource attachment requests are automatically accepted.
-* `default_route_table_association` - Whether resource attachments are automatically associated with the default association route table.
-* `default_route_table_propagation` - Whether resource attachments automatically propagate routes to the default propagation route table.
+* `auto_accept_shared_attachments` - Whether resource attachment requests are automatically accepted
+* `default_route_table_association` - Whether resource attachments are automatically associated with the default association route table
+* `default_route_table_propagation` - Whether resource attachments automatically propagate routes to the default propagation route table
 * `description` - Description of the EC2 Transit Gateway
-* `dns_support` - Whether DNS support is enabled.
+* `dns_support` - Whether DNS support is enabled
+* `multicast_support` - Whether Multicast support is enabled
 * `id` - EC2 Transit Gateway identifier
 * `owner_id` - Identifier of the AWS account that owns the EC2 Transit Gateway
-* `propagation_default_route_table_id` - Identifier of the default propagation route table.
+* `propagation_default_route_table_id` - Identifier of the default propagation route table
 * `tags` - Key-value tags for the EC2 Transit Gateway
-* `vpn_ecmp_support` - Whether VPN Equal Cost Multipath Protocol support is enabled.
+* `transit_gateway_cidr_blocks` - The list of associated CIDR blocks
+* `vpn_ecmp_support` - Whether VPN Equal Cost Multipath Protocol support is enabled
+
+## Timeouts
+
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+
+- `read` - (Default `20m`)

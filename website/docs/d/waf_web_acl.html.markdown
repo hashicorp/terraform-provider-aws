@@ -1,20 +1,20 @@
 ---
+subcategory: "WAF Classic"
 layout: "aws"
 page_title: "AWS: aws_waf_web_acl"
-sidebar_current: "docs-aws-datasource-waf-web-acl"
 description: |-
   Retrieves a WAF Web ACL id.
 ---
 
-# Data Source: aws_waf_rule
+# Data Source: aws_waf_web_acl
 
-`aws_waf_rule` Retrieves a WAF Web ACL Resource Id.
+`aws_waf_web_acl` Retrieves a WAF Web ACL Resource Id.
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_waf_web_acl" "example" {
-  name = "tfWAFRule"
+  name = "tfWAFWebACL"
 }
 ```
 
@@ -22,9 +22,9 @@ data "aws_waf_web_acl" "example" {
 
 The following arguments are supported:
 
-* `name` - (Required) The name of the WAF Web ACL.
+* `name` - (Required) Name of the WAF Web ACL.
 
 ## Attributes Reference
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - The ID of the WAF WebACL.
+* `id` - ID of the WAF Web ACL.

@@ -1,7 +1,7 @@
 ---
+subcategory: "SageMaker"
 layout: "aws"
 page_title: "AWS: aws_sagemaker_notebook_instance_lifecycle_configuration"
-sidebar_current: "docs-aws-resource-sagemaker-notebook-instance-lifecycle-configuration"
 description: |-
   Provides a lifecycle configuration for SageMaker Notebook Instances.
 ---
@@ -14,11 +14,11 @@ Provides a lifecycle configuration for SageMaker Notebook Instances.
 
 Usage:
 
-```hcl
+```terraform
 resource "aws_sagemaker_notebook_instance_lifecycle_configuration" "lc" {
   name      = "foo"
-  on_create = "${base64encode('echo foo')}"
-  on_start  = "${base64encode('echo bar')}"
+  on_create = base64encode("echo foo")
+  on_start  = base64encode("echo bar")
 }
 ```
 
@@ -32,13 +32,13 @@ The following arguments are supported:
 
 ## Attributes Reference
 
-The following attributes are exported:
+In addition to all arguments above, the following attributes are exported:
 
 * `arn` - The Amazon Resource Name (ARN) assigned by AWS to this lifecycle configuration.
 
 ## Import
 
-Models can be imported using the `name`, e.g.
+Models can be imported using the `name`, e.g.,
 
 ```
 $ terraform import aws_sagemaker_notebook_instance_lifecycle_configuration.lc foo

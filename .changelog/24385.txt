@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_mq_broker: Make `maintenance_window_start_time` updateable without recreation.
+```

@@ -1,7 +1,7 @@
 ---
+subcategory: "Managed Streaming for Kafka"
 layout: "aws"
 page_title: "AWS: aws_msk_configuration"
-sidebar_current: "docs-aws-datasource-msk-configuration"
 description: |-
   Get information on an Amazon MSK Configuration
 ---
@@ -12,7 +12,7 @@ Get information on an Amazon MSK Configuration.
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_msk_configuration" "example" {
   name = "example"
 }
@@ -28,7 +28,7 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `arn` - Amazon Resource Name (ARN) of the configuration.
+* `arn` - ARN of the configuration.
 * `latest_revision` - Latest revision of the configuration.
 * `description` - Description of the configuration.
 * `kafka_versions` - List of Apache Kafka versions which can use this configuration.
