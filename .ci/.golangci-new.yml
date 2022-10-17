@@ -9,7 +9,6 @@ linters:
     - asciicheck
     - gocritic
     - typecheck
-    - unused
     - vetshadow
 
 run:
