@@ -73,6 +73,7 @@ func ResourceSegment() *schema.Resource {
 					validation.StringLenBetween(1, 1024),
 					validation.StringIsJSON,
 				),
+				DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
 			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
