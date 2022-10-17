@@ -634,6 +634,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 
 			"aws_elasticache_cluster":           elasticache.DataSourceCluster(),
 			"aws_elasticache_replication_group": elasticache.DataSourceReplicationGroup(),
+			"aws_elasticache_subnet_group":      elasticache.DataSourceSubnetGroup(),
 			"aws_elasticache_user":              elasticache.DataSourceUser(),
 
 			"aws_elastic_beanstalk_application":    elasticbeanstalk.DataSourceApplication(),
@@ -1703,6 +1704,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_licensemanager_association":           licensemanager.ResourceAssociation(),
 			"aws_licensemanager_license_configuration": licensemanager.ResourceLicenseConfiguration(),
 
+			"aws_lightsail_certificate":                          lightsail.ResourceCertificate(),
 			"aws_lightsail_container_service":                    lightsail.ResourceContainerService(),
 			"aws_lightsail_container_service_deployment_version": lightsail.ResourceContainerServiceDeploymentVersion(),
 			"aws_lightsail_database":                             lightsail.ResourceDatabase(),
