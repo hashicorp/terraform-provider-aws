@@ -109,7 +109,7 @@ func resourceDedicatedIPPoolCreate(ctx context.Context, d *schema.ResourceData, 
 func resourceDedicatedIPPoolRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).SESV2Conn
 
-	out, err := findDedicatedIPPoolByID(ctx, conn, d.Id())
+	out, err := FindDedicatedIPPoolByID(ctx, conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] SESV2 DedicatedIPPool (%s) not found, removing from state", d.Id())
 		d.SetId("")
@@ -118,6 +118,7 @@ func resourceDedicatedIPPoolRead(ctx context.Context, d *schema.ResourceData, me
 	if err != nil {
 		return create.DiagError(names.SESV2, create.ErrActionReading, ResNameDedicatedIPPool, d.Id(), err)
 	}
+	d.Set("pool_name", d.Id())
 
 	poolNameARN := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
@@ -183,7 +184,7 @@ func resourceDedicatedIPPoolDelete(ctx context.Context, d *schema.ResourceData, 
 	return nil
 }
 
-func findDedicatedIPPoolByID(ctx context.Context, conn *sesv2.Client, id string) (*sesv2.GetDedicatedIpsOutput, error) {
+func FindDedicatedIPPoolByID(ctx context.Context, conn *sesv2.Client, id string) (*sesv2.GetDedicatedIpsOutput, error) {
 	in := &sesv2.GetDedicatedIpsInput{
 		PoolName: aws.String(id),
 	}
