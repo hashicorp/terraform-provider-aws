@@ -95,7 +95,7 @@ func resourceListenerCreate(ctx context.Context, d *schema.ResourceData, meta in
 	d.SetId(aws.StringValue(resp.Listener.ListenerArn))
 
 	// Creating a listener triggers the accelerator to change status to InPending.
-	if _, err := waitAcceleratorDeployed(conn, acceleratorARN, d.Timeout(schema.TimeoutCreate)); err != nil {
+	if _, err := waitAcceleratorDeployed(ctx, conn, acceleratorARN, d.Timeout(schema.TimeoutCreate)); err != nil {
 		return diag.Errorf("waiting for Global Accelerator Accelerator (%s) deployment: %s", acceleratorARN, err)
 	}
 
@@ -151,7 +151,7 @@ func resourceListenerUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	// Updating a listener triggers the accelerator to change status to InPending.
-	if _, err := waitAcceleratorDeployed(conn, acceleratorARN, d.Timeout(schema.TimeoutUpdate)); err != nil {
+	if _, err := waitAcceleratorDeployed(ctx, conn, acceleratorARN, d.Timeout(schema.TimeoutUpdate)); err != nil {
 		return diag.Errorf("waiting for Global Accelerator Accelerator (%s) deployment: %s", acceleratorARN, err)
 	}
 
@@ -176,7 +176,7 @@ func resourceListenerDelete(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	// Deleting a listener triggers the accelerator to change status to InPending.
-	if _, err := waitAcceleratorDeployed(conn, acceleratorARN, d.Timeout(schema.TimeoutDelete)); err != nil {
+	if _, err := waitAcceleratorDeployed(ctx, conn, acceleratorARN, d.Timeout(schema.TimeoutDelete)); err != nil {
 		return diag.Errorf("waiting for Global Accelerator Accelerator (%s) deployment: %s", acceleratorARN, err)
 	}
 

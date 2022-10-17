@@ -193,7 +193,7 @@ func resourceEndpointGroupCreate(ctx context.Context, d *schema.ResourceData, me
 		return diag.FromErr(err)
 	}
 
-	if _, err := waitAcceleratorDeployed(conn, acceleratorARN, d.Timeout(schema.TimeoutCreate)); err != nil {
+	if _, err := waitAcceleratorDeployed(ctx, conn, acceleratorARN, d.Timeout(schema.TimeoutCreate)); err != nil {
 		return diag.Errorf("waiting for Global Accelerator Accelerator (%s) deployment: %s", acceleratorARN, err)
 	}
 
@@ -295,7 +295,7 @@ func resourceEndpointGroupUpdate(ctx context.Context, d *schema.ResourceData, me
 		return diag.FromErr(err)
 	}
 
-	if _, err := waitAcceleratorDeployed(conn, acceleratorARN, d.Timeout(schema.TimeoutUpdate)); err != nil {
+	if _, err := waitAcceleratorDeployed(ctx, conn, acceleratorARN, d.Timeout(schema.TimeoutUpdate)); err != nil {
 		return diag.Errorf("waiting for Global Accelerator Accelerator (%s) deployment: %s", acceleratorARN, err)
 	}
 
@@ -324,7 +324,7 @@ func resourceEndpointGroupDelete(ctx context.Context, d *schema.ResourceData, me
 		return diag.FromErr(err)
 	}
 
-	if _, err := waitAcceleratorDeployed(conn, acceleratorARN, d.Timeout(schema.TimeoutDelete)); err != nil {
+	if _, err := waitAcceleratorDeployed(ctx, conn, acceleratorARN, d.Timeout(schema.TimeoutDelete)); err != nil {
 		return diag.Errorf("waiting for Global Accelerator Accelerator (%s) deployment: %s", acceleratorARN, err)
 	}
 

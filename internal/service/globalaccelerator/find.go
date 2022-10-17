@@ -10,20 +10,16 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-// FindAcceleratorByARN returns the accelerator corresponding to the specified ARN.
-// Returns NotFoundError if no accelerator is found.
-func FindAcceleratorByARN(conn *globalaccelerator.GlobalAccelerator, arn string) (*globalaccelerator.Accelerator, error) {
+func FindAcceleratorByARN(ctx context.Context, conn *globalaccelerator.GlobalAccelerator, arn string) (*globalaccelerator.Accelerator, error) {
 	input := &globalaccelerator.DescribeAcceleratorInput{
 		AcceleratorArn: aws.String(arn),
 	}
 
-	return FindAccelerator(conn, input)
+	return FindAccelerator(ctx, conn, input)
 }
 
-// FindAccelerator returns the accelerator corresponding to the specified input.
-// Returns NotFoundError if no accelerator is found.
-func FindAccelerator(conn *globalaccelerator.GlobalAccelerator, input *globalaccelerator.DescribeAcceleratorInput) (*globalaccelerator.Accelerator, error) {
-	output, err := conn.DescribeAccelerator(input)
+func FindAccelerator(ctx context.Context, conn *globalaccelerator.GlobalAccelerator, input *globalaccelerator.DescribeAcceleratorInput) (*globalaccelerator.Accelerator, error) {
+	output, err := conn.DescribeAcceleratorWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, globalaccelerator.ErrCodeAcceleratorNotFoundException) {
 		return nil, &resource.NotFoundError{
@@ -43,20 +39,16 @@ func FindAccelerator(conn *globalaccelerator.GlobalAccelerator, input *globalacc
 	return output.Accelerator, nil
 }
 
-// FindAcceleratorAttributesByARN returns the accelerator attributes corresponding to the specified ARN.
-// Returns NotFoundError if no accelerator is found.
-func FindAcceleratorAttributesByARN(conn *globalaccelerator.GlobalAccelerator, arn string) (*globalaccelerator.AcceleratorAttributes, error) {
+func FindAcceleratorAttributesByARN(ctx context.Context, conn *globalaccelerator.GlobalAccelerator, arn string) (*globalaccelerator.AcceleratorAttributes, error) {
 	input := &globalaccelerator.DescribeAcceleratorAttributesInput{
 		AcceleratorArn: aws.String(arn),
 	}
 
-	return FindAcceleratorAttributes(conn, input)
+	return FindAcceleratorAttributes(ctx, conn, input)
 }
 
-// FindAcceleratorAttributes returns the accelerator attributes corresponding to the specified input.
-// Returns NotFoundError if no accelerator is found.
-func FindAcceleratorAttributes(conn *globalaccelerator.GlobalAccelerator, input *globalaccelerator.DescribeAcceleratorAttributesInput) (*globalaccelerator.AcceleratorAttributes, error) {
-	output, err := conn.DescribeAcceleratorAttributes(input)
+func FindAcceleratorAttributes(ctx context.Context, conn *globalaccelerator.GlobalAccelerator, input *globalaccelerator.DescribeAcceleratorAttributesInput) (*globalaccelerator.AcceleratorAttributes, error) {
+	output, err := conn.DescribeAcceleratorAttributesWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, globalaccelerator.ErrCodeAcceleratorNotFoundException) {
 		return nil, &resource.NotFoundError{

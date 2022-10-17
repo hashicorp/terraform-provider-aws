@@ -1,6 +1,7 @@
 package globalaccelerator_test
 
 import (
+	"context"
 	"fmt"
 	"net"
 	"os"
@@ -391,7 +392,7 @@ func testAccCheckAcceleratorExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("No Global Accelerator Accelerator ID is set")
 		}
 
-		_, err := tfglobalaccelerator.FindAcceleratorByARN(conn, rs.Primary.ID)
+		_, err := tfglobalaccelerator.FindAcceleratorByARN(context.Background(), conn, rs.Primary.ID)
 
 		return err
 	}
@@ -405,7 +406,7 @@ func testAccCheckAcceleratorDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := tfglobalaccelerator.FindAcceleratorByARN(conn, rs.Primary.ID)
+		_, err := tfglobalaccelerator.FindAcceleratorByARN(context.Background(), conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue

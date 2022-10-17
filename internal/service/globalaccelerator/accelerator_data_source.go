@@ -1,6 +1,7 @@
 package globalaccelerator
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -85,6 +86,7 @@ func DataSourceAccelerator() *schema.Resource {
 }
 
 func dataSourceAcceleratorRead(d *schema.ResourceData, meta interface{}) error {
+	ctx := context.Background()
 	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -132,7 +134,7 @@ func dataSourceAcceleratorRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("ip_address_type", accelerator.IpAddressType)
 	d.Set("ip_sets", flattenIPSets(accelerator.IpSets))
 
-	acceleratorAttributes, err := FindAcceleratorAttributesByARN(conn, d.Id())
+	acceleratorAttributes, err := FindAcceleratorAttributesByARN(ctx, conn, d.Id())
 	if err != nil {
 		return fmt.Errorf("error reading Global Accelerator Accelerator (%s) attributes: %w", d.Id(), err)
 	}
