@@ -34,9 +34,11 @@ func ResourceBroker() *schema.Resource {
 		Read:   resourceBrokerRead,
 		Update: resourceBrokerUpdate,
 		Delete: resourceBrokerDelete,
+
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
+
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(30 * time.Minute),
 			Update: schema.DefaultTimeout(30 * time.Minute),
@@ -225,15 +227,15 @@ func ResourceBroker() *schema.Resource {
 				},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"general": {
-							Type:     schema.TypeBool,
-							Optional: true,
-						},
 						"audit": {
 							Type:             nullable.TypeNullableBool,
 							Optional:         true,
 							ValidateFunc:     nullable.ValidateTypeStringNullableBool,
 							DiffSuppressFunc: nullable.DiffSuppressNullableBoolFalseAsNull,
+						},
+						"general": {
+							Type:     schema.TypeBool,
+							Optional: true,
 						},
 					},
 				},
