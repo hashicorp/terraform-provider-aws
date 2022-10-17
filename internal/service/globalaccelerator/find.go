@@ -1,10 +1,13 @@
 package globalaccelerator
 
 import (
+	"context"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/globalaccelerator"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 // FindAcceleratorByARN returns the accelerator corresponding to the specified ARN.
@@ -115,20 +118,16 @@ func FindEndpointGroup(conn *globalaccelerator.GlobalAccelerator, input *globala
 	return output.EndpointGroup, nil
 }
 
-// FindListenerByARN returns the listener corresponding to the specified ARN.
-// Returns NotFoundError if no listener is found.
-func FindListenerByARN(conn *globalaccelerator.GlobalAccelerator, arn string) (*globalaccelerator.Listener, error) {
+func FindListenerByARN(ctx context.Context, conn *globalaccelerator.GlobalAccelerator, arn string) (*globalaccelerator.Listener, error) {
 	input := &globalaccelerator.DescribeListenerInput{
 		ListenerArn: aws.String(arn),
 	}
 
-	return FindListener(conn, input)
+	return FindListener(ctx, conn, input)
 }
 
-// FindListener returns the listener corresponding to the specified input.
-// Returns NotFoundError if no listener is found.
-func FindListener(conn *globalaccelerator.GlobalAccelerator, input *globalaccelerator.DescribeListenerInput) (*globalaccelerator.Listener, error) {
-	output, err := conn.DescribeListener(input)
+func FindListener(ctx context.Context, conn *globalaccelerator.GlobalAccelerator, input *globalaccelerator.DescribeListenerInput) (*globalaccelerator.Listener, error) {
+	output, err := conn.DescribeListenerWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, globalaccelerator.ErrCodeListenerNotFoundException) {
 		return nil, &resource.NotFoundError{
@@ -142,10 +141,7 @@ func FindListener(conn *globalaccelerator.GlobalAccelerator, input *globalaccele
 	}
 
 	if output == nil || output.Listener == nil {
-		return nil, &resource.NotFoundError{
-			Message:     "Empty result",
-			LastRequest: input,
-		}
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
 	return output.Listener, nil

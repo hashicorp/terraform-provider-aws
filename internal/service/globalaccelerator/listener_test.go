@@ -1,6 +1,7 @@
 package globalaccelerator_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -116,7 +117,7 @@ func testAccCheckListenerExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("No Global Accelerator Listener ID is set")
 		}
 
-		_, err := tfglobalaccelerator.FindListenerByARN(conn, rs.Primary.ID)
+		_, err := tfglobalaccelerator.FindListenerByARN(context.Background(), conn, rs.Primary.ID)
 
 		return err
 	}
@@ -130,7 +131,7 @@ func testAccCheckListenerDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := tfglobalaccelerator.FindListenerByARN(conn, rs.Primary.ID)
+		_, err := tfglobalaccelerator.FindListenerByARN(context.Background(), conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
