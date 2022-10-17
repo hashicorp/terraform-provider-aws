@@ -622,7 +622,7 @@ func resourceBrokerDelete(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	if _, err := WaitBrokerDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+	if _, err := waitBrokerDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return fmt.Errorf("error waiting for MQ Broker (%s) deletion: %w", d.Id(), err)
 	}
 
@@ -686,7 +686,7 @@ func waitBrokerCreated(conn *mq.MQ, id string, timeout time.Duration) (*mq.Descr
 	return nil, err
 }
 
-func WaitBrokerDeleted(conn *mq.MQ, id string, timeout time.Duration) (*mq.DescribeBrokerResponse, error) {
+func waitBrokerDeleted(conn *mq.MQ, id string, timeout time.Duration) (*mq.DescribeBrokerResponse, error) {
 	stateConf := resource.StateChangeConf{
 		Pending: []string{
 			mq.BrokerStateCreationFailed,
