@@ -142,8 +142,8 @@ func TestAccGlobalAcceleratorEndpointGroup_ALBEndpoint_clientIP(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "traffic_dial_percentage", "100"),
 				),
 			},
-			{
-				Config: acctest.ConfigVPCWithSubnets(rName, 2), // nosemgrep:ci.test-config-funcs-correct-form
+			{ // nosemgrep:ci.test-config-funcs-correct-form
+				Config: acctest.ConfigVPCWithSubnets(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExists(vpcResourceName, &vpc),
 					testAccCheckEndpointGroupDeleteSecurityGroup(&vpc),
@@ -194,8 +194,8 @@ func TestAccGlobalAcceleratorEndpointGroup_instanceEndpoint(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
-			{
-				Config: acctest.ConfigVPCWithSubnets(rName, 1), // nosemgrep:ci.test-config-funcs-correct-form
+			{ // nosemgrep:ci.test-config-funcs-correct-form
+				Config: acctest.ConfigVPCWithSubnets(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExists(vpcResourceName, &vpc),
 					testAccCheckEndpointGroupDeleteSecurityGroup(&vpc),
