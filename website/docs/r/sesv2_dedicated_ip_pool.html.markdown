@@ -24,7 +24,7 @@ resource "aws_sesv2_dedicated_ip_pool" "example" {
 
 The following arguments are required:
 
-* `pool_name` - (Required) Name of the dedicated IP pool. 
+* `pool_name` - (Required) Name of the dedicated IP pool.
 
 The following arguments are optional:
 
