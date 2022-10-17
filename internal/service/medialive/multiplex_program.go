@@ -31,7 +31,7 @@ const (
 )
 
 type multiplexProgram struct {
-	meta any
+	meta *conns.AWSClient
 }
 
 func (m *multiplexProgram) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
@@ -138,11 +138,13 @@ func (m *multiplexProgram) GetSchema(context.Context) (tfsdk.Schema, diag.Diagno
 }
 
 func (m *multiplexProgram) Configure(_ context.Context, request resource.ConfigureRequest, response *resource.ConfigureResponse) {
-	m.meta = request.ProviderData
+	if v, ok := request.ProviderData.(*conns.AWSClient); ok {
+		m.meta = v
+	}
 }
 
 func (m *multiplexProgram) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	conn := m.meta.(*conns.AWSClient).MediaLiveConn
+	conn := m.meta.MediaLiveConn
 
 	var plan resourceMultiplexProgramData
 	diags := req.Plan.Get(ctx, &plan)
@@ -187,7 +189,7 @@ func (m *multiplexProgram) Create(ctx context.Context, req resource.CreateReques
 }
 
 func (m *multiplexProgram) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	conn := m.meta.(*conns.AWSClient).MediaLiveConn
+	conn := m.meta.MediaLiveConn
 
 	var state resourceMultiplexProgramData
 	diags := req.State.Get(ctx, &state)
@@ -249,7 +251,7 @@ func (m *multiplexProgram) Update(ctx context.Context, req resource.UpdateReques
 }
 
 func (m *multiplexProgram) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	conn := m.meta.(*conns.AWSClient).MediaLiveConn
+	conn := m.meta.MediaLiveConn
 
 	var state resourceMultiplexProgramData
 	diags := req.State.Get(ctx, &state)
