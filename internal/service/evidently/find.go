@@ -35,9 +35,9 @@ func FindProjectByName(ctx context.Context, conn *cloudwatchevidently.CloudWatch
 	return output.Project, nil
 }
 
-func FindSegmentByName(ctx context.Context, conn *cloudwatchevidently.CloudWatchEvidently, name string) (*cloudwatchevidently.Segment, error) {
+func FindSegmentByNameOrARN(ctx context.Context, conn *cloudwatchevidently.CloudWatchEvidently, nameOrARN string) (*cloudwatchevidently.Segment, error) {
 	input := &cloudwatchevidently.GetSegmentInput{
-		Segment: aws.String(name),
+		Segment: aws.String(nameOrARN),
 	}
 
 	output, err := conn.GetSegmentWithContext(ctx, input)

@@ -114,7 +114,7 @@ func resourceSegmentCreate(ctx context.Context, d *schema.ResourceData, meta int
 		return diag.Errorf("creating CloudWatch Evidently Segment (%s): %s", name, err)
 	}
 
-	d.SetId(aws.StringValue(output.Segment.Name))
+	d.SetId(aws.StringValue(output.Segment.Arn))
 
 	return resourceSegmentRead(ctx, d, meta)
 }
@@ -124,7 +124,7 @@ func resourceSegmentRead(ctx context.Context, d *schema.ResourceData, meta inter
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	segment, err := FindSegmentByName(ctx, conn, d.Id())
+	segment, err := FindSegmentByNameOrARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] CloudWatch Evidently Segment (%s) not found, removing from state", d.Id())
@@ -166,7 +166,7 @@ func resourceSegmentUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTagsWithContext(ctx, conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTagsWithContext(ctx, conn, d.Id(), o, n); err != nil {
 			return diag.Errorf("updating tags: %s", err)
 		}
 	}

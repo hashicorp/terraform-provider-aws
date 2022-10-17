@@ -38,6 +38,7 @@ func TestAccEvidentlySegment_basic(t *testing.T) {
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "evidently", fmt.Sprintf("segment/%s", rName)),
 					resource.TestCheckResourceAttrSet(resourceName, "created_time"),
 					resource.TestCheckResourceAttrSet(resourceName, "experiment_count"),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "id", "evidently", fmt.Sprintf("segment/%s", rName)),
 					resource.TestCheckResourceAttrSet(resourceName, "last_updated_time"),
 					resource.TestCheckResourceAttrSet(resourceName, "launch_count"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -203,7 +204,7 @@ func testAccCheckSegmentDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := tfcloudwatchevidently.FindSegmentByName(context.Background(), conn, rs.Primary.ID)
+		_, err := tfcloudwatchevidently.FindSegmentByNameOrARN(context.Background(), conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -233,7 +234,7 @@ func testAccCheckSegmentExists(n string, v *cloudwatchevidently.Segment) resourc
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EvidentlyConn
 
-		output, err := tfcloudwatchevidently.FindSegmentByName(context.Background(), conn, rs.Primary.ID)
+		output, err := tfcloudwatchevidently.FindSegmentByNameOrARN(context.Background(), conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
