@@ -415,7 +415,7 @@ func resourceBrokerCreate(d *schema.ResourceData, meta interface{}) error {
 	d.SetId(aws.StringValue(out.BrokerId))
 	d.Set("arn", out.BrokerArn)
 
-	if _, err := WaitBrokerCreated(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+	if _, err := waitBrokerCreated(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return fmt.Errorf("error waiting for MQ Broker (%s) creation: %w", d.Id(), err)
 	}
 
@@ -670,12 +670,9 @@ func statusBrokerState(conn *mq.MQ, id string) resource.StateRefreshFunc {
 	}
 }
 
-func WaitBrokerCreated(conn *mq.MQ, id string, timeout time.Duration) (*mq.DescribeBrokerResponse, error) {
+func waitBrokerCreated(conn *mq.MQ, id string, timeout time.Duration) (*mq.DescribeBrokerResponse, error) {
 	stateConf := resource.StateChangeConf{
-		Pending: []string{
-			mq.BrokerStateCreationInProgress,
-			mq.BrokerStateRebootInProgress,
-		},
+		Pending: []string{mq.BrokerStateCreationInProgress, mq.BrokerStateRebootInProgress},
 		Target:  []string{mq.BrokerStateRunning},
 		Timeout: timeout,
 		Refresh: statusBrokerState(conn, id),
