@@ -1,6 +1,7 @@
 package globalaccelerator_test
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"testing"
@@ -429,7 +430,7 @@ func testAccCheckEndpointGroupExists(name string, v *globalaccelerator.EndpointG
 			return fmt.Errorf("No Global Accelerator Endpoint Group ID is set")
 		}
 
-		endpointGroup, err := tfglobalaccelerator.FindEndpointGroupByARN(conn, rs.Primary.ID)
+		endpointGroup, err := tfglobalaccelerator.FindEndpointGroupByARN(context.Background(), conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -449,7 +450,7 @@ func testAccCheckEndpointGroupDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := tfglobalaccelerator.FindEndpointGroupByARN(conn, rs.Primary.ID)
+		_, err := tfglobalaccelerator.FindEndpointGroupByARN(context.Background(), conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
