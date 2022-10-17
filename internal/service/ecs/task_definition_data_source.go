@@ -27,6 +27,10 @@ func DataSourceTaskDefinition() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"arn_without_revision": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"family": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -73,6 +77,7 @@ func dataSourceTaskDefinitionRead(ctx context.Context, d *schema.ResourceData, m
 
 	d.SetId(aws.StringValue(taskDefinition.TaskDefinitionArn))
 	d.Set("arn", taskDefinition.TaskDefinitionArn)
+	d.Set("arn_without_revision", computeArnWithoutRevision(*taskDefinition.TaskDefinitionArn))
 	d.Set("family", taskDefinition.Family)
 	d.Set("network_mode", taskDefinition.NetworkMode)
 	d.Set("revision", taskDefinition.Revision)
