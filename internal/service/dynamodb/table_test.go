@@ -1982,6 +1982,7 @@ func TestAccDynamoDBTable_backup_overrideEncryption(t *testing.T) {
 	})
 }
 
+//lintignore:AT002
 func TestAccDynamoDBTable_importTable(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -3564,12 +3565,12 @@ resource "aws_dynamodb_table" "test" {
   }
 
   import_table {
-    client_token = %[1]q
+    client_token           = %[1]q
     input_compression_type = "NONE"
-    input_format = "DYNAMODB_JSON"
+    input_format           = "DYNAMODB_JSON"
 
     s3_bucket_source {
-      s3_bucket = aws_s3_bucket.test.bucket
+      s3_bucket     = aws_s3_bucket.test.bucket
       s3_key_prefix = "data"
     }
   }
@@ -3580,8 +3581,8 @@ resource "aws_s3_bucket" "test" {
 }
 
 resource "aws_s3_bucket_object" "test" {
-  bucket = aws_s3_bucket.test.id
-  key    = "data/somedoc.json"
+  bucket  = aws_s3_bucket.test.id
+  key     = "data/somedoc.json"
   content = "{\"Item\":{\"%[1]s\":{\"S\":\"test\"},\"field\":{\"S\":\"test\"}}}"
 }
 `, rName)
