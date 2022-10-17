@@ -595,7 +595,7 @@ func resourceBrokerUpdate(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("error rebooting MQ Broker (%s): %w", d.Id(), err)
 		}
 
-		if _, err := WaitBrokerRebooted(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+		if _, err := waitBrokerRebooted(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return fmt.Errorf("error waiting for MQ Broker (%s) reboot: %w", d.Id(), err)
 		}
 	}
@@ -707,11 +707,9 @@ func waitBrokerDeleted(conn *mq.MQ, id string, timeout time.Duration) (*mq.Descr
 	return nil, err
 }
 
-func WaitBrokerRebooted(conn *mq.MQ, id string, timeout time.Duration) (*mq.DescribeBrokerResponse, error) {
+func waitBrokerRebooted(conn *mq.MQ, id string, timeout time.Duration) (*mq.DescribeBrokerResponse, error) {
 	stateConf := resource.StateChangeConf{
-		Pending: []string{
-			mq.BrokerStateRebootInProgress,
-		},
+		Pending: []string{mq.BrokerStateRebootInProgress},
 		Target:  []string{mq.BrokerStateRunning},
 		Timeout: timeout,
 		Refresh: statusBrokerState(conn, id),
