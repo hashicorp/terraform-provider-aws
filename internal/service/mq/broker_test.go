@@ -8,7 +8,6 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/mq"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -16,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfmq "github.com/hashicorp/terraform-provider-aws/internal/service/mq"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestValidateBrokerName(t *testing.T) {
@@ -297,6 +297,37 @@ func TestAccMQBroker_basic(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"apply_immediately", "user"},
+			},
+		},
+	})
+}
+
+func TestAccMQBroker_disappears(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var broker mq.DescribeBrokerResponse
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_mq_broker.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(mq.EndpointsID, t)
+			testAccPreCheck(t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, mq.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBrokerDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBrokerConfig_basic(rName, testAccBrokerVersionNewer),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBrokerExists(resourceName, &broker),
+					acctest.CheckResourceDisappears(acctest.Provider, tfmq.ResourceBroker(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -1014,37 +1045,6 @@ func TestAccMQBroker_Update_hostInstanceType(t *testing.T) {
 	})
 }
 
-func TestAccMQBroker_disappears(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	var broker mq.DescribeBrokerResponse
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_mq_broker.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(mq.EndpointsID, t)
-			testAccPreCheck(t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, mq.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBrokerDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccBrokerConfig_basic(rName, testAccBrokerVersionNewer),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBrokerExists(resourceName, &broker),
-					acctest.CheckResourceDisappears(acctest.Provider, tfmq.ResourceBroker(), resourceName),
-				),
-				ExpectNonEmptyPlan: true,
-			},
-		},
-	})
-}
-
 func TestAccMQBroker_RabbitMQ_basic(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -1291,45 +1291,42 @@ func testAccCheckBrokerDestroy(s *terraform.State) error {
 			continue
 		}
 
-		input := &mq.DescribeBrokerInput{
-			BrokerId: aws.String(rs.Primary.ID),
+		_, err := tfmq.FindBrokerByID(conn, rs.Primary.ID)
+
+		if tfresource.NotFound(err) {
+			continue
 		}
 
-		_, err := conn.DescribeBroker(input)
 		if err != nil {
-			if tfawserr.ErrCodeEquals(err, mq.ErrCodeNotFoundException) {
-				return nil
-			}
 			return err
 		}
 
-		return fmt.Errorf("Expected MQ Broker to be destroyed, %s found", rs.Primary.ID)
+		return fmt.Errorf("MQ Broker %s still exists", rs.Primary.ID)
 	}
 
 	return nil
 }
 
-func testAccCheckBrokerExists(name string, broker *mq.DescribeBrokerResponse) resource.TestCheckFunc {
+func testAccCheckBrokerExists(n string, v *mq.DescribeBrokerResponse) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", name)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No MQ Broker is set")
+			return fmt.Errorf("No MQ Broker ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).MQConn
-		resp, err := conn.DescribeBroker(&mq.DescribeBrokerInput{
-			BrokerId: aws.String(rs.Primary.ID),
-		})
+
+		output, err := tfmq.FindBrokerByID(conn, rs.Primary.ID)
 
 		if err != nil {
-			return fmt.Errorf("Error describing MQ Broker: %s", err.Error())
+			return err
 		}
 
-		*broker = *resp
+		*v = *output
 
 		return nil
 	}
