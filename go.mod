@@ -3,11 +3,9 @@ module github.com/hashicorp/terraform-provider-aws
 go 1.16
 
 require (
-	github.com/agl/ed25519 v0.0.0-20170116200512-5312a6153412 // indirect
+	github.com/ProtonMail/go-crypto v0.0.0-20210428141323-04723f9f07d7
 	github.com/aws/aws-sdk-go v1.44.13
 	github.com/beevik/etree v1.1.0
-	github.com/evanphx/json-patch v0.5.2 // indirect
-	github.com/fatih/color v1.9.0 // indirect
 	github.com/hashicorp/aws-cloudformation-resource-schema-sdk-go v0.15.0
 	github.com/hashicorp/aws-sdk-go-base v1.0.0
 	github.com/hashicorp/awspolicyequivalence v1.5.0
@@ -16,9 +14,7 @@ require (
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/hashicorp/go-version v1.4.0
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.10.1
-	github.com/keybase/go-crypto v0.0.0-20161004153544-93f5b35093ba
 	github.com/mattbaird/jsonpatch v0.0.0-20200820163806-098863c1fc24
-	github.com/mattn/go-colorable v0.1.7 // indirect
 	github.com/mitchellh/copystructure v1.2.0
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/mitchellh/go-testing-interface v1.14.1
@@ -26,4 +22,10 @@ require (
 	github.com/shopspring/decimal v1.3.1
 	golang.org/x/crypto v0.0.0-20210616213533-5ff15b29337e
 	gopkg.in/yaml.v2 v2.4.0
+)
+
+require (
+	github.com/evanphx/json-patch v0.5.2 // indirect
+	github.com/fatih/color v1.9.0 // indirect
+	github.com/mattn/go-colorable v0.1.7 // indirect
 )
