@@ -25,6 +25,16 @@ func DataSourceOutpostAssets() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
+			"host_id_filter": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"status_id_filter": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
 		},
 	}
 }
@@ -36,6 +46,15 @@ func DataSourceOutpostAssetsRead(d *schema.ResourceData, meta interface{}) error
 	input := &outposts.ListAssetsInput{
 		OutpostIdentifier: outpost_id,
 	}
+
+	if v, ok := d.GetOk("host_id_filter"); ok {
+		input.HostIdFilter = aws.StringSlice([]string{v})
+	}
+
+	if v, ok := d.GetOk("status_id_filter"); ok {
+		input.StatusFilter = aws.StringSlice([]string{v.(string)})
+	}
+
 	var asset_ids []string
 	err := conn.ListAssetsPages(input, func(page *outposts.ListAssetsOutput, lastPage bool) bool {
 		if page == nil {
