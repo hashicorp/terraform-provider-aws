@@ -22,8 +22,6 @@ resource "aws_fsx_lustre_file_system" "example" {
 }
 ```
 
-
-
 ## Argument Reference
 
 The following arguments are supported:

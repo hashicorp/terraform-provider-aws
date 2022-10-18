@@ -10,6 +10,8 @@ description: |-
 
 Provides an SSM Parameter resource.
 
+~> **Note:** `overwrite` also makes it possible to overwrite an existing SSM Parameter that's not created by Terraform before.
+
 ## Example Usage
 
 ### Basic example

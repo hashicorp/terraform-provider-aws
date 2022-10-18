@@ -176,14 +176,12 @@ func testAccCheckMultiplexProgramExists(name string, multiplexprogram *medialive
 }
 
 func testAccMultiplexProgramBaseConfig(rName string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "test" {
-  state = "available"
-}
-
+	return acctest.ConfigCompose(
+		acctest.ConfigAvailableAZsNoOptIn(),
+		fmt.Sprintf(`
 resource "aws_medialive_multiplex" "test" {
   name               = %[1]q
-  availability_zones = [data.aws_availability_zones.test.names[0], data.aws_availability_zones.test.names[1]]
+  availability_zones = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1]]
 
   multiplex_settings {
     transport_stream_bitrate                = 1000000
@@ -196,7 +194,7 @@ resource "aws_medialive_multiplex" "test" {
     Name = %[1]q
   }
 }
-`, rName)
+`, rName))
 }
 func testAccMultiplexProgramConfig_basic(rName string) string {
 	return acctest.ConfigCompose(

@@ -18,7 +18,6 @@ data "aws_organizations_delegated_services" "example" {
 }
 ```
 
-
 ## Argument Reference
 
 * `account_id` - (Required) Account ID number of a delegated administrator account in the organization.

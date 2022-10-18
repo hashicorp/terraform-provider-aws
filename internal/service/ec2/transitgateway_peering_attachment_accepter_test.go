@@ -9,7 +9,7 @@ import (
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/envvar"
 )
 
 func testAccTransitGatewayPeeringAttachmentAccepter_basic(t *testing.T) {
@@ -152,7 +152,7 @@ provider %[1]q {
   region     = %[4]q
   secret_key = %[5]q
 }
-`, acctest.ProviderNameAlternate, os.Getenv(conns.EnvVarAlternateAccessKeyId), os.Getenv(conns.EnvVarAlternateProfile), acctest.AlternateRegion(), os.Getenv(conns.EnvVarAlternateSecretAccessKey))
+`, acctest.ProviderNameAlternate, os.Getenv(envvar.AlternateAccessKeyId), os.Getenv(envvar.AlternateProfile), acctest.AlternateRegion(), os.Getenv(envvar.AlternateSecretAccessKey))
 }
 
 func testAccTransitGatewayPeeringAttachmentAccepterConfig_base(rName string) string {

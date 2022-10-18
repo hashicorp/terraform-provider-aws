@@ -19,5 +19,5 @@ func ResourceNodejsAppLayer() *schema.Resource {
 		},
 	}
 
-	return layerType.SchemaResource()
+	return layerType.resourceSchema()
 }

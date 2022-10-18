@@ -271,6 +271,9 @@ service/connectcontactlens:
 service/connectparticipant:
   - 'internal/service/connectparticipant/**/*'
   - 'website/**/connectparticipant_*'
+service/controltower:
+  - 'internal/service/controltower/**/*'
+  - 'website/**/controltower_*'
 service/cur:
   - 'internal/service/cur/**/*'
   - 'website/**/cur_*'

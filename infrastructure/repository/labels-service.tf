@@ -68,6 +68,7 @@ variable "service_labels" {
     "connect",
     "connectcontactlens",
     "connectparticipant",
+    "controltower",
     "cur",
     "customerprofiles",
     "databrew",

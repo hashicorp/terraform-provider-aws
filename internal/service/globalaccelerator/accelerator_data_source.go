@@ -1,153 +1,300 @@
 package globalaccelerator
 
 import (
-	"fmt"
+	"context"
 
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/globalaccelerator"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/fwtypes"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
-func DataSourceAccelerator() *schema.Resource {
-	return &schema.Resource{
-		Read: dataSourceAcceleratorRead,
+func init() {
+	registerFrameworkDataSourceFactory(newDataSourceAccelerator)
+}
 
-		Schema: map[string]*schema.Schema{
+// newDataSourceAccelerator instantiates a new DataSource for the aws_globalaccelerator_accelerator data source.
+func newDataSourceAccelerator(context.Context) (datasource.DataSourceWithConfigure, error) {
+	return &dataSourceAccelerator{}, nil
+}
+
+type dataSourceAccelerator struct {
+	meta *conns.AWSClient
+}
+
+// Metadata should return the full name of the data source, such as
+// examplecloud_thing.
+func (d *dataSourceAccelerator) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) {
+	response.TypeName = "aws_globalaccelerator_accelerator"
+}
+
+// GetSchema returns the schema for this data source.
+func (d *dataSourceAccelerator) GetSchema(context.Context) (tfsdk.Schema, diag.Diagnostics) {
+	schema := tfsdk.Schema{
+		Attributes: map[string]tfsdk.Attribute{
 			"arn": {
-				Type:     schema.TypeString,
+				Type:     fwtypes.ARNType,
 				Optional: true,
 				Computed: true,
 			},
-			"name": {
-				Type:     schema.TypeString,
+			"attributes": {
+				Type: types.ListType{ElemType: types.ObjectType{
+					AttrTypes: map[string]attr.Type{
+						"flow_logs_enabled":   types.BoolType,
+						"flow_logs_s3_bucket": types.StringType,
+						"flow_logs_s3_prefix": types.StringType,
+					},
+				}},
+				Computed: true,
+			},
+			"dns_name": {
+				Type:     types.StringType,
+				Computed: true,
+			},
+			"enabled": {
+				Type:     types.BoolType,
+				Computed: true,
+			},
+			"hosted_zone_id": {
+				Type:     types.StringType,
+				Computed: true,
+			},
+			"id": {
+				Type:     types.StringType,
 				Optional: true,
 				Computed: true,
 			},
 			"ip_address_type": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"enabled": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"dns_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"hosted_zone_id": {
-				Type:     schema.TypeString,
+				Type:     types.StringType,
 				Computed: true,
 			},
 			"ip_sets": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"ip_addresses": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"ip_family": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
+				Type: types.ListType{ElemType: types.ObjectType{
+					AttrTypes: map[string]attr.Type{
+						"ip_addresses": types.ListType{ElemType: types.StringType},
+						"ip_family":    types.StringType,
 					},
-				},
-			},
-			"attributes": {
-				Type:     schema.TypeList,
+				}},
 				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"flow_logs_enabled": {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-						"flow_logs_s3_bucket": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"flow_logs_s3_prefix": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
-				},
 			},
-
-			"tags": tftags.TagsSchemaComputed(),
+			"name": {
+				Type:     types.StringType,
+				Optional: true,
+				Computed: true,
+			},
+			"tags": tftags.TagsAttributeComputed(),
 		},
+	}
+
+	return schema, nil
+}
+
+// Configure enables provider-level data or clients to be set in the
+// provider-defined DataSource type. It is separately executed for each
+// ReadDataSource RPC.
+func (d *dataSourceAccelerator) Configure(_ context.Context, request datasource.ConfigureRequest, response *datasource.ConfigureResponse) {
+	if v, ok := request.ProviderData.(*conns.AWSClient); ok {
+		d.meta = v
 	}
 }
 
-func dataSourceAcceleratorRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+// Read is called when the provider must read data source values in order to update state.
+// Config values should be read from the ReadRequest and new state values set on the ReadResponse.
+func (d *dataSourceAccelerator) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
+	var data dataSourceAcceleratorData
+
+	response.Diagnostics.Append(request.Config.Get(ctx, &data)...)
+
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	conn := d.meta.GlobalAcceleratorConn
+	ignoreTagsConfig := d.meta.IgnoreTagsConfig
 
 	var results []*globalaccelerator.Accelerator
-
-	err := conn.ListAcceleratorsPages(&globalaccelerator.ListAcceleratorsInput{}, func(page *globalaccelerator.ListAcceleratorsOutput, lastPage bool) bool {
+	err := conn.ListAcceleratorsPagesWithContext(ctx, &globalaccelerator.ListAcceleratorsInput{}, func(page *globalaccelerator.ListAcceleratorsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
 
-		for _, l := range page.Accelerators {
-			if l == nil {
+		for _, accelerator := range page.Accelerators {
+			if accelerator == nil {
 				continue
 			}
 
-			if v, ok := d.GetOk("arn"); ok && v.(string) != aws.StringValue(l.AcceleratorArn) {
+			if !data.ARN.IsNull() && data.ARN.Value.String() != aws.StringValue(accelerator.AcceleratorArn) {
 				continue
 			}
 
-			if v, ok := d.GetOk("name"); ok && v.(string) != aws.StringValue(l.Name) {
+			if !data.Name.IsNull() && data.Name.Value != aws.StringValue(accelerator.Name) {
 				continue
 			}
 
-			results = append(results, l)
+			results = append(results, accelerator)
 		}
 
 		return !lastPage
 	})
 
 	if err != nil {
-		return fmt.Errorf("error reading AWS Global Accelerator: %w", err)
+		response.Diagnostics.AddError("listing Global Accelerator Accelerators", err.Error())
+
+		return
 	}
 
-	if len(results) != 1 {
-		return fmt.Errorf("Search returned %d results, please revise so only one is returned", len(results))
+	if n := len(results); n == 0 {
+		response.Diagnostics.AddError("no matching Global Accelerator Accelerator found", "")
+
+		return
+	} else if n > 1 {
+		response.Diagnostics.AddError("multiple Global Accelerator Accelerators matched; use additional constraints to reduce matches to a single Global Accelerator Accelerator", "")
+
+		return
 	}
 
 	accelerator := results[0]
-	d.SetId(aws.StringValue(accelerator.AcceleratorArn))
-	d.Set("arn", accelerator.AcceleratorArn)
-	d.Set("enabled", accelerator.Enabled)
-	d.Set("dns_name", accelerator.DnsName)
-	d.Set("hosted_zone_id", route53ZoneID)
-	d.Set("name", accelerator.Name)
-	d.Set("ip_address_type", accelerator.IpAddressType)
-	d.Set("ip_sets", flattenIPSets(accelerator.IpSets))
+	acceleratorARN := aws.StringValue(accelerator.AcceleratorArn)
+	if v, err := arn.Parse(acceleratorARN); err != nil {
+		response.Diagnostics.AddError("parsing ARN", err.Error())
+	} else {
+		data.ARN = fwtypes.ARN{Value: v}
+	}
+	data.DnsName = types.String{Value: aws.StringValue(accelerator.DnsName)}
+	data.Enabled = types.Bool{Value: aws.BoolValue(accelerator.Enabled)}
+	data.HostedZoneID = types.String{Value: route53ZoneID}
+	data.ID = types.String{Value: acceleratorARN}
+	data.IpAddressType = types.String{Value: aws.StringValue(accelerator.IpAddressType)}
+	data.IpSets = flattenIPSetsFramework(ctx, accelerator.IpSets)
+	data.Name = types.String{Value: aws.StringValue(accelerator.Name)}
 
-	acceleratorAttributes, err := FindAcceleratorAttributesByARN(conn, d.Id())
+	attributes, err := FindAcceleratorAttributesByARN(ctx, conn, acceleratorARN)
+
 	if err != nil {
-		return fmt.Errorf("error reading Global Accelerator Accelerator (%s) attributes: %w", d.Id(), err)
+		response.Diagnostics.AddError("reading Global Accelerator Accelerator attributes", err.Error())
+
+		return
 	}
 
-	if err := d.Set("attributes", []interface{}{flattenAcceleratorAttributes(acceleratorAttributes)}); err != nil {
-		return fmt.Errorf("error setting attributes: %w", err)
-	}
+	data.Attributes = flattenAcceleratorAttributesFramework(ctx, attributes)
 
-	tags, err := ListTags(conn, d.Id())
+	tags, err := ListTagsWithContext(ctx, conn, acceleratorARN)
+
 	if err != nil {
-		return fmt.Errorf("error listing tags for Global Accelerator Accelerator (%s): %w", d.Id(), err)
+		response.Diagnostics.AddError("listing tags for Global Accelerator Accelerator", err.Error())
+
+		return
 	}
 
-	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+	data.Tags = flex.FlattenFrameworkStringValueMap(ctx, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map())
+
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
+}
+
+type dataSourceAcceleratorData struct {
+	ARN           fwtypes.ARN  `tfsdk:"arn"`
+	Attributes    types.List   `tfsdk:"attributes"`
+	DnsName       types.String `tfsdk:"dns_name"`
+	Enabled       types.Bool   `tfsdk:"enabled"`
+	HostedZoneID  types.String `tfsdk:"hosted_zone_id"`
+	ID            types.String `tfsdk:"id"`
+	IpAddressType types.String `tfsdk:"ip_address_type"`
+	IpSets        types.List   `tfsdk:"ip_sets"`
+	Name          types.String `tfsdk:"name"`
+	Tags          types.Map    `tfsdk:"tags"`
+}
+
+func flattenIPSetFramework(ctx context.Context, apiObject *globalaccelerator.IpSet) types.Object {
+	attrTypes := map[string]attr.Type{
+		"ip_addresses": types.ListType{ElemType: types.StringType},
+		"ip_family":    types.StringType,
 	}
-	return nil
+
+	if apiObject == nil {
+		return types.Object{AttrTypes: attrTypes, Null: true}
+	}
+
+	attrs := map[string]attr.Value{}
+
+	if v := apiObject.IpAddresses; v != nil {
+		attrs["ip_addresses"] = flex.FlattenFrameworkStringList(ctx, v)
+	} else {
+		attrs["ip_addresses"] = types.List{Null: true}
+	}
+
+	if v := apiObject.IpFamily; v != nil {
+		attrs["ip_family"] = types.String{Value: aws.StringValue(v)}
+	} else {
+		attrs["ip_family"] = types.String{Null: true}
+	}
+
+	return types.Object{AttrTypes: attrTypes, Attrs: attrs}
+}
+
+func flattenIPSetsFramework(ctx context.Context, apiObjects []*globalaccelerator.IpSet) types.List {
+	elemType := types.ObjectType{AttrTypes: map[string]attr.Type{
+		"ip_addresses": types.ListType{ElemType: types.StringType},
+		"ip_family":    types.StringType,
+	}}
+
+	if len(apiObjects) == 0 {
+		return types.List{ElemType: elemType, Null: true}
+	}
+
+	var elems []attr.Value
+
+	for _, apiObject := range apiObjects {
+		if apiObject == nil {
+			continue
+		}
+
+		elems = append(elems, flattenIPSetFramework(ctx, apiObject))
+	}
+
+	return types.List{ElemType: elemType, Elems: elems}
+}
+
+func flattenAcceleratorAttributesFramework(_ context.Context, apiObject *globalaccelerator.AcceleratorAttributes) types.List {
+	attrTypes := map[string]attr.Type{
+		"flow_logs_enabled":   types.BoolType,
+		"flow_logs_s3_bucket": types.StringType,
+		"flow_logs_s3_prefix": types.StringType,
+	}
+	elemType := types.ObjectType{
+		AttrTypes: attrTypes,
+	}
+
+	if apiObject == nil {
+		return types.List{ElemType: elemType, Null: true}
+	}
+
+	attrs := map[string]attr.Value{}
+
+	if v := apiObject.FlowLogsEnabled; v != nil {
+		attrs["flow_logs_enabled"] = types.Bool{Value: aws.BoolValue(v)}
+	} else {
+		attrs["flow_logs_enabled"] = types.Bool{Null: true}
+	}
+
+	if v := apiObject.FlowLogsS3Bucket; v != nil {
+		attrs["flow_logs_s3_bucket"] = types.String{Value: aws.StringValue(v)}
+	} else {
+		attrs["flow_logs_s3_bucket"] = types.String{Value: ""}
+	}
+
+	if v := apiObject.FlowLogsS3Prefix; v != nil {
+		attrs["flow_logs_s3_prefix"] = types.String{Value: aws.StringValue(v)}
+	} else {
+		attrs["flow_logs_s3_prefix"] = types.String{Value: ""}
+	}
+
+	return types.List{ElemType: elemType, Elems: []attr.Value{types.Object{AttrTypes: attrTypes, Attrs: attrs}}}
 }

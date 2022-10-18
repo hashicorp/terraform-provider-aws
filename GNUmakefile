@@ -5,6 +5,7 @@ PKG_NAME            ?= internal
 TEST_COUNT          ?= 1
 ACCTEST_TIMEOUT     ?= 180m
 ACCTEST_PARALLELISM ?= 20
+GO_VER              ?= go
 
 ifneq ($(origin PKG), undefined)
 	PKG_NAME = internal/service/$(PKG)
@@ -57,7 +58,7 @@ endif
 default: build
 
 build: fmtcheck
-	go install
+	$(GO_VER) install
 
 gen:
 	rm -f .github/labeler-issue-triage.yml
@@ -73,15 +74,16 @@ gen:
 	rm -f .ci/.semgrep-caps-aws-ec2.yml
 	rm -f .ci/.semgrep-configs.yml
 	rm -f .ci/.semgrep-service-name*.yml
-	go generate ./...
+	$(GO_VER) generate ./...
 
 sweep:
 	# make sweep SWEEPARGS=-sweep-run=aws_example_thing
+	# set SWEEPARGS=-sweep-allow-failures to continue after first failure
 	@echo "WARNING: This will destroy infrastructure. Use only in development accounts."
-	go test $(SWEEP_DIR) -v -tags=sweep -sweep=$(SWEEP) $(SWEEPARGS) -timeout 60m
+	$(GO_VER) test $(SWEEP_DIR) -v -tags=sweep -sweep=$(SWEEP) $(SWEEPARGS) -timeout 60m
 
 test: fmtcheck
-	go test $(TEST) $(TESTARGS) -timeout=5m
+	$(GO_VER) test $(TEST) $(TESTARGS) -timeout=5m
 
 testacc: fmtcheck
 	@if [ "$(TESTARGS)" = "-run=TestAccXXX" ]; then \
@@ -91,10 +93,10 @@ testacc: fmtcheck
 		echo "For example if updating internal/service/acm/certificate.go, use the test names in internal/service/acm/certificate_test.go starting with TestAcc and up to the underscore:"; \
 		echo "make testacc TESTS=TestAccACMCertificate_ PKG=acm"; \
 		echo ""; \
-		echo "See the contributing guide for more information: https://github.com/hashicorp/terraform-provider-aws/blob/main/docs/contributing/running-and-writing-acceptance-tests.md"; \
+		echo "See the contributing guide for more information: https://hashicorp.github.io/terraform-provider-aws/running-and-writing-acceptance-tests"; \
 		exit 1; \
 	fi
-	TF_ACC=1 go test ./$(PKG_NAME)/... -v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) $(RUNARGS) $(TESTARGS) -timeout $(ACCTEST_TIMEOUT)
+	TF_ACC=1 $(GO_VER) test ./$(PKG_NAME)/... -v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) $(RUNARGS) $(TESTARGS) -timeout $(ACCTEST_TIMEOUT)
 
 fmt:
 	@echo "==> Fixing source code with gofmt..."
@@ -116,7 +118,7 @@ generate-changelog:
 
 depscheck:
 	@echo "==> Checking source code with go mod tidy..."
-	@go mod tidy
+	@$(GO_VER) mod tidy
 	@git diff --exit-code -- go.mod go.sum || \
 		(echo; echo "Unexpected difference in go.mod/go.sum files. Run 'go mod tidy' command or revert any go.mod/go.sum changes and commit."; exit 1)
 
@@ -139,7 +141,10 @@ docs-lint-fix:
 docscheck:
 	@tfproviderdocs check \
 		-allowed-resource-subcategories-file website/allowed-subcategories.txt \
-		-ignore-side-navigation-data-sources aws_alb,aws_alb_listener,aws_alb_target_group,aws_kms_secret \
+		-enable-contents-check \
+		-ignore-file-missing-data-sources aws_alb,aws_alb_listener,aws_alb_target_group \
+		-ignore-file-missing-resources aws_alb,aws_alb_listener,aws_alb_listener_certificate,aws_alb_listener_rule,aws_alb_target_group,aws_alb_target_group_attachment \
+		-provider-name=aws \
 		-require-resource-subcategory
 	@misspell -error -source text CHANGELOG.md .changelog
 
@@ -186,15 +191,15 @@ importlint:
 	@impi --local . --scheme stdThirdPartyLocal ./$(PKG_NAME)/...
 
 tools:
-	cd .ci/providerlint && go install .
-	cd .ci/tools && go install github.com/bflad/tfproviderdocs
-	cd .ci/tools && go install github.com/client9/misspell/cmd/misspell
-	cd .ci/tools && go install github.com/golangci/golangci-lint/cmd/golangci-lint
-	cd .ci/tools && go install github.com/katbyte/terrafmt
-	cd .ci/tools && go install github.com/terraform-linters/tflint
-	cd .ci/tools && go install github.com/pavius/impi/cmd/impi
-	cd .ci/tools && go install github.com/hashicorp/go-changelog/cmd/changelog-build
-	cd .ci/tools && go install github.com/rhysd/actionlint/cmd/actionlint
+	cd .ci/providerlint && $(GO_VER) install .
+	cd .ci/tools && $(GO_VER) install github.com/bflad/tfproviderdocs
+	cd .ci/tools && $(GO_VER) install github.com/client9/misspell/cmd/misspell
+	cd .ci/tools && $(GO_VER) install github.com/golangci/golangci-lint/cmd/golangci-lint
+	cd .ci/tools && $(GO_VER) install github.com/katbyte/terrafmt
+	cd .ci/tools && $(GO_VER) install github.com/terraform-linters/tflint
+	cd .ci/tools && $(GO_VER) install github.com/pavius/impi/cmd/impi
+	cd .ci/tools && $(GO_VER) install github.com/hashicorp/go-changelog/cmd/changelog-build
+	cd .ci/tools && $(GO_VER) install github.com/rhysd/actionlint/cmd/actionlint
 
 test-compile:
 	@if [ "$(TEST)" = "./..." ]; then \
@@ -202,7 +207,7 @@ test-compile:
 		echo "  make test-compile TEST=./$(PKG_NAME)"; \
 		exit 1; \
 	fi
-	go test -c $(TEST) $(TESTARGS)
+	$(GO_VER) test -c $(TEST) $(TESTARGS)
 
 website-link-check:
 	@.ci/scripts/markdown-link-check.sh
@@ -254,10 +259,10 @@ semall:
 		--config 'r/dgryski.semgrep-go.oserrors'
 
 skaff:
-	cd skaff && go install github.com/hashicorp/terraform-provider-aws/skaff
+	cd skaff && $(GO_VER) install github.com/hashicorp/terraform-provider-aws/skaff
 
 tfsdk2fw:
-	cd tools/tfsdk2fw && go install github.com/hashicorp/terraform-provider-aws/tools/tfsdk2fw
+	cd tools/tfsdk2fw && $(GO_VER) install github.com/hashicorp/terraform-provider-aws/tools/tfsdk2fw
 
 yamllint:
 	@yamllint .

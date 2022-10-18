@@ -76,6 +76,7 @@ const (
 	errCodeInvalidSubnetCIDRReservationIDNotFound         = "InvalidSubnetCidrReservationID.NotFound"
 	errCodeInvalidSubnetIDNotFound                        = "InvalidSubnetID.NotFound"
 	errCodeInvalidSubnetIdNotFound                        = "InvalidSubnetId.NotFound"
+	errCodeInvalidTrafficMirrorTargetIdNotFound           = "InvalidTrafficMirrorTargetId.NotFound"
 	errCodeInvalidTransitGatewayAttachmentIDNotFound      = "InvalidTransitGatewayAttachmentID.NotFound"
 	errCodeInvalidTransitGatewayConnectPeerIDNotFound     = "InvalidTransitGatewayConnectPeerID.NotFound"
 	errCodeInvalidTransitGatewayPolicyTableIdNotFound     = "InvalidTransitGatewayPolicyTableId.NotFound"

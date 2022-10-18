@@ -45,6 +45,10 @@ func (d durationType) ValueFromTerraform(_ context.Context, in tftypes.Value) (a
 	return Duration{Value: dur}, nil
 }
 
+func (d durationType) ValueType(context.Context) attr.Value {
+	return Duration{}
+}
+
 // Equal returns true if `o` is also a DurationType.
 func (d durationType) Equal(o attr.Type) bool {
 	_, ok := o.(durationType)

@@ -18,7 +18,6 @@ Provides an Amazon MQ broker resource. This resources also manages users for the
 
 ~> **NOTE:** All arguments including the username and password will be stored in the raw state as plain-text. [Read more about sensitive data in state](https://www.terraform.io/docs/state/sensitive-data.html).
 
-
 ## Example Usage
 
 ### Basic Example

@@ -94,7 +94,6 @@ In addition to all arguments above, the following attributes are exported:
 * `created_time` - Date and time, in UTC and extended RFC 3339 format, when the stack was created.
 * `id` - Unique ID of the appstream stack.
 
-
 ## Import
 
 `aws_appstream_stack` can be imported using the id, e.g.,

@@ -91,7 +91,7 @@ connectparticipant,connectparticipant,connectparticipant,connectparticipant,,con
 voice-id,voiceid,voiceid,voiceid,,voiceid,,,VoiceID,VoiceID,,1,,aws_voiceid_,,voiceid_,Connect Voice ID,Amazon,,,,,
 wisdom,wisdom,connectwisdomservice,wisdom,,wisdom,,connectwisdomservice,Wisdom,ConnectWisdomService,,1,,aws_wisdom_,,wisdom_,Connect Wisdom,Amazon,,,,,
 ,,,,,,,,,,,,,,,,Console Mobile Application,AWS,x,,,,No SDK support
-,,,,,,,,,,,,,,,,Control Tower,AWS,x,,,,No SDK support
+controltower,controltower,controltower,controltower,,controltower,,,ControlTower,ControlTower,,1,,aws_controltower_,,controltower_,Control Tower,AWS,,,,,
 cur,cur,costandusagereportservice,costandusagereportservice,,cur,,costandusagereportservice,CUR,CostandUsageReportService,,1,,aws_cur_,,cur_,Cost and Usage Report,AWS,,,,,
 ,,,,,,,,,,,,,,,,Crypto Tools,AWS,x,,,,No SDK support
 ,,,,,,,,,,,,,,,,Cryptographic Services Overview,AWS,x,,,,No SDK support
@@ -168,7 +168,7 @@ honeycode,honeycode,honeycode,honeycode,,honeycode,,,Honeycode,Honeycode,,1,,aws
 iam,iam,iam,iam,,iam,,,IAM,IAM,,1,,aws_iam_,,iam_,IAM (Identity & Access Management),AWS,,,AWS_IAM_ENDPOINT,TF_AWS_IAM_ENDPOINT,
 accessanalyzer,accessanalyzer,accessanalyzer,accessanalyzer,,accessanalyzer,,,AccessAnalyzer,AccessAnalyzer,,1,,aws_accessanalyzer_,,accessanalyzer_,IAM Access Analyzer,AWS,,,,,
 inspector,inspector,inspector,inspector,,inspector,,,Inspector,Inspector,,1,,aws_inspector_,,inspector_,Inspector,Amazon,,,,,
-inspector2,inspector2,inspector2,inspector2,,inspector2,,,Inspector2,Inspector2,,1,,aws_inspector2_,,inspector2_,Inspector V2,Amazon,,,,,
+inspector2,inspector2,inspector2,inspector2,,inspector2,,inspectorv2,Inspector2,Inspector2,x,2,,aws_inspector2_,,inspector2_,Inspector V2,Amazon,,,,,
 iot1click-devices,iot1clickdevices,iot1clickdevicesservice,iot1clickdevicesservice,,iot1clickdevices,,iot1clickdevicesservice,IoT1ClickDevices,IoT1ClickDevicesService,,1,,aws_iot1clickdevices_,,iot1clickdevices_,IoT 1-Click Devices,AWS,,,,,
 iot1click-projects,iot1clickprojects,iot1clickprojects,iot1clickprojects,,iot1clickprojects,,,IoT1ClickProjects,IoT1ClickProjects,,1,,aws_iot1clickprojects_,,iot1clickprojects_,IoT 1-Click Projects,AWS,,,,,
 iotanalytics,iotanalytics,iotanalytics,iotanalytics,,iotanalytics,,,IoTAnalytics,IoTAnalytics,,1,,aws_iotanalytics_,,iotanalytics_,IoT Analytics,AWS,,,,,
@@ -312,7 +312,7 @@ servicecatalog,servicecatalog,servicecatalog,servicecatalog,,servicecatalog,,,Se
 servicecatalog-appregistry,servicecatalogappregistry,appregistry,servicecatalogappregistry,,servicecatalogappregistry,,appregistry,ServiceCatalogAppRegistry,AppRegistry,,1,,aws_servicecatalogappregistry_,,servicecatalogappregistry_,Service Catalog AppRegistry,AWS,,,,,
 service-quotas,servicequotas,servicequotas,servicequotas,,servicequotas,,,ServiceQuotas,ServiceQuotas,,1,,aws_servicequotas_,,servicequotas_,Service Quotas,,,,,,
 ses,ses,ses,ses,,ses,,,SES,SES,,1,,aws_ses_,,ses_,SES (Simple Email),Amazon,,,,,
-sesv2,sesv2,sesv2,sesv2,,sesv2,,,SESV2,SESV2,,1,,aws_sesv2_,,sesv2_,SESv2 (Simple Email V2),Amazon,,,,,
+sesv2,sesv2,sesv2,sesv2,,sesv2,,,SESV2,SESV2,x,2,,aws_sesv2_,,sesv2_,SESv2 (Simple Email V2),Amazon,,,,,
 stepfunctions,stepfunctions,sfn,sfn,,sfn,,stepfunctions,SFN,SFN,,1,,aws_sfn_,,sfn_,SFN (Step Functions),AWS,,,,,
 shield,shield,shield,shield,,shield,,,Shield,Shield,x,1,,aws_shield_,,shield_,Shield,AWS,,,,,
 signer,signer,signer,signer,,signer,,,Signer,Signer,,1,,aws_signer_,,signer_,Signer,AWS,,,,,
