@@ -118,7 +118,7 @@ func FindDomainEntryById(ctx context.Context, conn *lightsail.Lightsail, id stri
 	entryExists := false
 
 	for _, n := range out.Domain.DomainEntries {
-		if name == *n.Name && recordType == *n.Type && recordTarget == *n.Target {
+		if name == aws.StringValue(n.Name) && recordType == aws.StringValue(n.Type) && recordTarget == aws.StringValue(n.Target) {
 			entry = n
 			entryExists = true
 			break
