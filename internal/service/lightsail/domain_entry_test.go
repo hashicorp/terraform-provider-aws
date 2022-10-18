@@ -43,6 +43,11 @@ func TestAccLightsailDomainEntry_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "type", "A"),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }

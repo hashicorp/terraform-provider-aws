@@ -23,6 +23,9 @@ func ResourceDomainEntry() *schema.Resource {
 		CreateWithoutTimeout: resourceAwsLightsailDomainEntryCreate,
 		ReadWithoutTimeout:   resourceAwsLightsailDomainEntryRead,
 		DeleteWithoutTimeout: resourceAwsLightsailDomainEntryDelete,
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"domain_name": {
