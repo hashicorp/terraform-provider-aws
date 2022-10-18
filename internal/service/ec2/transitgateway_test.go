@@ -241,7 +241,7 @@ func testAccTransitGateway_AmazonSideASN(t *testing.T) {
 				Config: testAccTransitGatewayConfig_amazonSideASN(rName, 64514),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayExists(resourceName, &transitGateway2),
-					testAccCheckTransitGatewayRecreated(&transitGateway1, &transitGateway2),
+					testAccCheckTransitGatewayNotRecreated(&transitGateway1, &transitGateway2),
 					resource.TestCheckResourceAttr(resourceName, "amazon_side_asn", "64514"),
 				),
 			},

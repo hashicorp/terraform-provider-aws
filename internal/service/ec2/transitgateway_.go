@@ -53,7 +53,6 @@ func ResourceTransitGateway() *schema.Resource {
 			"amazon_side_asn": {
 				Type:     schema.TypeInt,
 				Optional: true,
-				ForceNew: true,
 				Default:  64512,
 			},
 			"arn": {
@@ -232,6 +231,12 @@ func resourceTransitGatewayUpdate(d *schema.ResourceData, meta interface{}) erro
 			Options:          &ec2.ModifyTransitGatewayOptions{},
 			TransitGatewayId: aws.String(d.Id()),
 		}
+
+		if d.HasChange("amazon_side_asn") {
+			input.Options.AmazonSideAsn = aws.Int64(int64(d.Get("amazon_side_asn").(int)))
+		}
+
+		//aws.Int64(int64(v.(int)))
 
 		if d.HasChange("auto_accept_shared_attachments") {
 			input.Options.AutoAcceptSharedAttachments = aws.String(d.Get("auto_accept_shared_attachments").(string))
