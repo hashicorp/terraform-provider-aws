@@ -56,7 +56,8 @@ func TestAccSimpleDBDomain_disappears(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfsimpledb.ResourceDomain(), resourceName),
+					acctest.CheckFrameworkResourceDisappears(acctest.Provider, tfsimpledb.ResourceDomain2, resourceName),
+					//acctest.CheckResourceDisappears(acctest.Provider, tfsimpledb.ResourceDomain(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

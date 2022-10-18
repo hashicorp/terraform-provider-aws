@@ -1019,19 +1019,18 @@ func DeleteResource(resource *schema.Resource, d *schema.ResourceData, meta inte
 	return resource.Delete(d, meta)
 }
 
-func CheckResourceDisappears(provo *schema.Provider, resource *schema.Resource, resourceName string) resource.TestCheckFunc {
+func CheckResourceDisappears(provo *schema.Provider, resource *schema.Resource, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		resourceState, ok := s.RootModule().Resources[resourceName]
-
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("resource not found: %s", resourceName)
+			return fmt.Errorf("resource not found: %s", n)
 		}
 
-		if resourceState.Primary.ID == "" {
-			return fmt.Errorf("resource ID missing: %s", resourceName)
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("resource ID missing: %s", n)
 		}
 
-		return DeleteResource(resource, resource.Data(resourceState.Primary), provo.Meta())
+		return DeleteResource(resource, resource.Data(rs.Primary), provo.Meta())
 	}
 }
 
