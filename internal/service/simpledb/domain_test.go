@@ -41,6 +41,29 @@ func TestAccSimpleDBDomain_basic(t *testing.T) {
 	})
 }
 
+func TestAccSimpleDBDomain_disappears(t *testing.T) {
+	resourceName := "aws_simpledb_domain.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(simpledb.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, simpledb.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDomainDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDomainConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfsimpledb.ResourceDomain(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccCheckDomainDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).SimpleDBConn
 
