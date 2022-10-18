@@ -2,90 +2,167 @@ package simpledb
 
 import (
 	"context"
-	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/simpledb"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	sdkresource "github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func ResourceDomain() *schema.Resource {
-	return &schema.Resource{
-		CreateWithoutTimeout: resourceDomainCreate,
-		ReadWithoutTimeout:   resourceDomainRead,
-		DeleteWithoutTimeout: resourceDomainDelete,
+func init() {
+	registerFrameworkResourceFactory(newResourceDomain)
+}
 
-		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
-		},
+// newResourceDomain instantiates a new Resource for the aws_simpledb_domain resource.
+func newResourceDomain(context.Context) (resource.ResourceWithConfigure, error) {
+	return &resourceDomain{}, nil
+}
 
-		Schema: map[string]*schema.Schema{
+type resourceDomain struct {
+	meta *conns.AWSClient
+}
+
+// Metadata should return the full name of the resource, such as
+// examplecloud_thing.
+func (r *resourceDomain) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
+	response.TypeName = "aws_simpledb_domain"
+}
+
+// GetSchema returns the schema for this resource.
+func (r *resourceDomain) GetSchema(context.Context) (tfsdk.Schema, diag.Diagnostics) {
+	schema := tfsdk.Schema{
+		Attributes: map[string]tfsdk.Attribute{
+			"id": {
+				Type:     types.StringType,
+				Optional: true,
+				Computed: true,
+			},
 			"name": {
-				Type:     schema.TypeString,
+				Type:     types.StringType,
 				Required: true,
-				ForceNew: true,
+				// TODO ForceNew:true,
 			},
 		},
 	}
+
+	return schema, nil
 }
 
-func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SimpleDBConn
+// Configure enables provider-level data or clients to be set in the
+// provider-defined Resource type.
+func (r *resourceDomain) Configure(_ context.Context, request resource.ConfigureRequest, response *resource.ConfigureResponse) {
+	if v, ok := request.ProviderData.(*conns.AWSClient); ok {
+		r.meta = v
+	}
+}
 
-	name := d.Get("name").(string)
+// Create is called when the provider must create a new resource.
+// Config and planned state values should be read from the CreateRequest and new state values set on the CreateResponse.
+func (r *resourceDomain) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+	var data resourceDomainData
+
+	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
+
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	name := data.Name.Value
 	input := &simpledb.CreateDomainInput{
 		DomainName: aws.String(name),
 	}
 
-	_, err := conn.CreateDomainWithContext(ctx, input)
+	_, err := r.meta.SimpleDBConn.CreateDomainWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating SimpleDB Domain (%s): %s", name, err)
+		response.Diagnostics.AddError("creating SimpleDB Domain", err.Error())
+
+		return
 	}
 
-	d.SetId(name)
+	data.ID = types.String{Value: name}
 
-	return resourceDomainRead(ctx, d, meta)
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SimpleDBConn
+// Read is called when the provider must read resource values in order to update state.
+// Planned state values should be read from the ReadRequest and new state values set on the ReadResponse.
+func (r *resourceDomain) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+	var data resourceDomainData
 
-	_, err := FindDomainByName(ctx, conn, d.Id())
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] SimpleDB Domain %s not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	_, err := FindDomainByName(ctx, r.meta.SimpleDBConn, data.ID.Value)
+
+	if tfresource.NotFound(err) {
+		response.Diagnostics.Append(errs.NewResourceNotFoundWarningDiagnostic(err))
+		response.State.RemoveResource(ctx)
+
+		return
 	}
 
 	if err != nil {
-		return diag.Errorf("reading SimpleDB Domain (%s): %s", d.Id(), err)
+		response.Diagnostics.AddError("reading SimpleDB Domain", err.Error())
+
+		return
 	}
 
-	d.Set("name", d.Id())
-
-	return nil
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func resourceDomainDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SimpleDBConn
+// Update is called to update the state of the resource.
+// Config, planned state, and prior state values should be read from the UpdateRequest and new state values set on the UpdateResponse.
+func (r *resourceDomain) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+	var data resourceDomainData
 
-	log.Printf("[DEBUG] Deleting SimpleDB Domain: %s", d.Id())
-	_, err := conn.DeleteDomainWithContext(ctx, &simpledb.DeleteDomainInput{
-		DomainName: aws.String(d.Id()),
+	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
+
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
+}
+
+// Delete is called when the provider must delete the resource.
+// Config values may be read from the DeleteRequest.
+//
+// If execution completes without error, the framework will automatically call DeleteResponse.State.RemoveResource(),
+// so it can be omitted from provider logic.
+func (r *resourceDomain) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+	var data resourceDomainData
+
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	_, err := r.meta.SimpleDBConn.DeleteDomainWithContext(ctx, &simpledb.DeleteDomainInput{
+		DomainName: aws.String(data.ID.Value),
 	})
 
 	if err != nil {
-		return diag.Errorf("deleting SimpleDB Domain (%s): %s", d.Id(), err)
-	}
+		response.Diagnostics.AddError("deleting SimpleDB Domain", err.Error())
 
-	return nil
+		return
+	}
+}
+
+type resourceDomainData struct {
+	ID   types.String `tfsdk:"id"`
+	Name types.String `tfsdk:"name"`
 }
 
 func FindDomainByName(ctx context.Context, conn *simpledb.SimpleDB, name string) (*simpledb.DomainMetadataOutput, error) {
@@ -96,7 +173,7 @@ func FindDomainByName(ctx context.Context, conn *simpledb.SimpleDB, name string)
 	output, err := conn.DomainMetadataWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, simpledb.ErrCodeNoSuchDomain) {
-		return nil, &resource.NotFoundError{
+		return nil, &sdkresource.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
