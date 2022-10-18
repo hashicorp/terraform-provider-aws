@@ -434,7 +434,7 @@ rules:
 
   - id: helper-schema-TimeoutError-check-doesnt-return-output
     languages: [go]
-    message: If the resource.Retry(), resource.RetryContext(), or tfresource.RetryConfigContext() function returns a value, ensure the isResourceTimeoutError() check does as well
+    message: If the resource.Retry() or resource.RetryContext() function returns a value, ensure the isResourceTimeoutError() check does as well
     paths:
       exclude:
         - "*_test.go"
@@ -463,14 +463,6 @@ rules:
                   })
                   ...
                   if isResourceTimeoutError($ERR) { ... }
-              - pattern-not-inside: |
-                  $ERR = tfresource.RetryConfigContext(..., func() *resource.RetryError {
-                    ...
-                    _, $ERR2 = $CONN.$FUNC(...)
-                    ...
-                  })
-                  ...
-                  if tfresource.TimedOut($ERR) { ... }
           - patterns:
               - pattern: |
                   if tfresource.TimedOut($ERR) {
@@ -486,14 +478,6 @@ rules:
                   if tfresource.TimedOut($ERR) { ... }
               - pattern-not-inside: |
                   $ERR = resource.RetryContext(..., func() *resource.RetryError {
-                    ...
-                    _, $ERR2 = $CONN.$FUNC(...)
-                    ...
-                  })
-                  ...
-                  if tfresource.TimedOut($ERR) { ... }
-              - pattern-not-inside: |
-                  $ERR = tfresource.RetryConfigContext(..., func() *resource.RetryError {
                     ...
                     _, $ERR2 = $CONN.$FUNC(...)
                     ...
