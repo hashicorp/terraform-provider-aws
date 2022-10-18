@@ -133,6 +133,7 @@ var (
 		"sqs_managed_sse_enabled": {
 			Type:          schema.TypeBool,
 			Optional:      true,
+			Computed:      true,
 			ConflictsWith: []string{"kms_master_key_id"},
 		},
 		"tags":     tftags.TagsSchema(),
