@@ -634,6 +634,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 
 			"aws_elasticache_cluster":           elasticache.DataSourceCluster(),
 			"aws_elasticache_replication_group": elasticache.DataSourceReplicationGroup(),
+			"aws_elasticache_subnet_group":      elasticache.DataSourceSubnetGroup(),
 			"aws_elasticache_user":              elasticache.DataSourceUser(),
 
 			"aws_elastic_beanstalk_application":    elasticbeanstalk.DataSourceApplication(),
@@ -662,8 +663,6 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_kinesis_firehose_delivery_stream": firehose.DataSourceDeliveryStream(),
 
 			"aws_fsx_openzfs_snapshot": fsx.DataSourceOpenzfsSnapshot(),
-
-			"aws_globalaccelerator_accelerator": globalaccelerator.DataSourceAccelerator(),
 
 			"aws_glue_connection":                       glue.DataSourceConnection(),
 			"aws_glue_data_catalog_encryption_settings": glue.DataSourceDataCatalogEncryptionSettings(),
@@ -760,15 +759,6 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_location_tracker_association":  location.DataSourceTrackerAssociation(),
 			"aws_location_tracker_associations": location.DataSourceTrackerAssociations(),
 
-			// "aws_arn":                     meta.DataSourceARN(), // Now implemented using Terraform Plugin Framework.
-			"aws_billing_service_account": meta.DataSourceBillingServiceAccount(),
-			"aws_default_tags":            meta.DataSourceDefaultTags(),
-			"aws_ip_ranges":               meta.DataSourceIPRanges(),
-			"aws_partition":               meta.DataSourcePartition(),
-			"aws_region":                  meta.DataSourceRegion(),
-			"aws_regions":                 meta.DataSourceRegions(),
-			"aws_service":                 meta.DataSourceService(),
-
 			"aws_memorydb_acl":             memorydb.DataSourceACL(),
 			"aws_memorydb_cluster":         memorydb.DataSourceCluster(),
 			"aws_memorydb_parameter_group": memorydb.DataSourceParameterGroup(),
@@ -825,6 +815,8 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_ses_active_receipt_rule_set": ses.DataSourceActiveReceiptRuleSet(),
 			"aws_ses_domain_identity":         ses.DataSourceDomainIdentity(),
 			"aws_ses_email_identity":          ses.DataSourceEmailIdentity(),
+
+			"aws_sesv2_dedicated_ip_pool": sesv2.DataSourceDedicatedIPPool(),
 
 			"aws_db_cluster_snapshot":            rds.DataSourceClusterSnapshot(),
 			"aws_db_event_categories":            rds.DataSourceEventCategories(),
@@ -908,8 +900,6 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_ssoadmin_permission_set": ssoadmin.DataSourcePermissionSet(),
 
 			"aws_storagegateway_local_disk": storagegateway.DataSourceLocalDisk(),
-
-			"aws_caller_identity": sts.DataSourceCallerIdentity(),
 
 			"aws_transfer_server": transfer.DataSourceServer(),
 
@@ -1716,6 +1706,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_licensemanager_association":           licensemanager.ResourceAssociation(),
 			"aws_licensemanager_license_configuration": licensemanager.ResourceLicenseConfiguration(),
 
+			"aws_lightsail_certificate":                          lightsail.ResourceCertificate(),
 			"aws_lightsail_container_service":                    lightsail.ResourceContainerService(),
 			"aws_lightsail_container_service_deployment_version": lightsail.ResourceContainerServiceDeploymentVersion(),
 			"aws_lightsail_database":                             lightsail.ResourceDatabase(),
@@ -2063,6 +2054,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_ses_template":                     ses.ResourceTemplate(),
 
 			"aws_sesv2_configuration_set": sesv2.ResourceConfigurationSet(),
+			"aws_sesv2_dedicated_ip_pool": sesv2.ResourceDedicatedIPPool(),
 
 			"aws_sfn_activity":      sfn.ResourceActivity(),
 			"aws_sfn_state_machine": sfn.ResourceStateMachine(),
@@ -2192,7 +2184,9 @@ func New(_ context.Context) (*schema.Provider, error) {
 
 		// ServiceData is used before configuration to determine the provider's exported resources and data sources.
 		ServiceMap: map[string]intf.ServiceData{
-			"meta": meta.ServiceData,
+			"globalaccelerator": globalaccelerator.ServiceData,
+			"meta":              meta.ServiceData,
+			"sts":               sts.ServiceData,
 		},
 	}
 
