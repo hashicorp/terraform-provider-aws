@@ -50,6 +50,7 @@ func TestAccConnect_serial(t *testing.T) {
 			"S3Config_BucketPrefix":                     testAccInstanceStorageConfig_S3Config_BucketPrefix,
 			"S3Config_EncryptionConfig":                 testAccInstanceStorageConfig_S3Config_EncryptionConfig,
 			"dataSource_KinesisFirehoseConfig":          testAccInstanceStorageConfigDataSource_KinesisFirehoseConfig,
+			"dataSource_KinesisStreamConfig":            testAccInstanceStorageConfigDataSource_KinesisStreamConfig,
 			"dataSource_S3Config":                       testAccInstanceStorageConfigDataSource_S3Config,
 		},
 		"LambdaFunctionAssociation": {

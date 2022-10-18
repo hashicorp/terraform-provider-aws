@@ -40,6 +40,33 @@ func testAccInstanceStorageConfigDataSource_KinesisFirehoseConfig(t *testing.T) 
 	})
 }
 
+func testAccInstanceStorageConfigDataSource_KinesisStreamConfig(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	resourceName := "aws_connect_instance_storage_config.test"
+	datasourceName := "data.aws_connect_instance_storage_config.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceStorageConfigDataSourceConfig_kinesisStreamConfig(rName, rName2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(datasourceName, "association_id", resourceName, "association_id"),
+					resource.TestCheckResourceAttrPair(datasourceName, "instance_id", resourceName, "instance_id"),
+					resource.TestCheckResourceAttrPair(datasourceName, "resource_type", resourceName, "resource_type"),
+					resource.TestCheckResourceAttrPair(datasourceName, "storage_config.#", resourceName, "storage_config.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, "storage_config.0.kinesis_stream_config.#", resourceName, "storage_config.0.kinesis_stream_config.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, "storage_config.0.kinesis_stream_config.0.stream_arn", resourceName, "storage_config.0.kinesis_stream_config.0.stream_arn"),
+					resource.TestCheckResourceAttrPair(datasourceName, "storage_config.0.storage_type", resourceName, "storage_config.0.storage_type"),
+				),
+			},
+		},
+	})
+}
+
 func testAccInstanceStorageConfigDataSource_S3Config(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
@@ -201,6 +228,35 @@ data "aws_connect_instance_storage_config" "test" {
   resource_type  = aws_connect_instance_storage_config.test.resource_type
 }
 `, rName2, rName3, rName4, rName5))
+}
+
+func testAccInstanceStorageConfigDataSourceConfig_kinesisStreamConfig(rName, rName2 string) string {
+	return acctest.ConfigCompose(
+		testAccInstanceStorageConfigDataSourceConfig_base(rName),
+		fmt.Sprintf(`
+resource "aws_kinesis_stream" "test" {
+  name        = %[1]q
+  shard_count = 2
+}
+
+resource "aws_connect_instance_storage_config" "test" {
+  instance_id   = aws_connect_instance.test.id
+  resource_type = "CONTACT_TRACE_RECORDS"
+
+  storage_config {
+    kinesis_stream_config {
+      stream_arn = aws_kinesis_stream.test.arn
+    }
+    storage_type = "KINESIS_STREAM"
+  }
+}
+
+data "aws_connect_instance_storage_config" "test" {
+  association_id = aws_connect_instance_storage_config.test.association_id
+  instance_id    = aws_connect_instance.test.id
+  resource_type  = aws_connect_instance_storage_config.test.resource_type
+}
+`, rName2))
 }
 
 func testAccInstanceStorageConfigDataSourceConfig_S3Config(rName, rName2 string) string {
