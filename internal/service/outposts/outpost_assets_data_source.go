@@ -2,10 +2,12 @@ package outposts
 
 import (
 	"fmt"
+	"regexp"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/outposts"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -29,12 +31,27 @@ func DataSourceOutpostAssets() *schema.Resource {
 			"host_id_filter": {
 				Type:     schema.TypeList,
 				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 50),
+						validation.StringMatch(regexp.MustCompile(`^^[A-Za-z0-9-]*$`), "must match [a-zA-Z0-9-]"),
+					),
+				},
 			},
 			"status_id_filter": {
 				Type:     schema.TypeList,
 				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
+				MaxItems: 2,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+					ValidateFunc: validation.All(
+						validation.StringInSlice([]string{
+							"ACTIVE",
+							"RETIRING",
+						}, false),
+					),
+				},
 			},
 		},
 	}
