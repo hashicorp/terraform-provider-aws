@@ -354,6 +354,26 @@ func (p *fwprovider) Resources(ctx context.Context) []func() resource.Resource {
 		return medialive.NewResourceMultiplexProgram(ctx)
 	})
 
+	for serviceID, data := range p.Primary.Meta().(*conns.AWSClient).ServiceMap {
+		for _, v := range data.FrameworkResources(ctx) {
+			v, err := v(ctx)
+
+			if err != nil {
+				tflog.Warn(ctx, "creating resource", map[string]interface{}{
+					"service_id": serviceID,
+					"error":      err.Error(),
+				})
+
+				continue
+			}
+
+			resources = append(resources, func() resource.Resource {
+				// TODO Consider wrapping.
+				return v
+			})
+		}
+	}
+
 	return resources
 }
 
