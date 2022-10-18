@@ -2,6 +2,7 @@ package lightsail
 
 import (
 	"context"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/lightsail"
@@ -82,4 +83,51 @@ func FindContainerServiceDeploymentByVersion(ctx context.Context, conn *lightsai
 	}
 
 	return result, nil
+}
+
+func FindDomainEntryById(ctx context.Context, conn *lightsail.Lightsail, id string) (*lightsail.DomainEntry, error) {
+
+	id_parts := strings.SplitN(id, "_", -1)
+	domainName := id_parts[1]
+	name := expandDomainEntryName(id_parts[0], domainName)
+	recordType := id_parts[2]
+	recordTarget := id_parts[3]
+
+	in := &lightsail.GetDomainInput{
+		DomainName: aws.String(domainName),
+	}
+
+	if len(id_parts) != 4 {
+		return nil, tfresource.NewEmptyResultError(in)
+	}
+
+	out, err := conn.GetDomainWithContext(ctx, in)
+
+	if tfawserr.ErrCodeEquals(err, lightsail.ErrCodeNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: in,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	var entry *lightsail.DomainEntry
+	entryExists := false
+
+	for _, n := range out.Domain.DomainEntries {
+		if name == *n.Name && recordType == *n.Type && recordTarget == *n.Target {
+			entry = n
+			entryExists = true
+			break
+		}
+	}
+
+	if !entryExists {
+		return nil, tfresource.NewEmptyResultError(in)
+	}
+
+	return entry, nil
 }
