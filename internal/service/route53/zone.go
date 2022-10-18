@@ -106,6 +106,11 @@ func ResourceZone() *schema.Resource {
 				Computed: true,
 			},
 
+			"primary_name_server": {
+				Type:     schema.TypeString,
+				Computed: true,
+			}
+
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
 
@@ -234,6 +239,10 @@ func resourceZoneRead(d *schema.ResourceData, meta interface{}) error {
 				return fmt.Errorf("getting Route53 Hosted Zone (%s) name servers: %s", d.Id(), err)
 			}
 		}
+	}
+
+	if err := d.Set("primary_name_server", nameServers[0]); err != nil {
+		return fmt.Errorf("setting primary_name_server: %s", err)
 	}
 
 	sort.Strings(nameServers)

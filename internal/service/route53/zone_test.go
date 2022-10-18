@@ -98,6 +98,7 @@ func TestAccRoute53Zone_basic(t *testing.T) {
 					acctest.MatchResourceAttrGlobalARNNoAccount(resourceName, "arn", "route53", regexp.MustCompile("hostedzone/.+")),
 					resource.TestCheckResourceAttr(resourceName, "name", zoneName),
 					resource.TestCheckResourceAttr(resourceName, "name_servers.#", "4"),
+					resource.TestCheckResourceAttr(resourceName, "primary_name_server", "4"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "vpc.#", "0"),
 				),

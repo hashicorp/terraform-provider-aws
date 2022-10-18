@@ -60,6 +60,10 @@ func DataSourceZone() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Computed: true,
 			},
+			"primary_name_server": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"linked_service_principal": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -180,6 +184,10 @@ func dataSourceZoneRead(d *schema.ResourceData, meta interface{}) error {
 
 	if err != nil {
 		return fmt.Errorf("getting Route 53 Hosted Zone (%s) name servers: %w", idHostedZone, err)
+	}
+
+	if err := d.Set("primary_name_server", nameServers[0]); err != nil {
+		return fmt.Errorf("setting primary_name_server: %w", err)
 	}
 
 	if err := d.Set("name_servers", nameServers); err != nil {
