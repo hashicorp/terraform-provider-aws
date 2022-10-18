@@ -1,5 +1,5 @@
 ---
-subcategory: "Autoscaling"
+subcategory: "Auto Scaling"
 layout: "aws"
 page_title: "AWS: aws_launch_configuration"
 description: |-
@@ -9,6 +9,8 @@ description: |-
 # Resource: aws_launch_configuration
 
 Provides a resource to create a new launch configuration, used for autoscaling groups.
+
+-> **Note** When using `aws_launch_configuration` with `aws_autoscaling_group`, it is recommended to use the `name_prefix` (Optional) instead of the `name` (Optional) attribute. This will allow Terraform lifecycles to detect changes to the launch configuration and update the autoscaling group correctly.
 
 ## Example Usage
 
@@ -210,8 +212,9 @@ Modifying any `ebs_block_device` currently requires resource replacement.
 
 Each `ephemeral_block_device` supports the following:
 
-* `device_name` - The name of the block device to mount on the instance.
-* `virtual_name` - The [Instance Store Device
+* `device_name` - (Required) The name of the block device to mount on the instance.
+* `no_device` - (Optional) Whether the device in the block device mapping of the AMI is suppressed.
+* `virtual_name` - (Optional) The [Instance Store Device
   Name](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/InstanceStorage.html#InstanceStoreDeviceNames)
   (e.g., `"ephemeral0"`)
 

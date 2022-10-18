@@ -1,5 +1,5 @@
 ---
-subcategory: "Lex"
+subcategory: "Lex Model Building"
 layout: "aws"
 page_title: "AWS: aws_lex_intent"
 description: |-
@@ -178,7 +178,7 @@ documented below under [statement](#statement).
 Describes how the intent is fulfilled after the user provides all of the information required for the intent.
 
 * `type` - (Required) How the intent should be fulfilled, either by running a Lambda function or by
-returning the slot data to the client application.
+returning the slot data to the client application. Type can be either `ReturnIntent` or `CodeHook`, as documented [here](https://docs.aws.amazon.com/lex/latest/dg/API_FulfillmentActivity.html).
 * `code_hook` - (Optional) A description of the Lambda function that is run to fulfill the intent.
 Required if type is CodeHook. Attributes are documented under [code_hook](#code_hook).
 
@@ -240,15 +240,6 @@ Attributes are documented under [message](#message). Must contain between 1 and 
 slot values into the response card. For more information, see
 [Example: Using a Response Card](https://docs.aws.amazon.com/lex/latest/dg/ex-resp-card.html). Must be less than or equal to 50000 characters in length.
 
-### Timeouts
-
-The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) for certain actions:
-
-* `create` - (Defaults to 1 min) Used when creating the intent
-* `update` - (Defaults to 1 min) Used when updating the intent
-* `delete` - (Defaults to 5 mins) Used when deleting the intent
-
-
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
@@ -259,6 +250,14 @@ included as an argument because the resource will add it automatically when upda
 * `created_date` - The date when the intent version was created.
 * `last_updated_date` - The date when the $LATEST version of this intent was updated.
 * `version` - The version of the bot.
+
+## Timeouts
+
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+
+* `create` - (Default `1m`)
+* `update` - (Default `1m`)
+* `delete` - (Default `5m`)
 
 ## Import
 

@@ -1,6 +1,7 @@
 package ecs
 
 import (
+	"context"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -13,14 +14,15 @@ const (
 	capacityProviderUpdateTimeout = 10 * time.Minute
 
 	serviceCreateTimeout      = 2 * time.Minute
-	serviceInactiveTimeout    = 10 * time.Minute
 	serviceInactiveTimeoutMin = 1 * time.Second
 	serviceDescribeTimeout    = 2 * time.Minute
 	serviceUpdateTimeout      = 2 * time.Minute
 
+	clusterAvailableDelay   = 10 * time.Second
 	clusterAvailableTimeout = 10 * time.Minute
 	clusterDeleteTimeout    = 10 * time.Minute
-	clusterAvailableDelay   = 10 * time.Second
+	clusterReadTimeout      = 2 * time.Second
+	clusterUpdateTimeout    = 10 * time.Minute
 
 	taskSetCreateTimeout = 10 * time.Minute
 	taskSetDeleteTimeout = 10 * time.Minute
@@ -60,7 +62,8 @@ func waitCapacityProviderUpdated(conn *ecs.ECS, arn string) (*ecs.CapacityProvid
 	return nil, err
 }
 
-func waitServiceStable(conn *ecs.ECS, id, cluster string) error {
+// waitServiceStable waits for an ECS Service to reach the status "ACTIVE" and have all desired tasks running. Does not return tags.
+func waitServiceStable(conn *ecs.ECS, id, cluster string, timeout time.Duration) (*ecs.Service, error) { //nolint:unparam
 	input := &ecs.DescribeServicesInput{
 		Services: aws.StringSlice([]string{id}),
 	}
@@ -69,69 +72,73 @@ func waitServiceStable(conn *ecs.ECS, id, cluster string) error {
 		input.Cluster = aws.String(cluster)
 	}
 
-	if err := conn.WaitUntilServicesStable(input); err != nil {
-		return err
-	}
-	return nil
-}
-
-func waitServiceInactive(conn *ecs.ECS, id, cluster string) error {
-	input := &ecs.DescribeServicesInput{
-		Services: aws.StringSlice([]string{id}),
-	}
-
-	if cluster != "" {
-		input.Cluster = aws.String(cluster)
-	}
-
-	if err := conn.WaitUntilServicesInactive(input); err != nil {
-		return err
-	}
-
 	stateConf := &resource.StateChangeConf{
-		Pending:    []string{serviceStatusActive, serviceStatusDraining},
-		Target:     []string{serviceStatusInactive, serviceStatusNone},
-		Refresh:    statusService(conn, id, cluster),
-		Timeout:    serviceInactiveTimeout,
-		MinTimeout: serviceInactiveTimeoutMin,
-	}
-
-	_, err := stateConf.WaitForState()
-
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func waitServiceDescribeReady(conn *ecs.ECS, id, cluster string) (*ecs.DescribeServicesOutput, error) {
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{serviceStatusInactive, serviceStatusDraining, serviceStatusNone},
-		Target:  []string{serviceStatusActive},
-		Refresh: statusService(conn, id, cluster),
-		Timeout: serviceDescribeTimeout,
+		Pending: []string{serviceStatusInactive, serviceStatusDraining, serviceStatusPending},
+		Target:  []string{serviceStatusStable},
+		Refresh: statusServiceWaitForStable(conn, id, cluster),
+		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
 
-	if v, ok := outputRaw.(*ecs.DescribeServicesOutput); ok {
+	if v, ok := outputRaw.(*ecs.Service); ok {
 		return v, err
 	}
 
 	return nil, err
 }
 
-func waitClusterAvailable(conn *ecs.ECS, arn string) (*ecs.Cluster, error) { //nolint:unparam
+// waitServiceInactive waits for an ECS Service to reach the status "INACTIVE".
+func waitServiceInactive(conn *ecs.ECS, id, cluster string, timeout time.Duration) error {
+	input := &ecs.DescribeServicesInput{
+		Services: aws.StringSlice([]string{id}),
+	}
+
+	if cluster != "" {
+		input.Cluster = aws.String(cluster)
+	}
+
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{serviceStatusActive, serviceStatusDraining},
+		Target:     []string{serviceStatusInactive},
+		Refresh:    statusServiceNoTags(conn, id, cluster),
+		Timeout:    timeout,
+		MinTimeout: serviceInactiveTimeoutMin,
+	}
+
+	_, err := stateConf.WaitForState()
+
+	return err
+}
+
+// waitServiceActive waits for an ECS Service to reach the status "ACTIVE". Does not return tags.
+func waitServiceActive(conn *ecs.ECS, id, cluster string, timeout time.Duration) (*ecs.Service, error) { //nolint:unparam
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{serviceStatusInactive, serviceStatusDraining},
+		Target:  []string{serviceStatusActive},
+		Refresh: statusServiceNoTags(conn, id, cluster),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if v, ok := outputRaw.(*ecs.Service); ok {
+		return v, err
+	}
+
+	return nil, err
+}
+
+func waitClusterAvailable(ctx context.Context, conn *ecs.ECS, arn string) (*ecs.Cluster, error) { //nolint:unparam
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"PROVISIONING"},
 		Target:  []string{"ACTIVE"},
-		Refresh: statusCluster(conn, arn),
+		Refresh: statusCluster(ctx, conn, arn),
 		Timeout: clusterAvailableTimeout,
 		Delay:   clusterAvailableDelay,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if v, ok := outputRaw.(*ecs.Cluster); ok {
 		return v, err
@@ -144,7 +151,7 @@ func waitClusterDeleted(conn *ecs.ECS, arn string) (*ecs.Cluster, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"ACTIVE", "DEPROVISIONING"},
 		Target:  []string{"INACTIVE"},
-		Refresh: statusCluster(conn, arn),
+		Refresh: statusCluster(context.Background(), conn, arn),
 		Timeout: clusterDeleteTimeout,
 	}
 

@@ -7,7 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ses"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -48,7 +48,7 @@ func resourceReceiptRuleSetCreate(d *schema.ResourceData, meta interface{}) erro
 
 	_, err := conn.CreateReceiptRuleSet(createOpts)
 	if err != nil {
-		return fmt.Errorf("error creating SES rule set: %w", err)
+		return fmt.Errorf("creating SES rule set: %w", err)
 	}
 
 	d.SetId(ruleSetName)
@@ -65,14 +65,14 @@ func resourceReceiptRuleSetRead(d *schema.ResourceData, meta interface{}) error 
 
 	resp, err := conn.DescribeReceiptRuleSet(input)
 
-	if tfawserr.ErrMessageContains(err, ses.ErrCodeRuleSetDoesNotExistException, "") {
+	if tfawserr.ErrCodeEquals(err, ses.ErrCodeRuleSetDoesNotExistException) {
 		log.Printf("[WARN] SES Receipt Rule Set (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error describing SES Receipt Rule Set (%s): %w", d.Id(), err)
+		return fmt.Errorf("describing SES Receipt Rule Set (%s): %w", d.Id(), err)
 	}
 
 	if resp.Metadata == nil {
@@ -103,7 +103,7 @@ func resourceReceiptRuleSetDelete(d *schema.ResourceData, meta interface{}) erro
 		RuleSetName: aws.String(d.Id()),
 	}
 	if _, err := conn.DeleteReceiptRuleSet(input); err != nil {
-		return fmt.Errorf("error deleting SES Receipt Rule Set (%s): %w", d.Id(), err)
+		return fmt.Errorf("deleting SES Receipt Rule Set (%s): %w", d.Id(), err)
 	}
 
 	return nil

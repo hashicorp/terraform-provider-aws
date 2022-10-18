@@ -1,5 +1,5 @@
 ---
-subcategory: "Elastic Map Reduce (EMR)"
+subcategory: "EMR"
 layout: "aws"
 page_title: "AWS: aws_emr_studio_session_mapping"
 description: |-
@@ -20,7 +20,6 @@ resource "aws_emr_studio_session_mapping" "example" {
   session_policy_arn = aws_iam_policy.example.arn
 }
 ```
-
 
 ## Argument Reference
 

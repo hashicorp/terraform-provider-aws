@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/lightsail"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -24,9 +24,9 @@ func TestAccLightsailInstancePublicPorts_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService(lightsail.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, lightsail.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstancePublicPortsDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, lightsail.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstancePublicPortsDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstancePublicPortsConfig_basic(rName),
@@ -54,9 +54,9 @@ func TestAccLightsailInstancePublicPorts_multiple(t *testing.T) {
 			acctest.PreCheckPartitionHasService(lightsail.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, lightsail.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstancePublicPortsDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, lightsail.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstancePublicPortsDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstancePublicPortsConfig_multiple(rName),
@@ -89,9 +89,9 @@ func TestAccLightsailInstancePublicPorts_cidrs(t *testing.T) {
 			acctest.PreCheckPartitionHasService(lightsail.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, lightsail.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckInstancePublicPortsDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, lightsail.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstancePublicPortsDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstancePublicPortsConfig_cidrs(rName),

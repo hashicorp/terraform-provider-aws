@@ -7,8 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/eks"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
-	"github.com/hashicorp/go-cty/cty"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -92,7 +91,7 @@ func ResourceIdentityProviderConfig() *schema.Resource {
 							Type:     schema.TypeMap,
 							Optional: true,
 							ForceNew: true,
-							ValidateDiagFunc: allDiagFunc(
+							ValidateDiagFunc: verify.ValidAllDiag(
 								validation.MapKeyLenBetween(1, 63),
 								validation.MapValueLenBetween(1, 253),
 							),
@@ -125,24 +124,13 @@ func ResourceIdentityProviderConfig() *schema.Resource {
 	}
 }
 
-// https://github.com/hashicorp/terraform-plugin-sdk/issues/780.
-func allDiagFunc(validators ...schema.SchemaValidateDiagFunc) schema.SchemaValidateDiagFunc {
-	return func(i interface{}, k cty.Path) diag.Diagnostics {
-		var diags diag.Diagnostics
-		for _, validator := range validators {
-			diags = append(diags, validator(i, k)...)
-		}
-		return diags
-	}
-}
-
 func resourceIdentityProviderConfigCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).EKSConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	clusterName := d.Get("cluster_name").(string)
-	configName, oidc := expandEksOidcIdentityProviderConfigRequest(d.Get("oidc").([]interface{})[0].(map[string]interface{}))
+	configName, oidc := expandOIDCIdentityProviderConfigRequest(d.Get("oidc").([]interface{})[0].(map[string]interface{}))
 	id := IdentityProviderConfigCreateResourceID(clusterName, configName)
 
 	input := &eks.AssociateIdentityProviderConfigInput{
@@ -198,7 +186,7 @@ func resourceIdentityProviderConfigRead(ctx context.Context, d *schema.ResourceD
 	d.Set("arn", oidc.IdentityProviderConfigArn)
 	d.Set("cluster_name", oidc.ClusterName)
 
-	if err := d.Set("oidc", []interface{}{flattenEksOidcIdentityProviderConfig(oidc)}); err != nil {
+	if err := d.Set("oidc", []interface{}{flattenOIDCIdentityProviderConfig(oidc)}); err != nil {
 		return diag.Errorf("error setting oidc: %s", err)
 	}
 
@@ -270,7 +258,7 @@ func resourceIdentityProviderConfigDelete(ctx context.Context, d *schema.Resourc
 	return nil
 }
 
-func expandEksOidcIdentityProviderConfigRequest(tfMap map[string]interface{}) (string, *eks.OidcIdentityProviderConfigRequest) {
+func expandOIDCIdentityProviderConfigRequest(tfMap map[string]interface{}) (string, *eks.OidcIdentityProviderConfigRequest) {
 	if tfMap == nil {
 		return "", nil
 	}
@@ -314,7 +302,7 @@ func expandEksOidcIdentityProviderConfigRequest(tfMap map[string]interface{}) (s
 	return identityProviderConfigName, apiObject
 }
 
-func flattenEksOidcIdentityProviderConfig(apiObject *eks.OidcIdentityProviderConfig) map[string]interface{} {
+func flattenOIDCIdentityProviderConfig(apiObject *eks.OidcIdentityProviderConfig) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}

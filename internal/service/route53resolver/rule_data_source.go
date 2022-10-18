@@ -85,7 +85,7 @@ func dataSourceRuleRead(d *schema.ResourceData, meta interface{}) error {
 
 	var rule *route53resolver.ResolverRule
 	if v, ok := d.GetOk("resolver_rule_id"); ok {
-		ruleRaw, state, err := route53ResolverRuleRefresh(conn, v.(string))()
+		ruleRaw, state, err := ruleRefresh(conn, v.(string))()
 		if err != nil {
 			return fmt.Errorf("error getting Route53 Resolver rule (%s): %w", v, err)
 		}
@@ -97,7 +97,7 @@ func dataSourceRuleRead(d *schema.ResourceData, meta interface{}) error {
 		rule = ruleRaw.(*route53resolver.ResolverRule)
 	} else {
 		req := &route53resolver.ListResolverRulesInput{
-			Filters: buildRoute53ResolverAttributeFilterList(map[string]string{
+			Filters: buildAttributeFilterList(map[string]string{
 				"DOMAIN_NAME":          d.Get("domain_name").(string),
 				"NAME":                 d.Get("name").(string),
 				"RESOLVER_ENDPOINT_ID": d.Get("resolver_endpoint_id").(string),
@@ -152,7 +152,7 @@ func dataSourceRuleRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func buildRoute53ResolverAttributeFilterList(attrs map[string]string) []*route53resolver.Filter {
+func buildAttributeFilterList(attrs map[string]string) []*route53resolver.Filter {
 	filters := []*route53resolver.Filter{}
 
 	for k, v := range attrs {

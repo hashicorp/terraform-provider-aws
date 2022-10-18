@@ -8,7 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/fsx"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -156,6 +156,12 @@ func ResourceOpenzfsFileSystem() *schema.Resource {
 							Optional: true,
 							Computed: true,
 						},
+						"record_size_kib": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							Default:      128,
+							ValidateFunc: validation.IntInSlice([]int{4, 8, 16, 32, 64, 128, 256, 512, 1024}),
+						},
 						"user_and_group_quotas": {
 							Type:     schema.TypeSet,
 							Optional: true,
@@ -218,7 +224,6 @@ func ResourceOpenzfsFileSystem() *schema.Resource {
 			"storage_capacity": {
 				Type:         schema.TypeInt,
 				Optional:     true,
-				ForceNew:     true,
 				ValidateFunc: validation.IntBetween(64, 512*1024),
 			},
 			"storage_type": {
@@ -290,13 +295,13 @@ func resourceOepnzfsFileSystemCreate(d *schema.ResourceData, meta interface{}) e
 	}
 
 	if v, ok := d.GetOk("disk_iops_configuration"); ok {
-		input.OpenZFSConfiguration.DiskIopsConfiguration = expandFsxOpenzfsFileDiskIopsConfiguration(v.([]interface{}))
-		backupInput.OpenZFSConfiguration.DiskIopsConfiguration = expandFsxOpenzfsFileDiskIopsConfiguration(v.([]interface{}))
+		input.OpenZFSConfiguration.DiskIopsConfiguration = expandOpenzfsFileDiskIopsConfiguration(v.([]interface{}))
+		backupInput.OpenZFSConfiguration.DiskIopsConfiguration = expandOpenzfsFileDiskIopsConfiguration(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("root_volume_configuration"); ok {
-		input.OpenZFSConfiguration.RootVolumeConfiguration = expandFsxOpenzfsRootVolumeConfiguration(v.([]interface{}))
-		backupInput.OpenZFSConfiguration.RootVolumeConfiguration = expandFsxOpenzfsRootVolumeConfiguration(v.([]interface{}))
+		input.OpenZFSConfiguration.RootVolumeConfiguration = expandOpenzfsRootVolumeConfiguration(v.([]interface{}))
+		backupInput.OpenZFSConfiguration.RootVolumeConfiguration = expandOpenzfsRootVolumeConfiguration(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("kms_key_id"); ok {
@@ -437,7 +442,7 @@ func resourceOpenzfsFileSystemRead(d *schema.ResourceData, meta interface{}) err
 		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
-	if err := d.Set("disk_iops_configuration", flattenFsxOpenzfsFileDiskIopsConfiguration(openzfsConfig.DiskIopsConfiguration)); err != nil {
+	if err := d.Set("disk_iops_configuration", flattenOpenzfsFileDiskIopsConfiguration(openzfsConfig.DiskIopsConfiguration)); err != nil {
 		return fmt.Errorf("error setting disk_iops_configuration: %w", err)
 	}
 
@@ -454,7 +459,7 @@ func resourceOpenzfsFileSystemRead(d *schema.ResourceData, meta interface{}) err
 		return fmt.Errorf("error reading FSx OpenZFS Root Volume Configuration (%s): %w", *openzfsConfig.RootVolumeId, err)
 	}
 
-	if err := d.Set("root_volume_configuration", flattenFsxOpenzfsRootVolumeConfiguration(rootVolume)); err != nil {
+	if err := d.Set("root_volume_configuration", flattenOpenzfsRootVolumeConfiguration(rootVolume)); err != nil {
 		return fmt.Errorf("error setting root_volume_configuration: %w", err)
 	}
 
@@ -479,6 +484,10 @@ func resourceOpenzfsFileSystemUpdate(d *schema.ResourceData, meta interface{}) e
 			OpenZFSConfiguration: &fsx.UpdateFileSystemOpenZFSConfiguration{},
 		}
 
+		if d.HasChange("storage_capacity") {
+			input.StorageCapacity = aws.Int64(int64(d.Get("storage_capacity").(int)))
+		}
+
 		if d.HasChange("automatic_backup_retention_days") {
 			input.OpenZFSConfiguration.AutomaticBackupRetentionDays = aws.Int64(int64(d.Get("automatic_backup_retention_days").(int)))
 		}
@@ -499,6 +508,10 @@ func resourceOpenzfsFileSystemUpdate(d *schema.ResourceData, meta interface{}) e
 			input.OpenZFSConfiguration.ThroughputCapacity = aws.Int64(int64(d.Get("throughput_capacity").(int)))
 		}
 
+		if d.HasChange("disk_iops_configuration") {
+			input.OpenZFSConfiguration.DiskIopsConfiguration = expandOpenzfsFileDiskIopsConfiguration(d.Get("disk_iops_configuration").([]interface{}))
+		}
+
 		if d.HasChange("weekly_maintenance_start_time") {
 			input.OpenZFSConfiguration.WeeklyMaintenanceStartTime = aws.String(d.Get("weekly_maintenance_start_time").(string))
 		}
@@ -513,6 +526,10 @@ func resourceOpenzfsFileSystemUpdate(d *schema.ResourceData, meta interface{}) e
 			return fmt.Errorf("error waiting for FSx OpenZFS File System (%s) update: %w", d.Id(), err)
 		}
 
+		if _, err := waitAdministrativeActionCompleted(conn, d.Id(), fsx.AdministrativeActionTypeFileSystemUpdate, d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return fmt.Errorf("error waiting for FSx OpenZFS File System (%s) update: %w", d.Id(), err)
+		}
+
 		if d.HasChange("root_volume_configuration") {
 			input := &fsx.UpdateVolumeInput{
 				ClientRequestToken:   aws.String(resource.UniqueId()),
@@ -520,7 +537,7 @@ func resourceOpenzfsFileSystemUpdate(d *schema.ResourceData, meta interface{}) e
 				OpenZFSConfiguration: &fsx.UpdateOpenZFSVolumeConfiguration{},
 			}
 
-			input.OpenZFSConfiguration = expandFsxOpenzfsUpdateRootVolumeConfiguration(d.Get("root_volume_configuration").([]interface{}))
+			input.OpenZFSConfiguration = expandOpenzfsUpdateRootVolumeConfiguration(d.Get("root_volume_configuration").([]interface{}))
 
 			_, err := conn.UpdateVolume(input)
 
@@ -561,7 +578,7 @@ func resourceOpenzfsFileSystemDelete(d *schema.ResourceData, meta interface{}) e
 	return nil
 }
 
-func expandFsxOpenzfsFileDiskIopsConfiguration(cfg []interface{}) *fsx.DiskIopsConfiguration {
+func expandOpenzfsFileDiskIopsConfiguration(cfg []interface{}) *fsx.DiskIopsConfiguration {
 	if len(cfg) < 1 {
 		return nil
 	}
@@ -581,7 +598,7 @@ func expandFsxOpenzfsFileDiskIopsConfiguration(cfg []interface{}) *fsx.DiskIopsC
 	return &out
 }
 
-func expandFsxOpenzfsRootVolumeConfiguration(cfg []interface{}) *fsx.OpenZFSCreateRootVolumeConfiguration {
+func expandOpenzfsRootVolumeConfiguration(cfg []interface{}) *fsx.OpenZFSCreateRootVolumeConfiguration {
 	if len(cfg) < 1 {
 		return nil
 	}
@@ -602,18 +619,22 @@ func expandFsxOpenzfsRootVolumeConfiguration(cfg []interface{}) *fsx.OpenZFSCrea
 		out.ReadOnly = aws.Bool(v)
 	}
 
+	if v, ok := conf["record_size_kib"].(int); ok {
+		out.RecordSizeKiB = aws.Int64(int64(v))
+	}
+
 	if v, ok := conf["user_and_group_quotas"]; ok {
-		out.UserAndGroupQuotas = expandFsxOpenzfsUserAndGroupQuotas(v.(*schema.Set).List())
+		out.UserAndGroupQuotas = expandOpenzfsUserAndGroupQuotas(v.(*schema.Set).List())
 	}
 
 	if v, ok := conf["nfs_exports"].([]interface{}); ok {
-		out.NfsExports = expandFsxOpenzfsNfsExports(v)
+		out.NfsExports = expandOpenzfsNFSExports(v)
 	}
 
 	return &out
 }
 
-func expandFsxOpenzfsUpdateRootVolumeConfiguration(cfg []interface{}) *fsx.UpdateOpenZFSVolumeConfiguration {
+func expandOpenzfsUpdateRootVolumeConfiguration(cfg []interface{}) *fsx.UpdateOpenZFSVolumeConfiguration {
 	if len(cfg) < 1 {
 		return nil
 	}
@@ -630,22 +651,26 @@ func expandFsxOpenzfsUpdateRootVolumeConfiguration(cfg []interface{}) *fsx.Updat
 		out.ReadOnly = aws.Bool(v)
 	}
 
+	if v, ok := conf["record_size_kib"].(int); ok {
+		out.RecordSizeKiB = aws.Int64(int64(v))
+	}
+
 	if v, ok := conf["user_and_group_quotas"]; ok {
-		out.UserAndGroupQuotas = expandFsxOpenzfsUserAndGroupQuotas(v.(*schema.Set).List())
+		out.UserAndGroupQuotas = expandOpenzfsUserAndGroupQuotas(v.(*schema.Set).List())
 	}
 
 	if v, ok := conf["nfs_exports"].([]interface{}); ok {
-		out.NfsExports = expandFsxOpenzfsNfsExports(v)
+		out.NfsExports = expandOpenzfsNFSExports(v)
 	}
 
 	return &out
 }
 
-func expandFsxOpenzfsUserAndGroupQuotas(cfg []interface{}) []*fsx.OpenZFSUserOrGroupQuota {
+func expandOpenzfsUserAndGroupQuotas(cfg []interface{}) []*fsx.OpenZFSUserOrGroupQuota {
 	quotas := []*fsx.OpenZFSUserOrGroupQuota{}
 
 	for _, quota := range cfg {
-		expandedQuota := expandFsxOpenzfsUserAndGroupQuota(quota.(map[string]interface{}))
+		expandedQuota := expandOpenzfsUserAndGroupQuota(quota.(map[string]interface{}))
 		if expandedQuota != nil {
 			quotas = append(quotas, expandedQuota)
 		}
@@ -655,7 +680,7 @@ func expandFsxOpenzfsUserAndGroupQuotas(cfg []interface{}) []*fsx.OpenZFSUserOrG
 
 }
 
-func expandFsxOpenzfsUserAndGroupQuota(conf map[string]interface{}) *fsx.OpenZFSUserOrGroupQuota {
+func expandOpenzfsUserAndGroupQuota(conf map[string]interface{}) *fsx.OpenZFSUserOrGroupQuota {
 	if len(conf) < 1 {
 		return nil
 	}
@@ -678,11 +703,11 @@ func expandFsxOpenzfsUserAndGroupQuota(conf map[string]interface{}) *fsx.OpenZFS
 
 }
 
-func expandFsxOpenzfsNfsExports(cfg []interface{}) []*fsx.OpenZFSNfsExport {
+func expandOpenzfsNFSExports(cfg []interface{}) []*fsx.OpenZFSNfsExport {
 	exports := []*fsx.OpenZFSNfsExport{}
 
 	for _, export := range cfg {
-		expandedExport := expandFsxOpenzfsNfsExport(export.(map[string]interface{}))
+		expandedExport := expandOpenzfsNFSExport(export.(map[string]interface{}))
 		if expandedExport != nil {
 			exports = append(exports, expandedExport)
 		}
@@ -692,21 +717,21 @@ func expandFsxOpenzfsNfsExports(cfg []interface{}) []*fsx.OpenZFSNfsExport {
 
 }
 
-func expandFsxOpenzfsNfsExport(cfg map[string]interface{}) *fsx.OpenZFSNfsExport {
+func expandOpenzfsNFSExport(cfg map[string]interface{}) *fsx.OpenZFSNfsExport {
 	out := fsx.OpenZFSNfsExport{}
 
 	if v, ok := cfg["client_configurations"]; ok {
-		out.ClientConfigurations = expandFsxOpenzfsClinetConfigurations(v.(*schema.Set).List())
+		out.ClientConfigurations = expandOpenzfsClinetConfigurations(v.(*schema.Set).List())
 	}
 
 	return &out
 }
 
-func expandFsxOpenzfsClinetConfigurations(cfg []interface{}) []*fsx.OpenZFSClientConfiguration {
+func expandOpenzfsClinetConfigurations(cfg []interface{}) []*fsx.OpenZFSClientConfiguration {
 	configurations := []*fsx.OpenZFSClientConfiguration{}
 
 	for _, configuration := range cfg {
-		expandedConfiguration := expandFsxOpenzfsClientConfiguration(configuration.(map[string]interface{}))
+		expandedConfiguration := expandOpenzfsClientConfiguration(configuration.(map[string]interface{}))
 		if expandedConfiguration != nil {
 			configurations = append(configurations, expandedConfiguration)
 		}
@@ -716,7 +741,7 @@ func expandFsxOpenzfsClinetConfigurations(cfg []interface{}) []*fsx.OpenZFSClien
 
 }
 
-func expandFsxOpenzfsClientConfiguration(conf map[string]interface{}) *fsx.OpenZFSClientConfiguration {
+func expandOpenzfsClientConfiguration(conf map[string]interface{}) *fsx.OpenZFSClientConfiguration {
 	out := fsx.OpenZFSClientConfiguration{}
 
 	if v, ok := conf["clients"].(string); ok && len(v) > 0 {
@@ -730,7 +755,7 @@ func expandFsxOpenzfsClientConfiguration(conf map[string]interface{}) *fsx.OpenZ
 	return &out
 }
 
-func flattenFsxOpenzfsFileDiskIopsConfiguration(rs *fsx.DiskIopsConfiguration) []interface{} {
+func flattenOpenzfsFileDiskIopsConfiguration(rs *fsx.DiskIopsConfiguration) []interface{} {
 	if rs == nil {
 		return []interface{}{}
 	}
@@ -746,7 +771,7 @@ func flattenFsxOpenzfsFileDiskIopsConfiguration(rs *fsx.DiskIopsConfiguration) [
 	return []interface{}{m}
 }
 
-func flattenFsxOpenzfsRootVolumeConfiguration(rs *fsx.Volume) []interface{} {
+func flattenOpenzfsRootVolumeConfiguration(rs *fsx.Volume) []interface{} {
 	if rs == nil {
 		return []interface{}{}
 	}
@@ -759,25 +784,28 @@ func flattenFsxOpenzfsRootVolumeConfiguration(rs *fsx.Volume) []interface{} {
 		m["data_compression_type"] = aws.StringValue(rs.OpenZFSConfiguration.DataCompressionType)
 	}
 	if rs.OpenZFSConfiguration.NfsExports != nil {
-		m["nfs_exports"] = flattenFsxOpenzfsFileNfsExports(rs.OpenZFSConfiguration.NfsExports)
+		m["nfs_exports"] = flattenOpenzfsFileNFSExports(rs.OpenZFSConfiguration.NfsExports)
 	}
 	if rs.OpenZFSConfiguration.ReadOnly != nil {
 		m["read_only"] = aws.BoolValue(rs.OpenZFSConfiguration.ReadOnly)
 	}
+	if rs.OpenZFSConfiguration.RecordSizeKiB != nil {
+		m["record_size_kib"] = aws.Int64Value(rs.OpenZFSConfiguration.RecordSizeKiB)
+	}
 	if rs.OpenZFSConfiguration.UserAndGroupQuotas != nil {
-		m["user_and_group_quotas"] = flattenFsxOpenzfsFileUserAndGroupQuotas(rs.OpenZFSConfiguration.UserAndGroupQuotas)
+		m["user_and_group_quotas"] = flattenOpenzfsFileUserAndGroupQuotas(rs.OpenZFSConfiguration.UserAndGroupQuotas)
 	}
 
 	return []interface{}{m}
 }
 
-func flattenFsxOpenzfsFileNfsExports(rs []*fsx.OpenZFSNfsExport) []map[string]interface{} {
+func flattenOpenzfsFileNFSExports(rs []*fsx.OpenZFSNfsExport) []map[string]interface{} {
 	exports := make([]map[string]interface{}, 0)
 
 	for _, export := range rs {
 		if export != nil {
 			cfg := make(map[string]interface{})
-			cfg["client_configurations"] = flattenFsxOpenzfsClientConfigurations(export.ClientConfigurations)
+			cfg["client_configurations"] = flattenOpenzfsClientConfigurations(export.ClientConfigurations)
 			exports = append(exports, cfg)
 		}
 	}
@@ -789,7 +817,7 @@ func flattenFsxOpenzfsFileNfsExports(rs []*fsx.OpenZFSNfsExport) []map[string]in
 	return nil
 }
 
-func flattenFsxOpenzfsClientConfigurations(rs []*fsx.OpenZFSClientConfiguration) []map[string]interface{} {
+func flattenOpenzfsClientConfigurations(rs []*fsx.OpenZFSClientConfiguration) []map[string]interface{} {
 	configurations := make([]map[string]interface{}, 0)
 
 	for _, configuration := range rs {
@@ -808,7 +836,7 @@ func flattenFsxOpenzfsClientConfigurations(rs []*fsx.OpenZFSClientConfiguration)
 	return nil
 }
 
-func flattenFsxOpenzfsFileUserAndGroupQuotas(rs []*fsx.OpenZFSUserOrGroupQuota) []map[string]interface{} {
+func flattenOpenzfsFileUserAndGroupQuotas(rs []*fsx.OpenZFSUserOrGroupQuota) []map[string]interface{} {
 	quotas := make([]map[string]interface{}, 0)
 
 	for _, quota := range rs {

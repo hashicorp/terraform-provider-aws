@@ -107,7 +107,6 @@ resource "aws_glue_partition_index" "example" {
 }
 ```
 
-
 ## Argument Reference
 
 The following arguments are required:
@@ -116,7 +115,6 @@ The following arguments are required:
 * `database_name` - (Required) Name of the metadata database where the table metadata resides. For Hive compatibility, this must be all lowercase.
 * `partition_index` - (Required) Configuration block for a partition index. See [`partition_index`](#partition_index) below.
 * `catalog_id` - (Optional) The catalog ID where the table resides.
-
 
 ### partition_index
 
@@ -128,6 +126,13 @@ The following arguments are required:
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - Catalog ID, Database name, table name, and index name.
+
+## Timeouts
+
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+
+* `create` - (Default `10m`)
+* `delete` - (Default `10m`)
 
 ## Import
 

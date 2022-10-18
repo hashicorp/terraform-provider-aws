@@ -1,5 +1,5 @@
 ---
-subcategory: "AppStream"
+subcategory: "AppStream 2.0"
 layout: "aws"
 page_title: "AWS: aws_appstream_directory_config"
 description: |-
@@ -36,7 +36,6 @@ The following arguments are required:
 
 * `account_name` - (Required) User name of the account. This account must have the following privileges: create computer objects, join computers to the domain, and change/reset the password on descendant computer objects for the organizational units specified.
 * `account_password` - (Required) Password for the account.
-
 
 ## Attributes Reference
 

@@ -7,11 +7,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/redshift"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -152,7 +151,7 @@ func resourceScheduledActionCreate(d *schema.ResourceData, meta interface{}) err
 		IamRole:             aws.String(d.Get("iam_role").(string)),
 		Schedule:            aws.String(d.Get("schedule").(string)),
 		ScheduledActionName: aws.String(name),
-		TargetAction:        expandRedshiftScheduledActionType(d.Get("target_action").([]interface{})[0].(map[string]interface{})),
+		TargetAction:        expandScheduledActionType(d.Get("target_action").([]interface{})[0].(map[string]interface{})),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -173,7 +172,7 @@ func resourceScheduledActionCreate(d *schema.ResourceData, meta interface{}) err
 
 	log.Printf("[DEBUG] Creating Redshift Scheduled Action: %s", input)
 	outputRaw, err := tfresource.RetryWhen(
-		tfiam.PropagationTimeout,
+		propagationTimeout,
 		func() (interface{}, error) {
 			return conn.CreateScheduledAction(input)
 		},
@@ -187,7 +186,7 @@ func resourceScheduledActionCreate(d *schema.ResourceData, meta interface{}) err
 	)
 
 	if err != nil {
-		return fmt.Errorf("error creating Redshift Scheduled Action (%s): %w", name, err)
+		return fmt.Errorf("creating Redshift Scheduled Action (%s): %w", name, err)
 	}
 
 	d.SetId(aws.StringValue(outputRaw.(*redshift.CreateScheduledActionOutput).ScheduledActionName))
@@ -207,7 +206,7 @@ func resourceScheduledActionRead(d *schema.ResourceData, meta interface{}) error
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading Redshift Scheduled Action (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading Redshift Scheduled Action (%s): %w", d.Id(), err)
 	}
 
 	d.Set("description", scheduledAction.ScheduledActionDescription)
@@ -231,8 +230,8 @@ func resourceScheduledActionRead(d *schema.ResourceData, meta interface{}) error
 	}
 
 	if scheduledAction.TargetAction != nil {
-		if err := d.Set("target_action", []interface{}{flattenRedshiftScheduledActionType(scheduledAction.TargetAction)}); err != nil {
-			return fmt.Errorf("error setting target_action: %w", err)
+		if err := d.Set("target_action", []interface{}{flattenScheduledActionType(scheduledAction.TargetAction)}); err != nil {
+			return fmt.Errorf("setting target_action: %w", err)
 		}
 	} else {
 		d.Set("target_action", nil)
@@ -277,14 +276,14 @@ func resourceScheduledActionUpdate(d *schema.ResourceData, meta interface{}) err
 	}
 
 	if d.HasChange("target_action") {
-		input.TargetAction = expandRedshiftScheduledActionType(d.Get("target_action").([]interface{})[0].(map[string]interface{}))
+		input.TargetAction = expandScheduledActionType(d.Get("target_action").([]interface{})[0].(map[string]interface{}))
 	}
 
 	log.Printf("[DEBUG] Updating Redshift Scheduled Action: %s", input)
 	_, err := conn.ModifyScheduledAction(input)
 
 	if err != nil {
-		return fmt.Errorf("error updating Redshift Scheduled Action (%s): %w", d.Id(), err)
+		return fmt.Errorf("updating Redshift Scheduled Action (%s): %w", d.Id(), err)
 	}
 
 	return nil
@@ -303,13 +302,13 @@ func resourceScheduledActionDelete(d *schema.ResourceData, meta interface{}) err
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting Redshift Scheduled Action (%s): %w", d.Id(), err)
+		return fmt.Errorf("deleting Redshift Scheduled Action (%s): %w", d.Id(), err)
 	}
 
 	return nil
 }
 
-func expandRedshiftScheduledActionType(tfMap map[string]interface{}) *redshift.ScheduledActionType {
+func expandScheduledActionType(tfMap map[string]interface{}) *redshift.ScheduledActionType {
 	if tfMap == nil {
 		return nil
 	}
@@ -317,21 +316,21 @@ func expandRedshiftScheduledActionType(tfMap map[string]interface{}) *redshift.S
 	apiObject := &redshift.ScheduledActionType{}
 
 	if v, ok := tfMap["pause_cluster"].([]interface{}); ok && len(v) > 0 {
-		apiObject.PauseCluster = expandRedshiftPauseClusterMessage(v[0].(map[string]interface{}))
+		apiObject.PauseCluster = expandPauseClusterMessage(v[0].(map[string]interface{}))
 	}
 
 	if v, ok := tfMap["resize_cluster"].([]interface{}); ok && len(v) > 0 {
-		apiObject.ResizeCluster = expandRedshiftResizeClusterMessage(v[0].(map[string]interface{}))
+		apiObject.ResizeCluster = expandResizeClusterMessage(v[0].(map[string]interface{}))
 	}
 
 	if v, ok := tfMap["resume_cluster"].([]interface{}); ok && len(v) > 0 {
-		apiObject.ResumeCluster = expandRedshiftResumeClusterMessage(v[0].(map[string]interface{}))
+		apiObject.ResumeCluster = expandResumeClusterMessage(v[0].(map[string]interface{}))
 	}
 
 	return apiObject
 }
 
-func expandRedshiftPauseClusterMessage(tfMap map[string]interface{}) *redshift.PauseClusterMessage {
+func expandPauseClusterMessage(tfMap map[string]interface{}) *redshift.PauseClusterMessage {
 	if tfMap == nil {
 		return nil
 	}
@@ -345,7 +344,7 @@ func expandRedshiftPauseClusterMessage(tfMap map[string]interface{}) *redshift.P
 	return apiObject
 }
 
-func expandRedshiftResizeClusterMessage(tfMap map[string]interface{}) *redshift.ResizeClusterMessage {
+func expandResizeClusterMessage(tfMap map[string]interface{}) *redshift.ResizeClusterMessage {
 	if tfMap == nil {
 		return nil
 	}
@@ -375,7 +374,7 @@ func expandRedshiftResizeClusterMessage(tfMap map[string]interface{}) *redshift.
 	return apiObject
 }
 
-func expandRedshiftResumeClusterMessage(tfMap map[string]interface{}) *redshift.ResumeClusterMessage {
+func expandResumeClusterMessage(tfMap map[string]interface{}) *redshift.ResumeClusterMessage {
 	if tfMap == nil {
 		return nil
 	}
@@ -389,7 +388,7 @@ func expandRedshiftResumeClusterMessage(tfMap map[string]interface{}) *redshift.
 	return apiObject
 }
 
-func flattenRedshiftScheduledActionType(apiObject *redshift.ScheduledActionType) map[string]interface{} {
+func flattenScheduledActionType(apiObject *redshift.ScheduledActionType) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -397,21 +396,21 @@ func flattenRedshiftScheduledActionType(apiObject *redshift.ScheduledActionType)
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.PauseCluster; v != nil {
-		tfMap["pause_cluster"] = []interface{}{flattenRedshiftPauseClusterMessage(v)}
+		tfMap["pause_cluster"] = []interface{}{flattenPauseClusterMessage(v)}
 	}
 
 	if v := apiObject.ResizeCluster; v != nil {
-		tfMap["resize_cluster"] = []interface{}{flattenRedshiftResizeClusterMessage(v)}
+		tfMap["resize_cluster"] = []interface{}{flattenResizeClusterMessage(v)}
 	}
 
 	if v := apiObject.ResumeCluster; v != nil {
-		tfMap["resume_cluster"] = []interface{}{flattenRedshiftResumeClusterMessage(v)}
+		tfMap["resume_cluster"] = []interface{}{flattenResumeClusterMessage(v)}
 	}
 
 	return tfMap
 }
 
-func flattenRedshiftPauseClusterMessage(apiObject *redshift.PauseClusterMessage) map[string]interface{} {
+func flattenPauseClusterMessage(apiObject *redshift.PauseClusterMessage) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -425,7 +424,7 @@ func flattenRedshiftPauseClusterMessage(apiObject *redshift.PauseClusterMessage)
 	return tfMap
 }
 
-func flattenRedshiftResizeClusterMessage(apiObject *redshift.ResizeClusterMessage) map[string]interface{} {
+func flattenResizeClusterMessage(apiObject *redshift.ResizeClusterMessage) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -455,7 +454,7 @@ func flattenRedshiftResizeClusterMessage(apiObject *redshift.ResizeClusterMessag
 	return tfMap
 }
 
-func flattenRedshiftResumeClusterMessage(apiObject *redshift.ResumeClusterMessage) map[string]interface{} {
+func flattenResumeClusterMessage(apiObject *redshift.ResumeClusterMessage) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}

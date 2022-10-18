@@ -1,5 +1,5 @@
 ---
-subcategory: "Service Discovery"
+subcategory: "Cloud Map"
 layout: "aws"
 page_title: "AWS: aws_service_discovery_instance"
 description: |-

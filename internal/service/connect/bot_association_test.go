@@ -15,34 +15,19 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-//Serialized acceptance tests due to Connect account limits (max 2 parallel tests)
-func TestAccConnectBotAssociation_serial(t *testing.T) {
-	testCases := map[string]func(t *testing.T){
-		"basic":      testAccBotAssociation_basic,
-		"disappears": testAccBotAssociation_disappears,
-	}
-
-	for name, tc := range testCases {
-		tc := tc
-		t.Run(name, func(t *testing.T) {
-			tc(t)
-		})
-	}
-}
-
 func testAccBotAssociation_basic(t *testing.T) {
 	rName := sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_connect_bot_association.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, connect.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBotAssociationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBotAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBotV1AssociationConfigBasic(rName, rName2),
+				Config: testAccBotAssociationConfig_v1Basic(rName, rName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBotAssociationExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "instance_id"),
@@ -67,13 +52,13 @@ func testAccBotAssociation_disappears(t *testing.T) {
 	instanceResourceName := "aws_connect_bot_association.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, connect.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckBotAssociationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBotAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBotV1AssociationConfigBasic(rName, rName2),
+				Config: testAccBotAssociationConfig_v1Basic(rName, rName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBotAssociationExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfconnect.ResourceBotAssociation(), instanceResourceName),
@@ -195,7 +180,7 @@ resource "aws_connect_instance" "test" {
   `, rName, rName2)
 }
 
-func testAccBotV1AssociationConfigBasic(rName, rName2 string) string {
+func testAccBotAssociationConfig_v1Basic(rName, rName2 string) string {
 	return acctest.ConfigCompose(
 		testAccBotV1AssociationConfigBase(rName, rName2),
 		`

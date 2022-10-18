@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ses"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -24,17 +24,18 @@ func TestAccSESConfigurationSet_basic(t *testing.T) {
 			acctest.PreCheck(t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSESConfigurationSetDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, ses.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckConfigurationSetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfigurationSetBasicConfig(rName),
+				Config: testAccConfigurationSetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationSetExists(resourceName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "ses", fmt.Sprintf("configuration-set/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "delivery_options.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tracking_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "sending_enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "reputation_metrics_enabled", "false"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_fresh_start"),
@@ -58,12 +59,12 @@ func TestAccSESConfigurationSet_sendingEnabled(t *testing.T) {
 			acctest.PreCheck(t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSESConfigurationSetDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, ses.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckConfigurationSetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfigurationSetSendingConfig(rName, false),
+				Config: testAccConfigurationSetConfig_sending(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationSetExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "sending_enabled", "false"),
@@ -76,7 +77,7 @@ func TestAccSESConfigurationSet_sendingEnabled(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccConfigurationSetSendingConfig(rName, true),
+				Config: testAccConfigurationSetConfig_sending(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationSetExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "sending_enabled", "true"),
@@ -84,7 +85,7 @@ func TestAccSESConfigurationSet_sendingEnabled(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccConfigurationSetSendingConfig(rName, false),
+				Config: testAccConfigurationSetConfig_sending(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationSetExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "sending_enabled", "false"),
@@ -104,12 +105,12 @@ func TestAccSESConfigurationSet_reputationMetricsEnabled(t *testing.T) {
 			acctest.PreCheck(t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSESConfigurationSetDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, ses.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckConfigurationSetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfigurationSetReputationMetricsConfig(rName, false),
+				Config: testAccConfigurationSetConfig_reputationMetrics(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationSetExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "reputation_metrics_enabled", "false"),
@@ -121,14 +122,14 @@ func TestAccSESConfigurationSet_reputationMetricsEnabled(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccConfigurationSetReputationMetricsConfig(rName, true),
+				Config: testAccConfigurationSetConfig_reputationMetrics(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationSetExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "reputation_metrics_enabled", "true"),
 				),
 			},
 			{
-				Config: testAccConfigurationSetReputationMetricsConfig(rName, false),
+				Config: testAccConfigurationSetConfig_reputationMetrics(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationSetExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "reputation_metrics_enabled", "false"),
@@ -147,12 +148,12 @@ func TestAccSESConfigurationSet_deliveryOptions(t *testing.T) {
 			acctest.PreCheck(t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSESConfigurationSetDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, ses.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckConfigurationSetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfigurationSetDeliveryOptionsConfig(rName, ses.TlsPolicyRequire),
+				Config: testAccConfigurationSetConfig_deliveryOptions(rName, ses.TlsPolicyRequire),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationSetExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "delivery_options.#", "1"),
@@ -177,18 +178,18 @@ func TestAccSESConfigurationSet_Update_deliveryOptions(t *testing.T) {
 			acctest.PreCheck(t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSESConfigurationSetDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, ses.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckConfigurationSetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfigurationSetBasicConfig(rName),
+				Config: testAccConfigurationSetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationSetExists(resourceName),
 				),
 			},
 			{
-				Config: testAccConfigurationSetDeliveryOptionsConfig(rName, ses.TlsPolicyRequire),
+				Config: testAccConfigurationSetConfig_deliveryOptions(rName, ses.TlsPolicyRequire),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationSetExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "delivery_options.#", "1"),
@@ -201,7 +202,7 @@ func TestAccSESConfigurationSet_Update_deliveryOptions(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccConfigurationSetDeliveryOptionsConfig(rName, ses.TlsPolicyOptional),
+				Config: testAccConfigurationSetConfig_deliveryOptions(rName, ses.TlsPolicyOptional),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationSetExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "delivery_options.#", "1"),
@@ -209,7 +210,7 @@ func TestAccSESConfigurationSet_Update_deliveryOptions(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccConfigurationSetBasicConfig(rName),
+				Config: testAccConfigurationSetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationSetExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "delivery_options.#", "0"),
@@ -233,12 +234,12 @@ func TestAccSESConfigurationSet_emptyDeliveryOptions(t *testing.T) {
 			acctest.PreCheck(t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSESConfigurationSetDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, ses.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckConfigurationSetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfigurationSetEmptyDeliveryOptionsConfig(rName),
+				Config: testAccConfigurationSetConfig_emptyDeliveryOptions(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationSetExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "delivery_options.#", "1"),
@@ -263,19 +264,19 @@ func TestAccSESConfigurationSet_Update_emptyDeliveryOptions(t *testing.T) {
 			acctest.PreCheck(t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSESConfigurationSetDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, ses.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckConfigurationSetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfigurationSetBasicConfig(rName),
+				Config: testAccConfigurationSetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationSetExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "delivery_options.#", "0"),
 				),
 			},
 			{
-				Config: testAccConfigurationSetEmptyDeliveryOptionsConfig(rName),
+				Config: testAccConfigurationSetConfig_emptyDeliveryOptions(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationSetExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "delivery_options.#", "1"),
@@ -288,7 +289,7 @@ func TestAccSESConfigurationSet_Update_emptyDeliveryOptions(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccConfigurationSetBasicConfig(rName),
+				Config: testAccConfigurationSetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationSetExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "delivery_options.#", "0"),
@@ -303,6 +304,37 @@ func TestAccSESConfigurationSet_Update_emptyDeliveryOptions(t *testing.T) {
 	})
 }
 
+/*
+// TestAccSESConfigurationSet_trackingOptions requires a verified domain
+// which poses a problem for testing.
+func TestAccSESConfigurationSet_trackingOptions(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_ses_configuration_set.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ses.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckConfigurationSetDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccConfigurationSetConfig_trackingOptions(rName, "wn011su7.test"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckConfigurationSetExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tracking_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tracking_options.0.custom_redirect_domain", rName),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+*/
+
 func TestAccSESConfigurationSet_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ses_configuration_set.test"
@@ -312,12 +344,12 @@ func TestAccSESConfigurationSet_disappears(t *testing.T) {
 			acctest.PreCheck(t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSESConfigurationSetDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, ses.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckConfigurationSetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfigurationSetBasicConfig(rName),
+				Config: testAccConfigurationSetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationSetExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfses.ResourceConfigurationSet(), resourceName),
@@ -357,7 +389,7 @@ func testAccCheckConfigurationSetExists(n string) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckSESConfigurationSetDestroy(s *terraform.State) error {
+func testAccCheckConfigurationSetDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -370,7 +402,7 @@ func testAccCheckSESConfigurationSetDestroy(s *terraform.State) error {
 		})
 
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, ses.ErrCodeConfigurationSetDoesNotExistException, "") {
+			if tfawserr.ErrCodeEquals(err, ses.ErrCodeConfigurationSetDoesNotExistException) {
 				return nil
 			}
 			return err
@@ -379,7 +411,7 @@ func testAccCheckSESConfigurationSetDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccConfigurationSetBasicConfig(rName string) string {
+func testAccConfigurationSetConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ses_configuration_set" "test" {
   name = %[1]q
@@ -387,7 +419,7 @@ resource "aws_ses_configuration_set" "test" {
 `, rName)
 }
 
-func testAccConfigurationSetSendingConfig(rName string, enabled bool) string {
+func testAccConfigurationSetConfig_sending(rName string, enabled bool) string {
 	return fmt.Sprintf(`
 resource "aws_ses_configuration_set" "test" {
   name            = %[1]q
@@ -396,7 +428,7 @@ resource "aws_ses_configuration_set" "test" {
 `, rName, enabled)
 }
 
-func testAccConfigurationSetReputationMetricsConfig(rName string, enabled bool) string {
+func testAccConfigurationSetConfig_reputationMetrics(rName string, enabled bool) string {
 	return fmt.Sprintf(`
 resource "aws_ses_configuration_set" "test" {
   name                       = %[1]q
@@ -405,7 +437,7 @@ resource "aws_ses_configuration_set" "test" {
 `, rName, enabled)
 }
 
-func testAccConfigurationSetDeliveryOptionsConfig(rName, tlsPolicy string) string {
+func testAccConfigurationSetConfig_deliveryOptions(rName, tlsPolicy string) string {
 	return fmt.Sprintf(`
 resource "aws_ses_configuration_set" "test" {
   name = %[1]q
@@ -417,7 +449,22 @@ resource "aws_ses_configuration_set" "test" {
 `, rName, tlsPolicy)
 }
 
-func testAccConfigurationSetEmptyDeliveryOptionsConfig(rName string) string {
+/*
+// this cannot currently be tested without a verified domain
+func testAccConfigurationSetConfig_trackingOptions(rName, customRedirect string) string {
+	return fmt.Sprintf(`
+resource "aws_ses_configuration_set" "test" {
+  name = %[1]q
+
+  tracking_options {
+    custom_redirect_domain = %[2]q
+  }
+}
+`, rName, customRedirect)
+}
+*/
+
+func testAccConfigurationSetConfig_emptyDeliveryOptions(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ses_configuration_set" "test" {
   name = %[1]q

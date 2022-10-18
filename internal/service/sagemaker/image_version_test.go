@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -28,13 +28,13 @@ func TestAccSageMakerImageVersion_basic(t *testing.T) {
 	baseImage := os.Getenv("SAGEMAKER_IMAGE_VERSION_BASE_IMAGE")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckImageVersionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckImageVersionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccImageVersionBasicConfig(rName, baseImage),
+				Config: testAccImageVersionConfig_basic(rName, baseImage),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckImageVersionExists(resourceName, &image),
 					resource.TestCheckResourceAttr(resourceName, "image_name", rName),
@@ -66,13 +66,13 @@ func TestAccSageMakerImageVersion_disappears(t *testing.T) {
 	baseImage := os.Getenv("SAGEMAKER_IMAGE_VERSION_BASE_IMAGE")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckImageVersionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckImageVersionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccImageVersionBasicConfig(rName, baseImage),
+				Config: testAccImageVersionConfig_basic(rName, baseImage),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckImageVersionExists(resourceName, &image),
 					acctest.CheckResourceDisappears(acctest.Provider, tfsagemaker.ResourceImageVersion(), resourceName),
@@ -95,13 +95,13 @@ func TestAccSageMakerImageVersion_Disappears_image(t *testing.T) {
 	baseImage := os.Getenv("SAGEMAKER_IMAGE_VERSION_BASE_IMAGE")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckImageVersionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckImageVersionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccImageVersionBasicConfig(rName, baseImage),
+				Config: testAccImageVersionConfig_basic(rName, baseImage),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckImageVersionExists(resourceName, &image),
 					acctest.CheckResourceDisappears(acctest.Provider, tfsagemaker.ResourceImage(), "aws_sagemaker_image.test"),
@@ -127,7 +127,7 @@ func testAccCheckImageVersionDestroy(s *terraform.State) error {
 		}
 
 		if err != nil {
-			return fmt.Errorf("error reading Sagemaker Image Version (%s): %w", rs.Primary.ID, err)
+			return fmt.Errorf("reading SageMaker Image Version (%s): %w", rs.Primary.ID, err)
 		}
 
 		if aws.StringValue(imageVersion.ImageVersionArn) == rs.Primary.Attributes["arn"] {
@@ -161,7 +161,7 @@ func testAccCheckImageVersionExists(n string, image *sagemaker.DescribeImageVers
 	}
 }
 
-func testAccImageVersionBasicConfig(rName, baseImage string) string {
+func testAccImageVersionConfig_basic(rName, baseImage string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 

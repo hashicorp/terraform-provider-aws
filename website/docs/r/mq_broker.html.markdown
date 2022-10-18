@@ -18,7 +18,6 @@ Provides an Amazon MQ broker resource. This resources also manages users for the
 
 ~> **NOTE:** All arguments including the username and password will be stored in the raw state as plain-text. [Read more about sensitive data in state](https://www.terraform.io/docs/state/sensitive-data.html).
 
-
 ## Example Usage
 
 ### Basic Example
@@ -95,7 +94,7 @@ The following arguments are optional:
 * `security_groups` - (Optional) List of security group IDs assigned to the broker.
 * `storage_type` - (Optional) Storage type of the broker. For `engine_type` `ActiveMQ`, the valid values are `efs` and `ebs`, and the AWS-default is `efs`. For `engine_type` `RabbitMQ`, only `ebs` is supported. When using `ebs`, only the `mq.m5` broker instance type family is supported.
 * `subnet_ids` - (Optional) List of subnet IDs in which to launch the broker. A `SINGLE_INSTANCE` deployment requires one subnet. An `ACTIVE_STANDBY_MULTI_AZ` deployment requires multiple subnets.
-* `tags` - (Optional) Map of tags to assign to the broker. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Map of tags to assign to the broker. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### configuration
 
@@ -142,8 +141,6 @@ The following arguments are required:
 * `time_of_day` - (Required) Time, in 24-hour format, e.g., `02:00`.
 * `time_zone` - (Required) Time zone in either the Country/City format or the UTC offset format, e.g., `CET`.
 
-~> **NOTE:** Amazon MQ currently does not support updating the maintenance window. Changes to the maintenance window start time will force a new broker to be created.
-
 ### user
 
 * `console_access` - (Optional) Whether to enable access to the [ActiveMQ Web Console](http://activemq.apache.org/web-console.html) for the user. Applies to `engine_type` of `ActiveMQ` only.
@@ -171,7 +168,15 @@ In addition to all arguments above, the following attributes are exported:
             * `wss://broker-id.mq.us-west-2.amazonaws.com:61619`
         * For `RabbitMQ`:
             * `amqps://broker-id.mq.us-west-2.amazonaws.com:5671`
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+
+## Timeouts
+
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+
+* `create` - (Default `30m`)
+* `update` - (Default `30m`)
+* `delete` - (Default `30m`)
 
 ## Import
 

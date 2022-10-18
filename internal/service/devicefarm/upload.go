@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/devicefarm"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -95,7 +95,7 @@ func resourceUploadCreate(d *schema.ResourceData, meta interface{}) error {
 func resourceUploadRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DeviceFarmConn
 
-	upload, err := FindUploadByArn(conn, d.Id())
+	upload, err := FindUploadByARN(conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] DeviceFarm Upload (%s) not found, removing from state", d.Id())
@@ -116,7 +116,7 @@ func resourceUploadRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("metadata", upload.Metadata)
 	d.Set("arn", arn)
 
-	projectArn, err := decodeDevicefarmProjectArn(arn, "upload", meta)
+	projectArn, err := decodeProjectARN(arn, "upload", meta)
 	if err != nil {
 		return fmt.Errorf("error decoding project_arn (%s): %w", arn, err)
 	}
@@ -160,7 +160,7 @@ func resourceUploadDelete(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] Deleting DeviceFarm Upload: %s", d.Id())
 	_, err := conn.DeleteUpload(input)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, devicefarm.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, devicefarm.ErrCodeNotFoundException) {
 			return nil
 		}
 		return fmt.Errorf("Error deleting DeviceFarm Upload: %w", err)

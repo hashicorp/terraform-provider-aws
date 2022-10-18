@@ -23,13 +23,13 @@ func TestAccAPIGatewayModel_basic(t *testing.T) {
 	resourceName := "aws_api_gateway_model.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckModelDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckModelDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccModelConfig(rName, modelName),
+				Config: testAccModelConfig_basic(rName, modelName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckModelExists(resourceName, modelName, &conf),
 					testAccCheckModelAttributes(&conf, modelName),
@@ -59,13 +59,13 @@ func TestAccAPIGatewayModel_disappears(t *testing.T) {
 	resourceName := "aws_api_gateway_model.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckModelDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckModelDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccModelConfig(rName, modelName),
+				Config: testAccModelConfig_basic(rName, modelName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckModelExists(resourceName, modelName, &conf),
 					acctest.CheckResourceDisappears(acctest.Provider, tfapigateway.ResourceModel(), resourceName),
@@ -168,7 +168,7 @@ func testAccModelImportStateIdFunc(resourceName string) resource.ImportStateIdFu
 	}
 }
 
-func testAccModelConfig(rName, modelName string) string {
+func testAccModelConfig_basic(rName, modelName string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
   name = "%s"

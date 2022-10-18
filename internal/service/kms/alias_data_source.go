@@ -19,7 +19,7 @@ func DataSourceAlias() *schema.Resource {
 			"name": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validName,
+				ValidateFunc: validNameForDataSource,
 			},
 			"target_key_arn": {
 				Type:     schema.TypeString,

@@ -8,7 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/accessanalyzer"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -22,8 +22,8 @@ const (
 	// Maximum amount of time to wait for Organizations eventual consistency on creation
 	// This timeout value is much higher than usual since the cross-service validation
 	// appears to be consistently caching for 5 minutes:
-	// --- PASS: TestAccAWSAccessAnalyzer_serial/Analyzer/Type_Organization (315.86s)
-	accessAnalyzerOrganizationCreationTimeout = 10 * time.Minute
+	// --- PASS: TestAccAccessAnalyzer_serial/Analyzer/Type_Organization (315.86s)
+	organizationCreationTimeout = 10 * time.Minute
 )
 
 func ResourceAnalyzer() *schema.Resource {
@@ -82,7 +82,7 @@ func resourceAnalyzerCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// Handle Organizations eventual consistency
-	err := resource.Retry(accessAnalyzerOrganizationCreationTimeout, func() *resource.RetryError {
+	err := resource.Retry(organizationCreationTimeout, func() *resource.RetryError {
 		_, err := conn.CreateAnalyzer(input)
 
 		if tfawserr.ErrMessageContains(err, accessanalyzer.ErrCodeValidationException, "You must create an organization") {

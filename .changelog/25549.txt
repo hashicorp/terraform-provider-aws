@@ -1,0 +1,151 @@
+```release-note:bug
+resource/aws_cloudwatch_composite_alarm: Prevent ISO-partition tagging precautions from eating legit errors
+```
+
+```release-note:bug
+resource/aws_cloudwatch_metric_alarm: Prevent ISO-partition tagging precautions from eating legit errors
+```
+
+```release-note:bug
+resource/aws_cloudwatch_metric_stream: Prevent ISO-partition tagging precautions from eating legit errors
+```
+
+```release-note:bug
+resource/aws_ecr_repository: Prevent ISO-partition tagging precautions from eating legit errors
+```
+
+```release-note:bug
+data-source/aws_ecr_repository: Prevent ISO-partition tagging precautions from eating legit errors
+```
+
+```release-note:bug
+resource/aws_ecs_capacity_provider: Prevent ISO-partition tagging precautions from eating legit errors
+```
+
+```release-note:bug
+resource/aws_ecs_cluster: Prevent ISO-partition tagging precautions from eating legit errors
+```
+
+```release-note:bug
+resource/aws_ecs_service: Prevent ISO-partition tagging precautions from eating legit errors
+```
+
+```release-note:bug
+resource/aws_ecs_task_definition: Prevent ISO-partition tagging precautions from eating legit errors
+```
+
+```release-note:bug
+resource/aws_ecs_task_set: Prevent ISO-partition tagging precautions from eating legit errors
+```
+
+```release-note:bug
+resource/aws_elasticache_cluster: Prevent ISO-partition tagging precautions from eating legit errors
+```
+
+```release-note:bug
+data-source/aws_elasticache_cluster: Prevent ISO-partition tagging precautions from eating legit errors
+```
+
+```release-note:bug
+resource/aws_elasticache_parameter_group: Prevent ISO-partition tagging precautions from eating legit errors
+```
+
+```release-note:bug
+resource/aws_elasticache_replication_group: Prevent ISO-partition tagging precautions from eating legit errors
+```
+
+```release-note:bug
+resource/aws_elasticache_subnet_group: Prevent ISO-partition tagging precautions from eating legit errors
+```
+
+```release-note:bug
+resource/aws_elasticache_user: Prevent ISO-partition tagging precautions from eating legit errors
+```
+
+```release-note:bug
+resource/aws_elasticache_user_group: Prevent ISO-partition tagging precautions from eating legit errors
+```
+
+```release-note:bug
+resource/aws_lb_listener: Prevent ISO-partition tagging precautions from eating legit errors
+```
+
+```release-note:bug
+data-source/aws_lb_listener: Prevent ISO-partition tagging precautions from eating legit errors
+```
+
+```release-note:bug
+resource/aws_lb_listener_rule: Prevent ISO-partition tagging precautions from eating legit errors
+```
+
+```release-note:bug
+resource/aws_lb: Prevent ISO-partition tagging precautions from eating legit errors
+```
+
+```release-note:bug
+data-source/aws_lb: Prevent ISO-partition tagging precautions from eating legit errors
+```
+
+```release-note:bug
+resource/aws_lb_target_group: Prevent ISO-partition tagging precautions from eating legit errors
+```
+
+```release-note:bug
+data-source/aws_lb_target_group: Prevent ISO-partition tagging precautions from eating legit errors
+```
+
+```release-note:bug
+resource/aws_cloudwatch_event_bus: Prevent ISO-partition tagging precautions from eating legit errors
+```
+
+```release-note:bug
+resource/aws_cloudwatch_event_rule: Prevent ISO-partition tagging precautions from eating legit errors
+```
+
+```release-note:bug
+resource/aws_iam_instance_profile: Prevent ISO-partition tagging precautions from eating legit errors
+```
+
+```release-note:bug
+resource/aws_iam_openid_connect_provider: Prevent ISO-partition tagging precautions from eating legit errors
+```
+
+```release-note:bug
+resource/aws_iam_policy: Prevent ISO-partition tagging precautions from eating legit errors
+```
+
+```release-note:bug
+resource/aws_iam_role: Prevent ISO-partition tagging precautions from eating legit errors
+```
+
+```release-note:bug
+resource/aws_iam_saml_provider: Prevent ISO-partition tagging precautions from eating legit errors
+```
+
+```release-note:bug
+resource/aws_iam_server_certificate: Prevent ISO-partition tagging precautions from eating legit errors
+```
+
+```release-note:bug
+resource/aws_iam_service_linked_role: Prevent ISO-partition tagging precautions from eating legit errors
+```
+
+```release-note:bug
+resource/aws_iam_user: Prevent ISO-partition tagging precautions from eating legit errors
+```
+
+```release-note:bug
+resource/aws_iam_virtual_mfa_device: Prevent ISO-partition tagging precautions from eating legit errors
+```
+
+```release-note:bug
+resource/aws_sns_topic: Prevent ISO-partition tagging precautions from eating legit errors
+```
+
+```release-note:bug
+resource/aws_sqs_queue: Prevent ISO-partition tagging precautions from eating legit errors
+```
+
+```release-note:bug
+data-source/aws_sqs_queue: Prevent ISO-partition tagging precautions from eating legit errors
+```

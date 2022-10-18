@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apigatewayv2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -123,7 +123,7 @@ func resourceRouteCreate(d *schema.ResourceData, meta interface{}) error {
 		req.RequestModels = flex.ExpandStringMap(v.(map[string]interface{}))
 	}
 	if v, ok := d.GetOk("request_parameter"); ok && v.(*schema.Set).Len() > 0 {
-		req.RequestParameters = expandApiGatewayV2RouteRequestParameters(v.(*schema.Set).List())
+		req.RequestParameters = expandRouteRequestParameters(v.(*schema.Set).List())
 	}
 	if v, ok := d.GetOk("route_response_selection_expression"); ok {
 		req.RouteResponseSelectionExpression = aws.String(v.(string))
@@ -172,7 +172,7 @@ func resourceRouteRead(d *schema.ResourceData, meta interface{}) error {
 	if err := d.Set("request_models", flex.PointersMapToStringList(resp.RequestModels)); err != nil {
 		return fmt.Errorf("error setting request_models: %w", err)
 	}
-	if err := d.Set("request_parameter", flattenApiGatewayV2RouteRequestParameters(resp.RequestParameters)); err != nil {
+	if err := d.Set("request_parameter", flattenRouteRequestParameters(resp.RequestParameters)); err != nil {
 		return fmt.Errorf("error setting request_parameter: %w", err)
 	}
 	d.Set("route_key", resp.RouteKey)
@@ -217,7 +217,7 @@ func resourceRouteUpdate(d *schema.ResourceData, meta interface{}) error {
 			}
 		}
 
-		requestParameters = expandApiGatewayV2RouteRequestParameters(ns.List())
+		requestParameters = expandRouteRequestParameters(ns.List())
 	}
 
 	if d.HasChangesExcept("request_parameter") || len(requestParameters) > 0 {
@@ -293,7 +293,7 @@ func resourceRouteDelete(d *schema.ResourceData, meta interface{}) error {
 func resourceRouteImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	parts := strings.Split(d.Id(), "/")
 	if len(parts) != 2 {
-		return []*schema.ResourceData{}, fmt.Errorf("Wrong format of resource: %s. Please follow 'api-id/route-id'", d.Id())
+		return []*schema.ResourceData{}, fmt.Errorf("wrong format of import ID (%s), use: 'api-id/route-id'", d.Id())
 	}
 
 	apiId := parts[0]
@@ -319,7 +319,7 @@ func resourceRouteImport(d *schema.ResourceData, meta interface{}) ([]*schema.Re
 	return []*schema.ResourceData{d}, nil
 }
 
-func expandApiGatewayV2RouteRequestParameters(tfList []interface{}) map[string]*apigatewayv2.ParameterConstraints {
+func expandRouteRequestParameters(tfList []interface{}) map[string]*apigatewayv2.ParameterConstraints {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -347,7 +347,7 @@ func expandApiGatewayV2RouteRequestParameters(tfList []interface{}) map[string]*
 	return apiObjects
 }
 
-func flattenApiGatewayV2RouteRequestParameters(apiObjects map[string]*apigatewayv2.ParameterConstraints) []interface{} {
+func flattenRouteRequestParameters(apiObjects map[string]*apigatewayv2.ParameterConstraints) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}

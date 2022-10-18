@@ -8,7 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appstream"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -66,7 +66,7 @@ func resourceFleetStackAssociationCreate(ctx context.Context, d *schema.Resource
 		return diag.FromErr(fmt.Errorf("error creating AppStream Fleet Stack Association (%s): %w", d.Id(), err))
 	}
 
-	d.SetId(EncodeStackFleetID(d.Get("stack_name").(string), d.Get("fleet_name").(string)))
+	d.SetId(EncodeStackFleetID(d.Get("fleet_name").(string), d.Get("stack_name").(string)))
 
 	return resourceFleetStackAssociationRead(ctx, d, meta)
 }

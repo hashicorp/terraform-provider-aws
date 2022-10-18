@@ -143,7 +143,7 @@ func resourceHostedTransitVirtualInterfaceCreate(d *schema.ResourceData, meta in
 
 	d.SetId(aws.StringValue(resp.VirtualInterface.VirtualInterfaceId))
 
-	if err := dxHostedTransitVirtualInterfaceWaitUntilAvailable(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+	if err := hostedTransitVirtualInterfaceWaitUntilAvailable(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return err
 	}
 
@@ -153,7 +153,7 @@ func resourceHostedTransitVirtualInterfaceCreate(d *schema.ResourceData, meta in
 func resourceHostedTransitVirtualInterfaceRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DirectConnectConn
 
-	vif, err := dxVirtualInterfaceRead(d.Id(), conn)
+	vif, err := virtualInterfaceRead(d.Id(), conn)
 	if err != nil {
 		return err
 	}
@@ -189,13 +189,13 @@ func resourceHostedTransitVirtualInterfaceRead(d *schema.ResourceData, meta inte
 }
 
 func resourceHostedTransitVirtualInterfaceDelete(d *schema.ResourceData, meta interface{}) error {
-	return dxVirtualInterfaceDelete(d, meta)
+	return virtualInterfaceDelete(d, meta)
 }
 
 func resourceHostedTransitVirtualInterfaceImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	conn := meta.(*conns.AWSClient).DirectConnectConn
 
-	vif, err := dxVirtualInterfaceRead(d.Id(), conn)
+	vif, err := virtualInterfaceRead(d.Id(), conn)
 	if err != nil {
 		return nil, err
 	}
@@ -210,8 +210,8 @@ func resourceHostedTransitVirtualInterfaceImport(d *schema.ResourceData, meta in
 	return []*schema.ResourceData{d}, nil
 }
 
-func dxHostedTransitVirtualInterfaceWaitUntilAvailable(conn *directconnect.DirectConnect, vifId string, timeout time.Duration) error {
-	return dxVirtualInterfaceWaitUntilAvailable(
+func hostedTransitVirtualInterfaceWaitUntilAvailable(conn *directconnect.DirectConnect, vifId string, timeout time.Duration) error {
+	return virtualInterfaceWaitUntilAvailable(
 		conn,
 		vifId,
 		timeout,

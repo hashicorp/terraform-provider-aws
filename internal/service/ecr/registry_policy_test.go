@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/ecr"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -34,13 +34,13 @@ func testAccRegistryPolicy_basic(t *testing.T) {
 	resourceName := "aws_ecr_registry_policy.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ecr.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRegistryPolicyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ecr.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRegistryPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRegistryPolicy(),
+				Config: testAccRegistryPolicyConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRegistryPolicyExists(resourceName, &v),
 					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile(`"ecr:ReplicateImage".+`)),
@@ -53,7 +53,7 @@ func testAccRegistryPolicy_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccRegistryPolicyUpdated(),
+				Config: testAccRegistryPolicyConfig_updated(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRegistryPolicyExists(resourceName, &v),
 					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile(`"ecr:ReplicateImage".+`)),
@@ -70,13 +70,13 @@ func testAccRegistryPolicy_disappears(t *testing.T) {
 	resourceName := "aws_ecr_registry_policy.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ecr.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckRegistryPolicyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ecr.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRegistryPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRegistryPolicy(),
+				Config: testAccRegistryPolicyConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRegistryPolicyExists(resourceName, &v),
 					acctest.CheckResourceDisappears(acctest.Provider, tfecr.ResourceRegistryPolicy(), resourceName),
@@ -134,7 +134,7 @@ func testAccCheckRegistryPolicyExists(name string, res *ecr.GetRegistryPolicyOut
 	}
 }
 
-func testAccRegistryPolicy() string {
+func testAccRegistryPolicyConfig_basic() string {
 	return `
 data "aws_caller_identity" "current" {}
 
@@ -161,7 +161,7 @@ resource "aws_ecr_registry_policy" "test" {
 `
 }
 
-func testAccRegistryPolicyUpdated() string {
+func testAccRegistryPolicyConfig_updated() string {
 	return `
 data "aws_caller_identity" "current" {}
 

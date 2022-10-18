@@ -1,5 +1,5 @@
 ---
-subcategory: "VPC"
+subcategory: "VPC (Virtual Private Cloud)"
 layout: "aws"
 page_title: "AWS: aws_subnet_ids"
 description: |-
@@ -11,6 +11,8 @@ description: |-
 `aws_subnet_ids` provides a set of ids for a vpc_id
 
 This resource can be useful for getting back a set of subnet ids for a vpc.
+
+~> **NOTE:** The `aws_subnet_ids` data source has been deprecated and will be removed in a future version. Use the [`aws_subnets`](subnets.html) data source instead.
 
 ## Example Usage
 
@@ -54,17 +56,17 @@ resource "aws_instance" "app" {
 
 ## Argument Reference
 
-* `vpc_id` - (Required) The VPC ID that you want to filter from.
+* `vpc_id` - (Required) VPC ID that you want to filter from.
 
 * `filter` - (Optional) Custom filter block as described below.
 
-* `tags` - (Optional) A map of tags, each pair of which must exactly match
+* `tags` - (Optional) Map of tags, each pair of which must exactly match
   a pair on the desired subnets.
 
 More complex filters can be expressed using one or more `filter` sub-blocks,
 which take the following arguments:
 
-* `name` - (Required) The name of the field to filter by, as defined by
+* `name` - (Required) Name of the field to filter by, as defined by
   [the underlying AWS API](http://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeSubnets.html).
   For example, if matching against tag `Name`, use:
 
@@ -82,4 +84,10 @@ data "aws_subnet_ids" "selected" {
 
 ## Attributes Reference
 
-* `ids` - A set of all the subnet ids found. This data source will fail if none are found.
+* `ids` - Set of all the subnet ids found. This data source will fail if none are found.
+
+## Timeouts
+
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+
+- `read` - (Default `20m`)

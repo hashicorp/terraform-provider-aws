@@ -55,6 +55,22 @@ func statusFileSystem(conn *fsx.FSx, id string) resource.StateRefreshFunc {
 	}
 }
 
+func statusDataRepositoryAssociation(conn *fsx.FSx, id string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindDataRepositoryAssociationByID(conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.Lifecycle), nil
+	}
+}
+
 func statusStorageVirtualMachine(conn *fsx.FSx, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindStorageVirtualMachineByID(conn, id)

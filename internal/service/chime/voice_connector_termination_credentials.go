@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/chime"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -83,7 +83,7 @@ func resourceVoiceConnectorTerminationCredentialsRead(ctx context.Context, d *sc
 	}
 
 	_, err := conn.ListVoiceConnectorTerminationCredentialsWithContext(ctx, input)
-	if !d.IsNewResource() && tfawserr.ErrMessageContains(err, chime.ErrCodeNotFoundException, "") {
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, chime.ErrCodeNotFoundException) {
 		log.Printf("[WARN] Chime Voice Connector (%s) termination credentials not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -127,7 +127,7 @@ func resourceVoiceConnectorTerminationCredentialsDelete(ctx context.Context, d *
 
 	_, err := conn.DeleteVoiceConnectorTerminationCredentialsWithContext(ctx, input)
 
-	if tfawserr.ErrMessageContains(err, chime.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, chime.ErrCodeNotFoundException) {
 		return nil
 	}
 

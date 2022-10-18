@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/servicecatalog"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -22,10 +22,10 @@ func TestAccServiceCatalogServiceAction_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, servicecatalog.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckServiceActionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, servicecatalog.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckServiceActionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceActionConfig_basic(rName),
@@ -55,10 +55,10 @@ func TestAccServiceCatalogServiceAction_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, servicecatalog.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckServiceActionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, servicecatalog.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckServiceActionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceActionConfig_basic(rName),
@@ -78,10 +78,10 @@ func TestAccServiceCatalogServiceAction_update(t *testing.T) {
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, servicecatalog.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckServiceActionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, servicecatalog.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckServiceActionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceActionConfig_basic(rName),

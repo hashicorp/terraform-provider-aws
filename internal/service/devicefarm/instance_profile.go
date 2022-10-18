@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/devicefarm"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -110,7 +110,7 @@ func resourceInstanceProfileRead(d *schema.ResourceData, meta interface{}) error
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	instaceProf, err := FindInstanceProfileByArn(conn, d.Id())
+	instaceProf, err := FindInstanceProfileByARN(conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] DeviceFarm Instance Profile (%s) not found, removing from state", d.Id())
@@ -206,7 +206,7 @@ func resourceInstanceProfileDelete(d *schema.ResourceData, meta interface{}) err
 	log.Printf("[DEBUG] Deleting DeviceFarm Instance Profile: %s", d.Id())
 	_, err := conn.DeleteInstanceProfile(input)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, devicefarm.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, devicefarm.ErrCodeNotFoundException) {
 			return nil
 		}
 		return fmt.Errorf("Error deleting DeviceFarm Instance Profile: %w", err)

@@ -16,12 +16,12 @@ func TestAccSFNStateMachineDataSource_basic(t *testing.T) {
 	resourceName := "aws_sfn_state_machine.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, sfn.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sfn.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccStateMachineDataSourceConfig(rName),
+				Config: testAccStateMachineDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "id", dataSourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "creation_date", dataSourceName, "creation_date"),
@@ -35,7 +35,7 @@ func TestAccSFNStateMachineDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccStateMachineDataSourceConfig(rName string) string {
+func testAccStateMachineDataSourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 data "aws_region" "current" {}
 

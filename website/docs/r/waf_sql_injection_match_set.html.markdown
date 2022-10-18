@@ -1,5 +1,5 @@
 ---
-subcategory: "WAF"
+subcategory: "WAF Classic"
 layout: "aws"
 page_title: "AWS: aws_waf_sql_injection_match_set"
 description: |-
@@ -54,7 +54,6 @@ The following arguments are supported:
   e.g., `HEADER`, `METHOD` or `BODY`.
   See [docs](http://docs.aws.amazon.com/waf/latest/APIReference/API_FieldToMatch.html)
   for all supported values.
-
 
 ## Remarks
 

@@ -8,7 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/amplify"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -306,7 +306,6 @@ func ResourceApp() *schema.Resource {
 			"repository": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 1000),
 			},
 
@@ -332,7 +331,7 @@ func resourceAppCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("auto_branch_creation_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.AutoBranchCreationConfig = expandAmplifyAutoBranchCreationConfig(v.([]interface{})[0].(map[string]interface{}))
+		input.AutoBranchCreationConfig = expandAutoBranchCreationConfig(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("auto_branch_creation_patterns"); ok && v.(*schema.Set).Len() > 0 {
@@ -348,7 +347,7 @@ func resourceAppCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("custom_rule"); ok && len(v.([]interface{})) > 0 {
-		input.CustomRules = expandAmplifyCustomRules(v.([]interface{}))
+		input.CustomRules = expandCustomRules(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -426,7 +425,7 @@ func resourceAppRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("arn", app.AppArn)
 	if app.AutoBranchCreationConfig != nil {
-		if err := d.Set("auto_branch_creation_config", []interface{}{flattenAmplifyAutoBranchCreationConfig(app.AutoBranchCreationConfig)}); err != nil {
+		if err := d.Set("auto_branch_creation_config", []interface{}{flattenAutoBranchCreationConfig(app.AutoBranchCreationConfig)}); err != nil {
 			return fmt.Errorf("error setting auto_branch_creation_config: %w", err)
 		}
 	} else {
@@ -435,7 +434,7 @@ func resourceAppRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("auto_branch_creation_patterns", aws.StringValueSlice(app.AutoBranchCreationPatterns))
 	d.Set("basic_auth_credentials", app.BasicAuthCredentials)
 	d.Set("build_spec", app.BuildSpec)
-	if err := d.Set("custom_rule", flattenAmplifyCustomRules(app.CustomRules)); err != nil {
+	if err := d.Set("custom_rule", flattenCustomRules(app.CustomRules)); err != nil {
 		return fmt.Errorf("error setting custom_rule: %w", err)
 	}
 	d.Set("default_domain", app.DefaultDomain)
@@ -449,7 +448,7 @@ func resourceAppRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("name", app.Name)
 	d.Set("platform", app.Platform)
 	if app.ProductionBranch != nil {
-		if err := d.Set("production_branch", []interface{}{flattenAmplifyProductionBranch(app.ProductionBranch)}); err != nil {
+		if err := d.Set("production_branch", []interface{}{flattenProductionBranch(app.ProductionBranch)}); err != nil {
 			return fmt.Errorf("error setting production_branch: %w", err)
 		}
 	} else {
@@ -483,7 +482,7 @@ func resourceAppUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if d.HasChange("auto_branch_creation_config") {
-			input.AutoBranchCreationConfig = expandAmplifyAutoBranchCreationConfig(d.Get("auto_branch_creation_config").([]interface{})[0].(map[string]interface{}))
+			input.AutoBranchCreationConfig = expandAutoBranchCreationConfig(d.Get("auto_branch_creation_config").([]interface{})[0].(map[string]interface{}))
 
 			if d.HasChange("auto_branch_creation_config.0.environment_variables") {
 				if v := d.Get("auto_branch_creation_config.0.environment_variables").(map[string]interface{}); len(v) == 0 {
@@ -506,7 +505,7 @@ func resourceAppUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		if d.HasChange("custom_rule") {
 			if v := d.Get("custom_rule").([]interface{}); len(v) > 0 {
-				input.CustomRules = expandAmplifyCustomRules(v)
+				input.CustomRules = expandCustomRules(v)
 			} else {
 				input.CustomRules = []*amplify.CustomRule{}
 			}
@@ -596,7 +595,7 @@ func resourceAppDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func expandAmplifyAutoBranchCreationConfig(tfMap map[string]interface{}) *amplify.AutoBranchCreationConfig {
+func expandAutoBranchCreationConfig(tfMap map[string]interface{}) *amplify.AutoBranchCreationConfig {
 	if tfMap == nil {
 		return nil
 	}
@@ -646,7 +645,7 @@ func expandAmplifyAutoBranchCreationConfig(tfMap map[string]interface{}) *amplif
 	return apiObject
 }
 
-func flattenAmplifyAutoBranchCreationConfig(apiObject *amplify.AutoBranchCreationConfig) map[string]interface{} {
+func flattenAutoBranchCreationConfig(apiObject *amplify.AutoBranchCreationConfig) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -696,7 +695,7 @@ func flattenAmplifyAutoBranchCreationConfig(apiObject *amplify.AutoBranchCreatio
 	return tfMap
 }
 
-func expandAmplifyCustomRule(tfMap map[string]interface{}) *amplify.CustomRule {
+func expandCustomRule(tfMap map[string]interface{}) *amplify.CustomRule {
 	if tfMap == nil {
 		return nil
 	}
@@ -722,7 +721,7 @@ func expandAmplifyCustomRule(tfMap map[string]interface{}) *amplify.CustomRule {
 	return apiObject
 }
 
-func expandAmplifyCustomRules(tfList []interface{}) []*amplify.CustomRule {
+func expandCustomRules(tfList []interface{}) []*amplify.CustomRule {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -736,7 +735,7 @@ func expandAmplifyCustomRules(tfList []interface{}) []*amplify.CustomRule {
 			continue
 		}
 
-		apiObject := expandAmplifyCustomRule(tfMap)
+		apiObject := expandCustomRule(tfMap)
 
 		if apiObject == nil {
 			continue
@@ -748,7 +747,7 @@ func expandAmplifyCustomRules(tfList []interface{}) []*amplify.CustomRule {
 	return apiObjects
 }
 
-func flattenAmplifyCustomRule(apiObject *amplify.CustomRule) map[string]interface{} {
+func flattenCustomRule(apiObject *amplify.CustomRule) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -774,7 +773,7 @@ func flattenAmplifyCustomRule(apiObject *amplify.CustomRule) map[string]interfac
 	return tfMap
 }
 
-func flattenAmplifyCustomRules(apiObjects []*amplify.CustomRule) []interface{} {
+func flattenCustomRules(apiObjects []*amplify.CustomRule) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -786,13 +785,13 @@ func flattenAmplifyCustomRules(apiObjects []*amplify.CustomRule) []interface{} {
 			continue
 		}
 
-		tfList = append(tfList, flattenAmplifyCustomRule(apiObject))
+		tfList = append(tfList, flattenCustomRule(apiObject))
 	}
 
 	return tfList
 }
 
-func flattenAmplifyProductionBranch(apiObject *amplify.ProductionBranch) map[string]interface{} {
+func flattenProductionBranch(apiObject *amplify.ProductionBranch) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}

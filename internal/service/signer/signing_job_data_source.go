@@ -191,7 +191,7 @@ func dataSourceSigningJobRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting signer signing job requested by: %w", err)
 	}
 
-	if err := d.Set("revocation_record", flattenSignerSigningJobRevocationRecord(describeSigningJobOutput.RevocationRecord)); err != nil {
+	if err := d.Set("revocation_record", flattenSigningJobRevocationRecord(describeSigningJobOutput.RevocationRecord)); err != nil {
 		return fmt.Errorf("error setting signer signing job revocation record: %w", err)
 	}
 
@@ -203,11 +203,11 @@ func dataSourceSigningJobRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting signer signing job requested by: %w", err)
 	}
 
-	if err := d.Set("signed_object", flattenSignerSigningJobSignedObject(describeSigningJobOutput.SignedObject)); err != nil {
+	if err := d.Set("signed_object", flattenSigningJobSignedObject(describeSigningJobOutput.SignedObject)); err != nil {
 		return fmt.Errorf("error setting signer signing job signed object: %w", err)
 	}
 
-	if err := d.Set("source", flattenSignerSigningJobSource(describeSigningJobOutput.Source)); err != nil {
+	if err := d.Set("source", flattenSigningJobSource(describeSigningJobOutput.Source)); err != nil {
 		return fmt.Errorf("error setting signer signing job source: %w", err)
 	}
 

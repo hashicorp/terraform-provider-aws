@@ -6,7 +6,7 @@ import (
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 )
 
-func TestValidCustomEventBusEventSourceName(t *testing.T) {
+func TestValidCustomEventBusSourceName(t *testing.T) {
 	cases := []struct {
 		Value   string
 		IsValid bool
@@ -41,7 +41,7 @@ func TestValidCustomEventBusEventSourceName(t *testing.T) {
 		},
 	}
 	for _, tc := range cases {
-		_, errors := validCustomEventBusEventSourceName(tc.Value, "aws_cloudwatch_event_bus_event_source_name")
+		_, errors := validSourceName(tc.Value, "aws_cloudwatch_event_bus_event_source_name")
 		isValid := len(errors) == 0
 		if tc.IsValid && !isValid {
 			t.Errorf("expected %q to return valid, but did not", tc.Value)
@@ -101,7 +101,7 @@ func TestValidBusNameOrARN(t *testing.T) {
 		"HelloWorl_d",
 		"hello-world",
 		"hello.World0125",
-		"aws.partner/mongodb.com/stitch.trigger/something",        // nosemgrep: domain-names
+		"aws.partner/mongodb.com/stitch.trigger/something",        // nosemgrep:ci.domain-names
 		"arn:aws:events:us-east-1:123456789012:event-bus/default", // lintignore:AWSAT003,AWSAT005
 	}
 	for _, v := range validNames {

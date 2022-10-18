@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/transfer"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
@@ -89,7 +89,7 @@ func resourceSSHKeyRead(d *schema.ResourceData, meta interface{}) error {
 
 	resp, err := conn.DescribeUser(descOpts)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, transfer.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, transfer.ErrCodeResourceNotFoundException) {
 			log.Printf("[WARN] Transfer User (%s) for Server (%s) not found, removing ssh public key (%s) from state", userName, serverID, sshKeyID)
 			d.SetId("")
 			return nil
@@ -133,7 +133,7 @@ func resourceSSHKeyDelete(d *schema.ResourceData, meta interface{}) error {
 
 	_, err = conn.DeleteSshPublicKey(delOpts)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, transfer.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, transfer.ErrCodeResourceNotFoundException) {
 			return nil
 		}
 		return fmt.Errorf("error deleting Transfer User Ssh Key (%s): %s", d.Id(), err)

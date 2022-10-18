@@ -7,7 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/aws/aws-sdk-go/service/wafregional"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfwaf "github.com/hashicorp/terraform-provider-aws/internal/service/waf"
@@ -106,7 +106,7 @@ func resourceByteMatchSetRead(d *schema.ResourceData, meta interface{}) error {
 
 	resp, err := conn.GetByteMatchSet(params)
 
-	if tfawserr.ErrMessageContains(err, waf.ErrCodeNonexistentItemException, "") {
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, waf.ErrCodeNonexistentItemException) {
 		log.Printf("[WARN] WAF Regional Byte Set Match (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -116,13 +116,13 @@ func resourceByteMatchSetRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error getting WAF Regional Byte Match Set (%s): %s", d.Id(), err)
 	}
 
-	if resp == nil || resp.ByteMatchSet == nil {
+	if !d.IsNewResource() && (resp == nil || resp.ByteMatchSet == nil) {
 		log.Printf("[WARN] WAF Regional Byte Set Match (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
-	if err := d.Set("byte_match_tuples", flattenWafByteMatchTuplesWR(resp.ByteMatchSet.ByteMatchTuples)); err != nil {
+	if err := d.Set("byte_match_tuples", flattenByteMatchTuplesWR(resp.ByteMatchSet.ByteMatchTuples)); err != nil {
 		return fmt.Errorf("error setting byte_match_tuples: %s", err)
 	}
 
@@ -131,7 +131,7 @@ func resourceByteMatchSetRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func flattenWafByteMatchTuplesWR(in []*waf.ByteMatchTuple) []interface{} {
+func flattenByteMatchTuplesWR(in []*waf.ByteMatchTuple) []interface{} {
 	tuples := make([]interface{}, len(in))
 
 	for i, tuple := range in {

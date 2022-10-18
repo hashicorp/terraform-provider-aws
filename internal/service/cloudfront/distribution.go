@@ -8,14 +8,16 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func ResourceDistribution() *schema.Resource {
@@ -540,7 +542,7 @@ func ResourceDistribution() *schema.Resource {
 										Type:         schema.TypeInt,
 										Optional:     true,
 										Default:      5,
-										ValidateFunc: validation.IntBetween(1, 60),
+										ValidateFunc: validation.IntBetween(1, 180),
 									},
 									"origin_read_timeout": {
 										Type:         schema.TypeInt,
@@ -586,6 +588,11 @@ func ResourceDistribution() *schema.Resource {
 								},
 							},
 						},
+						"origin_access_control_id": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.NoZeroValues,
+						},
 						"origin_id": {
 							Type:         schema.TypeString,
 							Required:     true,
@@ -594,6 +601,7 @@ func ResourceDistribution() *schema.Resource {
 						"origin_path": {
 							Type:     schema.TypeString,
 							Optional: true,
+							Default:  "",
 						},
 						"origin_shield": {
 							Type:     schema.TypeList,
@@ -837,7 +845,7 @@ func resourceDistributionCreate(d *schema.ResourceData, meta interface{}) error 
 
 		// ACM and IAM certificate eventual consistency
 		// InvalidViewerCertificate: The specified SSL certificate doesn't exist, isn't in us-east-1 region, isn't valid, or doesn't include a valid certificate chain.
-		if tfawserr.ErrMessageContains(err, cloudfront.ErrCodeInvalidViewerCertificate, "") {
+		if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeInvalidViewerCertificate) {
 			return resource.RetryableError(err)
 		}
 
@@ -879,14 +887,14 @@ func resourceDistributionRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	resp, err := conn.GetDistribution(params)
-	if err != nil {
-		if tfawserr.ErrMessageContains(err, cloudfront.ErrCodeNoSuchDistribution, "") {
-			log.Printf("[WARN] No Distribution found: %s", d.Id())
-			d.SetId("")
-			return nil
-		}
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchDistribution) {
+		create.LogNotFoundRemoveState(names.CloudFront, create.ErrActionReading, ResNameDistribution, d.Id())
+		d.SetId("")
+		return nil
+	}
 
-		return err
+	if err != nil {
+		return create.Error(names.CloudFront, create.ErrActionReading, ResNameDistribution, d.Id(), err)
 	}
 
 	// Update attributes from DistributionConfig
@@ -896,10 +904,10 @@ func resourceDistributionRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// Update other attributes outside of DistributionConfig
-	if err := d.Set("trusted_key_groups", flattenCloudfrontActiveTrustedKeyGroups(resp.Distribution.ActiveTrustedKeyGroups)); err != nil {
+	if err := d.Set("trusted_key_groups", flattenActiveTrustedKeyGroups(resp.Distribution.ActiveTrustedKeyGroups)); err != nil {
 		return fmt.Errorf("error setting trusted_key_groups: %w", err)
 	}
-	if err := d.Set("trusted_signers", flattenCloudfrontActiveTrustedSigners(resp.Distribution.ActiveTrustedSigners)); err != nil {
+	if err := d.Set("trusted_signers", flattenActiveTrustedSigners(resp.Distribution.ActiveTrustedSigners)); err != nil {
 		return fmt.Errorf("error setting trusted_signers: %w", err)
 	}
 	d.Set("status", resp.Distribution.Status)
@@ -912,9 +920,9 @@ func resourceDistributionRead(d *schema.ResourceData, meta interface{}) error {
 	// override hosted_zone_id from flattenDistributionConfig
 	region := meta.(*conns.AWSClient).Region
 	if v, ok := endpoints.PartitionForRegion(endpoints.DefaultPartitions(), region); ok && v.ID() == endpoints.AwsCnPartitionID {
-		d.Set("hosted_zone_id", cloudFrontCNRoute53ZoneID)
+		d.Set("hosted_zone_id", cnRoute53ZoneID)
 	} else {
-		d.Set("hosted_zone_id", cloudFrontRoute53ZoneID)
+		d.Set("hosted_zone_id", route53ZoneID)
 	}
 
 	tags, err := ListTags(conn, d.Get("arn").(string))
@@ -949,7 +957,7 @@ func resourceDistributionUpdate(d *schema.ResourceData, meta interface{}) error 
 
 		// ACM and IAM certificate eventual consistency
 		// InvalidViewerCertificate: The specified SSL certificate doesn't exist, isn't in us-east-1 region, isn't valid, or doesn't include a valid certificate chain.
-		if tfawserr.ErrMessageContains(err, cloudfront.ErrCodeInvalidViewerCertificate, "") {
+		if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeInvalidViewerCertificate) {
 			return resource.RetryableError(err)
 		}
 
@@ -959,6 +967,29 @@ func resourceDistributionUpdate(d *schema.ResourceData, meta interface{}) error 
 
 		return nil
 	})
+
+	// Refresh our ETag if it is out of date and attempt update again
+	if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodePreconditionFailed) {
+		getDistributionInput := &cloudfront.GetDistributionInput{
+			Id: aws.String(d.Id()),
+		}
+		var getDistributionOutput *cloudfront.GetDistributionOutput
+
+		log.Printf("[DEBUG] Refreshing CloudFront Distribution (%s) ETag", d.Id())
+		getDistributionOutput, err = conn.GetDistribution(getDistributionInput)
+
+		if err != nil {
+			return fmt.Errorf("error refreshing CloudFront Distribution (%s) ETag: %s", d.Id(), err)
+		}
+
+		if getDistributionOutput == nil {
+			return fmt.Errorf("error refreshing CloudFront Distribution (%s) ETag: empty response", d.Id())
+		}
+
+		params.IfMatch = getDistributionOutput.ETag
+
+		_, err = conn.UpdateDistribution(params)
+	}
 
 	// Propagate AWS Go SDK retried error, if any
 	if tfresource.TimedOut(err) {
@@ -1037,12 +1068,12 @@ func resourceDistributionDelete(d *schema.ResourceData, meta interface{}) error 
 	log.Printf("[DEBUG] Deleting CloudFront Distribution: %s", d.Id())
 	_, err := conn.DeleteDistribution(deleteDistributionInput)
 
-	if err == nil || tfawserr.ErrMessageContains(err, cloudfront.ErrCodeNoSuchDistribution, "") {
+	if err == nil || tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchDistribution) {
 		return nil
 	}
 
 	// Refresh our ETag if it is out of date and attempt deletion again.
-	if tfawserr.ErrMessageContains(err, cloudfront.ErrCodeInvalidIfMatchVersion, "") {
+	if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeInvalidIfMatchVersion) {
 		getDistributionInput := &cloudfront.GetDistributionInput{
 			Id: aws.String(d.Id()),
 		}
@@ -1067,7 +1098,7 @@ func resourceDistributionDelete(d *schema.ResourceData, meta interface{}) error 
 	// Disable distribution if it is not yet disabled and attempt deletion again.
 	// Here we update via the deployed configuration to ensure we are not submitting an out of date
 	// configuration from the Terraform configuration, should other changes have occurred manually.
-	if tfawserr.ErrMessageContains(err, cloudfront.ErrCodeDistributionNotDisabled, "") {
+	if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeDistributionNotDisabled) {
 		getDistributionInput := &cloudfront.GetDistributionInput{
 			Id: aws.String(d.Id()),
 		}
@@ -1111,19 +1142,19 @@ func resourceDistributionDelete(d *schema.ResourceData, meta interface{}) error 
 		// CloudFront has eventual consistency issues even for "deployed" state.
 		// Occasionally the DeleteDistribution call will return this error as well, in which retries will succeed:
 		//   * PreconditionFailed: The request failed because it didn't meet the preconditions in one or more request-header fields
-		if tfawserr.ErrMessageContains(err, cloudfront.ErrCodeDistributionNotDisabled, "") || tfawserr.ErrMessageContains(err, cloudfront.ErrCodePreconditionFailed, "") {
+		if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeDistributionNotDisabled) || tfawserr.ErrCodeEquals(err, cloudfront.ErrCodePreconditionFailed) {
 			err = resource.Retry(2*time.Minute, func() *resource.RetryError {
 				_, err := conn.DeleteDistribution(deleteDistributionInput)
 
-				if tfawserr.ErrMessageContains(err, cloudfront.ErrCodeDistributionNotDisabled, "") {
+				if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeDistributionNotDisabled) {
 					return resource.RetryableError(err)
 				}
 
-				if tfawserr.ErrMessageContains(err, cloudfront.ErrCodeNoSuchDistribution, "") {
+				if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchDistribution) {
 					return nil
 				}
 
-				if tfawserr.ErrMessageContains(err, cloudfront.ErrCodePreconditionFailed, "") {
+				if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodePreconditionFailed) {
 					return resource.RetryableError(err)
 				}
 
@@ -1141,7 +1172,7 @@ func resourceDistributionDelete(d *schema.ResourceData, meta interface{}) error 
 		}
 	}
 
-	if tfawserr.ErrMessageContains(err, cloudfront.ErrCodeNoSuchDistribution, "") {
+	if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchDistribution) {
 		return nil
 	}
 

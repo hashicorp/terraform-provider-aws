@@ -1,5 +1,5 @@
 ---
-subcategory: "Route53 Recovery Control Config"
+subcategory: "Route 53 Recovery Control Config"
 layout: "aws"
 page_title: "AWS: aws_route53recoverycontrolconfig_safety_rule"
 description: |-

@@ -36,12 +36,15 @@ func DataSourceResourceShare() *schema.Resource {
 			},
 
 			"resource_owner": {
-				Type:     schema.TypeString,
-				Required: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					ram.ResourceOwnerOtherAccounts,
-					ram.ResourceOwnerSelf,
-				}, false),
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringInSlice(ram.ResourceOwner_Values(), false),
+			},
+
+			"resource_share_status": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringInSlice(ram.ResourceShareStatus_Values(), false),
 			},
 
 			"name": {
@@ -91,8 +94,12 @@ func dataSourceResourceShareRead(d *schema.ResourceData, meta interface{}) error
 		ResourceOwner: aws.String(owner),
 	}
 
+	if v, ok := d.GetOk("resource_share_status"); ok {
+		params.ResourceShareStatus = aws.String(v.(string))
+	}
+
 	if filtersOk {
-		params.TagFilters = buildRAMTagFilters(filters.(*schema.Set))
+		params.TagFilters = buildTagFilters(filters.(*schema.Set))
 	}
 
 	for {
@@ -157,7 +164,7 @@ func dataSourceResourceShareRead(d *schema.ResourceData, meta interface{}) error
 	return nil
 }
 
-func buildRAMTagFilters(set *schema.Set) []*ram.TagFilter {
+func buildTagFilters(set *schema.Set) []*ram.TagFilter {
 	var filters []*ram.TagFilter
 
 	for _, v := range set.List() {

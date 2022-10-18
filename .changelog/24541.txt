@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_ecs_service: Fix retry when using the `wait_for_steady_state` parameter
+```

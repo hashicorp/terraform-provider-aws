@@ -38,7 +38,7 @@ func sweepReplicationInstances(region string) error {
 	}
 
 	conn := client.(*conns.AWSClient).DMSConn
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
 	err = conn.DescribeReplicationInstancesPages(&dms.DescribeReplicationInstancesInput{}, func(page *dms.DescribeReplicationInstancesOutput, lastPage bool) bool {
@@ -78,7 +78,7 @@ func sweepReplicationTasks(region string) error {
 	}
 
 	conn := client.(*conns.AWSClient).DMSConn
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
 	input := &dms.DescribeReplicationTasksInput{

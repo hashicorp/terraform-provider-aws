@@ -1,5 +1,5 @@
 ---
-subcategory: "S3"
+subcategory: "S3 (Simple Storage)"
 layout: "aws"
 page_title: "AWS: aws_s3_bucket_policy"
 description: |-
@@ -60,5 +60,5 @@ No additional attributes are exported.
 S3 bucket policies can be imported using the bucket name, e.g.,
 
 ```
-$ terraform import aws_s3_bucket_policy.example my-bucket-name
+$ terraform import aws_s3_bucket_policy.allow_access_from_another_account my-tf-test-bucket
 ```

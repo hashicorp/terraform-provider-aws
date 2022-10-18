@@ -1,14 +1,17 @@
 package configservice
 
 import (
+	"errors"
 	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/configservice"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func ResourceConfigurationRecorderStatus() *schema.Resource {
@@ -78,21 +81,25 @@ func resourceConfigurationRecorderStatusRead(d *schema.ResourceData, meta interf
 		ConfigurationRecorderNames: []*string{aws.String(name)},
 	}
 	statusOut, err := conn.DescribeConfigurationRecorderStatus(&statusInput)
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, configservice.ErrCodeNoSuchConfigurationRecorderException) {
+		create.LogNotFoundRemoveState(names.ConfigService, create.ErrActionReading, ResNameConfigurationRecorderStatus, d.Id())
+		d.SetId("")
+		return nil
+	}
+
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, configservice.ErrCodeNoSuchConfigurationRecorderException, "") {
-			log.Printf("[WARN] Configuration Recorder (status) %q is gone (NoSuchConfigurationRecorderException)", name)
-			d.SetId("")
-			return nil
-		}
-		return fmt.Errorf("Failed describing Configuration Recorder %q status: %s",
-			name, err)
+		return create.Error(names.ConfigService, create.ErrActionReading, ResNameConfigurationRecorderStatus, d.Id(), err)
 	}
 
 	numberOfStatuses := len(statusOut.ConfigurationRecordersStatus)
-	if numberOfStatuses < 1 {
-		log.Printf("[WARN] Configuration Recorder (status) %q is gone (no recorders found)", name)
+	if !d.IsNewResource() && numberOfStatuses < 1 {
+		create.LogNotFoundRemoveState(names.ConfigService, create.ErrActionReading, ResNameConfigurationRecorderStatus, d.Id())
 		d.SetId("")
 		return nil
+	}
+
+	if d.IsNewResource() && numberOfStatuses < 1 {
+		return create.Error(names.ConfigService, create.ErrActionReading, ResNameConfigurationRecorderStatus, d.Id(), errors.New("not found after creation"))
 	}
 
 	if numberOfStatuses > 1 {

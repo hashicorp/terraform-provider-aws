@@ -9,13 +9,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/eks"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -33,6 +32,12 @@ func ResourceAddon() *schema.Resource {
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
+
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(20 * time.Minute),
+			Update: schema.DefaultTimeout(20 * time.Minute),
+			Delete: schema.DefaultTimeout(40 * time.Minute),
+		},
 
 		Schema: map[string]*schema.Schema{
 			"addon_name": {
@@ -67,6 +72,10 @@ func ResourceAddon() *schema.Resource {
 			"modified_at": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"preserve": {
+				Type:     schema.TypeBool,
+				Optional: true,
 			},
 			"resolve_conflicts": {
 				Type:         schema.TypeString,
@@ -115,7 +124,7 @@ func resourceAddonCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
-	err := resource.RetryContext(ctx, tfiam.PropagationTimeout, func() *resource.RetryError {
+	err := resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
 		_, err := conn.CreateAddonWithContext(ctx, input)
 
 		if tfawserr.ErrMessageContains(err, eks.ErrCodeInvalidParameterException, "CREATE_FAILED") {
@@ -143,7 +152,7 @@ func resourceAddonCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	d.SetId(id)
 
-	_, err = waitAddonCreated(ctx, conn, clusterName, addonName)
+	_, err = waitAddonCreated(ctx, conn, clusterName, addonName, d.Timeout(schema.TimeoutCreate))
 
 	if err != nil {
 		// Creating addon w/o setting resolve_conflicts to "OVERWRITE"
@@ -245,7 +254,7 @@ func resourceAddonUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 		updateID := aws.StringValue(output.Update.Id)
 
-		_, err = waitAddonUpdateSuccessful(ctx, conn, clusterName, addonName, updateID)
+		_, err = waitAddonUpdateSuccessful(ctx, conn, clusterName, addonName, updateID, d.Timeout(schema.TimeoutUpdate))
 
 		if err != nil {
 			if d.Get("resolve_conflicts") != eks.ResolveConflictsOverwrite {
@@ -279,17 +288,23 @@ func resourceAddonDelete(ctx context.Context, d *schema.ResourceData, meta inter
 		return diag.FromErr(err)
 	}
 
-	log.Printf("[DEBUG] Deleting EKS Add-On: %s", d.Id())
-	_, err = conn.DeleteAddonWithContext(ctx, &eks.DeleteAddonInput{
+	input := &eks.DeleteAddonInput{
 		AddonName:   aws.String(addonName),
 		ClusterName: aws.String(clusterName),
-	})
+	}
+
+	if v, ok := d.GetOk("preserve"); ok {
+		input.Preserve = aws.Bool(v.(bool))
+	}
+
+	log.Printf("[DEBUG] Deleting EKS Add-On: %s", d.Id())
+	_, err = conn.DeleteAddonWithContext(ctx, input)
 
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("error deleting EKS Add-On (%s): %w", d.Id(), err))
 	}
 
-	_, err = waitAddonDeleted(ctx, conn, clusterName, addonName)
+	_, err = waitAddonDeleted(ctx, conn, clusterName, addonName, d.Timeout(schema.TimeoutDelete))
 
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("error waiting for EKS Add-On (%s) to delete: %w", d.Id(), err))

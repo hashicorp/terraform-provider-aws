@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/opsworks"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -22,22 +22,23 @@ func TestAccOpsWorksApplication_basic(t *testing.T) {
 	resourceName := "aws_opsworks_application.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, opsworks.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckApplicationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, opsworks.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccApplicationCreate(rName),
+				Config: testAccApplicationConfig_create(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(resourceName, &opsapp),
 					testAccCheckCreateAppAttributes(&opsapp),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "type", "other"),
 					resource.TestCheckResourceAttr(resourceName, "enable_ssl", "false"),
-					resource.TestCheckNoResourceAttr(resourceName, "ssl_configuration"),
+					resource.TestCheckResourceAttr(resourceName, "ssl_configuration.#", "0"),
 					resource.TestCheckNoResourceAttr(resourceName, "domains"),
-					resource.TestCheckNoResourceAttr(resourceName, "app_source"),
+					resource.TestCheckResourceAttr(resourceName, "app_source.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "app_source.0.type", "other"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "environment.*", map[string]string{
 						"key":    "key1",
 						"value":  "value1",
@@ -54,7 +55,7 @@ func TestAccOpsWorksApplication_basic(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"environment"},
 			},
 			{
-				Config: testAccApplicationUpdate(rName),
+				Config: testAccApplicationConfig_update(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(resourceName, &opsapp),
 					testAccCheckUpdateAppAttributes(&opsapp),
@@ -253,7 +254,7 @@ func testAccCheckApplicationDestroy(s *terraform.State) error {
 			}
 		}
 
-		if !tfawserr.ErrMessageContains(err, opsworks.ErrCodeResourceNotFoundException, "") {
+		if !tfawserr.ErrCodeEquals(err, opsworks.ErrCodeResourceNotFoundException) {
 			return err
 		}
 	}
@@ -261,14 +262,15 @@ func testAccCheckApplicationDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccApplicationCreate(name string) string {
-	return testAccStackVPCCreateConfig(name) +
+func testAccApplicationConfig_create(rName string) string {
+	return acctest.ConfigCompose(
+		testAccStackConfig_vpcCreate(rName),
 		fmt.Sprintf(`
 resource "aws_opsworks_application" "test" {
   document_root = "foo"
   enable_ssl    = false
-  name          = %q
-  stack_id      = aws_opsworks_stack.tf-acc.id
+  name          = %[1]q
+  stack_id      = aws_opsworks_stack.test.id
   type          = "other"
 
   app_source {
@@ -281,20 +283,21 @@ resource "aws_opsworks_application" "test" {
     secure = false
   }
 }
-`, name)
+`, rName))
 }
 
-func testAccApplicationUpdate(name string) string {
-	return testAccStackVPCCreateConfig(name) +
+func testAccApplicationConfig_update(rName string) string {
+	return acctest.ConfigCompose(
+		testAccStackConfig_vpcCreate(rName),
 		fmt.Sprintf(`
 resource "aws_opsworks_application" "test" {
   auto_bundle_on_deploy = "true"
   document_root         = "root"
   domains               = ["example.com", "sub.example.com"]
   enable_ssl            = true
-  name                  = %q
+  name                  = %[1]q
   rails_env             = "staging"
-  stack_id              = aws_opsworks_stack.tf-acc.id
+  stack_id              = aws_opsworks_stack.test.id
   type                  = "rails"
 
   ssl_configuration {
@@ -349,5 +352,5 @@ EOS
     value = "value2"
   }
 }
-`, name)
+`, rName))
 }

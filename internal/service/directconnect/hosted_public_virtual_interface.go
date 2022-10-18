@@ -132,7 +132,7 @@ func resourceHostedPublicVirtualInterfaceCreate(d *schema.ResourceData, meta int
 		req.NewPublicVirtualInterfaceAllocation.CustomerAddress = aws.String(v.(string))
 	}
 	if v, ok := d.GetOk("route_filter_prefixes"); ok {
-		req.NewPublicVirtualInterfaceAllocation.RouteFilterPrefixes = expandRouteFilterPrefixes(v.(*schema.Set))
+		req.NewPublicVirtualInterfaceAllocation.RouteFilterPrefixes = expandRouteFilterPrefixes(v.(*schema.Set).List())
 	}
 
 	log.Printf("[DEBUG] Allocating Direct Connect hosted public virtual interface: %s", req)
@@ -143,7 +143,7 @@ func resourceHostedPublicVirtualInterfaceCreate(d *schema.ResourceData, meta int
 
 	d.SetId(aws.StringValue(resp.VirtualInterfaceId))
 
-	if err := dxHostedPublicVirtualInterfaceWaitUntilAvailable(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+	if err := hostedPublicVirtualInterfaceWaitUntilAvailable(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return err
 	}
 
@@ -153,7 +153,7 @@ func resourceHostedPublicVirtualInterfaceCreate(d *schema.ResourceData, meta int
 func resourceHostedPublicVirtualInterfaceRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DirectConnectConn
 
-	vif, err := dxVirtualInterfaceRead(d.Id(), conn)
+	vif, err := virtualInterfaceRead(d.Id(), conn)
 	if err != nil {
 		return err
 	}
@@ -190,13 +190,13 @@ func resourceHostedPublicVirtualInterfaceRead(d *schema.ResourceData, meta inter
 }
 
 func resourceHostedPublicVirtualInterfaceDelete(d *schema.ResourceData, meta interface{}) error {
-	return dxVirtualInterfaceDelete(d, meta)
+	return virtualInterfaceDelete(d, meta)
 }
 
 func resourceHostedPublicVirtualInterfaceImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	conn := meta.(*conns.AWSClient).DirectConnectConn
 
-	vif, err := dxVirtualInterfaceRead(d.Id(), conn)
+	vif, err := virtualInterfaceRead(d.Id(), conn)
 	if err != nil {
 		return nil, err
 	}
@@ -227,8 +227,8 @@ func resourceHostedPublicVirtualInterfaceCustomizeDiff(_ context.Context, diff *
 	return nil
 }
 
-func dxHostedPublicVirtualInterfaceWaitUntilAvailable(conn *directconnect.DirectConnect, vifId string, timeout time.Duration) error {
-	return dxVirtualInterfaceWaitUntilAvailable(
+func hostedPublicVirtualInterfaceWaitUntilAvailable(conn *directconnect.DirectConnect, vifId string, timeout time.Duration) error {
+	return virtualInterfaceWaitUntilAvailable(
 		conn,
 		vifId,
 		timeout,

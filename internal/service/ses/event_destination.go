@@ -9,7 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ses"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -199,13 +199,13 @@ func resourceEventDestinationRead(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	output, err := conn.DescribeConfigurationSet(input)
-	if tfawserr.ErrMessageContains(err, ses.ErrCodeConfigurationSetDoesNotExistException, "") {
+	if tfawserr.ErrCodeEquals(err, ses.ErrCodeConfigurationSetDoesNotExistException) {
 		log.Printf("[WARN] SES Configuration Set (%s) not found, removing from state", configurationSetName)
 		d.SetId("")
 		return nil
 	}
 	if err != nil {
-		return fmt.Errorf("error reading SES Configuration Set Event Destination (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading SES Configuration Set Event Destination (%s): %w", d.Id(), err)
 	}
 
 	var thisEventDestination *ses.EventDestination
@@ -224,17 +224,17 @@ func resourceEventDestinationRead(d *schema.ResourceData, meta interface{}) erro
 	d.Set("configuration_set_name", output.ConfigurationSet.Name)
 	d.Set("enabled", thisEventDestination.Enabled)
 	d.Set("name", thisEventDestination.Name)
-	if err := d.Set("cloudwatch_destination", flattenSesCloudWatchDestination(thisEventDestination.CloudWatchDestination)); err != nil {
-		return fmt.Errorf("error setting cloudwatch_destination: %w", err)
+	if err := d.Set("cloudwatch_destination", flattenCloudWatchDestination(thisEventDestination.CloudWatchDestination)); err != nil {
+		return fmt.Errorf("setting cloudwatch_destination: %w", err)
 	}
-	if err := d.Set("kinesis_destination", flattenSesKinesisFirehoseDestination(thisEventDestination.KinesisFirehoseDestination)); err != nil {
-		return fmt.Errorf("error setting kinesis_destination: %w", err)
+	if err := d.Set("kinesis_destination", flattenKinesisFirehoseDestination(thisEventDestination.KinesisFirehoseDestination)); err != nil {
+		return fmt.Errorf("setting kinesis_destination: %w", err)
 	}
 	if err := d.Set("matching_types", flex.FlattenStringSet(thisEventDestination.MatchingEventTypes)); err != nil {
-		return fmt.Errorf("error setting matching_types: %w", err)
+		return fmt.Errorf("setting matching_types: %w", err)
 	}
-	if err := d.Set("sns_destination", flattenSesSnsDestination(thisEventDestination.SNSDestination)); err != nil {
-		return fmt.Errorf("error setting sns_destination: %w", err)
+	if err := d.Set("sns_destination", flattenSNSDestination(thisEventDestination.SNSDestination)); err != nil {
+		return fmt.Errorf("setting sns_destination: %w", err)
 	}
 
 	arn := arn.ARN{
@@ -264,7 +264,7 @@ func resourceEventDestinationDelete(d *schema.ResourceData, meta interface{}) er
 func resourceEventDestinationImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	parts := strings.Split(d.Id(), "/")
 	if len(parts) != 2 {
-		return []*schema.ResourceData{}, fmt.Errorf("Wrong format of resource: %s. Please follow 'configuration-set-name/event-destination-name'", d.Id())
+		return []*schema.ResourceData{}, fmt.Errorf("wrong format of import ID (%s), use: 'configuration-set-name/event-destination-name'", d.Id())
 	}
 
 	configurationSetName := parts[0]
@@ -293,7 +293,7 @@ func generateCloudWatchDestination(v []interface{}) []*ses.CloudWatchDimensionCo
 	return b
 }
 
-func flattenSesCloudWatchDestination(destination *ses.CloudWatchDestination) []interface{} {
+func flattenCloudWatchDestination(destination *ses.CloudWatchDestination) []interface{} {
 	if destination == nil {
 		return []interface{}{}
 	}
@@ -313,7 +313,7 @@ func flattenSesCloudWatchDestination(destination *ses.CloudWatchDestination) []i
 	return vDimensionConfigurations
 }
 
-func flattenSesKinesisFirehoseDestination(destination *ses.KinesisFirehoseDestination) []interface{} {
+func flattenKinesisFirehoseDestination(destination *ses.KinesisFirehoseDestination) []interface{} {
 	if destination == nil {
 		return []interface{}{}
 	}
@@ -326,7 +326,7 @@ func flattenSesKinesisFirehoseDestination(destination *ses.KinesisFirehoseDestin
 	return []interface{}{mDestination}
 }
 
-func flattenSesSnsDestination(destination *ses.SNSDestination) []interface{} {
+func flattenSNSDestination(destination *ses.SNSDestination) []interface{} {
 	if destination == nil {
 		return []interface{}{}
 	}

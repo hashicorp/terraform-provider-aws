@@ -1,5 +1,5 @@
 ---
-subcategory: "Image Builder"
+subcategory: "EC2 Image Builder"
 layout: "aws"
 page_title: "AWS: aws_imagebuilder_image"
 description: |-
@@ -24,15 +24,16 @@ resource "aws_imagebuilder_image" "example" {
 
 The following arguments are required:
 
-* `image_recipe_arn` - (Required) Amazon Resource Name (ARN) of the Image Builder Infrastructure Recipe.
 * `infrastructure_configuration_arn` - (Required) Amazon Resource Name (ARN) of the Image Builder Infrastructure Configuration.
 
 The following arguments are optional:
 
+* `container_recipe_arn` - (Optional) - Amazon Resource Name (ARN) of the container recipe.
 * `distribution_configuration_arn` - (Optional) Amazon Resource Name (ARN) of the Image Builder Distribution Configuration.
 * `enhanced_image_metadata_enabled` - (Optional) Whether additional information about the image being created is collected. Defaults to `true`.
+* `image_recipe_arn` - (Optional) Amazon Resource Name (ARN) of the image recipe.
 * `image_tests_configuration` - (Optional) Configuration block with image tests configuration. Detailed below.
-* `tags` - (Optional) Key-value map of resource tags for the Image Builder Image. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value map of resource tags for the Image Builder Image. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### image_tests_configuration
 
@@ -56,14 +57,14 @@ In addition to all arguments above, the following attributes are exported:
         * `image` - Identifier of the AMI.
         * `name` - Name of the AMI.
         * `region` - Region of the AMI.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `version` - Version of the image.
 
 ## Timeouts
 
-`aws_imagebuilder_image` provides the following [Timeouts](/docs/configuration/resources.html#timeouts) configuration options:
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
 
-* `create` - (Default `60m`) How long to wait for the image to be built, tested, and distributed.
+* `create` - (Default `60m`)
 
 ## Import
 

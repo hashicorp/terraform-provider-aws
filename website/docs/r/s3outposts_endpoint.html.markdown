@@ -1,5 +1,5 @@
 ---
-subcategory: "S3 Outposts"
+subcategory: "S3 on Outposts"
 layout: "aws"
 page_title: "AWS: aws_s3outposts_endpoint"
 description: |-

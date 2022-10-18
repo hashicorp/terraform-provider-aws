@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/mediastore"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -18,13 +18,13 @@ func TestAccMediaStoreContainer_basic(t *testing.T) {
 	resourceName := "aws_media_store_container.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, mediastore.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckContainerDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, mediastore.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckContainerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMediaStoreContainerConfig(sdkacctest.RandString(5)),
+				Config: testAccContainerConfig_basic(sdkacctest.RandString(5)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerExists(resourceName),
 				),
@@ -43,13 +43,13 @@ func TestAccMediaStoreContainer_tags(t *testing.T) {
 	resourceName := "aws_media_store_container.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, mediastore.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckContainerDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, mediastore.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckContainerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMediaStoreContainerConfigWithTags(rName, "foo", "bar", "fizz", "buzz"),
+				Config: testAccContainerConfig_tags(rName, "foo", "bar", "fizz", "buzz"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
@@ -59,7 +59,7 @@ func TestAccMediaStoreContainer_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccMediaStoreContainerConfigWithTags(rName, "foo", "bar2", "fizz2", "buzz2"),
+				Config: testAccContainerConfig_tags(rName, "foo", "bar2", "fizz2", "buzz2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
@@ -74,7 +74,7 @@ func TestAccMediaStoreContainer_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccMediaStoreContainerConfig(rName),
+				Config: testAccContainerConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -98,7 +98,7 @@ func testAccCheckContainerDestroy(s *terraform.State) error {
 
 		resp, err := conn.DescribeContainer(input)
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, mediastore.ErrCodeContainerNotFoundException, "") {
+			if tfawserr.ErrCodeEquals(err, mediastore.ErrCodeContainerNotFoundException) {
 				return nil
 			}
 			return err
@@ -146,7 +146,7 @@ func testAccPreCheck(t *testing.T) {
 	}
 }
 
-func testAccMediaStoreContainerConfig(rName string) string {
+func testAccContainerConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_media_store_container" "test" {
   name = "tf_mediastore_%s"
@@ -154,7 +154,7 @@ resource "aws_media_store_container" "test" {
 `, rName)
 }
 
-func testAccMediaStoreContainerConfigWithTags(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccContainerConfig_tags(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_media_store_container" "test" {
   name = "tf_mediastore_%[1]s"

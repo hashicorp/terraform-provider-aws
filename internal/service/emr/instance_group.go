@@ -9,6 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/emr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
@@ -19,8 +20,8 @@ import (
 )
 
 const (
-	emrInstanceGroupCreateTimeout = 30 * time.Minute
-	emrInstanceGroupUpdateTimeout = 30 * time.Minute
+	instanceGroupCreateTimeout = 30 * time.Minute
+	instanceGroupUpdateTimeout = 30 * time.Minute
 )
 
 func ResourceInstanceGroup() *schema.Resource {
@@ -62,18 +63,12 @@ func ResourceInstanceGroup() *schema.Resource {
 			"configurations_json": {
 				Type:             schema.TypeString,
 				Optional:         true,
-				ForceNew:         false,
 				ValidateFunc:     validation.StringIsJSON,
 				DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
 				StateFunc: func(v interface{}) string {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
 				},
-			},
-			"ebs_optimized": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				ForceNew: true,
 			},
 			"ebs_config": {
 				Type:     schema.TypeSet,
@@ -108,10 +103,15 @@ func ResourceInstanceGroup() *schema.Resource {
 				},
 				Set: resourceClusterEBSHashConfig,
 			},
+			"ebs_optimized": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				ForceNew: true,
+			},
 			"instance_count": {
 				Type:     schema.TypeInt,
 				Optional: true,
-				Default:  1,
+				Computed: true,
 			},
 			"instance_type": {
 				Type:     schema.TypeString,
@@ -140,9 +140,8 @@ func resourceInstanceGroupCreate(d *schema.ResourceData, meta interface{}) error
 
 	instanceRole := emr.InstanceGroupTypeTask
 	groupConfig := &emr.InstanceGroupConfig{
-		EbsConfiguration: readEmrEBSConfig(d),
+		EbsConfiguration: readEBSConfig(d),
 		InstanceRole:     aws.String(instanceRole),
-		InstanceCount:    aws.Int64(int64(d.Get("instance_count").(int))),
 		InstanceType:     aws.String(d.Get("instance_type").(string)),
 		Name:             aws.String(d.Get("name").(string)),
 	}
@@ -161,10 +160,16 @@ func resourceInstanceGroupCreate(d *schema.ResourceData, meta interface{}) error
 		if err != nil {
 			return fmt.Errorf("configurations_json contains an invalid JSON: %s", err)
 		}
-		groupConfig.Configurations, err = expandConfigurationJson(info)
+		groupConfig.Configurations, err = expandConfigurationJSON(info)
 		if err != nil {
 			return fmt.Errorf("Error reading EMR configurations_json: %s", err)
 		}
+	}
+
+	if v, ok := d.GetOk("instance_count"); ok {
+		groupConfig.InstanceCount = aws.Int64(int64(v.(int)))
+	} else {
+		groupConfig.InstanceCount = aws.Int64(1)
 	}
 
 	groupConfig.Market = aws.String(emr.MarketTypeOnDemand)
@@ -190,7 +195,7 @@ func resourceInstanceGroupCreate(d *schema.ResourceData, meta interface{}) error
 	}
 	d.SetId(aws.StringValue(resp.InstanceGroupIds[0]))
 
-	if err := waitForEmrInstanceGroupStateRunning(conn, d.Get("cluster_id").(string), d.Id(), emrInstanceGroupCreateTimeout); err != nil {
+	if err := waitForInstanceGroupStateRunning(conn, d.Get("cluster_id").(string), d.Id(), instanceGroupCreateTimeout); err != nil {
 		return fmt.Errorf("error waiting for EMR Instance Group (%s) creation: %s", d.Id(), err)
 	}
 
@@ -209,6 +214,11 @@ func resourceInstanceGroupRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
+		if tfawserr.ErrMessageContains(err, emr.ErrCodeInvalidRequestException, "is not valid") {
+			log.Printf("[DEBUG] EMR Cluster corresponding to Instance Group (%s) not found, removing", d.Id())
+			d.SetId("")
+			return nil
+		}
 		return fmt.Errorf("error reading EMR Instance Group (%s): %s", d.Id(), err)
 	}
 
@@ -225,7 +235,7 @@ func resourceInstanceGroupRead(d *schema.ResourceData, meta interface{}) error {
 
 	switch {
 	case len(ig.Configurations) > 0:
-		configOut, err := flattenConfigurationJson(ig.Configurations)
+		configOut, err := flattenConfigurationJSON(ig.Configurations)
 		if err != nil {
 			return fmt.Errorf("Error reading EMR instance group configurations: %s", err)
 		}
@@ -236,35 +246,12 @@ func resourceInstanceGroupRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("configurations_json", "")
 	}
 
-	var autoscalingPolicyString string
-	if ig.AutoScalingPolicy != nil {
-		// AutoScalingPolicy has an additional Status field and null values that are causing a new hashcode to be generated for `instance_group`.
-		// We are purposefully omitting that field and the null values here when we flatten the autoscaling policy string for the statefile.
-		for i, rule := range ig.AutoScalingPolicy.Rules {
-			for j, dimension := range rule.Trigger.CloudWatchAlarmDefinition.Dimensions {
-				if aws.StringValue(dimension.Key) == "JobFlowId" {
-					tmpDimensions := append(ig.AutoScalingPolicy.Rules[i].Trigger.CloudWatchAlarmDefinition.Dimensions[:j], ig.AutoScalingPolicy.Rules[i].Trigger.CloudWatchAlarmDefinition.Dimensions[j+1:]...)
-					ig.AutoScalingPolicy.Rules[i].Trigger.CloudWatchAlarmDefinition.Dimensions = tmpDimensions
-				}
-			}
+	autoscalingPolicyString, err := flattenAutoScalingPolicyDescription(ig.AutoScalingPolicy)
 
-			if len(ig.AutoScalingPolicy.Rules[i].Trigger.CloudWatchAlarmDefinition.Dimensions) == 0 {
-				ig.AutoScalingPolicy.Rules[i].Trigger.CloudWatchAlarmDefinition.Dimensions = nil
-			}
-		}
-
-		autoscalingPolicyConstraintsBytes, err := json.Marshal(ig.AutoScalingPolicy.Constraints)
-		if err != nil {
-			return fmt.Errorf("error parsing EMR Cluster Instance Groups AutoScalingPolicy Constraints: %s", err)
-		}
-
-		autoscalingPolicyRulesBytes, err := marshalWithoutNil(ig.AutoScalingPolicy.Rules)
-		if err != nil {
-			return fmt.Errorf("error parsing EMR Cluster Instance Groups AutoScalingPolicy Rules: %s", err)
-		}
-
-		autoscalingPolicyString = fmt.Sprintf("{\"Constraints\":%s,\"Rules\":%s}", string(autoscalingPolicyConstraintsBytes), string(autoscalingPolicyRulesBytes))
+	if err != nil {
+		return err
 	}
+
 	d.Set("autoscaling_policy", autoscalingPolicyString)
 
 	d.Set("bid_price", ig.BidPrice)
@@ -303,7 +290,7 @@ func resourceInstanceGroupUpdate(d *schema.ResourceData, meta interface{}) error
 				if err != nil {
 					return fmt.Errorf("configurations_json contains an invalid JSON: %s", err)
 				}
-				instanceGroupModifyConfig.Configurations, err = expandConfigurationJson(info)
+				instanceGroupModifyConfig.Configurations, err = expandConfigurationJSON(info)
 				if err != nil {
 					return fmt.Errorf("Error reading EMR configurations_json: %s", err)
 				}
@@ -320,7 +307,7 @@ func resourceInstanceGroupUpdate(d *schema.ResourceData, meta interface{}) error
 			return fmt.Errorf("error modifying EMR Instance Group (%s): %s", d.Id(), err)
 		}
 
-		if err := waitForEmrInstanceGroupStateRunning(conn, d.Get("cluster_id").(string), d.Id(), emrInstanceGroupUpdateTimeout); err != nil {
+		if err := waitForInstanceGroupStateRunning(conn, d.Get("cluster_id").(string), d.Id(), instanceGroupUpdateTimeout); err != nil {
 			return fmt.Errorf("error waiting for EMR Instance Group (%s) modification: %s", d.Id(), err)
 		}
 	}
@@ -414,8 +401,8 @@ func FetchInstanceGroup(conn *emr.EMR, clusterID, groupID string) (*emr.Instance
 	return ig, nil
 }
 
-// readEmrEBSConfig populates an emr.EbsConfiguration struct
-func readEmrEBSConfig(d *schema.ResourceData) *emr.EbsConfiguration {
+// readEBSConfig populates an emr.EbsConfiguration struct
+func readEBSConfig(d *schema.ResourceData) *emr.EbsConfiguration {
 	result := &emr.EbsConfiguration{}
 	if v, ok := d.GetOk("ebs_optimized"); ok {
 		result.EbsOptimized = aws.Bool(v.(bool))
@@ -445,47 +432,7 @@ func readEmrEBSConfig(d *schema.ResourceData) *emr.EbsConfiguration {
 	return result
 }
 
-// marshalWithoutNil returns a JSON document of v stripped of any null properties
-func marshalWithoutNil(v interface{}) ([]byte, error) {
-	//removeNil is a helper for stripping nil values
-	removeNil := func(data map[string]interface{}) map[string]interface{} {
-
-		m := make(map[string]interface{})
-		for k, v := range data {
-			if v == nil {
-				continue
-			}
-
-			switch v := v.(type) {
-			case map[string]interface{}:
-				m[k] = removeNil(v)
-			default:
-				m[k] = v
-			}
-		}
-
-		return m
-	}
-
-	b, err := json.Marshal(v)
-	if err != nil {
-		return nil, err
-	}
-
-	var rules []map[string]interface{}
-	if err := json.Unmarshal(b, &rules); err != nil {
-		return nil, err
-	}
-
-	var cleanRules []map[string]interface{}
-	for _, rule := range rules {
-		cleanRules = append(cleanRules, removeNil(rule))
-	}
-
-	return json.Marshal(cleanRules)
-}
-
-func waitForEmrInstanceGroupStateRunning(conn *emr.EMR, clusterID string, instanceGroupID string, timeout time.Duration) error {
+func waitForInstanceGroupStateRunning(conn *emr.EMR, clusterID string, instanceGroupID string, timeout time.Duration) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
 			emr.InstanceGroupStateBootstrapping,

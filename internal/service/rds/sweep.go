@@ -11,7 +11,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -37,6 +37,7 @@ func init() {
 		F:    sweepClusters,
 		Dependencies: []string{
 			"aws_db_instance",
+			"aws_db_cluster_snapshot",
 		},
 	})
 
@@ -56,6 +57,10 @@ func init() {
 	resource.AddTestSweepers("aws_db_instance", &resource.Sweeper{
 		Name: "aws_db_instance",
 		F:    sweepInstances,
+		Dependencies: []string{
+			"aws_opsworks_rds_db_instance",
+			"aws_db_cluster_snapshot",
+		},
 	})
 
 	resource.AddTestSweepers("aws_db_option_group", &resource.Sweeper{
@@ -90,6 +95,16 @@ func init() {
 		Dependencies: []string{
 			"aws_db_instance",
 		},
+	})
+
+	resource.AddTestSweepers("aws_rds_cluster_activity_stream", &resource.Sweeper{
+		Name: "aws_rds_cluster_activity_stream",
+		F:    func(region string) error { return nil },
+	})
+
+	resource.AddTestSweepers("aws_db_instance_automated_backups_replication", &resource.Sweeper{
+		Name: "aws_db_instance_automated_backups_replication",
+		F:    sweepInstanceAutomatedBackupsReplication,
 	})
 }
 
@@ -182,7 +197,7 @@ func sweepClusterSnapshots(region string) error {
 			_, err := conn.DeleteDBClusterSnapshot(&rds.DeleteDBClusterSnapshotInput{
 				DBClusterSnapshotIdentifier: aws.String(id),
 			})
-			if tfawserr.ErrMessageContains(err, rds.ErrCodeDBClusterSnapshotNotFoundFault, "") {
+			if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBClusterSnapshotNotFoundFault) {
 				continue
 			}
 			if err != nil {
@@ -204,74 +219,49 @@ func sweepClusterSnapshots(region string) error {
 
 func sweepClusters(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
-
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
 	conn := client.(*conns.AWSClient).RDSConn
-	input := &rds.DescribeDBClustersInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.DescribeDBClustersPages(input, func(out *rds.DescribeDBClustersOutput, lastPage bool) bool {
+	err = conn.DescribeDBClustersPages(&rds.DescribeDBClustersInput{}, func(out *rds.DescribeDBClustersOutput, lastPage bool) bool {
 		for _, cluster := range out.DBClusters {
-			id := aws.StringValue(cluster.DBClusterIdentifier)
+			r := ResourceCluster()
+			d := r.Data(nil)
+			d.SetId(aws.StringValue(cluster.DBClusterIdentifier))
+			d.Set("apply_immediately", true)
+			d.Set("arn", cluster.DBClusterArn)
+			d.Set("deletion_protection", false)
+			d.Set("skip_final_snapshot", true)
 
-			// Automatically remove from global cluster to bypass this error on deletion:
-			// InvalidDBClusterStateFault: This cluster is a part of a global cluster, please remove it from globalcluster first
-			if aws.StringValue(cluster.EngineMode) == "global" {
+			if aws.StringValue(cluster.EngineMode) == "global" || aws.StringValue(cluster.EngineMode) == "provisioned" {
 				globalCluster, err := DescribeGlobalClusterFromClusterARN(conn, aws.StringValue(cluster.DBClusterArn))
-
 				if err != nil {
-					log.Printf("[ERROR] Failure reading RDS Global Cluster information for DB Cluster (%s): %s", id, err)
+					log.Printf("[ERROR] reading RDS Global Cluster information for DB Cluster (%s): %s", aws.StringValue(cluster.DBClusterIdentifier), err)
 				}
 
-				if globalCluster != nil {
-					globalClusterID := aws.StringValue(globalCluster.GlobalClusterIdentifier)
-					input := &rds.RemoveFromGlobalClusterInput{
-						DbClusterIdentifier:     cluster.DBClusterArn,
-						GlobalClusterIdentifier: globalCluster.GlobalClusterIdentifier,
-					}
-
-					log.Printf("[INFO] Removing RDS Cluster (%s) from RDS Global Cluster: %s", id, globalClusterID)
-					_, err = conn.RemoveFromGlobalCluster(input)
-
-					if err != nil {
-						log.Printf("[ERROR] Failure removing RDS Cluster (%s) from RDS Global Cluster (%s): %s", id, globalClusterID, err)
-					}
+				if globalCluster != nil && globalCluster.GlobalClusterIdentifier != nil {
+					d.Set("global_cluster_identifier", globalCluster.GlobalClusterIdentifier)
 				}
 			}
 
-			input := &rds.DeleteDBClusterInput{
-				DBClusterIdentifier: cluster.DBClusterIdentifier,
-				SkipFinalSnapshot:   aws.Bool(true),
-			}
-
-			log.Printf("[INFO] Deleting RDS DB Cluster: %s", id)
-
-			_, err := conn.DeleteDBCluster(input)
-
-			if err != nil {
-				log.Printf("[ERROR] Failed to delete RDS DB Cluster (%s): %s", id, err)
-				continue
-			}
-
-			if err := WaitForClusterDeletion(conn, id, 40*time.Minute); err != nil { //nolint:gomnd
-				log.Printf("[ERROR] Failure while waiting for RDS DB Cluster (%s) to be deleted: %s", id, err)
-			}
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping RDS DB Cluster sweep for %s: %s", region, err)
-		return nil
-	}
-
 	if err != nil {
-		return fmt.Errorf("error retrieving RDS DB Clusters: %s", err)
+		if sweep.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping RDS DB Cluster sweep for %s: %s", region, err)
+			return nil
+		}
+
+		return fmt.Errorf("retrieving DB clusters: %s", err)
 	}
 
-	return nil
+	return sweep.SweepOrchestrator(sweepResources)
 }
 
 func sweepEventSubscriptions(region string) error {
@@ -281,7 +271,7 @@ func sweepEventSubscriptions(region string) error {
 	}
 	conn := client.(*conns.AWSClient).RDSConn
 	input := &rds.DescribeEventSubscriptionsInput{}
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = conn.DescribeEventSubscriptionsPages(input, func(page *rds.DescribeEventSubscriptionsOutput, lastPage bool) bool {
 		if page == nil {
@@ -343,7 +333,7 @@ func sweepGlobalClusters(region string) error {
 				continue
 			}
 
-			if err := WaitForGlobalClusterDeletion(conn, id); err != nil {
+			if err := WaitForGlobalClusterDeletion(conn, id, 30*time.Minute); err != nil {
 				log.Printf("[ERROR] Failure while waiting for RDS Global Cluster (%s) to be deleted: %s", id, err)
 			}
 		}
@@ -369,7 +359,7 @@ func sweepInstances(region string) error {
 	}
 
 	conn := client.(*conns.AWSClient).RDSConn
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = conn.DescribeDBInstancesPages(&rds.DescribeDBInstancesInput{}, func(out *rds.DescribeDBInstancesOutput, lastPage bool) bool {
 		for _, dbi := range out.DBInstances {
@@ -377,6 +367,9 @@ func sweepInstances(region string) error {
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(dbi.DBInstanceIdentifier))
 			d.Set("skip_final_snapshot", true)
+			d.Set("delete_automated_backups", true)
+			d.Set("deletion_protection", false)
+			d.Set("apply_immediately", true)
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 		return !lastPage
@@ -424,7 +417,7 @@ func sweepOptionGroups(region string) error {
 		ret := resource.Retry(1*time.Minute, func() *resource.RetryError {
 			_, err := conn.DeleteOptionGroup(deleteOpts)
 			if err != nil {
-				if tfawserr.ErrMessageContains(err, rds.ErrCodeInvalidOptionGroupStateFault, "") {
+				if tfawserr.ErrCodeEquals(err, rds.ErrCodeInvalidOptionGroupStateFault) {
 					log.Printf("[DEBUG] AWS believes the RDS Option Group is still in use, retrying")
 					return resource.RetryableError(err)
 				}
@@ -565,7 +558,7 @@ func sweepSnapshots(region string) error {
 			log.Printf("[INFO] Deleting RDS DB Snapshot: %s", id)
 			_, err := conn.DeleteDBSnapshot(input)
 
-			if tfawserr.ErrMessageContains(err, rds.ErrCodeDBSnapshotNotFoundFault, "") {
+			if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBSnapshotNotFoundFault) {
 				continue
 			}
 
@@ -628,4 +621,57 @@ func sweepSubnetGroups(region string) error {
 	}
 
 	return nil
+}
+
+func sweepInstanceAutomatedBackupsReplication(region string) error {
+	client, err := sweep.SharedRegionalSweepClient(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+
+	conn := client.(*conns.AWSClient).RDSConn
+	sweepResources := make([]sweep.Sweepable, 0)
+	var sweeperErrs *multierror.Error
+
+	backupARNs := []string{}
+
+	err = conn.DescribeDBInstanceAutomatedBackupsPages(&rds.DescribeDBInstanceAutomatedBackupsInput{}, func(out *rds.DescribeDBInstanceAutomatedBackupsOutput, lastPage bool) bool {
+		for _, backup := range out.DBInstanceAutomatedBackups {
+			log.Printf("[INFO] Adding DB Instance Automated Backups for deletion %s: %s", aws.StringValue(backup.DBInstanceAutomatedBackupsArn), aws.StringValue(backup.DBInstanceArn))
+			r := ResourceInstanceAutomatedBackupsReplication()
+			d := r.Data(nil)
+			backupARNs = append(backupARNs, aws.StringValue(backup.DBInstanceAutomatedBackupsArn))
+			d.SetId(aws.StringValue(backup.DBInstanceAutomatedBackupsArn))
+			d.Set("source_db_instance_arn", backup.DBInstanceArn)
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+		return !lastPage
+	})
+	if err != nil {
+		if sweep.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping RDS DB Instance Automated Backups Replication sweep for %s: %s", region, err)
+		} else {
+			sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("Error retrieving DB Instance Automated Backups Replication: %s", err))
+		}
+	}
+
+	if err == nil {
+		if err := sweep.SweepOrchestrator(sweepResources); err != nil {
+			sweeperErrs = multierror.Append(sweeperErrs, err)
+		}
+	}
+
+	// since there is no resource for automated backups themselves, they are swept here
+
+	for _, arn := range backupARNs {
+		_, err = conn.DeleteDBInstanceAutomatedBackup(
+			&rds.DeleteDBInstanceAutomatedBackupInput{
+				DBInstanceAutomatedBackupsArn: aws.String(arn),
+			})
+		if err != nil {
+			sweeperErrs = multierror.Append(sweeperErrs, err)
+		}
+	}
+
+	return sweeperErrs.ErrorOrNil()
 }

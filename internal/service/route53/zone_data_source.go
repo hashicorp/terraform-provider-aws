@@ -21,37 +21,24 @@ func DataSourceZone() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"zone_id": {
+			"caller_reference": {
 				Type:     schema.TypeString,
-				Optional: true,
 				Computed: true,
-			},
-			"name": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"private_zone": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
 			},
 			"comment": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"caller_reference": {
+			"linked_service_description": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"vpc_id": {
+			"linked_service_principal": {
 				Type:     schema.TypeString,
-				Optional: true,
 				Computed: true,
 			},
-			"tags": tftags.TagsSchemaComputed(),
-			"resource_record_set_count": {
-				Type:     schema.TypeInt,
+			"name": {
+				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
@@ -60,12 +47,29 @@ func DataSourceZone() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Computed: true,
 			},
-			"linked_service_principal": {
+			"primary_name_server": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"linked_service_description": {
+			"private_zone": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+			"resource_record_set_count": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
+			"tags": tftags.TagsSchemaComputed(),
+			"vpc_id": {
 				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"zone_id": {
+				Type:     schema.TypeString,
+				Optional: true,
 				Computed: true,
 			},
 		},
@@ -179,21 +183,25 @@ func dataSourceZoneRead(d *schema.ResourceData, meta interface{}) error {
 	nameServers, err := hostedZoneNameServers(conn, idHostedZone, aws.StringValue(hostedZoneFound.Name))
 
 	if err != nil {
-		return fmt.Errorf("error getting Route 53 Hosted Zone (%s) name servers: %w", idHostedZone, err)
+		return fmt.Errorf("getting Route 53 Hosted Zone (%s) name servers: %w", idHostedZone, err)
+	}
+
+	if err := d.Set("primary_name_server", nameServers[0]); err != nil {
+		return fmt.Errorf("setting primary_name_server: %w", err)
 	}
 
 	if err := d.Set("name_servers", nameServers); err != nil {
-		return fmt.Errorf("error setting name_servers: %w", err)
+		return fmt.Errorf("setting name_servers: %w", err)
 	}
 
 	tags, err = ListTags(conn, idHostedZone, route53.TagResourceTypeHostedzone)
 
 	if err != nil {
-		return fmt.Errorf("error listing Route 53 Hosted Zone (%s) tags: %w", idHostedZone, err)
+		return fmt.Errorf("listing Route 53 Hosted Zone (%s) tags: %w", idHostedZone, err)
 	}
 
 	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return fmt.Errorf("setting tags: %w", err)
 	}
 
 	arn := arn.ARN{
@@ -215,11 +223,11 @@ func hostedZoneNameServers(conn *route53.Route53, id string, name string) ([]str
 	output, err := conn.GetHostedZone(input)
 
 	if err != nil {
-		return nil, fmt.Errorf("error getting Route 53 Hosted Zone (%s): %w", id, err)
+		return nil, fmt.Errorf("getting Route 53 Hosted Zone (%s): %w", id, err)
 	}
 
 	if output == nil {
-		return nil, fmt.Errorf("error getting Route 53 Hosted Zone (%s): empty response", id)
+		return nil, fmt.Errorf("getting Route 53 Hosted Zone (%s): empty response", id)
 	}
 
 	if output.DelegationSet != nil {
@@ -230,7 +238,7 @@ func hostedZoneNameServers(conn *route53.Route53, id string, name string) ([]str
 		nameServers, err := getNameServers(id, name, conn)
 
 		if err != nil {
-			return nil, fmt.Errorf("error listing Route 53 Hosted Zone (%s) NS records: %w", id, err)
+			return nil, fmt.Errorf("listing Route 53 Hosted Zone (%s) NS records: %w", id, err)
 		}
 
 		return nameServers, nil

@@ -150,7 +150,7 @@ func WaitCacheClusterDeleted(conn *elasticache.ElastiCache, cacheClusterID strin
 }
 
 const (
-	GlobalReplicationGroupDefaultCreatedTimeout = 20 * time.Minute
+	GlobalReplicationGroupDefaultCreatedTimeout = 25 * time.Minute
 	GlobalReplicationGroupDefaultUpdatedTimeout = 40 * time.Minute
 	GlobalReplicationGroupDefaultDeletedTimeout = 20 * time.Minute
 

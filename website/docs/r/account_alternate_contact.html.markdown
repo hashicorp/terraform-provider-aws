@@ -1,5 +1,5 @@
 ---
-subcategory: "Account"
+subcategory: "Account Management"
 layout: "aws"
 page_title: "AWS: aws_account_alternate_contact"
 description: |-
@@ -28,16 +28,24 @@ resource "aws_account_alternate_contact" "operations" {
 
 The following arguments are supported:
 
-* `account_id` - (Optional) The ID of the target account when managing member accounts. Will manage current user's account by default if omitted.
-* `alternate_contact_type` - (Required) The type of the alternate contact. Allowed values are: `BILLING`, `OPERATIONS`, `SECURITY`.
+* `account_id` - (Optional) ID of the target account when managing member accounts. Will manage current user's account by default if omitted.
+* `alternate_contact_type` - (Required) Type of the alternate contact. Allowed values are: `BILLING`, `OPERATIONS`, `SECURITY`.
 * `email_address` - (Required) An email address for the alternate contact.
-* `name` - (Required) The name of the alternate contact.
-* `phone_number` - (Required) A phone number for the alternate contact.
-* `title` - (Required) A title for the alternate contact.
+* `name` - (Required) Name of the alternate contact.
+* `phone_number` - (Required) Phone number for the alternate contact.
+* `title` - (Required) Title for the alternate contact.
 
 ## Attributes Reference
 
 No additional attributes are exported.
+
+## Timeouts
+
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+
+- `create` - (Default `5m`)
+- `update` - (Default `5m`)
+- `delete` - (Default `5m`)
 
 ## Import
 

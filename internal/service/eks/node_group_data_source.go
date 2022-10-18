@@ -24,6 +24,10 @@ func DataSourceNodeGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"capacity_type": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"cluster_name": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -127,6 +131,26 @@ func DataSourceNodeGroup() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"tags": tftags.TagsSchemaComputed(),
+			"taints": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"key": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"value": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"effect": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
 			"version": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -152,6 +176,7 @@ func dataSourceNodeGroupRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	d.Set("ami_type", nodeGroup.AmiType)
 	d.Set("arn", nodeGroup.NodegroupArn)
+	d.Set("capacity_type", nodeGroup.CapacityType)
 	d.Set("cluster_name", nodeGroup.ClusterName)
 	d.Set("disk_size", nodeGroup.DiskSize)
 	d.Set("instance_types", nodeGroup.InstanceTypes)
@@ -160,16 +185,16 @@ func dataSourceNodeGroupRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("node_role_arn", nodeGroup.NodeRole)
 	d.Set("release_version", nodeGroup.ReleaseVersion)
 
-	if err := d.Set("remote_access", flattenEksRemoteAccessConfig(nodeGroup.RemoteAccess)); err != nil {
+	if err := d.Set("remote_access", flattenRemoteAccessConfig(nodeGroup.RemoteAccess)); err != nil {
 		return diag.Errorf("error setting remote_access: %s", err)
 	}
 
-	if err := d.Set("resources", flattenEksNodeGroupResources(nodeGroup.Resources)); err != nil {
+	if err := d.Set("resources", flattenNodeGroupResources(nodeGroup.Resources)); err != nil {
 		return diag.Errorf("error setting resources: %s", err)
 	}
 
 	if nodeGroup.ScalingConfig != nil {
-		if err := d.Set("scaling_config", []interface{}{flattenEksNodeGroupScalingConfig(nodeGroup.ScalingConfig)}); err != nil {
+		if err := d.Set("scaling_config", []interface{}{flattenNodeGroupScalingConfig(nodeGroup.ScalingConfig)}); err != nil {
 			return diag.Errorf("error setting scaling_config: %s", err)
 		}
 	} else {
@@ -184,6 +209,10 @@ func dataSourceNodeGroupRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	if err := d.Set("tags", KeyValueTags(nodeGroup.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return diag.Errorf("error setting tags: %s", err)
+	}
+
+	if err := d.Set("taints", flattenTaints(nodeGroup.Taints)); err != nil {
+		return diag.Errorf("error setting taint: %s", err)
 	}
 
 	d.Set("version", nodeGroup.Version)

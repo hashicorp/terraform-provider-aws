@@ -67,7 +67,7 @@ func dataSourceSecretRotationRead(d *schema.ResourceData, meta interface{}) erro
 	d.Set("rotation_enabled", output.RotationEnabled)
 	d.Set("rotation_lambda_arn", output.RotationLambdaARN)
 
-	if err := d.Set("rotation_rules", flattenSecretsManagerRotationRules(output.RotationRules)); err != nil {
+	if err := d.Set("rotation_rules", flattenRotationRules(output.RotationRules)); err != nil {
 		return fmt.Errorf("error setting rotation_rules: %w", err)
 	}
 

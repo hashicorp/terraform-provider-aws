@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iot"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -333,13 +333,13 @@ func flattenThingGroupMetadata(apiObject *iot.ThingGroupMetadata) map[string]int
 	}
 
 	if v := apiObject.RootToParentThingGroups; v != nil {
-		tfMap["root_to_parent_groups"] = flattenGroupNameAndArns(v)
+		tfMap["root_to_parent_groups"] = flattenGroupNameAndARNs(v)
 	}
 
 	return tfMap
 }
 
-func flattenGroupNameAndArn(apiObject *iot.GroupNameAndArn) map[string]interface{} {
+func flattenGroupNameAndARN(apiObject *iot.GroupNameAndArn) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -357,7 +357,7 @@ func flattenGroupNameAndArn(apiObject *iot.GroupNameAndArn) map[string]interface
 	return tfMap
 }
 
-func flattenGroupNameAndArns(apiObjects []*iot.GroupNameAndArn) []interface{} {
+func flattenGroupNameAndARNs(apiObjects []*iot.GroupNameAndArn) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -369,7 +369,7 @@ func flattenGroupNameAndArns(apiObjects []*iot.GroupNameAndArn) []interface{} {
 			continue
 		}
 
-		tfList = append(tfList, flattenGroupNameAndArn(apiObject))
+		tfList = append(tfList, flattenGroupNameAndARN(apiObject))
 	}
 
 	return tfList

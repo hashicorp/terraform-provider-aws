@@ -1,5 +1,5 @@
 ---
-subcategory: "CloudWatch"
+subcategory: "CloudWatch Logs"
 layout: "aws"
 page_title: "AWS: aws_cloudwatch_log_metric_filter"
 description: |-

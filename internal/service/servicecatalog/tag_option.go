@@ -6,11 +6,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/servicecatalog"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -22,6 +21,13 @@ func ResourceTagOption() *schema.Resource {
 		Delete: resourceTagOptionDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
+		},
+
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(TagOptionReadyTimeout),
+			Read:   schema.DefaultTimeout(TagOptionReadTimeout),
+			Update: schema.DefaultTimeout(TagOptionUpdateTimeout),
+			Delete: schema.DefaultTimeout(TagOptionDeleteTimeout),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -56,7 +62,7 @@ func resourceTagOptionCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	var output *servicecatalog.CreateTagOptionOutput
-	err := resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
 		var err error
 
 		output, err = conn.CreateTagOption(input)
@@ -106,7 +112,7 @@ func resourceTagOptionCreate(d *schema.ResourceData, meta interface{}) error {
 func resourceTagOptionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ServiceCatalogConn
 
-	output, err := WaitTagOptionReady(conn, d.Id())
+	output, err := WaitTagOptionReady(conn, d.Id(), d.Timeout(schema.TimeoutRead))
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] Service Catalog Tag Option (%s) not found, removing from state", d.Id())
@@ -148,7 +154,7 @@ func resourceTagOptionUpdate(d *schema.ResourceData, meta interface{}) error {
 		input.Value = aws.String(d.Get("value").(string))
 	}
 
-	err := resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(d.Timeout(schema.TimeoutUpdate), func() *resource.RetryError {
 		_, err := conn.UpdateTagOption(input)
 
 		if tfawserr.ErrMessageContains(err, servicecatalog.ErrCodeInvalidParametersException, "profile does not exist") {
@@ -190,7 +196,7 @@ func resourceTagOptionDelete(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error deleting Service Catalog Tag Option (%s): %w", d.Id(), err)
 	}
 
-	if err := WaitTagOptionDeleted(conn, d.Id()); err != nil {
+	if err := WaitTagOptionDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return fmt.Errorf("error waiting for Service Catalog Tag Option (%s) to be deleted: %w", d.Id(), err)
 	}
 

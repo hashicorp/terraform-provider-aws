@@ -25,9 +25,9 @@ func StatusChangeSet(conn *cloudformation.CloudFormation, stackID, changeSetName
 	}
 }
 
-func StatusStackSetOperation(conn *cloudformation.CloudFormation, stackSetName, operationID string) resource.StateRefreshFunc {
+func StatusStackSetOperation(conn *cloudformation.CloudFormation, stackSetName, operationID, callAs string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindStackSetOperationByStackSetNameAndOperationID(conn, stackSetName, operationID)
+		output, err := FindStackSetOperationByStackSetNameAndOperationID(conn, stackSetName, operationID, callAs)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -62,7 +62,7 @@ func resourceModelPackageGroupPolicyPut(d *schema.ResourceData, meta interface{}
 
 	_, err = conn.PutModelPackageGroupPolicy(input)
 	if err != nil {
-		return fmt.Errorf("error creating SageMaker Model Package Group Policy %s: %w", name, err)
+		return fmt.Errorf("creating SageMaker Model Package Group Policy %s: %w", name, err)
 	}
 
 	d.SetId(name)
@@ -81,7 +81,7 @@ func resourceModelPackageGroupPolicyRead(d *schema.ResourceData, meta interface{
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading SageMaker Model Package Group Policy (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading SageMaker Model Package Group Policy (%s): %w", d.Id(), err)
 	}
 
 	d.Set("model_package_group_name", d.Id())
@@ -109,7 +109,7 @@ func resourceModelPackageGroupPolicyDelete(d *schema.ResourceData, meta interfac
 			tfawserr.ErrMessageContains(err, ErrCodeValidationException, "Cannot find resource policy") {
 			return nil
 		}
-		return fmt.Errorf("error deleting SageMaker Model Package Group Policy (%s): %w", d.Id(), err)
+		return fmt.Errorf("deleting SageMaker Model Package Group Policy (%s): %w", d.Id(), err)
 	}
 
 	return nil

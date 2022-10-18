@@ -1,5 +1,5 @@
 ---
-subcategory: "Kafka Connect (MSK Connect)"
+subcategory: "Managed Streaming for Kafka Connect"
 layout: "aws"
 page_title: "AWS: aws_mskconnect_custom_plugin"
 description: |-
@@ -19,7 +19,7 @@ resource "aws_s3_bucket" "example" {
   bucket = "example"
 }
 
-resource "aws_s3_bucket_object" "example" {
+resource "aws_s3_object" "example" {
   bucket = aws_s3_bucket.example.id
   key    = "debezium.zip"
   source = "debezium.zip"
@@ -31,7 +31,7 @@ resource "aws_mskconnect_custom_plugin" "example" {
   location {
     s3 {
       bucket_arn = aws_s3_bucket.example.arn
-      file_key   = aws_s3_bucket_object.example.key
+      file_key   = aws_s3_object.example.key
     }
   }
 }
@@ -69,10 +69,10 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-`aws_mskconnect_custom_plugin` provides the following
-[Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
 
-* `create` - (Default `10 minutes`) How long to wait for the MSK Connect Custom Plugin to be created.
+* `create` - (Default `10m`)
+* `delete` - (Default `10m`)
 
 ## Import
 

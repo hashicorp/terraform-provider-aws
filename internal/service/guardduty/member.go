@@ -8,7 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/guardduty"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -108,7 +108,7 @@ func resourceMemberCreate(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error inviting GuardDuty Member %q: %s", d.Id(), err)
 	}
 
-	err = inviteGuardDutyMemberWaiter(accountID, detectorID, d.Timeout(schema.TimeoutUpdate), conn)
+	err = inviteMemberWaiter(accountID, detectorID, d.Timeout(schema.TimeoutUpdate), conn)
 	if err != nil {
 		return fmt.Errorf("error waiting for GuardDuty Member %q invite: %s", d.Id(), err)
 	}
@@ -191,7 +191,7 @@ func resourceMemberUpdate(d *schema.ResourceData, meta interface{}) error {
 				return fmt.Errorf("error inviting GuardDuty Member %q: %s", d.Id(), aws.StringValue(output.UnprocessedAccounts[0].Result))
 			}
 
-			err = inviteGuardDutyMemberWaiter(accountID, detectorID, d.Timeout(schema.TimeoutUpdate), conn)
+			err = inviteMemberWaiter(accountID, detectorID, d.Timeout(schema.TimeoutUpdate), conn)
 			if err != nil {
 				return fmt.Errorf("error waiting for GuardDuty Member %q invite: %s", d.Id(), err)
 			}
@@ -232,7 +232,7 @@ func resourceMemberDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func inviteGuardDutyMemberWaiter(accountID, detectorID string, timeout time.Duration, conn *guardduty.GuardDuty) error {
+func inviteMemberWaiter(accountID, detectorID string, timeout time.Duration, conn *guardduty.GuardDuty) error {
 	input := guardduty.GetMembersInput{
 		DetectorId: aws.String(detectorID),
 		AccountIds: []*string{aws.String(accountID)},
@@ -249,7 +249,7 @@ func inviteGuardDutyMemberWaiter(accountID, detectorID string, timeout time.Dura
 			return resource.NonRetryableError(fmt.Errorf("error reading GuardDuty Member %q: %s", accountID, err))
 		}
 
-		retryable, err := guardDutyMemberInvited(out, accountID)
+		retryable, err := memberInvited(out, accountID)
 		if err != nil {
 			if retryable {
 				return resource.RetryableError(err)
@@ -263,21 +263,18 @@ func inviteGuardDutyMemberWaiter(accountID, detectorID string, timeout time.Dura
 		out, err = conn.GetMembers(&input)
 
 		if err != nil {
-			return fmt.Errorf("Error reading GuardDuty member: %s", err)
+			return fmt.Errorf("Error reading GuardDuty member: %w", err)
 		}
-		_, err = guardDutyMemberInvited(out, accountID)
-		if err != nil {
-			return err // Doesn't need fmt because that happens in the function
-		}
-		return nil
+		_, err = memberInvited(out, accountID)
+		return err
 	}
 	if err != nil {
-		return fmt.Errorf("Error waiting for GuardDuty email verification: %s", err)
+		return fmt.Errorf("Error waiting for GuardDuty email verification: %w", err)
 	}
 	return nil
 }
 
-func guardDutyMemberInvited(out *guardduty.GetMembersOutput, accountID string) (bool, error) {
+func memberInvited(out *guardduty.GetMembersOutput, accountID string) (bool, error) {
 	if out == nil || len(out.Members) == 0 {
 		return true, fmt.Errorf("error reading GuardDuty Member %q: member missing from response", accountID)
 	}

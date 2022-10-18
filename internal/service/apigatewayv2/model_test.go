@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apigatewayv2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -35,10 +35,10 @@ func TestAccAPIGatewayV2Model_basic(t *testing.T) {
 `
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckModelDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckModelDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccModelConfig_basic(rName, schema),
@@ -80,10 +80,10 @@ func TestAccAPIGatewayV2Model_disappears(t *testing.T) {
 `
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckModelDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckModelDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccModelConfig_basic(rName, schema),
@@ -132,10 +132,10 @@ func TestAccAPIGatewayV2Model_allAttributes(t *testing.T) {
 `
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckModelDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckModelDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccModelConfig_allAttributes(rName, schema1),
@@ -189,7 +189,7 @@ func testAccCheckModelDestroy(s *terraform.State) error {
 			ApiId:   aws.String(rs.Primary.Attributes["api_id"]),
 			ModelId: aws.String(rs.Primary.ID),
 		})
-		if tfawserr.ErrMessageContains(err, apigatewayv2.ErrCodeNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, apigatewayv2.ErrCodeNotFoundException) {
 			continue
 		}
 		if err != nil {

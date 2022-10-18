@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ses"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -20,13 +20,13 @@ func TestAccSESReceiptRuleSet_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t); testAccPreCheckSESReceiptRule(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSESReceiptRuleSetDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t); testAccPreCheckReceiptRule(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ses.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckReceiptRuleSetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReceiptRuleSetConfig(rName),
+				Config: testAccReceiptRuleSetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReceiptRuleSetExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "rule_set_name", rName),
@@ -47,13 +47,13 @@ func TestAccSESReceiptRuleSet_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t); testAccPreCheckSESReceiptRule(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckSESReceiptRuleSetDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t); testAccPreCheckReceiptRule(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ses.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckReceiptRuleSetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReceiptRuleSetConfig(rName),
+				Config: testAccReceiptRuleSetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReceiptRuleSetExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfses.ResourceReceiptRuleSet(), resourceName),
@@ -64,7 +64,7 @@ func TestAccSESReceiptRuleSet_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckSESReceiptRuleSetDestroy(s *terraform.State) error {
+func testAccCheckReceiptRuleSetDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -78,7 +78,7 @@ func testAccCheckSESReceiptRuleSetDestroy(s *terraform.State) error {
 
 		_, err := conn.DescribeReceiptRuleSet(params)
 
-		if tfawserr.ErrMessageContains(err, ses.ErrCodeRuleSetDoesNotExistException, "") {
+		if tfawserr.ErrCodeEquals(err, ses.ErrCodeRuleSetDoesNotExistException) {
 			continue
 		}
 
@@ -115,7 +115,7 @@ func testAccCheckReceiptRuleSetExists(n string) resource.TestCheckFunc {
 	}
 }
 
-func testAccReceiptRuleSetConfig(rName string) string {
+func testAccReceiptRuleSetConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ses_receipt_rule_set" "test" {
   rule_set_name = %q

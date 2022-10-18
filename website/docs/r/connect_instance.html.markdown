@@ -11,7 +11,7 @@ description: |-
 Provides an Amazon Connect instance resource. For more information see
 [Amazon Connect: Getting Started](https://docs.aws.amazon.com/connect/latest/adminguide/amazon-connect-get-started.html)
 
-!> **WARN:** There are limits to the number of Connect Instances that can be created in a specific AWS account, and those limits span the life of the account, not just active Instances. Minimize the number of times you create/delete an instance.
+!> **WARN:** Amazon Connect enforces a limit of [100 combined instance creation and deletions every 30 days](https://docs.aws.amazon.com/connect/latest/adminguide/amazon-connect-service-limits.html#feature-limits).  For example, if you create 80 instances and delete 20 of them, you must wait 30 days to create or delete another instance.  Use care when creating or deleting instances.
 
 ## Example Usage
 
@@ -60,7 +60,7 @@ The following arguments are supported:
 * `inbound_calls_enabled` - (Required) Specifies whether inbound calls are enabled.
 * `instance_alias` - (Optional) Specifies the name of the instance. Required if `directory_id` not specified.
 * `outbound_calls_enabled` - (Required) Specifies whether outbound calls are enabled.
-<!-- * `use_custom_tts_voices` - (Optional) Specifies Whether use custom tts voices is enabled. Defaults to `false` -->
+<!-- * `use_custom_tts_voices` - (Optional) Whether use custom tts voices is enabled. Defaults to `false` -->
 
 ## Attributes Reference
 
@@ -68,16 +68,16 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - The identifier of the instance.
 * `arn` - Amazon Resource Name (ARN) of the instance.
-* `created_time` - Specifies when the instance was created.
+* `created_time` - When the instance was created.
 * `service_role` - The service role of the instance.
 * `status` - The state of the instance.
 
-### Timeouts
+## Timeouts
 
-`aws_connect_instance` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
 
-* `create` - (Defaults to 5 mins) Used when creating the instance.
-* `delete` - (Defaults to 5 mins) Used when deleting the instance.
+* `create` - (Default `5m`)
+* `delete` - (Default `5m`)
 
 ## Import
 

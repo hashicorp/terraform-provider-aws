@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ssm"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -187,19 +187,14 @@ func resourceMaintenanceWindowUpdate(d *schema.ResourceData, meta interface{}) e
 
 	_, err := conn.UpdateMaintenanceWindow(params)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, ssm.ErrCodeDoesNotExistException, "") {
-			log.Printf("[WARN] Maintenance Window %s not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
-		return fmt.Errorf("error updating SSM Maintenance Window (%s): %s", d.Id(), err)
+		return fmt.Errorf("error updating SSM Maintenance Window (%s): %w", d.Id(), err)
 	}
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(conn, d.Id(), ssm.ResourceTypeForTaggingMaintenanceWindow, o, n); err != nil {
-			return fmt.Errorf("error updating SSM Maintenance Window (%s) tags: %s", d.Id(), err)
+			return fmt.Errorf("error updating SSM Maintenance Window (%s) tags: %w", d.Id(), err)
 		}
 	}
 
@@ -217,12 +212,12 @@ func resourceMaintenanceWindowRead(d *schema.ResourceData, meta interface{}) err
 
 	resp, err := conn.GetMaintenanceWindow(params)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, ssm.ErrCodeDoesNotExistException, "") {
+		if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, ssm.ErrCodeDoesNotExistException) {
 			log.Printf("[WARN] Maintenance Window %s not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("error reading SSM Maintenance Window (%s): %s", d.Id(), err)
+		return fmt.Errorf("error reading SSM Maintenance Window (%s): %w", d.Id(), err)
 	}
 
 	d.Set("allow_unassociated_targets", resp.AllowUnassociatedTargets)

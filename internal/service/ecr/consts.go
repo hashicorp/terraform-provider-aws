@@ -1,5 +1,7 @@
 package ecr
 
+import "time"
+
 const (
-	ErrCodeAccessDenied = "AccessDenied"
+	propagationTimeout = 2 * time.Minute
 )

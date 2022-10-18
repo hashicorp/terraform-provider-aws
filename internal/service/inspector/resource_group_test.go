@@ -18,13 +18,13 @@ func TestAccInspectorResourceGroup_basic(t *testing.T) {
 	resourceName := "aws_inspector_resource_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, inspector.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: nil,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, inspector.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccResourceGroup,
+				Config: testAccResourceGroupConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceGroupExists(resourceName, &v1),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "inspector", regexp.MustCompile(`resourcegroup/.+`)),
@@ -32,7 +32,7 @@ func TestAccInspectorResourceGroup_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccCheckResourceGroupModified,
+				Config: testAccResourceGroupConfig_modified,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceGroupExists(resourceName, &v2),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "inspector", regexp.MustCompile(`resourcegroup/.+`)),
@@ -82,7 +82,7 @@ func testAccCheckResourceGroupRecreated(v1, v2 *inspector.ResourceGroup) resourc
 	}
 }
 
-var testAccResourceGroup = `
+var testAccResourceGroupConfig_basic = `
 resource "aws_inspector_resource_group" "test" {
   tags = {
     Name = "foo"
@@ -90,7 +90,7 @@ resource "aws_inspector_resource_group" "test" {
 }
 `
 
-var testAccCheckResourceGroupModified = `
+var testAccResourceGroupConfig_modified = `
 resource "aws_inspector_resource_group" "test" {
   tags = {
     Name = "bar"

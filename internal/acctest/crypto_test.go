@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func TestTlsRsaPrivateKeyPem(t *testing.T) {
+func TestTLSRSAPrivateKeyPEM(t *testing.T) {
 	key := TLSRSAPrivateKeyPEM(2048)
 
 	if !strings.Contains(key, pemBlockTypeRsaPrivateKey) {
@@ -13,7 +13,7 @@ func TestTlsRsaPrivateKeyPem(t *testing.T) {
 	}
 }
 
-func TestTlsRsaPublicKeyPem(t *testing.T) {
+func TestTLSRSAPublicKeyPEM(t *testing.T) {
 	privateKey := TLSRSAPrivateKeyPEM(2048)
 	publicKey := TLSRSAPublicKeyPEM(privateKey)
 
@@ -22,7 +22,7 @@ func TestTlsRsaPublicKeyPem(t *testing.T) {
 	}
 }
 
-func TestTlsRsaX509LocallySignedCertificatePem(t *testing.T) {
+func TestTLSRSAX509LocallySignedCertificatePEM(t *testing.T) {
 	caKey := TLSRSAPrivateKeyPEM(2048)
 	caCertificate := TLSRSAX509SelfSignedCACertificatePEM(caKey)
 	key := TLSRSAPrivateKeyPEM(2048)
@@ -33,7 +33,7 @@ func TestTlsRsaX509LocallySignedCertificatePem(t *testing.T) {
 	}
 }
 
-func TestTlsRsaX509SelfSignedCaCertificatePem(t *testing.T) {
+func TestTLSRSAX509SelfSignedCACertificatePEM(t *testing.T) {
 	caKey := TLSRSAPrivateKeyPEM(2048)
 	caCertificate := TLSRSAX509SelfSignedCACertificatePEM(caKey)
 
@@ -42,7 +42,7 @@ func TestTlsRsaX509SelfSignedCaCertificatePem(t *testing.T) {
 	}
 }
 
-func TestTlsRsaX509SelfSignedCertificatePem(t *testing.T) {
+func TestTLSRSAX509SelfSignedCertificatePEM(t *testing.T) {
 	key := TLSRSAPrivateKeyPEM(2048)
 	certificate := TLSRSAX509SelfSignedCertificatePEM(key, "example.com")
 
@@ -51,7 +51,7 @@ func TestTlsRsaX509SelfSignedCertificatePem(t *testing.T) {
 	}
 }
 
-func TestTlsRsaX509CertificateRequestPem(t *testing.T) {
+func TestTLSRSAX509CertificateRequestPEM(t *testing.T) {
 	csr, key := TLSRSAX509CertificateRequestPEM(2048, "example.com")
 
 	if !strings.Contains(csr, pemBlockTypeCertificateRequest) {

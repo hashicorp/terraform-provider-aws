@@ -17,24 +17,24 @@ import (
 func init() {
 	resource.AddTestSweepers("aws_cloudhsm_v2_cluster", &resource.Sweeper{
 		Name:         "aws_cloudhsm_v2_cluster",
-		F:            sweepCloudhsmv2Clusters,
+		F:            sweepClusters,
 		Dependencies: []string{"aws_cloudhsm_v2_hsm"},
 	})
 
 	resource.AddTestSweepers("aws_cloudhsm_v2_hsm", &resource.Sweeper{
 		Name: "aws_cloudhsm_v2_hsm",
-		F:    sweepCloudhsmv2HSMs,
+		F:    sweepHSMs,
 	})
 }
 
-func sweepCloudhsmv2Clusters(region string) error {
+func sweepClusters(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 	conn := client.(*conns.AWSClient).CloudHSMV2Conn
 	input := &cloudhsmv2.DescribeClustersInput{}
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = conn.DescribeClustersPages(input, func(page *cloudhsmv2.DescribeClustersOutput, lastPage bool) bool {
 		if page == nil {
@@ -73,14 +73,14 @@ func sweepCloudhsmv2Clusters(region string) error {
 	return nil
 }
 
-func sweepCloudhsmv2HSMs(region string) error {
+func sweepHSMs(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 	conn := client.(*conns.AWSClient).CloudHSMV2Conn
 	input := &cloudhsmv2.DescribeClustersInput{}
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = conn.DescribeClustersPages(input, func(page *cloudhsmv2.DescribeClustersOutput, lastPage bool) bool {
 		if page == nil {

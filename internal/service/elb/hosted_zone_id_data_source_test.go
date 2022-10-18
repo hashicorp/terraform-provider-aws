@@ -11,18 +11,18 @@ import (
 
 func TestAccELBHostedZoneIDDataSource_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, elb.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elb.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAWSElbHostedZoneIdConfig,
+				Config: testAccHostedZoneIDDataSourceConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.aws_elb_hosted_zone_id.main", "id", tfelb.HostedZoneIdPerRegionMap[acctest.Region()]),
 				),
 			},
 			{
-				Config: testAccCheckAWSElbHostedZoneIdExplicitRegionConfig,
+				Config: testAccHostedZoneIDDataSourceConfig_explicitRegion,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.aws_elb_hosted_zone_id.regional", "id", "Z32O12XQLNTSW2"),
 				),
@@ -31,12 +31,12 @@ func TestAccELBHostedZoneIDDataSource_basic(t *testing.T) {
 	})
 }
 
-const testAccCheckAWSElbHostedZoneIdConfig = `
+const testAccHostedZoneIDDataSourceConfig_basic = `
 data "aws_elb_hosted_zone_id" "main" {}
 `
 
-//lintignore:AWSAT003
-const testAccCheckAWSElbHostedZoneIdExplicitRegionConfig = `
+// lintignore:AWSAT003
+const testAccHostedZoneIDDataSourceConfig_explicitRegion = `
 data "aws_elb_hosted_zone_id" "regional" {
   region = "eu-west-1"
 }

@@ -33,6 +33,22 @@ func DataSourceInfrastructureConfiguration() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"instance_metadata_options": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"http_put_response_hop_limit": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"http_tokens": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
 			"instance_profile_name": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -124,6 +140,13 @@ func dataSourceInfrastructureConfigurationRead(d *schema.ResourceData, meta inte
 	d.Set("date_created", infrastructureConfiguration.DateCreated)
 	d.Set("date_updated", infrastructureConfiguration.DateUpdated)
 	d.Set("description", infrastructureConfiguration.Description)
+
+	if infrastructureConfiguration.InstanceMetadataOptions != nil {
+		d.Set("instance_metadata_options", []interface{}{flattenInstanceMetadataOptions(infrastructureConfiguration.InstanceMetadataOptions)})
+	} else {
+		d.Set("instance_metadata_options", nil)
+	}
+
 	d.Set("instance_profile_name", infrastructureConfiguration.InstanceProfileName)
 	d.Set("instance_types", aws.StringValueSlice(infrastructureConfiguration.InstanceTypes))
 	d.Set("key_pair", infrastructureConfiguration.KeyPair)

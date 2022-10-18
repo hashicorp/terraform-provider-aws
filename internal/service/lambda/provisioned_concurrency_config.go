@@ -8,7 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/lambda"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -70,7 +70,7 @@ func resourceProvisionedConcurrencyConfigCreate(d *schema.ResourceData, meta int
 
 	d.SetId(fmt.Sprintf("%s:%s", functionName, qualifier))
 
-	if err := waitForLambdaProvisionedConcurrencyConfigStatusReady(conn, functionName, qualifier, d.Timeout(schema.TimeoutCreate)); err != nil {
+	if err := waitForProvisionedConcurrencyConfigStatusReady(conn, functionName, qualifier, d.Timeout(schema.TimeoutCreate)); err != nil {
 		return fmt.Errorf("error waiting for Lambda Provisioned Concurrency Config (%s) to be ready: %s", d.Id(), err)
 	}
 
@@ -93,7 +93,7 @@ func resourceProvisionedConcurrencyConfigRead(d *schema.ResourceData, meta inter
 
 	output, err := conn.GetProvisionedConcurrencyConfig(input)
 
-	if tfawserr.ErrMessageContains(err, lambda.ErrCodeProvisionedConcurrencyConfigNotFoundException, "") || tfawserr.ErrMessageContains(err, lambda.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, lambda.ErrCodeProvisionedConcurrencyConfigNotFoundException) || tfawserr.ErrCodeEquals(err, lambda.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] Lambda Provisioned Concurrency Config (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -131,7 +131,7 @@ func resourceProvisionedConcurrencyConfigUpdate(d *schema.ResourceData, meta int
 		return fmt.Errorf("error putting Lambda Provisioned Concurrency Config (%s:%s): %s", functionName, qualifier, err)
 	}
 
-	if err := waitForLambdaProvisionedConcurrencyConfigStatusReady(conn, functionName, qualifier, d.Timeout(schema.TimeoutUpdate)); err != nil {
+	if err := waitForProvisionedConcurrencyConfigStatusReady(conn, functionName, qualifier, d.Timeout(schema.TimeoutUpdate)); err != nil {
 		return fmt.Errorf("error waiting for Lambda Provisioned Concurrency Config (%s) to be ready: %s", d.Id(), err)
 	}
 
@@ -154,7 +154,7 @@ func resourceProvisionedConcurrencyConfigDelete(d *schema.ResourceData, meta int
 
 	_, err = conn.DeleteProvisionedConcurrencyConfig(input)
 
-	if tfawserr.ErrMessageContains(err, lambda.ErrCodeProvisionedConcurrencyConfigNotFoundException, "") || tfawserr.ErrMessageContains(err, lambda.ErrCodeResourceNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, lambda.ErrCodeProvisionedConcurrencyConfigNotFoundException) || tfawserr.ErrCodeEquals(err, lambda.ErrCodeResourceNotFoundException) {
 		return nil
 	}
 
@@ -175,7 +175,7 @@ func ProvisionedConcurrencyConfigParseID(id string) (string, string, error) {
 	return parts[0], parts[1], nil
 }
 
-func refreshLambdaProvisionedConcurrencyConfigStatus(conn *lambda.Lambda, functionName, qualifier string) resource.StateRefreshFunc {
+func refreshProvisionedConcurrencyConfigStatus(conn *lambda.Lambda, functionName, qualifier string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &lambda.GetProvisionedConcurrencyConfigInput{
 			FunctionName: aws.String(functionName),
@@ -198,11 +198,11 @@ func refreshLambdaProvisionedConcurrencyConfigStatus(conn *lambda.Lambda, functi
 	}
 }
 
-func waitForLambdaProvisionedConcurrencyConfigStatusReady(conn *lambda.Lambda, functionName, qualifier string, timeout time.Duration) error {
+func waitForProvisionedConcurrencyConfigStatusReady(conn *lambda.Lambda, functionName, qualifier string, timeout time.Duration) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{lambda.ProvisionedConcurrencyStatusEnumInProgress},
 		Target:  []string{lambda.ProvisionedConcurrencyStatusEnumReady},
-		Refresh: refreshLambdaProvisionedConcurrencyConfigStatus(conn, functionName, qualifier),
+		Refresh: refreshProvisionedConcurrencyConfigStatus(conn, functionName, qualifier),
 		Timeout: timeout,
 		Delay:   5 * time.Second,
 	}

@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_sagemaker_endpoint_configuration: Add `serverless_config` argument
+```
+
+```release-note:enhancement
+resource/aws_sagemaker_endpoint_configuration: Make `production_variants.initial_instance_count` and `production_variants.instance_type` arguments optional
+```

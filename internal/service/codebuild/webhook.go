@@ -2,16 +2,18 @@ package codebuild
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/codebuild"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func ResourceWebhook() *schema.Resource {
@@ -166,20 +168,34 @@ func resourceWebhookRead(d *schema.ResourceData, meta interface{}) error {
 		},
 	})
 
-	if err != nil {
-		return err
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, codebuild.ErrCodeResourceNotFoundException) {
+		create.LogNotFoundRemoveState(names.CodeBuild, create.ErrActionReading, ResNameWebhook, d.Id())
+		d.SetId("")
+		return nil
 	}
 
-	if len(resp.Projects) == 0 {
-		log.Printf("[WARN] CodeBuild Project %q not found, removing from state", d.Id())
+	if err != nil {
+		return create.Error(names.CodeBuild, create.ErrActionReading, ResNameWebhook, d.Id(), err)
+	}
+
+	if d.IsNewResource() && len(resp.Projects) == 0 {
+		return create.Error(names.CodeBuild, create.ErrActionReading, ResNameWebhook, d.Id(), errors.New("no project found after create"))
+	}
+
+	if !d.IsNewResource() && len(resp.Projects) == 0 {
+		create.LogNotFoundRemoveState(names.CodeBuild, create.ErrActionReading, ResNameWebhook, d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	project := resp.Projects[0]
 
-	if project.Webhook == nil {
-		log.Printf("[WARN] CodeBuild Project %q webhook not found, removing from state", d.Id())
+	if d.IsNewResource() && project.Webhook == nil {
+		return create.Error(names.CodeBuild, create.ErrActionReading, ResNameWebhook, d.Id(), errors.New("no webhook after creation"))
+	}
+
+	if !d.IsNewResource() && project.Webhook == nil {
+		create.LogNotFoundRemoveState(names.CodeBuild, create.ErrActionReading, ResNameWebhook, d.Id())
 		d.SetId("")
 		return nil
 	}
@@ -237,7 +253,7 @@ func resourceWebhookDelete(d *schema.ResourceData, meta interface{}) error {
 	})
 
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, codebuild.ErrCodeResourceNotFoundException, "") {
+		if tfawserr.ErrCodeEquals(err, codebuild.ErrCodeResourceNotFoundException) {
 			return nil
 		}
 		return err

@@ -8,7 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/datasync"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -23,13 +23,13 @@ func TestAccDataSyncLocationSMB_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, datasync.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLocationSMBDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, datasync.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLocationSMBDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLocationSMBConfig(rName, "/test/"),
+				Config: testAccLocationSMBConfig_basic(rName, "/test/"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocationSMBExists(resourceName, &locationSmb1),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "datasync", regexp.MustCompile(`location/loc-.+`)),
@@ -48,7 +48,7 @@ func TestAccDataSyncLocationSMB_basic(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"password", "server_hostname"},
 			},
 			{
-				Config: testAccLocationSMBConfig(rName, "/test2/"),
+				Config: testAccLocationSMBConfig_basic(rName, "/test2/"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocationSMBExists(resourceName, &locationSmb1),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "datasync", regexp.MustCompile(`location/loc-.+`)),
@@ -70,13 +70,13 @@ func TestAccDataSyncLocationSMB_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, datasync.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLocationSMBDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, datasync.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLocationSMBDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLocationSMBConfig(rName, "/test/"),
+				Config: testAccLocationSMBConfig_basic(rName, "/test/"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocationSMBExists(resourceName, &locationSmb1),
 					testAccCheckLocationSMBDisappears(&locationSmb1),
@@ -93,13 +93,13 @@ func TestAccDataSyncLocationSMB_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, datasync.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckLocationSMBDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, datasync.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLocationSMBDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLocationSMBTags1Config(rName, "key1", "value1"),
+				Config: testAccLocationSMBConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocationSMBExists(resourceName, &locationSmb1),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -113,7 +113,7 @@ func TestAccDataSyncLocationSMB_tags(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"password", "server_hostname"},
 			},
 			{
-				Config: testAccLocationSMBTags2Config(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccLocationSMBConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocationSMBExists(resourceName, &locationSmb2),
 					testAccCheckLocationSMBNotRecreated(&locationSmb1, &locationSmb2),
@@ -123,7 +123,7 @@ func TestAccDataSyncLocationSMB_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccLocationSMBTags1Config(rName, "key1", "value1"),
+				Config: testAccLocationSMBConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocationSMBExists(resourceName, &locationSmb3),
 					testAccCheckLocationSMBNotRecreated(&locationSmb2, &locationSmb3),
@@ -306,7 +306,7 @@ resource "aws_datasync_agent" "test" {
 `, rName))
 }
 
-func testAccLocationSMBConfig(rName, dir string) string {
+func testAccLocationSMBConfig_basic(rName, dir string) string {
 	return testAccLocationSMBBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_datasync_location_smb" "test" {
   agent_arns      = [aws_datasync_agent.test.arn]
@@ -318,7 +318,7 @@ resource "aws_datasync_location_smb" "test" {
 `, dir)
 }
 
-func testAccLocationSMBTags1Config(rName, key1, value1 string) string {
+func testAccLocationSMBConfig_tags1(rName, key1, value1 string) string {
 	return testAccLocationSMBBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_datasync_location_smb" "test" {
   agent_arns      = [aws_datasync_agent.test.arn]
@@ -334,7 +334,7 @@ resource "aws_datasync_location_smb" "test" {
 `, key1, value1)
 }
 
-func testAccLocationSMBTags2Config(rName, key1, value1, key2, value2 string) string {
+func testAccLocationSMBConfig_tags2(rName, key1, value1, key2, value2 string) string {
 	return testAccLocationSMBBaseConfig(rName) + fmt.Sprintf(`
 resource "aws_datasync_location_smb" "test" {
   agent_arns      = [aws_datasync_agent.test.arn]

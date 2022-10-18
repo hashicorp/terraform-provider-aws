@@ -2,7 +2,6 @@ package servicediscovery
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/servicediscovery"
@@ -10,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func DataSourceDNSNamespace() *schema.Resource {
@@ -33,9 +33,11 @@ func DataSourceDNSNamespace() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
+			"tags": tftags.TagsSchemaComputed(),
 			"type": {
 				Type:     schema.TypeString,
 				Required: true,
+				// HTTP namespaces are handled via the aws_service_discovery_http_namespace data source.
 				ValidateFunc: validation.StringInSlice([]string{
 					servicediscovery.NamespaceTypeDnsPublic,
 					servicediscovery.NamespaceTypeDnsPrivate,
@@ -47,77 +49,43 @@ func DataSourceDNSNamespace() *schema.Resource {
 
 func dataSourceDNSNamespaceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).ServiceDiscoveryConn
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	name := d.Get("name").(string)
-
-	input := &servicediscovery.ListNamespacesInput{}
-
-	var filters []*servicediscovery.NamespaceFilter
-
-	filter := &servicediscovery.NamespaceFilter{
-		Condition: aws.String(servicediscovery.FilterConditionEq),
-		Name:      aws.String(servicediscovery.NamespaceFilterNameType),
-		Values:    []*string{aws.String(d.Get("type").(string))},
-	}
-
-	filters = append(filters, filter)
-
-	input.Filters = filters
-
-	namespaceIds := make([]string, 0)
-
-	err := conn.ListNamespacesPagesWithContext(ctx, input, func(page *servicediscovery.ListNamespacesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, namespace := range page.Namespaces {
-			if namespace == nil {
-				continue
-			}
-
-			if name == aws.StringValue(namespace.Name) {
-				namespaceIds = append(namespaceIds, aws.StringValue(namespace.Id))
-			}
-		}
-		return !lastPage
-	})
+	nsType := d.Get("type").(string)
+	nsSummary, err := findNamespaceByNameAndType(ctx, conn, name, nsType)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error listing Service Discovery DNS Namespaces: %w", err))
+		return diag.Errorf("reading Service Discovery %s Namespace (%s): %s", name, nsType, err)
 	}
 
-	if len(namespaceIds) == 0 {
-		return diag.Errorf("no matching Service Discovery DNS Namespace found")
-	}
+	namespaceID := aws.StringValue(nsSummary.Id)
 
-	if len(namespaceIds) != 1 {
-		return diag.FromErr(fmt.Errorf("search returned %d Service Discovery DNS Namespaces, please revise so only one is returned", len(namespaceIds)))
-	}
-
-	d.SetId(namespaceIds[0])
-
-	req := &servicediscovery.GetNamespaceInput{
-		Id: aws.String(d.Id()),
-	}
-
-	output, err := conn.GetNamespaceWithContext(ctx, req)
+	ns, err := FindNamespaceByID(ctx, conn, namespaceID)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error reading Service Discovery DNS Namespace (%s): %w", d.Id(), err))
+		return diag.Errorf("reading Service Discovery %s Namespace (%s): %s", nsType, namespaceID, err)
 	}
 
-	if output == nil || output.Namespace == nil {
-		return diag.FromErr(fmt.Errorf("error reading Service Discovery DNS Namespace (%s): empty output", d.Id()))
+	d.SetId(namespaceID)
+	arn := aws.StringValue(ns.Arn)
+	d.Set("arn", arn)
+	d.Set("description", ns.Description)
+	if ns.Properties != nil && ns.Properties.DnsProperties != nil {
+		d.Set("hosted_zone", ns.Properties.DnsProperties.HostedZoneId)
+	} else {
+		d.Set("hosted_zone", nil)
+	}
+	d.Set("name", ns.Name)
+
+	tags, err := ListTagsWithContext(ctx, conn, arn)
+
+	if err != nil {
+		return diag.Errorf("listing tags for Service Discovery %s Namespace (%s): %s", nsType, arn, err)
 	}
 
-	namespace := output.Namespace
-
-	d.Set("name", namespace.Name)
-	d.Set("description", namespace.Description)
-	d.Set("arn", namespace.Arn)
-	if namespace.Properties != nil && namespace.Properties.DnsProperties != nil {
-		d.Set("hosted_zone", namespace.Properties.DnsProperties.HostedZoneId)
+	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return diag.Errorf("setting tags: %s", err)
 	}
 
 	return nil

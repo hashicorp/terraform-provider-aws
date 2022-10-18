@@ -8,7 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appmesh"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -227,7 +227,7 @@ func resourceVirtualServiceRead(d *schema.ResourceData, meta interface{}) error 
 	d.Set("created_date", resp.VirtualService.Metadata.CreatedAt.Format(time.RFC3339))
 	d.Set("last_updated_date", resp.VirtualService.Metadata.LastUpdatedAt.Format(time.RFC3339))
 	d.Set("resource_owner", resp.VirtualService.Metadata.ResourceOwner)
-	err = d.Set("spec", flattenAppMeshVirtualServiceSpec(resp.VirtualService.Spec))
+	err = d.Set("spec", flattenVirtualServiceSpec(resp.VirtualService.Spec))
 	if err != nil {
 		return fmt.Errorf("error setting spec: %s", err)
 	}
@@ -293,7 +293,7 @@ func resourceVirtualServiceDelete(d *schema.ResourceData, meta interface{}) erro
 		MeshName:           aws.String(d.Get("mesh_name").(string)),
 		VirtualServiceName: aws.String(d.Get("name").(string)),
 	})
-	if tfawserr.ErrMessageContains(err, appmesh.ErrCodeNotFoundException, "") {
+	if tfawserr.ErrCodeEquals(err, appmesh.ErrCodeNotFoundException) {
 		return nil
 	}
 	if err != nil {
@@ -306,7 +306,7 @@ func resourceVirtualServiceDelete(d *schema.ResourceData, meta interface{}) erro
 func resourceVirtualServiceImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	parts := strings.Split(d.Id(), "/")
 	if len(parts) != 2 {
-		return []*schema.ResourceData{}, fmt.Errorf("Wrong format of resource: %s. Please follow 'mesh-name/virtual-service-name'", d.Id())
+		return []*schema.ResourceData{}, fmt.Errorf("wrong format of import ID (%s), use: 'mesh-name/virtual-service-name'", d.Id())
 	}
 
 	mesh := parts[0]

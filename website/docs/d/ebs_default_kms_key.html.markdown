@@ -1,5 +1,5 @@
 ---
-subcategory: "EC2"
+subcategory: "EBS (EC2)"
 layout: "aws"
 page_title: "AWS: aws_ebs_default_kms_key"
 description: |-
@@ -27,5 +27,11 @@ resource "aws_ebs_volume" "example" {
 
 The following attributes are exported:
 
-* `key_arn` - Amazon Resource Name (ARN) of the default KMS key uses to encrypt an EBS volume in this region when no key is specified in an API call that creates the volume and encryption by default is enabled.
+* `key_arn` - ARN of the default KMS key uses to encrypt an EBS volume in this region when no key is specified in an API call that creates the volume and encryption by default is enabled.
 * `id` - Region of the default KMS Key.
+
+## Timeouts
+
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+
+- `read` - (Default `20m`)

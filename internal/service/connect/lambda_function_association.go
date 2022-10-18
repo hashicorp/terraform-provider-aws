@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/connect"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -69,7 +69,7 @@ func resourceLambdaFunctionAssociationRead(ctx context.Context, d *schema.Resour
 		return diag.FromErr(err)
 	}
 
-	lfaArn, err := FindLambdaFunctionAssociationByArnWithContext(ctx, conn, instanceID, functionArn)
+	lfaArn, err := FindLambdaFunctionAssociationByARNWithContext(ctx, conn, instanceID, functionArn)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Connect Lambda Function Association (%s) not found, removing from state", d.Id())

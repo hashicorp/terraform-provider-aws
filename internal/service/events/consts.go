@@ -1,13 +1,15 @@
 package events
 
-const (
-	ErrCodeAccessDenied = "AccessDenied"
-)
+import "time"
 
 const (
 	DefaultEventBusName = "default"
 )
 
 const (
-	mapMaxItemsCount = 100
+	targetInputTransformerMaxInputPaths = 100
+)
+
+const (
+	propagationTimeout = 2 * time.Minute
 )

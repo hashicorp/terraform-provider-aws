@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/pinpoint"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -22,10 +22,10 @@ func TestAccPinpointEventStream_basic(t *testing.T) {
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckApp(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, pinpoint.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEventStreamDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckApp(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, pinpoint.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEventStreamDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEventStreamConfig_basic(rName, rName),
@@ -60,10 +60,10 @@ func TestAccPinpointEventStream_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckApp(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, pinpoint.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckEventStreamDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckApp(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, pinpoint.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEventStreamDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEventStreamConfig_basic(rName, rName),
@@ -178,7 +178,7 @@ func testAccCheckEventStreamDestroy(s *terraform.State) error {
 		}
 		_, err := conn.GetEventStream(params)
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, pinpoint.ErrCodeNotFoundException, "") {
+			if tfawserr.ErrCodeEquals(err, pinpoint.ErrCodeNotFoundException) {
 				continue
 			}
 			return err

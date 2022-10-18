@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -76,7 +76,7 @@ func resourceBucketPublicAccessBlockCreate(d *schema.ResourceData, meta interfac
 	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
 		_, err := conn.PutPublicAccessBlock(input)
 
-		if tfawserr.ErrMessageContains(err, s3.ErrCodeNoSuchBucket, "") {
+		if tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket) {
 			return resource.RetryableError(err)
 		}
 
@@ -173,19 +173,6 @@ func resourceBucketPublicAccessBlockUpdate(d *schema.ResourceData, meta interfac
 
 	log.Printf("[DEBUG] Updating S3 bucket Public Access Block: %s", input)
 	_, err := conn.PutPublicAccessBlock(input)
-
-	if tfawserr.ErrCodeEquals(err, ErrCodeNoSuchPublicAccessBlockConfiguration) {
-		log.Printf("[WARN] S3 Bucket Public Access Block (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
-	}
-
-	if tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket) {
-		log.Printf("[WARN] S3 Bucket (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
-	}
-
 	if err != nil {
 		return fmt.Errorf("error updating S3 Bucket Public Access Block (%s): %s", d.Id(), err)
 	}

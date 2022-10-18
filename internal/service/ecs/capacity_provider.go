@@ -7,7 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ecs"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -126,14 +126,15 @@ func resourceCapacityProviderCreate(d *schema.ResourceData, meta interface{}) er
 	output, err := conn.CreateCapacityProvider(&input)
 
 	// Some partitions (i.e., ISO) may not support tag-on-create
-	if input.Tags != nil && (tfawserr.ErrCodeContains(err, ecs.ErrCodeAccessDeniedException) || tfawserr.ErrCodeContains(err, ecs.ErrCodeInvalidParameterException) || tfawserr.ErrCodeContains(err, ecs.ErrCodeUnsupportedFeatureException)) {
-		log.Printf("[WARN] ECS Capacity Provider (%s) create failed (%s) with tags. Trying create without tags.", d.Id(), err)
+	if input.Tags != nil && verify.ErrorISOUnsupported(conn.PartitionID, err) {
+		log.Printf("[WARN] ECS tagging failed creating Capacity Provider (%s) with tags: %s. Trying create without tags.", name, err)
 		input.Tags = nil
+
 		output, err = conn.CreateCapacityProvider(&input)
 	}
 
 	if err != nil {
-		return fmt.Errorf("error creating ECS Capacity Provider (%s): %w", name, err)
+		return fmt.Errorf("failed creating ECS Capacity Provider (%s): %w", name, err)
 	}
 
 	d.SetId(aws.StringValue(output.CapacityProvider.CapacityProviderArn))
@@ -142,14 +143,14 @@ func resourceCapacityProviderCreate(d *schema.ResourceData, meta interface{}) er
 	if input.Tags == nil && len(tags) > 0 {
 		err := UpdateTags(conn, d.Id(), nil, tags)
 
-		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && (tfawserr.ErrCodeContains(err, ecs.ErrCodeAccessDeniedException) || tfawserr.ErrCodeContains(err, ecs.ErrCodeInvalidParameterException) || tfawserr.ErrCodeContains(err, ecs.ErrCodeUnsupportedFeatureException)) {
+		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.ErrorISOUnsupported(conn.PartitionID, err) {
 			// If default tags only, log and continue. Otherwise, error.
-			log.Printf("[WARN] error adding tags after create for ECS Capacity Provider (%s): %s", d.Id(), err)
+			log.Printf("[WARN] ECS tagging failed adding tags after create for Capacity Provider (%s): %s", d.Id(), err)
 			return resourceCapacityProviderRead(d, meta)
 		}
 
 		if err != nil {
-			return fmt.Errorf("error creating ECS Capacity Provider (%s) tags: %w", name, err)
+			return fmt.Errorf("ECS tagging failed adding tags after create for Capacity Provider (%s): %w", d.Id(), err)
 		}
 	}
 
@@ -182,12 +183,6 @@ func resourceCapacityProviderRead(d *schema.ResourceData, meta interface{}) erro
 	d.Set("name", output.Name)
 
 	tags := KeyValueTags(output.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	// Some partitions (i.e., ISO) may not support tagging, giving error
-	if tfawserr.ErrCodeContains(err, ecs.ErrCodeAccessDeniedException) || tfawserr.ErrCodeContains(err, ecs.ErrCodeInvalidParameterException) || tfawserr.ErrCodeContains(err, ecs.ErrCodeUnsupportedFeatureException) {
-		log.Printf("[WARN] Unable to list tags for ECS Capacity Provider %s: %s", d.Id(), err)
-		return nil
-	}
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -244,13 +239,13 @@ func resourceCapacityProviderUpdate(d *schema.ResourceData, meta interface{}) er
 		err := UpdateTags(conn, d.Id(), o, n)
 
 		// Some partitions (i.e., ISO) may not support tagging, giving error
-		if tfawserr.ErrCodeContains(err, ecs.ErrCodeAccessDeniedException) || tfawserr.ErrCodeContains(err, ecs.ErrCodeInvalidParameterException) || tfawserr.ErrCodeContains(err, ecs.ErrCodeUnsupportedFeatureException) {
-			log.Printf("[WARN] Unable to update tags for ECS Capacity Provider %s: %s", d.Id(), err)
+		if verify.ErrorISOUnsupported(conn.PartitionID, err) {
+			log.Printf("[WARN] ECS tagging failed updating tags for Capacity Provider (%s): %s", d.Id(), err)
 			return resourceCapacityProviderRead(d, meta)
 		}
 
 		if err != nil {
-			return fmt.Errorf("error updating ECS Capacity Provider (%s) tags: %w", d.Id(), err)
+			return fmt.Errorf("ECS tagging failed updating tags for Capacity Provider (%s): %w", d.Id(), err)
 		}
 	}
 

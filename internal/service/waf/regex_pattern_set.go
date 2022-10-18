@@ -7,7 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/waf"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
@@ -73,7 +73,7 @@ func resourceRegexPatternSetRead(d *schema.ResourceData, meta interface{}) error
 
 	resp, err := conn.GetRegexPatternSet(params)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, waf.ErrCodeNonexistentItemException, "") {
+		if tfawserr.ErrCodeEquals(err, waf.ErrCodeNonexistentItemException) {
 			log.Printf("[WARN] WAF Regex Pattern Set (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -104,7 +104,7 @@ func resourceRegexPatternSetUpdate(d *schema.ResourceData, meta interface{}) err
 	if d.HasChange("regex_pattern_strings") {
 		o, n := d.GetChange("regex_pattern_strings")
 		oldPatterns, newPatterns := o.(*schema.Set).List(), n.(*schema.Set).List()
-		err := updateWafRegexPatternSetPatternStrings(d.Id(), oldPatterns, newPatterns, conn)
+		err := updateRegexPatternSetPatternStrings(d.Id(), oldPatterns, newPatterns, conn)
 		if err != nil {
 			return fmt.Errorf("Failed updating WAF Regex Pattern Set: %s", err)
 		}
@@ -119,7 +119,7 @@ func resourceRegexPatternSetDelete(d *schema.ResourceData, meta interface{}) err
 	oldPatterns := d.Get("regex_pattern_strings").(*schema.Set).List()
 	if len(oldPatterns) > 0 {
 		noPatterns := []interface{}{}
-		err := updateWafRegexPatternSetPatternStrings(d.Id(), oldPatterns, noPatterns, conn)
+		err := updateRegexPatternSetPatternStrings(d.Id(), oldPatterns, noPatterns, conn)
 		if err != nil {
 			return fmt.Errorf("Error updating WAF Regex Pattern Set: %s", err)
 		}
@@ -141,7 +141,7 @@ func resourceRegexPatternSetDelete(d *schema.ResourceData, meta interface{}) err
 	return nil
 }
 
-func updateWafRegexPatternSetPatternStrings(id string, oldPatterns, newPatterns []interface{}, conn *waf.WAF) error {
+func updateRegexPatternSetPatternStrings(id string, oldPatterns, newPatterns []interface{}, conn *waf.WAF) error {
 	wr := NewRetryer(conn)
 	_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
 		req := &waf.UpdateRegexPatternSetInput{

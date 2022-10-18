@@ -1,11 +1,11 @@
 package sns_test
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sns"
 	awspolicy "github.com/hashicorp/awspolicyequivalence"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
@@ -13,17 +13,16 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfsns "github.com/hashicorp/terraform-provider-aws/internal/service/sns"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func init() {
-	acctest.RegisterServiceErrorCheckFunc(sns.EndpointsID, testAccErrorCheckSkipSNS)
+	acctest.RegisterServiceErrorCheckFunc(sns.EndpointsID, testAccErrorCheckSkip)
 }
 
-func testAccErrorCheckSkipSNS(t *testing.T) resource.ErrorCheckFunc {
+func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
 	return acctest.ErrorCheckSkipMessagesContaining(t,
 		"Invalid protocol type: firehose",
 		"Unknown attribute FifoTopic",
@@ -35,14 +34,14 @@ func TestAccSNSTopic_basic(t *testing.T) {
 	resourceName := "aws_sns_topic.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, sns.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTopicDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sns.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTopicDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTopicNameGeneratedConfig,
-				Check: resource.ComposeTestCheckFunc(
+				Config: testAccTopicConfig_nameGenerated,
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTopicExists(resourceName, &attributes),
 					resource.TestCheckResourceAttr(resourceName, "application_failure_feedback_role_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "application_success_feedback_role_arn", ""),
@@ -62,7 +61,7 @@ func TestAccSNSTopic_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "lambda_failure_feedback_role_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "lambda_success_feedback_role_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "lambda_success_feedback_sample_rate", "0"),
-					create.TestCheckResourceAttrNameGenerated(resourceName, "name"),
+					acctest.CheckResourceAttrNameGenerated(resourceName, "name"),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
 					acctest.CheckResourceAttrAccountID(resourceName, "owner"),
 					resource.TestCheckResourceAttrSet(resourceName, "policy"),
@@ -81,23 +80,45 @@ func TestAccSNSTopic_basic(t *testing.T) {
 	})
 }
 
+func TestAccSNSTopic_disappears(t *testing.T) {
+	var attributes map[string]string
+	resourceName := "aws_sns_topic.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sns.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTopicDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTopicConfig_nameGenerated,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTopicExists(resourceName, &attributes),
+					acctest.CheckResourceDisappears(acctest.Provider, tfsns.ResourceTopic(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func TestAccSNSTopic_name(t *testing.T) {
 	var attributes map[string]string
 	resourceName := "aws_sns_topic.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, sns.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTopicDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sns.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTopicDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTopicNameConfig(rName),
+				Config: testAccTopicConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicExists(resourceName, &attributes),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "fifo_topic", "false"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
 				),
 			},
 			{
@@ -115,16 +136,16 @@ func TestAccSNSTopic_namePrefix(t *testing.T) {
 	rName := "tf-acc-test-prefix-"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, sns.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTopicDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sns.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTopicDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTopicNamePrefixConfig(rName),
+				Config: testAccTopicConfig_namePrefix(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicExists(resourceName, &attributes),
-					create.TestCheckResourceAttrNameFromPrefix(resourceName, "name", rName),
+					acctest.CheckResourceAttrNameFromPrefix(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", rName),
 					resource.TestCheckResourceAttr(resourceName, "fifo_topic", "false"),
 				),
@@ -138,23 +159,68 @@ func TestAccSNSTopic_namePrefix(t *testing.T) {
 	})
 }
 
+func TestAccSNSTopic_tags(t *testing.T) {
+	var attributes map[string]string
+	resourceName := "aws_sns_topic.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sns.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTopicDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTopicConfig_tags1(rName, "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTopicExists(resourceName, &attributes),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccTopicConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTopicExists(resourceName, &attributes),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccTopicConfig_tags1(rName, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTopicExists(resourceName, &attributes),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccSNSTopic_policy(t *testing.T) {
 	var attributes map[string]string
 	resourceName := "aws_sns_topic.test"
-	rName := sdkacctest.RandString(10)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	expectedPolicy := fmt.Sprintf(`{"Statement":[{"Sid":"Stmt1445931846145","Effect":"Allow","Principal":{"AWS":"*"},"Action":"sns:Publish","Resource":"arn:%s:sns:%s::example"}],"Version":"2012-10-17","Id":"Policy1445931846145"}`, acctest.Partition(), acctest.Region())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, sns.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTopicDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sns.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTopicDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTopicWithPolicy(rName),
+				Config: testAccTopicConfig_policy(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicExists(resourceName, &attributes),
-					testAccCheckNSTopicHasPolicy(resourceName, expectedPolicy),
+					testAccCheckTopicHasPolicy(resourceName, expectedPolicy),
 				),
 			},
 			{
@@ -169,16 +235,16 @@ func TestAccSNSTopic_policy(t *testing.T) {
 func TestAccSNSTopic_withIAMRole(t *testing.T) {
 	var attributes map[string]string
 	resourceName := "aws_sns_topic.test"
-	rName := sdkacctest.RandString(10)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, sns.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTopicDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sns.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTopicDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTopicConfig_withIAMRole(rName),
+				Config: testAccTopicConfig_iamRole(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicExists(resourceName, &attributes),
 				),
@@ -193,15 +259,16 @@ func TestAccSNSTopic_withIAMRole(t *testing.T) {
 }
 
 func TestAccSNSTopic_withFakeIAMRole(t *testing.T) {
-	rName := sdkacctest.RandString(10)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, sns.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTopicDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sns.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTopicDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccTopicConfig_withFakeIAMRole(rName),
+				Config:      testAccTopicConfig_fakeIAMRole(rName),
 				ExpectError: regexp.MustCompile(`PrincipalNotFound`),
 			},
 		},
@@ -211,20 +278,20 @@ func TestAccSNSTopic_withFakeIAMRole(t *testing.T) {
 func TestAccSNSTopic_withDeliveryPolicy(t *testing.T) {
 	var attributes map[string]string
 	resourceName := "aws_sns_topic.test"
-	rName := sdkacctest.RandString(10)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	expectedPolicy := `{"http":{"defaultHealthyRetryPolicy": {"minDelayTarget": 20,"maxDelayTarget": 20,"numMaxDelayRetries": 0,"numRetries": 3,"numNoDelayRetries": 0,"numMinDelayRetries": 0,"backoffFunction": "linear"},"disableSubscriptionOverrides": false}}`
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, sns.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTopicDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sns.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTopicDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTopicConfig_withDeliveryPolicy(rName),
+				Config: testAccTopicConfig_deliveryPolicy(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicExists(resourceName, &attributes),
-					testAccCheckNSTopicHasDeliveryPolicy(resourceName, expectedPolicy),
+					testAccCheckTopicHasDeliveryPolicy(resourceName, expectedPolicy),
 				),
 			},
 			{
@@ -240,14 +307,13 @@ func TestAccSNSTopic_deliveryStatus(t *testing.T) {
 	var attributes map[string]string
 	resourceName := "aws_sns_topic.test"
 	iamRoleResourceName := "aws_iam_role.example"
-
-	rName := sdkacctest.RandString(10)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, sns.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTopicDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sns.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTopicDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTopicConfig_deliveryStatus(rName),
@@ -284,16 +350,16 @@ func TestAccSNSTopic_NameGenerated_fifoTopic(t *testing.T) {
 	resourceName := "aws_sns_topic.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, sns.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTopicDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sns.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTopicDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTopicNameGeneratedFIFOTopicConfig,
+				Config: testAccTopicConfig_nameGeneratedFIFO,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicExists(resourceName, &attributes),
-					create.TestCheckResourceAttrNameWithSuffixGenerated(resourceName, "name", tfsns.FIFOTopicNameSuffix),
+					acctest.CheckResourceAttrNameWithSuffixGenerated(resourceName, "name", tfsns.FIFOTopicNameSuffix),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
 					resource.TestCheckResourceAttr(resourceName, "fifo_topic", "true"),
 				),
@@ -313,13 +379,13 @@ func TestAccSNSTopic_Name_fifoTopic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix) + tfsns.FIFOTopicNameSuffix
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, sns.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTopicDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sns.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTopicDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTopicNameFIFOTopicConfig(rName),
+				Config: testAccTopicConfig_nameFIFO(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicExists(resourceName, &attributes),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -341,16 +407,16 @@ func TestAccSNSTopic_NamePrefix_fifoTopic(t *testing.T) {
 	rName := "tf-acc-test-prefix-"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, sns.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTopicDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sns.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTopicDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTopicNamePrefixFIFOTopicConfig(rName),
+				Config: testAccTopicConfig_namePrefixFIFO(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicExists(resourceName, &attributes),
-					create.TestCheckResourceAttrNameWithSuffixFromPrefix(resourceName, "name", rName, tfsns.FIFOTopicNameSuffix),
+					acctest.CheckResourceAttrNameWithSuffixFromPrefix(resourceName, "name", rName, tfsns.FIFOTopicNameSuffix),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", rName),
 					resource.TestCheckResourceAttr(resourceName, "fifo_topic", "true"),
 				),
@@ -367,16 +433,16 @@ func TestAccSNSTopic_NamePrefix_fifoTopic(t *testing.T) {
 func TestAccSNSTopic_fifoWithContentBasedDeduplication(t *testing.T) {
 	var attributes map[string]string
 	resourceName := "aws_sns_topic.test"
-	rName := sdkacctest.RandString(10)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, sns.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTopicDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sns.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTopicDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTopicWithFIFOContentBasedDeduplicationConfig(rName, true),
+				Config: testAccTopicConfig_fifoContentBasedDeduplication(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicExists(resourceName, &attributes),
 					resource.TestCheckResourceAttr(resourceName, "fifo_topic", "true"),
@@ -390,7 +456,7 @@ func TestAccSNSTopic_fifoWithContentBasedDeduplication(t *testing.T) {
 			},
 			// Test attribute update
 			{
-				Config: testAccTopicWithFIFOContentBasedDeduplicationConfig(rName, false),
+				Config: testAccTopicConfig_fifoContentBasedDeduplication(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicExists(resourceName, &attributes),
 					resource.TestCheckResourceAttr(resourceName, "content_based_deduplication", "false"),
@@ -401,15 +467,16 @@ func TestAccSNSTopic_fifoWithContentBasedDeduplication(t *testing.T) {
 }
 
 func TestAccSNSTopic_fifoExpectContentBasedDeduplicationError(t *testing.T) {
-	rName := sdkacctest.RandString(10)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, sns.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTopicDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sns.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTopicDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccTopicExpectContentBasedDeduplicationError(rName),
+				Config:      testAccTopicConfig_expectContentBasedDeduplicationError(rName),
 				ExpectError: regexp.MustCompile(`content-based deduplication can only be set for FIFO topics`),
 			},
 		},
@@ -422,13 +489,13 @@ func TestAccSNSTopic_encryption(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, sns.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTopicDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sns.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTopicDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTopicConfig_withEncryption(rName),
+				Config: testAccTopicConfig_encryption(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicExists(resourceName, &attributes),
 					resource.TestCheckResourceAttr(resourceName, "kms_master_key_id", "alias/aws/sns"),
@@ -440,7 +507,7 @@ func TestAccSNSTopic_encryption(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccTopicNameConfig(rName),
+				Config: testAccTopicConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicExists(resourceName, &attributes),
 					resource.TestCheckResourceAttr(resourceName, "kms_master_key_id", ""),
@@ -450,74 +517,7 @@ func TestAccSNSTopic_encryption(t *testing.T) {
 	})
 }
 
-func TestAccSNSTopic_tags(t *testing.T) {
-	var attributes map[string]string
-	resourceName := "aws_sns_topic.test"
-	rName := sdkacctest.RandString(10)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, sns.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTopicDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccTopicTags1Config(rName, "key1", "value1"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTopicExists(resourceName, &attributes),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccTopicTags2Config(rName, "key1", "value1updated", "key2", "value2"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTopicExists(resourceName, &attributes),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
-				),
-			},
-			{
-				Config: testAccTopicTags1Config(rName, "key2", "value2"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTopicExists(resourceName, &attributes),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccSNSTopic_disappears(t *testing.T) {
-	var attributes map[string]string
-	resourceName := "aws_sns_topic.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, sns.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckTopicDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccTopicNameGeneratedConfig,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTopicExists(resourceName, &attributes),
-					acctest.CheckResourceDisappears(acctest.Provider, tfsns.ResourceTopic(), resourceName),
-				),
-				ExpectNonEmptyPlan: true,
-			},
-		},
-	})
-}
-
-func testAccCheckNSTopicHasPolicy(n string, expectedPolicyText string) resource.TestCheckFunc {
+func testAccCheckTopicHasPolicy(n string, expectedPolicyText string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -525,39 +525,29 @@ func testAccCheckNSTopicHasPolicy(n string, expectedPolicyText string) resource.
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("no Queue URL specified")
-		}
-
-		if !ok {
-			return fmt.Errorf("Not found: %s", n)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No SNS topic with that ARN exists")
+			return fmt.Errorf("No SNS Topic ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SNSConn
 
-		params := &sns.GetTopicAttributesInput{
-			TopicArn: aws.String(rs.Primary.ID),
-		}
-		resp, err := conn.GetTopicAttributes(params)
+		attributes, err := tfsns.FindTopicAttributesByARN(context.Background(), conn, rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
 
-		var actualPolicyText string
-		for k, v := range resp.Attributes {
-			if k == "Policy" {
-				actualPolicyText = aws.StringValue(v)
-				break
-			}
+		actualPolicyText := attributes[tfsns.TopicAttributeNamePolicy]
+
+		if actualPolicyText == "" {
+			return fmt.Errorf("SNS Topic Policy (%s) not found", rs.Primary.ID)
 		}
 
 		equivalent, err := awspolicy.PoliciesAreEquivalent(actualPolicyText, expectedPolicyText)
+
 		if err != nil {
 			return fmt.Errorf("Error testing policy equivalence: %s", err)
 		}
+
 		if !equivalent {
 			return fmt.Errorf("Non-equivalent policy error:\n\nexpected: %s\n\n     got: %s",
 				expectedPolicyText, actualPolicyText)
@@ -567,7 +557,7 @@ func testAccCheckNSTopicHasPolicy(n string, expectedPolicyText string) resource.
 	}
 }
 
-func testAccCheckNSTopicHasDeliveryPolicy(n string, expectedPolicyText string) resource.TestCheckFunc {
+func testAccCheckTopicHasDeliveryPolicy(n string, expectedPolicyText string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -575,25 +565,21 @@ func testAccCheckNSTopicHasDeliveryPolicy(n string, expectedPolicyText string) r
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("no Queue URL specified")
+			return fmt.Errorf("No SNS Topic ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SNSConn
 
-		params := &sns.GetTopicAttributesInput{
-			TopicArn: aws.String(rs.Primary.ID),
-		}
-		resp, err := conn.GetTopicAttributes(params)
+		attributes, err := tfsns.FindTopicAttributesByARN(context.Background(), conn, rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
 
-		var actualPolicyText string
-		for k, v := range resp.Attributes {
-			if k == "DeliveryPolicy" {
-				actualPolicyText = aws.StringValue(v)
-				break
-			}
+		actualPolicyText := attributes[tfsns.TopicAttributeNameDeliveryPolicy]
+
+		if actualPolicyText == "" {
+			return fmt.Errorf("SNS Topic Delivery Policy (%s) not found", rs.Primary.ID)
 		}
 
 		equivalent := verify.SuppressEquivalentJSONDiffs("", actualPolicyText, expectedPolicyText, nil)
@@ -615,7 +601,7 @@ func testAccCheckTopicDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := tfsns.FindTopicAttributesByARN(conn, rs.Primary.ID)
+		_, err := tfsns.FindTopicAttributesByARN(context.Background(), conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -644,7 +630,7 @@ func testAccCheckTopicExists(n string, v *map[string]string) resource.TestCheckF
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SNSConn
 
-		output, err := tfsns.FindTopicAttributesByARN(conn, rs.Primary.ID)
+		output, err := tfsns.FindTopicAttributesByARN(context.Background(), conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -656,17 +642,17 @@ func testAccCheckTopicExists(n string, v *map[string]string) resource.TestCheckF
 	}
 }
 
-const testAccTopicNameGeneratedConfig = `
+const testAccTopicConfig_nameGenerated = `
 resource "aws_sns_topic" "test" {}
 `
 
-const testAccTopicNameGeneratedFIFOTopicConfig = `
+const testAccTopicConfig_nameGeneratedFIFO = `
 resource "aws_sns_topic" "test" {
   fifo_topic = true
 }
 `
 
-func testAccTopicNameConfig(rName string) string {
+func testAccTopicConfig_name(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_sns_topic" "test" {
   name = %[1]q
@@ -674,7 +660,7 @@ resource "aws_sns_topic" "test" {
 `, rName)
 }
 
-func testAccTopicNameFIFOTopicConfig(rName string) string {
+func testAccTopicConfig_nameFIFO(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_sns_topic" "test" {
   name       = %[1]q
@@ -683,7 +669,7 @@ resource "aws_sns_topic" "test" {
 `, rName)
 }
 
-func testAccTopicNamePrefixConfig(prefix string) string {
+func testAccTopicConfig_namePrefix(prefix string) string {
 	return fmt.Sprintf(`
 resource "aws_sns_topic" "test" {
   name_prefix = %[1]q
@@ -691,7 +677,7 @@ resource "aws_sns_topic" "test" {
 `, prefix)
 }
 
-func testAccTopicNamePrefixFIFOTopicConfig(prefix string) string {
+func testAccTopicConfig_namePrefixFIFO(prefix string) string {
 	return fmt.Sprintf(`
 resource "aws_sns_topic" "test" {
   name_prefix = %[1]q
@@ -700,14 +686,14 @@ resource "aws_sns_topic" "test" {
 `, prefix)
 }
 
-func testAccTopicWithPolicy(r string) string {
+func testAccTopicConfig_policy(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
 data "aws_region" "current" {}
 
 resource "aws_sns_topic" "test" {
-  name = "example-%s"
+  name = %[1]q
 
   policy = <<EOF
 {
@@ -727,16 +713,16 @@ resource "aws_sns_topic" "test" {
 }
 EOF
 }
-`, r)
+`, rName)
 }
 
 // Test for https://github.com/hashicorp/terraform/issues/3660
-func testAccTopicConfig_withIAMRole(r string) string {
+func testAccTopicConfig_iamRole(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
 resource "aws_iam_role" "example" {
-  name = "tf_acc_test_%[1]s"
+  name = %[1]q
   path = "/test/"
 
   assume_role_policy = <<EOF
@@ -759,7 +745,7 @@ EOF
 data "aws_region" "current" {}
 
 resource "aws_sns_topic" "test" {
-  name = "tf-acc-test-with-iam-role-%[1]s"
+  name = %[1]q
 
   policy = <<EOF
 {
@@ -779,14 +765,14 @@ resource "aws_sns_topic" "test" {
 }
 EOF
 }
-`, r)
+`, rName)
 }
 
 // Test for https://github.com/hashicorp/terraform/issues/14024
-func testAccTopicConfig_withDeliveryPolicy(r string) string {
+func testAccTopicConfig_deliveryPolicy(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_sns_topic" "test" {
-  name = "tf_acc_test_delivery_policy_%s"
+  name = %[1]q
 
   delivery_policy = <<EOF
 {
@@ -805,18 +791,18 @@ resource "aws_sns_topic" "test" {
 }
 EOF
 }
-`, r)
+`, rName)
 }
 
 // Test for https://github.com/hashicorp/terraform/issues/3660
-func testAccTopicConfig_withFakeIAMRole(r string) string {
+func testAccTopicConfig_fakeIAMRole(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
 data "aws_region" "current" {}
 
 resource "aws_sns_topic" "test" {
-  name = "tf_acc_test_fake_iam_role_%s"
+  name = %[1]q
 
   policy = <<EOF
 {
@@ -836,14 +822,15 @@ resource "aws_sns_topic" "test" {
 }
 EOF
 }
-`, r)
+`, rName)
 }
 
-func testAccTopicConfig_deliveryStatus(r string) string {
+func testAccTopicConfig_deliveryStatus(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_sns_topic" "test" {
-  depends_on                               = [aws_iam_role_policy.example]
-  name                                     = "sns-delivery-status-topic-%[1]s"
+  depends_on = [aws_iam_role_policy.example]
+
+  name                                     = %[1]q
   application_success_feedback_role_arn    = aws_iam_role.example.arn
   application_success_feedback_sample_rate = 100
   application_failure_feedback_role_arn    = aws_iam_role.example.arn
@@ -864,7 +851,7 @@ resource "aws_sns_topic" "test" {
 data "aws_partition" "current" {}
 
 resource "aws_iam_role" "example" {
-  name = "sns-delivery-status-role-%[1]s"
+  name = %[1]q
   path = "/"
 
   assume_role_policy = <<EOF
@@ -884,7 +871,7 @@ EOF
 }
 
 resource "aws_iam_role_policy" "example" {
-  name = "sns-delivery-status-role-policy-%[1]s"
+  name = %[1]q
   role = aws_iam_role.example.id
 
   policy = <<EOF
@@ -908,10 +895,10 @@ resource "aws_iam_role_policy" "example" {
 }
 EOF
 }
-`, r)
+`, rName)
 }
 
-func testAccTopicConfig_withEncryption(rName string) string {
+func testAccTopicConfig_encryption(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_sns_topic" "test" {
   name              = %[1]q
@@ -920,46 +907,46 @@ resource "aws_sns_topic" "test" {
 `, rName)
 }
 
-func testAccTopicWithFIFOContentBasedDeduplicationConfig(r string, cbd bool) string {
+func testAccTopicConfig_fifoContentBasedDeduplication(rName string, cbd bool) string {
 	return fmt.Sprintf(`
 resource "aws_sns_topic" "test" {
-  name                        = "terraform-test-topic-%s.fifo"
+  name                        = "%[1]s.fifo"
   fifo_topic                  = true
-  content_based_deduplication = %t
+  content_based_deduplication = %[2]t
 }
-`, r, cbd)
+`, rName, cbd)
 }
 
-func testAccTopicExpectContentBasedDeduplicationError(r string) string {
+func testAccTopicConfig_expectContentBasedDeduplicationError(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_sns_topic" "test" {
-  name                        = "terraform-test-topic-%s"
+  name                        = %[1]q
   content_based_deduplication = true
 }
-`, r)
+`, rName)
 }
 
-func testAccTopicTags1Config(r, tag1Key, tag1Value string) string {
+func testAccTopicConfig_tags1(rName, tag1Key, tag1Value string) string {
 	return fmt.Sprintf(`
 resource "aws_sns_topic" "test" {
-  name = "terraform-test-topic-%s"
+  name = %[1]q
 
   tags = {
-    %q = %q
+    %[2]q = %[3]q
   }
 }
-`, r, tag1Key, tag1Value)
+`, rName, tag1Key, tag1Value)
 }
 
-func testAccTopicTags2Config(r, tag1Key, tag1Value, tag2Key, tag2Value string) string {
+func testAccTopicConfig_tags2(rName, tag1Key, tag1Value, tag2Key, tag2Value string) string {
 	return fmt.Sprintf(`
 resource "aws_sns_topic" "test" {
-  name = "terraform-test-topic-%s"
+  name = %[1]q
 
   tags = {
-    %q = %q
-    %q = %q
+    %[2]q = %[3]q
+    %[4]q = %[5]q
   }
 }
-`, r, tag1Key, tag1Value, tag2Key, tag2Value)
+`, rName, tag1Key, tag1Value, tag2Key, tag2Value)
 }

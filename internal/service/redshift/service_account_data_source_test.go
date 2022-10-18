@@ -15,12 +15,12 @@ func TestAccRedshiftServiceAccountDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_redshift_service_account.main"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, redshift.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, redshift.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAWSRedshiftServiceAccountConfig,
+				Config: testAccServiceAccountDataSourceConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "id", expectedAccountID),
 					acctest.CheckResourceAttrGlobalARNAccountID(dataSourceName, "arn", expectedAccountID, "iam", "user/logs"),
@@ -36,12 +36,12 @@ func TestAccRedshiftServiceAccountDataSource_region(t *testing.T) {
 	dataSourceName := "data.aws_redshift_service_account.regional"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, redshift.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, redshift.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAWSRedshiftServiceAccountExplicitRegionConfig,
+				Config: testAccServiceAccountDataSourceConfig_explicitRegion,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "id", expectedAccountID),
 					acctest.CheckResourceAttrGlobalARNAccountID(dataSourceName, "arn", expectedAccountID, "iam", "user/logs"),
@@ -51,11 +51,11 @@ func TestAccRedshiftServiceAccountDataSource_region(t *testing.T) {
 	})
 }
 
-const testAccCheckAWSRedshiftServiceAccountConfig = `
+const testAccServiceAccountDataSourceConfig_basic = `
 data "aws_redshift_service_account" "main" {}
 `
 
-const testAccCheckAWSRedshiftServiceAccountExplicitRegionConfig = `
+const testAccServiceAccountDataSourceConfig_explicitRegion = `
 data "aws_region" "current" {}
 
 data "aws_redshift_service_account" "regional" {

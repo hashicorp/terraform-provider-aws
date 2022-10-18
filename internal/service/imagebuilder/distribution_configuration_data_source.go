@@ -57,6 +57,20 @@ func DataSourceDistributionConfiguration() *schema.Resource {
 										Computed: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
+												"organization_arns": {
+													Type:     schema.TypeSet,
+													Computed: true,
+													Elem: &schema.Schema{
+														Type: schema.TypeString,
+													},
+												},
+												"organizational_unit_arns": {
+													Type:     schema.TypeSet,
+													Computed: true,
+													Elem: &schema.Schema{
+														Type: schema.TypeString,
+													},
+												},
 												"user_groups": {
 													Type:     schema.TypeSet,
 													Computed: true,
@@ -84,6 +98,113 @@ func DataSourceDistributionConfiguration() *schema.Resource {
 										Elem: &schema.Schema{
 											Type: schema.TypeString,
 										},
+									},
+								},
+							},
+						},
+						"container_distribution_configuration": {
+							Type:     schema.TypeSet,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"container_tags": {
+										Type:     schema.TypeSet,
+										Computed: true,
+										Elem: &schema.Schema{
+											Type: schema.TypeString,
+										},
+									},
+									"description": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"target_repository": {
+										Type:     schema.TypeSet,
+										Computed: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"repository_name": {
+													Type:     schema.TypeString,
+													Computed: true,
+												},
+												"service": {
+													Type:     schema.TypeString,
+													Computed: true,
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+						"fast_launch_configuration": {
+							Type:     schema.TypeSet,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"account_id": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"enabled": {
+										Type:     schema.TypeBool,
+										Computed: true,
+									},
+									"launch_template": {
+										Type:     schema.TypeSet,
+										Computed: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"launch_template_id": {
+													Type:     schema.TypeString,
+													Computed: true,
+												},
+												"launch_template_name": {
+													Type:     schema.TypeString,
+													Computed: true,
+												},
+												"launch_template_version": {
+													Type:     schema.TypeString,
+													Computed: true,
+												},
+											},
+										},
+									},
+									"max_parallel_launches": {
+										Type:     schema.TypeInt,
+										Computed: true,
+									},
+									"snapshot_configuration": {
+										Type:     schema.TypeSet,
+										Computed: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"target_resource_count": {
+													Type:     schema.TypeInt,
+													Computed: true,
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+						"launch_template_configuration": {
+							Type:     schema.TypeSet,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"account_id": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"default": {
+										Type:     schema.TypeBool,
+										Computed: true,
+									},
+									"launch_template_id": {
+										Type:     schema.TypeString,
+										Computed: true,
 									},
 								},
 							},

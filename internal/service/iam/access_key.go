@@ -1,18 +1,20 @@
 package iam
 
 import (
+	"context"
 	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/base64"
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func ResourceAccessKey() *schema.Resource {
@@ -125,11 +127,11 @@ func resourceAccessKeyCreate(d *schema.ResourceData, meta interface{}) error {
 
 	if v, ok := d.GetOk("pgp_key"); ok {
 		pgpKey := v.(string)
-		encryptionKey, err := RetrieveGPGKey(pgpKey)
+		encryptionKey, err := retrieveGPGKey(pgpKey)
 		if err != nil {
 			return err
 		}
-		fingerprint, encrypted, err := EncryptValue(encryptionKey, *createResp.AccessKey.SecretAccessKey, "IAM Access Key Secret")
+		fingerprint, encrypted, err := encryptValue(encryptionKey, *createResp.AccessKey.SecretAccessKey, "IAM Access Key Secret")
 		if err != nil {
 			return err
 		}
@@ -137,7 +139,7 @@ func resourceAccessKeyCreate(d *schema.ResourceData, meta interface{}) error {
 		d.Set("key_fingerprint", fingerprint)
 		d.Set("encrypted_secret", encrypted)
 
-		_, encrypted, err = EncryptValue(encryptionKey, sesSMTPPasswordV4, "SES SMTP password")
+		_, encrypted, err = encryptValue(encryptionKey, sesSMTPPasswordV4, "SES SMTP password")
 		if err != nil {
 			return err
 		}
@@ -180,28 +182,29 @@ func resourceAccessKeyCreate(d *schema.ResourceData, meta interface{}) error {
 func resourceAccessKeyRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IAMConn
 
-	request := &iam.ListAccessKeysInput{
-		UserName: aws.String(d.Get("user").(string)),
-	}
+	username := d.Get("user").(string)
 
-	getResp, err := conn.ListAccessKeys(request)
+	key, err := FindAccessKey(context.TODO(), conn, username, d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] IAM Access Key (%s) for User (%s) not found, removing from state", d.Id(), username)
+		d.SetId("")
+		return nil
+	}
 	if err != nil {
-		if iamerr, ok := err.(awserr.Error); ok && iamerr.Code() == "NoSuchEntity" { // XXX TEST ME
-			// the user does not exist, so the key can't exist.
-			d.SetId("")
-			return nil
-		}
-		return fmt.Errorf("Error reading IAM access key: %s", err)
+		return fmt.Errorf("error reading IAM access key: %w", err)
 	}
 
-	for _, key := range getResp.AccessKeyMetadata {
-		if aws.StringValue(key.AccessKeyId) == d.Id() {
-			return resourceAccessKeyReadResult(d, key)
-		}
+	d.SetId(aws.StringValue(key.AccessKeyId))
+
+	if key.CreateDate != nil {
+		d.Set("create_date", aws.TimeValue(key.CreateDate).Format(time.RFC3339))
+	} else {
+		d.Set("create_date", nil)
 	}
 
-	// Guess the key isn't around anymore.
-	d.SetId("")
+	d.Set("status", key.Status)
+	d.Set("user", key.UserName)
+
 	return nil
 }
 

@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/eventbridge"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -135,11 +135,17 @@ func ResourceConnection() *schema.Resource {
 									"key": {
 										Type:     schema.TypeString,
 										Required: true,
+										ValidateFunc: validation.All(
+											validation.StringLenBetween(1, 512),
+										),
 									},
 									"value": {
 										Type:      schema.TypeString,
 										Required:  true,
 										Sensitive: true,
+										ValidateFunc: validation.All(
+											validation.StringLenBetween(1, 512),
+										),
 									},
 								},
 							},
@@ -158,11 +164,17 @@ func ResourceConnection() *schema.Resource {
 									"username": {
 										Type:     schema.TypeString,
 										Required: true,
+										ValidateFunc: validation.All(
+											validation.StringLenBetween(1, 512),
+										),
 									},
 									"password": {
 										Type:      schema.TypeString,
 										Required:  true,
 										Sensitive: true,
+										ValidateFunc: validation.All(
+											validation.StringLenBetween(1, 512),
+										),
 									},
 								},
 							},
@@ -181,6 +193,9 @@ func ResourceConnection() *schema.Resource {
 									"authorization_endpoint": {
 										Type:     schema.TypeString,
 										Required: true,
+										ValidateFunc: validation.All(
+											validation.StringLenBetween(1, 2048),
+										),
 									},
 									"http_method": {
 										Type:         schema.TypeString,
@@ -202,11 +217,17 @@ func ResourceConnection() *schema.Resource {
 												"client_id": {
 													Type:     schema.TypeString,
 													Required: true,
+													ValidateFunc: validation.All(
+														validation.StringLenBetween(1, 512),
+													),
 												},
 												"client_secret": {
 													Type:      schema.TypeString,
 													Required:  true,
 													Sensitive: true,
+													ValidateFunc: validation.All(
+														validation.StringLenBetween(1, 512),
+													),
 												},
 											},
 										},
@@ -248,8 +269,6 @@ func resourceConnectionCreate(d *schema.ResourceData, meta interface{}) error {
 	if v, ok := d.GetOk("description"); ok {
 		input.Description = aws.String(v.(string))
 	}
-
-	log.Printf("[DEBUG] Creating EventBridge connection: %s", input)
 
 	_, err := conn.CreateConnection(input)
 
@@ -318,7 +337,6 @@ func resourceConnectionUpdate(d *schema.ResourceData, meta interface{}) error {
 		input.Description = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Updating EventBridge connection: %s", input)
 	_, err := conn.UpdateConnection(input)
 
 	if err != nil {

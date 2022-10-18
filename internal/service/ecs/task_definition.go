@@ -12,7 +12,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/private/protocol/json/jsonutil"
 	"github.com/aws/aws-sdk-go/service/ecs"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -519,18 +518,18 @@ func resourceTaskDefinitionCreate(d *schema.ResourceData, meta interface{}) erro
 	out, err := conn.RegisterTaskDefinition(&input)
 
 	// Some partitions (i.e., ISO) may not support tag-on-create
-	if input.Tags != nil && (tfawserr.ErrCodeContains(err, ecs.ErrCodeAccessDeniedException) || tfawserr.ErrCodeContains(err, ecs.ErrCodeInvalidParameterException) || tfawserr.ErrCodeContains(err, ecs.ErrCodeUnsupportedFeatureException)) {
-		log.Printf("[WARN] ECS Task Definition (%s) create failed (%s) with tags. Trying create without tags.", d.Id(), err)
+	if input.Tags != nil && verify.ErrorISOUnsupported(conn.PartitionID, err) {
+		log.Printf("[WARN] ECS tagging failed creating Task Definition (%s) with tags: %s. Trying create without tags.", d.Get("family").(string), err)
 		input.Tags = nil
 
 		out, err = conn.RegisterTaskDefinition(&input)
 	}
 
 	if err != nil {
-		return fmt.Errorf("error creating ECS Task Definition (%s): %w", d.Get("family").(string), err)
+		return fmt.Errorf("failed creating ECS Task Definition (%s): %w", d.Get("family").(string), err)
 	}
 
-	taskDefinition := *out.TaskDefinition // nosemgrep: prefer-aws-go-sdk-pointer-conversion-assignment // false positive
+	taskDefinition := *out.TaskDefinition // nosemgrep:ci.prefer-aws-go-sdk-pointer-conversion-assignment // false positive
 
 	log.Printf("[DEBUG] ECS task definition registered: %q (rev. %d)",
 		aws.StringValue(taskDefinition.TaskDefinitionArn), aws.Int64Value(taskDefinition.Revision))
@@ -543,13 +542,13 @@ func resourceTaskDefinitionCreate(d *schema.ResourceData, meta interface{}) erro
 		err := UpdateTags(conn, aws.StringValue(taskDefinition.TaskDefinitionArn), nil, tags)
 
 		// If default tags only, log and continue. Otherwise, error.
-		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && (tfawserr.ErrCodeContains(err, ecs.ErrCodeAccessDeniedException) || tfawserr.ErrCodeContains(err, ecs.ErrCodeInvalidParameterException) || tfawserr.ErrCodeContains(err, ecs.ErrCodeUnsupportedFeatureException)) {
-			log.Printf("[WARN] error adding tags after create for ECS Task Definition (%s): %s", d.Id(), err)
+		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.ErrorISOUnsupported(conn.PartitionID, err) {
+			log.Printf("[WARN] ECS tagging failed adding tags after create for Task Definition (%s): %s", d.Id(), err)
 			return resourceTaskDefinitionRead(d, meta)
 		}
 
 		if err != nil {
-			return fmt.Errorf("error creating ECS Task Definition (%s) tags: %w", d.Id(), err)
+			return fmt.Errorf("ECS tagging failed adding tags after create for Task Definition (%s): %w", d.Id(), err)
 		}
 	}
 
@@ -562,13 +561,26 @@ func resourceTaskDefinitionRead(d *schema.ResourceData, meta interface{}) error 
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	log.Printf("[DEBUG] Reading task definition %s", d.Id())
-	out, err := conn.DescribeTaskDefinition(&ecs.DescribeTaskDefinitionInput{
+
+	input := ecs.DescribeTaskDefinitionInput{
 		TaskDefinition: aws.String(d.Get("arn").(string)),
 		Include:        []*string{aws.String(ecs.TaskDefinitionFieldTags)},
-	})
+	}
+
+	out, err := conn.DescribeTaskDefinition(&input)
+
+	// Some partitions (i.e., ISO) may not support tagging, giving error
+	if verify.ErrorISOUnsupported(conn.PartitionID, err) {
+		log.Printf("[WARN] ECS tagging failed describing Task Definition (%s) with tags: %s; retrying without tags", d.Id(), err)
+
+		input.Include = nil
+		out, err = conn.DescribeTaskDefinition(&input)
+	}
+
 	if err != nil {
 		return err
 	}
+
 	log.Printf("[DEBUG] Received task definition %s, status:%s\n %s", aws.StringValue(out.TaskDefinition.Family),
 		aws.StringValue(out.TaskDefinition.Status), out)
 
@@ -636,12 +648,6 @@ func resourceTaskDefinitionRead(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	tags := KeyValueTags(out.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	// Some partitions (i.e., ISO) may not support tagging, giving error
-	if tfawserr.ErrCodeContains(err, ecs.ErrCodeAccessDeniedException) || tfawserr.ErrCodeContains(err, ecs.ErrCodeInvalidParameterException) || tfawserr.ErrCodeContains(err, ecs.ErrCodeUnsupportedFeatureException) {
-		log.Printf("[WARN] Unable to list tags for ECS Task Definition %s: %s", d.Id(), err)
-		return nil
-	}
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -726,13 +732,13 @@ func resourceTaskDefinitionUpdate(d *schema.ResourceData, meta interface{}) erro
 		err := UpdateTags(conn, d.Get("arn").(string), o, n)
 
 		// Some partitions (i.e., ISO) may not support tagging, giving error
-		if tfawserr.ErrCodeContains(err, ecs.ErrCodeAccessDeniedException) || tfawserr.ErrCodeContains(err, ecs.ErrCodeInvalidParameterException) || tfawserr.ErrCodeContains(err, ecs.ErrCodeUnsupportedFeatureException) {
-			log.Printf("[WARN] Unable to update tags for ECS Task Definition %s: %s", d.Id(), err)
+		if verify.ErrorISOUnsupported(conn.PartitionID, err) {
+			log.Printf("[WARN] ECS tagging failed updating tags for Task Definition (%s): %s", d.Id(), err)
 			return nil
 		}
 
 		if err != nil {
-			return fmt.Errorf("error updating ECS Task Definition (%s) tags: %w", d.Id(), err)
+			return fmt.Errorf("ECS tagging failed updating tags for Task Definition (%s): %w", d.Id(), err)
 		}
 	}
 
@@ -935,7 +941,7 @@ func expandVolumes(configured []interface{}) []*ecs.Volume {
 		}
 
 		if v, ok := data["fsx_windows_file_server_volume_configuration"].([]interface{}); ok && len(v) > 0 {
-			l.FsxWindowsFileServerVolumeConfiguration = expandVolumesFsxWinVolume(v)
+			l.FsxWindowsFileServerVolumeConfiguration = expandVolumesFSxWinVolume(v)
 		}
 
 		volumes = append(volumes, l)
@@ -953,8 +959,7 @@ func expandVolumesDockerVolume(configList []interface{}) *ecs.DockerVolumeConfig
 	}
 
 	if v, ok := config["autoprovision"]; ok && v != "" {
-		scope := dockerVol.Scope
-		if scope == nil || *scope != ecs.ScopeTask || v.(bool) {
+		if dockerVol.Scope == nil || aws.StringValue(dockerVol.Scope) != ecs.ScopeTask || v.(bool) {
 			dockerVol.Autoprovision = aws.Bool(v.(bool))
 		}
 	}
@@ -1015,7 +1020,7 @@ func expandVolumesEFSVolumeAuthorizationConfig(efsConfig []interface{}) *ecs.EFS
 	return auth
 }
 
-func expandVolumesFsxWinVolume(fsxWinConfig []interface{}) *ecs.FSxWindowsFileServerVolumeConfiguration {
+func expandVolumesFSxWinVolume(fsxWinConfig []interface{}) *ecs.FSxWindowsFileServerVolumeConfiguration {
 	config := fsxWinConfig[0].(map[string]interface{})
 	fsxVol := &ecs.FSxWindowsFileServerVolumeConfiguration{}
 
@@ -1028,13 +1033,13 @@ func expandVolumesFsxWinVolume(fsxWinConfig []interface{}) *ecs.FSxWindowsFileSe
 	}
 
 	if v, ok := config["authorization_config"].([]interface{}); ok && len(v) > 0 {
-		fsxVol.AuthorizationConfig = expandVolumesFsxWinVolumeAuthorizationConfig(v)
+		fsxVol.AuthorizationConfig = expandVolumesFSxWinVolumeAuthorizationConfig(v)
 	}
 
 	return fsxVol
 }
 
-func expandVolumesFsxWinVolumeAuthorizationConfig(config []interface{}) *ecs.FSxWindowsFileServerAuthorizationConfig {
+func expandVolumesFSxWinVolumeAuthorizationConfig(config []interface{}) *ecs.FSxWindowsFileServerAuthorizationConfig {
 	authconfig := config[0].(map[string]interface{})
 	auth := &ecs.FSxWindowsFileServerAuthorizationConfig{}
 
@@ -1069,7 +1074,7 @@ func flattenVolumes(list []*ecs.Volume) []map[string]interface{} {
 		}
 
 		if volume.FsxWindowsFileServerVolumeConfiguration != nil {
-			l["fsx_windows_file_server_volume_configuration"] = flattenFsxWinVolumeConfiguration(volume.FsxWindowsFileServerVolumeConfiguration)
+			l["fsx_windows_file_server_volume_configuration"] = flattenFSxWinVolumeConfiguration(volume.FsxWindowsFileServerVolumeConfiguration)
 		}
 
 		result = append(result, l)
@@ -1149,7 +1154,7 @@ func flattenEFSVolumeAuthorizationConfig(config *ecs.EFSAuthorizationConfig) []i
 	return items
 }
 
-func flattenFsxWinVolumeConfiguration(config *ecs.FSxWindowsFileServerVolumeConfiguration) []interface{} {
+func flattenFSxWinVolumeConfiguration(config *ecs.FSxWindowsFileServerVolumeConfiguration) []interface{} {
 	var items []interface{}
 	m := make(map[string]interface{})
 	if config != nil {
@@ -1162,7 +1167,7 @@ func flattenFsxWinVolumeConfiguration(config *ecs.FSxWindowsFileServerVolumeConf
 		}
 
 		if v := config.AuthorizationConfig; v != nil {
-			m["authorization_config"] = flattenFsxWinVolumeAuthorizationConfig(v)
+			m["authorization_config"] = flattenFSxWinVolumeAuthorizationConfig(v)
 		}
 	}
 
@@ -1170,7 +1175,7 @@ func flattenFsxWinVolumeConfiguration(config *ecs.FSxWindowsFileServerVolumeConf
 	return items
 }
 
-func flattenFsxWinVolumeAuthorizationConfig(config *ecs.FSxWindowsFileServerAuthorizationConfig) []interface{} {
+func flattenFSxWinVolumeAuthorizationConfig(config *ecs.FSxWindowsFileServerAuthorizationConfig) []interface{} {
 	var items []interface{}
 	m := make(map[string]interface{})
 	if config != nil {
@@ -1201,6 +1206,12 @@ func expandContainerDefinitions(rawDefinitions string) ([]*ecs.ContainerDefiniti
 	err := json.Unmarshal([]byte(rawDefinitions), &definitions)
 	if err != nil {
 		return nil, fmt.Errorf("Error decoding JSON: %s", err)
+	}
+
+	for i, c := range definitions {
+		if c == nil {
+			return nil, fmt.Errorf("invalid container definition supplied at index (%d)", i)
+		}
 	}
 
 	return definitions, nil

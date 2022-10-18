@@ -2,13 +2,27 @@ package organizations_test
 
 import (
 	"testing"
+
+	"github.com/aws/aws-sdk-go/service/organizations"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
+
+func init() {
+	acctest.RegisterServiceErrorCheckFunc(organizations.EndpointsID, testAccErrorCheckSkip)
+}
+
+func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
+	return acctest.ErrorCheckSkipMessagesContaining(t,
+		"MASTER_ACCOUNT_NOT_GOVCLOUD_ENABLED",
+	)
+}
 
 func TestAccOrganizations_serial(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
 		"Organization": {
 			"basic":                      testAccOrganization_basic,
-			"AwsServiceAccessPrincipals": testAccOrganization_AwsServiceAccessPrincipals,
+			"AwsServiceAccessPrincipals": testAccOrganization_serviceAccessPrincipals,
 			"EnabledPolicyTypes":         testAccOrganization_EnabledPolicyTypes,
 			"FeatureSet_Basic":           testAccOrganization_FeatureSet,
 			"FeatureSet_Update":          testAccOrganization_FeatureSetUpdate,
@@ -16,9 +30,11 @@ func TestAccOrganizations_serial(t *testing.T) {
 			"DataSource":                 testAccOrganizationDataSource_basic,
 		},
 		"Account": {
-			"basic":    testAccAccount_basic,
-			"ParentId": testAccAccount_ParentID,
-			"Tags":     testAccAccount_Tags,
+			"basic":           testAccAccount_basic,
+			"CloseOnDeletion": testAccAccount_CloseOnDeletion,
+			"ParentId":        testAccAccount_ParentID,
+			"Tags":            testAccAccount_Tags,
+			"GovCloud":        testAccAccount_govCloud,
 		},
 		"OrganizationalUnit": {
 			"basic":      testAccOrganizationalUnit_basic,
@@ -39,12 +55,13 @@ func TestAccOrganizations_serial(t *testing.T) {
 			"Type_Backup":            testAccPolicy_type_Backup,
 			"Type_SCP":               testAccPolicy_type_SCP,
 			"Type_Tag":               testAccPolicy_type_Tag,
-			"ImportAwsManagedPolicy": testAccPolicy_ImportAwsManagedPolicy,
+			"ImportAwsManagedPolicy": testAccPolicy_importManagedPolicy,
 		},
 		"PolicyAttachment": {
 			"Account":            testAccPolicyAttachment_Account,
 			"OrganizationalUnit": testAccPolicyAttachment_OrganizationalUnit,
 			"Root":               testAccPolicyAttachment_Root,
+			"disappears":         testAccPolicyAttachment_disappears,
 		},
 		"DelegatedAdministrator": {
 			"basic":      testAccDelegatedAdministrator_basic,

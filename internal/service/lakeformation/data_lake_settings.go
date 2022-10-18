@@ -6,14 +6,13 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/lakeformation"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
@@ -136,14 +135,14 @@ func resourceDataLakeSettingsCreate(d *schema.ResourceData, meta interface{}) er
 	input.DataLakeSettings = settings
 
 	var output *lakeformation.PutDataLakeSettingsOutput
-	err := resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(IAMPropagationTimeout, func() *resource.RetryError {
 		var err error
 		output, err = conn.PutDataLakeSettings(input)
 		if err != nil {
 			if tfawserr.ErrMessageContains(err, lakeformation.ErrCodeInvalidInputException, "Invalid principal") {
 				return resource.RetryableError(err)
 			}
-			if tfawserr.ErrMessageContains(err, lakeformation.ErrCodeConcurrentModificationException, "") {
+			if tfawserr.ErrCodeEquals(err, lakeformation.ErrCodeConcurrentModificationException) {
 				return resource.RetryableError(err)
 			}
 

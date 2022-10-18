@@ -105,7 +105,7 @@ func statusTrigger(conn *glue.Glue, triggerName string) resource.StateRefreshFun
 	}
 }
 
-func statusGlueDevEndpoint(conn *glue.Glue, name string) resource.StateRefreshFunc {
+func statusDevEndpoint(conn *glue.Glue, name string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindDevEndpointByName(conn, name)
 
@@ -121,7 +121,7 @@ func statusGlueDevEndpoint(conn *glue.Glue, name string) resource.StateRefreshFu
 	}
 }
 
-func statusGluePartitionIndex(conn *glue.Glue, id string) resource.StateRefreshFunc {
+func statusPartitionIndex(conn *glue.Glue, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindPartitionIndexByName(conn, id)
 

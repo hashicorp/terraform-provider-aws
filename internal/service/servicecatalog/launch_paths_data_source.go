@@ -15,6 +15,10 @@ func DataSourceLaunchPaths() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourceLaunchPathsRead,
 
+		Timeouts: &schema.ResourceTimeout{
+			Read: schema.DefaultTimeout(LaunchPathsReadyTimeout),
+		},
+
 		Schema: map[string]*schema.Schema{
 			"accept_language": {
 				Type:         schema.TypeString,
@@ -67,13 +71,13 @@ func dataSourceLaunchPathsRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ServiceCatalogConn
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	summaries, err := WaitLaunchPathsReady(conn, d.Get("accept_language").(string), d.Get("product_id").(string))
+	summaries, err := WaitLaunchPathsReady(conn, d.Get("accept_language").(string), d.Get("product_id").(string), d.Timeout(schema.TimeoutRead))
 
 	if err != nil {
 		return fmt.Errorf("error describing Service Catalog Launch Paths: %w", err)
 	}
 
-	if err := d.Set("summaries", flattenServiceCatalogLaunchPathSummaries(summaries, ignoreTagsConfig)); err != nil {
+	if err := d.Set("summaries", flattenLaunchPathSummaries(summaries, ignoreTagsConfig)); err != nil {
 		return fmt.Errorf("error setting summaries: %w", err)
 	}
 
@@ -82,7 +86,7 @@ func dataSourceLaunchPathsRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func flattenServiceCatalogLaunchPathSummary(apiObject *servicecatalog.LaunchPathSummary, ignoreTagsConfig *tftags.IgnoreConfig) map[string]interface{} {
+func flattenLaunchPathSummary(apiObject *servicecatalog.LaunchPathSummary, ignoreTagsConfig *tftags.IgnoreConfig) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -90,7 +94,7 @@ func flattenServiceCatalogLaunchPathSummary(apiObject *servicecatalog.LaunchPath
 	tfMap := map[string]interface{}{}
 
 	if len(apiObject.ConstraintSummaries) > 0 {
-		tfMap["constraint_summaries"] = flattenServiceCatalogConstraintSummaries(apiObject.ConstraintSummaries)
+		tfMap["constraint_summaries"] = flattenConstraintSummaries(apiObject.ConstraintSummaries)
 	}
 
 	if apiObject.Id != nil {
@@ -108,7 +112,7 @@ func flattenServiceCatalogLaunchPathSummary(apiObject *servicecatalog.LaunchPath
 	return tfMap
 }
 
-func flattenServiceCatalogLaunchPathSummaries(apiObjects []*servicecatalog.LaunchPathSummary, ignoreTagsConfig *tftags.IgnoreConfig) []interface{} {
+func flattenLaunchPathSummaries(apiObjects []*servicecatalog.LaunchPathSummary, ignoreTagsConfig *tftags.IgnoreConfig) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -120,13 +124,13 @@ func flattenServiceCatalogLaunchPathSummaries(apiObjects []*servicecatalog.Launc
 			continue
 		}
 
-		tfList = append(tfList, flattenServiceCatalogLaunchPathSummary(apiObject, ignoreTagsConfig))
+		tfList = append(tfList, flattenLaunchPathSummary(apiObject, ignoreTagsConfig))
 	}
 
 	return tfList
 }
 
-func flattenServiceCatalogConstraintSummary(apiObject *servicecatalog.ConstraintSummary) map[string]interface{} {
+func flattenConstraintSummary(apiObject *servicecatalog.ConstraintSummary) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -144,7 +148,7 @@ func flattenServiceCatalogConstraintSummary(apiObject *servicecatalog.Constraint
 	return tfMap
 }
 
-func flattenServiceCatalogConstraintSummaries(apiObjects []*servicecatalog.ConstraintSummary) []interface{} {
+func flattenConstraintSummaries(apiObjects []*servicecatalog.ConstraintSummary) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -156,7 +160,7 @@ func flattenServiceCatalogConstraintSummaries(apiObjects []*servicecatalog.Const
 			continue
 		}
 
-		tfList = append(tfList, flattenServiceCatalogConstraintSummary(apiObject))
+		tfList = append(tfList, flattenConstraintSummary(apiObject))
 	}
 
 	return tfList

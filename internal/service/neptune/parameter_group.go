@@ -8,7 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/neptune"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -124,7 +124,7 @@ func resourceParameterGroupRead(d *schema.ResourceData, meta interface{}) error 
 
 	describeResp, err := conn.DescribeDBParameterGroups(&describeOpts)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, neptune.ErrCodeDBParameterGroupNotFoundFault, "") {
+		if tfawserr.ErrCodeEquals(err, neptune.ErrCodeDBParameterGroupNotFoundFault) {
 			log.Printf("[WARN] Neptune Parameter Group (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -164,24 +164,24 @@ func resourceParameterGroupRead(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	if err := d.Set("parameter", flattenParameters(parameters)); err != nil {
-		return fmt.Errorf("error setting parameter: %s", err)
+		return fmt.Errorf("setting parameter: %s", err)
 	}
 
 	tags, err := ListTags(conn, d.Get("arn").(string))
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for Neptune Parameter Group (%s): %s", d.Get("arn").(string), err)
+		return fmt.Errorf("listing tags for Neptune Parameter Group (%s): %s", d.Get("arn").(string), err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return fmt.Errorf("setting tags: %w", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return fmt.Errorf("setting tags_all: %w", err)
 	}
 
 	return nil
@@ -265,7 +265,7 @@ func resourceParameterGroupUpdate(d *schema.ResourceData, meta interface{}) erro
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating Neptune Parameter Group (%s) tags: %s", d.Get("arn").(string), err)
+			return fmt.Errorf("updating Neptune Parameter Group (%s) tags: %s", d.Get("arn").(string), err)
 		}
 	}
 
@@ -281,10 +281,10 @@ func resourceParameterGroupDelete(d *schema.ResourceData, meta interface{}) erro
 	err := resource.Retry(3*time.Minute, func() *resource.RetryError {
 		_, err := conn.DeleteDBParameterGroup(&deleteOpts)
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, neptune.ErrCodeDBParameterGroupNotFoundFault, "") {
+			if tfawserr.ErrCodeEquals(err, neptune.ErrCodeDBParameterGroupNotFoundFault) {
 				return nil
 			}
-			if tfawserr.ErrMessageContains(err, neptune.ErrCodeInvalidDBParameterGroupStateFault, "") {
+			if tfawserr.ErrCodeEquals(err, neptune.ErrCodeInvalidDBParameterGroupStateFault) {
 				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(err)
@@ -296,7 +296,7 @@ func resourceParameterGroupDelete(d *schema.ResourceData, meta interface{}) erro
 		_, err = conn.DeleteDBParameterGroup(&deleteOpts)
 	}
 
-	if tfawserr.ErrMessageContains(err, neptune.ErrCodeDBParameterGroupNotFoundFault, "") {
+	if tfawserr.ErrCodeEquals(err, neptune.ErrCodeDBParameterGroupNotFoundFault) {
 		return nil
 	}
 

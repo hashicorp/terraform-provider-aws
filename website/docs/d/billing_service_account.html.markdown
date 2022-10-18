@@ -1,5 +1,5 @@
 ---
-subcategory: ""
+subcategory: "Meta Data Sources"
 layout: "aws"
 page_title: "AWS: aws_billing_service_account"
 description: |-
@@ -17,8 +17,15 @@ data "aws_billing_service_account" "main" {}
 
 resource "aws_s3_bucket" "billing_logs" {
   bucket = "my-billing-tf-test-bucket"
-  acl    = "private"
+}
 
+resource "aws_s3_bucket_acl" "billing_logs_acl" {
+  bucket = aws_s3_bucket.billing_logs.id
+  acl    = "private"
+}
+
+resource "aws_s3_bucket_policy" "allow_billing_logging" {
+  bucket = aws_s3_bucket.billing_logs.id
   policy = <<POLICY
 {
   "Id": "Policy",
@@ -54,8 +61,7 @@ POLICY
 }
 ```
 
-
 ## Attributes Reference
 
-* `id` - The ID of the AWS billing service account.
-* `arn` - The ARN of the AWS billing service account.
+* `id` - ID of the AWS billing service account.
+* `arn` - ARN of the AWS billing service account.

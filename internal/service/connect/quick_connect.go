@@ -8,12 +8,13 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/connect"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceQuickConnect() *schema.Resource {
@@ -25,6 +26,7 @@ func ResourceQuickConnect() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
+		CustomizeDiff: verify.SetTagsDiff,
 		Schema: map[string]*schema.Schema{
 			"description": {
 				Type:         schema.TypeString,
@@ -186,7 +188,7 @@ func resourceQuickConnectRead(ctx context.Context, d *schema.ResourceData, meta 
 		QuickConnectId: aws.String(quickConnectID),
 	})
 
-	if !d.IsNewResource() && tfawserr.ErrMessageContains(err, connect.ErrCodeResourceNotFoundException, "") {
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, connect.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] Connect Quick Connect (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -273,7 +275,7 @@ func resourceQuickConnectUpdate(ctx context.Context, d *schema.ResourceData, met
 	// updates to tags
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return diag.FromErr(fmt.Errorf("error updating tags: %w", err))
 		}
 	}

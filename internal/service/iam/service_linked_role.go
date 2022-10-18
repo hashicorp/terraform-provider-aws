@@ -10,7 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/iam"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -112,8 +112,16 @@ func resourceServiceLinkedRoleCreate(d *schema.ResourceData, meta interface{}) e
 			return err
 		}
 
-		if err := roleUpdateTags(conn, roleName, nil, tags); err != nil {
-			return fmt.Errorf("error updating IAM Service Linked Role (%s) tags: %w", d.Id(), err)
+		err = roleUpdateTags(conn, roleName, nil, tags)
+
+		// If default tags only, log and continue. Otherwise, error.
+		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.ErrorISOUnsupported(conn.PartitionID, err) {
+			log.Printf("[WARN] failed adding tags after create for IAM Service Linked Role (%s): %s", d.Id(), err)
+			return resourceServiceLinkedRoleRead(d, meta)
+		}
+
+		if err != nil {
+			return fmt.Errorf("failed adding tags after create for IAM Service Linked Role (%s): %w", d.Id(), err)
 		}
 	}
 
@@ -131,7 +139,7 @@ func resourceServiceLinkedRoleRead(d *schema.ResourceData, meta interface{}) err
 		return err
 	}
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(PropagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(propagationTimeout, func() (interface{}, error) {
 		return FindRoleByName(conn, roleName)
 	}, d.IsNewResource())
 
@@ -196,8 +204,16 @@ func resourceServiceLinkedRoleUpdate(d *schema.ResourceData, meta interface{}) e
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := roleUpdateTags(conn, roleName, o, n); err != nil {
-			return fmt.Errorf("error updating IAM Service Linked Role (%s) tags: %w", d.Id(), err)
+		err := roleUpdateTags(conn, roleName, o, n)
+
+		// If default tags only, log and continue. Otherwise, error.
+		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.ErrorISOUnsupported(conn.PartitionID, err) {
+			log.Printf("[WARN] failed updating tags for IAM Service Linked Role (%s): %s", d.Id(), err)
+			return resourceServiceLinkedRoleRead(d, meta)
+		}
+
+		if err != nil {
+			return fmt.Errorf("failed updating tags for IAM Service Linked Role (%s): %w", d.Id(), err)
 		}
 	}
 

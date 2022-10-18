@@ -9,7 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudtrail"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -68,7 +68,7 @@ func sweeps(region string) error {
 			_, err = conn.DeleteTrail(&cloudtrail.DeleteTrailInput{
 				Name: aws.String(name),
 			})
-			if tfawserr.ErrMessageContains(err, cloudtrail.ErrCodeTrailNotFoundException, "") {
+			if tfawserr.ErrCodeEquals(err, cloudtrail.ErrCodeTrailNotFoundException) {
 				continue
 			}
 			if err != nil {

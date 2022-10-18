@@ -21,14 +21,14 @@ func TestAccDirectConnectConnection_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, directconnect.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckConnectionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, directconnect.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDxConnectionConfigBasic(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Config: testAccConnectionConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckConnectionExists(resourceName, &connection),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "directconnect", regexp.MustCompile(`dxcon/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "bandwidth", "1Gbps"),
@@ -37,6 +37,7 @@ func TestAccDirectConnectConnection_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "provider_name", ""),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "vlan_id", ""),
 				),
 			},
 			// Test import.
@@ -55,13 +56,13 @@ func TestAccDirectConnectConnection_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, directconnect.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckConnectionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, directconnect.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDxConnectionConfigBasic(rName),
+				Config: testAccConnectionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConnectionExists(resourceName, &connection),
 					acctest.CheckResourceDisappears(acctest.Provider, tfdirectconnect.ResourceConnection(), resourceName),
@@ -78,13 +79,13 @@ func TestAccDirectConnectConnection_providerName(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, directconnect.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckConnectionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, directconnect.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDxConnectionConfigProviderName(rName),
+				Config: testAccConnectionConfig_providerName(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConnectionExists(resourceName, &connection),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "directconnect", regexp.MustCompile(`dxcon/.+`)),
@@ -112,13 +113,13 @@ func TestAccDirectConnectConnection_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, directconnect.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckConnectionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, directconnect.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDxConnectionConfigTags1(rName, "key1", "value1"),
+				Config: testAccConnectionConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConnectionExists(resourceName, &connection),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -133,7 +134,7 @@ func TestAccDirectConnectConnection_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDxConnectionConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccConnectionConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConnectionExists(resourceName, &connection),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -143,7 +144,7 @@ func TestAccDirectConnectConnection_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccDxConnectionConfigTags1(rName, "key2", "value2"),
+				Config: testAccConnectionConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConnectionExists(resourceName, &connection),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -204,7 +205,7 @@ func testAccCheckConnectionExists(name string, v *directconnect.Connection) reso
 	}
 }
 
-func testAccDxConnectionConfigBasic(rName string) string {
+func testAccConnectionConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 data "aws_dx_locations" "test" {}
 
@@ -221,7 +222,7 @@ resource "aws_dx_connection" "test" {
 `, rName)
 }
 
-func testAccDxConnectionConfigProviderName(rName string) string {
+func testAccConnectionConfig_providerName(rName string) string {
 	return fmt.Sprintf(`
 data "aws_dx_locations" "test" {}
 
@@ -244,7 +245,7 @@ resource "aws_dx_connection" "test" {
 `, rName)
 }
 
-func testAccDxConnectionConfigTags1(rName, tagKey1, tagValue1 string) string {
+func testAccConnectionConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 data "aws_dx_locations" "test" {}
 
@@ -265,7 +266,7 @@ resource "aws_dx_connection" "test" {
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccDxConnectionConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccConnectionConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 data "aws_dx_locations" "test" {}
 

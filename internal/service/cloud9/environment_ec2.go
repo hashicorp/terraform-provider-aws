@@ -6,12 +6,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloud9"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -29,15 +28,9 @@ func ResourceEnvironmentEC2() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringLenBetween(1, 60),
-			},
-			"instance_type": {
+			"arn": {
 				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Computed: true,
 			},
 			"automatic_stop_time_minutes": {
 				Type:         schema.TypeInt,
@@ -45,10 +38,40 @@ func ResourceEnvironmentEC2() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.IntAtMost(20160),
 			},
+			"connection_type": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				Default:      cloud9.ConnectionTypeConnectSsh,
+				ValidateFunc: validation.StringInSlice(cloud9.ConnectionType_Values(), false),
+			},
 			"description": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(1, 200),
+			},
+			"image_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+				ValidateFunc: validation.StringInSlice([]string{
+					"amazonlinux-1-x86_64",
+					"amazonlinux-2-x86_64",
+					"ubuntu-18.04-x86_64",
+					"resolve:ssm:/aws/service/cloud9/amis/amazonlinux-1-x86_64",
+					"resolve:ssm:/aws/service/cloud9/amis/amazonlinux-2-x86_64",
+					"resolve:ssm:/aws/service/cloud9/amis/ubuntu-18.04-x86_64",
+				}, false),
+			},
+			"instance_type": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
+			"name": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringLenBetween(1, 60),
 			},
 			"owner_arn": {
 				Type:         schema.TypeString,
@@ -62,16 +85,12 @@ func ResourceEnvironmentEC2() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 			"type": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -86,6 +105,7 @@ func resourceEnvironmentEC2Create(d *schema.ResourceData, meta interface{}) erro
 	name := d.Get("name").(string)
 	input := &cloud9.CreateEnvironmentEC2Input{
 		ClientRequestToken: aws.String(resource.UniqueId()),
+		ConnectionType:     aws.String(d.Get("connection_type").(string)),
 		InstanceType:       aws.String(d.Get("instance_type").(string)),
 		Name:               aws.String(name),
 		Tags:               Tags(tags.IgnoreAWS()),
@@ -97,6 +117,9 @@ func resourceEnvironmentEC2Create(d *schema.ResourceData, meta interface{}) erro
 	if v, ok := d.GetOk("description"); ok {
 		input.Description = aws.String(v.(string))
 	}
+	if v, ok := d.GetOk("image_id"); ok {
+		input.ImageId = aws.String(v.(string))
+	}
 	if v, ok := d.GetOk("owner_arn"); ok {
 		input.OwnerArn = aws.String(v.(string))
 	}
@@ -106,16 +129,19 @@ func resourceEnvironmentEC2Create(d *schema.ResourceData, meta interface{}) erro
 
 	log.Printf("[INFO] Creating Cloud9 EC2 Environment: %s", input)
 	var output *cloud9.CreateEnvironmentEC2Output
-	err := resource.Retry(tfiam.PropagationTimeout, func() *resource.RetryError {
+	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
 		var err error
 		output, err = conn.CreateEnvironmentEC2(input)
+
 		if err != nil {
 			// NotFoundException: User arn:aws:iam::*******:user/****** does not exist.
 			if tfawserr.ErrMessageContains(err, cloud9.ErrCodeNotFoundException, "User") {
 				return resource.RetryableError(err)
 			}
+
 			return resource.NonRetryableError(err)
 		}
+
 		return nil
 	})
 
@@ -157,6 +183,7 @@ func resourceEnvironmentEC2Read(d *schema.ResourceData, meta interface{}) error 
 
 	arn := aws.StringValue(env.Arn)
 	d.Set("arn", arn)
+	d.Set("connection_type", env.ConnectionType)
 	d.Set("description", env.Description)
 	d.Set("name", env.Name)
 	d.Set("owner_arn", env.OwnerArn)

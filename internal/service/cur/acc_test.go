@@ -8,7 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/costandusagereportservice"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -27,26 +27,32 @@ var testAccCurRegion string
 // This Provider can be used in testing code for API calls without requiring
 // the use of saving and referencing specific ProviderFactories instances.
 //
-// testAccPreCheckCur(t) must be called before using this provider instance.
+// testAccPreCheck(t) must be called before using this provider instance.
 var testAccProviderCur *schema.Provider
 
 // testAccProviderCurConfigure ensures the provider is only configured once
 var testAccProviderCurConfigure sync.Once
 
-// testAccPreCheckCur verifies AWS credentials and that Cost and Usage Reporting is supported
-func testAccPreCheckCur(t *testing.T) {
+// testAccPreCheck verifies AWS credentials and that Cost and Usage Reporting is supported
+func testAccPreCheck(t *testing.T) {
 	acctest.PreCheckPartitionHasService(costandusagereportservice.ServiceName, t)
 
 	// Since we are outside the scope of the Terraform configuration we must
 	// call Configure() to properly initialize the provider configuration.
 	testAccProviderCurConfigure.Do(func() {
-		testAccProviderCur = provider.Provider()
+		ctx := context.Background()
+		var err error
+		testAccProviderCur, err = provider.New(ctx)
 
-		config := map[string]interface{}{
-			"region": testAccGetCurRegion(),
+		if err != nil {
+			t.Fatal(err)
 		}
 
-		diags := testAccProviderCur.Configure(context.Background(), terraform.NewResourceConfigRaw(config))
+		config := map[string]interface{}{
+			"region": testAccGetRegion(),
+		}
+
+		diags := testAccProviderCur.Configure(ctx, terraform.NewResourceConfigRaw(config))
 
 		if diags != nil && diags.HasError() {
 			for _, d := range diags {
@@ -74,16 +80,16 @@ func testAccPreCheckCur(t *testing.T) {
 	}
 }
 
-// testAccCurRegionProviderConfig is the Terraform provider configuration for Cost and Usage Reporting region testing
+// testAccRegionProviderConfig is the Terraform provider configuration for Cost and Usage Reporting region testing
 //
 // Testing Cost and Usage Reporting assumes no other provider configurations
 // are necessary and overwrites the "aws" provider configuration.
-func testAccCurRegionProviderConfig() string {
-	return acctest.ConfigRegionalProvider(testAccGetCurRegion())
+func testAccRegionProviderConfig() string {
+	return acctest.ConfigRegionalProvider(testAccGetRegion())
 }
 
-// testAccGetCurRegion returns the Cost and Usage Reporting region for testing
-func testAccGetCurRegion() string {
+// testAccGetRegion returns the Cost and Usage Reporting region for testing
+func testAccGetRegion() string {
 	if testAccCurRegion != "" {
 		return testAccCurRegion
 	}

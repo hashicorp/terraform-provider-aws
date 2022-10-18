@@ -5,7 +5,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/mediaconvert"
 )
 
-func expandMediaConvertReservationPlanSettings(config map[string]interface{}) *mediaconvert.ReservationPlanSettings {
+func expandReservationPlanSettings(config map[string]interface{}) *mediaconvert.ReservationPlanSettings {
 	reservationPlanSettings := &mediaconvert.ReservationPlanSettings{}
 
 	if v, ok := config["commitment"]; ok {
@@ -23,7 +23,7 @@ func expandMediaConvertReservationPlanSettings(config map[string]interface{}) *m
 	return reservationPlanSettings
 }
 
-func flattenMediaConvertReservationPlan(reservationPlan *mediaconvert.ReservationPlan) []interface{} {
+func flattenReservationPlan(reservationPlan *mediaconvert.ReservationPlan) []interface{} {
 	if reservationPlan == nil {
 		return []interface{}{}
 	}

@@ -8,10 +8,10 @@ import (
 
 const (
 	// See https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/AccessLogs.html#AccessLogsBucketAndFileOwnership.
-	defaultCloudFrontLogDeliveryCanonicalUserId = "c4c1ede66af53448b93c283ce9448c4ba468c9432aa01d700d3878632f77d2d0"
+	defaultLogDeliveryCanonicalUserID = "c4c1ede66af53448b93c283ce9448c4ba468c9432aa01d700d3878632f77d2d0"
 
 	// See https://docs.amazonaws.cn/AmazonCloudFront/latest/DeveloperGuide/AccessLogs.html#AccessLogsBucketAndFileOwnership.
-	cnCloudFrontLogDeliveryCanonicalUserId = "a52cb28745c0c06e84ec548334e44bfa7fc2a85c54af20cd59e4969344b7af56"
+	cnLogDeliveryCanonicalUserID = "a52cb28745c0c06e84ec548334e44bfa7fc2a85c54af20cd59e4969344b7af56"
 )
 
 func DataSourceLogDeliveryCanonicalUserID() *schema.Resource {
@@ -28,7 +28,7 @@ func DataSourceLogDeliveryCanonicalUserID() *schema.Resource {
 }
 
 func dataSourceLogDeliveryCanonicalUserIDRead(d *schema.ResourceData, meta interface{}) error {
-	canonicalId := defaultCloudFrontLogDeliveryCanonicalUserId
+	canonicalId := defaultLogDeliveryCanonicalUserID
 
 	region := meta.(*conns.AWSClient).Region
 	if v, ok := d.GetOk("region"); ok {
@@ -36,7 +36,7 @@ func dataSourceLogDeliveryCanonicalUserIDRead(d *schema.ResourceData, meta inter
 	}
 
 	if v, ok := endpoints.PartitionForRegion(endpoints.DefaultPartitions(), region); ok && v.ID() == endpoints.AwsCnPartitionID {
-		canonicalId = cnCloudFrontLogDeliveryCanonicalUserId
+		canonicalId = cnLogDeliveryCanonicalUserID
 	}
 
 	d.SetId(canonicalId)

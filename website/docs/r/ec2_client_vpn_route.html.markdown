@@ -1,5 +1,5 @@
 ---
-subcategory: "EC2"
+subcategory: "VPN (Client)"
 layout: "aws"
 page_title: "AWS: aws_ec2_client_vpn_route"
 description: |-
@@ -47,7 +47,7 @@ The following arguments are supported:
 
 * `client_vpn_endpoint_id` - (Required) The ID of the Client VPN endpoint.
 * `destination_cidr_block` - (Required) The IPv4 address range, in CIDR notation, of the route destination.
-* `description` - (Optional) A brief description of the authorization rule.
+* `description` - (Optional) A brief description of the route.
 * `target_vpc_subnet_id` - (Required) The ID of the Subnet to route the traffic through. It must already be attached to the Client VPN.
 
 ## Attributes Reference
@@ -57,6 +57,13 @@ In addition to all arguments above, the following attributes are exported:
 * `id` - The ID of the Client VPN endpoint.
 * `origin` - Indicates how the Client VPN route was added. Will be `add-route` for routes created by this resource.
 * `type` - The type of the route.
+
+## Timeouts
+
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+
+- `create` - (Default `1m`)
+- `delete` - (Default `1m`)
 
 ## Import
 

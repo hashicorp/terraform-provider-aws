@@ -8,7 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -139,11 +139,11 @@ func resourceWorkteamCreate(d *schema.ResourceData, meta interface{}) error {
 		WorkteamName:      aws.String(name),
 		WorkforceName:     aws.String(d.Get("workforce_name").(string)),
 		Description:       aws.String(d.Get("description").(string)),
-		MemberDefinitions: expandSagemakerWorkteamMemberDefinition(d.Get("member_definition").([]interface{})),
+		MemberDefinitions: expandWorkteamMemberDefinition(d.Get("member_definition").([]interface{})),
 	}
 
 	if v, ok := d.GetOk("notification_configuration"); ok {
-		input.NotificationConfiguration = expandSagemakerWorkteamNotificationConfiguration(v.([]interface{}))
+		input.NotificationConfiguration = expandWorkteamNotificationConfiguration(v.([]interface{}))
 	}
 
 	if len(tags) > 0 {
@@ -156,7 +156,7 @@ func resourceWorkteamCreate(d *schema.ResourceData, meta interface{}) error {
 	}, "ValidationException")
 
 	if err != nil {
-		return fmt.Errorf("error creating SageMaker Workteam (%s): %w", name, err)
+		return fmt.Errorf("creating SageMaker Workteam (%s): %w", name, err)
 	}
 
 	d.SetId(name)
@@ -178,7 +178,7 @@ func resourceWorkteamRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading SageMaker Workteam (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading SageMaker Workteam (%s): %w", d.Id(), err)
 	}
 
 	arn := aws.StringValue(workteam.WorkteamArn)
@@ -187,29 +187,29 @@ func resourceWorkteamRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("description", workteam.Description)
 	d.Set("workteam_name", workteam.WorkteamName)
 
-	if err := d.Set("member_definition", flattenSagemakerWorkteamMemberDefinition(workteam.MemberDefinitions)); err != nil {
-		return fmt.Errorf("error setting member_definition: %w", err)
+	if err := d.Set("member_definition", flattenWorkteamMemberDefinition(workteam.MemberDefinitions)); err != nil {
+		return fmt.Errorf("setting member_definition: %w", err)
 	}
 
-	if err := d.Set("notification_configuration", flattenSagemakerWorkteamNotificationConfiguration(workteam.NotificationConfiguration)); err != nil {
-		return fmt.Errorf("error setting notification_configuration: %w", err)
+	if err := d.Set("notification_configuration", flattenWorkteamNotificationConfiguration(workteam.NotificationConfiguration)); err != nil {
+		return fmt.Errorf("setting notification_configuration: %w", err)
 	}
 
 	tags, err := ListTags(conn, arn)
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for SageMaker Workteam (%s): %w", d.Id(), err)
+		return fmt.Errorf("listing tags for SageMaker Workteam (%s): %w", d.Id(), err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return fmt.Errorf("setting tags: %w", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return fmt.Errorf("setting tags_all: %w", err)
 	}
 
 	return nil
@@ -221,7 +221,7 @@ func resourceWorkteamUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &sagemaker.UpdateWorkteamInput{
 			WorkteamName:      aws.String(d.Id()),
-			MemberDefinitions: expandSagemakerWorkteamMemberDefinition(d.Get("member_definition").([]interface{})),
+			MemberDefinitions: expandWorkteamMemberDefinition(d.Get("member_definition").([]interface{})),
 		}
 
 		if d.HasChange("description") {
@@ -229,14 +229,14 @@ func resourceWorkteamUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if d.HasChange("notification_configuration") {
-			input.NotificationConfiguration = expandSagemakerWorkteamNotificationConfiguration(d.Get("notification_configuration").([]interface{}))
+			input.NotificationConfiguration = expandWorkteamNotificationConfiguration(d.Get("notification_configuration").([]interface{}))
 		}
 
 		log.Printf("[DEBUG] Updating SageMaker Workteam: %s", input)
 		_, err := conn.UpdateWorkteam(input)
 
 		if err != nil {
-			return fmt.Errorf("error updating SageMaker Workteam (%s): %w", d.Id(), err)
+			return fmt.Errorf("updating SageMaker Workteam (%s): %w", d.Id(), err)
 		}
 	}
 
@@ -244,7 +244,7 @@ func resourceWorkteamUpdate(d *schema.ResourceData, meta interface{}) error {
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating SageMaker Workteam (%s) tags: %w", d.Id(), err)
+			return fmt.Errorf("updating SageMaker Workteam (%s) tags: %w", d.Id(), err)
 		}
 	}
 
@@ -264,13 +264,13 @@ func resourceWorkteamDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting SageMaker Workteam (%s): %w", d.Id(), err)
+		return fmt.Errorf("deleting SageMaker Workteam (%s): %w", d.Id(), err)
 	}
 
 	return nil
 }
 
-func expandSagemakerWorkteamMemberDefinition(l []interface{}) []*sagemaker.MemberDefinition {
+func expandWorkteamMemberDefinition(l []interface{}) []*sagemaker.MemberDefinition {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -282,11 +282,11 @@ func expandSagemakerWorkteamMemberDefinition(l []interface{}) []*sagemaker.Membe
 		member := &sagemaker.MemberDefinition{}
 
 		if v, ok := memRaw["cognito_member_definition"].([]interface{}); ok && len(v) > 0 {
-			member.CognitoMemberDefinition = expandSagemakerWorkteamCognitoMemberDefinition(v)
+			member.CognitoMemberDefinition = expandWorkteamCognitoMemberDefinition(v)
 		}
 
 		if v, ok := memRaw["oidc_member_definition"].([]interface{}); ok && len(v) > 0 {
-			member.OidcMemberDefinition = expandSagemakerWorkteamOidcMemberDefinition(v)
+			member.OidcMemberDefinition = expandWorkteamOIDCMemberDefinition(v)
 		}
 
 		members = append(members, member)
@@ -295,18 +295,18 @@ func expandSagemakerWorkteamMemberDefinition(l []interface{}) []*sagemaker.Membe
 	return members
 }
 
-func flattenSagemakerWorkteamMemberDefinition(config []*sagemaker.MemberDefinition) []map[string]interface{} {
+func flattenWorkteamMemberDefinition(config []*sagemaker.MemberDefinition) []map[string]interface{} {
 	members := make([]map[string]interface{}, 0, len(config))
 
 	for _, raw := range config {
 		member := make(map[string]interface{})
 
 		if raw.CognitoMemberDefinition != nil {
-			member["cognito_member_definition"] = flattenSagemakerWorkteamCognitoMemberDefinition(raw.CognitoMemberDefinition)
+			member["cognito_member_definition"] = flattenWorkteamCognitoMemberDefinition(raw.CognitoMemberDefinition)
 		}
 
 		if raw.OidcMemberDefinition != nil {
-			member["oidc_member_definition"] = flattenSagemakerWorkteamOidcMemberDefinition(raw.OidcMemberDefinition)
+			member["oidc_member_definition"] = flattenWorkteamOIDCMemberDefinition(raw.OidcMemberDefinition)
 		}
 
 		members = append(members, member)
@@ -315,7 +315,7 @@ func flattenSagemakerWorkteamMemberDefinition(config []*sagemaker.MemberDefiniti
 	return members
 }
 
-func expandSagemakerWorkteamCognitoMemberDefinition(l []interface{}) *sagemaker.CognitoMemberDefinition {
+func expandWorkteamCognitoMemberDefinition(l []interface{}) *sagemaker.CognitoMemberDefinition {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -331,7 +331,7 @@ func expandSagemakerWorkteamCognitoMemberDefinition(l []interface{}) *sagemaker.
 	return config
 }
 
-func flattenSagemakerWorkteamCognitoMemberDefinition(config *sagemaker.CognitoMemberDefinition) []map[string]interface{} {
+func flattenWorkteamCognitoMemberDefinition(config *sagemaker.CognitoMemberDefinition) []map[string]interface{} {
 	if config == nil {
 		return []map[string]interface{}{}
 	}
@@ -345,7 +345,7 @@ func flattenSagemakerWorkteamCognitoMemberDefinition(config *sagemaker.CognitoMe
 	return []map[string]interface{}{m}
 }
 
-func expandSagemakerWorkteamOidcMemberDefinition(l []interface{}) *sagemaker.OidcMemberDefinition {
+func expandWorkteamOIDCMemberDefinition(l []interface{}) *sagemaker.OidcMemberDefinition {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -359,7 +359,7 @@ func expandSagemakerWorkteamOidcMemberDefinition(l []interface{}) *sagemaker.Oid
 	return config
 }
 
-func flattenSagemakerWorkteamOidcMemberDefinition(config *sagemaker.OidcMemberDefinition) []map[string]interface{} {
+func flattenWorkteamOIDCMemberDefinition(config *sagemaker.OidcMemberDefinition) []map[string]interface{} {
 	if config == nil {
 		return []map[string]interface{}{}
 	}
@@ -371,7 +371,7 @@ func flattenSagemakerWorkteamOidcMemberDefinition(config *sagemaker.OidcMemberDe
 	return []map[string]interface{}{m}
 }
 
-func expandSagemakerWorkteamNotificationConfiguration(l []interface{}) *sagemaker.NotificationConfiguration {
+func expandWorkteamNotificationConfiguration(l []interface{}) *sagemaker.NotificationConfiguration {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -389,7 +389,7 @@ func expandSagemakerWorkteamNotificationConfiguration(l []interface{}) *sagemake
 	return config
 }
 
-func flattenSagemakerWorkteamNotificationConfiguration(config *sagemaker.NotificationConfiguration) []map[string]interface{} {
+func flattenWorkteamNotificationConfiguration(config *sagemaker.NotificationConfiguration) []map[string]interface{} {
 	if config == nil {
 		return []map[string]interface{}{}
 	}

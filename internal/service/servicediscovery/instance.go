@@ -9,7 +9,6 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/servicediscovery"
-	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -17,14 +16,15 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceInstance() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceInstancePut,
-		Read:   resourceInstanceRead,
-		Update: resourceInstancePut,
-		Delete: resourceInstanceDelete,
+		CreateWithoutTimeout: resourceInstancePut,
+		ReadWithoutTimeout:   resourceInstanceRead,
+		UpdateWithoutTimeout: resourceInstancePut,
+		DeleteWithoutTimeout: resourceInstanceDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: resourceInstanceImport,
@@ -35,7 +35,7 @@ func ResourceInstance() *schema.Resource {
 				Type:     schema.TypeMap,
 				Required: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
-				ValidateDiagFunc: allDiagFunc(
+				ValidateDiagFunc: verify.ValidAllDiag(
 					validation.MapKeyLenBetween(1, 255),
 					validation.MapKeyMatch(regexp.MustCompile(`^[a-zA-Z0-9!-~]+$`), ""),
 					validation.MapValueLenBetween(0, 1024),
@@ -61,7 +61,7 @@ func ResourceInstance() *schema.Resource {
 	}
 }
 
-func resourceInstancePut(d *schema.ResourceData, meta interface{}) error {
+func resourceInstancePut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).ServiceDiscoveryConn
 
 	instanceID := d.Get("instance_id").(string)
@@ -73,27 +73,27 @@ func resourceInstancePut(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] Registering Service Discovery Instance: %s", input)
-	output, err := conn.RegisterInstance(input)
+	output, err := conn.RegisterInstanceWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error registering Service Discovery Instance (%s): %w", instanceID, err)
+		return diag.Errorf("registering Service Discovery Instance (%s): %s", instanceID, err)
 	}
 
 	d.SetId(instanceID)
 
 	if output != nil && output.OperationId != nil {
-		if _, err := WaitOperationSuccess(conn, aws.StringValue(output.OperationId)); err != nil {
-			return fmt.Errorf("error waiting for Service Discovery Instance (%s) register: %w", d.Id(), err)
+		if _, err := WaitOperationSuccess(ctx, conn, aws.StringValue(output.OperationId)); err != nil {
+			return diag.Errorf("waiting for Service Discovery Instance (%s) create: %s", d.Id(), err)
 		}
 	}
 
-	return resourceInstanceRead(d, meta)
+	return resourceInstanceRead(ctx, d, meta)
 }
 
-func resourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
+func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).ServiceDiscoveryConn
 
-	instance, err := FindInstanceByServiceIDAndInstanceID(conn, d.Get("service_id").(string), d.Get("instance_id").(string))
+	instance, err := FindInstanceByServiceIDAndInstanceID(ctx, conn, d.Get("service_id").(string), d.Get("instance_id").(string))
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Service Discovery Instance (%s) not found, removing from state", d.Id())
@@ -102,7 +102,7 @@ func resourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading Service Discovery Instance (%s): %w", d.Id(), err)
+		return diag.Errorf("reading Service Discovery Instance (%s): %s", d.Id(), err)
 	}
 
 	attributes := instance.Attributes
@@ -118,13 +118,13 @@ func resourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceInstanceDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceInstanceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).ServiceDiscoveryConn
 
-	err := deregisterServiceDiscoveryInstance(conn, d.Get("service_id").(string), d.Get("instance_id").(string))
+	err := deregisterInstance(ctx, conn, d.Get("service_id").(string), d.Get("instance_id").(string))
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	return nil
@@ -143,15 +143,4 @@ func resourceInstanceImport(ctx context.Context, d *schema.ResourceData, meta in
 	d.SetId(instanceID)
 
 	return []*schema.ResourceData{d}, nil
-}
-
-// https://github.com/hashicorp/terraform-plugin-sdk/issues/780.
-func allDiagFunc(validators ...schema.SchemaValidateDiagFunc) schema.SchemaValidateDiagFunc {
-	return func(i interface{}, k cty.Path) diag.Diagnostics {
-		var diags diag.Diagnostics
-		for _, validator := range validators {
-			diags = append(diags, validator(i, k)...)
-		}
-		return diags
-	}
 }

@@ -2,6 +2,7 @@ package elasticache
 
 import (
 	"fmt"
+	"log"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -9,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func DataSourceCluster() *schema.Resource {
@@ -74,6 +76,30 @@ func DataSourceCluster() *schema.Resource {
 				Set:      schema.HashString,
 			},
 
+			"log_delivery_configuration": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"destination_type": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"destination": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"log_format": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"log_type": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
 			"maintenance_window": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -181,6 +207,7 @@ func dataSourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("replication_group_id", cluster.ReplicationGroupId)
 	}
 
+	d.Set("log_delivery_configuration", flattenLogDeliveryConfigurations(cluster.LogDeliveryConfigurations))
 	d.Set("maintenance_window", cluster.PreferredMaintenanceWindow)
 	d.Set("snapshot_window", cluster.SnapshotWindow)
 	d.Set("snapshot_retention_limit", cluster.SnapshotRetentionLimit)
@@ -206,14 +233,19 @@ func dataSourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 
 	tags, err := ListTags(conn, aws.StringValue(cluster.ARN))
 
-	if err != nil {
-		return fmt.Errorf("error listing tags for Elasticache Cluster (%s): %w", d.Id(), err)
+	if err != nil && !verify.ErrorISOUnsupported(conn.PartitionID, err) {
+		return fmt.Errorf("error listing tags for ElastiCache Cluster (%s): %w", d.Id(), err)
 	}
 
-	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+	if err != nil {
+		log.Printf("[WARN] error listing tags for ElastiCache Cluster (%s): %s", d.Id(), err)
+	}
+
+	if tags != nil {
+		if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+			return fmt.Errorf("error setting tags: %w", err)
+		}
 	}
 
 	return nil
-
 }

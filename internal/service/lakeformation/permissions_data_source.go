@@ -84,6 +84,84 @@ func DataSourcePermissions() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
+			"lf_tag": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"key": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringLenBetween(1, 128),
+						},
+						"values": {
+							Type:     schema.TypeSet,
+							Required: true,
+							MinItems: 1,
+							MaxItems: 15,
+							Elem: &schema.Schema{
+								Type:         schema.TypeString,
+								ValidateFunc: validateLFTagValues(),
+							},
+							Set: schema.HashString,
+						},
+						"catalog_id": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+					},
+				},
+			},
+			"lf_tag_policy": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"catalog_id": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: verify.ValidAccountID,
+						},
+						"expression": {
+							Type:     schema.TypeList,
+							Required: true,
+							MinItems: 1,
+							MaxItems: 5,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"key": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.StringLenBetween(1, 128),
+									},
+									"values": {
+										Type:     schema.TypeSet,
+										Required: true,
+										MinItems: 1,
+										MaxItems: 15,
+										Elem: &schema.Schema{
+											Type:         schema.TypeString,
+											ValidateFunc: validateLFTagValues(),
+										},
+										Set: schema.HashString,
+									},
+								},
+							},
+						},
+						"resource_type": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringInSlice(lakeformation.ResourceType_Values(), false),
+						},
+					},
+				},
+			},
 			"principal": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -195,6 +273,14 @@ func dataSourcePermissionsRead(d *schema.ResourceData, meta interface{}) error {
 		input.Resource.Database = ExpandDatabaseResource(v.([]interface{})[0].(map[string]interface{}))
 	}
 
+	if v, ok := d.GetOk("lf_tag"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.Resource.LFTag = ExpandLFTagKeyResource(v.([]interface{})[0].(map[string]interface{}))
+	}
+
+	if v, ok := d.GetOk("lf_tag_policy"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.Resource.LFTagPolicy = ExpandLFTagPolicyResource(v.([]interface{})[0].(map[string]interface{}))
+	}
+
 	tableType := ""
 
 	if v, ok := d.GetOk("table"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -248,8 +334,8 @@ func dataSourcePermissionsRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.Set("principal", cleanPermissions[0].Principal.DataLakePrincipalIdentifier)
-	d.Set("permissions", flattenLakeFormationPermissions(cleanPermissions))
-	d.Set("permissions_with_grant_option", flattenLakeFormationGrantPermissions(cleanPermissions))
+	d.Set("permissions", flattenPermissions(cleanPermissions))
+	d.Set("permissions_with_grant_option", flattenGrantPermissions(cleanPermissions))
 
 	if cleanPermissions[0].Resource.Catalog != nil {
 		d.Set("catalog_resource", true)
@@ -258,7 +344,7 @@ func dataSourcePermissionsRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if cleanPermissions[0].Resource.DataLocation != nil {
-		if err := d.Set("data_location", []interface{}{flattenLakeFormationDataLocationResource(cleanPermissions[0].Resource.DataLocation)}); err != nil {
+		if err := d.Set("data_location", []interface{}{flattenDataLocationResource(cleanPermissions[0].Resource.DataLocation)}); err != nil {
 			return fmt.Errorf("error setting data_location: %w", err)
 		}
 	} else {
@@ -266,11 +352,27 @@ func dataSourcePermissionsRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if cleanPermissions[0].Resource.Database != nil {
-		if err := d.Set("database", []interface{}{flattenLakeFormationDatabaseResource(cleanPermissions[0].Resource.Database)}); err != nil {
+		if err := d.Set("database", []interface{}{flattenDatabaseResource(cleanPermissions[0].Resource.Database)}); err != nil {
 			return fmt.Errorf("error setting database: %w", err)
 		}
 	} else {
 		d.Set("database", nil)
+	}
+
+	if cleanPermissions[0].Resource.LFTag != nil {
+		if err := d.Set("lf_tag", []interface{}{flattenLFTagKeyResource(cleanPermissions[0].Resource.LFTag)}); err != nil {
+			return fmt.Errorf("error setting LF-tag: %w", err)
+		}
+	} else {
+		d.Set("lf_tag", nil)
+	}
+
+	if cleanPermissions[0].Resource.LFTagPolicy != nil {
+		if err := d.Set("lf_tag_policy", []interface{}{flattenLFTagPolicyResource(cleanPermissions[0].Resource.LFTagPolicy)}); err != nil {
+			return fmt.Errorf("error setting LF-tag policy: %w", err)
+		}
+	} else {
+		d.Set("lf_tag_policy", nil)
 	}
 
 	tableSet := false
@@ -283,7 +385,7 @@ func dataSourcePermissionsRead(d *schema.ResourceData, meta interface{}) error {
 			}
 
 			if perm.Resource.TableWithColumns != nil && perm.Resource.TableWithColumns.ColumnWildcard != nil {
-				if err := d.Set("table", []interface{}{flattenLakeFormationTableWithColumnsResourceAsTable(perm.Resource.TableWithColumns)}); err != nil {
+				if err := d.Set("table", []interface{}{flattenTableColumnsResourceAsTable(perm.Resource.TableWithColumns)}); err != nil {
 					return fmt.Errorf("error setting table: %w", err)
 				}
 				tableSet = true
@@ -291,7 +393,7 @@ func dataSourcePermissionsRead(d *schema.ResourceData, meta interface{}) error {
 			}
 
 			if perm.Resource.Table != nil {
-				if err := d.Set("table", []interface{}{flattenLakeFormationTableResource(perm.Resource.Table)}); err != nil {
+				if err := d.Set("table", []interface{}{flattenTableResource(perm.Resource.Table)}); err != nil {
 					return fmt.Errorf("error setting table: %w", err)
 				}
 				tableSet = true
@@ -310,7 +412,7 @@ func dataSourcePermissionsRead(d *schema.ResourceData, meta interface{}) error {
 		// since perm list could include Table, get the right one
 		for _, perm := range cleanPermissions {
 			if perm.Resource.TableWithColumns != nil {
-				if err := d.Set("table_with_columns", []interface{}{flattenLakeFormationTableWithColumnsResource(perm.Resource.TableWithColumns)}); err != nil {
+				if err := d.Set("table_with_columns", []interface{}{flattenTableColumnsResource(perm.Resource.TableWithColumns)}); err != nil {
 					return fmt.Errorf("error setting table_with_columns: %w", err)
 				}
 				twcSet = true

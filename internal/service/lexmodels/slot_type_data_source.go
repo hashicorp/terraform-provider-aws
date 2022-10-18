@@ -90,7 +90,7 @@ func dataSourceSlotTypeRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("checksum", output.Checksum)
 	d.Set("created_date", output.CreatedDate.Format(time.RFC3339))
 	d.Set("description", output.Description)
-	d.Set("enumeration_value", flattenLexEnumerationValues(output.EnumerationValues))
+	d.Set("enumeration_value", flattenEnumerationValues(output.EnumerationValues))
 	d.Set("last_updated_date", output.LastUpdatedDate.Format(time.RFC3339))
 	d.Set("name", output.Name)
 	d.Set("value_selection_strategy", output.ValueSelectionStrategy)

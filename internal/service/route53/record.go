@@ -12,7 +12,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/route53"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -27,8 +27,8 @@ const (
 )
 
 var (
-	r53NoRecordsFound    = errors.New("No matching records found")
-	r53NoHostedZoneFound = errors.New("No matching Hosted Zone found")
+	errNoRecordsFound    = errors.New("No matching records found")
+	errNoHostedZoneFound = errors.New("No matching Hosted Zone found")
 )
 
 func ResourceRecord() *schema.Resource {
@@ -278,8 +278,52 @@ func resourceRecordUpdate(d *schema.ResourceData, meta interface{}) error {
 		Type: aws.String(typeo.(string)),
 	}
 
-	// If the old record had a weighted_routing_policy we need to pass that in
-	// here because otherwise the API will give us an error.
+	// If the old record has any of the following, we need to pass that in
+	// here because otherwise the API will give us an error:
+	// - failover_routing_policy
+	// - geolocation_routing_policy
+	// - latency_routing_policy
+	// - multivalue_answer_routing_policy
+	// - weighted_routing_policy
+
+	if v, _ := d.GetChange("failover_routing_policy"); v != nil {
+		if o, ok := v.([]interface{}); ok {
+			if len(o) == 1 {
+				if v, ok := o[0].(map[string]interface{}); ok {
+					oldRec.Failover = aws.String(v["type"].(string))
+				}
+			}
+		}
+	}
+
+	if v, _ := d.GetChange("geolocation_routing_policy"); v != nil {
+		if o, ok := v.([]interface{}); ok {
+			if len(o) == 1 {
+				if v, ok := o[0].(map[string]interface{}); ok {
+					oldRec.GeoLocation = &route53.GeoLocation{
+						ContinentCode:   nilString(v["continent"].(string)),
+						CountryCode:     nilString(v["country"].(string)),
+						SubdivisionCode: nilString(v["subdivision"].(string)),
+					}
+				}
+			}
+		}
+	}
+
+	if v, _ := d.GetChange("latency_routing_policy"); v != nil {
+		if o, ok := v.([]interface{}); ok {
+			if len(o) == 1 {
+				if v, ok := o[0].(map[string]interface{}); ok {
+					oldRec.Region = aws.String(v["region"].(string))
+				}
+			}
+		}
+	}
+
+	if v, _ := d.GetChange("multivalue_answer_routing_policy"); v != nil && v.(bool) {
+		oldRec.MultiValueAnswer = aws.Bool(v.(bool))
+	}
+
 	if v, _ := d.GetChange("weighted_routing_policy"); v != nil {
 		if o, ok := v.([]interface{}); ok {
 			if len(o) == 1 {
@@ -466,7 +510,7 @@ func ChangeRecordSet(conn *route53.Route53, input *route53.ChangeResourceRecordS
 	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
 		var err error
 		out, err = conn.ChangeResourceRecordSets(input)
-		if tfawserr.ErrMessageContains(err, route53.ErrCodeNoSuchHostedZone, "") {
+		if tfawserr.ErrCodeEquals(err, route53.ErrCodeNoSuchHostedZone) {
 			log.Print("[DEBUG] Hosted Zone not found, retrying...")
 			return resource.RetryableError(err)
 		}
@@ -524,7 +568,7 @@ func resourceRecordRead(d *schema.ResourceData, meta interface{}) error {
 	record, err := findRecord(d, meta)
 	if err != nil {
 		switch err {
-		case r53NoHostedZoneFound, r53NoRecordsFound:
+		case errNoHostedZoneFound, errNoRecordsFound:
 			log.Printf("[DEBUG] %s for: %s, removing from state file", err, d.Id())
 			d.SetId("")
 			return nil
@@ -608,10 +652,10 @@ func resourceRecordRead(d *schema.ResourceData, meta interface{}) error {
 // If records are found, it returns the matching
 // route53.ResourceRecordSet and nil for the error.
 //
-// If no hosted zone is found, it returns a nil recordset and r53NoHostedZoneFound
+// If no hosted zone is found, it returns a nil recordset and errNoHostedZoneFound
 // error.
 //
-// If no matching recordset is found, it returns nil and a r53NoRecordsFound
+// If no matching recordset is found, it returns nil and a errNoRecordsFound
 // error.
 //
 // If there are other errors, it returns a nil recordset and passes on the
@@ -624,8 +668,8 @@ func findRecord(d *schema.ResourceData, meta interface{}) (*route53.ResourceReco
 	// get expanded name
 	zoneRecord, err := conn.GetHostedZone(&route53.GetHostedZoneInput{Id: aws.String(zone)})
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, route53.ErrCodeNoSuchHostedZone, "") {
-			return nil, r53NoHostedZoneFound
+		if tfawserr.ErrCodeEquals(err, route53.ErrCodeNoSuchHostedZone) {
+			return nil, errNoHostedZoneFound
 		}
 
 		return nil, err
@@ -713,7 +757,7 @@ func findRecord(d *schema.ResourceData, meta interface{}) (*route53.ResourceReco
 		return nil, err
 	}
 	if record == nil {
-		return nil, r53NoRecordsFound
+		return nil, errNoRecordsFound
 	}
 	return record, nil
 }
@@ -724,7 +768,7 @@ func resourceRecordDelete(d *schema.ResourceData, meta interface{}) error {
 	rec, err := findRecord(d, meta)
 	if err != nil {
 		switch err {
-		case r53NoHostedZoneFound, r53NoRecordsFound:
+		case errNoHostedZoneFound, errNoRecordsFound:
 			return nil
 		default:
 			return err
@@ -766,7 +810,7 @@ func resourceRecordDelete(d *schema.ResourceData, meta interface{}) error {
 
 func DeleteRecordSet(conn *route53.Route53, input *route53.ChangeResourceRecordSetsInput) (interface{}, error) {
 	out, err := conn.ChangeResourceRecordSets(input)
-	if tfawserr.ErrMessageContains(err, route53.ErrCodeInvalidChangeBatch, "") {
+	if tfawserr.ErrCodeEquals(err, route53.ErrCodeInvalidChangeBatch) {
 		return out, nil
 	}
 
@@ -952,8 +996,7 @@ func nilString(s string) *string {
 }
 
 func NormalizeAliasName(alias interface{}) string {
-	input := strings.ToLower(alias.(string))
-	output := strings.TrimPrefix(input, "dualstack.")
+	output := strings.ToLower(alias.(string))
 	return strings.TrimSuffix(output, ".")
 }
 

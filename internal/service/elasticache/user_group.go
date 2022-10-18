@@ -7,9 +7,8 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/elasticache"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -80,14 +79,21 @@ func resourceUserGroupCreate(d *schema.ResourceData, meta interface{}) error {
 		input.UserIds = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
-	// Tags are currently only supported in AWS Commercial.
-	if len(tags) > 0 && meta.(*conns.AWSClient).Partition == endpoints.AwsPartitionID {
+	if len(tags) > 0 {
 		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	out, err := conn.CreateUserGroup(input)
+
+	if input.Tags != nil && verify.ErrorISOUnsupported(conn.PartitionID, err) {
+		log.Printf("[WARN] failed creating ElastiCache User Group with tags: %s. Trying create without tags.", err)
+
+		input.Tags = nil
+		out, err = conn.CreateUserGroup(input)
+	}
+
 	if err != nil {
-		return fmt.Errorf("error creating ElastiCache User Group: %w", err)
+		return fmt.Errorf("creating ElastiCache User Group (%s): %w", d.Get("user_group_id").(string), err)
 	}
 
 	d.SetId(aws.StringValue(out.UserGroupId))
@@ -107,8 +113,21 @@ func resourceUserGroupCreate(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error creating ElastiCache User Group: %w", err)
 	}
 
-	return resourceUserGroupRead(d, meta)
+	// In some partitions, only post-create tagging supported
+	if input.Tags == nil && len(tags) > 0 {
+		err := UpdateTags(conn, aws.StringValue(out.ARN), nil, tags)
 
+		if err != nil {
+			if v, ok := d.GetOk("tags"); (ok && len(v.(map[string]interface{})) > 0) || !verify.ErrorISOUnsupported(conn.PartitionID, err) {
+				// explicitly setting tags or not an iso-unsupported error
+				return fmt.Errorf("failed adding tags after create for ElastiCache User Group (%s): %w", d.Id(), err)
+			}
+
+			log.Printf("[WARN] failed adding tags after create for ElastiCache User Group (%s): %s", d.Id(), err)
+		}
+	}
+
+	return resourceUserGroupRead(d, meta)
 }
 
 func resourceUserGroupRead(d *schema.ResourceData, meta interface{}) error {
@@ -116,7 +135,7 @@ func resourceUserGroupRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	resp, err := FindElastiCacheUserGroupByID(conn, d.Id())
+	resp, err := FindUserGroupByID(conn, d.Id())
 	if !d.IsNewResource() && (tfresource.NotFound(err) || tfawserr.ErrCodeEquals(err, elasticache.ErrCodeUserGroupNotFoundFault)) {
 		d.SetId("")
 		log.Printf("[DEBUG] ElastiCache User Group (%s) not found", d.Id())
@@ -132,14 +151,18 @@ func resourceUserGroupRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("user_ids", resp.UserIds)
 	d.Set("user_group_id", resp.UserGroupId)
 
-	// Tags are currently only supported in AWS Commercial.
-	if meta.(*conns.AWSClient).Partition == endpoints.AwsPartitionID {
-		tags, err := ListTags(conn, aws.StringValue(resp.ARN))
+	tags, err := ListTags(conn, aws.StringValue(resp.ARN))
 
-		if err != nil {
-			return fmt.Errorf("error listing tags for ElastiCache User (%s): %w", aws.StringValue(resp.ARN), err)
-		}
+	if err != nil && !verify.ErrorISOUnsupported(conn.PartitionID, err) {
+		return fmt.Errorf("listing tags for ElastiCache User Group (%s): %w", aws.StringValue(resp.ARN), err)
+	}
 
+	// tags not supported in all partitions
+	if err != nil {
+		log.Printf("[WARN] failed listing tags for ElastiCache User Group (%s): %s", aws.StringValue(resp.ARN), err)
+	}
+
+	if tags != nil {
 		tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 		//lintignore:AWSR002
@@ -150,9 +173,6 @@ func resourceUserGroupRead(d *schema.ResourceData, meta interface{}) error {
 		if err := d.Set("tags_all", tags.Map()); err != nil {
 			return fmt.Errorf("error setting tags_all: %w", err)
 		}
-	} else {
-		d.Set("tags", nil)
-		d.Set("tags_all", nil)
 	}
 
 	return nil
@@ -204,12 +224,18 @@ func resourceUserGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	// Tags are currently only supported in AWS Commercial.
-	if d.HasChange("tags_all") && meta.(*conns.AWSClient).Partition == endpoints.AwsPartitionID {
+	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating ElastiCache User Group (%s) tags: %w", d.Get("arn").(string), err)
+		err := UpdateTags(conn, d.Get("arn").(string), o, n)
+
+		if err != nil {
+			if v, ok := d.GetOk("tags"); (ok && len(v.(map[string]interface{})) > 0) || !verify.ErrorISOUnsupported(conn.PartitionID, err) {
+				// explicitly setting tags or not an iso-unsupported error
+				return fmt.Errorf("failed updating ElastiCache User Group (%s) tags: %w", d.Get("arn").(string), err)
+			}
+
+			log.Printf("[WARN] failed updating tags for ElastiCache User Group (%s): %s", d.Get("arn").(string), err)
 		}
 	}
 
@@ -250,7 +276,7 @@ func resourceUserGroupDelete(d *schema.ResourceData, meta interface{}) error {
 
 func resourceUserGroupStateRefreshFunc(id string, conn *elasticache.ElastiCache) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		v, err := FindElastiCacheUserGroupByID(conn, id)
+		v, err := FindUserGroupByID(conn, id)
 
 		if err != nil {
 			log.Printf("Error on retrieving ElastiCache User Group when waiting: %s", err)

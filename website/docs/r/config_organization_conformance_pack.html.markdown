@@ -53,7 +53,7 @@ resource "aws_organizations_organization" "example" {
 ```hcl
 resource "aws_config_organization_conformance_pack" "example" {
   name            = "example"
-  template_s3_uri = "s3://${aws_s3_bucket.example.bucket}/${aws_s3_bucket_object.example.key}"
+  template_s3_uri = "s3://${aws_s3_bucket.example.bucket}/${aws_s3_object.example.key}"
 
   depends_on = [aws_config_configuration_recorder.example, aws_organizations_organization.example]
 }
@@ -67,7 +67,7 @@ resource "aws_s3_bucket" "example" {
   bucket = "example"
 }
 
-resource "aws_s3_bucket_object" "example" {
+resource "aws_s3_object" "example" {
   bucket  = aws_s3_bucket.example.id
   key     = "example-key"
   content = <<EOT
@@ -111,12 +111,11 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-`aws_config_organization_conformance_pack` provides the following
-[Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
 
-- `create` - (Default `10 minutes`) Used for creating conformance pack
-- `update` - (Default `10 minutes`) Used for conformance pack modifications
-- `delete` - (Default `20 minutes`) Used for destroying conformance pack
+- `create` - (Default `10m`)
+- `update` - (Default `10m`)
+- `delete` - (Default `20m`)
 
 ## Import
 

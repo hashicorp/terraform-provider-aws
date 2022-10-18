@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/guardduty"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -19,13 +19,13 @@ func testAccMember_basic(t *testing.T) {
 	accountID := "111111111111"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, guardduty.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckMemberDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, guardduty.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMemberDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGuardDutyMemberConfig_basic(accountID, acctest.DefaultEmailAddress),
+				Config: testAccMemberConfig_basic(accountID, acctest.DefaultEmailAddress),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMemberExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "account_id", accountID),
@@ -48,13 +48,13 @@ func testAccMember_invite_disassociate(t *testing.T) {
 	accountID, email := testAccMemberFromEnv(t)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, guardduty.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckMemberDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, guardduty.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMemberDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGuardDutyMemberConfig_invite(accountID, email, true),
+				Config: testAccMemberConfig_invite(accountID, email, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMemberExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "invite", "true"),
@@ -63,7 +63,7 @@ func testAccMember_invite_disassociate(t *testing.T) {
 			},
 			// Disassociate member
 			{
-				Config: testAccGuardDutyMemberConfig_invite(accountID, email, false),
+				Config: testAccMemberConfig_invite(accountID, email, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMemberExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "invite", "false"),
@@ -87,13 +87,13 @@ func testAccMember_invite_onUpdate(t *testing.T) {
 	accountID, email := testAccMemberFromEnv(t)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, guardduty.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckMemberDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, guardduty.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMemberDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGuardDutyMemberConfig_invite(accountID, email, false),
+				Config: testAccMemberConfig_invite(accountID, email, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMemberExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "invite", "false"),
@@ -102,7 +102,7 @@ func testAccMember_invite_onUpdate(t *testing.T) {
 			},
 			// Invite member
 			{
-				Config: testAccGuardDutyMemberConfig_invite(accountID, email, true),
+				Config: testAccMemberConfig_invite(accountID, email, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMemberExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "invite", "true"),
@@ -127,13 +127,13 @@ func testAccMember_invitationMessage(t *testing.T) {
 	invitationMessage := "inviting"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, guardduty.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckMemberDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, guardduty.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMemberDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGuardDutyMemberConfig_invitationMessage(accountID, email, invitationMessage),
+				Config: testAccMemberConfig_invitationMessage(accountID, email, invitationMessage),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMemberExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "account_id", accountID),
@@ -225,7 +225,7 @@ func testAccCheckMemberExists(name string) resource.TestCheckFunc {
 	}
 }
 
-func testAccGuardDutyMemberConfig_basic(accountID, email string) string {
+func testAccMemberConfig_basic(accountID, email string) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -234,10 +234,10 @@ resource "aws_guardduty_member" "test" {
   detector_id = aws_guardduty_detector.test.id
   email       = "%[3]s"
 }
-`, testAccGuardDutyDetectorConfig_basic1, accountID, email)
+`, testAccDetectorConfig_basic, accountID, email)
 }
 
-func testAccGuardDutyMemberConfig_invite(accountID, email string, invite bool) string {
+func testAccMemberConfig_invite(accountID, email string, invite bool) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -248,10 +248,10 @@ resource "aws_guardduty_member" "test" {
   email                      = "%[3]s"
   invite                     = %[4]t
 }
-`, testAccGuardDutyDetectorConfig_basic1, accountID, email, invite)
+`, testAccDetectorConfig_basic, accountID, email, invite)
 }
 
-func testAccGuardDutyMemberConfig_invitationMessage(accountID, email, invitationMessage string) string {
+func testAccMemberConfig_invitationMessage(accountID, email, invitationMessage string) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -263,5 +263,5 @@ resource "aws_guardduty_member" "test" {
   invitation_message         = "%[4]s"
   invite                     = true
 }
-`, testAccGuardDutyDetectorConfig_basic1, accountID, email, invitationMessage)
+`, testAccDetectorConfig_basic, accountID, email, invitationMessage)
 }

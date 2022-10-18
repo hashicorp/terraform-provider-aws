@@ -90,7 +90,7 @@ func dataSourceDelegatedAdministratorsRead(ctx context.Context, d *schema.Resour
 		return diag.FromErr(fmt.Errorf("error describing organizations delegated Administrators: %w", err))
 	}
 
-	if err = d.Set("delegated_administrators", flattenOrganizationsDelegatedAdministrators(delegators)); err != nil {
+	if err = d.Set("delegated_administrators", flattenDelegatedAdministrators(delegators)); err != nil {
 		return diag.FromErr(fmt.Errorf("error setting delegated_administrators: %w", err))
 	}
 
@@ -99,7 +99,7 @@ func dataSourceDelegatedAdministratorsRead(ctx context.Context, d *schema.Resour
 	return nil
 }
 
-func flattenOrganizationsDelegatedAdministrators(delegatedAdministrators []*organizations.DelegatedAdministrator) []map[string]interface{} {
+func flattenDelegatedAdministrators(delegatedAdministrators []*organizations.DelegatedAdministrator) []map[string]interface{} {
 	if len(delegatedAdministrators) == 0 {
 		return nil
 	}

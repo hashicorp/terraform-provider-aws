@@ -9,11 +9,14 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws/arn"
+	"github.com/hashicorp/go-cty/cty"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
-var accountIDRegexp = regexp.MustCompile(`^(aws|\d{12})$`)
+var accountIDRegexp = regexp.MustCompile(`^(aws|aws-managed|\d{12})$`)
 var partitionRegexp = regexp.MustCompile(`^aws(-[a-z]+)*$`)
 var regionRegexp = regexp.MustCompile(`^[a-z]{2}(-[a-z]+)+-\d$`)
 
@@ -176,6 +179,16 @@ func ValidIPv6CIDRNetworkAddress(v interface{}, k string) (ws []string, errors [
 	return
 }
 
+// IsIPv4CIDRBlockOrIPv6CIDRBlock returns a SchemaValidateFunc that test if the provided value:
+// - Is a valid IPv4 CIDR block and passes the specified validation, or
+// - Is a valid IPv6 CIDR block and passes the specified validation
+func IsIPv4CIDRBlockOrIPv6CIDRBlock(ipv4Validator, ipv6Validator schema.SchemaValidateFunc) schema.SchemaValidateFunc {
+	return validation.Any(
+		validation.All(ValidIPv4CIDRNetworkAddress, ipv4Validator),
+		validation.All(ValidIPv6CIDRNetworkAddress, ipv6Validator),
+	)
+}
+
 func ValidLaunchTemplateID(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 	if len(value) < 1 {
@@ -200,6 +213,29 @@ func ValidLaunchTemplateName(v interface{}, k string) (ws []string, errors []err
 	} else if !regexp.MustCompile(`^[0-9a-zA-Z()./_\-]+$`).MatchString(value) {
 		errors = append(errors, fmt.Errorf("%q can only alphanumeric characters and ()./_- symbols", k))
 	}
+	return
+}
+
+// validateMulticastIPAddress validates that the specified string is a multicast IP address.
+func validateMulticastIPAddress(s string) error {
+	ip := net.ParseIP(s)
+	if ip == nil {
+		return fmt.Errorf("%q is not a valid IP address", s)
+	}
+
+	if !ip.IsMulticast() {
+		return fmt.Errorf("%q is not a valid multicast address", s)
+	}
+
+	return nil
+}
+
+func ValidMulticastIPAddress(v interface{}, k string) (ws []string, errors []error) {
+	if err := validateMulticastIPAddress(v.(string)); err != nil {
+		errors = append(errors, err)
+		return
+	}
+
 	return
 }
 
@@ -315,3 +351,60 @@ var ValidStringDateOrPositiveInt = validation.Any(
 	validation.IsRFC3339Time,
 	validation.StringMatch(regexp.MustCompile(`^\d+$`), "must be a positive integer value"),
 )
+
+func ValidDuration(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	duration, err := time.ParseDuration(value)
+	if err != nil {
+		errors = append(errors, fmt.Errorf("%q cannot be parsed as a duration: %s", k, err))
+	}
+	if duration < 0 {
+		errors = append(errors, fmt.Errorf("%q must be greater than zero", k))
+	}
+	return
+}
+
+// FloatGreaterThan returns a SchemaValidateFunc which tests if the provided value
+// is of type float and is greater than threshold.
+func FloatGreaterThan(threshold float64) schema.SchemaValidateFunc {
+	return func(i interface{}, k string) (s []string, es []error) {
+		v, ok := i.(float64)
+		if !ok {
+			es = append(es, fmt.Errorf("expected type of %s to be float", k))
+			return
+		}
+
+		if v <= threshold {
+			es = append(es, fmt.Errorf("expected %s to be greater than (%f), got %f", k, threshold, v))
+			return
+		}
+
+		return
+	}
+}
+
+// https://github.com/hashicorp/terraform-plugin-sdk/issues/780.
+func ValidAllDiag(validators ...schema.SchemaValidateDiagFunc) schema.SchemaValidateDiagFunc {
+	return func(i any, path cty.Path) diag.Diagnostics {
+		var results diag.Diagnostics
+		for _, validator := range validators {
+			results = append(results, validator(i, path)...)
+		}
+		return results
+	}
+}
+
+// https://github.com/hashicorp/terraform-plugin-sdk/issues/780.
+func ValidAnyDiag(validators ...schema.SchemaValidateDiagFunc) schema.SchemaValidateDiagFunc {
+	return func(i any, path cty.Path) diag.Diagnostics {
+		var results diag.Diagnostics
+		for _, validator := range validators {
+			diags := validator(i, path)
+			if len(diags) == 0 {
+				return diag.Diagnostics{}
+			}
+			results = append(results, diags...)
+		}
+		return results
+	}
+}
