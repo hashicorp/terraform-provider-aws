@@ -4,7 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/aws/aws-sdk-go/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/sesv2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -91,4 +93,23 @@ func dataSourceDedicatedIPPoolRead(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	return nil
+}
+
+func flattenDedicatedIPs(apiObjects []types.DedicatedIp) []interface{} {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var dedicatedIps []interface{}
+	for _, apiObject := range apiObjects {
+		ip := map[string]interface{}{
+			"ip":                aws.ToString(apiObject.Ip),
+			"warmup_percentage": apiObject.WarmupPercentage,
+			"warmup_status":     string(apiObject.WarmupStatus),
+		}
+
+		dedicatedIps = append(dedicatedIps, ip)
+	}
+
+	return dedicatedIps
 }

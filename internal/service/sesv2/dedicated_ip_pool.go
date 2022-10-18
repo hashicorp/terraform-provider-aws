@@ -8,9 +8,9 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/sesv2"
 	"github.com/aws/aws-sdk-go-v2/service/sesv2/types"
-	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -48,26 +48,6 @@ func ResourceDedicatedIPPool() *schema.Resource {
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
-			},
-			"dedicated_ips": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"ip": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"warmup_percentage": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"warmup_status": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
-				},
 			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
@@ -109,7 +89,7 @@ func resourceDedicatedIPPoolCreate(ctx context.Context, d *schema.ResourceData, 
 func resourceDedicatedIPPoolRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).SESV2Conn
 
-	out, err := FindDedicatedIPPoolByID(ctx, conn, d.Id())
+	_, err := FindDedicatedIPPoolByID(ctx, conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] SESV2 DedicatedIPPool (%s) not found, removing from state", d.Id())
 		d.SetId("")
@@ -128,8 +108,6 @@ func resourceDedicatedIPPoolRead(ctx context.Context, d *schema.ResourceData, me
 		Resource:  fmt.Sprintf("dedicated-ip-pool/%s", d.Id()),
 	}.String()
 	d.Set("arn", poolNameARN)
-
-	d.Set("dedicated_ips", flattenDedicatedIPs(out.DedicatedIps))
 
 	tags, err := ListTags(ctx, conn, d.Get("arn").(string))
 	if err != nil {
@@ -206,23 +184,4 @@ func FindDedicatedIPPoolByID(ctx context.Context, conn *sesv2.Client, id string)
 	}
 
 	return out, nil
-}
-
-func flattenDedicatedIPs(apiObjects []types.DedicatedIp) []interface{} {
-	if len(apiObjects) == 0 {
-		return nil
-	}
-
-	var dedicatedIps []interface{}
-	for _, apiObject := range apiObjects {
-		ip := map[string]interface{}{
-			"ip":                aws.ToString(apiObject.Ip),
-			"warmup_percentage": apiObject.WarmupPercentage,
-			"warmup_status":     string(apiObject.WarmupStatus),
-		}
-
-		dedicatedIps = append(dedicatedIps, ip)
-	}
-
-	return dedicatedIps
 }
