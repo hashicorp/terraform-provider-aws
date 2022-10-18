@@ -21,12 +21,16 @@ data "aws_outposts_assets" "example" {
 
 ## Argument Reference
 
-The following arguments are required:
+The following arguments are supported:
 
 * `arn` - (Required) Outpost ARN.
+
+* `host_id_filter` - (Optional) Filters by list of Host IDs of a Dedicated Host.
+
+* `status_id_filter` - (Optional) Filters by list of state status. Valid values: "ACTIVE", "RETIRING".
 
 ## Attribute Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-* `asset_ids` - List of all the subnet ids found. This data source will fail if none are found.
+* `asset_ids` - List of all the asset ids found. This data source will fail if none are found.
