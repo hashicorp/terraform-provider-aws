@@ -46,6 +46,24 @@ func ResourceZone() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"comment": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      "Managed by Terraform",
+				ValidateFunc: validation.StringLenBetween(0, 256),
+			},
+			"delegation_set_id": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"vpc"},
+				ValidateFunc:  validation.StringLenBetween(0, 32),
+			},
+			"force_destroy": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 			"name": {
 				// AWS Provider 3.0.0 - trailing period removed from name
 				// returned from API, no longer requiring custom DiffSuppressFunc;
@@ -57,14 +75,17 @@ func ResourceZone() *schema.Resource {
 				StateFunc:    TrimTrailingPeriod,
 				ValidateFunc: validation.StringLenBetween(1, 1024),
 			},
-
-			"comment": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      "Managed by Terraform",
-				ValidateFunc: validation.StringLenBetween(0, 256),
+			"name_servers": {
+				Type:     schema.TypeList,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Computed: true,
 			},
-
+			"primary_name_server": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 			"vpc": {
 				Type:          schema.TypeSet,
 				Optional:      true,
@@ -86,38 +107,9 @@ func ResourceZone() *schema.Resource {
 				},
 				Set: hostedZoneVPCHash,
 			},
-
 			"zone_id": {
 				Type:     schema.TypeString,
 				Computed: true,
-			},
-
-			"delegation_set_id": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{"vpc"},
-				ValidateFunc:  validation.StringLenBetween(0, 32),
-			},
-
-			"name_servers": {
-				Type:     schema.TypeList,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Computed: true,
-			},
-
-			"primary_name_server": {
-				Type:     schema.TypeString,
-				Computed: true,
-			}
-
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
-
-			"force_destroy": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
 			},
 		},
 
