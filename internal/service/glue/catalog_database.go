@@ -55,6 +55,7 @@ func ResourceCatalogDatabase() *schema.Resource {
 						"permissions": {
 							Type:     schema.TypeSet,
 							Optional: true,
+							Computed: true,
 							Elem: &schema.Schema{
 								Type:         schema.TypeString,
 								ValidateFunc: validation.StringInSlice(glue.Permission_Values(), false),
@@ -64,11 +65,13 @@ func ResourceCatalogDatabase() *schema.Resource {
 							Type:     schema.TypeList,
 							MaxItems: 1,
 							Optional: true,
+							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"data_lake_principal_identifier": {
 										Type:         schema.TypeString,
 										Optional:     true,
+										Computed:     true,
 										ValidateFunc: validation.StringLenBetween(1, 255),
 									},
 								},
