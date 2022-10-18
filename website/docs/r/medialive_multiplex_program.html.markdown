@@ -79,7 +79,6 @@ The following arguments are optional:
 `constant_bitrate` - (Optional) Constant bitrate value.
 `statemux_settings` - (Optional) Statemux settings. See [Statemux Settings](#statemux-settings) for more details.
 
-
 ### Statemux Settings
 
 * `minimum_bitrate` - (Optional) Minimum bitrate.

@@ -298,7 +298,7 @@ func sweepLayers(region string) error {
 			}
 
 			l := &opsworksLayerType{}
-			r := l.SchemaResource()
+			r := l.resourceSchema()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(layer.LayerId))
 

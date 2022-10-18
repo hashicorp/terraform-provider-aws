@@ -8,7 +8,7 @@ description: |-
 
 # Data Source: aws_elasticache_cluster
 
-Use this data source to get information about an Elasticache Cluster
+Use this data source to get information about an ElastiCache Cluster
 
 ## Example Usage
 
@@ -23,7 +23,6 @@ data "aws_elasticache_cluster" "my_cluster" {
 The following arguments are supported:
 
 * `cluster_id` – (Required) Group identifier.
-
 
 ## Attributes Reference
 

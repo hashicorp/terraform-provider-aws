@@ -148,7 +148,7 @@ func resourceParameterGroupRead(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	if err != nil {
-		log.Printf("[WARN] failed listing tags for Elasticache Parameter Group (%s): %s", d.Id(), err)
+		log.Printf("[WARN] failed listing tags for ElastiCache Parameter Group (%s): %s", d.Id(), err)
 	}
 
 	if tags != nil {

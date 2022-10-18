@@ -45,6 +45,10 @@ func (t arnType) ValueFromTerraform(_ context.Context, in tftypes.Value) (attr.V
 	return ARN{Value: a}, nil
 }
 
+func (t arnType) ValueType(context.Context) attr.Value {
+	return ARN{}
+}
+
 // Equal returns true if `o` is also an ARNType.
 func (t arnType) Equal(o attr.Type) bool {
 	_, ok := o.(arnType)

@@ -1,6 +1,7 @@
 package rds
 
 import (
+	"context"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -493,4 +494,27 @@ func findGlobalClusters(conn *rds.RDS, input *rds.DescribeGlobalClustersInput) (
 	}
 
 	return output, nil
+}
+
+// FindReservedDBInstanceByID returns matching ReservedDBInstance.
+func FindReservedDBInstanceByID(ctx context.Context, conn *rds.RDS, id string) (*rds.ReservedDBInstance, error) {
+
+	input := &rds.DescribeReservedDBInstancesInput{
+		ReservedDBInstanceId: aws.String(id),
+	}
+
+	output, err := conn.DescribeReservedDBInstancesWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, rds.ErrCodeReservedDBInstanceNotFoundFault) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if output == nil || len(output.ReservedDBInstances) == 0 || output.ReservedDBInstances[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.ReservedDBInstances[0], nil
 }

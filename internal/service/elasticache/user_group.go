@@ -159,7 +159,7 @@ func resourceUserGroupRead(d *schema.ResourceData, meta interface{}) error {
 
 	// tags not supported in all partitions
 	if err != nil {
-		log.Printf("[WARN] failed listing tags for Elasticache User Group (%s): %s", aws.StringValue(resp.ARN), err)
+		log.Printf("[WARN] failed listing tags for ElastiCache User Group (%s): %s", aws.StringValue(resp.ARN), err)
 	}
 
 	if tags != nil {

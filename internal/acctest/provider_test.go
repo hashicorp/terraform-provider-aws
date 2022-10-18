@@ -527,7 +527,7 @@ func TestAccProvider_AssumeRole_empty(t *testing.T) {
 }
 
 // Replaces FactoriesInternal.
-func testAccProviderFactoriesInternal(t *testing.T, v **schema.Provider) map[string]func() (*schema.Provider, error) { //nolint:unparam
+func testAccProviderFactoriesInternal(t *testing.T, v **schema.Provider) map[string]func() (*schema.Provider, error) {
 	p, err := provider.New(context.Background())
 
 	if err != nil {
