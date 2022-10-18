@@ -1,20 +1,23 @@
 package simpledb_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/simpledb"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfsimpledb "github.com/hashicorp/terraform-provider-aws/internal/service/simpledb"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccSimpleDBDomain_basic(t *testing.T) {
-	resourceName := "aws_simpledb_domain.test_domain"
+	resourceName := "aws_simpledb_domain.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(simpledb.EndpointsID, t) },
@@ -23,9 +26,10 @@ func TestAccSimpleDBDomain_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckDomainDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainConfig_basic,
+				Config: testAccDomainConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
 				),
 			},
 			{
@@ -45,19 +49,17 @@ func testAccCheckDomainDestroy(s *terraform.State) error {
 			continue
 		}
 
-		input := &simpledb.DomainMetadataInput{
-			DomainName: aws.String(rs.Primary.ID),
-		}
-		_, err := conn.DomainMetadata(input)
-		if err == nil {
-			return fmt.Errorf("Domain exists when it should be destroyed!")
+		_, err := tfsimpledb.FindDomainByName(context.Background(), conn, rs.Primary.ID)
+
+		if tfresource.NotFound(err) {
+			continue
 		}
 
-		// Verify the error is an API error, not something else
-		_, ok := err.(awserr.Error)
-		if !ok {
+		if err != nil {
 			return err
 		}
+
+		return fmt.Errorf("SimpleDB Domain %s still exists", rs.Primary.ID)
 	}
 
 	return nil
@@ -71,20 +73,21 @@ func testAccCheckDomainExists(n string) resource.TestCheckFunc {
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No SimpleDB domain with that name exists")
+			return fmt.Errorf("No SimpleDB Domain ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SimpleDBConn
-		input := &simpledb.DomainMetadataInput{
-			DomainName: aws.String(rs.Primary.ID),
-		}
-		_, err := conn.DomainMetadata(input)
+
+		_, err := tfsimpledb.FindDomainByName(context.Background(), conn, rs.Primary.ID)
+
 		return err
 	}
 }
 
-var testAccDomainConfig_basic = `
-resource "aws_simpledb_domain" "test_domain" {
-  name = "terraform-test-domain"
+func testAccDomainConfig_basic(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_simpledb_domain" "test" {
+  name = %[1]q
 }
-`
+`, rName)
+}
