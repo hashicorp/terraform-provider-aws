@@ -23,6 +23,12 @@ func TestAccOutpostsAssetsDataSource_id(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(dataSourceName, "arn", "outposts", regexp.MustCompile(`outpost/.+`)),
 				),
 			},
+			{
+				Config: testAccOutpostAssetsDataSourceConfig_statusFilter(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(dataSourceName, "status_id_filter.0", "ACTIVE"),
+				),
+			},
 		},
 	})
 }
@@ -35,5 +41,20 @@ data "aws_outposts_assets" "test" {
   arn = tolist(data.aws_outposts_outposts.test.arns)[0]
 }
 
+`
+}
+
+func testAccOutpostAssetsDataSourceConfig_statusFilter() string {
+	return `
+data "aws_outposts_outposts" "test" {}
+
+data "aws_outposts_assets" "source" {
+  arn = tolist(data.aws_outposts_outposts.test.arns)[0]
+}
+
+data "aws_outposts_assets" "test" {
+	arn = data.aws_outposts_assets.source.arn
+	status_id_filter = ["ACTIVE"]
+  }
 `
 }
