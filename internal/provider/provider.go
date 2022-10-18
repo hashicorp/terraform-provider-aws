@@ -2063,8 +2063,6 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_signer_signing_profile":            signer.ResourceSigningProfile(),
 			"aws_signer_signing_profile_permission": signer.ResourceSigningProfilePermission(),
 
-			"aws_simpledb_domain": simpledb.ResourceDomain(),
-
 			"aws_sns_platform_application": sns.ResourcePlatformApplication(),
 			"aws_sns_sms_preferences":      sns.ResourceSMSPreferences(),
 			"aws_sns_topic":                sns.ResourceTopic(),
@@ -2182,6 +2180,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 		ServiceMap: map[string]intf.ServiceData{
 			"globalaccelerator": globalaccelerator.ServiceData,
 			"meta":              meta.ServiceData,
+			"simpledb":          simpledb.ServiceData,
 			"sts":               sts.ServiceData,
 		},
 	}
