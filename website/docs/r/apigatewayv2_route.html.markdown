@@ -57,7 +57,7 @@ resource "aws_apigatewayv2_route" "example" {
 The following arguments are supported:
 
 * `api_id` - (Required) API identifier.
-* `route_key` - (Required) Route key for the route. For HTTP APIs, the route key can be either `$default`, or a combination of an HTTP method and resource path, for example, `GET /pets`.
+* `route_key` - (Required) Route key for the route. For HTTP APIs, the route key can be either `$default`, or a combination of an HTTP method and resource path, for example, `GET /POST`.
 * `api_key_required` - (Optional) Boolean whether an API key is required for the route. Defaults to `false`. Supported only for WebSocket APIs.
 * `authorization_scopes` - (Optional) Authorization scopes supported by this route. The scopes are used with a JWT authorizer to authorize the method invocation.
 * `authorization_type` - (Optional) Authorization type for the route.
