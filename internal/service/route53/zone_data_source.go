@@ -21,37 +21,24 @@ func DataSourceZone() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"zone_id": {
+			"caller_reference": {
 				Type:     schema.TypeString,
-				Optional: true,
 				Computed: true,
-			},
-			"name": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"private_zone": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
 			},
 			"comment": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"caller_reference": {
+			"linked_service_description": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"vpc_id": {
+			"linked_service_principal": {
 				Type:     schema.TypeString,
-				Optional: true,
 				Computed: true,
 			},
-			"tags": tftags.TagsSchemaComputed(),
-			"resource_record_set_count": {
-				Type:     schema.TypeInt,
+			"name": {
+				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
@@ -64,12 +51,25 @@ func DataSourceZone() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"linked_service_principal": {
-				Type:     schema.TypeString,
+			"private_zone": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+			"resource_record_set_count": {
+				Type:     schema.TypeInt,
+				Optional: true,
 				Computed: true,
 			},
-			"linked_service_description": {
+			"tags": tftags.TagsSchemaComputed(),
+			"vpc_id": {
 				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"zone_id": {
+				Type:     schema.TypeString,
+				Optional: true,
 				Computed: true,
 			},
 		},
