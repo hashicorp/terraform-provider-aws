@@ -324,6 +324,7 @@ func (e *emitter) emitAttributesAndBlocks(path []string, schema map[string]*sche
 // and emits the generated code to the emitter's Writer.
 func (e *emitter) emitAttributeProperty(path []string, property *schema.Schema) error {
 	isTopLevelAttribute := len(path) == 1
+	var planModifiers []string
 
 	// At this point we are emitting code for the values of a tfsdk.Schema's Attributes (map[string]tfsdk.Attribute).
 	fprintf(e.SchemaWriter, "{\n")
@@ -462,11 +463,19 @@ func (e *emitter) emitAttributeProperty(path []string, property *schema.Schema) 
 		fprintf(e.SchemaWriter, "DeprecationMessage:%q,\n", deprecationMessage)
 	}
 
-	// Features that we can't (yet) migrate:
-
 	if property.ForceNew {
-		fprintf(e.SchemaWriter, "// TODO ForceNew:true,\n")
+		planModifiers = append(planModifiers, "resource.RequiresReplace()")
 	}
+
+	if len(planModifiers) > 0 {
+		fprintf(e.SchemaWriter, "PlanModifiers:[]tfsdk.AttributePlanModifier{\n")
+		for _, planModifier := range planModifiers {
+			fprintf(e.SchemaWriter, "%s,\n", planModifier)
+		}
+		fprintf(e.SchemaWriter, "},\n")
+	}
+
+	// Features that we can't (yet) migrate:
 
 	if def := property.Default; def != nil {
 		switch def.(type) {
