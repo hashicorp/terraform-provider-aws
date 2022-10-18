@@ -20,11 +20,6 @@ func DataSourceDedicatedIPPool() *schema.Resource {
 		ReadWithoutTimeout: dataSourceDedicatedIPPoolRead,
 
 		Schema: map[string]*schema.Schema{
-			"pool_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -48,6 +43,11 @@ func DataSourceDedicatedIPPool() *schema.Resource {
 						},
 					},
 				},
+			},
+			"pool_name": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
 			},
 			"tags": tftags.TagsSchemaComputed(),
 		},
