@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_sqs_queue: Fix creation of unencrypted SQS (sqs_managed_sse_enabled=false)
-```
