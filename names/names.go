@@ -23,15 +23,16 @@ import (
 
 // This "should" be defined by the AWS Go SDK v2, but currently isn't.
 const (
-	ComprehendEndpointID     = "comprehend"
-	IdentityStoreEndpointID  = "identitystore"
-	Inspector2EndpointID     = "inspector2"
-	KendraEndpointID         = "kendra"
-	MediaLiveEndpointID      = "medialive"
-	RolesAnywhereEndpointID  = "rolesanywhere"
-	Route53DomainsEndpointID = "route53domains"
-	SESV2EndpointID          = "sesv2"
-	TranscribeEndpointID     = "transcribe"
+	ComprehendEndpointID       = "comprehend"
+	ComputeOptimizerEndpointID = "computeoptimizer"
+	IdentityStoreEndpointID    = "identitystore"
+	Inspector2EndpointID       = "inspector2"
+	KendraEndpointID           = "kendra"
+	MediaLiveEndpointID        = "medialive"
+	RolesAnywhereEndpointID    = "rolesanywhere"
+	Route53DomainsEndpointID   = "route53domains"
+	SESV2EndpointID            = "sesv2"
+	TranscribeEndpointID       = "transcribe"
 )
 
 // Type ServiceDatum corresponds closely to columns in `names_data.csv` and are

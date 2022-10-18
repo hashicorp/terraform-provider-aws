@@ -47,6 +47,8 @@ require (
 	gopkg.in/yaml.v2 v2.4.0
 )
 
+require github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.17.19
+
 require (
 	github.com/agext/levenshtein v1.2.2 // indirect
 	github.com/apparentlymart/go-cidr v1.1.0 // indirect

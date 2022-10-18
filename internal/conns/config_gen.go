@@ -2,7 +2,6 @@
 package conns
 
 import (
-	"github.com/aws/aws-sdk-go-v2/service/computeoptimizer"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/accessanalyzer"
@@ -356,7 +355,6 @@ func (c *Config) clientConns(client *AWSClient, sess *session.Session) {
 	client.CognitoIdentityConn = cognitoidentity.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.CognitoIdentity])}))
 	client.CognitoSyncConn = cognitosync.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.CognitoSync])}))
 	client.ComprehendMedicalConn = comprehendmedical.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.ComprehendMedical])}))
-	client.ComputeOptimizerConn = computeoptimizer.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.ComputeOptimizer])}))
 	client.ConfigServiceConn = configservice.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.ConfigService])}))
 	client.ConnectConn = connect.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.Connect])}))
 	client.ConnectContactLensConn = connectcontactlens.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.ConnectContactLens])}))
