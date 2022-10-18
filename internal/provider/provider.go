@@ -816,6 +816,8 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_ses_domain_identity":         ses.DataSourceDomainIdentity(),
 			"aws_ses_email_identity":          ses.DataSourceEmailIdentity(),
 
+			"aws_sesv2_dedicated_ip_pool": sesv2.DataSourceDedicatedIPPool(),
+
 			"aws_db_cluster_snapshot":            rds.DataSourceClusterSnapshot(),
 			"aws_db_event_categories":            rds.DataSourceEventCategories(),
 			"aws_db_instance":                    rds.DataSourceInstance(),
@@ -2051,6 +2053,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_ses_template":                     ses.ResourceTemplate(),
 
 			"aws_sesv2_configuration_set": sesv2.ResourceConfigurationSet(),
+			"aws_sesv2_dedicated_ip_pool": sesv2.ResourceDedicatedIPPool(),
 
 			"aws_sfn_activity":      sfn.ResourceActivity(),
 			"aws_sfn_state_machine": sfn.ResourceStateMachine(),
