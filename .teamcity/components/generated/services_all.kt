@@ -43,6 +43,7 @@ val services = mapOf(
     "cognitoidentity" to ServiceSpec("Cognito Identity"),
     "cognitoidp" to ServiceSpec("Cognito IDP (Identity Provider)"),
     "comprehend" to ServiceSpec("Comprehend", parallelismOverride = 10),
+    "computeoptimizer" to ServiceSpec("Compute Optimizer"),
     "configservice" to ServiceSpec("Config"),
     "connect" to ServiceSpec("Connect"),
     "controltower" to ServiceSpec("Control Tower"),
