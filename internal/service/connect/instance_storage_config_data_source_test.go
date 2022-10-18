@@ -67,6 +67,36 @@ func testAccInstanceStorageConfigDataSource_KinesisStreamConfig(t *testing.T) {
 	})
 }
 
+func testAccInstanceStorageConfigDataSource_KinesisVideoStreamConfig(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	resourceName := "aws_connect_instance_storage_config.test"
+	datasourceName := "data.aws_connect_instance_storage_config.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceStorageConfigDataSourceConfig_kinesisVideoStreamConfig(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(datasourceName, "association_id", resourceName, "association_id"),
+					resource.TestCheckResourceAttrPair(datasourceName, "instance_id", resourceName, "instance_id"),
+					resource.TestCheckResourceAttrPair(datasourceName, "resource_type", resourceName, "resource_type"),
+					resource.TestCheckResourceAttrPair(datasourceName, "storage_config.#", resourceName, "storage_config.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, "storage_config.0.kinesis_video_stream_config.#", resourceName, "storage_config.0.kinesis_video_stream_config.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, "storage_config.0.kinesis_video_stream_config.0.prefix", resourceName, "storage_config.0.kinesis_video_stream_config.0.prefix"),
+					resource.TestCheckResourceAttrPair(datasourceName, "storage_config.0.kinesis_video_stream_config.0.retention_period_hours", resourceName, "storage_config.0.kinesis_video_stream_config.0.retention_period_hours"),
+					resource.TestCheckResourceAttrPair(datasourceName, "storage_config.0.kinesis_video_stream_config.0.encryption_config.#", resourceName, "storage_config.0.kinesis_video_stream_config.0.encryption_config.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, "storage_config.0.kinesis_video_stream_config.0.encryption_config.0.encryption_type", resourceName, "storage_config.0.kinesis_video_stream_config.0.encryption_config.0.encryption_type"),
+					resource.TestCheckResourceAttrPair(datasourceName, "storage_config.0.kinesis_video_stream_config.0.encryption_config.0.key_id", resourceName, "storage_config.0.kinesis_video_stream_config.0.encryption_config.0.key_id"),
+					resource.TestCheckResourceAttrPair(datasourceName, "storage_config.0.storage_type", resourceName, "storage_config.0.storage_type"),
+				),
+			},
+		},
+	})
+}
+
 func testAccInstanceStorageConfigDataSource_S3Config(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
@@ -257,6 +287,41 @@ data "aws_connect_instance_storage_config" "test" {
   resource_type  = aws_connect_instance_storage_config.test.resource_type
 }
 `, rName2))
+}
+
+func testAccInstanceStorageConfigDataSourceConfig_kinesisVideoStreamConfig(rName string) string {
+	return acctest.ConfigCompose(
+		testAccInstanceStorageConfigDataSourceConfig_base(rName),
+		`
+resource "aws_kms_key" "test" {
+  description             = "KMS Key"
+  deletion_window_in_days = 10
+}
+
+resource "aws_connect_instance_storage_config" "test" {
+  instance_id   = aws_connect_instance.test.id
+  resource_type = "MEDIA_STREAMS"
+
+  storage_config {
+    kinesis_video_stream_config {
+      prefix                 = "tf-test-prefix"
+      retention_period_hours = 1
+
+      encryption_config {
+        encryption_type = "KMS"
+        key_id          = aws_kms_key.test.arn
+      }
+    }
+    storage_type = "KINESIS_VIDEO_STREAM"
+  }
+}
+
+data "aws_connect_instance_storage_config" "test" {
+  association_id = aws_connect_instance_storage_config.test.association_id
+  instance_id    = aws_connect_instance.test.id
+  resource_type  = aws_connect_instance_storage_config.test.resource_type
+}
+`)
 }
 
 func testAccInstanceStorageConfigDataSourceConfig_S3Config(rName, rName2 string) string {
