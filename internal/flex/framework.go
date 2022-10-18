@@ -3,6 +3,7 @@ package flex
 import (
 	"context"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
@@ -35,6 +36,16 @@ func ExpandFrameworkStringValueSet(ctx context.Context, set types.Set) []string 
 	}
 
 	return vs
+}
+
+func FlattenFrameworkStringList(_ context.Context, vs []*string) types.List {
+	elems := make([]attr.Value, len(vs))
+
+	for i, v := range vs {
+		elems[i] = types.String{Value: aws.ToString(v)}
+	}
+
+	return types.List{ElemType: types.StringType, Elems: elems}
 }
 
 func FlattenFrameworkStringValueList(_ context.Context, vs []string) types.List {
