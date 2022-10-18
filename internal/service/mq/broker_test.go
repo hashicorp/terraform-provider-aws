@@ -1394,6 +1394,10 @@ func testAccBrokerConfig_ebs(rName, version string) string {
 	return fmt.Sprintf(`
 resource "aws_security_group" "test" {
   name = %[1]q
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_mq_broker" "test" {
@@ -1420,6 +1424,10 @@ func testAccBrokerConfig_engineVersionUpdate(rName, version string) string {
 	return fmt.Sprintf(`
 resource "aws_security_group" "test" {
   name = %[1]q
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_mq_broker" "test" {
@@ -1444,12 +1452,14 @@ resource "aws_mq_broker" "test" {
 
 func testAccBrokerConfig_allFieldsDefaultVPC(rName, version, cfgName, cfgBody string) string {
 	return fmt.Sprintf(`
-resource "aws_security_group" "mq1" {
-  name = %[1]q
-}
+resource "aws_security_group" "test" {
+  count = 2
 
-resource "aws_security_group" "mq2" {
-  name = "%[1]s-2"
+  name = "%[1]s-${count.index}"
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_mq_configuration" "test" {
@@ -1485,7 +1495,7 @@ resource "aws_mq_broker" "test" {
   }
 
   publicly_accessible = true
-  security_groups     = [aws_security_group.mq1.id, aws_security_group.mq2.id]
+  security_groups     = aws_security_group.test[*].id
 
   user {
     username = "Test"
@@ -1503,26 +1513,9 @@ resource "aws_mq_broker" "test" {
 }
 
 func testAccBrokerConfig_allFieldsCustomVPC(rName, version, cfgName, cfgBody, tz string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
-resource "aws_vpc" "main" {
-  cidr_block = "10.11.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
 resource "aws_internet_gateway" "test" {
-  vpc_id = aws_vpc.main.id
+  vpc_id = aws_vpc.test.id
 
   tags = {
     Name = %[1]q
@@ -1530,7 +1523,7 @@ resource "aws_internet_gateway" "test" {
 }
 
 resource "aws_route_table" "test" {
-  vpc_id = aws_vpc.main.id
+  vpc_id = aws_vpc.test.id
 
   route {
     cidr_block = "0.0.0.0/0"
@@ -1542,35 +1535,18 @@ resource "aws_route_table" "test" {
   }
 }
 
-resource "aws_subnet" "private" {
-  count             = 2
-  cidr_block        = "10.11.${count.index}.0/24"
-  availability_zone = data.aws_availability_zones.available.names[count.index]
-  vpc_id            = aws_vpc.main.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
 resource "aws_route_table_association" "test" {
-  count          = 2
-  subnet_id      = aws_subnet.private.*.id[count.index]
+  count = 2
+
+  subnet_id      = aws_subnet.test[count.index].id
   route_table_id = aws_route_table.test.id
 }
 
-resource "aws_security_group" "mq1" {
-  name   = "%[1]s-1"
-  vpc_id = aws_vpc.main.id
+resource "aws_security_group" "test" {
+  count = 2
 
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_security_group" "mq2" {
-  name   = "%[1]s-2"
-  vpc_id = aws_vpc.main.id
+  name   = "%[1]s-${count.index}"
+  vpc_id = aws_vpc.test.id
 
   tags = {
     Name = %[1]q
@@ -1615,8 +1591,8 @@ resource "aws_mq_broker" "test" {
   }
 
   publicly_accessible = true
-  security_groups     = [aws_security_group.mq1.id, aws_security_group.mq2.id]
-  subnet_ids          = aws_subnet.private[*].id
+  security_groups     = aws_security_group.test[*].id
+  subnet_ids          = aws_subnet.test[*].id
 
   user {
     username = "Test"
@@ -1632,7 +1608,7 @@ resource "aws_mq_broker" "test" {
 
   depends_on = [aws_internet_gateway.test]
 }
-`, rName, version, cfgName, cfgBody, tz)
+`, rName, version, cfgName, cfgBody, tz))
 }
 
 func testAccBrokerConfig_encryptionOptionsKMSKeyID(rName, version string) string {
@@ -1644,6 +1620,10 @@ resource "aws_kms_key" "test" {
 
 resource "aws_security_group" "test" {
   name = %[1]q
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_mq_broker" "test" {
@@ -1674,6 +1654,10 @@ func testAccBrokerConfig_encryptionOptionsManagedKey(rName, version string, useA
 	return fmt.Sprintf(`
 resource "aws_security_group" "test" {
   name = %[1]q
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_mq_broker" "test" {
@@ -1703,6 +1687,10 @@ func testAccBrokerConfig_updateUsers1(rName, version string) string {
 	return fmt.Sprintf(`
 resource "aws_security_group" "test" {
   name = %[1]q
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_mq_broker" "test" {
@@ -1725,6 +1713,10 @@ func testAccBrokerConfig_updateUsers2(rName, version string) string {
 	return fmt.Sprintf(`
 resource "aws_security_group" "test" {
   name = %[1]q
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_mq_broker" "test" {
@@ -1753,6 +1745,10 @@ func testAccBrokerConfig_updateUsers3(rName, version string) string {
 	return fmt.Sprintf(`
 resource "aws_security_group" "test" {
   name = %[1]q
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_mq_broker" "test" {
@@ -1837,10 +1833,18 @@ func testAccBrokerConfig_updateSecurityGroups(rName, version string) string {
 	return fmt.Sprintf(`
 resource "aws_security_group" "test" {
   name = %[1]q
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_security_group" "test2" {
-  name = "%[1]s-2"
+  name = "%[1]s-1"
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_mq_broker" "test" {
@@ -1867,10 +1871,18 @@ func testAccBrokerConfig_updateUsersSecurityGroups(rName, version string) string
 	return fmt.Sprintf(`
 resource "aws_security_group" "test" {
   name = %[1]q
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_security_group" "test2" {
-  name = "%[1]s-2"
+  name = "%[1]s-1"
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_mq_broker" "test" {
@@ -1897,6 +1909,10 @@ func testAccBrokerConfig_rabbit(rName, version string) string {
 	return fmt.Sprintf(`
 resource "aws_security_group" "test" {
   name = %[1]q
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_mq_broker" "test" {
@@ -1935,6 +1951,10 @@ resource "aws_mq_broker" "test" {
 
 resource "aws_security_group" "test" {
   name = %[1]q
+
+  tags = {
+    Name = %[1]q
+  }
 }
 `, rName, version)
 }
@@ -1961,6 +1981,10 @@ resource "aws_mq_broker" "test" {
 
 resource "aws_security_group" "test" {
   name = %[1]q
+
+  tags = {
+    Name = %[1]q
+  }
 }
 `, rName, version, enabled)
 }
@@ -1969,6 +1993,10 @@ func testAccBrokerConfig_rabbitCluster(rName, version string) string {
 	return fmt.Sprintf(`
 resource "aws_security_group" "test" {
   name = %[1]q
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_mq_broker" "test" {
@@ -1992,6 +2020,10 @@ func testAccBrokerConfig_ldap(rName, version, ldapUsername string) string {
 	return fmt.Sprintf(`
 resource "aws_security_group" "test" {
   name = %[1]q
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_mq_broker" "test" {
@@ -2033,6 +2065,10 @@ func testAccBrokerConfig_instanceType(rName, version, instanceType string) strin
 	return fmt.Sprintf(`
 resource "aws_security_group" "test" {
   name = %[1]q
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_mq_broker" "test" {
