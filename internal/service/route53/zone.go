@@ -182,27 +182,16 @@ func resourceZoneRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	input := &route53.GetHostedZoneInput{
-		Id: aws.String(d.Id()),
-	}
+	output, err := FindHostedZoneByID(conn, d.Id())
 
-	log.Printf("[DEBUG] Getting Route53 Hosted Zone: %s", input)
-	output, err := conn.GetHostedZone(input)
-
-	if tfawserr.ErrCodeEquals(err, route53.ErrCodeNoSuchHostedZone) {
-		log.Printf("[WARN] Route53 Hosted Zone (%s) not found, removing from state", d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] Route53 Hosted Zone %s not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("getting Route53 Hosted Zone (%s): %s", d.Id(), err)
-	}
-
-	if output == nil || output.HostedZone == nil {
-		log.Printf("[WARN] Route53 Hosted Zone (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
+		return fmt.Errorf("reading Route53 Hosted Zone (%s): %w", d.Id(), err)
 	}
 
 	d.Set("comment", "")
