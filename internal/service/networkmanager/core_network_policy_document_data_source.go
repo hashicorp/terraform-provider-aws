@@ -160,8 +160,9 @@ func DataSourceCoreNetworkPolicyDocument() *schema.Resource {
 										ValidateFunc: verify.ValidRegionName,
 									},
 									"asn": {
-										Type:     schema.TypeInt,
-										Optional: true,
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: verify.Valid4ByteASN,
 									},
 									"inside_cidr_blocks": {
 										Type:     schema.TypeList,
@@ -626,7 +627,7 @@ func expandDataCoreNetworkPolicyNetworkConfigurationEdgeLocations(tfList []inter
 		}
 
 		if v, ok := cfgEdgeLocation["asn"]; ok {
-			edgeLocation.Asn = v.(int)
+			edgeLocation.Asn = v.(string)
 		}
 
 		if cidrs := cfgEdgeLocation["inside_cidr_blocks"].([]interface{}); len(cidrs) > 0 {

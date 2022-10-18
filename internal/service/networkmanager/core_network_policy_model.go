@@ -64,7 +64,7 @@ type CoreNetworkPolicyCoreNetworkConfiguration struct {
 
 type CoreNetworkEdgeLocation struct {
 	Location         string      `json:"location"`
-	Asn              int         `json:"asn,omitempty"`
+	Asn              string      `json:"asn,omitempty"`
 	InsideCidrBlocks interface{} `json:"inside-cidr-blocks,omitempty"`
 }
 
