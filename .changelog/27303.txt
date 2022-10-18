@@ -1,3 +1,3 @@
 ```release-note:enhancement
-data-source/aws_outposts_assets: add host and status fiter support for aws_outposts_assets data
+data-source/aws_outposts_assets: Add `host_id_filter` and `status_id_filter` support
 ```
