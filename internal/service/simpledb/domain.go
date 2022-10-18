@@ -47,7 +47,9 @@ func (r *resourceDomain) GetSchema(context.Context) (tfsdk.Schema, diag.Diagnost
 			"name": {
 				Type:     types.StringType,
 				Required: true,
-				// TODO ForceNew:true,
+				PlanModifiers: tfsdk.AttributePlanModifiers{
+					resource.RequiresReplace(),
+				},
 			},
 		},
 	}
