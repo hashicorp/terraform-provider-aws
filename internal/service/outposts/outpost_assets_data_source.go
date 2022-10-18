@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/outposts"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -47,12 +48,12 @@ func DataSourceOutpostAssetsRead(d *schema.ResourceData, meta interface{}) error
 		OutpostIdentifier: outpost_id,
 	}
 
-	if v, ok := d.GetOk("host_id_filter"); ok {
-		input.HostIdFilter = aws.StringSlice([]string{v})
+	if _, ok := d.GetOk("host_id_filter"); ok {
+		input.HostIdFilter = flex.ExpandStringList(d.Get("host_id_filter").([]interface{}))
 	}
 
-	if v, ok := d.GetOk("status_id_filter"); ok {
-		input.StatusFilter = aws.StringSlice([]string{v.(string)})
+	if _, ok := d.GetOk("status_id_filter"); ok {
+		input.StatusFilter = flex.ExpandStringList(d.Get("status_id_filter").([]interface{}))
 	}
 
 	var asset_ids []string
