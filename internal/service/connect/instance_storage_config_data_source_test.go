@@ -108,7 +108,7 @@ func testAccInstanceStorageConfigDataSource_S3Config(t *testing.T) {
 		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
-			{
+			{ // nosemgrep:ci.test-config-funcs-correct-form
 				Config: testAccInstanceStorageConfigDataSourceConfig_S3Config(rName, rName2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "association_id", resourceName, "association_id"),
