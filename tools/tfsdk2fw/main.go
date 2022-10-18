@@ -180,6 +180,7 @@ func (m *migrator) generateTemplateData() (*templateData, error) {
 	}
 
 	templateData := &templateData{
+		EmitResourceImportState:      m.Resource.Importer != nil,
 		ImportFrameworkAttr:          emitter.ImportFrameworkAttr,
 		ImportProviderFrameworkTypes: emitter.ImportProviderFrameworkTypes,
 		Name:                         m.Name,
@@ -753,6 +754,7 @@ func unsupportedTypeError(path []string, typ string) error {
 }
 
 type templateData struct {
+	EmitResourceImportState      bool
 	ImportFrameworkAttr          bool
 	ImportProviderFrameworkTypes bool
 	Name                         string // e.g. Instance

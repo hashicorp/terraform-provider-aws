@@ -6,6 +6,7 @@ import (
     "context"
 
     {{if .ImportFrameworkAttr }}"github.com/hashicorp/terraform-plugin-framework/attr"{{- end}}
+    {{if .EmitResourceImportState }}"github.com/hashicorp/terraform-plugin-framework/path"{{- end}}
     "github.com/hashicorp/terraform-plugin-framework/resource"
     "github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
@@ -106,6 +107,16 @@ func (r *resource{{ .Name }}) Delete(ctx context.Context, request resource.Delet
 		return
 	}
 }
+
+{{if .EmitResourceImportState }}
+// ImportState is called when the provider must import the state of a resource instance.
+// This method must return enough state so the Read method can properly refresh the full resource.
+//
+// If setting an attribute with the import identifier, it is recommended to use the ImportStatePassthroughID() call in this method.
+func (r *resource{{ .Name }}) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+	resource.ImportStatePassthroughID(ctx, path.Root("id"), request, response)
+}
+{{- end}}
 
 type resource{{ .Name }}Data struct {
     {{ .Struct }}
