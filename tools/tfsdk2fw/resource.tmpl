@@ -82,7 +82,7 @@ func (r *resource{{ .Name }}) Read(ctx context.Context, request resource.ReadReq
 // Update is called to update the state of the resource.
 // Config, planned state, and prior state values should be read from the UpdateRequest and new state values set on the UpdateResponse.
 func (r *resource{{ .Name }}) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
-	var data resource{{ .Name }}Data
+{{if .EmitResourceUpdateSkeleton }}var data resource{{ .Name }}Data
 
 	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
 
@@ -90,7 +90,7 @@ func (r *resource{{ .Name }}) Update(ctx context.Context, request resource.Updat
 		return
 	}
 
-    response.Diagnostics.Append(response.State.Set(ctx, &data)...)
+    response.Diagnostics.Append(response.State.Set(ctx, &data)...){{- else}}// Noop.{{- end}}
 }
 
 // Delete is called when the provider must delete the resource.

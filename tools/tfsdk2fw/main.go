@@ -181,6 +181,7 @@ func (m *migrator) generateTemplateData() (*templateData, error) {
 
 	templateData := &templateData{
 		EmitResourceImportState:      m.Resource.Importer != nil,
+		EmitResourceUpdateSkeleton:   m.Resource.Update != nil || m.Resource.UpdateContext != nil || m.Resource.UpdateWithoutTimeout != nil,
 		ImportFrameworkAttr:          emitter.ImportFrameworkAttr,
 		ImportProviderFrameworkTypes: emitter.ImportProviderFrameworkTypes,
 		Name:                         m.Name,
@@ -755,6 +756,7 @@ func unsupportedTypeError(path []string, typ string) error {
 
 type templateData struct {
 	EmitResourceImportState      bool
+	EmitResourceUpdateSkeleton   bool
 	ImportFrameworkAttr          bool
 	ImportProviderFrameworkTypes bool
 	Name                         string // e.g. Instance
