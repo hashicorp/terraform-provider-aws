@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	fwresource "github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
-	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -16,7 +16,7 @@ import (
 
 // Terraform Plugin Framework variants of standard acceptance test helpers.
 
-func DeleteFrameworkResource(factory func(context.Context) (fwresource.ResourceWithConfigure, error), id string, meta interface{}) error {
+func DeleteFrameworkResource(factory func(context.Context) (fwresource.ResourceWithConfigure, error), is *terraform.InstanceState, meta interface{}) error {
 	ctx := context.Background()
 
 	resource, err := factory(ctx)
@@ -27,25 +27,18 @@ func DeleteFrameworkResource(factory func(context.Context) (fwresource.ResourceW
 
 	resource.Configure(ctx, fwresource.ConfigureRequest{ProviderData: meta}, &fwresource.ConfigureResponse{})
 
+	schema, diags := resource.GetSchema(ctx)
+
+	if diags.HasError() {
+		return errs.NewDiagnosticsError(diags)
+	}
+
 	// Simple Terraform State that contains just the resource ID.
 	state := tfsdk.State{
-		Raw: tftypes.NewValue(tftypes.Object{
-			AttributeTypes: map[string]tftypes.Type{
-				"id": tftypes.String,
-			},
-		}, map[string]tftypes.Value{
-			"id": tftypes.NewValue(tftypes.String, id),
-		}),
-		Schema: tfsdk.Schema{
-			Attributes: map[string]tfsdk.Attribute{
-				"id": {
-					Type:     types.StringType,
-					Optional: true,
-					Computed: true,
-				},
-			},
-		},
+		Raw:    tftypes.NewValue(schema.Type().TerraformType(ctx), nil),
+		Schema: schema,
 	}
+	state.SetAttribute(ctx, path.Root("id"), is.ID)
 	response := fwresource.DeleteResponse{}
 	resource.Delete(ctx, fwresource.DeleteRequest{State: state}, &response)
 
@@ -67,6 +60,6 @@ func CheckFrameworkResourceDisappears(provo *schema.Provider, factory func(conte
 			return fmt.Errorf("resource ID missing: %s", n)
 		}
 
-		return DeleteFrameworkResource(factory, rs.Primary.ID, provo.Meta())
+		return DeleteFrameworkResource(factory, rs.Primary, provo.Meta())
 	}
 }
