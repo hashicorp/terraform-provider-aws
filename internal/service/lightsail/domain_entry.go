@@ -20,9 +20,9 @@ import (
 
 func ResourceDomainEntry() *schema.Resource {
 	return &schema.Resource{
-		CreateWithoutTimeout: resourceAwsLightsailDomainEntryCreate,
-		ReadWithoutTimeout:   resourceAwsLightsailDomainEntryRead,
-		DeleteWithoutTimeout: resourceAwsLightsailDomainEntryDelete,
+		CreateWithoutTimeout: resourceDomainEntryCreate,
+		ReadWithoutTimeout:   resourceDomainEntryRead,
+		DeleteWithoutTimeout: resourceDomainEntryDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -67,7 +67,7 @@ func ResourceDomainEntry() *schema.Resource {
 	}
 }
 
-func resourceAwsLightsailDomainEntryCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDomainEntryCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).LightsailConn
 
 	req := &lightsail.CreateDomainEntryInput{
@@ -104,10 +104,10 @@ func resourceAwsLightsailDomainEntryCreate(ctx context.Context, d *schema.Resour
 
 	d.SetId(strings.Join(vars, "_"))
 
-	return resourceAwsLightsailDomainEntryRead(ctx, d, meta)
+	return resourceDomainEntryRead(ctx, d, meta)
 }
 
-func resourceAwsLightsailDomainEntryRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDomainEntryRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).LightsailConn
 
 	entry, err := FindDomainEntryById(ctx, conn, d.Id())
@@ -133,7 +133,7 @@ func resourceAwsLightsailDomainEntryRead(ctx context.Context, d *schema.Resource
 	return nil
 }
 
-func resourceAwsLightsailDomainEntryDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDomainEntryDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).LightsailConn
 
 	resp, err := conn.DeleteDomainEntry(&lightsail.DeleteDomainEntryInput{
