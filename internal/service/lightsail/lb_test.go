@@ -113,6 +113,7 @@ func TestAccLightsailLoadBalancer_HealthCheckPath(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, lightsail.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLoadBalancerDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLoadBalancerConfig_healthCheckPath(rName, "/"),
@@ -150,6 +151,7 @@ func TestAccLightsailLoadBalancer_Tags(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, lightsail.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLoadBalancerDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLoadBalancerConfig_tags1(rName, "key1", "value1"),

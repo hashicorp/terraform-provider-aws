@@ -40,7 +40,6 @@ func ResourceLoadBalancerAttachment() *schema.Resource {
 			},
 			"instance_name": {
 				Type:     schema.TypeString,
-				Set:      schema.HashString,
 				Required: true,
 				ForceNew: true,
 			},

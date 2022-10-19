@@ -58,6 +58,7 @@ func TestAccLightsailLoadBalancerAttachment_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, lightsail.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLoadBalancerAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLoadBalancerAttachmentConfig_basic(lbName, liName),
