@@ -2438,7 +2438,7 @@ func expandOutputsOutputSettings(tfList []interface{}) *types.OutputSettings {
 
 	var os types.OutputSettings
 	if v, ok := m["archive_output_settings"].([]interface{}); ok && len(v) > 0 {
-		os.ArchiveOutputSettings = expandOutputsOutputSettingsArchiveOutputSettings()
+		os.ArchiveOutputSettings = expandOutputsOutputSettingsArchiveOutputSettings(v)
 	}
 
 	return &os
@@ -2452,6 +2452,9 @@ func expandOutputsOutputSettingsArchiveOutputSettings(tfList []interface{}) *typ
 	m := tfList[0].(map[string]interface{})
 
 	var settings types.ArchiveOutputSettings
+	if v, ok := m["container_settings"].([]interface{}); ok && len(v) > 0 {
+		settings.ContainerSettings = expandOutputsOutputSettingsArchiveSettingsContainerSettings(v)
+	}
 	if v, ok := m["extension"].(string); ok && v != "" {
 		settings.Extension = aws.String(v)
 	}
@@ -2459,6 +2462,179 @@ func expandOutputsOutputSettingsArchiveOutputSettings(tfList []interface{}) *typ
 		settings.NameModifier = aws.String(v)
 	}
 	return &settings
+}
+
+func expandOutputsOutputSettingsArchiveSettingsContainerSettings(tfList []interface{}) *types.ArchiveContainerSettings {
+	if tfList == nil {
+		return nil
+	}
+
+	m := tfList[0].(map[string]interface{})
+
+	var settings types.ArchiveContainerSettings
+	if v, ok := m["m2ts_settings"].([]interface{}); ok && len(v) > 0 {
+		settings.M2tsSettings = expandM2tsSettings(v)
+	}
+
+	return &settings
+}
+
+func expandM2tsSettings(tfList []interface{}) *types.M2tsSettings {
+	if tfList == nil {
+		return nil
+	}
+
+	m := tfList[0].(map[string]interface{})
+
+	var s types.M2tsSettings
+	if v, ok := m["absent_input_audio_behavior"].(string); ok && v != "" {
+		s.AbsentInputAudioBehavior = types.M2tsAbsentInputAudioBehavior(v)
+	}
+	if v, ok := m["arib"].(string); ok && v != "" {
+		s.Arib = types.M2tsArib(v)
+	}
+	if v, ok := m["arib_caption_pid"].(string); ok && v != "" {
+		s.AribCaptionsPid = aws.String(v)
+	}
+	if v, ok := m["arib_caption_pid_control"].(string); ok && v != "" {
+		s.AribCaptionsPidControl = types.M2tsAribCaptionsPidControl(v)
+	}
+	if v, ok := m["audio_buffer_model"].(string); ok && v != "" {
+		s.AudioBufferModel = types.M2tsAudioBufferModel(v)
+	}
+	if v, ok := m["audio_frames_per_pes"].(int); ok {
+		s.AudioFramesPerPes = int32(v)
+	}
+	if v, ok := m["audi_pids"].(string); ok && v != "" {
+		s.AudioPids = aws.String(v)
+	}
+	if v, ok := m["audio_stream_type"].(string); ok && v != "" {
+		s.AudioStreamType = types.M2tsAudioStreamType(v)
+	}
+	if v, ok := m["bitrate"].(int); ok {
+		s.Bitrate = int32(v)
+	}
+	if v, ok := m["buffer_model"].(string); ok && v != "" {
+		s.AudioBufferModel = types.M2tsAudioBufferModel(v)
+	}
+	if v, ok := m["cc_descriptor"].(string); ok && v != "" {
+		s.CcDescriptor = types.M2tsCcDescriptor(v)
+	}
+	if v, ok := m["dvb_nit_settings"].([]interface{}); ok && len(v) > 0 {
+		s.DvbNitSettings = expandM2tsDvbNitSettings(v)
+	}
+	if v, ok := m["dvb_sdt_settings"].([]interface{}); ok && len(v) > 0 {
+		s.DvbSdtSettings = expandM2tsDvbSdtSettings(v)
+	}
+	if v, ok := m["dvb_sub_pids"].(string); ok && v != "" {
+		s.AudioPids = aws.String(v)
+	}
+	if v, ok := m["dvb_tdt_settings"].([]interface{}); ok && len(v) > 0 {
+		s.DvbTdtSettings = func(tfList []interface{}) *types.DvbTdtSettings {
+			if tfList == nil {
+				return nil
+			}
+
+			m := tfList[0].(map[string]interface{})
+
+			var s types.DvbTdtSettings
+			if v, ok := m["rep_interval"].(int); ok {
+				s.RepInterval = int32(v)
+			}
+			return &s
+		}(v)
+	}
+	if v, ok := m["dvb_teletext_pid"].(string); ok && v != "" {
+		s.DvbTeletextPid = aws.String(v)
+	}
+	if v, ok := m["ebif"].(string); ok && v != "" {
+		s.Ebif = types.M2tsEbifControl(v)
+	}
+	if v, ok := m["ebp_audio_interval"].(string); ok && v != "" {
+		s.EbpAudioInterval = types.M2tsAudioInterval(v)
+	}
+	if v, ok := m["ebp_lookahead_ms"].(int); ok {
+		s.EbpLookaheadMs = int32(v)
+	}
+	if v, ok := m["ebp_placement"].(string); ok && v != "" {
+		s.EbpPlacement = types.M2tsEbpPlacement(v)
+	}
+	if v, ok := m["ecm_pid"].(string); ok && v != "" {
+		s.EcmPid = aws.String(v)
+	}
+	if v, ok := m["es_rate_in_pes"].(string); ok && v != "" {
+		s.EsRateInPes = types.M2tsEsRateInPes(v)
+	}
+	if v, ok := m["etv_platform_pid"].(string); ok && v != "" {
+		s.EtvPlatformPid = aws.String(v)
+	}
+	if v, ok := m["etv_signal_pid"].(string); ok && v != "" {
+		s.EtvSignalPid = aws.String(v)
+	}
+	if v, ok := m["fragment_time"].(float32); ok {
+		s.FragmentTime = float64(v)
+	}
+	if v, ok := m["klv"].(string); ok && v != "" {
+		s.Klv = types.M2tsKlv(v)
+	}
+	if v, ok := m["klv_data_pids"].(string); ok && v != "" {
+		s.KlvDataPids = aws.String(v)
+	}
+	if v, ok := m["nielsen_id3_behavior"].(string); ok && v != "" {
+		s.NielsenId3Behavior = types.M2tsNielsenId3Behavior(v)
+	}
+	if v, ok := m["null_packet_bitrate"].(float32); ok {
+		s.NullPacketBitrate = float64(v)
+	}
+	if v, ok := m["pat_interval"].(int); ok && {
+		s.PatInterval = int32(v)
+	}
+
+	return &s
+}
+
+func expandM2tsDvbNitSettings(tfList []interface{}) *types.DvbNitSettings {
+	if tfList == nil {
+		return nil
+	}
+
+	m := tfList[0].(map[string]interface{})
+
+	var s types.DvbNitSettings
+	if v, ok := m["network_ids"].(int); ok {
+		s.NetworkId = int32(v)
+	}
+	if v, ok := m["network_name"].(string); ok && v != "" {
+		s.NetworkName = aws.String(v)
+	}
+	if v, ok := m["network_ids"].(int); ok {
+		s.RepInterval = int32(v)
+	}
+	return &s
+}
+
+func expandM2tsDvbSdtSettings(tfList []interface{}) *types.DvbSdtSettings {
+	if tfList == nil {
+		return nil
+	}
+
+	m := tfList[0].(map[string]interface{})
+
+	var s types.DvbSdtSettings
+	if v, ok := m["output_sdt"].(string); ok && v != "" {
+		s.OutputSdt = types.DvbSdtOutputSdt(v)
+	}
+	if v, ok := m["rep_interval"].(int); ok {
+		s.RepInterval = int32(v)
+	}
+	if v, ok := m["service_name"].(string); ok && v != "" {
+		s.ServiceName = aws.String(v)
+	}
+	if v, ok := m["service_provider_name"].(string); ok && v != "" {
+		s.ServiceProviderName = aws.String(v)
+	}
+
+	return &s
 }
 
 func expandChannelEncoderSettingsTimecodeConfig(tfList []interface{}) *types.TimecodeConfig {
