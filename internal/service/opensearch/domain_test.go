@@ -1851,7 +1851,6 @@ func testAccCheckDomainDestroy(s *terraform.State) error {
 		}
 
 		return fmt.Errorf("OpenSearch domain %s still exists", rs.Primary.ID)
-
 	}
 	return nil
 }
