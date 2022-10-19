@@ -521,10 +521,11 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_docdb_engine_version":        docdb.DataSourceEngineVersion(),
 			"aws_docdb_orderable_db_instance": docdb.DataSourceOrderableDBInstance(),
 
-			"aws_dx_connection": directconnect.DataSourceConnection(),
-			"aws_dx_gateway":    directconnect.DataSourceGateway(),
-			"aws_dx_location":   directconnect.DataSourceLocation(),
-			"aws_dx_locations":  directconnect.DataSourceLocations(),
+			"aws_dx_connection":           directconnect.DataSourceConnection(),
+			"aws_dx_gateway":              directconnect.DataSourceGateway(),
+			"aws_dx_location":             directconnect.DataSourceLocation(),
+			"aws_dx_locations":            directconnect.DataSourceLocations(),
+			"aws_dx_router_configuration": directconnect.DataSourceRouterConfiguration(),
 
 			"aws_directory_service_directory": ds.DataSourceDirectory(),
 
