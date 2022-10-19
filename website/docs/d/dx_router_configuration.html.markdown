@@ -57,6 +57,3 @@ In addition to all arguments above, the following attributes are exported:
   * `vendor` - Router vendor
   * `xslt_template_name` - Router XSLT Template Name
   * `xslt_template_name_for_mac` - Router XSLT Template Name for MacSec
-
-* `arn` - ARN of the Router Configuration. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
-* `example_attribute` - Concise description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
