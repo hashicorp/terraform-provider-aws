@@ -179,7 +179,7 @@ func (g *Graph) OverallOrder() ([]string, error) {
 	return order, nil
 }
 
-// sliceRemoveString removes all occurences of the specified string from a slice.
+// sliceRemoveString removes all occurrences of the specified string from a slice.
 func sliceRemoveString(slice []string, s string) []string {
 	result := make([]string, 0)
 
