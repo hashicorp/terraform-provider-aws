@@ -89,6 +89,14 @@ The `s3_destination` block supports the following arguments:
 * `bucket` - (Optional) The name of the bucket in which Evidently stores evaluation events.
 * `prefix` - (Optional) The bucket prefix in which Evidently stores evaluation events.
 
+## Timeouts
+
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+
+* `create` - (Default `2m`)
+* `delete` - (Default `2m`)
+* `update` - (Default `2m`)
+
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
