@@ -248,9 +248,11 @@ func ResourceTargetGroup() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 							ValidateFunc: validation.StringInSlice([]string{
-								"lb_cookie",  // Only for ALBs
-								"app_cookie", // Only for ALBs
-								"source_ip",  // Only for NLBs
+								"lb_cookie",               // Only for ALBs
+								"app_cookie",              // Only for ALBs
+								"source_ip",               // Only for NLBs
+								"source_ip_dest_ip",       // Only for GWLBs
+								"source_ip_dest_ip_proto", // Only for GWLBs
 							}, false),
 						},
 					},
@@ -262,6 +264,31 @@ func ResourceTargetGroup() *schema.Resource {
 				Computed:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice(elbv2.TargetGroupIpAddressTypeEnum_Values(), false),
+			},
+			"target_failover": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"on_deregistration": {
+							Type:     schema.TypeString,
+							Optional: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								"rebalance",
+								"no_rebalance",
+							}, false),
+						},
+						"on_unhealthy": {
+							Type:     schema.TypeString,
+							Optional: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								"rebalance",
+								"no_rebalance",
+							}, false),
+						},
+					},
+				},
 			},
 			"target_type": {
 				Type:         schema.TypeString,
@@ -473,6 +500,21 @@ func resourceTargetGroupCreate(d *schema.ResourceData, meta interface{}) error {
 				Key:   aws.String("slow_start.duration_seconds"),
 				Value: aws.String(fmt.Sprintf("%d", v.(int))),
 			})
+		}
+
+		if v, ok := d.GetOk("target_failover"); ok {
+			failoverBlock := v.([]interface{})
+			failover := failoverBlock[0].(map[string]interface{})
+			attrs = append(attrs,
+				&elbv2.TargetGroupAttribute{
+					Key:   aws.String("target_failover.on_deregistration"),
+					Value: aws.String(failover["on_deregistration"].(string)),
+				},
+				&elbv2.TargetGroupAttribute{
+					Key:   aws.String("target_failover.on_unhealthy"),
+					Value: aws.String(failover["on_unhealthy"].(string)),
+				},
+			)
 		}
 
 		if v, ok := d.Get("protocol").(string); ok && v != elbv2.ProtocolEnumGeneve {
