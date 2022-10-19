@@ -85,6 +85,7 @@ The following arguments are supported:
 * `slow_start` - (Optional) Amount time for targets to warm up before the load balancer sends them a full share of requests. The range is 30-900 seconds or 0 to disable. The default value is 0 seconds.
 * `stickiness` - (Optional, Maximum of 1) Stickiness configuration block. Detailed below.
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `target_failover` - (Optional) Target failover block. Detailed below. Only applicable for Gateway Load Balancer target groups.
 * `target_type` - (May be required, Forces new resource) Type of target that you must specify when registering targets with this target group. See [doc](https://docs.aws.amazon.com/elasticloadbalancing/latest/APIReference/API_CreateTargetGroup.html) for supported values. The default is `instance`.
 
   Note that you can't specify targets for a target group using both instance IDs and IP addresses.
@@ -118,7 +119,13 @@ The following arguments are supported:
 * `cookie_duration` - (Optional) Only used when the type is `lb_cookie`. The time period, in seconds, during which requests from a client should be routed to the same target. After this time period expires, the load balancer-generated cookie is considered stale. The range is 1 second to 1 week (604800 seconds). The default value is 1 day (86400 seconds).
 * `cookie_name` - (Optional) Name of the application based cookie. AWSALB, AWSALBAPP, and AWSALBTG prefixes are reserved and cannot be used. Only needed when type is `app_cookie`.
 * `enabled` - (Optional) Boolean to enable / disable `stickiness`. Default is `true`.
-* `type` - (Required) The type of sticky sessions. The only current possible values are `lb_cookie`, `app_cookie` for ALBs, and `source_ip` for NLBs.
+* `type` - (Required) The type of sticky sessions. The only current possible values are `lb_cookie`, `app_cookie` for ALBs, `source_ip` for NLBs, and `source_ip_dest_ip`, `source_ip_dest_ip_proto` for GWLBs.
+
+### target_failover
+~> **NOTE:** This block is only applicable for a Gateway Load Balancer (GWLB). The two attributes `on_deregistration` and `on_unhealthy` cannot be set independently. The value you set for both attributes must be the same.
+
+* `on_deregistration` - (Optional) Indicates how the GWLB handles existing flows when a target is deregistered. Possible values are `rebalance` and `no_rebalance`. Must match the attribute value set for `on_unhealthy`. Default: `no_rebalance`. 
+* `on_unhealthy` - Indicates how the GWLB handles existing flows when a target is unhealthy. Possible values are `rebalance` and `no_rebalance`. Must match the attribute value set for `on_deregistration`. Default: `no_rebalance`. 
 
 ## Attributes Reference
 
