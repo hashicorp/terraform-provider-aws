@@ -13,11 +13,12 @@ import (
 // AttributeMap represents a map of Terraform resource attribute name to AWS API attribute name.
 // Useful for SQS Queue or SNS Topic attribute handling.
 type attributeInfo struct {
-	apiAttributeName string
-	tfType           schema.ValueType
-	tfComputed       bool
-	tfOptional       bool
-	isIAMPolicy      bool
+	alwaysSendConfiguredValueOnCreate bool
+	apiAttributeName                  string
+	tfType                            schema.ValueType
+	tfComputed                        bool
+	tfOptional                        bool
+	isIAMPolicy                       bool
 }
 
 type AttributeMap map[string]attributeInfo
@@ -104,11 +105,12 @@ func (m AttributeMap) ResourceDataToApiAttributesCreate(d *schema.ResourceData) 
 		}
 
 		var apiAttributeValue string
+		configuredValue := d.GetRawConfig().GetAttr(tfAttributeName)
 		tfOptionalComputed := attributeInfo.tfComputed && attributeInfo.tfOptional
 
 		switch v, t := d.Get(tfAttributeName), attributeInfo.tfType; t {
 		case schema.TypeBool:
-			if v := v.(bool); v {
+			if v := v.(bool); v || (attributeInfo.alwaysSendConfiguredValueOnCreate && !configuredValue.IsNull()) {
 				apiAttributeValue = strconv.FormatBool(v)
 			}
 		case schema.TypeInt:
@@ -193,6 +195,18 @@ func (m AttributeMap) ApiAttributeNames() []string {
 	}
 
 	return apiAttributeNames
+}
+
+// WithAlwaysSendConfiguredBooleanValueOnCreate marks the specified Terraform Boolean attribute as always having any configured value sent on resource create.
+// By default a Boolean value is only sent to the API on resource create if its configured value is true.
+// This method is intended to be chained with other similar helper methods in a builder pattern.
+func (m AttributeMap) WithAlwaysSendConfiguredBooleanValueOnCreate(tfAttributeName string) AttributeMap {
+	if attributeInfo, ok := m[tfAttributeName]; ok && attributeInfo.tfType == schema.TypeBool {
+		attributeInfo.alwaysSendConfiguredValueOnCreate = true
+		m[tfAttributeName] = attributeInfo
+	}
+
+	return m
 }
 
 // WithIAMPolicyAttribute marks the specified Terraform attribute as holding an AWS IAM policy.
