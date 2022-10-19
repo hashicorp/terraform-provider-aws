@@ -1716,6 +1716,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_lightsail_instance_public_ports":                lightsail.ResourceInstancePublicPorts(),
 			"aws_lightsail_key_pair":                             lightsail.ResourceKeyPair(),
 			"aws_lightsail_lb":                                   lightsail.ResourceLoadBalancer(),
+			"aws_lightsail_lb_attachment":                        lightsail.ResourceLoadBalancerAttachment(),
 			"aws_lightsail_static_ip":                            lightsail.ResourceStaticIP(),
 			"aws_lightsail_static_ip_attachment":                 lightsail.ResourceStaticIPAttachment(),
 
