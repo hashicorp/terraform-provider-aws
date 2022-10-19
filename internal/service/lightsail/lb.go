@@ -108,7 +108,7 @@ func resourceLoadBalancerCreate(ctx context.Context, d *schema.ResourceData, met
 		in.Tags = Tags(tags.IgnoreAWS())
 	}
 
-	out, err := conn.CreateLoadBalancer(&in)
+	out, err := conn.CreateLoadBalancerWithContext(ctx, &in)
 
 	if err != nil {
 		return create.DiagError(names.Lightsail, lightsail.OperationTypeCreateLoadBalancer, ResLoadBalancer, d.Get("name").(string), err)
@@ -222,7 +222,8 @@ func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, met
 
 func resourceLoadBalancerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).LightsailConn
-	out, err := conn.DeleteLoadBalancer(&lightsail.DeleteLoadBalancerInput{
+
+	out, err := conn.DeleteLoadBalancerWithContext(ctx, &lightsail.DeleteLoadBalancerInput{
 		LoadBalancerName: aws.String(d.Id()),
 	})
 
