@@ -19,6 +19,16 @@ data "aws_rds_engine_version" "test" {
 }
 ```
 
+```terraform
+data "aws_rds_engine_version" "test" {
+  engine             = "aurora"
+  filter {
+    name   = "engine-mode"
+    values = ["serverless"]
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
@@ -27,6 +37,7 @@ The following arguments are supported:
 * `parameter_group_family` - (Optional) Name of a specific DB parameter group family. Examples of parameter group families are `mysql8.0`, `mariadb10.4`, and `postgres12`.
 * `preferred_versions` - (Optional) Ordered list of preferred engine versions. The first match in this list will be returned. If no preferred matches are found and the original search returned more than one result, an error is returned. If both the `version` and `preferred_versions` arguments are not configured, the data source will return the default version for the engine.
 * `version` - (Optional) Version of the DB engine. For example, `5.7.22`, `10.1.34`, and `12.3`. If both the `version` and `preferred_versions` arguments are not configured, the data source will return the default version for the engine.
+* `engine-mode` - (Optional) Accepts DB engine modes for Aurora. The results list only includes information about the DB engine versions for these engine modes. Valid DB engine modes are the following: `global`, `multimaster`, `parallelquery`, `provisioned` and `serverless`.
 
 ## Attribute Reference
 
