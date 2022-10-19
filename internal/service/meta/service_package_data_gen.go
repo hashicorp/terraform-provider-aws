@@ -37,4 +37,8 @@ func (d *servicePackageData) FrameworkResources(ctx context.Context) []func(cont
 	return d.frameworkResourceFactories
 }
 
+func (d *servicePackageData) ServicePackageName() string {
+	return "meta"
+}
+
 var ServicePackageData intf.ServicePackageData = spd

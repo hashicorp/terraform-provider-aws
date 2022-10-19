@@ -12,4 +12,5 @@ type ServicePackageData interface {
 	Configure(context.Context, any) error
 	FrameworkDataSources(context.Context) []func(context.Context) (datasource.DataSourceWithConfigure, error)
 	FrameworkResources(context.Context) []func(context.Context) (resource.ResourceWithConfigure, error)
+	ServicePackageName() string
 }
