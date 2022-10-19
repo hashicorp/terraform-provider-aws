@@ -42,13 +42,11 @@ func DataSourceOutpostAssets() *schema.Resource {
 			"status_id_filter": {
 				Type:     schema.TypeSet,
 				Optional: true,
-				//MinItems: 1,
 				MaxItems: 2,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 					ValidateFunc: validation.All(
 						validation.StringInSlice(outposts.AssetState_Values(), false),
-						//validation.NoZeroValues,
 					),
 				},
 			},
