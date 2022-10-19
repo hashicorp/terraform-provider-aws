@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"golang.org/x/exp/slices"
 )
 
@@ -41,14 +42,14 @@ func (g *Graph) AddNode(s string) {
 func (g *Graph) RemoveNode(s string) {
 	if g.HasNode(s) {
 		for n, edges := range g.outgoingEdges {
-			g.outgoingEdges[n] = sliceRemoveString(edges, s)
+			g.outgoingEdges[n] = tfslices.RemoveAll(edges, s)
 		}
 
 		for n, edges := range g.incomingEdges {
-			g.incomingEdges[n] = sliceRemoveString(edges, s)
+			g.incomingEdges[n] = tfslices.RemoveAll(edges, s)
 		}
 
-		g.nodes = sliceRemoveString(g.nodes, s)
+		g.nodes = tfslices.RemoveAll(g.nodes, s)
 		delete(g.outgoingEdges, s)
 		delete(g.incomingEdges, s)
 	}
@@ -84,11 +85,11 @@ func (g *Graph) AddDependency(from, to string) error {
 // If either node doesn't exist no error is returned.
 func (g *Graph) RemoveDependency(from, to string) {
 	if g.HasNode(from) {
-		g.outgoingEdges[from] = sliceRemoveString(g.outgoingEdges[from], to)
+		g.outgoingEdges[from] = tfslices.RemoveAll(g.outgoingEdges[from], to)
 	}
 
 	if g.HasNode(to) {
-		g.incomingEdges[to] = sliceRemoveString(g.incomingEdges[to], from)
+		g.incomingEdges[to] = tfslices.RemoveAll(g.incomingEdges[to], from)
 	}
 }
 
@@ -126,7 +127,7 @@ func (g *Graph) DependenciesOf(s string) ([]string, error) {
 		return nil, err
 	}
 
-	return sliceRemoveString(result, s), nil
+	return tfslices.RemoveAll(result, s), nil
 }
 
 // DependentsOf returns the nodes that depend on the specified node (transitively).
@@ -143,7 +144,7 @@ func (g *Graph) DependentsOf(s string) ([]string, error) {
 		return nil, err
 	}
 
-	return sliceRemoveString(result, s), nil
+	return tfslices.RemoveAll(result, s), nil
 }
 
 // OverallOrder returns the overall processing order for the dependency graph.
@@ -179,19 +180,6 @@ func (g *Graph) OverallOrder() ([]string, error) {
 	}
 
 	return order, nil
-}
-
-// sliceRemoveString removes all occurrences of the specified string from a slice.
-func sliceRemoveString(slice []string, s string) []string {
-	result := make([]string, 0)
-
-	for _, v := range slice {
-		if v != s {
-			result = append(result, v)
-		}
-	}
-
-	return result
 }
 
 // depthFirstSearch returns a Topological Sort using Depth-First-Search on a set of edges.
