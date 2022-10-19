@@ -6,7 +6,6 @@ import (
 )
 
 // Graph implements a simple dependency graph.
-// Inspired by https://github.com/jriecken/dependency-graph.
 type Graph struct {
 	nodes         []string
 	outgoingEdges map[string][]string
