@@ -3,6 +3,8 @@ package depgraph
 import (
 	"fmt"
 	"strings"
+
+	"golang.org/x/exp/slices"
 )
 
 // Graph implements a simple dependency graph.
@@ -54,7 +56,7 @@ func (g *Graph) RemoveNode(s string) {
 
 // HasNode returns whether the specified string is in the graph.
 func (g *Graph) HasNode(s string) bool {
-	return sliceContainsString(g.nodes, s)
+	return slices.Contains(g.nodes, s)
 }
 
 // AddDependency adds a dependency between two nodes.
@@ -67,11 +69,11 @@ func (g *Graph) AddDependency(from, to string) error {
 		return nonExistentNodeError(to)
 	}
 
-	if !sliceContainsString(g.outgoingEdges[from], to) {
+	if !slices.Contains(g.outgoingEdges[from], to) {
 		g.outgoingEdges[from] = append(g.outgoingEdges[from], to)
 	}
 
-	if !sliceContainsString(g.incomingEdges[to], from) {
+	if !slices.Contains(g.incomingEdges[to], from) {
 		g.incomingEdges[to] = append(g.incomingEdges[to], from)
 	}
 
@@ -192,17 +194,6 @@ func sliceRemoveString(slice []string, s string) []string {
 	return result
 }
 
-// sliceContainsString returns whether a slice contains a specified string.
-func sliceContainsString(slice []string, s string) bool {
-	for _, v := range slice {
-		if v == s {
-			return true
-		}
-	}
-
-	return false
-}
-
 // depthFirstSearch returns a Topological Sort using Depth-First-Search on a set of edges.
 // Returns an error if a dependency cycle is detected.
 func depthFirstSearch(edges map[string][]string) func(s string) ([]string, error) {
@@ -216,7 +207,7 @@ func depthFirstSearch(edges map[string][]string) func(s string) ([]string, error
 	return func(s string) ([]string, error) {
 		results := make([]string, 0)
 
-		if sliceContainsString(visited, s) {
+		if slices.Contains(visited, s) {
 			return results, nil
 		}
 
@@ -234,7 +225,7 @@ func depthFirstSearch(edges map[string][]string) func(s string) ([]string, error
 
 			if !current.processed {
 				// Visit edges.
-				if sliceContainsString(visited, node) {
+				if slices.Contains(visited, node) {
 					todo.pop()
 
 					continue
