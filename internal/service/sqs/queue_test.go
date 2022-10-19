@@ -671,7 +671,7 @@ func TestAccSQSQueue_encryption(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccQueueConfig_managedEncryption(rName, "true"),
+				Config: testAccManagedEncryptionConfig(rName, "true"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueueExists(resourceName, &queueAttributes),
 					resource.TestCheckResourceAttr(resourceName, "kms_data_key_reuse_period_seconds", strconv.Itoa(tfsqs.DefaultQueueKMSDataKeyReusePeriodSeconds)),
@@ -689,13 +689,13 @@ func TestAccSQSQueue_managedEncryption(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sqs.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckQueueDestroy,
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, sqs.EndpointsID),
+		Providers:    acctest.Providers,
+		CheckDestroy: testAccCheckQueueDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccQueueConfig_managedEncryption(rName, "null"),
+				Config: testAccManagedEncryptionConfig(rName, "null"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueueExists(resourceName, &queueAttributes),
 					resource.TestCheckResourceAttr(resourceName, "sqs_managed_sse_enabled", "true"),
@@ -707,7 +707,7 @@ func TestAccSQSQueue_managedEncryption(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccQueueConfig_managedEncryption(rName, "false"),
+				Config: testAccManagedEncryptionConfig(rName, "false"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueueExists(resourceName, &queueAttributes),
 					resource.TestCheckResourceAttr(resourceName, "sqs_managed_sse_enabled", "false"),
