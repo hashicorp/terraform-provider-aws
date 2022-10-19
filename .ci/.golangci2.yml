@@ -29,6 +29,7 @@ linters:
     - unused
     - vet
     - vetshadow
+    - whitespace
 
 linters-settings:
   errcheck:
