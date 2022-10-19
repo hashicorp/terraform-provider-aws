@@ -194,7 +194,6 @@ func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, met
 		}
 
 		op := out.Operations[0]
-		d.SetId(d.Get("name").(string))
 
 		err = waitOperation(conn, op.Id)
 		if err != nil {
@@ -236,7 +235,6 @@ func resourceLoadBalancerDelete(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	op := out.Operations[0]
-	d.SetId(d.Get("name").(string))
 
 	err = waitOperation(conn, op.Id)
 	if err != nil {
