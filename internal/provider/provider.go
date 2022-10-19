@@ -2177,11 +2177,11 @@ func New(_ context.Context) (*schema.Provider, error) {
 		// TODO: This should be generated.
 
 		// ServicePackageData is used before configuration to determine the provider's exported resources and data sources.
-		ServiceMap: map[string]intf.ServicePackageData{
-			"globalaccelerator": globalaccelerator.ServicePackageData,
-			"meta":              meta.ServicePackageData,
-			"simpledb":          simpledb.ServicePackageData,
-			"sts":               sts.ServicePackageData,
+		ServicePackages: []intf.ServicePackageData{
+			globalaccelerator.ServicePackageData,
+			meta.ServicePackageData,
+			simpledb.ServicePackageData,
+			sts.ServicePackageData,
 		},
 	}
 
@@ -2290,7 +2290,7 @@ func configure(ctx context.Context, provider *schema.Provider, d *schema.Resourc
 	}
 
 	// Configure each service.
-	for _, v := range providerData.ServiceMap {
+	for _, v := range providerData.ServicePackages {
 		if err := v.Configure(ctx, providerData); err != nil {
 			diags = append(diags, diag.FromErr(err)...)
 		}
