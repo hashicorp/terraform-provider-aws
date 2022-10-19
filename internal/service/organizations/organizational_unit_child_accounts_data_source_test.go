@@ -31,8 +31,6 @@ func testAccOrganizationalUnitChildAccountsDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "accounts.0.arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "email", dataSourceName, "accounts.0.email"),
 					resource.TestCheckResourceAttrPair(resourceName, "id", dataSourceName, "accounts.0.id"),
-					resource.TestCheckResourceAttrPair(resourceName, "joined_method", dataSourceName, "accounts.0.joined_method"),
-					resource.TestCheckResourceAttrPair(resourceName, "joined_timestamp", dataSourceName, "accounts.0.joined_timestamp"),
 					resource.TestCheckResourceAttrPair(resourceName, "name", dataSourceName, "accounts.0.name"),
 					resource.TestCheckResourceAttrPair(resourceName, "status", dataSourceName, "accounts.0.status"),
 				),

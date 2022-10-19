@@ -35,14 +35,6 @@ func DataSourceOrganizationalUnitChildAccounts() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"joined_method": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"joined_timestamp": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
 						"name": {
 							Type:     schema.TypeString,
 							Computed: true,
@@ -99,8 +91,6 @@ func flattenAccounts(accounts []*organizations.Account) []map[string]interface{}
 			"arn":              aws.StringValue(account.Arn),
 			"email":            aws.StringValue(account.Email),
 			"id":               aws.StringValue(account.Id),
-			"joined_method":    aws.StringValue(account.JoinedMethod),
-			"joined_timestamp": aws.TimeValue(account.JoinedTimestamp).String(),
 			"name":             aws.StringValue(account.Name),
 			"status":           aws.StringValue(account.Status),
 		})

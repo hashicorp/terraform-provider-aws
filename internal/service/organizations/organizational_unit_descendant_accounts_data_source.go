@@ -35,14 +35,6 @@ func DataSourceOrganizationalUnitDescendantAccounts() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"joined_method": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"joined_timestamp": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
 						"name": {
 							Type:     schema.TypeString,
 							Computed: true,
