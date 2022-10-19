@@ -279,7 +279,6 @@ func resourceStackRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return diag.FromErr(fmt.Errorf("error reading Appstream Stack (%s): %w", d.Id(), err))
 	}
 	for _, v := range resp.Stacks {
-
 		if err = d.Set("access_endpoints", flattenAccessEndpoints(v.AccessEndpoints)); err != nil {
 			return diag.FromErr(fmt.Errorf("error setting `%s` for AppStream Stack (%s): %w", "access_endpoints", d.Id(), err))
 		}
