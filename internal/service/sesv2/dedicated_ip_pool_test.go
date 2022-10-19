@@ -24,7 +24,7 @@ func TestAccSESV2DedicatedIPPool_basic(t *testing.T) {
 	resourceName := "aws_sesv2_dedicated_ip_pool.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckDedicatedIPPool(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2EndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDedicatedIPPoolDestroy,
@@ -51,7 +51,7 @@ func TestAccSESV2DedicatedIPPool_disappears(t *testing.T) {
 	resourceName := "aws_sesv2_dedicated_ip_pool.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckDedicatedIPPool(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2EndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDedicatedIPPoolDestroy,
@@ -73,7 +73,7 @@ func TestAccSESV2DedicatedIPPool_scalingMode(t *testing.T) {
 	resourceName := "aws_sesv2_dedicated_ip_pool.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckDedicatedIPPool(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2EndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDedicatedIPPoolDestroy,
@@ -108,7 +108,7 @@ func TestAccSESV2DedicatedIPPool_tags(t *testing.T) {
 	resourceName := "aws_sesv2_dedicated_ip_pool.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckDedicatedIPPool(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2EndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDedicatedIPPoolDestroy,
@@ -196,7 +196,7 @@ func testAccCheckDedicatedIPPoolExists(name string) resource.TestCheckFunc {
 	}
 }
 
-func testAccPreCheck(t *testing.T) {
+func testAccPreCheckDedicatedIPPool(t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).SESV2Conn
 	ctx := context.Background()
 
