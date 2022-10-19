@@ -19,7 +19,7 @@ func DataSourceInstanceStorageConfig() *schema.Resource {
 			"association_id": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validation.StringLenBetween(1, 1000),
+				ValidateFunc: validation.StringLenBetween(1, 100),
 			},
 			"instance_id": {
 				Type:         schema.TypeString,
