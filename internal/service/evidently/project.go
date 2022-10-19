@@ -184,7 +184,7 @@ func resourceProjectRead(ctx context.Context, d *schema.ResourceData, meta inter
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	project, err := FindProjectByName(ctx, conn, d.Id())
+	project, err := FindProjectByNameOrARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] CloudWatch Evidently Project (%s) not found, removing from state", d.Id())

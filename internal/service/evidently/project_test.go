@@ -357,7 +357,7 @@ func testAccCheckProjectDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := tfcloudwatchevidently.FindProjectByName(context.Background(), conn, rs.Primary.ID)
+		_, err := tfcloudwatchevidently.FindProjectByNameOrARN(context.Background(), conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -387,7 +387,7 @@ func testAccCheckProjectExists(n string, v *cloudwatchevidently.Project) resourc
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EvidentlyConn
 
-		output, err := tfcloudwatchevidently.FindProjectByName(context.Background(), conn, rs.Primary.ID)
+		output, err := tfcloudwatchevidently.FindProjectByNameOrARN(context.Background(), conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
