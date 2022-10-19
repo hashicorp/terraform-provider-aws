@@ -763,7 +763,7 @@ func TestAccSSMParameter_DataType_ec2Image(t *testing.T) {
 	})
 }
 
-func TestAccSSMParameter_DataType_ssmIntegration(t *testing.T) {
+func TestAccSSMParameter_DataType_ssmIntegration(t *testing.T) { //nosemgrep:ci.ssm-in-func-name
 	var param ssm.Parameter
 	webhookName := sdkacctest.RandString(16)
 	rName := fmt.Sprintf("/d9d01087-4a3f-49e0-b0b4-d568d7826553/ssm/integrations/webhook/%s", webhookName)
@@ -997,7 +997,7 @@ resource "aws_ssm_parameter" "test" {
 `, rName))
 }
 
-func testAccParameterConfig_dataTypeSSMIntegration(rName string) string {
+func testAccParameterConfig_dataTypeSSMIntegration(rName string) string { // nosemgrep:ci.ssm-in-func-name
 	return acctest.ConfigCompose(
 		fmt.Sprintf(`
 resource "aws_ssm_parameter" "test" {
