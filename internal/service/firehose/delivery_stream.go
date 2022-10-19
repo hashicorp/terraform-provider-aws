@@ -1600,7 +1600,6 @@ func ResourceDeliveryStream() *schema.Resource {
 }
 
 func createSourceConfig(source map[string]interface{}) *firehose.KinesisStreamSourceConfiguration {
-
 	configuration := &firehose.KinesisStreamSourceConfiguration{
 		KinesisStreamARN: aws.String(source["kinesis_stream_arn"].(string)),
 		RoleARN:          aws.String(source["role_arn"].(string)),
@@ -2089,7 +2088,6 @@ func extractCloudWatchLoggingConfiguration(s3 map[string]interface{}) *firehose.
 	}
 
 	return loggingOptions
-
 }
 
 func extractVPCConfiguration(es map[string]interface{}) *firehose.VpcConfiguration {
@@ -2681,7 +2679,6 @@ func resourceDeliveryStreamCreate(d *schema.ResourceData, meta interface{}) erro
 }
 
 func validSchema(d *schema.ResourceData) error {
-
 	_, s3Exists := d.GetOk("s3_configuration")
 	_, extendedS3Exists := d.GetOk("extended_s3_configuration")
 
