@@ -326,7 +326,6 @@ func testAccDomain_kernelGatewayAppSettings_lifecycleConfig(t *testing.T) {
 }
 
 func testAccDomain_kernelGatewayAppSettings_customImage(t *testing.T) {
-
 	if os.Getenv("SAGEMAKER_IMAGE_VERSION_BASE_IMAGE") == "" {
 		t.Skip("Environment variable SAGEMAKER_IMAGE_VERSION_BASE_IMAGE is not set")
 	}
@@ -365,7 +364,6 @@ func testAccDomain_kernelGatewayAppSettings_customImage(t *testing.T) {
 }
 
 func testAccDomain_kernelGatewayAppSettings_defaultResourceSpecAndCustomImage(t *testing.T) {
-
 	if os.Getenv("SAGEMAKER_IMAGE_VERSION_BASE_IMAGE") == "" {
 		t.Skip("Environment variable SAGEMAKER_IMAGE_VERSION_BASE_IMAGE is not set")
 	}
