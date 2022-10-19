@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	sdkresource "github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -143,6 +144,10 @@ func (r *resourceDomain) Delete(ctx context.Context, request resource.DeleteRequ
 	if response.Diagnostics.HasError() {
 		return
 	}
+
+	tflog.Debug(ctx, "deleting SimpleDB Domain", map[string]interface{}{
+		"id": data.ID.Value,
+	})
 
 	_, err := r.meta.SimpleDBConn.DeleteDomainWithContext(ctx, &simpledb.DeleteDomainInput{
 		DomainName: aws.String(data.ID.Value),
