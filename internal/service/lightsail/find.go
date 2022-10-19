@@ -156,3 +156,29 @@ func FindDomainEntryById(ctx context.Context, conn *lightsail.Lightsail, id stri
 
 	return entry, nil
 }
+
+func FindLoadBalancerByName(ctx context.Context, conn *lightsail.Lightsail, name string) (*lightsail.LoadBalancer, error) {
+
+	in := &lightsail.GetLoadBalancerInput{LoadBalancerName: aws.String(name)}
+	out, err := conn.GetLoadBalancerWithContext(ctx, in)
+
+	if tfawserr.ErrCodeEquals(err, lightsail.ErrCodeNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: in,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if out == nil || out.LoadBalancer == nil {
+		return nil, tfresource.NewEmptyResultError(in)
+	}
+
+	lb := out.LoadBalancer
+
+	return lb, nil
+
+}
