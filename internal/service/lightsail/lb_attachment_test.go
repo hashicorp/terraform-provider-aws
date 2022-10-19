@@ -163,14 +163,14 @@ func testAccCheckLoadBalancerAttachmentDestroy(s *terraform.State) error {
 
 func testAccLoadBalancerAttachmentConfig_basic(lbName string, liName string) string {
 	return fmt.Sprintf(`
-	data "aws_availability_zones" "available" {
-		state = "available"
-	  
-		filter {
-		  name   = "opt-in-status"
-		  values = ["opt-in-not-required"]
-		}
-	  }
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
 resource "aws_lightsail_lb" "test" {
   name              = %[1]q
   health_check_path = "/"
@@ -183,8 +183,8 @@ resource "aws_lightsail_instance" "test" {
   bundle_id         = "nano_1_0"
 }
 resource "aws_lightsail_lb_attachment" "test" {
-  lb_name = aws_lightsail_lb.test.name
-  instance_name      = aws_lightsail_instance.test.name
+  lb_name       = aws_lightsail_lb.test.name
+  instance_name = aws_lightsail_instance.test.name
 }
 `, lbName, liName)
 }
