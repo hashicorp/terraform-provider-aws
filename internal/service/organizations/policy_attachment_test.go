@@ -168,7 +168,6 @@ func testAccCheckPolicyAttachmentDestroy(s *terraform.State) error {
 	}
 
 	return nil
-
 }
 
 func testAccCheckPolicyAttachmentExists(n string) resource.TestCheckFunc {
