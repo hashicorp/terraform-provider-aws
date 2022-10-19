@@ -637,7 +637,6 @@ func resourceFunctionCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if reservedConcurrentExecutions >= 0 {
-
 		log.Printf("[DEBUG] Setting Concurrency to %d for the Lambda Function %s", reservedConcurrentExecutions, functionName)
 
 		concurrencyParams := &lambda.PutFunctionConcurrencyInput{
@@ -864,7 +863,6 @@ func resourceFunctionRead(d *schema.ResourceData, meta interface{}) error {
 		qualifiedInvokeArn := functionInvokeARN(functionARN, meta)
 		d.Set("qualified_invoke_arn", qualifiedInvokeArn)
 	} else {
-
 		// List is sorted from oldest to latest
 		// so this may get costly over time :'(
 		var lastVersion, lastQualifiedArn string
