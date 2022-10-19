@@ -80,20 +80,3 @@ func dataSourceOrganizationalUnitChildAccountsRead(d *schema.ResourceData, meta 
 
 	return nil
 }
-
-func flattenAccounts(accounts []*organizations.Account) []map[string]interface{} {
-	if len(accounts) == 0 {
-		return nil
-	}
-	var result []map[string]interface{}
-	for _, account := range accounts {
-		result = append(result, map[string]interface{}{
-			"arn":              aws.StringValue(account.Arn),
-			"email":            aws.StringValue(account.Email),
-			"id":               aws.StringValue(account.Id),
-			"name":             aws.StringValue(account.Name),
-			"status":           aws.StringValue(account.Status),
-		})
-	}
-	return result
-}
