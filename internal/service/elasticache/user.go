@@ -213,7 +213,6 @@ func resourceUserUpdate(d *schema.ResourceData, meta interface{}) error {
 				return fmt.Errorf("error waiting for ElastiCache User (%s) to be modified: %w", d.Id(), err)
 			}
 		}
-
 	}
 
 	if d.HasChange("tags_all") {
