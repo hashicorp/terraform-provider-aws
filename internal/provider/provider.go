@@ -2176,12 +2176,12 @@ func New(_ context.Context) (*schema.Provider, error) {
 	providerData := &conns.AWSClient{
 		// TODO: This should be generated.
 
-		// ServiceData is used before configuration to determine the provider's exported resources and data sources.
-		ServiceMap: map[string]intf.ServiceData{
-			"globalaccelerator": globalaccelerator.ServiceData,
-			"meta":              meta.ServiceData,
-			"simpledb":          simpledb.ServiceData,
-			"sts":               sts.ServiceData,
+		// ServicePackageData is used before configuration to determine the provider's exported resources and data sources.
+		ServiceMap: map[string]intf.ServicePackageData{
+			"globalaccelerator": globalaccelerator.ServicePackageData,
+			"meta":              meta.ServicePackageData,
+			"simpledb":          simpledb.ServicePackageData,
+			"sts":               sts.ServicePackageData,
 		},
 	}
 

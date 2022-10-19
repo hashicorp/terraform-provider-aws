@@ -26,7 +26,7 @@ func main() {
 	flag.Usage = usage
 	flag.Parse()
 
-	filename := `service_data_gen.go`
+	filename := `service_package_data_gen.go`
 	if args := flag.Args(); len(args) > 0 {
 		filename = args[0]
 	}
@@ -44,7 +44,7 @@ func main() {
 	}
 
 	if err := generator.ApplyAndWriteTemplate(filename, tmpl, templateData); err != nil {
-		ui.Error(fmt.Sprintf("error generating %s service data: %s", templateData.PackageName, err.Error()))
+		ui.Error(fmt.Sprintf("error generating %s service package data: %s", templateData.PackageName, err.Error()))
 		os.Exit(1)
 	}
 }
@@ -54,7 +54,7 @@ type Generator struct {
 }
 
 func (g *Generator) ApplyAndWriteTemplate(filename, templateBody string, templateData *TemplateData) error {
-	tmpl, err := template.New("servicedata").Parse(templateBody)
+	tmpl, err := template.New("servicepackagedata").Parse(templateBody)
 
 	if err != nil {
 		return fmt.Errorf("parsing function template: %w", err)

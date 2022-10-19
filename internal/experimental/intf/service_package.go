@@ -7,8 +7,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 )
 
-// ServiceData is data about a service.
-type ServiceData interface {
+// ServicePackageData is data about a service package.
+type ServicePackageData interface {
 	Configure(context.Context, any) error
 	FrameworkDataSources(context.Context) []func(context.Context) (datasource.DataSourceWithConfigure, error)
 	FrameworkResources(context.Context) []func(context.Context) (resource.ResourceWithConfigure, error)
