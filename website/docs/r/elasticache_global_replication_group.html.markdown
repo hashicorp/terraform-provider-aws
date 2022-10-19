@@ -133,6 +133,11 @@ In addition to all arguments above, the following attributes are exported:
 * `cluster_enabled` - Indicates whether the Global Datastore is cluster enabled.
 * `engine` - The name of the cache engine to be used for the clusters in this global replication group.
 * `global_replication_group_id` - The full ID of the global replication group.
+* `global_node_groups` - Set of node groups (shards) on the global replication group.
+  Has the values:
+    * `global_node_group_id` - The ID of the global node group.
+    * `slots` - The keyspace for this node group.
+* `num_node_groups` - The number of node groups (shards) on the global replication group.
 * `transit_encryption_enabled` - A flag that indicates whether the encryption in transit is enabled.
 
 ## Import

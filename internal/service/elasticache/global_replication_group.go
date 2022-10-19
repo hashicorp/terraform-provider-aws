@@ -99,6 +99,22 @@ func ResourceGlobalReplicationGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"global_node_groups": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"global_node_group_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"slots": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
 			"global_replication_group_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -136,6 +152,10 @@ func ResourceGlobalReplicationGroup() *schema.Resource {
 			// 		},
 			// 	},
 			// },
+			"num_node_groups": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
 			"parameter_group_name": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -349,11 +369,14 @@ func resourceGlobalReplicationGroupRead(ctx context.Context, d *schema.ResourceD
 	d.Set("global_replication_group_id", globalReplicationGroup.GlobalReplicationGroupId)
 	d.Set("transit_encryption_enabled", globalReplicationGroup.TransitEncryptionEnabled)
 
-	err = setEngineVersionRedis(d, globalReplicationGroup.EngineVersion)
-	if err != nil {
+	if err := setEngineVersionRedis(d, globalReplicationGroup.EngineVersion); err != nil {
 		return diag.Errorf("reading ElastiCache Replication Group (%s): %s", d.Id(), err)
 	}
 
+	if err := d.Set("global_node_groups", flattenGlobalNodeGroups(globalReplicationGroup.GlobalNodeGroups)); err != nil {
+		return diag.Errorf("setting global_node_groups: %s", err)
+	}
+	d.Set("num_node_groups", len(globalReplicationGroup.GlobalNodeGroups))
 	d.Set("automatic_failover_enabled", flattenGlobalReplicationGroupAutomaticFailoverEnabled(globalReplicationGroup.Members))
 
 	d.Set("primary_replication_group_id", flattenGlobalReplicationGroupPrimaryGroupID(globalReplicationGroup.Members))
@@ -517,6 +540,42 @@ func flattenGlobalReplicationGroupAutomaticFailoverEnabled(members []*elasticach
 
 	member := members[0]
 	return aws.StringValue(member.AutomaticFailover) == elasticache.AutomaticFailoverStatusEnabled
+}
+
+func flattenGlobalNodeGroups(nodeGroups []*elasticache.GlobalNodeGroup) []any {
+	if len(nodeGroups) == 0 {
+		return nil
+	}
+
+	var l []any
+
+	for _, nodeGroup := range nodeGroups {
+		if nodeGroup == nil {
+			continue
+		}
+
+		l = append(l, flattenGlobalNodeGroup(nodeGroup))
+	}
+
+	return l
+}
+
+func flattenGlobalNodeGroup(nodeGroup *elasticache.GlobalNodeGroup) map[string]any {
+	if nodeGroup == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{}
+
+	if v := nodeGroup.GlobalNodeGroupId; v != nil {
+		m["global_node_group_id"] = aws.StringValue(v)
+	}
+
+	if v := nodeGroup.Slots; v != nil {
+		m["slots"] = aws.StringValue(v)
+	}
+
+	return m
 }
 
 func flattenGlobalReplicationGroupPrimaryGroupID(members []*elasticache.GlobalReplicationGroupMember) string {
