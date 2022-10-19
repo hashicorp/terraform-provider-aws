@@ -445,7 +445,6 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	return resourceClusterRead(d, meta)
-
 }
 
 func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
@@ -705,7 +704,6 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("updating Neptune Cluster (%s) tags: %w", d.Get("arn").(string), err)
 		}
-
 	}
 
 	return resourceClusterRead(d, meta)
