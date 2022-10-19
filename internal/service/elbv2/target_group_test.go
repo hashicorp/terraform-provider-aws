@@ -1005,6 +1005,78 @@ func TestAccELBV2TargetGroup_Geneve_notSticky(t *testing.T) {
 	})
 }
 
+func TestAccELBV2TargetGroup_Geneve_Sticky(t *testing.T) {
+	var conf elbv2.TargetGroup
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_lb_target_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckGatewayLoadBalancer(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTargetGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTargetGroupConfig_protocolGeneve(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTargetGroupExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "port", "6081"),
+					resource.TestCheckResourceAttr(resourceName, "protocol", elbv2.ProtocolEnumGeneve),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.0.type", "source_ip_dest_ip"),
+				),
+			},
+			{
+				Config: testAccTargetGroupConfig_protocolGeneve(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTargetGroupExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "port", "6081"),
+					resource.TestCheckResourceAttr(resourceName, "protocol", elbv2.ProtocolEnumGeneve),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "stickiness.0.type", "source_ip_dest_ip_proto"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccELBV2TargetGroup_Geneve_targetFailover(t *testing.T) {
+	var conf elbv2.TargetGroup
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_lb_target_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckGatewayLoadBalancer(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTargetGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTargetGroupConfig_protocolGeneveTargetFailover(rName, "rebalance"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTargetGroupExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "port", "6081"),
+					resource.TestCheckResourceAttr(resourceName, "protocol", elbv2.ProtocolEnumGeneve),
+					resource.TestCheckResourceAttr(resourceName, "target_failover.0.on_deregistration", "rebalance"),
+					resource.TestCheckResourceAttr(resourceName, "target_failover.0.on_unhealthy", "rebalance"),
+				),
+			},
+			{
+				Config: testAccTargetGroupConfig_protocolGeneveTargetFailover(rName, "no_rebalance"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTargetGroupExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "port", "6081"),
+					resource.TestCheckResourceAttr(resourceName, "protocol", elbv2.ProtocolEnumGeneve),
+					resource.TestCheckResourceAttr(resourceName, "target_failover.0.on_deregistration", "no_rebalance"),
+					resource.TestCheckResourceAttr(resourceName, "target_failover.0.on_unhealthy", "no_rebalance"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccELBV2TargetGroup_Stickiness_defaultALB(t *testing.T) {
 	var conf elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -2194,6 +2266,32 @@ resource "aws_lb_target_group" "test" {
   }
 }
 `, rName)
+}
+
+func testAccTargetGroupConfig_protocolGeneveTargetFailover(rName, failoverType string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.10.10.0/25"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_lb_target_group" "test" {
+  name     = %[1]q
+  port     = 6081
+  protocol = "GENEVE"
+  vpc_id   = aws_vpc.test.id
+  target_failover {
+    on_deregistration = %[2]q
+	on_unhealthy = %[2]q
+  }
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, failoverType)
 }
 
 func testAccTargetGroupConfig_tags1(rName, tagKey1, tagValue1 string) string {
