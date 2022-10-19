@@ -525,7 +525,6 @@ func disableDNSSECForZone(conn *route53.Route53, hostedZoneId string) error {
 }
 
 func resourceGoWait(r53 *route53.Route53, ref *route53.GetChangeInput) (result interface{}, state string, err error) {
-
 	status, err := r53.GetChange(ref)
 	if err != nil {
 		return nil, "UNKNOWN", err
