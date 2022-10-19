@@ -391,7 +391,6 @@ func expandMetricStreamStatisticsConfigurations(s *schema.Set) []*cloudwatch.Met
 		}
 
 		configurations = append(configurations, configuration)
-
 	}
 
 	log.Printf("[DEBUG] statistics_configurations: %#v", configurations)
