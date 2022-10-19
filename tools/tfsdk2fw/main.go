@@ -325,6 +325,8 @@ func (e *emitter) emitAttributesAndBlocks(path []string, schema map[string]*sche
 // emitAttributeProperty generates the Plugin Framework code for a Plugin SDK Attribute's property
 // and emits the generated code to the emitter's Writer.
 func (e *emitter) emitAttributeProperty(path []string, property *schema.Schema) error {
+	attributeName := path[len(path)-1]
+	isComputedOnly := property.Computed && !property.Optional
 	isTopLevelAttribute := len(path) == 1
 	var planModifiers []string
 
@@ -357,7 +359,8 @@ func (e *emitter) emitAttributeProperty(path []string, property *schema.Schema) 
 		}
 
 	case schema.TypeString:
-		if path[len(path)-1] == "arn" {
+		// Computed-only ARN attributes are easiest handled as strings.
+		if (attributeName == "arn" || strings.HasSuffix(attributeName, "_arn")) && !isComputedOnly {
 			e.ImportProviderFrameworkTypes = true
 
 			fprintf(e.SchemaWriter, "Type:fwtypes.ARNType,\n")
