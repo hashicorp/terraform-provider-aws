@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/generate/namevaluesfilters"
 )
 
 func DataSourceEngineVersion() *schema.Resource {
@@ -35,6 +36,8 @@ func DataSourceEngineVersion() *schema.Resource {
 				Computed: true,
 				Set:      schema.HashString,
 			},
+
+			"filter": namevaluesfilters.Schema(),
 
 			"parameter_group_family": {
 				Type:     schema.TypeString,
@@ -148,6 +151,10 @@ func dataSourceEngineVersionRead(d *schema.ResourceData, meta interface{}) error
 		if _, ok := d.GetOk("preferred_versions"); !ok {
 			input.DefaultOnly = aws.Bool(true)
 		}
+	}
+
+	if v, ok := d.GetOk("filter"); ok {
+		input.Filters = namevaluesfilters.New(v.(*schema.Set)).RDSFilters()
 	}
 
 	log.Printf("[DEBUG] Reading RDS engine versions: %v", input)
