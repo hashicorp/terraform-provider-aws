@@ -2311,7 +2311,7 @@ resource "aws_lb_target_group" "test" {
   vpc_id   = aws_vpc.test.id
   target_failover {
     on_deregistration = %[2]q
-    on_unhealthy = %[2]q
+    on_unhealthy      = %[2]q
   }
   tags = {
     Name = %[1]q
