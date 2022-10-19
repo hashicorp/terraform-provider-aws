@@ -205,6 +205,58 @@ func TestAccFISExperimentTemplate_spot(t *testing.T) {
 	})
 }
 
+func TestAccFISExperimentTemplate_eks(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_fis_experiment_template.test"
+	var conf types.ExperimentTemplate
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, fis.ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccExperimentTemplateDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccExperimentTemplateConfig_eks(rName, "kubernetes custom resource creation", "k8s-pod-delete", "k8s pod delete", "aws:eks:inject-kubernetes-custom-resource", "Cluster", "kubernetes-custom-resource-creation-target", "kubernetesApiVersion", "litmuschaos.io/v1alpha1", "kubernetesKind", "ChaosEngine", "kubernetesNamespace", "observability", "kubernetesSpec", "{\"engineState\":\"active\",\"appinfo\":{\"appns\":\"observability\",\"applabel\":\"app=nginx\",\"appkind\":\"deployment\"},\"chaosServiceAccount\":\"pod-delete-sa\",\"experiments\":[{\"name\":\"pod-delete\",\"spec\":{\"components\":{\"env\":[{\"name\":\"TOTAL_CHAOS_DURATION\",\"value\":\"60\"},{\"name\":\"CHAOS_INTERVAL\",\"value\":\"60\"},{\"name\":\"PODS_AFFECTED_PERC\",\"value\":\"30\"}]},\"probe\":[]}}],\"annotationCheck\":\"false\"}", "maxDuration", "PT2M", "aws:eks:cluster", "ALL", "env", "test"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccExperimentTemplateExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "description", "kubernetes custom resource creation"),
+					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test_fis", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "stop_condition.0.source", "none"),
+					resource.TestCheckResourceAttr(resourceName, "stop_condition.0.value", ""),
+					resource.TestCheckResourceAttr(resourceName, "stop_condition.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.name", "k8s-pod-delete"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.description", "k8s pod delete"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.action_id", "aws:eks:inject-kubernetes-custom-resource"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.parameter.#", "5"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.parameter.0.key", "kubernetesApiVersion"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.parameter.0.value", "litmuschaos.io/v1alpha1"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.parameter.1.key", "kubernetesKind"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.parameter.1.value", "ChaosEngine"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.parameter.2.key", "kubernetesNamespace"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.parameter.2.value", "observability"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.parameter.3.key", "kubernetesSpec"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.parameter.3.value", "{\"engineState\":\"active\",\"appinfo\":{\"appns\":\"observability\",\"applabel\":\"app=nginx\",\"appkind\":\"deployment\"},\"chaosServiceAccount\":\"pod-delete-sa\",\"experiments\":[{\"name\":\"pod-delete\",\"spec\":{\"components\":{\"env\":[{\"name\":\"TOTAL_CHAOS_DURATION\",\"value\":\"60\"},{\"name\":\"CHAOS_INTERVAL\",\"value\":\"60\"},{\"name\":\"PODS_AFFECTED_PERC\",\"value\":\"30\"}]},\"probe\":[]}}],\"annotationCheck\":\"false\"}"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.parameter.4.key", "maxDuration"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.parameter.4.value", "PT2M"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.start_after.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.target.0.key", "Cluster"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.target.0.value", "kubernetes-custom-resource-creation-target"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.target.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target.0.name", "kubernetes-custom-resource-creation-target"),
+					resource.TestCheckResourceAttr(resourceName, "target.0.resource_type", "aws:eks:cluster"),
+					resource.TestCheckResourceAttr(resourceName, "target.0.selection_mode", "ALL"),
+					resource.TestCheckResourceAttr(resourceName, "target.0.filter.#", "0"),
+					resource.TestCheckResourceAttrPair(resourceName, "target.0.resource_arns.0", "aws_eks_cluster.test", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "target.0.resource_tag.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "target.#", "1"),
+				),
+			},
+		},
+	})
+}
+
 func testAccExperimentTemplateExists(resourceName string, config *types.ExperimentTemplate) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
@@ -366,4 +418,160 @@ resource "aws_fis_experiment_template" "test" {
   }
 }
 `, rName, desc, actionName, actionDesc, actionID, actionTargetK, actionTargetV, paramK, paramV, targetResType, targetSelectMode, targetResTagK, targetResTagV)
+}
+
+func testAccExperimentTemplateConfig_ekscluster(rName string) string {
+	return fmt.Sprintf(`
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
+data "aws_partition" "current" {}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "eks.${data.aws_partition.current.dns_suffix}"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+POLICY
+}
+
+resource "aws_iam_role_policy_attachment" "test-AmazonEKSClusterPolicy" {
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonEKSClusterPolicy"
+  role       = aws_iam_role.test.name
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  assign_generated_ipv6_cidr_block = true
+
+  tags = {
+    Name                          = %[1]q
+    "kubernetes.io/cluster/%[1]s" = "shared"
+  }
+}
+
+resource "aws_subnet" "test" {
+  count = 2
+
+  availability_zone = data.aws_availability_zones.available.names[count.index]
+  cidr_block        = "10.0.${count.index}.0/24"
+  vpc_id            = aws_vpc.test.id
+
+  ipv6_cidr_block                 = cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, count.index)
+  assign_ipv6_address_on_creation = true
+
+  tags = {
+    Name                          = %[1]q
+    "kubernetes.io/cluster/%[1]s" = "shared"
+  }
+}
+
+resource "aws_eks_cluster" "test" {
+  name     = %[1]q
+  role_arn = aws_iam_role.test.arn
+
+  vpc_config {
+    subnet_ids = aws_subnet.test[*].id
+  }
+
+  depends_on = [aws_iam_role_policy_attachment.test-AmazonEKSClusterPolicy]
+}
+`, rName)
+}
+
+func testAccExperimentTemplateConfig_eks(rName, desc, actionName, actionDesc, actionID, actionTargetK, actionTargetV, paramK1, paramV1, paramK2, paramV2, paramK3, paramV3, paramK4, paramV4, paramK5, paramV5, targetResType, targetSelectMode, targetResTagK, targetResTagV string) string {
+	return acctest.ConfigCompose(testAccExperimentTemplateConfig_ekscluster(rName), fmt.Sprintf(`
+
+resource "aws_iam_role" "test_fis" {
+  name = %[1]q
+
+  assume_role_policy = jsonencode({
+    Statement = [{
+      Action = "sts:AssumeRole"
+      Effect = "Allow"
+      Principal = {
+        Service = [
+          "fis.${data.aws_partition.current.dns_suffix}",
+        ]
+      }
+    }]
+    Version = "2012-10-17"
+  })
+}
+
+resource "aws_fis_experiment_template" "test" {
+  description = %[2]q
+  role_arn    = aws_iam_role.test_fis.arn
+
+  stop_condition {
+    source = "none"
+  }
+
+  action {
+    name        = %[3]q
+    description = %[4]q
+    action_id   = %[5]q
+
+    target {
+      key   = %[6]q
+      value = %[7]q
+    }
+
+    parameter {
+      key   = %[8]q
+      value = %[9]q
+    }
+
+		parameter {
+      key   = %[10]q
+      value = %[11]q
+    }
+
+		parameter {
+      key   = %[12]q
+      value = %[13]q
+    }
+
+		parameter {
+      key   = %[14]q
+      value = %[15]q
+    }
+
+		parameter {
+      key   = %[16]q
+      value = %[17]q
+    }
+  }
+
+  target {
+    name           = %[7]q
+    resource_type  = %[18]q
+    selection_mode = %[19]q
+
+    resource_arns = tolist([aws_eks_cluster.test.arn])
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName+"-fis", desc, actionName, actionDesc, actionID, actionTargetK, actionTargetV, paramK1, paramV1, paramK2, paramV2, paramK3, paramV3, paramK4, paramV4, paramK5, paramV5, targetResType, targetSelectMode, targetResTagK, targetResTagV))
 }
