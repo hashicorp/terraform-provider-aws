@@ -168,10 +168,22 @@ func TestDependencyGraphDependenciesAndDependents(t *testing.T) {
 	g.AddNode("c")
 	g.AddNode("d")
 
-	g.AddDependency("a", "d")
-	g.AddDependency("a", "b")
-	g.AddDependency("b", "c")
-	g.AddDependency("d", "b")
+	err := g.AddDependency("a", "d")
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+	err = g.AddDependency("a", "b")
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+	err = g.AddDependency("b", "c")
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+	err = g.AddDependency("d", "b")
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
 
 	got, err := g.DependenciesOf("a")
 	if err != nil {
@@ -255,18 +267,33 @@ func TestDependencyGraphDetectCycles(t *testing.T) {
 	g.AddNode("c")
 	g.AddNode("d")
 
-	g.AddDependency("a", "b")
-	g.AddDependency("b", "c")
-	g.AddDependency("c", "a")
-	g.AddDependency("d", "a")
+	err := g.AddDependency("a", "b")
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+	err = g.AddDependency("b", "c")
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+	err = g.AddDependency("c", "a")
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+	err = g.AddDependency("d", "a")
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
 
-	_, err := g.OverallOrder()
+	_, err = g.OverallOrder()
 	if err == nil {
 		t.Fatalf("expected error")
 	}
 
 	// Add a node with no dependent.
-	g.AddDependency("d", "a")
+	err = g.AddDependency("d", "a")
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
 
 	_, err = g.OverallOrder()
 	if err == nil {
@@ -282,10 +309,22 @@ func TestDependencyGraphDetectCycles(t *testing.T) {
 	g.AddNode("b_2")
 	g.AddNode("b_3")
 
-	g.AddDependency("a_1", "a_2")
-	g.AddDependency("b_1", "b_2")
-	g.AddDependency("b_2", "b_3")
-	g.AddDependency("b_3", "b_1")
+	err = g.AddDependency("a_1", "a_2")
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+	err = g.AddDependency("b_1", "b_2")
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+	err = g.AddDependency("b_2", "b_3")
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+	err = g.AddDependency("b_3", "b_1")
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
 
 	_, err = g.OverallOrder()
 	if err == nil {
@@ -310,10 +349,22 @@ func TestDependencyGraphOverallOrder(t *testing.T) {
 	g.AddNode("d")
 	g.AddNode("e")
 
-	g.AddDependency("a", "b")
-	g.AddDependency("a", "c")
-	g.AddDependency("b", "c")
-	g.AddDependency("c", "d")
+	err = g.AddDependency("a", "b")
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+	err = g.AddDependency("a", "c")
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+	err = g.AddDependency("b", "c")
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+	err = g.AddDependency("c", "d")
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
 
 	got, err = g.OverallOrder()
 	if err != nil {
@@ -332,9 +383,18 @@ func TestDependencyGraphOverallOrder(t *testing.T) {
 	g.AddNode("b_2")
 	g.AddNode("b_3")
 
-	g.AddDependency("a_1", "a_2")
-	g.AddDependency("b_1", "b_2")
-	g.AddDependency("b_2", "b_3")
+	err = g.AddDependency("a_1", "a_2")
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+	err = g.AddDependency("b_1", "b_2")
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+	err = g.AddDependency("b_2", "b_3")
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
 
 	got, err = g.OverallOrder()
 	if err != nil {
