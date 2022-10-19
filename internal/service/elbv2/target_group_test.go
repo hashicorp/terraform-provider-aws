@@ -1017,7 +1017,7 @@ func TestAccELBV2TargetGroup_Geneve_Sticky(t *testing.T) {
 		CheckDestroy:             testAccCheckTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTargetGroupConfig_protocolGeneve(rName),
+				Config: testAccTargetGroupConfig_protocolGeneveSticky(rName, "source_ip_dest_ip"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "port", "6081"),
@@ -1028,7 +1028,7 @@ func TestAccELBV2TargetGroup_Geneve_Sticky(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccTargetGroupConfig_protocolGeneve(rName),
+				Config: testAccTargetGroupConfig_protocolGeneveSticky(rName, "source_ip_dest_ip_proto"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "port", "6081"),
@@ -2266,6 +2266,32 @@ resource "aws_lb_target_group" "test" {
   }
 }
 `, rName)
+}
+
+func testAccTargetGroupConfig_protocolGeneveSticky(rName, stickinessType string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.10.10.0/25"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_lb_target_group" "test" {
+  name     = %[1]q
+  port     = 6081
+  protocol = "GENEVE"
+  vpc_id   = aws_vpc.test.id
+  stickiness {
+    enabled = true
+    type    = %[2]q
+  }
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, stickinessType)
 }
 
 func testAccTargetGroupConfig_protocolGeneveTargetFailover(rName, failoverType string) string {

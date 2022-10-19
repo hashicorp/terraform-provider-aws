@@ -229,7 +229,7 @@ func ResourceTargetGroup() *schema.Resource {
 							ValidateFunc: validation.IntBetween(0, 604800),
 							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 								switch d.Get("protocol").(string) {
-								case elbv2.ProtocolEnumTcp, elbv2.ProtocolEnumUdp, elbv2.ProtocolEnumTcpUdp, elbv2.ProtocolEnumTls:
+								case elbv2.ProtocolEnumTcp, elbv2.ProtocolEnumUdp, elbv2.ProtocolEnumTcpUdp, elbv2.ProtocolEnumTls, elbv2.ProtocolEnumGeneve:
 									return true
 								}
 								return false
@@ -520,7 +520,6 @@ func resourceTargetGroupCreate(d *schema.ResourceData, meta interface{}) error {
 			}
 		}
 
-		//if v, ok := d.Get("protocol").(string); ok && v != elbv2.ProtocolEnumGeneve {
 		if v, ok := d.GetOk("stickiness"); ok && len(v.([]interface{})) > 0 {
 			stickinessBlocks := v.([]interface{})
 			stickiness := stickinessBlocks[0].(map[string]interface{})
@@ -559,7 +558,6 @@ func resourceTargetGroupCreate(d *schema.ResourceData, meta interface{}) error {
 				}
 			}
 		}
-		//}
 	case elbv2.TargetTypeEnumLambda:
 		if v, ok := d.GetOk("lambda_multi_value_headers_enabled"); ok {
 			attrs = append(attrs, &elbv2.TargetGroupAttribute{
@@ -745,7 +743,6 @@ func resourceTargetGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 			})
 		}
 
-		// if v, ok := d.Get("protocol").(string); ok && v != elbv2.ProtocolEnumGeneve {
 		if d.HasChange("stickiness") {
 			stickinessBlocks := d.Get("stickiness").([]interface{})
 			if len(stickinessBlocks) == 1 {
@@ -790,7 +787,6 @@ func resourceTargetGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 				})
 			}
 		}
-		//}
 
 		if d.HasChange("load_balancing_algorithm_type") {
 			attrs = append(attrs, &elbv2.TargetGroupAttribute{
