@@ -119,11 +119,9 @@ func dataSourceFileSystemRead(d *schema.ResourceData, meta interface{}) error {
 	results := describeResp.FileSystems
 
 	if len(tagsToMatch) > 0 {
-
 		var fileSystems []*efs.FileSystemDescription
 
 		for _, fileSystem := range describeResp.FileSystems {
-
 			tags := KeyValueTags(fileSystem.Tags)
 
 			if !tags.ContainsAll(tagsToMatch) {

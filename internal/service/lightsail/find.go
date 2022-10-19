@@ -112,7 +112,6 @@ func FindContainerServiceDeploymentByVersion(ctx context.Context, conn *lightsai
 }
 
 func FindDomainEntryById(ctx context.Context, conn *lightsail.Lightsail, id string) (*lightsail.DomainEntry, error) {
-
 	id_parts := strings.SplitN(id, "_", -1)
 	domainName := id_parts[1]
 	name := expandDomainEntryName(id_parts[0], domainName)

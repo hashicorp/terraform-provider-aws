@@ -18,7 +18,6 @@ import (
 )
 
 func ResourceUser() *schema.Resource {
-
 	return &schema.Resource{
 		Create: resourceUserCreate,
 		Read:   resourceUserRead,

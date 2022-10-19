@@ -160,7 +160,6 @@ func resourceDomainEntryDelete(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func expandDomainEntry(id string) *lightsail.DomainEntry {
-
 	id_parts := strings.SplitN(id, "_", -1)
 	name := id_parts[0]
 	domainName := id_parts[1]
@@ -177,7 +176,6 @@ func expandDomainEntry(id string) *lightsail.DomainEntry {
 }
 
 func expandDomainNameFromId(id string) string {
-
 	id_parts := strings.SplitN(id, "_", -1)
 	domainName := id_parts[1]
 

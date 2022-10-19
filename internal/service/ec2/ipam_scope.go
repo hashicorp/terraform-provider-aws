@@ -277,7 +277,6 @@ func WaitIPAMScopeDeleted(conn *ec2.EC2, ipamScopeId string, timeout time.Durati
 
 func statusIPAMScopeStatus(conn *ec2.EC2, ipamScopeId string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-
 		output, err := findIPAMScopeById(conn, ipamScopeId)
 
 		if tfresource.NotFound(err) {

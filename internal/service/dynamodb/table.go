@@ -477,7 +477,6 @@ func resourceTableCreate(d *schema.ResourceData, meta interface{}) error {
 		if output == nil || output.TableDescription == nil {
 			return errors.New("error creating DynamoDB Table: empty response")
 		}
-
 	} else {
 		input := &dynamodb.CreateTableInput{
 			TableName:   aws.String(d.Get("name").(string)),

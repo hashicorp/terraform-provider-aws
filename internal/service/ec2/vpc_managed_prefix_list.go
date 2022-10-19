@@ -348,7 +348,6 @@ func updateMaxEntry(ctx context.Context, conn *ec2.EC2, id string, maxEntries in
 
 	if err != nil {
 		return fmt.Errorf("error updating MaxEntries for EC2 Managed Prefix List (%s): %s", id, err)
-
 	}
 
 	_, err = WaitManagedPrefixListModified(ctx, conn, id)

@@ -263,7 +263,6 @@ func testAccCheckCustomDataIdentifierDestroy(s *terraform.State) error {
 	}
 
 	return nil
-
 }
 
 func testAccCustomDataIdentifierConfig_nameGenerated(regex string) string {

@@ -68,7 +68,6 @@ func TestReverseDNS(t *testing.T) {
 
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
-
 			if got, want := conns.ReverseDNS(testCase.input), testCase.expected; got != want {
 				t.Errorf("got: %s, expected: %s", got, want)
 			}

@@ -779,7 +779,6 @@ func updateBrokerUsers(conn *mq.MQ, bId string, oldUsers, newUsers []interface{}
 
 func DiffBrokerUsers(bId string, oldUsers, newUsers []interface{}) (
 	cr []*mq.CreateUserRequest, di []*mq.DeleteUserInput, ur []*mq.UpdateUserRequest, e error) {
-
 	existingUsers := make(map[string]interface{})
 	for _, ou := range oldUsers {
 		u := ou.(map[string]interface{})
@@ -816,7 +815,6 @@ func DiffBrokerUsers(bId string, oldUsers, newUsers []interface{}) (
 		}
 
 		if eu, ok := existingUsers[username]; ok {
-
 			existingUserMap := eu.(map[string]interface{})
 
 			if !reflect.DeepEqual(existingUserMap, newUserMap) {

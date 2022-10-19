@@ -586,7 +586,6 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("log_delivery_configuration") {
-
 		oldLogDeliveryConfig, newLogDeliveryConfig := d.GetChange("log_delivery_configuration")
 
 		req.LogDeliveryConfigurations = []*elasticache.LogDeliveryConfigurationRequest{}
@@ -687,7 +686,6 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		req.NumCacheNodes = aws.Int64(int64(d.Get("num_cache_nodes").(int)))
 		requestUpdate = true
-
 	}
 
 	if requestUpdate {

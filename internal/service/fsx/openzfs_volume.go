@@ -393,7 +393,6 @@ func resourceOpenzfsVolumeUpdate(d *schema.ResourceData, meta interface{}) error
 		if _, err := waitVolumeUpdated(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return fmt.Errorf("error waiting for FSx OpenZFS Volume (%s) update: %w", d.Id(), err)
 		}
-
 	}
 
 	return resourceOpenzfsVolumeRead(d, meta)
@@ -433,7 +432,6 @@ func expandOpenzfsVolumeUserAndGroupQuotas(cfg []interface{}) []*fsx.OpenZFSUser
 	}
 
 	return quotas
-
 }
 
 func expandOpenzfsVolumeUserAndGroupQuota(conf map[string]interface{}) *fsx.OpenZFSUserOrGroupQuota {
@@ -456,7 +454,6 @@ func expandOpenzfsVolumeUserAndGroupQuota(conf map[string]interface{}) *fsx.Open
 	}
 
 	return &out
-
 }
 
 func expandOpenzfsVolumeNFSExports(cfg []interface{}) []*fsx.OpenZFSNfsExport {
@@ -470,7 +467,6 @@ func expandOpenzfsVolumeNFSExports(cfg []interface{}) []*fsx.OpenZFSNfsExport {
 	}
 
 	return exports
-
 }
 
 func expandOpenzfsVolumeNFSExport(cfg map[string]interface{}) *fsx.OpenZFSNfsExport {
@@ -494,7 +490,6 @@ func expandOpenzfsVolumeClinetConfigurations(cfg []interface{}) []*fsx.OpenZFSCl
 	}
 
 	return configurations
-
 }
 
 func expandOpenzfsVolumeClientConfiguration(conf map[string]interface{}) *fsx.OpenZFSClientConfiguration {

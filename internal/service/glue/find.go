@@ -135,7 +135,6 @@ func FindSchemaVersionByID(conn *glue.Glue, id string) (*glue.GetSchemaVersionOu
 
 // FindPartitionByValues returns the Partition corresponding to the specified Partition Values.
 func FindPartitionByValues(conn *glue.Glue, id string) (*glue.Partition, error) {
-
 	catalogID, dbName, tableName, values, err := readPartitionID(id)
 	if err != nil {
 		return nil, err
@@ -188,7 +187,6 @@ func FindConnectionByName(conn *glue.Glue, name, catalogID string) (*glue.Connec
 
 // FindPartitionIndexByName returns the Partition Index corresponding to the specified Partition Index Name.
 func FindPartitionIndexByName(conn *glue.Glue, id string) (*glue.PartitionIndexDescriptor, error) {
-
 	catalogID, dbName, tableName, partIndex, err := readPartitionIndexID(id)
 	if err != nil {
 		return nil, err

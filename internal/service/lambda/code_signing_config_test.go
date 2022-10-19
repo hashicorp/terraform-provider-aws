@@ -236,9 +236,7 @@ func testAccCheckCodeSigningConfigDestroy(s *terraform.State) error {
 		}
 
 		return fmt.Errorf("Code Signing Config still exists")
-
 	}
 
 	return nil
-
 }

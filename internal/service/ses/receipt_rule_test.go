@@ -381,11 +381,9 @@ func testAccCheckReceiptRuleDestroy(s *terraform.State) error {
 		if !ok {
 			return err
 		}
-
 	}
 
 	return nil
-
 }
 
 func testAccCheckReceiptRuleExists(n string, rule *ses.ReceiptRule) resource.TestCheckFunc {
