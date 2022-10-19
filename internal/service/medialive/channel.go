@@ -130,7 +130,9 @@ func ResourceChannel() *schema.Resource {
 					},
 				},
 			},
-			"encoder_settings": channelEncoderSettingsSchema(),
+			"encoder_settings": func() *schema.Schema {
+				return channelEncoderSettingsSchema()
+			}(),
 			"input_attachment": {
 				Type:     schema.TypeSet,
 				Required: true,

@@ -6,6 +6,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
 func channelEncoderSettingsSchema() *schema.Schema {
@@ -1146,12 +1147,14 @@ func channelEncoderSettingsSchema() *schema.Schema {
 									},
 								},
 							},
-							"outputs": {
+							"output": {
 								Type:     schema.TypeList,
 								Required: true,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"output_settings": outputSettingsSchema(),
+										"output_settings": func() *schema.Schema {
+											return outputSettingsSchema()
+										}(),
 										"audio_description_names": {
 											Type:     schema.TypeSet,
 											Optional: true,
@@ -2379,8 +2382,8 @@ func expandChannelEncoderSettingsOutputGroups(tfList []interface{}) []types.Outp
 		if v, ok := m["output_group_settings"].([]interface{}); ok && len(v) > 0 {
 			o.OutputGroupSettings = nil // TODO expandChannelEncoderSettingsOutputGroupsOutputGroupSettings(v)
 		}
-		if v, ok := m["outputs"].([]interface{}); ok && len(v) > 0 {
-			o.Outputs = nil // TODO expandChannelEncoderSettingsOutputGroupsOutputs(v)
+		if v, ok := m["output"].([]interface{}); ok && len(v) > 0 {
+			o.Outputs = expandChannelEncoderSettingsOutputGroupsOutputs(v)
 		}
 		if v, ok := m["name"].(string); ok && v != "" {
 			o.Name = aws.String(v)
@@ -2390,6 +2393,72 @@ func expandChannelEncoderSettingsOutputGroups(tfList []interface{}) []types.Outp
 	}
 
 	return outputGroups
+}
+
+func expandChannelEncoderSettingsOutputGroupsOutputs(tfList []interface{}) []types.Output {
+	if tfList == nil {
+		return nil
+	}
+
+	var outputs []types.Output
+	for _, item := range tfList {
+		m, ok := item.(map[string]interface{})
+		if !ok {
+			continue
+		}
+
+		var o types.Output
+		if v, ok := m["output_settings"].([]interface{}); ok && len(v) > 0 {
+			o.OutputSettings = expandOutputsOutputSettings(v)
+		}
+		if v, ok := m["audio_description_names"].([]interface{}); ok && len(v) > 0 {
+			o.AudioDescriptionNames = flex.ExpandStringValueList(v)
+		}
+		if v, ok := m["caption_description_names"].([]interface{}); ok && len(v) > 0 {
+			o.CaptionDescriptionNames = flex.ExpandStringValueList(v)
+		}
+		if v, ok := m["output_name"].(string); ok && v != "" {
+			o.OutputName = aws.String(v)
+		}
+		if v, ok := m["video_description_name"].(string); ok && v != "" {
+			o.OutputName = aws.String(v)
+		}
+		outputs = append(outputs, o)
+	}
+
+	return nil
+}
+
+func expandOutputsOutputSettings(tfList []interface{}) *types.OutputSettings {
+	if tfList == nil {
+		return nil
+	}
+
+	m := tfList[0].(map[string]interface{})
+
+	var os types.OutputSettings
+	if v, ok := m["archive_output_settings"].([]interface{}); ok && len(v) > 0 {
+		os.ArchiveOutputSettings = expandOutputsOutputSettingsArchiveOutputSettings()
+	}
+
+	return &os
+}
+
+func expandOutputsOutputSettingsArchiveOutputSettings(tfList []interface{}) *types.ArchiveOutputSettings {
+	if tfList == nil {
+		return nil
+	}
+
+	m := tfList[0].(map[string]interface{})
+
+	var settings types.ArchiveOutputSettings
+	if v, ok := m["extension"].(string); ok && v != "" {
+		settings.Extension = aws.String(v)
+	}
+	if v, ok := m["name_modifier"].(string); ok && v != "" {
+		settings.NameModifier = aws.String(v)
+	}
+	return &settings
 }
 
 func expandChannelEncoderSettingsTimecodeConfig(tfList []interface{}) *types.TimecodeConfig {
@@ -2456,7 +2525,7 @@ func flattenChannelEncoderSettings(apiObject *types.EncoderSettings) []interface
 	}
 
 	m := map[string]interface{}{
-		"audio_descriptions": nil, // TODO
+		"audio_descriptions": flattenAudioDescriptions(apiObject.AudioDescriptions),
 		"output_groups":      nil, // TODO
 		"timecode_config":    nil, // TODO
 		"video_descriptions": nil, // TODO
@@ -2468,6 +2537,62 @@ func flattenChannelEncoderSettings(apiObject *types.EncoderSettings) []interface
 		// TODO global_configuration
 		// TODO motion_graphics_configuration
 		// TODO nielsen_configuration
+	}
+
+	return []interface{}{m}
+}
+
+func flattenAudioDescriptions(od []types.AudioDescription) []interface{} {
+	if len(od) == 0 {
+		return nil
+	}
+
+	ml := make([]interface{}, 0)
+
+	for _, v := range od {
+		m := map[string]interface{}{
+			"audio_selector_name":      aws.ToString(v.AudioSelectorName),
+			"name":                     aws.ToString(v.Name),
+			"audio_normalization":      flattenAudioNormalization(v.AudioNormalizationSettings),
+			"audio_type":               v.AudioType,
+			"audio_type_control":       v.AudioTypeControl,
+			"audio_watermark_settings": flattenAudioWatermarkSettings(v.AudioWatermarkingSettings),
+		}
+
+		ml = append(ml, m)
+	}
+
+	return ml
+}
+
+func flattenAudioNormalization(ns *types.AudioNormalizationSettings) []interface{} {
+	if ns == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"algorithm":         ns.Algorithm,
+		"algorithm_control": ns.AlgorithmControl,
+		"target_lkfs":       ns.TargetLkfs,
+	}
+
+	return []interface{}{m}
+}
+
+func flattenAudioWatermarkSettings(ns *types.AudioWatermarkSettings) []interface{} {
+	if ns == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"nielsen_watermark_settings": func(n *types.NielsenWatermarksSettings) []interface{} {
+			if n == nil {
+				return nil
+			}
+
+			m := map[string]interface{}{}
+			return []interface{}{m}
+		}(ns.NielsenWatermarksSettings),
 	}
 
 	return []interface{}{m}
