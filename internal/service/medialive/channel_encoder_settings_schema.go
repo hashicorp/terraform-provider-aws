@@ -2586,7 +2586,7 @@ func expandM2tsSettings(tfList []interface{}) *types.M2tsSettings {
 	if v, ok := m["null_packet_bitrate"].(float32); ok {
 		s.NullPacketBitrate = float64(v)
 	}
-	if v, ok := m["pat_interval"].(int); ok && {
+	if v, ok := m["pat_interval"].(int); ok {
 		s.PatInterval = int32(v)
 	}
 
