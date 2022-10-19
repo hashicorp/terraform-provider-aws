@@ -201,7 +201,6 @@ func testAccCheckStackDestroy(s *terraform.State) error {
 	}
 
 	return nil
-
 }
 
 func testAccStackConfig_basic(name string) string {

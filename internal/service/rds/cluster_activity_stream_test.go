@@ -114,7 +114,6 @@ func testAccCheckClusterActivityStreamExistsProvider(resourceName string, dbClus
 
 func testAccCheckClusterActivityStreamAttributes(v *rds.DBCluster) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-
 		if aws.StringValue(v.DBClusterArn) == "" {
 			return fmt.Errorf("empty RDS Cluster arn")
 		}

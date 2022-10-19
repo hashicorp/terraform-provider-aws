@@ -90,11 +90,9 @@ func testAccCheckInvitationAccepterDestroy(s *terraform.State) error {
 		}
 
 		return fmt.Errorf("macie InvitationAccepter %q still exists", rs.Primary.ID)
-
 	}
 
 	return nil
-
 }
 
 func testAccInvitationAccepterConfig_basic(email string) string {

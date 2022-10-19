@@ -205,7 +205,6 @@ func testAccCheckAliasDestroy(s *terraform.State) error {
 		if err == nil {
 			return fmt.Errorf("Lambda alias was not deleted")
 		}
-
 	}
 
 	return nil

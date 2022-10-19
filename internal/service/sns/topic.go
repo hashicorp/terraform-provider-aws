@@ -432,7 +432,6 @@ func resourceTopicCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, me
 		if !re.MatchString(name) {
 			return fmt.Errorf("invalid topic name: %s", name)
 		}
-
 	}
 
 	if !fifoTopic && contentBasedDeduplication {

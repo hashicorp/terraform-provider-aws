@@ -242,7 +242,6 @@ func WaitIPAMPoolCIDRDeleted(conn *ec2.EC2, id string, timeout time.Duration) (*
 
 func statusIPAMPoolCIDRStatus(conn *ec2.EC2, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-
 		output, _, err := FindIPAMPoolCIDR(conn, id)
 
 		// there was an unhandled error in the Finder

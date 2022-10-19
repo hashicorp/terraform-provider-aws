@@ -18,7 +18,6 @@ import (
 
 func init() {
 	acctest.RegisterServiceErrorCheckFunc(cloudtrail.EndpointsID, testAccErrorCheckSkip)
-
 }
 
 // testAccErrorCheckSkip skips CloudTrail tests that have error messages indicating unsupported features

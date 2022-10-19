@@ -627,7 +627,6 @@ func testAccCheckUserCreatesMFADevice(getUserOutput *iam.GetUserOutput) resource
 // Creates an IAM User SSH Key outside of Terraform to verify that it is deleted when `force_destroy` is set
 func testAccCheckUserUploadsSSHKey(getUserOutput *iam.GetUserOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-
 		publicKey, _, err := RandSSHKeyPairSize(2048, acctest.DefaultEmailAddress)
 		if err != nil {
 			return fmt.Errorf("error generating random SSH key: %w", err)
@@ -652,7 +651,6 @@ func testAccCheckUserUploadsSSHKey(getUserOutput *iam.GetUserOutput) resource.Te
 // Creates an IAM User Service Specific Credential outside of Terraform to verify that it is deleted when `force_destroy` is set
 func testAccCheckUserServiceSpecificCredential(getUserOutput *iam.GetUserOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
 
 		input := &iam.CreateServiceSpecificCredentialInput{
