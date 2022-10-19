@@ -1044,7 +1044,7 @@ func flattenTargetGroupResource(d *schema.ResourceData, meta interface{}, target
 	}
 
 	// Set target failover attributes for GWLB
-	targetFailoverAttr, err := flattenTargetGroupFailover(attrResp.Attributes)
+	targetFailoverAttr := flattenTargetGroupFailover(attrResp.Attributes)
 	if err != nil {
 		return fmt.Errorf("flattening target failover: %w", err)
 	}
@@ -1078,9 +1078,9 @@ func flattenTargetGroupResource(d *schema.ResourceData, meta interface{}, target
 	return nil
 }
 
-func flattenTargetGroupFailover(attributes []*elbv2.TargetGroupAttribute) ([]interface{}, error) {
+func flattenTargetGroupFailover(attributes []*elbv2.TargetGroupAttribute) []interface{} {
 	if len(attributes) == 0 {
-		return []interface{}{}, nil
+		return []interface{}{}
 	}
 
 	m := make(map[string]interface{})
@@ -1094,7 +1094,7 @@ func flattenTargetGroupFailover(attributes []*elbv2.TargetGroupAttribute) ([]int
 		}
 	}
 
-	return []interface{}{m}, nil
+	return []interface{}{m}
 }
 
 func flattenTargetGroupStickiness(attributes []*elbv2.TargetGroupAttribute) ([]interface{}, error) {
