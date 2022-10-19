@@ -214,7 +214,6 @@ func resourceProjectRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 	tags := KeyValueTags(project.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
-	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
 		return diag.Errorf("setting tags: %s", err)
 	}
