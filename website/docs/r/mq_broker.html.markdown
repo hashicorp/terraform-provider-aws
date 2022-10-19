@@ -170,6 +170,14 @@ In addition to all arguments above, the following attributes are exported:
             * `amqps://broker-id.mq.us-west-2.amazonaws.com:5671`
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
+## Timeouts
+
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+
+* `create` - (Default `30m`)
+* `update` - (Default `30m`)
+* `delete` - (Default `30m`)
+
 ## Import
 
 MQ Brokers can be imported using their broker id, e.g.,

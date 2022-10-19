@@ -1,4 +1,19 @@
 ## 4.36.0 (Unreleased)
+
+FEATURES:
+
+* **New Data Source:** `aws_elasticache_subnet_group` ([#27233](https://github.com/hashicorp/terraform-provider-aws/issues/27233))
+* **New Data Source:** `aws_sesv2_dedicated_ip_pool` ([#27278](https://github.com/hashicorp/terraform-provider-aws/issues/27278))
+* **New Resource:** `aws_lightsail_certificate` ([#25283](https://github.com/hashicorp/terraform-provider-aws/issues/25283))
+* **New Resource:** `aws_sesv2_dedicated_ip_pool` ([#27278](https://github.com/hashicorp/terraform-provider-aws/issues/27278))
+
+ENHANCEMENTS:
+
+* resource/aws_lightsail_container_service: Add `private_registry_access` argument ([#27236](https://github.com/hashicorp/terraform-provider-aws/issues/27236))
+* resource/aws_mq_broker: Add configurable timeouts ([#27035](https://github.com/hashicorp/terraform-provider-aws/issues/27035))
+* resource/aws_rum_app_monitor: Add `app_monitor_id` attribute ([#26994](https://github.com/hashicorp/terraform-provider-aws/issues/26994))
+* resource/aws_sns_platform_application: Add `apple_platform_bundle_id` and `apple_platform_team_id` arguments. NOTE: Because we cannot easily test this functionality, it is best effort and we ask for community help in testing ([#23147](https://github.com/hashicorp/terraform-provider-aws/issues/23147))
+
 ## 4.35.0 (October 17, 2022)
 
 FEATURES:

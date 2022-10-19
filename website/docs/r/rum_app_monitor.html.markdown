@@ -46,7 +46,8 @@ The following arguments are supported:
 In addition to all arguments above, the following attributes are exported:
 
 * `arn` - The Amazon Resource Name (ARN) specifying the app monitor.
-* `id` - TThe Amazon Resource Name (ARN) specifying the app monitor.
+* `id` - The CloudWatch RUM name as it is the identifier of a RUM.
+* `app_monitor_id` - The unique ID of the app monitor. Useful for JS templates.
 * `cw_log_group` - The name of the log group where the copies are stored.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
