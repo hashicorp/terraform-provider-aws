@@ -2,6 +2,7 @@ package lightsail
 
 import (
 	"context"
+	"errors"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -180,5 +181,48 @@ func FindLoadBalancerByName(ctx context.Context, conn *lightsail.Lightsail, name
 	lb := out.LoadBalancer
 
 	return lb, nil
+
+}
+
+func FindLoadBalancerAttachmentById(ctx context.Context, conn *lightsail.Lightsail, id string) (*string, error) {
+
+	id_parts := strings.SplitN(id, ",", -1)
+	if len(id_parts) != 2 {
+		return nil, errors.New("invalid load balancer attachment id")
+	}
+
+	lbName := id_parts[0]
+	iName := id_parts[1]
+
+	in := &lightsail.GetLoadBalancerInput{LoadBalancerName: aws.String(lbName)}
+	out, err := conn.GetLoadBalancerWithContext(ctx, in)
+
+	if tfawserr.ErrCodeEquals(err, lightsail.ErrCodeNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: in,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	var entry *string
+	entryExists := false
+
+	for _, n := range out.LoadBalancer.InstanceHealthSummary {
+		if iName == aws.StringValue(n.InstanceName) {
+			entry = n.InstanceName
+			entryExists = true
+			break
+		}
+	}
+
+	if !entryExists {
+		return nil, tfresource.NewEmptyResultError(in)
+	}
+
+	return entry, nil
 
 }
