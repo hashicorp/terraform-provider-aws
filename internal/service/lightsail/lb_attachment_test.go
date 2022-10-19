@@ -4,11 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
 	"testing"
-	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/lightsail"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -53,39 +50,6 @@ func TestAccLightsailLoadBalancerAttachment_disappears(t *testing.T) {
 	lbName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	liName := sdkacctest.RandomWithPrefix("tf-acc-test")
 
-	testDestroy := func(*terraform.State) error {
-		// reach out and detach Instance from the Load Balancer
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn
-
-		resp, err := conn.DetachInstancesFromLoadBalancer(&lightsail.DetachInstancesFromLoadBalancerInput{
-			LoadBalancerName: aws.String(lbName),
-			InstanceNames:    aws.StringSlice([]string{liName}),
-		})
-
-		if len(resp.Operations) == 0 {
-			return fmt.Errorf("No operations found for Detach Instances From Load Balancer request")
-		}
-
-		op := resp.Operations[0]
-
-		stateConf := &resource.StateChangeConf{
-			Pending:    []string{"Started"},
-			Target:     []string{"Completed", "Succeeded"},
-			Refresh:    resourceOperationRefreshFunc(op.Id, acctest.Provider.Meta()),
-			Timeout:    10 * time.Minute,
-			Delay:      5 * time.Second,
-			MinTimeout: 3 * time.Second,
-		}
-
-		_, err = stateConf.WaitForState()
-
-		if err != nil {
-			return fmt.Errorf("error detaching Lightsail instance from LoadBalancer in disappear test")
-		}
-
-		return nil
-	}
-
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
@@ -99,7 +63,7 @@ func TestAccLightsailLoadBalancerAttachment_disappears(t *testing.T) {
 				Config: testAccLoadBalancerAttachmentConfig_basic(lbName, liName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoadBalancerAttachmentExists(resourceName, &liName),
-					testDestroy,
+					acctest.CheckResourceDisappears(acctest.Provider, tflightsail.ResourceLoadBalancerAttachment(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -187,33 +151,4 @@ resource "aws_lightsail_lb_attachment" "test" {
   instance_name = aws_lightsail_instance.test.name
 }
 `, lbName, liName)
-}
-
-// method to check the status of an Operation, which is returned from
-// Create/Delete methods.
-// Status's are an aws.OperationStatus enum:
-// - NotStarted
-// - Started
-// - Failed
-// - Completed
-// - Succeeded (not documented?)
-func resourceOperationRefreshFunc(
-	oid *string, meta interface{}) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		conn := meta.(*conns.AWSClient).LightsailConn
-		log.Printf("[DEBUG] Checking if Lightsail Operation (%s) is Completed", *oid)
-		o, err := conn.GetOperation(&lightsail.GetOperationInput{
-			OperationId: oid,
-		})
-		if err != nil {
-			return o, "FAILED", err
-		}
-
-		if o.Operation == nil {
-			return nil, "Failed", fmt.Errorf("Error retrieving Operation info for operation (%s)", *oid)
-		}
-
-		log.Printf("[DEBUG] Lightsail Operation (%s) is currently %q", *oid, *o.Operation.Status)
-		return o, *o.Operation.Status, nil
-	}
 }
