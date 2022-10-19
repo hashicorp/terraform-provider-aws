@@ -107,6 +107,25 @@ func TestAccRDSEngineVersionDataSource_defaultOnly(t *testing.T) {
 	})
 }
 
+func TestAccRDSEngineVersionDataSource_filters(t *testing.T) {
+	dataSourceName := "data.aws_rds_engine_version.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); testAccEngineVersionPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEngineVersionDataSourceConfig_filters(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet(dataSourceName, "version"),
+				),
+			},
+		},
+	})
+}
+
 func testAccEngineVersionPreCheck(t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
 
@@ -158,6 +177,18 @@ func testAccEngineVersionDataSourceConfig_defaultOnly() string {
 	return `
 data "aws_rds_engine_version" "test" {
   engine = "mysql"
+}
+`
+}
+
+func testAccEngineVersionDataSourceConfig_filters() string {
+	return `
+data "aws_rds_engine_version" "test" {
+  engine = "aurora"
+  filter {
+    name   = "engine-mode"
+    values = ["serverless"]
+  }
 }
 `
 }
