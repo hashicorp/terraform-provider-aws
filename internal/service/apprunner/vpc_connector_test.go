@@ -92,6 +92,23 @@ func TestAccAppRunnerVPCConnector_tags(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
+			{
+				Config: testAccVPCConnectorConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVPCConnectorExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccVPCConnectorConfig_tags1(rName, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVPCConnectorExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
 		},
 	})
 }
@@ -157,19 +174,10 @@ func testAccCheckVPCConnectorExists(n string) resource.TestCheckFunc {
 	}
 }
 
-func testAccVPCConnectorConfig_basic(rName string) string {
+func testAccVPCConnectorConfig_base(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_security_group" "test" {
-  vpc_id = aws_vpc.test.id
-  name   = %[1]q
 
   tags = {
     Name = %[1]q
@@ -185,6 +193,18 @@ resource "aws_subnet" "test" {
   }
 }
 
+resource "aws_security_group" "test" {
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName)
+}
+
+func testAccVPCConnectorConfig_basic(rName string) string {
+	return testAccVPCConnectorConfig_base(rName) + fmt.Sprintf(`
 resource "aws_apprunner_vpc_connector" "test" {
   vpc_connector_name = %[1]q
   subnets            = [aws_subnet.test.id]
@@ -194,33 +214,7 @@ resource "aws_apprunner_vpc_connector" "test" {
 }
 
 func testAccVPCConnectorConfig_tags1(rName string, tagKey1 string, tagValue1 string) string {
-	return fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block = "10.1.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_security_group" "test" {
-  vpc_id = aws_vpc.test.id
-  name   = %[1]q
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test" {
-  cidr_block = "10.1.1.0/24"
-  vpc_id     = aws_vpc.test.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
+	return testAccVPCConnectorConfig_base(rName) + fmt.Sprintf(`
 resource "aws_apprunner_vpc_connector" "test" {
   vpc_connector_name = %[1]q
   subnets            = [aws_subnet.test.id]
@@ -231,6 +225,21 @@ resource "aws_apprunner_vpc_connector" "test" {
   }
 }
 `, rName, tagKey1, tagValue1)
+}
+
+func testAccVPCConnectorConfig_tags2(rName string, tagKey1 string, tagValue1 string, tagKey2 string, tagValue2 string) string {
+	return testAccVPCConnectorConfig_base(rName) + fmt.Sprintf(`
+resource "aws_apprunner_vpc_connector" "test" {
+	vpc_connector_name = %[1]q
+	subnets            = [aws_subnet.test.id]
+	security_groups    = [aws_security_group.test.id]
+
+	tags = {
+		%[2]q = %[3]q
+		%[4]q = %[5]q
+	}
+}
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
 func testAccPreCheckVPCConnector(t *testing.T) {

@@ -171,6 +171,10 @@ func resourceVPCConnectorRead(ctx context.Context, d *schema.ResourceData, meta 
 		return diag.FromErr(fmt.Errorf("error setting tags: %w", err))
 	}
 
+	if err := d.Set("tags_all", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return diag.FromErr(fmt.Errorf("error setting tags_all: %w", err))
+	}
+
 	return nil
 }
 
