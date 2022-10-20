@@ -110,160 +110,6 @@ func ResourceGroup() *schema.Resource {
 	}
 }
 
-func extractResourceGroupConfigurationParameters(parameterList []interface{}) []*resourcegroups.GroupConfigurationParameter {
-	var parameters []*resourcegroups.GroupConfigurationParameter
-
-	for _, param := range parameterList {
-		parameter := param.(map[string]interface{})
-		var values []string
-		for _, val := range parameter["values"].([]interface{}) {
-			values = append(values, val.(string))
-		}
-		parameters = append(parameters, &resourcegroups.GroupConfigurationParameter{
-			Name:   aws.String(parameter["name"].(string)),
-			Values: aws.StringSlice(values),
-		})
-	}
-
-	return parameters
-}
-
-func extractResourceGroupConfigurationItems(configurationItemList []interface{}) []*resourcegroups.GroupConfigurationItem {
-	var configurationItems []*resourcegroups.GroupConfigurationItem
-
-	for _, configItem := range configurationItemList {
-		configItemMap := configItem.(map[string]interface{})
-		configurationItems = append(configurationItems, &resourcegroups.GroupConfigurationItem{
-			Parameters: extractResourceGroupConfigurationParameters(configItemMap["parameters"].(*schema.Set).List()),
-			Type:       aws.String(configItemMap["type"].(string)),
-		})
-	}
-
-	return configurationItems
-}
-
-func flattenResourceGroupConfigurationParameter(param *resourcegroups.GroupConfigurationParameter) map[string]interface{} {
-	if param == nil {
-		return nil
-	}
-
-	tfMap := map[string]interface{}{}
-
-	if v := param.Name; v != nil {
-		tfMap["name"] = aws.StringValue(param.Name)
-	}
-
-	if v := param.Values; v != nil {
-		tfMap["values"] = aws.StringValueSlice(v)
-	}
-
-	return tfMap
-}
-
-func flattenResourceGroupConfigurationItem(configuration *resourcegroups.GroupConfigurationItem) map[string]interface{} {
-	if configuration == nil {
-		return nil
-	}
-
-	tfMap := map[string]interface{}{}
-
-	if v := configuration.Type; v != nil {
-		tfMap["type"] = aws.StringValue(v)
-	}
-
-	if v := configuration.Parameters; v != nil {
-		var params []interface{}
-		for _, param := range v {
-			params = append(params, flattenResourceGroupConfigurationParameter(param))
-		}
-		tfMap["parameters"] = params
-	}
-
-	return tfMap
-}
-
-func flattenResourceGroupConfigurationItems(configurationItems []*resourcegroups.GroupConfigurationItem) []interface{} {
-	if len(configurationItems) == 0 {
-		return nil
-	}
-
-	var tfList []interface{}
-
-	for _, configuration := range configurationItems {
-		if configuration == nil {
-			continue
-		}
-
-		tfList = append(tfList, flattenResourceGroupConfigurationItem(configuration))
-	}
-
-	return tfList
-}
-
-func extractResourceGroupResourceQuery(resourceQueryList []interface{}) *resourcegroups.ResourceQuery {
-	resourceQuery := resourceQueryList[0].(map[string]interface{})
-
-	return &resourcegroups.ResourceQuery{
-		Query: aws.String(resourceQuery["query"].(string)),
-		Type:  aws.String(resourceQuery["type"].(string)),
-	}
-}
-
-func getGroupConfiguration(conn *resourcegroups.ResourceGroups, input *resourcegroups.GetGroupConfigurationInput) (*resourcegroups.GetGroupConfigurationOutput, error) {
-	output, err := conn.GetGroupConfiguration(input)
-
-	if err != nil {
-		if tfawserr.ErrCodeEquals(err, resourcegroups.ErrCodeNotFoundException) {
-			return nil, tfresource.NewEmptyResultError(input)
-		}
-		return nil, err
-	}
-
-	return output, nil
-}
-
-func statusGroupConfigurationState(conn *resourcegroups.ResourceGroups, name string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		input := &resourcegroups.GetGroupConfigurationInput{
-			Group: aws.String(name),
-		}
-
-		output, err := getGroupConfiguration(conn, input)
-
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return output, aws.StringValue(output.GroupConfiguration.Status), nil
-	}
-}
-
-func waitForConfigurationUpdatedState(conn *resourcegroups.ResourceGroups, name string, timeout time.Duration) error {
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{
-			resourcegroups.GroupConfigurationStatusUpdating,
-		},
-		Target: []string{
-			resourcegroups.GroupConfigurationStatusUpdateComplete,
-			resourcegroups.GroupConfigurationStatusUpdateFailed,
-		},
-		Refresh: statusGroupConfigurationState(conn, name),
-		Timeout: timeout,
-	}
-
-	outputRaw, err := stateConf.WaitForState()
-
-	if _, ok := outputRaw.(*resourcegroups.GroupConfiguration); ok {
-		return err
-	}
-
-	return err
-}
-
 func resourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ResourceGroupsConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
@@ -456,4 +302,158 @@ func resourceGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	return nil
+}
+
+func extractResourceGroupConfigurationParameters(parameterList []interface{}) []*resourcegroups.GroupConfigurationParameter {
+	var parameters []*resourcegroups.GroupConfigurationParameter
+
+	for _, param := range parameterList {
+		parameter := param.(map[string]interface{})
+		var values []string
+		for _, val := range parameter["values"].([]interface{}) {
+			values = append(values, val.(string))
+		}
+		parameters = append(parameters, &resourcegroups.GroupConfigurationParameter{
+			Name:   aws.String(parameter["name"].(string)),
+			Values: aws.StringSlice(values),
+		})
+	}
+
+	return parameters
+}
+
+func extractResourceGroupConfigurationItems(configurationItemList []interface{}) []*resourcegroups.GroupConfigurationItem {
+	var configurationItems []*resourcegroups.GroupConfigurationItem
+
+	for _, configItem := range configurationItemList {
+		configItemMap := configItem.(map[string]interface{})
+		configurationItems = append(configurationItems, &resourcegroups.GroupConfigurationItem{
+			Parameters: extractResourceGroupConfigurationParameters(configItemMap["parameters"].(*schema.Set).List()),
+			Type:       aws.String(configItemMap["type"].(string)),
+		})
+	}
+
+	return configurationItems
+}
+
+func flattenResourceGroupConfigurationParameter(param *resourcegroups.GroupConfigurationParameter) map[string]interface{} {
+	if param == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := param.Name; v != nil {
+		tfMap["name"] = aws.StringValue(param.Name)
+	}
+
+	if v := param.Values; v != nil {
+		tfMap["values"] = aws.StringValueSlice(v)
+	}
+
+	return tfMap
+}
+
+func flattenResourceGroupConfigurationItem(configuration *resourcegroups.GroupConfigurationItem) map[string]interface{} {
+	if configuration == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := configuration.Type; v != nil {
+		tfMap["type"] = aws.StringValue(v)
+	}
+
+	if v := configuration.Parameters; v != nil {
+		var params []interface{}
+		for _, param := range v {
+			params = append(params, flattenResourceGroupConfigurationParameter(param))
+		}
+		tfMap["parameters"] = params
+	}
+
+	return tfMap
+}
+
+func flattenResourceGroupConfigurationItems(configurationItems []*resourcegroups.GroupConfigurationItem) []interface{} {
+	if len(configurationItems) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+
+	for _, configuration := range configurationItems {
+		if configuration == nil {
+			continue
+		}
+
+		tfList = append(tfList, flattenResourceGroupConfigurationItem(configuration))
+	}
+
+	return tfList
+}
+
+func extractResourceGroupResourceQuery(resourceQueryList []interface{}) *resourcegroups.ResourceQuery {
+	resourceQuery := resourceQueryList[0].(map[string]interface{})
+
+	return &resourcegroups.ResourceQuery{
+		Query: aws.String(resourceQuery["query"].(string)),
+		Type:  aws.String(resourceQuery["type"].(string)),
+	}
+}
+
+func getGroupConfiguration(conn *resourcegroups.ResourceGroups, input *resourcegroups.GetGroupConfigurationInput) (*resourcegroups.GetGroupConfigurationOutput, error) {
+	output, err := conn.GetGroupConfiguration(input)
+
+	if err != nil {
+		if tfawserr.ErrCodeEquals(err, resourcegroups.ErrCodeNotFoundException) {
+			return nil, tfresource.NewEmptyResultError(input)
+		}
+		return nil, err
+	}
+
+	return output, nil
+}
+
+func statusGroupConfigurationState(conn *resourcegroups.ResourceGroups, name string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		input := &resourcegroups.GetGroupConfigurationInput{
+			Group: aws.String(name),
+		}
+
+		output, err := getGroupConfiguration(conn, input)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.GroupConfiguration.Status), nil
+	}
+}
+
+func waitForConfigurationUpdatedState(conn *resourcegroups.ResourceGroups, name string, timeout time.Duration) error {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{
+			resourcegroups.GroupConfigurationStatusUpdating,
+		},
+		Target: []string{
+			resourcegroups.GroupConfigurationStatusUpdateComplete,
+			resourcegroups.GroupConfigurationStatusUpdateFailed,
+		},
+		Refresh: statusGroupConfigurationState(conn, name),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if _, ok := outputRaw.(*resourcegroups.GroupConfiguration); ok {
+		return err
+	}
+
+	return err
 }
