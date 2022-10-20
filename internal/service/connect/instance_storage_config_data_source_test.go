@@ -12,10 +12,6 @@ import (
 
 func testAccInstanceStorageConfigDataSource_KinesisFirehoseConfig(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rName3 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rName4 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rName5 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_connect_instance_storage_config.test"
 	datasourceName := "data.aws_connect_instance_storage_config.test"
 
@@ -25,7 +21,7 @@ func testAccInstanceStorageConfigDataSource_KinesisFirehoseConfig(t *testing.T) 
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceStorageConfigDataSourceConfig_kinesisFirehoseConfig(rName, rName2, rName3, rName4, rName5),
+				Config: testAccInstanceStorageConfigDataSourceConfig_kinesisFirehoseConfig(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "association_id", resourceName, "association_id"),
 					resource.TestCheckResourceAttrPair(datasourceName, "instance_id", resourceName, "instance_id"),
@@ -139,7 +135,7 @@ resource "aws_connect_instance" "test" {
 `, rName)
 }
 
-func testAccInstanceStorageConfigDataSourceConfig_kinesisFirehoseConfig(rName, rName2, rName3, rName4, rName5 string) string {
+func testAccInstanceStorageConfigDataSourceConfig_kinesisFirehoseConfig(rName string) string {
 	return acctest.ConfigCompose(
 		testAccInstanceStorageConfigDataSourceConfig_base(rName),
 		fmt.Sprintf(`
@@ -172,7 +168,7 @@ EOF
 }
 
 resource "aws_s3_bucket" "bucket" {
-  bucket = %[2]q
+  bucket = %[1]q
 }
 
 resource "aws_s3_bucket_acl" "test" {
@@ -181,7 +177,7 @@ resource "aws_s3_bucket_acl" "test" {
 }
 
 resource "aws_iam_role_policy" "firehose" {
-  name = %[3]q
+  name = %[1]q
   role = aws_iam_role.firehose.id
 
   policy = <<EOF
@@ -231,7 +227,7 @@ EOF
 
 resource "aws_kinesis_firehose_delivery_stream" "test" {
   depends_on  = [aws_iam_role_policy.firehose]
-  name        = %[4]q
+  name        = %[1]q
   destination = "s3"
 
   s3_configuration {
@@ -257,7 +253,7 @@ data "aws_connect_instance_storage_config" "test" {
   instance_id    = aws_connect_instance.test.id
   resource_type  = aws_connect_instance_storage_config.test.resource_type
 }
-`, rName2, rName3, rName4, rName5))
+`, rName))
 }
 
 func testAccInstanceStorageConfigDataSourceConfig_kinesisStreamConfig(rName, rName2 string) string {
