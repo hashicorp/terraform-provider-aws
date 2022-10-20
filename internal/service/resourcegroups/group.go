@@ -1,14 +1,15 @@
 package resourcegroups
 
 import (
+	"context"
 	"errors"
-	"fmt"
 	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/resourcegroups"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -20,10 +21,10 @@ import (
 
 func ResourceGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceGroupCreate,
-		Read:   resourceGroupRead,
-		Update: resourceGroupUpdate,
-		Delete: resourceGroupDelete,
+		CreateWithoutTimeout: resourceGroupCreate,
+		ReadWithoutTimeout:   resourceGroupRead,
+		UpdateWithoutTimeout: resourceGroupUpdate,
+		DeleteWithoutTimeout: resourceGroupDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -111,7 +112,7 @@ func ResourceGroup() *schema.Resource {
 	}
 }
 
-func resourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).ResourceGroupsConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
@@ -135,29 +136,29 @@ func resourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
 		input.ResourceQuery = extractResourceGroupResourceQuery(resourceQuery.([]interface{}))
 	}
 
-	output, err := conn.CreateGroup(input)
+	output, err := conn.CreateGroupWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("creating Resource Groups Group (%s): %w", name, err)
+		return diag.Errorf("creating Resource Groups Group (%s): %s", name, err)
 	}
 
 	d.SetId(aws.StringValue(output.Group.Name))
 
 	if waitForConfigurationAttached {
-		if _, err := waitGroupConfigurationUpdated(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-			return fmt.Errorf("waiting for Resource Groups Group (%s) configuration update: %w", d.Id(), err)
+		if _, err := waitGroupConfigurationUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+			return diag.Errorf("waiting for Resource Groups Group (%s) configuration update: %s", d.Id(), err)
 		}
 	}
 
-	return resourceGroupRead(d, meta)
+	return resourceGroupRead(ctx, d, meta)
 }
 
-func resourceGroupRead(d *schema.ResourceData, meta interface{}) error {
+func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).ResourceGroupsConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	group, err := FindGroupByName(conn, d.Id())
+	group, err := FindGroupByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Resource Groups Group %s not found, removing from state", d.Id())
@@ -166,7 +167,7 @@ func resourceGroupRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("reading Resource Groups Group (%s): %w", d.Id(), err)
+		return diag.Errorf("reading Resource Groups Group (%s): %s", d.Id(), err)
 	}
 
 	arn := aws.StringValue(group.GroupArn)
@@ -174,17 +175,17 @@ func resourceGroupRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("description", group.Description)
 	d.Set("name", group.Name)
 
-	q, err := conn.GetGroupQuery(&resourcegroups.GetGroupQueryInput{
+	q, err := conn.GetGroupQueryWithContext(ctx, &resourcegroups.GetGroupQueryInput{
 		GroupName: aws.String(d.Id()),
 	})
 
 	isConfigurationGroup := false
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, resourcegroups.ErrCodeBadRequestException) {
-			// Attempting to get the query on a configuration group returns BadRequestException
+			// Attempting to get the query on a configuration group returns BadRequestException.
 			isConfigurationGroup = true
 		} else {
-			return fmt.Errorf("error reading resource query for resource group (%s): %s", d.Id(), err)
+			return diag.Errorf("reading Resource Groups Group (%s) resource query: %s", d.Id(), err)
 		}
 	}
 
@@ -193,121 +194,129 @@ func resourceGroupRead(d *schema.ResourceData, meta interface{}) error {
 		resultQuery["query"] = aws.StringValue(q.GroupQuery.ResourceQuery.Query)
 		resultQuery["type"] = aws.StringValue(q.GroupQuery.ResourceQuery.Type)
 		if err := d.Set("resource_query", []map[string]interface{}{resultQuery}); err != nil {
-			return fmt.Errorf("error setting resource_query: %s", err)
+			return diag.Errorf("setting resource_query: %s", err)
 		}
 	}
 
 	if isConfigurationGroup {
-		groupCfg, err := conn.GetGroupConfiguration(&resourcegroups.GetGroupConfigurationInput{
-			Group: aws.String(d.Id()),
-		})
+		groupCfg, err := findGroupConfigurationByGroupName(ctx, conn, d.Id())
 
 		if err != nil {
-			return fmt.Errorf("error reading configuration for resource group (%s): %s", d.Id(), err)
+			return diag.Errorf("reading Resource Groups Group (%s) configuration: %s", d.Id(), err)
 		}
 
-		if err := d.Set("configuration", flattenResourceGroupConfigurationItems(groupCfg.GroupConfiguration.Configuration)); err != nil {
-			return fmt.Errorf("error setting configuration: %s", err)
+		if err := d.Set("configuration", flattenResourceGroupConfigurationItems(groupCfg.Configuration)); err != nil {
+			return diag.Errorf("setting configuration: %s", err)
 		}
 	}
 
-	tags, err := ListTags(conn, arn)
+	tags, err := ListTagsWithContext(ctx, conn, arn)
+
 	if err != nil {
-		return fmt.Errorf("error listing tags for resource (%s): %s", arn, err)
+		return diag.Errorf("listing tags for Resource Groups Group (%s): %s", arn, err)
 	}
+
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return diag.Errorf("setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return diag.Errorf("setting tags_all: %s", err)
 	}
 
 	return nil
 }
 
-func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).ResourceGroupsConn
 
 	// Conversion between a resource-query and configuration group is not possible and vice-versa
 	if d.HasChange("configuration") && d.HasChange("resource_query") {
-		return fmt.Errorf("conversion between resource-query and configuration group types is not possible")
+		return diag.Errorf("conversion between resource-query and configuration group types is not possible")
 	}
 
 	if d.HasChange("description") {
-		input := resourcegroups.UpdateGroupInput{
-			GroupName:   aws.String(d.Id()),
+		input := &resourcegroups.UpdateGroupInput{
 			Description: aws.String(d.Get("description").(string)),
+			GroupName:   aws.String(d.Id()),
 		}
 
-		_, err := conn.UpdateGroup(&input)
+		_, err := conn.UpdateGroupWithContext(ctx, input)
+
 		if err != nil {
-			return fmt.Errorf("error updating resource group (%s): %s", d.Id(), err)
+			return diag.Errorf("updating Resource Groups Group (%s): %s", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("resource_query") {
-		input := resourcegroups.UpdateGroupQueryInput{
+		input := &resourcegroups.UpdateGroupQueryInput{
 			GroupName:     aws.String(d.Id()),
 			ResourceQuery: extractResourceGroupResourceQuery(d.Get("resource_query").([]interface{})),
 		}
 
-		_, err := conn.UpdateGroupQuery(&input)
+		_, err := conn.UpdateGroupQueryWithContext(ctx, input)
+
 		if err != nil {
-			return fmt.Errorf("error updating resource query for resource group (%s): %s", d.Id(), err)
+			return diag.Errorf("updating Resource Groups Group (%s) resource query: %s", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("configuration") {
-		input := resourcegroups.PutGroupConfigurationInput{
-			Group:         aws.String(d.Id()),
+		input := &resourcegroups.PutGroupConfigurationInput{
 			Configuration: extractResourceGroupConfigurationItems(d.Get("configuration").(*schema.Set).List()),
+			Group:         aws.String(d.Id()),
 		}
 
-		_, err := conn.PutGroupConfiguration(&input)
+		_, err := conn.PutGroupConfigurationWithContext(ctx, input)
+
 		if err != nil {
-			return fmt.Errorf("error updating configuration for resource group (%s): %s", d.Id(), err)
+			return diag.Errorf("updating Resource Groups Group (%s) configuration: %s", d.Id(), err)
 		}
 
-		if _, err := waitGroupConfigurationUpdated(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return fmt.Errorf("waiting for Resource Groups Group (%s) configuration update: %w", d.Id(), err)
+		if _, err := waitGroupConfigurationUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return diag.Errorf("waiting for Resource Groups Group (%s) configuration update: %s", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating tags: %s", err)
+
+		if err := UpdateTagsWithContext(ctx, conn, d.Get("arn").(string), o, n); err != nil {
+			return diag.Errorf("updating tags: %s", err)
 		}
 	}
 
-	return resourceGroupRead(d, meta)
+	return resourceGroupRead(ctx, d, meta)
 }
 
-func resourceGroupDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).ResourceGroupsConn
 
-	input := resourcegroups.DeleteGroupInput{
+	log.Printf("[DEBUG] Deleting Resource Groups Group: %s", d.Id())
+	_, err := conn.DeleteGroupWithContext(ctx, &resourcegroups.DeleteGroupInput{
 		GroupName: aws.String(d.Id()),
+	})
+
+	if tfawserr.ErrCodeEquals(err, resourcegroups.ErrCodeNotFoundException) {
+		return nil
 	}
 
-	_, err := conn.DeleteGroup(&input)
 	if err != nil {
-		return fmt.Errorf("error deleting resource group (%s): %s", d.Id(), err)
+		return diag.Errorf("deleting Resource Groups Group (%s): %s", d.Id(), err)
 	}
 
 	return nil
 }
 
-func FindGroupByName(conn *resourcegroups.ResourceGroups, name string) (*resourcegroups.Group, error) {
+func FindGroupByName(ctx context.Context, conn *resourcegroups.ResourceGroups, name string) (*resourcegroups.Group, error) {
 	input := &resourcegroups.GetGroupInput{
 		GroupName: aws.String(name),
 	}
 
-	output, err := conn.GetGroup(input)
+	output, err := conn.GetGroupWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, resourcegroups.ErrCodeNotFoundException) {
 		return nil, &resource.NotFoundError{
@@ -327,12 +336,12 @@ func FindGroupByName(conn *resourcegroups.ResourceGroups, name string) (*resourc
 	return output.Group, nil
 }
 
-func findGroupConfigurationByGroupName(conn *resourcegroups.ResourceGroups, groupName string) (*resourcegroups.GroupConfiguration, error) {
+func findGroupConfigurationByGroupName(ctx context.Context, conn *resourcegroups.ResourceGroups, groupName string) (*resourcegroups.GroupConfiguration, error) {
 	input := &resourcegroups.GetGroupConfigurationInput{
 		Group: aws.String(groupName),
 	}
 
-	output, err := conn.GetGroupConfiguration(input)
+	output, err := conn.GetGroupConfigurationWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, resourcegroups.ErrCodeNotFoundException) {
 		return nil, &resource.NotFoundError{
@@ -352,9 +361,9 @@ func findGroupConfigurationByGroupName(conn *resourcegroups.ResourceGroups, grou
 	return output.GroupConfiguration, nil
 }
 
-func statusGroupConfiguration(conn *resourcegroups.ResourceGroups, groupName string) resource.StateRefreshFunc {
+func statusGroupConfiguration(ctx context.Context, conn *resourcegroups.ResourceGroups, groupName string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := findGroupConfigurationByGroupName(conn, groupName)
+		output, err := findGroupConfigurationByGroupName(ctx, conn, groupName)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -368,15 +377,15 @@ func statusGroupConfiguration(conn *resourcegroups.ResourceGroups, groupName str
 	}
 }
 
-func waitGroupConfigurationUpdated(conn *resourcegroups.ResourceGroups, groupName string, timeout time.Duration) (*resourcegroups.GroupConfiguration, error) {
+func waitGroupConfigurationUpdated(ctx context.Context, conn *resourcegroups.ResourceGroups, groupName string, timeout time.Duration) (*resourcegroups.GroupConfiguration, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{resourcegroups.GroupConfigurationStatusUpdating},
 		Target:  []string{resourcegroups.GroupConfigurationStatusUpdateComplete},
-		Refresh: statusGroupConfiguration(conn, groupName),
+		Refresh: statusGroupConfiguration(ctx, conn, groupName),
 		Timeout: timeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*resourcegroups.GroupConfiguration); ok {
 		if status := aws.StringValue(output.Status); status == resourcegroups.GroupConfigurationStatusUpdateFailed {

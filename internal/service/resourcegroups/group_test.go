@@ -1,6 +1,7 @@
 package resourcegroups_test
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"testing"
@@ -195,7 +196,7 @@ func testAccCheckResourceGroupExists(n string, v *resourcegroups.Group) resource
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ResourceGroupsConn
 
-		output, err := tfresourcegroups.FindGroupByName(conn, rs.Primary.ID)
+		output, err := tfresourcegroups.FindGroupByName(context.Background(), conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -215,7 +216,7 @@ func testAccCheckResourceGroupDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := tfresourcegroups.FindGroupByName(conn, rs.Primary.ID)
+		_, err := tfresourcegroups.FindGroupByName(context.Background(), conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
