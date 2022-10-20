@@ -140,8 +140,8 @@ func TestAccEvidentlyProject_updateDataDeliveryCloudWatchLogGroup(t *testing.T) 
 
 	rName := sdkacctest.RandomWithPrefix("tf-test-bucket")
 	rName2 := sdkacctest.RandomWithPrefix("tf-test-bucket")
-	rName3 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rName4 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName3 := sdkacctest.RandomWithPrefix(fmt.Sprintf("/aws/vendedlogs/%s", acctest.ResourcePrefix))
+	rName4 := sdkacctest.RandomWithPrefix(fmt.Sprintf("/aws/vendedlogs/%s", acctest.ResourcePrefix))
 	rName5 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	resourceName := "aws_evidently_project.test"
 
@@ -283,8 +283,8 @@ func TestAccEvidentlyProject_updateDataDeliveryCloudWatchToS3(t *testing.T) {
 
 	rName := sdkacctest.RandomWithPrefix("tf-test-bucket")
 	rName2 := sdkacctest.RandomWithPrefix("tf-test-bucket")
-	rName3 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rName4 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName3 := sdkacctest.RandomWithPrefix(fmt.Sprintf("/aws/vendedlogs/%s", acctest.ResourcePrefix))
+	rName4 := sdkacctest.RandomWithPrefix(fmt.Sprintf("/aws/vendedlogs/%s", acctest.ResourcePrefix))
 	rName5 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	resourceName := "aws_evidently_project.test"
 	prefix := "tests3prefix"
