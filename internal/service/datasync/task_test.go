@@ -539,6 +539,7 @@ func TestAccDataSyncTask_DefaultSyncOptions_securityDescriptorCopyFlags(t *testi
 	var task1, task2 datasync.DescribeTaskOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_datasync_task.test"
+	domainName := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
@@ -547,11 +548,14 @@ func TestAccDataSyncTask_DefaultSyncOptions_securityDescriptorCopyFlags(t *testi
 		CheckDestroy:             testAccCheckTaskDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTaskConfig_defaultSyncOptionsSecurityDescriptorCopyFlags(rName, "OWNER_DACL"),
+				Config: testAccTaskConfig_defaultSyncOptionsSecurityDescriptorCopyFlags(rName, domainName, "OWNER_DACL"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskExists(resourceName, &task1),
 					resource.TestCheckResourceAttr(resourceName, "options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "options.0.gid", "NONE"),
+					resource.TestCheckResourceAttr(resourceName, "options.0.posix_permissions", "NONE"),
 					resource.TestCheckResourceAttr(resourceName, "options.0.security_descriptor_copy_flags", "OWNER_DACL"),
+					resource.TestCheckResourceAttr(resourceName, "options.0.uid", "NONE"),
 				),
 			},
 			{
@@ -560,12 +564,15 @@ func TestAccDataSyncTask_DefaultSyncOptions_securityDescriptorCopyFlags(t *testi
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccTaskConfig_defaultSyncOptionsSecurityDescriptorCopyFlags(rName, "NONE"),
+				Config: testAccTaskConfig_defaultSyncOptionsSecurityDescriptorCopyFlags(rName, domainName, "OWNER_DACL_SACL"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskExists(resourceName, &task2),
 					testAccCheckTaskNotRecreated(&task1, &task2),
 					resource.TestCheckResourceAttr(resourceName, "options.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "options.0.security_descriptor_copy_flags", "NONE"),
+					resource.TestCheckResourceAttr(resourceName, "options.0.gid", "NONE"),
+					resource.TestCheckResourceAttr(resourceName, "options.0.posix_permissions", "NONE"),
+					resource.TestCheckResourceAttr(resourceName, "options.0.security_descriptor_copy_flags", "OWNER_DACL_SACL"),
+					resource.TestCheckResourceAttr(resourceName, "options.0.uid", "NONE"),
 				),
 			},
 		},
@@ -1273,21 +1280,137 @@ resource "aws_datasync_task" "test" {
 `, rName, preserveDevices))
 }
 
-func testAccTaskConfig_defaultSyncOptionsSecurityDescriptorCopyFlags(rName, securityDescriptorCopyFlags string) string {
+// https://docs.aws.amazon.com/datasync/latest/userguide/API_Options.html#DataSync-Type-Options-SecurityDescriptorCopyFlags:
+// This value is only used for transfers between SMB and Amazon FSx for Windows File Server locations, or between two Amazon FSx for Windows File Server locations.
+func testAccTaskConfig_defaultSyncOptionsSecurityDescriptorCopyFlags(rName, domain, securityDescriptorCopyFlags string) string {
 	return acctest.ConfigCompose(
-		testAccTaskConfig_baseLocationS3(rName),
-		testAccTaskConfig_baseLocationNFS(rName),
+		acctest.ConfigVPCWithSubnets(rName, 2),
+		// Reference: https://docs.aws.amazon.com/datasync/latest/userguide/agent-requirements.html
+		acctest.AvailableEC2InstanceTypeForAvailabilityZone("data.aws_availability_zones.available.names[0]", "m5.2xlarge", "m5.4xlarge"),
 		fmt.Sprintf(`
-resource "aws_datasync_task" "test" {
-  destination_location_arn = aws_datasync_location_s3.test.arn
-  name                     = %[1]q
-  source_location_arn      = aws_datasync_location_nfs.test.arn
+data "aws_partition" "current" {}
 
-  options {
-    security_descriptor_copy_flags = %[2]q
+# Reference: https://docs.aws.amazon.com/datasync/latest/userguide/deploy-agents.html
+data "aws_ssm_parameter" "test" {
+  name = "/aws/service/datasync/ami"
+}
+
+resource "aws_internet_gateway" "test" {
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
   }
 }
-`, rName, securityDescriptorCopyFlags))
+
+resource "aws_default_route_table" "test" {
+  default_route_table_id = aws_vpc.test.default_route_table_id
+
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.test.id
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_security_group" "test" {
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_instance" "test" {
+  depends_on = [aws_default_route_table.test]
+
+  ami                         = data.aws_ssm_parameter.test.value
+  associate_public_ip_address = true
+  instance_type               = data.aws_ec2_instance_type_offering.available.instance_type
+  vpc_security_group_ids      = [aws_security_group.test.id]
+  subnet_id                   = aws_subnet.test[0].id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_datasync_agent" "test" {
+  ip_address = aws_instance.test.public_ip
+  name       = %[1]q
+}
+
+resource "aws_datasync_location_smb" "test" {
+  agent_arns      = [aws_datasync_agent.test.arn]
+  password        = "ZaphodBeeblebroxPW"
+  server_hostname = aws_instance.test.public_ip
+  subdirectory    = "/test/"
+  user            = "Guest"
+}
+
+resource "aws_directory_service_directory" "test" {
+  edition  = "Standard"
+  name     = %[2]q
+  password = "SuperSecretPassw0rd"
+  type     = "MicrosoftAD"
+
+  vpc_settings {
+    subnet_ids = aws_subnet.test[*].id
+    vpc_id     = aws_vpc.test.id
+  }
+}
+
+resource "aws_fsx_windows_file_system" "test" {
+  active_directory_id = aws_directory_service_directory.test.id
+  security_group_ids  = [aws_security_group.test.id]
+  skip_final_backup   = true
+  storage_capacity    = 32
+  subnet_ids          = [aws_subnet.test[0].id]
+  throughput_capacity = 8
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_datasync_location_fsx_windows_file_system" "test" {
+  fsx_filesystem_arn  = aws_fsx_windows_file_system.test.arn
+  user                = "SomeUser"
+  password            = "SuperSecretPassw0rd"
+  security_group_arns = [aws_security_group.test.arn]
+}
+
+resource "aws_datasync_task" "test" {
+  destination_location_arn = aws_datasync_location_fsx_windows_file_system.test.arn
+  name                     = %[1]q
+  source_location_arn      = aws_datasync_location_smb.test.arn
+
+  options {
+    gid                            = "NONE"
+    posix_permissions              = "NONE"
+    security_descriptor_copy_flags = %[3]q
+    uid                            = "NONE"
+  }
+}
+`, rName, domain, securityDescriptorCopyFlags))
 }
 
 func testAccTaskConfig_defaultSyncOptionsQueueing(rName, taskQueueing string) string {
