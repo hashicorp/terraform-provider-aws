@@ -105,7 +105,7 @@ func ResourceVirtualNode() *schema.Resource {
 							Type:     schema.TypeList,
 							Optional: true,
 							MinItems: 0,
-							MaxItems: 1,
+							MaxItems: 50,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"connection_pool": {
@@ -129,12 +129,6 @@ func ResourceVirtualNode() *schema.Resource {
 															},
 														},
 													},
-													ExactlyOneOf: []string{
-														"spec.0.listener.0.connection_pool.0.grpc",
-														"spec.0.listener.0.connection_pool.0.http",
-														"spec.0.listener.0.connection_pool.0.http2",
-														"spec.0.listener.0.connection_pool.0.tcp",
-													},
 												},
 
 												"http": {
@@ -157,12 +151,6 @@ func ResourceVirtualNode() *schema.Resource {
 															},
 														},
 													},
-													ExactlyOneOf: []string{
-														"spec.0.listener.0.connection_pool.0.grpc",
-														"spec.0.listener.0.connection_pool.0.http",
-														"spec.0.listener.0.connection_pool.0.http2",
-														"spec.0.listener.0.connection_pool.0.tcp",
-													},
 												},
 
 												"http2": {
@@ -179,12 +167,6 @@ func ResourceVirtualNode() *schema.Resource {
 															},
 														},
 													},
-													ExactlyOneOf: []string{
-														"spec.0.listener.0.connection_pool.0.grpc",
-														"spec.0.listener.0.connection_pool.0.http",
-														"spec.0.listener.0.connection_pool.0.http2",
-														"spec.0.listener.0.connection_pool.0.tcp",
-													},
 												},
 
 												"tcp": {
@@ -200,12 +182,6 @@ func ResourceVirtualNode() *schema.Resource {
 																ValidateFunc: validation.IntAtLeast(1),
 															},
 														},
-													},
-													ExactlyOneOf: []string{
-														"spec.0.listener.0.connection_pool.0.grpc",
-														"spec.0.listener.0.connection_pool.0.http",
-														"spec.0.listener.0.connection_pool.0.http2",
-														"spec.0.listener.0.connection_pool.0.tcp",
 													},
 												},
 											},
@@ -407,12 +383,6 @@ func ResourceVirtualNode() *schema.Resource {
 															},
 														},
 													},
-													ExactlyOneOf: []string{
-														"spec.0.listener.0.timeout.0.grpc",
-														"spec.0.listener.0.timeout.0.http",
-														"spec.0.listener.0.timeout.0.http2",
-														"spec.0.listener.0.timeout.0.tcp",
-													},
 												},
 
 												"http": {
@@ -464,12 +434,6 @@ func ResourceVirtualNode() *schema.Resource {
 																},
 															},
 														},
-													},
-													ExactlyOneOf: []string{
-														"spec.0.listener.0.timeout.0.grpc",
-														"spec.0.listener.0.timeout.0.http",
-														"spec.0.listener.0.timeout.0.http2",
-														"spec.0.listener.0.timeout.0.tcp",
 													},
 												},
 
@@ -523,12 +487,6 @@ func ResourceVirtualNode() *schema.Resource {
 															},
 														},
 													},
-													ExactlyOneOf: []string{
-														"spec.0.listener.0.timeout.0.grpc",
-														"spec.0.listener.0.timeout.0.http",
-														"spec.0.listener.0.timeout.0.http2",
-														"spec.0.listener.0.timeout.0.tcp",
-													},
 												},
 
 												"tcp": {
@@ -559,12 +517,6 @@ func ResourceVirtualNode() *schema.Resource {
 																},
 															},
 														},
-													},
-													ExactlyOneOf: []string{
-														"spec.0.listener.0.timeout.0.grpc",
-														"spec.0.listener.0.timeout.0.http",
-														"spec.0.listener.0.timeout.0.http2",
-														"spec.0.listener.0.timeout.0.tcp",
 													},
 												},
 											},
@@ -599,11 +551,6 @@ func ResourceVirtualNode() *schema.Resource {
 																		},
 																	},
 																},
-																ExactlyOneOf: []string{
-																	"spec.0.listener.0.tls.0.certificate.0.acm",
-																	"spec.0.listener.0.tls.0.certificate.0.file",
-																	"spec.0.listener.0.tls.0.certificate.0.sds",
-																},
 															},
 
 															"file": {
@@ -626,11 +573,6 @@ func ResourceVirtualNode() *schema.Resource {
 																		},
 																	},
 																},
-																ExactlyOneOf: []string{
-																	"spec.0.listener.0.tls.0.certificate.0.acm",
-																	"spec.0.listener.0.tls.0.certificate.0.file",
-																	"spec.0.listener.0.tls.0.certificate.0.sds",
-																},
 															},
 
 															"sds": {
@@ -645,11 +587,6 @@ func ResourceVirtualNode() *schema.Resource {
 																			Required: true,
 																		},
 																	},
-																},
-																ExactlyOneOf: []string{
-																	"spec.0.listener.0.tls.0.certificate.0.acm",
-																	"spec.0.listener.0.tls.0.certificate.0.file",
-																	"spec.0.listener.0.tls.0.certificate.0.sds",
 																},
 															},
 														},
@@ -717,10 +654,6 @@ func ResourceVirtualNode() *schema.Resource {
 																					},
 																				},
 																			},
-																			ExactlyOneOf: []string{
-																				"spec.0.listener.0.tls.0.validation.0.trust.0.file",
-																				"spec.0.listener.0.tls.0.validation.0.trust.0.sds",
-																			},
 																		},
 
 																		"sds": {
@@ -736,10 +669,6 @@ func ResourceVirtualNode() *schema.Resource {
 																						ValidateFunc: validation.StringLenBetween(1, 255),
 																					},
 																				},
-																			},
-																			ExactlyOneOf: []string{
-																				"spec.0.listener.0.tls.0.validation.0.trust.0.file",
-																				"spec.0.listener.0.tls.0.validation.0.trust.0.sds",
 																			},
 																		},
 																	},

@@ -60,6 +60,7 @@ func TestAccAppMesh_serial(t *testing.T) {
 			"listenerTimeout":            testAccVirtualNode_listenerTimeout,
 			"listenerTls":                testAccVirtualNode_listenerTLS,
 			"listenerValidation":         testAccVirtualNode_listenerValidation,
+			"multipleListeners":          testAccVirtualNode_multipleListeners,
 			"logging":                    testAccVirtualNode_logging,
 			"tags":                       testAccVirtualNode_tags,
 		},
