@@ -10,7 +10,7 @@ description: |-
 
 Creates a Lightsail load balancer resource.
 
-## Example Usage, creating a new load balancer
+## Example Usage
 
 ```terraform
 resource "aws_lightsail_lb" "test" {
@@ -34,7 +34,7 @@ The following arguments are supported:
 
 ## Attributes Reference
 
-The following attributes are exported in addition to the arguments listed above:
+In addition to all arguments above, the following attributes are exported:
 
 * `id` - The name used for this load balancer (matches `name`).
 * `arn` - The ARN of the Lightsail load balancer.
