@@ -377,7 +377,7 @@ func statusGroupConfiguration(ctx context.Context, conn *resourcegroups.Resource
 	}
 }
 
-func waitGroupConfigurationUpdated(ctx context.Context, conn *resourcegroups.ResourceGroups, groupName string, timeout time.Duration) (*resourcegroups.GroupConfiguration, error) {
+func waitGroupConfigurationUpdated(ctx context.Context, conn *resourcegroups.ResourceGroups, groupName string, timeout time.Duration) (*resourcegroups.GroupConfiguration, error) { //nolint:unparam
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{resourcegroups.GroupConfigurationStatusUpdating},
 		Target:  []string{resourcegroups.GroupConfigurationStatusUpdateComplete},
