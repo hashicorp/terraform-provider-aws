@@ -1506,6 +1506,26 @@ func FindNetworkInterfacesByAttachmentInstanceOwnerIDAndDescriptionWithContext(c
 	return FindNetworkInterfacesWithContext(ctx, conn, input)
 }
 
+func FindNetworkInterfaceByAttachmentID(ctx context.Context, conn *ec2.EC2, id string) (*ec2.NetworkInterface, error) {
+	input := &ec2.DescribeNetworkInterfacesInput{
+		Filters: BuildAttributeFilterList(map[string]string{
+			"attachment.attachment-id": id,
+		}),
+	}
+
+	networkInterface, err := FindNetworkInterfaceWithContext(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if networkInterface == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return networkInterface, nil
+}
+
 func FindNetworkInterfaceAttachmentByID(ctx context.Context, conn *ec2.EC2, id string) (*ec2.NetworkInterfaceAttachment, error) {
 	input := &ec2.DescribeNetworkInterfacesInput{
 		Filters: BuildAttributeFilterList(map[string]string{
