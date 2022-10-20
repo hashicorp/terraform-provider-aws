@@ -17,8 +17,8 @@ func waitProjectCreated(conn *cloudwatchevidently.CloudWatchEvidently, nameOrARN
 
 	outputRaw, err := stateConf.WaitForState()
 
-	if v, ok := outputRaw.(*cloudwatchevidently.GetProjectOutput); ok {
-		return v, err
+	if output, ok := outputRaw.(*cloudwatchevidently.GetProjectOutput); ok {
+		return output, err
 	}
 
 	return nil, err
@@ -34,8 +34,8 @@ func waitProjectUpdated(conn *cloudwatchevidently.CloudWatchEvidently, nameOrARN
 
 	outputRaw, err := stateConf.WaitForState()
 
-	if v, ok := outputRaw.(*cloudwatchevidently.GetProjectOutput); ok {
-		return v, err
+	if output, ok := outputRaw.(*cloudwatchevidently.GetProjectOutput); ok {
+		return output, err
 	}
 
 	return nil, err
