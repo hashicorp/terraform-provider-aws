@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"log"
 	"regexp"
+	"sort"
+	"strconv"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -16,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -153,8 +156,10 @@ func ResourceGlobalReplicationGroup() *schema.Resource {
 			// 	},
 			// },
 			"num_node_groups": {
-				Type:     schema.TypeInt,
-				Computed: true,
+				Type:         schema.TypeInt,
+				Computed:     true,
+				Optional:     true,
+				ValidateFunc: validation.IntAtLeast(1),
 			},
 			"parameter_group_name": {
 				Type:     schema.TypeString,
@@ -337,7 +342,61 @@ func resourceGlobalReplicationGroupCreate(ctx context.Context, d *schema.Resourc
 		}
 	}
 
+	if v, ok := d.GetOk("num_node_groups"); ok {
+		requested := v.(int)
+		current := len(globalReplicationGroup.GlobalNodeGroups)
+
+		if requested != current {
+			if requested > current {
+				input := &elasticache.IncreaseNodeGroupsInGlobalReplicationGroupInput{
+					ApplyImmediately:         aws.Bool(true),
+					GlobalReplicationGroupId: aws.String(d.Id()),
+					NodeGroupCount:           aws.Int64(int64(requested)),
+				}
+				_, err := conn.IncreaseNodeGroupsInGlobalReplicationGroupWithContext(ctx, input)
+				if err != nil {
+					return diag.Errorf("updating ElastiCache Global Replication Group (%s) node groups on creation: %s", d.Id(), err)
+				}
+			} else if requested < current {
+				var ids []string
+				for _, v := range globalReplicationGroup.GlobalNodeGroups {
+					ids = append(ids, aws.StringValue(v.GlobalNodeGroupId))
+				}
+				sort.Slice(ids, func(i, j int) bool {
+					return globalReplicationGroupNodeNumber(ids[i]) < globalReplicationGroupNodeNumber(ids[j])
+				})
+				ids = ids[:requested]
+
+				input := &elasticache.DecreaseNodeGroupsInGlobalReplicationGroupInput{
+					ApplyImmediately:         aws.Bool(true),
+					GlobalReplicationGroupId: aws.String(d.Id()),
+					NodeGroupCount:           aws.Int64(int64(requested)),
+					GlobalNodeGroupsToRetain: aws.StringSlice(ids),
+				}
+				_, err := conn.DecreaseNodeGroupsInGlobalReplicationGroupWithContext(ctx, input)
+				if err != nil {
+					return diag.Errorf("updating ElastiCache Global Replication Group (%s) node groups on creation: %s", d.Id(), err)
+				}
+			}
+
+			if _, err := waitGlobalReplicationGroupAvailable(ctx, conn, d.Id(), GlobalReplicationGroupDefaultUpdatedTimeout); err != nil {
+				return diag.Errorf("updating ElastiCache Global Replication Group (%s) node groups on creation: waiting for completion: %s", d.Id(), err)
+			}
+		}
+	}
+
 	return resourceGlobalReplicationGroupRead(ctx, d, meta)
+}
+
+func globalReplicationGroupNodeNumber(id string) int {
+	re := regexp.MustCompile(`^.+-0{0-3}(\d+)$`)
+	matches := re.FindStringSubmatch(id)
+	if len(matches) == 2 {
+		if v, err := strconv.Atoi(matches[1]); err == nil {
+			return v
+		}
+	}
+	return 0
 }
 
 func resourceGlobalReplicationGroupRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {

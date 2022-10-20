@@ -116,6 +116,7 @@ The following arguments are supported:
 * `global_replication_group_id_suffix` – (Required) The suffix name of a Global Datastore. If `global_replication_group_id_suffix` is changed, creates a new resource.
 * `primary_replication_group_id` – (Required) The ID of the primary cluster that accepts writes and will replicate updates to the secondary cluster. If `primary_replication_group_id` is changed, creates a new resource.
 * `global_replication_group_description` – (Optional) A user-created description for the global replication group.
+* `num_node_groups` - (Optional) The number of node groups (shards) on the global replication group.
 * `parameter_group_name` - (Optional) An ElastiCache Parameter Group to use for the Global Replication Group.
   Required when upgrading a major engine version, but will be ignored if left configured after the upgrade is complete.
   Specifying without a major version upgrade will fail.
@@ -137,7 +138,6 @@ In addition to all arguments above, the following attributes are exported:
   Has the values:
     * `global_node_group_id` - The ID of the global node group.
     * `slots` - The keyspace for this node group.
-* `num_node_groups` - The number of node groups (shards) on the global replication group.
 * `transit_encryption_enabled` - A flag that indicates whether the encryption in transit is enabled.
 
 ## Import
