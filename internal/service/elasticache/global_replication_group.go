@@ -40,7 +40,7 @@ func ResourceGlobalReplicationGroup() *schema.Resource {
 		UpdateWithoutTimeout: resourceGlobalReplicationGroupUpdate,
 		DeleteWithoutTimeout: resourceGlobalReplicationGroupDelete,
 		Importer: &schema.ResourceImporter{
-			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+			State: func(d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 				re := regexp.MustCompile("^" + GlobalReplicationGroupRegionPrefixFormat)
 				d.Set("global_replication_group_id_suffix", re.ReplaceAllLiteralString(d.Id(), ""))
 
@@ -166,7 +166,7 @@ func descriptionDiffSuppress(_, old, new string, _ *schema.ResourceData) bool {
 	return false
 }
 
-func descriptionStateFunc(v interface{}) string {
+func descriptionStateFunc(v any) string {
 	s := v.(string)
 	if s == "" {
 		return EmptyDescription
@@ -174,7 +174,7 @@ func descriptionStateFunc(v interface{}) string {
 	return s
 }
 
-func customizeDiffGlobalReplicationGroupEngineVersionErrorOnDowngrade(_ context.Context, diff *schema.ResourceDiff, _ interface{}) error {
+func customizeDiffGlobalReplicationGroupEngineVersionErrorOnDowngrade(_ context.Context, diff *schema.ResourceDiff, _ any) error {
 	if diff.Id() == "" || !diff.HasChange("engine_version") {
 		return nil
 	}
@@ -191,19 +191,19 @@ of the Global Replication Group and all Replication Group members. The AWS provi
 Please use the "-replace" option on the terraform plan and apply commands (see https://www.terraform.io/cli/commands/plan#replace-address).`, diff.Id())
 }
 
-type changesDiffer interface {
+type changeDiffer interface {
 	Id() string
-	GetChange(key string) (interface{}, interface{})
+	GetChange(key string) (any, any)
 	HasChange(key string) bool
 }
 
-func customizeDiffGlobalReplicationGroupParamGroupNameRequiresMajorVersionUpgrade(_ context.Context, diff *schema.ResourceDiff, _ interface{}) error {
+func customizeDiffGlobalReplicationGroupParamGroupNameRequiresMajorVersionUpgrade(_ context.Context, diff *schema.ResourceDiff, _ any) error {
 	return paramGroupNameRequiresMajorVersionUpgrade(diff)
 }
 
 // parameter_group_name can only be set when doing a major update,
 // but we also should allow it to stay set afterwards
-func paramGroupNameRequiresMajorVersionUpgrade(diff changesDiffer) error {
+func paramGroupNameRequiresMajorVersionUpgrade(diff changeDiffer) error {
 	o, n := diff.GetChange("parameter_group_name")
 	if o.(string) == n.(string) {
 		return nil
