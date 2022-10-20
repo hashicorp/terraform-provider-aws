@@ -1,6 +1,7 @@
 package resourcegroups
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"time"
@@ -17,11 +18,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-const (
-	// Maximum amount of time to wait for a group configuration to be attached
-	groupConfigurationAttachedTimeout = 15 * time.Minute
-)
-
 func ResourceGroup() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceGroupCreate,
@@ -31,6 +27,11 @@ func ResourceGroup() *schema.Resource {
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
+		},
+
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(15 * time.Minute),
+			Update: schema.DefaultTimeout(15 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -115,9 +116,10 @@ func resourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
-	input := resourcegroups.CreateGroupInput{
+	name := d.Get("name").(string)
+	input := &resourcegroups.CreateGroupInput{
 		Description: aws.String(d.Get("description").(string)),
-		Name:        aws.String(d.Get("name").(string)),
+		Name:        aws.String(name),
 		Tags:        Tags(tags.IgnoreAWS()),
 	}
 
@@ -133,20 +135,19 @@ func resourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
 		input.ResourceQuery = extractResourceGroupResourceQuery(resourceQuery.([]interface{}))
 	}
 
-	res, err := conn.CreateGroup(&input)
+	output, err := conn.CreateGroup(input)
+
 	if err != nil {
-		return fmt.Errorf("error creating resource group: %s", err)
+		return fmt.Errorf("creating Resource Groups Group (%s): %w", name, err)
 	}
+
+	d.SetId(aws.StringValue(output.Group.Name))
 
 	if waitForConfigurationAttached {
-		// Need to wait and refresh for when the configuration has been attached to the group
-		err := waitForConfigurationUpdatedState(conn, aws.StringValue(res.Group.Name), groupConfigurationAttachedTimeout)
-		if err != nil {
-			return fmt.Errorf("error attaching configuration to resource group: %s", err)
+		if _, err := waitGroupConfigurationUpdated(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+			return fmt.Errorf("waiting for Resource Groups Group (%s) configuration update: %w", d.Id(), err)
 		}
 	}
-
-	d.SetId(aws.StringValue(res.Group.Name))
 
 	return resourceGroupRead(d, meta)
 }
@@ -271,9 +272,8 @@ func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("error updating configuration for resource group (%s): %s", d.Id(), err)
 		}
 
-		err = waitForConfigurationUpdatedState(conn, d.Id(), groupConfigurationAttachedTimeout)
-		if err != nil {
-			return fmt.Errorf("error updating configuration on resource group: %s", err)
+		if _, err := waitGroupConfigurationUpdated(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return fmt.Errorf("waiting for Resource Groups Group (%s) configuration update: %w", d.Id(), err)
 		}
 	}
 
@@ -325,6 +325,68 @@ func FindGroupByName(conn *resourcegroups.ResourceGroups, name string) (*resourc
 	}
 
 	return output.Group, nil
+}
+
+func findGroupConfigurationByGroupName(conn *resourcegroups.ResourceGroups, groupName string) (*resourcegroups.GroupConfiguration, error) {
+	input := &resourcegroups.GetGroupConfigurationInput{
+		Group: aws.String(groupName),
+	}
+
+	output, err := conn.GetGroupConfiguration(input)
+
+	if tfawserr.ErrCodeEquals(err, resourcegroups.ErrCodeNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.GroupConfiguration == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.GroupConfiguration, nil
+}
+
+func statusGroupConfiguration(conn *resourcegroups.ResourceGroups, groupName string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findGroupConfigurationByGroupName(conn, groupName)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.Status), nil
+	}
+}
+
+func waitGroupConfigurationUpdated(conn *resourcegroups.ResourceGroups, groupName string, timeout time.Duration) (*resourcegroups.GroupConfiguration, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{resourcegroups.GroupConfigurationStatusUpdating},
+		Target:  []string{resourcegroups.GroupConfigurationStatusUpdateComplete},
+		Refresh: statusGroupConfiguration(conn, groupName),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*resourcegroups.GroupConfiguration); ok {
+		if status := aws.StringValue(output.Status); status == resourcegroups.GroupConfigurationStatusUpdateFailed {
+			tfresource.SetLastError(err, errors.New(aws.StringValue(output.FailureReason)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
 }
 
 func extractResourceGroupConfigurationParameters(parameterList []interface{}) []*resourcegroups.GroupConfigurationParameter {
@@ -424,59 +486,4 @@ func extractResourceGroupResourceQuery(resourceQueryList []interface{}) *resourc
 		Query: aws.String(resourceQuery["query"].(string)),
 		Type:  aws.String(resourceQuery["type"].(string)),
 	}
-}
-
-func getGroupConfiguration(conn *resourcegroups.ResourceGroups, input *resourcegroups.GetGroupConfigurationInput) (*resourcegroups.GetGroupConfigurationOutput, error) {
-	output, err := conn.GetGroupConfiguration(input)
-
-	if err != nil {
-		if tfawserr.ErrCodeEquals(err, resourcegroups.ErrCodeNotFoundException) {
-			return nil, tfresource.NewEmptyResultError(input)
-		}
-		return nil, err
-	}
-
-	return output, nil
-}
-
-func statusGroupConfigurationState(conn *resourcegroups.ResourceGroups, name string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		input := &resourcegroups.GetGroupConfigurationInput{
-			Group: aws.String(name),
-		}
-
-		output, err := getGroupConfiguration(conn, input)
-
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return output, aws.StringValue(output.GroupConfiguration.Status), nil
-	}
-}
-
-func waitForConfigurationUpdatedState(conn *resourcegroups.ResourceGroups, name string, timeout time.Duration) error {
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{
-			resourcegroups.GroupConfigurationStatusUpdating,
-		},
-		Target: []string{
-			resourcegroups.GroupConfigurationStatusUpdateComplete,
-			resourcegroups.GroupConfigurationStatusUpdateFailed,
-		},
-		Refresh: statusGroupConfigurationState(conn, name),
-		Timeout: timeout,
-	}
-
-	outputRaw, err := stateConf.WaitForState()
-
-	if _, ok := outputRaw.(*resourcegroups.GroupConfiguration); ok {
-		return err
-	}
-
-	return err
 }
