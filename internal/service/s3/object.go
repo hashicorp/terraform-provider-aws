@@ -3,8 +3,12 @@ package s3
 import (
 	"bytes"
 	"context"
+	"crypto/sha1"
+	"crypto/sha256"
 	"encoding/base64"
+	"encoding/binary"
 	"fmt"
+	"hash/crc32"
 	"io"
 	"log"
 	"net/http"
@@ -69,6 +73,27 @@ func ResourceObject() *schema.Resource {
 			"cache_control": {
 				Type:     schema.TypeString,
 				Optional: true,
+			},
+			"checksum_algorithm": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringInSlice(s3.ChecksumAlgorithm_Values(), false),
+			},
+			"checksum_crc32": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"checksum_crc32c": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"checksum_sha1": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"checksum_sha256": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"content": {
 				Type:          schema.TypeString,
@@ -199,8 +224,9 @@ func resourceObjectRead(d *schema.ResourceData, meta interface{}) error {
 	key := d.Get("key").(string)
 
 	input := &s3.HeadObjectInput{
-		Bucket: aws.String(bucket),
-		Key:    aws.String(key),
+		Bucket:       aws.String(bucket),
+		Key:          aws.String(key),
+		ChecksumMode: aws.String(s3.ChecksumModeEnabled),
 	}
 
 	var resp *s3.HeadObjectOutput
@@ -239,6 +265,10 @@ func resourceObjectRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("bucket_key_enabled", resp.BucketKeyEnabled)
 	d.Set("cache_control", resp.CacheControl)
+	d.Set("checksum_crc32", resp.ChecksumCRC32)
+	d.Set("checksum_crc32c", resp.ChecksumCRC32C)
+	d.Set("checksum_sha1", resp.ChecksumSHA1)
+	d.Set("checksum_sha256", resp.ChecksumSHA256)
 	d.Set("content_disposition", resp.ContentDisposition)
 	d.Set("content_encoding", resp.ContentEncoding)
 	d.Set("content_language", resp.ContentLanguage)
@@ -532,6 +562,35 @@ func resourceObjectUpload(d *schema.ResourceData, meta interface{}) error {
 		input.ObjectLockRetainUntilDate = expandObjectDate(v.(string))
 	}
 
+	if v, ok := d.GetOk("checksum_algorithm"); ok {
+		input.ChecksumAlgorithm = aws.String(v.(string))
+
+		buf := new(bytes.Buffer)
+		_, err := io.Copy(buf, body)
+		if err != nil {
+			return fmt.Errorf("copying s3 object body to bytes buffer: %s", err)
+		}
+		// 'body' changes empty after 'io.Copy' called. Set 'buf' instead of 'body' to 'input.Body'.
+		input.Body = buf
+
+		switch v.(string) {
+		case s3.ChecksumAlgorithmCrc32:
+			rawHash := make([]byte, 4)
+			binary.BigEndian.PutUint32(rawHash, crc32.Checksum(buf.Bytes(), crc32.MakeTable(crc32.IEEE)))
+			input.ChecksumCRC32 = aws.String(base64.StdEncoding.EncodeToString(rawHash))
+		case s3.ChecksumAlgorithmCrc32c:
+			rawHash := make([]byte, 4)
+			binary.BigEndian.PutUint32(rawHash, crc32.Checksum(buf.Bytes(), crc32.MakeTable(crc32.Castagnoli)))
+			input.ChecksumCRC32C = aws.String(base64.StdEncoding.EncodeToString(rawHash))
+		case s3.ChecksumAlgorithmSha1:
+			rawHash := sha1.Sum(buf.Bytes())
+			input.ChecksumSHA1 = aws.String(base64.StdEncoding.EncodeToString(rawHash[:]))
+		case s3.ChecksumAlgorithmSha256:
+			rawHash := sha256.Sum256(buf.Bytes())
+			input.ChecksumSHA256 = aws.String(base64.StdEncoding.EncodeToString(rawHash[:]))
+		}
+	}
+
 	if _, err := uploader.Upload(input); err != nil {
 		return fmt.Errorf("uploading object to S3 bucket (%s): %s", bucket, err)
 	}
@@ -589,6 +648,7 @@ func hasObjectContentChanges(d verify.ResourceDiffer) bool {
 	for _, key := range []string{
 		"bucket_key_enabled",
 		"cache_control",
+		"checksum_algorithm",
 		"content_base64",
 		"content_disposition",
 		"content_encoding",

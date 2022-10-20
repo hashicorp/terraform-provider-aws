@@ -1306,6 +1306,354 @@ func TestAccS3Object_ignoreTags(t *testing.T) {
 	})
 }
 
+func TestAccS3Object_checksumCRC32(t *testing.T) {
+	var obj, updatedObj s3.GetObjectOutput
+	resourceName := "aws_s3_object.object"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	startingData := "{anything will do }"
+	source := testAccObjectCreateTempFile(t, startingData)
+	defer os.Remove(source)
+
+	updatedData := "{anything will update }"
+	updateSource := func(*terraform.State) error {
+		if err := os.WriteFile(source, []byte(updatedData), 0644); err != nil {
+			os.Remove(source)
+			t.Fatal(err)
+		}
+		return nil
+	}
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckObjectDestroy,
+		Steps: []resource.TestStep{
+			{
+				PreConfig: func() {},
+				Config:    testAccObjectConfig_checksumSource(rName, source, s3.ChecksumAlgorithmCrc32),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckObjectExists(resourceName, &obj),
+					testAccCheckObjectBody(&obj, startingData),
+					resource.TestCheckResourceAttr(resourceName, "checksum_crc32", "mB9I0g=="),
+					updateSource,
+				),
+				ExpectNonEmptyPlan: true,
+			},
+			{
+				PreConfig: func() {},
+				Config:    testAccObjectConfig_checksumSource(rName, source, s3.ChecksumAlgorithmCrc32),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckObjectExists(resourceName, &updatedObj),
+					testAccCheckObjectBody(&updatedObj, updatedData),
+					resource.TestCheckResourceAttr(resourceName, "checksum_crc32", "4TGf1g=="),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"acl", "source", "checksum_algorithm", "force_destroy", "source_hash"},
+				ImportStateId:           fmt.Sprintf("s3://%s/test-key", rName),
+			},
+		},
+	})
+}
+
+func TestAccS3Object_checksumCRC32FromContent(t *testing.T) {
+	var obj s3.GetObjectOutput
+	resourceName := "aws_s3_object.object"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	content := "{anything will do }"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckObjectDestroy,
+		Steps: []resource.TestStep{
+			{
+				PreConfig: func() {},
+				Config:    testAccObjectConfig_checksumContent(rName, content, s3.ChecksumAlgorithmCrc32),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckObjectExists(resourceName, &obj),
+					testAccCheckObjectBody(&obj, content),
+					resource.TestCheckResourceAttrSet(resourceName, "checksum_crc32"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"acl", "content", "checksum_algorithm", "force_destroy"},
+				ImportStateId:           fmt.Sprintf("s3://%s/test-key", rName),
+			},
+		},
+	})
+}
+
+func TestAccS3Object_checksumCRC32C(t *testing.T) {
+	var obj, updatedObj s3.GetObjectOutput
+	resourceName := "aws_s3_object.object"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	startingData := "{anything will do }"
+	source := testAccObjectCreateTempFile(t, startingData)
+	defer os.Remove(source)
+
+	updatedData := "{anything will update }"
+	updateSource := func(*terraform.State) error {
+		if err := os.WriteFile(source, []byte(updatedData), 0644); err != nil {
+			os.Remove(source)
+			t.Fatal(err)
+		}
+		return nil
+	}
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckObjectDestroy,
+		Steps: []resource.TestStep{
+			{
+				PreConfig: func() {},
+				Config:    testAccObjectConfig_checksumSource(rName, source, s3.ChecksumAlgorithmCrc32c),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckObjectExists(resourceName, &obj),
+					testAccCheckObjectBody(&obj, startingData),
+					resource.TestCheckResourceAttr(resourceName, "checksum_crc32c", "dGm6gA=="),
+					updateSource,
+				),
+				ExpectNonEmptyPlan: true,
+			},
+			{
+				PreConfig: func() {},
+				Config:    testAccObjectConfig_checksumSource(rName, source, s3.ChecksumAlgorithmCrc32c),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckObjectExists(resourceName, &updatedObj),
+					testAccCheckObjectBody(&updatedObj, updatedData),
+					resource.TestCheckResourceAttr(resourceName, "checksum_crc32c", "mXikYA=="),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"acl", "source", "checksum_algorithm", "force_destroy", "source_hash"},
+				ImportStateId:           fmt.Sprintf("s3://%s/test-key", rName),
+			},
+		},
+	})
+}
+
+func TestAccS3Object_checksumCRC32CFromContent(t *testing.T) {
+	var obj s3.GetObjectOutput
+	resourceName := "aws_s3_object.object"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	content := "{anything will do }"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckObjectDestroy,
+		Steps: []resource.TestStep{
+			{
+				PreConfig: func() {},
+				Config:    testAccObjectConfig_checksumContent(rName, content, s3.ChecksumAlgorithmCrc32c),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckObjectExists(resourceName, &obj),
+					testAccCheckObjectBody(&obj, content),
+					resource.TestCheckResourceAttrSet(resourceName, "checksum_crc32c"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"acl", "content", "checksum_algorithm", "force_destroy"},
+				ImportStateId:           fmt.Sprintf("s3://%s/test-key", rName),
+			},
+		},
+	})
+}
+
+func TestAccS3Object_checksumSHA1(t *testing.T) {
+	var obj, updatedObj s3.GetObjectOutput
+	resourceName := "aws_s3_object.object"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	startingData := "{anything will do }"
+	source := testAccObjectCreateTempFile(t, startingData)
+	defer os.Remove(source)
+
+	updatedData := "{anything will update }"
+	updateSource := func(*terraform.State) error {
+		if err := os.WriteFile(source, []byte(updatedData), 0644); err != nil {
+			os.Remove(source)
+			t.Fatal(err)
+		}
+		return nil
+	}
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckObjectDestroy,
+		Steps: []resource.TestStep{
+			{
+				PreConfig: func() {},
+				Config:    testAccObjectConfig_checksumSource(rName, source, s3.ChecksumAlgorithmSha1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckObjectExists(resourceName, &obj),
+					testAccCheckObjectBody(&obj, startingData),
+					resource.TestCheckResourceAttr(resourceName, "checksum_sha1", "Jfq5VokkqJ4AYDAg1MaVaclbdUM="),
+					updateSource,
+				),
+				ExpectNonEmptyPlan: true,
+			},
+			{
+				PreConfig: func() {},
+				Config:    testAccObjectConfig_checksumSource(rName, source, s3.ChecksumAlgorithmSha1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckObjectExists(resourceName, &updatedObj),
+					testAccCheckObjectBody(&updatedObj, updatedData),
+					resource.TestCheckResourceAttr(resourceName, "checksum_sha1", "k+oPZ7IuZQdqRMINlp2DL/aYykA="),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"acl", "source", "checksum_algorithm", "force_destroy", "source_hash"},
+				ImportStateId:           fmt.Sprintf("s3://%s/test-key", rName),
+			},
+		},
+	})
+}
+
+func TestAccS3Object_checksumSHA1FromContent(t *testing.T) {
+	var obj s3.GetObjectOutput
+	resourceName := "aws_s3_object.object"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	content := "{anything will do }"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckObjectDestroy,
+		Steps: []resource.TestStep{
+			{
+				PreConfig: func() {},
+				Config:    testAccObjectConfig_checksumContent(rName, content, s3.ChecksumAlgorithmSha1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckObjectExists(resourceName, &obj),
+					testAccCheckObjectBody(&obj, content),
+					resource.TestCheckResourceAttrSet(resourceName, "checksum_sha1"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"acl", "content", "checksum_algorithm", "force_destroy"},
+				ImportStateId:           fmt.Sprintf("s3://%s/test-key", rName),
+			},
+		},
+	})
+}
+
+func TestAccS3Object_checksumSHA256(t *testing.T) {
+	var obj, updatedObj s3.GetObjectOutput
+	resourceName := "aws_s3_object.object"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	startingData := "{anything will do }"
+	source := testAccObjectCreateTempFile(t, startingData)
+	defer os.Remove(source)
+
+	updatedData := "{anything will update }"
+	updateSource := func(*terraform.State) error {
+		if err := os.WriteFile(source, []byte(updatedData), 0644); err != nil {
+			os.Remove(source)
+			t.Fatal(err)
+		}
+		return nil
+	}
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckObjectDestroy,
+		Steps: []resource.TestStep{
+			{
+				PreConfig: func() {},
+				Config:    testAccObjectConfig_checksumSource(rName, source, s3.ChecksumAlgorithmSha256),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckObjectExists(resourceName, &obj),
+					testAccCheckObjectBody(&obj, startingData),
+					resource.TestCheckResourceAttr(resourceName, "checksum_sha256", "E+Q1+EhtC9yu+TpP/VmppQbF8Kogbm/MdvZvBLc/qyk="),
+					updateSource,
+				),
+				ExpectNonEmptyPlan: true,
+			},
+			{
+				PreConfig: func() {},
+				Config:    testAccObjectConfig_checksumSource(rName, source, s3.ChecksumAlgorithmSha256),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckObjectExists(resourceName, &updatedObj),
+					testAccCheckObjectBody(&updatedObj, updatedData),
+					resource.TestCheckResourceAttr(resourceName, "checksum_sha256", "6dbPtaVLFtEf5EVs3VlxI2b0+aqKImunUL4uDo0/Hvk="),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"acl", "source", "checksum_algorithm", "force_destroy", "source_hash"},
+				ImportStateId:           fmt.Sprintf("s3://%s/test-key", rName),
+			},
+		},
+	})
+}
+
+func TestAccS3Object_checksumSHA256FromContent(t *testing.T) {
+	var obj s3.GetObjectOutput
+	resourceName := "aws_s3_object.object"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	content := "{anything will do }"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckObjectDestroy,
+		Steps: []resource.TestStep{
+			{
+				PreConfig: func() {},
+				Config:    testAccObjectConfig_checksumContent(rName, content, s3.ChecksumAlgorithmSha256),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckObjectExists(resourceName, &obj),
+					testAccCheckObjectBody(&obj, content),
+					resource.TestCheckResourceAttrSet(resourceName, "checksum_sha256"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"acl", "content", "checksum_algorithm", "force_destroy"},
+				ImportStateId:           fmt.Sprintf("s3://%s/test-key", rName),
+			},
+		},
+	})
+}
+
 func testAccCheckObjectVersionIdDiffers(first, second *s3.GetObjectOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if first.VersionId == nil {
@@ -2114,4 +2462,35 @@ resource "aws_s3_object" "object" {
   content = %[2]q
 }
 `, rName, content)
+}
+
+func testAccObjectConfig_checksumSource(rName string, source string, algorithm string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+
+resource "aws_s3_object" "object" {
+  bucket             = aws_s3_bucket.test.bucket
+  key                = "test-key"
+  source             = %[2]q
+  source_hash        = filemd5(%[2]q)
+  checksum_algorithm = %[3]q
+}
+`, rName, source, algorithm)
+}
+
+func testAccObjectConfig_checksumContent(rName string, content string, algorithm string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+
+resource "aws_s3_object" "object" {
+  bucket             = aws_s3_bucket.test.bucket
+  key                = "test-key"
+  content            = %[2]q
+  checksum_algorithm = %[3]q
+}
+`, rName, content, algorithm)
 }
