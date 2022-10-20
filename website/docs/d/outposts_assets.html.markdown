@@ -26,7 +26,6 @@ The following arguments are supported:
 * `arn` - (Required) Outpost ARN.
 
 * `host_id_filter` - (Optional) Filters by list of Host IDs of a Dedicated Host.
-
 * `status_id_filter` - (Optional) Filters by list of state status. Valid values: "ACTIVE", "RETIRING".
 
 ## Attribute Reference
