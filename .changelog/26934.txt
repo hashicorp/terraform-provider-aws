@@ -1,3 +1,3 @@
 ```release-note:enhancement
-resource/aws_resourcegroups_group: Support `configuration` attribute for configuration type groups
+resource/aws_resourcegroups_group: Add `configuration` argument
 ```
