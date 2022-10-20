@@ -320,14 +320,14 @@ func (p *fwprovider) Configure(ctx context.Context, request provider.ConfigureRe
 func (p *fwprovider) DataSources(ctx context.Context) []func() datasource.DataSource {
 	var dataSources []func() datasource.DataSource
 
-	for serviceID, data := range p.Primary.Meta().(*conns.AWSClient).ServiceMap {
-		for _, v := range data.FrameworkDataSources(ctx) {
+	for _, sp := range p.Primary.Meta().(*conns.AWSClient).ServicePackages {
+		for _, v := range sp.FrameworkDataSources(ctx) {
 			v, err := v(ctx)
 
 			if err != nil {
 				tflog.Warn(ctx, "creating data source", map[string]interface{}{
-					"service_id": serviceID,
-					"error":      err.Error(),
+					"service_package_name": sp.ServicePackageName(),
+					"error":                err.Error(),
 				})
 
 				continue
@@ -353,6 +353,26 @@ func (p *fwprovider) Resources(ctx context.Context) []func() resource.Resource {
 	resources = append(resources, func() resource.Resource {
 		return medialive.NewResourceMultiplexProgram(ctx)
 	})
+
+	for _, sp := range p.Primary.Meta().(*conns.AWSClient).ServicePackages {
+		for _, v := range sp.FrameworkResources(ctx) {
+			v, err := v(ctx)
+
+			if err != nil {
+				tflog.Warn(ctx, "creating resource", map[string]interface{}{
+					"service_package_name": sp.ServicePackageName(),
+					"error":                err.Error(),
+				})
+
+				continue
+			}
+
+			resources = append(resources, func() resource.Resource {
+				// TODO Consider wrapping.
+				return v
+			})
+		}
+	}
 
 	return resources
 }

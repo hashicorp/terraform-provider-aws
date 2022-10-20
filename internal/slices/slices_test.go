@@ -81,3 +81,45 @@ func TestReversed(t *testing.T) {
 		})
 	}
 }
+
+func TestRemoveAll(t *testing.T) {
+	t.Parallel()
+
+	type testCase struct {
+		input    []string
+		expected []string
+	}
+	tests := map[string]testCase{
+		"two occurrences": {
+			input:    []string{"one", "two", "one"},
+			expected: []string{"two"},
+		},
+		"one occurrences": {
+			input:    []string{"one", "two"},
+			expected: []string{"two"},
+		},
+		"only occurrence": {
+			input:    []string{"one"},
+			expected: []string{},
+		},
+		"no occurrences": {
+			input:    []string{"two", "three", "four"},
+			expected: []string{"two", "three", "four"},
+		},
+		"zero elements": {
+			input:    []string{},
+			expected: []string{},
+		},
+	}
+
+	for name, test := range tests {
+		name, test := name, test
+		t.Run(name, func(t *testing.T) {
+			got := RemoveAll(test.input, "one")
+
+			if diff := cmp.Diff(got, test.expected); diff != "" {
+				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+			}
+		})
+	}
+}
