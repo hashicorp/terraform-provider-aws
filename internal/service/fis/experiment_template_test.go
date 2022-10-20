@@ -206,6 +206,9 @@ func TestAccFISExperimentTemplate_spot(t *testing.T) {
 }
 
 func TestAccFISExperimentTemplate_eks(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_fis_experiment_template.test"
 	var conf types.ExperimentTemplate
