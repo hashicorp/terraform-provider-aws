@@ -158,7 +158,6 @@ func FindDomainEntryById(ctx context.Context, conn *lightsail.Lightsail, id stri
 }
 
 func FindLoadBalancerByName(ctx context.Context, conn *lightsail.Lightsail, name string) (*lightsail.LoadBalancer, error) {
-
 	in := &lightsail.GetLoadBalancerInput{LoadBalancerName: aws.String(name)}
 	out, err := conn.GetLoadBalancerWithContext(ctx, in)
 
@@ -180,11 +179,9 @@ func FindLoadBalancerByName(ctx context.Context, conn *lightsail.Lightsail, name
 	lb := out.LoadBalancer
 
 	return lb, nil
-
 }
 
 func FindLoadBalancerAttachmentById(ctx context.Context, conn *lightsail.Lightsail, id string) (*string, error) {
-
 	id_parts := strings.SplitN(id, ",", -1)
 	if len(id_parts) != 2 {
 		return nil, errors.New("invalid load balancer attachment id")
@@ -223,5 +220,4 @@ func FindLoadBalancerAttachmentById(ctx context.Context, conn *lightsail.Lightsa
 	}
 
 	return entry, nil
-
 }

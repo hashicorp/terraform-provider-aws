@@ -261,7 +261,6 @@ func TestAccLightsailLoadBalancer_disappears(t *testing.T) {
 }
 
 func testAccCheckLoadBalancerDestroy(s *terraform.State) error {
-
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_lightsail_lb" {
 			continue

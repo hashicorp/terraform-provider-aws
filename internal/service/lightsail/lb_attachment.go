@@ -143,7 +143,6 @@ func resourceLoadBalancerAttachmentDelete(ctx context.Context, d *schema.Resourc
 }
 
 func expandLoadBalancerNameFromId(id string) string {
-
 	id_parts := strings.SplitN(id, ",", -1)
 	lbName := id_parts[0]
 

@@ -102,7 +102,6 @@ func testAccCheckLoadBalancerAttachmentExists(n string, liName *string) resource
 }
 
 func testAccCheckLoadBalancerAttachmentDestroy(s *terraform.State) error {
-
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_lightsail_lb_attachment" {
 			continue
