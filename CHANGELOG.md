@@ -24,6 +24,7 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * resource/aws_appstream_stack: Fix panic with `application_settings`. ([#27257](https://github.com/hashicorp/terraform-provider-aws/issues/27257))
+* resource/aws_rds_proxy_endpoint: Respect `tags_all` attribute ([#25477](https://github.com/hashicorp/terraform-provider-aws/issues/25477))
 * resource/aws_sqs_queue: Change `sqs_managed_sse_enabled` to `Computed` as newly created SQS queues use [SSE-SQS encryption by default](https://aws.amazon.com/about-aws/whats-new/2022/10/amazon-sqs-announces-server-side-encryption-ssq-managed-sse-sqs-default/). This means that Terraform will only perform drift detection of the attribute's value when present in a configuration ([#26843](https://github.com/hashicorp/terraform-provider-aws/issues/26843))
 * resource/aws_sqs_queue: Respect configured `sqs_managed_sse_enabled` value on resource Create. In particular a configured `false` value is sent to the AWS API, which overrides the [new service default value of `true`](https://aws.amazon.com/about-aws/whats-new/2022/10/amazon-sqs-announces-server-side-encryption-ssq-managed-sse-sqs-default/) ([#27335](https://github.com/hashicorp/terraform-provider-aws/issues/27335))
 
