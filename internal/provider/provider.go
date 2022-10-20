@@ -2055,9 +2055,10 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_ses_receipt_rule_set":             ses.ResourceReceiptRuleSet(),
 			"aws_ses_template":                     ses.ResourceTemplate(),
 
-			"aws_sesv2_configuration_set": sesv2.ResourceConfigurationSet(),
-			"aws_sesv2_dedicated_ip_pool": sesv2.ResourceDedicatedIPPool(),
-			"aws_sesv2_email_identity":    sesv2.ResourceEmailIdentity(),
+			"aws_sesv2_configuration_set":       sesv2.ResourceConfigurationSet(),
+			"aws_sesv2_dedicated_ip_assignment": sesv2.ResourceDedicatedIPAssignment(),
+			"aws_sesv2_dedicated_ip_pool":       sesv2.ResourceDedicatedIPPool(),
+			"aws_sesv2_email_identity":          sesv2.ResourceEmailIdentity(),
 
 			"aws_sfn_activity":      sfn.ResourceActivity(),
 			"aws_sfn_state_machine": sfn.ResourceStateMachine(),
