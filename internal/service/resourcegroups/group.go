@@ -34,23 +34,16 @@ func ResourceGroup() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"name": {
+			"arn": {
 				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Computed: true,
 			},
-
 			"configuration": {
 				Type:          schema.TypeSet,
 				Optional:      true,
 				ConflictsWith: []string{"resource_query"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"type": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-
 						"parameters": {
 							Type:     schema.TypeSet,
 							Required: true,
@@ -60,7 +53,6 @@ func ResourceGroup() *schema.Resource {
 										Type:     schema.TypeString,
 										Required: true,
 									},
-
 									"values": {
 										Type:     schema.TypeList,
 										Required: true,
@@ -71,15 +63,22 @@ func ResourceGroup() *schema.Resource {
 								},
 							},
 						},
+						"type": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
 					},
 				},
 			},
-
 			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-
+			"name": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
 			"resource_query": {
 				Type:          schema.TypeList,
 				Optional:      true,
@@ -92,7 +91,6 @@ func ResourceGroup() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-
 						"type": {
 							Type:     schema.TypeString,
 							Optional: true,
@@ -103,11 +101,6 @@ func ResourceGroup() *schema.Resource {
 						},
 					},
 				},
-			},
-
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
 			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
