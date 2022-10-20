@@ -14,12 +14,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceVPCConnector() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVPCConnectorCreate,
 		ReadWithoutTimeout:   resourceVPCConnectorRead,
+		UpdateWithoutTimeout: resourceVPCConnectorUpdate,
 		DeleteWithoutTimeout: resourceVPCConnectorDelete,
 
 		Importer: &schema.ResourceImporter{
@@ -51,7 +53,8 @@ func ResourceVPCConnector() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Set:      schema.HashString,
 			},
-			"tags": tftags.TagsSchemaComputed(),
+			"tags":     tftags.TagsSchemaComputed(),
+			"tags_all": tftags.TagsSchemaComputed(),
 			"status": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -61,6 +64,7 @@ func ResourceVPCConnector() *schema.Resource {
 				Computed: true,
 			},
 		},
+		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -168,6 +172,20 @@ func resourceVPCConnectorRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	return nil
+}
+
+func resourceVPCConnectorUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).AppRunnerConn
+
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
+
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+			return diag.FromErr(fmt.Errorf("error updating App Runner vpc Connector (%s) tags: %s", d.Get("arn").(string), err))
+		}
+	}
+
+	return resourceVPCConnectorRead(ctx, d, meta)
 }
 
 func resourceVPCConnectorDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
