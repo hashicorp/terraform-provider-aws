@@ -50,7 +50,10 @@ There is currently no AWS API to retrieve the full list of `router_type_identifi
 In addition to all arguments above, the following attributes are exported:
 
 * `customer_router_config` - Instructions for configuring your router
-* `router` - Single-item list of the router type details:
+* `router` - Block of the router type details
+
+A `router` block supports the following attributes:
+
   * `platform` - Router platform
   * `router_type_identifier` - Router type identifier
   * `software` - Router operating system

@@ -49,8 +49,8 @@ func TestAccDirectConnectRouterConfigurationDataSource_basic(t *testing.T) {
 func testAccRouterConfigurationDataSourceConfig_basic(virtualInterfaceId string, routerTypeIdentifier string) string {
 	return fmt.Sprintf(`
 data "aws_dx_router_configuration" "test" {
-  virtual_interface_id    = %[1]q
-  router_type_identifier  = %[2]q
+  virtual_interface_id   = %[1]q
+  router_type_identifier = %[2]q
 }
 `, virtualInterfaceId, routerTypeIdentifier)
 }
