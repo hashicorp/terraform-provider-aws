@@ -24,7 +24,7 @@ func waitProjectCreated(conn *cloudwatchevidently.CloudWatchEvidently, nameOrARN
 	return nil, err
 }
 
-func waitProjectUpdated(conn *cloudwatchevidently.CloudWatchEvidently, nameOrARN string, timeout time.Duration) (*cloudwatchevidently.GetProjectOutput, error) {
+func waitProjectUpdated(conn *cloudwatchevidently.CloudWatchEvidently, nameOrARN string, timeout time.Duration) (*cloudwatchevidently.GetProjectOutput, error) { //nolint:unparam
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{cloudwatchevidently.ProjectStatusUpdating},
 		Target:  []string{cloudwatchevidently.ProjectStatusAvailable},
