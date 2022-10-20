@@ -156,24 +156,22 @@ func resourceGroupRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	g, err := conn.GetGroup(&resourcegroups.GetGroupInput{
-		GroupName: aws.String(d.Id()),
-	})
+	group, err := FindGroupByName(conn, d.Id())
 
-	if err != nil {
-		if tfawserr.ErrCodeEquals(err, resourcegroups.ErrCodeNotFoundException) {
-			log.Printf("[WARN] Resource Groups Group (%s) not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
-
-		return fmt.Errorf("error reading resource group (%s): %s", d.Id(), err)
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] Resource Groups Group %s not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
 	}
 
-	arn := aws.StringValue(g.Group.GroupArn)
-	d.Set("name", g.Group.Name)
-	d.Set("description", g.Group.Description)
+	if err != nil {
+		return fmt.Errorf("reading Resource Groups Group (%s): %w", d.Id(), err)
+	}
+
+	arn := aws.StringValue(group.GroupArn)
 	d.Set("arn", arn)
+	d.Set("description", group.Description)
+	d.Set("name", group.Name)
 
 	q, err := conn.GetGroupQuery(&resourcegroups.GetGroupQueryInput{
 		GroupName: aws.String(d.Id()),
@@ -302,6 +300,31 @@ func resourceGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	return nil
+}
+
+func FindGroupByName(conn *resourcegroups.ResourceGroups, name string) (*resourcegroups.Group, error) {
+	input := &resourcegroups.GetGroupInput{
+		GroupName: aws.String(name),
+	}
+
+	output, err := conn.GetGroup(input)
+
+	if tfawserr.ErrCodeEquals(err, resourcegroups.ErrCodeNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.Group == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.Group, nil
 }
 
 func extractResourceGroupConfigurationParameters(parameterList []interface{}) []*resourcegroups.GroupConfigurationParameter {

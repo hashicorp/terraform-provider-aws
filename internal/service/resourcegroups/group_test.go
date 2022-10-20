@@ -5,17 +5,17 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/resourcegroups"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfresourcegroups "github.com/hashicorp/terraform-provider-aws/internal/service/resourcegroups"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccResourceGroupsGroup_Resource_basic(t *testing.T) {
+func TestAccResourceGroupsGroup_basic(t *testing.T) {
 	var v resourcegroups.Group
 	resourceName := "aws_resourcegroups_group.test"
 	n := fmt.Sprintf("test-group-%d", sdkacctest.RandInt())
@@ -69,74 +69,7 @@ func TestAccResourceGroupsGroup_Resource_basic(t *testing.T) {
 	})
 }
 
-func TestAccResourceGroupsGroup_Resource_Configuration(t *testing.T) {
-	var v resourcegroups.Group
-	resourceName := "aws_resourcegroups_group.test"
-	n := fmt.Sprintf("test-group-%d", sdkacctest.RandInt())
-
-	desc1 := "Hello World"
-	desc2 := "Foo Bar"
-	configType1 := "AWS::EC2::HostManagement"
-	configType2 := "AWS::ResourceGroups::Generic"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, resourcegroups.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckResourceGroupDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccGroupConfig_config(n, desc1, configType1, configType2, false),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResourceGroupExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "name", n),
-					resource.TestCheckResourceAttr(resourceName, "description", desc1),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.type", configType1),
-					resource.TestCheckResourceAttr(resourceName, "configuration.1.type", configType2),
-					resource.TestCheckResourceAttr(resourceName, "configuration.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.parameters.#", "4"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.parameters.0.name", "allowed-host-families"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.parameters.0.values.0", "mac1"),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			// Check that changing the auto-allocate value is represented
-			{
-				Config: testAccGroupConfig_config(n, desc1, configType1, configType2, true),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResourceGroupExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "name", n),
-					resource.TestCheckResourceAttr(resourceName, "description", desc1),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.type", configType1),
-					resource.TestCheckResourceAttr(resourceName, "configuration.1.type", configType2),
-					resource.TestCheckResourceAttr(resourceName, "configuration.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.parameters.#", "4"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.parameters.2.name", "auto-allocate-host"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.parameters.2.values.0", "true"),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
-				),
-			},
-			{
-				Config: testAccGroupConfig_config(n, desc2, configType1, configType2, true),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "description", desc2),
-				),
-			},
-			// Check that trying to change the configuration group to a resource-query group fails
-			{
-				Config:      testAccGroupConfig_basic(n, desc1, testAccResourceGroupQueryConfig),
-				ExpectError: regexp.MustCompile(`conversion between resource-query and configuration group types is not possible`),
-			},
-		},
-	})
-}
-
-func TestAccResourceGroupsGroup_Resource_tags(t *testing.T) {
+func TestAccResourceGroupsGroup_tags(t *testing.T) {
 	var v resourcegroups.Group
 	resourceName := "aws_resourcegroups_group.test"
 	n := fmt.Sprintf("test-group-%d", sdkacctest.RandInt())
@@ -182,6 +115,73 @@ func TestAccResourceGroupsGroup_Resource_tags(t *testing.T) {
 	})
 }
 
+func TestAccResourceGroupsGroup_Configuration(t *testing.T) {
+	var v resourcegroups.Group
+	resourceName := "aws_resourcegroups_group.test"
+	n := fmt.Sprintf("test-group-%d", sdkacctest.RandInt())
+
+	desc1 := "Hello World"
+	desc2 := "Foo Bar"
+	configType1 := "AWS::EC2::HostManagement"
+	configType2 := "AWS::ResourceGroups::Generic"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, resourcegroups.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckResourceGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGroupConfig_configuration(n, desc1, configType1, configType2, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckResourceGroupExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "name", n),
+					resource.TestCheckResourceAttr(resourceName, "description", desc1),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.type", configType1),
+					resource.TestCheckResourceAttr(resourceName, "configuration.1.type", configType2),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.parameters.#", "4"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.parameters.0.name", "allowed-host-families"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.parameters.0.values.0", "mac1"),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			// Check that changing the auto-allocate value is represented
+			{
+				Config: testAccGroupConfig_configuration(n, desc1, configType1, configType2, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckResourceGroupExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "name", n),
+					resource.TestCheckResourceAttr(resourceName, "description", desc1),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.type", configType1),
+					resource.TestCheckResourceAttr(resourceName, "configuration.1.type", configType2),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.parameters.#", "4"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.parameters.2.name", "auto-allocate-host"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.parameters.2.values.0", "true"),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+				),
+			},
+			{
+				Config: testAccGroupConfig_configuration(n, desc2, configType1, configType2, true),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "description", desc2),
+				),
+			},
+			// Check that trying to change the configuration group to a resource-query group fails
+			{
+				Config:      testAccGroupConfig_basic(n, desc1, testAccResourceGroupQueryConfig),
+				ExpectError: regexp.MustCompile(`conversion between resource-query and configuration group types is not possible`),
+			},
+		},
+	})
+}
+
 func testAccCheckResourceGroupExists(n string, v *resourcegroups.Group) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -190,50 +190,42 @@ func testAccCheckResourceGroupExists(n string, v *resourcegroups.Group) resource
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No resource group name is set")
+			return fmt.Errorf("No Resource Groups Group ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ResourceGroupsConn
 
-		resp, err := conn.GetGroup(&resourcegroups.GetGroupInput{
-			GroupName: aws.String(rs.Primary.ID),
-		})
+		output, err := tfresourcegroups.FindGroupByName(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		if *resp.Group.Name == rs.Primary.ID {
-			*v = *resp.Group
-			return nil
-		}
+		*v = *output
 
-		return fmt.Errorf("Resource Group (%s) not found", rs.Primary.ID)
+		return nil
 	}
 }
 
 func testAccCheckResourceGroupDestroy(s *terraform.State) error {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ResourceGroupsConn
+
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_resourcegroups_group" {
 			continue
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ResourceGroupsConn
-		resp, err := conn.GetGroup(&resourcegroups.GetGroupInput{
-			GroupName: aws.String(rs.Primary.ID),
-		})
+		_, err := tfresourcegroups.FindGroupByName(conn, rs.Primary.ID)
 
-		if err == nil {
-			if *resp.Group.Name == rs.Primary.ID {
-				return fmt.Errorf("Resource Group %s still exists", rs.Primary.ID)
-			}
+		if tfresource.NotFound(err) {
+			continue
 		}
 
-		if tfawserr.ErrCodeEquals(err, resourcegroups.ErrCodeNotFoundException) {
-			return nil
+		if err != nil {
+			return err
 		}
 
-		return err
+		return fmt.Errorf("Resource Groups Group %s still exists", rs.Primary.ID)
 	}
 
 	return nil
@@ -310,7 +302,7 @@ JSON
 `, rName, desc, query, tag1Key, tag1Value, tag2Key, tag2Value)
 }
 
-func testAccGroupConfig_config(rName, desc, cType1, cType2 string, autoAllocateHost bool) string {
+func testAccGroupConfig_configuration(rName, desc, cType1, cType2 string, autoAllocateHost bool) string {
 	return fmt.Sprintf(`
 resource "aws_resourcegroups_group" "test" {
   name        = "%s"
