@@ -125,27 +125,27 @@ func flattenRouter(apiObject *directconnect.RouterType) []interface{} {
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Platform; v != nil {
-		tfMap["platform"] = v
+		tfMap["platform"] = aws.StringValue(v)
 	}
 
 	if v := apiObject.RouterTypeIdentifier; v != nil {
-		tfMap["router_type_identifier"] = v
+		tfMap["router_type_identifier"] = aws.StringValue(v)
 	}
 
 	if v := apiObject.Software; v != nil {
-		tfMap["software"] = v
+		tfMap["software"] = aws.StringValue(v)
 	}
 
 	if v := apiObject.Vendor; v != nil {
-		tfMap["vendor"] = v
+		tfMap["vendor"] = aws.StringValue(v)
 	}
 
 	if v := apiObject.XsltTemplateName; v != nil {
-		tfMap["xslt_template_name"] = v
+		tfMap["xslt_template_name"] = aws.StringValue(v)
 	}
 
 	if v := apiObject.XsltTemplateNameForMacSec; v != nil {
-		tfMap["xslt_template_name_for_mac_sec"] = v
+		tfMap["xslt_template_name_for_mac_sec"] = aws.StringValue(v)
 	}
 
 	return []interface{}{tfMap}

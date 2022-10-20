@@ -16,7 +16,7 @@ Terraform data source for retrieving Router Configuration instructions for a giv
 
 ```terraform
 data "aws_dx_router_configuration" "example" {
-  virtual_interface_id = "dxvif-abcde123"
+  virtual_interface_id   = "dxvif-abcde123"
   router_type_identifier = "CiscoSystemsInc-2900SeriesRouters-IOS124"
 }
 ```
