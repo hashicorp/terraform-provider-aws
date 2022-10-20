@@ -11,11 +11,11 @@ import (
 )
 
 func testAccInstanceStorageConfigDataSource_KinesisFirehoseConfig(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
-	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
-	rName3 := sdkacctest.RandomWithPrefix("resource-test-terraform")
-	rName4 := sdkacctest.RandomWithPrefix("resource-test-terraform")
-	rName5 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName3 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName4 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName5 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_connect_instance_storage_config.test"
 	datasourceName := "data.aws_connect_instance_storage_config.test"
 
@@ -41,8 +41,8 @@ func testAccInstanceStorageConfigDataSource_KinesisFirehoseConfig(t *testing.T) 
 }
 
 func testAccInstanceStorageConfigDataSource_KinesisStreamConfig(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
-	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_connect_instance_storage_config.test"
 	datasourceName := "data.aws_connect_instance_storage_config.test"
 
@@ -68,7 +68,7 @@ func testAccInstanceStorageConfigDataSource_KinesisStreamConfig(t *testing.T) {
 }
 
 func testAccInstanceStorageConfigDataSource_KinesisVideoStreamConfig(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_connect_instance_storage_config.test"
 	datasourceName := "data.aws_connect_instance_storage_config.test"
 
@@ -98,8 +98,8 @@ func testAccInstanceStorageConfigDataSource_KinesisVideoStreamConfig(t *testing.
 }
 
 func testAccInstanceStorageConfigDataSource_S3Config(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
-	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_connect_instance_storage_config.test"
 	datasourceName := "data.aws_connect_instance_storage_config.test"
 
