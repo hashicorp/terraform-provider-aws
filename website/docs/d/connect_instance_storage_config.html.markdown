@@ -12,7 +12,7 @@ Provides details about a specific Amazon Connect Instance Storage Config.
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_connect_instance_storage_config" "example" {
   association_id = "1234567890123456789012345678901234567890123456789012345678901234"
   instance_id    = "aaaaaaaa-bbbb-cccc-dddd-111111111111"
