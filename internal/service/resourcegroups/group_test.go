@@ -320,28 +320,28 @@ resource "aws_resourcegroups_group" "test" {
     type = "%s"
 
     parameters {
-      name   = "allowed-host-families"
+      name = "allowed-host-families"
       values = [
         "mac1",
       ]
     }
 
     parameters {
-      name   = "any-host-based-license-configuration"
+      name = "any-host-based-license-configuration"
       values = [
         "true",
       ]
     }
 
     parameters {
-      name   = "auto-allocate-host"
+      name = "auto-allocate-host"
       values = [
         "%t",
       ]
     }
 
     parameters {
-      name   = "auto-release-host"
+      name = "auto-release-host"
       values = [
         "true",
       ]
