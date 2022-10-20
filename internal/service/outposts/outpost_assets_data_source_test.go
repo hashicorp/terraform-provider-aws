@@ -53,8 +53,8 @@ data "aws_outposts_assets" "source" {
 }
 
 data "aws_outposts_assets" "test" {
-	arn = data.aws_outposts_assets.source.arn
-	status_id_filter = ["ACTIVE"]
-  }
+  arn = data.aws_outposts_assets.source.arn
+  status_id_filter = ["ACTIVE"]
+}
 `
 }
