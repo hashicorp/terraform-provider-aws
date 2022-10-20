@@ -404,7 +404,6 @@ func resourcePolicyImport(d *schema.ResourceData, meta interface{}) ([]*schema.R
 }
 
 func ValidPolicyImportInput(id string) ([]string, error) {
-
 	idParts := strings.Split(id, "/")
 	if len(idParts) < 4 {
 		return nil, fmt.Errorf("unexpected format (%q), expected <service-namespace>/<resource-id>/<scalable-dimension>/<policy-name>", id)
@@ -429,7 +428,6 @@ func ValidPolicyImportInput(id string) ([]string, error) {
 		resourceId = strings.Join(idParts[1:len(idParts)-2], "/")
 		scalableDimension = idParts[len(idParts)-2]
 		policyName = idParts[len(idParts)-1]
-
 	}
 
 	if serviceNamespace == "" || resourceId == "" || scalableDimension == "" || policyName == "" {

@@ -9,6 +9,7 @@ issues:
 linters:
   disable-all: true
   enable:
+    - asciicheck
     - errcheck
     - exportloopref
     - gofmt
@@ -22,10 +23,13 @@ linters:
     - nolintlint
     - staticcheck
     - stylecheck
+    - typecheck
     - unconvert
     - unparam
     - unused
     - vet
+    - vetshadow
+    - whitespace
 
 linters-settings:
   errcheck:

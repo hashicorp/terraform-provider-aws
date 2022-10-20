@@ -1,5 +1,8 @@
 package lightsail
 
 const (
-	ResTags = "Tags"
+	ResCertificate = "Certificate"
+	ResDatabase    = "Database"
+	ResTags        = "Tags"
+	ResDomainEntry = "Domain Entry"
 )

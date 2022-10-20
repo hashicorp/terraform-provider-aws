@@ -209,6 +209,34 @@ func TestAccLightsailContainerService_PublicDomainNames(t *testing.T) {
 	})
 }
 
+func TestAccLightsailContainerService_PrivateRegistryAccess(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_lightsail_container_service.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(lightsail.EndpointsID, t)
+			testAccPreCheck(t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, lightsail.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckContainerServiceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccContainerServiceConfig_privateRegistryAccess(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckContainerServiceExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "private_registry_access.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "private_registry_access.0.ecr_image_puller_role.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "private_registry_access.0.ecr_image_puller_role.0.is_active", "true"),
+					resource.TestCheckResourceAttrSet(resourceName, "private_registry_access.0.ecr_image_puller_role.0.principal_arn"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccLightsailContainerService_Scale(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lightsail_container_service.test"
@@ -239,7 +267,6 @@ func TestAccLightsailContainerService_Scale(t *testing.T) {
 			},
 		},
 	})
-
 }
 
 func TestAccLightsailContainerService_tags(t *testing.T) {
@@ -368,7 +395,6 @@ resource "aws_lightsail_container_service" "test" {
   name  = %q
   power = "nano"
   scale = 1
-
   public_domain_names {
     certificate {
       certificate_name = "NonExsitingCertificate"
@@ -376,6 +402,22 @@ resource "aws_lightsail_container_service" "test" {
         "nonexisting1.com",
         "nonexisting2.com",
       ]
+    }
+  }
+}
+`, rName)
+}
+
+func testAccContainerServiceConfig_privateRegistryAccess(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_lightsail_container_service" "test" {
+  name  = %q
+  power = "micro"
+  scale = 1
+
+  private_registry_access {
+    ecr_image_puller_role {
+      is_active = true
     }
   }
 }
@@ -398,7 +440,6 @@ resource "aws_lightsail_container_service" "test" {
   name  = %[1]q
   power = "nano"
   scale = 1
-
   tags = {
     %[2]q = %[3]q
   }
@@ -412,7 +453,6 @@ resource "aws_lightsail_container_service" "test" {
   name  = %q
   power = "nano"
   scale = 1
-
   tags = {
     %[2]q = %[3]q
     %[4]q = %[5]q

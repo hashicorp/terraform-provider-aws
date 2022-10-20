@@ -302,7 +302,6 @@ func resourceConfigurationSetUpdate(ctx context.Context, d *schema.ResourceData,
 	}
 
 	if d.HasChanges("reputation_options") {
-		log.Printf("[DEBUG] has change kurwa")
 		in := &sesv2.PutConfigurationSetReputationOptionsInput{
 			ConfigurationSetName: aws.String(d.Id()),
 		}

@@ -394,7 +394,6 @@ func WaitIPAMPoolDeleted(conn *ec2.EC2, ipamPoolId string, timeout time.Duration
 
 func statusIPAMPoolStatus(conn *ec2.EC2, ipamPoolId string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-
 		output, err := FindIPAMPoolById(conn, ipamPoolId)
 
 		if tfawserr.ErrCodeEquals(err, InvalidIPAMPoolIDNotFound) {

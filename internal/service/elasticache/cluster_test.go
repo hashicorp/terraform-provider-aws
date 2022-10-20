@@ -21,7 +21,6 @@ import (
 
 func init() {
 	acctest.RegisterServiceErrorCheckFunc(elasticache.EndpointsID, testAccErrorCheckSkip)
-
 }
 
 func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
@@ -1863,7 +1862,6 @@ data "aws_elasticache_cluster" "test" {
   cluster_id = aws_elasticache_cluster.test.cluster_id
 }
 `, rName, slowLogDeliveryEnabled, slowDeliveryDestination, slowDeliveryFormat, engineLogDeliveryEnabled, engineDeliveryDestination, engineLogDeliveryFormat)
-
 }
 
 func testAccClusterConfig_tags1(rName, tag1Key, tag1Value string) string {

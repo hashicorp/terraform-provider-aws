@@ -10,6 +10,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/mq"
@@ -23,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/experimental/nullable"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/mitchellh/copystructure"
 )
@@ -33,8 +35,15 @@ func ResourceBroker() *schema.Resource {
 		Read:   resourceBrokerRead,
 		Update: resourceBrokerUpdate,
 		Delete: resourceBrokerDelete,
+
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
+		},
+
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(30 * time.Minute),
+			Update: schema.DefaultTimeout(30 * time.Minute),
+			Delete: schema.DefaultTimeout(30 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -219,15 +228,15 @@ func ResourceBroker() *schema.Resource {
 				},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"general": {
-							Type:     schema.TypeBool,
-							Optional: true,
-						},
 						"audit": {
 							Type:             nullable.TypeNullableBool,
 							Optional:         true,
 							ValidateFunc:     nullable.ValidateTypeStringNullableBool,
 							DiffSuppressFunc: nullable.DiffSuppressNullableBoolFalseAsNull,
+						},
+						"general": {
+							Type:     schema.TypeBool,
+							Optional: true,
 						},
 					},
 				},
@@ -352,11 +361,10 @@ func resourceBrokerCreate(d *schema.ResourceData, meta interface{}) error {
 
 	name := d.Get("broker_name").(string)
 	engineType := d.Get("engine_type").(string)
-	requestId := resource.PrefixedUniqueId(fmt.Sprintf("tf-%s", name))
 	input := mq.CreateBrokerRequest{
 		AutoMinorVersionUpgrade: aws.Bool(d.Get("auto_minor_version_upgrade").(bool)),
 		BrokerName:              aws.String(name),
-		CreatorRequestId:        aws.String(requestId),
+		CreatorRequestId:        aws.String(resource.PrefixedUniqueId(fmt.Sprintf("tf-%s", name))),
 		EngineType:              aws.String(engineType),
 		EngineVersion:           aws.String(d.Get("engine_version").(string)),
 		HostInstanceType:        aws.String(d.Get("host_instance_type").(string)),
@@ -407,7 +415,7 @@ func resourceBrokerCreate(d *schema.ResourceData, meta interface{}) error {
 	d.SetId(aws.StringValue(out.BrokerId))
 	d.Set("arn", out.BrokerArn)
 
-	if _, err := WaitBrokerCreated(conn, d.Id()); err != nil {
+	if _, err := waitBrokerCreated(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return fmt.Errorf("error waiting for MQ Broker (%s) creation: %w", d.Id(), err)
 	}
 
@@ -419,22 +427,16 @@ func resourceBrokerRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	output, err := conn.DescribeBroker(&mq.DescribeBrokerInput{
-		BrokerId: aws.String(d.Id()),
-	})
+	output, err := FindBrokerByID(conn, d.Id())
 
-	if !d.IsNewResource() && (tfawserr.ErrCodeEquals(err, mq.ErrCodeNotFoundException) || tfawserr.ErrCodeEquals(err, mq.ErrCodeForbiddenException)) {
-		log.Printf("[WARN] MQ broker (%s) not found, removing from state", d.Id())
+	if !d.IsNewResource() && (tfresource.NotFound(err) || tfawserr.ErrCodeEquals(err, mq.ErrCodeForbiddenException)) {
+		log.Printf("[WARN] MQ Broker (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading MQ broker (%s): %w", d.Id(), err)
-	}
-
-	if output == nil {
-		return fmt.Errorf("empty response while reading MQ broker (%s)", d.Id())
+		return fmt.Errorf("reading MQ Broker (%s): %w", d.Id(), err)
 	}
 
 	d.Set("arn", output.BrokerArn)
@@ -593,7 +595,7 @@ func resourceBrokerUpdate(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("error rebooting MQ Broker (%s): %w", d.Id(), err)
 		}
 
-		if _, err := WaitBrokerRebooted(conn, d.Id()); err != nil {
+		if _, err := waitBrokerRebooted(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return fmt.Errorf("error waiting for MQ Broker (%s) reboot: %w", d.Id(), err)
 		}
 	}
@@ -620,11 +622,105 @@ func resourceBrokerDelete(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	if _, err := WaitBrokerDeleted(conn, d.Id()); err != nil {
+	if _, err := waitBrokerDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return fmt.Errorf("error waiting for MQ Broker (%s) deletion: %w", d.Id(), err)
 	}
 
 	return nil
+}
+
+func FindBrokerByID(conn *mq.MQ, id string) (*mq.DescribeBrokerResponse, error) {
+	input := &mq.DescribeBrokerInput{
+		BrokerId: aws.String(id),
+	}
+
+	output, err := conn.DescribeBroker(input)
+
+	if tfawserr.ErrCodeEquals(err, mq.ErrCodeNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
+func statusBrokerState(conn *mq.MQ, id string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindBrokerByID(conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.BrokerState), nil
+	}
+}
+
+func waitBrokerCreated(conn *mq.MQ, id string, timeout time.Duration) (*mq.DescribeBrokerResponse, error) {
+	stateConf := resource.StateChangeConf{
+		Pending: []string{mq.BrokerStateCreationInProgress, mq.BrokerStateRebootInProgress},
+		Target:  []string{mq.BrokerStateRunning},
+		Timeout: timeout,
+		Refresh: statusBrokerState(conn, id),
+	}
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*mq.DescribeBrokerResponse); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitBrokerDeleted(conn *mq.MQ, id string, timeout time.Duration) (*mq.DescribeBrokerResponse, error) {
+	stateConf := resource.StateChangeConf{
+		Pending: []string{
+			mq.BrokerStateCreationFailed,
+			mq.BrokerStateDeletionInProgress,
+			mq.BrokerStateRebootInProgress,
+			mq.BrokerStateRunning,
+		},
+		Target:  []string{},
+		Timeout: timeout,
+		Refresh: statusBrokerState(conn, id),
+	}
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*mq.DescribeBrokerResponse); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitBrokerRebooted(conn *mq.MQ, id string, timeout time.Duration) (*mq.DescribeBrokerResponse, error) {
+	stateConf := resource.StateChangeConf{
+		Pending: []string{mq.BrokerStateRebootInProgress},
+		Target:  []string{mq.BrokerStateRunning},
+		Timeout: timeout,
+		Refresh: statusBrokerState(conn, id),
+	}
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*mq.DescribeBrokerResponse); ok {
+		return output, err
+	}
+
+	return nil, err
 }
 
 func resourceUserHash(v interface{}) int {
@@ -683,7 +779,6 @@ func updateBrokerUsers(conn *mq.MQ, bId string, oldUsers, newUsers []interface{}
 
 func DiffBrokerUsers(bId string, oldUsers, newUsers []interface{}) (
 	cr []*mq.CreateUserRequest, di []*mq.DeleteUserInput, ur []*mq.UpdateUserRequest, e error) {
-
 	existingUsers := make(map[string]interface{})
 	for _, ou := range oldUsers {
 		u := ou.(map[string]interface{})
@@ -720,7 +815,6 @@ func DiffBrokerUsers(bId string, oldUsers, newUsers []interface{}) (
 		}
 
 		if eu, ok := existingUsers[username]; ok {
-
 			existingUserMap := eu.(map[string]interface{})
 
 			if !reflect.DeepEqual(existingUserMap, newUserMap) {

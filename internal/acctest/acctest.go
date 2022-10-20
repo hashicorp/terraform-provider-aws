@@ -763,7 +763,7 @@ func PreCheckOrganizationManagementAccount(t *testing.T) {
 		t.Fatalf("error describing AWS Organization: %s", err)
 	}
 
-	callerIdentity, err := tfsts.FindCallerIdentity(Provider.Meta().(*conns.AWSClient).STSConn)
+	callerIdentity, err := tfsts.FindCallerIdentity(context.Background(), Provider.Meta().(*conns.AWSClient).STSConn)
 
 	if err != nil {
 		t.Fatalf("error getting current identity: %s", err)
@@ -2032,6 +2032,5 @@ func CheckResourceAttrGreaterThanValue(n, key, value string) resource.TestCheckF
 		}
 
 		return nil
-
 	}
 }
