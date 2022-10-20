@@ -19,7 +19,7 @@ import (
 func TestAccResourceGroupsGroup_basic(t *testing.T) {
 	var v resourcegroups.Group
 	resourceName := "aws_resourcegroups_group.test"
-	n := fmt.Sprintf("test-group-%d", sdkacctest.RandInt())
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	desc1 := "Hello World"
 	desc2 := "Foo Bar"
@@ -45,10 +45,10 @@ func TestAccResourceGroupsGroup_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckResourceGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupConfig_basic(n, desc1, testAccResourceGroupQueryConfig),
+				Config: testAccGroupConfig_basic(rName, desc1, testAccResourceGroupQueryConfig),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceGroupExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "name", n),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "description", desc1),
 					resource.TestCheckResourceAttr(resourceName, "resource_query.0.query", testAccResourceGroupQueryConfig+"\n"),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
@@ -60,7 +60,7 @@ func TestAccResourceGroupsGroup_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccGroupConfig_basic(n, desc2, query2),
+				Config: testAccGroupConfig_basic(rName, desc2, query2),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "description", desc2),
 					resource.TestCheckResourceAttr(resourceName, "resource_query.0.query", query2+"\n"),
@@ -73,7 +73,7 @@ func TestAccResourceGroupsGroup_basic(t *testing.T) {
 func TestAccResourceGroupsGroup_tags(t *testing.T) {
 	var v resourcegroups.Group
 	resourceName := "aws_resourcegroups_group.test"
-	n := fmt.Sprintf("test-group-%d", sdkacctest.RandInt())
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	desc1 := "Hello World"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -83,7 +83,7 @@ func TestAccResourceGroupsGroup_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckResourceGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupConfig_tags1(n, desc1, testAccResourceGroupQueryConfig, "key1", "value1"),
+				Config: testAccGroupConfig_tags1(rName, desc1, testAccResourceGroupQueryConfig, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceGroupExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -96,7 +96,7 @@ func TestAccResourceGroupsGroup_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccGroupConfig_tags2(n, desc1, testAccResourceGroupQueryConfig, "key1", "value1updated", "key2", "value2"),
+				Config: testAccGroupConfig_tags2(rName, desc1, testAccResourceGroupQueryConfig, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceGroupExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -105,7 +105,7 @@ func TestAccResourceGroupsGroup_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccGroupConfig_tags1(n, desc1, testAccResourceGroupQueryConfig, "key2", "value2"),
+				Config: testAccGroupConfig_tags1(rName, desc1, testAccResourceGroupQueryConfig, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceGroupExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -119,7 +119,7 @@ func TestAccResourceGroupsGroup_tags(t *testing.T) {
 func TestAccResourceGroupsGroup_Configuration(t *testing.T) {
 	var v resourcegroups.Group
 	resourceName := "aws_resourcegroups_group.test"
-	n := fmt.Sprintf("test-group-%d", sdkacctest.RandInt())
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	desc1 := "Hello World"
 	desc2 := "Foo Bar"
@@ -133,10 +133,10 @@ func TestAccResourceGroupsGroup_Configuration(t *testing.T) {
 		CheckDestroy:             testAccCheckResourceGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupConfig_configuration(n, desc1, configType1, configType2, false),
+				Config: testAccGroupConfig_configuration(rName, desc1, configType1, configType2, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceGroupExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "name", n),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "description", desc1),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.type", configType1),
 					resource.TestCheckResourceAttr(resourceName, "configuration.1.type", configType2),
@@ -154,10 +154,10 @@ func TestAccResourceGroupsGroup_Configuration(t *testing.T) {
 			},
 			// Check that changing the auto-allocate value is represented
 			{
-				Config: testAccGroupConfig_configuration(n, desc1, configType1, configType2, true),
+				Config: testAccGroupConfig_configuration(rName, desc1, configType1, configType2, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceGroupExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "name", n),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "description", desc1),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.type", configType1),
 					resource.TestCheckResourceAttr(resourceName, "configuration.1.type", configType2),
@@ -169,14 +169,14 @@ func TestAccResourceGroupsGroup_Configuration(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccGroupConfig_configuration(n, desc2, configType1, configType2, true),
+				Config: testAccGroupConfig_configuration(rName, desc2, configType1, configType2, true),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "description", desc2),
 				),
 			},
 			// Check that trying to change the configuration group to a resource-query group fails
 			{
-				Config:      testAccGroupConfig_basic(n, desc1, testAccResourceGroupQueryConfig),
+				Config:      testAccGroupConfig_basic(rName, desc1, testAccResourceGroupQueryConfig),
 				ExpectError: regexp.MustCompile(`conversion between resource-query and configuration group types is not possible`),
 			},
 		},
@@ -249,12 +249,12 @@ const testAccResourceGroupQueryConfig = `{
 func testAccGroupConfig_basic(rName, desc, query string) string {
 	return fmt.Sprintf(`
 resource "aws_resourcegroups_group" "test" {
-  name        = "%s"
-  description = "%s"
+  name        = %[1]q
+  description = %[2]q
 
   resource_query {
     query = <<JSON
-%s
+%[3]s
 JSON
 
   }
@@ -265,18 +265,18 @@ JSON
 func testAccGroupConfig_tags1(rName, desc, query, tag1Key, tag1Value string) string {
 	return fmt.Sprintf(`
 resource "aws_resourcegroups_group" "test" {
-  name        = "%s"
-  description = "%s"
+  name        = %[1]q
+  description = %[2]q
 
   resource_query {
     query = <<JSON
-%s
+%[3]s
 JSON
 
   }
 
   tags = {
-    %q = %q
+    %[4]q = %[5]q
   }
 }
 `, rName, desc, query, tag1Key, tag1Value)
@@ -285,19 +285,19 @@ JSON
 func testAccGroupConfig_tags2(rName, desc, query, tag1Key, tag1Value, tag2Key, tag2Value string) string {
 	return fmt.Sprintf(`
 resource "aws_resourcegroups_group" "test" {
-  name        = "%s"
-  description = "%s"
+  name        = %[1]q
+  description = %[2]q
 
   resource_query {
     query = <<JSON
-%s
+%[3]s
 JSON
 
   }
 
   tags = {
-    %q = %q
-    %q = %q
+    %[4]q = %[5]q
+    %[6]q = %[7]q
   }
 }
 `, rName, desc, query, tag1Key, tag1Value, tag2Key, tag2Value)
@@ -306,11 +306,11 @@ JSON
 func testAccGroupConfig_configuration(rName, desc, cType1, cType2 string, autoAllocateHost bool) string {
 	return fmt.Sprintf(`
 resource "aws_resourcegroups_group" "test" {
-  name        = "%s"
-  description = "%s"
+  name        = %[1]q
+  description = %[2]q
 
   configuration {
-    type = "%s"
+    type = %[3]q
 
     parameters {
       name = "allowed-host-families"
@@ -329,7 +329,7 @@ resource "aws_resourcegroups_group" "test" {
     parameters {
       name = "auto-allocate-host"
       values = [
-        "%t",
+        "%[4]t",
       ]
     }
 
@@ -342,7 +342,7 @@ resource "aws_resourcegroups_group" "test" {
   }
 
   configuration {
-    type = "%s"
+    type = %[5]q
 
     parameters {
       name = "allowed-resource-types"
