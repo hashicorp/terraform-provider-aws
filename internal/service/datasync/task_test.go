@@ -32,7 +32,7 @@ func TestAccDataSyncTask_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTaskConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTaskExists(resourceName, &task1),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "datasync", regexp.MustCompile(`task/task-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_log_group_arn", ""),
@@ -50,6 +50,7 @@ func TestAccDataSyncTask_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "options.0.posix_permissions", "PRESERVE"),
 					resource.TestCheckResourceAttr(resourceName, "options.0.preserve_deleted_files", "PRESERVE"),
 					resource.TestCheckResourceAttr(resourceName, "options.0.preserve_devices", "NONE"),
+					resource.TestCheckResourceAttr(resourceName, "options.0.security_descriptor_copy_flags", "NONE"),
 					resource.TestCheckResourceAttr(resourceName, "options.0.task_queueing", "ENABLED"),
 					resource.TestCheckResourceAttr(resourceName, "options.0.transfer_mode", "CHANGED"),
 					resource.TestCheckResourceAttr(resourceName, "options.0.uid", "INT_VALUE"),
@@ -57,7 +58,6 @@ func TestAccDataSyncTask_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "schedule.#", "0"),
 					resource.TestCheckResourceAttrPair(resourceName, "source_location_arn", dataSyncSourceLocationResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "schedule.#", "0"),
 				),
 			},
 			{

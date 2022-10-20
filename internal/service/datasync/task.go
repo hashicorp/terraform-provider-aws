@@ -150,7 +150,7 @@ func ResourceTask() *schema.Resource {
 						"security_descriptor_copy_flags": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							Default:      datasync.SmbSecurityDescriptorCopyFlagsOwnerDacl,
+							Computed:     true,
 							ValidateFunc: validation.StringInSlice(datasync.SmbSecurityDescriptorCopyFlags_Values(), false),
 						},
 						"task_queueing": {
@@ -418,23 +418,26 @@ func expandOptions(l []interface{}) *datasync.Options {
 	m := l[0].(map[string]interface{})
 
 	options := &datasync.Options{
-		Atime:                       aws.String(m["atime"].(string)),
-		Gid:                         aws.String(m["gid"].(string)),
-		LogLevel:                    aws.String(m["log_level"].(string)),
-		Mtime:                       aws.String(m["mtime"].(string)),
-		OverwriteMode:               aws.String(m["overwrite_mode"].(string)),
-		PreserveDeletedFiles:        aws.String(m["preserve_deleted_files"].(string)),
-		PreserveDevices:             aws.String(m["preserve_devices"].(string)),
-		SecurityDescriptorCopyFlags: aws.String(m["security_descriptor_copy_flags"].(string)),
-		PosixPermissions:            aws.String(m["posix_permissions"].(string)),
-		TaskQueueing:                aws.String(m["task_queueing"].(string)),
-		TransferMode:                aws.String(m["transfer_mode"].(string)),
-		Uid:                         aws.String(m["uid"].(string)),
-		VerifyMode:                  aws.String(m["verify_mode"].(string)),
+		Atime:                aws.String(m["atime"].(string)),
+		Gid:                  aws.String(m["gid"].(string)),
+		LogLevel:             aws.String(m["log_level"].(string)),
+		Mtime:                aws.String(m["mtime"].(string)),
+		OverwriteMode:        aws.String(m["overwrite_mode"].(string)),
+		PreserveDeletedFiles: aws.String(m["preserve_deleted_files"].(string)),
+		PreserveDevices:      aws.String(m["preserve_devices"].(string)),
+		PosixPermissions:     aws.String(m["posix_permissions"].(string)),
+		TaskQueueing:         aws.String(m["task_queueing"].(string)),
+		TransferMode:         aws.String(m["transfer_mode"].(string)),
+		Uid:                  aws.String(m["uid"].(string)),
+		VerifyMode:           aws.String(m["verify_mode"].(string)),
 	}
 
-	if v, ok := m["bytes_per_second"]; ok && v.(int) > 0 {
-		options.BytesPerSecond = aws.Int64(int64(v.(int)))
+	if v, ok := m["bytes_per_second"].(int); ok && v != 0 {
+		options.BytesPerSecond = aws.Int64(int64(v))
+	}
+
+	if v, ok := m["security_descriptor_copy_flags"].(string); ok && v != "" {
+		options.SecurityDescriptorCopyFlags = aws.String(v)
 	}
 
 	return options
