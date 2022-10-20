@@ -63,7 +63,7 @@ The `kinesis_video_stream_config` configuration block supports the following arg
 
 * `encryption_config` - The encryption configuration. [Documented below](#encryption_config).
 * `prefix` - The prefix of the video stream. Minimum length of `1`. Maximum length of `128`. When read from the state, the value returned is `<prefix>-connect-<connect_instance_alias>-contact-` since the API appends additional details to the `prefix`.
-* `retention_period_hours` - The number of hours data is retained in the stream. Kinesis Video Streams retains the data in a data store that is associated with the stream. Minimum value of `0`. Maximum value of `87600`. A value of `0`, indicates that the stream does not persist data.
+* `retention_period_hours` - The number of hours to retain the data in a data store associated with the stream. Minimum value of `0`. Maximum value of `87600`. A value of `0`, indicates that the stream does not persist data.
 
 #### `s3_config`
 
