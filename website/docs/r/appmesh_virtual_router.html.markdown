@@ -52,8 +52,7 @@ The following arguments are supported:
 
 The `spec` object supports the following:
 
-* `listener` - (Required) Listeners that the virtual router is expected to receive inbound traffic from.
-Currently only one listener is supported per virtual router.
+* `listener` - (Required) Listeners that the virtual router is expected to receive inbound traffic from. Up to 50 listeners may be specified.
 
 The `listener` object supports the following:
 

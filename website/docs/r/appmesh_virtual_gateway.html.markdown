@@ -82,7 +82,7 @@ The following arguments are supported:
 
 The `spec` object supports the following:
 
-* `listener` - (Required) Listeners that the mesh endpoint is expected to receive inbound traffic from. You can specify one listener.
+* `listener` - (Required) Listeners that the mesh endpoint is expected to receive inbound traffic from. You can specify up to 50 listeners.
 * `backend_defaults` - (Optional) Defaults for backends.
 * `logging` - (Optional) Inbound and outbound access logging information for the virtual gateway.
 
