@@ -284,7 +284,7 @@ func testAccPolicyDocumentExpectedJSON() string {
     "edge-locations": [
       {
         "location": "us-east-1",
-        "asn": "64555",
+        "asn": 64555,
         "inside-cidr-blocks": [
           "2001:4860:F000::/40",
           "192.128.0.0/10",
@@ -293,7 +293,7 @@ func testAccPolicyDocumentExpectedJSON() string {
       },
       {
         "location": "eu-west-1",
-        "asn": "4200000001",
+        "asn": 4200000001,
         "inside-cidr-blocks": [
           "2001:4860:E000::/40",
           "192.192.0.0/10"
