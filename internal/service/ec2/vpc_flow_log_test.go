@@ -230,7 +230,6 @@ func TestAccVPCFlowLog_LogDestinationType_cloudWatchLogs(t *testing.T) {
 func TestAccVPCFlowLog_LogDestinationType_kinesisFirehose(t *testing.T) {
 	var flowLog ec2.FlowLog
 	kinesisFirehoseResourceName := "aws_kinesis_firehose_delivery_stream.test"
-	//s3ResourceName := "aws_s3_bucket.test"
 	resourceName := "aws_flow_log.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1170,80 +1169,78 @@ resource "aws_flow_log" "test" {
 
 func testAccVPCFlowLogConfig_destinationTypeKinesisFirehose(rName string) string {
 	return acctest.ConfigCompose(testAccFlowLogConfigBase(rName), fmt.Sprintf(`
-
 resource "aws_flow_log" "test" {
-  log_destination      = aws_kinesis_firehose_delivery_stream.test.arn
-  log_destination_type = "kinesis-data-firehose"
-  traffic_type         = "ALL"
-  vpc_id               = aws_vpc.test.id
+	log_destination      = aws_kinesis_firehose_delivery_stream.test.arn
+	log_destination_type = "kinesis-data-firehose"
+	traffic_type         = "ALL"
+	vpc_id               = aws_vpc.test.id
 }
 
 resource "aws_kinesis_firehose_delivery_stream" "test" {
 	name        = "kinesis_firehose_test"
 	destination = "extended_s3"
-  
+
 	extended_s3_configuration {
-	  role_arn   = aws_iam_role.test.arn
-	  bucket_arn = aws_s3_bucket.bucket.arn
-  
+		role_arn   = aws_iam_role.test.arn
+		bucket_arn = aws_s3_bucket.bucket.arn
 	}
 
 	tags = {
 		"LogDeliveryEnabled" = "true"
 	}
-  }
-  
-  resource "aws_s3_bucket" "bucket" {
+}
+
+resource "aws_s3_bucket" "bucket" {
 	bucket = %[1]q
-  }
-  
-  resource "aws_s3_bucket_acl" "bucket_acl" {
+}
+
+resource "aws_s3_bucket_acl" "bucket_acl" {
 	bucket = aws_s3_bucket.bucket.id
 	acl    = "private"
-  }
-  
-  resource "aws_iam_role" "test" {
-	name = "firehose_test_role"
-  
-	assume_role_policy = <<EOF
-  {
-	"Version": "2012-10-17",
-	"Statement": [
-	  {
-		"Action": "sts:AssumeRole",
-		"Principal": {
-		  "Service": "firehose.amazonaws.com"
-		},
-		"Effect": "Allow",
-		"Sid": ""
-	  }
-	]
-  }
-  EOF
-  }
-
-  resource "aws_iam_role_policy" "test" {
-	name = "test"
-	role = aws_iam_role.test.id
-  
-	policy = <<EOF
-{
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-            "Action": [
-                "logs:CreateLogDelivery",
-                "logs:DeleteLogDelivery",
-                "logs:ListLogDeliveries",
-                "logs:GetLogDelivery",
-                "firehose:TagDeliveryStream"
-            ],
-            "Effect": "Allow",
-            "Resource": "*"
-        }
-    ]
 }
-  EOF
-  }
+
+resource "aws_iam_role" "test" {
+	name = "firehose_test_role"
+
+	assume_role_policy = <<EOF
+{
+	"Version":"2012-10-17",
+	"Statement":[
+	{
+		"Action":"sts:AssumeRole",
+		"Principal":{
+			"Service":"firehose.amazonaws.com"
+		},
+		"Effect":"Allow",
+		"Sid":""
+	}
+	]
+}
+EOF
+}
+
+resource "aws_iam_role_policy" "test" {
+name = "test"
+role = aws_iam_role.test.id
+
+policy = <<EOF
+{
+	"Version":"2012-10-17",
+	"Statement":[
+	{
+		"Action":[
+			"logs:CreateLogDelivery",
+			"logs:DeleteLogDelivery",
+			"logs:ListLogDeliveries",
+			"logs:GetLogDelivery",
+			"firehose:TagDeliveryStream"
+		],
+		"Effect":"Allow",
+		"Resource":"*"
+	}
+	]
+}
+EOF
+}
 `, rName))
 }
