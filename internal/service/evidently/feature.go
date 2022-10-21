@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/experimental/nullable"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -23,7 +24,8 @@ import (
 
 func ResourceFeature() *schema.Resource {
 	return &schema.Resource{
-		ReadWithoutTimeout: resourceFeatureRead,
+		CreateWithoutTimeout: resourceFeatureCreate,
+		ReadWithoutTimeout:   resourceFeatureRead,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -175,6 +177,54 @@ func ResourceFeature() *schema.Resource {
 	}
 }
 
+func resourceFeatureCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).EvidentlyConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+
+	name := d.Get("name").(string)
+	project := d.Get("project").(string)
+
+	input := &cloudwatchevidently.CreateFeatureInput{
+		Name:       aws.String(name),
+		Project:    aws.String(project),
+		Variations: expandVariations(d.Get("variations").(*schema.Set).List()),
+	}
+
+	if v, ok := d.GetOk("default_variation"); ok {
+		input.DefaultVariation = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("description"); ok {
+		input.Description = aws.String(v.(string))
+	}
+
+	if v := d.Get("entity_overrides").(map[string]interface{}); len(v) > 0 {
+		input.EntityOverrides = flex.ExpandStringMap(v)
+	}
+
+	if v, ok := d.GetOk("evaluation_strategy"); ok {
+		input.EvaluationStrategy = aws.String(v.(string))
+	}
+
+	if len(tags) > 0 {
+		input.Tags = Tags(tags.IgnoreAWS())
+	}
+
+	log.Printf("[DEBUG] Creating CloudWatch Evidently Feature: %s", input)
+	output, err := conn.CreateFeatureWithContext(ctx, input)
+
+	if err != nil {
+		return diag.Errorf("creating CloudWatch Evidently Feature (%s) for Project (%s): %s", name, project, err)
+	}
+
+	// the GetFeature API call uses the Feature name and Project ARN
+	// concat Feature name and Project Name or ARN to be used in Read for imports
+	d.SetId(fmt.Sprintf("%s:%s", aws.StringValue(output.Feature.Name), project))
+
+	return resourceFeatureRead(ctx, d, meta)
+}
+
 func resourceFeatureRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).EvidentlyConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
@@ -239,6 +289,52 @@ func FeatureParseID(id string) (string, string, error) {
 	}
 
 	return featureName, projectNameOrARN, nil
+}
+
+func expandVariations(variations []interface{}) []*cloudwatchevidently.VariationConfig {
+	if len(variations) == 0 {
+		return nil
+	}
+
+	variationsFormatted := make([]*cloudwatchevidently.VariationConfig, len(variations))
+
+	for i, variation := range variations {
+		variationsFormatted[i] = expandVariation(variation.(map[string]interface{}))
+	}
+
+	return variationsFormatted
+}
+
+func expandVariation(variation map[string]interface{}) *cloudwatchevidently.VariationConfig {
+	return &cloudwatchevidently.VariationConfig{
+		Name:  aws.String(variation["name"].(string)),
+		Value: expandValue(variation["value"].([]interface{})),
+	}
+}
+
+func expandValue(value []interface{}) *cloudwatchevidently.VariableValue {
+	if len(value) == 0 || value[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := value[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	result := &cloudwatchevidently.VariableValue{}
+
+	// Only one of these values can be set at a time
+	if val, null, _ := nullable.Bool(tfMap["bool_value"].(string)).Value(); !null {
+		result.BoolValue = aws.Bool(val)
+	} else if v, null, _ := nullable.Int(tfMap["long_value"].(string)).Value(); !null {
+		result.LongValue = aws.Int64(v)
+	} else if v, null, _ := nullable.Float(tfMap["double_value"].(string)).Value(); !null {
+		result.DoubleValue = aws.Float64(float64(v))
+	} else if v, ok := tfMap["string_value"].(string); ok {
+		result.StringValue = aws.String(v)
+	}
+	return result
 }
 
 func flattenVariations(apiObject []*cloudwatchevidently.Variation) []interface{} {
