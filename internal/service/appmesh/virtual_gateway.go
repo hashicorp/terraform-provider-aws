@@ -302,11 +302,6 @@ func ResourceVirtualGateway() *schema.Resource {
 															},
 														},
 													},
-													ExactlyOneOf: []string{
-														"spec.0.listener.0.connection_pool.0.grpc",
-														"spec.0.listener.0.connection_pool.0.http",
-														"spec.0.listener.0.connection_pool.0.http2",
-													},
 												},
 
 												"http": {
@@ -329,11 +324,6 @@ func ResourceVirtualGateway() *schema.Resource {
 															},
 														},
 													},
-													ExactlyOneOf: []string{
-														"spec.0.listener.0.connection_pool.0.grpc",
-														"spec.0.listener.0.connection_pool.0.http",
-														"spec.0.listener.0.connection_pool.0.http2",
-													},
 												},
 
 												"http2": {
@@ -349,11 +339,6 @@ func ResourceVirtualGateway() *schema.Resource {
 																ValidateFunc: validation.IntAtLeast(1),
 															},
 														},
-													},
-													ExactlyOneOf: []string{
-														"spec.0.listener.0.connection_pool.0.grpc",
-														"spec.0.listener.0.connection_pool.0.http",
-														"spec.0.listener.0.connection_pool.0.http2",
 													},
 												},
 											},
@@ -462,11 +447,6 @@ func ResourceVirtualGateway() *schema.Resource {
 																		},
 																	},
 																},
-																ExactlyOneOf: []string{
-																	"spec.0.listener.0.tls.0.certificate.0.acm",
-																	"spec.0.listener.0.tls.0.certificate.0.file",
-																	"spec.0.listener.0.tls.0.certificate.0.sds",
-																},
 															},
 
 															"file": {
@@ -489,11 +469,6 @@ func ResourceVirtualGateway() *schema.Resource {
 																		},
 																	},
 																},
-																ExactlyOneOf: []string{
-																	"spec.0.listener.0.tls.0.certificate.0.acm",
-																	"spec.0.listener.0.tls.0.certificate.0.file",
-																	"spec.0.listener.0.tls.0.certificate.0.sds",
-																},
 															},
 
 															"sds": {
@@ -508,11 +483,6 @@ func ResourceVirtualGateway() *schema.Resource {
 																			Required: true,
 																		},
 																	},
-																},
-																ExactlyOneOf: []string{
-																	"spec.0.listener.0.tls.0.certificate.0.acm",
-																	"spec.0.listener.0.tls.0.certificate.0.file",
-																	"spec.0.listener.0.tls.0.certificate.0.sds",
 																},
 															},
 														},
@@ -580,10 +550,6 @@ func ResourceVirtualGateway() *schema.Resource {
 																					},
 																				},
 																			},
-																			ExactlyOneOf: []string{
-																				"spec.0.listener.0.tls.0.validation.0.trust.0.file",
-																				"spec.0.listener.0.tls.0.validation.0.trust.0.sds",
-																			},
 																		},
 
 																		"sds": {
@@ -599,10 +565,6 @@ func ResourceVirtualGateway() *schema.Resource {
 																						ValidateFunc: validation.StringLenBetween(1, 255),
 																					},
 																				},
-																			},
-																			ExactlyOneOf: []string{
-																				"spec.0.listener.0.tls.0.validation.0.trust.0.file",
-																				"spec.0.listener.0.tls.0.validation.0.trust.0.sds",
 																			},
 																		},
 																	},
