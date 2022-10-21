@@ -316,7 +316,7 @@ func expandMultiplexProgramSettings(mps []multiplexProgramSettings) *mltypes.Mul
 	data := mps[0]
 
 	l := &mltypes.MultiplexProgramSettings{
-		ProgramNumber:            data.ProgramNumber,
+		ProgramNumber:            int32(data.ProgramNumber.Value),
 		PreferredChannelPipeline: mltypes.PreferredChannelPipeline(data.PreferredChannelPipeline.Value),
 	}
 
@@ -329,14 +329,14 @@ func expandMultiplexProgramSettings(mps []multiplexProgramSettings) *mltypes.Mul
 
 	if len(data.VideoSettings) > 0 {
 		l.VideoSettings = &mltypes.MultiplexVideoSettings{
-			ConstantBitrate: data.VideoSettings[0].ConstantBitrate,
+			ConstantBitrate: int32(data.VideoSettings[0].ConstantBitrate.Value),
 		}
 
 		if len(data.VideoSettings[0].StatemuxSettings) > 0 {
 			l.VideoSettings.StatmuxSettings = &mltypes.MultiplexStatmuxVideoSettings{
-				MinimumBitrate: data.VideoSettings[0].StatemuxSettings[0].MinimumBitrate,
-				MaximumBitrate: data.VideoSettings[0].StatemuxSettings[0].MaximumBitrate,
-				Priority:       data.VideoSettings[0].StatemuxSettings[0].Priority,
+				MinimumBitrate: int32(data.VideoSettings[0].StatemuxSettings[0].MinimumBitrate.Value),
+				MaximumBitrate: int32(data.VideoSettings[0].StatemuxSettings[0].MaximumBitrate.Value),
+				Priority:       int32(data.VideoSettings[0].StatemuxSettings[0].Priority.Value),
 			}
 		}
 	}
@@ -350,7 +350,7 @@ func flattenMultiplexProgramSettings(mps *mltypes.MultiplexProgramSettings) []mu
 	}
 
 	m := multiplexProgramSettings{
-		ProgramNumber:            mps.ProgramNumber,
+		ProgramNumber:            types.Int64{Value: int64(mps.ProgramNumber)},
 		PreferredChannelPipeline: types.String{Value: string(mps.PreferredChannelPipeline)},
 	}
 
@@ -367,14 +367,14 @@ func flattenMultiplexProgramSettings(mps *mltypes.MultiplexProgramSettings) []mu
 	vsList := make([]videoSettings, 0)
 	if mps.VideoSettings != nil {
 		var vs videoSettings
-		vs.ConstantBitrate = mps.VideoSettings.ConstantBitrate
+		vs.ConstantBitrate = types.Int64{Value: int64(mps.VideoSettings.ConstantBitrate)}
 
 		ssList := make([]statemuxSettings, 0)
 		if mps.VideoSettings.StatmuxSettings != nil {
 			var s statemuxSettings
-			s.MinimumBitrate = mps.VideoSettings.StatmuxSettings.MinimumBitrate
-			s.MaximumBitrate = mps.VideoSettings.StatmuxSettings.MaximumBitrate
-			s.Priority = mps.VideoSettings.StatmuxSettings.Priority
+			s.MinimumBitrate = types.Int64{Value: int64(mps.VideoSettings.StatmuxSettings.MinimumBitrate)}
+			s.MaximumBitrate = types.Int64{Value: int64(mps.VideoSettings.StatmuxSettings.MaximumBitrate)}
+			s.Priority = types.Int64{Value: int64(mps.VideoSettings.StatmuxSettings.Priority)}
 
 			ssList = append(ssList, s)
 		}
@@ -417,7 +417,7 @@ type resourceMultiplexProgramData struct {
 }
 
 type multiplexProgramSettings struct {
-	ProgramNumber            int32               `tfsdk:"program_number"`
+	ProgramNumber            types.Int64         `tfsdk:"program_number"`
 	PreferredChannelPipeline types.String        `tfsdk:"preferred_channel_pipeline"`
 	ServiceDescriptor        []serviceDescriptor `tfsdk:"service_descriptor"`
 	VideoSettings            []videoSettings     `tfsdk:"video_settings"`
@@ -429,12 +429,12 @@ type serviceDescriptor struct {
 }
 
 type videoSettings struct {
-	ConstantBitrate  int32              `tfsdk:"constant_bitrate"`
+	ConstantBitrate  types.Int64        `tfsdk:"constant_bitrate"`
 	StatemuxSettings []statemuxSettings `tfsdk:"statemux_settings"`
 }
 
 type statemuxSettings struct {
-	MaximumBitrate int32 `tfsdk:"maximum_bitrate"`
-	MinimumBitrate int32 `tfsdk:"minimum_bitrate"`
-	Priority       int32 `tfsdk:"priority"`
+	MaximumBitrate types.Int64 `tfsdk:"maximum_bitrate"`
+	MinimumBitrate types.Int64 `tfsdk:"minimum_bitrate"`
+	Priority       types.Int64 `tfsdk:"priority"`
 }
