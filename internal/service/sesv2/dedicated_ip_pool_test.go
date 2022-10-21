@@ -68,6 +68,41 @@ func TestAccSESV2DedicatedIPPool_disappears(t *testing.T) {
 	})
 }
 
+func TestAccSESV2DedicatedIPPool_scalingMode(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_sesv2_dedicated_ip_pool.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2EndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDedicatedIPPoolDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDedicatedIPPoolConfig_scalingMode(rName, string(types.ScalingModeManaged)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDedicatedIPPoolExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "pool_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "scaling_mode", string(types.ScalingModeManaged)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccDedicatedIPPoolConfig_scalingMode(rName, string(types.ScalingModeStandard)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDedicatedIPPoolExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "pool_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "scaling_mode", string(types.ScalingModeStandard)),
+				),
+			},
+		},
+	})
+}
+
 func TestAccSESV2DedicatedIPPool_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sesv2_dedicated_ip_pool.test"
@@ -180,6 +215,15 @@ resource "aws_sesv2_dedicated_ip_pool" "test" {
   pool_name = %[1]q
 }
 `, rName)
+}
+
+func testAccDedicatedIPPoolConfig_scalingMode(rName, scalingMode string) string {
+	return fmt.Sprintf(`
+resource "aws_sesv2_dedicated_ip_pool" "test" {
+  pool_name    = %[1]q
+  scaling_mode = %[2]q
+}
+`, rName, scalingMode)
 }
 
 func testAccDedicatedIPPoolConfig_tags1(rName, tagKey1, tagValue1 string) string {
