@@ -1170,6 +1170,50 @@ func testAccVirtualNode_multipleListeners(t *testing.T) {
 				),
 			},
 			{
+				Config: testAccVirtualNodeConfig_multipleListenersUpdated(meshName, vnName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVirtualNodeExists(resourceName, &vn),
+					resource.TestCheckResourceAttr(resourceName, "name", vnName),
+					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
+					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
+					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.backend.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "spec.0.backend.*", map[string]string{
+						"virtual_service.#":                      "1",
+						"virtual_service.0.client_policy.#":      "0",
+						"virtual_service.0.virtual_service_name": "servicea.simpleapp.local",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.connection_pool.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.health_check.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.outlier_detection.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.0.port", "8080"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.0.protocol", "http"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.1.connection_pool.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.1.health_check.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.1.outlier_detection.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.1.port_mapping.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.1.port_mapping.0.port", "8081"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.1.port_mapping.0.protocol", "http"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.2.connection_pool.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.2.health_check.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.2.outlier_detection.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.2.port_mapping.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.2.port_mapping.0.port", "9000"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.2.port_mapping.0.protocol", "http"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.logging.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.service_discovery.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.service_discovery.0.dns.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.service_discovery.0.dns.0.hostname", "serviceb.simpleapp.local"),
+					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
+					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
+					acctest.CheckResourceAttrAccountID(resourceName, "resource_owner"),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualNode/%s", meshName, vnName)),
+				),
+			},
+			{
 				ResourceName:      resourceName,
 				ImportStateId:     fmt.Sprintf("%s/%s", meshName, vnName),
 				ImportState:       true,
@@ -2240,6 +2284,50 @@ resource "aws_appmesh_virtual_node" "test" {
     listener {
       port_mapping {
         port     = 8081
+        protocol = "http"
+      }
+    }
+
+    service_discovery {
+      dns {
+        hostname = "serviceb.simpleapp.local"
+      }
+    }
+  }
+}
+`, vnName))
+}
+
+func testAccVirtualNodeConfig_multipleListenersUpdated(meshName, vnName string) string {
+	return acctest.ConfigCompose(testAccVirtualNodeConfig_mesh(meshName), fmt.Sprintf(`
+resource "aws_appmesh_virtual_node" "test" {
+  name      = %[1]q
+  mesh_name = aws_appmesh_mesh.test.id
+
+  spec {
+    backend {
+      virtual_service {
+        virtual_service_name = "servicea.simpleapp.local"
+      }
+    }
+
+    listener {
+      port_mapping {
+        port     = 8080
+        protocol = "http"
+      }
+    }
+
+    listener {
+      port_mapping {
+        port     = 8081
+        protocol = "http"
+      }
+    }
+
+    listener {
+      port_mapping {
+        port     = 9000
         protocol = "http"
       }
     }
