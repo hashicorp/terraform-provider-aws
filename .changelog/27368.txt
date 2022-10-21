@@ -1,0 +1,11 @@
+```release-note:enhancement
+resource/aws_appmesh_virtual_node: Allow for multiple `listener` blocks
+```
+
+```release-note:enhancement
+resource/aws_appmesh_virtual_router: Allow for multiple `listener` blocks
+```
+
+```release-note:enhancement
+resource/aws_appmesh_virtual_gateway: Allow for multiple `listener` blocks
+```
