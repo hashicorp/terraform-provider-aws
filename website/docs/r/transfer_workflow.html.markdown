@@ -26,7 +26,7 @@ resource "aws_transfer_workflow" "example" {
 }
 ```
 
-### Multiple steps example
+### Multistep example
 
 ```terraform
 resource "aws_transfer_workflow" "example" {
