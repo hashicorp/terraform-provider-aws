@@ -2,7 +2,6 @@ package fsx
 
 import (
 	"context"
-	"errors"
 	"log"
 	"regexp"
 	"time"
@@ -349,7 +348,7 @@ func resourceFileCacheRead(ctx context.Context, d *schema.ResourceData, meta int
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	filecache, err := findFileCacheByID(ctx, conn, d.Id())
+	filecache, err := findFileCacheByID(conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] FSx FileCache (%s) not found, removing from state", d.Id())
@@ -465,117 +464,6 @@ func resourceFileCacheDelete(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	return nil
-}
-
-func waitFileCacheCreated(ctx context.Context, conn *fsx.FSx, id string, timeout time.Duration) (*fsx.FileCache, error) {
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{fsx.FileCacheLifecycleCreating},
-		Target:  []string{fsx.FileCacheLifecycleAvailable},
-		Refresh: statusFileCache(ctx, conn, id),
-		Timeout: timeout,
-		Delay:   30 * time.Second,
-	}
-
-	outputRaw, err := stateConf.WaitForState()
-
-	if output, ok := outputRaw.(*fsx.FileCache); ok {
-		if status, details := aws.StringValue(output.Lifecycle), output.FailureDetails; status == fsx.FileCacheLifecycleFailed && details != nil {
-			tfresource.SetLastError(err, errors.New(aws.StringValue(output.FailureDetails.Message)))
-		}
-		return output, err
-	}
-	return nil, err
-}
-
-func waitFileCacheUpdated(ctx context.Context, conn *fsx.FSx, id string, timeout time.Duration) (*fsx.FileCache, error) {
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{fsx.FileCacheLifecycleUpdating},
-		Target:  []string{fsx.FileCacheLifecycleAvailable},
-		Refresh: statusFileCache(ctx, conn, id),
-		Timeout: timeout,
-		Delay:   30 * time.Second,
-	}
-
-	outputRaw, err := stateConf.WaitForState()
-
-	if output, ok := outputRaw.(*fsx.FileCache); ok {
-		if status, details := aws.StringValue(output.Lifecycle), output.FailureDetails; status == fsx.FileCacheLifecycleFailed && details != nil {
-			tfresource.SetLastError(err, errors.New(aws.StringValue(output.FailureDetails.Message)))
-		}
-		return output, err
-	}
-
-	return nil, err
-}
-
-func waitFileCacheDeleted(ctx context.Context, conn *fsx.FSx, id string, timeout time.Duration) (*fsx.FileCache, error) {
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{fsx.FileCacheLifecycleAvailable, fsx.FileCacheLifecycleDeleting},
-		Target:  []string{},
-		Refresh: statusFileCache(ctx, conn, id),
-		Timeout: timeout,
-		Delay:   30 * time.Second,
-	}
-
-	outputRaw, err := stateConf.WaitForState()
-
-	if output, ok := outputRaw.(*fsx.FileCache); ok {
-		if status, details := aws.StringValue(output.Lifecycle), output.FailureDetails; status == fsx.FileCacheLifecycleFailed && details != nil {
-			tfresource.SetLastError(err, errors.New(aws.StringValue(output.FailureDetails.Message)))
-		}
-		return output, err
-	}
-
-	return nil, err
-}
-
-func statusFileCache(ctx context.Context, conn *fsx.FSx, id string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		out, err := findFileCacheByID(ctx, conn, id)
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return out, aws.StringValue(out.Lifecycle), nil
-	}
-}
-
-func findFileCacheByID(ctx context.Context, conn *fsx.FSx, id string) (*fsx.FileCache, error) {
-
-	input := &fsx.DescribeFileCachesInput{
-		FileCacheIds: []*string{aws.String(id)},
-	}
-	var fileCaches []*fsx.FileCache
-
-	err := conn.DescribeFileCachesPages(input, func(page *fsx.DescribeFileCachesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-		fileCaches = append(fileCaches, page.FileCaches...)
-
-		return !lastPage
-	})
-
-	if tfawserr.ErrCodeEquals(err, fsx.ErrCodeFileCacheNotFound) {
-		return nil, &resource.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-	if err != nil {
-		return nil, err
-	}
-	if len(fileCaches) == 0 || fileCaches[0] == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-	if count := len(fileCaches); count > 1 {
-		return nil, tfresource.NewTooManyResultsError(count, input)
-	}
-	return fileCaches[0], nil
 }
 
 func flattenDataRepositoryAssociations(ctx context.Context, conn *fsx.FSx, meta interface{}, dataRepositoryAssociationIds []*string) ([]interface{}, error) {
