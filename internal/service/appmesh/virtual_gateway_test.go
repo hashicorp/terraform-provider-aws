@@ -607,6 +607,92 @@ func testAccVirtualGateway_ListenerValidation(t *testing.T) {
 	})
 }
 
+func testAccVirtualGateway_multipleListeners(t *testing.T) {
+	var v appmesh.VirtualGatewayData
+	resourceName := "aws_appmesh_virtual_gateway.test"
+	meshName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	vgName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, appmesh.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVirtualGatewayDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVirtualGatewayConfig_multipleListeners(meshName, vgName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVirtualGatewayExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
+					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
+					resource.TestCheckResourceAttr(resourceName, "name", vgName),
+					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.connection_pool.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.health_check.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.0.port", "8080"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.0.protocol", "http"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.1.connection_pool.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.1.health_check.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.1.port_mapping.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.1.port_mapping.0.port", "8081"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.1.port_mapping.0.protocol", "http"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.1.tls.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.logging.#", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
+					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
+					acctest.CheckResourceAttrAccountID(resourceName, "resource_owner"),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s", meshName, vgName)),
+				),
+			},
+			{
+				Config: testAccVirtualGatewayConfig_multipleListenersUpdated(meshName, vgName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVirtualGatewayExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
+					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
+					resource.TestCheckResourceAttr(resourceName, "name", vgName),
+					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.connection_pool.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.health_check.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.0.port", "8080"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.0.protocol", "http"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.1.connection_pool.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.1.health_check.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.1.port_mapping.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.1.port_mapping.0.port", "8081"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.1.port_mapping.0.protocol", "http"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.1.tls.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.2.connection_pool.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.2.health_check.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.2.port_mapping.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.2.port_mapping.0.port", "9000"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.2.port_mapping.0.protocol", "http"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.2.tls.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.logging.#", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
+					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
+					acctest.CheckResourceAttrAccountID(resourceName, "resource_owner"),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s", meshName, vgName)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportStateId:     fmt.Sprintf("%s/%s", meshName, vgName),
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccVirtualGateway_Logging(t *testing.T) {
 	var v appmesh.VirtualGatewayData
 	resourceName := "aws_appmesh_virtual_gateway.test"
@@ -1294,4 +1380,69 @@ resource "aws_appmesh_virtual_gateway" "test" {
   }
 }
 `, meshName, vgName, tagKey1, tagValue1, tagKey2, tagValue2)
+}
+
+func testAccVirtualGatewayConfig_multipleListeners(meshName, vgName string) string {
+	return fmt.Sprintf(`
+resource "aws_appmesh_mesh" "test" {
+  name = %[1]q
+}
+
+resource "aws_appmesh_virtual_gateway" "test" {
+  name      = %[2]q
+  mesh_name = aws_appmesh_mesh.test.id
+
+  spec {
+    listener {
+      port_mapping {
+        port     = 8080
+        protocol = "http"
+      }
+    }
+
+    listener {
+      port_mapping {
+        port     = 8081
+        protocol = "http"
+      }
+    }
+  }
+}
+`, meshName, vgName)
+}
+
+func testAccVirtualGatewayConfig_multipleListenersUpdated(meshName, vgName string) string {
+	return fmt.Sprintf(`
+resource "aws_appmesh_mesh" "test" {
+  name = %[1]q
+}
+
+resource "aws_appmesh_virtual_gateway" "test" {
+  name      = %[2]q
+  mesh_name = aws_appmesh_mesh.test.id
+
+  spec {
+    listener {
+      port_mapping {
+        port     = 8080
+        protocol = "http"
+      }
+    }
+
+    listener {
+      port_mapping {
+        port     = 8081
+        protocol = "http"
+      }
+    }
+
+    listener {
+      port_mapping {
+        port     = 9000
+        protocol = "http"
+      }
+    }
+  }
+}
+`, meshName, vgName)
 }

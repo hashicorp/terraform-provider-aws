@@ -43,6 +43,7 @@ func TestAccAppMesh_serial(t *testing.T) {
 			"listenerHealthChecks":       testAccVirtualGateway_ListenerHealthChecks,
 			"listenerTls":                testAccVirtualGateway_ListenerTLS,
 			"listenerValidation":         testAccVirtualGateway_ListenerValidation,
+			"multipleListeners":          testAccVirtualGateway_multipleListeners,
 			"logging":                    testAccVirtualGateway_Logging,
 			"tags":                       testAccVirtualGateway_Tags,
 		},
