@@ -1,4 +1,5 @@
-## 4.36.1 (Unreleased)
+## 4.37.0 (Unreleased)
+## 4.36.1 (October 21, 2022)
 
 BUG FIXES:
 
