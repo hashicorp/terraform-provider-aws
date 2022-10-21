@@ -211,13 +211,13 @@ resource "aws_customer_gateway" "test" {
 }
 
 resource "aws_vpn_connection" "test" {
-    customer_gateway_id = aws_customer_gateway.test.id
-    type                = "ipsec.1"
+  customer_gateway_id = aws_customer_gateway.test.id
+  type                = "ipsec.1"
 
-    tags = {
-      Name = %[1]q
-    }
+  tags = {
+    Name = %[1]q
   }
+}
 
 resource "aws_networkmanager_global_network" "test" {
   tags = {
@@ -250,26 +250,26 @@ data "aws_networkmanager_core_network_policy_document" "test" {
     action     = "share"
     mode       = "attachment-route"
     segment    = "shared"
-      share_with = ["*"]
+    share_with = ["*"]
   }
 
   attachment_policies {
     rule_number     = 1
     condition_logic = "or"
 
-      conditions {
-        type     = "tag-value"
-        operator = "equals"
-        key      = "segment"
-        value    = "shared"
-      }
+    conditions {
+      type     = "tag-value"
+      operator = "equals"
+      key      = "segment"
+      value    = "shared"
+    }
 
-      action {
-        association_method = "constant"
-        segment            = "shared"
-      }
+    action {
+      association_method = "constant"
+      segment            = "shared"
+    }
   }
- }
+}
 `, rName, bgpASN, vpnIP))
 }
 
@@ -278,9 +278,9 @@ func testAccVpnAttachmentConfig_basic(rName string, bgpASN int, vpnIP string) st
 resource "aws_networkmanager_vpn_attachment" "test" {
   core_network_id = awscc_networkmanager_core_network.test.id
   vpn_arn         = aws_vpn_connection.test.arn
-	tags = {
-		segment = "shared"
-	}
+  tags = {
+    segment = "shared"
+  }
 }
 
 resource "aws_networkmanager_attachment_accepter" "test" {
