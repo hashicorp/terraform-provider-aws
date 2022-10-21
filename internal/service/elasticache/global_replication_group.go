@@ -247,7 +247,7 @@ func resourceGlobalReplicationGroupCreate(ctx context.Context, d *schema.Resourc
 		input.GlobalReplicationGroupDescription = aws.String(v.(string))
 	}
 
-	output, err := conn.CreateGlobalReplicationGroup(input)
+	output, err := conn.CreateGlobalReplicationGroupWithContext(ctx, input)
 	if err != nil {
 		return diag.Errorf("creating ElastiCache Global Replication Group (%s): %s", id, err)
 	}
@@ -258,7 +258,7 @@ func resourceGlobalReplicationGroupCreate(ctx context.Context, d *schema.Resourc
 
 	d.SetId(aws.StringValue(output.GlobalReplicationGroup.GlobalReplicationGroupId))
 
-	globalReplicationGroup, err := WaitGlobalReplicationGroupAvailable(conn, d.Id(), GlobalReplicationGroupDefaultCreatedTimeout)
+	globalReplicationGroup, err := waitGlobalReplicationGroupAvailable(ctx, conn, d.Id(), GlobalReplicationGroupDefaultCreatedTimeout)
 	if err != nil {
 		return diag.Errorf("waiting for ElastiCache Global Replication Group (%s) creation: %s", d.Id(), err)
 	}
@@ -267,7 +267,7 @@ func resourceGlobalReplicationGroupCreate(ctx context.Context, d *schema.Resourc
 		if v := v.(bool); v == flattenGlobalReplicationGroupAutomaticFailoverEnabled(globalReplicationGroup.Members) {
 			log.Printf("[DEBUG] Not updating ElastiCache Global Replication Group (%s) automatic failover: no change from %t", d.Id(), v)
 		} else {
-			if err := updateGlobalReplicationGroup(conn, d.Id(), globalReplicationAutomaticFailoverUpdater(v)); err != nil {
+			if err := updateGlobalReplicationGroup(ctx, conn, d.Id(), globalReplicationAutomaticFailoverUpdater(v)); err != nil {
 				return diag.Errorf("updating ElastiCache Global Replication Group (%s) automatic failover on creation: %s", d.Id(), err)
 			}
 		}
@@ -277,7 +277,7 @@ func resourceGlobalReplicationGroupCreate(ctx context.Context, d *schema.Resourc
 		if v.(string) == aws.StringValue(globalReplicationGroup.CacheNodeType) {
 			log.Printf("[DEBUG] Not updating ElastiCache Global Replication Group (%s) node type: no change from %q", d.Id(), v)
 		} else {
-			if err := updateGlobalReplicationGroup(conn, d.Id(), globalReplicationGroupNodeTypeUpdater(v.(string))); err != nil {
+			if err := updateGlobalReplicationGroup(ctx, conn, d.Id(), globalReplicationGroupNodeTypeUpdater(v.(string))); err != nil {
 				return diag.Errorf("updating ElastiCache Global Replication Group (%s) node type on creation: %s", d.Id(), err)
 			}
 		}
@@ -300,7 +300,7 @@ func resourceGlobalReplicationGroupCreate(ctx context.Context, d *schema.Resourc
 		p := d.Get("parameter_group_name").(string)
 
 		if diff[0] == 1 {
-			err := updateGlobalReplicationGroup(conn, d.Id(), globalReplicationGroupEngineVersionMajorUpdater(v.(string), p))
+			err := updateGlobalReplicationGroup(ctx, conn, d.Id(), globalReplicationGroupEngineVersionMajorUpdater(v.(string), p))
 			if err != nil {
 				return diag.Errorf("updating ElastiCache Global Replication Group (%s) engine version on creation: %s", d.Id(), err)
 			}
@@ -309,7 +309,7 @@ func resourceGlobalReplicationGroupCreate(ctx context.Context, d *schema.Resourc
 				return diag.Errorf("cannot change parameter group name on minor engine version upgrade, upgrading from %s to %s", engineVersion.String(), requestedVersion.String())
 			}
 			if t, _ := regexp.MatchString(`[6-9]\.x`, v.(string)); !t {
-				err := updateGlobalReplicationGroup(conn, d.Id(), globalReplicationGroupEngineVersionMinorUpdater(v.(string)))
+				err := updateGlobalReplicationGroup(ctx, conn, d.Id(), globalReplicationGroupEngineVersionMinorUpdater(v.(string)))
 				if err != nil {
 					return diag.Errorf("updating ElastiCache Global Replication Group (%s) engine version on creation: %s", d.Id(), err)
 				}
@@ -323,7 +323,7 @@ func resourceGlobalReplicationGroupCreate(ctx context.Context, d *schema.Resourc
 func resourceGlobalReplicationGroupRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).ElastiCacheConn
 
-	globalReplicationGroup, err := FindGlobalReplicationGroupByID(conn, d.Id())
+	globalReplicationGroup, err := FindGlobalReplicationGroupByID(ctx, conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] ElastiCache Global Replication Group (%s) not found, removing from state", d.Id())
 		d.SetId("")
@@ -368,13 +368,13 @@ func resourceGlobalReplicationGroupUpdate(ctx context.Context, d *schema.Resourc
 
 	// Only one field can be changed per request
 	if d.HasChange("cache_node_type") {
-		if err := updateGlobalReplicationGroup(conn, d.Id(), globalReplicationGroupNodeTypeUpdater(d.Get("cache_node_type").(string))); err != nil {
+		if err := updateGlobalReplicationGroup(ctx, conn, d.Id(), globalReplicationGroupNodeTypeUpdater(d.Get("cache_node_type").(string))); err != nil {
 			return diag.Errorf("updating ElastiCache Global Replication Group (%s) node type: %s", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("automatic_failover_enabled") {
-		if err := updateGlobalReplicationGroup(conn, d.Id(), globalReplicationAutomaticFailoverUpdater(d.Get("automatic_failover_enabled").(bool))); err != nil {
+		if err := updateGlobalReplicationGroup(ctx, conn, d.Id(), globalReplicationAutomaticFailoverUpdater(d.Get("automatic_failover_enabled").(bool))); err != nil {
 			return diag.Errorf("updating ElastiCache Global Replication Group (%s) automatic failover: %s", d.Id(), err)
 		}
 	}
@@ -388,12 +388,12 @@ func resourceGlobalReplicationGroupUpdate(ctx context.Context, d *schema.Resourc
 		diff := diffVersion(newVersion, oldVersion)
 		if diff[0] == 1 {
 			p := d.Get("parameter_group_name").(string)
-			err := updateGlobalReplicationGroup(conn, d.Id(), globalReplicationGroupEngineVersionMajorUpdater(n.(string), p))
+			err := updateGlobalReplicationGroup(ctx, conn, d.Id(), globalReplicationGroupEngineVersionMajorUpdater(n.(string), p))
 			if err != nil {
 				return diag.Errorf("updating ElastiCache Global Replication Group (%s): %s", d.Id(), err)
 			}
 		} else if diff[1] == 1 {
-			err := updateGlobalReplicationGroup(conn, d.Id(), globalReplicationGroupEngineVersionMinorUpdater(n.(string)))
+			err := updateGlobalReplicationGroup(ctx, conn, d.Id(), globalReplicationGroupEngineVersionMinorUpdater(n.(string)))
 			if err != nil {
 				return diag.Errorf("updating ElastiCache Global Replication Group (%s): %s", d.Id(), err)
 			}
@@ -401,7 +401,7 @@ func resourceGlobalReplicationGroupUpdate(ctx context.Context, d *schema.Resourc
 	}
 
 	if d.HasChange("global_replication_group_description") {
-		if err := updateGlobalReplicationGroup(conn, d.Id(), globalReplicationGroupDescriptionUpdater(d.Get("global_replication_group_description").(string))); err != nil {
+		if err := updateGlobalReplicationGroup(ctx, conn, d.Id(), globalReplicationGroupDescriptionUpdater(d.Get("global_replication_group_description").(string))); err != nil {
 			return diag.Errorf("updating ElastiCache Global Replication Group (%s) description: %s", d.Id(), err)
 		}
 	}
@@ -440,18 +440,18 @@ func globalReplicationGroupNodeTypeUpdater(nodeType string) globalReplicationGro
 	}
 }
 
-func updateGlobalReplicationGroup(conn *elasticache.ElastiCache, id string, f globalReplicationGroupUpdater) error {
+func updateGlobalReplicationGroup(ctx context.Context, conn *elasticache.ElastiCache, id string, f globalReplicationGroupUpdater) error {
 	input := &elasticache.ModifyGlobalReplicationGroupInput{
 		ApplyImmediately:         aws.Bool(true),
 		GlobalReplicationGroupId: aws.String(id),
 	}
 	f(input)
 
-	if _, err := conn.ModifyGlobalReplicationGroup(input); err != nil {
+	if _, err := conn.ModifyGlobalReplicationGroupWithContext(ctx, input); err != nil {
 		return err
 	}
 
-	if _, err := WaitGlobalReplicationGroupAvailable(conn, id, GlobalReplicationGroupDefaultUpdatedTimeout); err != nil {
+	if _, err := waitGlobalReplicationGroupAvailable(ctx, conn, id, GlobalReplicationGroupDefaultUpdatedTimeout); err != nil {
 		return fmt.Errorf("waiting for completion: %w", err)
 	}
 
@@ -462,7 +462,7 @@ func resourceGlobalReplicationGroupDelete(ctx context.Context, d *schema.Resourc
 	conn := meta.(*conns.AWSClient).ElastiCacheConn
 
 	// Using Update timeout because the Global Replication Group could be in the middle of an update operation
-	err := DeleteGlobalReplicationGroup(conn, d.Id(), GlobalReplicationGroupDefaultUpdatedTimeout)
+	err := deleteGlobalReplicationGroup(ctx, conn, d.Id(), GlobalReplicationGroupDefaultUpdatedTimeout)
 	if err != nil {
 		return diag.Errorf("deleting ElastiCache Global Replication Group: %s", err)
 	}
@@ -470,14 +470,14 @@ func resourceGlobalReplicationGroupDelete(ctx context.Context, d *schema.Resourc
 	return nil
 }
 
-func DeleteGlobalReplicationGroup(conn *elasticache.ElastiCache, id string, readyTimeout time.Duration) error {
+func deleteGlobalReplicationGroup(ctx context.Context, conn *elasticache.ElastiCache, id string, readyTimeout time.Duration) error {
 	input := &elasticache.DeleteGlobalReplicationGroupInput{
 		GlobalReplicationGroupId:      aws.String(id),
 		RetainPrimaryReplicationGroup: aws.Bool(true),
 	}
 
-	err := resource.Retry(readyTimeout, func() *resource.RetryError {
-		_, err := conn.DeleteGlobalReplicationGroup(input)
+	err := resource.RetryContext(ctx, readyTimeout, func() *resource.RetryError {
+		_, err := conn.DeleteGlobalReplicationGroupWithContext(ctx, input)
 		if tfawserr.ErrCodeEquals(err, elasticache.ErrCodeGlobalReplicationGroupNotFoundFault) {
 			return resource.NonRetryableError(&resource.NotFoundError{
 				LastError:   err,
@@ -494,7 +494,7 @@ func DeleteGlobalReplicationGroup(conn *elasticache.ElastiCache, id string, read
 		return nil
 	})
 	if tfresource.TimedOut(err) {
-		_, err = conn.DeleteGlobalReplicationGroup(input)
+		_, err = conn.DeleteGlobalReplicationGroupWithContext(ctx, input)
 	}
 	if tfresource.NotFound(err) {
 		return nil
@@ -503,7 +503,7 @@ func DeleteGlobalReplicationGroup(conn *elasticache.ElastiCache, id string, read
 		return err
 	}
 
-	if _, err := WaitGlobalReplicationGroupDeleted(conn, id); err != nil {
+	if _, err := WaitGlobalReplicationGroupDeleted(ctx, conn, id); err != nil {
 		return fmt.Errorf("waiting for completion: %w", err)
 	}
 
