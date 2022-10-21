@@ -34,7 +34,7 @@ data "aws_outposts_assets" "example" {
 ```terraform
 data "aws_outposts_assets" "example" {
   arn              = data.aws_outposts_outpost.example.arn
-  status_id_filter = ["ACTIVE]
+  status_id_filter = ["ACTIVE"]
 }
 ```
 
