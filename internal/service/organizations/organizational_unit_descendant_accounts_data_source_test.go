@@ -25,8 +25,8 @@ func testAccOrganizationalUnitDescendantAccountsDataSource_basic(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckOrganizationsAccount(t)
 		},
-		ErrorCheck: acctest.ErrorCheck(t, organizations.EndpointsID),
-		Providers:  acctest.Providers,
+		ErrorCheck:               acctest.ErrorCheck(t, organizations.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrganizationalUnitDescendantAccountsDataSourceConfig(address1, address2, address3),
