@@ -1,4 +1,9 @@
 ## 4.37.0 (Unreleased)
+
+BUG FIXES:
+
+* data-source/aws_default_tags: Fix regression setting `tags` to `null` instead of an empty map (`{}`) when no `default_tags` are defined ([#27377](https://github.com/hashicorp/terraform-provider-aws/issues/27377))
+
 ## 4.36.0 (October 20, 2022)
 
 FEATURES:
