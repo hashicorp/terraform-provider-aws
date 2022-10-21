@@ -9,6 +9,9 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* resource/aws_appmesh_virtual_node: Allow for multiple `listener` blocks ([#26380](https://github.com/hashicorp/terraform-provider-aws/issues/26380))
+* resource/aws_appmesh_virtual_router: Allow for multiple `listener` blocks ([#26380](https://github.com/hashicorp/terraform-provider-aws/issues/26380))
+* resource/aws_appmesh_virtual_gateway: Allow for multiple `listener` blocks ([#26380](https://github.com/hashicorp/terraform-provider-aws/issues/26380))
 * resource/aws_lightsail_container_service: Add `private_registry_access` argument ([#27236](https://github.com/hashicorp/terraform-provider-aws/issues/27236))
 * resource/aws_mq_broker: Add configurable timeouts ([#27035](https://github.com/hashicorp/terraform-provider-aws/issues/27035))
 * resource/aws_rum_app_monitor: Add `app_monitor_id` attribute ([#26994](https://github.com/hashicorp/terraform-provider-aws/issues/26994))
