@@ -21,7 +21,6 @@ func DataSourceFirewallResourcePolicy() *schema.Resource {
 				ValidateFunc: verify.ValidARN,
 			},
 			"policy": {
-				// No validation needed since policy JSON is returned from call
 				Type:     schema.TypeString,
 				Computed: true,
 			},

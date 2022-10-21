@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccNetworkFirewallFirewallResourcePolicyDataSource(t *testing.T) {
+func TestAccNetworkFirewallFirewallResourcePolicyDataSource_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_resource_policy.test"
 
