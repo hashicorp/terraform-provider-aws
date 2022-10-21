@@ -204,17 +204,17 @@ resource "aws_security_group" "test" {
 }
 
 func testAccVPCConnectorConfig_basic(rName string) string {
-	return testAccVPCConnectorConfig_base(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccVPCConnectorConfig_base(rName), fmt.Sprintf(`
 resource "aws_apprunner_vpc_connector" "test" {
   vpc_connector_name = %[1]q
   subnets            = [aws_subnet.test.id]
   security_groups    = [aws_security_group.test.id]
 }
-`, rName)
+`, rName))
 }
 
 func testAccVPCConnectorConfig_tags1(rName string, tagKey1 string, tagValue1 string) string {
-	return testAccVPCConnectorConfig_base(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccVPCConnectorConfig_base(rName), fmt.Sprintf(`
 resource "aws_apprunner_vpc_connector" "test" {
   vpc_connector_name = %[1]q
   subnets            = [aws_subnet.test.id]
@@ -224,22 +224,22 @@ resource "aws_apprunner_vpc_connector" "test" {
     %[2]q = %[3]q
   }
 }
-`, rName, tagKey1, tagValue1)
+`, rName, tagKey1, tagValue1))
 }
 
 func testAccVPCConnectorConfig_tags2(rName string, tagKey1 string, tagValue1 string, tagKey2 string, tagValue2 string) string {
-	return testAccVPCConnectorConfig_base(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccVPCConnectorConfig_base(rName), fmt.Sprintf(`
 resource "aws_apprunner_vpc_connector" "test" {
-	vpc_connector_name = %[1]q
-	subnets            = [aws_subnet.test.id]
-	security_groups    = [aws_security_group.test.id]
+  vpc_connector_name = %[1]q
+  subnets            = [aws_subnet.test.id]
+  security_groups    = [aws_security_group.test.id]
 
-	tags = {
-		%[2]q = %[3]q
-		%[4]q = %[5]q
-	}
+  tags = {
+	%[2]q = %[3]q
+	%[4]q = %[5]q
+  }
 }
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }
 
 func testAccPreCheckVPCConnector(t *testing.T) {
