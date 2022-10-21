@@ -152,7 +152,8 @@ func TestAccNetworkFirewallRuleGroup_Basic_rules(t *testing.T) {
 	var ruleGroup networkfirewall.DescribeRuleGroupOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_rule_group.test"
-	rules := `alert http any any -> any any (http_response_line; content:"403 Forbidden"; sid:1;)`
+	rules := `#test comment
+alert http any any -> any any (http_response_line; content:"403 Forbidden"; sid:1;)`
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
