@@ -20,13 +20,19 @@ import (
 
 func ResourceProject() *schema.Resource {
 	return &schema.Resource{
-		CreateWithoutTimeout: resourceProjectCreate,
-		ReadWithoutTimeout:   resourceProjectRead,
-		UpdateWithoutTimeout: resourceProjectUpdate,
-		DeleteWithoutTimeout: resourceProjectDelete,
+		CreateContext: resourceProjectCreate,
+		ReadContext:   resourceProjectRead,
+		UpdateContext: resourceProjectUpdate,
+		DeleteContext: resourceProjectDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
+		},
+
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(2 * time.Minute),
+			Update: schema.DefaultTimeout(2 * time.Minute),
+			Delete: schema.DefaultTimeout(2 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -176,6 +182,10 @@ func resourceProjectCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 	d.SetId(aws.StringValue(output.Project.Name))
 
+	if _, err := waitProjectCreated(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return diag.Errorf("waiting for CloudWatch Evidently Project (%s) creation: %s", d.Id(), err)
+	}
+
 	return resourceProjectRead(ctx, d, meta)
 }
 
@@ -184,7 +194,7 @@ func resourceProjectRead(ctx context.Context, d *schema.ResourceData, meta inter
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	project, err := FindProjectByName(ctx, conn, d.Id())
+	project, err := FindProjectByNameOrARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] CloudWatch Evidently Project (%s) not found, removing from state", d.Id())
@@ -214,7 +224,6 @@ func resourceProjectRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 	tags := KeyValueTags(project.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
-	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
 		return diag.Errorf("setting tags: %s", err)
 	}
@@ -241,6 +250,10 @@ func resourceProjectUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 		if err != nil {
 			return diag.Errorf("updating CloudWatch Evidently Project (%s): %s", d.Id(), err)
+		}
+
+		if _, err := waitProjectUpdated(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return diag.Errorf("waiting for CloudWatch Evidently Project (%s) update: %s", d.Id(), err)
 		}
 	}
 
@@ -271,6 +284,10 @@ func resourceProjectUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		if err != nil {
 			return diag.Errorf("updating CloudWatch Evidently Project (%s) data delivery: %s", d.Id(), err)
 		}
+
+		if _, err := waitProjectUpdated(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return diag.Errorf("waiting for CloudWatch Evidently Project (%s) update: %s", d.Id(), err)
+		}
 	}
 
 	// updates to tags
@@ -299,6 +316,10 @@ func resourceProjectDelete(ctx context.Context, d *schema.ResourceData, meta int
 
 	if err != nil {
 		return diag.Errorf("deleting CloudWatch Evidently Project (%s): %s", d.Id(), err)
+	}
+
+	if _, err := waitProjectDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return diag.Errorf("waiting for CloudWatch Evidently Project (%s) deletion: %s", d.Id(), err)
 	}
 
 	return nil
