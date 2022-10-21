@@ -1729,18 +1729,23 @@ func flattenVirtualRouterSpec(spec *appmesh.VirtualRouterSpec) []interface{} {
 		return []interface{}{}
 	}
 	mSpec := make(map[string]interface{})
-	if spec.Listeners != nil && spec.Listeners[0] != nil {
-		// Per schema definition, set at most 1 Listener
-		listener := spec.Listeners[0]
-		mListener := make(map[string]interface{})
-		if listener.PortMapping != nil {
-			mPortMapping := map[string]interface{}{
-				"port":     int(aws.Int64Value(listener.PortMapping.Port)),
-				"protocol": aws.StringValue(listener.PortMapping.Protocol),
+
+	if listeners := spec.Listeners; listeners != nil && spec.Listeners[0] != nil {
+		vListeners := []interface{}{}
+
+		for _, listener := range listeners {
+			mListener := make(map[string]interface{})
+			if listener.PortMapping != nil {
+				mPortMapping := map[string]interface{}{
+					"port":     int(aws.Int64Value(listener.PortMapping.Port)),
+					"protocol": aws.StringValue(listener.PortMapping.Protocol),
+				}
+				mListener["port_mapping"] = []interface{}{mPortMapping}
 			}
-			mListener["port_mapping"] = []interface{}{mPortMapping}
+			vListeners = append(vListeners, mListener)
 		}
-		mSpec["listener"] = []interface{}{mListener}
+
+		mSpec["listener"] = vListeners
 	}
 
 	return []interface{}{mSpec}
