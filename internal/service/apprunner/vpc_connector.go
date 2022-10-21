@@ -185,7 +185,7 @@ func resourceVPCConnectorUpdate(ctx context.Context, d *schema.ResourceData, met
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return diag.FromErr(fmt.Errorf("error updating App Runner vpc Connector (%s) tags: %s", d.Get("arn").(string), err))
+			return diag.Errorf("error updating App Runner vpc Connector (%s) tags: %s", d.Get("arn").(string), err)
 		}
 	}
 
