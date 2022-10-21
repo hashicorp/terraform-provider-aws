@@ -213,7 +213,7 @@ resource "aws_apprunner_vpc_connector" "test" {
 `, rName))
 }
 
-func testAccVPCConnectorConfig_tags1(rName string, tagKey1 string, tagValue1 string) string {
+func testAccVPCConnectorConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(testAccVPCConnectorConfig_base(rName), fmt.Sprintf(`
 resource "aws_apprunner_vpc_connector" "test" {
   vpc_connector_name = %[1]q
@@ -227,7 +227,7 @@ resource "aws_apprunner_vpc_connector" "test" {
 `, rName, tagKey1, tagValue1))
 }
 
-func testAccVPCConnectorConfig_tags2(rName string, tagKey1 string, tagValue1 string, tagKey2 string, tagValue2 string) string {
+func testAccVPCConnectorConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return acctest.ConfigCompose(testAccVPCConnectorConfig_base(rName), fmt.Sprintf(`
 resource "aws_apprunner_vpc_connector" "test" {
   vpc_connector_name = %[1]q
@@ -235,8 +235,8 @@ resource "aws_apprunner_vpc_connector" "test" {
   security_groups    = [aws_security_group.test.id]
 
   tags = {
-	%[2]q = %[3]q
-	%[4]q = %[5]q
+    %[2]q = %[3]q
+    %[4]q = %[5]q
   }
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2))
