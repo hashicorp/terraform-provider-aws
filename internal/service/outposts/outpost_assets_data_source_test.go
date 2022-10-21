@@ -1,6 +1,7 @@
 package outposts_test
 
 import (
+	"fmt"
 	"os"
 	"regexp"
 	"testing"
@@ -57,7 +58,7 @@ func TestAccOutpostsAssetsDataSource_statusFilter(t *testing.T) {
 }
 
 func TestAccOutpostsAssetsDataSource_hostFilter(t *testing.T) {
-	key := "OUTPOST_HOST_ID"
+	key := "OUTPOST_HOST_ID" // Ex. "h-x38g5n0yd2a0ueb61"
 	outpostHostId := os.Getenv(key)
 	if outpostHostId == "" {
 		t.Skipf("Environment variable %s is not set", key)
@@ -70,7 +71,7 @@ func TestAccOutpostsAssetsDataSource_hostFilter(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOutpostAssetsDataSourceConfig_hostFilter(),
+				Config: testAccOutpostAssetsDataSourceConfig_hostFilter(outpostHostId),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckTypeSetElemAttr(dataSourceName, "host_id_filter.*", outpostHostId),
 				),
@@ -86,7 +87,6 @@ data "aws_outposts_outposts" "test" {}
 data "aws_outposts_assets" "test" {
   arn = tolist(data.aws_outposts_outposts.test.arns)[0]
 }
-
 `
 }
 
@@ -101,12 +101,12 @@ data "aws_outposts_assets" "source" {
 data "aws_outposts_assets" "test" {
   arn              = data.aws_outposts_assets.source.arn
   status_id_filter = ["ACTIVE"]
-  }
+}
 `
 }
 
-func testAccOutpostAssetsDataSourceConfig_hostFilter() string {
-	return `
+func testAccOutpostAssetsDataSourceConfig_hostFilter(outpostHostId string) string {
+	return fmt.Sprintf(`
 data "aws_outposts_outposts" "test" {}
 
 data "aws_outposts_assets" "source" {
@@ -115,7 +115,7 @@ data "aws_outposts_assets" "source" {
 
 data "aws_outposts_assets" "test" {
   arn            = data.aws_outposts_assets.source.arn
-  host_id_filter = ["h-x38g5n0yd2a0ueb61"]
-  }
-`
+  host_id_filter = [%[1]q]
+}
+`, outpostHostId)
 }
