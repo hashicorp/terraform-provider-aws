@@ -68,6 +68,10 @@ In addition to all arguments above, the following attributes are exported:
 * `body` - Object data (see **limitations above** to understand cases in which this field is actually available)
 * `bucket_key_enabled` - (Optional) Whether or not to use [Amazon S3 Bucket Keys](https://docs.aws.amazon.com/AmazonS3/latest/dev/bucket-key.html) for SSE-KMS.
 * `cache_control` - Caching behavior along the request/reply chain.
+* `checksum_crc32` - The checksum value of the object, if object additional checksum algorithm is `CRC32`.
+* `checksum_crc32c` - The checksum value of the object, if object additional checksum algorithm is `CRC32C`.
+* `checksum_sha1` -The checksum value of the object, if object additional checksum algorithm is `SHA1`.
+* `checksum_sha256` - The checksum value of the object, if object additional checksum algorithm is `SHA256`.
 * `content_disposition` - Presentational information for the object.
 * `content_encoding` - What content encodings have been applied to the object and thus what decoding mechanisms must be applied to obtain the media-type referenced by the Content-Type header field.
 * `content_language` - Language the content is in.
