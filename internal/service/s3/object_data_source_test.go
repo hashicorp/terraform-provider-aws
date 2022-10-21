@@ -230,6 +230,11 @@ func TestAccS3ObjectDataSource_allParams(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "object_lock_legal_hold_status", resourceName, "object_lock_legal_hold_status"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "object_lock_mode", resourceName, "object_lock_mode"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "object_lock_retain_until_date", resourceName, "object_lock_retain_until_date"),
+					// Additional checksum algorithm
+					resource.TestCheckResourceAttrPair(dataSourceName, "checksum_crc32", resourceName, "checksum_crc32"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "checksum_crc32c", resourceName, "checksum_crc32c"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "checksum_sha1", resourceName, "checksum_sha1"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "checksum_sha256", resourceName, "checksum_sha256"),
 				),
 			},
 		},
@@ -423,6 +428,150 @@ func TestAccS3ObjectDataSource_singleSlashAsKey(t *testing.T) {
 				Config: testAccObjectDataSourceConfig_singleSlashAsKey(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckObjectExistsDataSource(dataSourceName, &dsObj),
+				),
+			},
+		},
+	})
+}
+
+func TestAccS3ObjectDataSource_checksumCRC32(t *testing.T) {
+	rInt := sdkacctest.RandInt()
+
+	var rObj s3.GetObjectOutput
+	var dsObj s3.GetObjectOutput
+
+	resourceName := "aws_s3_object.object"
+	dataSourceName := "data.aws_s3_object.obj"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                  func() { acctest.PreCheck(t) },
+		ErrorCheck:                acctest.ErrorCheck(t, s3.EndpointsID),
+		ProtoV5ProviderFactories:  acctest.ProtoV5ProviderFactories,
+		PreventPostDestroyRefresh: true,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccObjectDataSourceConfig_checksum(rInt, s3.ChecksumAlgorithmCrc32),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckObjectExists(resourceName, &rObj),
+					testAccCheckObjectExistsDataSource(dataSourceName, &dsObj),
+					resource.TestCheckResourceAttr(dataSourceName, "content_length", "11"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "content_type", resourceName, "content_type"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "etag", resourceName, "etag"),
+					resource.TestMatchResourceAttr(dataSourceName, "last_modified", regexp.MustCompile(rfc1123RegexPattern)),
+					resource.TestCheckResourceAttrPair(dataSourceName, "object_lock_legal_hold_status", resourceName, "object_lock_legal_hold_status"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "object_lock_mode", resourceName, "object_lock_mode"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "object_lock_retain_until_date", resourceName, "object_lock_retain_until_date"),
+					resource.TestCheckNoResourceAttr(dataSourceName, "body"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "checksum_crc32", resourceName, "checksum_crc32"),
+					resource.TestCheckResourceAttr(dataSourceName, "checksum_crc32", "ShexVg=="),
+				),
+			},
+		},
+	})
+}
+
+func TestAccS3ObjectDataSource_checksumCRC32C(t *testing.T) {
+	rInt := sdkacctest.RandInt()
+
+	var rObj s3.GetObjectOutput
+	var dsObj s3.GetObjectOutput
+
+	resourceName := "aws_s3_object.object"
+	dataSourceName := "data.aws_s3_object.obj"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                  func() { acctest.PreCheck(t) },
+		ErrorCheck:                acctest.ErrorCheck(t, s3.EndpointsID),
+		ProtoV5ProviderFactories:  acctest.ProtoV5ProviderFactories,
+		PreventPostDestroyRefresh: true,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccObjectDataSourceConfig_checksum(rInt, s3.ChecksumAlgorithmCrc32c),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckObjectExists(resourceName, &rObj),
+					testAccCheckObjectExistsDataSource(dataSourceName, &dsObj),
+					resource.TestCheckResourceAttr(dataSourceName, "content_length", "11"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "content_type", resourceName, "content_type"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "etag", resourceName, "etag"),
+					resource.TestMatchResourceAttr(dataSourceName, "last_modified", regexp.MustCompile(rfc1123RegexPattern)),
+					resource.TestCheckResourceAttrPair(dataSourceName, "object_lock_legal_hold_status", resourceName, "object_lock_legal_hold_status"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "object_lock_mode", resourceName, "object_lock_mode"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "object_lock_retain_until_date", resourceName, "object_lock_retain_until_date"),
+					resource.TestCheckNoResourceAttr(dataSourceName, "body"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "checksum_crc32c", resourceName, "checksum_crc32c"),
+					resource.TestCheckResourceAttr(dataSourceName, "checksum_crc32c", "aR2qLw=="),
+				),
+			},
+		},
+	})
+}
+
+func TestAccS3ObjectDataSource_checksumSHA1(t *testing.T) {
+	rInt := sdkacctest.RandInt()
+
+	var rObj s3.GetObjectOutput
+	var dsObj s3.GetObjectOutput
+
+	resourceName := "aws_s3_object.object"
+	dataSourceName := "data.aws_s3_object.obj"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                  func() { acctest.PreCheck(t) },
+		ErrorCheck:                acctest.ErrorCheck(t, s3.EndpointsID),
+		ProtoV5ProviderFactories:  acctest.ProtoV5ProviderFactories,
+		PreventPostDestroyRefresh: true,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccObjectDataSourceConfig_checksum(rInt, s3.ChecksumAlgorithmSha1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckObjectExists(resourceName, &rObj),
+					testAccCheckObjectExistsDataSource(dataSourceName, &dsObj),
+					resource.TestCheckResourceAttr(dataSourceName, "content_length", "11"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "content_type", resourceName, "content_type"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "etag", resourceName, "etag"),
+					resource.TestMatchResourceAttr(dataSourceName, "last_modified", regexp.MustCompile(rfc1123RegexPattern)),
+					resource.TestCheckResourceAttrPair(dataSourceName, "object_lock_legal_hold_status", resourceName, "object_lock_legal_hold_status"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "object_lock_mode", resourceName, "object_lock_mode"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "object_lock_retain_until_date", resourceName, "object_lock_retain_until_date"),
+					resource.TestCheckNoResourceAttr(dataSourceName, "body"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "checksum_sha1", resourceName, "checksum_sha1"),
+					resource.TestCheckResourceAttr(dataSourceName, "checksum_sha1", "Ck1VqNd45QIvq3AZd8XYQLvEhtA="),
+				),
+			},
+		},
+	})
+}
+
+func TestAccS3ObjectDataSource_checksumSHA256(t *testing.T) {
+	rInt := sdkacctest.RandInt()
+
+	var rObj s3.GetObjectOutput
+	var dsObj s3.GetObjectOutput
+
+	resourceName := "aws_s3_object.object"
+	dataSourceName := "data.aws_s3_object.obj"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                  func() { acctest.PreCheck(t) },
+		ErrorCheck:                acctest.ErrorCheck(t, s3.EndpointsID),
+		ProtoV5ProviderFactories:  acctest.ProtoV5ProviderFactories,
+		PreventPostDestroyRefresh: true,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccObjectDataSourceConfig_checksum(rInt, s3.ChecksumAlgorithmSha256),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckObjectExists(resourceName, &rObj),
+					testAccCheckObjectExistsDataSource(dataSourceName, &dsObj),
+					resource.TestCheckResourceAttr(dataSourceName, "content_length", "11"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "content_type", resourceName, "content_type"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "etag", resourceName, "etag"),
+					resource.TestMatchResourceAttr(dataSourceName, "last_modified", regexp.MustCompile(rfc1123RegexPattern)),
+					resource.TestCheckResourceAttrPair(dataSourceName, "object_lock_legal_hold_status", resourceName, "object_lock_legal_hold_status"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "object_lock_mode", resourceName, "object_lock_mode"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "object_lock_retain_until_date", resourceName, "object_lock_retain_until_date"),
+					resource.TestCheckNoResourceAttr(dataSourceName, "body"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "checksum_sha256", resourceName, "checksum_sha256"),
+					resource.TestCheckResourceAttr(dataSourceName, "checksum_sha256", "pZGm1Av0IEBKARczz7exkNYsZb8LzaMrV7J32a2fFG4="),
 				),
 			},
 		},
@@ -770,4 +919,24 @@ data "aws_s3_object" "test" {
   key    = "/"
 }
 `, rName)
+}
+
+func testAccObjectDataSourceConfig_checksum(randInt int, algorithm string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "object_bucket" {
+  bucket = "tf-object-test-bucket-%[1]d"
+}
+
+resource "aws_s3_object" "object" {
+  bucket             = aws_s3_bucket.object_bucket.bucket
+  key                = "tf-testing-obj-%[1]d"
+  content            = "Hello World"
+  checksum_algorithm = %[2]q
+}
+
+data "aws_s3_object" "obj" {
+  bucket = aws_s3_bucket.object_bucket.bucket
+  key    = aws_s3_object.object.key
+}
+`, randInt, algorithm)
 }

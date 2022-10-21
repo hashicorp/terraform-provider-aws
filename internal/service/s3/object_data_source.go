@@ -37,6 +37,22 @@ func DataSourceObject() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"checksum_crc32": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"checksum_crc32c": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"checksum_sha1": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"checksum_sha256": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"content_disposition": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -133,8 +149,9 @@ func dataSourceObjectRead(d *schema.ResourceData, meta interface{}) error {
 	key := d.Get("key").(string)
 
 	input := s3.HeadObjectInput{
-		Bucket: aws.String(bucket),
-		Key:    aws.String(key),
+		Bucket:       aws.String(bucket),
+		Key:          aws.String(key),
+		ChecksumMode: aws.String(s3.ChecksumModeEnabled),
 	}
 	if v, ok := d.GetOk("range"); ok {
 		input.Range = aws.String(v.(string))
@@ -165,6 +182,10 @@ func dataSourceObjectRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("bucket_key_enabled", out.BucketKeyEnabled)
 	d.Set("cache_control", out.CacheControl)
+	d.Set("checksum_crc32", out.ChecksumCRC32)
+	d.Set("checksum_crc32c", out.ChecksumCRC32C)
+	d.Set("checksum_sha1", out.ChecksumSHA1)
+	d.Set("checksum_sha256", out.ChecksumSHA256)
 	d.Set("content_disposition", out.ContentDisposition)
 	d.Set("content_encoding", out.ContentEncoding)
 	d.Set("content_language", out.ContentLanguage)
