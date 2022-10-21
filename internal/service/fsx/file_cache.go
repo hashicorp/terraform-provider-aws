@@ -300,6 +300,8 @@ const (
 
 func resourceFileCacheCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).FSxConn
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &fsx.CreateFileCacheInput{
 		ClientRequestToken:   aws.String(resource.UniqueId()),
@@ -323,15 +325,12 @@ func resourceFileCacheCreate(ctx context.Context, d *schema.ResourceData, meta i
 	if v, ok := d.GetOk("security_group_ids"); ok {
 		input.SecurityGroupIds = flex.ExpandStringList(v.([]interface{}))
 	}
-
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
-
 	if len(tags) > 0 {
 		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
 	result, err := conn.CreateFileCacheWithContext(ctx, input)
+
 	if err != nil {
 		return create.DiagError(names.FSx, create.ErrActionCreating, ResNameFileCache, "", err)
 	}
@@ -416,38 +415,33 @@ func resourceFileCacheUpdate(ctx context.Context, d *schema.ResourceData, meta i
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(conn, d.Get("resource_arn").(string), o, n); err != nil {
 			return create.DiagError(names.FSx, create.ErrActionUpdating, ResNameFileCache, d.Id(), err)
 		}
 	}
 
-	update := false
+	if d.HasChangesExcept("tags_all") {
+		input := &fsx.UpdateFileCacheInput{
+			ClientRequestToken:  aws.String(resource.UniqueId()),
+			FileCacheId:         aws.String(d.Id()),
+			LustreConfiguration: &fsx.UpdateFileCacheLustreConfiguration{},
+		}
 
-	input := &fsx.UpdateFileCacheInput{
-		ClientRequestToken:  aws.String(resource.UniqueId()),
-		FileCacheId:         aws.String(d.Id()),
-		LustreConfiguration: &fsx.UpdateFileCacheLustreConfiguration{},
+		if d.HasChanges("lustre_configuration") {
+			input.LustreConfiguration = expandUpdateFileCacheLustreConfiguration(d.Get("lustre_configuration").([]interface{}))
+		}
+
+		log.Printf("[DEBUG] Updating FSx FileCache (%s): %#v", d.Id(), input)
+
+		result, err := conn.UpdateFileCacheWithContext(ctx, input)
+		if err != nil {
+			return create.DiagError(names.FSx, create.ErrActionUpdating, ResNameFileCache, d.Id(), err)
+		}
+		if _, err := waitFileCacheUpdated(ctx, conn, aws.StringValue(result.FileCache.FileCacheId), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return create.DiagError(names.FSx, create.ErrActionWaitingForUpdate, ResNameFileCache, d.Id(), err)
+		}
+
 	}
-
-	if d.HasChanges("lustre_configuration") {
-		input.LustreConfiguration = expandUpdateFileCacheLustreConfiguration(d.Get("lustre_configuration").([]interface{}))
-		update = true
-	}
-
-	if !update {
-		return nil
-	}
-
-	log.Printf("[DEBUG] Updating FSx FileCache (%s): %#v", d.Id(), input)
-	result, err := conn.UpdateFileCacheWithContext(ctx, input)
-	if err != nil {
-		return create.DiagError(names.FSx, create.ErrActionUpdating, ResNameFileCache, d.Id(), err)
-	}
-
-	if _, err := waitFileCacheUpdated(ctx, conn, aws.StringValue(result.FileCache.FileCacheId), d.Timeout(schema.TimeoutUpdate)); err != nil {
-		return create.DiagError(names.FSx, create.ErrActionWaitingForUpdate, ResNameFileCache, d.Id(), err)
-	}
-
 	return resourceFileCacheRead(ctx, d, meta)
 }
 
