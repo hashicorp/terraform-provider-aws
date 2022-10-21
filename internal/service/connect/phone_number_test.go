@@ -18,7 +18,7 @@ import (
 
 func testAccPhoneNumber_basic(t *testing.T) {
 	var v connect.DescribePhoneNumberOutput
-	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_connect_phone_number.test"
 
 	resource.Test(t, resource.TestCase{
@@ -51,7 +51,7 @@ func testAccPhoneNumber_basic(t *testing.T) {
 
 func testAccPhoneNumber_description(t *testing.T) {
 	var v connect.DescribePhoneNumberOutput
-	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	description := "example description"
 	resourceName := "aws_connect_phone_number.test"
 
@@ -79,7 +79,7 @@ func testAccPhoneNumber_description(t *testing.T) {
 
 func testAccPhoneNumber_prefix(t *testing.T) {
 	var v connect.DescribePhoneNumberOutput
-	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	prefix := "+1"
 	resourceName := "aws_connect_phone_number.test"
 
@@ -110,8 +110,8 @@ func testAccPhoneNumber_prefix(t *testing.T) {
 
 func testAccPhoneNumber_targetARN(t *testing.T) {
 	var v connect.DescribePhoneNumberOutput
-	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
-	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_connect_phone_number.test"
 
 	resource.Test(t, resource.TestCase{
@@ -145,7 +145,7 @@ func testAccPhoneNumber_targetARN(t *testing.T) {
 
 func testAccPhoneNumber_tags(t *testing.T) {
 	var v connect.DescribePhoneNumberOutput
-	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_connect_phone_number.test"
 
 	resource.Test(t, resource.TestCase{
@@ -190,7 +190,7 @@ func testAccPhoneNumber_tags(t *testing.T) {
 
 func testAccPhoneNumber_disappears(t *testing.T) {
 	var v connect.DescribePhoneNumberOutput
-	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_connect_phone_number.test"
 
 	resource.Test(t, resource.TestCase{
