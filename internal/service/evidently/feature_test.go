@@ -3,6 +3,7 @@ package evidently_test
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/cloudwatchevidently"
@@ -245,6 +246,70 @@ func TestAccEvidentlyFeature_updateEvaluationStrategy(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFeatureExists(resourceName, &feature),
 					resource.TestCheckResourceAttr(resourceName, "evaluation_strategy", updatedEvaluationStategy),
+				),
+			},
+		},
+	})
+}
+
+func TestAccEvidentlyFeature_updateVariationsBoolValue(t *testing.T) {
+	var feature cloudwatchevidently.Feature
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	originalVariationName1 := "Variation1Original"
+	updatedVariationName1 := "Variation1Updated"
+	originalVariationBoolVal1 := true
+	updatedVariationBoolVal1 := false
+	variationName2 := "Variation2"
+	variationBoolVal2 := true
+	resourceName := "aws_evidently_feature.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(cloudwatchevidently.EndpointsID, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, cloudwatchevidently.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFeatureDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFeatureConfig_variationsBoolValue1(rName, rName2, originalVariationName1, originalVariationBoolVal1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFeatureExists(resourceName, &feature),
+					resource.TestCheckResourceAttr(resourceName, "default_variation", originalVariationName1),
+					resource.TestCheckResourceAttr(resourceName, "value_type", cloudwatchevidently.VariationValueTypeBoolean),
+					resource.TestCheckResourceAttr(resourceName, "variations.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "variations.*", map[string]string{
+						"name":               originalVariationName1,
+						"value.#":            "1",
+						"value.0.bool_value": strconv.FormatBool(originalVariationBoolVal1),
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccFeatureConfig_variationsBoolValue2(rName, rName2, updatedVariationName1, updatedVariationBoolVal1, variationName2, variationBoolVal2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFeatureExists(resourceName, &feature),
+					resource.TestCheckResourceAttr(resourceName, "default_variation", variationName2), // update default_variation since the first variation is deleted
+					resource.TestCheckResourceAttr(resourceName, "value_type", cloudwatchevidently.VariationValueTypeBoolean),
+					resource.TestCheckResourceAttr(resourceName, "variations.#", "2"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "variations.*", map[string]string{
+						"name":               updatedVariationName1,
+						"value.#":            "1",
+						"value.0.bool_value": strconv.FormatBool(updatedVariationBoolVal1),
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "variations.*", map[string]string{
+						"name":               variationName2,
+						"value.#":            "1",
+						"value.0.bool_value": strconv.FormatBool(variationBoolVal2),
+					}),
 				),
 			},
 		},
@@ -540,6 +605,50 @@ resource "aws_evidently_feature" "test" {
   }
 }
 `, rName2, evaluationStrategy))
+}
+
+func testAccFeatureConfig_variationsBoolValue1(rName, rName2, variationName1 string, boolVal1 bool) string {
+	return acctest.ConfigCompose(
+		testAccFeatureConfigBase(rName),
+		fmt.Sprintf(`
+resource "aws_evidently_feature" "test" {
+  name    = %[1]q
+  project = aws_evidently_project.test.name
+
+  variations {
+    name = %[2]q
+    value {
+      bool_value = %[3]t
+    }
+  }
+}
+`, rName2, variationName1, boolVal1))
+}
+
+func testAccFeatureConfig_variationsBoolValue2(rName, rName2, variationName1 string, boolVal1 bool, variationName2 string, boolVal2 bool) string {
+	return acctest.ConfigCompose(
+		testAccFeatureConfigBase(rName),
+		fmt.Sprintf(`
+resource "aws_evidently_feature" "test" {
+  name              = %[1]q
+  project           = aws_evidently_project.test.name
+  default_variation = %[4]q
+
+  variations {
+    name = %[2]q
+    value {
+      bool_value = %[3]t
+    }
+  }
+
+  variations {
+    name = %[4]q
+    value {
+      bool_value = %[5]t
+    }
+  }
+}
+`, rName2, variationName1, boolVal1, variationName2, boolVal2))
 }
 
 func testAccFeatureConfig_tags1(rName, rName2, tag, value string) string {
