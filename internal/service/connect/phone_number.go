@@ -235,7 +235,6 @@ func resourcePhoneNumberUpdate(ctx context.Context, d *schema.ResourceData, meta
 		if err != nil {
 			return diag.Errorf("updating Phone Number (%s): %s", d.Id(), err)
 		}
-
 	}
 
 	if d.HasChange("tags_all") {
