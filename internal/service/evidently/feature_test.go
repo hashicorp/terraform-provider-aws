@@ -105,6 +105,47 @@ func TestAccEvidentlyFeature_updateDefaultVariation(t *testing.T) {
 	})
 }
 
+func TestAccEvidentlyFeature_updateDescription(t *testing.T) {
+	var feature cloudwatchevidently.Feature
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	originalDescription := "original description"
+	updatedDescription := "updated description"
+	resourceName := "aws_evidently_feature.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(cloudwatchevidently.EndpointsID, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, cloudwatchevidently.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFeatureDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFeatureConfig_description(rName, rName2, originalDescription),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFeatureExists(resourceName, &feature),
+					resource.TestCheckResourceAttr(resourceName, "description", originalDescription),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccFeatureConfig_description(rName, rName2, updatedDescription),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFeatureExists(resourceName, &feature),
+					resource.TestCheckResourceAttr(resourceName, "description", updatedDescription),
+				),
+			},
+		},
+	})
+}
+
 func TestAccEvidentlyFeature_tags(t *testing.T) {
 	var feature cloudwatchevidently.Feature
 
@@ -297,6 +338,25 @@ resource "aws_evidently_feature" "test" {
   }
 }
 `, rName2, variationName1, variationName2, selectDefaultVariation))
+}
+
+func testAccFeatureConfig_description(rName, rName2, description string) string {
+	return acctest.ConfigCompose(
+		testAccFeatureConfigBase(rName),
+		fmt.Sprintf(`
+resource "aws_evidently_feature" "test" {
+  name        = %[1]q
+  description = %[2]q
+  project     = aws_evidently_project.test.name
+
+  variations {
+    name = "Variation1"
+    value {
+      string_value = "test"
+    }
+  }
+}
+`, rName2, description))
 }
 
 func testAccFeatureConfig_tags1(rName, rName2, tag, value string) string {
