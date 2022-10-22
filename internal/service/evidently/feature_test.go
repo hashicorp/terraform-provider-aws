@@ -380,6 +380,70 @@ func TestAccEvidentlyFeature_updateVariationsDoubleValue(t *testing.T) {
 	})
 }
 
+func TestAccEvidentlyFeature_updateVariationsLongValue(t *testing.T) {
+	var feature cloudwatchevidently.Feature
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	originalVariationName1 := "Variation1Original"
+	updatedVariationName1 := "Variation1Updated"
+	originalVariationLongVal1 := 0
+	updatedVariationLongVal1 := 2
+	variationName2 := "Variation2"
+	variationLongVal2 := 3
+	resourceName := "aws_evidently_feature.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(cloudwatchevidently.EndpointsID, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, cloudwatchevidently.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFeatureDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFeatureConfig_variationsLongValue1(rName, rName2, originalVariationName1, originalVariationLongVal1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFeatureExists(resourceName, &feature),
+					resource.TestCheckResourceAttr(resourceName, "default_variation", originalVariationName1),
+					resource.TestCheckResourceAttr(resourceName, "value_type", cloudwatchevidently.VariationValueTypeLong),
+					resource.TestCheckResourceAttr(resourceName, "variations.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "variations.*", map[string]string{
+						"name":               originalVariationName1,
+						"value.#":            "1",
+						"value.0.long_value": strconv.Itoa(originalVariationLongVal1),
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccFeatureConfig_variationsLongValue2(rName, rName2, updatedVariationName1, updatedVariationLongVal1, variationName2, variationLongVal2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFeatureExists(resourceName, &feature),
+					resource.TestCheckResourceAttr(resourceName, "default_variation", variationName2), // update default_variation since the first variation is deleted
+					resource.TestCheckResourceAttr(resourceName, "value_type", cloudwatchevidently.VariationValueTypeLong),
+					resource.TestCheckResourceAttr(resourceName, "variations.#", "2"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "variations.*", map[string]string{
+						"name":               updatedVariationName1,
+						"value.#":            "1",
+						"value.0.long_value": strconv.Itoa(updatedVariationLongVal1),
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "variations.*", map[string]string{
+						"name":               variationName2,
+						"value.#":            "1",
+						"value.0.long_value": strconv.Itoa(variationLongVal2),
+					}),
+				),
+			},
+		},
+	})
+}
+
 func TestAccEvidentlyFeature_tags(t *testing.T) {
 	var feature cloudwatchevidently.Feature
 
@@ -757,6 +821,50 @@ resource "aws_evidently_feature" "test" {
   }
 }
 `, rName2, variationName1, doubleVal1, variationName2, doubleVal2))
+}
+
+func testAccFeatureConfig_variationsLongValue1(rName, rName2, variationName1 string, longVal1 int) string {
+	return acctest.ConfigCompose(
+		testAccFeatureConfigBase(rName),
+		fmt.Sprintf(`
+resource "aws_evidently_feature" "test" {
+  name    = %[1]q
+  project = aws_evidently_project.test.name
+
+  variations {
+    name = %[2]q
+    value {
+      long_value = %[3]d
+    }
+  }
+}
+`, rName2, variationName1, longVal1))
+}
+
+func testAccFeatureConfig_variationsLongValue2(rName, rName2, variationName1 string, longVal1 int, variationName2 string, longVal2 int) string {
+	return acctest.ConfigCompose(
+		testAccFeatureConfigBase(rName),
+		fmt.Sprintf(`
+resource "aws_evidently_feature" "test" {
+  name              = %[1]q
+  project           = aws_evidently_project.test.name
+  default_variation = %[4]q
+
+  variations {
+    name = %[2]q
+    value {
+      long_value = %[3]d
+    }
+  }
+
+  variations {
+    name = %[4]q
+    value {
+      long_value = %[5]d
+    }
+  }
+}
+`, rName2, variationName1, longVal1, variationName2, longVal2))
 }
 
 func testAccFeatureConfig_tags1(rName, rName2, tag, value string) string {
