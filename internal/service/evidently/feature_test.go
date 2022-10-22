@@ -210,6 +210,47 @@ func TestAccEvidentlyFeature_updateEntityOverrides(t *testing.T) {
 	})
 }
 
+func TestAccEvidentlyFeature_updateEvaluationStrategy(t *testing.T) {
+	var feature cloudwatchevidently.Feature
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	originalEvaluationStategy := cloudwatchevidently.FeatureEvaluationStrategyAllRules
+	updatedEvaluationStategy := cloudwatchevidently.FeatureEvaluationStrategyDefaultVariation
+	resourceName := "aws_evidently_feature.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(cloudwatchevidently.EndpointsID, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, cloudwatchevidently.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFeatureDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFeatureConfig_evaluationStrategy(rName, rName2, originalEvaluationStategy),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFeatureExists(resourceName, &feature),
+					resource.TestCheckResourceAttr(resourceName, "evaluation_strategy", originalEvaluationStategy),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccFeatureConfig_evaluationStrategy(rName, rName2, updatedEvaluationStategy),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFeatureExists(resourceName, &feature),
+					resource.TestCheckResourceAttr(resourceName, "evaluation_strategy", updatedEvaluationStategy),
+				),
+			},
+		},
+	})
+}
+
 func TestAccEvidentlyFeature_tags(t *testing.T) {
 	var feature cloudwatchevidently.Feature
 
@@ -480,6 +521,25 @@ resource "aws_evidently_feature" "test" {
   }
 }
 `, rName2, variationName1, variationName2))
+}
+
+func testAccFeatureConfig_evaluationStrategy(rName, rName2, evaluationStrategy string) string {
+	return acctest.ConfigCompose(
+		testAccFeatureConfigBase(rName),
+		fmt.Sprintf(`
+resource "aws_evidently_feature" "test" {
+  name                = %[1]q
+  evaluation_strategy = %[2]q
+  project             = aws_evidently_project.test.name
+
+  variations {
+    name = "Variation1"
+    value {
+      string_value = "test"
+    }
+  }
+}
+`, rName2, evaluationStrategy))
 }
 
 func testAccFeatureConfig_tags1(rName, rName2, tag, value string) string {
