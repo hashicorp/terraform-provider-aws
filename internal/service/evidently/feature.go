@@ -116,6 +116,11 @@ func ResourceFeature() *schema.Resource {
 					validation.StringLenBetween(0, 2048),
 					validation.StringMatch(regexp.MustCompile(`(^[a-zA-Z0-9._-]*$)|(arn:[^:]*:[^:]*:[^:]*:[^:]*:project/[a-zA-Z0-9._-]*)`), "name or arn of the project"),
 				),
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					// case 1: User-defined string (old) is a name and is the suffix of API-returned string (new). Check non-empty old in resoure creation scenario
+					// case 2: after setting API-returned string.  User-defined string (new) is suffix of API-returned string (old)
+					return (strings.HasSuffix(new, old) && old != "") || strings.HasSuffix(old, new)
+				},
 			},
 			"status": {
 				Type:     schema.TypeString,
@@ -229,7 +234,7 @@ func resourceFeatureCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 	// the GetFeature API call uses the Feature name and Project ARN
 	// concat Feature name and Project Name or ARN to be used in Read for imports
-	d.SetId(fmt.Sprintf("%s:%s", aws.StringValue(output.Feature.Name), project))
+	d.SetId(fmt.Sprintf("%s:%s", aws.StringValue(output.Feature.Name), aws.StringValue(output.Feature.Project)))
 
 	if _, err := waitFeatureCreated(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return diag.Errorf("waiting for CloudWatch Evidently Feature (%s) for Project (%s) creation: %s", name, project, err)
@@ -277,7 +282,7 @@ func resourceFeatureRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("evaluation_strategy", feature.EvaluationStrategy)
 	d.Set("last_updated_time", aws.TimeValue(feature.LastUpdatedTime).Format(time.RFC3339))
 	d.Set("name", feature.Name)
-	d.Set("project", projectNameOrARN)
+	d.Set("project", feature.Project)
 	d.Set("status", feature.Status)
 	d.Set("value_type", feature.ValueType)
 

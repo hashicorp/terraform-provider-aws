@@ -44,7 +44,7 @@ func TestAccEvidentlyFeature_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "evaluation_strategy", cloudwatchevidently.FeatureEvaluationStrategyAllRules),
 					resource.TestCheckResourceAttrSet(resourceName, "last_updated_time"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName2),
-					resource.TestCheckResourceAttr(resourceName, "project", rName),
+					resource.TestCheckResourceAttrPair(resourceName, "project", "aws_evidently_project.test", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "status", cloudwatchevidently.FeatureStatusAvailable),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "value_type", cloudwatchevidently.VariationValueTypeString),
