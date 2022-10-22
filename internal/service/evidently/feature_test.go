@@ -64,6 +64,31 @@ func TestAccEvidentlyFeature_basic(t *testing.T) {
 	})
 }
 
+func TestAccEvidentlyFeature_disappears(t *testing.T) {
+	var feature cloudwatchevidently.Feature
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_evidently_feature.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudwatchevidently.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFeatureDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFeatureConfig_basic(rName, rName2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFeatureExists(resourceName, &feature),
+					acctest.CheckResourceDisappears(acctest.Provider, tfcloudwatchevidently.ResourceFeature(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccCheckFeatureDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EvidentlyConn
 	for _, rs := range s.RootModule().Resources {
