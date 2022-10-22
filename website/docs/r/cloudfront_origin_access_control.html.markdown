@@ -30,7 +30,7 @@ resource "aws_cloudfront_origin_access_control" "example" {
 
 The following arguments are required:
 
-* `name` - (Optional) A name that identifies the Origin Access Control. Conflicts with `name`.
+* `name` - (Optional) A name that identifies the Origin Access Control. Conflicts with `name_prefix`.
 * `name_prefix` - (Optional) Creates a unique name beginning with the specified prefix. Conflicts with `name`.
 * `description` - (Required) The description of the Origin Access Control. It may be empty.
 * `origin_access_control_origin_type` - (Required) The type of origin that this Origin Access Control is for. The only valid value is `s3`.
