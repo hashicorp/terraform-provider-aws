@@ -11,6 +11,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudwatchevidently"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -27,6 +28,7 @@ func ResourceFeature() *schema.Resource {
 		CreateWithoutTimeout: resourceFeatureCreate,
 		ReadWithoutTimeout:   resourceFeatureRead,
 		UpdateWithoutTimeout: resourceFeatureUpdate,
+		DeleteWithoutTimeout: resourceFeatureDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -324,6 +326,29 @@ func resourceFeatureUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	return resourceFeatureRead(ctx, d, meta)
+}
+
+func resourceFeatureDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).EvidentlyConn
+
+	name := d.Get("name").(string)
+	project := d.Get("project").(string)
+
+	log.Printf("[DEBUG] Deleting CloudWatch Evidently Feature: %s", d.Id())
+	_, err := conn.DeleteFeatureWithContext(ctx, &cloudwatchevidently.DeleteFeatureInput{
+		Feature: aws.String(name),
+		Project: aws.String(project),
+	})
+
+	if tfawserr.ErrCodeEquals(err, cloudwatchevidently.ErrCodeResourceNotFoundException) {
+		return nil
+	}
+
+	if err != nil {
+		return diag.Errorf("deleting CloudWatch Evidently Feature (%s) for Project (%s): %s", name, project, err)
+	}
+
+	return nil
 }
 
 func FeatureParseID(id string) (string, string, error) {
