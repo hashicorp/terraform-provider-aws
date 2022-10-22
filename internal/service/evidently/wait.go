@@ -1,6 +1,7 @@
 package evidently
 
 import (
+	"context"
 	"time"
 
 	"github.com/aws/aws-sdk-go/service/cloudwatchevidently"
@@ -15,7 +16,7 @@ func waitProjectCreated(conn *cloudwatchevidently.CloudWatchEvidently, nameOrARN
 		Timeout: timeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(context.Background())
 
 	if output, ok := outputRaw.(*cloudwatchevidently.Project); ok {
 		return output, err
@@ -32,7 +33,7 @@ func waitProjectUpdated(conn *cloudwatchevidently.CloudWatchEvidently, nameOrARN
 		Timeout: timeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(context.Background())
 
 	if output, ok := outputRaw.(*cloudwatchevidently.Project); ok {
 		return output, err
@@ -49,7 +50,7 @@ func waitProjectDeleted(conn *cloudwatchevidently.CloudWatchEvidently, nameOrARN
 		Timeout: timeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(context.Background())
 
 	if output, ok := outputRaw.(*cloudwatchevidently.Project); ok {
 		return output, err
