@@ -37,6 +37,7 @@ func ResourceFeature() *schema.Resource {
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(2 * time.Minute),
 			Update: schema.DefaultTimeout(2 * time.Minute),
+			Delete: schema.DefaultTimeout(2 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -359,6 +360,10 @@ func resourceFeatureDelete(ctx context.Context, d *schema.ResourceData, meta int
 
 	if err != nil {
 		return diag.Errorf("deleting CloudWatch Evidently Feature (%s) for Project (%s): %s", name, project, err)
+	}
+
+	if _, err := waitFeatureDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return diag.Errorf("waiting for CloudWatch Evidently Feature (%s) for Project (%s) deletion: %s", name, project, err)
 	}
 
 	return nil
