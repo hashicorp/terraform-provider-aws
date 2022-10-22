@@ -34,6 +34,10 @@ func ResourceFeature() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(2 * time.Minute),
+		},
+
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
@@ -224,6 +228,10 @@ func resourceFeatureCreate(ctx context.Context, d *schema.ResourceData, meta int
 	// the GetFeature API call uses the Feature name and Project ARN
 	// concat Feature name and Project Name or ARN to be used in Read for imports
 	d.SetId(fmt.Sprintf("%s:%s", aws.StringValue(output.Feature.Name), project))
+
+	if _, err := waitFeatureCreated(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return diag.Errorf("waiting for CloudWatch Evidently Feature (%s) for Project (%s) creation: %s", name, project, err)
+	}
 
 	return resourceFeatureRead(ctx, d, meta)
 }
