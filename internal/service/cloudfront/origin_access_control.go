@@ -41,9 +41,20 @@ func ResourceOriginAccessControl() *schema.Resource {
 				Computed: true,
 			},
 			"name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringLenBetween(1, 64),
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"name_prefix"},
+				ValidateFunc:  validation.StringLenBetween(1, 64),
+			},
+			"name_prefix": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"name"},
+				ValidateFunc:  validation.StringLenBetween(0, 64-resource.UniqueIDSuffixLength),
 			},
 			"origin_access_control_origin_type": {
 				Type:         schema.TypeString,
@@ -71,10 +82,12 @@ const (
 func resourceOriginAccessControlCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).CloudFrontConn
 
+	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
+
 	in := &cloudfront.CreateOriginAccessControlInput{
 		OriginAccessControlConfig: &cloudfront.OriginAccessControlConfig{
 			Description:                   aws.String(d.Get("description").(string)),
-			Name:                          aws.String(d.Get("name").(string)),
+			Name:                          aws.String(name),
 			OriginAccessControlOriginType: aws.String(d.Get("origin_access_control_origin_type").(string)),
 			SigningBehavior:               aws.String(d.Get("signing_behavior").(string)),
 			SigningProtocol:               aws.String(d.Get("signing_protocol").(string)),
@@ -119,6 +132,7 @@ func resourceOriginAccessControlRead(ctx context.Context, d *schema.ResourceData
 	d.Set("description", config.Description)
 	d.Set("etag", out.ETag)
 	d.Set("name", config.Name)
+	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(config.Name)))
 	d.Set("origin_access_control_origin_type", config.OriginAccessControlOriginType)
 	d.Set("signing_behavior", config.SigningBehavior)
 	d.Set("signing_protocol", config.SigningProtocol)

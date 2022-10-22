@@ -210,6 +210,68 @@ func TestAccCloudFrontOriginAccessControl_SigningBehavior(t *testing.T) {
 	})
 }
 
+func TestAccCloudFrontOriginAccessControl_nameGenerated(t *testing.T) {
+	var originaccesscontrol cloudfront.OriginAccessControl
+	resourceName := "aws_cloudfront_origin_access_control.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t)
+			testAccPreCheck(t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, cloudfront.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOriginAccessControlDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccOriginAccessControlConfig_nameGenerated(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckOriginAccessControlExists(resourceName, &originaccesscontrol),
+					acctest.CheckResourceAttrNameGenerated(resourceName, "name"),
+					resource.TestCheckResourceAttr(resourceName, "name_prefix", resource.UniqueIdPrefix),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccCloudFrontOriginAccessControl_namePrefix(t *testing.T) {
+	var originaccesscontrol cloudfront.OriginAccessControl
+	resourceName := "aws_cloudfront_origin_access_control.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t)
+			testAccPreCheck(t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, cloudfront.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOriginAccessControlDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccOriginAccessControlConfig_namePrefix("tf-acc-test-prefix-"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckOriginAccessControlExists(resourceName, &originaccesscontrol),
+					acctest.CheckResourceAttrNameFromPrefix(resourceName, "name", "tf-acc-test-prefix-"),
+					resource.TestCheckResourceAttr(resourceName, "name_prefix", "tf-acc-test-prefix-"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckOriginAccessControlDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn
 	ctx := context.Background()
@@ -321,4 +383,25 @@ resource "aws_cloudfront_origin_access_control" "test" {
   signing_protocol                  = "sigv4"
 }
 `, rName, signingBehavior)
+}
+
+func testAccOriginAccessControlConfig_nameGenerated() string {
+	return `
+resource "aws_cloudfront_origin_access_control" "test" {
+  origin_access_control_origin_type = "s3"
+  signing_behavior                  = "always"
+  signing_protocol                  = "sigv4"
+}
+`
+}
+
+func testAccOriginAccessControlConfig_namePrefix(namePrefix string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudfront_origin_access_control" "test" {
+  name_prefix                       = %[1]q
+  origin_access_control_origin_type = "s3"
+  signing_behavior                  = "always"
+  signing_protocol                  = "sigv4"
+}
+`, namePrefix)
 }
