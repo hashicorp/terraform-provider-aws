@@ -146,6 +146,70 @@ func TestAccEvidentlyFeature_updateDescription(t *testing.T) {
 	})
 }
 
+func TestAccEvidentlyFeature_updateEntityOverrides(t *testing.T) {
+	var feature cloudwatchevidently.Feature
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	variationName1 := "Variation1"
+	variationName2 := "Variation2"
+	resourceName := "aws_evidently_feature.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(cloudwatchevidently.EndpointsID, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, cloudwatchevidently.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFeatureDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFeatureConfig_entityOverrides1(rName, rName2, variationName1, variationName2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFeatureExists(resourceName, &feature),
+					resource.TestCheckResourceAttr(resourceName, "entity_overrides.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "entity_overrides.test1", variationName1),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "variations.*", map[string]string{
+						"name":                 variationName1,
+						"value.#":              "1",
+						"value.0.string_value": "testval1",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "variations.*", map[string]string{
+						"name":                 variationName2,
+						"value.#":              "1",
+						"value.0.string_value": "testval2",
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccFeatureConfig_entityOverrides2(rName, rName2, variationName1, variationName2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFeatureExists(resourceName, &feature),
+					resource.TestCheckResourceAttr(resourceName, "entity_overrides.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "entity_overrides.test1", variationName2),
+					resource.TestCheckResourceAttr(resourceName, "entity_overrides.test2", variationName1),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "variations.*", map[string]string{
+						"name":                 variationName1,
+						"value.#":              "1",
+						"value.0.string_value": "testval1",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "variations.*", map[string]string{
+						"name":                 variationName2,
+						"value.#":              "1",
+						"value.0.string_value": "testval2",
+					}),
+				),
+			},
+		},
+	})
+}
+
 func TestAccEvidentlyFeature_tags(t *testing.T) {
 	var feature cloudwatchevidently.Feature
 
@@ -357,6 +421,65 @@ resource "aws_evidently_feature" "test" {
   }
 }
 `, rName2, description))
+}
+
+func testAccFeatureConfig_entityOverrides1(rName, rName2, variationName1, variationName2 string) string {
+	return acctest.ConfigCompose(
+		testAccFeatureConfigBase(rName),
+		fmt.Sprintf(`
+resource "aws_evidently_feature" "test" {
+  name    = %[1]q
+  project = aws_evidently_project.test.name
+
+  entity_overrides = {
+    test1 = %[2]q
+  }
+
+  variations {
+    name = %[2]q
+    value {
+      string_value = "testval1"
+    }
+  }
+
+  variations {
+    name = %[3]q
+    value {
+      string_value = "testval2"
+    }
+  }
+}
+`, rName2, variationName1, variationName2))
+}
+
+func testAccFeatureConfig_entityOverrides2(rName, rName2, variationName1, variationName2 string) string {
+	return acctest.ConfigCompose(
+		testAccFeatureConfigBase(rName),
+		fmt.Sprintf(`
+resource "aws_evidently_feature" "test" {
+  name    = %[1]q
+  project = aws_evidently_project.test.name
+
+  entity_overrides = {
+    test1 = %[3]q
+    test2 = %[2]q
+  }
+
+  variations {
+    name = %[2]q
+    value {
+      string_value = "testval1"
+    }
+  }
+
+  variations {
+    name = %[3]q
+    value {
+      string_value = "testval2"
+    }
+  }
+}
+`, rName2, variationName1, variationName2))
 }
 
 func testAccFeatureConfig_tags1(rName, rName2, tag, value string) string {
