@@ -26,6 +26,7 @@ func ResourceFeature() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceFeatureCreate,
 		ReadWithoutTimeout:   resourceFeatureRead,
+		UpdateWithoutTimeout: resourceFeatureUpdate,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -281,6 +282,50 @@ func resourceFeatureRead(ctx context.Context, d *schema.ResourceData, meta inter
 	return nil
 }
 
+func resourceFeatureUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).EvidentlyConn
+
+	if d.HasChanges("default_variation", "description", "entity_overrides", "evaluation_strategy", "variations") {
+		name := d.Get("name").(string)
+		project := d.Get("project").(string)
+
+		input := &cloudwatchevidently.UpdateFeatureInput{
+			DefaultVariation:   aws.String(d.Get("default_variation").(string)),
+			Description:        aws.String(d.Get("description").(string)),
+			EntityOverrides:    flex.ExpandStringMap(d.Get("entity_overrides").(map[string]interface{})),
+			EvaluationStrategy: aws.String(d.Get("evaluation_strategy").(string)),
+			Feature:            aws.String(name),
+			Project:            aws.String(project),
+		}
+
+		if d.HasChange("variations") {
+			o, n := d.GetChange("variations")
+			toRemove, toAddOrUpdate := VariationChanges(o, n)
+
+			log.Printf("[DEBUG] Updating variations (%s)", d.Id())
+			log.Printf("[DEBUG] Variations to remove: %#v", toRemove)
+			log.Printf("[DEBUG] Variations to add or update: %#v", toAddOrUpdate)
+			input.AddOrUpdateVariations = toAddOrUpdate
+			input.RemoveVariations = toRemove
+		}
+		_, err := conn.UpdateFeatureWithContext(ctx, input)
+
+		if err != nil {
+			return diag.Errorf("updating CloudWatch Evidently Feature (%s) for Project (%s): %s", name, project, err)
+		}
+	}
+
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
+
+		if err := UpdateTagsWithContext(ctx, conn, d.Get("arn").(string), o, n); err != nil {
+			return diag.Errorf("updating tags: %s", err)
+		}
+	}
+
+	return resourceFeatureRead(ctx, d, meta)
+}
+
 func FeatureParseID(id string) (string, string, error) {
 	featureName, projectNameOrARN, _ := strings.Cut(id, ":")
 
@@ -388,4 +433,66 @@ func flattenEvaluationRules(apiObject []*cloudwatchevidently.EvaluationRule) []i
 		evaluationRulesFormatted = append(evaluationRulesFormatted, evaluationRuleFormatted)
 	}
 	return evaluationRulesFormatted
+}
+
+func VariationChanges(o, n interface{}) (remove []*string, addOrUpdate []*cloudwatchevidently.VariationConfig) {
+	if o == nil {
+		o = new(schema.Set)
+	}
+	if n == nil {
+		n = new(schema.Set)
+	}
+
+	os := o.(*schema.Set)
+	ns := n.(*schema.Set)
+
+	om := make(map[string]*cloudwatchevidently.VariationConfig, os.Len())
+	for _, raw := range os.List() {
+		param := raw.(map[string]interface{})
+		om[param["name"].(string)] = expandVariation(param)
+	}
+	nm := make(map[string]*cloudwatchevidently.VariationConfig, len(addOrUpdate))
+	for _, raw := range ns.List() {
+		param := raw.(map[string]interface{})
+		nm[param["name"].(string)] = expandVariation(param)
+	}
+
+	// Remove: key is in old, but not in new
+	// commented out because remove is the list of names. Left here in the event the API changes
+	// remove = make([]*cloudwatchevidently.VariationConfig, 0, os.Len())
+	// for k := range om {
+	// 	if _, ok := nm[k]; !ok {
+	// 		remove = append(remove, om[k])
+	// 	}
+	// }
+	// remove is a list of strings
+	remove = make([]*string, 0)
+	for k := range om {
+		if _, ok := nm[k]; !ok {
+			remove = append(remove, &k)
+		}
+	}
+
+	// Add or Update: key is in new, but not in old or has changed value
+	addOrUpdate = make([]*cloudwatchevidently.VariationConfig, 0, ns.Len())
+	for k, nv := range nm {
+		ov, ok := om[k]
+		if !ok {
+			// add new variations
+			addOrUpdate = append(addOrUpdate, nm[k])
+		} else {
+			// updates to existing variations
+			if nv.Value.StringValue != nil && aws.StringValue(nv.Value.StringValue) != aws.StringValue(ov.Value.StringValue) {
+				addOrUpdate = append(addOrUpdate, nm[k])
+			} else if nv.Value.BoolValue != nil && aws.BoolValue(nv.Value.BoolValue) != aws.BoolValue(ov.Value.BoolValue) {
+				addOrUpdate = append(addOrUpdate, nm[k])
+			} else if nv.Value.LongValue != nil && aws.Int64Value(nv.Value.LongValue) != aws.Int64Value(ov.Value.LongValue) {
+				addOrUpdate = append(addOrUpdate, nm[k])
+			} else if nv.Value.DoubleValue != nil && aws.Float64Value(nv.Value.DoubleValue) != aws.Float64Value(ov.Value.DoubleValue) {
+				addOrUpdate = append(addOrUpdate, nm[k])
+			}
+		}
+	}
+
+	return remove, addOrUpdate
 }
