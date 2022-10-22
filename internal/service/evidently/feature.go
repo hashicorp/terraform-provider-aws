@@ -36,6 +36,7 @@ func ResourceFeature() *schema.Resource {
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(2 * time.Minute),
+			Update: schema.DefaultTimeout(2 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -322,6 +323,10 @@ func resourceFeatureUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 		if err != nil {
 			return diag.Errorf("updating CloudWatch Evidently Feature (%s) for Project (%s): %s", name, project, err)
+		}
+
+		if _, err := waitFeatureUpdated(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return diag.Errorf("waiting for CloudWatch Evidently Feature (%s) for Project (%s) update: %s", name, project, err)
 		}
 	}
 

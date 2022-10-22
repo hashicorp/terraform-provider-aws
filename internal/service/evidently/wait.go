@@ -25,6 +25,23 @@ func waitFeatureCreated(conn *cloudwatchevidently.CloudWatchEvidently, id string
 	return nil, err
 }
 
+func waitFeatureUpdated(conn *cloudwatchevidently.CloudWatchEvidently, id string, timeout time.Duration) (*cloudwatchevidently.Feature, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{cloudwatchevidently.FeatureStatusUpdating},
+		Target:  []string{cloudwatchevidently.FeatureStatusAvailable},
+		Refresh: statusFeature(conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(context.Background())
+
+	if output, ok := outputRaw.(*cloudwatchevidently.Feature); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
 func waitProjectCreated(conn *cloudwatchevidently.CloudWatchEvidently, nameOrARN string, timeout time.Duration) (*cloudwatchevidently.Project, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{},
