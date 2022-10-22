@@ -64,6 +64,47 @@ func TestAccEvidentlyFeature_basic(t *testing.T) {
 	})
 }
 
+func TestAccEvidentlyFeature_updateDefaultVariation(t *testing.T) {
+	var feature cloudwatchevidently.Feature
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	variationName1 := "Variation1"
+	variationName2 := "Variation2"
+	resourceName := "aws_evidently_feature.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(cloudwatchevidently.EndpointsID, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, cloudwatchevidently.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFeatureDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFeatureConfig_defaultVariation(rName, rName2, variationName1, variationName2, "first"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFeatureExists(resourceName, &feature),
+					resource.TestCheckResourceAttr(resourceName, "default_variation", variationName1),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccFeatureConfig_defaultVariation(rName, rName2, variationName1, variationName2, "second"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFeatureExists(resourceName, &feature),
+					resource.TestCheckResourceAttr(resourceName, "default_variation", variationName2),
+				),
+			},
+		},
+	})
+}
+
 func TestAccEvidentlyFeature_tags(t *testing.T) {
 	var feature cloudwatchevidently.Feature
 
@@ -224,6 +265,38 @@ resource "aws_evidently_feature" "test" {
   }
 }
 `, rName2))
+}
+
+func testAccFeatureConfig_defaultVariation(rName, rName2, variationName1, variationName2, selectDefaultVariation string) string {
+	return acctest.ConfigCompose(
+		testAccFeatureConfigBase(rName),
+		fmt.Sprintf(`
+locals {
+  select_default_variation = %[4]q
+  variation_name1          = %[2]q
+  variation_name2          = %[3]q
+}
+
+resource "aws_evidently_feature" "test" {
+  name              = %[1]q
+  project           = aws_evidently_project.test.name
+  default_variation = local.select_default_variation == "first" ? local.variation_name1 : local.variation_name2
+
+  variations {
+    name = %[2]q
+    value {
+      string_value = "testval1"
+    }
+  }
+
+  variations {
+    name = %[3]q
+    value {
+      string_value = "testval2"
+    }
+  }
+}
+`, rName2, variationName1, variationName2, selectDefaultVariation))
 }
 
 func testAccFeatureConfig_tags1(rName, rName2, tag, value string) string {
