@@ -1512,6 +1512,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 
 			"aws_emrserverless_application": emrserverless.ResourceApplication(),
 
+			"aws_evidently_feature": evidently.ResourceFeature(),
 			"aws_evidently_project": evidently.ResourceProject(),
 
 			"aws_kinesis_firehose_delivery_stream": firehose.ResourceDeliveryStream(),
