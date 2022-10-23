@@ -331,7 +331,7 @@ resource "aws_sesv2_configuration_set" "test1" {
 }
 
 resource "aws_sesv2_email_identity" "test" {
-  email_identity = %[1]q
+  email_identity         = %[1]q
   configuration_set_name = aws_sesv2_configuration_set.test1.configuration_set_name
 }
 `, rName, configurationSetName)
@@ -344,7 +344,7 @@ resource "aws_sesv2_configuration_set" "test2" {
 }
 
 resource "aws_sesv2_email_identity" "test" {
-  email_identity = %[1]q
+  email_identity         = %[1]q
   configuration_set_name = aws_sesv2_configuration_set.test2.configuration_set_name
 }
 `, rName, configurationSetName)
@@ -356,7 +356,7 @@ resource "aws_sesv2_email_identity" "test" {
   email_identity = %[1]q
 
   dkim_signing_attributes {
-	next_signing_key_length = %[2]q
+    next_signing_key_length = %[2]q
   }
 }
 `, rName, nextSigningKeyLength)
@@ -368,8 +368,8 @@ resource "aws_sesv2_email_identity" "test" {
   email_identity = %[1]q
 
   dkim_signing_attributes {
-	domain_signing_private_key = %[2]q
-	domain_signing_selector = %[3]q
+    domain_signing_private_key = %[2]q
+    domain_signing_selector    = %[3]q
   }
 }
 `, rName, domainSigningPrivateKey, domainSigningSelector)
