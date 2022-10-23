@@ -30,7 +30,7 @@ resource "aws_sesv2_email_identity" "example" {
 }
 ```
 
-### Configuration Set
+#### Configuration Set
 
 ```terraform
 resource "aws_sesv2_configuration_set" "example" {
@@ -43,7 +43,7 @@ resource "aws_sesv2_email_identity" "example" {
 }
 ```
 
-### DKIM Signing Attributes (BYODKIM)
+#### DKIM Signing Attributes (BYODKIM)
 
 ```terraform
 resource "tls_private_key" "example" {
