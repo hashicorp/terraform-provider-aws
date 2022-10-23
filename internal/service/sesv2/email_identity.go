@@ -76,10 +76,6 @@ func ResourceEmailIdentity() *schema.Resource {
 							ConflictsWith: []string{"dkim_attributes.0.domain_signing_private_key", "dkim_attributes.0.domain_signing_selector"},
 							ValidateFunc:  validation.StringInSlice(dkimSigningKeyLengthValues(types.DkimSigningKeyLength("").Values()), false),
 						},
-						"signing_enabled": {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
 						"signing_attributes_origin": {
 							Type:     schema.TypeString,
 							Computed: true,
@@ -100,33 +96,9 @@ func ResourceEmailIdentity() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"feedback_forwarding_status": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
 			"identity_type": {
 				Type:     schema.TypeString,
 				Computed: true,
-			},
-			"mail_from_attributes": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"behavior_on_mx_failure": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"mail_from_domain": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"mail_from_domain_status": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
-				},
 			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
@@ -219,16 +191,7 @@ func resourceEmailIdentityRead(ctx context.Context, d *schema.ResourceData, meta
 		d.Set("dkim_attributes", nil)
 	}
 
-	d.Set("feedback_forwarding_status", out.FeedbackForwardingStatus)
 	d.Set("identity_type", string(out.IdentityType))
-
-	if out.MailFromAttributes != nil {
-		if err := d.Set("mail_from_attributes", []interface{}{flattenMailFromAttributes(out.MailFromAttributes)}); err != nil {
-			return create.DiagError(names.SESV2, create.ErrActionSetting, ResNameEmailIdentity, d.Id(), err)
-		}
-	} else {
-		d.Set("mail_from_attributes", nil)
-	}
 
 	tags, err := ListTags(ctx, conn, d.Get("arn").(string))
 	if err != nil {
@@ -395,7 +358,6 @@ func flattenDkimAttributes(apiObject *types.DkimAttributes) map[string]interface
 	m := map[string]interface{}{
 		"current_signing_key_length": string(apiObject.CurrentSigningKeyLength),
 		"next_signing_key_length":    string(apiObject.NextSigningKeyLength),
-		"signing_enabled":            apiObject.SigningEnabled,
 		"signing_attributes_origin":  string(apiObject.SigningAttributesOrigin),
 		"status":                     string(apiObject.Status),
 	}
@@ -406,23 +368,6 @@ func flattenDkimAttributes(apiObject *types.DkimAttributes) map[string]interface
 
 	if v := apiObject.Tokens; v != nil {
 		m["tokens"] = apiObject.Tokens
-	}
-
-	return m
-}
-
-func flattenMailFromAttributes(apiObject *types.MailFromAttributes) map[string]interface{} {
-	if apiObject == nil {
-		return nil
-	}
-
-	m := map[string]interface{}{
-		"behavior_on_mx_failure":  string(apiObject.BehaviorOnMxFailure),
-		"mail_from_domain_status": string(apiObject.MailFromDomainStatus),
-	}
-
-	if v := apiObject.MailFromDomain; v != nil {
-		m["mail_from_domain"] = aws.ToString(apiObject.MailFromDomain)
 	}
 
 	return m
