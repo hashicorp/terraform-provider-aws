@@ -59,11 +59,24 @@ func ResourceEmailIdentity() *schema.Resource {
 							Type:         schema.TypeString,
 							Optional:     true,
 							RequiredWith: []string{"dkim_signing_attributes.0.domain_signing_selector"},
+							ValidateFunc: validation.All(
+								validation.StringLenBetween(1, 20480),
+								func(v interface{}, name string) (warns []string, errs []error) {
+									s := v.(string)
+									if !verify.IsBase64Encoded([]byte(s)) {
+										errs = append(errs, fmt.Errorf(
+											"%s: must be base64-encoded", name,
+										))
+									}
+									return
+								},
+							),
 						},
 						"domain_signing_selector": {
 							Type:         schema.TypeString,
 							Optional:     true,
 							RequiredWith: []string{"dkim_signing_attributes.0.domain_signing_private_key"},
+							ValidateFunc: validation.StringLenBetween(1, 63),
 						},
 						"last_key_generation_timestamp": {
 							Type:     schema.TypeString,
