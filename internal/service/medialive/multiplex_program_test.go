@@ -19,6 +19,54 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+func TestParseMultiplexProgramIDUnitTest(t *testing.T) {
+	testCases := []struct {
+		TestName    string
+		Input       string
+		ProgramName string
+		MultiplexID string
+		Error       bool
+	}{
+		{
+			TestName:    "valid id",
+			Input:       "program_name/multiplex_id",
+			ProgramName: "program_name",
+			MultiplexID: "multiplex_id",
+			Error:       false,
+		},
+		{
+			TestName:    "invalid id",
+			Input:       "multiplex_id",
+			ProgramName: "",
+			MultiplexID: "",
+			Error:       true,
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.TestName, func(t *testing.T) {
+			pn, mid, err := tfmedialive.ParseMultiplexProgramID(testCase.Input)
+
+			if err != nil && !testCase.Error {
+				t.Errorf("got error (%s), expected no error", err)
+			}
+
+			if err == nil && testCase.Error {
+				t.Errorf("got (%s, %s) and no error, expected error", pn, mid)
+			}
+
+			if pn != testCase.ProgramName {
+				t.Errorf("got %s, expected %s", pn, testCase.ProgramName)
+			}
+
+			if pn != testCase.ProgramName {
+				t.Errorf("got %s, expected %s", mid, testCase.MultiplexID)
+			}
+		})
+
+	}
+}
+
 func testAccMultiplexProgram_basic(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")

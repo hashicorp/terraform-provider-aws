@@ -508,7 +508,7 @@ func preferredChannelPipelineToSlice(p []mltypes.PreferredChannelPipeline) []str
 func ParseMultiplexProgramID(id string) (programName string, multiplexId string, err error) {
 	idParts := strings.Split(id, "/")
 
-	if idParts[0] == "" || idParts[1] == "" {
+	if len(idParts) < 2 || (idParts[0] == "" || idParts[1] == "") {
 		err = errors.New("invalid id")
 		return
 	}
