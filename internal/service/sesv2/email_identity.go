@@ -44,7 +44,7 @@ func ResourceEmailIdentity() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(1, 64),
 			},
-			"dkim_attributes": {
+			"dkim_signing_attributes": {
 				Type:     schema.TypeList,
 				Optional: true,
 				Computed: true,
@@ -58,12 +58,12 @@ func ResourceEmailIdentity() *schema.Resource {
 						"domain_signing_private_key": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							RequiredWith: []string{"dkim_attributes.0.domain_signing_selector"},
+							RequiredWith: []string{"dkim_signing_attributes.0.domain_signing_selector"},
 						},
 						"domain_signing_selector": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							RequiredWith: []string{"dkim_attributes.0.domain_signing_private_key"},
+							RequiredWith: []string{"dkim_signing_attributes.0.domain_signing_private_key"},
 						},
 						"last_key_generation_timestamp": {
 							Type:     schema.TypeString,
@@ -73,7 +73,7 @@ func ResourceEmailIdentity() *schema.Resource {
 							Type:          schema.TypeString,
 							Optional:      true,
 							Computed:      true,
-							ConflictsWith: []string{"dkim_attributes.0.domain_signing_private_key", "dkim_attributes.0.domain_signing_selector"},
+							ConflictsWith: []string{"dkim_signing_attributes.0.domain_signing_private_key", "dkim_signing_attributes.0.domain_signing_selector"},
 							ValidateFunc:  validation.StringInSlice(dkimSigningKeyLengthValues(types.DkimSigningKeyLength("").Values()), false),
 						},
 						"signing_attributes_origin": {
@@ -127,7 +127,7 @@ func resourceEmailIdentityCreate(ctx context.Context, d *schema.ResourceData, me
 		in.ConfigurationSetName = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("dkim_attributes"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if v, ok := d.GetOk("dkim_signing_attributes"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		in.DkimSigningAttributes = expandDkimSigningAttributes(v.([]interface{})[0].(map[string]interface{}))
 	}
 
@@ -181,14 +181,14 @@ func resourceEmailIdentityRead(ctx context.Context, d *schema.ResourceData, meta
 
 	if out.DkimAttributes != nil {
 		tfMap := flattenDkimAttributes(out.DkimAttributes)
-		tfMap["domain_signing_private_key"] = d.Get("dkim_attributes.0.domain_signing_private_key").(string)
-		tfMap["domain_signing_selector"] = d.Get("dkim_attributes.0.domain_signing_selector").(string)
+		tfMap["domain_signing_private_key"] = d.Get("dkim_signing_attributes.0.domain_signing_private_key").(string)
+		tfMap["domain_signing_selector"] = d.Get("dkim_signing_attributes.0.domain_signing_selector").(string)
 
-		if err := d.Set("dkim_attributes", []interface{}{tfMap}); err != nil {
+		if err := d.Set("dkim_signing_attributes", []interface{}{tfMap}); err != nil {
 			return create.DiagError(names.SESV2, create.ErrActionSetting, ResNameEmailIdentity, d.Id(), err)
 		}
 	} else {
-		d.Set("dkim_attributes", nil)
+		d.Set("dkim_signing_attributes", nil)
 	}
 
 	d.Set("identity_type", string(out.IdentityType))
@@ -234,13 +234,13 @@ func resourceEmailIdentityUpdate(ctx context.Context, d *schema.ResourceData, me
 		}
 	}
 
-	if d.HasChanges("dkim_attributes") {
+	if d.HasChanges("dkim_signing_attributes") {
 		in := &sesv2.PutEmailIdentityDkimSigningAttributesInput{
 			EmailIdentity:           aws.String(d.Id()),
 			SigningAttributesOrigin: types.DkimSigningAttributesOriginAwsSes,
 		}
 
-		if v, ok := d.GetOk("dkim_attributes"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		if v, ok := d.GetOk("dkim_signing_attributes"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 			in.SigningAttributes = expandDkimSigningAttributes(v.([]interface{})[0].(map[string]interface{}))
 			in.SigningAttributesOrigin = getSigningAttributesOrigin(v.([]interface{})[0].(map[string]interface{}))
 		}

@@ -35,13 +35,13 @@ func TestAccSESV2EmailIdentity_basicEmail(t *testing.T) {
 					testAccCheckEmailIdentityExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "email_identity", rName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ses", regexp.MustCompile(`identity/.+`)),
-					resource.TestCheckResourceAttr(resourceName, "dkim_attributes.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "dkim_attributes.0.current_signing_key_length", ""),
-					resource.TestCheckResourceAttr(resourceName, "dkim_attributes.0.last_key_generation_timestamp", ""),
-					resource.TestCheckResourceAttr(resourceName, "dkim_attributes.0.next_signing_key_length", "RSA_1024_BIT"),
-					resource.TestCheckResourceAttr(resourceName, "dkim_attributes.0.signing_attributes_origin", "AWS_SES"),
-					resource.TestCheckResourceAttr(resourceName, "dkim_attributes.0.status", "NOT_STARTED"),
-					resource.TestCheckResourceAttr(resourceName, "dkim_attributes.0.tokens.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "dkim_signing_attributes.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "dkim_signing_attributes.0.current_signing_key_length", ""),
+					resource.TestCheckResourceAttr(resourceName, "dkim_signing_attributes.0.last_key_generation_timestamp", ""),
+					resource.TestCheckResourceAttr(resourceName, "dkim_signing_attributes.0.next_signing_key_length", "RSA_1024_BIT"),
+					resource.TestCheckResourceAttr(resourceName, "dkim_signing_attributes.0.signing_attributes_origin", "AWS_SES"),
+					resource.TestCheckResourceAttr(resourceName, "dkim_signing_attributes.0.status", "NOT_STARTED"),
+					resource.TestCheckResourceAttr(resourceName, "dkim_signing_attributes.0.tokens.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "identity_type", "EMAIL_ADDRESS"),
 					resource.TestCheckResourceAttr(resourceName, "verified_for_sending_status", "false"),
 				),
@@ -71,13 +71,13 @@ func TestAccSESV2EmailIdentity_basicDomain(t *testing.T) {
 					testAccCheckEmailIdentityExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "email_identity", rName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ses", regexp.MustCompile(`identity/.+`)),
-					resource.TestCheckResourceAttr(resourceName, "dkim_attributes.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "dkim_attributes.0.current_signing_key_length", "RSA_2048_BIT"),
-					acctest.CheckResourceAttrRFC3339(resourceName, "dkim_attributes.0.last_key_generation_timestamp"),
-					resource.TestCheckResourceAttr(resourceName, "dkim_attributes.0.next_signing_key_length", "RSA_2048_BIT"),
-					resource.TestCheckResourceAttr(resourceName, "dkim_attributes.0.signing_attributes_origin", "AWS_SES"),
-					resource.TestCheckResourceAttr(resourceName, "dkim_attributes.0.status", "PENDING"),
-					resource.TestCheckResourceAttr(resourceName, "dkim_attributes.0.tokens.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "dkim_signing_attributes.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "dkim_signing_attributes.0.current_signing_key_length", "RSA_2048_BIT"),
+					acctest.CheckResourceAttrRFC3339(resourceName, "dkim_signing_attributes.0.last_key_generation_timestamp"),
+					resource.TestCheckResourceAttr(resourceName, "dkim_signing_attributes.0.next_signing_key_length", "RSA_2048_BIT"),
+					resource.TestCheckResourceAttr(resourceName, "dkim_signing_attributes.0.signing_attributes_origin", "AWS_SES"),
+					resource.TestCheckResourceAttr(resourceName, "dkim_signing_attributes.0.status", "PENDING"),
+					resource.TestCheckResourceAttr(resourceName, "dkim_signing_attributes.0.tokens.#", "3"),
 					resource.TestCheckResourceAttr(resourceName, "identity_type", "DOMAIN"),
 					resource.TestCheckResourceAttr(resourceName, "verified_for_sending_status", "false"),
 				),
@@ -127,8 +127,8 @@ func TestAccSESV2EmailIdentity_nextSigningKeyLength(t *testing.T) {
 				Config: testAccEmailIdentityConfig_nextSigningKeyLength(rName, string(types.DkimSigningKeyLengthRsa2048Bit)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEmailIdentityExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "dkim_attributes.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "dkim_attributes.0.next_signing_key_length", "RSA_2048_BIT"),
+					resource.TestCheckResourceAttr(resourceName, "dkim_signing_attributes.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "dkim_signing_attributes.0.next_signing_key_length", "RSA_2048_BIT"),
 				),
 			},
 			{
@@ -140,8 +140,8 @@ func TestAccSESV2EmailIdentity_nextSigningKeyLength(t *testing.T) {
 				Config: testAccEmailIdentityConfig_nextSigningKeyLength(rName, string(types.DkimSigningKeyLengthRsa1024Bit)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEmailIdentityExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "dkim_attributes.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "dkim_attributes.0.next_signing_key_length", "RSA_1024_BIT"),
+					resource.TestCheckResourceAttr(resourceName, "dkim_signing_attributes.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "dkim_signing_attributes.0.next_signing_key_length", "RSA_1024_BIT"),
 				),
 			},
 		},
@@ -168,24 +168,24 @@ func TestAccSESV2EmailIdentity_domainSigning(t *testing.T) {
 				Config: testAccEmailIdentityConfig_domainSigning(rName, key1, selector1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEmailIdentityExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "dkim_attributes.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "dkim_attributes.0.domain_signing_private_key", key1),
-					resource.TestCheckResourceAttr(resourceName, "dkim_attributes.0.domain_signing_selector", selector1),
+					resource.TestCheckResourceAttr(resourceName, "dkim_signing_attributes.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "dkim_signing_attributes.0.domain_signing_private_key", key1),
+					resource.TestCheckResourceAttr(resourceName, "dkim_signing_attributes.0.domain_signing_selector", selector1),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"dkim_attributes.0.domain_signing_private_key", "dkim_attributes.0.domain_signing_selector"},
+				ImportStateVerifyIgnore: []string{"dkim_signing_attributes.0.domain_signing_private_key", "dkim_signing_attributes.0.domain_signing_selector"},
 			},
 			{
 				Config: testAccEmailIdentityConfig_domainSigning(rName, key2, selector2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEmailIdentityExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "dkim_attributes.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "dkim_attributes.0.domain_signing_private_key", key2),
-					resource.TestCheckResourceAttr(resourceName, "dkim_attributes.0.domain_signing_selector", selector2),
+					resource.TestCheckResourceAttr(resourceName, "dkim_signing_attributes.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "dkim_signing_attributes.0.domain_signing_private_key", key2),
+					resource.TestCheckResourceAttr(resourceName, "dkim_signing_attributes.0.domain_signing_selector", selector2),
 				),
 			},
 		},
@@ -296,7 +296,7 @@ func testAccEmailIdentityConfig_nextSigningKeyLength(rName, nextSigningKeyLength
 resource "aws_sesv2_email_identity" "test" {
   email_identity = %[1]q
 
-  dkim_attributes {
+  dkim_signing_attributes {
 	next_signing_key_length = %[2]q
   }
 }
@@ -308,7 +308,7 @@ func testAccEmailIdentityConfig_domainSigning(rName, domainSigningPrivateKey, do
 resource "aws_sesv2_email_identity" "test" {
   email_identity = %[1]q
 
-  dkim_attributes {
+  dkim_signing_attributes {
 	domain_signing_private_key = %[2]q
 	domain_signing_selector = %[3]q
   }
