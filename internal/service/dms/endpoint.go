@@ -616,7 +616,7 @@ func ResourceEndpoint() *schema.Resource {
 						"timestamp_column_name": {
 							Type:     schema.TypeString,
 							Optional: true,
-							Default:  "",
+							Default:  null,
 						},
 						"use_csv_no_sup_value": {
 							Type:     schema.TypeBool,
