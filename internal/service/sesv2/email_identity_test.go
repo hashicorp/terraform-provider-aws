@@ -17,7 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccSESV2EmailIdentity_basic(t *testing.T) {
+func TestAccSESV2EmailIdentity_basicEmail(t *testing.T) {
 	rName := acctest.RandomEmailAddress(acctest.RandomDomainName())
 	resourceName := "aws_sesv2_email_identity.test"
 
@@ -33,6 +33,63 @@ func TestAccSESV2EmailIdentity_basic(t *testing.T) {
 					testAccCheckEmailIdentityExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "email_identity", rName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ses", regexp.MustCompile(`identity/.+`)),
+					resource.TestCheckResourceAttr(resourceName, "dkim_attributes.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "dkim_attributes.0.current_signing_key_length", ""),
+					resource.TestCheckResourceAttr(resourceName, "dkim_attributes.0.last_key_generation_timestamp", ""),
+					resource.TestCheckResourceAttr(resourceName, "dkim_attributes.0.next_signing_key_length", "RSA_1024_BIT"),
+					resource.TestCheckResourceAttr(resourceName, "dkim_attributes.0.signing_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "dkim_attributes.0.signing_attributes_origin", "AWS_SES"),
+					resource.TestCheckResourceAttr(resourceName, "dkim_attributes.0.status", "NOT_STARTED"),
+					resource.TestCheckResourceAttr(resourceName, "dkim_attributes.0.tokens.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "feedback_forwarding_status", "true"),
+					resource.TestCheckResourceAttr(resourceName, "identity_type", "EMAIL_ADDRESS"),
+					resource.TestCheckResourceAttr(resourceName, "mail_from_attributes.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "mail_from_attributes.0.behavior_on_mx_failure", "USE_DEFAULT_VALUE"),
+					resource.TestCheckResourceAttr(resourceName, "mail_from_attributes.0.mail_from_domain", ""),
+					resource.TestCheckResourceAttr(resourceName, "mail_from_attributes.0.mail_from_domain_status", ""),
+					resource.TestCheckResourceAttr(resourceName, "verified_for_sending_status", "false"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccSESV2EmailIdentity_basicDomain(t *testing.T) {
+	rName := acctest.RandomDomainName()
+	resourceName := "aws_sesv2_email_identity.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2EndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEmailIdentityDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEmailIdentityConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEmailIdentityExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "email_identity", rName),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ses", regexp.MustCompile(`identity/.+`)),
+					resource.TestCheckResourceAttr(resourceName, "dkim_attributes.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "dkim_attributes.0.current_signing_key_length", "RSA_2048_BIT"),
+					acctest.CheckResourceAttrRFC3339(resourceName, "dkim_attributes.0.last_key_generation_timestamp"),
+					resource.TestCheckResourceAttr(resourceName, "dkim_attributes.0.next_signing_key_length", "RSA_2048_BIT"),
+					resource.TestCheckResourceAttr(resourceName, "dkim_attributes.0.signing_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "dkim_attributes.0.signing_attributes_origin", "AWS_SES"),
+					resource.TestCheckResourceAttr(resourceName, "dkim_attributes.0.status", "PENDING"),
+					resource.TestCheckResourceAttr(resourceName, "dkim_attributes.0.tokens.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "feedback_forwarding_status", "true"),
+					resource.TestCheckResourceAttr(resourceName, "identity_type", "DOMAIN"),
+					resource.TestCheckResourceAttr(resourceName, "mail_from_attributes.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "mail_from_attributes.0.behavior_on_mx_failure", "USE_DEFAULT_VALUE"),
+					resource.TestCheckResourceAttr(resourceName, "mail_from_attributes.0.mail_from_domain", ""),
+					resource.TestCheckResourceAttr(resourceName, "mail_from_attributes.0.mail_from_domain_status", ""),
+					resource.TestCheckResourceAttr(resourceName, "verified_for_sending_status", "false"),
 				),
 			},
 			{

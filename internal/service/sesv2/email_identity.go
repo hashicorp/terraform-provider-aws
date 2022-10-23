@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/sesv2"
@@ -43,12 +44,83 @@ func ResourceEmailIdentity() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(1, 64),
 			},
+			"dkim_attributes": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"current_signing_key_length": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"last_key_generation_timestamp": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"next_signing_key_length": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"signing_enabled": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+						"signing_attributes_origin": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"status": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"tokens": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+					},
+				},
+			},
 			"email_identity": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
+			"feedback_forwarding_status": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
+			"identity_type": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"mail_from_attributes": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"behavior_on_mx_failure": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"mail_from_domain": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"mail_from_domain_status": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
+			"verified_for_sending_status": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -118,6 +190,25 @@ func resourceEmailIdentityRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set("configuration_set_name", out.ConfigurationSetName)
 	d.Set("email_identity", d.Id())
 
+	if out.DkimAttributes != nil {
+		if err := d.Set("dkim_attributes", []interface{}{flattenDkimAttributes(out.DkimAttributes)}); err != nil {
+			return create.DiagError(names.SESV2, create.ErrActionSetting, ResNameEmailIdentity, d.Id(), err)
+		}
+	} else {
+		d.Set("dkim_attributes", nil)
+	}
+
+	d.Set("feedback_forwarding_status", out.FeedbackForwardingStatus)
+	d.Set("identity_type", string(out.IdentityType))
+
+	if out.MailFromAttributes != nil {
+		if err := d.Set("mail_from_attributes", []interface{}{flattenMailFromAttributes(out.MailFromAttributes)}); err != nil {
+			return create.DiagError(names.SESV2, create.ErrActionSetting, ResNameEmailIdentity, d.Id(), err)
+		}
+	} else {
+		d.Set("mail_from_attributes", nil)
+	}
+
 	tags, err := ListTags(ctx, conn, d.Get("arn").(string))
 	if err != nil {
 		return create.DiagError(names.SESV2, create.ErrActionReading, ResNameEmailIdentity, d.Id(), err)
@@ -134,6 +225,8 @@ func resourceEmailIdentityRead(ctx context.Context, d *schema.ResourceData, meta
 	if err := d.Set("tags_all", tags.Map()); err != nil {
 		return create.DiagError(names.SESV2, create.ErrActionSetting, ResNameEmailIdentity, d.Id(), err)
 	}
+
+	d.Set("verified_for_sending_status", out.VerifiedForSendingStatus)
 
 	return nil
 }
@@ -212,3 +305,64 @@ func FindEmailIdentityByID(ctx context.Context, conn *sesv2.Client, id string) (
 
 	return out, nil
 }
+
+func flattenDkimAttributes(apiObject *types.DkimAttributes) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"current_signing_key_length": string(apiObject.CurrentSigningKeyLength),
+		"next_signing_key_length":    string(apiObject.NextSigningKeyLength),
+		"signing_enabled":            apiObject.SigningEnabled,
+		"signing_attributes_origin":  string(apiObject.SigningAttributesOrigin),
+		"status":                     string(apiObject.Status),
+	}
+
+	if v := apiObject.LastKeyGenerationTimestamp; v != nil {
+		m["last_key_generation_timestamp"] = v.Format(time.RFC3339)
+	}
+
+	if v := apiObject.Tokens; v != nil {
+		m["tokens"] = apiObject.Tokens
+	}
+
+	return m
+}
+
+func flattenMailFromAttributes(apiObject *types.MailFromAttributes) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"behavior_on_mx_failure":  string(apiObject.BehaviorOnMxFailure),
+		"mail_from_domain_status": string(apiObject.MailFromDomainStatus),
+	}
+
+	if v := apiObject.MailFromDomain; v != nil {
+		m["mail_from_domain"] = aws.ToString(apiObject.MailFromDomain)
+	}
+
+	return m
+}
+
+// func dkimSigningKeyLengthValues(in []types.DkimSigningKeyLength) []string {
+// 	var out []string
+
+// 	for _, v := range in {
+// 		out = append(out, string(v))
+// 	}
+
+// 	return out
+// }
+
+// func dkimSigningAttributesOriginValues(in []types.DkimSigningAttributesOrigin) []string {
+// 	var out []string
+
+// 	for _, v := range in {
+// 		out = append(out, string(v))
+// 	}
+
+// 	return out
+// }
