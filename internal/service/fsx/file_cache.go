@@ -128,10 +128,7 @@ func ResourceFileCache() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"tags": {
-							Type:     schema.TypeMap,
-							Computed: true,
-						},
+						"tags": tftags.TagsSchemaComputed(),
 					},
 				},
 			},
@@ -390,7 +387,7 @@ func resourceFileCacheRead(ctx context.Context, d *schema.ResourceData, meta int
 		return create.DiagError(names.FSx, create.ErrActionSetting, ResNameFileCache, d.Id(), err)
 	}
 
-	//Volume tags do not get returned with describe call so need to make a separate list tags call
+	//Cache tags do not get returned with describe call so need to make a separate list tags call
 	tags, tagserr := ListTags(conn, *filecache.ResourceARN)
 
 	if tagserr != nil {
@@ -485,6 +482,7 @@ func flattenDataRepositoryAssociations(ctx context.Context, conn *fsx.FSx, meta 
 		return nil, tfresource.NewEmptyResultError(in)
 	}
 
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 	dataRepositoryAssociationsList := []interface{}{}
 
@@ -500,26 +498,11 @@ func flattenDataRepositoryAssociations(ctx context.Context, conn *fsx.FSx, meta 
 			"imported_file_chunk_size":       dataRepositoryAssociation.ImportedFileChunkSize,
 			"nfs":                            flattenNFSDataRepositoryConfiguration(dataRepositoryAssociation.NFS),
 			"resource_arn":                   dataRepositoryAssociation.ResourceARN,
-			"tags":                           tags,
+			"tags":                           tags.RemoveDefaultConfig(defaultTagsConfig).Map(),
 		}
-
 		dataRepositoryAssociationsList = append(dataRepositoryAssociationsList, values)
 	}
 	return dataRepositoryAssociationsList, nil
-}
-
-func flattenDataRepositoryAssociationTags(tags []*fsx.Tag) []map[string]interface{} {
-
-	dataRepositoryAssociationTags := make([]map[string]interface{}, 0)
-
-	for _, tag := range tags {
-		values := map[string]interface{}{
-			"key":   tag.Key,
-			"value": tag.Value,
-		}
-		dataRepositoryAssociationTags = append(dataRepositoryAssociationTags, values)
-	}
-	return dataRepositoryAssociationTags
 }
 
 func flattenNFSDataRepositoryConfiguration(nfsDataRepositoryConfiguration *fsx.NFSDataRepositoryConfiguration) []map[string]interface{} {
