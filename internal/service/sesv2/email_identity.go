@@ -141,7 +141,7 @@ func resourceEmailIdentityCreate(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	if v, ok := d.GetOk("dkim_signing_attributes"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		in.DkimSigningAttributes = expandDkimSigningAttributes(v.([]interface{})[0].(map[string]interface{}))
+		in.DkimSigningAttributes = expandDKIMSigningAttributes(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
@@ -193,7 +193,7 @@ func resourceEmailIdentityRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set("email_identity", d.Id())
 
 	if out.DkimAttributes != nil {
-		tfMap := flattenDkimAttributes(out.DkimAttributes)
+		tfMap := flattenDKIMAttributes(out.DkimAttributes)
 		tfMap["domain_signing_private_key"] = d.Get("dkim_signing_attributes.0.domain_signing_private_key").(string)
 		tfMap["domain_signing_selector"] = d.Get("dkim_signing_attributes.0.domain_signing_selector").(string)
 
@@ -254,7 +254,7 @@ func resourceEmailIdentityUpdate(ctx context.Context, d *schema.ResourceData, me
 		}
 
 		if v, ok := d.GetOk("dkim_signing_attributes"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			in.SigningAttributes = expandDkimSigningAttributes(v.([]interface{})[0].(map[string]interface{}))
+			in.SigningAttributes = expandDKIMSigningAttributes(v.([]interface{})[0].(map[string]interface{}))
 			in.SigningAttributesOrigin = getSigningAttributesOrigin(v.([]interface{})[0].(map[string]interface{}))
 		}
 
@@ -321,7 +321,7 @@ func FindEmailIdentityByID(ctx context.Context, conn *sesv2.Client, id string) (
 	return out, nil
 }
 
-func expandDkimSigningAttributes(tfMap map[string]interface{}) *types.DkimSigningAttributes {
+func expandDKIMSigningAttributes(tfMap map[string]interface{}) *types.DkimSigningAttributes {
 	if tfMap == nil {
 		return nil
 	}
@@ -363,7 +363,7 @@ func getSigningAttributesOrigin(tfMap map[string]interface{}) types.DkimSigningA
 	return types.DkimSigningAttributesOriginAwsSes
 }
 
-func flattenDkimAttributes(apiObject *types.DkimAttributes) map[string]interface{} {
+func flattenDKIMAttributes(apiObject *types.DkimAttributes) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
