@@ -413,12 +413,12 @@ func flattenMultiplexProgramSettings(mps *mltypes.MultiplexProgramSettings) type
 
 	if mps == nil {
 		return types.List{ElemType: elemType, Elems: []attr.Value{}}
-	} else {
-		attrs["program_number"] = types.Int64{Value: int64(mps.ProgramNumber)}
-		attrs["preferred_channel_pipeline"] = types.String{Value: string(mps.PreferredChannelPipeline)}
-		attrs["service_descriptor"] = flattenServiceDescriptor(mps.ServiceDescriptor)
-		attrs["video_settings"] = flattenVideoSettings(mps.VideoSettings)
 	}
+
+	attrs["program_number"] = types.Int64{Value: int64(mps.ProgramNumber)}
+	attrs["preferred_channel_pipeline"] = types.String{Value: string(mps.PreferredChannelPipeline)}
+	attrs["service_descriptor"] = flattenServiceDescriptor(mps.ServiceDescriptor)
+	attrs["video_settings"] = flattenVideoSettings(mps.VideoSettings)
 
 	vals.Attrs = attrs
 
@@ -436,10 +436,10 @@ func flattenServiceDescriptor(sd *mltypes.MultiplexProgramServiceDescriptor) typ
 
 	if sd == nil {
 		return types.List{ElemType: elemType, Elems: []attr.Value{}}
-	} else {
-		attrs["provider_name"] = types.String{Value: aws.ToString(sd.ProviderName)}
-		attrs["service_name"] = types.String{Value: aws.ToString(sd.ServiceName)}
 	}
+
+	attrs["provider_name"] = types.String{Value: aws.ToString(sd.ProviderName)}
+	attrs["service_name"] = types.String{Value: aws.ToString(sd.ServiceName)}
 
 	vals.Attrs = attrs
 
@@ -456,20 +456,18 @@ func flattenStateMuxSettings(mps *mltypes.MultiplexStatmuxVideoSettings) types.L
 
 	if mps == nil {
 		return types.List{ElemType: elemType, Elems: []attr.Value{}}
-	} else {
-		attrs := map[string]attr.Value{}
-		attrs["minimum_bitrate"] = types.Int64{Value: int64(mps.MinimumBitrate)}
-		attrs["maximum_bitrate"] = types.Int64{Value: int64(mps.MaximumBitrate)}
-		attrs["priority"] = types.Int64{Value: int64(mps.Priority)}
+	}
 
-		vals.Attrs = attrs
+	attrs := map[string]attr.Value{}
+	attrs["minimum_bitrate"] = types.Int64{Value: int64(mps.MinimumBitrate)}
+	attrs["maximum_bitrate"] = types.Int64{Value: int64(mps.MaximumBitrate)}
+	attrs["priority"] = types.Int64{Value: int64(mps.Priority)}
 
-		return types.List{
-			Elems: []attr.Value{vals},
-			ElemType: types.ObjectType{
-				AttrTypes: statemuxAttrs,
-			},
-		}
+	vals.Attrs = attrs
+
+	return types.List{
+		Elems:    []attr.Value{vals},
+		ElemType: elemType,
 	}
 }
 
