@@ -18,7 +18,7 @@ Terraform resource for managing an AWS SESv2 (Simple Email V2) Email Identity.
 
 ```terraform
 resource "aws_sesv2_email_identity" "example" {
-  email_identity = "testing@example.com" 
+  email_identity = "testing@example.com"
 }
 ```
 
@@ -26,7 +26,7 @@ resource "aws_sesv2_email_identity" "example" {
 
 ```terraform
 resource "aws_sesv2_email_identity" "example" {
-  email_identity = "example.com" 
+  email_identity = "example.com"
 }
 ```
 
