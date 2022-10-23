@@ -8,12 +8,14 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/sesv2/types"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfsesv2 "github.com/hashicorp/terraform-provider-aws/internal/service/sesv2"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -123,6 +125,85 @@ func TestAccSESV2EmailIdentity_disappears(t *testing.T) {
 	})
 }
 
+func TestAccSESV2EmailIdentity_nextSigningKeyLength(t *testing.T) {
+	rName := acctest.RandomDomainName()
+	resourceName := "aws_sesv2_email_identity.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2EndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEmailIdentityDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEmailIdentityConfig_nextSigningKeyLength(rName, string(types.DkimSigningKeyLengthRsa2048Bit)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEmailIdentityExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "dkim_attributes.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "dkim_attributes.0.next_signing_key_length", "RSA_2048_BIT"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccEmailIdentityConfig_nextSigningKeyLength(rName, string(types.DkimSigningKeyLengthRsa1024Bit)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEmailIdentityExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "dkim_attributes.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "dkim_attributes.0.next_signing_key_length", "RSA_1024_BIT"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccSESV2EmailIdentity_domainSigning(t *testing.T) {
+	rName := acctest.RandomDomainName()
+	resourceName := "aws_sesv2_email_identity.test"
+
+	key1 := verify.Base64Encode([]byte(acctest.TLSRSAPrivateKeyPEM(2048)))
+	selector1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	key2 := verify.Base64Encode([]byte(acctest.TLSRSAPrivateKeyPEM(2048)))
+	selector2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2EndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEmailIdentityDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEmailIdentityConfig_domainSigning(rName, key1, selector1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEmailIdentityExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "dkim_attributes.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "dkim_attributes.0.domain_signing_private_key", key1),
+					resource.TestCheckResourceAttr(resourceName, "dkim_attributes.0.domain_signing_selector", selector1),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"dkim_attributes.0.domain_signing_private_key", "dkim_attributes.0.domain_signing_selector"},
+			},
+			{
+				Config: testAccEmailIdentityConfig_domainSigning(rName, key2, selector2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEmailIdentityExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "dkim_attributes.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "dkim_attributes.0.domain_signing_private_key", key2),
+					resource.TestCheckResourceAttr(resourceName, "dkim_attributes.0.domain_signing_selector", selector2),
+				),
+			},
+		},
+	})
+}
+
 func TestAccSESV2EmailIdentity_tags(t *testing.T) {
 	rName := acctest.RandomEmailAddress(acctest.RandomDomainName())
 	resourceName := "aws_sesv2_email_identity.test"
@@ -220,6 +301,31 @@ resource "aws_sesv2_email_identity" "test" {
   email_identity = %[1]q
 }
 `, rName)
+}
+
+func testAccEmailIdentityConfig_nextSigningKeyLength(rName, nextSigningKeyLength string) string {
+	return fmt.Sprintf(`
+resource "aws_sesv2_email_identity" "test" {
+  email_identity = %[1]q
+
+  dkim_attributes {
+	next_signing_key_length = %[2]q
+  }
+}
+`, rName, nextSigningKeyLength)
+}
+
+func testAccEmailIdentityConfig_domainSigning(rName, domainSigningPrivateKey, domainSigningSelector string) string {
+	return fmt.Sprintf(`
+resource "aws_sesv2_email_identity" "test" {
+  email_identity = %[1]q
+
+  dkim_attributes {
+	domain_signing_private_key = %[2]q
+	domain_signing_selector = %[3]q
+  }
+}
+`, rName, domainSigningPrivateKey, domainSigningSelector)
 }
 
 func testAccEmailIdentityConfig_tags1(rName, tagKey1, tagValue1 string) string {
