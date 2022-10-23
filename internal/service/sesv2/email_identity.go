@@ -108,6 +108,7 @@ func ResourceEmailIdentity() *schema.Resource {
 			"email_identity": {
 				Type:     schema.TypeString,
 				Required: true,
+				ForceNew: true,
 			},
 			"identity_type": {
 				Type:     schema.TypeString,
