@@ -70,7 +70,7 @@ The following arguments are supported:
 
 ### dkim_signing_attributes
 
-* `domain_signing_private_key` - (Optional) [Bring Your Own DKIM] A private key that's used to generate a DKIM signature.
+* `domain_signing_private_key` - (Optional) [Bring Your Own DKIM] A private key that's used to generate a DKIM signature. The private key must use 1024 or 2048-bit RSA encryption, and must be encoded using base64 encoding.
 * `domain_signing_selector` - (Optional) [Bring Your Own DKIM] A string that's used to identify a public key in the DNS configuration for a domain.
 * `next_signing_key_length` - (Optional) [Easy DKIM] The key length of the future DKIM key pair to be generated. This can be changed at most once per day.
 
