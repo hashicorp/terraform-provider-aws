@@ -167,9 +167,10 @@ func ResourceFeature() *schema.Resource {
 										// ConflictsWith: []string{"bool_value", "long_value", "string_value"},
 									},
 									"long_value": {
-										Type:         nullable.TypeNullableInt,
-										Optional:     true,
-										ValidateFunc: nullable.ValidateTypeStringNullableIntBetween(-9007199254740991, 9007199254740991),
+										Type:     nullable.TypeNullableInt,
+										Optional: true,
+										// values in ValidateFunc results in overflows
+										// ValidateFunc: nullable.ValidateTypeStringNullableIntBetween(-9007199254740991, 9007199254740991),
 										// unable to index parent list
 										// ConflictsWith: []string{"bool_value", "double_value", "string_value"},
 									},
