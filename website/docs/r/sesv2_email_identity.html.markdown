@@ -90,7 +90,6 @@ In addition to all arguments above, the following attributes are exported:
 * `tags` - (Optional) A map of tags to assign to the service. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `verified_for_sending_status` - Specifies whether or not the identity is verified.
 
-
 ## Import
 
 SESv2 (Simple Email V2) Email Identity can be imported using the `email_identity`, e.g.,
