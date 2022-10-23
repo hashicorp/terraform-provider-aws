@@ -113,6 +113,39 @@ func TestAccSESV2EmailIdentity_disappears(t *testing.T) {
 	})
 }
 
+func TestAccSESV2EmailIdentity_configurationSetName(t *testing.T) {
+	rName := acctest.RandomEmailAddress(acctest.RandomDomainName())
+	resourceName := "aws_sesv2_email_identity.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2EndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEmailIdentityDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEmailIdentityConfig_configurationSetName1(rName, sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEmailIdentityExists(resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, "configuration_set_name", "aws_sesv2_configuration_set.test1", "configuration_set_name"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccEmailIdentityConfig_configurationSetName2(rName, sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEmailIdentityExists(resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, "configuration_set_name", "aws_sesv2_configuration_set.test2", "configuration_set_name"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccSESV2EmailIdentity_nextSigningKeyLength(t *testing.T) {
 	rName := acctest.RandomDomainName()
 	resourceName := "aws_sesv2_email_identity.test"
@@ -289,6 +322,32 @@ resource "aws_sesv2_email_identity" "test" {
   email_identity = %[1]q
 }
 `, rName)
+}
+
+func testAccEmailIdentityConfig_configurationSetName1(rName, configurationSetName string) string {
+	return fmt.Sprintf(`
+resource "aws_sesv2_configuration_set" "test1" {
+  configuration_set_name = %[2]q
+}
+
+resource "aws_sesv2_email_identity" "test" {
+  email_identity = %[1]q
+  configuration_set_name = aws_sesv2_configuration_set.test1.configuration_set_name
+}
+`, rName, configurationSetName)
+}
+
+func testAccEmailIdentityConfig_configurationSetName2(rName, configurationSetName string) string {
+	return fmt.Sprintf(`
+resource "aws_sesv2_configuration_set" "test2" {
+  configuration_set_name = %[2]q
+}
+
+resource "aws_sesv2_email_identity" "test" {
+  email_identity = %[1]q
+  configuration_set_name = aws_sesv2_configuration_set.test2.configuration_set_name
+}
+`, rName, configurationSetName)
 }
 
 func testAccEmailIdentityConfig_nextSigningKeyLength(rName, nextSigningKeyLength string) string {
