@@ -424,7 +424,7 @@ func expandValue(value []interface{}) *cloudwatchevidently.VariableValue {
 	} else if v, null, _ := nullable.Int(tfMap["long_value"].(string)).Value(); !null {
 		result.LongValue = aws.Int64(v)
 	} else if v, null, _ := nullable.Float(tfMap["double_value"].(string)).Value(); !null {
-		result.DoubleValue = aws.Float64(float64(v))
+		result.DoubleValue = aws.Float64(v)
 	} else if v, ok := tfMap["string_value"].(string); ok {
 		result.StringValue = aws.String(v)
 	}
