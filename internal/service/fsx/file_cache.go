@@ -381,9 +381,10 @@ func resourceFileCacheRead(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	// Lookup and set Data Repository Associations
-	data_repository_associations, err := flattenDataRepositoryAssociations(ctx, conn, meta, filecache.DataRepositoryAssociationIds)
 
-	if err := d.Set("data_repository_associations", data_repository_associations); err != nil {
+	dataRepositoryAssociations, err := findDataRepositoryAssociationsByIDs(conn, filecache.DataRepositoryAssociationIds)
+
+	if err := d.Set("data_repository_associations", flattenDataRepositoryAssociations(dataRepositoryAssociations, defaultTagsConfig, ignoreTagsConfig)); err != nil {
 		return create.DiagError(names.FSx, create.ErrActionSetting, ResNameFileCache, d.Id(), err)
 	}
 
@@ -463,30 +464,10 @@ func resourceFileCacheDelete(ctx context.Context, d *schema.ResourceData, meta i
 	return nil
 }
 
-func flattenDataRepositoryAssociations(ctx context.Context, conn *fsx.FSx, meta interface{}, dataRepositoryAssociationIds []*string) ([]interface{}, error) {
-	in := &fsx.DescribeDataRepositoryAssociationsInput{
-		AssociationIds: dataRepositoryAssociationIds,
-	}
-	result, err := conn.DescribeDataRepositoryAssociationsWithContext(ctx, in)
+func flattenDataRepositoryAssociations(dataRepositoryAssociations []*fsx.DataRepositoryAssociation, defaultTagsConfig *tftags.DefaultConfig, ignoreTagsConfig *tftags.IgnoreConfig) []map[string]interface{} {
+	flattenedDataRepositoryAssociations := make([]map[string]interface{}, 0)
 
-	if tfawserr.ErrCodeEquals(err, fsx.ErrCodeFileCacheNotFound) {
-		return nil, &resource.NotFoundError{
-			LastError:   err,
-			LastRequest: in,
-		}
-	}
-	if err != nil {
-		return nil, err
-	}
-	if result == nil || result.Associations == nil {
-		return nil, tfresource.NewEmptyResultError(in)
-	}
-
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-	dataRepositoryAssociationsList := []interface{}{}
-
-	for _, dataRepositoryAssociation := range result.Associations {
+	for _, dataRepositoryAssociation := range dataRepositoryAssociations {
 		tags := KeyValueTags(dataRepositoryAssociation.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 		values := map[string]interface{}{
@@ -500,9 +481,9 @@ func flattenDataRepositoryAssociations(ctx context.Context, conn *fsx.FSx, meta 
 			"resource_arn":                   dataRepositoryAssociation.ResourceARN,
 			"tags":                           tags.RemoveDefaultConfig(defaultTagsConfig).Map(),
 		}
-		dataRepositoryAssociationsList = append(dataRepositoryAssociationsList, values)
+		flattenedDataRepositoryAssociations = append(flattenedDataRepositoryAssociations, values)
 	}
-	return dataRepositoryAssociationsList, nil
+	return flattenedDataRepositoryAssociations
 }
 
 func flattenNFSDataRepositoryConfiguration(nfsDataRepositoryConfiguration *fsx.NFSDataRepositoryConfiguration) []map[string]interface{} {

@@ -88,6 +88,38 @@ func findFileCacheByID(conn *fsx.FSx, id string) (*fsx.FileCache, error) {
 	return fileCaches[0], nil
 }
 
+func findDataRepositoryAssociationsByIDs(conn *fsx.FSx, ids []*string) ([]*fsx.DataRepositoryAssociation, error) {
+	input := &fsx.DescribeDataRepositoryAssociationsInput{
+		AssociationIds: ids,
+	}
+	var dataRepositoryAssociations []*fsx.DataRepositoryAssociation
+
+	err := conn.DescribeDataRepositoryAssociationsPages(input, func(page *fsx.DescribeDataRepositoryAssociationsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+		for _, dataRepositoryAssociation := range page.Associations {
+			dataRepositoryAssociations = append(dataRepositoryAssociations, dataRepositoryAssociation)
+		}
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, fsx.ErrCodeDataRepositoryAssociationNotFound) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+	if err != nil {
+		return nil, err
+	}
+	if len(dataRepositoryAssociations) == 0 || dataRepositoryAssociations[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return dataRepositoryAssociations, nil
+}
+
 func FindFileSystemByID(conn *fsx.FSx, id string) (*fsx.FileSystem, error) {
 	input := &fsx.DescribeFileSystemsInput{
 		FileSystemIds: []*string{aws.String(id)},
