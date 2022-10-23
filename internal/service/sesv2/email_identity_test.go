@@ -19,7 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccSESV2EmailIdentity_basicEmail(t *testing.T) {
+func TestAccSESV2EmailIdentity_basic_emailAddress(t *testing.T) {
 	rName := acctest.RandomEmailAddress(acctest.RandomDomainName())
 	resourceName := "aws_sesv2_email_identity.test"
 
@@ -55,7 +55,7 @@ func TestAccSESV2EmailIdentity_basicEmail(t *testing.T) {
 	})
 }
 
-func TestAccSESV2EmailIdentity_basicDomain(t *testing.T) {
+func TestAccSESV2EmailIdentity_basic_domain(t *testing.T) {
 	rName := acctest.RandomDomainName()
 	resourceName := "aws_sesv2_email_identity.test"
 
