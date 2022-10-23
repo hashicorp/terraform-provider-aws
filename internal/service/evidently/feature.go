@@ -517,6 +517,7 @@ func VariationChanges(o, n interface{}) (remove []*string, addOrUpdate []*cloudw
 	// remove is a list of strings
 	remove = make([]*string, 0)
 	for k := range om {
+		k := k
 		if _, ok := nm[k]; !ok {
 			remove = append(remove, &k)
 		}
