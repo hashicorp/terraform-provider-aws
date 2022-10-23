@@ -23,8 +23,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func NewResourceMultiplexProgram(_ context.Context) resource.Resource {
-	return &multiplexProgram{}
+func init() {
+	registerFrameworkResourceFactory(newResourceMultiplexProgram)
+}
+
+func newResourceMultiplexProgram(_ context.Context) (resource.ResourceWithConfigure, error) {
+	return &multiplexProgram{}, nil
 }
 
 const (
