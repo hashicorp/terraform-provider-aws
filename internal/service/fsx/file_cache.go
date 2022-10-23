@@ -358,6 +358,7 @@ func resourceFileCacheRead(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	d.Set("dns_name", filecache.DNSName)
+	d.Set("file_cache_id", filecache.FileCacheId)
 	d.Set("file_cache_type", filecache.FileCacheType)
 	d.Set("file_cache_type_version", filecache.FileCacheTypeVersion)
 	d.Set("kms_key_id", filecache.KmsKeyId)
