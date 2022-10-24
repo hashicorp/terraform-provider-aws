@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"log"
 	"regexp"
-	"sort"
 	"strconv"
 	"time"
 
@@ -350,12 +349,7 @@ func resourceGlobalReplicationGroupCreate(ctx context.Context, d *schema.Resourc
 
 		if requested != current {
 			if requested > current {
-				input := &elasticache.IncreaseNodeGroupsInGlobalReplicationGroupInput{
-					ApplyImmediately:         aws.Bool(true),
-					GlobalReplicationGroupId: aws.String(d.Id()),
-					NodeGroupCount:           aws.Int64(int64(requested)),
-				}
-				_, err := conn.IncreaseNodeGroupsInGlobalReplicationGroupWithContext(ctx, input)
+				err := globalReplcationGroupNodeGroupIncrease(ctx, conn, d.Id(), requested)
 				if err != nil {
 					return diag.Errorf("updating ElastiCache Global Replication Group (%s) node groups on creation: %s", d.Id(), err)
 				}
@@ -364,18 +358,7 @@ func resourceGlobalReplicationGroupCreate(ctx context.Context, d *schema.Resourc
 				for _, v := range globalReplicationGroup.GlobalNodeGroups {
 					ids = append(ids, aws.StringValue(v.GlobalNodeGroupId))
 				}
-				sort.Slice(ids, func(i, j int) bool {
-					return globalReplicationGroupNodeNumber(ids[i]) < globalReplicationGroupNodeNumber(ids[j])
-				})
-				ids = ids[:requested]
-
-				input := &elasticache.DecreaseNodeGroupsInGlobalReplicationGroupInput{
-					ApplyImmediately:         aws.Bool(true),
-					GlobalReplicationGroupId: aws.String(d.Id()),
-					NodeGroupCount:           aws.Int64(int64(requested)),
-					GlobalNodeGroupsToRetain: aws.StringSlice(ids),
-				}
-				_, err := conn.DecreaseNodeGroupsInGlobalReplicationGroupWithContext(ctx, input)
+				err := globalReplicationGroupNodeGroupDecrease(ctx, conn, d.Id(), requested, ids)
 				if err != nil {
 					return diag.Errorf("updating ElastiCache Global Replication Group (%s) node groups on creation: %s", d.Id(), err)
 				}
@@ -388,17 +371,6 @@ func resourceGlobalReplicationGroupCreate(ctx context.Context, d *schema.Resourc
 	}
 
 	return resourceGlobalReplicationGroupRead(ctx, d, meta)
-}
-
-func globalReplicationGroupNodeNumber(id string) int {
-	re := regexp.MustCompile(`^.+-0{0-3}(\d+)$`)
-	matches := re.FindStringSubmatch(id)
-	if len(matches) == 2 {
-		if v, err := strconv.Atoi(matches[1]); err == nil {
-			return v
-		}
-	}
-	return 0
 }
 
 func resourceGlobalReplicationGroupRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -497,12 +469,7 @@ func resourceGlobalReplicationGroupUpdate(ctx context.Context, d *schema.Resourc
 
 		if requested != current {
 			if requested > current {
-				input := &elasticache.IncreaseNodeGroupsInGlobalReplicationGroupInput{
-					ApplyImmediately:         aws.Bool(true),
-					GlobalReplicationGroupId: aws.String(d.Id()),
-					NodeGroupCount:           aws.Int64(int64(requested)),
-				}
-				_, err := conn.IncreaseNodeGroupsInGlobalReplicationGroupWithContext(ctx, input)
+				err := globalReplcationGroupNodeGroupIncrease(ctx, conn, d.Id(), requested)
 				if err != nil {
 					return diag.Errorf("updating ElastiCache Global Replication Group (%s) node groups: %s", d.Id(), err)
 				}
@@ -512,18 +479,7 @@ func resourceGlobalReplicationGroupUpdate(ctx context.Context, d *schema.Resourc
 					v := v.(map[string]any)
 					ids = append(ids, v["global_node_group_id"].(string))
 				}
-				slices.SortFunc(ids, func(a, b string) bool {
-					return globalReplicationGroupNodeNumber(a) < globalReplicationGroupNodeNumber(b)
-				})
-				ids = ids[:requested]
-
-				input := &elasticache.DecreaseNodeGroupsInGlobalReplicationGroupInput{
-					ApplyImmediately:         aws.Bool(true),
-					GlobalReplicationGroupId: aws.String(d.Id()),
-					NodeGroupCount:           aws.Int64(int64(requested)),
-					GlobalNodeGroupsToRemove: aws.StringSlice(ids),
-				}
-				_, err := conn.DecreaseNodeGroupsInGlobalReplicationGroupWithContext(ctx, input)
+				err := globalReplicationGroupNodeGroupDecrease(ctx, conn, d.Id(), requested, ids)
 				if err != nil {
 					return diag.Errorf("updating ElastiCache Global Replication Group (%s) node groups: %s", d.Id(), err)
 				}
@@ -691,6 +647,43 @@ func flattenGlobalReplicationGroupPrimaryGroupID(members []*elasticache.GlobalRe
 		}
 	}
 	return ""
+}
+
+func globalReplcationGroupNodeGroupIncrease(ctx context.Context, conn *elasticache.ElastiCache, id string, requested int) error {
+	input := &elasticache.IncreaseNodeGroupsInGlobalReplicationGroupInput{
+		ApplyImmediately:         aws.Bool(true),
+		GlobalReplicationGroupId: aws.String(id),
+		NodeGroupCount:           aws.Int64(int64(requested)),
+	}
+	_, err := conn.IncreaseNodeGroupsInGlobalReplicationGroupWithContext(ctx, input)
+	return err
+}
+
+func globalReplicationGroupNodeGroupDecrease(ctx context.Context, conn *elasticache.ElastiCache, id string, requested int, nodeGroupIDs []string) error {
+	slices.SortFunc(nodeGroupIDs, func(a, b string) bool {
+		return globalReplicationGroupNodeNumber(a) < globalReplicationGroupNodeNumber(b)
+	})
+	nodeGroupIDs = nodeGroupIDs[:requested]
+
+	input := &elasticache.DecreaseNodeGroupsInGlobalReplicationGroupInput{
+		ApplyImmediately:         aws.Bool(true),
+		GlobalReplicationGroupId: aws.String(id),
+		NodeGroupCount:           aws.Int64(int64(requested)),
+		GlobalNodeGroupsToRetain: aws.StringSlice(nodeGroupIDs),
+	}
+	_, err := conn.DecreaseNodeGroupsInGlobalReplicationGroupWithContext(ctx, input)
+	return err
+}
+
+func globalReplicationGroupNodeNumber(id string) int {
+	re := regexp.MustCompile(`^.+-0{0,3}(\d+)$`)
+	matches := re.FindStringSubmatch(id)
+	if len(matches) == 2 {
+		if v, err := strconv.Atoi(matches[1]); err == nil {
+			return v
+		}
+	}
+	return 0
 }
 
 func diffHasChange(key ...string) customdiff.ResourceConditionFunc {
