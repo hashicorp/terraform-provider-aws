@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"golang.org/x/exp/slices"
 )
 
 const (
@@ -177,9 +178,10 @@ func ResourceGlobalReplicationGroup() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: customdiff.Sequence(
+		CustomizeDiff: customdiff.All(
 			customizeDiffGlobalReplicationGroupEngineVersionErrorOnDowngrade,
 			customizeDiffGlobalReplicationGroupParamGroupNameRequiresMajorVersionUpgrade,
+			customdiff.ComputedIf("global_node_groups", diffHasChange("num_node_groups")),
 		),
 	}
 }
@@ -343,8 +345,8 @@ func resourceGlobalReplicationGroupCreate(ctx context.Context, d *schema.Resourc
 	}
 
 	if v, ok := d.GetOk("num_node_groups"); ok {
-		requested := v.(int)
 		current := len(globalReplicationGroup.GlobalNodeGroups)
+		requested := v.(int)
 
 		if requested != current {
 			if requested > current {
@@ -485,6 +487,51 @@ func resourceGlobalReplicationGroupUpdate(ctx context.Context, d *schema.Resourc
 	if d.HasChange("global_replication_group_description") {
 		if err := updateGlobalReplicationGroup(ctx, conn, d.Id(), globalReplicationGroupDescriptionUpdater(d.Get("global_replication_group_description").(string))); err != nil {
 			return diag.Errorf("updating ElastiCache Global Replication Group (%s) description: %s", d.Id(), err)
+		}
+	}
+
+	if d.HasChange("num_node_groups") {
+		o, n := d.GetChange("num_node_groups")
+		current := o.(int)
+		requested := n.(int)
+
+		if requested != current {
+			if requested > current {
+				input := &elasticache.IncreaseNodeGroupsInGlobalReplicationGroupInput{
+					ApplyImmediately:         aws.Bool(true),
+					GlobalReplicationGroupId: aws.String(d.Id()),
+					NodeGroupCount:           aws.Int64(int64(requested)),
+				}
+				_, err := conn.IncreaseNodeGroupsInGlobalReplicationGroupWithContext(ctx, input)
+				if err != nil {
+					return diag.Errorf("updating ElastiCache Global Replication Group (%s) node groups: %s", d.Id(), err)
+				}
+			} else if requested < current {
+				var ids []string
+				for _, v := range d.Get("global_node_groups").(*schema.Set).List() {
+					v := v.(map[string]any)
+					ids = append(ids, v["global_node_group_id"].(string))
+				}
+				slices.SortFunc(ids, func(a, b string) bool {
+					return globalReplicationGroupNodeNumber(a) < globalReplicationGroupNodeNumber(b)
+				})
+				ids = ids[:requested]
+
+				input := &elasticache.DecreaseNodeGroupsInGlobalReplicationGroupInput{
+					ApplyImmediately:         aws.Bool(true),
+					GlobalReplicationGroupId: aws.String(d.Id()),
+					NodeGroupCount:           aws.Int64(int64(requested)),
+					GlobalNodeGroupsToRemove: aws.StringSlice(ids),
+				}
+				_, err := conn.DecreaseNodeGroupsInGlobalReplicationGroupWithContext(ctx, input)
+				if err != nil {
+					return diag.Errorf("updating ElastiCache Global Replication Group (%s) node groups: %s", d.Id(), err)
+				}
+			}
+
+			if _, err := waitGlobalReplicationGroupAvailable(ctx, conn, d.Id(), GlobalReplicationGroupDefaultUpdatedTimeout); err != nil {
+				return diag.Errorf("updating ElastiCache Global Replication Group (%s) node groups: waiting for completion: %s", d.Id(), err)
+			}
 		}
 	}
 
@@ -644,4 +691,10 @@ func flattenGlobalReplicationGroupPrimaryGroupID(members []*elasticache.GlobalRe
 		}
 	}
 	return ""
+}
+
+func diffHasChange(key ...string) customdiff.ResourceConditionFunc {
+	return func(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
+		return diff.HasChanges(key...)
+	}
 }
