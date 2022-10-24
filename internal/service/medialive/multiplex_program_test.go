@@ -62,7 +62,6 @@ func TestParseMultiplexProgramIDUnitTest(t *testing.T) {
 				t.Errorf("got %s, expected %s", mid, testCase.MultiplexID)
 			}
 		})
-
 	}
 }
 
