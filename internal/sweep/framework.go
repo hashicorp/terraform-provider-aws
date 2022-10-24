@@ -25,7 +25,7 @@ type SweepFrameworkResource struct {
 	meta    interface{}
 }
 
-func NewSweepFrameworkResource(factory func(context.Context) (fwresource.ResourceWithConfigure, error), id string, meta interface{}) *SweepFrameworkResource {
+func NewSweepFrameworkResource(factory func(context.Context) (fwresource.ResourceWithConfigureAndImportState, error), id string, meta interface{}) *SweepFrameworkResource {
 	return &SweepFrameworkResource{
 		factory: factory,
 		id:      id,
