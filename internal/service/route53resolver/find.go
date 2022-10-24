@@ -6,25 +6,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-// FindResolverQueryLogConfigAssociationByID returns the query logging configuration association corresponding to the specified ID.
-// Returns nil if no configuration is found.
-func FindResolverQueryLogConfigAssociationByID(conn *route53resolver.Route53Resolver, queryLogConfigAssociationID string) (*route53resolver.ResolverQueryLogConfigAssociation, error) {
-	input := &route53resolver.GetResolverQueryLogConfigAssociationInput{
-		ResolverQueryLogConfigAssociationId: aws.String(queryLogConfigAssociationID),
-	}
-
-	output, err := conn.GetResolverQueryLogConfigAssociation(input)
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil {
-		return nil, nil
-	}
-
-	return output.ResolverQueryLogConfigAssociation, nil
-}
-
 // FindResolverDNSSECConfigByID returns the dnssec configuration corresponding to the specified ID.
 // Returns nil if no configuration is found.
 func FindResolverDNSSECConfigByID(conn *route53resolver.Route53Resolver, dnssecConfigID string) (*route53resolver.ResolverDnssecConfig, error) {

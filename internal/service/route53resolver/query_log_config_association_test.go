@@ -5,13 +5,13 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/route53resolver"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfroute53resolver "github.com/hashicorp/terraform-provider-aws/internal/service/route53resolver"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccRoute53ResolverQueryLogConfigAssociation_basic(t *testing.T) {
@@ -75,15 +75,16 @@ func testAccCheckQueryLogConfigAssociationDestroy(s *terraform.State) error {
 			continue
 		}
 
-		// Try to find the resource
 		_, err := tfroute53resolver.FindResolverQueryLogConfigAssociationByID(conn, rs.Primary.ID)
-		// Verify the error is what we want
-		if tfawserr.ErrCodeEquals(err, route53resolver.ErrCodeResourceNotFoundException) {
+
+		if tfresource.NotFound(err) {
 			continue
 		}
+
 		if err != nil {
 			return err
 		}
+
 		return fmt.Errorf("Route 53 Resolver Query Log Config Association still exists: %s", rs.Primary.ID)
 	}
 
@@ -102,12 +103,14 @@ func testAccCheckQueryLogConfigAssociationExists(n string, v *route53resolver.Re
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ResolverConn
-		out, err := tfroute53resolver.FindResolverQueryLogConfigAssociationByID(conn, rs.Primary.ID)
+
+		output, err := tfroute53resolver.FindResolverQueryLogConfigAssociationByID(conn, rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
 
-		*v = *out
+		*v = *output
 
 		return nil
 	}

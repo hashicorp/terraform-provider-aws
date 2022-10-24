@@ -8,9 +8,6 @@ import (
 )
 
 const (
-	resolverQueryLogConfigAssociationStatusNotFound = "NotFound"
-	resolverQueryLogConfigAssociationStatusUnknown  = "Unknown"
-
 	resolverQueryLogConfigStatusNotFound = "NotFound"
 	resolverQueryLogConfigStatusUnknown  = "Unknown"
 
@@ -23,27 +20,6 @@ const (
 	resolverFirewallRuleGroupAssociationStatusNotFound = "NotFound"
 	resolverFirewallRuleGroupAssociationStatusUnknown  = "Unknown"
 )
-
-// StatusQueryLogConfigAssociation fetches the QueryLogConfigAssociation and its Status
-func StatusQueryLogConfigAssociation(conn *route53resolver.Route53Resolver, queryLogConfigAssociationID string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		queryLogConfigAssociation, err := FindResolverQueryLogConfigAssociationByID(conn, queryLogConfigAssociationID)
-
-		if tfawserr.ErrCodeEquals(err, route53resolver.ErrCodeResourceNotFoundException) {
-			return nil, resolverQueryLogConfigAssociationStatusNotFound, nil
-		}
-
-		if err != nil {
-			return nil, resolverQueryLogConfigAssociationStatusUnknown, err
-		}
-
-		if queryLogConfigAssociation == nil {
-			return nil, resolverQueryLogConfigAssociationStatusNotFound, nil
-		}
-
-		return queryLogConfigAssociation, aws.StringValue(queryLogConfigAssociation.Status), nil
-	}
-}
 
 // StatusDNSSECConfig fetches the DnssecConfig and its Status
 func StatusDNSSECConfig(conn *route53resolver.Route53Resolver, dnssecConfigID string) resource.StateRefreshFunc {

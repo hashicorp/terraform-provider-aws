@@ -10,12 +10,6 @@ import (
 )
 
 const (
-	// Maximum amount of time to wait for a QueryLogConfigAssociation to return ACTIVE
-	QueryLogConfigAssociationCreatedTimeout = 5 * time.Minute
-
-	// Maximum amount of time to wait for a QueryLogConfigAssociation to be deleted
-	QueryLogConfigAssociationDeletedTimeout = 5 * time.Minute
-
 	// Maximum amount of time to wait for a DnssecConfig to return ENABLED
 	DNSSECConfigCreatedTimeout = 10 * time.Minute
 
@@ -37,42 +31,6 @@ const (
 	// Maximum amount of time to wait for a FirewallRuleGroupAssociation to be deleted
 	FirewallRuleGroupAssociationDeletedTimeout = 5 * time.Minute
 )
-
-// WaitQueryLogConfigAssociationCreated waits for a QueryLogConfig to return ACTIVE
-func WaitQueryLogConfigAssociationCreated(conn *route53resolver.Route53Resolver, queryLogConfigAssociationID string) (*route53resolver.ResolverQueryLogConfigAssociation, error) {
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{route53resolver.ResolverQueryLogConfigAssociationStatusCreating},
-		Target:  []string{route53resolver.ResolverQueryLogConfigAssociationStatusActive},
-		Refresh: StatusQueryLogConfigAssociation(conn, queryLogConfigAssociationID),
-		Timeout: QueryLogConfigAssociationCreatedTimeout,
-	}
-
-	outputRaw, err := stateConf.WaitForState()
-
-	if v, ok := outputRaw.(*route53resolver.ResolverQueryLogConfigAssociation); ok {
-		return v, err
-	}
-
-	return nil, err
-}
-
-// WaitQueryLogConfigAssociationCreated waits for a QueryLogConfig to be deleted
-func WaitQueryLogConfigAssociationDeleted(conn *route53resolver.Route53Resolver, queryLogConfigAssociationID string) (*route53resolver.ResolverQueryLogConfigAssociation, error) {
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{route53resolver.ResolverQueryLogConfigAssociationStatusDeleting},
-		Target:  []string{},
-		Refresh: StatusQueryLogConfigAssociation(conn, queryLogConfigAssociationID),
-		Timeout: QueryLogConfigAssociationDeletedTimeout,
-	}
-
-	outputRaw, err := stateConf.WaitForState()
-
-	if v, ok := outputRaw.(*route53resolver.ResolverQueryLogConfigAssociation); ok {
-		return v, err
-	}
-
-	return nil, err
-}
 
 // WaitDNSSECConfigCreated waits for a DnssecConfig to return ENABLED
 func WaitDNSSECConfigCreated(conn *route53resolver.Route53Resolver, dnssecConfigID string) (*route53resolver.ResolverDnssecConfig, error) {
