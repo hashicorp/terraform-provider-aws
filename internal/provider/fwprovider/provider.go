@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/experimental/intf"
 	"github.com/hashicorp/terraform-provider-aws/internal/fwtypes"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -422,13 +423,13 @@ func (w *wrappedDataSource) Configure(ctx context.Context, request datasource.Co
 	w.inner.Configure(ctx, request, response)
 }
 
-// wrappedDataSource wraps a data source, adding common functionality.
+// wrappedResource wraps a resource, adding common functionality.
 type wrappedResource struct {
-	inner    resource.ResourceWithConfigure
+	inner    intf.ResourceWithConfigureAndImportState
 	typeName string
 }
 
-func newWrappedResource(inner resource.ResourceWithConfigure) resource.ResourceWithConfigure {
+func newWrappedResource(inner intf.ResourceWithConfigureAndImportState) intf.ResourceWithConfigureAndImportState {
 	return &wrappedResource{inner: inner, typeName: strings.TrimPrefix(reflect.TypeOf(inner).String(), "*")}
 }
 
@@ -474,4 +475,8 @@ func (w *wrappedResource) Delete(ctx context.Context, request resource.DeleteReq
 
 func (w *wrappedResource) Configure(ctx context.Context, request resource.ConfigureRequest, response *resource.ConfigureResponse) {
 	w.inner.Configure(ctx, request, response)
+}
+
+func (w *wrappedResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+	w.inner.ImportState(ctx, request, response)
 }

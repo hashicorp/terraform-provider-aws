@@ -12,11 +12,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/experimental/intf"
 )
 
 // Terraform Plugin Framework variants of standard acceptance test helpers.
 
-func DeleteFrameworkResource(factory func(context.Context) (fwresource.ResourceWithConfigure, error), is *terraform.InstanceState, meta interface{}) error {
+func DeleteFrameworkResource(factory func(context.Context) (intf.ResourceWithConfigureAndImportState, error), is *terraform.InstanceState, meta interface{}) error {
 	ctx := context.Background()
 
 	resource, err := factory(ctx)
@@ -49,7 +50,7 @@ func DeleteFrameworkResource(factory func(context.Context) (fwresource.ResourceW
 	return nil
 }
 
-func CheckFrameworkResourceDisappears(provo *schema.Provider, factory func(context.Context) (fwresource.ResourceWithConfigure, error), n string) resource.TestCheckFunc {
+func CheckFrameworkResourceDisappears(provo *schema.Provider, factory func(context.Context) (intf.ResourceWithConfigureAndImportState, error), n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
