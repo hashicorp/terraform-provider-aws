@@ -61,7 +61,7 @@ The following arguments are optional:
 * `data_repository_association` - See the [`data_repository_association` configuration](#data-repository-association-arguments) block. Max of 8.
 A list of up to 8 configurations for data repository associations (DRAs) to be created during the cache creation. The DRAs link the cache to either an Amazon S3 data repository or a Network File System (NFS) data repository that supports the NFSv3 protocol. The DRA configurations must meet the following requirements: 1) All configurations on the list must be of the same data repository type, either all S3 or all NFS. A cache can't link to different data repository types at the same time. 2) An NFS DRA must link to an NFS file system that supports the NFSv3 protocol. DRA automatic import and automatic export is not supported.
 * `kms_key_id` - Specifies the ID of the AWS Key Management Service (AWS KMS) key to use for encrypting data on an Amazon File Cache. If a KmsKeyId isn't specified, the Amazon FSx-managed AWS KMS key for your account is used.
-* `lustre_configuration` - See the [`lustre_configuration`](#lustre-configuration-arguments) block.
+* `lustre_configuration` - See the [`lustre_configuration`](#lustre-configuration-arguments) block. Required when `file_cache_type` is `LUSTRE`.
 * `security_group_ids` - A list of IDs specifying the security groups to apply to all network interfaces created for Amazon File Cache access.
 * `tags` - (Optional) A map of tags to assign to the file cache. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
@@ -118,7 +118,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-FSx File Cache can be imported using the `id`, e.g.,
+FSx File Cache can be imported using the `id`.
 
 ```
 $ terraform import aws_fsx_file_cache.example fc-8012925589
