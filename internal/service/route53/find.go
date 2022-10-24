@@ -108,12 +108,12 @@ func FindKeySigningKeyByResourceID(conn *route53.Route53, resourceID string) (*r
 	return FindKeySigningKey(conn, hostedZoneID, name)
 }
 
-func FindQueryLoggingConfigByID(conn *route53.Route53, id string) (*route53.QueryLoggingConfig, error) {
+func FindQueryLoggingConfigByID(ctx context.Context, conn *route53.Route53, id string) (*route53.QueryLoggingConfig, error) {
 	input := &route53.GetQueryLoggingConfigInput{
 		Id: aws.String(id),
 	}
 
-	output, err := conn.GetQueryLoggingConfig(input)
+	output, err := conn.GetQueryLoggingConfigWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, route53.ErrCodeNoSuchQueryLoggingConfig, route53.ErrCodeNoSuchHostedZone) {
 		return nil, &resource.NotFoundError{
