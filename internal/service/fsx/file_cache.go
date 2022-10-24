@@ -191,7 +191,6 @@ func ResourceFileCache() *schema.Resource {
 						"log_configuration": {
 							Type:     schema.TypeList,
 							Computed: true,
-							ForceNew: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"destination": {
@@ -333,7 +332,7 @@ func resourceFileCacheCreate(ctx context.Context, d *schema.ResourceData, meta i
 
 	d.SetId(aws.StringValue(result.FileCache.FileCacheId))
 
-	if _, err := waitFileCacheCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+	if _, err := waitFileCacheCreated(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return create.DiagError(names.FSx, create.ErrActionWaitingForCreation, ResNameFileCache, d.Id(), err)
 	}
 
@@ -435,7 +434,7 @@ func resourceFileCacheUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		if err != nil {
 			return create.DiagError(names.FSx, create.ErrActionUpdating, ResNameFileCache, d.Id(), err)
 		}
-		if _, err := waitFileCacheUpdated(ctx, conn, aws.StringValue(result.FileCache.FileCacheId), d.Timeout(schema.TimeoutUpdate)); err != nil {
+		if _, err := waitFileCacheUpdated(conn, aws.StringValue(result.FileCache.FileCacheId), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return create.DiagError(names.FSx, create.ErrActionWaitingForUpdate, ResNameFileCache, d.Id(), err)
 		}
 
@@ -458,7 +457,7 @@ func resourceFileCacheDelete(ctx context.Context, d *schema.ResourceData, meta i
 	if err != nil {
 		return create.DiagError(names.FSx, create.ErrActionDeleting, ResNameFileCache, d.Id(), err)
 	}
-	if _, err := waitFileCacheDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+	if _, err := waitFileCacheDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return create.DiagError(names.FSx, create.ErrActionWaitingForDeletion, ResNameFileCache, d.Id(), err)
 	}
 

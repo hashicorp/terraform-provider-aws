@@ -98,9 +98,7 @@ func findDataRepositoryAssociationsByIDs(conn *fsx.FSx, ids []*string) ([]*fsx.D
 		if page == nil {
 			return !lastPage
 		}
-		for _, dataRepositoryAssociation := range page.Associations {
-			dataRepositoryAssociations = append(dataRepositoryAssociations, dataRepositoryAssociation)
-		}
+		dataRepositoryAssociations = append(dataRepositoryAssociations, page.Associations...)
 		return !lastPage
 	})
 

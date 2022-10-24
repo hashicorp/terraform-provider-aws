@@ -251,7 +251,7 @@ func testAccFSxFileCache_securityGroupId(t *testing.T) {
 				Config: testAccFileCacheConfig_securityGroupID(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFileCacheExists(resourceName, &filecache1),
-					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "1"),
 				),
 			},
 		},
@@ -532,11 +532,6 @@ func testAccFileCacheConfig_copyTagsToDataRepositoryAssociations(tagKey1, tagVal
 		fmt.Sprintf(`
 resource "aws_fsx_filecache" "test" {
   copy_tags_to_data_repository_associations = true
-  data_repository_association {
-    data_repository_path = "s3://${aws_s3_bucket.test.id}"
-    file_cache_path      = "/ns1"
-  }
-
   file_cache_type         = "LUSTRE"
   file_cache_type_version = "2.12"
 
@@ -568,11 +563,6 @@ resource "aws_kms_key" "test1" {
 }
 
 resource "aws_fsx_filecache" "test" {
-  data_repository_association {
-    data_repository_path = "s3://${aws_s3_bucket.test.id}"
-    file_cache_path      = "/ns1"
-  }
-
   file_cache_type         = "LUSTRE"
   file_cache_type_version = "2.12"
 
@@ -600,11 +590,6 @@ resource "aws_kms_key" "test2" {
 }
 
 resource "aws_fsx_filecache" "test" {
-  data_repository_association {
-    data_repository_path = "s3://${aws_s3_bucket.test.id}"
-    file_cache_path      = "/ns1"
-  }
-
   file_cache_type         = "LUSTRE"
   file_cache_type_version = "2.12"
 
@@ -646,11 +631,6 @@ resource "aws_security_group" "test1" {
 }
 
 resource "aws_fsx_filecache" "test" {
-  data_repository_association {
-    data_repository_path = "s3://${aws_s3_bucket.test.id}"
-    file_cache_path      = "/ns1"
-  }
-
   file_cache_type         = "LUSTRE"
   file_cache_type_version = "2.12"
 
@@ -674,11 +654,6 @@ func testAccFileCache_tags1(tagKey1, tagValue1 string) string {
 	return testAccFileCacheBaseConfig() +
 		fmt.Sprintf(`
 resource "aws_fsx_filecache" "test" {
-	data_repository_association {
-		data_repository_path = "s3://${aws_s3_bucket.test.id}"
-		file_cache_path      = "/ns1"
-	}
-	
 	file_cache_type         = "LUSTRE"
 	file_cache_type_version = "2.12"
 	
@@ -705,11 +680,6 @@ func testAccFileCache_tags2(tagKey1, tagValue1, tagKey2, tagValue2 string) strin
 	return testAccFileCacheBaseConfig() +
 		fmt.Sprintf(`
 resource "aws_fsx_filecache" "test" {
-	data_repository_association {
-		data_repository_path = "s3://${aws_s3_bucket.test.id}"
-		file_cache_path      = "/ns1"
-	}
-
 	file_cache_type         = "LUSTRE"
 	file_cache_type_version = "2.12"
 

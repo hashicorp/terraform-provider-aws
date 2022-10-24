@@ -1,7 +1,6 @@
 package fsx
 
 import (
-	"context"
 	"errors"
 	"time"
 
@@ -72,7 +71,7 @@ func waitBackupDeleted(conn *fsx.FSx, id string) (*fsx.Backup, error) {
 	return nil, err
 }
 
-func waitFileCacheCreated(ctx context.Context, conn *fsx.FSx, id string, timeout time.Duration) (*fsx.FileCache, error) {
+func waitFileCacheCreated(conn *fsx.FSx, id string, timeout time.Duration) (*fsx.FileCache, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{fsx.FileCacheLifecycleCreating},
 		Target:  []string{fsx.FileCacheLifecycleAvailable},
@@ -92,7 +91,7 @@ func waitFileCacheCreated(ctx context.Context, conn *fsx.FSx, id string, timeout
 	return nil, err
 }
 
-func waitFileCacheUpdated(ctx context.Context, conn *fsx.FSx, id string, timeout time.Duration) (*fsx.FileCache, error) {
+func waitFileCacheUpdated(conn *fsx.FSx, id string, timeout time.Duration) (*fsx.FileCache, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{fsx.FileCacheLifecycleUpdating},
 		Target:  []string{fsx.FileCacheLifecycleAvailable},
@@ -113,7 +112,7 @@ func waitFileCacheUpdated(ctx context.Context, conn *fsx.FSx, id string, timeout
 	return nil, err
 }
 
-func waitFileCacheDeleted(ctx context.Context, conn *fsx.FSx, id string, timeout time.Duration) (*fsx.FileCache, error) {
+func waitFileCacheDeleted(conn *fsx.FSx, id string, timeout time.Duration) (*fsx.FileCache, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{fsx.FileCacheLifecycleAvailable, fsx.FileCacheLifecycleDeleting},
 		Target:  []string{},
