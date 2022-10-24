@@ -21,16 +21,41 @@ import (
 	tffsx "github.com/hashicorp/terraform-provider-aws/internal/service/fsx"
 )
 
+func TestAccFSxFileCache_serial(t *testing.T) {
+	testCases := map[string]map[string]func(t *testing.T){
+		"FSxFileCache": {
+			"basic":      TestAccFSxFileCache_basic,
+			"disappears": TestAccFSxFileCache_disappears,
+			"kms_key_id": testAccFSxFileCache_kmsKeyID,
+			"copy_tags_to_data_repository_associations": testAccFSxFileCache_copyTagsToDataRepositoryAssociations,
+			"data_repository_association":               testAccFSxFileCache_dataRepositoryAssociation,
+			"security_group_id":                         testAccFSxFileCache_securityGroupId,
+			"tags":                                      testAccFSxFileCache_tags,
+		},
+	}
+
+	for group, m := range testCases {
+		m := m
+		t.Run(group, func(t *testing.T) {
+			for name, tc := range m {
+				tc := tc
+				t.Run(name, func(t *testing.T) {
+					tc(t)
+				})
+			}
+		})
+	}
+}
+
 func TestAccFSxFileCache_basic(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
 
 	var filecache fsx.DescribeFileCachesOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_fsx_filecache.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(fsx.EndpointsID, t)
@@ -40,22 +65,21 @@ func TestAccFSxFileCache_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckFileCacheDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFileCacheConfig_basic(rName),
+				Config: testAccFileCacheConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFileCacheExists(resourceName, &filecache),
-					resource.TestCheckResourceAttrSet(resourceName, "copy_tags_to_data_repository_associations"),
-					resource.TestCheckResourceAttrSet(resourceName, "data_repository_association_ids"),
-					resource.TestCheckResourceAttrSet(resourceName, "dns_name"),
-					resource.TestCheckResourceAttrSet(resourceName, "file_cache_type"),
-					resource.TestCheckResourceAttrSet(resourceName, "file_cache_type_version"),
-					resource.TestCheckResourceAttrSet(resourceName, "id"),
-					resource.TestCheckResourceAttrSet(resourceName, "kms_key_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "network_interface_ids"),
-					resource.TestCheckResourceAttrSet(resourceName, "owner_id"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "resource_arn", "fsx", regexp.MustCompile(`filecache:+.`)),
-					resource.TestCheckResourceAttrSet(resourceName, "storage_capacity"),
-					resource.TestCheckResourceAttrSet(resourceName, "subnet_ids"),
-					resource.TestCheckResourceAttrSet(resourceName, "vpc_id"),
+					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_data_repository_associations", "false"),
+					resource.TestCheckResourceAttr(resourceName, "file_cache_type", "LUSTRE"),
+					resource.TestCheckResourceAttr(resourceName, "file_cache_type_version", "2.12"),
+					resource.TestMatchResourceAttr(resourceName, "id", regexp.MustCompile(`fc-.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "kms_key_id", "kms", regexp.MustCompile(`key\/.+`)),
+					resource.TestCheckResourceAttr(resourceName, "lustre_configuration.0.deployment_type", "CACHE_1"),
+					resource.TestCheckResourceAttr(resourceName, "lustre_configuration.0.metadata_configuration.0.storage_capacity", "2400"),
+					resource.TestCheckResourceAttr(resourceName, "lustre_configuration.0.metadata_configuration.0.per_unit_storage_capacity", "1000"),
+					resource.TestCheckResourceAttr(resourceName, "lustre_configuration.0.metadata_configuration.0.weekly_maintenance_start_time", "2:05:00"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "resource_arn", "fsx", regexp.MustCompile(`file-cache/fc-.+`)),
+					resource.TestCheckResourceAttr(resourceName, "storage_capacity", "1200"),
+					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "0"),
 				),
 			},
 			{
@@ -74,10 +98,9 @@ func TestAccFSxFileCache_disappears(t *testing.T) {
 	}
 
 	var filecache fsx.DescribeFileCachesOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_fsx_filecache.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(fsx.EndpointsID, t)
@@ -87,7 +110,7 @@ func TestAccFSxFileCache_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckFileCacheDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFileCacheConfig_basic(rName),
+				Config: testAccFileCacheConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFileCacheExists(resourceName, &filecache),
 					acctest.CheckResourceDisappears(acctest.Provider, tffsx.ResourceFileCache(), resourceName),
@@ -98,11 +121,152 @@ func TestAccFSxFileCache_disappears(t *testing.T) {
 	})
 }
 
-func TestAccFSxFileCache_tags(t *testing.T) {
+// Per Attribute Acceptance Tests
+func testAccFSxFileCache_kmsKeyID(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var filecache1, filecache2 fsx.DescribeFileCachesOutput
+	kmsKeyResourceName1 := "aws_kms_key.test1"
+	kmsKeyResourceName2 := "aws_kms_key.test2"
+	resourceName := "aws_fsx_filecache.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWindowsFileSystemDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFileCacheConfig_kmsKeyID1(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFileCacheExists(resourceName, &filecache2),
+					resource.TestCheckResourceAttrPair(resourceName, "kms_key_id", kmsKeyResourceName1, "arn"),
+				),
+			},
+			{
+				ResourceName: resourceName,
+				ImportState:  true,
+			},
+			{
+				Config: testAccFileCacheConfig_kmsKeyID2(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFileCacheExists(resourceName, &filecache2),
+					testAccCheckFileCacheRecreated(&filecache1, &filecache2),
+					resource.TestCheckResourceAttrPair(resourceName, "kms_key_id", kmsKeyResourceName2, "arn"),
+				),
+			},
+		},
+	})
+}
+
+func testAccFSxFileCache_copyTagsToDataRepositoryAssociations(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var filecache1 fsx.DescribeFileCachesOutput
+	resourceName := "aws_fsx_filecache.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWindowsFileSystemDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFileCacheConfig_copyTagsToDataRepositoryAssociations("key1", "value1", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFileCacheExists(resourceName, &filecache1),
+					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_data_repository_associations", "true"),
+					resource.TestCheckResourceAttr(resourceName, "data_repository_association.0.tags.%", "2"),
+				),
+			},
+		},
+	})
+}
+
+func testAccFSxFileCache_dataRepositoryAssociation(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var filecache1 fsx.DescribeFileCachesOutput
+	resourceName := "aws_fsx_filecache.test"
+	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWindowsFileSystemDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFileCacheConfig_NFSAssociation(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFileCacheExists(resourceName, &filecache1),
+					resource.TestCheckResourceAttr(resourceName, "data_repository_association.data_repository_path", "nfs://filer.domain.com"),
+					resource.TestCheckResourceAttr(resourceName, "data_repository_association.file_cache_path", "/ns1"),
+					resource.TestCheckResourceAttr(resourceName, "data_repository_association.nfs.dns_ips.0", "192.168.0.1"),
+					resource.TestCheckResourceAttr(resourceName, "data_repository_association.nfs.version", "NFS3"),
+					resource.TestCheckResourceAttr(resourceName, "data_repository_association_ids.#", "0"),
+				),
+			},
+			{
+				Config: testAccFileCacheConfig_S3Association(bucketName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFileCacheExists(resourceName, &filecache1),
+					resource.TestCheckResourceAttr(resourceName, "data_repository_association.data_repository_path", bucketName),
+					resource.TestCheckResourceAttr(resourceName, "data_repository_association.file_cache_path", "/ns1"),
+					resource.TestCheckResourceAttr(resourceName, "data_repository_association_ids.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "data_repository_association_ids.#", "0"),
+				),
+			},
+			{
+				Config: testAccFileCacheConfig_MultipleAssociations(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFileCacheExists(resourceName, &filecache1),
+					resource.TestCheckResourceAttr(resourceName, "data_repository_association_ids.#", "1"),
+				),
+			},
+		},
+	})
+}
+
+func testAccFSxFileCache_securityGroupId(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var filecache1 fsx.DescribeFileCachesOutput
+	resourceName := "aws_fsx_filecache.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWindowsFileSystemDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFileCacheConfig_securityGroupID(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFileCacheExists(resourceName, &filecache1),
+					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "0"),
+				),
+			},
+		},
+	})
+}
+
+func testAccFSxFileCache_tags(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var filecache1, filecache2 fsx.DescribeFileCachesOutput
 	resourceName := "aws_fsx_filecache.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -135,6 +299,7 @@ func TestAccFSxFileCache_tags(t *testing.T) {
 }
 
 func testAccCheckFileCacheDestroy(s *terraform.State) error {
+
 	conn := acctest.Provider.Meta().(*conns.AWSClient).FSxConn
 	ctx := context.Background()
 
@@ -207,14 +372,12 @@ func testAccCheckFileCacheRecreated(i, j *fsx.DescribeFileCachesOutput) resource
 	}
 }
 
-func testAccFileCacheConfig_basic(rName string) string {
-	return testAccFileCacheBaseConfig() + fmt.Sprint(`
-resource "aws_fsx_filecache" "test" {
-  data_repository_associations {
-    data_repository_path = "s3://${aws_s3_bucket.test.id}"
-    file_cache_path      = "/ns1"
-  }
+// Test Configurations
 
+func testAccFileCacheConfig_basic() string {
+	return testAccFileCacheBaseConfig() +
+		`
+resource "aws_fsx_filecache" "test" {
   file_cache_type         = "LUSTRE"
   file_cache_type_version = "2.12"
 
@@ -230,7 +393,7 @@ resource "aws_fsx_filecache" "test" {
   subnet_ids       = [aws_subnet.test1.id]
   storage_capacity = 1200
 }
-`)
+`
 }
 
 func testAccFileCacheBaseConfig() string {
@@ -253,18 +416,50 @@ resource "aws_subnet" "test1" {
   cidr_block        = "10.0.1.0/24"
   availability_zone = data.aws_availability_zones.available.names[0]
 }
-
-resource "aws_s3_bucket" "test" {}
 `
 }
 
-func testAccFileCache_tags1(tagKey1, tagValue1 string) string {
-	return testAccFileCacheBaseConfig() + fmt.Sprintf(`
+func testAccFileCacheConfig_NFSAssociation() string {
+	return testAccFileCacheBaseConfig() + `
 resource "aws_fsx_filecache" "test" {
-	data_repository_associations {
+  data_repository_association {
+    data_repository_path           = "nfs://filer.domain.com"
+    data_repository_subdirectories = ["test", "test2"]
+    file_cache_path                = "/ns1"
+
+    nfs {
+      dns_ips = ["192.168.0.1", "192.168.0.2"]
+      version = "NFS3"
+    }
+  }
+
+  file_cache_type         = "LUSTRE"
+  file_cache_type_version = "2.12"
+
+  lustre_configuration {
+    deployment_type = "CACHE_1"
+    metadata_configuration {
+      storage_capacity = 2400
+    }
+    per_unit_storage_throughput   = 1000
+    weekly_maintenance_start_time = "2:05:00"
+  }
+
+  subnet_ids       = [aws_subnet.test1.id]
+  storage_capacity = 1200
+}
+`
+
+}
+
+func testAccFileCacheConfig_S3Association(bucketName string) string {
+	return testAccFileCacheBaseConfig() +
+		fmt.Sprintf(`
+resource "aws_fsx_filecache" "test" {
+	data_repository_association {
 		data_repository_path = "s3://${aws_s3_bucket.test.id}"
 		file_cache_path      = "/ns1"
-	}
+	  }
 	
 	file_cache_type         = "LUSTRE"
 	file_cache_type_version = "2.12"
@@ -280,18 +475,206 @@ resource "aws_fsx_filecache" "test" {
 	
 	subnet_ids       = [aws_subnet.test1.id]
 	storage_capacity = 1200
+}
+resource "aws_s3_bucket" "test" {
+	bucket = %[1]q
+}
+`, bucketName)
+}
+
+func testAccFileCacheConfig_MultipleAssociations() string {
+	return testAccFileCacheBaseConfig() + `
+resource "aws_fsx_filecache" "test" {
+  data_repository_association {
+    data_repository_path           = "nfs://filer2.domain.com"
+    data_repository_subdirectories = ["test", "test2"]
+    file_cache_path                = "/ns2"
+
+    nfs {
+      dns_ips = ["192.168.0.1", "192.168.0.2"]
+      version = "NFS3"
+    }
+  }
+
+  data_repository_association {
+    data_repository_path           = "nfs://filer.domain.com"
+    data_repository_subdirectories = ["test", "test2"]
+    file_cache_path                = "/ns1"
+
+    nfs {
+      dns_ips = ["192.168.0.1", "192.168.0.2"]
+      version = "NFS3"
+    }
+  }
+
+  file_cache_type         = "LUSTRE"
+  file_cache_type_version = "2.12"
+
+  lustre_configuration {
+    deployment_type = "CACHE_1"
+    metadata_configuration {
+      storage_capacity = 2400
+    }
+    per_unit_storage_throughput   = 1000
+    weekly_maintenance_start_time = "2:05:00"
+  }
+
+  subnet_ids       = [aws_subnet.test1.id]
+  storage_capacity = 1200
+}
+
+
+`
+}
+
+func testAccFileCacheConfig_copyTagsToDataRepositoryAssociations(tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return testAccFileCacheBaseConfig() +
+		fmt.Sprintf(`
+resource "aws_fsx_filecache" "test" {
+  copy_tags_to_data_repository_associations = true
+  data_repository_association {
+    data_repository_path = "s3://${aws_s3_bucket.test.id}"
+    file_cache_path      = "/ns1"
+  }
+
+  file_cache_type         = "LUSTRE"
+  file_cache_type_version = "2.12"
+
+  lustre_configuration {
+    deployment_type = "CACHE_1"
+    metadata_configuration {
+      storage_capacity = 2400
+    }
+    per_unit_storage_throughput   = 1000
+    weekly_maintenance_start_time = "2:05:00"
+  }
+
+  subnet_ids       = [aws_subnet.test1.id]
+  storage_capacity = 1200
 
   tags = {
     %[1]q = %[2]q
+    %[3]q = %[4]q
   }
 }
-`, tagKey1, tagValue1)
+`, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
-func testAccFileCache_tags2(tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return testAccFileCacheBaseConfig() + fmt.Sprintf(`
+func testAccFileCacheConfig_kmsKeyID1() string {
+	return testAccFileCacheBaseConfig() + `
+resource "aws_kms_key" "test1" {
+  description             = "FSx KMS Testing key"
+  deletion_window_in_days = 7
+}
+
 resource "aws_fsx_filecache" "test" {
-	data_repository_associations {
+  data_repository_association {
+    data_repository_path = "s3://${aws_s3_bucket.test.id}"
+    file_cache_path      = "/ns1"
+  }
+
+  file_cache_type         = "LUSTRE"
+  file_cache_type_version = "2.12"
+
+  lustre_configuration {
+    deployment_type = "CACHE_1"
+    metadata_configuration {
+      storage_capacity = 2400
+    }
+    per_unit_storage_throughput   = 1000
+    weekly_maintenance_start_time = "2:05:00"
+  }
+
+  kms_key_id       = aws_kms_key.test1.arn
+  subnet_ids       = [aws_subnet.test1.id]
+  storage_capacity = 1200
+}
+`
+}
+
+func testAccFileCacheConfig_kmsKeyID2() string {
+	return testAccFileCacheBaseConfig() + `
+resource "aws_kms_key" "test2" {
+  description             = "FSx KMS Testing key"
+  deletion_window_in_days = 7
+}
+
+resource "aws_fsx_filecache" "test" {
+  data_repository_association {
+    data_repository_path = "s3://${aws_s3_bucket.test.id}"
+    file_cache_path      = "/ns1"
+  }
+
+  file_cache_type         = "LUSTRE"
+  file_cache_type_version = "2.12"
+
+  lustre_configuration {
+    deployment_type = "CACHE_1"
+    metadata_configuration {
+      storage_capacity = 2400
+    }
+    per_unit_storage_throughput   = 1000
+    weekly_maintenance_start_time = "2:05:00"
+  }
+
+  kms_key_id       = aws_kms_key.test2.arn
+  subnet_ids       = [aws_subnet.test1.id]
+  storage_capacity = 1200
+}
+`
+}
+
+func testAccFileCacheConfig_securityGroupID() string {
+	return testAccFileCacheBaseConfig() + `
+resource "aws_security_group" "test1" {
+  description = "security group for FSx testing"
+  vpc_id      = aws_vpc.test.id
+
+  ingress {
+    cidr_blocks = [aws_vpc.test.cidr_block]
+    from_port   = 0
+    protocol    = -1
+    to_port     = 0
+  }
+
+  egress {
+    cidr_blocks = ["0.0.0.0/0"]
+    from_port   = 0
+    protocol    = "-1"
+    to_port     = 0
+  }
+}
+
+resource "aws_fsx_filecache" "test" {
+  data_repository_association {
+    data_repository_path = "s3://${aws_s3_bucket.test.id}"
+    file_cache_path      = "/ns1"
+  }
+
+  file_cache_type         = "LUSTRE"
+  file_cache_type_version = "2.12"
+
+  lustre_configuration {
+    deployment_type = "CACHE_1"
+    metadata_configuration {
+      storage_capacity = 2400
+    }
+    per_unit_storage_throughput   = 1000
+    weekly_maintenance_start_time = "2:05:00"
+  }
+
+  security_group_ids = [aws_security_group.test1.id]
+  subnet_ids         = [aws_subnet.test1.id]
+  storage_capacity   = 1200
+}
+`
+}
+
+func testAccFileCache_tags1(tagKey1, tagValue1 string) string {
+	return testAccFileCacheBaseConfig() +
+		fmt.Sprintf(`
+resource "aws_fsx_filecache" "test" {
+	data_repository_association {
 		data_repository_path = "s3://${aws_s3_bucket.test.id}"
 		file_cache_path      = "/ns1"
 	}
@@ -308,6 +691,37 @@ resource "aws_fsx_filecache" "test" {
 		weekly_maintenance_start_time = "2:05:00"
 	}
 	
+	subnet_ids         = [aws_subnet.test1.id]
+	storage_capacity   = 1200
+
+  tags = {
+    %[1]q = %[2]q
+  }
+}
+`, tagKey1, tagValue1)
+}
+
+func testAccFileCache_tags2(tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return testAccFileCacheBaseConfig() +
+		fmt.Sprintf(`
+resource "aws_fsx_filecache" "test" {
+	data_repository_association {
+		data_repository_path = "s3://${aws_s3_bucket.test.id}"
+		file_cache_path      = "/ns1"
+	}
+
+	file_cache_type         = "LUSTRE"
+	file_cache_type_version = "2.12"
+
+	lustre_configuration {
+		deployment_type = "CACHE_1"
+		metadata_configuration {
+		storage_capacity = 2400
+		}
+		per_unit_storage_throughput   = 1000
+		weekly_maintenance_start_time = "2:05:00"
+	}
+
 	subnet_ids       = [aws_subnet.test1.id]
 	storage_capacity = 1200
 
