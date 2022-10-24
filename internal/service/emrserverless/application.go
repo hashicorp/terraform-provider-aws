@@ -522,7 +522,6 @@ func expandInitialCapacity(tfMap *schema.Set) map[string]*emrserverless.InitialC
 	configs := make(map[string]*emrserverless.InitialCapacityConfig)
 
 	for _, tfMapRaw := range tfMap.List() {
-
 		config, ok := tfMapRaw.(map[string]interface{})
 
 		if !ok {
@@ -547,7 +546,6 @@ func flattenInitialCapacity(apiObject map[string]*emrserverless.InitialCapacityC
 	var tfList []interface{}
 
 	for capacityType, config := range apiObject {
-
 		if config == nil {
 			continue
 		}

@@ -897,7 +897,6 @@ func stopInstance(d *schema.ResourceData, meta interface{}, timeout time.Duratio
 }
 
 func readBlockDevices(instance *opsworks.Instance) map[string]interface{} {
-
 	blockDevices := make(map[string]interface{})
 	blockDevices["ebs"] = make([]map[string]interface{}, 0)
 	blockDevices["ephemeral"] = make([]map[string]interface{}, 0)

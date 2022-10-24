@@ -194,7 +194,6 @@ func testAccCheckProvisionedConcurrencyConfigDestroy(s *terraform.State) error {
 	}
 
 	return nil
-
 }
 
 func testAccCheckProvisionedConcurrencyDisappearsConfig(resourceName string) resource.TestCheckFunc {

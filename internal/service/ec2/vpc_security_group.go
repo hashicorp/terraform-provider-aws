@@ -725,7 +725,6 @@ func SecurityGroupIPPermGather(groupId string, permissions []*ec2.IpPermission, 
 				rule["security_groups"] = list
 			}
 		}
-
 	}
 
 	rules := make([]map[string]interface{}, 0, len(ruleMap))
@@ -1114,7 +1113,6 @@ func MatchRules(rType string, local []interface{}, remote []map[string]interface
 								}
 							}
 						}
-
 					}
 				}
 			}
@@ -1182,7 +1180,6 @@ func resourceSecurityGroupCopyRule(src map[string]interface{}, self bool, k stri
 // For more detail, see comments for
 // SecurityGroupExpandRules()
 func SecurityGroupCollapseRules(ruleset string, rules []interface{}) []interface{} {
-
 	var keys_to_collapse = []string{"cidr_blocks", "ipv6_cidr_blocks", "prefix_list_ids", "security_groups"}
 
 	collapsed := make(map[string]map[string]interface{})

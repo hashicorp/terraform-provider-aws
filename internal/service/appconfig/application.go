@@ -139,7 +139,6 @@ func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AppConfigConn
 
 	if d.HasChangesExcept("tags", "tags_all") {
-
 		updateInput := &appconfig.UpdateApplicationInput{
 			ApplicationId: aws.String(d.Id()),
 		}

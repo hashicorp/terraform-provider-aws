@@ -21,7 +21,6 @@ import (
 
 func init() {
 	acctest.RegisterServiceErrorCheckFunc(cognitoidentityprovider.EndpointsID, testAccErrorCheckSkip)
-
 }
 
 func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {

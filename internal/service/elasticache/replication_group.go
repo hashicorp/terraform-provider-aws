@@ -844,7 +844,6 @@ func resourceReplicationGroupUpdate(d *schema.ResourceData, meta interface{}) er
 	}
 
 	if d.HasChange("log_delivery_configuration") {
-
 		oldLogDeliveryConfig, newLogDeliveryConfig := d.GetChange("log_delivery_configuration")
 
 		params.LogDeliveryConfigurations = []*elasticache.LogDeliveryConfigurationRequest{}
@@ -930,7 +929,6 @@ func resourceReplicationGroupUpdate(d *schema.ResourceData, meta interface{}) er
 			params.UserGroupIdsToRemove = flex.ExpandStringSet(remove)
 			requestUpdate = true
 		}
-
 	}
 
 	if requestUpdate {
@@ -1056,7 +1054,6 @@ func DisassociateReplicationGroup(conn *elasticache.ElastiCache, globalReplicati
 	}
 
 	return nil
-
 }
 
 func deleteReplicationGroup(replicationGroupID string, conn *elasticache.ElastiCache, finalSnapshotID string, timeout time.Duration) error {

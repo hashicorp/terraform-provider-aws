@@ -493,7 +493,6 @@ func expandEndpointDeploymentConfigAutoRollbackConfigAlarms(configured []interfa
 	alarms := make([]*sagemaker.Alarm, 0, len(configured))
 
 	for _, alarmRaw := range configured {
-
 		m := alarmRaw.(map[string]interface{})
 
 		alarm := &sagemaker.Alarm{

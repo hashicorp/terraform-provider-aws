@@ -753,11 +753,9 @@ func expandAdvancedEventSelector(configured []interface{}) []*cloudtrail.Advance
 		}
 
 		advancedEventSelectors = append(advancedEventSelectors, aes)
-
 	}
 
 	return advancedEventSelectors
-
 }
 
 func expandAdvancedEventSelectorFieldSelector(configured *schema.Set) []*cloudtrail.AdvancedFieldSelector {

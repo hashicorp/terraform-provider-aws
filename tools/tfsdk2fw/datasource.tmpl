@@ -60,7 +60,6 @@ func (d *dataSource{{ .Name }}) Read(ctx context.Context, request datasource.Rea
 		return
 	}
 
-    // TODO
 	data.ID = types.String{Value: "TODO"}
 
     response.Diagnostics.Append(response.State.Set(ctx, &data)...)

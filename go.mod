@@ -8,6 +8,7 @@ require (
 	github.com/aws/aws-sdk-go-v2 v1.16.16
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.12.17
 	github.com/aws/aws-sdk-go-v2/service/comprehend v1.19.0
+	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.17.19
 	github.com/aws/aws-sdk-go-v2/service/fis v1.13.1
 	github.com/aws/aws-sdk-go-v2/service/identitystore v1.15.5
 	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.8.1
@@ -16,7 +17,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.0.10
 	github.com/aws/aws-sdk-go-v2/service/route53domains v1.12.17
 	github.com/aws/aws-sdk-go-v2/service/s3control v1.24.0
-	github.com/aws/aws-sdk-go-v2/service/sesv2 v1.13.18
+	github.com/aws/aws-sdk-go-v2/service/sesv2 v1.14.0
 	github.com/aws/aws-sdk-go-v2/service/transcribe v1.21.9
 	github.com/beevik/etree v1.1.0
 	github.com/google/go-cmp v0.5.9

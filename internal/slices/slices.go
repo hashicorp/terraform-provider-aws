@@ -20,3 +20,16 @@ func Reversed[S ~[]E, E any](s S) S {
 
 	return v
 }
+
+// RemoveAll removes all occurrences of the specified value from a slice.
+func RemoveAll[E comparable](s []E, r E) []E {
+	v := []E{}
+
+	for _, e := range s {
+		if e != r {
+			v = append(v, e)
+		}
+	}
+
+	return v
+}

@@ -257,7 +257,6 @@ func testAccPipelineConfig_basic(rName string) string {
 resource "aws_datapipeline_pipeline" "default" {
   name = "%[1]s"
 }`, rName)
-
 }
 
 func testAccPipelineConfig_description(rName, description string) string {
@@ -266,7 +265,6 @@ resource "aws_datapipeline_pipeline" "default" {
   name        = "%[1]s"
   description = %[2]q
 }`, rName, description)
-
 }
 
 func testAccPipelineConfig_tags(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
@@ -279,5 +277,4 @@ resource "aws_datapipeline_pipeline" "default" {
     %[4]s = %[5]q
   }
 }`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
-
 }

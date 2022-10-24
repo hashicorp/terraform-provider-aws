@@ -300,7 +300,6 @@ func testAccCheckFunctionDestroy(s *terraform.State) error {
 	}
 
 	return nil
-
 }
 
 func testAccCheckFunctionExists(n string, v *cloudfront.DescribeFunctionOutput) resource.TestCheckFunc {

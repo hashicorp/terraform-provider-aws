@@ -256,7 +256,6 @@ func dataSourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("endpoint", fmt.Sprintf("%s:%d", aws.StringValue(dbEndpoint.Address), aws.Int64Value(dbEndpoint.Port)))
 		d.Set("hosted_zone_id", dbEndpoint.HostedZoneId)
 		d.Set("port", dbEndpoint.Port)
-
 	} else {
 		d.Set("address", nil)
 		d.Set("endpoint", nil)
