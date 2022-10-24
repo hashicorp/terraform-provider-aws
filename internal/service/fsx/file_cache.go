@@ -40,6 +40,10 @@ func ResourceFileCache() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"copy_tags_to_data_repository_associations": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -253,10 +257,6 @@ func ResourceFileCache() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"resource_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"security_group_ids": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -357,13 +357,13 @@ func resourceFileCacheRead(ctx context.Context, d *schema.ResourceData, meta int
 		return create.DiagError(names.FSx, create.ErrActionReading, ResNameFileCache, d.Id(), err)
 	}
 
+	d.Set("arn", filecache.ResourceARN)
 	d.Set("dns_name", filecache.DNSName)
 	d.Set("file_cache_id", filecache.FileCacheId)
 	d.Set("file_cache_type", filecache.FileCacheType)
 	d.Set("file_cache_type_version", filecache.FileCacheTypeVersion)
 	d.Set("kms_key_id", filecache.KmsKeyId)
 	d.Set("owner_id", filecache.OwnerId)
-	d.Set("resource_arn", filecache.ResourceARN)
 	d.Set("storage_capacity", filecache.StorageCapacity)
 	d.Set("subnet_ids", aws.StringValueSlice(filecache.SubnetIds))
 	d.Set("vpc_id", filecache.VpcId)
@@ -413,7 +413,7 @@ func resourceFileCacheUpdate(ctx context.Context, d *schema.ResourceData, meta i
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, d.Get("resource_arn").(string), o, n); err != nil {
+		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return create.DiagError(names.FSx, create.ErrActionUpdating, ResNameFileCache, d.Id(), err)
 		}
 	}
