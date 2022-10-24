@@ -5,16 +5,15 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/route53"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfroute53 "github.com/hashicorp/terraform-provider-aws/internal/service/route53"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccRoute53QueryLog_basic(t *testing.T) {
@@ -104,30 +103,26 @@ func TestAccRoute53QueryLog_Disappears_hostedZone(t *testing.T) {
 	})
 }
 
-func testAccCheckQueryLogExists(pr string, queryLoggingConfig *route53.QueryLoggingConfig) resource.TestCheckFunc {
+func testAccCheckQueryLogExists(n string, v *route53.QueryLoggingConfig) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[pr]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", pr)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ID is set")
+			return fmt.Errorf("No Route53 Query Logging Config ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Conn
 
-		out, err := conn.GetQueryLoggingConfig(&route53.GetQueryLoggingConfigInput{
-			Id: aws.String(rs.Primary.ID),
-		})
+		output, err := tfroute53.FindQueryLoggingConfigByID(conn, rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
-		if out.QueryLoggingConfig == nil {
-			return fmt.Errorf("Route53 query logging configuration does not exist: %q", rs.Primary.ID)
-		}
 
-		*queryLoggingConfig = *out.QueryLoggingConfig
+		*v = *output
 
 		return nil
 	}
@@ -141,21 +136,17 @@ func testAccCheckQueryLogDestroy(s *terraform.State) error {
 			continue
 		}
 
-		out, err := conn.GetQueryLoggingConfig(&route53.GetQueryLoggingConfigInput{
-			Id: aws.String(rs.Primary.ID),
-		})
+		_, err := tfroute53.FindQueryLoggingConfigByID(conn, rs.Primary.ID)
 
-		if tfawserr.ErrCodeEquals(err, route53.ErrCodeNoSuchQueryLoggingConfig) {
+		if tfresource.NotFound(err) {
 			continue
 		}
 
 		if err != nil {
-			return fmt.Errorf("reading Route 53 Query Logging Configuration (%s): %w", rs.Primary.ID, err)
+			return err
 		}
 
-		if out.QueryLoggingConfig != nil {
-			return fmt.Errorf("Route53 query logging configuration exists: %q", rs.Primary.ID)
-		}
+		return fmt.Errorf("Route53 Query Logging Config %s still exists", rs.Primary.ID)
 	}
 
 	return nil
