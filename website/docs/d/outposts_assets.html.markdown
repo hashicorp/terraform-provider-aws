@@ -24,8 +24,8 @@ data "aws_outposts_assets" "example" {
 
 ```terraform
 data "aws_outposts_assets" "example" {
-  arn              = data.aws_outposts_outpost.example.arn
-  host_id_filter   = ["h-x38g5n0yd2a0ueb61"]
+  arn            = data.aws_outposts_outpost.example.arn
+  host_id_filter = ["h-x38g5n0yd2a0ueb61"]
 }
 ```
 
