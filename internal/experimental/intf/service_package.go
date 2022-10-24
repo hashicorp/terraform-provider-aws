@@ -11,6 +11,11 @@ import (
 type ServicePackageData interface {
 	Configure(context.Context, any) error
 	FrameworkDataSources(context.Context) []func(context.Context) (datasource.DataSourceWithConfigure, error)
-	FrameworkResources(context.Context) []func(context.Context) (resource.ResourceWithConfigure, error)
+	FrameworkResources(context.Context) []func(context.Context) (ResourceWithConfigureAndImportState, error)
 	ServicePackageName() string
+}
+
+type ResourceWithConfigureAndImportState interface {
+	resource.ResourceWithConfigure
+	ImportState(context.Context, resource.ImportStateRequest, *resource.ImportStateResponse)
 }
