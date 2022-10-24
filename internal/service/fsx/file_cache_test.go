@@ -201,7 +201,7 @@ func testAccFileCache_dataRepositoryAssociation(t *testing.T) {
 		CheckDestroy:             testAccCheckWindowsFileSystemDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFileCacheConfig_NFSAssociation(),
+				Config: testAccFileCacheConfig_nfs_association(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFileCacheExists(resourceName, &filecache1),
 					resource.TestCheckResourceAttr(resourceName, "data_repository_association.data_repository_path", "nfs://filer.domain.com"),
@@ -212,7 +212,7 @@ func testAccFileCache_dataRepositoryAssociation(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccFileCacheConfig_S3Association(bucketName),
+				Config: testAccFileCacheConfig_s3_association(bucketName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFileCacheExists(resourceName, &filecache1),
 					resource.TestCheckResourceAttr(resourceName, "data_repository_association.data_repository_path", bucketName),
@@ -222,7 +222,7 @@ func testAccFileCache_dataRepositoryAssociation(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccFileCacheConfig_MultipleAssociations(),
+				Config: testAccFileCacheConfig_multiple_associations(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFileCacheExists(resourceName, &filecache1),
 					resource.TestCheckResourceAttr(resourceName, "data_repository_association_ids.#", "1"),
@@ -272,7 +272,7 @@ func testAccFileCache_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckFileCacheDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFileCache_tags1("key1", "value1"),
+				Config: testAccFileCacheConfig_tags1("key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFileCacheExists(resourceName, &filecache1),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -284,7 +284,7 @@ func testAccFileCache_tags(t *testing.T) {
 				ImportState:  true,
 			},
 			{
-				Config: testAccFileCache_tags2("key1", "value1updated", "key2", "value2"),
+				Config: testAccFileCacheConfig_tags2("key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFileCacheExists(resourceName, &filecache2),
 					testAccCheckFileCacheNotRecreated(&filecache1, &filecache2),
@@ -417,7 +417,7 @@ resource "aws_subnet" "test1" {
 `
 }
 
-func testAccFileCacheConfig_NFSAssociation() string {
+func testAccFileCacheConfig_nfs_association() string {
 	return testAccFileCacheBaseConfig() + `
 resource "aws_fsx_file_cache" "test" {
   data_repository_association {
@@ -449,7 +449,7 @@ resource "aws_fsx_file_cache" "test" {
 `
 }
 
-func testAccFileCacheConfig_S3Association(bucketName string) string {
+func testAccFileCacheConfig_s3_association(bucketName string) string {
 	return testAccFileCacheBaseConfig() +
 		fmt.Sprintf(`
 resource "aws_fsx_file_cache" "test" {
@@ -479,7 +479,7 @@ resource "aws_s3_bucket" "test" {
 `, bucketName)
 }
 
-func testAccFileCacheConfig_MultipleAssociations() string {
+func testAccFileCacheConfig_multiple_associations() string {
 	return testAccFileCacheBaseConfig() + `
 resource "aws_fsx_file_cache" "test" {
   data_repository_association {
@@ -647,7 +647,7 @@ resource "aws_fsx_file_cache" "test" {
 `
 }
 
-func testAccFileCache_tags1(tagKey1, tagValue1 string) string {
+func testAccFileCacheConfig_tags1(tagKey1, tagValue1 string) string {
 	return testAccFileCacheBaseConfig() +
 		fmt.Sprintf(`
 resource "aws_fsx_file_cache" "test" {
@@ -673,7 +673,7 @@ resource "aws_fsx_file_cache" "test" {
 `, tagKey1, tagValue1)
 }
 
-func testAccFileCache_tags2(tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccFileCacheConfig_tags2(tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return testAccFileCacheBaseConfig() +
 		fmt.Sprintf(`
 resource "aws_fsx_file_cache" "test" {
