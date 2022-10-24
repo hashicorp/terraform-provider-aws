@@ -51,8 +51,8 @@ github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.4.18 h1:c2RKF0UvfdVI6epHtF
 github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.4.18/go.mod h1:fkQKYK/jUhCL/wNS1tOPrlYhr9vqutjCz4zZC1wBE1s=
 github.com/aws/aws-sdk-go-v2/internal/ini v1.3.11 h1:6cZRymlLEIlDTEB0+5+An6Zj1CKt6rSE69tOmFeu1nk=
 github.com/aws/aws-sdk-go-v2/internal/ini v1.3.11/go.mod h1:0MR+sS1b/yxsfAPvAESrw8NfwUoxMinDyw6EYR9BS2U=
-github.com/aws/aws-sdk-go-v2/service/comprehend v1.19.0 h1:pBGwxTJF3e1kA0agTb34DbLXm+Ddth01yTcgaCsCAco=
-github.com/aws/aws-sdk-go-v2/service/comprehend v1.19.0/go.mod h1:7+jAM+u98ZbJwAxaXyvxlSJgWpGUGofDSHHIxcziIDQ=
+github.com/aws/aws-sdk-go-v2/service/comprehend v1.19.1 h1:1/aqLtHWzvsKGOi/l2xzlrCNpt3NQoi+7zPXZ7Dpykk=
+github.com/aws/aws-sdk-go-v2/service/comprehend v1.19.1/go.mod h1:1lrYQr3AF4zbYqxbApXFgtEmVoTS7VAOEp/X2tTb+P8=
 github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.17.19 h1:b9VD8wXsMRukE1FKm1na3fpeDdjxUWv1Rt09pB043oA=
 github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.17.19/go.mod h1:qo86DWOaN9axmzFjfXSAtQfBO99IKmzXAFD4XOq0J7A=
 github.com/aws/aws-sdk-go-v2/service/fis v1.13.1 h1:CNDkUBNTQRhBxDZRFQcXF8pK5WeJamwLWVNVY0PkeG0=
