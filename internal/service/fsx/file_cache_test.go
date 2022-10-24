@@ -20,7 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccFileCache_serial(t *testing.T) {
+func TestAccFSxFileCache_serial(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
 		"FSxFileCache": {
 			"basic":      TestAccFileCache_basic,
@@ -46,7 +46,7 @@ func TestAccFileCache_serial(t *testing.T) {
 	}
 }
 
-func TestAccFileCache_basic(t *testing.T) {
+func TestAccFSxFileCache_basic(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -91,7 +91,7 @@ func TestAccFileCache_basic(t *testing.T) {
 	})
 }
 
-func TestAccFileCache_disappears(t *testing.T) {
+func TestAccFSxFileCache_disappears(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
