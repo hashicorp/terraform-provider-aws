@@ -67,8 +67,8 @@ github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.9.4 h1:b16QW0XWl0
 github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.9.4/go.mod h1:uKkN7qmSIsNJVyMtxNQoCEYMvFEXbOg9fwCJPdfp2u8=
 github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.13.17 h1:HfVVR1vItaG6le+Bpw6P4midjBDMKnjMyZnw9MXYUcE=
 github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.13.17/go.mod h1:YqMdV+gEKCQ59NrB7rzrJdALeBIsYiVi8Inj3+KcqHI=
-github.com/aws/aws-sdk-go-v2/service/kendra v1.35.0 h1:nOHdZFfH438FwUfAVQePSXlVD3Rux20n8KxJeGYlabY=
-github.com/aws/aws-sdk-go-v2/service/kendra v1.35.0/go.mod h1:vpAlARGh4pK3T2oNoW6osfGCEMGy3JDKJJfcnlzv+aM=
+github.com/aws/aws-sdk-go-v2/service/kendra v1.35.1 h1:i7y7NPNtrHYF/ADNvrHN70R+QGQBisHCyCMSiqgMybM=
+github.com/aws/aws-sdk-go-v2/service/kendra v1.35.1/go.mod h1:SgjlUqn4ZHYFLzgnkWqO8SdNaDWvAubOU+Gafdbw/3M=
 github.com/aws/aws-sdk-go-v2/service/medialive v1.24.1 h1:aHsoN4yvYXrfoggiQ58webCblJ7eOhrbZuUExsyWuWo=
 github.com/aws/aws-sdk-go-v2/service/medialive v1.24.1/go.mod h1:3XPW6mIgytBfUUGfmpruUUZQKfZWxMte3VjIRoBytVk=
 github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.0.10 h1:FYBnb1z07t3qpAFddDMIJskPEjWEIMbK4Dv/FWDX06s=
