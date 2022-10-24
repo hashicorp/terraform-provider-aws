@@ -438,11 +438,11 @@ func (w *wrappedResource) GetSchema(ctx context.Context) (tfsdk.Schema, diag.Dia
 }
 
 func (w *wrappedResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
-	tflog.Debug(ctx, fmt.Sprintf("%s.Read enter", w.typeName))
+	tflog.Debug(ctx, fmt.Sprintf("%s.Create enter", w.typeName))
 
 	w.inner.Create(ctx, request, response)
 
-	tflog.Debug(ctx, fmt.Sprintf("%s.Read exit", w.typeName))
+	tflog.Debug(ctx, fmt.Sprintf("%s.Create exit", w.typeName))
 }
 
 func (w *wrappedResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
@@ -454,19 +454,19 @@ func (w *wrappedResource) Read(ctx context.Context, request resource.ReadRequest
 }
 
 func (w *wrappedResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
-	tflog.Debug(ctx, fmt.Sprintf("%s.Read enter", w.typeName))
+	tflog.Debug(ctx, fmt.Sprintf("%s.Update enter", w.typeName))
 
 	w.inner.Update(ctx, request, response)
 
-	tflog.Debug(ctx, fmt.Sprintf("%s.Read exit", w.typeName))
+	tflog.Debug(ctx, fmt.Sprintf("%s.Update exit", w.typeName))
 }
 
 func (w *wrappedResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
-	tflog.Debug(ctx, fmt.Sprintf("%s.Read enter", w.typeName))
+	tflog.Debug(ctx, fmt.Sprintf("%s.Delete enter", w.typeName))
 
 	w.inner.Delete(ctx, request, response)
 
-	tflog.Debug(ctx, fmt.Sprintf("%s.Read exit", w.typeName))
+	tflog.Debug(ctx, fmt.Sprintf("%s.Delete exit", w.typeName))
 }
 
 func (w *wrappedResource) Configure(ctx context.Context, request resource.ConfigureRequest, response *resource.ConfigureResponse) {
