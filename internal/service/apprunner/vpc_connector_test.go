@@ -6,15 +6,14 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apprunner"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccAppRunnerVPCConnector_basic(t *testing.T) {
@@ -121,13 +120,9 @@ func testAccCheckVPCConnectorDestroy(s *terraform.State) error {
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AppRunnerConn
 
-		input := &apprunner.DescribeVpcConnectorInput{
-			VpcConnectorArn: aws.String(rs.Primary.ID),
-		}
+		_, err := tfapprunner.FindVPCConnectorByARN(context.Background(), conn, rs.Primary.ID)
 
-		output, err := conn.DescribeVpcConnectorWithContext(context.Background(), input)
-
-		if tfawserr.ErrCodeEquals(err, apprunner.ErrCodeResourceNotFoundException) {
+		if tfresource.NotFound(err) {
 			continue
 		}
 
@@ -135,9 +130,7 @@ func testAccCheckVPCConnectorDestroy(s *terraform.State) error {
 			return err
 		}
 
-		if output != nil && output.VpcConnector != nil && aws.StringValue(output.VpcConnector.Status) != "INACTIVE" {
-			return fmt.Errorf("App Runner VpcConnector Configuration (%s) still exists", rs.Primary.ID)
-		}
+		return fmt.Errorf("App Runner VPC Connector %s still exists", rs.Primary.ID)
 	}
 
 	return nil
@@ -151,26 +144,14 @@ func testAccCheckVPCConnectorExists(n string) resource.TestCheckFunc {
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No App Runner Vpc Connector ID is set")
+			return fmt.Errorf("No App Runner VPC Connector ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AppRunnerConn
 
-		input := &apprunner.DescribeVpcConnectorInput{
-			VpcConnectorArn: aws.String(rs.Primary.ID),
-		}
+		_, err := tfapprunner.FindVPCConnectorByARN(context.Background(), conn, rs.Primary.ID)
 
-		output, err := conn.DescribeVpcConnectorWithContext(context.Background(), input)
-
-		if err != nil {
-			return err
-		}
-
-		if output == nil || output.VpcConnector == nil {
-			return fmt.Errorf("App Runner Vpc Connector Configuration (%s) not found", rs.Primary.ID)
-		}
-
-		return nil
+		return err
 	}
 }
 
