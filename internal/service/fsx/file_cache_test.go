@@ -298,7 +298,6 @@ func testAccFileCache_tags(t *testing.T) {
 }
 
 func testAccCheckFileCacheDestroy(s *terraform.State) error {
-
 	conn := acctest.Provider.Meta().(*conns.AWSClient).FSxConn
 	ctx := context.Background()
 
@@ -448,7 +447,6 @@ resource "aws_fsx_file_cache" "test" {
   storage_capacity = 1200
 }
 `
-
 }
 
 func testAccFileCacheConfig_S3Association(bucketName string) string {

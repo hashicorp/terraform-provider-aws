@@ -55,7 +55,6 @@ func FindBackupByID(conn *fsx.FSx, id string) (*fsx.Backup, error) {
 }
 
 func findFileCacheByID(conn *fsx.FSx, id string) (*fsx.FileCache, error) {
-
 	input := &fsx.DescribeFileCachesInput{
 		FileCacheIds: []*string{aws.String(id)},
 	}

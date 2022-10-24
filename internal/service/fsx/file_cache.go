@@ -406,7 +406,6 @@ func resourceFileCacheRead(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func resourceFileCacheUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-
 	conn := meta.(*conns.AWSClient).FSxConn
 
 	if d.HasChange("tags_all") {
@@ -437,7 +436,6 @@ func resourceFileCacheUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		if _, err := waitFileCacheUpdated(conn, aws.StringValue(result.FileCache.FileCacheId), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return create.DiagError(names.FSx, create.ErrActionWaitingForUpdate, ResNameFileCache, d.Id(), err)
 		}
-
 	}
 	return resourceFileCacheRead(ctx, d, meta)
 }
