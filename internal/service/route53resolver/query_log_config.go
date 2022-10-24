@@ -3,6 +3,7 @@ package route53resolver
 import (
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/route53resolver"
@@ -11,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -85,7 +87,7 @@ func resourceQueryLogConfigCreate(d *schema.ResourceData, meta interface{}) erro
 
 	d.SetId(aws.StringValue(output.ResolverQueryLogConfig.Id))
 
-	_, err = WaitQueryLogConfigCreated(conn, d.Id())
+	_, err = waitQueryLogConfigCreated(conn, d.Id())
 
 	if err != nil {
 		return fmt.Errorf("error waiting for Route53 Resolver Query Log Config (%s) to become available: %w", d.Id(), err)
@@ -172,11 +174,91 @@ func resourceQueryLogConfigDelete(d *schema.ResourceData, meta interface{}) erro
 		return fmt.Errorf("error deleting Route53 Resolver Query Log Config (%s): %w", d.Id(), err)
 	}
 
-	_, err = WaitQueryLogConfigDeleted(conn, d.Id())
+	_, err = waitQueryLogConfigDeleted(conn, d.Id())
 
 	if err != nil {
 		return fmt.Errorf("error waiting for Route53 Resolver Query Log Config (%s) to be deleted: %w", d.Id(), err)
 	}
 
 	return nil
+}
+
+func FindResolverQueryLogConfigByID(conn *route53resolver.Route53Resolver, id string) (*route53resolver.ResolverQueryLogConfig, error) {
+	input := &route53resolver.GetResolverQueryLogConfigInput{
+		ResolverQueryLogConfigId: aws.String(id),
+	}
+
+	output, err := conn.GetResolverQueryLogConfig(input)
+
+	if tfawserr.ErrCodeEquals(err, route53resolver.ErrCodeResourceNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.ResolverQueryLogConfig == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.ResolverQueryLogConfig, nil
+}
+
+func statusQueryLogConfig(conn *route53resolver.Route53Resolver, id string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindResolverQueryLogConfigByID(conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.Status), nil
+	}
+}
+
+const (
+	queryLogConfigCreatedTimeout = 5 * time.Minute
+	queryLogConfigDeletedTimeout = 5 * time.Minute
+)
+
+func waitQueryLogConfigCreated(conn *route53resolver.Route53Resolver, id string) (*route53resolver.ResolverQueryLogConfig, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{route53resolver.ResolverQueryLogConfigStatusCreating},
+		Target:  []string{route53resolver.ResolverQueryLogConfigStatusCreated},
+		Refresh: statusQueryLogConfig(conn, id),
+		Timeout: queryLogConfigCreatedTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*route53resolver.ResolverQueryLogConfig); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitQueryLogConfigDeleted(conn *route53resolver.Route53Resolver, id string) (*route53resolver.ResolverQueryLogConfig, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{route53resolver.ResolverQueryLogConfigStatusDeleting},
+		Target:  []string{},
+		Refresh: statusQueryLogConfig(conn, id),
+		Timeout: queryLogConfigDeletedTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*route53resolver.ResolverQueryLogConfig); ok {
+		return output, err
+	}
+
+	return nil, err
 }

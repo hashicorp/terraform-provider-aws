@@ -16,12 +16,6 @@ const (
 	// Maximum amount of time to wait for a QueryLogConfigAssociation to be deleted
 	QueryLogConfigAssociationDeletedTimeout = 5 * time.Minute
 
-	// Maximum amount of time to wait for a QueryLogConfig to return CREATED
-	QueryLogConfigCreatedTimeout = 5 * time.Minute
-
-	// Maximum amount of time to wait for a QueryLogConfig to be deleted
-	QueryLogConfigDeletedTimeout = 5 * time.Minute
-
 	// Maximum amount of time to wait for a DnssecConfig to return ENABLED
 	DNSSECConfigCreatedTimeout = 10 * time.Minute
 
@@ -74,42 +68,6 @@ func WaitQueryLogConfigAssociationDeleted(conn *route53resolver.Route53Resolver,
 	outputRaw, err := stateConf.WaitForState()
 
 	if v, ok := outputRaw.(*route53resolver.ResolverQueryLogConfigAssociation); ok {
-		return v, err
-	}
-
-	return nil, err
-}
-
-// WaitQueryLogConfigCreated waits for a QueryLogConfig to return CREATED
-func WaitQueryLogConfigCreated(conn *route53resolver.Route53Resolver, queryLogConfigID string) (*route53resolver.ResolverQueryLogConfig, error) {
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{route53resolver.ResolverQueryLogConfigStatusCreating},
-		Target:  []string{route53resolver.ResolverQueryLogConfigStatusCreated},
-		Refresh: StatusQueryLogConfig(conn, queryLogConfigID),
-		Timeout: QueryLogConfigCreatedTimeout,
-	}
-
-	outputRaw, err := stateConf.WaitForState()
-
-	if v, ok := outputRaw.(*route53resolver.ResolverQueryLogConfig); ok {
-		return v, err
-	}
-
-	return nil, err
-}
-
-// WaitQueryLogConfigCreated waits for a QueryLogConfig to be deleted
-func WaitQueryLogConfigDeleted(conn *route53resolver.Route53Resolver, queryLogConfigID string) (*route53resolver.ResolverQueryLogConfig, error) {
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{route53resolver.ResolverQueryLogConfigStatusDeleting},
-		Target:  []string{},
-		Refresh: StatusQueryLogConfig(conn, queryLogConfigID),
-		Timeout: QueryLogConfigDeletedTimeout,
-	}
-
-	outputRaw, err := stateConf.WaitForState()
-
-	if v, ok := outputRaw.(*route53resolver.ResolverQueryLogConfig); ok {
 		return v, err
 	}
 

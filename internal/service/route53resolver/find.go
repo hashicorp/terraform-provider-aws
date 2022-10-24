@@ -25,25 +25,6 @@ func FindResolverQueryLogConfigAssociationByID(conn *route53resolver.Route53Reso
 	return output.ResolverQueryLogConfigAssociation, nil
 }
 
-// FindResolverQueryLogConfigByID returns the query logging configuration corresponding to the specified ID.
-// Returns nil if no configuration is found.
-func FindResolverQueryLogConfigByID(conn *route53resolver.Route53Resolver, queryLogConfigID string) (*route53resolver.ResolverQueryLogConfig, error) {
-	input := &route53resolver.GetResolverQueryLogConfigInput{
-		ResolverQueryLogConfigId: aws.String(queryLogConfigID),
-	}
-
-	output, err := conn.GetResolverQueryLogConfig(input)
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil {
-		return nil, nil
-	}
-
-	return output.ResolverQueryLogConfig, nil
-}
-
 // FindResolverDNSSECConfigByID returns the dnssec configuration corresponding to the specified ID.
 // Returns nil if no configuration is found.
 func FindResolverDNSSECConfigByID(conn *route53resolver.Route53Resolver, dnssecConfigID string) (*route53resolver.ResolverDnssecConfig, error) {

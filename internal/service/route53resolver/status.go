@@ -45,27 +45,6 @@ func StatusQueryLogConfigAssociation(conn *route53resolver.Route53Resolver, quer
 	}
 }
 
-// StatusQueryLogConfig fetches the QueryLogConfig and its Status
-func StatusQueryLogConfig(conn *route53resolver.Route53Resolver, queryLogConfigID string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		queryLogConfig, err := FindResolverQueryLogConfigByID(conn, queryLogConfigID)
-
-		if tfawserr.ErrCodeEquals(err, route53resolver.ErrCodeResourceNotFoundException) {
-			return nil, resolverQueryLogConfigStatusNotFound, nil
-		}
-
-		if err != nil {
-			return nil, resolverQueryLogConfigStatusUnknown, err
-		}
-
-		if queryLogConfig == nil {
-			return nil, resolverQueryLogConfigStatusNotFound, nil
-		}
-
-		return queryLogConfig, aws.StringValue(queryLogConfig.Status), nil
-	}
-}
-
 // StatusDNSSECConfig fetches the DnssecConfig and its Status
 func StatusDNSSECConfig(conn *route53resolver.Route53Resolver, dnssecConfigID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
