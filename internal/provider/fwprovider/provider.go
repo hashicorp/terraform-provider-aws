@@ -350,10 +350,6 @@ func (p *fwprovider) DataSources(ctx context.Context) []func() datasource.DataSo
 func (p *fwprovider) Resources(ctx context.Context) []func() resource.Resource {
 	var resources []func() resource.Resource
 
-	//resources = append(resources, func() resource.Resource {
-	//	return medialive.NewResourceMultiplexProgram(ctx)
-	//})
-
 	for _, sp := range p.Primary.Meta().(*conns.AWSClient).ServicePackages {
 		for _, v := range sp.FrameworkResources(ctx) {
 			v, err := v(ctx)
