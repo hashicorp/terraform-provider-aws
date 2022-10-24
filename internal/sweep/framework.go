@@ -7,6 +7,7 @@ import (
 	"context"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	fwresource "github.com/hashicorp/terraform-plugin-framework/resource"
@@ -34,8 +35,8 @@ func NewSweepFrameworkResource(factory func(context.Context) (intf.ResourceWithC
 	}
 }
 
-func (sr *SweepFrameworkResource) Delete(ctx context.Context, rc RetryConfig) error {
-	err := tfresource.RetryConfigContext(ctx, rc.Delay, rc.DelayRand, rc.MinTimeout, rc.PollInterval, rc.Timeout, func() *resource.RetryError {
+func (sr *SweepFrameworkResource) Delete(ctx context.Context, timeout time.Duration, optFns ...tfresource.OptionsFunc) error {
+	err := tfresource.RetryContext(ctx, timeout, func() *resource.RetryError {
 		err := DeleteFrameworkResource(sr.factory, sr.id, sr.meta)
 
 		if err != nil {
@@ -48,7 +49,7 @@ func (sr *SweepFrameworkResource) Delete(ctx context.Context, rc RetryConfig) er
 		}
 
 		return nil
-	})
+	}, optFns...)
 
 	if tfresource.TimedOut(err) {
 		err = DeleteFrameworkResource(sr.factory, sr.id, sr.meta)

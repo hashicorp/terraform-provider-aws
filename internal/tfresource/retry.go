@@ -143,32 +143,6 @@ func RetryWhenNewResourceNotFound(timeout time.Duration, f func() (interface{}, 
 	return RetryWhenNewResourceNotFoundContext(context.Background(), timeout, f, isNewResource)
 }
 
-// RetryConfigContext allows configuration of StateChangeConf's various time arguments.
-// This is especially useful for AWS services that are prone to throttling, such as Route53, where
-// the default durations cause problems. To not use a StateChangeConf argument and revert to the
-// default, pass in a zero value (i.e., 0*time.Second).
-func RetryConfigContext(ctx context.Context, delay time.Duration, delayRand time.Duration, minPollInterval time.Duration, pollInterval time.Duration, timeout time.Duration, f resource.RetryFunc) error {
-	return RetryContext(ctx, timeout, f, func(o *Options) {
-		if delay > 0 {
-			o.Delay = delay
-		}
-
-		if delayRand > 0 {
-			// Hitting the API at exactly the same time on each iteration of the retry is more likely to
-			// cause Throttling problems. We introduce randomness in order to help AWS be happier.
-			o.Delay = time.Duration(rand.Int63n(delayRand.Milliseconds())) * time.Millisecond
-		}
-
-		if minPollInterval > 0 {
-			o.MinPollInterval = minPollInterval
-		}
-
-		if pollInterval > 0 {
-			o.PollInterval = pollInterval
-		}
-	})
-}
-
 type Options struct {
 	Delay           time.Duration // Wait this time before starting checks
 	MinPollInterval time.Duration // Smallest time to wait before refreshes (MinTimeout in resource.StateChangeConf)
@@ -194,6 +168,13 @@ type OptionsFunc func(*Options)
 func WithDelay(delay time.Duration) OptionsFunc {
 	return func(o *Options) {
 		o.Delay = delay
+	}
+}
+
+// WithDelayRand sets the delay to a value between 0s and the passed duration
+func WithDelayRand(delayRand time.Duration) OptionsFunc {
+	return func(o *Options) {
+		o.Delay = time.Duration(rand.Int63n(delayRand.Milliseconds())) * time.Millisecond
 	}
 }
 
