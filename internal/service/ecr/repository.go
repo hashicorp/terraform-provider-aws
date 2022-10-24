@@ -409,7 +409,6 @@ func resourceRepositoryUpdateImageTagMutability(conn *ecr.ECR, d *schema.Resourc
 	return nil
 }
 func resourceRepositoryUpdateImageScanningConfiguration(conn *ecr.ECR, d *schema.ResourceData) error {
-
 	var ecrImageScanningConfig ecr.ImageScanningConfiguration
 	imageScanningConfigs := d.Get("image_scanning_configuration").([]interface{})
 	if len(imageScanningConfigs) > 0 {

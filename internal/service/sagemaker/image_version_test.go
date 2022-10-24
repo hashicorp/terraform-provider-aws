@@ -17,7 +17,6 @@ import (
 )
 
 func TestAccSageMakerImageVersion_basic(t *testing.T) {
-
 	if os.Getenv("SAGEMAKER_IMAGE_VERSION_BASE_IMAGE") == "" {
 		t.Skip("Environment variable SAGEMAKER_IMAGE_VERSION_BASE_IMAGE is not set")
 	}
@@ -55,7 +54,6 @@ func TestAccSageMakerImageVersion_basic(t *testing.T) {
 }
 
 func TestAccSageMakerImageVersion_disappears(t *testing.T) {
-
 	if os.Getenv("SAGEMAKER_IMAGE_VERSION_BASE_IMAGE") == "" {
 		t.Skip("Environment variable SAGEMAKER_IMAGE_VERSION_BASE_IMAGE is not set")
 	}
@@ -84,7 +82,6 @@ func TestAccSageMakerImageVersion_disappears(t *testing.T) {
 }
 
 func TestAccSageMakerImageVersion_Disappears_image(t *testing.T) {
-
 	if os.Getenv("SAGEMAKER_IMAGE_VERSION_BASE_IMAGE") == "" {
 		t.Skip("Environment variable SAGEMAKER_IMAGE_VERSION_BASE_IMAGE is not set")
 	}

@@ -5,8 +5,10 @@ package sweep
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
+	"net"
 	"os"
 	"strconv"
 	"strings"
@@ -174,7 +176,7 @@ func SweepOrchestratorWithContext(ctx context.Context, sweepables []Sweepable, d
 // Check sweeper API call error for reasons to skip sweeping
 // These include missing API endpoints and unsupported API calls
 func SkipSweepError(err error) bool {
-	// Ignore missing API endpoints
+	// Ignore missing API endpoints for AWS SDK for Go v1
 	if tfawserr.ErrMessageContains(err, "RequestError", "send request failed") {
 		return true
 	}
@@ -226,6 +228,10 @@ func SkipSweepError(err error) bool {
 	if tfawserr.ErrMessageContains(err, "UnknownOperationException", "Operation is disabled in this region") {
 		return true
 	}
+	// For example from us-east-1 SageMaker
+	if tfawserr.ErrMessageContains(err, "UnknownOperationException", "The requested operation is not supported in the called region") {
+		return true
+	}
 	// For example from us-west-2 ECR public repository
 	if tfawserr.ErrMessageContains(err, "UnsupportedCommandException", "command is only supported in") {
 		return true
@@ -233,6 +239,12 @@ func SkipSweepError(err error) bool {
 	// For example from us-west-1 EMR studio
 	if tfawserr.ErrMessageContains(err, "ValidationException", "Account is not whitelisted to use this feature") {
 		return true
+	}
+
+	// Ignore missing API endpoints for AWS SDK for Go v2
+	var dnsErr *net.DNSError
+	if errors.As(err, &dnsErr) {
+		return dnsErr.IsNotFound
 	}
 	return false
 }

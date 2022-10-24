@@ -41,10 +41,7 @@ func TestAccMetaDefaultTagsDataSource_empty(t *testing.T) {
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
-				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags0(),
-					testAccDefaultTagsDataSourceConfig_basic(),
-				),
+				Config: testAccDefaultTagsDataSourceConfig_basic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "tags.%", "0"),
 				),
@@ -104,6 +101,35 @@ func TestAccMetaDefaultTagsDataSource_ignore(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "tags.%", "0"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccMetaDefaultTagsDataSource_MigrateFromPluginSDK_Empty(t *testing.T) {
+	dataSourceName := "data.aws_default_tags.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(t) },
+		ErrorCheck:   acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
+		CheckDestroy: nil,
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "4.35.0",
+					},
+				},
+				Config: testAccDefaultTagsDataSourceConfig_basic(),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(dataSourceName, "tags.%", "0"),
+				),
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccDefaultTagsDataSourceConfig_basic(),
+				PlanOnly:                 true,
 			},
 		},
 	})

@@ -15,6 +15,9 @@ func ResourceNetworkInterfaceAttachment() *schema.Resource {
 		Create: resourceNetworkInterfaceAttachmentCreate,
 		Read:   resourceNetworkInterfaceAttachmentRead,
 		Delete: resourceNetworkInterfaceAttachmentDelete,
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"attachment_id": {
@@ -69,7 +72,7 @@ func resourceNetworkInterfaceAttachmentCreate(d *schema.ResourceData, meta inter
 func resourceNetworkInterfaceAttachmentRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	attachment, err := FindNetworkInterfaceAttachmentByID(context.TODO(), conn, d.Id())
+	network_interface, err := FindNetworkInterfaceByAttachmentID(context.TODO(), conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EC2 Network Interface Attachment (%s) not found, removing from state", d.Id())
@@ -81,10 +84,11 @@ func resourceNetworkInterfaceAttachmentRead(d *schema.ResourceData, meta interfa
 		return fmt.Errorf("error reading EC2 Network Interface Attachment (%s): %w", d.Id(), err)
 	}
 
-	d.Set("attachment_id", attachment.AttachmentId)
-	d.Set("device_index", attachment.DeviceIndex)
-	d.Set("instance_id", attachment.InstanceId)
-	d.Set("status", attachment.Status)
+	d.Set("network_interface_id", network_interface.NetworkInterfaceId)
+	d.Set("attachment_id", network_interface.Attachment.AttachmentId)
+	d.Set("device_index", network_interface.Attachment.DeviceIndex)
+	d.Set("instance_id", network_interface.Attachment.InstanceId)
+	d.Set("status", network_interface.Attachment.Status)
 
 	return nil
 }

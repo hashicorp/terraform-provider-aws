@@ -182,7 +182,6 @@ func testAccCheckSecretPolicyDestroy(s *terraform.State) error {
 	}
 
 	return nil
-
 }
 
 func testAccCheckSecretPolicyExists(resourceName string, policy *secretsmanager.GetResourcePolicyOutput) resource.TestCheckFunc {

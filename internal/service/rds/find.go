@@ -498,7 +498,6 @@ func findGlobalClusters(conn *rds.RDS, input *rds.DescribeGlobalClustersInput) (
 
 // FindReservedDBInstanceByID returns matching ReservedDBInstance.
 func FindReservedDBInstanceByID(ctx context.Context, conn *rds.RDS, id string) (*rds.ReservedDBInstance, error) {
-
 	input := &rds.DescribeReservedDBInstancesInput{
 		ReservedDBInstanceId: aws.String(id),
 	}

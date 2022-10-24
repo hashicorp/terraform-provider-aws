@@ -276,11 +276,9 @@ func testAccCheckSubscriptionFilterDestroy(s *terraform.State) error {
 		}
 
 		return fmt.Errorf("Subscription Filter still exists")
-
 	}
 
 	return nil
-
 }
 
 func testAccCheckSubscriptionFilterExists(n string, filter *cloudwatchlogs.SubscriptionFilter) resource.TestCheckFunc {

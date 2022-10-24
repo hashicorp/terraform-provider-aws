@@ -678,7 +678,6 @@ func statusIndex(ctx context.Context, conn *kendra.Client, id string) resource.S
 }
 
 func waitIndexCreated(ctx context.Context, conn *kendra.Client, id string, timeout time.Duration) (*kendra.DescribeIndexOutput, error) {
-
 	stateConf := &resource.StateChangeConf{
 		Pending: enum.Slice(types.IndexStatusCreating),
 		Target:  enum.Slice(types.IndexStatusActive),
@@ -699,7 +698,6 @@ func waitIndexCreated(ctx context.Context, conn *kendra.Client, id string, timeo
 }
 
 func waitIndexUpdated(ctx context.Context, conn *kendra.Client, id string, timeout time.Duration) (*kendra.DescribeIndexOutput, error) {
-
 	stateConf := &resource.StateChangeConf{
 		Pending: enum.Slice(types.IndexStatusUpdating),
 		Target:  enum.Slice(types.IndexStatusActive),

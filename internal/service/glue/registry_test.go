@@ -207,7 +207,6 @@ func testAccCheckRegistryDestroy(s *terraform.State) error {
 			if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
 				return nil
 			}
-
 		}
 
 		if output != nil && aws.StringValue(output.RegistryArn) == rs.Primary.ID {
