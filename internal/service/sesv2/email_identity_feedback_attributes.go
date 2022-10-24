@@ -36,7 +36,7 @@ func ResourceEmailIdentityFeedbackAttributes() *schema.Resource {
 			"email_forwarding_enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Computed: true,
+				Default:  false,
 			},
 		},
 	}
