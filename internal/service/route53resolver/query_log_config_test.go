@@ -1,6 +1,7 @@
 package route53resolver_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -135,7 +136,7 @@ func testAccCheckQueryLogConfigDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := tfroute53resolver.FindResolverQueryLogConfigByID(conn, rs.Primary.ID)
+		_, err := tfroute53resolver.FindResolverQueryLogConfigByID(context.Background(), conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -164,7 +165,7 @@ func testAccCheckQueryLogConfigExists(n string, v *route53resolver.ResolverQuery
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ResolverConn
 
-		output, err := tfroute53resolver.FindResolverQueryLogConfigByID(conn, rs.Primary.ID)
+		output, err := tfroute53resolver.FindResolverQueryLogConfigByID(context.Background(), conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
