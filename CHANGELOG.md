@@ -1,4 +1,15 @@
 ## 4.37.0 (Unreleased)
+
+ENHANCEMENTS:
+
+* resource/aws_ec2_transit_gateway: Add support to modify `amazon_side_asn` argument ([#27306](https://github.com/hashicorp/terraform-provider-aws/issues/27306))
+* resource/aws_evidently_project: Support configurable timeouts for create, update, and delete ([#27336](https://github.com/hashicorp/terraform-provider-aws/issues/27336))
+* resource/aws_network_interface_attachment: Added import capabilities for the resource ([#27364](https://github.com/hashicorp/terraform-provider-aws/issues/27364))
+
+BUG FIXES:
+
+* resource/aws_connect_contact_flow: Change `type` to ForceNew ([#27347](https://github.com/hashicorp/terraform-provider-aws/issues/27347))
+
 ## 4.36.1 (October 21, 2022)
 
 BUG FIXES:
