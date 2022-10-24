@@ -42,6 +42,42 @@ func ResourceBudget() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"auto_adjust_data": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"auto_adjust_type": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringInSlice(budgets.AutoAdjustType_Values(), false),
+						},
+						"historical_options": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"budget_adjustment_period": {
+										Type:         schema.TypeInt,
+										Required:     true,
+										ValidateFunc: validation.IntBetween(1, 60),
+									},
+									"lookback_available_periods": {
+										Type:     schema.TypeInt,
+										Computed: true,
+									},
+								},
+							},
+						},
+						"last_auto_adjust_time": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
 			"budget_type": {
 				Type:         schema.TypeString,
 				Required:     true,
