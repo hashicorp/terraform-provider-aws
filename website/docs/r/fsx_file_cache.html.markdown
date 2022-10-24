@@ -10,9 +10,6 @@ description: |-
 
 Terraform resource for managing an AWS FSx File Cache.
 See the [Create File Cache](https://docs.aws.amazon.com/fsx/latest/APIReference/API_CreateFileCache.html) for more information.
-
-## Example Usage
-
 ### Basic Usage
 
 ```terraform
@@ -100,7 +97,7 @@ The following arguments are supported for `metadata_configuration` configuration
 
 In addition to all arguments above, the following attributes are exported:
 
-* `arn` - The Amazon Resource Name (ARN) for the resource. 
+* `arn` - The Amazon Resource Name (ARN) for the resource.
 * `data_repository_association_ids` - A list of IDs of data repository associations that are associated with this cache.
 * `dns_name` - The Domain Name System (DNS) name for the cache.
 * `file_cache_id` - The system-generated, unique ID of the cache.
@@ -118,7 +115,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-FSx File Cache can be imported using the `id`.
+FSx File Cache can be imported using the resource `id`.
 
 ```
 $ terraform import aws_fsx_file_cache.example fc-8012925589
