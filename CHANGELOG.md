@@ -10,6 +10,7 @@ ENHANCEMENTS:
 * resource/aws_ec2_transit_gateway: Add support to modify `amazon_side_asn` argument ([#27306](https://github.com/hashicorp/terraform-provider-aws/issues/27306))
 * resource/aws_evidently_project: Support configurable timeouts for create, update, and delete ([#27336](https://github.com/hashicorp/terraform-provider-aws/issues/27336))
 * resource/aws_network_interface_attachment: Added import capabilities for the resource ([#27364](https://github.com/hashicorp/terraform-provider-aws/issues/27364))
+* resource/aws_sesv2_dedicated_ip_pool: Add `scaling_mode` attribute ([#27388](https://github.com/hashicorp/terraform-provider-aws/issues/27388))
 
 BUG FIXES:
 
