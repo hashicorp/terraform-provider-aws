@@ -13,7 +13,7 @@ See the [Create File Cache](https://docs.aws.amazon.com/fsx/latest/APIReference/
 ### Basic Usage
 
 ```terraform
-resource "aws_fsx_filecache" "example" {
+resource "aws_fsx_file_cache" "example" {
 
   data_repository_association {
     data_repository_path           = "nfs://filer.domain.com"
