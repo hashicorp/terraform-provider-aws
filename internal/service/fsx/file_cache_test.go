@@ -23,8 +23,8 @@ import (
 func TestAccFSxFileCache_serial(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
 		"FSxFileCache": {
-			"basic":      TestAccFileCache_basic,
-			"disappears": TestAccFileCache_disappears,
+			"basic":      TestAccFSxFileCache_basic,
+			"disappears": TestAccFSxFileCache_disappears,
 			"kms_key_id": testAccFileCache_kmsKeyID,
 			"copy_tags_to_data_repository_associations": testAccFileCache_copyTagsToDataRepositoryAssociations,
 			"data_repository_association":               testAccFileCache_dataRepositoryAssociation,
