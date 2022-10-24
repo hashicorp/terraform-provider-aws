@@ -6,7 +6,7 @@ require (
 	github.com/ProtonMail/go-crypto v0.0.0-20210428141323-04723f9f07d7
 	github.com/aws/aws-sdk-go v1.44.117
 	github.com/aws/aws-sdk-go-v2 v1.17.0
-	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.12.17
+	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.12.18
 	github.com/aws/aws-sdk-go-v2/service/comprehend v1.19.1
 	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.17.20
 	github.com/aws/aws-sdk-go-v2/service/fis v1.13.2
