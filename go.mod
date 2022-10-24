@@ -16,7 +16,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/medialive v1.24.1
 	github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.0.10
 	github.com/aws/aws-sdk-go-v2/service/route53domains v1.12.18
-	github.com/aws/aws-sdk-go-v2/service/s3control v1.24.0
+	github.com/aws/aws-sdk-go-v2/service/s3control v1.24.1
 	github.com/aws/aws-sdk-go-v2/service/sesv2 v1.14.1
 	github.com/aws/aws-sdk-go-v2/service/transcribe v1.21.9
 	github.com/beevik/etree v1.1.0
@@ -63,7 +63,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/internal/ini v1.3.11 // indirect
 	github.com/aws/aws-sdk-go-v2/service/iam v1.18.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.9.4 // indirect
-	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.13.17 // indirect
+	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.13.18 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sso v1.11.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sts v1.16.4 // indirect
 	github.com/aws/smithy-go v1.13.3 // indirect
