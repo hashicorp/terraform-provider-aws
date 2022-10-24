@@ -10,7 +10,7 @@ description: |-
 
 Terraform resource for managing an AWS FSx File Cache.
 See the [Create File Cache](https://docs.aws.amazon.com/fsx/latest/APIReference/API_CreateFileCache.html) for more information.
-### Basic Usage
+## Example Usage
 
 ```terraform
 resource "aws_fsx_file_cache" "example" {
