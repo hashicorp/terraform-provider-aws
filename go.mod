@@ -9,7 +9,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.12.17
 	github.com/aws/aws-sdk-go-v2/service/comprehend v1.19.0
 	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.17.19
-	github.com/aws/aws-sdk-go-v2/service/fis v1.13.1
+	github.com/aws/aws-sdk-go-v2/service/fis v1.13.2
 	github.com/aws/aws-sdk-go-v2/service/identitystore v1.15.5
 	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.8.1
 	github.com/aws/aws-sdk-go-v2/service/kendra v1.35.1
