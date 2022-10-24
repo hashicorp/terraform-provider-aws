@@ -456,28 +456,28 @@ func testAccFileCacheConfig_S3Association(bucketName string) string {
 	return testAccFileCacheBaseConfig() +
 		fmt.Sprintf(`
 resource "aws_fsx_filecache" "test" {
-	data_repository_association {
-		data_repository_path = "s3://${aws_s3_bucket.test.id}"
-		file_cache_path      = "/ns1"
-	  }
-	
-	file_cache_type         = "LUSTRE"
-	file_cache_type_version = "2.12"
-	
-	lustre_configuration {
-		deployment_type = "CACHE_1"
-		metadata_configuration {
-		storage_capacity = 2400
-		}
-		per_unit_storage_throughput   = 1000
-		weekly_maintenance_start_time = "2:05:00"
-	}
-	
-	subnet_ids       = [aws_subnet.test1.id]
-	storage_capacity = 1200
+  data_repository_association {
+    data_repository_path = "s3://${aws_s3_bucket.test.id}"
+    file_cache_path      = "/ns1"
+  }
+
+  file_cache_type         = "LUSTRE"
+  file_cache_type_version = "2.12"
+
+  lustre_configuration {
+    deployment_type = "CACHE_1"
+    metadata_configuration {
+      storage_capacity = 2400
+    }
+    per_unit_storage_throughput   = 1000
+    weekly_maintenance_start_time = "2:05:00"
+  }
+
+  subnet_ids       = [aws_subnet.test1.id]
+  storage_capacity = 1200
 }
 resource "aws_s3_bucket" "test" {
-	bucket = %[1]q
+  bucket = %[1]q
 }
 `, bucketName)
 }
@@ -532,8 +532,8 @@ func testAccFileCacheConfig_copyTagsToDataRepositoryAssociations(tagKey1, tagVal
 		fmt.Sprintf(`
 resource "aws_fsx_filecache" "test" {
   copy_tags_to_data_repository_associations = true
-  file_cache_type         = "LUSTRE"
-  file_cache_type_version = "2.12"
+  file_cache_type                           = "LUSTRE"
+  file_cache_type_version                   = "2.12"
 
   lustre_configuration {
     deployment_type = "CACHE_1"
@@ -654,20 +654,20 @@ func testAccFileCache_tags1(tagKey1, tagValue1 string) string {
 	return testAccFileCacheBaseConfig() +
 		fmt.Sprintf(`
 resource "aws_fsx_filecache" "test" {
-	file_cache_type         = "LUSTRE"
-	file_cache_type_version = "2.12"
-	
-	lustre_configuration {
-		deployment_type = "CACHE_1"
-		metadata_configuration {
-		storage_capacity = 2400
-		}
-		per_unit_storage_throughput   = 1000
-		weekly_maintenance_start_time = "2:05:00"
-	}
-	
-	subnet_ids         = [aws_subnet.test1.id]
-	storage_capacity   = 1200
+  file_cache_type         = "LUSTRE"
+  file_cache_type_version = "2.12"
+
+  lustre_configuration {
+    deployment_type = "CACHE_1"
+    metadata_configuration {
+      storage_capacity = 2400
+    }
+    per_unit_storage_throughput   = 1000
+    weekly_maintenance_start_time = "2:05:00"
+  }
+
+  subnet_ids       = [aws_subnet.test1.id]
+  storage_capacity = 1200
 
   tags = {
     %[1]q = %[2]q
@@ -680,25 +680,25 @@ func testAccFileCache_tags2(tagKey1, tagValue1, tagKey2, tagValue2 string) strin
 	return testAccFileCacheBaseConfig() +
 		fmt.Sprintf(`
 resource "aws_fsx_filecache" "test" {
-	file_cache_type         = "LUSTRE"
-	file_cache_type_version = "2.12"
+  file_cache_type         = "LUSTRE"
+  file_cache_type_version = "2.12"
 
-	lustre_configuration {
-		deployment_type = "CACHE_1"
-		metadata_configuration {
-		storage_capacity = 2400
-		}
-		per_unit_storage_throughput   = 1000
-		weekly_maintenance_start_time = "2:05:00"
-	}
+  lustre_configuration {
+    deployment_type = "CACHE_1"
+    metadata_configuration {
+      storage_capacity = 2400
+    }
+    per_unit_storage_throughput   = 1000
+    weekly_maintenance_start_time = "2:05:00"
+  }
 
-	subnet_ids       = [aws_subnet.test1.id]
-	storage_capacity = 1200
+  subnet_ids       = [aws_subnet.test1.id]
+  storage_capacity = 1200
 
-	tags = {
-		%[1]q = %[2]q
-		%[3]q = %[4]q
-	}
+  tags = {
+    %[1]q = %[2]q
+    %[3]q = %[4]q
+  }
 }
 `, tagKey1, tagValue1, tagKey2, tagValue2)
 }
