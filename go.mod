@@ -18,7 +18,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/route53domains v1.12.18
 	github.com/aws/aws-sdk-go-v2/service/s3control v1.24.1
 	github.com/aws/aws-sdk-go-v2/service/sesv2 v1.14.1
-	github.com/aws/aws-sdk-go-v2/service/transcribe v1.21.9
+	github.com/aws/aws-sdk-go-v2/service/transcribe v1.21.10
 	github.com/beevik/etree v1.1.0
 	github.com/google/go-cmp v0.5.9
 	github.com/hashicorp/aws-cloudformation-resource-schema-sdk-go v0.18.0
