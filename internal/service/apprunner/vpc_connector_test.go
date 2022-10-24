@@ -156,39 +156,23 @@ func testAccCheckVPCConnectorExists(n string) resource.TestCheckFunc {
 }
 
 func testAccVPCConnectorConfig_base(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block = "10.1.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test" {
-  cidr_block = "10.1.1.0/24"
-  vpc_id     = aws_vpc.test.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 1), fmt.Sprintf(`
 resource "aws_security_group" "test" {
   vpc_id = aws_vpc.test.id
+  name   = %[1]q
 
   tags = {
     Name = %[1]q
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccVPCConnectorConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccVPCConnectorConfig_base(rName), fmt.Sprintf(`
 resource "aws_apprunner_vpc_connector" "test" {
   vpc_connector_name = %[1]q
-  subnets            = [aws_subnet.test.id]
+  subnets            = aws_subnet.test[*].id
   security_groups    = [aws_security_group.test.id]
 }
 `, rName))
@@ -198,7 +182,7 @@ func testAccVPCConnectorConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(testAccVPCConnectorConfig_base(rName), fmt.Sprintf(`
 resource "aws_apprunner_vpc_connector" "test" {
   vpc_connector_name = %[1]q
-  subnets            = [aws_subnet.test.id]
+  subnets            = aws_subnet.test[*].id
   security_groups    = [aws_security_group.test.id]
 
   tags = {
@@ -212,7 +196,7 @@ func testAccVPCConnectorConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValu
 	return acctest.ConfigCompose(testAccVPCConnectorConfig_base(rName), fmt.Sprintf(`
 resource "aws_apprunner_vpc_connector" "test" {
   vpc_connector_name = %[1]q
-  subnets            = [aws_subnet.test.id]
+  subnets            = aws_subnet.test[*].id
   security_groups    = [aws_security_group.test.id]
 
   tags = {
