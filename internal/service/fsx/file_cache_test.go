@@ -25,7 +25,7 @@ func TestAccFSxFileCache_serial(t *testing.T) {
 		"FSxFileCache": {
 			"basic":      TestAccFSxFileCache_basic,
 			"disappears": TestAccFSxFileCache_disappears,
-			"kms_key_id": testAccFileCache_kmsKeyID,
+			"kms_key_id": TestAccFileCache_kmsKeyID,
 			"copy_tags_to_data_repository_associations": testAccFileCache_copyTagsToDataRepositoryAssociations,
 			"data_repository_association":               testAccFileCache_dataRepositoryAssociation,
 			"security_group_id":                         testAccFileCache_securityGroupId,
@@ -67,6 +67,7 @@ func TestAccFSxFileCache_basic(t *testing.T) {
 				Config: testAccFileCacheConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFileCacheExists(resourceName, &filecache),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "fsx", regexp.MustCompile(`file-cache/fc-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_data_repository_associations", "false"),
 					resource.TestCheckResourceAttr(resourceName, "file_cache_type", "LUSTRE"),
 					resource.TestCheckResourceAttr(resourceName, "file_cache_type_version", "2.12"),
@@ -74,9 +75,8 @@ func TestAccFSxFileCache_basic(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(resourceName, "kms_key_id", "kms", regexp.MustCompile(`key\/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "lustre_configuration.0.deployment_type", "CACHE_1"),
 					resource.TestCheckResourceAttr(resourceName, "lustre_configuration.0.metadata_configuration.0.storage_capacity", "2400"),
-					resource.TestCheckResourceAttr(resourceName, "lustre_configuration.0.metadata_configuration.0.per_unit_storage_capacity", "1000"),
-					resource.TestCheckResourceAttr(resourceName, "lustre_configuration.0.metadata_configuration.0.weekly_maintenance_start_time", "2:05:00"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "resource_arn", "fsx", regexp.MustCompile(`file-cache/fc-.+`)),
+					resource.TestCheckResourceAttr(resourceName, "lustre_configuration.0.per_unit_storage_throughput", "1000"),
+					resource.TestCheckResourceAttr(resourceName, "lustre_configuration.0.weekly_maintenance_start_time", "2:05:00"),
 					resource.TestCheckResourceAttr(resourceName, "storage_capacity", "1200"),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "0"),
 				),
@@ -121,7 +121,7 @@ func TestAccFSxFileCache_disappears(t *testing.T) {
 }
 
 // Per Attribute Acceptance Tests
-func testAccFileCache_kmsKeyID(t *testing.T) {
+func TestAccFileCache_kmsKeyID(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -135,12 +135,12 @@ func testAccFileCache_kmsKeyID(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckWindowsFileSystemDestroy,
+		CheckDestroy:             testAccCheckFileCacheDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFileCacheConfig_kmsKeyID1(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFileCacheExists(resourceName, &filecache2),
+					testAccCheckFileCacheExists(resourceName, &filecache1),
 					resource.TestCheckResourceAttrPair(resourceName, "kms_key_id", kmsKeyResourceName1, "arn"),
 				),
 			},
@@ -172,7 +172,7 @@ func testAccFileCache_copyTagsToDataRepositoryAssociations(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckWindowsFileSystemDestroy,
+		CheckDestroy:             testAccCheckFileCacheDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFileCacheConfig_copyTagsToDataRepositoryAssociations("key1", "value1", "key2", "value2"),
@@ -198,17 +198,17 @@ func testAccFileCache_dataRepositoryAssociation(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckWindowsFileSystemDestroy,
+		CheckDestroy:             testAccCheckFileCacheDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFileCacheConfig_nfs_association(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFileCacheExists(resourceName, &filecache1),
-					resource.TestCheckResourceAttr(resourceName, "data_repository_association.data_repository_path", "nfs://filer.domain.com"),
-					resource.TestCheckResourceAttr(resourceName, "data_repository_association.file_cache_path", "/ns1"),
-					resource.TestCheckResourceAttr(resourceName, "data_repository_association.nfs.dns_ips.0", "192.168.0.1"),
-					resource.TestCheckResourceAttr(resourceName, "data_repository_association.nfs.version", "NFS3"),
-					resource.TestCheckResourceAttr(resourceName, "data_repository_association_ids.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "data_repository_association.0.data_repository_path", "nfs://filer.domain.com/"),
+					resource.TestCheckResourceAttr(resourceName, "data_repository_association.0.file_cache_path", "/ns1"),
+					resource.TestCheckResourceAttr(resourceName, "data_repository_association.0.nfs.0.dns_ips.0", "192.168.0.1"),
+					resource.TestCheckResourceAttr(resourceName, "data_repository_association.0.nfs.0.version", "NFS3"),
+					resource.TestCheckResourceAttr(resourceName, "data_repository_association_ids.#", "1"),
 				),
 			},
 			{
@@ -244,7 +244,7 @@ func testAccFileCache_securityGroupId(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckWindowsFileSystemDestroy,
+		CheckDestroy:             testAccCheckFileCacheDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFileCacheConfig_securityGroupID(),
@@ -529,6 +529,18 @@ func testAccFileCacheConfig_copyTagsToDataRepositoryAssociations(tagKey1, tagVal
 		fmt.Sprintf(`
 resource "aws_fsx_file_cache" "test" {
   copy_tags_to_data_repository_associations = true
+
+  data_repository_association {
+    data_repository_path           = "nfs://filer.domain.com"
+    data_repository_subdirectories = ["test", "test2"]
+    file_cache_path                = "/ns1"
+
+    nfs {
+      dns_ips = ["192.168.0.1", "192.168.0.2"]
+      version = "NFS3"
+    }
+  }
+
   file_cache_type                           = "LUSTRE"
   file_cache_type_version                   = "2.12"
 
