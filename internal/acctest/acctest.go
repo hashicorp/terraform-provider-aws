@@ -691,17 +691,29 @@ func PreCheckMultipleRegion(t *testing.T, regions int) {
 	}
 }
 
-// PreCheckRegion checks that the test region is the specified region.
-func PreCheckRegion(t *testing.T, region string) {
-	if curr := Region(); curr != region {
-		t.Skipf("skipping tests; %s (%s) does not equal %s", envvar.DefaultRegion, curr, region)
+// PreCheckRegion checks that the test region is one of the specified regions.
+func PreCheckRegion(t *testing.T, regions ...string) {
+	curr := Region()
+	var regionOK bool
+
+	for _, region := range regions {
+		if curr == region {
+			regionOK = true
+			break
+		}
+	}
+
+	if !regionOK {
+		t.Skipf("skipping tests; %s (%s) not supported", envvar.DefaultRegion, curr)
 	}
 }
 
 // PreCheckRegionNot checks that the test region is not one of the specified regions.
 func PreCheckRegionNot(t *testing.T, regions ...string) {
+	curr := Region()
+
 	for _, region := range regions {
-		if curr := Region(); curr == region {
+		if curr == region {
 			t.Skipf("skipping tests; %s (%s) not supported", envvar.DefaultRegion, curr)
 		}
 	}
