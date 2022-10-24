@@ -45,7 +45,7 @@ func ResourceFileCache() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
-			"data_repository_associations": {
+			"data_repository_association": {
 				Type:     schema.TypeList,
 				Optional: true,
 				ForceNew: true,
@@ -103,7 +103,7 @@ func ResourceFileCache() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"dns_ips": {
-										Type:     schema.TypeSet,
+										Type:     schema.TypeList,
 										Optional: true,
 										MaxItems: 10,
 										Elem: &schema.Schema{
@@ -309,7 +309,7 @@ func resourceFileCacheCreate(ctx context.Context, d *schema.ResourceData, meta i
 	if v, ok := d.GetOk("copy_tags_to_data_repository_associations"); ok {
 		input.CopyTagsToDataRepositoryAssociations = aws.Bool(v.(bool))
 	}
-	if v, ok := d.GetOk("data_repository_associations"); ok && len(v.([]interface{})) > 0 {
+	if v, ok := d.GetOk("data_repository_association"); ok && len(v.([]interface{})) > 0 {
 		input.DataRepositoryAssociations = expandDataRepositoryAssociations(v.([]interface{}))
 	}
 	if v, ok := d.GetOk("kms_key_id"); ok {
@@ -385,7 +385,7 @@ func resourceFileCacheRead(ctx context.Context, d *schema.ResourceData, meta int
 
 	dataRepositoryAssociations, err := findDataRepositoryAssociationsByIDs(conn, filecache.DataRepositoryAssociationIds)
 
-	if err := d.Set("data_repository_associations", flattenDataRepositoryAssociations(dataRepositoryAssociations, defaultTagsConfig, ignoreTagsConfig)); err != nil {
+	if err := d.Set("data_repository_association", flattenDataRepositoryAssociations(dataRepositoryAssociations, defaultTagsConfig, ignoreTagsConfig)); err != nil {
 		return create.DiagError(names.FSx, create.ErrActionSetting, ResNameFileCache, d.Id(), err)
 	}
 
@@ -553,7 +553,7 @@ func expandDataRepositoryAssociations(l []interface{}) []*fsx.FileCacheDataRepos
 			req.FileCachePath = aws.String(v)
 		}
 		if v, ok := tfMap["nfs"]; ok && len(v.([]interface{})) > 0 {
-			req.NFS = expandFileCacheNFSConfiguration(v.(map[string]interface{}))
+			req.NFS = expandFileCacheNFSConfiguration(v.([]interface{}))
 		}
 		dataRepositoryAssociations = append(dataRepositoryAssociations, req)
 	}
@@ -561,12 +561,17 @@ func expandDataRepositoryAssociations(l []interface{}) []*fsx.FileCacheDataRepos
 	return dataRepositoryAssociations
 }
 
-func expandFileCacheNFSConfiguration(l map[string]interface{}) *fsx.FileCacheNFSConfiguration {
+func expandFileCacheNFSConfiguration(l []interface{}) *fsx.FileCacheNFSConfiguration {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+	data := l[0].(map[string]interface{})
+
 	req := &fsx.FileCacheNFSConfiguration{}
-	if v, ok := l["dns_ips"]; ok {
+	if v, ok := data["dns_ips"]; ok {
 		req.DnsIps = flex.ExpandStringList(v.([]interface{}))
 	}
-	if v, ok := l["version"].(string); ok {
+	if v, ok := data["version"].(string); ok {
 		req.Version = aws.String(v)
 	}
 
