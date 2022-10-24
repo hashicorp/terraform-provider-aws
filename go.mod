@@ -11,7 +11,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.17.20
 	github.com/aws/aws-sdk-go-v2/service/fis v1.13.2
 	github.com/aws/aws-sdk-go-v2/service/identitystore v1.15.6
-	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.8.1
+	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.8.2
 	github.com/aws/aws-sdk-go-v2/service/kendra v1.35.1
 	github.com/aws/aws-sdk-go-v2/service/medialive v1.24.1
 	github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.0.10
