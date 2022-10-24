@@ -73,8 +73,8 @@ github.com/aws/aws-sdk-go-v2/service/medialive v1.24.1 h1:aHsoN4yvYXrfoggiQ58web
 github.com/aws/aws-sdk-go-v2/service/medialive v1.24.1/go.mod h1:3XPW6mIgytBfUUGfmpruUUZQKfZWxMte3VjIRoBytVk=
 github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.0.10 h1:FYBnb1z07t3qpAFddDMIJskPEjWEIMbK4Dv/FWDX06s=
 github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.0.10/go.mod h1:61Oc8W4jS9kp9xNyrBkzir82bq5AV7moeXLkHR6nzLY=
-github.com/aws/aws-sdk-go-v2/service/route53domains v1.12.17 h1:Y/ay2+KWFoPBWP5p4VnWi7uCnZe+C6kdTlYUZC1w30U=
-github.com/aws/aws-sdk-go-v2/service/route53domains v1.12.17/go.mod h1:8kD6U3g33wPkjgM8boZrrVeXT6kmaWKf0nHquE2wWVU=
+github.com/aws/aws-sdk-go-v2/service/route53domains v1.12.18 h1:8bHSg1I6Vp0zMiGSJj655woXCwI/+5OohKHcC92dbGs=
+github.com/aws/aws-sdk-go-v2/service/route53domains v1.12.18/go.mod h1:dHPtvtegheEC622PvOWC/R+OEMMZDfcm9azyU0XnXh4=
 github.com/aws/aws-sdk-go-v2/service/s3control v1.24.0 h1:sUzmjWeHc74jxbxuqlCj21Np3pspePMPJGXgjanQujQ=
 github.com/aws/aws-sdk-go-v2/service/s3control v1.24.0/go.mod h1:OGlbj8zUJ6BavucCjkjcvmBxFaYcuRW8easK//ktnx4=
 github.com/aws/aws-sdk-go-v2/service/sesv2 v1.14.1 h1:bl8k4bV7ry3QOoXf58kdaS0dWfMnTKXsrpd8efkCElc=
