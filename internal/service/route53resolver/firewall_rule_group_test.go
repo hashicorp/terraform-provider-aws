@@ -1,6 +1,7 @@
 package route53resolver_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -133,7 +134,7 @@ func testAccCheckFirewallRuleGroupDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := tfroute53resolver.FindFirewallRuleGroupByID(conn, rs.Primary.ID)
+		_, err := tfroute53resolver.FindFirewallRuleGroupByID(context.Background(), conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -162,7 +163,7 @@ func testAccCheckFirewallRuleGroupExists(n string, v *route53resolver.FirewallRu
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ResolverConn
 
-		output, err := tfroute53resolver.FindFirewallRuleGroupByID(conn, rs.Primary.ID)
+		output, err := tfroute53resolver.FindFirewallRuleGroupByID(context.Background(), conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
