@@ -151,9 +151,9 @@ func WaitCacheClusterDeleted(conn *elasticache.ElastiCache, cacheClusterID strin
 }
 
 const (
-	GlobalReplicationGroupDefaultCreatedTimeout = 25 * time.Minute
-	GlobalReplicationGroupDefaultUpdatedTimeout = 40 * time.Minute
-	GlobalReplicationGroupDefaultDeletedTimeout = 20 * time.Minute
+	globalReplicationGroupDefaultCreatedTimeout = 60 * time.Minute
+	globalReplicationGroupDefaultUpdatedTimeout = 60 * time.Minute
+	globalReplicationGroupDefaultDeletedTimeout = 20 * time.Minute
 
 	globalReplicationGroupAvailableMinTimeout = 10 * time.Second
 	globalReplicationGroupAvailableDelay      = 30 * time.Second
@@ -181,8 +181,8 @@ func waitGlobalReplicationGroupAvailable(ctx context.Context, conn *elasticache.
 	return nil, err
 }
 
-// WaitGlobalReplicationGroupDeleted waits for a Global Replication Group to be deleted
-func WaitGlobalReplicationGroupDeleted(ctx context.Context, conn *elasticache.ElastiCache, globalReplicationGroupID string) (*elasticache.GlobalReplicationGroup, error) {
+// waitGlobalReplicationGroupDeleted waits for a Global Replication Group to be deleted
+func waitGlobalReplicationGroupDeleted(ctx context.Context, conn *elasticache.ElastiCache, globalReplicationGroupID string, timeout time.Duration) (*elasticache.GlobalReplicationGroup, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
 			GlobalReplicationGroupStatusAvailable,
@@ -192,7 +192,7 @@ func WaitGlobalReplicationGroupDeleted(ctx context.Context, conn *elasticache.El
 		},
 		Target:     []string{},
 		Refresh:    statusGlobalReplicationGroup(ctx, conn, globalReplicationGroupID),
-		Timeout:    GlobalReplicationGroupDefaultDeletedTimeout,
+		Timeout:    timeout,
 		MinTimeout: globalReplicationGroupDeletedMinTimeout,
 		Delay:      globalReplicationGroupDeletedDelay,
 	}

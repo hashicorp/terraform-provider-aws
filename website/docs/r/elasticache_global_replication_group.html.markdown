@@ -140,6 +140,14 @@ In addition to all arguments above, the following attributes are exported:
     * `slots` - The keyspace for this node group.
 * `transit_encryption_enabled` - A flag that indicates whether the encryption in transit is enabled.
 
+## Timeouts
+
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+
+* `create` - (Default `60m`)
+* `update` - (Default `60m`)
+* `delete` - (Default `20m`)
+
 ## Import
 
 ElastiCache Global Replication Groups can be imported using the `global_replication_group_id`, e.g.,
