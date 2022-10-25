@@ -705,10 +705,6 @@ func expandAutoAdjustData(tfMap map[string]interface{}) *budgets.AutoAdjustData 
 		apiObject.AutoAdjustType = aws.String(v)
 	}
 
-	//if v, ok := tfMap["last_auto_adjust_time"].(time.Time); ok {
-	//	apiObject.LastAutoAdjustTime = aws.Time(v)
-	//}
-
 	if v, ok := tfMap["historical_options"].([]interface{}); ok && len(v) > 0 {
 		apiObject.HistoricalOptions = expandHistoricalOptions(v)
 	}
@@ -728,10 +724,6 @@ func expandHistoricalOptions(l []interface{}) *budgets.HistoricalOptions {
 	if v, ok := m["budget_adjustment_period"].(int); ok && v != 0 {
 		apiObject.BudgetAdjustmentPeriod = aws.Int64(int64(v))
 	}
-
-	//if v, ok := m["lookback_available_periods"].(int); ok && v != 0 {
-	//	apiObject.LookBackAvailablePeriods = aws.Int64(int64(v))
-	//}
 
 	return apiObject
 }
