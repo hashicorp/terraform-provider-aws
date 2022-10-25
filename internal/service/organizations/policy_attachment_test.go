@@ -2,11 +2,9 @@ package organizations_test
 
 import (
 	"fmt"
-	"log"
 	"strconv"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/organizations"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
@@ -15,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tforganizations "github.com/hashicorp/terraform-provider-aws/internal/service/organizations"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func testAccPolicyAttachment_Account(t *testing.T) {
@@ -115,6 +114,28 @@ func testAccPolicyAttachment_Root(t *testing.T) {
 	})
 }
 
+func testAccPolicyAttachment_disappears(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_organizations_policy_attachment.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, organizations.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPolicyAttachmentDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPolicyAttachmentConfig_organizationalUnit(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPolicyAttachmentExists(resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tforganizations.ResourcePolicyAttachment(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccCheckPolicyAttachmentDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).OrganizationsConn
 
@@ -124,89 +145,53 @@ func testAccCheckPolicyAttachmentDestroy(s *terraform.State) error {
 		}
 
 		targetID, policyID, err := tforganizations.DecodePolicyAttachmentID(rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
 
-		input := &organizations.ListPoliciesForTargetInput{
-			Filter:   aws.String(organizations.PolicyTypeServiceControlPolicy),
-			TargetId: aws.String(targetID),
-		}
+		_, err = tforganizations.FindPolicyAttachmentByTwoPartKey(conn, targetID, policyID)
 
-		log.Printf("[DEBUG] Listing Organizations Policies for Target: %s", input)
-		var output *organizations.PolicySummary
-		err = conn.ListPoliciesForTargetPages(input, func(page *organizations.ListPoliciesForTargetOutput, lastPage bool) bool {
-			for _, policySummary := range page.Policies {
-				if aws.StringValue(policySummary.Id) == policyID {
-					output = policySummary
-					return true
-				}
-			}
-			return !lastPage
-		})
+		if tfresource.NotFound(err) {
+			continue
+		}
 
 		if tfawserr.ErrCodeEquals(err, organizations.ErrCodeAWSOrganizationsNotInUseException) {
 			continue
 		}
 
-		if tfawserr.ErrCodeEquals(err, organizations.ErrCodeTargetNotFoundException) {
-			continue
-		}
-
 		if err != nil {
 			return err
 		}
 
-		if output == nil {
-			continue
-		}
-
-		return fmt.Errorf("Policy attachment %q still exists", rs.Primary.ID)
+		return fmt.Errorf("Organizations Policy Attachment %s still exists", rs.Primary.ID)
 	}
 
 	return nil
-
 }
 
-func testAccCheckPolicyAttachmentExists(resourceName string) resource.TestCheckFunc {
+func testAccCheckPolicyAttachmentExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", resourceName)
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No Organizations Policy Attachment ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).OrganizationsConn
 
 		targetID, policyID, err := tforganizations.DecodePolicyAttachmentID(rs.Primary.ID)
-		if err != nil {
-			return err
-		}
-
-		input := &organizations.ListTargetsForPolicyInput{
-			PolicyId: aws.String(policyID),
-		}
-
-		log.Printf("[DEBUG] Listing Organizations Policies for Target: %s", input)
-		var output *organizations.PolicyTargetSummary
-		err = conn.ListTargetsForPolicyPages(input, func(page *organizations.ListTargetsForPolicyOutput, lastPage bool) bool {
-			for _, policySummary := range page.Targets {
-				if aws.StringValue(policySummary.TargetId) == targetID {
-					output = policySummary
-					return true
-				}
-			}
-			return !lastPage
-		})
 
 		if err != nil {
 			return err
 		}
 
-		if output == nil {
-			return fmt.Errorf("Policy attachment %q does not exist", rs.Primary.ID)
-		}
+		_, err = tforganizations.FindPolicyAttachmentByTwoPartKey(conn, targetID, policyID)
 
-		return nil
+		return err
 	}
 }
 

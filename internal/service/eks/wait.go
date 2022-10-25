@@ -79,7 +79,7 @@ func waitAddonUpdateSuccessful(ctx context.Context, conn *eks.EKS, clusterName, 
 
 func waitClusterCreated(conn *eks.EKS, name string, timeout time.Duration) (*eks.Cluster, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{eks.ClusterStatusCreating},
+		Pending: []string{eks.ClusterStatusPending, eks.ClusterStatusCreating},
 		Target:  []string{eks.ClusterStatusActive},
 		Refresh: statusCluster(conn, name),
 		Timeout: timeout,

@@ -88,4 +88,3 @@ Workspaces can be imported using their ID, e.g.,
 ```
 $ terraform import aws_workspaces_workspace.example ws-9z9zmbkhv
 ```
-

@@ -226,7 +226,6 @@ func TestAccDocDBClusterInstance_disappears(t *testing.T) {
 
 func testAccCheckClusterInstanceAttributes(v *docdb.DBInstance) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-
 		if *v.Engine != "docdb" {
 			return fmt.Errorf("bad engine, expected \"docdb\": %#v", *v.Engine)
 		}

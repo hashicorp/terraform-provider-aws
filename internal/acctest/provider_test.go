@@ -68,7 +68,6 @@ func TestReverseDNS(t *testing.T) {
 
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
-
 			if got, want := conns.ReverseDNS(testCase.input), testCase.expected; got != want {
 				t.Errorf("got: %s, expected: %s", got, want)
 			}
@@ -527,7 +526,7 @@ func TestAccProvider_AssumeRole_empty(t *testing.T) {
 }
 
 // Replaces FactoriesInternal.
-func testAccProviderFactoriesInternal(t *testing.T, v **schema.Provider) map[string]func() (*schema.Provider, error) { //nolint:unparam
+func testAccProviderFactoriesInternal(t *testing.T, v **schema.Provider) map[string]func() (*schema.Provider, error) {
 	p, err := provider.New(context.Background())
 
 	if err != nil {

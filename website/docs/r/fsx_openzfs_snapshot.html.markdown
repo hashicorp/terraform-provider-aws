@@ -11,7 +11,6 @@ description: |-
 Manages an Amazon FSx for OpenZFS volume.
 See the [FSx OpenZFS User Guide](https://docs.aws.amazon.com/fsx/latest/OpenZFSGuide/what-is-fsx.html) for more information.
 
-
 ## Example Usage
 
 ### Root volume Example
@@ -50,7 +49,6 @@ resource "aws_fsx_openzfs_file_system" "example" {
   throughput_capacity = 64
 }
 ```
-
 
 ## Argument Reference
 

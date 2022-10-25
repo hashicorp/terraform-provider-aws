@@ -224,7 +224,6 @@ func resourceDirectoryCreate(d *schema.ResourceData, meta interface{}) error {
 			input.ShortName = aws.String(v.(string))
 		}
 
-		log.Printf("[DEBUG] Creating Directory Service Directory: %s", input)
 		output, err := conn.ConnectDirectory(input)
 
 		if err != nil {
@@ -256,7 +255,6 @@ func resourceDirectoryCreate(d *schema.ResourceData, meta interface{}) error {
 			input.VpcSettings = expandDirectoryVpcSettings(v.([]interface{})[0].(map[string]interface{}))
 		}
 
-		log.Printf("[DEBUG] Creating Directory Service Directory: %s", input)
 		output, err := conn.CreateMicrosoftAD(input)
 
 		if err != nil {
@@ -291,7 +289,6 @@ func resourceDirectoryCreate(d *schema.ResourceData, meta interface{}) error {
 			input.VpcSettings = expandDirectoryVpcSettings(v.([]interface{})[0].(map[string]interface{}))
 		}
 
-		log.Printf("[DEBUG] Creating Directory Service Directory: %s", input)
 		output, err := conn.CreateDirectory(input)
 
 		if err != nil {

@@ -71,6 +71,7 @@ func main() {
 			os.Exit(2)
 		}
 
+		migrator.IsDataSource = true
 		migrator.Resource = resource
 		migrator.Template = datasourceImpl
 		migrator.TFTypeName = v
@@ -94,12 +95,13 @@ func main() {
 }
 
 type migrator struct {
-	Name        string
-	PackageName string
-	Resource    *schema.Resource
-	Template    string
-	TFTypeName  string
-	Ui          cli.Ui
+	IsDataSource bool
+	Name         string
+	PackageName  string
+	Resource     *schema.Resource
+	Template     string
+	TFTypeName   string
+	Ui           cli.Ui
 }
 
 // migrate generates an identical schema into the specified output file.
@@ -165,9 +167,10 @@ func (m *migrator) generateTemplateData() (*templateData, error) {
 	sbSchema := strings.Builder{}
 	sbStruct := strings.Builder{}
 	emitter := &emitter{
-		Ui:           m.Ui,
+		IsDataSource: m.IsDataSource,
 		SchemaWriter: &sbSchema,
 		StructWriter: &sbStruct,
+		Ui:           m.Ui,
 	}
 
 	err := emitter.emitSchemaForResource(m.Resource)
@@ -177,12 +180,15 @@ func (m *migrator) generateTemplateData() (*templateData, error) {
 	}
 
 	templateData := &templateData{
-		ImportFrameworkAttr: emitter.ImportFrameworkAttr,
-		Name:                m.Name,
-		PackageName:         m.PackageName,
-		Schema:              sbSchema.String(),
-		Struct:              sbStruct.String(),
-		TFTypeName:          m.TFTypeName,
+		EmitResourceImportState:      m.Resource.Importer != nil,
+		EmitResourceUpdateSkeleton:   m.Resource.Update != nil || m.Resource.UpdateContext != nil || m.Resource.UpdateWithoutTimeout != nil,
+		ImportFrameworkAttr:          emitter.ImportFrameworkAttr,
+		ImportProviderFrameworkTypes: emitter.ImportProviderFrameworkTypes,
+		Name:                         m.Name,
+		PackageName:                  m.PackageName,
+		Schema:                       sbSchema.String(),
+		Struct:                       sbStruct.String(),
+		TFTypeName:                   m.TFTypeName,
 	}
 
 	return templateData, nil
@@ -193,10 +199,12 @@ func (m *migrator) infof(format string, a ...interface{}) {
 }
 
 type emitter struct {
-	Ui                  cli.Ui
-	SchemaWriter        io.Writer
-	StructWriter        io.Writer
-	ImportFrameworkAttr bool
+	ImportFrameworkAttr          bool
+	ImportProviderFrameworkTypes bool
+	IsDataSource                 bool
+	SchemaWriter                 io.Writer
+	StructWriter                 io.Writer
+	Ui                           cli.Ui
 }
 
 // emitSchemaForResource generates the Plugin Framework code for a Plugin SDK Resource and emits the generated code to the emitter's Writer.
@@ -240,6 +248,8 @@ func (e *emitter) emitSchemaForResource(resource *schema.Resource) error {
 // and emits the generated code to the emitter's Writer.
 // Property names are sorted prior to code generation to reduce diffs.
 func (e *emitter) emitAttributesAndBlocks(path []string, schema map[string]*schema.Schema) error {
+	isTopLevelAttribute := len(path) == 0
+
 	// At this point we are emitting code for a tfsdk.Block or Schema.
 	names := make([]string, 0)
 	for name := range schema {
@@ -262,16 +272,21 @@ func (e *emitter) emitAttributesAndBlocks(path []string, schema map[string]*sche
 
 		fprintf(e.SchemaWriter, "%q:", name)
 
+		if isTopLevelAttribute {
+			fprintf(e.StructWriter, "%s ", naming.ToCamelCase(name))
+		}
+
 		err := e.emitAttributeProperty(append(path, name), property)
 
 		if err != nil {
 			return err
 		}
 
-		fprintf(e.SchemaWriter, ",\n")
+		if isTopLevelAttribute {
+			fprintf(e.StructWriter, " `tfsdk:%q`\n", name)
+		}
 
-		fprintf(e.StructWriter, "%s *string ", naming.ToCamelCase(name))
-		fprintf(e.StructWriter, "`tfsdk:%q`\n", name)
+		fprintf(e.SchemaWriter, ",\n")
 	}
 	if emittedFieldName {
 		fprintf(e.SchemaWriter, "},\n")
@@ -310,6 +325,11 @@ func (e *emitter) emitAttributesAndBlocks(path []string, schema map[string]*sche
 // emitAttributeProperty generates the Plugin Framework code for a Plugin SDK Attribute's property
 // and emits the generated code to the emitter's Writer.
 func (e *emitter) emitAttributeProperty(path []string, property *schema.Schema) error {
+	attributeName := path[len(path)-1]
+	isComputedOnly := property.Computed && !property.Optional
+	isTopLevelAttribute := len(path) == 1
+	var planModifiers []string
+
 	// At this point we are emitting code for the values of a tfsdk.Schema's Attributes (map[string]tfsdk.Attribute).
 	fprintf(e.SchemaWriter, "{\n")
 
@@ -320,14 +340,41 @@ func (e *emitter) emitAttributeProperty(path []string, property *schema.Schema) 
 	case schema.TypeBool:
 		fprintf(e.SchemaWriter, "Type:types.BoolType,\n")
 
+		if isTopLevelAttribute {
+			fprintf(e.StructWriter, "types.Bool")
+		}
+
 	case schema.TypeFloat:
 		fprintf(e.SchemaWriter, "Type:types.Float64Type,\n")
+
+		if isTopLevelAttribute {
+			fprintf(e.StructWriter, "types.Float64")
+		}
 
 	case schema.TypeInt:
 		fprintf(e.SchemaWriter, "Type:types.Int64Type,\n")
 
+		if isTopLevelAttribute {
+			fprintf(e.StructWriter, "types.Int64")
+		}
+
 	case schema.TypeString:
-		fprintf(e.SchemaWriter, "Type:types.StringType,\n")
+		// Computed-only ARN attributes are easiest handled as strings.
+		if (attributeName == "arn" || strings.HasSuffix(attributeName, "_arn")) && !isComputedOnly {
+			e.ImportProviderFrameworkTypes = true
+
+			fprintf(e.SchemaWriter, "Type:fwtypes.ARNType,\n")
+
+			if isTopLevelAttribute {
+				fprintf(e.StructWriter, "fwtypes.ARN")
+			}
+		} else {
+			fprintf(e.SchemaWriter, "Type:types.StringType,\n")
+
+			if isTopLevelAttribute {
+				fprintf(e.StructWriter, "types.String")
+			}
+		}
 
 	//
 	// Complex types.
@@ -339,12 +386,21 @@ func (e *emitter) emitAttributeProperty(path []string, property *schema.Schema) 
 		case schema.TypeList:
 			aggregateType = "types.ListType"
 			typeName = "list"
+			if isTopLevelAttribute {
+				fprintf(e.StructWriter, "types.List")
+			}
 		case schema.TypeMap:
 			aggregateType = "types.MapType"
 			typeName = "map"
+			if isTopLevelAttribute {
+				fprintf(e.StructWriter, "types.Map")
+			}
 		case schema.TypeSet:
 			aggregateType = "types.SetType"
 			typeName = "set"
+			if isTopLevelAttribute {
+				fprintf(e.StructWriter, "types.Set")
+			}
 		}
 
 		switch v := property.Elem.(type) {
@@ -412,11 +468,19 @@ func (e *emitter) emitAttributeProperty(path []string, property *schema.Schema) 
 		fprintf(e.SchemaWriter, "DeprecationMessage:%q,\n", deprecationMessage)
 	}
 
-	// Features that we can't (yet) migrate:
-
 	if property.ForceNew {
-		fprintf(e.SchemaWriter, "// TODO ForceNew:true,\n")
+		planModifiers = append(planModifiers, "resource.RequiresReplace()")
 	}
+
+	if len(planModifiers) > 0 {
+		fprintf(e.SchemaWriter, "PlanModifiers:[]tfsdk.AttributePlanModifier{\n")
+		for _, planModifier := range planModifiers {
+			fprintf(e.SchemaWriter, "%s,\n", planModifier)
+		}
+		fprintf(e.SchemaWriter, "},\n")
+	}
+
+	// Features that we can't (yet) migrate:
 
 	if def := property.Default; def != nil {
 		switch def.(type) {
@@ -694,12 +758,15 @@ func unsupportedTypeError(path []string, typ string) error {
 }
 
 type templateData struct {
-	ImportFrameworkAttr bool
-	Name                string // e.g. Instance
-	PackageName         string // e.g. ec2
-	Schema              string
-	Struct              string
-	TFTypeName          string // e.g. aws_instance
+	EmitResourceImportState      bool
+	EmitResourceUpdateSkeleton   bool
+	ImportFrameworkAttr          bool
+	ImportProviderFrameworkTypes bool
+	Name                         string // e.g. Instance
+	PackageName                  string // e.g. ec2
+	Schema                       string
+	Struct                       string
+	TFTypeName                   string // e.g. aws_instance
 }
 
 //go:embed datasource.tmpl

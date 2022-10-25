@@ -658,7 +658,6 @@ func expandCostTypes(tfMap map[string]interface{}) *budgets.CostTypes {
 }
 
 func expandBudgetNotificationsUnmarshal(notificationsRaw []interface{}) ([]*budgets.Notification, [][]*budgets.Subscriber) {
-
 	notifications := make([]*budgets.Notification, len(notificationsRaw))
 	subscribersForNotifications := make([][]*budgets.Subscriber, len(notificationsRaw))
 	for i, notificationRaw := range notificationsRaw {

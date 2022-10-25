@@ -529,7 +529,6 @@ func testAccCheckFunctionEventInvokeConfigDestroy(s *terraform.State) error {
 	}
 
 	return nil
-
 }
 
 func testAccCheckFunctionDisappears(function *lambda.GetFunctionOutput) resource.TestCheckFunc {
@@ -647,7 +646,7 @@ resource "aws_lambda_function" "test" {
   role          = aws_iam_role.test.arn
   handler       = "lambdapinpoint.handler"
   publish       = true
-  runtime       = "nodejs12.x"
+  runtime       = "nodejs16.x"
 
   depends_on = [
     aws_iam_role_policy_attachment.test,

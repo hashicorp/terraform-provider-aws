@@ -175,7 +175,6 @@ func testAccCheckAnalyzerDestroy(s *terraform.State) error {
 	}
 
 	return nil
-
 }
 
 func testAccCheckAnalyzerDisappears(analyzer *accessanalyzer.AnalyzerSummary) resource.TestCheckFunc {

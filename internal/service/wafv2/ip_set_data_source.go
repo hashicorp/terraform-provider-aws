@@ -38,12 +38,9 @@ func DataSourceIPSet() *schema.Resource {
 				Required: true,
 			},
 			"scope": {
-				Type:     schema.TypeString,
-				Required: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					wafv2.ScopeCloudfront,
-					wafv2.ScopeRegional,
-				}, false),
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringInSlice(wafv2.Scope_Values(), false),
 			},
 		},
 	}

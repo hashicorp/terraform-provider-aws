@@ -838,7 +838,6 @@ func TestValidLoadBalancerAccessLogsInterval(t *testing.T) {
 			t.Fatalf("Expected %q to trigger a validation error.", tc.Value)
 		}
 	}
-
 }
 
 func TestValidLoadBalancerHealthCheckTarget(t *testing.T) {

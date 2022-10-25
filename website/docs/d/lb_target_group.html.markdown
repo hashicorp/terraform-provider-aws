@@ -42,7 +42,7 @@ The following arguments are supported:
 * `arn` - (Optional) Full ARN of the target group.
 * `name` - (Optional) Unique name of the target group.
 
-~> **NOTE**: When both `arn` and `name` are specified, `arn` takes precedence.
+~> **NOTE:** When both `arn` and `name` are specified, `arn` takes precedence.
 
 ## Attributes Reference
 

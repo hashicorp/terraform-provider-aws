@@ -110,7 +110,6 @@ func testAccCheckCertificateDestroy_basic(s *terraform.State) error {
 				return err
 			}
 		}
-
 	}
 
 	return nil

@@ -111,7 +111,6 @@ func resourceAccountAssignmentCreate(d *schema.ResourceData, meta interface{}) e
 
 	if output == nil || output.AccountAssignmentCreationStatus == nil {
 		return fmt.Errorf("error creating SSO Account Assignment for %s (%s): empty output", principalType, principalID)
-
 	}
 
 	status := output.AccountAssignmentCreationStatus

@@ -531,7 +531,6 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 			input.ClusterType = aws.String(clusterTypeSingleNode)
 		}
 
-		log.Printf("[DEBUG] Creating Redshift Cluster: %s", input)
 		output, err := conn.CreateCluster(input)
 
 		if err != nil {
@@ -778,7 +777,6 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 			input.VpcSecurityGroupIds = flex.ExpandStringSet(d.Get("vpc_security_group_ids").(*schema.Set))
 		}
 
-		log.Printf("[DEBUG] Modifying Redshift Cluster: %s", input)
 		_, err := conn.ModifyCluster(input)
 
 		if err != nil {

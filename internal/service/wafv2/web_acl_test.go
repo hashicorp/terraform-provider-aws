@@ -1,19 +1,19 @@
 package wafv2_test
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/wafv2"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfwafv2 "github.com/hashicorp/terraform-provider-aws/internal/service/wafv2"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccWAFV2WebACL_basic(t *testing.T) {
@@ -1709,9 +1709,10 @@ func TestAccWAFV2WebACL_RateBased_maxNested(t *testing.T) {
 						"statement.0.rate_based_statement.0.scope_down_statement.0.not_statement.#":                                        "1",
 						"statement.0.rate_based_statement.0.scope_down_statement.0.not_statement.0.statement.#":                            "1",
 						"statement.0.rate_based_statement.0.scope_down_statement.0.not_statement.0.statement.0.or_statement.#":             "1",
-						"statement.0.rate_based_statement.0.scope_down_statement.0.not_statement.0.statement.0.or_statement.0.statement.#": "2",
+						"statement.0.rate_based_statement.0.scope_down_statement.0.not_statement.0.statement.0.or_statement.0.statement.#": "3",
 						"statement.0.rate_based_statement.0.scope_down_statement.0.not_statement.0.statement.0.or_statement.0.statement.0.regex_pattern_set_reference_statement.#": "1",
-						"statement.0.rate_based_statement.0.scope_down_statement.0.not_statement.0.statement.0.or_statement.0.statement.1.ip_set_reference_statement.#":            "1",
+						"statement.0.rate_based_statement.0.scope_down_statement.0.not_statement.0.statement.0.or_statement.0.statement.1.regex_match_statement.#":                 "1",
+						"statement.0.rate_based_statement.0.scope_down_statement.0.not_statement.0.statement.0.or_statement.0.statement.2.ip_set_reference_statement.#":            "1",
 					}),
 				),
 			},
@@ -1750,9 +1751,10 @@ func TestAccWAFV2WebACL_Operators_maxNested(t *testing.T) {
 						"statement.0.and_statement.0.statement.0.not_statement.#":                                        "1",
 						"statement.0.and_statement.0.statement.0.not_statement.0.statement.#":                            "1",
 						"statement.0.and_statement.0.statement.0.not_statement.0.statement.0.or_statement.#":             "1",
-						"statement.0.and_statement.0.statement.0.not_statement.0.statement.0.or_statement.0.statement.#": "2",
+						"statement.0.and_statement.0.statement.0.not_statement.0.statement.0.or_statement.0.statement.#": "3",
 						"statement.0.and_statement.0.statement.0.not_statement.0.statement.0.or_statement.0.statement.0.regex_pattern_set_reference_statement.#": "1",
-						"statement.0.and_statement.0.statement.0.not_statement.0.statement.0.or_statement.0.statement.1.ip_set_reference_statement.#":            "1",
+						"statement.0.and_statement.0.statement.0.not_statement.0.statement.0.or_statement.0.statement.1.regex_match_statement.#":                 "1",
+						"statement.0.and_statement.0.statement.0.not_statement.0.statement.0.or_statement.0.statement.2.ip_set_reference_statement.#":            "1",
 						"statement.0.and_statement.0.statement.1.geo_match_statement.#":                                                                          "1",
 						"statement.0.and_statement.0.statement.1.geo_match_statement.0.country_codes.0":                                                          "NL",
 					}),
@@ -1775,28 +1777,18 @@ func testAccCheckWebACLDestroy(s *terraform.State) error {
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFV2Conn
-		resp, err := conn.GetWebACL(
-			&wafv2.GetWebACLInput{
-				Id:    aws.String(rs.Primary.ID),
-				Name:  aws.String(rs.Primary.Attributes["name"]),
-				Scope: aws.String(rs.Primary.Attributes["scope"]),
-			})
 
-		if err == nil {
-			if resp == nil || resp.WebACL == nil {
-				return fmt.Errorf("Error getting WAFv2 WebACL")
-			}
-			if aws.StringValue(resp.WebACL.Id) == rs.Primary.ID {
-				return fmt.Errorf("WAFv2 WebACL %s still exists", rs.Primary.ID)
-			}
+		_, err := tfwafv2.FindWebACLByThreePartKey(context.Background(), conn, rs.Primary.ID, rs.Primary.Attributes["name"], rs.Primary.Attributes["scope"])
+
+		if tfresource.NotFound(err) {
+			continue
 		}
 
-		// Return nil if the WebACL is already destroyed
-		if tfawserr.ErrCodeEquals(err, wafv2.ErrCodeWAFNonexistentItemException) {
-			return nil
+		if err != nil {
+			return err
 		}
 
-		return err
+		return fmt.Errorf("WAFv2 WebACL %s still exists", rs.Primary.ID)
 	}
 
 	return nil
@@ -1814,26 +1806,16 @@ func testAccCheckWebACLExists(n string, v *wafv2.WebACL) resource.TestCheckFunc 
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFV2Conn
-		resp, err := conn.GetWebACL(&wafv2.GetWebACLInput{
-			Id:    aws.String(rs.Primary.ID),
-			Name:  aws.String(rs.Primary.Attributes["name"]),
-			Scope: aws.String(rs.Primary.Attributes["scope"]),
-		})
+
+		output, err := tfwafv2.FindWebACLByThreePartKey(context.Background(), conn, rs.Primary.ID, rs.Primary.Attributes["name"], rs.Primary.Attributes["scope"])
 
 		if err != nil {
 			return err
 		}
 
-		if resp == nil || resp.WebACL == nil {
-			return fmt.Errorf("Error getting WAFv2 WebACL")
-		}
+		*v = *output.WebACL
 
-		if aws.StringValue(resp.WebACL.Id) == rs.Primary.ID {
-			*v = *resp.WebACL
-			return nil
-		}
-
-		return fmt.Errorf("WAFv2 WebACL (%s) not found", rs.Primary.ID)
+		return nil
 	}
 }
 
@@ -3241,7 +3223,7 @@ resource "aws_wafv2_regex_pattern_set" "test" {
   scope = "REGIONAL"
 
   regular_expression {
-    regex_string = "one"
+    regex_string = "[a-z]([a-z0-9_-]*[a-z0-9])?"
   }
 }
 
@@ -3294,6 +3276,21 @@ resource "aws_wafv2_web_acl" "test" {
                 }
 
                 statement {
+                  regex_match_statement {
+                    regex_string = "[a-z]([a-z0-9_-]*[a-z0-9])?"
+
+                    field_to_match {
+                      uri_path {}
+                    }
+
+                    text_transformation {
+                      type     = "LOWERCASE"
+                      priority = 1
+                    }
+                  }
+                }
+
+                statement {
                   ip_set_reference_statement {
                     arn = aws_wafv2_ip_set.test.arn
                   }
@@ -3328,7 +3325,7 @@ resource "aws_wafv2_regex_pattern_set" "test" {
   scope = "REGIONAL"
 
   regular_expression {
-    regex_string = "one"
+    regex_string = "[a-z]([a-z0-9_-]*[a-z0-9])?"
   }
 }
 
@@ -3365,6 +3362,21 @@ resource "aws_wafv2_web_acl" "test" {
                 statement {
                   regex_pattern_set_reference_statement {
                     arn = aws_wafv2_regex_pattern_set.test.arn
+
+                    field_to_match {
+                      uri_path {}
+                    }
+
+                    text_transformation {
+                      type     = "LOWERCASE"
+                      priority = 1
+                    }
+                  }
+                }
+
+                statement {
+                  regex_match_statement {
+                    regex_string = "[a-z]([a-z0-9_-]*[a-z0-9])?"
 
                     field_to_match {
                       uri_path {}

@@ -263,7 +263,6 @@ func resourceDatabaseCreate(d *schema.ResourceData, meta interface{}) error {
 		if err != nil {
 			return fmt.Errorf("Error waiting for Relational Database (%s) Backup Retention to be updated: %s", d.Id(), err)
 		}
-
 	}
 
 	// Some Operations can complete before the Database enters the Available state. Added a waiter to make sure the Database is available before continuing.

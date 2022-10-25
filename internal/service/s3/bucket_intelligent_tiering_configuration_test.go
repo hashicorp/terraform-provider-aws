@@ -399,5 +399,4 @@ func testAccCheckBucketIntelligentTieringConfigurationDestroy(s *terraform.State
 	}
 
 	return nil
-
 }

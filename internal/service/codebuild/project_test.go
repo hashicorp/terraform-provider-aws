@@ -4722,7 +4722,7 @@ resource "aws_codebuild_project" "test" {
 `, rName, bucketName))
 }
 
-func testAccProjectConfig_secondaryArtifactsName(rName string, name string) string {
+func testAccProjectConfig_secondaryArtifactsName(rName string, name string) string { //nolint:unused // This function is used in a skipped acceptance test
 	return acctest.ConfigCompose(
 		testAccProjectConfig_Base_ServiceRole(rName),
 		fmt.Sprintf(`

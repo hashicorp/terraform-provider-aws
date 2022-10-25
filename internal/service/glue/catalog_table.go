@@ -390,7 +390,6 @@ func resourceCatalogTableRead(d *schema.ResourceData, meta interface{}) error {
 
 	out, err := FindTableByName(conn, catalogID, dbName, name)
 	if err != nil {
-
 		if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
 			log.Printf("[WARN] Glue Catalog Table (%s) not found, removing from state", d.Id())
 			d.SetId("")

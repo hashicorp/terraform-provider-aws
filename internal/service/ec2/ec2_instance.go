@@ -1121,7 +1121,6 @@ func resourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 				ipv6Addresses = append(ipv6Addresses, aws.StringValue(address.Ipv6Address))
 			}
 		}
-
 	} else {
 		d.Set("associate_public_ip_address", instance.PublicIpAddress != nil)
 		d.Set("ipv6_address_count", 0)
@@ -1403,7 +1402,6 @@ func resourceInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 	// SourceDestCheck can only be modified on an instance without manually specified network interfaces.
 	// SourceDestCheck, in that case, is configured at the network interface level
 	if _, ok := d.GetOk("network_interface"); !ok {
-
 		// If we have a new resource and source_dest_check is still true, don't modify
 		sourceDestCheck := d.Get("source_dest_check").(bool)
 

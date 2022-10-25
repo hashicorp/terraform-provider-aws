@@ -201,5 +201,4 @@ func resourceUserPoolDomainDelete(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	return nil
-
 }
