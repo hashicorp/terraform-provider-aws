@@ -1,6 +1,7 @@
 package route53resolver
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"time"
@@ -8,6 +9,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/route53resolver"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -16,9 +19,9 @@ import (
 
 func ResourceDNSSECConfig() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceDNSSECConfigCreate,
-		Read:   resourceDNSSECConfigRead,
-		Delete: resourceDNSSECConfigDelete,
+		CreateWithoutTimeout: resourceDNSSECConfigCreate,
+		ReadWithoutTimeout:   resourceDNSSECConfigRead,
+		DeleteWithoutTimeout: resourceDNSSECConfigDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -46,7 +49,7 @@ func ResourceDNSSECConfig() *schema.Resource {
 	}
 }
 
-func resourceDNSSECConfigCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceDNSSECConfigCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).Route53ResolverConn
 
 	input := &route53resolver.UpdateResolverDnssecConfigInput{
@@ -54,26 +57,25 @@ func resourceDNSSECConfigCreate(d *schema.ResourceData, meta interface{}) error 
 		Validation: aws.String(route53resolver.ValidationEnable),
 	}
 
-	output, err := conn.UpdateResolverDnssecConfig(input)
+	output, err := conn.UpdateResolverDnssecConfigWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error creating Route 53 Resolver DNSSEC config: %w", err)
+		return diag.Errorf("creating Route 53 Resolver DNSSEC Config: %s", err)
 	}
 
 	d.SetId(aws.StringValue(output.ResolverDNSSECConfig.Id))
 
-	_, err = waitDNSSECConfigCreated(conn, d.Id())
-	if err != nil {
-		return err
+	if _, err := waitDNSSECConfigCreated(ctx, conn, d.Id()); err != nil {
+		return diag.Errorf("waiting for Route 53 Resolver DNSSEC Config (%s) create: %s", d.Id(), err)
 	}
 
-	return resourceDNSSECConfigRead(d, meta)
+	return resourceDNSSECConfigRead(ctx, d, meta)
 }
 
-func resourceDNSSECConfigRead(d *schema.ResourceData, meta interface{}) error {
+func resourceDNSSECConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).Route53ResolverConn
 
-	dnssecConfig, err := FindResolverDNSSECConfigByID(conn, d.Id())
+	dnssecConfig, err := FindResolverDNSSECConfigByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Route53 Resolver DNSSEC Config (%s) not found, removing from state", d.Id())
@@ -82,7 +84,7 @@ func resourceDNSSECConfigRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("reading Route53 Resolver DNSSEC Config (%s): %w", d.Id(), err)
+		return diag.Errorf("reading Route53 Resolver DNSSEC Config (%s): %s", d.Id(), err)
 	}
 
 	ownerID := aws.StringValue(dnssecConfig.OwnerId)
@@ -102,48 +104,37 @@ func resourceDNSSECConfigRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceDNSSECConfigDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceDNSSECConfigDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).Route53ResolverConn
 
-	err := updateResolverDNSSECConfigValidation(conn, d.Get("resource_id").(string), route53resolver.ValidationDisable)
+	log.Printf("[DEBUG] Deleting Route53 Resolver DNSSEC Config: %s", d.Id())
+	_, err := conn.UpdateResolverDnssecConfigWithContext(ctx, &route53resolver.UpdateResolverDnssecConfigInput{
+		ResourceId: aws.String(d.Get("resource_id").(string)),
+		Validation: aws.String(route53resolver.ValidationDisable),
+	})
+
+	if tfawserr.ErrCodeEquals(err, route53resolver.ErrCodeAccessDeniedException) {
+		// VPC doesn't exist.
+		return nil
+	}
 
 	if err != nil {
-		return fmt.Errorf("deleting Route 53 Resolver DNSSEC Config (%s): %w", d.Id(), err)
+		return diag.Errorf("deleting Route 53 Resolver DNSSEC Config (%s): %s", d.Id(), err)
 	}
 
-	if _, err = waitDNSSECConfigDeleted(conn, d.Id()); err != nil {
-		return fmt.Errorf("waiting for Route 53 Resolver DNSSEC Config (%s) delete: %w", d.Id(), err)
+	if _, err = waitDNSSECConfigDeleted(ctx, conn, d.Id()); err != nil {
+		return diag.Errorf("waiting for Route 53 Resolver DNSSEC Config (%s) delete: %s", d.Id(), err)
 	}
-
-	// // (2) Update Route 53 ResolverDnssecConfig again, effectively deleting the resource
-	// _, err = updateResolverDNSSECConfigValidation(conn, aws.StringValue(config.ResourceId), route53resolver.ValidationDisable)
-
-	// if tfawserr.ErrCodeEquals(err, route53resolver.ErrCodeResourceNotFoundException) {
-	// 	return nil
-	// }
-
-	// if err != nil {
-	// 	return fmt.Errorf("error deleting Route 53 Resolver DNSSEC config (%s): %w", d.Id(), err)
-	// }
 
 	return nil
 }
 
-func updateResolverDNSSECConfigValidation(conn *route53resolver.Route53Resolver, resourceID, validation string) error {
-	_, err := conn.UpdateResolverDnssecConfig(&route53resolver.UpdateResolverDnssecConfigInput{
-		ResourceId: aws.String(resourceID),
-		Validation: aws.String(validation),
-	})
-
-	return err
-}
-
-func FindResolverDNSSECConfigByID(conn *route53resolver.Route53Resolver, id string) (*route53resolver.ResolverDnssecConfig, error) {
+func FindResolverDNSSECConfigByID(ctx context.Context, conn *route53resolver.Route53Resolver, id string) (*route53resolver.ResolverDnssecConfig, error) {
 	input := &route53resolver.ListResolverDnssecConfigsInput{}
 	var output *route53resolver.ResolverDnssecConfig
 
 	// GetResolverDnssecConfig does not support query by ID.
-	err := conn.ListResolverDnssecConfigsPages(input, func(page *route53resolver.ListResolverDnssecConfigsOutput, lastPage bool) bool {
+	err := conn.ListResolverDnssecConfigsPagesWithContext(ctx, input, func(page *route53resolver.ListResolverDnssecConfigsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -177,9 +168,9 @@ func FindResolverDNSSECConfigByID(conn *route53resolver.Route53Resolver, id stri
 	return output, nil
 }
 
-func statusDNSSECConfig(conn *route53resolver.Route53Resolver, id string) resource.StateRefreshFunc {
+func statusDNSSECConfig(ctx context.Context, conn *route53resolver.Route53Resolver, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindResolverDNSSECConfigByID(conn, id)
+		output, err := FindResolverDNSSECConfigByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -198,15 +189,15 @@ const (
 	dnssecConfigDeletedTimeout = 10 * time.Minute
 )
 
-func waitDNSSECConfigCreated(conn *route53resolver.Route53Resolver, id string) (*route53resolver.ResolverDnssecConfig, error) {
+func waitDNSSECConfigCreated(ctx context.Context, conn *route53resolver.Route53Resolver, id string) (*route53resolver.ResolverDnssecConfig, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{route53resolver.ResolverDNSSECValidationStatusEnabling},
 		Target:  []string{route53resolver.ResolverDNSSECValidationStatusEnabled},
-		Refresh: statusDNSSECConfig(conn, id),
+		Refresh: statusDNSSECConfig(ctx, conn, id),
 		Timeout: dnssecConfigCreatedTimeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*route53resolver.ResolverDnssecConfig); ok {
 		return output, err
@@ -215,15 +206,15 @@ func waitDNSSECConfigCreated(conn *route53resolver.Route53Resolver, id string) (
 	return nil, err
 }
 
-func waitDNSSECConfigDeleted(conn *route53resolver.Route53Resolver, id string) (*route53resolver.ResolverDnssecConfig, error) {
+func waitDNSSECConfigDeleted(ctx context.Context, conn *route53resolver.Route53Resolver, id string) (*route53resolver.ResolverDnssecConfig, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{route53resolver.ResolverDNSSECValidationStatusDisabling},
 		Target:  []string{},
-		Refresh: statusDNSSECConfig(conn, id),
+		Refresh: statusDNSSECConfig(ctx, conn, id),
 		Timeout: dnssecConfigDeletedTimeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*route53resolver.ResolverDnssecConfig); ok {
 		return output, err

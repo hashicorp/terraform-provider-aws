@@ -1,6 +1,7 @@
 package route53resolver_test
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"testing"
@@ -75,7 +76,7 @@ func testAccCheckDNSSECConfigDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := tfroute53resolver.FindResolverDNSSECConfigByID(conn, rs.Primary.ID)
+		_, err := tfroute53resolver.FindResolverDNSSECConfigByID(context.Background(), conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -104,7 +105,7 @@ func testAccCheckDNSSECConfigExists(n string) resource.TestCheckFunc {
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ResolverConn
 
-		_, err := tfroute53resolver.FindResolverDNSSECConfigByID(conn, rs.Primary.ID)
+		_, err := tfroute53resolver.FindResolverDNSSECConfigByID(context.Background(), conn, rs.Primary.ID)
 
 		return err
 	}
