@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
@@ -343,6 +344,10 @@ func resourceBudgetRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting cost_types: %w", err)
 	}
 
+	if err := d.Set("auto_adjust_data", flattenAutoAdjustData(budget.AutoAdjustData)); err != nil {
+		return fmt.Errorf("error setting auto_adjust_data: %w", err)
+	}
+
 	if budget.BudgetLimit != nil {
 		d.Set("limit_amount", budget.BudgetLimit.Amount)
 		d.Set("limit_unit", budget.BudgetLimit.Unit)
@@ -541,6 +546,24 @@ func resourceBudgetNotificationsUpdate(d *schema.ResourceData, meta interface{})
 	return nil
 }
 
+func flattenAutoAdjustData(autoAdjustData *budgets.AutoAdjustData) []map[string]interface{} {
+	if autoAdjustData == nil {
+		return []map[string]interface{}{}
+	}
+
+	historicalOptions := map[string]interface{}{
+		"budget_adjustment_period":   aws.Int64Value(autoAdjustData.HistoricalOptions.BudgetAdjustmentPeriod),
+		"lookback_available_periods": aws.Int64Value(autoAdjustData.HistoricalOptions.LookBackAvailablePeriods),
+	}
+	attrs := map[string]interface{}{
+		"auto_adjust_type":      aws.StringValue(autoAdjustData.AutoAdjustType),
+		"historical_options":    historicalOptions,
+		"last_auto_adjust_time": aws.TimeValue(autoAdjustData.LastAutoAdjustTime),
+	}
+
+	return []map[string]interface{}{attrs}
+}
+
 func flattenCostTypes(costTypes *budgets.CostTypes) []map[string]interface{} {
 	if costTypes == nil {
 		return []map[string]interface{}{}
@@ -642,11 +665,57 @@ func expandBudgetUnmarshal(d *schema.ResourceData) (*budgets.Budget, error) {
 		CostFilters: budgetCostFilters,
 	}
 
+	if v, ok := d.GetOk("auto_adjust_data"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		budget.AutoAdjustData = expandAutoAdjustData(v.([]interface{})[0].(map[string]interface{}))
+	}
+
 	if v, ok := d.GetOk("cost_types"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		budget.CostTypes = expandCostTypes(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	return budget, nil
+}
+
+func expandAutoAdjustData(tfMap map[string]interface{}) *budgets.AutoAdjustData {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &budgets.AutoAdjustData{}
+	if v, ok := tfMap["auto_adjust_type"].(string); ok {
+		apiObject.AutoAdjustType = aws.String(v)
+	}
+
+	if v, ok := tfMap["last_auto_adjust_time"].(time.Time); ok {
+		apiObject.LastAutoAdjustTime = aws.Time(v)
+	}
+
+	if v, ok := tfMap["historical_options"].([]interface{}); ok && len(v) > 0 {
+		apiObject.HistoricalOptions = expandHistoricalOptions(v)
+
+	}
+
+	return apiObject
+}
+
+func expandHistoricalOptions(l []interface{}) *budgets.HistoricalOptions {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	apiObject := &budgets.HistoricalOptions{}
+
+	if v, ok := m["budget_adjustment_period"].(int64); ok {
+		apiObject.BudgetAdjustmentPeriod = aws.Int64(v)
+	}
+
+	if v, ok := m["lookback_available_periods"].(int64); ok {
+		apiObject.LookBackAvailablePeriods = aws.Int64(v)
+	}
+
+	return apiObject
 }
 
 func expandCostTypes(tfMap map[string]interface{}) *budgets.CostTypes {
