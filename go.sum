@@ -69,8 +69,8 @@ github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.13.18 h1:sk9Z5ZwZpLGq3
 github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.13.18/go.mod h1:O1mfO/JzWKUNujOAqD39r7BXqlvhjh/JiPnQ97tvQMc=
 github.com/aws/aws-sdk-go-v2/service/kendra v1.35.1 h1:i7y7NPNtrHYF/ADNvrHN70R+QGQBisHCyCMSiqgMybM=
 github.com/aws/aws-sdk-go-v2/service/kendra v1.35.1/go.mod h1:SgjlUqn4ZHYFLzgnkWqO8SdNaDWvAubOU+Gafdbw/3M=
-github.com/aws/aws-sdk-go-v2/service/medialive v1.24.1 h1:aHsoN4yvYXrfoggiQ58webCblJ7eOhrbZuUExsyWuWo=
-github.com/aws/aws-sdk-go-v2/service/medialive v1.24.1/go.mod h1:3XPW6mIgytBfUUGfmpruUUZQKfZWxMte3VjIRoBytVk=
+github.com/aws/aws-sdk-go-v2/service/medialive v1.24.2 h1:qQGI444VIllp+BlfPUAEO7igk7MnhrtZzRr2jVzU+Z8=
+github.com/aws/aws-sdk-go-v2/service/medialive v1.24.2/go.mod h1:ToDxovZoXnH2AbxzTQ26ySXjpmME5gGa7aiH2rnAVv8=
 github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.0.11 h1:YwLAuTsygkl3pHQQ1C/H+L4xtftaIKn7tn7GrT+2alg=
 github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.0.11/go.mod h1:QMdHM6cLUSRqN/nu6bdJHBBPNK6YStovLvRjVvyhnjE=
 github.com/aws/aws-sdk-go-v2/service/route53domains v1.12.19 h1:UNe7/1LUyQ9udyVIdAg++HfuqnBgm3Or8f2nFCfSl0U=
