@@ -290,7 +290,7 @@ func FindLoadBalancerCertificateAttachmentById(ctx context.Context, conn *lights
 	entryExists := false
 
 	for _, n := range out.TlsCertificates {
-		if cName == aws.StringValue(n.Name) && true == aws.BoolValue(n.IsAttached) {
+		if cName == aws.StringValue(n.Name) && aws.BoolValue(n.IsAttached) {
 			entry = n.Name
 			entryExists = true
 			break
