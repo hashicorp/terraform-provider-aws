@@ -74,9 +74,9 @@ func (m *multiplexProgram) GetSchema(context.Context) (tfsdk.Schema, diag.Diagno
 				NestingMode: tfsdk.BlockNestingModeList,
 				MinItems:    1,
 				MaxItems:    1,
-				PlanModifiers: tfsdk.AttributePlanModifiers{
-					resource.RequiresReplace(),
-				},
+				//PlanModifiers: tfsdk.AttributePlanModifiers{
+				//	resource.RequiresReplace(),
+				//},
 				Attributes: map[string]tfsdk.Attribute{
 					"program_number": {
 						Type:     types.Int64Type,
@@ -312,7 +312,13 @@ func (m *multiplexProgram) Read(ctx context.Context, req resource.ReadRequest, r
 		return
 	}
 
-	state.MultiplexProgramSettings = flattenMultiplexProgramSettings(out.MultiplexProgramSettings, len(sm[0].StatemuxSettings.Elems) == 0)
+	var stateMuxIsNull bool
+	if len(sm) > 0 {
+		if len(sm[0].StatemuxSettings.Elems) == 0 {
+			stateMuxIsNull = true
+		}
+	}
+	state.MultiplexProgramSettings = flattenMultiplexProgramSettings(out.MultiplexProgramSettings, stateMuxIsNull)
 	state.ProgramName = types.String{Value: aws.ToString(out.ProgramName)}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
@@ -323,15 +329,68 @@ func (m *multiplexProgram) Read(ctx context.Context, req resource.ReadRequest, r
 }
 
 func (m *multiplexProgram) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var model resourceMultiplexProgramData
+	conn := m.meta.MediaLiveConn
 
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &model)...)
-
+	var plan resourceMultiplexProgramData
+	diags := req.Plan.Get(ctx, &plan)
+	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &model)...)
+	programName, multiplexId, err := ParseMultiplexProgramID(plan.ID.Value)
+
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.MediaLive, create.ErrActionReading, ResNameMultiplexProgram, plan.ProgramName.String(), nil),
+			err.Error(),
+		)
+		return
+	}
+
+	mps := make([]multiplexProgramSettings, 1)
+	resp.Diagnostics.Append(plan.MultiplexProgramSettings.ElementsAs(ctx, &mps, false)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	mpSettings, stateMuxIsNull, errExpand := expandMultiplexProgramSettings(ctx, mps)
+
+	resp.Diagnostics.Append(errExpand...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	in := &medialive.UpdateMultiplexProgramInput{
+		MultiplexId:              aws.String(multiplexId),
+		ProgramName:              aws.String(programName),
+		MultiplexProgramSettings: mpSettings,
+	}
+
+	_, errUpdate := conn.UpdateMultiplexProgram(ctx, in)
+
+	if errUpdate != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.MediaLive, create.ErrActionUpdating, ResNameMultiplexProgram, plan.ProgramName.String(), nil),
+			errUpdate.Error(),
+		)
+		return
+	}
+
+	//Need to find multiplex program because output from update does not provide state data
+	out, errUpdate := FindMultipleProgramByID(ctx, conn, multiplexId, programName)
+
+	if errUpdate != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.MediaLive, create.ErrActionUpdating, ResNameMultiplexProgram, plan.ProgramName.String(), nil),
+			errUpdate.Error(),
+		)
+		return
+	}
+
+	plan.MultiplexProgramSettings = flattenMultiplexProgramSettings(out.MultiplexProgramSettings, stateMuxIsNull)
+
+	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
 func (m *multiplexProgram) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
