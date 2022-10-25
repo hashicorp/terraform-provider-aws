@@ -54,9 +54,9 @@ In addition to all arguments above, the following attributes are exported:
 
 A `router` block supports the following attributes:
 
-  * `platform` - Router platform
-  * `router_type_identifier` - Router type identifier
-  * `software` - Router operating system
-  * `vendor` - Router vendor
-  * `xslt_template_name` - Router XSLT Template Name
-  * `xslt_template_name_for_mac` - Router XSLT Template Name for MacSec
+* `platform` - Router platform
+* `router_type_identifier` - Router type identifier
+* `software` - Router operating system
+* `vendor` - Router vendor
+* `xslt_template_name` - Router XSLT Template Name
+* `xslt_template_name_for_mac` - Router XSLT Template Name for MacSec
