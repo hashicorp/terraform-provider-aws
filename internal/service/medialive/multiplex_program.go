@@ -150,18 +150,15 @@ func (m *multiplexProgram) GetSchema(context.Context) (tfsdk.Schema, diag.Diagno
 									},
 								},
 								//Validators: []tfsdk.AttributeValidator{
-								//	schemavalidator.ExactlyOneOf(
+								//	schemavalidator.ConflictsWith(
 								//		path.Expressions{path.MatchRoot("multiplex_program_settings").
 								//			AtListIndex(0).AtName("video_settings").
-								//			AtListIndex(0).AtName("statmux_settings").AtListIndex(0)}...),
+								//			AtListIndex(0).AtName("statmux_settings").Resolve()}...),
 								//},
 							},
 							"statmux_settings": {
 								NestingMode: tfsdk.BlockNestingModeList,
 								MaxItems:    1,
-								PlanModifiers: []tfsdk.AttributePlanModifier{
-									resource.UseStateForUnknown(),
-								},
 								Attributes: map[string]tfsdk.Attribute{
 									"minimum_bitrate": {
 										Type:     types.Int64Type,
