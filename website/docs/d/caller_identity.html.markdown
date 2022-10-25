@@ -1,5 +1,5 @@
 ---
-subcategory: ""
+subcategory: "STS (Security Token)"
 layout: "aws"
 page_title: "AWS: aws_caller_identity"
 description: |-

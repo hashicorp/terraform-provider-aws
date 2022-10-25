@@ -1,5 +1,5 @@
 ---
-subcategory: "SimpleDB"
+subcategory: "SDB (SimpleDB)"
 layout: "aws"
 page_title: "AWS: aws_simpledb_domain"
 description: |-
@@ -32,7 +32,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-SimpleDB Domains can be imported using the `name`, e.g.
+SimpleDB Domains can be imported using the `name`, e.g.,
 
 ```
 $ terraform import aws_simpledb_domain.users users

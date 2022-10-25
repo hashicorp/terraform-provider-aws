@@ -1,5 +1,5 @@
 ---
-subcategory: "S3"
+subcategory: "S3 (Simple Storage)"
 layout: "aws"
 page_title: "AWS: aws_s3_bucket_analytics_configuration"
 description: |-
@@ -39,7 +39,7 @@ resource "aws_s3_bucket" "analytics" {
 }
 ```
 
-### Add analytics configuration with S3 bucket object filter
+### Add analytics configuration with S3 object filter
 
 ```terraform
 resource "aws_s3_bucket_analytics_configuration" "example-filtered" {
@@ -101,7 +101,7 @@ No additional attributes are exported.
 
 ## Import
 
-S3 bucket analytics configurations can be imported using `bucket:analytics`, e.g.
+S3 bucket analytics configurations can be imported using `bucket:analytics`, e.g.,
 
 ```
 $ terraform import aws_s3_bucket_analytics_configuration.my-bucket-entire-bucket my-bucket:EntireBucket

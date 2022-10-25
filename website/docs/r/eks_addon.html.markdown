@@ -1,5 +1,5 @@
 ---
-subcategory: "EKS"
+subcategory: "EKS (Elastic Kubernetes)"
 layout: "aws"
 page_title: "AWS: aws_eks_addon"
 description: |-
@@ -21,6 +21,20 @@ which is only available in Kubernetes 1.18 and later.
 resource "aws_eks_addon" "example" {
   cluster_name = aws_eks_cluster.example.name
   addon_name   = "vpc-cni"
+}
+```
+
+## Example Update add-on usage with resolve_conflicts and PRESERVE
+`resolve_conflicts` with `PRESERVE` can be used to retain the config changes applied to the add-on with kubectl while upgrading to a newer version of the add-on.
+
+~> **Note:** `resolve_conflicts` with `PRESERVE` can only be used for upgrading the add-ons but not during the creation of add-on.
+
+```terraform
+resource "aws_eks_addon" "example" {
+  cluster_name      = aws_eks_cluster.example.name
+  addon_name        = "coredns"
+  addon_version     = "v1.8.7-eksbuild.3" #e.g., previous version v1.8.7-eksbuild.2 and the new version is v1.8.7-eksbuild.3
+  resolve_conflicts = "PRESERVE"
 }
 ```
 
@@ -75,7 +89,7 @@ resource "aws_iam_role_policy_attachment" "example" {
 The following arguments are required:
 
 * `addon_name` – (Required) Name of the EKS add-on. The name must match one of
-  the names returned by [list-addon](https://docs.aws.amazon.com/cli/latest/reference/eks/list-addons.html).
+  the names returned by [describe-addon-versions](https://docs.aws.amazon.com/cli/latest/reference/eks/describe-addon-versions.html).
 * `cluster_name` – (Required) Name of the EKS Cluster. Must be between 1-100 characters in length. Must begin with an alphanumeric character, and must only contain alphanumeric characters, dashes and underscores (`^[0-9A-Za-z][A-Za-z0-9\-_]+$`).
 
 The following arguments are optional:
@@ -84,8 +98,9 @@ The following arguments are optional:
   match one of the versions returned by [describe-addon-versions](https://docs.aws.amazon.com/cli/latest/reference/eks/describe-addon-versions.html).
 * `resolve_conflicts` - (Optional) Define how to resolve parameter value conflicts
   when migrating an existing add-on to an Amazon EKS add-on or when applying
-  version updates to the add-on. Valid values are `NONE` and `OVERWRITE`.
-* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+  version updates to the add-on. Valid values are `NONE`, `OVERWRITE` and `PRESERVE`. For more details check [UpdateAddon](https://docs.aws.amazon.com/eks/latest/APIReference/API_UpdateAddon.html) API Docs.
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `preserve` - (Optional) Indicates if you want to preserve the created resources when deleting the EKS add-on.
 * `service_account_role_arn` - (Optional) The Amazon Resource Name (ARN) of an
   existing IAM role to bind to the add-on's service account. The role must be
   assigned the IAM permissions required by the add-on. If you don't specify
@@ -107,11 +122,19 @@ In addition to all arguments above, the following attributes are exported:
 * `status` - Status of the EKS add-on.
 * `created_at` - Date and time in [RFC3339 format](https://tools.ietf.org/html/rfc3339#section-5.8) that the EKS add-on was created.
 * `modified_at` - Date and time in [RFC3339 format](https://tools.ietf.org/html/rfc3339#section-5.8) that the EKS add-on was updated.
-* `tags_all` - (Optional) Key-value map of resource tags, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - (Optional) Key-value map of resource tags, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+
+## Timeouts
+
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+
+* `create` - (Default `20m`)
+* `update` - (Default `20m`)
+* `delete` - (Default `40m`)
 
 ## Import
 
-EKS add-on can be imported using the `cluster_name` and `addon_name` separated by a colon (`:`), e.g.
+EKS add-on can be imported using the `cluster_name` and `addon_name` separated by a colon (`:`), e.g.,
 
 ```
 $ terraform import aws_eks_addon.my_eks_addon my_cluster_name:my_addon_name

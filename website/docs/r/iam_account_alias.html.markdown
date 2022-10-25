@@ -1,5 +1,5 @@
 ---
-subcategory: "IAM"
+subcategory: "IAM (Identity & Access Management)"
 layout: "aws"
 page_title: "AWS: aws_iam_account_alias"
 description: |-
@@ -32,7 +32,7 @@ No additional attributes are exported.
 
 ## Import
 
-The current Account Alias can be imported using the `account_alias`, e.g.
+The current Account Alias can be imported using the `account_alias`, e.g.,
 
 ```
 $ terraform import aws_iam_account_alias.alias my-account-alias

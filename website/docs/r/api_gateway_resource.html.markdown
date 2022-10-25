@@ -1,5 +1,5 @@
 ---
-subcategory: "API Gateway (REST APIs)"
+subcategory: "API Gateway"
 layout: "aws"
 page_title: "AWS: aws_api_gateway_resource"
 description: |-
@@ -29,20 +29,20 @@ resource "aws_api_gateway_resource" "MyDemoResource" {
 
 The following arguments are supported:
 
-* `rest_api_id` - (Required) The ID of the associated REST API
-* `parent_id` - (Required) The ID of the parent API resource
-* `path_part` - (Required) The last path segment of this API resource.
+* `rest_api_id` - (Required) ID of the associated REST API
+* `parent_id` - (Required) ID of the parent API resource
+* `path_part` - (Required) Last path segment of this API resource.
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - The resource's identifier.
-* `path` - The complete path for this API resource, including all parent paths.
+* `id` - Resource's identifier.
+* `path` - Complete path for this API resource, including all parent paths.
 
 ## Import
 
-`aws_api_gateway_resource` can be imported using `REST-API-ID/RESOURCE-ID`, e.g.
+`aws_api_gateway_resource` can be imported using `REST-API-ID/RESOURCE-ID`, e.g.,
 
 ```
 $ terraform import aws_api_gateway_resource.example 12345abcde/67890fghij

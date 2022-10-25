@@ -1,0 +1,3 @@
+```release-note:note
+data-source/aws_instances: If no instances match the specified criteria an empty list is returned (previously an error was raised)
+```

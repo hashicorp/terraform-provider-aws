@@ -53,7 +53,7 @@ resource "aws_organizations_organization" "example" {
 ```hcl
 resource "aws_config_organization_conformance_pack" "example" {
   name            = "example"
-  template_s3_uri = "s3://${aws_s3_bucket.example.bucket}/${aws_s3_bucket_object.example.key}"
+  template_s3_uri = "s3://${aws_s3_bucket.example.bucket}/${aws_s3_object.example.key}"
 
   depends_on = [aws_config_configuration_recorder.example, aws_organizations_organization.example]
 }
@@ -67,7 +67,7 @@ resource "aws_s3_bucket" "example" {
   bucket = "example"
 }
 
-resource "aws_s3_bucket_object" "example" {
+resource "aws_s3_object" "example" {
   bucket  = aws_s3_bucket.example.id
   key     = "example-key"
   content = <<EOT
@@ -93,7 +93,7 @@ The following arguments are supported:
 * `excluded_accounts` - (Optional) Set of AWS accounts to be excluded from an organization conformance pack while deploying a conformance pack. Maximum of 1000 accounts.
 * `input_parameter` - (Optional) Set of configuration blocks describing input parameters passed to the conformance pack template. Documented below. When configured, the parameters must also be included in the `template_body` or in the template stored in Amazon S3 if using `template_s3_uri`.
 * `template_body` - (Optional, Conflicts with `template_s3_uri`) A string containing full conformance pack template body. Maximum length of 51200. Drift detection is not possible with this argument.
-* `template_s3_uri` - (Optional, Conflicts with `template_body`) Location of file, e.g. `s3://bucketname/prefix`, containing the template body. The uri must point to the conformance pack template that is located in an Amazon S3 bucket in the same region as the conformance pack. Maximum length of 1024. Drift detection is not possible with this argument.
+* `template_s3_uri` - (Optional, Conflicts with `template_body`) Location of file, e.g., `s3://bucketname/prefix`, containing the template body. The uri must point to the conformance pack template that is located in an Amazon S3 bucket in the same region as the conformance pack. Maximum length of 1024. Drift detection is not possible with this argument.
 
 ### input_parameter Argument Reference
 
@@ -111,16 +111,15 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-`aws_config_organization_conformance_pack` provides the following
-[Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
 
-- `create` - (Default `10 minutes`) Used for creating conformance pack
-- `update` - (Default `10 minutes`) Used for conformance pack modifications
-- `delete` - (Default `20 minutes`) Used for destroying conformance pack
+- `create` - (Default `10m`)
+- `update` - (Default `10m`)
+- `delete` - (Default `20m`)
 
 ## Import
 
-Config Organization Conformance Packs can be imported using the `name`, e.g.
+Config Organization Conformance Packs can be imported using the `name`, e.g.,
 
 ```
 $ terraform import aws_config_organization_conformance_pack.example example

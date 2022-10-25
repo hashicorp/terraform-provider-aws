@@ -1,0 +1,27 @@
+archives:
+  - files:
+      # Ensure only built binary is archived
+      - 'none*'
+    format: zip
+    name_template: '{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}'
+before:
+  hooks:
+    - 'go mod download'
+builds:
+  # Check and build binary for 32-bit architecture (FreeBSD/ARM)
+  - id: 32-bit-arch
+    # Binary naming only required for Terraform CLI 0.12
+    binary: '{{ .ProjectName }}_v{{ .Version }}_x5'
+    env:
+      - CGO_ENABLED=0
+    flags:
+      - -trimpath
+    goos:
+      - freebsd
+    goarch:
+      - arm
+    ldflags:
+      - -s -w -X version.ProviderVersion={{.Version}}
+    mod_timestamp: '{{ .CommitTimestamp }}'
+snapshot:
+  name_template: "{{ .Tag }}-next"

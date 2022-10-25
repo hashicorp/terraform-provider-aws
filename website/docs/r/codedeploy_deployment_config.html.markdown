@@ -131,7 +131,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-CodeDeploy Deployment Configurations can be imported using the `deployment_config_name`, e.g.
+CodeDeploy Deployment Configurations can be imported using the `deployment_config_name`, e.g.,
 
 ```
 $ terraform import aws_codedeploy_deployment_config.example my-deployment-config

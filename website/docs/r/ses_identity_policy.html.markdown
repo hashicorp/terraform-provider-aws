@@ -1,5 +1,5 @@
 ---
-subcategory: "SES"
+subcategory: "SES (Simple Email)"
 layout: "aws"
 page_title: "AWS: aws_ses_identity_policy"
 description: |-
@@ -50,7 +50,7 @@ No additional attributes are exported.
 
 ## Import
 
-SES Identity Policies can be imported using the identity and policy name, separated by a pipe character (`|`), e.g.
+SES Identity Policies can be imported using the identity and policy name, separated by a pipe character (`|`), e.g.,
 
 ```
 $ terraform import aws_ses_identity_policy.example 'example.com|example'

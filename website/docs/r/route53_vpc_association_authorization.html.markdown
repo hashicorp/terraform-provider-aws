@@ -1,5 +1,5 @@
 ---
-subcategory: "Route53"
+subcategory: "Route 53"
 layout: "aws"
 page_title: "AWS: aws_route53_vpc_association_authorization"
 description: |-
@@ -34,7 +34,7 @@ resource "aws_route53_zone" "example" {
   }
 
   # Prevent the deletion of associated VPCs after
-  # the initial creation. See documentation on 
+  # the initial creation. See documentation on
   # aws_route53_zone_association for details
   lifecycle {
     ignore_changes = [vpc]
@@ -78,7 +78,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Route 53 VPC Association Authorizations can be imported via the Hosted Zone ID and VPC ID, separated by a colon (`:`), e.g.
+Route 53 VPC Association Authorizations can be imported via the Hosted Zone ID and VPC ID, separated by a colon (`:`), e.g.,
 
 ```
 $ terraform import aws_route53_vpc_association_authorization.example Z123456ABCDEFG:vpc-12345678

@@ -1,5 +1,5 @@
 ---
-subcategory: "ACM"
+subcategory: "ACM (Certificate Manager)"
 layout: "aws"
 page_title: "AWS: aws_acm_certificate_validation"
 description: |-
@@ -16,7 +16,6 @@ Most commonly, this resource is used together with [`aws_route53_record`](route5
 deploy the required validation records and wait for validation to complete.
 
 ~> **WARNING:** This resource implements a part of the validation workflow. It does not represent a real-world entity in AWS, therefore changing or deleting this resource on its own has no immediate effect.
-
 
 ## Example Usage
 
@@ -130,18 +129,17 @@ resource "aws_acm_certificate_validation" "example" {
 
 The following arguments are supported:
 
-* `certificate_arn` - (Required) The ARN of the certificate that is being validated.
+* `certificate_arn` - (Required) ARN of the certificate that is being validated.
 * `validation_record_fqdns` - (Optional) List of FQDNs that implement the validation. Only valid for DNS validation method ACM certificates. If this is set, the resource can implement additional sanity checks and has an explicit dependency on the resource that is implementing the validation
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - The time at which the certificate was issued
+* `id` - Time at which the certificate was issued
 
 ## Timeouts
 
-`acm_certificate_validation` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts)
-configuration options:
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
 
-- `create` - (Default `45m`) How long to wait for a certificate to be issued.
+- `create` - (Default `75m`)

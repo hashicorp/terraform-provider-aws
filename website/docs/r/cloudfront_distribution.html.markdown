@@ -15,9 +15,9 @@ For information about CloudFront distributions, see the
 CloudFront web distributions, see the [POST Distribution][2] page in the Amazon
 CloudFront API Reference.
 
-~> **NOTE:** CloudFront distributions take about 15 minutes to a deployed state
-after creation or modification. During this time, deletes to resources will be
-blocked. If you need to delete a distribution that is enabled and you do not
+~> **NOTE:** CloudFront distributions take about 15 minutes to reach a deployed
+state after creation or modification. During this time, deletes to resources will
+be blocked. If you need to delete a distribution that is enabled and you do not
 want to wait, you need to use the `retain_on_delete` flag.
 
 ## Example Usage
@@ -27,11 +27,15 @@ The following example below creates a CloudFront distribution with an S3 origin.
 ```terraform
 resource "aws_s3_bucket" "b" {
   bucket = "mybucket"
-  acl    = "private"
 
   tags = {
     Name = "My bucket"
   }
+}
+
+resource "aws_s3_bucket_acl" "b_acl" {
+  bucket = aws_s3_bucket.b.id
+  acl    = "private"
 }
 
 locals {
@@ -40,12 +44,9 @@ locals {
 
 resource "aws_cloudfront_distribution" "s3_distribution" {
   origin {
-    domain_name = aws_s3_bucket.b.bucket_regional_domain_name
-    origin_id   = local.s3_origin_id
-
-    s3_origin_config {
-      origin_access_identity = "origin-access-identity/cloudfront/ABCDEFG1234567"
-    }
+    domain_name              = aws_s3_bucket.b.bucket_regional_domain_name
+    origin_access_control_id = aws_cloudfront_origin_access_control.default.id
+    origin_id                = local.s3_origin_id
   }
 
   enabled             = true
@@ -218,7 +219,7 @@ of several sub-resources - these resources are laid out below.
 * `is_ipv6_enabled` (Optional) - Whether the IPv6 is enabled for the distribution.
 
 * `http_version` (Optional) - The maximum HTTP version to support on the
-    distribution. Allowed values are `http1.1` and `http2`. The default is
+    distribution. Allowed values are `http1.1`, `http2`, `http2and3` and `http3`. The default is
     `http2`.
 
 * `logging_config` (Optional) - The [logging
@@ -241,14 +242,14 @@ of several sub-resources - these resources are laid out below.
 * `restrictions` (Required) - The [restriction
     configuration](#restrictions-arguments) for this distribution (maximum one).
 
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 * `viewer_certificate` (Required) - The [SSL
     configuration](#viewer-certificate-arguments) for this distribution (maximum
     one).
 
 * `web_acl_id` (Optional) - A unique identifier that specifies the AWS WAF web ACL,
-    if any, to associate with this distribution.  
+    if any, to associate with this distribution.
     To specify a web ACL created using the latest version of AWS WAF (WAFv2), use the ACL ARN,
     for example `aws_wafv2_web_acl.example.arn`. To specify a web
     ACL created using AWS WAF Classic, use the ACL ID, for example `aws_waf_web_acl.example.id`.
@@ -312,6 +313,8 @@ of several sub-resources - these resources are laid out below.
 * `realtime_log_config_arn` (Optional) - The ARN of the [real-time log configuration](cloudfront_realtime_log_config.html)
     that is attached to this cache behavior.
 
+* `response_headers_policy_id` (Optional) - The identifier for a response headers policy.
+
 * `smooth_streaming` (Optional) - Indicates whether you want to distribute
     media files in Microsoft Smooth Streaming format using the origin that is
     associated with this cache behavior.
@@ -336,7 +339,7 @@ See the [CloudFront User Guide](https://docs.aws.amazon.com/AmazonCloudFront/lat
 * `cookies` (Required) - The [forwarded values cookies](#cookies-arguments)
     that specifies how CloudFront handles cookies (maximum one).
 
-* `headers` (Optional) - Specifies the Headers, if any, that you want
+* `headers` (Optional) - Headers, if any, that you want
     CloudFront to vary upon for this cache behavior. Specify `*` to include all
     headers.
 
@@ -409,7 +412,7 @@ resource "aws_cloudfront_distribution" "example" {
 
 ##### Cookies Arguments
 
-* `forward` (Required) - Specifies whether you want CloudFront to forward
+* `forward` (Required) - Whether you want CloudFront to forward
     cookies to the origin that is associated with this cache behavior. You can
     specify `all`, `none` or `whitelist`. If `whitelist`, you must include the
     subsequent `whitelisted_names`
@@ -458,7 +461,7 @@ argument should not be specified.
 
 * `custom_origin_config` - The [CloudFront custom
     origin](#custom-origin-config-arguments) configuration information. If an S3
-    origin is required, use `s3_origin_config` instead.
+    origin is required, use `origin_access_control_id` or `s3_origin_config` instead.
 
 * `domain_name` (Required) - The DNS domain name of either the S3 bucket, or
     web site of your custom origin.
@@ -466,6 +469,8 @@ argument should not be specified.
 * `custom_header` (Optional) - One or more sub-resources with `name` and
     `value` parameters that specify header data that will be sent to the origin
     (multiples allowed).
+
+* `origin_access_control_id` (Optional) - The unique identifier of a [CloudFront origin access control][8] for this origin.
 
 * `origin_id` (Required) - A unique identifier for the origin.
 
@@ -505,8 +510,7 @@ argument should not be specified.
 
 ##### S3 Origin Config Arguments
 
-* `origin_access_identity` (Optional) - The [CloudFront origin access
-  identity][5] to associate with the origin.
+* `origin_access_identity` (Required) - The [CloudFront origin access identity][5] to associate with the origin.
 
 #### Origin Group Arguments
 
@@ -587,7 +591,7 @@ In addition to all arguments above, the following attributes are exported:
     distribution's information is fully propagated throughout the Amazon
     CloudFront system.
 
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 * `trusted_key_groups` - List of nested attributes for active trusted key groups, if the distribution is set up to serve private content with signed URLs
     * `enabled` - `true` if any of the key groups have public keys that CloudFront can use to verify the signatures of signed URLs and signed cookies
@@ -623,10 +627,11 @@ In addition to all arguments above, the following attributes are exported:
 [5]: /docs/providers/aws/r/cloudfront_origin_access_identity.html
 [6]: https://aws.amazon.com/certificate-manager/
 [7]: http://docs.aws.amazon.com/Route53/latest/APIReference/CreateAliasRRSAPI.html
+[8]: /docs/providers/aws/r/cloudfront_origin_access_control.html
 
 ## Import
 
-Cloudfront Distributions can be imported using the `id`, e.g.
+Cloudfront Distributions can be imported using the `id`, e.g.,
 
 ```
 $ terraform import aws_cloudfront_distribution.distribution E74FTE3EXAMPLE

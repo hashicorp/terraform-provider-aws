@@ -22,25 +22,25 @@ data "aws_cloudfront_cache_policy" "example" {
 
 The following arguments are supported:
 
-* `name` - (Optional) A unique name to identify the cache policy.
-* `id` - (Optional) The identifier for the cache policy.
+* `name` - (Optional) Unique name to identify the cache policy.
+* `id` - (Optional) Identifier for the cache policy.
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-* `etag` - The current version of the cache policy.
-* `min_ttl` - The minimum amount of time, in seconds, that you want objects to stay in the CloudFront cache before CloudFront sends another request to the origin to see if the object has been updated.
-* `max_ttl` - The maximum amount of time, in seconds, that objects stay in the CloudFront cache before CloudFront sends another request to the origin to see if the object has been updated.
-* `default_ttl` - The default amount of time, in seconds, that you want objects to stay in the CloudFront cache before CloudFront sends another request to the origin to see if the object has been updated.
-* `comment` - A comment to describe the cache policy.
+* `etag` - Current version of the cache policy.
+* `min_ttl` - Minimum amount of time, in seconds, that you want objects to stay in the CloudFront cache before CloudFront sends another request to the origin to see if the object has been updated.
+* `max_ttl` - Maximum amount of time, in seconds, that objects stay in the CloudFront cache before CloudFront sends another request to the origin to see if the object has been updated.
+* `default_ttl` - Default amount of time, in seconds, that you want objects to stay in the CloudFront cache before CloudFront sends another request to the origin to see if the object has been updated.
+* `comment` - Comment to describe the cache policy.
 * `parameters_in_cache_key_and_forwarded_to_origin` - The HTTP headers, cookies, and URL query strings to include in the cache key. See [Parameters In Cache Key And Forwarded To Origin](#parameters-in-cache-key-and-forwarded-to-origin) for more information.
 
 ### Parameters In Cache Key And Forwarded To Origin
 
 * `cookies_config` - Object that determines whether any cookies in viewer requests (and if so, which cookies) are included in the cache key and automatically included in requests that CloudFront sends to the origin. See [Cookies Config](#cookies-config) for more information.
 * `headers_config` - Object that determines whether any HTTP headers (and if so, which headers) are included in the cache key and automatically included in requests that CloudFront sends to the origin. See [Headers Config](#headers-config) for more information.
-* `query_strings_config` - Object that determines whether any URL query strings in viewer requests (and if so, which query strings) are included in the cache key and automatically included in requests that CloudFront sends to the origin. See [Query Strings Config](#query-strings-config) for more information.
+* `query_strings_config` - Object that determines whether any URL query strings in viewer requests (and if so, which query strings) are included in the cache key and automatically included in requests that CloudFront sends to the origin. See [Query String Config](#query-string-config) for more information.
 * `enable_accept_encoding_brotli` - A flag that can affect whether the Accept-Encoding HTTP header is included in the cache key and included in requests that CloudFront sends to the origin.
 * `enable_accept_encoding_gzip` - A flag that can affect whether the Accept-Encoding HTTP header is included in the cache key and included in requests that CloudFront sends to the origin.
 
@@ -61,4 +61,4 @@ In addition to all arguments above, the following attributes are exported:
 
 ### Items
 
-* `items` - A list of item names (`cookies`, `headers`, or `query_strings`).
+* `items` - List of item names (`cookies`, `headers`, or `query_strings`).

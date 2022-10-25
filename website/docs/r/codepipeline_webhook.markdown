@@ -115,7 +115,7 @@ The following arguments are supported:
 * `filter` (Required) One or more `filter` blocks. Filter blocks are documented below.
 * `target_action` - (Required) The name of the action in a pipeline you want to connect to the webhook. The action must be from the source (first) stage of the pipeline.
 * `target_pipeline` - (Required) The name of the pipeline.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 An `authentication_configuration` block supports the following arguments:
 
@@ -125,19 +125,20 @@ An `authentication_configuration` block supports the following arguments:
 A `filter` block supports the following arguments:
 
 * `json_path` - (Required) The [JSON path](https://github.com/json-path/JsonPath) to filter on.
-* `match_equals` - (Required) The value to match on (e.g. `refs/heads/{Branch}`). See [AWS docs](https://docs.aws.amazon.com/codepipeline/latest/APIReference/API_WebhookFilterRule.html) for details.
+* `match_equals` - (Required) The value to match on (e.g., `refs/heads/{Branch}`). See [AWS docs](https://docs.aws.amazon.com/codepipeline/latest/APIReference/API_WebhookFilterRule.html) for details.
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
+* `arn` - The CodePipeline webhook's ARN.
 * `id` - The CodePipeline webhook's ARN.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `url` - The CodePipeline webhook's URL. POST events to this endpoint to trigger the target.
 
 ## Import
 
-CodePipeline Webhooks can be imported by their ARN, e.g.
+CodePipeline Webhooks can be imported by their ARN, e.g.,
 
 ```
 $ terraform import aws_codepipeline_webhook.example arn:aws:codepipeline:us-west-2:123456789012:webhook:example

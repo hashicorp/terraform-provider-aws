@@ -1,5 +1,5 @@
 ---
-subcategory: "RDS"
+subcategory: "RDS (Relational Database)"
 layout: "aws"
 page_title: "AWS: aws_db_option_group"
 description: |-
@@ -48,7 +48,7 @@ resource "aws_db_option_group" "example" {
 }
 ```
 
-~> **Note**: Any modifications to the `aws_db_option_group` are set to happen immediately as we default to applying immediately.
+~> **Note:** Any modifications to the `aws_db_option_group` are set to happen immediately as we default to applying immediately.
 
 ~> **WARNING:** You can perform a destroy on a `aws_db_option_group`, as long as it is not associated with any Amazon RDS resource. An option group can be associated with a DB instance, a manual DB snapshot, or an automated DB snapshot.
 
@@ -68,14 +68,14 @@ The following arguments are supported:
 * `engine_name` - (Required) Specifies the name of the engine that this option group should be associated with.
 * `major_engine_version` - (Required) Specifies the major version of the engine that this option group should be associated with.
 * `option` - (Optional) A list of Options to apply.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 Option blocks support the following:
 
-* `option_name` - (Required) The Name of the Option (e.g. MEMCACHED).
+* `option_name` - (Required) The Name of the Option (e.g., MEMCACHED).
 * `option_settings` - (Optional) A list of option settings to apply.
-* `port` - (Optional) The Port number when connecting to the Option (e.g. 11211).
-* `version` - (Optional) The version of the option (e.g. 13.1.0.0).
+* `port` - (Optional) The Port number when connecting to the Option (e.g., 11211).
+* `version` - (Optional) The version of the option (e.g., 13.1.0.0).
 * `db_security_group_memberships` - (Optional) A list of DB Security Groups for which the option is enabled.
 * `vpc_security_group_memberships` - (Optional) A list of VPC Security Groups for which the option is enabled.
 
@@ -90,18 +90,17 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - The db option group name.
 * `arn` - The ARN of the db option group.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
-`aws_db_option_group` provides the following
-[Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
 
-- `delete` - (Default `15 minutes`)
+- `delete` - (Default `15m`)
 
 ## Import
 
-DB Option groups can be imported using the `name`, e.g.
+DB Option groups can be imported using the `name`, e.g.,
 
 ```
 $ terraform import aws_db_option_group.example mysql-option-group

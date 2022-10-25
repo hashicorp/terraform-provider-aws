@@ -46,12 +46,13 @@ The following arguments are optional:
 In addition to all arguments above, the following attributes are exported:
 
 * `arn` - Amazon Resource Name (ARN) identifying your CloudFront Function.
-* `etag` - ETag hash of the function
+* `etag` - ETag hash of the function. This is the value for the `DEVELOPMENT` stage of the function.
+* `live_stage_etag` - ETag hash of any `LIVE` stage of the function.
 * `status` - Status of the function. Can be `UNPUBLISHED`, `UNASSOCIATED` or `ASSOCIATED`.
 
 ## Import
 
-CloudFront Functions can be imported using the `name`, e.g.
+CloudFront Functions can be imported using the `name`, e.g.,
 
 ```
 $ terraform import aws_cloudfront_function.test my_test_function

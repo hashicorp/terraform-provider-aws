@@ -24,15 +24,17 @@ data "aws_cloudfront_origin_request_policy" "example" {
 The following arguments are supported:
 
 * `name` - Unique name to identify the origin request policy.
-* `id` - The identifier for the origin request policy.
+* `id` - Identifier for the origin request policy.
 
 ## Attributes Reference
 
+In addition to all arguments above, the following attributes are exported:
+
 * `comment` - Comment to describe the origin request policy.
 * `cookies_config` - Object that determines whether any cookies in viewer requests (and if so, which cookies) are included in the origin request key and automatically included in requests that CloudFront sends to the origin. See [Cookies Config](#cookies-config) for more information.
-* `etag` - The current version of the origin request policy.
+* `etag` - Current version of the origin request policy.
 * `headers_config` - Object that determines whether any HTTP headers (and if so, which headers) are included in the origin request key and automatically included in requests that CloudFront sends to the origin. See [Headers Config](#headers-config) for more information.
-* `query_strings_config` - Object that determines whether any URL query strings in viewer requests (and if so, which query strings) are included in the origin request key and automatically included in requests that CloudFront sends to the origin. See [Query Strings Config](#query-strings-config) for more information.
+* `query_strings_config` - Object that determines whether any URL query strings in viewer requests (and if so, which query strings) are included in the origin request key and automatically included in requests that CloudFront sends to the origin. See [Query String Config](#query-string-config) for more information.
 
 ### Cookies Config
 

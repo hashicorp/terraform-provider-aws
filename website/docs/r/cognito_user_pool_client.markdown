@@ -1,5 +1,5 @@
 ---
-subcategory: "Cognito"
+subcategory: "Cognito IDP (Identity Provider)"
 layout: "aws"
 page_title: "AWS: aws_cognito_user_pool_client"
 description: |-
@@ -110,6 +110,24 @@ resource "aws_cognito_user_pool_client" "test" {
 }
 ```
 
+### Create a user pool client with Cognito as the identity provider
+
+```terraform
+resource "aws_cognito_user_pool" "pool" {
+  name = "pool"
+}
+
+resource "aws_cognito_user_pool_client" "userpool_client" {
+  name                                 = "client"
+  user_pool_id                         = aws_cognito_user_pool.pool.id
+  callback_urls                        = ["https://example.com"]
+  allowed_oauth_flows_user_pool_client = true
+  allowed_oauth_flows                  = ["code", "implicit"]
+  allowed_oauth_scopes                 = ["email", "openid"]
+  supported_identity_providers         = ["COGNITO"]
+}
+```
+
 ## Argument Reference
 
 The following arguments are required:
@@ -127,6 +145,7 @@ The following arguments are optional:
 * `callback_urls` - (Optional) List of allowed callback URLs for the identity providers.
 * `default_redirect_uri` - (Optional) Default redirect URI. Must be in the list of callback URLs.
 * `enable_token_revocation` - (Optional) Enables or disables token revocation.
+* `enable_propagate_additional_user_context_data` - (Optional) Activates the propagation of additional user context data.
 * `explicit_auth_flows` - (Optional) List of authentication flows (ADMIN_NO_SRP_AUTH, CUSTOM_AUTH_FLOW_ONLY, USER_PASSWORD_AUTH, ALLOW_ADMIN_USER_PASSWORD_AUTH, ALLOW_CUSTOM_AUTH, ALLOW_USER_PASSWORD_AUTH, ALLOW_USER_SRP_AUTH, ALLOW_REFRESH_TOKEN_AUTH).
 * `generate_secret` - (Optional) Should an application secret be generated.
 * `id_token_validity` - (Optional) Time limit, between 5 minutes and 1 day, after which the ID token is no longer valid and cannot be used. This value will be overridden if you have entered a value in `token_validity_units`.
@@ -134,7 +153,7 @@ The following arguments are optional:
 * `prevent_user_existence_errors` - (Optional) Choose which errors and responses are returned by Cognito APIs during authentication, account confirmation, and password recovery when the user does not exist in the user pool. When set to `ENABLED` and the user does not exist, authentication returns an error indicating either the username or password was incorrect, and account confirmation and password recovery return a response indicating a code was sent to a simulated destination. When set to `LEGACY`, those APIs will return a `UserNotFoundException` exception if the user does not exist in the user pool.
 * `read_attributes` - (Optional) List of user pool attributes the application client can read from.
 * `refresh_token_validity` - (Optional) Time limit in days refresh tokens are valid for.
-* `supported_identity_providers` - (Optional) List of provider names for the identity providers that are supported on this client.
+* `supported_identity_providers` - (Optional) List of provider names for the identity providers that are supported on this client. Uses the `provider_name` attribute of `aws_cognito_identity_provider` resource(s), or the equivalent string(s).
 * `token_validity_units` - (Optional) Configuration block for units in which the validity times are represented in. [Detailed below](#token_validity_units).
 * `write_attributes` - (Optional) List of user pool attributes the application client can write to.
 
@@ -165,8 +184,8 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Cognito User Pool Clients can be imported using the `id` of the Cognito User Pool, and the `id` of the Cognito User Pool Client, e.g.
+Cognito User Pool Clients can be imported using the `id` of the Cognito User Pool, and the `id` of the Cognito User Pool Client, e.g.,
 
 ```
-$ terraform import aws_cognito_user_pool_client.client <user_pool_id>/<user_pool_client_id>
+$ terraform import aws_cognito_user_pool_client.client us-west-2_abc123/3ho4ek12345678909nh3fmhpko
 ```

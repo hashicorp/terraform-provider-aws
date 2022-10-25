@@ -59,7 +59,7 @@ The following arguments are optional:
 * `provisioning_parameters` - (Optional) Configuration block with parameters specified by the administrator that are required for provisioning the product. See details below.
 * `retain_physical_resources` - (Optional) _Only applies to deleting._ Whether to delete the Service Catalog provisioned product but leave the CloudFormation stack, stack set, or the underlying resources of the deleted provisioned product. The default value is `false`.
 * `stack_set_provisioning_preferences` - (Optional) Configuration block with information about the provisioning preferences for a stack set. See details below.
-* `tags` - (Optional) Tags to apply to the provisioned product. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Tags to apply to the provisioned product. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### provisioning_parameters
 
@@ -94,12 +94,18 @@ In addition to all arguments above, the following attributes are exported:
 * `last_record_id` - Record identifier of the last request performed on this provisioned product.
 * `last_successful_provisioning_record_id` - Record identifier of the last successful request performed on this provisioned product of the following types: `ProvisionedProduct`, `UpdateProvisionedProduct`, `ExecuteProvisionedProductPlan`, `TerminateProvisionedProduct`.
 * `launch_role_arn` - ARN of the launch role associated with the provisioned product.
+* `outputs` - The set of outputs for the product created.
+    * `description` -  The description of the output.
+    * `key` - The output key.
+    * `value` - The output value.
 * `status` - Current status of the provisioned product. See meanings below.
 * `status_message` - Current status message of the provisioned product.
-* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `type` - Type of provisioned product. Valid values are `CFN_STACK` and `CFN_STACKSET`.
 
 ### status Meanings
+
+~> **NOTE:** [Enable logging](https://www.terraform.io/plugin/log/managing) to `WARN` verbosity to further investigate error messages associated with a provisioned product in the `ERROR` or `TAINTED` state which can occur during resource creation or update.
 
 * `AVAILABLE` - Stable state, ready to perform any operation. The most recent operation succeeded and completed.
 * `UNDER_CHANGE` - Transitive state. Operations performed might not have
@@ -108,9 +114,18 @@ valid results. Wait for an `AVAILABLE` status before performing operations.
 * `ERROR` - An unexpected error occurred. The provisioned product exists but the stack is not running. For example, CloudFormation received a parameter value that was not valid and could not launch the stack.
 * `PLAN_IN_PROGRESS` - Transitive state. The plan operations were performed to provision a new product, but resources have not yet been created. After reviewing the list of resources to be created, execute the plan. Wait for an `AVAILABLE` status before performing operations.
 
+## Timeouts
+
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+
+- `create` - (Default `30m`)
+- `read` - (Default `10m`)
+- `update` - (Default `30m`)
+- `delete` - (Default `30m`)
+
 ## Import
 
-`aws_servicecatalog_provisioned_product` can be imported using the provisioned product ID, e.g.
+`aws_servicecatalog_provisioned_product` can be imported using the provisioned product ID, e.g.,
 
 ```
 $ terraform import aws_servicecatalog_provisioned_product.example pp-dnigbtea24ste

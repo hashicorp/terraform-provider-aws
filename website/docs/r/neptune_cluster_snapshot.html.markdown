@@ -45,13 +45,13 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-`aws_neptune_cluster_snapshot` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
 
-* `create` - (Default `20m`) How long to wait for the snapshot to be available.
+* `create` - (Default `20m`)
 
 ## Import
 
-`aws_neptune_cluster_snapshot` can be imported by using the cluster snapshot identifier, e.g.
+`aws_neptune_cluster_snapshot` can be imported by using the cluster snapshot identifier, e.g.,
 
 ```
 $ terraform import aws_neptune_cluster_snapshot.example my-cluster-snapshot

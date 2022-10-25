@@ -1,5 +1,5 @@
 ---
-subcategory: "VPC"
+subcategory: "VPC (Virtual Private Cloud)"
 layout: "aws"
 page_title: "AWS: aws_default_route_table"
 description: |-
@@ -22,16 +22,15 @@ For more information, see the Amazon VPC User Guide on [Route Tables](https://do
 resource "aws_default_route_table" "example" {
   default_route_table_id = aws_vpc.example.default_route_table_id
 
-  route = [
-    {
-      cidr_block = "10.0.1.0/24"
-      gateway_id = aws_internet_gateway.example.id
-    },
-    {
-      ipv6_cidr_block        = "::/0"
-      egress_only_gateway_id = aws_egress_only_internet_gateway.example.id
-    }
-  ]
+  route {
+    cidr_block = "10.0.1.0/24"
+    gateway_id = aws_internet_gateway.example.id
+  }
+
+  route {
+    ipv6_cidr_block        = "::/0"
+    egress_only_gateway_id = aws_egress_only_internet_gateway.example.id
+  }
 
   tags = {
     Name = "example"
@@ -62,8 +61,8 @@ The following arguments are required:
 The following arguments are optional:
 
 * `propagating_vgws` - (Optional) List of virtual gateways for propagation.
-* `route` - (Optional) Set of objects. Detailed below. This argument is processed in [attribute-as-blocks mode](https://www.terraform.io/docs/configuration/attr-as-blocks.html). This means that omitting this argument is interpreted as ignoring any existing routes. To remove all managed routes an empty list should be specified. See the example above.
-* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `route` - (Optional) Configuration block of routes. Detailed below. This argument is processed in [attribute-as-blocks mode](https://www.terraform.io/docs/configuration/attr-as-blocks.html). This means that omitting this argument is interpreted as ignoring any existing routes. To remove all managed routes an empty list should be specified. See the example above.
+* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### route
 
@@ -77,6 +76,7 @@ One of the following destination arguments must be supplied:
 
 One of the following target arguments must be supplied:
 
+* `core_network_arn` - (Optional) The Amazon Resource Name (ARN) of a core network.
 * `egress_only_gateway_id` - (Optional) Identifier of a VPC Egress Only Internet Gateway.
 * `gateway_id` - (Optional) Identifier of a VPC internet gateway or a virtual private gateway.
 * `instance_id` - (Optional) Identifier of an EC2 instance.
@@ -95,12 +95,19 @@ In addition to all arguments above, the following attributes are exported:
 * `id` - ID of the route table.
 * `arn` - The ARN of the route table.
 * `owner_id` - ID of the AWS account that owns the route table.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `vpc_id` - ID of the VPC.
+
+## Timeouts
+
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+
+- `create` - (Default `2m`)
+- `update` - (Default `2m`)
 
 ## Import
 
-Default VPC route tables can be imported using the `vpc_id`, e.g.
+Default VPC route tables can be imported using the `vpc_id`, e.g.,
 
 ```
 $ terraform import aws_default_route_table.example vpc-33cc44dd

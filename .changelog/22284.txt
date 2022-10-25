@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_networkfirewall_rule_group: Allow any character in `ip_set` `definition` as per the AWS API docs
+```

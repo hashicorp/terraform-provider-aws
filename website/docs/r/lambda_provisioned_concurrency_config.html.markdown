@@ -48,14 +48,14 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-`aws_lambda_provisioned_concurrency_config` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
 
-* `create` - (Default `15 minutes`) How long to wait for the Lambda Provisioned Concurrency Config to be ready on creation.
-* `update` - (Default `15 minutes`) How long to wait for the Lambda Provisioned Concurrency Config to be ready on update.
+* `create` - (Default `15m`)
+* `update` - (Default `15m`)
 
 ## Import
 
-Lambda Provisioned Concurrency Configs can be imported using the `function_name` and `qualifier` separated by a colon (`:`), e.g.
+Lambda Provisioned Concurrency Configs can be imported using the `function_name` and `qualifier` separated by a colon (`:`), e.g.,
 
 ```
 $ terraform import aws_lambda_provisioned_concurrency_config.example my_function:production

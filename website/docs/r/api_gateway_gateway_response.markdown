@@ -1,5 +1,5 @@
 ---
-subcategory: "API Gateway (REST APIs)"
+subcategory: "API Gateway"
 layout: "aws"
 page_title: "AWS: aws_api_gateway_gateway_response"
 description: |-
@@ -36,11 +36,11 @@ resource "aws_api_gateway_gateway_response" "test" {
 
 The following arguments are supported:
 
-* `rest_api_id` - (Required) The string identifier of the associated REST API.
-* `response_type` - (Required) The response type of the associated GatewayResponse.
-* `status_code` - (Optional) The HTTP status code of the Gateway Response.
-* `response_templates` - (Optional) A map specifying the templates used to transform the response body.
-* `response_parameters` - (Optional) A map specifying the parameters (paths, query strings and headers) of the Gateway Response.
+* `rest_api_id` - (Required) String identifier of the associated REST API.
+* `response_type` - (Required) Response type of the associated GatewayResponse.
+* `status_code` - (Optional) HTTP status code of the Gateway Response.
+* `response_templates` - (Optional) Map of templates used to transform the response body.
+* `response_parameters` - (Optional) Map of parameters (paths, query strings and headers) of the Gateway Response.
 
 ## Attributes Reference
 
@@ -48,7 +48,7 @@ No additional attributes are exported.
 
 ## Import
 
-`aws_api_gateway_gateway_response` can be imported using `REST-API-ID/RESPONSE-TYPE`, e.g.
+`aws_api_gateway_gateway_response` can be imported using `REST-API-ID/RESPONSE-TYPE`, e.g.,
 
 ```
 $ terraform import aws_api_gateway_gateway_response.example 12345abcde/UNAUTHORIZED

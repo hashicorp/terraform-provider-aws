@@ -34,7 +34,10 @@ resource "aws_cloudtrail" "foobar" {
 resource "aws_s3_bucket" "foo" {
   bucket        = "tf-test-trail"
   force_destroy = true
+}
 
+resource "aws_s3_bucket_policy" "foo" {
+  bucket = aws_s3_bucket.foo.id
   policy = <<POLICY
 {
     "Version": "2012-10-17",
@@ -46,7 +49,7 @@ resource "aws_s3_bucket" "foo" {
               "Service": "cloudtrail.amazonaws.com"
             },
             "Action": "s3:GetBucketAcl",
-            "Resource": "arn:aws:s3:::tf-test-trail"
+            "Resource": "${aws_s3_bucket.foo.arn}"
         },
         {
             "Sid": "AWSCloudTrailWrite",
@@ -55,7 +58,7 @@ resource "aws_s3_bucket" "foo" {
               "Service": "cloudtrail.amazonaws.com"
             },
             "Action": "s3:PutObject",
-            "Resource": "arn:aws:s3:::tf-test-trail/prefix/AWSLogs/${data.aws_caller_identity.current.account_id}/*",
+            "Resource": "${aws_s3_bucket.foo.arn}/prefix/AWSLogs/${data.aws_caller_identity.current.account_id}/*",
             "Condition": {
                 "StringEquals": {
                     "s3:x-amz-acl": "bucket-owner-full-control"
@@ -70,7 +73,7 @@ POLICY
 
 ### Data Event Logging
 
-CloudTrail can log [Data Events](https://docs.aws.amazon.com/awscloudtrail/latest/userguide/logging-data-events-with-cloudtrail.html) for certain services such as S3 bucket objects and Lambda function invocations. Additional information about data event configuration can be found in the following links:
+CloudTrail can log [Data Events](https://docs.aws.amazon.com/awscloudtrail/latest/userguide/logging-data-events-with-cloudtrail.html) for certain services such as S3 objects and Lambda function invocations. Additional information about data event configuration can be found in the following links:
 
 * [CloudTrail API DataResource documentation](https://docs.aws.amazon.com/awscloudtrail/latest/APIReference/API_DataResource.html) (for basic event selector).
 * [CloudTrail API AdvancedFieldSelector documentation](https://docs.aws.amazon.com/awscloudtrail/latest/APIReference/API_AdvancedFieldSelector.html) (for advanced event selector).
@@ -93,7 +96,7 @@ resource "aws_cloudtrail" "example" {
 }
 ```
 
-#### Logging All S3 Bucket Object Events By Using Basic Event Selectors
+#### Logging All S3 Object Events By Using Basic Event Selectors
 
 ```terraform
 resource "aws_cloudtrail" "example" {
@@ -105,7 +108,7 @@ resource "aws_cloudtrail" "example" {
 
     data_resource {
       type   = "AWS::S3::Object"
-      values = ["arn:aws:s3:::"]
+      values = ["arn:aws:s3"]
     }
   }
 }
@@ -136,7 +139,7 @@ resource "aws_cloudtrail" "example" {
 }
 ```
 
-#### Logging All S3 Bucket Object Events Except For Two S3 Buckets By Using Advanced Event Selectors
+#### Logging All S3 Object Events Except For Two S3 Buckets By Using Advanced Event Selectors
 
 ```terraform
 data "aws_s3_bucket" "not-important-bucket-1" {
@@ -151,7 +154,7 @@ resource "aws_cloudtrail" "example" {
   # ... other configuration ...
 
   advanced_event_selector {
-    name = "Log all S3 buckets objects events except for two S3 buckets"
+    name = "Log all S3 objects events except for two S3 buckets"
 
     field_selector {
       field  = "eventCategory"
@@ -311,14 +314,15 @@ The following arguments are optional:
 * `kms_key_id` - (Optional) KMS key ARN to use to encrypt the logs delivered by CloudTrail.
 * `s3_key_prefix` - (Optional) S3 key prefix that follows the name of the bucket you have designated for log file delivery.
 * `sns_topic_name` - (Optional) Name of the Amazon SNS topic defined for notification of log file delivery.
-* `tags` - (Optional) Map of tags to assign to the trail. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Map of tags to assign to the trail. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### event_selector
 
 This configuration block supports the following attributes:
 
 * `data_resource` - (Optional) Configuration block for data events. See details below.
-* `include_management_events` - (Optional) Whether to include management events for your trail.
+* `exclude_management_event_sources` (Optional) -  A set of event sources to exclude. Valid values include: `kms.amazonaws.com` and `rdsdata.amazonaws.com`. `include_management_events` must be set to`true` to allow this.
+* `include_management_events` - (Optional) Whether to include management events for your trail. Defaults to `true`.
 * `read_write_type` - (Optional) Type of events to log. Valid values are `ReadOnly`, `WriteOnly`, `All`. Default value is `All`.
 
 #### data_resource
@@ -328,23 +332,22 @@ This configuration block supports the following attributes:
 * `type` - (Required) Resource type in which you want to log data events. You can specify only the following value: "AWS::S3::Object", "AWS::Lambda::Function" and "AWS::DynamoDB::Table".
 * `values` - (Required) List of ARN strings or partial ARN strings to specify selectors for data audit events over data resources. ARN list is specific to single-valued `type`. For example, `arn:aws:s3:::<bucket name>/` for all objects in a bucket, `arn:aws:s3:::<bucket name>/key` for specific objects, `arn:aws:lambda` for all lambda events within an account, `arn:aws:lambda:<region>:<account number>:function:<function name>` for a specific Lambda function, `arn:aws:dynamodb` for all DDB events for all tables within an account, or `arn:aws:dynamodb:<region>:<account number>:table/<table name>` for a specific DynamoDB table.
 
-
 ### insight_selector
 
 This configuration block supports the following attributes:
 
-* `insight_type` - (Optional) Type of insights to log on a trail. The valid value is `ApiCallRateInsight`.
+* `insight_type` - (Optional) Type of insights to log on a trail. Valid values are: `ApiCallRateInsight` and `ApiErrorRateInsight`.
 
 ### Advanced Event Selector Arguments
 For **advanced_event_selector** the following attributes are supported.
 
-* `name` (Optional) - Specifies the name of the advanced event selector.
+* `name` (Optional) - Name of the advanced event selector.
 * `field_selector` (Required) - Specifies the selector statements in an advanced event selector. Fields documented below.
 
 #### Field Selector Arguments
 For **field_selector** the following attributes are supported.
 
-* `field` (Required) - Specifies a field in an event record on which to filter events to be logged. You can specify only the following values: `readOnly`, `eventSource`, `eventName`, `eventCategory`, `resources.type`, `resources.ARN`.
+* `field` (Required) - Field in an event record on which to filter events to be logged. You can specify only the following values: `readOnly`, `eventSource`, `eventName`, `eventCategory`, `resources.type`, `resources.ARN`.
 * `equals` (Optional) - A list of values that includes events that match the exact value of the event record field specified as the value of `field`. This is the only valid operator that you can use with the `readOnly`, `eventCategory`, and `resources.type` fields.
 * `not_equals` (Optional) - A list of values that excludes events that match the exact value of the event record field specified as the value of `field`.
 * `starts_with` (Optional) - A list of values that includes events that match the first few characters of the event record field specified as the value of `field`.
@@ -359,11 +362,11 @@ In addition to all arguments above, the following attributes are exported:
 * `arn` - ARN of the trail.
 * `home_region` - Region in which the trail was created.
 * `id` - Name of the trail.
-* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
-Cloudtrails can be imported using the `name`, e.g.
+Cloudtrails can be imported using the `name`, e.g.,
 
 ```
 $ terraform import aws_cloudtrail.sample my-sample-trail

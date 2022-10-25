@@ -1,5 +1,5 @@
 ---
-subcategory: "EKS"
+subcategory: "EKS (Elastic Kubernetes)"
 layout: "aws"
 page_title: "AWS: aws_eks_node_groups"
 description: |-
@@ -18,19 +18,18 @@ data "aws_eks_node_groups" "example" {
 }
 
 data "aws_eks_node_group" "example" {
-  for_each = data.aws_eks_node_group_names.example.names
+  for_each = data.aws_eks_node_groups.example.names
 
   cluster_name    = "example"
   node_group_name = each.value
 }
 ```
 
-
 ## Argument Reference
 
-* `cluster_name` - (Required) The name of the cluster.
+* `cluster_name` - (Required) Name of the cluster.
 
 ## Attributes Reference
 
 * `id` - Cluster name.
-* `names` - A set of all node group names in an EKS Cluster.
+* `names` - Set of all node group names in an EKS Cluster.

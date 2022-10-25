@@ -49,7 +49,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_macie2_invitation_accepter` can be imported using the admin account ID, e.g.
+`aws_macie2_invitation_accepter` can be imported using the admin account ID, e.g.,
 
 ```
 $ terraform import aws_macie2_invitation_accepter.example 123456789012

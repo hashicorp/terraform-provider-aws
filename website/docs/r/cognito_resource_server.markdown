@@ -1,5 +1,5 @@
 ---
-subcategory: "Cognito"
+subcategory: "Cognito IDP (Identity Provider)"
 layout: "aws"
 page_title: "AWS: aws_cognito_resource_server"
 side_bar_current: "docs-aws-resource-cognito-resource-server"
@@ -54,7 +54,7 @@ The following arguments are supported:
 
 * `identifier` - (Required) An identifier for the resource server.
 * `name` - (Required) A name for the resource server.
-* `scope` - (Optional) A list of [Authorization Scope](#authorization_scope).
+* `scope` - (Optional) A list of [Authorization Scope](#authorization-scope).
 
 ### Authorization Scope
 
@@ -69,8 +69,8 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_cognito_resource_server` can be imported using their User Pool ID and Identifier, e.g.
+`aws_cognito_resource_server` can be imported using their User Pool ID and Identifier, e.g.,
 
 ```
-$ terraform import aws_cognito_resource_server.example xxx_yyyyy|https://example.com
+$ terraform import aws_cognito_resource_server.example us-west-2_abc123:https://example.com
 ```

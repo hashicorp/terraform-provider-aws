@@ -1,5 +1,5 @@
 ---
-subcategory: "ElasticSearch"
+subcategory: "Elasticsearch"
 layout: "aws"
 page_title: "AWS: aws_elasticsearch_domain_saml_options"
 description: |-
@@ -62,8 +62,7 @@ The following arguments are optional:
 * `master_user_name` - (Optional) This username from the SAML IdP receives full permissions to the cluster, equivalent to a new master user.
 * `roles_key` - (Optional) Element of the SAML assertion to use for backend roles. Default is roles.
 * `session_timeout_minutes` - (Optional) Duration of a session in minutes after a user logs in. Default is 60. Maximum value is 1,440.
-* `subject_key` - (Optional) Element of the SAML assertion to use for username. Default is NameID.
-
+* `subject_key` - (Optional) Custom SAML attribute to use for user names. Default is an empty string - `""`. This will cause Elasticsearch to use the `NameID` element of the `Subject`, which is the default location for name identifiers in the SAML specification.
 
 #### idp
 
@@ -78,7 +77,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Elasticsearch domains can be imported using the `domain_name`, e.g.
+Elasticsearch domains can be imported using the `domain_name`, e.g.,
 
 ```
 $ terraform import aws_elasticsearch_domain_saml_options.example domain_name

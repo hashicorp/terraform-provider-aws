@@ -1,5 +1,5 @@
 ---
-subcategory: "EventBridge (CloudWatch Events)"
+subcategory: "EventBridge"
 layout: "aws"
 page_title: "AWS: aws_cloudwatch_event_connection"
 description: |-
@@ -11,7 +11,6 @@ description: |-
 Provides an EventBridge connection resource.
 
 ~> **Note:** EventBridge was formerly known as CloudWatch Events. The functionality is identical.
-
 
 ## Example Usage
 
@@ -191,10 +190,9 @@ In addition to all arguments above, the following attributes are exported:
 * `arn` - The Amazon Resource Name (ARN) of the connection.
 * `secret_arn` - The Amazon Resource Name (ARN) of the secret created from the authorization parameters specified for the connection.
 
-
 ## Import
 
-EventBridge Connection can be imported using the `name`, e.g.
+EventBridge Connection can be imported using the `name`, e.g.,
 
 ```console
 $ terraform import aws_cloudwatch_event_connection.test ngrok-connection

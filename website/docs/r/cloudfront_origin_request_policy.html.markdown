@@ -46,7 +46,7 @@ The following arguments are supported:
 * `comment` - (Optional) Comment to describe the origin request policy.
 * `cookies_config` - (Required) Object that determines whether any cookies in viewer requests (and if so, which cookies) are included in the origin request key and automatically included in requests that CloudFront sends to the origin. See [Cookies Config](#cookies-config) for more information.
 * `headers_config` - (Required) Object that determines whether any HTTP headers (and if so, which headers) are included in the origin request key and automatically included in requests that CloudFront sends to the origin. See [Headers Config](#headers-config) for more information.
-* `query_strings_config` - (Required) Object that determines whether any URL query strings in viewer requests (and if so, which query strings) are included in the origin request key and automatically included in requests that CloudFront sends to the origin. See [Query Strings Config](#query-strings-config) for more information.
+* `query_strings_config` - (Required) Object that determines whether any URL query strings in viewer requests (and if so, which query strings) are included in the origin request key and automatically included in requests that CloudFront sends to the origin. See [Query String Config](#query-string-config) for more information.
 
 ### Cookies Config
 
@@ -73,3 +73,11 @@ In addition to all arguments above, the following attributes are exported:
 
 * `etag` - The current version of the origin request policy.
 * `id` - The identifier for the origin request policy.
+
+## Import
+
+Cloudfront Origin Request Policies can be imported using the `id`, e.g.
+
+```
+$ terraform import aws_cloudfront_origin_request_policy.policy ccca32ef-dce3-4df3-80df-1bd3000bc4d3
+```

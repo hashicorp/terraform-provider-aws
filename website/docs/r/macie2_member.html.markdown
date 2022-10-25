@@ -50,7 +50,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_macie2_member` can be imported using the account ID of the member account, e.g.
+`aws_macie2_member` can be imported using the account ID of the member account, e.g.,
 
 ```
 $ terraform import aws_macie2_member.example 123456789012

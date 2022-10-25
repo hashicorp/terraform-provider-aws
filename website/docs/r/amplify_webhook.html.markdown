@@ -1,5 +1,5 @@
 ---
-subcategory: "Amplify Console"
+subcategory: "Amplify"
 layout: "aws"
 page_title: "AWS: aws_amplify_webhook"
 description: |-
@@ -33,20 +33,20 @@ resource "aws_amplify_webhook" "master" {
 
 The following arguments are supported:
 
-* `app_id` - (Required) The unique ID for an Amplify app.
-* `branch_name` - (Required) The name for a branch that is part of the Amplify app.
-* `description` - (Optional) The description for a webhook.
+* `app_id` - (Required) Unique ID for an Amplify app.
+* `branch_name` - (Required) Name for a branch that is part of the Amplify app.
+* `description` - (Optional) Description for a webhook.
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-* `arn` - The Amazon Resource Name (ARN) for the webhook.
-* `url` - The URL of the webhook.
+* `arn` - ARN for the webhook.
+* `url` - URL of the webhook.
 
 ## Import
 
-Amplify webhook can be imported using a webhook ID, e.g.
+Amplify webhook can be imported using a webhook ID, e.g.,
 
 ```
 $ terraform import aws_amplify_webhook.master a26b22a0-748b-4b57-b9a0-ae7e601fe4b1

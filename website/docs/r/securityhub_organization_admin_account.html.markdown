@@ -46,7 +46,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Security Hub Organization Admin Accounts can be imported using the AWS account ID, e.g.
+Security Hub Organization Admin Accounts can be imported using the AWS account ID, e.g.,
 
 ```
 $ terraform import aws_securityhub_organization_admin_account.example 123456789012

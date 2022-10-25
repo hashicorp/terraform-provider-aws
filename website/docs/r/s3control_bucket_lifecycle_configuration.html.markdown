@@ -55,7 +55,7 @@ The following arguments are required:
     * `abort_incomplete_multipart_upload` - (Optional) Configuration block containing settings for abort incomplete multipart upload.
         * `days_after_initiation` - (Required) Number of days after which Amazon S3 aborts an incomplete multipart upload.
     * `expiration` - (Optional) Configuration block containing settings for expiration of objects.
-        * `date` - (Optional) Date the object is to be deleted. Should be in `YYYY-MM-DD` date format, e.g. `2020-09-30`.
+        * `date` - (Optional) Date the object is to be deleted. Should be in `YYYY-MM-DD` date format, e.g., `2020-09-30`.
         * `days` - (Optional) Number of days before the object is to be deleted.
         * `expired_object_delete_marker` - (Optional) Enable to remove a delete marker with no noncurrent versions. Cannot be specified with `date` or `days`.
     * `filter` - (Optional) Configuration block containing settings for filtering.
@@ -72,7 +72,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-S3 Control Bucket Lifecycle Configurations can be imported using the Amazon Resource Name (ARN), e.g.
+S3 Control Bucket Lifecycle Configurations can be imported using the Amazon Resource Name (ARN), e.g.,
 
 ```
 $ terraform import aws_s3control_bucket_lifecycle_configuration.example arn:aws:s3-outposts:us-east-1:123456789012:outpost/op-12345678/bucket/example

@@ -1,5 +1,5 @@
 ---
-subcategory: "Route53"
+subcategory: "Route 53"
 layout: "aws"
 page_title: "AWS: aws_route53_delegation_set"
 description: |-
@@ -44,11 +44,9 @@ In addition to all arguments above, the following attributes are exported:
 * `name_servers` - A list of authoritative name servers for the hosted zone
   (effectively a list of NS records).
 
-
-
 ## Import
 
-Route53 Delegation Sets can be imported using the `delegation set id`, e.g.
+Route53 Delegation Sets can be imported using the `delegation set id`, e.g.,
 
 ```
 $ terraform import aws_route53_delegation_set.set1 N1PA6795SAMPLE

@@ -29,7 +29,11 @@ The following arguments are supported:
 
 * `product_arn` - (Required) The ARN of the product that generates findings that you want to import into Security Hub - see below.
 
-Currently available products (remember to replace `${var.region}` as appropriate):
+Amazon maintains a list of [Product integrations in AWS Security Hub](https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-findings-providers.html) that changes over time. Any of the products on the linked [Available AWS service integrations](https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-internal-providers.html) or [Available third-party partner product integrations](https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-partner-providers.html) can be configured using `aws_securityhub_product_subscription`.
+
+Available products can also be listed by running the AWS CLI command `aws securityhub describe-products`.
+
+A subset of currently available products (remember to replace `${var.region}` as appropriate) includes:
 
 * `arn:aws:securityhub:${var.region}::product/aws/guardduty`
 * `arn:aws:securityhub:${var.region}::product/aws/inspector`
@@ -71,7 +75,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Security Hub product subscriptions can be imported in the form `product_arn,arn`, e.g.
+Security Hub product subscriptions can be imported in the form `product_arn,arn`, e.g.,
 
 ```sh
 $ terraform import aws_securityhub_product_subscription.example arn:aws:securityhub:eu-west-1:733251395267:product/alertlogic/althreatmanagement,arn:aws:securityhub:eu-west-1:123456789012:product-subscription/alertlogic/althreatmanagement

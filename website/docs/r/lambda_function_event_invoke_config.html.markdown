@@ -117,7 +117,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Lambda Function Event Invoke Configs can be imported using the fully qualified Function name or Amazon Resource Name (ARN), e.g.
+Lambda Function Event Invoke Configs can be imported using the fully qualified Function name or Amazon Resource Name (ARN), e.g.,
 
 ARN without qualifier (all versions and aliases):
 

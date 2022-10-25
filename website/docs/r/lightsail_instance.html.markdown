@@ -42,10 +42,10 @@ instance (see list below)
 * `key_pair_name` - (Optional) The name of your key pair. Created in the
 Lightsail console (cannot use `aws_key_pair` at this time)
 * `user_data` - (Optional) launch script to configure server with additional user data
-* `tags` - (Optional) A map of tags to assign to the resource. To create a key-only tag, use an empty string as the value. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. To create a key-only tag, use an empty string as the value. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Availability Zones
-Lightsail currently supports the following Availability Zones (e.g. `us-east-1a`):
+Lightsail currently supports the following Availability Zones (e.g., `us-east-1a`):
 
 - `ap-northeast-1{a,c,d}`
 - `ap-northeast-2{a,c}`
@@ -63,7 +63,7 @@ Lightsail currently supports the following Availability Zones (e.g. `us-east-1a`
 
 ## Bundles
 
-Lightsail currently supports the following Bundle IDs (e.g. an instance in `ap-northeast-1` would use `small_2_0`):
+Lightsail currently supports the following Bundle IDs (e.g., an instance in `ap-northeast-1` would use `small_2_0`):
 
 ### Prefix
 
@@ -102,13 +102,19 @@ In addition to all arguments above, the following attributes are exported:
 * `id` - The ARN of the Lightsail instance (matches `arn`).
 * `arn` - The ARN of the Lightsail instance (matches `id`).
 * `created_at` - The timestamp when the instance was created.
+* `cpu_count` - The number of vCPUs the instance has.
+* `ram_size` - The amount of RAM in GB on the instance (e.g., 1.0).
 * `ipv6_address` - (**Deprecated**) The first IPv6 address of the Lightsail instance. Use `ipv6_addresses` attribute instead.
 * `ipv6_addresses` - List of IPv6 addresses for the Lightsail instance.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `private_ip_address` - The private IP address of the instance.
+* `public_ip_address` - The public IP address of the instance.
+* `is_static_ip` - A Boolean value indicating whether this instance has a static IP assigned to it.
+* `username` - The user name for connecting to the instance (e.g., ec2-user).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
-Lightsail Instances can be imported using their name, e.g.
+Lightsail Instances can be imported using their name, e.g.,
 
 ```
 $ terraform import aws_lightsail_instance.gitlab_test 'custom gitlab'

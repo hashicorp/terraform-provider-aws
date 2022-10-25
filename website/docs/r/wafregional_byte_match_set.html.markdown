@@ -1,5 +1,5 @@
 ---
-subcategory: "WAF Regional"
+subcategory: "WAF Classic Regional"
 layout: "aws"
 page_title: "AWS: aws_wafregional_byte_match_set"
 description: |-
@@ -36,7 +36,6 @@ The following arguments are supported:
 * `name` - (Required) The name or description of the ByteMatchSet.
 * `byte_match_tuples` - (Optional)Settings for the ByteMatchSet, such as the bytes (typically a string that corresponds with ASCII characters) that you want AWS WAF to search for in web requests. ByteMatchTuple documented below.
 
-
 ByteMatchTuples(byte_match_tuples) support the following:
 
 * `field_to_match` - (Required) Settings for the ByteMatchTuple. FieldToMatch documented below.
@@ -59,7 +58,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-WAF Regional Byte Match Set can be imported using the id, e.g.
+WAF Regional Byte Match Set can be imported using the id, e.g.,
 
 ```
 $ terraform import aws_wafregional_byte_match_set.byte_set a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc

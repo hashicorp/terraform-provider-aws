@@ -1,14 +1,16 @@
 ---
-subcategory: "S3"
+subcategory: "S3 (Simple Storage)"
 layout: "aws"
 page_title: "AWS: aws_s3_bucket_object"
 description: |-
-  Provides a S3 bucket object resource.
+  Provides an S3 object resource.
 ---
 
 # Resource: aws_s3_bucket_object
 
-Provides a S3 bucket object resource.
+~> **NOTE:** The `aws_s3_bucket_object` resource is DEPRECATED and will be removed in a future version! Use `aws_s3_object` instead, where new features and fixes will be added. When replacing `aws_s3_bucket_object` with `aws_s3_object` in your configuration, on the next apply, Terraform will recreate the object. If you prefer to not have Terraform recreate the object, import the object using `aws_s3_object`.
+
+Provides an S3 object resource.
 
 ## Example Usage
 
@@ -37,10 +39,14 @@ resource "aws_kms_key" "examplekms" {
 
 resource "aws_s3_bucket" "examplebucket" {
   bucket = "examplebuckettftest"
+}
+
+resource "aws_s3_bucket_acl" "example" {
+  bucket = aws_s3_bucket.examplebucket.id
   acl    = "private"
 }
 
-resource "aws_s3_bucket_object" "examplebucket_object" {
+resource "aws_s3_bucket_object" "example" {
   key        = "someobject"
   bucket     = aws_s3_bucket.examplebucket.id
   source     = "index.html"
@@ -53,10 +59,14 @@ resource "aws_s3_bucket_object" "examplebucket_object" {
 ```terraform
 resource "aws_s3_bucket" "examplebucket" {
   bucket = "examplebuckettftest"
+}
+
+resource "aws_s3_bucket_acl" "example" {
+  bucket = aws_s3_bucket.examplebucket.id
   acl    = "private"
 }
 
-resource "aws_s3_bucket_object" "examplebucket_object" {
+resource "aws_s3_bucket_object" "example" {
   key                    = "someobject"
   bucket                 = aws_s3_bucket.examplebucket.id
   source                 = "index.html"
@@ -69,10 +79,14 @@ resource "aws_s3_bucket_object" "examplebucket_object" {
 ```terraform
 resource "aws_s3_bucket" "examplebucket" {
   bucket = "examplebuckettftest"
+}
+
+resource "aws_s3_bucket_acl" "example" {
+  bucket = aws_s3_bucket.examplebucket.id
   acl    = "private"
 }
 
-resource "aws_s3_bucket_object" "examplebucket_object" {
+resource "aws_s3_bucket_object" "example" {
   key                    = "someobject"
   bucket                 = aws_s3_bucket.examplebucket.id
   source                 = "index.html"
@@ -85,18 +99,26 @@ resource "aws_s3_bucket_object" "examplebucket_object" {
 ```terraform
 resource "aws_s3_bucket" "examplebucket" {
   bucket = "examplebuckettftest"
+
+  object_lock_enabled = true
+}
+
+resource "aws_s3_bucket_acl" "example" {
+  bucket = aws_s3_bucket.examplebucket.id
   acl    = "private"
+}
 
-  versioning {
-    enabled = true
-  }
-
-  object_lock_configuration {
-    object_lock_enabled = "Enabled"
+resource "aws_s3_bucket_versioning" "example" {
+  bucket = aws_s3_bucket.examplebucket.id
+  versioning_configuration {
+    status = "Enabled"
   }
 }
 
-resource "aws_s3_bucket_object" "examplebucket_object" {
+resource "aws_s3_bucket_object" "example" {
+  # Must have bucket versioning enabled first
+  depends_on = [aws_s3_bucket_versioning.example]
+
   key    = "someobject"
   bucket = aws_s3_bucket.examplebucket.id
   source = "important.txt"
@@ -126,8 +148,8 @@ The following arguments are optional:
 * `content_base64` - (Optional, conflicts with `source` and `content`) Base64-encoded data that will be decoded and uploaded as raw bytes for the object content. This allows safely uploading non-UTF8 binary data, but is recommended only for small content such as the result of the `gzipbase64` function with small text strings. For larger objects, use `source` to stream the content from a disk file.
 * `content_disposition` - (Optional) Presentational information for the object. Read [w3c content_disposition](http://www.w3.org/Protocols/rfc2616/rfc2616-sec19.html#sec19.5.1) for further information.
 * `content_encoding` - (Optional) Content encodings that have been applied to the object and thus what decoding mechanisms must be applied to obtain the media-type referenced by the Content-Type header field. Read [w3c content encoding](http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.11) for further information.
-* `content_language` - (Optional) Language the content is in e.g. en-US or en-GB.
-* `content_type` - (Optional) Standard MIME type describing the format of the object data, e.g. application/octet-stream. All Valid MIME Types are valid for this input.
+* `content_language` - (Optional) Language the content is in e.g., en-US or en-GB.
+* `content_type` - (Optional) Standard MIME type describing the format of the object data, e.g., application/octet-stream. All Valid MIME Types are valid for this input.
 * `content` - (Optional, conflicts with `source` and `content_base64`) Literal string value to use as the object content, which will be uploaded as UTF-8-encoded text.
 * `etag` - (Optional) Triggers updates when the value changes. The only meaningful value is `filemd5("path/to/file")` (Terraform 0.11.12 or later) or `${md5(file("path/to/file"))}` (Terraform 0.11.11 or earlier). This attribute is not compatible with KMS encryption, `kms_key_id` or `server_side_encryption = "aws:kms"` (see `source_hash` instead).
 * `force_destroy` - (Optional) Whether to allow the object to be deleted by removing any legal hold on any object version. Default is `false`. This value should be set to `true` only if the bucket has S3 object lock enabled.
@@ -139,8 +161,8 @@ The following arguments are optional:
 * `server_side_encryption` - (Optional) Server-side encryption of the object in S3. Valid values are "`AES256`" and "`aws:kms`".
 * `source_hash` - (Optional) Triggers updates like `etag` but useful to address `etag` encryption limitations. Set using `filemd5("path/to/source")` (Terraform 0.11.12 or later). (The value is only stored in state and not saved by AWS.)
 * `source` - (Optional, conflicts with `content` and `content_base64`) Path to a file that will be read and uploaded as raw bytes for the object content.
-* `storage_class` - (Optional) [Storage Class](http://docs.aws.amazon.com/AmazonS3/latest/dev/storage-class-intro.html) for the object. Can be either "`STANDARD`", "`REDUCED_REDUNDANCY`", "`ONEZONE_IA`", "`INTELLIGENT_TIERING`", "`GLACIER`", "`DEEP_ARCHIVE`", or "`STANDARD_IA`". Defaults to "`STANDARD`".
-* `tags` - (Optional) Map of tags to assign to the object. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `storage_class` - (Optional) [Storage Class](https://docs.aws.amazon.com/AmazonS3/latest/API/API_PutObject.html#AmazonS3-PutObject-request-header-StorageClass) for the object. Defaults to "`STANDARD`".
+* `tags` - (Optional) Map of tags to assign to the object. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `website_redirect` - (Optional) Target URL for [website redirect](http://docs.aws.amazon.com/AmazonS3/latest/dev/how-to-page-redirect.html).
 
 If no content is provided through `source`, `content` or `content_base64`, then the object will be empty.
@@ -153,18 +175,18 @@ In addition to all arguments above, the following attributes are exported:
 
 * `etag` - ETag generated for the object (an MD5 sum of the object content). For plaintext objects or objects encrypted with an AWS-managed key, the hash is an MD5 digest of the object data. For objects encrypted with a KMS key or objects created by either the Multipart Upload or Part Copy operation, the hash is not an MD5 digest, regardless of the method of encryption. More information on possible values can be found on [Common Response Headers](https://docs.aws.amazon.com/AmazonS3/latest/API/RESTCommonResponseHeaders.html).
 * `id` - `key` of the resource supplied above
-* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `version_id` - Unique version ID value for the object, if bucket versioning is enabled.
 
 ## Import
 
-Objects can be imported using the `id`. The `id` is the bucket name and the key together e.g.
+Objects can be imported using the `id`. The `id` is the bucket name and the key together e.g.,
 
 ```
 $ terraform import aws_s3_bucket_object.object some-bucket-name/some/key.txt
 ```
 
-Additionally, s3 url syntax can be used, e.g.
+Additionally, s3 url syntax can be used, e.g.,
 
 ```
 $ terraform import aws_s3_bucket_object.object s3://some-bucket-name/some/key.txt

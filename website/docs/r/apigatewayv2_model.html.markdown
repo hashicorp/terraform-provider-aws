@@ -1,5 +1,5 @@
 ---
-subcategory: "API Gateway v2 (WebSocket and HTTP APIs)"
+subcategory: "API Gateway V2"
 layout: "aws"
 page_title: "AWS: aws_apigatewayv2_model"
 description: |-
@@ -37,21 +37,21 @@ EOF
 
 The following arguments are supported:
 
-* `api_id` - (Required) The API identifier.
+* `api_id` - (Required) API identifier.
 * `content_type` - (Required)  The content-type for the model, for example, `application/json`. Must be between 1 and 256 characters in length.
-* `name` - (Required) The name of the model. Must be alphanumeric. Must be between 1 and 128 characters in length.
-* `schema` - (Required) The schema for the model. This should be a [JSON schema draft 4](https://tools.ietf.org/html/draft-zyp-json-schema-04) model. Must be less than or equal to 32768 characters in length.
-* `description` - (Optional) The description of the model. Must be between 1 and 128 characters in length.
+* `name` - (Required) Name of the model. Must be alphanumeric. Must be between 1 and 128 characters in length.
+* `schema` - (Required) Schema for the model. This should be a [JSON schema draft 4](https://tools.ietf.org/html/draft-zyp-json-schema-04) model. Must be less than or equal to 32768 characters in length.
+* `description` - (Optional) Description of the model. Must be between 1 and 128 characters in length.
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - The model identifier.
+* `id` - Model identifier.
 
 ## Import
 
-`aws_apigatewayv2_model` can be imported by using the API identifier and model identifier, e.g.
+`aws_apigatewayv2_model` can be imported by using the API identifier and model identifier, e.g.,
 
 ```
 $ terraform import aws_apigatewayv2_model.example aabbccddee/1122334

@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_route53domains_registered_domain: Redirect all Route 53 Domains AWS API calls to the `us-east-1` Region
+```

@@ -1,5 +1,5 @@
 ---
-subcategory: "Kinesis Data Analytics v2 (SQL and Flink Applications)"
+subcategory: "Kinesis Analytics V2"
 layout: "aws"
 page_title: "AWS: aws_kinesisanalyticsv2_application"
 description: |-
@@ -22,7 +22,7 @@ resource "aws_s3_bucket" "example" {
   bucket = "example-flink-application"
 }
 
-resource "aws_s3_bucket_object" "example" {
+resource "aws_s3_object" "example" {
   bucket = aws_s3_bucket.example.bucket
   key    = "example-flink-application"
   source = "flink-app.jar"
@@ -38,7 +38,7 @@ resource "aws_kinesisanalyticsv2_application" "example" {
       code_content {
         s3_content_location {
           bucket_arn = aws_s3_bucket.example.arn
-          file_key   = aws_s3_bucket_object.example.key
+          file_key   = aws_s3_object.example.key
         }
       }
 
@@ -104,7 +104,7 @@ resource "aws_cloudwatch_log_stream" "example" {
 
 resource "aws_kinesisanalyticsv2_application" "example" {
   name                   = "example-sql-application"
-  runtime_environment    = "SQL-1.0"
+  runtime_environment    = "SQL-1_0"
   service_execution_role = aws_iam_role.example.arn
 
   application_configuration {
@@ -220,7 +220,7 @@ resource "aws_s3_bucket" "example" {
   bucket = "example-flink-application"
 }
 
-resource "aws_s3_bucket_object" "example" {
+resource "aws_s3_object" "example" {
   bucket = aws_s3_bucket.example.bucket
   key    = "example-flink-application"
   source = "flink-app.jar"
@@ -236,7 +236,7 @@ resource "aws_kinesisanalyticsv2_application" "example" {
       code_content {
         s3_content_location {
           bucket_arn = aws_s3_bucket.example.arn
-          file_key   = aws_s3_bucket_object.example.key
+          file_key   = aws_s3_object.example.key
         }
       }
 
@@ -256,14 +256,14 @@ resource "aws_kinesisanalyticsv2_application" "example" {
 The following arguments are supported:
 
 * `name` - (Required) The name of the application.
-* `runtime_environment` - (Required) The runtime environment for the application. Valid values: `SQL-1_0`, `FLINK-1_6`, `FLINK-1_8`, `FLINK-1_11`.
+* `runtime_environment` - (Required) The runtime environment for the application. Valid values: `SQL-1_0`, `FLINK-1_6`, `FLINK-1_8`, `FLINK-1_11`, `FLINK-1_13`.
 * `service_execution_role` - (Required) The ARN of the [IAM role](/docs/providers/aws/r/iam_role.html) used by the application to access Kinesis data streams, Kinesis Data Firehose delivery streams, Amazon S3 objects, and other external resources.
 * `application_configuration` - (Optional) The application's configuration
 * `cloudwatch_logging_options` - (Optional) A [CloudWatch log stream](/docs/providers/aws/r/cloudwatch_log_stream.html) to monitor application configuration errors.
 * `description` - (Optional) A summary description of the application.
 * `force_stop` - (Optional) Whether to force stop an unresponsive Flink-based application.
 * `start_application` - (Optional) Whether to start or stop the application.
-* `tags` - (Optional) A map of tags to assign to the application. If configured with a provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the application. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 The `application_configuration` object supports the following:
 
@@ -409,7 +409,7 @@ The `json_mapping_parameters` object supports the following:
 
 The `input_starting_position_configuration` object supports the following:
 
-~> **NOTE**: To modify an application's starting position, first stop the application by setting `start_application = false`, then update `starting_position` and set `start_application = true`.
+~> **NOTE:** To modify an application's starting position, first stop the application by setting `start_application = false`, then update `starting_position` and set `start_application = true`.
 
 * `input_starting_position` - (Required) The starting position on the stream. Valid values: `LAST_STOPPED_POINT`, `NOW`, `TRIM_HORIZON`.
 
@@ -481,11 +481,19 @@ In addition to all arguments above, the following attributes are exported:
 * `last_update_timestamp` - The current timestamp when the application was last updated.
 * `status` - The status of the application.
 * `version_id` - The current application version. Kinesis Data Analytics updates the `version_id` each time the application is updated.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+
+## Timeouts
+
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+
+- `create` - (Default `10m`)
+- `update` - (Default `10m`)
+- `delete` - (Default `10m`)
 
 ## Import
 
-`aws_kinesisanalyticsv2_application` can be imported by using the application ARN, e.g.
+`aws_kinesisanalyticsv2_application` can be imported by using the application ARN, e.g.,
 
 ```
 $ terraform import aws_kinesisanalyticsv2_application.example arn:aws:kinesisanalytics:us-west-2:123456789012:application/example-sql-application

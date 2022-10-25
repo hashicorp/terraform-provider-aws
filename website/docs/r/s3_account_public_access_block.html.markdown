@@ -1,5 +1,5 @@
 ---
-subcategory: "S3"
+subcategory: "S3 Control"
 layout: "aws"
 page_title: "AWS: aws_s3_account_public_access_block"
 description: |-
@@ -30,7 +30,7 @@ The following arguments are supported:
 * `account_id` - (Optional) AWS account ID to configure. Defaults to automatically determined account ID of the Terraform AWS provider.
 * `block_public_acls` - (Optional) Whether Amazon S3 should block public ACLs for buckets in this account. Defaults to `false`. Enabling this setting does not affect existing policies or ACLs. When set to `true` causes the following behavior:
     * PUT Bucket acl and PUT Object acl calls will fail if the specified ACL allows public access.
-    * PUT Object calls will fail if the request includes an object ACL.
+    * PUT Object calls fail if the request includes a public ACL.
 * `block_public_policy` - (Optional) Whether Amazon S3 should block public bucket policies for buckets in this account. Defaults to `false`. Enabling this setting does not affect existing bucket policies. When set to `true` causes Amazon S3 to:
     * Reject calls to PUT Bucket policy if the specified bucket policy allows public access.
 * `ignore_public_acls` - (Optional) Whether Amazon S3 should ignore public ACLs for buckets in this account. Defaults to `false`. Enabling this setting does not affect the persistence of any existing ACLs and doesn't prevent new public ACLs from being set. When set to `true` causes Amazon S3 to:
@@ -46,7 +46,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_s3_account_public_access_block` can be imported by using the AWS account ID, e.g.
+`aws_s3_account_public_access_block` can be imported by using the AWS account ID, e.g.,
 
 ```
 $ terraform import aws_s3_account_public_access_block.example 123456789012

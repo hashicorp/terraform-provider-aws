@@ -65,7 +65,7 @@ No additional attributes are exported.
 
 ## Import
 
-Signer signing profile permission statements can be imported using profile_name/statement_id, e.g.
+Signer signing profile permission statements can be imported using profile_name/statement_id, e.g.,
 
 ```
 $ terraform import aws_signer_signing_profile_permission.test_signer_signing_profile_permission prod_profile_DdW3Mk1foYL88fajut4mTVFGpuwfd4ACO6ANL0D1uIj7lrn8adK/ProdAccountStartSigningJobStatementId

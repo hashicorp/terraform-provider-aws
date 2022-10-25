@@ -1,5 +1,5 @@
 ---
-subcategory: "RDS"
+subcategory: "RDS (Relational Database)"
 layout: "aws"
 page_title: "AWS: aws_db_proxy_default_target_group"
 description: |-
@@ -74,16 +74,16 @@ In addition to all arguments above, the following attributes are exported:
 * `arn` - The Amazon Resource Name (ARN) representing the target group.
 * `name` - The name of the default target group.
 
-### Timeouts
+## Timeouts
 
-`aws_db_proxy_default_target_group` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
 
-- `create` - (Default `30 minutes`) Timeout for modifying DB proxy target group on creation.
-- `update` - (Default `30 minutes`) Timeout for modifying DB proxy target group on update.
+- `create` - (Default `30m`)
+- `update` - (Default `30m`)
 
 ## Import
 
-DB proxy default target groups can be imported using the `db_proxy_name`, e.g.
+DB proxy default target groups can be imported using the `db_proxy_name`, e.g.,
 
 ```
 $ terraform import aws_db_proxy_default_target_group.example example

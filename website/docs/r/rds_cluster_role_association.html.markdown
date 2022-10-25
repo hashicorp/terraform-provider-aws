@@ -1,5 +1,5 @@
 ---
-subcategory: "RDS"
+subcategory: "RDS (Relational Database)"
 layout: "aws"
 page_title: "AWS: aws_rds_cluster_role_association"
 description: |-
@@ -19,7 +19,7 @@ Manages a RDS DB Cluster association with an IAM Role. Example use cases:
 resource "aws_rds_cluster_role_association" "example" {
   db_cluster_identifier = aws_rds_cluster.example.id
   feature_name          = "S3_INTEGRATION"
-  role_arn              = aws_iam_role.example.id
+  role_arn              = aws_iam_role.example.arn
 }
 ```
 
@@ -39,7 +39,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_rds_cluster_role_association` can be imported using the DB Cluster Identifier and IAM Role ARN separated by a comma (`,`), e.g.
+`aws_rds_cluster_role_association` can be imported using the DB Cluster Identifier and IAM Role ARN separated by a comma (`,`), e.g.,
 
 ```
 $ terraform import aws_rds_cluster_role_association.example my-db-cluster,arn:aws:iam::123456789012:role/my-role

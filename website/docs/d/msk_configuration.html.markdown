@@ -1,5 +1,5 @@
 ---
-subcategory: "Managed Streaming for Kafka (MSK)"
+subcategory: "Managed Streaming for Kafka"
 layout: "aws"
 page_title: "AWS: aws_msk_configuration"
 description: |-
@@ -28,7 +28,7 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `arn` - Amazon Resource Name (ARN) of the configuration.
+* `arn` - ARN of the configuration.
 * `latest_revision` - Latest revision of the configuration.
 * `description` - Description of the configuration.
 * `kafka_versions` - List of Apache Kafka versions which can use this configuration.

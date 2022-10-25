@@ -1,5 +1,5 @@
 ---
-subcategory: "Sagemaker"
+subcategory: "SageMaker"
 layout: "aws"
 page_title: "AWS: aws_sagemaker_feature_group"
 description: |-
@@ -44,7 +44,7 @@ The following arguments are supported:
 * `feature_definition` (Optional) - A list of Feature names and types. See [Feature Definition](#feature-definition) Below.
 * `offline_store_config` (Optional) - The Offline Feature Store Configuration. See [Offline Store Config](#offline-store-config) Below.
 * `online_store_config` (Optional) - The Online Feature Store Configuration. See [Online Store Config](#online-store-config) Below.
-* `tags` - (Optional) Map of resource tags for the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Map of resource tags for the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### Feature Definition
 
@@ -83,11 +83,11 @@ In addition to all arguments above, the following attributes are exported:
 
 * `name` - The name of the Feature Group.
 * `arn` - The Amazon Resource Name (ARN) assigned by AWS to this feature_group.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
-Feature Groups can be imported using the `name`, e.g.
+Feature Groups can be imported using the `name`, e.g.,
 
 ```
 $ terraform import aws_sagemaker_feature_group.test_feature_group feature_group-foo

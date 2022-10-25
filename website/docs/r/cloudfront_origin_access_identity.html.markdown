@@ -98,10 +98,9 @@ resource "aws_s3_bucket_policy" "example" {
 [3]: /docs/providers/aws/r/cloudfront_distribution.html
 [4]: /docs/providers/aws/r/s3_bucket.html
 
-
 ## Import
 
-Cloudfront Origin Access Identities can be imported using the `id`, e.g.
+Cloudfront Origin Access Identities can be imported using the `id`, e.g.,
 
 ```
 $ terraform import aws_cloudfront_origin_access_identity.origin_access E74FTE3AEXAMPLE

@@ -40,7 +40,7 @@ The following arguments are supported:
 
 * `name` - (Required) A friendly name for the Protection you are creating.
 * `resource_arn` - (Required) The ARN (Amazon Resource Name) of the resource to be protected.
-* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attributes Reference
 
@@ -48,11 +48,11 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - The unique identifier (ID) for the Protection object that is created.
 * `arn` - The ARN of the Protection.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
-Shield protection resources can be imported by specifying their ID e.g.
+Shield protection resources can be imported by specifying their ID e.g.,
 
 ```
 $ terraform import aws_shield_protection.example ff9592dc-22f3-4e88-afa1-7b29fde9669a

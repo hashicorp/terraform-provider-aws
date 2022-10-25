@@ -1,5 +1,5 @@
 ---
-subcategory: "RDS"
+subcategory: "RDS (Relational Database)"
 layout: "aws"
 page_title: "AWS: aws_db_proxy_endpoint"
 description: |-
@@ -8,7 +8,7 @@ description: |-
 
 # Resource: aws_db_proxy_endpoint
 
-Provides an RDS DB proxy endpoint resource. For additional information, see the [RDS User Guide](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/rds-proxy.html#rds-proxy-endpoints).
+Provides an RDS DB proxy endpoint resource. For additional information, see the [RDS User Guide](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/rds-proxy-endpoints.html).
 
 ## Example Usage
 
@@ -42,17 +42,17 @@ In addition to all arguments above, the following attributes are exported:
 * `is_default` - Indicates whether this endpoint is the default endpoint for the associated DB proxy.
 * `vpc_id` - The VPC ID of the DB proxy endpoint.
 
-### Timeouts
+## Timeouts
 
-`aws_db_proxy_endpoint` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
 
-- `create` - (Default `30 minutes`) Used for creating DB proxy endpoint.
-- `update` - (Default `30 minutes`) Used for modifying DB proxy endpoint.
-- `delete` - (Default `60 minutes`) Used for destroying DB proxy endpoint.
+- `create` - (Default `30m`)
+- `update` - (Default `30m`)
+- `delete` - (Default `60m`)
 
 ## Import
 
-DB proxy endpoints can be imported using the `DB-PROXY-NAME/DB-PROXY-ENDPOINT-NAME`, e.g.
+DB proxy endpoints can be imported using the `DB-PROXY-NAME/DB-PROXY-ENDPOINT-NAME`, e.g.,
 
 ```
 $ terraform import aws_db_proxy_endpoint.example example/example

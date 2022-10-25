@@ -47,7 +47,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-CloudFront monitoring subscription can be imported using the id, e.g.
+CloudFront monitoring subscription can be imported using the id, e.g.,
 
 ```
 $ terraform import aws_cloudfront_monitoring_subscription.example E3QYSUHO4VYRGB

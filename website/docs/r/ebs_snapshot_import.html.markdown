@@ -1,5 +1,5 @@
 ---
-subcategory: "EC2"
+subcategory: "EBS (EC2)"
 layout: "aws"
 page_title: "AWS: aws_ebs_snapshot_import"
 description: |-
@@ -32,7 +32,6 @@ resource "aws_ebs_snapshot_import" "example" {
 
 ## Argument Reference
 
-
 The following arguments are supported:
 
 * `client_data` - (Optional) The client-specific data. Detailed below.
@@ -40,6 +39,9 @@ The following arguments are supported:
 * `disk_container` - (Required) Information about the disk container. Detailed below.
 * `encrypted` - (Optional) Specifies whether the destination snapshot of the imported image should be encrypted. The default KMS key for EBS is used unless you specify a non-default KMS key using KmsKeyId.
 * `kms_key_id` - (Optional) An identifier for the symmetric KMS key to use when creating the encrypted snapshot. This parameter is only required if you want to use a non-default KMS key; if this parameter is not specified, the default KMS key for EBS is used. If a KmsKeyId is specified, the Encrypted flag must also be set.
+* `storage_tier` - (Optional) The name of the storage tier. Valid values are `archive` and `standard`. Default value is `standard`.
+* `permanent_restore` - (Optional) Indicates whether to permanently restore an archived snapshot.
+* `temporary_restore_days` - (Optional) Specifies the number of days for which to temporarily restore an archived snapshot. Required for temporary restores only. The snapshot will be automatically re-archived after this period.
 * `role_name` - (Optional) The name of the IAM Role the VM Import/Export service will assume. This role needs certain permissions. See https://docs.aws.amazon.com/vm-import/latest/userguide/vmie_prereqs.html#vmimport-role. Default: `vmimport`
 * `tags` - (Optional) A map of tags to assign to the snapshot.
 
@@ -62,23 +64,21 @@ The following arguments are supported:
 * `s3_bucket` - The name of the Amazon S3 bucket where the disk image is located.
 * `s3_key` - The file name of the disk image.
 
-### Timeouts
+## Timeouts
 
-`aws_ebs_snapshot_import` provides the following
-[Timeouts](/docs/configuration/resources.html#timeouts) configuration options:
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
 
-- `create` - (Default `60 minutes`) Used for importing the EBS snapshot
-- `delete` - (Default `10 minutes`) Used for deleting the EBS snapshot
+- `create` - (Default `60m`)
+- `delete` - (Default `10m`)
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
 * `arn` - Amazon Resource Name (ARN) of the EBS Snapshot.
-* `id` - The snapshot ID (e.g. snap-59fcb34e).
+* `id` - The snapshot ID (e.g., snap-59fcb34e).
 * `owner_id` - The AWS account ID of the EBS snapshot owner.
 * `owner_alias` - Value from an Amazon-maintained list (`amazon`, `aws-marketplace`, `microsoft`) of snapshot owners.
 * `volume_size` - The size of the drive in GiBs.
 * `data_encryption_key_id` - The data encryption key identifier for the snapshot.
-* `tags` - A map of tags for the snapshot.
-
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).

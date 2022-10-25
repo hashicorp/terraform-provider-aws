@@ -57,7 +57,6 @@ The `criterion` object supports the following:
 * `gt` - (Optional) The value for the property is greater than the specified value.
 * `gte` - (Optional) The value for the property is greater than or equal to the specified value.
 
-
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
@@ -67,7 +66,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_macie2_findings_filter` can be imported using the id, e.g.
+`aws_macie2_findings_filter` can be imported using the id, e.g.,
 
 ```
 $ terraform import aws_macie2_findings_filter.example abcd1

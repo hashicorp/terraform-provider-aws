@@ -1,5 +1,5 @@
 ---
-subcategory: "SES"
+subcategory: "SES (Simple Email)"
 layout: "aws"
 page_title: "AWS: aws_ses_domain_dkim"
 description: |-
@@ -43,16 +43,16 @@ resource "aws_ses_domain_dkim" "example" {
 resource "aws_route53_record" "example_amazonses_dkim_record" {
   count   = 3
   zone_id = "ABCDEFGHIJ123"
-  name    = "${element(aws_ses_domain_dkim.example.dkim_tokens, count.index)}._domainkey"
+  name    = "${aws_ses_domain_dkim.example.dkim_tokens[count.index]}._domainkey"
   type    = "CNAME"
   ttl     = "600"
-  records = ["${element(aws_ses_domain_dkim.example.dkim_tokens, count.index)}.dkim.amazonses.com"]
+  records = ["${aws_ses_domain_dkim.example.dkim_tokens[count.index]}.dkim.amazonses.com"]
 }
 ```
 
 ## Import
 
-DKIM tokens can be imported using the `domain` attribute, e.g.
+DKIM tokens can be imported using the `domain` attribute, e.g.,
 
 ```
 $ terraform import aws_ses_domain_dkim.example example.com

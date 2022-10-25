@@ -1,5 +1,5 @@
 ---
-subcategory: "Cognito"
+subcategory: "Cognito IDP (Identity Provider)"
 layout: "aws"
 page_title: "AWS: aws_cognito_user_group"
 description: |-
@@ -70,7 +70,7 @@ No additional attributes are exported.
 
 ## Import
 
-Cognito User Groups can be imported using the `user_pool_id`/`name` attributes concatenated, e.g.
+Cognito User Groups can be imported using the `user_pool_id`/`name` attributes concatenated, e.g.,
 
 ```
 $ terraform import aws_cognito_user_group.group us-east-1_vG78M4goG/user-group

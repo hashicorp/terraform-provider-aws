@@ -53,7 +53,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-DAX Parameter Group can be imported using the `name`, e.g.
+DAX Parameter Group can be imported using the `name`, e.g.,
 
 ```
 $ terraform import aws_dax_parameter_group.example my_dax_pg

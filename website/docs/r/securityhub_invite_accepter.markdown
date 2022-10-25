@@ -29,7 +29,7 @@ resource "aws_securityhub_account" "invitee" {
 
 resource "aws_securityhub_invite_accepter" "invitee" {
   provider   = "aws.invitee"
-  depends_on = [aws_securityhub_account.accepter]
+  depends_on = [aws_securityhub_account.invitee]
   master_id  = aws_securityhub_member.example.master_id
 }
 ```
@@ -48,7 +48,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Security Hub invite acceptance can be imported using the account ID, e.g.
+Security Hub invite acceptance can be imported using the account ID, e.g.,
 
 ```
 $ terraform import aws_securityhub_invite_accepter.example 123456789012

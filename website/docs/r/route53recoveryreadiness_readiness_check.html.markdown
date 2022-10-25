@@ -1,5 +1,5 @@
 ---
-subcategory: "Route53 Recovery Readiness"
+subcategory: "Route 53 Recovery Readiness"
 layout: "aws"
 page_title: "AWS: aws_route53recoveryreadiness_readiness_check"
 description: |-
@@ -28,18 +28,18 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
 * `arn` - ARN of the readiness_check
-* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
-Route53 Recovery Readiness readiness checks can be imported via the readiness check name, e.g.
+Route53 Recovery Readiness readiness checks can be imported via the readiness check name, e.g.,
 
 ```
 $ terraform import aws_route53recoveryreadiness_readiness_check.my-cw-alarm-check
@@ -47,7 +47,6 @@ $ terraform import aws_route53recoveryreadiness_readiness_check.my-cw-alarm-chec
 
 ## Timeouts
 
-`aws_route53recoveryreadiness_readiness_check` provides the following [Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts)
-configuration options:
+[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
 
-- `delete` - (Default `5m`) Used when deleting the Readiness Check
+- `delete` - (Default `5m`)
