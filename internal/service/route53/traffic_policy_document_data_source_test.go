@@ -124,6 +124,20 @@ func testAccTrafficPolicyDocumentConfigCompleteExpectedJSON() string {
         {
           "RuleReference":"region_selector",
           "Country":"US"
+        },
+        {
+          "RuleReference":"geoproximity_selector",
+          "Country":"UK"
+        }
+      ]
+    },
+    "geoproximity_selector": {
+      "RuleType": "geoproximity",
+      "GeoproximityLocations": [
+        {
+          "EndpointReference": "denied_message",
+          "Latitude": "51.50",
+          "Longitude": "-0.07"
         }
       ]
     },
@@ -244,6 +258,23 @@ data "aws_route53_traffic_policy_document" "test" {
       rule_reference = "region_selector"
       country        = "US"
     }
+    location {
+      rule_reference = "geoproximity_selector"
+      country        = "UK"
+    }
+  }
+
+  rule {
+    id   = "geoproximity_selector"
+    type = "geoproximity"
+
+    geo_proximity_location {
+      longitude              = "-0.07"
+      latitude               = "51.50"
+      endpoint_reference     = "denied_message"
+
+    }
+
   }
   rule {
     id   = "region_selector"
