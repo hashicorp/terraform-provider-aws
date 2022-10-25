@@ -24,26 +24,6 @@ func FindFirewallRuleGroupByID(conn *route53resolver.Route53Resolver, firewallGr
 	return output.FirewallRuleGroup, nil
 }
 
-// FindFirewallDomainListByID returns the DNS Firewall rule group corresponding to the specified ID.
-// Returns nil if no DNS Firewall rule group is found.
-func FindFirewallDomainListByID(conn *route53resolver.Route53Resolver, firewallDomainListId string) (*route53resolver.FirewallDomainList, error) {
-	input := &route53resolver.GetFirewallDomainListInput{
-		FirewallDomainListId: aws.String(firewallDomainListId),
-	}
-
-	output, err := conn.GetFirewallDomainList(input)
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil {
-		return nil, nil
-	}
-
-	return output.FirewallDomainList, nil
-}
-
 // FindFirewallRuleByID returns the DNS Firewall rule corresponding to the specified rule group and domain list IDs.
 // Returns nil if no DNS Firewall rule is found.
 func FindFirewallRuleByID(conn *route53resolver.Route53Resolver, firewallRuleId string) (*route53resolver.FirewallRule, error) {

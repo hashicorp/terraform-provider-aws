@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -87,20 +88,14 @@ func resourceFirewallDomainListRead(d *schema.ResourceData, meta interface{}) er
 
 	firewallDomainList, err := FindFirewallDomainListByID(conn, d.Id())
 
-	if tfawserr.ErrCodeEquals(err, route53resolver.ErrCodeResourceNotFoundException) {
-		log.Printf("[WARN] Route53 Resolver DNS Firewall domain list (%s) not found, removing from state", d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] Route53 Resolver Firewall Domain List (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error getting Route 53 Resolver DNS Firewall domain list (%s): %w", d.Id(), err)
-	}
-
-	if firewallDomainList == nil {
-		log.Printf("[WARN] Route 53 Resolver DNS Firewall domain list (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
+		return fmt.Errorf("reading Route53 Resolver Firewall Domain List (%s): %w", d.Id(), err)
 	}
 
 	arn := aws.StringValue(firewallDomainList.Arn)
@@ -214,4 +209,29 @@ func resourceFirewallDomainListDelete(d *schema.ResourceData, meta interface{}) 
 	}
 
 	return nil
+}
+
+func FindFirewallDomainListByID(conn *route53resolver.Route53Resolver, id string) (*route53resolver.FirewallDomainList, error) {
+	input := &route53resolver.GetFirewallDomainListInput{
+		FirewallDomainListId: aws.String(id),
+	}
+
+	output, err := conn.GetFirewallDomainList(input)
+
+	if tfawserr.ErrCodeEquals(err, route53resolver.ErrCodeResourceNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.FirewallDomainList == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.FirewallDomainList, nil
 }
