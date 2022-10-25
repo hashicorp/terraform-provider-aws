@@ -161,6 +161,29 @@ func TestAccBudgetsBudget_disappears(t *testing.T) {
 	})
 }
 
+func TestAccBudgetsBudget_autoAdjustData(t *testing.T) {
+	var budget budgets.Budget
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_budgets_budget.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(budgets.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, budgets.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccBudgetDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBudgetConfig_autoAdjustData(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccBudgetExists(resourceName, &budget),
+					resource.TestCheckResourceAttr(resourceName, "budget_type", "COST"),
+					resource.TestCheckResourceAttr(resourceName, "auto_adjust_data.0.auto_adjust_type", "FORECAST"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccBudgetsBudget_costTypes(t *testing.T) {
 	var budget budgets.Budget
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -447,6 +470,24 @@ resource "aws_budgets_budget" "test" {
 }
 `, namePrefix)
 }
+
+func testAccBudgetConfig_autoAdjustData(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_budgets_budget" "test" {
+  name         = %[1]q
+  budget_type  = "COST"
+  time_unit         = "MONTHLY"
+
+  auto_adjust_data {
+	auto_adjust_type = "FORECAST"
+  }
+}
+`, rName)
+}
+
+//historical_options {
+//  budget_adjustment_period = 2
+//}
 
 func testAccBudgetConfig_costTypes(rName, startDate, endDate string) string {
 	return fmt.Sprintf(`

@@ -180,12 +180,14 @@ func ResourceBudget() *schema.Resource {
 			},
 			"limit_amount": {
 				Type:             schema.TypeString,
-				Required:         true,
+				Optional:         true,
+				Computed:         true,
 				DiffSuppressFunc: suppressEquivalentBudgetLimitAmount,
 			},
 			"limit_unit": {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
+				Computed: true,
 			},
 			"name": {
 				Type:          schema.TypeString,
@@ -546,19 +548,30 @@ func resourceBudgetNotificationsUpdate(d *schema.ResourceData, meta interface{})
 	return nil
 }
 
+//func flattenCostCategoryRuleInheritedValue(apiObject *costexplorer.CostCategoryInheritedValueDimension) []map[string]interface{} {
+
+func flattenHistoricalOptions(historicalOptions *budgets.HistoricalOptions) []map[string]interface{} {
+	if historicalOptions == nil {
+		return []map[string]interface{}{}
+	}
+
+	attrs := map[string]interface{}{
+		"budget_adjustment_period":   aws.Int64Value(historicalOptions.BudgetAdjustmentPeriod),
+		"lookback_available_periods": aws.Int64Value(historicalOptions.LookBackAvailablePeriods),
+	}
+
+	return []map[string]interface{}{attrs}
+}
+
 func flattenAutoAdjustData(autoAdjustData *budgets.AutoAdjustData) []map[string]interface{} {
 	if autoAdjustData == nil {
 		return []map[string]interface{}{}
 	}
 
-	historicalOptions := map[string]interface{}{
-		"budget_adjustment_period":   aws.Int64Value(autoAdjustData.HistoricalOptions.BudgetAdjustmentPeriod),
-		"lookback_available_periods": aws.Int64Value(autoAdjustData.HistoricalOptions.LookBackAvailablePeriods),
-	}
 	attrs := map[string]interface{}{
 		"auto_adjust_type":      aws.StringValue(autoAdjustData.AutoAdjustType),
-		"historical_options":    historicalOptions,
-		"last_auto_adjust_time": aws.TimeValue(autoAdjustData.LastAutoAdjustTime),
+		"historical_options":    flattenHistoricalOptions(autoAdjustData.HistoricalOptions),
+		"last_auto_adjust_time": aws.TimeValue(autoAdjustData.LastAutoAdjustTime).Format(time.RFC3339),
 	}
 
 	return []map[string]interface{}{attrs}
@@ -618,8 +631,6 @@ func convertCostFiltersToStringMap(costFilters map[string][]*string) map[string]
 func expandBudgetUnmarshal(d *schema.ResourceData) (*budgets.Budget, error) {
 	budgetName := d.Get("name").(string)
 	budgetType := d.Get("budget_type").(string)
-	budgetLimitAmount := d.Get("limit_amount").(string)
-	budgetLimitUnit := d.Get("limit_unit").(string)
 	budgetTimeUnit := d.Get("time_unit").(string)
 	budgetCostFilters := make(map[string][]*string)
 
@@ -653,16 +664,22 @@ func expandBudgetUnmarshal(d *schema.ResourceData) (*budgets.Budget, error) {
 	budget := &budgets.Budget{
 		BudgetName: aws.String(budgetName),
 		BudgetType: aws.String(budgetType),
-		BudgetLimit: &budgets.Spend{
-			Amount: aws.String(budgetLimitAmount),
-			Unit:   aws.String(budgetLimitUnit),
-		},
 		TimePeriod: &budgets.TimePeriod{
 			End:   budgetTimePeriodEnd,
 			Start: budgetTimePeriodStart,
 		},
 		TimeUnit:    aws.String(budgetTimeUnit),
 		CostFilters: budgetCostFilters,
+	}
+
+	spendAmountValue, spendLimitOk := d.GetOk("limit_amount")
+	spendUnitValue, spendUnitOk := d.GetOk("limit_unit")
+
+	if spendUnitOk && spendLimitOk {
+		budget.BudgetLimit = &budgets.Spend{
+			Amount: aws.String(spendAmountValue.(string)),
+			Unit:   aws.String(spendUnitValue.(string)),
+		}
 	}
 
 	if v, ok := d.GetOk("auto_adjust_data"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -692,7 +709,6 @@ func expandAutoAdjustData(tfMap map[string]interface{}) *budgets.AutoAdjustData 
 
 	if v, ok := tfMap["historical_options"].([]interface{}); ok && len(v) > 0 {
 		apiObject.HistoricalOptions = expandHistoricalOptions(v)
-
 	}
 
 	return apiObject
@@ -707,12 +723,12 @@ func expandHistoricalOptions(l []interface{}) *budgets.HistoricalOptions {
 
 	apiObject := &budgets.HistoricalOptions{}
 
-	if v, ok := m["budget_adjustment_period"].(int64); ok {
-		apiObject.BudgetAdjustmentPeriod = aws.Int64(v)
+	if v, ok := m["budget_adjustment_period"].(int); ok && v != 0 {
+		apiObject.BudgetAdjustmentPeriod = aws.Int64(int64(v))
 	}
 
-	if v, ok := m["lookback_available_periods"].(int64); ok {
-		apiObject.LookBackAvailablePeriods = aws.Int64(v)
+	if v, ok := m["lookback_available_periods"].(int); ok && v != 0 {
+		apiObject.LookBackAvailablePeriods = aws.Int64(int64(v))
 	}
 
 	return apiObject
