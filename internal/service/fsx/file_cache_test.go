@@ -542,8 +542,8 @@ resource "aws_fsx_file_cache" "test" {
     }
   }
 
-  file_cache_type                           = "LUSTRE"
-  file_cache_type_version                   = "2.12"
+  file_cache_type         = "LUSTRE"
+  file_cache_type_version = "2.12"
 
   lustre_configuration {
     deployment_type = "CACHE_1"
