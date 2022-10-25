@@ -10,12 +10,6 @@ import (
 )
 
 const (
-	// Maximum amount of time to wait for a DnssecConfig to return ENABLED
-	DNSSECConfigCreatedTimeout = 10 * time.Minute
-
-	// Maximum amount of time to wait for a DnssecConfig to return DISABLED
-	DNSSECConfigDeletedTimeout = 10 * time.Minute
-
 	// Maximum amount of time to wait for a FirewallDomainList to be updated
 	FirewallDomainListUpdatedTimeout = 5 * time.Minute
 
@@ -31,42 +25,6 @@ const (
 	// Maximum amount of time to wait for a FirewallRuleGroupAssociation to be deleted
 	FirewallRuleGroupAssociationDeletedTimeout = 5 * time.Minute
 )
-
-// WaitDNSSECConfigCreated waits for a DnssecConfig to return ENABLED
-func WaitDNSSECConfigCreated(conn *route53resolver.Route53Resolver, dnssecConfigID string) (*route53resolver.ResolverDnssecConfig, error) {
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{route53resolver.ResolverDNSSECValidationStatusEnabling},
-		Target:  []string{route53resolver.ResolverDNSSECValidationStatusEnabled},
-		Refresh: StatusDNSSECConfig(conn, dnssecConfigID),
-		Timeout: DNSSECConfigCreatedTimeout,
-	}
-
-	outputRaw, err := stateConf.WaitForState()
-
-	if v, ok := outputRaw.(*route53resolver.ResolverDnssecConfig); ok {
-		return v, err
-	}
-
-	return nil, err
-}
-
-// WaitDNSSECConfigDisabled waits for a DnssecConfig to return DISABLED
-func WaitDNSSECConfigDisabled(conn *route53resolver.Route53Resolver, dnssecConfigID string) (*route53resolver.ResolverDnssecConfig, error) {
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{route53resolver.ResolverDNSSECValidationStatusDisabling},
-		Target:  []string{route53resolver.ResolverDNSSECValidationStatusDisabled},
-		Refresh: StatusDNSSECConfig(conn, dnssecConfigID),
-		Timeout: DNSSECConfigDeletedTimeout,
-	}
-
-	outputRaw, err := stateConf.WaitForState()
-
-	if v, ok := outputRaw.(*route53resolver.ResolverDnssecConfig); ok {
-		return v, err
-	}
-
-	return nil, err
-}
 
 // WaitFirewallDomainListUpdated waits for a FirewallDomainList to be updated
 func WaitFirewallDomainListUpdated(conn *route53resolver.Route53Resolver, firewallDomainListId string) (*route53resolver.FirewallDomainList, error) {

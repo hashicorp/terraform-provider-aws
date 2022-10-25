@@ -8,39 +8,12 @@ import (
 )
 
 const (
-	resolverQueryLogConfigStatusNotFound = "NotFound"
-	resolverQueryLogConfigStatusUnknown  = "Unknown"
-
-	dnssecConfigStatusNotFound = "NotFound"
-	dnssecConfigStatusUnknown  = "Unknown"
-
 	firewallDomainListStatusNotFound = "NotFound"
 	firewallDomainListStatusUnknown  = "Unknown"
 
 	resolverFirewallRuleGroupAssociationStatusNotFound = "NotFound"
 	resolverFirewallRuleGroupAssociationStatusUnknown  = "Unknown"
 )
-
-// StatusDNSSECConfig fetches the DnssecConfig and its Status
-func StatusDNSSECConfig(conn *route53resolver.Route53Resolver, dnssecConfigID string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		dnssecConfig, err := FindResolverDNSSECConfigByID(conn, dnssecConfigID)
-
-		if tfawserr.ErrCodeEquals(err, route53resolver.ErrCodeResourceNotFoundException) {
-			return nil, dnssecConfigStatusNotFound, nil
-		}
-
-		if err != nil {
-			return nil, dnssecConfigStatusUnknown, err
-		}
-
-		if dnssecConfig == nil {
-			return nil, dnssecConfigStatusNotFound, nil
-		}
-
-		return dnssecConfig, aws.StringValue(dnssecConfig.ValidationStatus), nil
-	}
-}
 
 // StatusFirewallDomainList fetches the FirewallDomainList and its Status
 func StatusFirewallDomainList(conn *route53resolver.Route53Resolver, firewallDomainListId string) resource.StateRefreshFunc {
