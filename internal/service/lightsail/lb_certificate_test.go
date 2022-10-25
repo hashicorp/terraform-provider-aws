@@ -209,9 +209,9 @@ func testAccCheckLoadBalancerCertificateExists(n string, certificate *lightsail.
 func testAccLoadBalancerCertificateConfigBase(lbName string) string {
 	return fmt.Sprintf(`
 resource "aws_lightsail_lb" "test" {
-	name              = %[1]q
-	health_check_path = "/"
-	instance_port     = "80"
+  name              = %[1]q
+  health_check_path = "/"
+  instance_port     = "80"
 }
 `, lbName)
 }
@@ -222,7 +222,7 @@ func testAccLoadBalancerCertificateConfig_basic(rName string, lbName string, dom
 		fmt.Sprintf(`
 resource "aws_lightsail_lb_certificate" "test" {
   name        = %[1]q
-  lb_name = aws_lightsail_lb.test.id
+  lb_name     = aws_lightsail_lb.test.id
   domain_name = %[2]q
 }
 `, rName, domainName))
@@ -234,7 +234,7 @@ func testAccLoadBalancerCertificateConfig_subjectAlternativeNames(rName string, 
 		fmt.Sprintf(`
 resource "aws_lightsail_lb_certificate" "test" {
   name                      = %[1]q
-  lb_name = aws_lightsail_lb.test.id
+  lb_name                   = aws_lightsail_lb.test.id
   domain_name               = %[2]q
   subject_alternative_names = [%[3]q]
 }

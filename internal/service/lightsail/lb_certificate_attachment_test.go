@@ -42,12 +42,12 @@ resource "aws_lightsail_lb" "test" {
   instance_port     = "80"
 }
 resource "aws_lightsail_lb_certificate" "test" {
-	name        = %[2]q
-	lb_name = aws_lightsail_lb.test.id
-	domain_name = %[3]q
-  }
+  name        = %[2]q
+  lb_name     = aws_lightsail_lb.test.id
+  domain_name = %[3]q
+}
 resource "aws_lightsail_lb_certificate_attachment" "test" {
-  lb_name       = aws_lightsail_lb.test.name
+  lb_name          = aws_lightsail_lb.test.name
   certificate_name = aws_lightsail_lb_certificate.test.name
 }
 `, lbName, cName, domainName)
