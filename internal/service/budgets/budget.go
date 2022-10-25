@@ -548,21 +548,6 @@ func resourceBudgetNotificationsUpdate(d *schema.ResourceData, meta interface{})
 	return nil
 }
 
-//func flattenCostCategoryRuleInheritedValue(apiObject *costexplorer.CostCategoryInheritedValueDimension) []map[string]interface{} {
-
-func flattenHistoricalOptions(historicalOptions *budgets.HistoricalOptions) []map[string]interface{} {
-	if historicalOptions == nil {
-		return []map[string]interface{}{}
-	}
-
-	attrs := map[string]interface{}{
-		"budget_adjustment_period":   aws.Int64Value(historicalOptions.BudgetAdjustmentPeriod),
-		"lookback_available_periods": aws.Int64Value(historicalOptions.LookBackAvailablePeriods),
-	}
-
-	return []map[string]interface{}{attrs}
-}
-
 func flattenAutoAdjustData(autoAdjustData *budgets.AutoAdjustData) []map[string]interface{} {
 	if autoAdjustData == nil {
 		return []map[string]interface{}{}
@@ -575,6 +560,19 @@ func flattenAutoAdjustData(autoAdjustData *budgets.AutoAdjustData) []map[string]
 
 	if *autoAdjustData.HistoricalOptions != (budgets.HistoricalOptions{}) {
 		attrs["historical_options"] = flattenHistoricalOptions(autoAdjustData.HistoricalOptions)
+	}
+
+	return []map[string]interface{}{attrs}
+}
+
+func flattenHistoricalOptions(historicalOptions *budgets.HistoricalOptions) []map[string]interface{} {
+	if historicalOptions == nil {
+		return []map[string]interface{}{}
+	}
+
+	attrs := map[string]interface{}{
+		"budget_adjustment_period":   aws.Int64Value(historicalOptions.BudgetAdjustmentPeriod),
+		"lookback_available_periods": aws.Int64Value(historicalOptions.LookBackAvailablePeriods),
 	}
 
 	return []map[string]interface{}{attrs}
@@ -675,18 +673,18 @@ func expandBudgetUnmarshal(d *schema.ResourceData) (*budgets.Budget, error) {
 		CostFilters: budgetCostFilters,
 	}
 
-	spendAmountValue, spendLimitOk := d.GetOk("limit_amount")
-	spendUnitValue, spendUnitOk := d.GetOk("limit_unit")
-
-	if spendUnitOk && spendLimitOk {
-		budget.BudgetLimit = &budgets.Spend{
-			Amount: aws.String(spendAmountValue.(string)),
-			Unit:   aws.String(spendUnitValue.(string)),
-		}
-	}
-
 	if v, ok := d.GetOk("auto_adjust_data"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		budget.AutoAdjustData = expandAutoAdjustData(v.([]interface{})[0].(map[string]interface{}))
+	} else {
+		spendAmountValue, spendLimitOk := d.GetOk("limit_amount")
+		spendUnitValue, spendUnitOk := d.GetOk("limit_unit")
+
+		if spendUnitOk && spendLimitOk {
+			budget.BudgetLimit = &budgets.Spend{
+				Amount: aws.String(spendAmountValue.(string)),
+				Unit:   aws.String(spendUnitValue.(string)),
+			}
+		}
 	}
 
 	if v, ok := d.GetOk("cost_types"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -702,13 +700,14 @@ func expandAutoAdjustData(tfMap map[string]interface{}) *budgets.AutoAdjustData 
 	}
 
 	apiObject := &budgets.AutoAdjustData{}
+
 	if v, ok := tfMap["auto_adjust_type"].(string); ok {
 		apiObject.AutoAdjustType = aws.String(v)
 	}
 
-	if v, ok := tfMap["last_auto_adjust_time"].(time.Time); ok {
-		apiObject.LastAutoAdjustTime = aws.Time(v)
-	}
+	//if v, ok := tfMap["last_auto_adjust_time"].(time.Time); ok {
+	//	apiObject.LastAutoAdjustTime = aws.Time(v)
+	//}
 
 	if v, ok := tfMap["historical_options"].([]interface{}); ok && len(v) > 0 {
 		apiObject.HistoricalOptions = expandHistoricalOptions(v)
@@ -730,9 +729,9 @@ func expandHistoricalOptions(l []interface{}) *budgets.HistoricalOptions {
 		apiObject.BudgetAdjustmentPeriod = aws.Int64(int64(v))
 	}
 
-	if v, ok := m["lookback_available_periods"].(int); ok && v != 0 {
-		apiObject.LookBackAvailablePeriods = aws.Int64(int64(v))
-	}
+	//if v, ok := m["lookback_available_periods"].(int); ok && v != 0 {
+	//	apiObject.LookBackAvailablePeriods = aws.Int64(int64(v))
+	//}
 
 	return apiObject
 }

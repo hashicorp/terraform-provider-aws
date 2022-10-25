@@ -181,7 +181,8 @@ func TestAccBudgetsBudget_autoAdjustDataForecast(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "cost_filter.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cost_filters.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "time_unit", "MONTHLY"),
+					acctest.CheckResourceAttrGreaterThanValue(resourceName, "limit_amount", "0"),
+					resource.TestCheckResourceAttr(resourceName, "limit_unit", "USD"),
 				),
 			},
 			{
@@ -211,16 +212,37 @@ func TestAccBudgetsBudget_autoAdjustDataHistorical(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "budget_type", "COST"),
 					resource.TestCheckResourceAttr(resourceName, "auto_adjust_data.0.auto_adjust_type", "HISTORICAL"),
 					resource.TestCheckResourceAttr(resourceName, "auto_adjust_data.0.historical_options.0.budget_adjustment_period", "2"),
+					resource.TestCheckResourceAttr(resourceName, "auto_adjust_data.0.historical_options.0.lookback_available_periods", "2"),
+					resource.TestCheckResourceAttrSet(resourceName, "auto_adjust_data.0.last_auto_adjust_time"),
 					resource.TestCheckResourceAttr(resourceName, "cost_filter.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cost_filters.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "time_unit", "MONTHLY"),
+					acctest.CheckResourceAttrGreaterThanValue(resourceName, "limit_amount", "0"),
+					resource.TestCheckResourceAttr(resourceName, "limit_unit", "USD"),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+			{
+				Config: testAccBudgetConfig_autoAdjustDataHistoricalUpdated(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccBudgetExists(resourceName, &budget),
+					resource.TestCheckResourceAttr(resourceName, "budget_type", "COST"),
+					resource.TestCheckResourceAttr(resourceName, "auto_adjust_data.0.auto_adjust_type", "HISTORICAL"),
+					resource.TestCheckResourceAttr(resourceName, "auto_adjust_data.0.historical_options.0.budget_adjustment_period", "5"),
+					resource.TestCheckResourceAttr(resourceName, "auto_adjust_data.0.historical_options.0.lookback_available_periods", "5"),
+					resource.TestCheckResourceAttrSet(resourceName, "auto_adjust_data.0.last_auto_adjust_time"),
+					resource.TestCheckResourceAttr(resourceName, "cost_filter.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "cost_filters.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "time_unit", "MONTHLY"),
+					acctest.CheckResourceAttrGreaterThanValue(resourceName, "limit_amount", "0"),
+					resource.TestCheckResourceAttr(resourceName, "limit_unit", "USD"),
+				),
 			},
 		},
 	})
@@ -544,9 +566,22 @@ resource "aws_budgets_budget" "test" {
 `, rName)
 }
 
-//historical_options {
-//  budget_adjustment_period = 2
-//}
+func testAccBudgetConfig_autoAdjustDataHistoricalUpdated(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_budgets_budget" "test" {
+  name         = %[1]q
+  budget_type  = "COST"
+  time_unit         = "MONTHLY"
+
+  auto_adjust_data {
+	auto_adjust_type = "HISTORICAL"
+	historical_options {
+		budget_adjustment_period = 5
+    }
+  }
+}
+`, rName)
+}
 
 func testAccBudgetConfig_costTypes(rName, startDate, endDate string) string {
 	return fmt.Sprintf(`
