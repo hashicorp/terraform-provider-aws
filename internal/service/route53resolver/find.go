@@ -45,22 +45,3 @@ func FindFirewallRuleByID(conn *route53resolver.Route53Resolver, firewallRuleId 
 
 	return rule, nil
 }
-
-// FindFirewallRuleGroupAssociationByID returns the DNS Firewall rule group association corresponding to the specified ID.
-// Returns nil if no DNS Firewall rule group association is found.
-func FindFirewallRuleGroupAssociationByID(conn *route53resolver.Route53Resolver, firewallRuleGroupAssociationId string) (*route53resolver.FirewallRuleGroupAssociation, error) {
-	input := &route53resolver.GetFirewallRuleGroupAssociationInput{
-		FirewallRuleGroupAssociationId: aws.String(firewallRuleGroupAssociationId),
-	}
-
-	output, err := conn.GetFirewallRuleGroupAssociation(input)
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil {
-		return nil, nil
-	}
-
-	return output.FirewallRuleGroupAssociation, nil
-}
