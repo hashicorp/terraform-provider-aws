@@ -570,8 +570,11 @@ func flattenAutoAdjustData(autoAdjustData *budgets.AutoAdjustData) []map[string]
 
 	attrs := map[string]interface{}{
 		"auto_adjust_type":      aws.StringValue(autoAdjustData.AutoAdjustType),
-		"historical_options":    flattenHistoricalOptions(autoAdjustData.HistoricalOptions),
 		"last_auto_adjust_time": aws.TimeValue(autoAdjustData.LastAutoAdjustTime).Format(time.RFC3339),
+	}
+
+	if *autoAdjustData.HistoricalOptions != (budgets.HistoricalOptions{}) {
+		attrs["historical_options"] = flattenHistoricalOptions(autoAdjustData.HistoricalOptions)
 	}
 
 	return []map[string]interface{}{attrs}

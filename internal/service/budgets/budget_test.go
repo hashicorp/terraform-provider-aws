@@ -178,7 +178,16 @@ func TestAccBudgetsBudget_autoAdjustData(t *testing.T) {
 					testAccBudgetExists(resourceName, &budget),
 					resource.TestCheckResourceAttr(resourceName, "budget_type", "COST"),
 					resource.TestCheckResourceAttr(resourceName, "auto_adjust_data.0.auto_adjust_type", "FORECAST"),
+					resource.TestCheckResourceAttr(resourceName, "cost_filter.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "cost_filters.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "time_unit", "MONTHLY"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
