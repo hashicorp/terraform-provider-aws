@@ -1,21 +1,13 @@
 package route53resolver
 
 import (
-	"fmt"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/route53resolver"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
 const (
-	// Maximum amount of time to wait for a FirewallDomainList to be updated
-	FirewallDomainListUpdatedTimeout = 5 * time.Minute
-
-	// Maximum amount of time to wait for a FirewallDomainList to be deleted
-	FirewallDomainListDeletedTimeout = 5 * time.Minute
-
 	// Maximum amount of time to wait for a FirewallRuleGroupAssociation to be created
 	FirewallRuleGroupAssociationCreatedTimeout = 5 * time.Minute
 
@@ -25,51 +17,6 @@ const (
 	// Maximum amount of time to wait for a FirewallRuleGroupAssociation to be deleted
 	FirewallRuleGroupAssociationDeletedTimeout = 5 * time.Minute
 )
-
-// WaitFirewallDomainListUpdated waits for a FirewallDomainList to be updated
-func WaitFirewallDomainListUpdated(conn *route53resolver.Route53Resolver, firewallDomainListId string) (*route53resolver.FirewallDomainList, error) {
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{
-			route53resolver.FirewallDomainListStatusUpdating,
-			route53resolver.FirewallDomainListStatusImporting,
-		},
-		Target: []string{
-			route53resolver.FirewallDomainListStatusComplete,
-			route53resolver.FirewallDomainListStatusCompleteImportFailed,
-		},
-		Refresh: StatusFirewallDomainList(conn, firewallDomainListId),
-		Timeout: FirewallDomainListUpdatedTimeout,
-	}
-
-	outputRaw, err := stateConf.WaitForState()
-
-	if v, ok := outputRaw.(*route53resolver.FirewallDomainList); ok {
-		if aws.StringValue(v.Status) != route53resolver.FirewallDomainListStatusComplete {
-			err = fmt.Errorf("error updating Route 53 Resolver DNS Firewall domain list (%s): %s", firewallDomainListId, aws.StringValue(v.StatusMessage))
-		}
-		return v, err
-	}
-
-	return nil, err
-}
-
-// WaitFirewallDomainListDeleted waits for a FirewallDomainList to be deleted
-func WaitFirewallDomainListDeleted(conn *route53resolver.Route53Resolver, firewallDomainListId string) (*route53resolver.FirewallDomainList, error) {
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{route53resolver.FirewallDomainListStatusDeleting},
-		Target:  []string{},
-		Refresh: StatusFirewallDomainList(conn, firewallDomainListId),
-		Timeout: FirewallDomainListDeletedTimeout,
-	}
-
-	outputRaw, err := stateConf.WaitForState()
-
-	if v, ok := outputRaw.(*route53resolver.FirewallDomainList); ok {
-		return v, err
-	}
-
-	return nil, err
-}
 
 // WaitFirewallRuleGroupAssociationCreated waits for a FirewallRuleGroupAssociation to return COMPLETE
 func WaitFirewallRuleGroupAssociationCreated(conn *route53resolver.Route53Resolver, firewallRuleGroupAssociationId string) (*route53resolver.FirewallRuleGroupAssociation, error) {

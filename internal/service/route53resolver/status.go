@@ -8,33 +8,9 @@ import (
 )
 
 const (
-	firewallDomainListStatusNotFound = "NotFound"
-	firewallDomainListStatusUnknown  = "Unknown"
-
 	resolverFirewallRuleGroupAssociationStatusNotFound = "NotFound"
 	resolverFirewallRuleGroupAssociationStatusUnknown  = "Unknown"
 )
-
-// StatusFirewallDomainList fetches the FirewallDomainList and its Status
-func StatusFirewallDomainList(conn *route53resolver.Route53Resolver, firewallDomainListId string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		firewallDomainList, err := FindFirewallDomainListByID(conn, firewallDomainListId)
-
-		if tfawserr.ErrCodeEquals(err, route53resolver.ErrCodeResourceNotFoundException) {
-			return nil, firewallDomainListStatusNotFound, nil
-		}
-
-		if err != nil {
-			return nil, firewallDomainListStatusUnknown, err
-		}
-
-		if firewallDomainList == nil {
-			return nil, firewallDomainListStatusNotFound, nil
-		}
-
-		return firewallDomainList, aws.StringValue(firewallDomainList.Status), nil
-	}
-}
 
 // StatusFirewallRuleGroupAssociation fetches the FirewallRuleGroupAssociation and its Status
 func StatusFirewallRuleGroupAssociation(conn *route53resolver.Route53Resolver, firewallRuleGroupAssociationId string) resource.StateRefreshFunc {
