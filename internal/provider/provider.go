@@ -2112,8 +2112,6 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_storagegateway_upload_buffer":           storagegateway.ResourceUploadBuffer(),
 			"aws_storagegateway_working_storage":         storagegateway.ResourceWorkingStorage(),
 
-			"aws_swf_domain": swf.ResourceDomain(),
-
 			"aws_synthetics_canary": synthetics.ResourceCanary(),
 
 			"aws_timestreamwrite_database": timestreamwrite.ResourceDatabase(),
@@ -2192,6 +2190,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 			meta.ServicePackageData,
 			simpledb.ServicePackageData,
 			sts.ServicePackageData,
+			swf.ServicePackageData,
 		},
 	}
 
