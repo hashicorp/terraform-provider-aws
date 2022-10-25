@@ -25,7 +25,7 @@ func TestAccFSxFileCache_serial(t *testing.T) {
 		"FSxFileCache": {
 			"basic":      TestAccFSxFileCache_basic,
 			"disappears": TestAccFSxFileCache_disappears,
-			"kms_key_id": TestAccFileCache_kmsKeyID,
+			"kms_key_id": testAccFileCache_kmsKeyID,
 			"copy_tags_to_data_repository_associations": testAccFileCache_copyTagsToDataRepositoryAssociations,
 			"data_repository_association":               testAccFileCache_dataRepositoryAssociation,
 			"security_group_id":                         testAccFileCache_securityGroupId,
@@ -68,7 +68,6 @@ func TestAccFSxFileCache_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFileCacheExists(resourceName, &filecache),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "fsx", regexp.MustCompile(`file-cache/fc-.+`)),
-					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_data_repository_associations", "false"),
 					resource.TestCheckResourceAttr(resourceName, "file_cache_type", "LUSTRE"),
 					resource.TestCheckResourceAttr(resourceName, "file_cache_type_version", "2.12"),
 					resource.TestMatchResourceAttr(resourceName, "id", regexp.MustCompile(`fc-.+`)),
@@ -78,7 +77,7 @@ func TestAccFSxFileCache_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "lustre_configuration.0.per_unit_storage_throughput", "1000"),
 					resource.TestCheckResourceAttr(resourceName, "lustre_configuration.0.weekly_maintenance_start_time", "2:05:00"),
 					resource.TestCheckResourceAttr(resourceName, "storage_capacity", "1200"),
-					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "1"),
 				),
 			},
 			{
@@ -121,44 +120,6 @@ func TestAccFSxFileCache_disappears(t *testing.T) {
 }
 
 // Per Attribute Acceptance Tests
-func TestAccFileCache_kmsKeyID(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	var filecache1, filecache2 fsx.DescribeFileCachesOutput
-	kmsKeyResourceName1 := "aws_kms_key.test1"
-	kmsKeyResourceName2 := "aws_kms_key.test2"
-	resourceName := "aws_fsx_file_cache.test"
-
-	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFileCacheDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccFileCacheConfig_kmsKeyID1(),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFileCacheExists(resourceName, &filecache1),
-					resource.TestCheckResourceAttrPair(resourceName, "kms_key_id", kmsKeyResourceName1, "arn"),
-				),
-			},
-			{
-				ResourceName: resourceName,
-				ImportState:  true,
-			},
-			{
-				Config: testAccFileCacheConfig_kmsKeyID2(),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFileCacheExists(resourceName, &filecache2),
-					testAccCheckFileCacheRecreated(&filecache1, &filecache2),
-					resource.TestCheckResourceAttrPair(resourceName, "kms_key_id", kmsKeyResourceName2, "arn"),
-				),
-			},
-		},
-	})
-}
 
 func testAccFileCache_copyTagsToDataRepositoryAssociations(t *testing.T) {
 	if testing.Short() {
@@ -215,17 +176,55 @@ func testAccFileCache_dataRepositoryAssociation(t *testing.T) {
 				Config: testAccFileCacheConfig_s3_association(bucketName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFileCacheExists(resourceName, &filecache1),
-					resource.TestCheckResourceAttr(resourceName, "data_repository_association.data_repository_path", bucketName),
-					resource.TestCheckResourceAttr(resourceName, "data_repository_association.file_cache_path", "/ns1"),
-					resource.TestCheckResourceAttr(resourceName, "data_repository_association_ids.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "data_repository_association_ids.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "data_repository_association.0.data_repository_path", bucketName),
+					resource.TestCheckResourceAttr(resourceName, "data_repository_association.0.file_cache_path", "/ns1"),
+					resource.TestCheckResourceAttr(resourceName, "data_repository_association_ids.#", "1"),
 				),
 			},
 			{
 				Config: testAccFileCacheConfig_multiple_associations(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFileCacheExists(resourceName, &filecache1),
-					resource.TestCheckResourceAttr(resourceName, "data_repository_association_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "data_repository_association_ids.#", "2"),
+				),
+			},
+		},
+	})
+}
+
+func testAccFileCache_kmsKeyID(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var filecache1, filecache2 fsx.DescribeFileCachesOutput
+	kmsKeyResourceName1 := "aws_kms_key.test1"
+	kmsKeyResourceName2 := "aws_kms_key.test2"
+	resourceName := "aws_fsx_file_cache.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFileCacheDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFileCacheConfig_kmsKeyID1(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFileCacheExists(resourceName, &filecache1),
+					resource.TestCheckResourceAttrPair(resourceName, "kms_key_id", kmsKeyResourceName1, "arn"),
+				),
+			},
+			{
+				ResourceName: resourceName,
+				ImportState:  true,
+			},
+			{
+				Config: testAccFileCacheConfig_kmsKeyID2(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFileCacheExists(resourceName, &filecache2),
+					testAccCheckFileCacheRecreated(&filecache1, &filecache2),
+					resource.TestCheckResourceAttrPair(resourceName, "kms_key_id", kmsKeyResourceName2, "arn"),
 				),
 			},
 		},
@@ -296,6 +295,8 @@ func testAccFileCache_tags(t *testing.T) {
 		},
 	})
 }
+
+// helper functions
 
 func testAccCheckFileCacheDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).FSxConn
@@ -421,7 +422,7 @@ func testAccFileCacheConfig_nfs_association() string {
 	return testAccFileCacheBaseConfig() + `
 resource "aws_fsx_file_cache" "test" {
   data_repository_association {
-    data_repository_path           = "nfs://filer.domain.com"
+    data_repository_path           = "nfs://filer.domain.com/"
     data_repository_subdirectories = ["test", "test2"]
     file_cache_path                = "/ns1"
 
@@ -494,7 +495,7 @@ resource "aws_fsx_file_cache" "test" {
   }
 
   data_repository_association {
-    data_repository_path           = "nfs://filer.domain.com"
+    data_repository_path           = "nfs://filer.domain.com/"
     data_repository_subdirectories = ["test", "test2"]
     file_cache_path                = "/ns1"
 
@@ -531,7 +532,7 @@ resource "aws_fsx_file_cache" "test" {
   copy_tags_to_data_repository_associations = true
 
   data_repository_association {
-    data_repository_path           = "nfs://filer.domain.com"
+    data_repository_path           = "nfs://filer.domain.com/"
     data_repository_subdirectories = ["test", "test2"]
     file_cache_path                = "/ns1"
 
