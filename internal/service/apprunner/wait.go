@@ -17,9 +17,6 @@ const (
 	CustomDomainAssociationCreateTimeout = 5 * time.Minute
 	CustomDomainAssociationDeleteTimeout = 5 * time.Minute
 
-	vpcConnectorCreateTimeout = 2 * time.Minute
-	vpcConnectorDeleteTimeout = 2 * time.Minute
-
 	ServiceCreateTimeout = 20 * time.Minute
 	ServiceDeleteTimeout = 20 * time.Minute
 	ServiceUpdateTimeout = 20 * time.Minute
@@ -151,32 +148,6 @@ func WaitServiceDeleted(ctx context.Context, conn *apprunner.AppRunner, serviceA
 		Target:  []string{apprunner.ServiceStatusDeleted},
 		Refresh: StatusService(ctx, conn, serviceArn),
 		Timeout: ServiceDeleteTimeout,
-	}
-
-	_, err := stateConf.WaitForState()
-
-	return err
-}
-
-func waitVPCConnectorActive(ctx context.Context, conn *apprunner.AppRunner, arn string) error {
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{},
-		Target:  []string{apprunner.VpcConnectorStatusActive},
-		Refresh: StatusVPCConnector(ctx, conn, arn),
-		Timeout: vpcConnectorCreateTimeout,
-	}
-
-	_, err := stateConf.WaitForState()
-
-	return err
-}
-
-func waitVPCConnectorInactive(ctx context.Context, conn *apprunner.AppRunner, arn string) error {
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{apprunner.VpcConnectorStatusActive},
-		Target:  []string{apprunner.VpcConnectorStatusInactive},
-		Refresh: StatusVPCConnector(ctx, conn, arn),
-		Timeout: vpcConnectorDeleteTimeout,
 	}
 
 	_, err := stateConf.WaitForState()

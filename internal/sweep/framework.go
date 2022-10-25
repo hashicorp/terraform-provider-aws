@@ -7,6 +7,7 @@ import (
 	"context"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	fwresource "github.com/hashicorp/terraform-plugin-framework/resource"
@@ -14,18 +15,19 @@ import (
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/experimental/intf"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 // Terraform Plugin Framework variants of sweeper helpers.
 
 type SweepFrameworkResource struct {
-	factory func(context.Context) (fwresource.ResourceWithConfigure, error)
+	factory func(context.Context) (intf.ResourceWithConfigureAndImportState, error)
 	id      string // TODO Currently we can only delete a resource if "id" is the only attribute used.
 	meta    interface{}
 }
 
-func NewSweepFrameworkResource(factory func(context.Context) (fwresource.ResourceWithConfigure, error), id string, meta interface{}) *SweepFrameworkResource {
+func NewSweepFrameworkResource(factory func(context.Context) (intf.ResourceWithConfigureAndImportState, error), id string, meta interface{}) *SweepFrameworkResource {
 	return &SweepFrameworkResource{
 		factory: factory,
 		id:      id,
@@ -33,8 +35,8 @@ func NewSweepFrameworkResource(factory func(context.Context) (fwresource.Resourc
 	}
 }
 
-func (sr *SweepFrameworkResource) Delete(ctx context.Context, rc RetryConfig) error {
-	err := tfresource.RetryConfigContext(ctx, rc.Delay, rc.DelayRand, rc.MinTimeout, rc.PollInterval, rc.Timeout, func() *resource.RetryError {
+func (sr *SweepFrameworkResource) Delete(ctx context.Context, timeout time.Duration, optFns ...tfresource.OptionsFunc) error {
+	err := tfresource.RetryContext(ctx, timeout, func() *resource.RetryError {
 		err := DeleteFrameworkResource(sr.factory, sr.id, sr.meta)
 
 		if err != nil {
@@ -47,7 +49,7 @@ func (sr *SweepFrameworkResource) Delete(ctx context.Context, rc RetryConfig) er
 		}
 
 		return nil
-	})
+	}, optFns...)
 
 	if tfresource.TimedOut(err) {
 		err = DeleteFrameworkResource(sr.factory, sr.id, sr.meta)
@@ -57,7 +59,7 @@ func (sr *SweepFrameworkResource) Delete(ctx context.Context, rc RetryConfig) er
 
 }
 
-func DeleteFrameworkResource(factory func(context.Context) (fwresource.ResourceWithConfigure, error), id string, meta interface{}) error {
+func DeleteFrameworkResource(factory func(context.Context) (intf.ResourceWithConfigureAndImportState, error), id string, meta interface{}) error {
 	ctx := context.Background()
 
 	resource, err := factory(ctx)

@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/medialive"
-	"github.com/aws/aws-sdk-go/aws"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -18,6 +17,53 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
+
+func TestParseMultiplexProgramIDUnitTest(t *testing.T) {
+	testCases := []struct {
+		TestName    string
+		Input       string
+		ProgramName string
+		MultiplexID string
+		Error       bool
+	}{
+		{
+			TestName:    "valid id",
+			Input:       "program_name/multiplex_id",
+			ProgramName: "program_name",
+			MultiplexID: "multiplex_id",
+			Error:       false,
+		},
+		{
+			TestName:    "invalid id",
+			Input:       "multiplex_id",
+			ProgramName: "",
+			MultiplexID: "",
+			Error:       true,
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.TestName, func(t *testing.T) {
+			pn, mid, err := tfmedialive.ParseMultiplexProgramID(testCase.Input)
+
+			if err != nil && !testCase.Error {
+				t.Errorf("got error (%s), expected no error", err)
+			}
+
+			if err == nil && testCase.Error {
+				t.Errorf("got (%s, %s) and no error, expected error", pn, mid)
+			}
+
+			if pn != testCase.ProgramName {
+				t.Errorf("got %s, expected %s", pn, testCase.ProgramName)
+			}
+
+			if pn != testCase.ProgramName {
+				t.Errorf("got %s, expected %s", mid, testCase.MultiplexID)
+			}
+		})
+	}
+}
 
 func testAccMultiplexProgram_basic(t *testing.T) {
 	if testing.Short() {
@@ -79,7 +125,7 @@ func testAccMultiplexProgram_disappears(t *testing.T) {
 				Config: testAccMultiplexProgramConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMultiplexProgramExists(resourceName, &multiplexprogram),
-					testAccCheckMultiplexProgramDisappears(resourceName),
+					acctest.CheckFrameworkResourceDisappears(acctest.Provider, tfmedialive.ResourceMultiplexProgram, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -87,38 +133,6 @@ func testAccMultiplexProgram_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckMultiplexProgramDisappears(resourceName string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
-
-		if !ok {
-			return fmt.Errorf("resource not found: %s", resourceName)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("resource ID missing: %s", resourceName)
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).MediaLiveConn
-		ctx := context.Background()
-		programName, multiplexId, err := tfmedialive.ParseMultiplexProgramID(rs.Primary.ID)
-
-		if err != nil {
-			return create.Error(names.MediaLive, create.ErrActionCheckingExistence, tfmedialive.ResNameMultiplexProgram, rs.Primary.ID, err)
-		}
-
-		_, err = conn.DeleteMultiplexProgram(ctx, &medialive.DeleteMultiplexProgramInput{
-			MultiplexId: aws.String(multiplexId),
-			ProgramName: aws.String(programName),
-		})
-
-		if err != nil {
-			return create.Error(names.MediaLive, "checking disappears", tfmedialive.ResNameMultiplexProgram, rs.Primary.ID, err)
-		}
-
-		return nil
-	}
-}
 func testAccCheckMultiplexProgramDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).MediaLiveConn
 	ctx := context.Background()

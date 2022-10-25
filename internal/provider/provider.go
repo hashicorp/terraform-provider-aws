@@ -521,10 +521,11 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_docdb_engine_version":        docdb.DataSourceEngineVersion(),
 			"aws_docdb_orderable_db_instance": docdb.DataSourceOrderableDBInstance(),
 
-			"aws_dx_connection": directconnect.DataSourceConnection(),
-			"aws_dx_gateway":    directconnect.DataSourceGateway(),
-			"aws_dx_location":   directconnect.DataSourceLocation(),
-			"aws_dx_locations":  directconnect.DataSourceLocations(),
+			"aws_dx_connection":           directconnect.DataSourceConnection(),
+			"aws_dx_gateway":              directconnect.DataSourceGateway(),
+			"aws_dx_location":             directconnect.DataSourceLocation(),
+			"aws_dx_locations":            directconnect.DataSourceLocations(),
+			"aws_dx_router_configuration": directconnect.DataSourceRouterConfiguration(),
 
 			"aws_directory_service_directory": ds.DataSourceDirectory(),
 
@@ -2055,8 +2056,10 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_ses_receipt_rule_set":             ses.ResourceReceiptRuleSet(),
 			"aws_ses_template":                     ses.ResourceTemplate(),
 
-			"aws_sesv2_configuration_set": sesv2.ResourceConfigurationSet(),
-			"aws_sesv2_dedicated_ip_pool": sesv2.ResourceDedicatedIPPool(),
+			"aws_sesv2_configuration_set":       sesv2.ResourceConfigurationSet(),
+			"aws_sesv2_dedicated_ip_assignment": sesv2.ResourceDedicatedIPAssignment(),
+			"aws_sesv2_dedicated_ip_pool":       sesv2.ResourceDedicatedIPPool(),
+			"aws_sesv2_email_identity":          sesv2.ResourceEmailIdentity(),
 
 			"aws_sfn_activity":      sfn.ResourceActivity(),
 			"aws_sfn_state_machine": sfn.ResourceStateMachine(),
@@ -2185,6 +2188,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 		// ServicePackageData is used before configuration to determine the provider's exported resources and data sources.
 		ServicePackages: []intf.ServicePackageData{
 			globalaccelerator.ServicePackageData,
+			medialive.ServicePackageData,
 			meta.ServicePackageData,
 			simpledb.ServicePackageData,
 			sts.ServicePackageData,
