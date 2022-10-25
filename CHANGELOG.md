@@ -23,6 +23,7 @@ BUG FIXES:
 
 * resource/aws_connect_contact_flow: Change `type` to ForceNew ([#27347](https://github.com/hashicorp/terraform-provider-aws/issues/27347))
 * resource/aws_ecs_service: Correctly handle unconfigured `task_definition`, making `EXTERNAL` deployments possible ([#27390](https://github.com/hashicorp/terraform-provider-aws/issues/27390))
+* resource/aws_lb_target_group: Fix import issues on `aws_lb_target_group` when specifying `ip_address_type` of `ipv4` ([#27464](https://github.com/hashicorp/terraform-provider-aws/issues/27464))
 * resource/aws_rds_proxy_endpoint: Respect configured provider `default_tags` value on resource Update ([#27367](https://github.com/hashicorp/terraform-provider-aws/issues/27367))
 
 ## 4.36.1 (October 21, 2022)
