@@ -92,7 +92,7 @@ func ResourceCapacityReservation() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"placement_group_arm": {
+			"placement_group_arn": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: verify.ValidARN,
