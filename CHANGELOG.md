@@ -2,6 +2,7 @@
 
 FEATURES:
 
+* **New Data Source:** `aws_dx_router_configuration` ([#27341](https://github.com/hashicorp/terraform-provider-aws/issues/27341))
 * **New Resource:** `aws_sesv2_dedicated_ip_assignment` ([#27361](https://github.com/hashicorp/terraform-provider-aws/issues/27361))
 * **New Resource:** `aws_sesv2_email_identity` ([#27260](https://github.com/hashicorp/terraform-provider-aws/issues/27260))
 
