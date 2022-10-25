@@ -5,25 +5,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/route53resolver"
 )
 
-// FindFirewallRuleGroupByID returns the DNS Firewall rule group corresponding to the specified ID.
-// Returns nil if no DNS Firewall rule group is found.
-func FindFirewallRuleGroupByID(conn *route53resolver.Route53Resolver, firewallGroupId string) (*route53resolver.FirewallRuleGroup, error) {
-	input := &route53resolver.GetFirewallRuleGroupInput{
-		FirewallRuleGroupId: aws.String(firewallGroupId),
-	}
-
-	output, err := conn.GetFirewallRuleGroup(input)
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil {
-		return nil, nil
-	}
-
-	return output.FirewallRuleGroup, nil
-}
-
 // FindFirewallRuleByID returns the DNS Firewall rule corresponding to the specified rule group and domain list IDs.
 // Returns nil if no DNS Firewall rule is found.
 func FindFirewallRuleByID(conn *route53resolver.Route53Resolver, firewallRuleId string) (*route53resolver.FirewallRule, error) {

@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -20,6 +21,7 @@ func ResourceFirewallRuleGroup() *schema.Resource {
 		Read:   resourceFirewallRuleGroupRead,
 		Update: resourceFirewallRuleGroupUpdate,
 		Delete: resourceFirewallRuleGroupDelete,
+
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -29,24 +31,20 @@ func ResourceFirewallRuleGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"name": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validResolverName,
 			},
-
 			"owner_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"share_status": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
 		},
@@ -86,20 +84,14 @@ func resourceFirewallRuleGroupRead(d *schema.ResourceData, meta interface{}) err
 
 	ruleGroup, err := FindFirewallRuleGroupByID(conn, d.Id())
 
-	if tfawserr.ErrCodeEquals(err, route53resolver.ErrCodeResourceNotFoundException) {
-		log.Printf("[WARN] Route53 Resolver DNS Firewall rule group (%s) not found, removing from state", d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] Route53 Resolver Firewall Rule Group (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error getting Route 53 Resolver DNS Firewall rule group (%s): %w", d.Id(), err)
-	}
-
-	if ruleGroup == nil {
-		log.Printf("[WARN] Route 53 Resolver DNS Firewall rule group (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
+		return fmt.Errorf("reading Route53 Resolver Firewall Rule Group (%s): %w", d.Id(), err)
 	}
 
 	arn := aws.StringValue(ruleGroup.Arn)
@@ -143,6 +135,7 @@ func resourceFirewallRuleGroupUpdate(d *schema.ResourceData, meta interface{}) e
 func resourceFirewallRuleGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).Route53ResolverConn
 
+	log.Printf("[DEBUG] Deleting Route53 Resolver Firewall Rule Group: %s", d.Id())
 	_, err := conn.DeleteFirewallRuleGroup(&route53resolver.DeleteFirewallRuleGroupInput{
 		FirewallRuleGroupId: aws.String(d.Id()),
 	})
@@ -152,8 +145,33 @@ func resourceFirewallRuleGroupDelete(d *schema.ResourceData, meta interface{}) e
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting Route 53 Resolver DNS Firewall rule group (%s): %w", d.Id(), err)
+		return fmt.Errorf("deleting Route53 Resolver Firewall Rule Group (%s): %w", d.Id(), err)
 	}
 
 	return nil
+}
+
+func FindFirewallRuleGroupByID(conn *route53resolver.Route53Resolver, id string) (*route53resolver.FirewallRuleGroup, error) {
+	input := &route53resolver.GetFirewallRuleGroupInput{
+		FirewallRuleGroupId: aws.String(id),
+	}
+
+	output, err := conn.GetFirewallRuleGroup(input)
+
+	if tfawserr.ErrCodeEquals(err, route53resolver.ErrCodeResourceNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.FirewallRuleGroup == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.FirewallRuleGroup, nil
 }
