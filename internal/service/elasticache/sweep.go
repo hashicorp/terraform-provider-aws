@@ -4,6 +4,7 @@
 package elasticache
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strings"
@@ -125,6 +126,7 @@ func sweepGlobalReplicationGroups(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 	conn := client.(*conns.AWSClient).ElastiCacheConn
+	ctx := context.Background()
 
 	var grgGroup multierror.Group
 
@@ -150,7 +152,7 @@ func sweepGlobalReplicationGroups(region string) error {
 				}
 
 				log.Printf("[INFO] Deleting ElastiCache Global Replication Group: %s", id)
-				err := DeleteGlobalReplicationGroup(conn, id, sweeperGlobalReplicationGroupDefaultUpdatedTimeout)
+				err := deleteGlobalReplicationGroup(ctx, conn, id, sweeperGlobalReplicationGroupDefaultUpdatedTimeout)
 				if err != nil {
 					sweeperErr := fmt.Errorf("error deleting ElastiCache Global Replication Group (%s): %w", id, err)
 					log.Printf("[ERROR] %s", sweeperErr)
