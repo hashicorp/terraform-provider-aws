@@ -3,6 +3,7 @@ package directconnect
 import (
 	"context"
 	"fmt"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/directconnect"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
