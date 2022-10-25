@@ -13723,6 +13723,15 @@ var awsPartition = partition{
 					Deprecated: boxedTrue,
 				},
 				endpointKey{
+					Region: "ap-south-2-fips",
+				}: endpoint{
+					Hostname: "kms-fips.ap-south-2.amazonaws.com",
+					CredentialScope: credentialScope{
+						Region: "ap-south-2",
+					},
+					Deprecated: boxedTrue,
+				},
+				endpointKey{
 					Region: "ap-southeast-1",
 				}: endpoint{},
 				endpointKey{
