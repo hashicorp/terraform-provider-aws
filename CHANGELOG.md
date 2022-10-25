@@ -10,6 +10,7 @@ ENHANCEMENTS:
 * data-source/aws_outposts_assets: Add `host_id_filter` and `status_id_filter` arguments ([#27303](https://github.com/hashicorp/terraform-provider-aws/issues/27303))
 * resource/aws_apprunner_vpc_connector: Add ability to update `tags` ([#27345](https://github.com/hashicorp/terraform-provider-aws/issues/27345))
 * resource/aws_datasync_task: Add `security_descriptor_copy_flags` to `options` configuration block ([#26992](https://github.com/hashicorp/terraform-provider-aws/issues/26992))
+* resource/aws_ec2_capacity_reservation: Add `placement_group_arn` argument ([#27458](https://github.com/hashicorp/terraform-provider-aws/issues/27458))
 * resource/aws_ec2_transit_gateway: Add support to modify `amazon_side_asn` argument ([#27306](https://github.com/hashicorp/terraform-provider-aws/issues/27306))
 * resource/aws_evidently_project: Support configurable timeouts for create, update, and delete ([#27336](https://github.com/hashicorp/terraform-provider-aws/issues/27336))
 * resource/aws_network_interface_attachment: Added import capabilities for the resource ([#27364](https://github.com/hashicorp/terraform-provider-aws/issues/27364))
