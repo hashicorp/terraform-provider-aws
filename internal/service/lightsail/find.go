@@ -221,3 +221,85 @@ func FindLoadBalancerAttachmentById(ctx context.Context, conn *lightsail.Lightsa
 
 	return entry, nil
 }
+
+func FindLoadBalancerCertificateById(ctx context.Context, conn *lightsail.Lightsail, id string) (*lightsail.LoadBalancerTlsCertificate, error) {
+	id_parts := strings.SplitN(id, ",", -1)
+	if len(id_parts) != 2 {
+		return nil, errors.New("invalid load balancer certificate id")
+	}
+
+	lbName := id_parts[0]
+	cName := id_parts[1]
+
+	in := &lightsail.GetLoadBalancerTlsCertificatesInput{LoadBalancerName: aws.String(lbName)}
+	out, err := conn.GetLoadBalancerTlsCertificatesWithContext(ctx, in)
+
+	if tfawserr.ErrCodeEquals(err, lightsail.ErrCodeNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: in,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	var entry *lightsail.LoadBalancerTlsCertificate
+	entryExists := false
+
+	for _, n := range out.TlsCertificates {
+		if cName == aws.StringValue(n.Name) {
+			entry = n
+			entryExists = true
+			break
+		}
+	}
+
+	if !entryExists {
+		return nil, tfresource.NewEmptyResultError(in)
+	}
+
+	return entry, nil
+}
+
+func FindLoadBalancerCertificateAttachmentById(ctx context.Context, conn *lightsail.Lightsail, id string) (*string, error) {
+	id_parts := strings.SplitN(id, ",", -1)
+	if len(id_parts) != 2 {
+		return nil, errors.New("invalid load balancer certificate attachment id")
+	}
+
+	lbName := id_parts[0]
+	cName := id_parts[1]
+
+	in := &lightsail.GetLoadBalancerTlsCertificatesInput{LoadBalancerName: aws.String(lbName)}
+	out, err := conn.GetLoadBalancerTlsCertificatesWithContext(ctx, in)
+
+	if tfawserr.ErrCodeEquals(err, lightsail.ErrCodeNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: in,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	var entry *string
+	entryExists := false
+
+	for _, n := range out.TlsCertificates {
+		if cName == aws.StringValue(n.Name) && true == aws.BoolValue(n.IsAttached) {
+			entry = n.Name
+			entryExists = true
+			break
+		}
+	}
+
+	if !entryExists {
+		return nil, tfresource.NewEmptyResultError(in)
+	}
+
+	return entry, nil
+}
