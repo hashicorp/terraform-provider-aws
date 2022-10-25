@@ -88,6 +88,43 @@ func TestExpandFrameworkStringValueSet(t *testing.T) {
 	}
 }
 
+func TestFlattenFrameworkStringList(t *testing.T) {
+	t.Parallel()
+
+	type testCase struct {
+		input    []*string
+		expected types.List
+	}
+	tests := map[string]testCase{
+		"two elements": {
+			input: []*string{aws.String("GET"), aws.String("HEAD")},
+			expected: types.List{ElemType: types.StringType, Elems: []attr.Value{
+				types.String{Value: "GET"},
+				types.String{Value: "HEAD"},
+			}},
+		},
+		"zero elements": {
+			input:    []*string{},
+			expected: types.List{ElemType: types.StringType, Elems: []attr.Value{}},
+		},
+		"nil array": {
+			input:    nil,
+			expected: types.List{ElemType: types.StringType, Elems: []attr.Value{}},
+		},
+	}
+
+	for name, test := range tests {
+		name, test := name, test
+		t.Run(name, func(t *testing.T) {
+			got := FlattenFrameworkStringList(context.Background(), test.input)
+
+			if diff := cmp.Diff(got, test.expected); diff != "" {
+				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+			}
+		})
+	}
+}
+
 func TestFlattenFrameworkStringValueList(t *testing.T) {
 	t.Parallel()
 
