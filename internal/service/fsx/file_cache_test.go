@@ -152,7 +152,7 @@ func testAccFileCache_dataRepositoryAssociation(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var filecache1 fsx.DescribeFileCachesOutput
+	var filecache1, filecache2, filecache3 fsx.DescribeFileCachesOutput
 	resourceName := "aws_fsx_file_cache.test"
 	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resource.Test(t, resource.TestCase{
@@ -175,8 +175,8 @@ func testAccFileCache_dataRepositoryAssociation(t *testing.T) {
 			{
 				Config: testAccFileCacheConfig_s3_association(bucketName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFileCacheExists(resourceName, &filecache1),
-					resource.TestCheckResourceAttr(resourceName, "data_repository_association.0.data_repository_path", bucketName),
+					testAccCheckFileCacheExists(resourceName, &filecache2),
+					resource.TestCheckResourceAttr(resourceName, "data_repository_association.0.data_repository_path", "s3://"+bucketName),
 					resource.TestCheckResourceAttr(resourceName, "data_repository_association.0.file_cache_path", "/ns1"),
 					resource.TestCheckResourceAttr(resourceName, "data_repository_association_ids.#", "1"),
 				),
@@ -184,7 +184,7 @@ func testAccFileCache_dataRepositoryAssociation(t *testing.T) {
 			{
 				Config: testAccFileCacheConfig_multiple_associations(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFileCacheExists(resourceName, &filecache1),
+					testAccCheckFileCacheExists(resourceName, &filecache3),
 					resource.TestCheckResourceAttr(resourceName, "data_repository_association_ids.#", "2"),
 				),
 			},
@@ -484,7 +484,7 @@ func testAccFileCacheConfig_multiple_associations() string {
 	return testAccFileCacheBaseConfig() + `
 resource "aws_fsx_file_cache" "test" {
   data_repository_association {
-    data_repository_path           = "nfs://filer2.domain.com"
+    data_repository_path           = "nfs://filer2.domain.com/"
     data_repository_subdirectories = ["test", "test2"]
     file_cache_path                = "/ns2"
 
