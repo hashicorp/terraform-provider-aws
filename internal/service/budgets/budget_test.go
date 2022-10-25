@@ -161,7 +161,7 @@ func TestAccBudgetsBudget_disappears(t *testing.T) {
 	})
 }
 
-func TestAccBudgetsBudget_autoAdjustData(t *testing.T) {
+func TestAccBudgetsBudget_autoAdjustDataForecast(t *testing.T) {
 	var budget budgets.Budget
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_budgets_budget.test"
@@ -173,11 +173,44 @@ func TestAccBudgetsBudget_autoAdjustData(t *testing.T) {
 		CheckDestroy:             testAccBudgetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBudgetConfig_autoAdjustData(rName),
+				Config: testAccBudgetConfig_autoAdjustDataForecast(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccBudgetExists(resourceName, &budget),
 					resource.TestCheckResourceAttr(resourceName, "budget_type", "COST"),
 					resource.TestCheckResourceAttr(resourceName, "auto_adjust_data.0.auto_adjust_type", "FORECAST"),
+					resource.TestCheckResourceAttr(resourceName, "cost_filter.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "cost_filters.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "time_unit", "MONTHLY"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccBudgetsBudget_autoAdjustDataHistorical(t *testing.T) {
+	var budget budgets.Budget
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_budgets_budget.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(budgets.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, budgets.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccBudgetDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBudgetConfig_autoAdjustDataHistorical(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccBudgetExists(resourceName, &budget),
+					resource.TestCheckResourceAttr(resourceName, "budget_type", "COST"),
+					resource.TestCheckResourceAttr(resourceName, "auto_adjust_data.0.auto_adjust_type", "HISTORICAL"),
+					resource.TestCheckResourceAttr(resourceName, "auto_adjust_data.0.historical_options.0.budget_adjustment_period", "2"),
 					resource.TestCheckResourceAttr(resourceName, "cost_filter.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cost_filters.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -480,7 +513,7 @@ resource "aws_budgets_budget" "test" {
 `, namePrefix)
 }
 
-func testAccBudgetConfig_autoAdjustData(rName string) string {
+func testAccBudgetConfig_autoAdjustDataForecast(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_budgets_budget" "test" {
   name         = %[1]q
@@ -489,6 +522,23 @@ resource "aws_budgets_budget" "test" {
 
   auto_adjust_data {
 	auto_adjust_type = "FORECAST"
+  }
+}
+`, rName)
+}
+
+func testAccBudgetConfig_autoAdjustDataHistorical(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_budgets_budget" "test" {
+  name         = %[1]q
+  budget_type  = "COST"
+  time_unit         = "MONTHLY"
+
+  auto_adjust_data {
+	auto_adjust_type = "HISTORICAL"
+	historical_options {
+		budget_adjustment_period = 2
+    }
   }
 }
 `, rName)
