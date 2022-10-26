@@ -16,8 +16,8 @@ import (
 func TestAccControlTowerControl_serial(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
 		"ControlTowerControl": {
-			"basic":      testAccControlTowerControl_basic,
-			"disappears": testAccControlTowerControl_disappears,
+			"basic":      testAccControl_basic,
+			"disappears": testAccControl_disappears,
 		},
 	}
 
@@ -34,7 +34,7 @@ func TestAccControlTowerControl_serial(t *testing.T) {
 	}
 }
 
-func testAccControlTowerControl_basic(t *testing.T) {
+func testAccControl_basic(t *testing.T) {
 	var control controltower.EnabledControlSummary
 	resourceName := "aws_controltower_control.test"
 	controlName := "AWS-GR_EC2_VOLUME_INUSE_CHECK"
@@ -61,7 +61,7 @@ func testAccControlTowerControl_basic(t *testing.T) {
 	})
 }
 
-func testAccControlTowerControl_disappears(t *testing.T) {
+func testAccControl_disappears(t *testing.T) {
 	var control controltower.EnabledControlSummary
 	resourceName := "aws_controltower_control.test"
 	controlName := "AWS-GR_EC2_VOLUME_INUSE_CHECK"
