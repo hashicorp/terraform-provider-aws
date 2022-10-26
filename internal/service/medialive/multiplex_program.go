@@ -275,7 +275,7 @@ func (m *multiplexProgram) Read(ctx context.Context, req resource.ReadRequest, r
 		return
 	}
 
-	out, err := FindMultipleProgramByID(ctx, conn, multiplexId, programName)
+	out, err := FindMultiplexProgramByID(ctx, conn, multiplexId, programName)
 
 	if tfresource.NotFound(err) {
 		diag.NewWarningDiagnostic(
@@ -370,7 +370,7 @@ func (m *multiplexProgram) Update(ctx context.Context, req resource.UpdateReques
 	}
 
 	//Need to find multiplex program because output from update does not provide state data
-	out, errUpdate := FindMultipleProgramByID(ctx, conn, multiplexId, programName)
+	out, errUpdate := FindMultiplexProgramByID(ctx, conn, multiplexId, programName)
 
 	if errUpdate != nil {
 		resp.Diagnostics.AddError(
@@ -460,7 +460,7 @@ func (m *multiplexProgram) ValidateConfig(ctx context.Context, req resource.Vali
 	}
 }
 
-func FindMultipleProgramByID(ctx context.Context, conn *medialive.Client, multiplexId, programName string) (*medialive.DescribeMultiplexProgramOutput, error) {
+func FindMultiplexProgramByID(ctx context.Context, conn *medialive.Client, multiplexId, programName string) (*medialive.DescribeMultiplexProgramOutput, error) {
 	in := &medialive.DescribeMultiplexProgramInput{
 		MultiplexId: aws.String(multiplexId),
 		ProgramName: aws.String(programName),
