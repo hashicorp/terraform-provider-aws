@@ -84,7 +84,7 @@ func resourceFirewallRuleCreate(ctx context.Context, d *schema.ResourceData, met
 
 	firewallDomainListID := d.Get("firewall_domain_list_id").(string)
 	firewallRuleGroupID := d.Get("firewall_rule_group_id").(string)
-	id := firewallRuleCreateResourceID(firewallRuleGroupID, firewallDomainListID)
+	id := FirewallRuleCreateResourceID(firewallRuleGroupID, firewallDomainListID)
 	name := d.Get("name").(string)
 	input := &route53resolver.CreateFirewallRuleInput{
 		Action:               aws.String(d.Get("action").(string)),
@@ -226,7 +226,7 @@ func resourceFirewallRuleDelete(ctx context.Context, d *schema.ResourceData, met
 
 const firewallRuleIDSeparator = ":"
 
-func firewallRuleCreateResourceID(firewallRuleGroupID, firewallDomainListID string) string {
+func FirewallRuleCreateResourceID(firewallRuleGroupID, firewallDomainListID string) string {
 	parts := []string{firewallRuleGroupID, firewallDomainListID}
 	id := strings.Join(parts, firewallRuleIDSeparator)
 

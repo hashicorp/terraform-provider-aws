@@ -116,7 +116,7 @@ func resourceRuleAssociationRead(d *schema.ResourceData, meta interface{}) error
 func resourceRuleAssociationDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).Route53ResolverConn
 
-	log.Printf("[DEBUG] Deleting Route53 Resolver rule association: %s", d.Id())
+	log.Printf("[DEBUG] Deleting Route53 Resolver Rule Association: %s", d.Id())
 	_, err := conn.DisassociateResolverRule(&route53resolver.DisassociateResolverRuleInput{
 		ResolverRuleId: aws.String(d.Get("resolver_rule_id").(string)),
 		VPCId:          aws.String(d.Get("vpc_id").(string)),

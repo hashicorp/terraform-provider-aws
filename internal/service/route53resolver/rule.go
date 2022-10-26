@@ -259,7 +259,7 @@ func resourceRuleUpdate(d *schema.ResourceData, meta interface{}) error {
 func resourceRuleDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).Route53ResolverConn
 
-	log.Printf("[DEBUG] Deleting Route53 Resolver rule: %s", d.Id())
+	log.Printf("[DEBUG] Deleting Route53 Resolver Rule: %s", d.Id())
 	_, err := conn.DeleteResolverRule(&route53resolver.DeleteResolverRuleInput{
 		ResolverRuleId: aws.String(d.Id()),
 	})
