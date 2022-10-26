@@ -133,7 +133,6 @@ func TestAccRoute53ResolverRuleDataSource_sharedByMe(t *testing.T) {
 					resource.TestCheckResourceAttrPair(ds1ResourceName, "tags.Key1", resourceName, "tags.Key1"),
 					resource.TestCheckResourceAttrPair(ds1ResourceName, "tags.Key2", resourceName, "tags.Key2"),
 				),
-				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -169,7 +168,6 @@ func TestAccRoute53ResolverRuleDataSource_sharedWithMe(t *testing.T) {
 					// Tags cannot be retrieved for rules shared with us.
 					resource.TestCheckResourceAttr(ds1ResourceName, "tags.%", "0"),
 				),
-				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -225,12 +223,12 @@ data "aws_route53_resolver_rule" "by_resolver_endpoint_id" {
 
 func testAccRuleDataSourceConfig_sharedByMe(rName, domainName string) string {
 	return acctest.ConfigCompose(testAccRuleConfig_resolverEndpointBase(rName), acctest.ConfigAlternateAccountProvider(), fmt.Sprintf(`
-resource "aws_route53_resolver_rule" "example" {
+resource "aws_route53_resolver_rule" "test" {
   domain_name = %[2]q
   rule_type   = "FORWARD"
   name        = %[1]q
 
-  resolver_endpoint_id = aws_route53_resolver_endpoint.bar.id
+  resolver_endpoint_id = aws_route53_resolver_endpoint.test[1].id
 
   target_ip {
     ip = "192.0.2.7"
@@ -269,12 +267,12 @@ data "aws_route53_resolver_rule" "by_resolver_endpoint_id" {
 
 func testAccRuleDataSourceConfig_sharedWithMe(rName, domainName string) string {
 	return acctest.ConfigCompose(testAccRuleConfig_resolverEndpointBase(rName), acctest.ConfigAlternateAccountProvider(), fmt.Sprintf(`
-resource "aws_route53_resolver_rule" "example" {
+resource "aws_route53_resolver_rule" "test" {
   domain_name = %[2]q
   rule_type   = "FORWARD"
   name        = %[1]q
 
-  resolver_endpoint_id = aws_route53_resolver_endpoint.bar.id
+  resolver_endpoint_id = aws_route53_resolver_endpoint.test[1].id
 
   target_ip {
     ip = "192.0.2.7"
