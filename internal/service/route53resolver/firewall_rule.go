@@ -1,6 +1,7 @@
 package route53resolver
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strings"
@@ -8,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/route53resolver"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -17,10 +19,10 @@ import (
 
 func ResourceFirewallRule() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceFirewallRuleCreate,
-		Read:   resourceFirewallRuleRead,
-		Update: resourceFirewallRuleUpdate,
-		Delete: resourceFirewallRuleDelete,
+		CreateWithoutTimeout: resourceFirewallRuleCreate,
+		ReadWithoutTimeout:   resourceFirewallRuleRead,
+		UpdateWithoutTimeout: resourceFirewallRuleUpdate,
+		DeleteWithoutTimeout: resourceFirewallRuleDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -77,7 +79,7 @@ func ResourceFirewallRule() *schema.Resource {
 	}
 }
 
-func resourceFirewallRuleCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceFirewallRuleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).Route53ResolverConn
 
 	firewallDomainListID := d.Get("firewall_domain_list_id").(string)
@@ -109,27 +111,27 @@ func resourceFirewallRuleCreate(d *schema.ResourceData, meta interface{}) error 
 		input.BlockResponse = aws.String(v.(string))
 	}
 
-	_, err := conn.CreateFirewallRule(input)
+	_, err := conn.CreateFirewallRuleWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("creating Route53 Resolver Firewall Rule (%s): %w", name, err)
+		return diag.Errorf("creating Route53 Resolver Firewall Rule (%s): %s", name, err)
 	}
 
 	d.SetId(id)
 
-	return resourceFirewallRuleRead(d, meta)
+	return resourceFirewallRuleRead(ctx, d, meta)
 }
 
-func resourceFirewallRuleRead(d *schema.ResourceData, meta interface{}) error {
+func resourceFirewallRuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).Route53ResolverConn
 
 	firewallRuleGroupID, firewallDomainListID, err := FirewallRuleParseResourceID(d.Id())
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
-	firewallRule, err := FindFirewallRuleByTwoPartKey(conn, firewallRuleGroupID, firewallDomainListID)
+	firewallRule, err := FindFirewallRuleByTwoPartKey(ctx, conn, firewallRuleGroupID, firewallDomainListID)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Route53 Resolver Firewall Rule (%s) not found, removing from state", d.Id())
@@ -138,7 +140,7 @@ func resourceFirewallRuleRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("reading Route53 Resolver Firewall Rule (%s): %w", d.Id(), err)
+		return diag.Errorf("reading Route53 Resolver Firewall Rule (%s): %s", d.Id(), err)
 	}
 
 	d.Set("action", firewallRule.Action)
@@ -154,13 +156,13 @@ func resourceFirewallRuleRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceFirewallRuleUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceFirewallRuleUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).Route53ResolverConn
 
 	firewallRuleGroupID, firewallDomainListID, err := FirewallRuleParseResourceID(d.Id())
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	input := &route53resolver.UpdateFirewallRuleInput{
@@ -187,26 +189,26 @@ func resourceFirewallRuleUpdate(d *schema.ResourceData, meta interface{}) error 
 		input.BlockResponse = aws.String(v.(string))
 	}
 
-	_, err = conn.UpdateFirewallRule(input)
+	_, err = conn.UpdateFirewallRuleWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("updating Route53 Resolver Firewall Rule (%s): %w", d.Id(), err)
+		return diag.Errorf("updating Route53 Resolver Firewall Rule (%s): %s", d.Id(), err)
 	}
 
-	return resourceFirewallRuleRead(d, meta)
+	return resourceFirewallRuleRead(ctx, d, meta)
 }
 
-func resourceFirewallRuleDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceFirewallRuleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).Route53ResolverConn
 
 	firewallRuleGroupID, firewallDomainListID, err := FirewallRuleParseResourceID(d.Id())
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	log.Printf("[DEBUG] Deleting Route53 Resolver Firewall Rule: %s", d.Id())
-	_, err = conn.DeleteFirewallRule(&route53resolver.DeleteFirewallRuleInput{
+	_, err = conn.DeleteFirewallRuleWithContext(ctx, &route53resolver.DeleteFirewallRuleInput{
 		FirewallDomainListId: aws.String(firewallDomainListID),
 		FirewallRuleGroupId:  aws.String(firewallRuleGroupID),
 	})
@@ -216,7 +218,7 @@ func resourceFirewallRuleDelete(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	if err != nil {
-		return fmt.Errorf("deleting Route53 Resolver Firewall Rule (%s): %w", d.Id(), err)
+		return diag.Errorf("deleting Route53 Resolver Firewall Rule (%s): %s", d.Id(), err)
 	}
 
 	return nil
@@ -241,13 +243,13 @@ func FirewallRuleParseResourceID(id string) (string, string, error) {
 	return parts[0], parts[1], nil
 }
 
-func FindFirewallRuleByTwoPartKey(conn *route53resolver.Route53Resolver, firewallRuleGroupID, firewallDomainListID string) (*route53resolver.FirewallRule, error) {
+func FindFirewallRuleByTwoPartKey(ctx context.Context, conn *route53resolver.Route53Resolver, firewallRuleGroupID, firewallDomainListID string) (*route53resolver.FirewallRule, error) {
 	input := &route53resolver.ListFirewallRulesInput{
 		FirewallRuleGroupId: aws.String(firewallRuleGroupID),
 	}
 	var output *route53resolver.FirewallRule
 
-	err := conn.ListFirewallRulesPages(input, func(page *route53resolver.ListFirewallRulesOutput, lastPage bool) bool {
+	err := conn.ListFirewallRulesPagesWithContext(ctx, input, func(page *route53resolver.ListFirewallRulesOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
