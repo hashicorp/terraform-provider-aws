@@ -127,6 +127,34 @@ func TestAccBatchComputeEnvironment_namePrefix(t *testing.T) {
 	})
 }
 
+func TestAccBatchComputeEnvironment_eksConfiguration(t *testing.T) {
+	var ce batch.ComputeEnvironmentDetail
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_batch_compute_environment.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, batch.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckComputeEnvironmentDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccComputeEnvironmentConfig_eksConfiguration(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckComputeEnvironmentExists(resourceName, &ce),
+					acctest.CheckResourceAttrNameFromPrefix(resourceName, "compute_environment_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "compute_environment_name_prefix", rName),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccBatchComputeEnvironment_createEC2(t *testing.T) {
 	var ce batch.ComputeEnvironmentDetail
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1569,6 +1597,20 @@ resource "aws_batch_compute_environment" "test" {
 }
 
 func testAccComputeEnvironmentConfig_namePrefix(rName string) string {
+	return acctest.ConfigCompose(
+		testAccComputeEnvironmentBaseConfig(rName),
+		fmt.Sprintf(`
+resource "aws_batch_compute_environment" "test" {
+  compute_environment_name_prefix = %[1]q
+
+  service_role = aws_iam_role.batch_service.arn
+  type         = "UNMANAGED"
+  depends_on   = [aws_iam_role_policy_attachment.batch_service]
+}
+`, rName))
+}
+
+func testAccComputeEnvironmentConfig_eksConfiguration(rName string) string {
 	return acctest.ConfigCompose(
 		testAccComputeEnvironmentBaseConfig(rName),
 		fmt.Sprintf(`
