@@ -27,7 +27,9 @@ func TestAccFSxFileCache_serial(t *testing.T) {
 			"disappears": TestAccFSxFileCache_disappears,
 			"kms_key_id": testAccFileCache_kmsKeyID,
 			"copy_tags_to_data_repository_associations": testAccFileCache_copyTagsToDataRepositoryAssociations,
-			"data_repository_association":               testAccFileCache_dataRepositoryAssociation,
+			"data_repository_association_multiple":      TestAccFileCache_dataRepositoryAssociation_multiple,
+			"data_repository_association_nfs":           testAccFileCache_dataRepositoryAssociation_nfs,
+			"data_repository_association_s3":            testAccFileCache_dataRepositoryAssociation_s3,
 			"security_group_id":                         testAccFileCache_securityGroupId,
 			"tags":                                      testAccFileCache_tags,
 		},
@@ -84,7 +86,7 @@ func TestAccFSxFileCache_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately", "user"},
+				ImportStateVerifyIgnore: []string{"copy_tags_to_data_repository_associations"},
 			},
 		},
 	})
@@ -143,18 +145,55 @@ func testAccFileCache_copyTagsToDataRepositoryAssociations(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "data_repository_association.0.tags.%", "2"),
 				),
 			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"copy_tags_to_data_repository_associations"},
+			},
 		},
 	})
 }
 
-func testAccFileCache_dataRepositoryAssociation(t *testing.T) {
+func TestAccFileCache_dataRepositoryAssociation_multiple(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var filecache1, filecache2, filecache3 fsx.DescribeFileCachesOutput
+	var filecache fsx.DescribeFileCachesOutput
 	resourceName := "aws_fsx_file_cache.test"
-	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFileCacheDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFileCacheConfig_multiple_associations(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFileCacheExists(resourceName, &filecache),
+					resource.TestCheckResourceAttr(resourceName, "data_repository_association_ids.#", "2"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"copy_tags_to_data_repository_associations"},
+			},
+		},
+	})
+}
+
+func testAccFileCache_dataRepositoryAssociation_nfs(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var filecache fsx.DescribeFileCachesOutput
+	resourceName := "aws_fsx_file_cache.test"
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
@@ -164,7 +203,7 @@ func testAccFileCache_dataRepositoryAssociation(t *testing.T) {
 			{
 				Config: testAccFileCacheConfig_nfs_association(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFileCacheExists(resourceName, &filecache1),
+					testAccCheckFileCacheExists(resourceName, &filecache),
 					resource.TestCheckResourceAttr(resourceName, "data_repository_association.0.data_repository_path", "nfs://filer.domain.com/"),
 					resource.TestCheckResourceAttr(resourceName, "data_repository_association.0.file_cache_path", "/ns1"),
 					resource.TestCheckResourceAttr(resourceName, "data_repository_association.0.nfs.0.dns_ips.0", "192.168.0.1"),
@@ -173,20 +212,44 @@ func testAccFileCache_dataRepositoryAssociation(t *testing.T) {
 				),
 			},
 			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"copy_tags_to_data_repository_associations"},
+			},
+		},
+	})
+}
+
+func testAccFileCache_dataRepositoryAssociation_s3(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var filecache fsx.DescribeFileCachesOutput
+	resourceName := "aws_fsx_file_cache.test"
+	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFileCacheDestroy,
+		Steps: []resource.TestStep{
+			{
 				Config: testAccFileCacheConfig_s3_association(bucketName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFileCacheExists(resourceName, &filecache2),
+					testAccCheckFileCacheExists(resourceName, &filecache),
 					resource.TestCheckResourceAttr(resourceName, "data_repository_association.0.data_repository_path", "s3://"+bucketName),
 					resource.TestCheckResourceAttr(resourceName, "data_repository_association.0.file_cache_path", "/ns1"),
 					resource.TestCheckResourceAttr(resourceName, "data_repository_association_ids.#", "1"),
 				),
 			},
 			{
-				Config: testAccFileCacheConfig_multiple_associations(),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFileCacheExists(resourceName, &filecache3),
-					resource.TestCheckResourceAttr(resourceName, "data_repository_association_ids.#", "2"),
-				),
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"copy_tags_to_data_repository_associations"},
 			},
 		},
 	})
@@ -216,8 +279,10 @@ func testAccFileCache_kmsKeyID(t *testing.T) {
 				),
 			},
 			{
-				ResourceName: resourceName,
-				ImportState:  true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"copy_tags_to_data_repository_associations"},
 			},
 			{
 				Config: testAccFileCacheConfig_kmsKeyID2(),
@@ -226,6 +291,12 @@ func testAccFileCache_kmsKeyID(t *testing.T) {
 					testAccCheckFileCacheRecreated(&filecache1, &filecache2),
 					resource.TestCheckResourceAttrPair(resourceName, "kms_key_id", kmsKeyResourceName2, "arn"),
 				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"copy_tags_to_data_repository_associations"},
 			},
 		},
 	})
@@ -251,6 +322,12 @@ func testAccFileCache_securityGroupId(t *testing.T) {
 					testAccCheckFileCacheExists(resourceName, &filecache1),
 					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "1"),
 				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"copy_tags_to_data_repository_associations", "security_group_ids"},
 			},
 		},
 	})
@@ -279,8 +356,10 @@ func testAccFileCache_tags(t *testing.T) {
 				),
 			},
 			{
-				ResourceName: resourceName,
-				ImportState:  true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"copy_tags_to_data_repository_associations"},
 			},
 			{
 				Config: testAccFileCacheConfig_tags2("key1", "value1updated", "key2", "value2"),
@@ -291,6 +370,12 @@ func testAccFileCache_tags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"copy_tags_to_data_repository_associations"},
 			},
 		},
 	})
@@ -423,7 +508,7 @@ func testAccFileCacheConfig_nfs_association() string {
 resource "aws_fsx_file_cache" "test" {
   data_repository_association {
     data_repository_path           = "nfs://filer.domain.com/"
-    data_repository_subdirectories = ["test", "test2"]
+    data_repository_subdirectories = ["test5", "test3", "test2", "test4", "test1"]
     file_cache_path                = "/ns1"
 
     nfs {
@@ -485,7 +570,7 @@ func testAccFileCacheConfig_multiple_associations() string {
 resource "aws_fsx_file_cache" "test" {
   data_repository_association {
     data_repository_path           = "nfs://filer2.domain.com/"
-    data_repository_subdirectories = ["test", "test2"]
+    data_repository_subdirectories = ["test5", "test3", "test2", "test4", "test1"]
     file_cache_path                = "/ns2"
 
     nfs {
@@ -496,7 +581,7 @@ resource "aws_fsx_file_cache" "test" {
 
   data_repository_association {
     data_repository_path           = "nfs://filer.domain.com/"
-    data_repository_subdirectories = ["test", "test2"]
+    data_repository_subdirectories = ["test5", "test3", "test2", "test4", "test1"]
     file_cache_path                = "/ns1"
 
     nfs {
