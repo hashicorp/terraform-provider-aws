@@ -103,6 +103,50 @@ func testAccMultiplexProgram_basic(t *testing.T) {
 	})
 }
 
+func testAccMultiplexProgram_update(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var multiplexprogram medialive.DescribeMultiplexProgramOutput
+	rName := fmt.Sprintf("tf_acc_%s", sdkacctest.RandString(8))
+	resourceName := "aws_medialive_multiplex_program.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(names.MediaLiveEndpointID, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMultiplexProgramDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccMultiplexProgramConfig_update(rName, 100000),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMultiplexProgramExists(resourceName, &multiplexprogram),
+					resource.TestCheckResourceAttr(resourceName, "program_name", rName),
+					resource.TestCheckResourceAttrSet(resourceName, "multiplex_id"),
+					resource.TestCheckResourceAttr(resourceName, "multiplex_program_settings.0.program_number", "1"),
+					resource.TestCheckResourceAttr(resourceName, "multiplex_program_settings.0.preferred_channel_pipeline", "CURRENTLY_ACTIVE"),
+					resource.TestCheckResourceAttr(resourceName, "multiplex_program_settings.0.video_settings.0.statmux_settings.0.minimum_bitrate", "100000"),
+				),
+			},
+			{
+				Config: testAccMultiplexProgramConfig_update(rName, 100001),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMultiplexProgramExists(resourceName, &multiplexprogram),
+					resource.TestCheckResourceAttr(resourceName, "program_name", rName),
+					resource.TestCheckResourceAttrSet(resourceName, "multiplex_id"),
+					resource.TestCheckResourceAttr(resourceName, "multiplex_program_settings.0.program_number", "1"),
+					resource.TestCheckResourceAttr(resourceName, "multiplex_program_settings.0.preferred_channel_pipeline", "CURRENTLY_ACTIVE"),
+					resource.TestCheckResourceAttr(resourceName, "multiplex_program_settings.0.video_settings.0.statmux_settings.0.minimum_bitrate", "100001"),
+				),
+			},
+		},
+	})
+}
+
 func testAccMultiplexProgram_disappears(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -210,6 +254,7 @@ resource "aws_medialive_multiplex" "test" {
 }
 `, rName))
 }
+
 func testAccMultiplexProgramConfig_basic(rName string) string {
 	return acctest.ConfigCompose(
 		testAccMultiplexProgramBaseConfig(rName),
@@ -228,4 +273,26 @@ resource "aws_medialive_multiplex_program" "test" {
   }
 }
 `, rName))
+}
+
+func testAccMultiplexProgramConfig_update(rName string, minBitrate int) string {
+	return acctest.ConfigCompose(
+		testAccMultiplexProgramBaseConfig(rName),
+		fmt.Sprintf(`
+resource "aws_medialive_multiplex_program" "test" {
+  program_name = %[1]q
+  multiplex_id = aws_medialive_multiplex.test.id
+
+  multiplex_program_settings {
+    program_number             = 1
+    preferred_channel_pipeline = "CURRENTLY_ACTIVE"
+
+    video_settings {
+      statmux_settings {
+        minimum_bitrate = %[2]d
+      }
+    }
+  }
+}
+`, rName, minBitrate))
 }

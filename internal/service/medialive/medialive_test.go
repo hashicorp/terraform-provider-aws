@@ -15,6 +15,7 @@ func TestAccMediaLive_serial(t *testing.T) {
 		},
 		"MultiplexProgram": {
 			"basic":      testAccMultiplexProgram_basic,
+			"update":     testAccMultiplex_update,
 			"disappears": testAccMultiplexProgram_disappears,
 		},
 	}
