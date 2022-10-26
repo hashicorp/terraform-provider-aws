@@ -110,7 +110,6 @@ resource "aws_config_config_rule" "example" {
 }
 ```
 
-
 ### Custom Policies
 
 ```terraform

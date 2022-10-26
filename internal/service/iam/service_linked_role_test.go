@@ -319,7 +319,6 @@ func testAccCheckServiceLinkedRoleDestroy(s *terraform.State) error {
 	}
 
 	return nil
-
 }
 
 func testAccCheckServiceLinkedRoleExists(n string) resource.TestCheckFunc {

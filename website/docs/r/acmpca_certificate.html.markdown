@@ -73,7 +73,6 @@ The following arguments are supported:
 * `type` - (Required) Determines how `value` is interpreted. Valid values: `DAYS`, `MONTHS`, `YEARS`, `ABSOLUTE`, `END_DATE`.
 * `value` - (Required) If `type` is `DAYS`, `MONTHS`, or `YEARS`, the relative time until the certificate expires. If `type` is `ABSOLUTE`, the date in seconds since the Unix epoch. If `type` is `END_DATE`, the  date in RFC 3339 format.
 
-
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
@@ -84,4 +83,8 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_acmpca_certificate` can not be imported at this time.
+ACM PCA Certificates can be imported using their ARN, e.g.,
+
+```
+$ terraform import aws_acmpca_certificate.cert arn:aws:acm-pca:eu-west-1:675225743824:certificate-authority/08319ede-83g9-1400-8f21-c7d12b2b6edb/certificate/a4e9c2aa4bcfab625g1b9136464cd3a
+```

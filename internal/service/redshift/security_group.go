@@ -148,7 +148,6 @@ func resourceSecurityGroupUpdate(d *schema.ResourceData, meta interface{}) error
 				}
 			}
 		}
-
 	}
 	return resourceSecurityGroupRead(d, meta)
 }

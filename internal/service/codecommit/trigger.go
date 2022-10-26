@@ -113,7 +113,6 @@ func resourceTriggerRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceTriggerDelete(d *schema.ResourceData, meta interface{}) error {
-
 	conn := meta.(*conns.AWSClient).CodeCommitConn
 
 	log.Printf("[DEBUG] Deleting Trigger: %q", d.Id())

@@ -45,7 +45,6 @@ resource "aws_worklink_fleet" "test" {
 }
 ```
 
-
 ## Argument Reference
 
 The following arguments are supported:

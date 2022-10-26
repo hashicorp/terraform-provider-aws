@@ -570,6 +570,22 @@ type TestStep struct {
 	// at the end of the test step that is verifying import behavior.
 	ImportStatePersist bool
 
+	//---------------------------------------------------------------
+	// RefreshState testing
+	//---------------------------------------------------------------
+
+	// RefreshState, if true, will test the functionality of `terraform
+	// refresh` by refreshing the state, running any checks against the
+	// refreshed state, and running a plan to verify against unexpected plan
+	// differences.
+	//
+	// If the refresh is expected to result in a non-empty plan
+	// ExpectNonEmptyPlan should be set to true in the same TestStep.
+	//
+	// RefreshState cannot be the first TestStep and, it is mutually exclusive
+	// with ImportState.
+	RefreshState bool
+
 	// ProviderFactories can be specified for the providers that are valid for
 	// this TestStep. When providers are specified at the TestStep level, all
 	// TestStep within a TestCase must declare providers.

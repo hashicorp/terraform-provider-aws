@@ -31,7 +31,6 @@ point in time. See the [AWS Spot Instance
 documentation](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-spot-instances.html)
 for more information.
 
-
 ## Example Usage
 
 ```terraform

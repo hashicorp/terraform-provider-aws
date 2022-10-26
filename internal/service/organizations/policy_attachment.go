@@ -9,7 +9,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/organizations"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -20,6 +19,7 @@ func ResourcePolicyAttachment() *schema.Resource {
 		Create: resourcePolicyAttachmentCreate,
 		Read:   resourcePolicyAttachmentRead,
 		Delete: resourcePolicyAttachmentDelete,
+
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -44,37 +44,21 @@ func resourcePolicyAttachmentCreate(d *schema.ResourceData, meta interface{}) er
 
 	policyID := d.Get("policy_id").(string)
 	targetID := d.Get("target_id").(string)
-
+	id := fmt.Sprintf("%s:%s", targetID, policyID)
 	input := &organizations.AttachPolicyInput{
 		PolicyId: aws.String(policyID),
 		TargetId: aws.String(targetID),
 	}
 
-	log.Printf("[DEBUG] Creating Organizations Policy Attachment: %s", input)
-
-	err := resource.Retry(4*time.Minute, func() *resource.RetryError {
-		_, err := conn.AttachPolicy(input)
-
-		if err != nil {
-			if tfawserr.ErrCodeEquals(err, organizations.ErrCodeFinalizingOrganizationException) {
-				log.Printf("[DEBUG] Trying to create policy attachment again: %q", err.Error())
-				return resource.RetryableError(err)
-			}
-
-			return resource.NonRetryableError(err)
-		}
-
-		return nil
-	})
-	if tfresource.TimedOut(err) {
-		_, err = conn.AttachPolicy(input)
-	}
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(4*time.Minute, func() (interface{}, error) {
+		return conn.AttachPolicy(input)
+	}, organizations.ErrCodeFinalizingOrganizationException)
 
 	if err != nil {
-		return fmt.Errorf("error creating Organizations Policy Attachment: %s", err)
+		return fmt.Errorf("creating Organizations Policy Attachment (%s): %w", id, err)
 	}
 
-	d.SetId(fmt.Sprintf("%s:%s", targetID, policyID))
+	d.SetId(id)
 
 	return resourcePolicyAttachmentRead(d, meta)
 }
@@ -87,40 +71,21 @@ func resourcePolicyAttachmentRead(d *schema.ResourceData, meta interface{}) erro
 		return err
 	}
 
-	input := &organizations.ListTargetsForPolicyInput{
-		PolicyId: aws.String(policyID),
-	}
+	_, err = FindPolicyAttachmentByTwoPartKey(conn, targetID, policyID)
 
-	log.Printf("[DEBUG] Listing Organizations Policies for Target: %s", input)
-	var output *organizations.PolicyTargetSummary
-
-	err = conn.ListTargetsForPolicyPages(input, func(page *organizations.ListTargetsForPolicyOutput, lastPage bool) bool {
-		for _, policySummary := range page.Targets {
-			if aws.StringValue(policySummary.TargetId) == targetID {
-				output = policySummary
-				return true
-			}
-		}
-		return !lastPage
-	})
-
-	if err != nil {
-		if tfawserr.ErrCodeEquals(err, organizations.ErrCodeTargetNotFoundException) {
-			log.Printf("[WARN] Target does not exist, removing from state: %s", d.Id())
-			d.SetId("")
-			return nil
-		}
-		return err
-	}
-
-	if output == nil {
-		log.Printf("[WARN] Attachment does not exist, removing from state: %s", d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] Organizations Policy Attachment %s not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
+	if err != nil {
+		return fmt.Errorf("reading Organizations Policy Attachment (%s): %w", d.Id(), err)
+	}
+
 	d.Set("policy_id", policyID)
 	d.Set("target_id", targetID)
+
 	return nil
 }
 
@@ -132,22 +97,20 @@ func resourcePolicyAttachmentDelete(d *schema.ResourceData, meta interface{}) er
 		return err
 	}
 
-	input := &organizations.DetachPolicyInput{
+	log.Printf("[DEBUG] Deleting Organizations Policy Attachment: %s", d.Id())
+	_, err = conn.DetachPolicy(&organizations.DetachPolicyInput{
 		PolicyId: aws.String(policyID),
 		TargetId: aws.String(targetID),
+	})
+
+	if tfawserr.ErrCodeEquals(err, organizations.ErrCodeTargetNotFoundException, organizations.ErrCodePolicyNotFoundException) {
+		return nil
 	}
 
-	log.Printf("[DEBUG] Detaching Organizations Policy %q from %q", policyID, targetID)
-	_, err = conn.DetachPolicy(input)
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, organizations.ErrCodePolicyNotFoundException) {
-			return nil
-		}
-		if tfawserr.ErrCodeEquals(err, organizations.ErrCodeTargetNotFoundException) {
-			return nil
-		}
-		return err
+		return fmt.Errorf("deleting Organizations Policy Attachment (%s): %w", d.Id(), err)
 	}
+
 	return nil
 }
 

@@ -51,6 +51,7 @@ func ResourceParameter() *schema.Resource {
 				Computed: true,
 				ValidateFunc: validation.StringInSlice([]string{
 					"aws:ec2:image",
+					"aws:ssm:integration",
 					"text",
 				}, false),
 			},

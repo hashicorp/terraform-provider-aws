@@ -288,7 +288,6 @@ func WaiterIPAMDeleted(conn *ec2.EC2, ipamId string, timeout time.Duration) (*ec
 
 func statusIPAMStatus(conn *ec2.EC2, ipamId string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-
 		output, err := findIPAMById(conn, ipamId)
 
 		if tfawserr.ErrCodeEquals(err, invalidIPAMIDNotFound) {

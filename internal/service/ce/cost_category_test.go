@@ -225,7 +225,6 @@ func testAccCheckCostCategoryDestroy(s *terraform.State) error {
 	}
 
 	return nil
-
 }
 
 func testAccCostCategoryConfig_basic(rName string) string {

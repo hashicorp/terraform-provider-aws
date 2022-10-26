@@ -4,7 +4,7 @@ import (
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	awsdiag "github.com/hashicorp/terraform-provider-aws/internal/diag"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/types/duration"
 )
 
@@ -33,12 +33,12 @@ func (d RFC3339Duration) Value() (duration.Duration, bool, error) {
 func ValidateRFC3339Duration(i any, path cty.Path) diag.Diagnostics {
 	v, ok := i.(string)
 	if !ok {
-		return diag.Diagnostics{awsdiag.NewIncorrectValueTypeAttributeError(path, "string")}
+		return diag.Diagnostics{errs.NewIncorrectValueTypeAttributeError(path, "string")}
 	}
 
 	_, err := duration.Parse(v)
 	if err != nil {
-		return diag.Diagnostics{awsdiag.NewInvalidValueAttributeErrorf(path, "Cannot be parsed as an RFC 3339 duration: %s", err)}
+		return diag.Diagnostics{errs.NewInvalidValueAttributeErrorf(path, "Cannot be parsed as an RFC 3339 duration: %s", err)}
 	}
 
 	return nil

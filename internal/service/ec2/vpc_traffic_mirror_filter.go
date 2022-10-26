@@ -85,7 +85,6 @@ func resourceTrafficMirrorFilterCreate(d *schema.ResourceData, meta interface{})
 		if err != nil {
 			return fmt.Errorf("error modifying EC2 Traffic Mirror Filter (%s) network services: %w", d.Id(), err)
 		}
-
 	}
 
 	return resourceTrafficMirrorFilterRead(d, meta)
