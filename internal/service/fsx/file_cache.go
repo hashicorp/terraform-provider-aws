@@ -367,7 +367,7 @@ func resourceFileCacheRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("subnet_ids", aws.StringValueSlice(filecache.SubnetIds))
 	d.Set("vpc_id", filecache.VpcId)
 
-	if err := d.Set("data_repository_association_ids", aws.StringValueSlice(filecache.DataRepositoryAssociationIds)); err != nil {
+	if err := d.Set("data_repository_association_ids", filecache.DataRepositoryAssociationIds); err != nil {
 		return create.DiagError(names.FSx, create.ErrActionSetting, ResNameFileCache, d.Id(), err)
 	}
 	if err := d.Set("lustre_configuration", flattenFileCacheLustreConfiguration(filecache.LustreConfiguration)); err != nil {

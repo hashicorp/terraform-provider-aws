@@ -27,7 +27,7 @@ func TestAccFSxFileCache_serial(t *testing.T) {
 			"disappears": TestAccFSxFileCache_disappears,
 			"kms_key_id": testAccFileCache_kmsKeyID,
 			"copy_tags_to_data_repository_associations": testAccFileCache_copyTagsToDataRepositoryAssociations,
-			"data_repository_association_multiple":      TestAccFileCache_dataRepositoryAssociation_multiple,
+			"data_repository_association_multiple":      testAccFileCache_dataRepositoryAssociation_multiple,
 			"data_repository_association_nfs":           testAccFileCache_dataRepositoryAssociation_nfs,
 			"data_repository_association_s3":            testAccFileCache_dataRepositoryAssociation_s3,
 			"security_group_id":                         testAccFileCache_securityGroupId,
@@ -155,7 +155,7 @@ func testAccFileCache_copyTagsToDataRepositoryAssociations(t *testing.T) {
 	})
 }
 
-func TestAccFileCache_dataRepositoryAssociation_multiple(t *testing.T) {
+func testAccFileCache_dataRepositoryAssociation_multiple(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
