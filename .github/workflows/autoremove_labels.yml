@@ -26,8 +26,6 @@ jobs:
             needs-triage
 
   RemoveTriagingLabelsFromClosedIssueOrPR:
-    permissions:
-      contents: none
     if: github.event.action == 'closed'
     runs-on: ubuntu-latest
     steps:
