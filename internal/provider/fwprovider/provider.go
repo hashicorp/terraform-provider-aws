@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/experimental/intf"
 	"github.com/hashicorp/terraform-provider-aws/internal/fwtypes"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/medialive"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -349,6 +350,10 @@ func (p *fwprovider) DataSources(ctx context.Context) []func() datasource.DataSo
 // the Metadata method. All resources must have unique names.
 func (p *fwprovider) Resources(ctx context.Context) []func() resource.Resource {
 	var resources []func() resource.Resource
+
+	resources = append(resources, func() resource.Resource {
+		return medialive.NewResourceMultiplexProgram(ctx)
+	})
 
 	for _, sp := range p.Primary.Meta().(*conns.AWSClient).ServicePackages {
 		for _, v := range sp.FrameworkResources(ctx) {
