@@ -1614,7 +1614,6 @@ resource "aws_batch_compute_environment" "test" {
 
 func testAccComputeEnvironmentConfig_eksConfiguration(rName string) string {
 	return acctest.ConfigCompose(
-		testAccComputeEnvironmentBaseConfig(rName),
 		fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
@@ -1626,30 +1625,6 @@ data "aws_availability_zones" "available" {
 }
   
 data "aws_partition" "current" {}
-
-resource "aws_iam_role" "test" {
-name = %[1]q
-
-assume_role_policy = <<POLICY
-	{
-	"Version": "2012-10-17",
-	"Statement": [
-		{
-		"Effect": "Allow",
-		"Principal": {
-			"Service": "eks.${data.aws_partition.current.dns_suffix}"
-		},
-		"Action": "sts:AssumeRole"
-		}
-	]
-	}
-POLICY
-}
-
-resource "aws_iam_role_policy_attachment" "test-AmazonEKSClusterPolicy" {
-  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonEKSClusterPolicy"
-  role       = aws_iam_role.test.name
-}
 
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
@@ -1680,13 +1655,45 @@ resource "aws_subnet" "test" {
 
 resource "aws_eks_cluster" "test" {
   name     = %[1]q
-  role_arn = aws_iam_role.test.arn
+  role_arn = aws_iam_role.batch_service.arn
   
   vpc_config {
     subnet_ids = aws_subnet.test[*].id
   }
   
-  depends_on = [aws_iam_role_policy_attachment.test-AmazonEKSClusterPolicy]
+  depends_on = [
+	  aws_iam_role_policy_attachment.test-AmazonEKSClusterPolicy
+	]
+}
+
+resource "aws_iam_role" "batch_service" {
+	name = "%[1]s_batch_service"
+  
+	assume_role_policy = <<EOF
+  {
+	"Version": "2012-10-17",
+	"Statement": [{
+	  "Action": "sts:AssumeRole",
+	  "Effect": "Allow",
+	  "Principal": {
+		"Service": [
+		  "batch.${data.aws_partition.current.dns_suffix}",
+		  "eks.${data.aws_partition.current.dns_suffix}"
+		]
+	  }
+	}]
+  }
+  EOF
+}
+
+resource "aws_iam_role_policy_attachment" "batch_service" {
+  role       = aws_iam_role.batch_service.name
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AWSBatchServiceRole"
+}
+
+resource "aws_iam_role_policy_attachment" "test-AmazonEKSClusterPolicy" {
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonEKSClusterPolicy"
+  role       = aws_iam_role.batch_service.name
 }
 
 resource "aws_batch_compute_environment" "test" {
