@@ -10,7 +10,6 @@ description: |-
 
 ## Example Usage
 
-
 This example shows how to retrieve a custom origin request policy:
 
 ```terraform
