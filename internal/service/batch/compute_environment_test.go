@@ -131,6 +131,7 @@ func TestAccBatchComputeEnvironment_eksConfiguration(t *testing.T) {
 	var ce batch.ComputeEnvironmentDetail
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_batch_compute_environment.test"
+	eksClusterResourceName := "aws_eks_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
@@ -142,8 +143,9 @@ func TestAccBatchComputeEnvironment_eksConfiguration(t *testing.T) {
 				Config: testAccComputeEnvironmentConfig_eksConfiguration(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckComputeEnvironmentExists(resourceName, &ce),
-					acctest.CheckResourceAttrNameFromPrefix(resourceName, "compute_environment_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "compute_environment_name_prefix", rName),
+					resource.TestCheckResourceAttr(resourceName, "eks_configuration.#", "0"),
+					resource.TestCheckResourceAttrPair(resourceName, "eks_configuration.0.eks_cluter_arn", eksClusterResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "eks_configuration.0.kubernetes_namespace", "aws-batch"),
 				),
 			},
 			{
@@ -1614,8 +1616,86 @@ func testAccComputeEnvironmentConfig_eksConfiguration(rName string) string {
 	return acctest.ConfigCompose(
 		testAccComputeEnvironmentBaseConfig(rName),
 		fmt.Sprintf(`
+data "aws_availability_zones" "available" {
+  state = "available"
+  
+  filter {
+	name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+  
+data "aws_partition" "current" {}
+
+resource "aws_iam_role" "test" {
+name = %[1]q
+
+assume_role_policy = <<POLICY
+	{
+	"Version": "2012-10-17",
+	"Statement": [
+		{
+		"Effect": "Allow",
+		"Principal": {
+			"Service": "eks.${data.aws_partition.current.dns_suffix}"
+		},
+		"Action": "sts:AssumeRole"
+		}
+	]
+	}
+POLICY
+}
+
+resource "aws_iam_role_policy_attachment" "test-AmazonEKSClusterPolicy" {
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonEKSClusterPolicy"
+  role       = aws_iam_role.test.name
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  assign_generated_ipv6_cidr_block = true
+
+  tags = {
+	Name                          = %[1]q
+	"kubernetes.io/cluster/%[1]s" = "shared"
+  }
+}
+
+resource "aws_subnet" "test" {
+  count = 2
+
+  availability_zone = data.aws_availability_zones.available.names[count.index]
+  cidr_block        = "10.0.${count.index}.0/24"
+  vpc_id            = aws_vpc.test.id
+
+  ipv6_cidr_block                 = cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, count.index)
+  assign_ipv6_address_on_creation = true
+
+  tags = {
+	Name                          = %[1]q
+	"kubernetes.io/cluster/%[1]s" = "shared"
+  }
+}
+
+resource "aws_eks_cluster" "test" {
+  name     = %[1]q
+  role_arn = aws_iam_role.test.arn
+  
+  vpc_config {
+    subnet_ids = aws_subnet.test[*].id
+  }
+  
+  depends_on = [aws_iam_role_policy_attachment.test-AmazonEKSClusterPolicy]
+}
+
 resource "aws_batch_compute_environment" "test" {
   compute_environment_name_prefix = %[1]q
+
+  eks_configuration {
+    eks_cluster_arn      = aws_eks_cluster.test.arn
+	kubernetes_namespace = "aws-batch"
+  }
 
   service_role = aws_iam_role.batch_service.arn
   type         = "UNMANAGED"
