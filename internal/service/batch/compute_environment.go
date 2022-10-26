@@ -196,6 +196,25 @@ func ResourceComputeEnvironment() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"eks_configuration": {
+				Type:     schema.TypeList,
+				Optional: true,
+				ForceNew: true,
+				MinItems: 0,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"eks_cluster_arn": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"kubernetes_namespace": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+					},
+				},
+			},
 			"service_role": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -250,6 +269,10 @@ func resourceComputeEnvironmentCreate(d *schema.ResourceData, meta interface{}) 
 
 	if v, ok := d.GetOk("compute_resources"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.ComputeResources = expandComputeResource(v.([]interface{})[0].(map[string]interface{}))
+	}
+
+	if v, ok := d.GetOk("eks_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.EksConfiguration = expandEksConfiguration(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("state"); ok {
@@ -311,6 +334,14 @@ func resourceComputeEnvironmentRead(d *schema.ResourceData, meta interface{}) er
 		}
 	} else {
 		d.Set("compute_resources", nil)
+	}
+
+	if computeEnvironment.EksConfiguration != nil {
+		if err := d.Set("eks_configuration", []interface{}{flattenEksConfiguration(computeEnvironment.EksConfiguration)}); err != nil {
+			return fmt.Errorf("error setting eks_configuration: %w", err)
+		}
+	} else {
+		d.Set("eks_configuration", nil)
 	}
 
 	tags := KeyValueTags(computeEnvironment.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
@@ -541,6 +572,24 @@ func expandComputeResource(tfMap map[string]interface{}) *batch.ComputeResource 
 	return apiObject
 }
 
+func expandEksConfiguration(tfMap map[string]interface{}) *batch.EksConfiguration {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &batch.EksConfiguration{}
+
+	if v, ok := tfMap["eks_cluster_arn"].(string); ok && v != "" {
+		apiObject.EksClusterArn = aws.String(v)
+	}
+
+	if v, ok := tfMap["kubernetes_namespace"].(string); ok && v != "" {
+		apiObject.KubernetesNamespace = aws.String(v)
+	}
+
+	return apiObject
+}
+
 func expandEC2Configuration(tfMap map[string]interface{}) *batch.Ec2Configuration {
 	if tfMap == nil {
 		return nil
@@ -676,6 +725,24 @@ func flattenComputeResource(apiObject *batch.ComputeResource) map[string]interfa
 
 	if v := apiObject.Type; v != nil {
 		tfMap["type"] = aws.StringValue(v)
+	}
+
+	return tfMap
+}
+
+func flattenEksConfiguration(apiObject *batch.EksConfiguration) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.EksClusterArn; v != nil {
+		tfMap["eks_cluster_arn"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.KubernetesNamespace; v != nil {
+		tfMap["kubernetes_namespace"] = aws.StringValue(v)
 	}
 
 	return tfMap
