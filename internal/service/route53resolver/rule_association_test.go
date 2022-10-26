@@ -63,7 +63,7 @@ func testAccCheckRuleAssociationDestroy(s *terraform.State) error {
 		if err != nil {
 			return err
 		}
-		return fmt.Errorf("Route 53 Resolver rule association still exists: %s", rs.Primary.ID)
+		return fmt.Errorf("Route53 Resolver rule association still exists: %s", rs.Primary.ID)
 	}
 	return nil
 }
@@ -76,7 +76,7 @@ func testAccCheckRuleAssociationExists(n string, assn *route53resolver.ResolverR
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Route 53 Resolver rule association ID is set")
+			return fmt.Errorf("No Route53 Resolver rule association ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ResolverConn

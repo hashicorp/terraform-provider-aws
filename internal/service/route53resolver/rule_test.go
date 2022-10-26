@@ -322,7 +322,7 @@ func TestAccRoute53ResolverRule_forwardEndpointRecreate(t *testing.T) {
 func testAccCheckRulesSame(before, after *route53resolver.ResolverRule) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if *before.Arn != *after.Arn {
-			return fmt.Errorf("Expected Route 53 Resolver rule ARNs to be the same. But they were: %v, %v", *before.Arn, *after.Arn)
+			return fmt.Errorf("Expected Route53 Resolver rule ARNs to be the same. But they were: %v, %v", *before.Arn, *after.Arn)
 		}
 		return nil
 	}
@@ -331,7 +331,7 @@ func testAccCheckRulesSame(before, after *route53resolver.ResolverRule) resource
 func testAccCheckRulesDifferent(before, after *route53resolver.ResolverRule) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if *before.Arn == *after.Arn {
-			return fmt.Errorf("Expected Route 53 Resolver rule ARNs to be different. But they were both: %v", *before.Arn)
+			return fmt.Errorf("Expected Route53 Resolver rule ARNs to be different. But they were both: %v", *before.Arn)
 		}
 		return nil
 	}
@@ -356,7 +356,7 @@ func testAccCheckRuleDestroy(s *terraform.State) error {
 		if err != nil {
 			return err
 		}
-		return fmt.Errorf("Route 53 Resolver rule still exists: %s", rs.Primary.ID)
+		return fmt.Errorf("Route53 Resolver rule still exists: %s", rs.Primary.ID)
 	}
 	return nil
 }
@@ -369,7 +369,7 @@ func testAccCheckRuleExists(n string, rule *route53resolver.ResolverRule) resour
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Route 53 Resolver rule ID is set")
+			return fmt.Errorf("No Route53 Resolver rule ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ResolverConn

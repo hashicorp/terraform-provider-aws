@@ -95,7 +95,7 @@ func TestAccRoute53ResolverRulesDataSource_nonExistentNameRegex(t *testing.T) {
 const testAccRulesDataSourceConfig_basic = `
 # The default Internet Resolver rule.
 data "aws_route53_resolver_rules" "test" {
-  owner_id     = "Route 53 Resolver"
+  owner_id     = "Route53 Resolver"
   rule_type    = "RECURSIVE"
   share_status = "NOT_SHARED"
 }

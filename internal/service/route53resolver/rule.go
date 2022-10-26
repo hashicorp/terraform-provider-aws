@@ -147,10 +147,10 @@ func resourceRuleCreate(d *schema.ResourceData, meta interface{}) error {
 		req.Tags = Tags(tags.IgnoreAWS())
 	}
 
-	log.Printf("[DEBUG] Creating Route 53 Resolver rule: %s", req)
+	log.Printf("[DEBUG] Creating Route53 Resolver rule: %s", req)
 	resp, err := conn.CreateResolverRule(req)
 	if err != nil {
-		return fmt.Errorf("error creating Route 53 Resolver rule: %s", err)
+		return fmt.Errorf("error creating Route53 Resolver rule: %s", err)
 	}
 
 	d.SetId(aws.StringValue(resp.ResolverRule.Id))
@@ -235,7 +235,7 @@ func resourceRuleUpdate(d *schema.ResourceData, meta interface{}) error {
 		log.Printf("[DEBUG] Updating Route53 Resolver rule: %#v", req)
 		_, err := conn.UpdateResolverRule(req)
 		if err != nil {
-			return fmt.Errorf("error updating Route 53 Resolver rule (%s): %s", d.Id(), err)
+			return fmt.Errorf("error updating Route53 Resolver rule (%s): %s", d.Id(), err)
 		}
 
 		err = RuleWaitUntilTargetState(conn, d.Id(), d.Timeout(schema.TimeoutUpdate),
@@ -267,7 +267,7 @@ func resourceRuleDelete(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 	if err != nil {
-		return fmt.Errorf("error deleting Route 53 Resolver rule (%s): %s", d.Id(), err)
+		return fmt.Errorf("error deleting Route53 Resolver rule (%s): %s", d.Id(), err)
 	}
 
 	return RuleWaitUntilTargetState(conn, d.Id(), d.Timeout(schema.TimeoutDelete),
@@ -302,7 +302,7 @@ func ruleRefresh(conn *route53resolver.Route53Resolver, ruleId string) resource.
 		}
 
 		if statusMessage := aws.StringValue(resp.ResolverRule.StatusMessage); statusMessage != "" {
-			log.Printf("[INFO] Route 53 Resolver rule (%s) status message: %s", ruleId, statusMessage)
+			log.Printf("[INFO] Route53 Resolver rule (%s) status message: %s", ruleId, statusMessage)
 		}
 
 		return resp.ResolverRule, aws.StringValue(resp.ResolverRule.Status), nil

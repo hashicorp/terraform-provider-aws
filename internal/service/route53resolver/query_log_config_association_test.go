@@ -86,7 +86,7 @@ func testAccCheckQueryLogConfigAssociationDestroy(s *terraform.State) error {
 			return err
 		}
 
-		return fmt.Errorf("Route 53 Resolver Query Log Config Association still exists: %s", rs.Primary.ID)
+		return fmt.Errorf("Route53 Resolver Query Log Config Association still exists: %s", rs.Primary.ID)
 	}
 
 	return nil
@@ -100,7 +100,7 @@ func testAccCheckQueryLogConfigAssociationExists(n string, v *route53resolver.Re
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Route 53 Resolver Query Log Config Association ID is set")
+			return fmt.Errorf("No Route53 Resolver Query Log Config Association ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ResolverConn

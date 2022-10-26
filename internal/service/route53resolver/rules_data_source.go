@@ -31,7 +31,7 @@ func DataSourceRules() *schema.Resource {
 				ValidateFunc: validation.Any(
 					verify.ValidAccountID,
 					// The owner of the default Internet Resolver rule.
-					validation.StringInSlice([]string{"Route 53 Resolver"}, false),
+					validation.StringInSlice([]string{"Route53 Resolver"}, false),
 				),
 			},
 

@@ -182,7 +182,7 @@ func testAccCheckFirewallDomainListDestroy(s *terraform.State) error {
 			return err
 		}
 
-		return fmt.Errorf("Route 53 Resolver Firewall Domain List still exists: %s", rs.Primary.ID)
+		return fmt.Errorf("Route53 Resolver Firewall Domain List still exists: %s", rs.Primary.ID)
 	}
 
 	return nil
@@ -196,7 +196,7 @@ func testAccCheckFirewallDomainListExists(n string, v *route53resolver.FirewallD
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Route 53 Resolver Firewall Domain List ID is set")
+			return fmt.Errorf("No Route53 Resolver Firewall Domain List ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ResolverConn

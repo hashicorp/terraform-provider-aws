@@ -59,7 +59,7 @@ func resourceFirewallConfigCreate(ctx context.Context, d *schema.ResourceData, m
 	output, err := conn.UpdateFirewallConfigWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating Route 53 Resolver Firewall Config: %s", err)
+		return diag.Errorf("creating Route53 Resolver Firewall Config: %s", err)
 	}
 
 	d.SetId(aws.StringValue(output.FirewallConfig.Id))
@@ -73,13 +73,13 @@ func resourceFirewallConfigRead(ctx context.Context, d *schema.ResourceData, met
 	firewallConfig, err := FindFirewallConfigByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] Route 53 Resolver Firewall Config (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] Route53 Resolver Firewall Config (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return diag.Errorf("reading Route 53 Resolver Firewall Config (%s): %s", d.Id(), err)
+		return diag.Errorf("reading Route53 Resolver Firewall Config (%s): %s", d.Id(), err)
 	}
 
 	d.Set("firewall_fail_open", firewallConfig.FirewallFailOpen)
@@ -103,7 +103,7 @@ func resourceFirewallConfigUpdate(ctx context.Context, d *schema.ResourceData, m
 	_, err := conn.UpdateFirewallConfigWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("updating Route 53 Resolver Firewall Config: %s", err)
+		return diag.Errorf("updating Route53 Resolver Firewall Config: %s", err)
 	}
 
 	return resourceFirewallConfigRead(ctx, d, meta)
@@ -112,14 +112,14 @@ func resourceFirewallConfigUpdate(ctx context.Context, d *schema.ResourceData, m
 func resourceFirewallConfigDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).Route53ResolverConn
 
-	log.Printf("[DEBUG] Deleting Route 53 Resolver Firewall Config: %s", d.Id())
+	log.Printf("[DEBUG] Deleting Route53 Resolver Firewall Config: %s", d.Id())
 	_, err := conn.UpdateFirewallConfigWithContext(ctx, &route53resolver.UpdateFirewallConfigInput{
 		ResourceId:       aws.String(d.Get("resource_id").(string)),
 		FirewallFailOpen: aws.String(route53resolver.FirewallFailOpenStatusDisabled),
 	})
 
 	if err != nil {
-		return diag.Errorf("deleting Route 53 Resolver Firewall Config (%s): %s", d.Id(), err)
+		return diag.Errorf("deleting Route53 Resolver Firewall Config (%s): %s", d.Id(), err)
 	}
 
 	return nil

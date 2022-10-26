@@ -86,7 +86,7 @@ func testAccCheckDNSSECConfigDestroy(s *terraform.State) error {
 			return err
 		}
 
-		return fmt.Errorf("Route 53 Resolver DNSSEC Config still exists: %s", rs.Primary.ID)
+		return fmt.Errorf("Route53 Resolver DNSSEC Config still exists: %s", rs.Primary.ID)
 	}
 
 	return nil
@@ -100,7 +100,7 @@ func testAccCheckDNSSECConfigExists(n string) resource.TestCheckFunc {
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Route 53 Resolver DNSSEC Config ID is set")
+			return fmt.Errorf("No Route53 Resolver DNSSEC Config ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ResolverConn

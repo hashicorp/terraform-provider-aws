@@ -325,7 +325,7 @@ func endpointRefresh(conn *route53resolver.Route53Resolver, epId string) resourc
 		}
 
 		if statusMessage := aws.StringValue(resp.ResolverEndpoint.StatusMessage); statusMessage != "" {
-			log.Printf("[INFO] Route 53 Resolver endpoint (%s) status message: %s", epId, statusMessage)
+			log.Printf("[INFO] Route53 Resolver endpoint (%s) status message: %s", epId, statusMessage)
 		}
 
 		return resp.ResolverEndpoint, aws.StringValue(resp.ResolverEndpoint.Status), nil

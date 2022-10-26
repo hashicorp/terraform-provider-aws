@@ -104,7 +104,7 @@ func testAccCheckEndpointDestroy(s *terraform.State) error {
 		if err != nil {
 			return err
 		}
-		return fmt.Errorf("Route 53 Resolver endpoint still exists: %s", rs.Primary.ID)
+		return fmt.Errorf("Route53 Resolver endpoint still exists: %s", rs.Primary.ID)
 	}
 
 	return nil
@@ -118,7 +118,7 @@ func testAccCheckEndpointExists(n string, ep *route53resolver.ResolverEndpoint) 
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Route 53 Resolver endpoint ID is set")
+			return fmt.Errorf("No Route53 Resolver endpoint ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ResolverConn

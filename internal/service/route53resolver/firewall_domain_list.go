@@ -72,7 +72,7 @@ func resourceFirewallDomainListCreate(ctx context.Context, d *schema.ResourceDat
 	output, err := conn.CreateFirewallDomainListWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating Route 53 Resolver Firewall Domain List (%s): %s", name, err)
+		return diag.Errorf("creating Route53 Resolver Firewall Domain List (%s): %s", name, err)
 	}
 
 	d.SetId(aws.StringValue(output.FirewallDomainList.Id))
@@ -85,11 +85,11 @@ func resourceFirewallDomainListCreate(ctx context.Context, d *schema.ResourceDat
 		})
 
 		if err != nil {
-			return diag.Errorf("updating Route 53 Resolver Firewall Domain List (%s) domains: %s", d.Id(), err)
+			return diag.Errorf("updating Route53 Resolver Firewall Domain List (%s) domains: %s", d.Id(), err)
 		}
 
 		if _, err = waitFirewallDomainListUpdated(ctx, conn, d.Id()); err != nil {
-			return diag.Errorf("waiting for Route 53 Resolver Firewall Domain List (%s) update: %s", d.Id(), err)
+			return diag.Errorf("waiting for Route53 Resolver Firewall Domain List (%s) update: %s", d.Id(), err)
 		}
 	}
 
@@ -187,11 +187,11 @@ func resourceFirewallDomainListUpdate(ctx context.Context, d *schema.ResourceDat
 		})
 
 		if err != nil {
-			return diag.Errorf("updating Route 53 Resolver Firewall Domain List (%s) domains: %s", d.Id(), err)
+			return diag.Errorf("updating Route53 Resolver Firewall Domain List (%s) domains: %s", d.Id(), err)
 		}
 
 		if _, err = waitFirewallDomainListUpdated(ctx, conn, d.Id()); err != nil {
-			return diag.Errorf("waiting for Route 53 Resolver Firewall Domain List (%s) update: %s", d.Id(), err)
+			return diag.Errorf("waiting for Route53 Resolver Firewall Domain List (%s) update: %s", d.Id(), err)
 		}
 	}
 

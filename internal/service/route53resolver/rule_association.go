@@ -73,10 +73,10 @@ func resourceRuleAssociationCreate(d *schema.ResourceData, meta interface{}) err
 		req.Name = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Creating Route 53 Resolver rule association: %s", req)
+	log.Printf("[DEBUG] Creating Route53 Resolver rule association: %s", req)
 	resp, err := conn.AssociateResolverRule(req)
 	if err != nil {
-		return fmt.Errorf("error creating Route 53 Resolver rule association: %s", err)
+		return fmt.Errorf("error creating Route53 Resolver rule association: %s", err)
 	}
 
 	d.SetId(aws.StringValue(resp.ResolverRuleAssociation.Id))
@@ -125,7 +125,7 @@ func resourceRuleAssociationDelete(d *schema.ResourceData, meta interface{}) err
 		return nil
 	}
 	if err != nil {
-		return fmt.Errorf("error deleting Route 53 Resolver rule association (%s): %s", d.Id(), err)
+		return fmt.Errorf("error deleting Route53 Resolver rule association (%s): %s", d.Id(), err)
 	}
 
 	return RuleAssociationWaitUntilTargetState(conn, d.Id(), d.Timeout(schema.TimeoutDelete),
@@ -146,7 +146,7 @@ func ruleAssociationRefresh(conn *route53resolver.Route53Resolver, assocId strin
 		}
 
 		if statusMessage := aws.StringValue(resp.ResolverRuleAssociation.StatusMessage); statusMessage != "" {
-			log.Printf("[INFO] Route 53 Resolver rule association (%s) status message: %s", assocId, statusMessage)
+			log.Printf("[INFO] Route53 Resolver rule association (%s) status message: %s", assocId, statusMessage)
 		}
 
 		return resp.ResolverRuleAssociation, aws.StringValue(resp.ResolverRuleAssociation.Status), nil

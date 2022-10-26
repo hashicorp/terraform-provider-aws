@@ -60,13 +60,13 @@ func resourceDNSSECConfigCreate(ctx context.Context, d *schema.ResourceData, met
 	output, err := conn.UpdateResolverDnssecConfigWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating Route 53 Resolver DNSSEC Config: %s", err)
+		return diag.Errorf("creating Route53 Resolver DNSSEC Config: %s", err)
 	}
 
 	d.SetId(aws.StringValue(output.ResolverDNSSECConfig.Id))
 
 	if _, err := waitDNSSECConfigCreated(ctx, conn, d.Id()); err != nil {
-		return diag.Errorf("waiting for Route 53 Resolver DNSSEC Config (%s) create: %s", d.Id(), err)
+		return diag.Errorf("waiting for Route53 Resolver DNSSEC Config (%s) create: %s", d.Id(), err)
 	}
 
 	return resourceDNSSECConfigRead(ctx, d, meta)
@@ -119,11 +119,11 @@ func resourceDNSSECConfigDelete(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting Route 53 Resolver DNSSEC Config (%s): %s", d.Id(), err)
+		return diag.Errorf("deleting Route53 Resolver DNSSEC Config (%s): %s", d.Id(), err)
 	}
 
 	if _, err = waitDNSSECConfigDeleted(ctx, conn, d.Id()); err != nil {
-		return diag.Errorf("waiting for Route 53 Resolver DNSSEC Config (%s) delete: %s", d.Id(), err)
+		return diag.Errorf("waiting for Route53 Resolver DNSSEC Config (%s) delete: %s", d.Id(), err)
 	}
 
 	return nil
