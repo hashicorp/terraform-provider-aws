@@ -462,8 +462,12 @@ func resourceFileCacheDelete(ctx context.Context, d *schema.ResourceData, meta i
 	return nil
 }
 
-func flattenDataRepositoryAssociations(dataRepositoryAssociations []*fsx.DataRepositoryAssociation, defaultTagsConfig *tftags.DefaultConfig, ignoreTagsConfig *tftags.IgnoreConfig) []map[string]interface{} {
-	flattenedDataRepositoryAssociations := make([]map[string]interface{}, 0)
+func flattenDataRepositoryAssociations(dataRepositoryAssociations []*fsx.DataRepositoryAssociation, defaultTagsConfig *tftags.DefaultConfig, ignoreTagsConfig *tftags.IgnoreConfig) []interface{} {
+	if len(dataRepositoryAssociations) == 0 {
+		return nil
+	}
+
+	var flattenedDataRepositoryAssociations []interface{}
 
 	for _, dataRepositoryAssociation := range dataRepositoryAssociations {
 		tags := KeyValueTags(dataRepositoryAssociation.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
@@ -534,10 +538,18 @@ func flattenFileCacheLustreMetadataConfiguration(fileCacheLustreMetadataConfigur
 }
 
 func expandDataRepositoryAssociations(l []interface{}) []*fsx.FileCacheDataRepositoryAssociation {
-	dataRepositoryAssociations := []*fsx.FileCacheDataRepositoryAssociation{}
+	if len(l) == 0 {
+		return nil
+	}
 
-	for _, dataRepositoryAssociation := range l {
-		tfMap := dataRepositoryAssociation.(map[string]interface{})
+	var dataRepositoryAssociations []*fsx.FileCacheDataRepositoryAssociation
+
+	for _, tfMapRaw := range l {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
+
+		if !ok {
+			continue
+		}
 		req := &fsx.FileCacheDataRepositoryAssociation{}
 
 		if v, ok := tfMap["data_repository_path"].(string); ok {
