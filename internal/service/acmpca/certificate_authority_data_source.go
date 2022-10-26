@@ -34,6 +34,10 @@ func DataSourceCertificateAuthority() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"usage_mode": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"not_after": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -139,6 +143,7 @@ func dataSourceCertificateAuthorityRead(d *schema.ResourceData, meta interface{}
 	certificateAuthority := describeCertificateAuthorityOutput.CertificateAuthority
 
 	d.Set("arn", certificateAuthority.Arn)
+	d.Set("usage_mode", certificateAuthority.UsageMode)
 	d.Set("not_after", aws.TimeValue(certificateAuthority.NotAfter).Format(time.RFC3339))
 	d.Set("not_before", aws.TimeValue(certificateAuthority.NotBefore).Format(time.RFC3339))
 
