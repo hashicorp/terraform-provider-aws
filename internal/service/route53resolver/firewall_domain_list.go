@@ -275,7 +275,7 @@ const (
 	firewallDomainListDeletedTimeout = 5 * time.Minute
 )
 
-func waitFirewallDomainListUpdated(ctx context.Context, conn *route53resolver.Route53Resolver, id string) (*route53resolver.FirewallDomainList, error) {
+func waitFirewallDomainListUpdated(ctx context.Context, conn *route53resolver.Route53Resolver, id string) (*route53resolver.FirewallDomainList, error) { //nolint:unparam
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{route53resolver.FirewallDomainListStatusUpdating, route53resolver.FirewallDomainListStatusImporting},
 		Target: []string{route53resolver.FirewallDomainListStatusComplete,
