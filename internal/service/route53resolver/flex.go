@@ -45,27 +45,6 @@ func expandEndpointIPAddresses(vIpAddresses *schema.Set) []*route53resolver.IpAd
 	return ipAddressRequests
 }
 
-func expandRuleTargetIPs(vTargetIps *schema.Set) []*route53resolver.TargetAddress {
-	targetAddresses := []*route53resolver.TargetAddress{}
-
-	for _, vTargetIp := range vTargetIps.List() {
-		targetAddress := &route53resolver.TargetAddress{}
-
-		mTargetIp := vTargetIp.(map[string]interface{})
-
-		if vIp, ok := mTargetIp["ip"].(string); ok && vIp != "" {
-			targetAddress.Ip = aws.String(vIp)
-		}
-		if vPort, ok := mTargetIp["port"].(int); ok {
-			targetAddress.Port = aws.Int64(int64(vPort))
-		}
-
-		targetAddresses = append(targetAddresses, targetAddress)
-	}
-
-	return targetAddresses
-}
-
 func flattenEndpointIPAddresses(ipAddresses []*route53resolver.IpAddressResponse) []interface{} {
 	if ipAddresses == nil {
 		return []interface{}{}
@@ -84,23 +63,4 @@ func flattenEndpointIPAddresses(ipAddresses []*route53resolver.IpAddressResponse
 	}
 
 	return vIpAddresses
-}
-
-func flattenRuleTargetIPs(targetAddresses []*route53resolver.TargetAddress) []interface{} {
-	if targetAddresses == nil {
-		return []interface{}{}
-	}
-
-	vTargetIps := []interface{}{}
-
-	for _, targetAddress := range targetAddresses {
-		mTargetIp := map[string]interface{}{
-			"ip":   aws.StringValue(targetAddress.Ip),
-			"port": int(aws.Int64Value(targetAddress.Port)),
-		}
-
-		vTargetIps = append(vTargetIps, mTargetIp)
-	}
-
-	return vTargetIps
 }
