@@ -36,8 +36,8 @@ jobs:
               - CHANGELOG.md
   comment:
     permissions:
-      issues: write  # for peter-evans/create-or-update-comment to create or update comment
-      pull-requests: write  # for peter-evans/create-or-update-comment to create or update comment
+      issues: read
+      pull-requests: read
     needs: changes
     if: ${{ needs.changes.outputs.changed == 'true' }}
     name: Comment
