@@ -781,7 +781,7 @@ func testAccCertificateAuthorityConfig_usageMode(commonName, certificateAuthorit
 	return fmt.Sprintf(`
 resource "aws_acmpca_certificate_authority" "test" {
   enabled                         = true
-  usage_mode					  = %[1]q
+  usage_mode                      = %[1]q
   permanent_deletion_time_in_days = 7
   type                            = %[2]q
 
