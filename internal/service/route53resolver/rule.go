@@ -26,30 +26,21 @@ const (
 	RuleStatusDeleted = "DELETED"
 )
 
-const (
-	ruleCreatedDefaultTimeout = 10 * time.Minute
-	ruleUpdatedDefaultTimeout = 10 * time.Minute
-	ruleDeletedDefaultTimeout = 10 * time.Minute
-)
-
 func ResourceRule() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceRuleCreate,
 		Read:   resourceRuleRead,
 		Update: resourceRuleUpdate,
 		Delete: resourceRuleDelete,
-		CustomizeDiff: customdiff.Sequence(
-			resourceRuleCustomizeDiff,
-			verify.SetTagsDiff,
-		),
+
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(ruleCreatedDefaultTimeout),
-			Update: schema.DefaultTimeout(ruleUpdatedDefaultTimeout),
-			Delete: schema.DefaultTimeout(ruleDeletedDefaultTimeout),
+			Create: schema.DefaultTimeout(10 * time.Minute),
+			Update: schema.DefaultTimeout(10 * time.Minute),
+			Delete: schema.DefaultTimeout(10 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -110,6 +101,11 @@ func ResourceRule() *schema.Resource {
 				Set: ruleHashTargetIP,
 			},
 		},
+
+		CustomizeDiff: customdiff.Sequence(
+			resourceRuleCustomizeDiff,
+			verify.SetTagsDiff,
+		),
 	}
 }
 
