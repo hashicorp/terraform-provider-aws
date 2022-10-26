@@ -78,9 +78,6 @@ func (m *multiplexProgram) GetSchema(context.Context) (tfsdk.Schema, diag.Diagno
 				NestingMode: tfsdk.BlockNestingModeList,
 				MinItems:    1,
 				MaxItems:    1,
-				//PlanModifiers: tfsdk.AttributePlanModifiers{
-				//	resource.RequiresReplace(),
-				//},
 				Attributes: map[string]tfsdk.Attribute{
 					"program_number": {
 						Type:     types.Int64Type,

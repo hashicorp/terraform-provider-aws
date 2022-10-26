@@ -94,7 +94,6 @@ The following arguments are optional:
 * `maximum_bitrate` - (Optional) Maximum bitrate.
 * `priority` - (Optional) Priority value.
 
-
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
