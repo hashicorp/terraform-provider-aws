@@ -2,7 +2,6 @@ package budgets
 
 import (
 	"fmt"
-	"strconv"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -32,31 +31,6 @@ func TimePeriodTimestampToString(ts *time.Time) string {
 	}
 
 	return aws.TimeValue(ts).Format(timePeriodLayout)
-}
-
-func TimePeriodSecondsFromString(s string) (string, error) {
-	if s == "" {
-		return "", nil
-	}
-
-	ts, err := time.Parse(timePeriodLayout, s)
-
-	if err != nil {
-		return "", err
-	}
-
-	return strconv.FormatInt(aws.Time(ts).Unix(), 10), nil
-}
-
-func TimePeriodSecondsToString(s string) (string, error) {
-	startTime, err := strconv.ParseInt(s, 10, 64)
-	if err != nil {
-		return "", err
-	}
-
-	startTime = startTime * 1000
-
-	return aws.SecondsTimeValue(&startTime).UTC().Format(timePeriodLayout), nil
 }
 
 func ValidTimePeriodTimestamp(v interface{}, k string) (ws []string, errors []error) {

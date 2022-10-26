@@ -343,55 +343,6 @@ func TestAccBudgetsBudget_notifications(t *testing.T) {
 	})
 }
 
-func TestAccBudgetsBudget_plannedLimits(t *testing.T) {
-	var budget budgets.Budget
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_budgets_budget.test"
-	now := time.Now()
-	config1, testCheckFuncs1 := generateStartTimes(resourceName, "100.0", now)
-	config2, testCheckFuncs2 := generateStartTimes(resourceName, "200.0", now)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(budgets.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, budgets.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccBudgetDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccBudgetConfig_plannedLimits(rName, config1),
-				Check: resource.ComposeTestCheckFunc(
-					append(
-						testCheckFuncs1,
-						testAccBudgetExists(resourceName, &budget),
-						resource.TestCheckResourceAttr(resourceName, "name", rName),
-						resource.TestCheckResourceAttr(resourceName, "budget_type", "COST"),
-						resource.TestCheckResourceAttr(resourceName, "time_unit", "MONTHLY"),
-						resource.TestCheckResourceAttr(resourceName, "planned_limit.#", "12"),
-					)...,
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccBudgetConfig_plannedLimitsUpdated(rName, config2),
-				Check: resource.ComposeTestCheckFunc(
-					append(
-						testCheckFuncs2,
-						testAccBudgetExists(resourceName, &budget),
-						resource.TestCheckResourceAttr(resourceName, "name", rName),
-						resource.TestCheckResourceAttr(resourceName, "budget_type", "COST"),
-						resource.TestCheckResourceAttr(resourceName, "time_unit", "MONTHLY"),
-						resource.TestCheckResourceAttr(resourceName, "planned_limit.#", "12"),
-					)...,
-				),
-			},
-		},
-	})
-}
-
 func testAccBudgetExists(resourceName string, v *budgets.Budget) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
@@ -603,59 +554,4 @@ resource "aws_budgets_budget" "test" {
   }
 }
 `, rName, emailAddress1)
-}
-
-func testAccBudgetConfig_plannedLimits(rName, config string) string {
-	return fmt.Sprintf(`
-resource "aws_budgets_budget" "test" {
-  name         = %[1]q
-  budget_type  = "COST"
-  time_unit    = "MONTHLY"
-  %[2]s
-}
-`, rName, config)
-}
-
-func testAccBudgetConfig_plannedLimitsUpdated(rName, config string) string {
-	return fmt.Sprintf(`
-resource "aws_budgets_budget" "test" {
-  name         = %[1]q
-  budget_type  = "COST"
-  time_unit    = "MONTHLY"
-  %[2]s
-}
-`, rName, config)
-}
-
-func generateStartTimes(resourceName, amount string, now time.Time) (string, []resource.TestCheckFunc) {
-	startTimes := make([]time.Time, 12)
-
-	year, month, _ := now.Date()
-	startTimes[0] = time.Date(year, month, 1, 0, 0, 0, 0, time.UTC)
-
-	for i := 1; i < len(startTimes); i++ {
-		startTimes[i] = startTimes[i-1].AddDate(0, 1, 0)
-	}
-
-	configBuilder := strings.Builder{}
-	for i := 0; i < len(startTimes); i++ {
-		configBuilder.WriteString(fmt.Sprintf(`
-planned_limit {
-  start_time = %[1]q
-  amount     = %[2]q
-  unit       = "USD"
-}
-`, tfbudgets.TimePeriodTimestampToString(&startTimes[i]), amount))
-	}
-
-	testCheckFuncs := make([]resource.TestCheckFunc, len(startTimes))
-	for i := 0; i < len(startTimes); i++ {
-		testCheckFuncs[i] = resource.TestCheckTypeSetElemNestedAttrs(resourceName, "planned_limit.*", map[string]string{
-			"start_time": tfbudgets.TimePeriodTimestampToString(&startTimes[i]),
-			"amount":     amount,
-			"unit":       "USD",
-		})
-	}
-
-	return configBuilder.String(), testCheckFuncs
 }
