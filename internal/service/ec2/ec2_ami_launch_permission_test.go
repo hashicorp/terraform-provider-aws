@@ -20,10 +20,10 @@ func TestAccEC2AMILaunchPermission_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAMILaunchPermissionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAMILaunchPermissionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAMILaunchPermissionConfig_accountID(rName),
@@ -50,10 +50,10 @@ func TestAccEC2AMILaunchPermission_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAMILaunchPermissionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAMILaunchPermissionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAMILaunchPermissionConfig_accountID(rName),
@@ -72,10 +72,10 @@ func TestAccEC2AMILaunchPermission_Disappears_ami(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAMILaunchPermissionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAMILaunchPermissionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAMILaunchPermissionConfig_accountID(rName),
@@ -94,10 +94,10 @@ func TestAccEC2AMILaunchPermission_group(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAMILaunchPermissionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAMILaunchPermissionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAMILaunchPermissionConfig_group(rName),
@@ -124,10 +124,10 @@ func TestAccEC2AMILaunchPermission_organizationARN(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsEnabled(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAMILaunchPermissionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsEnabled(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAMILaunchPermissionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAMILaunchPermissionConfig_organizationARN(rName),
@@ -154,10 +154,10 @@ func TestAccEC2AMILaunchPermission_organizationalUnitARN(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAMILaunchPermissionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAMILaunchPermissionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAMILaunchPermissionConfig_organizationalUnitARN(rName),
@@ -219,13 +219,9 @@ func testAccCheckAMILaunchPermissionExists(n string) resource.TestCheckFunc {
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
-		_, err = tfec2.FindImageLaunchPermission(context.TODO(), conn, imageID, accountID, group, organizationARN, organizationalUnitARN)
+		_, err = tfec2.FindImageLaunchPermission(context.Background(), conn, imageID, accountID, group, organizationARN, organizationalUnitARN)
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 
@@ -243,7 +239,7 @@ func testAccCheckAMILaunchPermissionDestroy(s *terraform.State) error {
 			return err
 		}
 
-		_, err = tfec2.FindImageLaunchPermission(context.TODO(), conn, imageID, accountID, group, organizationARN, organizationalUnitARN)
+		_, err = tfec2.FindImageLaunchPermission(context.Background(), conn, imageID, accountID, group, organizationARN, organizationalUnitARN)
 
 		if tfresource.NotFound(err) {
 			continue

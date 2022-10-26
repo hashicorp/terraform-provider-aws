@@ -28,10 +28,6 @@ func ResourceAppMonitor() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"app_monitor_configuration": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -90,6 +86,14 @@ func ResourceAppMonitor() *schema.Resource {
 						},
 					},
 				},
+			},
+			"app_monitor_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"cw_log_enabled": {
 				Type:     schema.TypeBool,
@@ -165,6 +169,10 @@ func resourceAppMonitorRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error reading CloudWatch RUM App Monitor (%s): %w", d.Id(), err)
 	}
 
+	if err := d.Set("app_monitor_configuration", []interface{}{flattenAppMonitorConfiguration(appMon.AppMonitorConfiguration)}); err != nil {
+		return fmt.Errorf("setting app_monitor_configuration: %w", err)
+	}
+	d.Set("app_monitor_id", appMon.Id)
 	arn := arn.ARN{
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Partition: meta.(*conns.AWSClient).Partition,
@@ -172,17 +180,11 @@ func resourceAppMonitorRead(d *schema.ResourceData, meta interface{}) error {
 		Resource:  fmt.Sprintf("appmonitor/%s", aws.StringValue(appMon.Name)),
 		Service:   "rum",
 	}.String()
-
-	d.Set("name", appMon.Name)
 	d.Set("arn", arn)
-	d.Set("domain", appMon.Domain)
-
 	d.Set("cw_log_enabled", appMon.DataStorage.CwLog.CwLogEnabled)
 	d.Set("cw_log_group", appMon.DataStorage.CwLog.CwLogGroup)
-
-	if err := d.Set("app_monitor_configuration", []interface{}{flattenAppMonitorConfiguration(appMon.AppMonitorConfiguration)}); err != nil {
-		return fmt.Errorf("error setting app_monitor_configuration for CloudWatch RUM App Monitor (%s): %w", d.Id(), err)
-	}
+	d.Set("domain", appMon.Domain)
+	d.Set("name", appMon.Name)
 
 	tags := KeyValueTags(appMon.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 

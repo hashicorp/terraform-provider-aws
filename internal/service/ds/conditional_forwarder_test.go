@@ -22,10 +22,10 @@ func TestAccDSConditionalForwarder_Condition_basic(t *testing.T) {
 	ip1, ip2, ip3 := "8.8.8.8", "1.1.1.1", "8.8.4.4"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckDirectoryService(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, directoryservice.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckConditionalForwarderDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckDirectoryService(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, directoryservice.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckConditionalForwarderDestroy,
 		Steps: []resource.TestStep{
 			// test create
 			{

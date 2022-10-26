@@ -23,10 +23,10 @@ func TestAccIoTRoleAlias_basic(t *testing.T) {
 	resourceName2 := "aws_iot_role_alias.ra2"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, iot.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRoleAliasDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iot.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRoleAliasDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRoleAliasConfig_basic(alias),
@@ -76,7 +76,6 @@ func TestAccIoTRoleAlias_basic(t *testing.T) {
 			},
 		},
 	})
-
 }
 
 func testAccCheckRoleAliasDestroy(s *terraform.State) error {

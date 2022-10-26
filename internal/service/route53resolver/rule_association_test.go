@@ -22,10 +22,10 @@ func TestAccRoute53ResolverRuleAssociation_basic(t *testing.T) {
 	name := fmt.Sprintf("terraform-testacc-r53-resolver-%d", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, route53resolver.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRuleAssociationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, route53resolver.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRuleAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRuleAssociationConfig_basic(name),

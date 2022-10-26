@@ -1,0 +1,11 @@
+```release-note:enhancement
+resource/aws_dynamodb_table: Add `replica.*.point_in_time_recovery` argument
+```
+
+```release-note:bug
+resource/aws_dynamodb_table: Prevent `restore_source_name` from forcing replacement when removed to enable restoring from a PITR backup
+```
+
+```release-note:bug
+resource/aws_dynamodb_table: Respect custom timeouts including when working with replicas
+```

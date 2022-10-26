@@ -24,10 +24,10 @@ func TestAccAutoScalingPlansScalingPlan_basicDynamicScaling(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, autoscalingplans.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckScalingPlanDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, autoscalingplans.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckScalingPlanDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccScalingPlanConfig_basicDynamicScaling(rName, rName),
@@ -84,9 +84,9 @@ func TestAccAutoScalingPlansScalingPlan_basicPredictiveScaling(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckIAMServiceLinkedRole(t, "/aws-service-role/autoscaling-plans")
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, autoscalingplans.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckScalingPlanDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, autoscalingplans.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckScalingPlanDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccScalingPlanConfig_basicPredictiveScaling(rName, rName),
@@ -147,9 +147,9 @@ func TestAccAutoScalingPlansScalingPlan_basicUpdate(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckIAMServiceLinkedRole(t, "/aws-service-role/autoscaling-plans")
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, autoscalingplans.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckScalingPlanDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, autoscalingplans.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckScalingPlanDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccScalingPlanConfig_basicDynamicScaling(rName, rName),
@@ -238,10 +238,10 @@ func TestAccAutoScalingPlansScalingPlan_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, autoscalingplans.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckScalingPlanDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, autoscalingplans.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckScalingPlanDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccScalingPlanConfig_basicDynamicScaling(rName, rName),
@@ -261,10 +261,10 @@ func TestAccAutoScalingPlansScalingPlan_DynamicScaling_customizedScalingMetricSp
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, autoscalingplans.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckScalingPlanDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, autoscalingplans.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckScalingPlanDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccScalingPlanConfig_dynamicScalingCustomizedScalingMetricSpecification(rName, rName, 90),

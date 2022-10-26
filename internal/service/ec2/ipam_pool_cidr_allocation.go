@@ -179,7 +179,6 @@ func resourceIPAMPoolCIDRAllocationDelete(d *schema.ResourceData, meta interface
 }
 
 func FindIPAMPoolCIDRAllocation(conn *ec2.EC2, id string) (*ec2.IpamPoolAllocation, string, error) {
-
 	allocation_id, pool_id, err := DecodeIPAMPoolCIDRAllocationID(id)
 	if err != nil {
 		return nil, "", fmt.Errorf("error decoding ID (%s): %w", allocation_id, err)

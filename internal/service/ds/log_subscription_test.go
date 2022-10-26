@@ -21,10 +21,10 @@ func TestAccDSLogSubscription_basic(t *testing.T) {
 	domainName := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckDirectoryService(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, directoryservice.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckLogSubscriptionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckDirectoryService(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, directoryservice.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLogSubscriptionDestroy,
 		Steps: []resource.TestStep{
 			// test create
 			{

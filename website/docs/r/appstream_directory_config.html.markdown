@@ -37,7 +37,6 @@ The following arguments are required:
 * `account_name` - (Required) User name of the account. This account must have the following privileges: create computer objects, join computers to the domain, and change/reset the password on descendant computer objects for the organizational units specified.
 * `account_password` - (Required) Password for the account.
 
-
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:

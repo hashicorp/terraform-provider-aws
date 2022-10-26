@@ -68,11 +68,7 @@ func resourceVPNGatewayRoutePropagationDisable(d *schema.ResourceData, meta inte
 		return nil
 	}
 
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }
 
 func resourceVPNGatewayRoutePropagationRead(d *schema.ResourceData, meta interface{}) error {

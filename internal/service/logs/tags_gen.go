@@ -63,7 +63,7 @@ func UpdateTagsWithContext(ctx context.Context, conn cloudwatchlogsiface.CloudWa
 		_, err := conn.UntagLogGroupWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
+			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -76,7 +76,7 @@ func UpdateTagsWithContext(ctx context.Context, conn cloudwatchlogsiface.CloudWa
 		_, err := conn.TagLogGroupWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
+			return fmt.Errorf("tagging resource (%s): %w", identifier, err)
 		}
 	}
 

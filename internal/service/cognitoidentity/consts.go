@@ -1,7 +1,7 @@
 package cognitoidentity
 
 const (
-	ResPoolRolesAttachment      = "Pool Roles Attachment"
-	ResPoolProviderPrincipalTag = "Pool Provider Principal Tag"
-	ResPool                     = "Pool"
+	ResNamePoolRolesAttachment      = "Pool Roles Attachment"
+	ResNamePoolProviderPrincipalTag = "Pool Provider Principal Tag"
+	ResNamePool                     = "Pool"
 )

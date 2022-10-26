@@ -20,10 +20,10 @@ func testAccTransitGatewayMulticastGroupSource_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTransitGatewayMulticastGroupSourceDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTransitGatewayMulticastGroupSourceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTransitGatewayMulticastGroupSourceConfig_basic(rName),
@@ -41,10 +41,10 @@ func testAccTransitGatewayMulticastGroupSource_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTransitGatewayMulticastGroupSourceDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTransitGatewayMulticastGroupSourceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTransitGatewayMulticastGroupSourceConfig_basic(rName),
@@ -65,10 +65,10 @@ func testAccTransitGatewayMulticastGroupSource_Disappears_domain(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTransitGatewayMulticastGroupSourceDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTransitGatewayMulticastGroupSourceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTransitGatewayMulticastGroupSourceConfig_basic(rName),

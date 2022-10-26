@@ -314,7 +314,7 @@ The following arguments are optional:
 * `kms_key_id` - (Optional) KMS key ARN to use to encrypt the logs delivered by CloudTrail.
 * `s3_key_prefix` - (Optional) S3 key prefix that follows the name of the bucket you have designated for log file delivery.
 * `sns_topic_name` - (Optional) Name of the Amazon SNS topic defined for notification of log file delivery.
-* `tags` - (Optional) Map of tags to assign to the trail. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Map of tags to assign to the trail. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### event_selector
 
@@ -332,7 +332,6 @@ This configuration block supports the following attributes:
 * `type` - (Required) Resource type in which you want to log data events. You can specify only the following value: "AWS::S3::Object", "AWS::Lambda::Function" and "AWS::DynamoDB::Table".
 * `values` - (Required) List of ARN strings or partial ARN strings to specify selectors for data audit events over data resources. ARN list is specific to single-valued `type`. For example, `arn:aws:s3:::<bucket name>/` for all objects in a bucket, `arn:aws:s3:::<bucket name>/key` for specific objects, `arn:aws:lambda` for all lambda events within an account, `arn:aws:lambda:<region>:<account number>:function:<function name>` for a specific Lambda function, `arn:aws:dynamodb` for all DDB events for all tables within an account, or `arn:aws:dynamodb:<region>:<account number>:table/<table name>` for a specific DynamoDB table.
 
-
 ### insight_selector
 
 This configuration block supports the following attributes:
@@ -342,13 +341,13 @@ This configuration block supports the following attributes:
 ### Advanced Event Selector Arguments
 For **advanced_event_selector** the following attributes are supported.
 
-* `name` (Optional) - Specifies the name of the advanced event selector.
+* `name` (Optional) - Name of the advanced event selector.
 * `field_selector` (Required) - Specifies the selector statements in an advanced event selector. Fields documented below.
 
 #### Field Selector Arguments
 For **field_selector** the following attributes are supported.
 
-* `field` (Required) - Specifies a field in an event record on which to filter events to be logged. You can specify only the following values: `readOnly`, `eventSource`, `eventName`, `eventCategory`, `resources.type`, `resources.ARN`.
+* `field` (Required) - Field in an event record on which to filter events to be logged. You can specify only the following values: `readOnly`, `eventSource`, `eventName`, `eventCategory`, `resources.type`, `resources.ARN`.
 * `equals` (Optional) - A list of values that includes events that match the exact value of the event record field specified as the value of `field`. This is the only valid operator that you can use with the `readOnly`, `eventCategory`, and `resources.type` fields.
 * `not_equals` (Optional) - A list of values that excludes events that match the exact value of the event record field specified as the value of `field`.
 * `starts_with` (Optional) - A list of values that includes events that match the first few characters of the event record field specified as the value of `field`.
@@ -363,7 +362,7 @@ In addition to all arguments above, the following attributes are exported:
 * `arn` - ARN of the trail.
 * `home_region` - Region in which the trail was created.
 * `id` - Name of the trail.
-* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 

@@ -1,0 +1,7 @@
+```release-note:enhancement
+ resource/aws_ce_cost_category: Add `tags` argument and `tags_all` attribute to support resource tagging
+ ```
+
+ ```release-note:enhancement
+ data-source/aws_ce_cost_category: Add `tags` attribute
+ ```

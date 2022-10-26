@@ -428,21 +428,29 @@ func resourceListenerCreate(d *schema.ResourceData, meta interface{}) error {
 		var err error
 		params.DefaultActions, err = expandLbListenerActions(v.([]interface{}))
 		if err != nil {
-			return fmt.Errorf("error creating ELBv2 Listener for ARN (%s): %w", lbArn, err)
+			return fmt.Errorf("creating ELBv2 Listener for ARN (%s): %w", lbArn, err)
 		}
 	}
 
 	output, err := retryListenerCreate(conn, params)
 
 	// Some partitions may not support tag-on-create
-	if params.Tags != nil && verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
+	if params.Tags != nil && verify.ErrorISOUnsupported(conn.PartitionID, err) {
+		log.Printf("[WARN] ELBv2 Listener (%s) create failed (%s) with tags. Trying create without tags.", lbArn, err)
+		params.Tags = nil
+		output, err = retryListenerCreate(conn, params)
+	}
+
+	// Tags are not supported on creation with some load balancer types (i.e. Gateway)
+	// Retry creation without tags
+	if params.Tags != nil && tfawserr.ErrMessageContains(err, ErrValidationError, TagsOnCreationErrMessage) {
 		log.Printf("[WARN] ELBv2 Listener (%s) create failed (%s) with tags. Trying create without tags.", lbArn, err)
 		params.Tags = nil
 		output, err = retryListenerCreate(conn, params)
 	}
 
 	if err != nil {
-		return fmt.Errorf("error creating ELBv2 Listener (%s): %w", lbArn, err)
+		return fmt.Errorf("creating ELBv2 Listener (%s): %w", lbArn, err)
 	}
 
 	d.SetId(aws.StringValue(output.Listeners[0].ListenerArn))
@@ -451,14 +459,14 @@ func resourceListenerCreate(d *schema.ResourceData, meta interface{}) error {
 	if params.Tags == nil && len(tags) > 0 {
 		err := UpdateTags(conn, d.Id(), nil, tags)
 
-		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
+		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.ErrorISOUnsupported(conn.PartitionID, err) {
 			// if default tags only, log and continue (i.e., should error if explicitly setting tags and they can't be)
 			log.Printf("[WARN] error adding tags after create for ELBv2 Listener (%s): %s", d.Id(), err)
 			return resourceListenerRead(d, meta)
 		}
 
 		if err != nil {
-			return fmt.Errorf("error creating ELBv2 Listener (%s) tags: %w", d.Id(), err)
+			return fmt.Errorf("creating ELBv2 Listener (%s) tags: %w", d.Id(), err)
 		}
 	}
 
@@ -498,12 +506,12 @@ func resourceListenerRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error describing ELBv2 Listener (%s): %w", d.Id(), err)
+		return fmt.Errorf("describing ELBv2 Listener (%s): %w", d.Id(), err)
 	}
 
 	if listener == nil {
 		if d.IsNewResource() {
-			return fmt.Errorf("error describing ELBv2 Listener (%s): empty response", d.Id())
+			return fmt.Errorf("describing ELBv2 Listener (%s): empty response", d.Id())
 		}
 		log.Printf("[WARN] ELBv2 Listener (%s) not found, removing from state", d.Id())
 		d.SetId("")
@@ -529,29 +537,29 @@ func resourceListenerRead(d *schema.ResourceData, meta interface{}) error {
 	})
 
 	if err := d.Set("default_action", flattenLbListenerActions(d, listener.DefaultActions)); err != nil {
-		return fmt.Errorf("error setting default_action for ELBv2 listener (%s): %w", d.Id(), err)
+		return fmt.Errorf("setting default_action for ELBv2 listener (%s): %w", d.Id(), err)
 	}
 
 	tags, err := ListTags(conn, d.Id())
 
-	if verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
+	if verify.ErrorISOUnsupported(conn.PartitionID, err) {
 		log.Printf("[WARN] Unable to list tags for ELBv2 Listener %s: %s", d.Id(), err)
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for (%s): %w", d.Id(), err)
+		return fmt.Errorf("listing tags for (%s): %w", d.Id(), err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return fmt.Errorf("setting tags: %w", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return fmt.Errorf("setting tags_all: %w", err)
 	}
 
 	return nil
@@ -592,7 +600,7 @@ func resourceListenerUpdate(d *schema.ResourceData, meta interface{}) error {
 			var err error
 			params.DefaultActions, err = expandLbListenerActions(d.Get("default_action").([]interface{}))
 			if err != nil {
-				return fmt.Errorf("error updating ELBv2 Listener (%s): %w", d.Id(), err)
+				return fmt.Errorf("updating ELBv2 Listener (%s): %w", d.Id(), err)
 			}
 		}
 
@@ -615,7 +623,7 @@ func resourceListenerUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if err != nil {
-			return fmt.Errorf("error modifying ELBv2 Listener (%s): %w", d.Id(), err)
+			return fmt.Errorf("modifying ELBv2 Listener (%s): %w", d.Id(), err)
 		}
 	}
 
@@ -643,13 +651,13 @@ func resourceListenerUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		// ISO partitions may not support tagging, giving error
-		if verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
+		if verify.ErrorISOUnsupported(conn.PartitionID, err) {
 			log.Printf("[WARN] Unable to update tags for ELBv2 Listener %s: %s", d.Id(), err)
 			return resourceListenerRead(d, meta)
 		}
 
 		if err != nil {
-			return fmt.Errorf("error updating LB (%s) tags: %w", d.Id(), err)
+			return fmt.Errorf("updating LB (%s) tags: %w", d.Id(), err)
 		}
 	}
 
@@ -663,7 +671,7 @@ func resourceListenerDelete(d *schema.ResourceData, meta interface{}) error {
 		ListenerArn: aws.String(d.Id()),
 	})
 	if err != nil {
-		return fmt.Errorf("error deleting Listener (%s): %w", d.Id(), err)
+		return fmt.Errorf("deleting Listener (%s): %w", d.Id(), err)
 	}
 
 	return nil
@@ -697,7 +705,7 @@ func retryListenerCreate(conn *elbv2.ELBV2, params *elbv2.CreateListenerInput) (
 	}
 
 	if output == nil || len(output.Listeners) == 0 {
-		return nil, fmt.Errorf("error creating ELBv2 Listener: no listeners returned in response")
+		return nil, fmt.Errorf("creating ELBv2 Listener: no listeners returned in response")
 	}
 
 	return output, nil
@@ -921,7 +929,6 @@ func expandLbListenerActionForwardConfigTargetGroups(l []interface{}) []*elbv2.T
 		tfMap, ok := tfMapRaw.(map[string]interface{})
 		if !ok {
 			continue
-
 		}
 
 		group := &elbv2.TargetGroupTuple{

@@ -22,10 +22,10 @@ func TestAccAPIGatewayMethod_basic(t *testing.T) {
 	resourceName := "aws_api_gateway_method.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, apigateway.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckMethodDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMethodDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMethodConfig_basic(rInt),
@@ -61,10 +61,10 @@ func TestAccAPIGatewayMethod_customAuthorizer(t *testing.T) {
 	resourceName := "aws_api_gateway_method.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, apigateway.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckMethodDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMethodDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMethodConfig_customAuthorizer(rInt),
@@ -103,10 +103,10 @@ func TestAccAPIGatewayMethod_cognitoAuthorizer(t *testing.T) {
 	resourceName := "aws_api_gateway_method.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, apigateway.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckMethodDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMethodDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMethodConfig_cognitoAuthorizer(rInt),
@@ -148,10 +148,10 @@ func TestAccAPIGatewayMethod_customRequestValidator(t *testing.T) {
 	resourceName := "aws_api_gateway_method.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, apigateway.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckMethodDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMethodDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMethodConfig_customRequestValidator(rInt),
@@ -189,10 +189,10 @@ func TestAccAPIGatewayMethod_disappears(t *testing.T) {
 	resourceName := "aws_api_gateway_method.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, apigateway.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckMethodDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMethodDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMethodConfig_basic(rInt),
@@ -212,10 +212,10 @@ func TestAccAPIGatewayMethod_operationName(t *testing.T) {
 	resourceName := "aws_api_gateway_method.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, apigateway.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckMethodDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMethodDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMethodConfig_operationName(rInt, "getTest"),
@@ -433,7 +433,7 @@ resource "aws_lambda_function" "authorizer" {
   function_name    = "tf_acc_api_gateway_authorizer_%d"
   role             = aws_iam_role.iam_for_lambda.arn
   handler          = "exports.example"
-  runtime          = "nodejs12.x"
+  runtime          = "nodejs16.x"
 }
 
 resource "aws_api_gateway_authorizer" "test" {

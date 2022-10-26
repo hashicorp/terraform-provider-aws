@@ -72,10 +72,10 @@ func TestAccSchemasSchema_basic(t *testing.T) {
 	resourceName := "aws_schemas_schema.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(schemas.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, schemas.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckSchemaDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(schemas.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, schemas.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSchemaDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSchemaConfig_basic(rName),
@@ -108,10 +108,10 @@ func TestAccSchemasSchema_disappears(t *testing.T) {
 	resourceName := "aws_schemas_schema.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(schemas.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, schemas.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckSchemaDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(schemas.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, schemas.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSchemaDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSchemaConfig_basic(rName),
@@ -131,10 +131,10 @@ func TestAccSchemasSchema_contentDescription(t *testing.T) {
 	resourceName := "aws_schemas_schema.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(schemas.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, schemas.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckSchemaDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(schemas.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, schemas.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSchemaDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSchemaConfig_contentDescription(rName, testAccSchemaContent, "description1"),
@@ -177,10 +177,10 @@ func TestAccSchemasSchema_tags(t *testing.T) {
 	resourceName := "aws_schemas_schema.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(schemas.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, schemas.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckSchemaDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(schemas.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, schemas.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSchemaDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSchemaConfig_tags1(rName, "key1", "value1"),

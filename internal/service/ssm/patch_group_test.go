@@ -18,10 +18,10 @@ func TestAccSSMPatchGroup_basic(t *testing.T) {
 	resourceName := "aws_ssm_patch_group.patchgroup"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ssm.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckPatchGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ssm.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPatchGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPatchGroupConfig_basic(rName),
@@ -38,10 +38,10 @@ func TestAccSSMPatchGroup_disappears(t *testing.T) {
 	resourceName := "aws_ssm_patch_group.patchgroup"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ssm.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      nil,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ssm.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPatchGroupConfig_basic(rName),
@@ -62,10 +62,10 @@ func TestAccSSMPatchGroup_multipleBaselines(t *testing.T) {
 	resourceName3 := "aws_ssm_patch_group.test3"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ssm.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckPatchGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ssm.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPatchGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPatchGroupConfig_multipleBaselines(rName),

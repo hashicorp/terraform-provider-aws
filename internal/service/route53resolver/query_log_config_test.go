@@ -21,10 +21,10 @@ func TestAccRoute53ResolverQueryLogConfig_basic(t *testing.T) {
 	s3BucketResourceName := "aws_s3_bucket.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, route53resolver.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckQueryLogConfigDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, route53resolver.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckQueryLogConfigDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccQueryLogConfigConfig_basic(rName),
@@ -52,10 +52,10 @@ func TestAccRoute53ResolverQueryLogConfig_disappears(t *testing.T) {
 	resourceName := "aws_route53_resolver_query_log_config.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, route53resolver.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckQueryLogConfigDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, route53resolver.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckQueryLogConfigDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccQueryLogConfigConfig_basic(rName),
@@ -76,10 +76,10 @@ func TestAccRoute53ResolverQueryLogConfig_tags(t *testing.T) {
 	cwLogGroupResourceName := "aws_cloudwatch_log_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, route53resolver.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckQueryLogConfigDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, route53resolver.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckQueryLogConfigDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccQueryLogConfigConfig_tags1(rName, "key1", "value1"),

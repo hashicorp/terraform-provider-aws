@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/opensearchservice"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
@@ -15,15 +14,15 @@ func TestAccOpenSearchDomainDataSource_Data_basic(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := testAccRandomDomainName()
 	autoTuneStartAtTime := testAccGetValidStartAtTime(t, "24h")
 	datasourceName := "data.aws_opensearch_domain.test"
 	resourceName := "aws_opensearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRole(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, opensearchservice.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRole(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, opensearchservice.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainDataSourceConfig_basic(rName, autoTuneStartAtTime),
@@ -41,8 +40,10 @@ func TestAccOpenSearchDomainDataSource_Data_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, "cluster_config.0.zone_awareness_enabled", resourceName, "cluster_config.0.zone_awareness_enabled"),
 					resource.TestCheckResourceAttrPair(datasourceName, "ebs_options.#", resourceName, "ebs_options.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "ebs_options.0.ebs_enabled", resourceName, "ebs_options.0.ebs_enabled"),
+					resource.TestCheckResourceAttrPair(datasourceName, "ebs_options.0.throughput", resourceName, "ebs_options.0.throughput"),
 					resource.TestCheckResourceAttrPair(datasourceName, "ebs_options.0.volume_type", resourceName, "ebs_options.0.volume_type"),
 					resource.TestCheckResourceAttrPair(datasourceName, "ebs_options.0.volume_size", resourceName, "ebs_options.0.volume_size"),
+					resource.TestCheckResourceAttrPair(datasourceName, "ebs_options.0.iops", resourceName, "ebs_options.0.iops"),
 					resource.TestCheckResourceAttrPair(datasourceName, "snapshot_options.#", resourceName, "snapshot_options.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "snapshot_options.0.automated_snapshot_start_hour", resourceName, "snapshot_options.0.automated_snapshot_start_hour"),
 					resource.TestCheckResourceAttrPair(datasourceName, "advanced_security_options.#", resourceName, "advanced_security_options.#"),
@@ -57,15 +58,15 @@ func TestAccOpenSearchDomainDataSource_Data_advanced(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := testAccRandomDomainName()
 	autoTuneStartAtTime := testAccGetValidStartAtTime(t, "24h")
 	datasourceName := "data.aws_opensearch_domain.test"
 	resourceName := "aws_opensearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRole(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, opensearchservice.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRole(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, opensearchservice.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainDataSourceConfig_advanced(rName, autoTuneStartAtTime),
@@ -105,7 +106,7 @@ data "aws_region" "current" {}
 data "aws_caller_identity" "current" {}
 
 locals {
-  domain_substr = substr(%[1]q, 0, 28)
+  domain_substr = %[1]q
 }
 
 resource "aws_opensearch_domain" "test" {
@@ -150,7 +151,7 @@ POLICY
   }
 
   cluster_config {
-    instance_type            = "t2.small.search"
+    instance_type            = "t3.small.search"
     instance_count           = 2
     dedicated_master_enabled = false
 
@@ -163,7 +164,9 @@ POLICY
 
   ebs_options {
     ebs_enabled = true
-    volume_type = "gp2"
+    iops        = 3000
+    throughput  = 125
+    volume_type = "gp3"
     volume_size = 20
   }
 
@@ -248,7 +251,7 @@ resource "aws_security_group_rule" "test" {
 }
 
 locals {
-  domain_substr = substr(%[1]q, 0, 28)
+  domain_substr = %[1]q
 }
 
 resource "aws_opensearch_domain" "test" {

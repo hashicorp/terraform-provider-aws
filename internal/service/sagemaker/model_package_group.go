@@ -74,13 +74,13 @@ func resourceModelPackageGroupCreate(d *schema.ResourceData, meta interface{}) e
 
 	_, err := conn.CreateModelPackageGroup(input)
 	if err != nil {
-		return fmt.Errorf("error creating SageMaker Model Package Group %s: %w", name, err)
+		return fmt.Errorf("creating SageMaker Model Package Group %s: %w", name, err)
 	}
 
 	d.SetId(name)
 
 	if _, err := WaitModelPackageGroupCompleted(conn, d.Id()); err != nil {
-		return fmt.Errorf("error waiting for SageMaker Model Package Group (%s) to be created: %w", d.Id(), err)
+		return fmt.Errorf("waiting for SageMaker Model Package Group (%s) to be created: %w", d.Id(), err)
 	}
 
 	return resourceModelPackageGroupRead(d, meta)
@@ -98,8 +98,7 @@ func resourceModelPackageGroupRead(d *schema.ResourceData, meta interface{}) err
 			log.Printf("[WARN] Unable to find SageMaker Model Package Group (%s); removing from state", d.Id())
 			return nil
 		}
-		return fmt.Errorf("error reading SageMaker Model Package Group (%s): %w", d.Id(), err)
-
+		return fmt.Errorf("reading SageMaker Model Package Group (%s): %w", d.Id(), err)
 	}
 
 	arn := aws.StringValue(mpg.ModelPackageGroupArn)
@@ -110,18 +109,18 @@ func resourceModelPackageGroupRead(d *schema.ResourceData, meta interface{}) err
 	tags, err := ListTags(conn, arn)
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for SageMaker Model Package Group (%s): %w", d.Id(), err)
+		return fmt.Errorf("listing tags for SageMaker Model Package Group (%s): %w", d.Id(), err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return fmt.Errorf("setting tags: %w", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return fmt.Errorf("setting tags_all: %w", err)
 	}
 
 	return nil
@@ -134,7 +133,7 @@ func resourceModelPackageGroupUpdate(d *schema.ResourceData, meta interface{}) e
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating SageMaker Model Package Group (%s) tags: %s", d.Id(), err)
+			return fmt.Errorf("updating SageMaker Model Package Group (%s) tags: %s", d.Id(), err)
 		}
 	}
 
@@ -152,14 +151,14 @@ func resourceModelPackageGroupDelete(d *schema.ResourceData, meta interface{}) e
 		if tfawserr.ErrMessageContains(err, "ValidationException", "does not exist") {
 			return nil
 		}
-		return fmt.Errorf("error deleting SageMaker Model Package Group (%s): %w", d.Id(), err)
+		return fmt.Errorf("deleting SageMaker Model Package Group (%s): %w", d.Id(), err)
 	}
 
 	if _, err := WaitModelPackageGroupDeleted(conn, d.Id()); err != nil {
 		if tfawserr.ErrMessageContains(err, "ValidationException", "does not exist") {
 			return nil
 		}
-		return fmt.Errorf("error waiting for SageMaker Model Package Group (%s) to delete: %w", d.Id(), err)
+		return fmt.Errorf("waiting for SageMaker Model Package Group (%s) to delete: %w", d.Id(), err)
 	}
 
 	return nil

@@ -17,9 +17,9 @@ import (
 
 func TestAccMetaIPRangesDataSource_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIPRangesDataSourceConfig_basic,
@@ -37,9 +37,9 @@ func TestAccMetaIPRangesDataSource_basic(t *testing.T) {
 
 func TestAccMetaIPRangesDataSource_url(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIPRangesDataSourceConfig_url,
@@ -55,7 +55,6 @@ func TestAccMetaIPRangesDataSource_url(t *testing.T) {
 
 func testAccIPRangesCheckAttributes(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-
 		r := s.RootModule().Resources[n]
 		a := r.Primary.Attributes
 
@@ -84,27 +83,22 @@ func testAccIPRangesCheckAttributes(n string) resource.TestCheckFunc {
 		)
 
 		for k, v := range a {
-
 			if regionMember.MatchString(k) {
-
 				// lintignore:AWSAT003
 				if !(v == "eu-west-1" || v == "eu-central-1") {
 					return fmt.Errorf("unexpected region %s", v)
 				}
 
 				regions = regions + 1
-
 			}
 
 			if serviceMember.MatchString(k) {
-
 				if v != "ec2" {
 					return fmt.Errorf("unexpected service %s", v)
 				}
 
 				services = services + 1
 			}
-
 		}
 
 		if regions != 2 {

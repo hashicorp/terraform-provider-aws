@@ -8,7 +8,8 @@ before:
   hooks:
     - 'go mod download'
 builds:
-  - # Binary naming only required for Terraform CLI 0.12
+  -
+    # Binary naming only required for Terraform CLI 0.12
     binary: '{{ .ProjectName }}_v{{ .Version }}_x5'
     env:
       - CGO_ENABLED=0

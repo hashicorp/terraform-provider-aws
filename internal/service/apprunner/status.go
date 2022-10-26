@@ -62,26 +62,6 @@ func StatusObservabilityConfiguration(ctx context.Context, conn *apprunner.AppRu
 	}
 }
 
-func StatusVPCConnector(ctx context.Context, conn *apprunner.AppRunner, arn string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		input := &apprunner.DescribeVpcConnectorInput{
-			VpcConnectorArn: aws.String(arn),
-		}
-
-		output, err := conn.DescribeVpcConnectorWithContext(ctx, input)
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		if output == nil || output.VpcConnector == nil {
-			return nil, "", nil
-		}
-
-		return output.VpcConnector, aws.StringValue(output.VpcConnector.Status), nil
-	}
-}
-
 func StatusConnection(ctx context.Context, conn *apprunner.AppRunner, name string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		c, err := FindConnectionSummaryByName(ctx, conn, name)

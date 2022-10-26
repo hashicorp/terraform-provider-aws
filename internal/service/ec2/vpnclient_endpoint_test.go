@@ -26,9 +26,10 @@ func init() {
 }
 
 // This is part of an experimental feature, do not use this as a starting point for tests
-//   "This place is not a place of honor... no highly esteemed deed is commemorated here... nothing valued is here.
-//   What is here was dangerous and repulsive to us. This message is a warning about danger."
-//   --  https://hyperallergic.com/312318/a-nuclear-warning-designed-to-last-10000-years/
+//
+//	"This place is not a place of honor... no highly esteemed deed is commemorated here... nothing valued is here.
+//	What is here was dangerous and repulsive to us. This message is a warning about danger."
+//	--  https://hyperallergic.com/312318/a-nuclear-warning-designed-to-last-10000-years/
 func TestAccClientVPNEndpoint_serial(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
 		"Endpoint": {
@@ -93,10 +94,10 @@ func testAccClientVPNEndpoint_basic(t *testing.T) {
 	resourceName := "aws_ec2_client_vpn_endpoint.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheckClientVPNSyncronize(t); acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckClientVPNEndpointDestroy,
+		PreCheck:                 func() { testAccPreCheckClientVPNSyncronize(t); acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClientVPNEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClientVPNEndpointConfig_basic(rName),
@@ -149,10 +150,10 @@ func testAccClientVPNEndpoint_disappears(t *testing.T) {
 	resourceName := "aws_ec2_client_vpn_endpoint.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheckClientVPNSyncronize(t); acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckClientVPNEndpointDestroy,
+		PreCheck:                 func() { testAccPreCheckClientVPNSyncronize(t); acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClientVPNEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClientVPNEndpointConfig_basic(rName),
@@ -171,10 +172,10 @@ func testAccClientVPNEndpoint_tags(t *testing.T) {
 	resourceName := "aws_ec2_client_vpn_endpoint.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheckClientVPNSyncronize(t); acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckClientVPNEndpointDestroy,
+		PreCheck:                 func() { testAccPreCheckClientVPNSyncronize(t); acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClientVPNEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClientVPNEndpointConfig_tags1("key1", "value1"),
@@ -222,10 +223,10 @@ func testAccClientVPNEndpoint_msADAuth(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheckClientVPNSyncronize(t); acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckClientVPNEndpointDestroy,
+		PreCheck:                 func() { testAccPreCheckClientVPNSyncronize(t); acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClientVPNEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClientVPNEndpointConfig_microsoftAD(rName, domainName),
@@ -258,10 +259,10 @@ func testAccClientVPNEndpoint_msADAuthAndMutualAuth(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheckClientVPNSyncronize(t); acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckClientVPNEndpointDestroy,
+		PreCheck:                 func() { testAccPreCheckClientVPNSyncronize(t); acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClientVPNEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClientVPNEndpointConfig_mutualAuthAndMicrosoftAD(rName, domainName),
@@ -291,10 +292,10 @@ func testAccClientVPNEndpoint_federatedAuth(t *testing.T) {
 	samlProviderResourceName := "aws_iam_saml_provider.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckClientVPNSyncronize(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckClientVPNEndpointDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckClientVPNSyncronize(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClientVPNEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClientVPNEndpointConfig_federatedAuth(rName, idpEntityID),
@@ -323,10 +324,10 @@ func testAccClientVPNEndpoint_federatedAuthWithSelfServiceProvider(t *testing.T)
 	samlProvider2ResourceName := "aws_iam_saml_provider.test2"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckClientVPNSyncronize(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckClientVPNEndpointDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckClientVPNSyncronize(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClientVPNEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClientVPNEndpointConfig_federatedAuthAndSelfServiceSAMLProvider(rName, idpEntityID),
@@ -355,10 +356,10 @@ func testAccClientVPNEndpoint_withClientConnectOptions(t *testing.T) {
 	lambdaFunction2ResourceName := "aws_lambda_function.test2"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheckClientVPNSyncronize(t); acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckClientVPNEndpointDestroy,
+		PreCheck:                 func() { testAccPreCheckClientVPNSyncronize(t); acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClientVPNEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClientVPNEndpointConfig_clientConnectOptions(rName, true, 1),
@@ -402,10 +403,10 @@ func testAccClientVPNEndpoint_withClientLoginBannerOptions(t *testing.T) {
 	resourceName := "aws_ec2_client_vpn_endpoint.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheckClientVPNSyncronize(t); acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckClientVPNEndpointDestroy,
+		PreCheck:                 func() { testAccPreCheckClientVPNSyncronize(t); acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClientVPNEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClientVPNEndpointConfig_clientLoginBannerOptions(rName, true, "Options 1"),
@@ -452,10 +453,10 @@ func testAccClientVPNEndpoint_withConnectionLogOptions(t *testing.T) {
 	logStream2ResourceName := "aws_cloudwatch_log_stream.test2"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheckClientVPNSyncronize(t); acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckClientVPNEndpointDestroy,
+		PreCheck:                 func() { testAccPreCheckClientVPNSyncronize(t); acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClientVPNEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClientVPNEndpointConfig_connectionLogOptions(rName, 0),
@@ -512,10 +513,10 @@ func testAccClientVPNEndpoint_withDNSServers(t *testing.T) {
 	resourceName := "aws_ec2_client_vpn_endpoint.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheckClientVPNSyncronize(t); acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckClientVPNEndpointDestroy,
+		PreCheck:                 func() { testAccPreCheckClientVPNSyncronize(t); acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClientVPNEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClientVPNEndpointConfig_dnsServers(rName),
@@ -558,10 +559,10 @@ func testAccClientVPNEndpoint_simpleAttributesUpdate(t *testing.T) {
 	serverCertificate2ResourceName := "aws_acm_certificate.test2"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheckClientVPNSyncronize(t); acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckClientVPNEndpointDestroy,
+		PreCheck:                 func() { testAccPreCheckClientVPNSyncronize(t); acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClientVPNEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClientVPNEndpointConfig_simpleAttributes(rName),
@@ -603,10 +604,10 @@ func testAccClientVPNEndpoint_selfServicePortal(t *testing.T) {
 	resourceName := "aws_ec2_client_vpn_endpoint.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheckClientVPNSyncronize(t); acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckClientVPNEndpointDestroy,
+		PreCheck:                 func() { testAccPreCheckClientVPNSyncronize(t); acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClientVPNEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClientVPNEndpointConfig_selfServicePortal(rName, "enabled", idpEntityID),
@@ -639,10 +640,10 @@ func testAccClientVPNEndpoint_vpcNoSecurityGroups(t *testing.T) {
 	vpcResourceName := "aws_vpc.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheckClientVPNSyncronize(t); acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckClientVPNEndpointDestroy,
+		PreCheck:                 func() { testAccPreCheckClientVPNSyncronize(t); acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClientVPNEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClientVPNEndpointConfig_securityGroups(rName, 0),
@@ -671,10 +672,10 @@ func testAccClientVPNEndpoint_vpcSecurityGroups(t *testing.T) {
 	vpcResourceName := "aws_vpc.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheckClientVPNSyncronize(t); acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckClientVPNEndpointDestroy,
+		PreCheck:                 func() { testAccPreCheckClientVPNSyncronize(t); acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClientVPNEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClientVPNEndpointConfig_securityGroups(rName, 2),

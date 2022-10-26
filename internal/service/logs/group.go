@@ -149,18 +149,18 @@ func resourceGroupRead(d *schema.ResourceData, meta interface{}) error {
 	tags, err := ListTags(conn, d.Id())
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for CloudWatch Logs Group (%s): %s", d.Id(), err)
+		return fmt.Errorf("listing tags for CloudWatch Logs Group (%s): %s", d.Id(), err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return fmt.Errorf("setting tags: %w", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return fmt.Errorf("setting tags_all: %w", err)
 	}
 
 	return nil
@@ -219,7 +219,7 @@ func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating CloudWatch Log Group (%s) tags: %s", d.Id(), err)
+			return fmt.Errorf("updating CloudWatch Log Group (%s) tags: %s", d.Id(), err)
 		}
 	}
 

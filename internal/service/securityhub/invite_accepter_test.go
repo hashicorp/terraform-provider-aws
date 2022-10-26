@@ -8,14 +8,12 @@ import (
 	"github.com/aws/aws-sdk-go/service/securityhub"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func testAccInviteAccepter_basic(t *testing.T) {
-	var providers []*schema.Provider
 	resourceName := "aws_securityhub_invite_accepter.test"
 
 	resource.Test(t, resource.TestCase{
@@ -23,9 +21,9 @@ func testAccInviteAccepter_basic(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckAlternateAccount(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, securityhub.EndpointsID),
-		ProviderFactories: acctest.FactoriesAlternate(&providers),
-		CheckDestroy:      testAccCheckInviteAccepterDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, securityhub.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
+		CheckDestroy:             testAccCheckInviteAccepterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInviteAccepterConfig_basic(acctest.DefaultEmailAddress),

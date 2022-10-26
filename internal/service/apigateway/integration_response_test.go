@@ -21,10 +21,10 @@ func TestAccAPIGatewayIntegrationResponse_basic(t *testing.T) {
 	resourceName := "aws_api_gateway_integration_response.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, apigateway.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckIntegrationResponseDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIntegrationResponseDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIntegrationResponseConfig_basic(rName),
@@ -69,10 +69,10 @@ func TestAccAPIGatewayIntegrationResponse_disappears(t *testing.T) {
 	resourceName := "aws_api_gateway_integration_response.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, apigateway.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckIntegrationResponseDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIntegrationResponseDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIntegrationResponseConfig_basic(rName),

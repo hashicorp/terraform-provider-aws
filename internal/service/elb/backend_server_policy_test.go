@@ -26,10 +26,10 @@ func TestAccELBBackendServerPolicy_basic(t *testing.T) {
 	lbName := fmt.Sprintf("tf-acc-lb-bsp-basic-%s", rString)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, elb.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckBackendServerPolicyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elb.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBackendServerPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBackendServerPolicyConfig_basic0(lbName, privateKey1, publicKey1, certificate1),

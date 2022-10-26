@@ -124,7 +124,7 @@ func resourceAppImageConfigCreate(d *schema.ResourceData, meta interface{}) erro
 
 	_, err := conn.CreateAppImageConfig(input)
 	if err != nil {
-		return fmt.Errorf("error creating SageMaker App Image Config %s: %w", name, err)
+		return fmt.Errorf("creating SageMaker App Image Config %s: %w", name, err)
 	}
 
 	d.SetId(name)
@@ -144,8 +144,7 @@ func resourceAppImageConfigRead(d *schema.ResourceData, meta interface{}) error 
 			log.Printf("[WARN] Unable to find SageMaker App Image Config (%s); removing from state", d.Id())
 			return nil
 		}
-		return fmt.Errorf("error reading SageMaker App Image Config (%s): %w", d.Id(), err)
-
+		return fmt.Errorf("reading SageMaker App Image Config (%s): %w", d.Id(), err)
 	}
 
 	arn := aws.StringValue(image.AppImageConfigArn)
@@ -153,24 +152,24 @@ func resourceAppImageConfigRead(d *schema.ResourceData, meta interface{}) error 
 	d.Set("arn", arn)
 
 	if err := d.Set("kernel_gateway_image_config", flattenAppImageConfigKernelGatewayImageConfig(image.KernelGatewayImageConfig)); err != nil {
-		return fmt.Errorf("error setting kernel_gateway_image_config: %w", err)
+		return fmt.Errorf("setting kernel_gateway_image_config: %w", err)
 	}
 
 	tags, err := ListTags(conn, arn)
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for SageMaker App Image Config (%s): %w", d.Id(), err)
+		return fmt.Errorf("listing tags for SageMaker App Image Config (%s): %w", d.Id(), err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return fmt.Errorf("setting tags: %w", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return fmt.Errorf("setting tags_all: %w", err)
 	}
 
 	return nil
@@ -183,12 +182,11 @@ func resourceAppImageConfigUpdate(d *schema.ResourceData, meta interface{}) erro
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating SageMaker App Image Config (%s) tags: %w", d.Id(), err)
+			return fmt.Errorf("updating SageMaker App Image Config (%s) tags: %w", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("kernel_gateway_image_config") {
-
 		input := &sagemaker.UpdateAppImageConfigInput{
 			AppImageConfigName: aws.String(d.Id()),
 		}
@@ -200,9 +198,8 @@ func resourceAppImageConfigUpdate(d *schema.ResourceData, meta interface{}) erro
 		log.Printf("[DEBUG] SageMaker App Image Config update config: %#v", *input)
 		_, err := conn.UpdateAppImageConfig(input)
 		if err != nil {
-			return fmt.Errorf("error updating SageMaker App Image Config: %w", err)
+			return fmt.Errorf("updating SageMaker App Image Config: %w", err)
 		}
-
 	}
 
 	return resourceAppImageConfigRead(d, meta)
@@ -219,7 +216,7 @@ func resourceAppImageConfigDelete(d *schema.ResourceData, meta interface{}) erro
 		if tfawserr.ErrMessageContains(err, sagemaker.ErrCodeResourceNotFound, "does not exist") {
 			return nil
 		}
-		return fmt.Errorf("error deleting SageMaker App Image Config (%s): %w", d.Id(), err)
+		return fmt.Errorf("deleting SageMaker App Image Config (%s): %w", d.Id(), err)
 	}
 
 	return nil

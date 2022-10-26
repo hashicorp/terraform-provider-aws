@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -119,7 +120,6 @@ func resourceQuerySuggestionsBlockListCreate(ctx context.Context, d *schema.Reso
 		propagationTimeout,
 		func() (interface{}, error) {
 			return conn.CreateQuerySuggestionsBlockList(ctx, in)
-
 		},
 		func(err error) (bool, error) {
 			var validationException *types.ValidationException
@@ -250,7 +250,6 @@ func resourceQuerySuggestionsBlockListUpdate(ctx context.Context, d *schema.Reso
 			propagationTimeout,
 			func() (interface{}, error) {
 				return conn.UpdateQuerySuggestionsBlockList(ctx, input)
-
 			},
 			func(err error) (bool, error) {
 				var validationException *types.ValidationException
@@ -332,8 +331,8 @@ func statusQuerySuggestionsBlockList(ctx context.Context, conn *kendra.Client, i
 
 func waitQuerySuggestionsBlockListCreated(ctx context.Context, conn *kendra.Client, id, indexId string, timeout time.Duration) (*kendra.DescribeQuerySuggestionsBlockListOutput, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending:                   []string{string(types.QuerySuggestionsBlockListStatusCreating)},
-		Target:                    []string{string(types.QuerySuggestionsBlockListStatusActive)},
+		Pending:                   enum.Slice(types.QuerySuggestionsBlockListStatusCreating),
+		Target:                    enum.Slice(types.QuerySuggestionsBlockListStatusActive),
 		Refresh:                   statusQuerySuggestionsBlockList(ctx, conn, id, indexId),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
@@ -353,8 +352,8 @@ func waitQuerySuggestionsBlockListCreated(ctx context.Context, conn *kendra.Clie
 
 func waitQuerySuggestionsBlockListUpdated(ctx context.Context, conn *kendra.Client, id, indexId string, timeout time.Duration) (*kendra.DescribeQuerySuggestionsBlockListOutput, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending:                   []string{string(types.QuerySuggestionsBlockListStatusUpdating)},
-		Target:                    []string{string(types.QuerySuggestionsBlockListStatusActive)},
+		Pending:                   enum.Slice(types.QuerySuggestionsBlockListStatusUpdating),
+		Target:                    enum.Slice(types.QuerySuggestionsBlockListStatusActive),
 		Refresh:                   statusQuerySuggestionsBlockList(ctx, conn, id, indexId),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
@@ -374,7 +373,7 @@ func waitQuerySuggestionsBlockListUpdated(ctx context.Context, conn *kendra.Clie
 
 func waitQuerySuggestionsBlockListDeleted(ctx context.Context, conn *kendra.Client, id, indexId string, timeout time.Duration) (*kendra.DescribeQuerySuggestionsBlockListOutput, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{string(types.QuerySuggestionsBlockListStatusDeleting)},
+		Pending: enum.Slice(types.QuerySuggestionsBlockListStatusDeleting),
 		Target:  []string{},
 		Refresh: statusQuerySuggestionsBlockList(ctx, conn, id, indexId),
 		Timeout: timeout,

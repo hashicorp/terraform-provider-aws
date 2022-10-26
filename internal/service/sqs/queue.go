@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
@@ -112,6 +113,7 @@ var (
 		"redrive_allow_policy": {
 			Type:         schema.TypeString,
 			Optional:     true,
+			Computed:     true,
 			ValidateFunc: validation.StringIsJSON,
 			StateFunc: func(v interface{}) string {
 				json, _ := structure.NormalizeJsonString(v)
@@ -121,6 +123,7 @@ var (
 		"redrive_policy": {
 			Type:         schema.TypeString,
 			Optional:     true,
+			Computed:     true,
 			ValidateFunc: validation.StringIsJSON,
 			StateFunc: func(v interface{}) string {
 				json, _ := structure.NormalizeJsonString(v)
@@ -130,6 +133,7 @@ var (
 		"sqs_managed_sse_enabled": {
 			Type:          schema.TypeBool,
 			Optional:      true,
+			Computed:      true,
 			ConflictsWith: []string{"kms_master_key_id"},
 		},
 		"tags":     tftags.TagsSchema(),
@@ -163,18 +167,20 @@ var (
 		"redrive_policy":                    sqs.QueueAttributeNameRedrivePolicy,
 		"sqs_managed_sse_enabled":           sqs.QueueAttributeNameSqsManagedSseEnabled,
 		"visibility_timeout_seconds":        sqs.QueueAttributeNameVisibilityTimeout,
-	}, queueSchema).WithIAMPolicyAttribute("policy")
+	}, queueSchema).WithIAMPolicyAttribute("policy").WithMissingSetToNil("*").WithAlwaysSendConfiguredBooleanValueOnCreate("sqs_managed_sse_enabled")
 )
 
 func ResourceQueue() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceQueueCreate,
-		Read:   resourceQueueRead,
-		Update: resourceQueueUpdate,
-		Delete: resourceQueueDelete,
+		CreateWithoutTimeout: resourceQueueCreate,
+		ReadWithoutTimeout:   resourceQueueRead,
+		UpdateWithoutTimeout: resourceQueueUpdate,
+		DeleteWithoutTimeout: resourceQueueDelete,
+
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
+
 		CustomizeDiff: customdiff.Sequence(
 			resourceQueueCustomizeDiff,
 			verify.SetTagsDiff,
@@ -184,7 +190,7 @@ func ResourceQueue() *schema.Resource {
 	}
 }
 
-func resourceQueueCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceQueueCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).SQSConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
@@ -204,7 +210,7 @@ func resourceQueueCreate(d *schema.ResourceData, meta interface{}) error {
 	attributes, err := queueAttributeMap.ResourceDataToAPIAttributesCreate(d)
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	input.Attributes = aws.StringMap(attributes)
@@ -214,57 +220,57 @@ func resourceQueueCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] Creating SQS Queue: %s", input)
-	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(queueCreatedTimeout, func() (interface{}, error) {
-		return conn.CreateQueue(input)
+	outputRaw, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, queueCreatedTimeout, func() (interface{}, error) {
+		return conn.CreateQueueWithContext(ctx, input)
 	}, sqs.ErrCodeQueueDeletedRecently)
 
 	// Some partitions may not support tag-on-create
-	if input.Tags != nil && verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
+	if input.Tags != nil && verify.ErrorISOUnsupported(conn.PartitionID, err) {
 		log.Printf("[WARN] failed creating SQS Queue (%s) with tags: %s. Trying create without tags.", name, err)
 
 		input.Tags = nil
-		outputRaw, err = tfresource.RetryWhenAWSErrCodeEquals(queueCreatedTimeout, func() (interface{}, error) {
-			return conn.CreateQueue(input)
+		outputRaw, err = tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, queueCreatedTimeout, func() (interface{}, error) {
+			return conn.CreateQueueWithContext(ctx, input)
 		}, sqs.ErrCodeQueueDeletedRecently)
 	}
 
 	if err != nil {
-		return fmt.Errorf("failed creating SQS Queue (%s): %w", name, err)
+		return diag.Errorf("creating SQS Queue (%s): %s", name, err)
 	}
 
 	d.SetId(aws.StringValue(outputRaw.(*sqs.CreateQueueOutput).QueueUrl))
 
-	err = waitQueueAttributesPropagated(conn, d.Id(), attributes)
+	err = waitQueueAttributesPropagated(ctx, conn, d.Id(), attributes)
 
 	if err != nil {
-		return fmt.Errorf("error waiting for SQS Queue (%s) attributes to create: %w", d.Id(), err)
+		return diag.Errorf("waiting for SQS Queue (%s) attributes create: %s", d.Id(), err)
 	}
 
 	// Only post-create tagging supported in some partitions
 	if input.Tags == nil && len(tags) > 0 {
-		err := UpdateTags(conn, d.Id(), nil, tags)
+		err := UpdateTagsWithContext(ctx, conn, d.Id(), nil, tags)
 
-		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
+		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.ErrorISOUnsupported(conn.PartitionID, err) {
 			// if default tags only, log and continue (i.e., should error if explicitly setting tags and they can't be)
 			log.Printf("[WARN] failed adding tags after create for SQS Queue (%s): %s", d.Id(), err)
-			return resourceQueueRead(d, meta)
+			return resourceQueueRead(ctx, d, meta)
 		}
 
 		if err != nil {
-			return fmt.Errorf("failed adding tags after create for SQS Queue (%s): %w", d.Id(), err)
+			return diag.Errorf("adding tags after create to SQS Queue (%s): %s", d.Id(), err)
 		}
 	}
 
-	return resourceQueueRead(d, meta)
+	return resourceQueueRead(ctx, d, meta)
 }
 
-func resourceQueueRead(d *schema.ResourceData, meta interface{}) error {
+func resourceQueueRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).SQSConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	outputRaw, err := tfresource.RetryWhenNotFound(queueReadTimeout, func() (interface{}, error) {
-		return FindQueueAttributesByURL(conn, d.Id())
+	outputRaw, err := tfresource.RetryWhenNotFoundContext(ctx, queueReadTimeout, func() (interface{}, error) {
+		return FindQueueAttributesByURL(ctx, conn, d.Id())
 	})
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -274,13 +280,13 @@ func resourceQueueRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading SQS Queue (%s): %w", d.Id(), err)
+		return diag.Errorf("reading SQS Queue (%s): %s", d.Id(), err)
 	}
 
 	name, err := QueueNameFromURL(d.Id())
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	output := outputRaw.(map[string]string)
@@ -288,7 +294,7 @@ func resourceQueueRead(d *schema.ResourceData, meta interface{}) error {
 	err = queueAttributeMap.APIAttributesToResourceData(output, d)
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Backwards compatibility: https://github.com/hashicorp/terraform-provider-aws/issues/19786.
@@ -304,42 +310,42 @@ func resourceQueueRead(d *schema.ResourceData, meta interface{}) error {
 	}
 	d.Set("url", d.Id())
 
-	outputRaw, err = tfresource.RetryWhenAWSErrCodeEquals(queueTagsTimeout, func() (interface{}, error) {
-		return ListTags(conn, d.Id())
+	outputRaw, err = tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, queueTagsTimeout, func() (interface{}, error) {
+		return ListTagsWithContext(ctx, conn, d.Id())
 	}, sqs.ErrCodeQueueDoesNotExist)
 
-	if verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
+	if verify.ErrorISOUnsupported(conn.PartitionID, err) {
 		// Some partitions may not support tagging, giving error
 		log.Printf("[WARN] failed listing tags for SQS Queue (%s): %s", d.Id(), err)
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("failed listing tags for SQS Queue (%s): %w", d.Id(), err)
+		return diag.Errorf("listing tags for SQS Queue (%s): %s", d.Id(), err)
 	}
 
 	tags := outputRaw.(tftags.KeyValueTags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return diag.Errorf("setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return diag.Errorf("setting tags_all: %s", err)
 	}
 
 	return nil
 }
 
-func resourceQueueUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceQueueUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).SQSConn
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		attributes, err := queueAttributeMap.ResourceDataToAPIAttributesUpdate(d)
 
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 
 		input := &sqs.SetQueueAttributesInput{
@@ -348,42 +354,42 @@ func resourceQueueUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		log.Printf("[DEBUG] Updating SQS Queue: %s", input)
-		_, err = conn.SetQueueAttributes(input)
+		_, err = conn.SetQueueAttributesWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error updating SQS Queue (%s) attributes: %w", d.Id(), err)
+			return diag.Errorf("updating SQS Queue (%s) attributes: %s", d.Id(), err)
 		}
 
-		err = waitQueueAttributesPropagated(conn, d.Id(), attributes)
+		err = waitQueueAttributesPropagated(ctx, conn, d.Id(), attributes)
 
 		if err != nil {
-			return fmt.Errorf("error waiting for SQS Queue (%s) attributes to update: %w", d.Id(), err)
+			return diag.Errorf("waiting for SQS Queue (%s) attributes update: %s", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		err := UpdateTags(conn, d.Id(), o, n)
+		err := UpdateTagsWithContext(ctx, conn, d.Id(), o, n)
 
-		if verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
+		if verify.ErrorISOUnsupported(conn.PartitionID, err) {
 			// Some partitions may not support tagging, giving error
 			log.Printf("[WARN] failed updating tags for SQS Queue (%s): %s", d.Id(), err)
-			return resourceQueueRead(d, meta)
+			return resourceQueueRead(ctx, d, meta)
 		}
 
 		if err != nil {
-			return fmt.Errorf("failed updating tags for SQS Queue (%s): %w", d.Id(), err)
+			return diag.Errorf("updating tags for SQS Queue (%s): %s", d.Id(), err)
 		}
 	}
 
-	return resourceQueueRead(d, meta)
+	return resourceQueueRead(ctx, d, meta)
 }
 
-func resourceQueueDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceQueueDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).SQSConn
 
 	log.Printf("[DEBUG] Deleting SQS Queue: %s", d.Id())
-	_, err := conn.DeleteQueue(&sqs.DeleteQueueInput{
+	_, err := conn.DeleteQueueWithContext(ctx, &sqs.DeleteQueueInput{
 		QueueUrl: aws.String(d.Id()),
 	})
 
@@ -392,13 +398,13 @@ func resourceQueueDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting SQS Queue (%s): %w", d.Id(), err)
+		return diag.Errorf("deleting SQS Queue (%s): %s", d.Id(), err)
 	}
 
-	err = waitQueueDeleted(conn, d.Id())
+	err = waitQueueDeleted(ctx, conn, d.Id())
 
 	if err != nil {
-		return fmt.Errorf("error waiting for SQS Queue (%s) to delete: %w", d.Id(), err)
+		return diag.Errorf("waiting for SQS Queue (%s) delete: %s", d.Id(), err)
 	}
 
 	return nil

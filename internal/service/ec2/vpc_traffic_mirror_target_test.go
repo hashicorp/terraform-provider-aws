@@ -5,15 +5,14 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccVPCTrafficMirrorTarget_nlb(t *testing.T) {
@@ -27,9 +26,9 @@ func TestAccVPCTrafficMirrorTarget_nlb(t *testing.T) {
 			acctest.PreCheck(t)
 			testAccPreCheckTrafficMirrorTarget(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTrafficMirrorTargetDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTrafficMirrorTargetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCTrafficMirrorTargetConfig_nlb(rName, description),
@@ -38,7 +37,7 @@ func TestAccVPCTrafficMirrorTarget_nlb(t *testing.T) {
 					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`traffic-mirror-target/tmt-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "description", description),
-					resource.TestCheckResourceAttrPair(resourceName, "network_load_balancer_arn", "aws_lb.lb", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "network_load_balancer_arn", "aws_lb.test", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -62,9 +61,9 @@ func TestAccVPCTrafficMirrorTarget_eni(t *testing.T) {
 			acctest.PreCheck(t)
 			testAccPreCheckTrafficMirrorTarget(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTrafficMirrorTargetDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTrafficMirrorTargetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCTrafficMirrorTargetConfig_eni(rName, description),
@@ -95,9 +94,9 @@ func TestAccVPCTrafficMirrorTarget_tags(t *testing.T) {
 			acctest.PreCheck(t)
 			testAccPreCheckTrafficMirrorTarget(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTrafficMirrorTargetDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTrafficMirrorTargetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCTrafficMirrorTargetConfig_tags1(rName, description, "key1", "value1"),
@@ -144,9 +143,9 @@ func TestAccVPCTrafficMirrorTarget_disappears(t *testing.T) {
 			acctest.PreCheck(t)
 			testAccPreCheckTrafficMirrorTarget(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckTrafficMirrorTargetDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTrafficMirrorTargetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCTrafficMirrorTargetConfig_nlb(rName, description),
@@ -160,110 +159,112 @@ func TestAccVPCTrafficMirrorTarget_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckTrafficMirrorTargetExists(name string, target *ec2.TrafficMirrorTarget) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
-		if !ok {
-			return fmt.Errorf("Not found: %s", name)
-		}
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ID set for %s", name)
+func TestAccVPCTrafficMirrorTarget_gwlb(t *testing.T) {
+	resourceName := "aws_ec2_traffic_mirror_target.test"
+	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(10))
+	description := "test gwlb endpoint target"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			testAccPreCheckTrafficMirrorTarget(t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTrafficMirrorTargetDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCTrafficMirrorTargetConfig_gwlb(rName, description),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "description", description),
+					resource.TestCheckResourceAttrPair(resourceName, "gateway_load_balancer_endpoint_id", "aws_vpc_endpoint.test", "id"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccCheckTrafficMirrorTargetDestroy(s *terraform.State) error {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != "aws_ec2_traffic_mirror_target" {
+			continue
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
-		out, err := conn.DescribeTrafficMirrorTargets(&ec2.DescribeTrafficMirrorTargetsInput{
-			TrafficMirrorTargetIds: []*string{
-				aws.String(rs.Primary.ID),
-			},
-		})
+		_, err := tfec2.FindTrafficMirrorTargetByID(conn, rs.Primary.ID)
+
+		if tfresource.NotFound(err) {
+			continue
+		}
 
 		if err != nil {
 			return err
 		}
 
-		if 0 == len(out.TrafficMirrorTargets) {
-			return fmt.Errorf("Traffic mirror target %s not found", rs.Primary.ID)
+		return fmt.Errorf("EC2 Traffic Mirror Target %s still exists", rs.Primary.ID)
+	}
+
+	return nil
+}
+
+func testAccCheckTrafficMirrorTargetExists(n string, v *ec2.TrafficMirrorTarget) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
 		}
 
-		*target = *out.TrafficMirrorTargets[0]
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No EC2 Traffic Mirror Target ID is set")
+		}
+
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+
+		output, err := tfec2.FindTrafficMirrorTargetByID(conn, rs.Primary.ID)
+
+		if err != nil {
+			return err
+		}
+
+		*v = *output
 
 		return nil
 	}
 }
 
-func testAccTrafficMirrorTargetConfigBase(rName string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "azs" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
-resource "aws_vpc" "vpc" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "sub1" {
-  vpc_id            = aws_vpc.vpc.id
-  cidr_block        = "10.0.0.0/24"
-  availability_zone = data.aws_availability_zones.azs.names[0]
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "sub2" {
-  vpc_id            = aws_vpc.vpc.id
-  cidr_block        = "10.0.1.0/24"
-  availability_zone = data.aws_availability_zones.azs.names[1]
-
-  tags = {
-    Name = %[1]q
-  }
-}
-`, rName)
-}
-
 func testAccVPCTrafficMirrorTargetConfig_nlb(rName, description string) string {
-	return acctest.ConfigCompose(testAccTrafficMirrorTargetConfigBase(rName), fmt.Sprintf(`
-resource "aws_lb" "lb" {
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
+resource "aws_lb" "test" {
   name               = %[1]q
   internal           = true
   load_balancer_type = "network"
-  subnets            = [aws_subnet.sub1.id, aws_subnet.sub2.id]
+  subnets            = aws_subnet.test[*].id
 
   enable_deletion_protection = false
-
-  tags = {
-    Name        = %[1]q
-    Environment = "production"
-  }
 }
 
 resource "aws_ec2_traffic_mirror_target" "test" {
   description               = %[2]q
-  network_load_balancer_arn = aws_lb.lb.arn
+  network_load_balancer_arn = aws_lb.test.arn
 }
 `, rName, description))
 }
 
 func testAccVPCTrafficMirrorTargetConfig_eni(rName, description string) string {
 	return acctest.ConfigCompose(
-		testAccTrafficMirrorTargetConfigBase(rName),
+		acctest.ConfigVPCWithSubnets(rName, 1),
 		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
 		fmt.Sprintf(`
-resource "aws_instance" "src" {
+resource "aws_instance" "test" {
   ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = "t2.micro"
-  subnet_id     = aws_subnet.sub1.id
+  subnet_id     = aws_subnet.test[0].id
 
   tags = {
     Name = %[1]q
@@ -272,30 +273,25 @@ resource "aws_instance" "src" {
 
 resource "aws_ec2_traffic_mirror_target" "test" {
   description          = %[2]q
-  network_interface_id = aws_instance.src.primary_network_interface_id
+  network_interface_id = aws_instance.test.primary_network_interface_id
 }
 `, rName, description))
 }
 
 func testAccVPCTrafficMirrorTargetConfig_tags1(rName, description, tagKey1, tagValue1 string) string {
-	return acctest.ConfigCompose(testAccTrafficMirrorTargetConfigBase(rName), fmt.Sprintf(`
-resource "aws_lb" "lb" {
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
+resource "aws_lb" "test" {
   name               = %[1]q
   internal           = true
   load_balancer_type = "network"
-  subnets            = [aws_subnet.sub1.id, aws_subnet.sub2.id]
+  subnets            = aws_subnet.test[*].id
 
   enable_deletion_protection = false
-
-  tags = {
-    Name        = %[1]q
-    Environment = "production"
-  }
 }
 
 resource "aws_ec2_traffic_mirror_target" "test" {
   description               = %[2]q
-  network_load_balancer_arn = aws_lb.lb.arn
+  network_load_balancer_arn = aws_lb.test.arn
 
   tags = {
     %[3]q = %[4]q
@@ -305,24 +301,19 @@ resource "aws_ec2_traffic_mirror_target" "test" {
 }
 
 func testAccVPCTrafficMirrorTargetConfig_tags2(rName, description, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return acctest.ConfigCompose(testAccTrafficMirrorTargetConfigBase(rName), fmt.Sprintf(`
-resource "aws_lb" "lb" {
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
+resource "aws_lb" "test" {
   name               = %[1]q
   internal           = true
   load_balancer_type = "network"
-  subnets            = [aws_subnet.sub1.id, aws_subnet.sub2.id]
+  subnets            = aws_subnet.test[*].id
 
   enable_deletion_protection = false
-
-  tags = {
-    Name        = %[1]q
-    Environment = "production"
-  }
 }
 
 resource "aws_ec2_traffic_mirror_target" "test" {
   description               = %[2]q
-  network_load_balancer_arn = aws_lb.lb.arn
+  network_load_balancer_arn = aws_lb.test.arn
 
   tags = {
     %[3]q = %[4]q
@@ -330,6 +321,17 @@ resource "aws_ec2_traffic_mirror_target" "test" {
   }
 }
 `, rName, description, tagKey1, tagValue1, tagKey2, tagValue2))
+}
+
+func testAccVPCTrafficMirrorTargetConfig_gwlb(rName, description string) string {
+	return acctest.ConfigCompose(
+		testAccVPCEndpointConfig_gatewayLoadBalancer(rName),
+		fmt.Sprintf(`
+resource "aws_ec2_traffic_mirror_target" "test" {
+  description                       = %[1]q
+  gateway_load_balancer_endpoint_id = aws_vpc_endpoint.test.id
+}
+`, description))
 }
 
 func testAccPreCheckTrafficMirrorTarget(t *testing.T) {
@@ -344,34 +346,4 @@ func testAccPreCheckTrafficMirrorTarget(t *testing.T) {
 	if err != nil {
 		t.Fatal("Unexpected PreCheck error: ", err)
 	}
-}
-
-func testAccCheckTrafficMirrorTargetDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
-
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_ec2_traffic_mirror_target" {
-			continue
-		}
-
-		out, err := conn.DescribeTrafficMirrorTargets(&ec2.DescribeTrafficMirrorTargetsInput{
-			TrafficMirrorTargetIds: []*string{
-				aws.String(rs.Primary.ID),
-			},
-		})
-
-		if tfawserr.ErrCodeEquals(err, "InvalidTrafficMirrorTargetId.NotFound") {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		if len(out.TrafficMirrorTargets) != 0 {
-			return fmt.Errorf("Traffic mirror target %s still not destroyed", rs.Primary.ID)
-		}
-	}
-
-	return nil
 }

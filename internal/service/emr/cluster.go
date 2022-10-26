@@ -171,6 +171,11 @@ func ResourceCluster() *schema.Resource {
 										Required: true,
 										ForceNew: true,
 									},
+									"throughput": {
+										Type:     schema.TypeInt,
+										Optional: true,
+										ForceNew: true,
+									},
 									"type": {
 										Type:         schema.TypeString,
 										Required:     true,
@@ -391,6 +396,11 @@ func ResourceCluster() *schema.Resource {
 									"size": {
 										Type:     schema.TypeInt,
 										Required: true,
+										ForceNew: true,
+									},
+									"throughput": {
+										Type:     schema.TypeInt,
+										Optional: true,
 										ForceNew: true,
 									},
 									"type": {
@@ -947,8 +957,6 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 		params.AutoTerminationPolicy = expandAutoTerminationPolicy(v.([]interface{}))
 	}
 
-	log.Printf("[DEBUG] EMR Cluster create options: %s", params)
-
 	var resp *emr.RunJobFlowOutput
 	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
 		var err error
@@ -1023,7 +1031,6 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	instanceGroups, err := fetchAllInstanceGroups(conn, d.Id())
 
 	if err == nil { // find instance group
-
 		coreGroup := coreInstanceGroup(instanceGroups)
 		masterGroup := findMasterGroup(instanceGroups)
 
@@ -1045,7 +1052,6 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	instanceFleets, err := FetchAllInstanceFleets(conn, d.Id())
 
 	if err == nil { // find instance fleets
-
 		coreFleet := findInstanceFleet(instanceFleets, emr.InstanceFleetTypeCore)
 		masterFleet := findInstanceFleet(instanceFleets, emr.InstanceFleetTypeMaster)
 
@@ -1367,7 +1373,6 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 					break
 				}
 			}
-
 		}
 	}
 
@@ -1666,6 +1671,9 @@ func flattenEBSConfig(ebsBlockDevices []*emr.EbsBlockDevice) *schema.Set {
 		if ebs.VolumeSpecification.SizeInGB != nil {
 			ebsAttrs["size"] = int(aws.Int64Value(ebs.VolumeSpecification.SizeInGB))
 		}
+		if ebs.VolumeSpecification.Throughput != nil {
+			ebsAttrs["throughput"] = aws.Int64Value(ebs.VolumeSpecification.Throughput)
+		}
 		if ebs.VolumeSpecification.VolumeType != nil {
 			ebsAttrs["type"] = aws.StringValue(ebs.VolumeSpecification.VolumeType)
 		}
@@ -1814,6 +1822,9 @@ func expandEBSConfig(configAttributes map[string]interface{}, config *emr.Instan
 					VolumeType: aws.String(rawEbsConfig["type"].(string)),
 				},
 			}
+			if v, ok := rawEbsConfig["throughput"].(int); ok && v != 0 {
+				ebsBlockDeviceConfig.VolumeSpecification.Throughput = aws.Int64(int64(v))
+			}
 			if v, ok := rawEbsConfig["iops"].(int); ok && v != 0 {
 				ebsBlockDeviceConfig.VolumeSpecification.Iops = aws.Int64(int64(v))
 			}
@@ -1909,6 +1920,9 @@ func resourceClusterEBSHashConfig(v interface{}) int {
 	buf.WriteString(fmt.Sprintf("%d-", m["size"].(int)))
 	buf.WriteString(fmt.Sprintf("%s-", m["type"].(string)))
 	buf.WriteString(fmt.Sprintf("%d-", m["volumes_per_instance"].(int)))
+	if v, ok := m["throughput"].(int); ok && v != 0 {
+		buf.WriteString(fmt.Sprintf("%d-", v))
+	}
 	if v, ok := m["iops"].(int); ok && v != 0 {
 		buf.WriteString(fmt.Sprintf("%d-", v))
 	}
@@ -1947,7 +1961,6 @@ func fetchAllInstanceGroups(conn *emr.EMR, clusterID string) ([]*emr.InstanceGro
 }
 
 func readInstanceFleetConfig(data map[string]interface{}, InstanceFleetType string) *emr.InstanceFleetConfig {
-
 	config := &emr.InstanceFleetConfig{
 		InstanceFleetType:      &InstanceFleetType,
 		Name:                   aws.String(data["name"].(string)),
@@ -2092,6 +2105,9 @@ func expandEBSConfiguration(ebsConfigurations []interface{}) *emr.EbsConfigurati
 				VolumeType: aws.String(cfg["type"].(string)),
 			},
 		}
+		if v, ok := cfg["throughput"].(int); ok && v != 0 {
+			ebsBlockDeviceConfig.VolumeSpecification.Throughput = aws.Int64(int64(v))
+		}
 		if v, ok := cfg["iops"].(int); ok && v != 0 {
 			ebsBlockDeviceConfig.VolumeSpecification.Iops = aws.Int64(int64(v))
 		}
@@ -2161,7 +2177,6 @@ func expandLaunchSpecification(launchSpecification map[string]interface{}) *emr.
 			spotProvisioning.BlockDurationMinutes = aws.Int64(int64(v.(int)))
 		}
 		if v, ok := configAttributes["allocation_strategy"]; ok {
-
 			spotProvisioning.AllocationStrategy = aws.String(v.(string))
 		}
 

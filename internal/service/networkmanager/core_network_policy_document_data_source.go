@@ -307,7 +307,6 @@ func DataSourceCoreNetworkPolicyDocument() *schema.Resource {
 }
 
 func dataSourceCoreNetworkPolicyDocumentRead(d *schema.ResourceData, meta interface{}) error {
-
 	mergedDoc := &CoreNetworkPolicyDoc{
 		Version: d.Get("version").(string),
 	}
@@ -405,7 +404,6 @@ func expandDataCoreNetworkPolicySegmentActions(cfgSegmentActionsIntf []interface
 		}
 
 		sgmtActions[i] = sgmtAction
-
 	}
 	return sgmtActions, nil
 }
@@ -450,7 +448,6 @@ func expandDataCoreNetworkPolicyAttachmentPolicies(cfgAttachmentPolicyIntf []int
 
 	// adjust
 	return aPolicies, nil
-
 }
 
 func expandDataCoreNetworkPolicyAttachmentPoliciesConditions(tfList []interface{}) ([]*CoreNetworkAttachmentPolicyCondition, error) {
@@ -607,7 +604,6 @@ func expandDataCoreNetworkPolicyNetworkConfigurationEdgeLocations(tfList []inter
 	locMap := make(map[string]struct{})
 
 	for i, edgeLocationsRaw := range tfList {
-
 		cfgEdgeLocation, ok := edgeLocationsRaw.(map[string]interface{})
 		edgeLocation := &CoreNetworkEdgeLocation{}
 

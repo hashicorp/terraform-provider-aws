@@ -107,7 +107,7 @@ func resourceClusterSnapshotCreate(d *schema.ResourceData, meta interface{}) err
 	log.Printf("[DEBUG] Creating Neptune DB Cluster Snapshot: %s", input)
 	_, err := conn.CreateDBClusterSnapshot(input)
 	if err != nil {
-		return fmt.Errorf("error creating Neptune DB Cluster Snapshot: %s", err)
+		return fmt.Errorf("creating Neptune DB Cluster Snapshot: %s", err)
 	}
 	d.SetId(d.Get("db_cluster_snapshot_identifier").(string))
 
@@ -123,7 +123,7 @@ func resourceClusterSnapshotCreate(d *schema.ResourceData, meta interface{}) err
 	// Wait, catching any errors
 	_, err = stateConf.WaitForState()
 	if err != nil {
-		return fmt.Errorf("error waiting for Neptune DB Cluster Snapshot %q to create: %s", d.Id(), err)
+		return fmt.Errorf("waiting for Neptune DB Cluster Snapshot %q to create: %s", d.Id(), err)
 	}
 
 	return resourceClusterSnapshotRead(d, meta)
@@ -144,7 +144,7 @@ func resourceClusterSnapshotRead(d *schema.ResourceData, meta interface{}) error
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("error reading Neptune DB Cluster Snapshot %q: %s", d.Id(), err)
+		return fmt.Errorf("reading Neptune DB Cluster Snapshot %q: %s", d.Id(), err)
 	}
 
 	if output == nil || len(output.DBClusterSnapshots) == 0 || output.DBClusterSnapshots[0] == nil || aws.StringValue(output.DBClusterSnapshots[0].DBClusterSnapshotIdentifier) != d.Id() {
@@ -157,7 +157,7 @@ func resourceClusterSnapshotRead(d *schema.ResourceData, meta interface{}) error
 
 	d.Set("allocated_storage", snapshot.AllocatedStorage)
 	if err := d.Set("availability_zones", flex.FlattenStringList(snapshot.AvailabilityZones)); err != nil {
-		return fmt.Errorf("error setting availability_zones: %s", err)
+		return fmt.Errorf("setting availability_zones: %s", err)
 	}
 	d.Set("db_cluster_identifier", snapshot.DBClusterIdentifier)
 	d.Set("db_cluster_snapshot_arn", snapshot.DBClusterSnapshotArn)
@@ -189,7 +189,7 @@ func resourceClusterSnapshotDelete(d *schema.ResourceData, meta interface{}) err
 		if tfawserr.ErrCodeEquals(err, neptune.ErrCodeDBClusterSnapshotNotFoundFault) {
 			return nil
 		}
-		return fmt.Errorf("error deleting Neptune DB Cluster Snapshot %q: %s", d.Id(), err)
+		return fmt.Errorf("deleting Neptune DB Cluster Snapshot %q: %s", d.Id(), err)
 	}
 
 	return nil

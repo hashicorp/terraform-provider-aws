@@ -1,5 +1,5 @@
 package codestarconnections
 
 const (
-	ResConnection = "Connection"
+	ResNameConnection = "Connection"
 )

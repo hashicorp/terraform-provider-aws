@@ -151,7 +151,7 @@ In addition to all arguments above, the following attributes are exported:
 Valid keys for `cost_types` parameter.
 
 * `include_credit` - A boolean value whether to include credits in the cost budget. Defaults to `true`
-* `include_discount` - Specifies whether a budget includes discounts. Defaults to `true`
+* `include_discount` - Whether a budget includes discounts. Defaults to `true`
 * `include_other_subscription` - A boolean value whether to include other subscription costs in the cost budget. Defaults to `true`
 * `include_recurring` - A boolean value whether to include recurring costs in the cost budget. Defaults to `true`
 * `include_refund` - A boolean value whether to include refunds in the cost budget. Defaults to `true`
@@ -159,7 +159,7 @@ Valid keys for `cost_types` parameter.
 * `include_support` - A boolean value whether to include support costs in the cost budget. Defaults to `true`
 * `include_tax` - A boolean value whether to include tax in the cost budget. Defaults to `true`
 * `include_upfront` - A boolean value whether to include upfront costs in the cost budget. Defaults to `true`
-* `use_amortized` - Specifies whether a budget uses the amortized rate. Defaults to `false`
+* `use_amortized` - Whether a budget uses the amortized rate. Defaults to `false`
 * `use_blended` - A boolean value whether to use blended costs in the cost budget. Defaults to `false`
 
 Refer to [AWS CostTypes documentation](https://docs.aws.amazon.com/aws-cost-management/latest/APIReference/API_budgets_CostTypes.html) for further detail.

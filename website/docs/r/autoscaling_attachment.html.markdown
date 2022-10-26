@@ -59,9 +59,9 @@ resource "aws_autoscaling_attachment" "asg_attachment_bar" {
 The following arguments are supported:
 
 * `autoscaling_group_name` - (Required) Name of ASG to associate with the ELB.
-* `elb` - (Optional) The name of the ELB.
-* `alb_target_group_arn` - (Optional, **Deprecated** use `lb_target_group_arn` instead) The ARN of an ALB Target Group.
-* `lb_target_group_arn` - (Optional) The ARN of a load balancer target group.
+* `elb` - (Optional) Name of the ELB.
+* `alb_target_group_arn` - (Optional, **Deprecated** use `lb_target_group_arn` instead) ARN of an ALB Target Group.
+* `lb_target_group_arn` - (Optional) ARN of a load balancer target group.
 
 ## Attributes Reference
 

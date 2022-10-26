@@ -368,7 +368,6 @@ func (c *PermissionPolicyStatementCondition) UnmarshalJSON(b []byte) error {
 
 func FindPermissionPolicyStatementByID(policy *PermissionPolicyDoc, id string) (
 	*PermissionPolicyStatement, error) {
-
 	log.Printf("[DEBUG] Finding statement (%s) in EventBridge permission policy: %s", id, policy)
 	for _, statement := range policy.Statements {
 		if statement.Sid == id {

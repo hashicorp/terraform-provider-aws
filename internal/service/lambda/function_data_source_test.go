@@ -21,9 +21,9 @@ func TestAccLambdaFunctionDataSource_basic(t *testing.T) {
 	resourceName := "aws_lambda_function.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, lambda.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFunctionDataSourceConfig_basic(rName),
@@ -40,6 +40,7 @@ func TestAccLambdaFunctionDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "last_modified", resourceName, "last_modified"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "memory_size", resourceName, "memory_size"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "qualified_arn", resourceName, "qualified_arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "qualified_invoke_arn", resourceName, "qualified_invoke_arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "reserved_concurrent_executions", resourceName, "reserved_concurrent_executions"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "role", resourceName, "role"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "runtime", resourceName, "runtime"),
@@ -64,17 +65,67 @@ func TestAccLambdaFunctionDataSource_version(t *testing.T) {
 	resourceName := "aws_lambda_function.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, lambda.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFunctionDataSourceConfig_version(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "invoke_arn", resourceName, "invoke_arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "qualified_arn", resourceName, "qualified_arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "qualified_invoke_arn", resourceName, "qualified_invoke_arn"),
 					resource.TestCheckResourceAttr(dataSourceName, "qualifier", "1"),
 					resource.TestCheckResourceAttr(dataSourceName, "version", "1"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccLambdaFunctionDataSource_latestVersion(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	dataSourceName := "data.aws_lambda_function.test"
+	resourceName := "aws_lambda_function.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFunctionDataSourceConfig_latestVersion(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "invoke_arn", resourceName, "invoke_arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "qualified_arn", resourceName, "qualified_arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "qualified_invoke_arn", resourceName, "qualified_invoke_arn"),
+					resource.TestCheckResourceAttr(dataSourceName, "version", "1"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccLambdaFunctionDataSource_unpublishedVersion(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	dataSourceName := "data.aws_lambda_function.test"
+	resourceName := "aws_lambda_function.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFunctionDataSourceConfig_unpublishedVersion(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "invoke_arn", resourceName, "invoke_arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "qualified_arn", resourceName, "qualified_arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "qualified_invoke_arn", resourceName, "qualified_invoke_arn"),
+					resource.TestCheckResourceAttr(dataSourceName, "version", "$LATEST"),
 				),
 			},
 		},
@@ -88,9 +139,9 @@ func TestAccLambdaFunctionDataSource_alias(t *testing.T) {
 	resourceName := "aws_lambda_function.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, lambda.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFunctionDataSourceConfig_alias(rName),
@@ -111,9 +162,9 @@ func TestAccLambdaFunctionDataSource_layers(t *testing.T) {
 	resourceName := "aws_lambda_function.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, lambda.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFunctionDataSourceConfig_layers(rName),
@@ -136,9 +187,9 @@ func TestAccLambdaFunctionDataSource_vpc(t *testing.T) {
 	resourceName := "aws_lambda_function.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, lambda.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFunctionDataSourceConfig_vpc(rName),
@@ -159,9 +210,9 @@ func TestAccLambdaFunctionDataSource_environment(t *testing.T) {
 	resourceName := "aws_lambda_function.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, lambda.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFunctionDataSourceConfig_environment(rName),
@@ -187,9 +238,9 @@ func TestAccLambdaFunctionDataSource_fileSystem(t *testing.T) {
 	resourceName := "aws_lambda_function.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, lambda.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFunctionDataSourceConfig_fileSystems(rName),
@@ -212,9 +263,9 @@ func TestAccLambdaFunctionDataSource_image(t *testing.T) {
 	imageLatestID := os.Getenv("AWS_LAMBDA_IMAGE_LATEST_ID")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccImageLatestPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, lambda.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccImageLatestPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFunctionDataSourceConfig_image(rName, imageLatestID),
@@ -233,9 +284,9 @@ func TestAccLambdaFunctionDataSource_architectures(t *testing.T) {
 	resourceName := "aws_lambda_function.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, lambda.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFunctionDataSourceConfig_architectures(rName),
@@ -253,9 +304,9 @@ func TestAccLambdaFunctionDataSource_ephemeralStorage(t *testing.T) {
 	resourceName := "aws_lambda_function.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, lambda.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFunctionDataSourceConfig_ephemeralStorage(rName),
@@ -341,7 +392,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   handler       = "exports.example"
   role          = aws_iam_role.lambda.arn
-  runtime       = "nodejs12.x"
+  runtime       = "nodejs16.x"
 }
 
 data "aws_lambda_function" "test" {
@@ -358,12 +409,46 @@ resource "aws_lambda_function" "test" {
   handler       = "exports.example"
   publish       = true
   role          = aws_iam_role.lambda.arn
-  runtime       = "nodejs12.x"
+  runtime       = "nodejs16.x"
 }
 
 data "aws_lambda_function" "test" {
   function_name = aws_lambda_function.test.function_name
   qualifier     = 1
+}
+`, rName))
+}
+
+func testAccFunctionDataSourceConfig_latestVersion(rName string) string {
+	return acctest.ConfigCompose(testAccFunctionDataSourceConfig_base(rName), fmt.Sprintf(`
+resource "aws_lambda_function" "test" {
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = %[1]q
+  handler       = "exports.example"
+  publish       = true
+  role          = aws_iam_role.lambda.arn
+  runtime       = "nodejs16.x"
+}
+
+data "aws_lambda_function" "test" {
+  function_name = aws_lambda_function.test.function_name
+}
+`, rName))
+}
+
+func testAccFunctionDataSourceConfig_unpublishedVersion(rName string) string {
+	return acctest.ConfigCompose(testAccFunctionDataSourceConfig_base(rName), fmt.Sprintf(`
+resource "aws_lambda_function" "test" {
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = %[1]q
+  handler       = "exports.example"
+  publish       = false
+  role          = aws_iam_role.lambda.arn
+  runtime       = "nodejs16.x"
+}
+
+data "aws_lambda_function" "test" {
+  function_name = aws_lambda_function.test.function_name
 }
 `, rName))
 }
@@ -376,7 +461,7 @@ resource "aws_lambda_function" "test" {
   handler       = "exports.example"
   publish       = true
   role          = aws_iam_role.lambda.arn
-  runtime       = "nodejs12.x"
+  runtime       = "nodejs16.x"
 }
 
 resource "aws_lambda_alias" "test" {
@@ -397,7 +482,7 @@ func testAccFunctionDataSourceConfig_layers(rName string) string {
 resource "aws_lambda_layer_version" "test" {
   filename            = "test-fixtures/lambdatest.zip"
   layer_name          = %[1]q
-  compatible_runtimes = ["nodejs12.x"]
+  compatible_runtimes = ["nodejs16.x"]
 }
 
 resource "aws_lambda_function" "test" {
@@ -406,7 +491,7 @@ resource "aws_lambda_function" "test" {
   handler       = "exports.example"
   layers        = [aws_lambda_layer_version.test.arn]
   role          = aws_iam_role.lambda.arn
-  runtime       = "nodejs12.x"
+  runtime       = "nodejs16.x"
 }
 
 data "aws_lambda_function" "test" {
@@ -416,28 +501,13 @@ data "aws_lambda_function" "test" {
 }
 
 func testAccFunctionDataSourceConfig_vpc(rName string) string {
-	return acctest.ConfigCompose(testAccFunctionDataSourceConfig_base(rName), fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test" {
-  vpc_id     = aws_vpc.test.id
-  cidr_block = "10.0.1.0/24"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
+	return acctest.ConfigCompose(
+		testAccFunctionDataSourceConfig_base(rName),
+		acctest.ConfigVPCWithSubnets(rName, 1),
+		fmt.Sprintf(`
 resource "aws_security_group" "test" {
-  name        = %[1]q
-  description = "Terraform Acceptance Testing"
-  vpc_id      = aws_vpc.test.id
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
 
   ingress {
     from_port = 0
@@ -452,6 +522,10 @@ resource "aws_security_group" "test" {
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_lambda_function" "test" {
@@ -459,11 +533,11 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   handler       = "exports.example"
   role          = aws_iam_role.lambda.arn
-  runtime       = "nodejs12.x"
+  runtime       = "nodejs16.x"
 
   vpc_config {
     security_group_ids = [aws_security_group.test.id]
-    subnet_ids         = [aws_subnet.test.id]
+    subnet_ids         = [aws_subnet.test[0].id]
   }
 }
 
@@ -480,7 +554,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   handler       = "exports.example"
   role          = aws_iam_role.lambda.arn
-  runtime       = "nodejs12.x"
+  runtime       = "nodejs16.x"
 
   environment {
     variables = {
@@ -497,28 +571,13 @@ data "aws_lambda_function" "test" {
 }
 
 func testAccFunctionDataSourceConfig_fileSystems(rName string) string {
-	return acctest.ConfigCompose(testAccFunctionDataSourceConfig_base(rName), fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test" {
-  vpc_id     = aws_vpc.test.id
-  cidr_block = "10.0.1.0/24"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
+	return acctest.ConfigCompose(
+		testAccFunctionDataSourceConfig_base(rName),
+		acctest.ConfigVPCWithSubnets(rName, 1),
+		fmt.Sprintf(`
 resource "aws_security_group" "test" {
-  name        = %[1]q
-  description = "Terraform Acceptance Testing"
-  vpc_id      = aws_vpc.test.id
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
 
   ingress {
     from_port = 0
@@ -533,17 +592,21 @@ resource "aws_security_group" "test" {
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_efs_file_system" "efs_for_lambda" {
   tags = {
-    Name = "efs_for_lambda"
+    Name = %[1]q
   }
 }
 
 resource "aws_efs_mount_target" "alpha" {
   file_system_id = aws_efs_file_system.efs_for_lambda.id
-  subnet_id      = aws_subnet.test.id
+  subnet_id      = aws_subnet.test[0].id
 }
 
 resource "aws_efs_access_point" "access_point_1" {
@@ -570,11 +633,11 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   handler       = "lambdatest.handler"
   role          = aws_iam_role.lambda.arn
-  runtime       = "nodejs12.x"
+  runtime       = "nodejs16.x"
 
   vpc_config {
     security_group_ids = [aws_security_group.test.id]
-    subnet_ids         = [aws_subnet.test.id]
+    subnet_ids         = [aws_subnet.test[0].id]
   }
 
   file_system_config {
@@ -618,7 +681,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   handler       = "exports.example"
   role          = aws_iam_role.lambda.arn
-  runtime       = "nodejs12.x"
+  runtime       = "nodejs16.x"
   architectures = ["arm64"]
 }
 
@@ -635,7 +698,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   handler       = "exports.example"
   role          = aws_iam_role.lambda.arn
-  runtime       = "nodejs12.x"
+  runtime       = "nodejs16.x"
 
   ephemeral_storage {
     size = 1024

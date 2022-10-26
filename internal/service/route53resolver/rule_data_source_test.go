@@ -7,7 +7,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/route53resolver"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
@@ -23,9 +22,9 @@ func TestAccRoute53ResolverRuleDataSource_basic(t *testing.T) {
 	ds3ResourceName := "data.aws_route53_resolver_rule.by_name_and_rule_type"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, route53resolver.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, route53resolver.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRuleDataSourceConfig_basic(rName),
@@ -74,9 +73,9 @@ func TestAccRoute53ResolverRuleDataSource_resolverEndpointIdWithTags(t *testing.
 	ds1ResourceName := "data.aws_route53_resolver_rule.by_resolver_endpoint_id"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, route53resolver.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, route53resolver.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRuleDataSourceConfig_resolverEndpointIDTags(rName),
@@ -101,7 +100,6 @@ func TestAccRoute53ResolverRuleDataSource_resolverEndpointIdWithTags(t *testing.
 }
 
 func TestAccRoute53ResolverRuleDataSource_sharedByMe(t *testing.T) {
-	var providers []*schema.Provider
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_route53_resolver_rule.example"
 	ds1ResourceName := "data.aws_route53_resolver_rule.by_resolver_endpoint_id"
@@ -112,8 +110,8 @@ func TestAccRoute53ResolverRuleDataSource_sharedByMe(t *testing.T) {
 			acctest.PreCheckAlternateAccount(t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, route53resolver.EndpointsID),
-		ProviderFactories: acctest.FactoriesAlternate(&providers),
+		ErrorCheck:               acctest.ErrorCheck(t, route53resolver.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRuleDataSourceConfig_sharedByMe(rName),
@@ -139,7 +137,6 @@ func TestAccRoute53ResolverRuleDataSource_sharedByMe(t *testing.T) {
 }
 
 func TestAccRoute53ResolverRuleDataSource_sharedWithMe(t *testing.T) {
-	var providers []*schema.Provider
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_route53_resolver_rule.example"
 	ds1ResourceName := "data.aws_route53_resolver_rule.by_resolver_endpoint_id"
@@ -150,8 +147,8 @@ func TestAccRoute53ResolverRuleDataSource_sharedWithMe(t *testing.T) {
 			acctest.PreCheckAlternateAccount(t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, route53resolver.EndpointsID),
-		ProviderFactories: acctest.FactoriesAlternate(&providers),
+		ErrorCheck:               acctest.ErrorCheck(t, route53resolver.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRuleDataSourceConfig_sharedWithMe(rName),

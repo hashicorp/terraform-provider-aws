@@ -25,10 +25,10 @@ func TestAccFirehoseDeliveryStream_basic(t *testing.T) {
 	resourceName := "aws_kinesis_firehose_delivery_stream.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, firehose.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDeliveryStreamDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, firehose.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDeliveryStreamDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeliveryStreamConfig_extendedS3basic(rName),
@@ -65,10 +65,10 @@ func TestAccFirehoseDeliveryStream_disappears(t *testing.T) {
 	resourceName := "aws_kinesis_firehose_delivery_stream.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, firehose.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDeliveryStreamDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, firehose.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDeliveryStreamDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeliveryStreamConfig_extendedS3basic(rName),
@@ -88,10 +88,10 @@ func TestAccFirehoseDeliveryStream_s3basic(t *testing.T) {
 	resourceName := "aws_kinesis_firehose_delivery_stream.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, firehose.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDeliveryStreamDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, firehose.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDeliveryStreamDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeliveryStreamConfig_s3basic(rName),
@@ -110,10 +110,10 @@ func TestAccFirehoseDeliveryStream_s3basicWithPrefixes(t *testing.T) {
 	resourceName := "aws_kinesis_firehose_delivery_stream.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, firehose.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDeliveryStreamDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, firehose.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDeliveryStreamDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeliveryStreamConfig_s3basicPrefixes(rName, "logs/", ""),
@@ -165,10 +165,10 @@ func TestAccFirehoseDeliveryStream_s3basicWithSSE(t *testing.T) {
 	resourceName := "aws_kinesis_firehose_delivery_stream.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, firehose.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDeliveryStreamDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, firehose.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDeliveryStreamDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeliveryStreamConfig_s3basicSSE(rName, true),
@@ -213,10 +213,10 @@ func TestAccFirehoseDeliveryStream_s3basicWithSSEAndKeyARN(t *testing.T) {
 	resourceName := "aws_kinesis_firehose_delivery_stream.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, firehose.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDeliveryStreamDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, firehose.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDeliveryStreamDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeliveryStreamConfig_s3BasicSSEAndKeyARN(rName, true),
@@ -259,10 +259,10 @@ func TestAccFirehoseDeliveryStream_s3basicWithSSEAndKeyType(t *testing.T) {
 	resourceName := "aws_kinesis_firehose_delivery_stream.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, firehose.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDeliveryStreamDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, firehose.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDeliveryStreamDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeliveryStreamConfig_s3basicSSEAndKeyType(rName, true, firehose.KeyTypeAwsOwnedCmk),
@@ -303,10 +303,10 @@ func TestAccFirehoseDeliveryStream_s3basicWithTags(t *testing.T) {
 	resourceName := "aws_kinesis_firehose_delivery_stream.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, firehose.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDeliveryStreamDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, firehose.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDeliveryStreamDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeliveryStreamConfig_s3basicTags(rName),
@@ -344,10 +344,10 @@ func TestAccFirehoseDeliveryStream_s3KinesisStreamSource(t *testing.T) {
 	resourceName := "aws_kinesis_firehose_delivery_stream.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, firehose.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDeliveryStreamDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, firehose.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDeliveryStreamDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeliveryStreamConfig_s3Source(rName),
@@ -366,10 +366,10 @@ func TestAccFirehoseDeliveryStream_s3WithCloudWatchLogging(t *testing.T) {
 	resourceName := "aws_kinesis_firehose_delivery_stream.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, firehose.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDeliveryStreamDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, firehose.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDeliveryStreamDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeliveryStreamConfig_s3CloudWatchLogging(rName),
@@ -395,10 +395,10 @@ func TestAccFirehoseDeliveryStream_s3Updates(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, firehose.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDeliveryStreamDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, firehose.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDeliveryStreamDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeliveryStreamConfig_s3basic(rName),
@@ -424,10 +424,10 @@ func TestAccFirehoseDeliveryStream_extendedS3basic(t *testing.T) {
 	resourceName := "aws_kinesis_firehose_delivery_stream.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, firehose.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDeliveryStreamDestroy_ExtendedS3,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, firehose.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDeliveryStreamDestroy_ExtendedS3,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeliveryStreamConfig_extendedS3basic(rName),
@@ -453,10 +453,10 @@ func TestAccFirehoseDeliveryStream_ExtendedS3DataFormatConversion_enabled(t *tes
 	resourceName := "aws_kinesis_firehose_delivery_stream.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, firehose.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDeliveryStreamDestroy_ExtendedS3,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, firehose.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDeliveryStreamDestroy_ExtendedS3,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeliveryStreamConfig_extendedS3DataFormatConversionConfigurationEnabled(rName, false),
@@ -500,10 +500,10 @@ func TestAccFirehoseDeliveryStream_ExtendedS3_externalUpdate(t *testing.T) {
 	resourceName := "aws_kinesis_firehose_delivery_stream.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, firehose.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDeliveryStreamDestroy_ExtendedS3,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, firehose.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDeliveryStreamDestroy_ExtendedS3,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeliveryStreamConfig_extendedS3ExternalUpdate(rName),
@@ -559,10 +559,10 @@ func TestAccFirehoseDeliveryStream_ExtendedS3DataFormatConversionDeserializer_up
 	resourceName := "aws_kinesis_firehose_delivery_stream.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, firehose.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDeliveryStreamDestroy_ExtendedS3,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, firehose.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDeliveryStreamDestroy_ExtendedS3,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeliveryStreamConfig_extendedS3DataFormatConversionConfigurationHiveJSONSerDeEmpty(rName),
@@ -601,10 +601,10 @@ func TestAccFirehoseDeliveryStream_ExtendedS3DataFormatConversionHiveJSONSerDe_e
 	resourceName := "aws_kinesis_firehose_delivery_stream.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, firehose.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDeliveryStreamDestroy_ExtendedS3,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, firehose.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDeliveryStreamDestroy_ExtendedS3,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeliveryStreamConfig_extendedS3DataFormatConversionConfigurationHiveJSONSerDeEmpty(rName),
@@ -632,10 +632,10 @@ func TestAccFirehoseDeliveryStream_ExtendedS3DataFormatConversionOpenXJSONSerDe_
 	resourceName := "aws_kinesis_firehose_delivery_stream.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, firehose.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDeliveryStreamDestroy_ExtendedS3,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, firehose.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDeliveryStreamDestroy_ExtendedS3,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeliveryStreamConfig_extendedS3DataFormatConversionConfigurationOpenXJSONSerDeEmpty(rName),
@@ -663,10 +663,10 @@ func TestAccFirehoseDeliveryStream_ExtendedS3DataFormatConversionOrcSerDe_empty(
 	resourceName := "aws_kinesis_firehose_delivery_stream.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, firehose.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDeliveryStreamDestroy_ExtendedS3,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, firehose.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDeliveryStreamDestroy_ExtendedS3,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeliveryStreamConfig_extendedS3DataFormatConversionConfigurationOrcSerDeEmpty(rName),
@@ -694,10 +694,10 @@ func TestAccFirehoseDeliveryStream_ExtendedS3DataFormatConversionParquetSerDe_em
 	resourceName := "aws_kinesis_firehose_delivery_stream.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, firehose.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDeliveryStreamDestroy_ExtendedS3,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, firehose.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDeliveryStreamDestroy_ExtendedS3,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeliveryStreamConfig_extendedS3DataFormatConversionConfigurationParquetSerDeEmpty(rName),
@@ -725,10 +725,10 @@ func TestAccFirehoseDeliveryStream_ExtendedS3DataFormatConversionSerializer_upda
 	resourceName := "aws_kinesis_firehose_delivery_stream.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, firehose.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDeliveryStreamDestroy_ExtendedS3,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, firehose.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDeliveryStreamDestroy_ExtendedS3,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeliveryStreamConfig_extendedS3DataFormatConversionConfigurationOrcSerDeEmpty(rName),
@@ -767,10 +767,10 @@ func TestAccFirehoseDeliveryStream_ExtendedS3_errorOutputPrefix(t *testing.T) {
 	resourceName := "aws_kinesis_firehose_delivery_stream.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, firehose.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDeliveryStreamDestroy_ExtendedS3,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, firehose.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDeliveryStreamDestroy_ExtendedS3,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeliveryStreamConfig_extendedS3ErrorOutputPrefix(rName, "prefix1"),
@@ -818,10 +818,10 @@ func TestAccFirehoseDeliveryStream_ExtendedS3_S3BackupConfiguration_ErrorOutputP
 	resourceName := "aws_kinesis_firehose_delivery_stream.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, firehose.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDeliveryStreamDestroy_ExtendedS3,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, firehose.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDeliveryStreamDestroy_ExtendedS3,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeliveryStreamConfig_extendedS3S3BackUpConfigurationErrorOutputPrefix(rName, "prefix1"),
@@ -869,10 +869,10 @@ func TestAccFirehoseDeliveryStream_ExtendedS3Processing_empty(t *testing.T) {
 	resourceName := "aws_kinesis_firehose_delivery_stream.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, firehose.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDeliveryStreamDestroy_ExtendedS3,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, firehose.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDeliveryStreamDestroy_ExtendedS3,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeliveryStreamConfig_extendedS3ProcessingConfigurationEmpty(rName),
@@ -897,10 +897,10 @@ func TestAccFirehoseDeliveryStream_extendedS3KMSKeyARN(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, firehose.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDeliveryStreamDestroy_ExtendedS3,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, firehose.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDeliveryStreamDestroy_ExtendedS3,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeliveryStreamConfig_extendedS3KMSKeyARN(rName),
@@ -925,10 +925,10 @@ func TestAccFirehoseDeliveryStream_extendedS3DynamicPartitioning(t *testing.T) {
 	resourceName := "aws_kinesis_firehose_delivery_stream.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, firehose.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDeliveryStreamDestroy_ExtendedS3,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, firehose.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDeliveryStreamDestroy_ExtendedS3,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeliveryStreamConfig_extendedS3DynamicPartitioning(rName),
@@ -988,10 +988,10 @@ func TestAccFirehoseDeliveryStream_extendedS3Updates(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, firehose.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDeliveryStreamDestroy_ExtendedS3,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, firehose.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDeliveryStreamDestroy_ExtendedS3,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeliveryStreamConfig_extendedS3basic(rName),
@@ -1029,10 +1029,10 @@ func TestAccFirehoseDeliveryStream_ExtendedS3_kinesisStreamSource(t *testing.T) 
 	resourceName := "aws_kinesis_firehose_delivery_stream.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, firehose.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDeliveryStreamDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, firehose.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDeliveryStreamDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeliveryStreamConfig_extendedS3Source(rName),
@@ -1077,10 +1077,10 @@ func TestAccFirehoseDeliveryStream_redshiftUpdates(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, firehose.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDeliveryStreamDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, firehose.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDeliveryStreamDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeliveryStreamConfig_redshift(rName),
@@ -1100,6 +1100,45 @@ func TestAccFirehoseDeliveryStream_redshiftUpdates(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeliveryStreamExists(resourceName, &stream),
 					testAccCheckDeliveryStreamAttributes(&stream, nil, nil, updatedRedshiftConfig, nil, nil, nil),
+				),
+			},
+		},
+	})
+}
+
+func TestAccFirehoseDeliveryStream_tagUpdates(t *testing.T) {
+	var stream firehose.DeliveryStreamDescription
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_kinesis_firehose_delivery_stream.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, firehose.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDeliveryStreamDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDeliveryStreamConfig_tag(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDeliveryStreamExists(resourceName, &stream),
+					testAccCheckDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil, nil),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key", "Value"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"redshift_configuration.0.password"},
+			},
+			{
+				Config: testAccDeliveryStreamConfig_tagUpdates(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDeliveryStreamExists(resourceName, &stream),
+					testAccCheckDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil, nil),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key", "Value2"),
 				),
 			},
 		},
@@ -1132,10 +1171,10 @@ func TestAccFirehoseDeliveryStream_splunkUpdates(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, firehose.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDeliveryStreamDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, firehose.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDeliveryStreamDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeliveryStreamConfig_splunkBasic(rName),
@@ -1166,10 +1205,10 @@ func TestAccFirehoseDeliveryStream_Splunk_ErrorOutputPrefix(t *testing.T) {
 	resourceName := "aws_kinesis_firehose_delivery_stream.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, firehose.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDeliveryStreamDestroy_ExtendedS3,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, firehose.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDeliveryStreamDestroy_ExtendedS3,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeliveryStreamConfig_splunkErrorOutputPrefix(rName, "prefix1"),
@@ -1237,10 +1276,10 @@ func TestAccFirehoseDeliveryStream_httpEndpoint(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, firehose.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDeliveryStreamDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, firehose.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDeliveryStreamDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeliveryStreamConfig_httpEndpointBasic(rName),
@@ -1271,10 +1310,10 @@ func TestAccFirehoseDeliveryStream_HTTPEndpoint_ErrorOutputPrefix(t *testing.T) 
 	resourceName := "aws_kinesis_firehose_delivery_stream.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, firehose.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDeliveryStreamDestroy_ExtendedS3,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, firehose.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDeliveryStreamDestroy_ExtendedS3,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeliveryStreamConfig_httpEndpointErrorOutputPrefix(rName, "prefix1"),
@@ -1320,10 +1359,10 @@ func TestAccFirehoseDeliveryStream_HTTPEndpoint_retryDuration(t *testing.T) {
 	resourceName := "aws_kinesis_firehose_delivery_stream.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, firehose.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDeliveryStreamDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, firehose.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDeliveryStreamDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeliveryStreamConfig_httpEndpointRetryDuration(rName, 301),
@@ -1372,10 +1411,10 @@ func TestAccFirehoseDeliveryStream_elasticSearchUpdates(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, firehose.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDeliveryStreamDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, firehose.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDeliveryStreamDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeliveryStreamConfig_elasticsearchBasic(rName),
@@ -1426,10 +1465,10 @@ func TestAccFirehoseDeliveryStream_elasticSearchEndpointUpdates(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, firehose.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDeliveryStreamDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, firehose.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDeliveryStreamDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeliveryStreamConfig_elasticsearchEndpoint(rName),
@@ -1482,10 +1521,10 @@ func TestAccFirehoseDeliveryStream_elasticSearchWithVPCUpdates(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRoleEs(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, firehose.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDeliveryStreamDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRoleEs(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, firehose.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDeliveryStreamDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeliveryStreamConfig_elasticsearchVPCBasic(rName),
@@ -1524,10 +1563,10 @@ func TestAccFirehoseDeliveryStream_Elasticsearch_ErrorOutputPrefix(t *testing.T)
 	resourceName := "aws_kinesis_firehose_delivery_stream.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, firehose.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDeliveryStreamDestroy_ExtendedS3,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, firehose.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDeliveryStreamDestroy_ExtendedS3,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeliveryStreamConfig_elasticsearchErrorOutputPrefix(rName, "prefix1"),
@@ -1574,10 +1613,10 @@ func TestAccFirehoseDeliveryStream_missingProcessing(t *testing.T) {
 	resourceName := "aws_kinesis_firehose_delivery_stream.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, firehose.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDeliveryStreamDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, firehose.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDeliveryStreamDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeliveryStreamConfig_missingProcessingConfiguration(rName),
@@ -1788,7 +1827,6 @@ func testAccCheckDeliveryStreamAttributes(stream *firehose.DeliveryStreamDescrip
 					return fmt.Errorf("Mismatch HTTP Endpoint ProcessingConfiguration.Processors count, expected: %s, got: %s", s, stream.Destinations)
 				}
 			}
-
 		}
 		return nil
 	}
@@ -1907,7 +1945,7 @@ resource "aws_lambda_function" "lambda_function_test" {
   function_name = %[1]q
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
-  runtime       = "nodejs12.x"
+  runtime       = "nodejs16.x"
 }
 `, rName)
 }
@@ -3095,6 +3133,63 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
         }
       }
     }
+  }
+}
+`, rName))
+}
+
+func testAccDeliveryStreamConfig_tag(rName string) string {
+	return acctest.ConfigCompose(
+		testAccDeliveryStreamRedshiftConfigBase(rName),
+		fmt.Sprintf(`
+resource "aws_kinesis_firehose_delivery_stream" "test" {
+  name        = %[1]q
+  destination = "redshift"
+
+  s3_configuration {
+    role_arn   = aws_iam_role.firehose.arn
+    bucket_arn = aws_s3_bucket.bucket.arn
+  }
+
+  redshift_configuration {
+    role_arn        = aws_iam_role.firehose.arn
+    cluster_jdbcurl = "jdbc:redshift://${aws_redshift_cluster.test.endpoint}/${aws_redshift_cluster.test.database_name}"
+    username        = "testuser"
+    password        = "T3stPass"
+    data_table_name = "test-table"
+  }
+
+  tags = {
+    "Key" = "Value"
+  }
+}
+`, rName))
+}
+
+func testAccDeliveryStreamConfig_tagUpdates(rName string) string {
+	return acctest.ConfigCompose(
+		testAccLambdaBasicConfig(rName),
+		testAccDeliveryStreamRedshiftConfigBase(rName),
+		fmt.Sprintf(`
+resource "aws_kinesis_firehose_delivery_stream" "test" {
+  name        = %[1]q
+  destination = "redshift"
+
+  s3_configuration {
+    role_arn   = aws_iam_role.firehose.arn
+    bucket_arn = aws_s3_bucket.bucket.arn
+  }
+
+  redshift_configuration {
+    role_arn        = aws_iam_role.firehose.arn
+    cluster_jdbcurl = "jdbc:redshift://${aws_redshift_cluster.test.endpoint}/${aws_redshift_cluster.test.database_name}"
+    username        = "testuser"
+    password        = "T3stPass"
+    data_table_name = "test-table"
+  }
+
+  tags = {
+    "Key" = "Value2"
   }
 }
 `, rName))

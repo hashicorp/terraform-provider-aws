@@ -27,9 +27,9 @@ func TestAccAppStreamUser_basic(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 		},
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckUserDestroy,
-		ErrorCheck:        acctest.ErrorCheck(t, appstream.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, appstream.EndpointsID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserConfig_basic(authType, rEmail),
@@ -62,9 +62,9 @@ func TestAccAppStreamUser_disappears(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 		},
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckUserDestroy,
-		ErrorCheck:        acctest.ErrorCheck(t, appstream.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, appstream.EndpointsID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserConfig_basic(authType, rEmail),
@@ -91,9 +91,9 @@ func TestAccAppStreamUser_complete(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 		},
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckUserDestroy,
-		ErrorCheck:        acctest.ErrorCheck(t, appstream.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, appstream.EndpointsID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserConfig_complete(authType, rEmail, firstName, lastName, false),

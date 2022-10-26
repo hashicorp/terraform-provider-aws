@@ -30,10 +30,10 @@ func testAccDefaultVPCDHCPOptions_basic(t *testing.T) {
 	resourceName := "aws_default_vpc_dhcp_options.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.CheckDestroyNoop,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCDefaultVPCDHCPOptionsConfig_basic,
@@ -56,10 +56,10 @@ func testAccDefaultVPCDHCPOptions_owner(t *testing.T) {
 	resourceName := "aws_default_vpc_dhcp_options.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      acctest.CheckDestroyNoop,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCDefaultVPCDHCPOptionsConfig_owner,
@@ -101,9 +101,9 @@ func testAccDefaultVPCDHCPOptions_v420Regression(t *testing.T) {
 				),
 			},
 			{
-				ProviderFactories: acctest.ProviderFactories,
-				Config:            testAccVPCDefaultVPCDHCPOptionsConfig_basic,
-				PlanOnly:          true,
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccVPCDefaultVPCDHCPOptionsConfig_basic,
+				PlanOnly:                 true,
 			},
 		},
 	})

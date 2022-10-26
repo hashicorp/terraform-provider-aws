@@ -185,9 +185,9 @@ func TestAccGameLiftFleet_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService(gamelift.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, gamelift.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckFleetDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, gamelift.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFleetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFleetConfig_basic(rName, launchPath, params, bucketName, key, roleArn),
@@ -278,9 +278,9 @@ func TestAccGameLiftFleet_tags(t *testing.T) {
 			acctest.PreCheckPartitionHasService(gamelift.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, gamelift.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckFleetDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, gamelift.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFleetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFleetConfig_basicTags1(rName, launchPath, params, bucketName, key, roleArn, "key1", "value1"),
@@ -358,9 +358,9 @@ func TestAccGameLiftFleet_allFields(t *testing.T) {
 			acctest.PreCheckPartitionHasService(gamelift.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, gamelift.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckFleetDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, gamelift.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFleetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFleetConfig_allFields(rName, desc, launchPath, params[0], bucketName, key, roleArn),
@@ -498,9 +498,9 @@ func TestAccGameLiftFleet_cert(t *testing.T) {
 			acctest.PreCheckPartitionHasService(gamelift.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, gamelift.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckFleetDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, gamelift.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFleetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFleetConfig_cert(rName, launchPath, params, bucketName, key, roleArn),
@@ -537,9 +537,9 @@ func TestAccGameLiftFleet_script(t *testing.T) {
 			acctest.PreCheckPartitionHasService(gamelift.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, gamelift.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckFleetDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, gamelift.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFleetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFleetConfig_script(rName),
@@ -608,9 +608,9 @@ func TestAccGameLiftFleet_disappears(t *testing.T) {
 			acctest.PreCheckPartitionHasService(gamelift.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, gamelift.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckFleetDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, gamelift.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFleetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFleetConfig_basic(rName, launchPath, params, bucketName, key, roleArn),

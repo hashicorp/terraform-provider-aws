@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -110,13 +111,13 @@ func resourceDomainRead(d *schema.ResourceData, meta interface{}) error {
 		DomainOwner: aws.String(domainOwner),
 	})
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, codeartifact.ErrCodeResourceNotFoundException) {
-		names.LogNotFoundRemoveState(names.CodeArtifact, names.ErrActionReading, ResDomain, d.Id())
+		create.LogNotFoundRemoveState(names.CodeArtifact, create.ErrActionReading, ResNameDomain, d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return names.Error(names.CodeArtifact, names.ErrActionReading, ResDomain, d.Id(), err)
+		return create.Error(names.CodeArtifact, create.ErrActionReading, ResNameDomain, d.Id(), err)
 	}
 
 	arn := aws.StringValue(sm.Domain.Arn)
