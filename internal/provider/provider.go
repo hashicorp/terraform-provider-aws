@@ -1921,6 +1921,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_route53recoveryreadiness_recovery_group":  route53recoveryreadiness.ResourceRecoveryGroup(),
 			"aws_route53recoveryreadiness_resource_set":    route53recoveryreadiness.ResourceResourceSet(),
 
+			"aws_route53_resolver_config":                          route53resolver.ResourceConfig(),
 			"aws_route53_resolver_dnssec_config":                   route53resolver.ResourceDNSSECConfig(),
 			"aws_route53_resolver_endpoint":                        route53resolver.ResourceEndpoint(),
 			"aws_route53_resolver_firewall_config":                 route53resolver.ResourceFirewallConfig(),
