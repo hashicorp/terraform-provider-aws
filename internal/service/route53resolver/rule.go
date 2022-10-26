@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -52,6 +53,10 @@ func ResourceRule() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"domain_name": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -59,29 +64,31 @@ func ResourceRule() *schema.Resource {
 				ValidateFunc: validation.StringLenBetween(1, 256),
 				StateFunc:    trimTrailingPeriod,
 			},
-
-			"rule_type": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					route53resolver.RuleTypeOptionForward,
-					route53resolver.RuleTypeOptionSystem,
-					route53resolver.RuleTypeOptionRecursive,
-				}, false),
-			},
-
 			"name": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validResolverName,
 			},
-
+			"owner_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"resolver_endpoint_id": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-
+			"rule_type": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice(route53resolver.RuleTypeOption_Values(), false),
+			},
+			"share_status": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 			"target_ip": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -101,24 +108,6 @@ func ResourceRule() *schema.Resource {
 					},
 				},
 				Set: ruleHashTargetIP,
-			},
-
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
-
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"owner_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"share_status": {
-				Type:     schema.TypeString,
-				Computed: true,
 			},
 		},
 	}
@@ -170,18 +159,20 @@ func resourceRuleRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	ruleRaw, state, err := ruleRefresh(conn, d.Id())()
-	if err != nil {
-		return fmt.Errorf("error getting Route53 Resolver rule (%s): %s", d.Id(), err)
-	}
-	if state == RuleStatusDeleted {
-		log.Printf("[WARN] Route53 Resolver rule (%s) not found, removing from state", d.Id())
+	rule, err := FindRuleByID(conn, d.Id())
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] Route53 Resolver Rule (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
-	rule := ruleRaw.(*route53resolver.ResolverRule)
-	d.Set("arn", rule.Arn)
+	if err != nil {
+		return fmt.Errorf("reading Route53 Resolver Rule (%s): %w", d.Id(), err)
+	}
+
+	arn := aws.StringValue(rule.Arn)
+	d.Set("arn", arn)
 	// To be consistent with other AWS services that do not accept a trailing period,
 	// we remove the suffix from the Domain Name returned from the API
 	d.Set("domain_name", trimTrailingPeriod(aws.StringValue(rule.DomainName)))
@@ -194,21 +185,21 @@ func resourceRuleRead(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	tags, err := ListTags(conn, d.Get("arn").(string))
+	tags, err := ListTags(conn, arn)
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for Route53 Resolver rule (%s): %s", d.Get("arn").(string), err)
+		return fmt.Errorf("listing tags for Route53 Resolver Rule (%s): %w", arn, err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return fmt.Errorf("setting tags: %w", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return fmt.Errorf("setting tags_all: %w", err)
 	}
 
 	return nil
@@ -287,6 +278,31 @@ func resourceRuleCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, v i
 	}
 
 	return nil
+}
+
+func FindRuleByID(conn *route53resolver.Route53Resolver, id string) (*route53resolver.ResolverRule, error) {
+	input := &route53resolver.GetResolverRuleInput{
+		ResolverRuleId: aws.String(id),
+	}
+
+	output, err := conn.GetResolverRule(input)
+
+	if tfawserr.ErrCodeEquals(err, route53resolver.ErrCodeResourceNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.ResolverRule == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.ResolverRule, nil
 }
 
 func ruleRefresh(conn *route53resolver.Route53Resolver, ruleId string) resource.StateRefreshFunc {
