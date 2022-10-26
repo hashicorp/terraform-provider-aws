@@ -205,8 +205,9 @@ func ResourceComputeEnvironment() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"eks_cluster_arn": {
-							Type:     schema.TypeString,
-							Required: true,
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: verify.ValidARN,
 						},
 						"kubernetes_namespace": {
 							Type:     schema.TypeString,
