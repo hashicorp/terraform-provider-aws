@@ -32,6 +32,10 @@ func newResourceMultiplexProgram(_ context.Context) (intf.ResourceWithConfigureA
 	return &multiplexProgram{}, nil
 }
 
+func NewResourceMultiplexProgram(_ context.Context) resource.Resource {
+	return &multiplexProgram{}
+}
+
 const (
 	ResNameMultiplexProgram = "Multiplex Program"
 )
@@ -120,7 +124,7 @@ func (m *multiplexProgram) GetSchema(context.Context) (tfsdk.Schema, diag.Diagno
 						},
 						Blocks: map[string]tfsdk.Block{
 							"statemux_settings": {
-								DeprecationMessage: "Configure statmux_settings instead. This block will be removed in the next major version of the provider.",
+								DeprecationMessage: "Configure statmux_settings instead of statemux_settings. This block will be removed in the next major version of the provider.",
 								NestingMode:        tfsdk.BlockNestingModeList,
 								MaxItems:           1,
 								Attributes: map[string]tfsdk.Attribute{
@@ -131,16 +135,6 @@ func (m *multiplexProgram) GetSchema(context.Context) (tfsdk.Schema, diag.Diagno
 										PlanModifiers: []tfsdk.AttributePlanModifier{
 											resource.UseStateForUnknown(),
 										},
-										//Validators: []tfsdk.AttributeValidator{
-										//	schemavalidator.ConflictsWith(
-										//		path.Expressions{path.MatchRelative().AtParent().
-										//			AtListIndex(0).AtName("video_settings").
-										//			AtListIndex(0).AtName("statmux_settings").AtListIndex(0).AtName("minimum_bitrate")}...),
-										//},
-										//Validators: []tfsdk.AttributeValidator{
-										//	schemavalidator.ConflictsWith(
-										//		path.Expressions{path.MatchRelative().AtParent().AtParent().AtParent().Resolve().AtName("statmux_settings")}...),
-										//},
 									},
 									"maximum_bitrate": {
 										Type:     types.Int64Type,
@@ -149,12 +143,6 @@ func (m *multiplexProgram) GetSchema(context.Context) (tfsdk.Schema, diag.Diagno
 										PlanModifiers: []tfsdk.AttributePlanModifier{
 											resource.UseStateForUnknown(),
 										},
-										//Validators: []tfsdk.AttributeValidator{
-										//	schemavalidator.ConflictsWith(
-										//		path.Expressions{path.MatchRoot("multiplex_program_settings").
-										//			AtListIndex(0).AtName("video_settings").
-										//			AtListIndex(0).AtName("statmux_settings").AtListIndex(0).AtName("maximum_bitrate")}...),
-										//},
 									},
 									"priority": {
 										Type:     types.Int64Type,
@@ -163,12 +151,6 @@ func (m *multiplexProgram) GetSchema(context.Context) (tfsdk.Schema, diag.Diagno
 										PlanModifiers: []tfsdk.AttributePlanModifier{
 											resource.UseStateForUnknown(),
 										},
-										//Validators: []tfsdk.AttributeValidator{
-										//	schemavalidator.ConflictsWith(
-										//		path.Expressions{path.MatchRoot("multiplex_program_settings").
-										//			AtListIndex(0).AtName("video_settings").
-										//			AtListIndex(0).AtName("statmux_settings").AtListIndex(0).AtName("priority_bitrate")}...),
-										//},
 									},
 								},
 							},
@@ -183,12 +165,6 @@ func (m *multiplexProgram) GetSchema(context.Context) (tfsdk.Schema, diag.Diagno
 										PlanModifiers: []tfsdk.AttributePlanModifier{
 											resource.UseStateForUnknown(),
 										},
-										//Validators: []tfsdk.AttributeValidator{
-										//	schemavalidator.ConflictsWith(
-										//		path.Expressions{path.MatchRoot("multiplex_program_settings").
-										//			AtAnyListIndex().AtName("video_settings").
-										//			AtAnyListIndex().AtName("statemux_settings").AtAnyListIndex().AtName("minimum_bitrate")}...),
-										//},
 									},
 									"maximum_bitrate": {
 										Type:     types.Int64Type,
@@ -452,6 +428,41 @@ func (m *multiplexProgram) ImportState(ctx context.Context, req resource.ImportS
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
+func (m *multiplexProgram) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
+	var data resourceMultiplexProgramData
+
+	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
+
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	mps := make([]multiplexProgramSettings, 1)
+	resp.Diagnostics.Append(data.MultiplexProgramSettings.ElementsAs(ctx, &mps, false)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if len(mps[0].VideoSettings.Elems) > 0 || !mps[0].VideoSettings.IsNull() {
+		vs := make([]videoSettings, 1)
+		resp.Diagnostics.Append(mps[0].VideoSettings.ElementsAs(ctx, &vs, false)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+
+		statMuxSet := len(vs[0].StatmuxSettings.Elems) > 0
+		stateMuxSet := len(vs[0].StatemuxSettings.Elems) > 0
+
+		if statMuxSet && stateMuxSet {
+			resp.Diagnostics.AddAttributeError(
+				path.Root("multiplex_program_settings").AtListIndex(0).AtName("video_settings").AtListIndex(0).AtName("statmux_settings"),
+				"Conflicting Attribute Configuration",
+				"Attribute statmux_settings cannot be configured with statemux_settings.",
+			)
+		}
+	}
+}
+
 func FindMultipleProgramByID(ctx context.Context, conn *medialive.Client, multiplexId, programName string) (*medialive.DescribeMultiplexProgramOutput, error) {
 	in := &medialive.DescribeMultiplexProgramInput{
 		MultiplexId: aws.String(multiplexId),
@@ -665,9 +676,6 @@ func flattenVideoSettings(mps *mltypes.MultiplexVideoSettings, stateMuxIsNull bo
 		}
 		attrs["statemux_settings"] = flattenStatMuxSettings(mps.StatmuxSettings)
 	}
-
-	//attrs["statmux_settings"] = flattenStatMuxSettings(mps.StatmuxSettings)
-	//attrs["statemux_settings"] = flattenStatMuxSettings(mps.StatmuxSettings)
 
 	vals.Attrs = attrs
 
