@@ -50,7 +50,7 @@ resource "aws_db_parameter_group" "default" {
 The [`create_before_destroy`](https://developer.hashicorp.com/terraform/language/meta-arguments/lifecycle#create_before_destroy)
 lifecycle configuration is necessary for modifications that force re-creation of an existing,
 in-use parameter group. This includes common situations like changing the group `name` or
-bumping `family` during a major version upgrade. This configuration will prevent destruction
+bumping the `family` version during a major version upgrade. This configuration will prevent destruction
 of the deposed parameter group while still in use by the database during upgrade.
 
 ```terraform
