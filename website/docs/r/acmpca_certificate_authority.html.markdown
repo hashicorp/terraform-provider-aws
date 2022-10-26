@@ -31,6 +31,24 @@ resource "aws_acmpca_certificate_authority" "example" {
 }
 ```
 
+### Basic short-lived certificate
+
+```terraform
+resource "aws_acmpca_certificate_authority" "example" {
+  usage_mode = "SHORT_LIVED_CERTIFICATE"
+  certificate_authority_configuration {
+    key_algorithm     = "RSA_4096"
+    signing_algorithm = "SHA512WITHRSA"
+
+    subject {
+      common_name = "example.com"
+    }
+  }
+
+  permanent_deletion_time_in_days = 7
+}
+```
+
 ### Enable Certificate Revocation List
 
 ```terraform
