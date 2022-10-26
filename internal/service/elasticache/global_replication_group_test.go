@@ -1,6 +1,7 @@
 package elasticache_test
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"testing"
@@ -1139,6 +1140,8 @@ func TestAccElastiCacheGlobalReplicationGroup_UpdateParameterGroupName(t *testin
 }
 
 func testAccCheckGlobalReplicationGroupExists(resourceName string, v *elasticache.GlobalReplicationGroup) resource.TestCheckFunc {
+	ctx := context.Background()
+
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -1150,7 +1153,7 @@ func testAccCheckGlobalReplicationGroupExists(resourceName string, v *elasticach
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn
-		grg, err := tfelasticache.FindGlobalReplicationGroupByID(conn, rs.Primary.ID)
+		grg, err := tfelasticache.FindGlobalReplicationGroupByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return fmt.Errorf("error retrieving ElastiCache Global Replication Group (%s): %w", rs.Primary.ID, err)
 		}
@@ -1167,13 +1170,14 @@ func testAccCheckGlobalReplicationGroupExists(resourceName string, v *elasticach
 
 func testAccCheckGlobalReplicationGroupDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn
+	ctx := context.Background()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_elasticache_global_replication_group" {
 			continue
 		}
 
-		_, err := tfelasticache.FindGlobalReplicationGroupByID(conn, rs.Primary.ID)
+		_, err := tfelasticache.FindGlobalReplicationGroupByID(ctx, conn, rs.Primary.ID)
 		if tfresource.NotFound(err) {
 			continue
 		}
