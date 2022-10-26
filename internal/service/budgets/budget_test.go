@@ -538,12 +538,12 @@ resource "aws_budgets_budget" "test" {
 func testAccBudgetConfig_autoAdjustDataForecast(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_budgets_budget" "test" {
-  name         = %[1]q
-  budget_type  = "COST"
-  time_unit         = "MONTHLY"
+  name        = %[1]q
+  budget_type = "COST"
+  time_unit   = "MONTHLY"
 
   auto_adjust_data {
-	auto_adjust_type = "FORECAST"
+    auto_adjust_type = "FORECAST"
   }
 }
 `, rName)
@@ -552,14 +552,14 @@ resource "aws_budgets_budget" "test" {
 func testAccBudgetConfig_autoAdjustDataHistorical(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_budgets_budget" "test" {
-  name         = %[1]q
-  budget_type  = "COST"
-  time_unit         = "MONTHLY"
+  name        = %[1]q
+  budget_type = "COST"
+  time_unit   = "MONTHLY"
 
   auto_adjust_data {
-	auto_adjust_type = "HISTORICAL"
-	historical_options {
-		budget_adjustment_period = 2
+    auto_adjust_type = "HISTORICAL"
+    historical_options {
+      budget_adjustment_period = 2
     }
   }
 }
@@ -569,14 +569,14 @@ resource "aws_budgets_budget" "test" {
 func testAccBudgetConfig_autoAdjustDataHistoricalUpdated(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_budgets_budget" "test" {
-  name         = %[1]q
-  budget_type  = "COST"
-  time_unit         = "MONTHLY"
+  name        = %[1]q
+  budget_type = "COST"
+  time_unit   = "MONTHLY"
 
   auto_adjust_data {
-	auto_adjust_type = "HISTORICAL"
-	historical_options {
-		budget_adjustment_period = 5
+    auto_adjust_type = "HISTORICAL"
+    historical_options {
+      budget_adjustment_period = 5
     }
   }
 }
