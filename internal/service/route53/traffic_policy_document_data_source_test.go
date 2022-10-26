@@ -269,13 +269,12 @@ data "aws_route53_traffic_policy_document" "test" {
     type = "geoproximity"
 
     geo_proximity_location {
-      longitude              = "-0.07"
-      latitude               = "51.50"
-      endpoint_reference     = "denied_message"
-
+      longitude          = "-0.07"
+      latitude           = "51.50"
+      endpoint_reference = "denied_message"
     }
-
   }
+
   rule {
     id   = "region_selector"
     type = "latency"
@@ -289,6 +288,7 @@ data "aws_route53_traffic_policy_document" "test" {
       rule_reference = "west_coast_region"
     }
   }
+
   rule {
     id   = "east_coast_region"
     type = "failover"
@@ -300,6 +300,7 @@ data "aws_route53_traffic_policy_document" "test" {
       endpoint_reference = "east_coast_lb2"
     }
   }
+
   rule {
     id   = "west_coast_region"
     type = "failover"
