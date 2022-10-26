@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	tfroute53resolver "github.com/hashicorp/terraform-provider-aws/internal/service/route53resolver"
 )
 
@@ -48,6 +49,30 @@ func TestAccRoute53ResolverConfig_basic(t *testing.T) {
 					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "resource_id", vpcResourceName, "id"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccRoute53ResolverConfig_Disappears_vpc(t *testing.T) {
+	var v route53resolver.ResolverConfig
+	resourceName := "aws_route53_resolver_config.test"
+	vpcResourceName := "aws_vpc.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, route53resolver.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccConfigConfig_basic(rName, "ENABLE"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckConfigExists(resourceName, &v),
+					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceVPC(), vpcResourceName),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
