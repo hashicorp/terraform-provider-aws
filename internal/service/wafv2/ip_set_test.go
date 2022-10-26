@@ -1,19 +1,19 @@
 package wafv2_test
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/wafv2"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfwafv2 "github.com/hashicorp/terraform-provider-aws/internal/service/wafv2"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccWAFV2IPSet_basic(t *testing.T) {
@@ -285,29 +285,18 @@ func testAccCheckIPSetDestroy(s *terraform.State) error {
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFV2Conn
-		resp, err := conn.GetIPSet(
-			&wafv2.GetIPSetInput{
-				Id:    aws.String(rs.Primary.ID),
-				Name:  aws.String(rs.Primary.Attributes["name"]),
-				Scope: aws.String(rs.Primary.Attributes["scope"]),
-			})
 
-		if err == nil {
-			if resp == nil || resp.IPSet == nil {
-				return fmt.Errorf("Error getting WAFv2 IPSet")
-			}
-			if aws.StringValue(resp.IPSet.Id) == rs.Primary.ID {
-				return fmt.Errorf("WAFv2 IPSet %s still exists", rs.Primary.ID)
-			}
-			return nil
+		_, err := tfwafv2.FindIPSetByThreePartKey(context.Background(), conn, rs.Primary.ID, rs.Primary.Attributes["name"], rs.Primary.Attributes["scope"])
+
+		if tfresource.NotFound(err) {
+			continue
 		}
 
-		// Return nil if the IPSet is already destroyed
-		if tfawserr.ErrCodeEquals(err, wafv2.ErrCodeWAFNonexistentItemException) {
-			return nil
+		if err != nil {
+			return err
 		}
 
-		return err
+		return fmt.Errorf("WAFv2 IPSet %s still exists", rs.Primary.ID)
 	}
 
 	return nil
@@ -325,34 +314,24 @@ func testAccCheckIPSetExists(n string, v *wafv2.IPSet) resource.TestCheckFunc {
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFV2Conn
-		resp, err := conn.GetIPSet(&wafv2.GetIPSetInput{
-			Id:    aws.String(rs.Primary.ID),
-			Name:  aws.String(rs.Primary.Attributes["name"]),
-			Scope: aws.String(rs.Primary.Attributes["scope"]),
-		})
+
+		output, err := tfwafv2.FindIPSetByThreePartKey(context.Background(), conn, rs.Primary.ID, rs.Primary.Attributes["name"], rs.Primary.Attributes["scope"])
 
 		if err != nil {
 			return err
 		}
 
-		if resp == nil || resp.IPSet == nil {
-			return fmt.Errorf("Error getting WAFv2 IPSet")
-		}
+		*v = *output.IPSet
 
-		if aws.StringValue(resp.IPSet.Id) == rs.Primary.ID {
-			*v = *resp.IPSet
-			return nil
-		}
-
-		return fmt.Errorf("WAFv2 IPSet (%s) not found", rs.Primary.ID)
+		return nil
 	}
 }
 
 func testAccIPSetConfig_basic(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_ip_set" "ip_set" {
-  name               = "%s"
-  description        = "%s"
+  name               = %[1]q
+  description        = %[1]q
   scope              = "REGIONAL"
   ip_address_version = "IPV4"
   addresses          = ["1.2.3.4/32", "5.6.7.8/32"]
@@ -362,13 +341,13 @@ resource "aws_wafv2_ip_set" "ip_set" {
     Tag2 = "Value2"
   }
 }
-`, name, name)
+`, name)
 }
 
 func testAccIPSetConfig_update(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_ip_set" "ip_set" {
-  name               = "%s"
+  name               = %[1]q
   description        = "Updated"
   scope              = "REGIONAL"
   ip_address_version = "IPV4"
@@ -380,8 +359,8 @@ resource "aws_wafv2_ip_set" "ip_set" {
 func testAccIPSetConfig_v6(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_ip_set" "ip_set" {
-  name               = "%s"
-  description        = "%s"
+  name               = %[1]q
+  description        = %[1]q
   scope              = "REGIONAL"
   ip_address_version = "IPV6"
   addresses = [
@@ -390,13 +369,13 @@ resource "aws_wafv2_ip_set" "ip_set" {
     "2001:db8::/32"
   ]
 }
-`, name, name)
+`, name)
 }
 
 func testAccIPSetConfig_minimal(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_ip_set" "ip_set" {
-  name               = "%s"
+  name               = %[1]q
   scope              = "REGIONAL"
   ip_address_version = "IPV4"
 }
@@ -406,41 +385,41 @@ resource "aws_wafv2_ip_set" "ip_set" {
 func testAccIPSetConfig_oneTag(name, tagKey, tagValue string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_ip_set" "ip_set" {
-  name               = "%s"
-  description        = "%s"
+  name               = %[1]q
+  description        = %[1]q
   scope              = "REGIONAL"
   ip_address_version = "IPV4"
   addresses          = ["1.2.3.4/32", "5.6.7.8/32"]
 
   tags = {
-    "%s" = "%s"
+    %[2]q = %[3]q
   }
 }
-`, name, name, tagKey, tagValue)
+`, name, tagKey, tagValue)
 }
 
 func testAccIPSetConfig_twoTags(name, tag1Key, tag1Value, tag2Key, tag2Value string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_ip_set" "ip_set" {
-  name               = "%s"
-  description        = "%s"
+  name               = %[1]q
+  description        = %[1]q
   scope              = "REGIONAL"
   ip_address_version = "IPV4"
   addresses          = ["1.2.3.4/32", "5.6.7.8/32"]
 
   tags = {
-    "%s" = "%s"
-    "%s" = "%s"
+    %[2]q = %[3]q
+    %[4]q = %[5]q
   }
 }
-`, name, name, tag1Key, tag1Value, tag2Key, tag2Value)
+`, name, tag1Key, tag1Value, tag2Key, tag2Value)
 }
 
 func testAccIPSetConfig_large(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_ip_set" "ip_set" {
-  name               = "%s"
-  description        = "%s"
+  name               = %[1]q
+  description        = %[1]q
   scope              = "REGIONAL"
   ip_address_version = "IPV4"
   addresses = [
@@ -456,7 +435,7 @@ resource "aws_wafv2_ip_set" "ip_set" {
     "1.1.1.20/32", "2.2.2.25/32", "1.1.1.45/32", "1.1.1.2/32", "2.2.2.98/32"
   ]
 }
-`, name, name)
+`, name)
 }
 
 func testAccIPSetImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {

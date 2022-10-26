@@ -588,7 +588,7 @@ func resourceReplicationGroupCreate(d *schema.ResourceData, meta interface{}) er
 		// state, but the global replication group can still be in the "modifying" state. Wait for the replication group
 		// to be fully added to the global replication group.
 		// API calls to the global replication group can be made in any region.
-		if _, err := WaitGlobalReplicationGroupAvailable(conn, v.(string), GlobalReplicationGroupDefaultCreatedTimeout); err != nil {
+		if _, err := waitGlobalReplicationGroupAvailable(context.TODO(), conn, v.(string), GlobalReplicationGroupDefaultCreatedTimeout); err != nil {
 			return fmt.Errorf("error waiting for ElastiCache Global Replication Group (%s) to be available: %w", v, err)
 		}
 	}
@@ -844,7 +844,6 @@ func resourceReplicationGroupUpdate(d *schema.ResourceData, meta interface{}) er
 	}
 
 	if d.HasChange("log_delivery_configuration") {
-
 		oldLogDeliveryConfig, newLogDeliveryConfig := d.GetChange("log_delivery_configuration")
 
 		params.LogDeliveryConfigurations = []*elasticache.LogDeliveryConfigurationRequest{}
@@ -930,7 +929,6 @@ func resourceReplicationGroupUpdate(d *schema.ResourceData, meta interface{}) er
 			params.UserGroupIdsToRemove = flex.ExpandStringSet(remove)
 			requestUpdate = true
 		}
-
 	}
 
 	if requestUpdate {
@@ -1050,13 +1048,12 @@ func DisassociateReplicationGroup(conn *elasticache.ElastiCache, globalReplicati
 		return err
 	}
 
-	_, err = WaitGlobalReplicationGroupMemberDetached(conn, globalReplicationGroupID, id)
+	_, err = waitGlobalReplicationGroupMemberDetached(conn, globalReplicationGroupID, id)
 	if err != nil {
 		return fmt.Errorf("waiting for completion: %w", err)
 	}
 
 	return nil
-
 }
 
 func deleteReplicationGroup(replicationGroupID string, conn *elasticache.ElastiCache, finalSnapshotID string, timeout time.Duration) error {

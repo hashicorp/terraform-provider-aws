@@ -8,7 +8,7 @@ description: |-
 
 # Data Source: aws_elasticache_replication_group
 
-Use this data source to get information about an Elasticache Replication Group.
+Use this data source to get information about an ElastiCache Replication Group.
 
 ## Example Usage
 

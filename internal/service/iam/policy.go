@@ -279,7 +279,6 @@ func resourcePolicyUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IAMConn
 
 	if d.HasChangesExcept("tags", "tags_all") {
-
 		if err := policyPruneVersions(d.Id(), conn); err != nil {
 			return err
 		}

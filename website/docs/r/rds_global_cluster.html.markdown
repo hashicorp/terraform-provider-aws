@@ -72,7 +72,6 @@ resource "aws_rds_cluster_instance" "secondary" {
 
 ### New PostgreSQL Global Cluster
 
-
 ```terraform
 provider "aws" {
   alias  = "primary"
@@ -137,7 +136,6 @@ resource "aws_rds_cluster_instance" "secondary" {
   db_subnet_group_name = "default"
 }
 ```
-
 
 ### New Global Cluster From Existing DB Cluster
 

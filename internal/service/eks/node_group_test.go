@@ -18,7 +18,6 @@ import (
 
 func init() {
 	acctest.RegisterServiceErrorCheckFunc(eks.EndpointsID, testAccErrorCheckSkip)
-
 }
 
 func TestAccEKSNodeGroup_basic(t *testing.T) {

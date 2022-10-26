@@ -115,7 +115,6 @@ func resourceFileSystemAssociationCreate(d *schema.ResourceData, meta interface{
 		input.CacheAttributes = expandFileSystemAssociationCacheAttributes(v.([]interface{}))
 	}
 
-	log.Printf("[DEBUG] Creating Storage Gateway File System Association: %s", input)
 	output, err := conn.AssociateFileSystem(input)
 
 	if err != nil {
@@ -193,7 +192,6 @@ func resourceFileSystemAssociationUpdate(d *schema.ResourceData, meta interface{
 			input.CacheAttributes = expandFileSystemAssociationCacheAttributes(v.([]interface{}))
 		}
 
-		log.Printf("[DEBUG] Updating Storage Gateway File System Association: %s", input)
 		_, err := conn.UpdateFileSystemAssociation(input)
 
 		if err != nil {

@@ -82,14 +82,12 @@ func testAccCheckAPICacheDestroy(s *terraform.State) error {
 		}
 
 		return nil
-
 	}
 	return nil
 }
 
 func testAccCheckAPICacheExists(resourceName string, apiCache *appsync.ApiCache) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
 			return fmt.Errorf("Appsync Api Cache Not found in state: %s", resourceName)

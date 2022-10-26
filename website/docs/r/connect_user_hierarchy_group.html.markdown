@@ -61,7 +61,6 @@ The following arguments are supported:
 * `tags` - (Optional) Tags to apply to the hierarchy group. If configured with a provider
 [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:

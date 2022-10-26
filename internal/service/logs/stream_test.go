@@ -135,7 +135,6 @@ func testAccCheckStreamDestroy(s *terraform.State) error {
 		if exists {
 			return fmt.Errorf("Bad: LogStream still exists: %q", rs.Primary.ID)
 		}
-
 	}
 
 	return nil

@@ -17,7 +17,6 @@ import (
 
 func init() {
 	acctest.RegisterServiceErrorCheckFunc(appstream.EndpointsID, testAccErrorCheckSkip)
-
 }
 
 // testAccErrorCheckSkip skips AppStream tests that have error messages indicating unsupported features

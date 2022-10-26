@@ -64,7 +64,6 @@ The following arguments are optional:
 * `session_timeout_minutes` - (Optional) Duration of a session in minutes after a user logs in. Default is 60. Maximum value is 1,440.
 * `subject_key` - (Optional) Element of the SAML assertion to use for username. Default is NameID.
 
-
 #### idp
 
 * `entity_id` - (Required) Unique Entity ID of the application in SAML Identity Provider.
@@ -75,7 +74,6 @@ The following arguments are optional:
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - Name of the domain the SAML options are associated with.
-
 
 ## Timeouts
 

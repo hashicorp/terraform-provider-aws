@@ -85,6 +85,7 @@ The following arguments are optional:
 * `sms_verification_message` - (Optional) String representing the SMS verification message. Conflicts with `verification_message_template` configuration block `sms_message` argument.
 * `software_token_mfa_configuration` - (Optional) Configuration block for software token Mult-Factor Authentication (MFA) settings. [Detailed below](#software_token_mfa_configuration).
 * `tags` - (Optional) Map of tags to assign to the User Pool. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `user_attribute_update_settings` - (Optional) Configuration block for user attribute update settings. [Detailed below](#user_attribute_update_settings).
 * `user_pool_add_ons` - (Optional) Configuration block for user pool add-ons to enable user pool advanced security mode features. [Detailed below](#user_pool_add_ons).
 * `username_attributes` - (Optional) Whether email addresses or phone numbers can be specified as usernames when a user signs up. Conflicts with `alias_attributes`.
 * `username_configuration` - (Optional) Configuration block for username configuration. [Detailed below](#username_configuration).
@@ -210,6 +211,10 @@ The following arguments are required in the `software_token_mfa_configuration` c
 
 * `enabled` - (Required) Boolean whether to enable software token Multi-Factor (MFA) tokens, such as Time-based One-Time Password (TOTP). To disable software token MFA When `sms_configuration` is not present, the `mfa_configuration` argument must be set to `OFF` and the `software_token_mfa_configuration` configuration block must be fully removed.
 
+### user_attribute_update_settings
+
+* `attributes_require_verification_before_update` - (Required) A list of attributes requiring verification before update. If set, the provided value(s) must also be set in `auto_verified_attributes`. Valid values: `email`, `phone_number`.
+
 ### user_pool_add_ons
 
 * `advanced_security_mode` - (Required) Mode for advanced security, must be one of `OFF`, `AUDIT` or `ENFORCED`.
@@ -227,7 +232,6 @@ The following arguments are required in the `software_token_mfa_configuration` c
 * `email_subject_by_link` - (Optional) Subject line for the email message template for sending a confirmation link to the user.
 * `sms_message` - (Optional) SMS message template. Must contain the `{####}` placeholder. Conflicts with `sms_verification_message` argument.
   
-
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:

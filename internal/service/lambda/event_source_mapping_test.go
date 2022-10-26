@@ -1095,12 +1095,10 @@ func testAccCheckEventSourceMappingIsBeingDisabled(conf *lambda.EventSourceMappi
 			if *newConf.State != "Disabled" {
 				return resource.RetryableError(fmt.Errorf(
 					"Waiting to get Lambda Event Source Mapping to be fully enabled, it's currently %s: %v", *newConf.State, conf.UUID))
-
 			}
 
 			return nil
 		})
-
 	}
 }
 

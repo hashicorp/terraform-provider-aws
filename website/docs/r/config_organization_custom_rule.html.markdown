@@ -57,7 +57,6 @@ The following arguments are supported:
 * `tag_key_scope` - (Optional, Required if `tag_value_scope` is configured) Tag key of AWS resources to evaluate
 * `tag_value_scope` - (Optional) Tag value of AWS resources to evaluate
 
-
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:

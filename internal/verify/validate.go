@@ -383,7 +383,7 @@ func FloatGreaterThan(threshold float64) schema.SchemaValidateFunc {
 	}
 }
 
-// https://github.com/hashicorp/terraform-plugin-sdk/issues/1071
+// https://github.com/hashicorp/terraform-plugin-sdk/issues/780.
 func ValidAllDiag(validators ...schema.SchemaValidateDiagFunc) schema.SchemaValidateDiagFunc {
 	return func(i any, path cty.Path) diag.Diagnostics {
 		var results diag.Diagnostics
@@ -394,7 +394,7 @@ func ValidAllDiag(validators ...schema.SchemaValidateDiagFunc) schema.SchemaVali
 	}
 }
 
-// https://github.com/hashicorp/terraform-plugin-sdk/issues/1071
+// https://github.com/hashicorp/terraform-plugin-sdk/issues/780.
 func ValidAnyDiag(validators ...schema.SchemaValidateDiagFunc) schema.SchemaValidateDiagFunc {
 	return func(i any, path cty.Path) diag.Diagnostics {
 		var results diag.Diagnostics

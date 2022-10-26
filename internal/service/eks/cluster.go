@@ -155,6 +155,10 @@ func ResourceCluster() *schema.Resource {
 								validation.StringMatch(regexp.MustCompile(`^(10|172\.(1[6-9]|2[0-9]|3[0-1])|192\.168)\..*`), "must be within 10.0.0.0/8, 172.16.0.0/12, or 192.168.0.0/16"),
 							),
 						},
+						"service_ipv6_cidr": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 					},
 				},
 			},
@@ -537,7 +541,7 @@ func resourceClusterDelete(d *schema.ResourceData, meta interface{}) error {
 
 	// If a cluster is scaling up due to load a delete request will fail
 	// This is a temporary workaround until EKS supports multiple parallel mutating operations
-	err := tfresource.RetryConfigContext(context.Background(), 0*time.Second, 1*time.Minute, 0*time.Second, 30*time.Second, clusterDeleteRetryTimeout, func() *resource.RetryError {
+	err := tfresource.RetryContext(context.Background(), clusterDeleteRetryTimeout, func() *resource.RetryError {
 		var err error
 
 		_, err = conn.DeleteCluster(input)
@@ -552,7 +556,7 @@ func resourceClusterDelete(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		return nil
-	})
+	}, tfresource.WithDelayRand(1*time.Minute), tfresource.WithPollInterval(30*time.Second))
 
 	if tfresource.TimedOut(err) {
 		_, err = conn.DeleteCluster(input)
@@ -833,6 +837,7 @@ func flattenNetworkConfig(apiObject *eks.KubernetesNetworkConfigResponse) []inte
 
 	tfMap := map[string]interface{}{
 		"service_ipv4_cidr": aws.StringValue(apiObject.ServiceIpv4Cidr),
+		"service_ipv6_cidr": aws.StringValue(apiObject.ServiceIpv6Cidr),
 		"ip_family":         aws.StringValue(apiObject.IpFamily),
 	}
 

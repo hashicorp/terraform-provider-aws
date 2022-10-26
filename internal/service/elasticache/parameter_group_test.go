@@ -440,7 +440,6 @@ func testAccCheckParameterGroupDestroy(s *terraform.State) error {
 
 func testAccCheckParameterGroupAttributes(v *elasticache.CacheParameterGroup, rName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-
 		if *v.CacheParameterGroupName != rName {
 			return fmt.Errorf("bad name: %#v", v.CacheParameterGroupName)
 		}

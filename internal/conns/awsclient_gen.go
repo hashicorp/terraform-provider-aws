@@ -2,7 +2,9 @@
 package conns
 
 import (
+	awsv2 "github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/comprehend"
+	"github.com/aws/aws-sdk-go-v2/service/computeoptimizer"
 	"github.com/aws/aws-sdk-go-v2/service/fis"
 	"github.com/aws/aws-sdk-go-v2/service/identitystore"
 	"github.com/aws/aws-sdk-go-v2/service/inspector2"
@@ -10,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/medialive"
 	"github.com/aws/aws-sdk-go-v2/service/rolesanywhere"
 	"github.com/aws/aws-sdk-go-v2/service/route53domains"
+	"github.com/aws/aws-sdk-go-v2/service/sesv2"
 	"github.com/aws/aws-sdk-go-v2/service/transcribe"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/accessanalyzer"
@@ -78,7 +81,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/aws/aws-sdk-go/service/cognitosync"
 	"github.com/aws/aws-sdk-go/service/comprehendmedical"
-	"github.com/aws/aws-sdk-go/service/computeoptimizer"
 	"github.com/aws/aws-sdk-go/service/configservice"
 	"github.com/aws/aws-sdk-go/service/connect"
 	"github.com/aws/aws-sdk-go/service/connectcontactlens"
@@ -267,7 +269,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/servicediscovery"
 	"github.com/aws/aws-sdk-go/service/servicequotas"
 	"github.com/aws/aws-sdk-go/service/ses"
-	"github.com/aws/aws-sdk-go/service/sesv2"
 	"github.com/aws/aws-sdk-go/service/sfn"
 	"github.com/aws/aws-sdk-go/service/shield"
 	"github.com/aws/aws-sdk-go/service/signer"
@@ -312,6 +313,7 @@ import (
 
 type AWSClient struct {
 	AccountID                 string
+	Config                    *awsv2.Config
 	DefaultTagsConfig         *tftags.DefaultConfig
 	DNSSuffix                 string
 	IgnoreTagsConfig          *tftags.IgnoreConfig
@@ -320,7 +322,7 @@ type AWSClient struct {
 	Region                    string
 	ReverseDNSPrefix          string
 	S3ConnURICleaningDisabled *s3.S3
-	ServiceMap                map[string]intf.ServiceData
+	ServicePackages           []intf.ServicePackageData
 	Session                   *session.Session
 	SupportedPlatforms        []string
 	TerraformVersion          string
@@ -388,7 +390,7 @@ type AWSClient struct {
 	CognitoSyncConn                  *cognitosync.CognitoSync
 	ComprehendConn                   *comprehend.Client
 	ComprehendMedicalConn            *comprehendmedical.ComprehendMedical
-	ComputeOptimizerConn             *computeoptimizer.ComputeOptimizer
+	ComputeOptimizerConn             *computeoptimizer.Client
 	ConfigServiceConn                *configservice.ConfigService
 	ConnectConn                      *connect.Connect
 	ConnectContactLensConn           *connectcontactlens.ConnectContactLens
@@ -573,7 +575,7 @@ type AWSClient struct {
 	S3ControlConn                    *s3control.S3Control
 	S3OutpostsConn                   *s3outposts.S3Outposts
 	SESConn                          *ses.SES
-	SESV2Conn                        *sesv2.SESV2
+	SESV2Conn                        *sesv2.Client
 	SFNConn                          *sfn.SFN
 	SMSConn                          *sms.SMS
 	SNSConn                          *sns.SNS

@@ -7,29 +7,33 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
-	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/fwtypes"
 )
 
-// TODO: Remove
-var NewDataSourceARNType = newDataSourceARNType
-
 func init() {
-	registerDataSourceTypeFactory("aws_arn", newDataSourceARNType)
+	registerFrameworkDataSourceFactory(newDataSourceARN)
 }
 
-// newDataSourceARNType instantiates a new DataSourceType for the aws_arn data source.
-func newDataSourceARNType(ctx context.Context) (provider.DataSourceType, error) {
-	return &dataSourceARNType{}, nil
+// newDataSourceARN instantiates a new DataSource for the aws_arn data source.
+func newDataSourceARN(context.Context) (datasource.DataSourceWithConfigure, error) {
+	return &dataSourceARN{}, nil
 }
 
-type dataSourceARNType struct{}
+type dataSourceARN struct {
+	meta *conns.AWSClient
+}
+
+// Metadata should return the full name of the data source, such as
+// examplecloud_thing.
+func (d *dataSourceARN) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
+	response.TypeName = "aws_arn"
+}
 
 // GetSchema returns the schema for this data source.
-func (t *dataSourceARNType) GetSchema(context.Context) (tfsdk.Schema, diag.Diagnostics) {
+func (d *dataSourceARN) GetSchema(context.Context) (tfsdk.Schema, diag.Diagnostics) {
 	schema := tfsdk.Schema{
 		Attributes: map[string]tfsdk.Attribute{
 			"account": {
@@ -67,47 +71,44 @@ func (t *dataSourceARNType) GetSchema(context.Context) (tfsdk.Schema, diag.Diagn
 	return schema, nil
 }
 
-// NewDataSource instantiates a new DataSource of this DataSourceType.
-func (t *dataSourceARNType) NewDataSource(ctx context.Context, provider provider.Provider) (datasource.DataSource, diag.Diagnostics) {
-	return &dataSourceARN{}, nil
+// Configure enables provider-level data or clients to be set in the
+// provider-defined DataSource type. It is separately executed for each
+// ReadDataSource RPC.
+func (d *dataSourceARN) Configure(_ context.Context, request datasource.ConfigureRequest, response *datasource.ConfigureResponse) { //nolint:unparam
+	if v, ok := request.ProviderData.(*conns.AWSClient); ok {
+		d.meta = v
+	}
 }
-
-type dataSourceARN struct{}
 
 // Read is called when the provider must read data source values in order to update state.
 // Config values should be read from the ReadRequest and new state values set on the ReadResponse.
 func (d *dataSourceARN) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
-	tflog.Trace(ctx, "dataSourceARN.Read enter")
+	var data dataSourceARNData
 
-	var config dataSourceARNData
-
-	response.Diagnostics.Append(request.Config.Get(ctx, &config)...)
+	response.Diagnostics.Append(request.Config.Get(ctx, &data)...)
 
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	state := config
-	arn := &state.ARN.Value
-	id := arn.String()
+	arn := &data.ARN.Value
 
-	state.Account = &arn.AccountID
-	state.ID = &id
-	state.Partition = &arn.Partition
-	state.Region = &arn.Region
-	state.Resource = &arn.Resource
-	state.Service = &arn.Service
+	data.Account = types.String{Value: arn.AccountID}
+	data.ID = types.String{Value: arn.String()}
+	data.Partition = types.String{Value: arn.Partition}
+	data.Region = types.String{Value: arn.Region}
+	data.Resource = types.String{Value: arn.Resource}
+	data.Service = types.String{Value: arn.Service}
 
-	response.Diagnostics.Append(response.State.Set(ctx, &state)...)
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-// TODO: Generate this structure definition.
 type dataSourceARNData struct {
-	Account   *string     `tfsdk:"account"`
-	ARN       fwtypes.ARN `tfsdk:"arn"`
-	ID        *string     `tfsdk:"id"`
-	Partition *string     `tfsdk:"partition"`
-	Region    *string     `tfsdk:"region"`
-	Resource  *string     `tfsdk:"resource"`
-	Service   *string     `tfsdk:"service"`
+	Account   types.String `tfsdk:"account"`
+	ARN       fwtypes.ARN  `tfsdk:"arn"`
+	ID        types.String `tfsdk:"id"`
+	Partition types.String `tfsdk:"partition"`
+	Region    types.String `tfsdk:"region"`
+	Resource  types.String `tfsdk:"resource"`
+	Service   types.String `tfsdk:"service"`
 }

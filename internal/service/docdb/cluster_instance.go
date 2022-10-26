@@ -410,7 +410,6 @@ func resourceClusterInstanceUpdate(d *schema.ResourceData, meta interface{}) err
 		if err != nil {
 			return fmt.Errorf("error waiting for DocDB Instance (%s) update: %w", d.Id(), err)
 		}
-
 	}
 
 	if d.HasChange("tags_all") {
@@ -419,7 +418,6 @@ func resourceClusterInstanceUpdate(d *schema.ResourceData, meta interface{}) err
 		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating DocumentDB Cluster Instance (%s) tags: %w", d.Get("arn").(string), err)
 		}
-
 	}
 
 	return resourceClusterInstanceRead(d, meta)
@@ -450,7 +448,6 @@ func resourceClusterInstanceDelete(d *schema.ResourceData, meta interface{}) err
 	}
 
 	return nil
-
 }
 
 func resourceInstanceStateRefreshFunc(conn *docdb.DocDB, id string) resource.StateRefreshFunc {

@@ -11,7 +11,6 @@ description: |-
 The ECS task definition data source allows access to details of
 a specific AWS ECS task definition.
 
-
 ## Example Usage
 
 ```terraform
