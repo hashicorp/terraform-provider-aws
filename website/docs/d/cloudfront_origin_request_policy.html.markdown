@@ -10,13 +10,19 @@ description: |-
 
 ## Example Usage
 
-The following example below creates a CloudFront origin request policy.
 
+This example shows how to retrieve a custom origin request policy:
 ```terraform
 data "aws_cloudfront_origin_request_policy" "example" {
   name = "example-policy"
 }
+```
 
+To retrieve an AWS-managed origin request policy, use the following syntax:
+```terraform
+data "aws_cloudfront_origin_request_policy" "ua_referer" {
+  name = "Managed-UserAgentRefererHeaders"
+}
 ```
 
 ## Argument Reference
