@@ -1,3 +1,3 @@
 ```release-note:bug
-resource/route53: Fixed incorrect capitalization for GeoproximityLocations
+data-source/aws_route53_traffic_policy_document: Fixed incorrect capitalization for `GeoproximityLocations`
 ```
