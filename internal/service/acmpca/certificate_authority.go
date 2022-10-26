@@ -412,7 +412,7 @@ func resourceCertificateAuthorityRead(d *schema.ResourceData, meta interface{}) 
 	}
 
 	d.Set("enabled", (aws.StringValue(certificateAuthority.Status) != acmpca.CertificateAuthorityStatusDisabled))
-	d.Set("usage_mode", aws.StringValue(certificateAuthority.UsageMode))
+	d.Set("usage_mode", certificateAuthority.UsageMode)
 	d.Set("not_after", aws.TimeValue(certificateAuthority.NotAfter).Format(time.RFC3339))
 	d.Set("not_before", aws.TimeValue(certificateAuthority.NotBefore).Format(time.RFC3339))
 
