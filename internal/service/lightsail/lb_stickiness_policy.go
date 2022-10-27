@@ -56,7 +56,6 @@ func resourceLoadBalancerStickinessPolicyCreate(ctx context.Context, d *schema.R
 	conn := meta.(*conns.AWSClient).LightsailConn
 
 	for _, v := range []string{"enabled", "cookie_duration"} {
-
 		in := lightsail.UpdateLoadBalancerAttributeInput{
 			LoadBalancerName: aws.String(d.Get("lb_name").(string)),
 		}
@@ -65,6 +64,7 @@ func resourceLoadBalancerStickinessPolicyCreate(ctx context.Context, d *schema.R
 			in.AttributeName = aws.String(lightsail.LoadBalancerAttributeNameSessionStickinessEnabled)
 			in.AttributeValue = aws.String("true")
 		}
+
 		if v == "cookie_duration" {
 			in.AttributeName = aws.String(lightsail.LoadBalancerAttributeNameSessionStickinessLbCookieDurationSeconds)
 			in.AttributeValue = aws.String(fmt.Sprint(d.Get("cookie_duration").(int)))
@@ -81,13 +81,11 @@ func resourceLoadBalancerStickinessPolicyCreate(ctx context.Context, d *schema.R
 		}
 
 		op := out.Operations[0]
-
 		err = waitOperation(conn, op.Id)
 
 		if err != nil {
 			return create.DiagError(names.Lightsail, lightsail.OperationTypeUpdateLoadBalancerAttribute, ResLoadBalancerStickinessPolicy, d.Get("lb_name").(string), errors.New("Error waiting for Update Load Balancer Attribute request operation"))
 		}
-
 	}
 
 	d.SetId(d.Get("lb_name").(string))
@@ -148,7 +146,6 @@ func resourceLoadBalancerStickinessPolicyUpdate(ctx context.Context, d *schema.R
 		}
 
 		op := out.Operations[0]
-
 		err = waitOperation(conn, op.Id)
 
 		if err != nil {
@@ -179,7 +176,6 @@ func resourceLoadBalancerStickinessPolicyDelete(ctx context.Context, d *schema.R
 	}
 
 	op := out.Operations[0]
-
 	err = waitOperation(conn, op.Id)
 
 	if err != nil {
