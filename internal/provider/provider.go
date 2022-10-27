@@ -1718,6 +1718,8 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_lightsail_key_pair":                             lightsail.ResourceKeyPair(),
 			"aws_lightsail_lb":                                   lightsail.ResourceLoadBalancer(),
 			"aws_lightsail_lb_attachment":                        lightsail.ResourceLoadBalancerAttachment(),
+			"aws_lightsail_lb_certificate":                       lightsail.ResourceLoadBalancerCertificate(),
+			"aws_lightsail_lb_certificate_attachment":            lightsail.ResourceLoadBalancerCertificateAttachment(),
 			"aws_lightsail_static_ip":                            lightsail.ResourceStaticIP(),
 			"aws_lightsail_static_ip_attachment":                 lightsail.ResourceStaticIPAttachment(),
 
@@ -2188,7 +2190,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 		// ServicePackageData is used before configuration to determine the provider's exported resources and data sources.
 		ServicePackages: []intf.ServicePackageData{
 			globalaccelerator.ServicePackageData,
-			medialive.ServicePackageData,
+			//medialive.ServicePackageData,
 			meta.ServicePackageData,
 			simpledb.ServicePackageData,
 			sts.ServicePackageData,
