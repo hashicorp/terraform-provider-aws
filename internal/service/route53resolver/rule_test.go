@@ -544,11 +544,11 @@ resource "aws_vpc" "test" {
 
 resource "aws_subnet" "test" {
   count = 3
-  
+
   vpc_id            = aws_vpc.test.id
   availability_zone = data.aws_availability_zones.available.names[count.index]
   cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)
-  
+
   tags = {
     Name = %[1]q
   }
