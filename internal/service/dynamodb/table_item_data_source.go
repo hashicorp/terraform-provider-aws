@@ -2,6 +2,9 @@ package dynamodb
 
 import (
 	"context"
+	"log"
+	"strings"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -11,8 +14,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
-	"log"
-	"strings"
 )
 
 func DataSourceTableItem() *schema.Resource {
