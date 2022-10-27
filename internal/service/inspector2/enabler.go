@@ -150,8 +150,8 @@ const (
 
 func waitEnabled(ctx context.Context, conn *inspector2.Client, id string, timeout time.Duration) error {
 	stateConf := &resource.StateChangeConf{
-		Pending:                   []string{string(types.StatusEnabling), StatusDisabledEnabled, StatusInProgress, string(types.StatusDisabled)},
-		Target:                    []string{string(types.StatusEnabled)},
+		Pending:                   append(enum.Slice(types.StatusEnabling, types.StatusDisabled), StatusDisabledEnabled, StatusInProgress),
+		Target:                    enum.Slice(types.StatusEnabled),
 		Refresh:                   statusEnable(ctx, conn, id, timeout),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
@@ -165,7 +165,7 @@ func waitEnabled(ctx context.Context, conn *inspector2.Client, id string, timeou
 
 func waitDisabled(ctx context.Context, conn *inspector2.Client, id string, timeout time.Duration) error {
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{string(types.StatusDisabling), StatusDisabledEnabled, StatusInProgress, string(types.StatusEnabled)},
+		Pending: append(enum.Slice(types.StatusDisabling, types.StatusEnabled), StatusDisabledEnabled, StatusInProgress),
 		Target:  []string{string(types.StatusDisabled)},
 		Refresh: statusEnable(ctx, conn, id, timeout),
 		Timeout: timeout,
