@@ -3,7 +3,7 @@ subcategory: "DynamoDB"
 layout: "aws"
 page_title: "AWS: aws_dynamodb_table_item"
 description: |-
-Terraform data source for retrieving a value from an AWS DynamoDB table.
+  Terraform data source for retrieving a value from an AWS DynamoDB table.
 ---
 
 # Data Source: aws_dynamodb_table_item
