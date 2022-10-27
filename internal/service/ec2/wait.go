@@ -2761,3 +2761,47 @@ func waitEBSSnapshotTierArchive(conn *ec2.EC2, id string, timeout time.Duration)
 
 	return nil, err
 }
+
+func WaitIPAMPoolCIDRCreated(conn *ec2.EC2, cidrBlock, poolID string, timeout time.Duration) (*ec2.IpamPoolCidr, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.IpamPoolCidrStatePendingProvision},
+		Target:  []string{ec2.IpamPoolCidrStateProvisioned},
+		Refresh: StatusIPAMPoolCIDRState(conn, cidrBlock, poolID),
+		Timeout: timeout,
+		Delay:   5 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.IpamPoolCidr); ok {
+		if state, failureReason := aws.StringValue(output.State), output.FailureReason; state == ec2.IpamPoolCidrStateFailedProvision && failureReason != nil {
+			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.StringValue(failureReason.Code), aws.StringValue(failureReason.Message)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func WaitIPAMPoolCIDRDeleted(conn *ec2.EC2, cidrBlock, poolID string, timeout time.Duration) (*ec2.IpamPoolCidr, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.IpamPoolCidrStatePendingDeprovision, ec2.IpamPoolCidrStateProvisioned},
+		Target:  []string{},
+		Refresh: StatusIPAMPoolCIDRState(conn, cidrBlock, poolID),
+		Timeout: timeout,
+		Delay:   5 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.IpamPoolCidr); ok {
+		if state, failureReason := aws.StringValue(output.State), output.FailureReason; state == ec2.IpamPoolCidrStateFailedDeprovision && failureReason != nil {
+			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.StringValue(failureReason.Code), aws.StringValue(failureReason.Message)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}

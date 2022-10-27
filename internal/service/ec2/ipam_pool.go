@@ -114,12 +114,11 @@ func ResourceIPAMPool() *schema.Resource {
 }
 
 const (
-	ipamPoolCreateTimeout     = 3 * time.Minute
-	InvalidIPAMPoolIDNotFound = "InvalidIpamPoolId.NotFound"
-	ipamPoolUpdateTimeout     = 3 * time.Minute
-	IPAMPoolDeleteTimeout     = 3 * time.Minute
-	ipamPoolAvailableDelay    = 5 * time.Second
-	ipamPoolDeleteDelay       = 5 * time.Second
+	ipamPoolCreateTimeout  = 3 * time.Minute
+	ipamPoolUpdateTimeout  = 3 * time.Minute
+	IPAMPoolDeleteTimeout  = 3 * time.Minute
+	ipamPoolAvailableDelay = 5 * time.Second
+	ipamPoolDeleteDelay    = 5 * time.Second
 )
 
 func ResourceIPAMPoolCreate(d *schema.ResourceData, meta interface{}) error {
@@ -196,7 +195,7 @@ func ResourceIPAMPoolRead(d *schema.ResourceData, meta interface{}) error {
 
 	pool, err := FindIPAMPoolById(conn, d.Id())
 
-	if err != nil && !tfawserr.ErrCodeEquals(err, InvalidIPAMPoolIDNotFound) {
+	if err != nil && !tfawserr.ErrCodeEquals(err, ErrCodeInvalidIpamPoolIdNotFound) {
 		return err
 	}
 
@@ -377,7 +376,7 @@ func WaitIPAMPoolUpdate(conn *ec2.EC2, ipamPoolId string, timeout time.Duration)
 func WaitIPAMPoolDeleted(conn *ec2.EC2, ipamPoolId string, timeout time.Duration) (*ec2.IpamPool, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{ec2.IpamPoolStateDeleteInProgress},
-		Target:  []string{InvalidIPAMPoolIDNotFound},
+		Target:  []string{ErrCodeInvalidIpamPoolIdNotFound},
 		Refresh: statusIPAMPoolStatus(conn, ipamPoolId),
 		Timeout: timeout,
 		Delay:   ipamPoolDeleteDelay,
@@ -396,8 +395,8 @@ func statusIPAMPoolStatus(conn *ec2.EC2, ipamPoolId string) resource.StateRefres
 	return func() (interface{}, string, error) {
 		output, err := FindIPAMPoolById(conn, ipamPoolId)
 
-		if tfawserr.ErrCodeEquals(err, InvalidIPAMPoolIDNotFound) {
-			return output, InvalidIPAMPoolIDNotFound, nil
+		if tfawserr.ErrCodeEquals(err, ErrCodeInvalidIpamPoolIdNotFound) {
+			return output, ErrCodeInvalidIpamPoolIdNotFound, nil
 		}
 
 		// there was an unhandled error in the Finder
