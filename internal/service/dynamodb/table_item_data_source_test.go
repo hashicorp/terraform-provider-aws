@@ -51,16 +51,9 @@ func TestAccDynamoDBTableItemDataSource_basic(t *testing.T) {
 }
 
 func TestAccDynamoDBTableItemDataSource_projectionExpression(t *testing.T) {
-	// TIP: This is a long-running test guard for tests that run longer than
-	// 300s (5 min) generally.
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_dynamodb_table_item.test"
 	hashKey := "hashKey"
-	projectionExpression := "one, two"
 	itemContent := `{
 	"hashKey": {"S": "something"},
 	"one": {"N": "11111"},
@@ -72,6 +65,11 @@ func TestAccDynamoDBTableItemDataSource_projectionExpression(t *testing.T) {
 	"hashKey": {"S": "something"}
 }`
 
+	expected := `{
+	"one": {"N": "11111"},
+	"two": {"N": "22222"}
+}`
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
@@ -81,11 +79,48 @@ func TestAccDynamoDBTableItemDataSource_projectionExpression(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTableItemDataSourceConfig_ProjectionExpression(rName, hashKey, itemContent, key, projectionExpression),
+				Config: testAccTableItemDataSourceConfig_ProjectionExpression(rName, hashKey, itemContent, key),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckResourceAttrEquivalentJSON(dataSourceName, "item", itemContent),
+					acctest.CheckResourceAttrEquivalentJSON(dataSourceName, "item", expected),
 					resource.TestCheckResourceAttr(dataSourceName, "table_name", rName),
-					resource.TestCheckResourceAttr(dataSourceName, "projection_expression", rName+"\n"),
+					resource.TestCheckResourceAttr(dataSourceName, "projection_expression", "one,two"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccDynamoDBTableItemDataSource_expressionAttributeNames(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	dataSourceName := "data.aws_dynamodb_table_item.test"
+	hashKey := "hashKey"
+	itemContent := `{
+	"hashKey": {"S": "something"},
+	"one": {"N": "11111"},
+	"Percentile": {"N": "22222"}
+}`
+	key := `{
+	"hashKey": {"S": "something"}
+}`
+
+	expected := `{
+	"Percentile": {"N": "22222"}
+}`
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(dynamodb.EndpointsID, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, dynamodb.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTableItemDataSourceConfig_ExpressionAttributeNames(rName, hashKey, itemContent, key),
+				Check: resource.ComposeTestCheckFunc(
+					acctest.CheckResourceAttrEquivalentJSON(dataSourceName, "item", expected),
+					resource.TestCheckResourceAttr(dataSourceName, "table_name", rName),
+					resource.TestCheckResourceAttr(dataSourceName, "projection_expression", "#P"),
 				),
 			},
 		},
@@ -126,7 +161,7 @@ KEY
 `, tableName, hashKey, hashKey, item, key)
 }
 
-func testAccTableItemDataSourceConfig_ProjectionExpression(tableName, hashKey, item string, key string, projectionExpression string) string {
+func testAccTableItemDataSourceConfig_ProjectionExpression(tableName, hashKey, item string, key string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "test" {
   name           = "%s"
@@ -151,11 +186,48 @@ ITEM
 
 data "aws_dynamodb_table_item" "test" {
   table_name = aws_dynamodb_table.test.name
-  projection_expression = "%s"
-
+  projection_expression = "one,two"
   key = <<KEY
 %s
 KEY
+  depends_on = [aws_dynamodb_table_item.test]
 }
-`, tableName, hashKey, hashKey, item, projectionExpression, key)
+`, tableName, hashKey, hashKey, item, key)
+}
+
+func testAccTableItemDataSourceConfig_ExpressionAttributeNames(tableName, hashKey, item string, key string) string {
+	return fmt.Sprintf(`
+resource "aws_dynamodb_table" "test" {
+  name           = "%s"
+  read_capacity  = 10
+  write_capacity = 10
+  hash_key       = "%s"
+
+  attribute {
+    name = "%s"
+    type = "S"
+  }
+}
+
+resource "aws_dynamodb_table_item" "test" {
+  table_name = aws_dynamodb_table.test.name
+  hash_key   = aws_dynamodb_table.test.hash_key
+
+  item = <<ITEM
+%s
+ITEM
+}
+
+data "aws_dynamodb_table_item" "test" {
+  table_name = aws_dynamodb_table.test.name
+  expression_attribute_names = {
+	"#P" = "Percentile"
+}
+  projection_expression = "#P"
+  key = <<KEY
+%s
+KEY
+  depends_on = [aws_dynamodb_table_item.test]
+}
+`, tableName, hashKey, hashKey, item, key)
 }
