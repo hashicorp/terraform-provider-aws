@@ -54,6 +54,7 @@ func TestAccDynamoDBTableItemDataSource_projectionExpression(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_dynamodb_table_item.test"
 	hashKey := "hashKey"
+	projectionExpression := "one,two"
 	itemContent := `{
 	"hashKey": {"S": "something"},
 	"one": {"N": "11111"},
@@ -79,11 +80,11 @@ func TestAccDynamoDBTableItemDataSource_projectionExpression(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTableItemDataSourceConfig_ProjectionExpression(rName, hashKey, itemContent, key),
+				Config: testAccTableItemDataSourceConfig_ProjectionExpression(rName, hashKey, itemContent, projectionExpression, key),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckResourceAttrEquivalentJSON(dataSourceName, "item", expected),
 					resource.TestCheckResourceAttr(dataSourceName, "table_name", rName),
-					resource.TestCheckResourceAttr(dataSourceName, "projection_expression", "one,two"),
+					resource.TestCheckResourceAttr(dataSourceName, "projection_expression", projectionExpression),
 				),
 			},
 		},
@@ -161,7 +162,7 @@ KEY
 `, tableName, hashKey, hashKey, item, key)
 }
 
-func testAccTableItemDataSourceConfig_ProjectionExpression(tableName, hashKey, item string, key string) string {
+func testAccTableItemDataSourceConfig_ProjectionExpression(tableName, hashKey, item, projectionExpression, key string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "test" {
   name           = "%s"
@@ -186,13 +187,13 @@ ITEM
 
 data "aws_dynamodb_table_item" "test" {
   table_name = aws_dynamodb_table.test.name
-  projection_expression = "one,two"
+  projection_expression = "%s"
   key = <<KEY
 %s
 KEY
   depends_on = [aws_dynamodb_table_item.test]
 }
-`, tableName, hashKey, hashKey, item, key)
+`, tableName, hashKey, hashKey, item, projectionExpression, key)
 }
 
 func testAccTableItemDataSourceConfig_ExpressionAttributeNames(tableName, hashKey, item string, key string) string {
