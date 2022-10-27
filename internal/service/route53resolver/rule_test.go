@@ -370,7 +370,7 @@ func testAccCheckRuleDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := tfroute53resolver.FindRuleByID(context.Background(), conn, rs.Primary.ID)
+		_, err := tfroute53resolver.FindResolverRuleByID(context.Background(), conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -398,7 +398,7 @@ func testAccCheckRuleExists(n string, v *route53resolver.ResolverRule) resource.
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ResolverConn
 
-		output, err := tfroute53resolver.FindRuleByID(context.Background(), conn, rs.Primary.ID)
+		output, err := tfroute53resolver.FindResolverRuleByID(context.Background(), conn, rs.Primary.ID)
 
 		if err != nil {
 			return err

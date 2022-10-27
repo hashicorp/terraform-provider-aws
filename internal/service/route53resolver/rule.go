@@ -150,7 +150,7 @@ func resourceRuleRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	rule, err := FindRuleByID(ctx, conn, d.Id())
+	rule, err := FindResolverRuleByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Route53 Resolver Rule (%s) not found, removing from state", d.Id())
@@ -276,7 +276,7 @@ func resourceRuleCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, v i
 	return nil
 }
 
-func FindRuleByID(ctx context.Context, conn *route53resolver.Route53Resolver, id string) (*route53resolver.ResolverRule, error) {
+func FindResolverRuleByID(ctx context.Context, conn *route53resolver.Route53Resolver, id string) (*route53resolver.ResolverRule, error) {
 	input := &route53resolver.GetResolverRuleInput{
 		ResolverRuleId: aws.String(id),
 	}
@@ -303,7 +303,7 @@ func FindRuleByID(ctx context.Context, conn *route53resolver.Route53Resolver, id
 
 func statusRule(ctx context.Context, conn *route53resolver.Route53Resolver, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindRuleByID(ctx, conn, id)
+		output, err := FindResolverRuleByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

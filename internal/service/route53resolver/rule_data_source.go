@@ -75,7 +75,7 @@ func dataSourceRuleRead(ctx context.Context, d *schema.ResourceData, meta interf
 	var rule *route53resolver.ResolverRule
 	if v, ok := d.GetOk("resolver_rule_id"); ok {
 		id := v.(string)
-		rule, err = FindRuleByID(ctx, conn, id)
+		rule, err = FindResolverRuleByID(ctx, conn, id)
 
 		if err != nil {
 			return diag.Errorf("reading Route53 Resolver Rule (%s): %s", id, err)
