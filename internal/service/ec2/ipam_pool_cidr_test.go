@@ -41,6 +41,53 @@ func TestAccIPAMPoolCIDR_basic(t *testing.T) {
 	})
 }
 
+func TestAccIPAMPoolCIDR_disappears(t *testing.T) {
+	var cidr ec2.IpamPoolCidr
+	resourceName := "aws_vpc_ipam_pool_cidr.test"
+	cidrBlock := "10.0.0.0/24"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIPAMPoolCIDRDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIPAMPoolCIDRConfig_provisionedIPv4(cidrBlock),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIPAMPoolCIDRExists(resourceName, &cidr),
+					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceIPAMPoolCIDR(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccIPAMPoolCIDR_Disappears_ipam(t *testing.T) {
+	var cidr ec2.IpamPoolCidr
+	resourceName := "aws_vpc_ipam_pool_cidr.test"
+	ipamResourceName := "aws_vpc_ipam.test"
+	cidrBlock := "10.0.0.0/24"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIPAMPoolCIDRDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIPAMPoolCIDRConfig_provisionedIPv4(cidrBlock),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIPAMPoolCIDRExists(resourceName, &cidr),
+					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceIPAM(), ipamResourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccCheckIPAMPoolCIDRExists(n string, v *ec2.IpamPoolCidr) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -111,6 +158,8 @@ resource "aws_vpc_ipam" "test" {
   operating_regions {
     region_name = data.aws_region.current.name
   }
+
+  cascade = true
 }
 `
 
