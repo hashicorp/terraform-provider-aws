@@ -12,15 +12,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 const (
 	RuleAssociationStatusDeleted = "DELETED"
-)
-
-const (
-	ruleAssociationCreatedDefaultTimeout = 10 * time.Minute
-	ruleAssociationDeletedDefaultTimeout = 10 * time.Minute
 )
 
 func ResourceRuleAssociation() *schema.Resource {
@@ -28,35 +24,34 @@ func ResourceRuleAssociation() *schema.Resource {
 		Create: resourceRuleAssociationCreate,
 		Read:   resourceRuleAssociationRead,
 		Delete: resourceRuleAssociationDelete,
+
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(ruleAssociationCreatedDefaultTimeout),
-			Delete: schema.DefaultTimeout(ruleAssociationDeletedDefaultTimeout),
+			Create: schema.DefaultTimeout(10 * time.Minute),
+			Delete: schema.DefaultTimeout(10 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
+			"name": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validResolverName,
+			},
 			"resolver_rule_id": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 64),
 			},
-
 			"vpc_id": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 64),
-			},
-
-			"name": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validResolverName,
 			},
 		},
 	}
@@ -94,21 +89,21 @@ func resourceRuleAssociationCreate(d *schema.ResourceData, meta interface{}) err
 func resourceRuleAssociationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).Route53ResolverConn
 
-	assocRaw, state, err := ruleAssociationRefresh(conn, d.Id())()
-	if err != nil {
-		return fmt.Errorf("error getting Route53 Resolver rule association (%s): %s", d.Id(), err)
-	}
-	if state == RuleAssociationStatusDeleted {
-		log.Printf("[WARN] Route53 Resolver rule association (%s) not found, removing from state", d.Id())
+	ruleAssociation, err := FindResolverRuleAssociationByID(conn, d.Id())
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] Route53 Resolver Rule Association (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
-	assoc := assocRaw.(*route53resolver.ResolverRuleAssociation)
+	if err != nil {
+		return fmt.Errorf("reading Route53 Resolver Rule Association (%s): %w", d.Id(), err)
+	}
 
-	d.Set("name", assoc.Name)
-	d.Set("resolver_rule_id", assoc.ResolverRuleId)
-	d.Set("vpc_id", assoc.VPCId)
+	d.Set("name", ruleAssociation.Name)
+	d.Set("resolver_rule_id", ruleAssociation.ResolverRuleId)
+	d.Set("vpc_id", ruleAssociation.VPCId)
 
 	return nil
 }
@@ -131,6 +126,31 @@ func resourceRuleAssociationDelete(d *schema.ResourceData, meta interface{}) err
 	return RuleAssociationWaitUntilTargetState(conn, d.Id(), d.Timeout(schema.TimeoutDelete),
 		[]string{route53resolver.ResolverRuleAssociationStatusDeleting},
 		[]string{RuleAssociationStatusDeleted})
+}
+
+func FindResolverRuleAssociationByID(conn *route53resolver.Route53Resolver, id string) (*route53resolver.ResolverRuleAssociation, error) {
+	input := &route53resolver.GetResolverRuleAssociationInput{
+		ResolverRuleAssociationId: aws.String(id),
+	}
+
+	output, err := conn.GetResolverRuleAssociation(input)
+
+	if tfawserr.ErrCodeEquals(err, route53resolver.ErrCodeResourceNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.ResolverRuleAssociation == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.ResolverRuleAssociation, nil
 }
 
 func ruleAssociationRefresh(conn *route53resolver.Route53Resolver, assocId string) resource.StateRefreshFunc {
