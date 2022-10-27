@@ -23,7 +23,7 @@ resource "aws_lightsail_lb" "test" {
 }
 
 resource "aws_lightsail_lb_stickiness_policy" "test" {
-  lb_name          = aws_lightsail_lb.test.name
+  lb_name         = aws_lightsail_lb.test.name
   cookie_duration = 900
 }
 ```
