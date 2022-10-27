@@ -43,7 +43,7 @@ The following arguments are required:
 
 ## Attributes Reference
 
-There are no attributes for this resource.
+No additional attributes are exported.
 
 ## Timeouts
 
