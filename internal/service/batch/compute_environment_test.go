@@ -1666,6 +1666,28 @@ resource "aws_eks_cluster" "test" {
 	]
 }
 
+resource "aws_eks_node_group" "example" {
+  cluster_name    = aws_eks_cluster.test.name
+  node_group_name = "example"
+  node_role_arn   = aws_iam_role.batch_service.arn
+  subnet_ids      = aws_subnet.test[*].id
+  
+  scaling_config {
+    desired_size = 1
+    max_size     = 2
+    min_size     = 1
+  }
+  
+  update_config {
+    max_unavailable = 1
+  }
+  
+  depends_on = [
+    aws_iam_role_policy_attachment.batch_service,
+    aws_iam_role_policy_attachment.test-AmazonEKSClusterPolicy,
+  ]
+}
+
 resource "aws_iam_role" "batch_service" {
 	name = "%[1]s_batch_service"
   
@@ -1678,7 +1700,8 @@ resource "aws_iam_role" "batch_service" {
 	  "Principal": {
 		"Service": [
 		  "batch.${data.aws_partition.current.dns_suffix}",
-		  "eks.${data.aws_partition.current.dns_suffix}"
+		  "eks.${data.aws_partition.current.dns_suffix}",
+		  "ec2.${data.aws_partition.current.dns_suffix}"
 		]
 	  }
 	}]
