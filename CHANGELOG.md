@@ -20,6 +20,8 @@ ENHANCEMENTS:
 * resource/aws_datasync_task: Add `security_descriptor_copy_flags` to `options` configuration block ([#26992](https://github.com/hashicorp/terraform-provider-aws/issues/26992))
 * resource/aws_ec2_capacity_reservation: Add `placement_group_arn` argument ([#27458](https://github.com/hashicorp/terraform-provider-aws/issues/27458))
 * resource/aws_ec2_transit_gateway: Add support to modify `amazon_side_asn` argument ([#27306](https://github.com/hashicorp/terraform-provider-aws/issues/27306))
+* resource/aws_elasticache_global_replication_group: Add `global_node_groups` and `num_node_groups` arguments ([#27500](https://github.com/hashicorp/terraform-provider-aws/issues/27500))
+* resource/aws_elasticache_global_replication_group: Add timeouts. ([#27500](https://github.com/hashicorp/terraform-provider-aws/issues/27500))
 * resource/aws_evidently_project: Support configurable timeouts for create, update, and delete ([#27336](https://github.com/hashicorp/terraform-provider-aws/issues/27336))
 * resource/aws_flow_log: Amazon VPC Flow Logs supports Kinesis Data Firehose as destination ([#27340](https://github.com/hashicorp/terraform-provider-aws/issues/27340))
 * resource/aws_medialive_multiplex_program: Add ability to update `multiplex_program_settings` in place ([#27223](https://github.com/hashicorp/terraform-provider-aws/issues/27223))
