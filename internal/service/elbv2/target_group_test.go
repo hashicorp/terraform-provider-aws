@@ -1064,6 +1064,11 @@ func TestAccELBV2TargetGroup_Geneve_targetFailover(t *testing.T) {
 				),
 			},
 			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
 				Config: testAccTargetGroupConfig_protocolGeneveTargetFailover(rName, "no_rebalance"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(resourceName, &conf),
@@ -1073,6 +1078,11 @@ func TestAccELBV2TargetGroup_Geneve_targetFailover(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "target_failover.0.on_unhealthy", "no_rebalance"),
 				),
 			},
+		},
+		{
+			ResourceName:      resourceName,
+			ImportState:       true,
+			ImportStateVerify: true,
 		},
 	})
 }
