@@ -4,21 +4,21 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/route53resolver"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfroute53resolver "github.com/hashicorp/terraform-provider-aws/internal/service/route53resolver"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccRoute53ResolverEndpoint_basicInbound(t *testing.T) {
 	var ep route53resolver.ResolverEndpoint
-	resourceName := "aws_route53_resolver_endpoint.foo"
-	rInt := sdkacctest.RandInt()
-	name := fmt.Sprintf("terraform-testacc-r53-resolver-%d", rInt)
+	resourceName := "aws_route53_resolver_endpoint.test"
+	vpcResourceName := "aws_vpc.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
@@ -27,14 +27,16 @@ func TestAccRoute53ResolverEndpoint_basicInbound(t *testing.T) {
 		CheckDestroy:             testAccCheckEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEndpointConfig_initial(rInt, "INBOUND", name),
-				Check: resource.ComposeTestCheckFunc(
+				Config: testAccEndpointConfig_initial(rName, "INBOUND", rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEndpointExists(resourceName, &ep),
-					resource.TestCheckResourceAttr(resourceName, "name", name),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "direction", "INBOUND"),
+					resource.TestCheckResourceAttrPair(resourceName, "host_vpc_id", vpcResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "ip_address.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Usage", "original"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
@@ -48,10 +50,10 @@ func TestAccRoute53ResolverEndpoint_basicInbound(t *testing.T) {
 
 func TestAccRoute53ResolverEndpoint_updateOutbound(t *testing.T) {
 	var ep route53resolver.ResolverEndpoint
-	resourceName := "aws_route53_resolver_endpoint.foo"
-	rInt := sdkacctest.RandInt()
-	initialName := fmt.Sprintf("terraform-testacc-r53-resolver-%d", rInt)
-	updatedName := fmt.Sprintf("terraform-testacc-r53-rupdated-%d", rInt)
+	resourceName := "aws_route53_resolver_endpoint.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	initialName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	updatedName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
@@ -60,25 +62,21 @@ func TestAccRoute53ResolverEndpoint_updateOutbound(t *testing.T) {
 		CheckDestroy:             testAccCheckEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEndpointConfig_initial(rInt, "OUTBOUND", initialName),
+				Config: testAccEndpointConfig_initial(rName, "OUTBOUND", initialName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(resourceName, &ep),
-					resource.TestCheckResourceAttr(resourceName, "name", initialName),
+					resource.TestCheckResourceAttr(resourceName, "direction", "OUTBOUND"),
 					resource.TestCheckResourceAttr(resourceName, "ip_address.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Usage", "original"),
+					resource.TestCheckResourceAttr(resourceName, "name", initialName),
 				),
 			},
 			{
-				Config: testAccEndpointConfig_updated(rInt, "OUTBOUND", updatedName),
+				Config: testAccEndpointConfig_updated(rName, "OUTBOUND", updatedName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(resourceName, &ep),
-					resource.TestCheckResourceAttr(resourceName, "name", updatedName),
+					resource.TestCheckResourceAttr(resourceName, "direction", "OUTBOUND"),
 					resource.TestCheckResourceAttr(resourceName, "ip_address.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Usage", "changed"),
+					resource.TestCheckResourceAttr(resourceName, "name", updatedName),
 				),
 			},
 		},
@@ -93,24 +91,23 @@ func testAccCheckEndpointDestroy(s *terraform.State) error {
 			continue
 		}
 
-		// Try to find the resource
-		_, err := conn.GetResolverEndpoint(&route53resolver.GetResolverEndpointInput{
-			ResolverEndpointId: aws.String(rs.Primary.ID),
-		})
-		// Verify the error is what we want
-		if tfawserr.ErrCodeEquals(err, route53resolver.ErrCodeResourceNotFoundException) {
+		_, err := tfroute53resolver.FindResolverEndpointByID(conn, rs.Primary.ID)
+
+		if tfresource.NotFound(err) {
 			continue
 		}
+
 		if err != nil {
 			return err
 		}
-		return fmt.Errorf("Route53 Resolver endpoint still exists: %s", rs.Primary.ID)
+
+		return fmt.Errorf("Route53 Resolver Endpoint still exists: %s", rs.Primary.ID)
 	}
 
 	return nil
 }
 
-func testAccCheckEndpointExists(n string, ep *route53resolver.ResolverEndpoint) resource.TestCheckFunc {
+func testAccCheckEndpointExists(n string, v *route53resolver.ResolverEndpoint) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -118,18 +115,18 @@ func testAccCheckEndpointExists(n string, ep *route53resolver.ResolverEndpoint) 
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Route53 Resolver endpoint ID is set")
+			return fmt.Errorf("No Route53 Resolver Endpoint ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ResolverConn
-		resp, err := conn.GetResolverEndpoint(&route53resolver.GetResolverEndpointInput{
-			ResolverEndpointId: aws.String(rs.Primary.ID),
-		})
+
+		output, err := tfroute53resolver.FindResolverEndpointByID(conn, rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
 
-		*ep = *resp.ResolverEndpoint
+		*v = *output
 
 		return nil
 	}
@@ -151,131 +148,78 @@ func testAccPreCheck(t *testing.T) {
 	}
 }
 
-func testAccEndpointConfig_base(rInt int) string {
-	return fmt.Sprintf(`
-resource "aws_vpc" "foo" {
+func testAccEndpointConfig_base(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
+resource "aws_vpc" "test" {
   cidr_block           = "10.0.0.0/16"
   enable_dns_support   = true
   enable_dns_hostnames = true
 
   tags = {
-    Name = "terraform-testacc-r53-resolver-vpc-%[1]d"
+    Name = %[1]q
   }
 }
 
-data "aws_availability_zones" "available" {
-  state = "available"
+resource "aws_subnet" "test" {
+  count = 3
 
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
-resource "aws_subnet" "sn1" {
-  vpc_id            = aws_vpc.foo.id
-  cidr_block        = cidrsubnet(aws_vpc.foo.cidr_block, 2, 0)
-  availability_zone = data.aws_availability_zones.available.names[0]
+  vpc_id            = aws_vpc.test.id
+  availability_zone = data.aws_availability_zones.available.names[count.index]
+  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)
 
   tags = {
-    Name = "tf-acc-r53-resolver-sn1-%[1]d"
+    Name = %[1]q
   }
 }
 
-resource "aws_subnet" "sn2" {
-  vpc_id            = aws_vpc.foo.id
-  cidr_block        = cidrsubnet(aws_vpc.foo.cidr_block, 2, 1)
-  availability_zone = data.aws_availability_zones.available.names[1]
+resource "aws_security_group" "test" {
+  count = 2
+
+  vpc_id = aws_vpc.test.id
+  name   = "%[1]s-${count.index}"
 
   tags = {
-    Name = "tf-acc-r53-resolver-sn2-%[1]d"
+    Name = %[1]q
   }
 }
-
-resource "aws_subnet" "sn3" {
-  vpc_id            = aws_vpc.foo.id
-  cidr_block        = cidrsubnet(aws_vpc.foo.cidr_block, 2, 2)
-  availability_zone = data.aws_availability_zones.available.names[2]
-
-  tags = {
-    Name = "tf-acc-r53-resolver-sn3-%[1]d"
-  }
+`, rName))
 }
 
-resource "aws_security_group" "sg1" {
-  vpc_id = aws_vpc.foo.id
-  name   = "tf-acc-r53-resolver-sg1-%[1]d"
+func testAccEndpointConfig_initial(rName, direction, name string) string {
+	return acctest.ConfigCompose(testAccEndpointConfig_base(rName), fmt.Sprintf(`
+resource "aws_route53_resolver_endpoint" "test" {
+  direction = %[1]q
+  name      = %[2]q
 
-  tags = {
-    Name = "tf-acc-r53-resolver-sg1-%[1]d"
-  }
-}
-
-resource "aws_security_group" "sg2" {
-  vpc_id = aws_vpc.foo.id
-  name   = "tf-acc-r53-resolver-sg2-%[1]d"
-
-  tags = {
-    Name = "tf-acc-r53-resolver-sg2-%[1]d"
-  }
-}
-`, rInt)
-}
-
-func testAccEndpointConfig_initial(rInt int, direction, name string) string {
-	return fmt.Sprintf(`
-%s
-
-resource "aws_route53_resolver_endpoint" "foo" {
-  direction = "%s"
-  name      = "%s"
-
-  security_group_ids = [
-    aws_security_group.sg1.id,
-    aws_security_group.sg2.id,
-  ]
+  security_group_ids = aws_security_group.test[*].id
 
   ip_address {
-    subnet_id = aws_subnet.sn1.id
+    subnet_id = aws_subnet.test[0].id
   }
 
   ip_address {
-    subnet_id = aws_subnet.sn2.id
-    ip        = cidrhost(aws_subnet.sn2.cidr_block, 8)
-  }
-
-  tags = {
-    Environment = "production"
-    Usage       = "original"
+    subnet_id = aws_subnet.test[1].id
+    ip        = cidrhost(aws_subnet.test[1].cidr_block, 8)
   }
 }
-`, testAccEndpointConfig_base(rInt), direction, name)
+`, direction, name))
 }
 
-func testAccEndpointConfig_updated(rInt int, direction, name string) string {
-	return fmt.Sprintf(`
-%s
+func testAccEndpointConfig_updated(rName, direction, name string) string {
+	return acctest.ConfigCompose(testAccEndpointConfig_base(rName), fmt.Sprintf(`
+resource "aws_route53_resolver_endpoint" "test" {
+  direction = %[1]q
+  name      = %[2]q
 
-resource "aws_route53_resolver_endpoint" "foo" {
-  direction = "%s"
-  name      = "%s"
-
-  security_group_ids = [
-    aws_security_group.sg1.id,
-    aws_security_group.sg2.id,
-  ]
+  security_group_ids = aws_security_group.test[*].id
 
   ip_address {
-    subnet_id = aws_subnet.sn1.id
+    subnet_id = aws_subnet.test[0].id
   }
 
   ip_address {
-    subnet_id = aws_subnet.sn3.id
-  }
-
-  tags = {
-    Usage = "changed"
+    subnet_id = aws_subnet.test[2].id
   }
 }
-`, testAccEndpointConfig_base(rInt), direction, name)
+`, direction, name))
 }

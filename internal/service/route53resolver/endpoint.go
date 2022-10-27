@@ -16,17 +16,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const (
 	EndpointStatusDeleted = "DELETED"
-)
-
-const (
-	endpointCreatedDefaultTimeout = 10 * time.Minute
-	endpointUpdatedDefaultTimeout = 10 * time.Minute
-	endpointDeletedDefaultTimeout = 10 * time.Minute
 )
 
 func ResourceEndpoint() *schema.Resource {
@@ -35,21 +30,26 @@ func ResourceEndpoint() *schema.Resource {
 		Read:   resourceEndpointRead,
 		Update: resourceEndpointUpdate,
 		Delete: resourceEndpointDelete,
+
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
 
 		Schema: map[string]*schema.Schema{
-			"direction": {
+			"arn": {
 				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					route53resolver.ResolverEndpointDirectionInbound,
-					route53resolver.ResolverEndpointDirectionOutbound,
-				}, false),
+				Computed: true,
 			},
-
+			"direction": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice(route53resolver.ResolverEndpointDirection_Values(), false),
+			},
+			"host_vpc_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"ip_address": {
 				Type:     schema.TypeSet,
 				Required: true,
@@ -57,10 +57,6 @@ func ResourceEndpoint() *schema.Resource {
 				MaxItems: 10,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"subnet_id": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
 						"ip": {
 							Type:         schema.TypeString,
 							Optional:     true,
@@ -71,11 +67,19 @@ func ResourceEndpoint() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+						"subnet_id": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
 					},
 				},
 				Set: endpointHashIPAddress,
 			},
-
+			"name": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validResolverName,
+			},
 			"security_group_ids": {
 				Type:     schema.TypeSet,
 				Required: true,
@@ -83,33 +87,15 @@ func ResourceEndpoint() *schema.Resource {
 				MinItems: 1,
 				MaxItems: 64,
 				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
 			},
-
-			"name": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validResolverName,
-			},
-
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
-
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"host_vpc_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 		},
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(endpointCreatedDefaultTimeout),
-			Update: schema.DefaultTimeout(endpointUpdatedDefaultTimeout),
-			Delete: schema.DefaultTimeout(endpointDeletedDefaultTimeout),
+			Create: schema.DefaultTimeout(10 * time.Minute),
+			Update: schema.DefaultTimeout(10 * time.Minute),
+			Delete: schema.DefaultTimeout(10 * time.Minute),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -157,24 +143,23 @@ func resourceEndpointRead(d *schema.ResourceData, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	epRaw, state, err := endpointRefresh(conn, d.Id())()
-	if err != nil {
-		return fmt.Errorf("error getting Route53 Resolver endpoint (%s): %s", d.Id(), err)
-	}
-	if state == EndpointStatusDeleted {
-		log.Printf("[WARN] Route53 Resolver endpoint (%s) not found, removing from state", d.Id())
+	ep, err := FindResolverEndpointByID(conn, d.Id())
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] Route53 Resolver Endpoint (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
-	ep := epRaw.(*route53resolver.ResolverEndpoint)
+	if err != nil {
+		return fmt.Errorf("reading Route53 Resolver Endpoint (%s): %w", d.Id(), err)
+	}
+
 	d.Set("arn", ep.Arn)
 	d.Set("direction", ep.Direction)
 	d.Set("host_vpc_id", ep.HostVPCId)
 	d.Set("name", ep.Name)
-	if err := d.Set("security_group_ids", flex.FlattenStringSet(ep.SecurityGroupIds)); err != nil {
-		return err
-	}
+	d.Set("security_group_ids", aws.StringValueSlice(ep.SecurityGroupIds))
 
 	ipAddresses := []interface{}{}
 	req := &route53resolver.ListResolverEndpointIpAddressesInput{
@@ -312,6 +297,31 @@ func resourceEndpointDelete(d *schema.ResourceData, meta interface{}) error {
 		[]string{EndpointStatusDeleted})
 }
 
+func FindResolverEndpointByID(conn *route53resolver.Route53Resolver, id string) (*route53resolver.ResolverEndpoint, error) {
+	input := &route53resolver.GetResolverEndpointInput{
+		ResolverEndpointId: aws.String(id),
+	}
+
+	output, err := conn.GetResolverEndpoint(input)
+
+	if tfawserr.ErrCodeEquals(err, route53resolver.ErrCodeResourceNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.ResolverEndpoint == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.ResolverEndpoint, nil
+}
+
 func endpointRefresh(conn *route53resolver.Route53Resolver, epId string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		resp, err := conn.GetResolverEndpoint(&route53resolver.GetResolverEndpointInput{
@@ -353,4 +363,63 @@ func endpointHashIPAddress(v interface{}) int {
 	m := v.(map[string]interface{})
 	buf.WriteString(fmt.Sprintf("%s-", m["subnet_id"].(string)))
 	return create.StringHashcode(buf.String())
+}
+
+func expandEndpointIPAddressUpdate(vIpAddress interface{}) *route53resolver.IpAddressUpdate {
+	ipAddressUpdate := &route53resolver.IpAddressUpdate{}
+
+	mIpAddress := vIpAddress.(map[string]interface{})
+
+	if vSubnetId, ok := mIpAddress["subnet_id"].(string); ok && vSubnetId != "" {
+		ipAddressUpdate.SubnetId = aws.String(vSubnetId)
+	}
+	if vIp, ok := mIpAddress["ip"].(string); ok && vIp != "" {
+		ipAddressUpdate.Ip = aws.String(vIp)
+	}
+	if vIpId, ok := mIpAddress["ip_id"].(string); ok && vIpId != "" {
+		ipAddressUpdate.IpId = aws.String(vIpId)
+	}
+
+	return ipAddressUpdate
+}
+
+func expandEndpointIPAddresses(vIpAddresses *schema.Set) []*route53resolver.IpAddressRequest {
+	ipAddressRequests := []*route53resolver.IpAddressRequest{}
+
+	for _, vIpAddress := range vIpAddresses.List() {
+		ipAddressRequest := &route53resolver.IpAddressRequest{}
+
+		mIpAddress := vIpAddress.(map[string]interface{})
+
+		if vSubnetId, ok := mIpAddress["subnet_id"].(string); ok && vSubnetId != "" {
+			ipAddressRequest.SubnetId = aws.String(vSubnetId)
+		}
+		if vIp, ok := mIpAddress["ip"].(string); ok && vIp != "" {
+			ipAddressRequest.Ip = aws.String(vIp)
+		}
+
+		ipAddressRequests = append(ipAddressRequests, ipAddressRequest)
+	}
+
+	return ipAddressRequests
+}
+
+func flattenEndpointIPAddresses(ipAddresses []*route53resolver.IpAddressResponse) []interface{} {
+	if ipAddresses == nil {
+		return []interface{}{}
+	}
+
+	vIpAddresses := []interface{}{}
+
+	for _, ipAddress := range ipAddresses {
+		mIpAddress := map[string]interface{}{
+			"subnet_id": aws.StringValue(ipAddress.SubnetId),
+			"ip":        aws.StringValue(ipAddress.Ip),
+			"ip_id":     aws.StringValue(ipAddress.IpId),
+		}
+
+		vIpAddresses = append(vIpAddresses, mIpAddress)
+	}
+
+	return vIpAddresses
 }
