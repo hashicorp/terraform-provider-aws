@@ -80,7 +80,7 @@ func TestAccDynamoDBTableItemDataSource_projectionExpression(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTableItemDataSourceConfig_ProjectionExpression(rName, hashKey, itemContent, projectionExpression, key),
+				Config: testAccTableItemDataSourceConfig_projectionExpression(rName, hashKey, itemContent, projectionExpression, key),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckResourceAttrEquivalentJSON(dataSourceName, "item", expected),
 					resource.TestCheckResourceAttr(dataSourceName, "table_name", rName),
@@ -117,7 +117,7 @@ func TestAccDynamoDBTableItemDataSource_expressionAttributeNames(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTableItemDataSourceConfig_ExpressionAttributeNames(rName, hashKey, itemContent, key),
+				Config: testAccTableItemDataSourceConfig_expressionAttributeNames(rName, hashKey, itemContent, key),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckResourceAttrEquivalentJSON(dataSourceName, "item", expected),
 					resource.TestCheckResourceAttr(dataSourceName, "table_name", rName),
@@ -162,7 +162,7 @@ KEY
 `, tableName, hashKey, hashKey, item, key)
 }
 
-func testAccTableItemDataSourceConfig_ProjectionExpression(tableName, hashKey, item, projectionExpression, key string) string {
+func testAccTableItemDataSourceConfig_projectionExpression(tableName, hashKey, item, projectionExpression, key string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "test" {
   name           = "%s"
@@ -196,7 +196,7 @@ KEY
 `, tableName, hashKey, hashKey, item, projectionExpression, key)
 }
 
-func testAccTableItemDataSourceConfig_ExpressionAttributeNames(tableName, hashKey, item string, key string) string {
+func testAccTableItemDataSourceConfig_expressionAttributeNames(tableName, hashKey, item string, key string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "test" {
   name           = "%s"
