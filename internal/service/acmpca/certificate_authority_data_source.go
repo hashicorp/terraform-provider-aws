@@ -34,10 +34,6 @@ func DataSourceCertificateAuthority() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"usage_mode": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"not_after": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -114,6 +110,10 @@ func DataSourceCertificateAuthority() *schema.Resource {
 			},
 			"tags": tftags.TagsSchemaComputed(),
 			"type": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"usage_mode": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
