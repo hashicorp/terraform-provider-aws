@@ -154,7 +154,7 @@ ITEM
 data "aws_dynamodb_table_item" "test" {
   table_name = aws_dynamodb_table.test.name
 
-  key = <<KEY
+  key        = <<KEY
 %s
 KEY
   depends_on = [aws_dynamodb_table_item.test]
@@ -186,12 +186,12 @@ ITEM
 }
 
 data "aws_dynamodb_table_item" "test" {
-  table_name = aws_dynamodb_table.test.name
+  table_name            = aws_dynamodb_table.test.name
   projection_expression = "%s"
-  key = <<KEY
+  key                   = <<KEY
 %s
 KEY
-  depends_on = [aws_dynamodb_table_item.test]
+  depends_on            = [aws_dynamodb_table_item.test]
 }
 `, tableName, hashKey, hashKey, item, projectionExpression, key)
 }
@@ -222,13 +222,13 @@ ITEM
 data "aws_dynamodb_table_item" "test" {
   table_name = aws_dynamodb_table.test.name
   expression_attribute_names = {
-	"#P" = "Percentile"
-}
+    "#P" = "Percentile"
+  }
   projection_expression = "#P"
-  key = <<KEY
+  key                   = <<KEY
 %s
 KEY
-  depends_on = [aws_dynamodb_table_item.test]
+  depends_on            = [aws_dynamodb_table_item.test]
 }
 `, tableName, hashKey, hashKey, item, key)
 }
