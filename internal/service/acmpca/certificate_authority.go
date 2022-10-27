@@ -326,8 +326,8 @@ func resourceCertificateAuthorityCreate(d *schema.ResourceData, meta interface{}
 		RevocationConfiguration:           expandRevocationConfiguration(d.Get("revocation_configuration").([]interface{})),
 	}
 
-	if v, ok := d.Get("usage_mode").(string); ok {
-		input.UsageMode = aws.String(v)
+	if v, ok := d.GetOk("usage_mode"); ok {
+		input.UsageMode = aws.String(v.(string))
 	}
 
 	if len(tags) > 0 {
