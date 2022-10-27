@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccRoute53ResolverEndpoint_basicInbound(t *testing.T) {
+func TestAccRoute53ResolverEndpoint_basic(t *testing.T) {
 	var ep route53resolver.ResolverEndpoint
 	resourceName := "aws_route53_resolver_endpoint.test"
 	vpcResourceName := "aws_vpc.test"
@@ -27,14 +27,14 @@ func TestAccRoute53ResolverEndpoint_basicInbound(t *testing.T) {
 		CheckDestroy:             testAccCheckEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEndpointConfig_initial(rName, "INBOUND", rName),
+				Config: testAccEndpointConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEndpointExists(resourceName, &ep),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "direction", "INBOUND"),
 					resource.TestCheckResourceAttrPair(resourceName, "host_vpc_id", vpcResourceName, "id"),
-					resource.TestCheckResourceAttr(resourceName, "ip_address.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "ip_address.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "name", ""),
 					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
@@ -43,6 +43,74 @@ func TestAccRoute53ResolverEndpoint_basicInbound(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccRoute53ResolverEndpoint_disappears(t *testing.T) {
+	var ep route53resolver.ResolverEndpoint
+	resourceName := "aws_route53_resolver_endpoint.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, route53resolver.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEndpointConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEndpointExists(resourceName, &ep),
+					acctest.CheckResourceDisappears(acctest.Provider, tfroute53resolver.ResourceEndpoint(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccRoute53ResolverEndpoint_tags(t *testing.T) {
+	var ep route53resolver.ResolverEndpoint
+	resourceName := "aws_route53_resolver_endpoint.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, route53resolver.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEndpointConfig_tags1(rName, "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEndpointExists(resourceName, &ep),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccEndpointConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEndpointExists(resourceName, &ep),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccEndpointConfig_tags1(rName, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEndpointExists(resourceName, &ep),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
 			},
 		},
 	})
@@ -62,7 +130,7 @@ func TestAccRoute53ResolverEndpoint_updateOutbound(t *testing.T) {
 		CheckDestroy:             testAccCheckEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEndpointConfig_initial(rName, "OUTBOUND", initialName),
+				Config: testAccEndpointConfig_outbound(rName, initialName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(resourceName, &ep),
 					resource.TestCheckResourceAttr(resourceName, "direction", "OUTBOUND"),
@@ -71,11 +139,11 @@ func TestAccRoute53ResolverEndpoint_updateOutbound(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccEndpointConfig_updated(rName, "OUTBOUND", updatedName),
+				Config: testAccEndpointConfig_updatedOutbound(rName, updatedName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(resourceName, &ep),
 					resource.TestCheckResourceAttr(resourceName, "direction", "OUTBOUND"),
-					resource.TestCheckResourceAttr(resourceName, "ip_address.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "ip_address.#", "3"),
 					resource.TestCheckResourceAttr(resourceName, "name", updatedName),
 				),
 			},
@@ -185,11 +253,86 @@ resource "aws_security_group" "test" {
 `, rName))
 }
 
-func testAccEndpointConfig_initial(rName, direction, name string) string {
+func testAccEndpointConfig_basic(rName string) string {
+	return acctest.ConfigCompose(testAccEndpointConfig_base(rName), `
+resource "aws_route53_resolver_endpoint" "test" {
+  direction = "INBOUND"
+
+  security_group_ids = aws_security_group.test[*].id
+
+  ip_address {
+    subnet_id = aws_subnet.test[0].id
+  }
+
+  ip_address {
+    subnet_id = aws_subnet.test[1].id
+  }
+
+  ip_address {
+    subnet_id = aws_subnet.test[2].id
+  }
+}
+`)
+}
+
+func testAccEndpointConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(testAccEndpointConfig_base(rName), fmt.Sprintf(`
 resource "aws_route53_resolver_endpoint" "test" {
-  direction = %[1]q
-  name      = %[2]q
+  direction = "INBOUND"
+
+  security_group_ids = aws_security_group.test[*].id
+
+  ip_address {
+    subnet_id = aws_subnet.test[0].id
+  }
+
+  ip_address {
+    subnet_id = aws_subnet.test[1].id
+  }
+
+  ip_address {
+    subnet_id = aws_subnet.test[2].id
+  }
+
+  tags = {
+    %[1]q = %[2]q
+  }
+}
+`, tagKey1, tagValue1))
+}
+
+func testAccEndpointConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return acctest.ConfigCompose(testAccEndpointConfig_base(rName), fmt.Sprintf(`
+resource "aws_route53_resolver_endpoint" "test" {
+  direction = "INBOUND"
+
+  security_group_ids = aws_security_group.test[*].id
+
+  ip_address {
+    subnet_id = aws_subnet.test[0].id
+  }
+
+  ip_address {
+    subnet_id = aws_subnet.test[1].id
+  }
+
+  ip_address {
+    subnet_id = aws_subnet.test[2].id
+  }
+
+  tags = {
+    %[1]q = %[2]q
+    %[3]q = %[4]q
+  }
+}
+`, tagKey1, tagValue1, tagKey2, tagValue2))
+}
+
+func testAccEndpointConfig_outbound(rName, name string) string {
+	return acctest.ConfigCompose(testAccEndpointConfig_base(rName), fmt.Sprintf(`
+resource "aws_route53_resolver_endpoint" "test" {
+  direction = "OUTBOUND"
+  name      = %[1]q
 
   security_group_ids = aws_security_group.test[*].id
 
@@ -202,24 +345,28 @@ resource "aws_route53_resolver_endpoint" "test" {
     ip        = cidrhost(aws_subnet.test[1].cidr_block, 8)
   }
 }
-`, direction, name))
+`, name))
 }
 
-func testAccEndpointConfig_updated(rName, direction, name string) string {
+func testAccEndpointConfig_updatedOutbound(rName, name string) string {
 	return acctest.ConfigCompose(testAccEndpointConfig_base(rName), fmt.Sprintf(`
 resource "aws_route53_resolver_endpoint" "test" {
-  direction = %[1]q
-  name      = %[2]q
+  direction = "OUTBOUND"
+  name      = %[1]q
 
   security_group_ids = aws_security_group.test[*].id
 
   ip_address {
-    subnet_id = aws_subnet.test[0].id
+    subnet_id = aws_subnet.test[2].id
   }
 
   ip_address {
-    subnet_id = aws_subnet.test[2].id
+    subnet_id = aws_subnet.test[1].id
+  }
+
+  ip_address {
+    subnet_id = aws_subnet.test[0].id
   }
 }
-`, direction, name))
+`, name))
 }
