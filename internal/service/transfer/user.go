@@ -33,13 +33,11 @@ func ResourceUser() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"home_directory": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 1024),
 			},
-
 			"home_directory_mappings": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -58,14 +56,12 @@ func ResourceUser() *schema.Resource {
 					},
 				},
 			},
-
 			"home_directory_type": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Default:      transfer.HomeDirectoryTypePath,
-				ValidateFunc: validation.StringInSlice([]string{transfer.HomeDirectoryTypePath, transfer.HomeDirectoryTypeLogical}, false),
+				ValidateFunc: validation.StringInSlice(transfer.HomeDirectoryType_Values(), false),
 			},
-
 			"policy": {
 				Type:             schema.TypeString,
 				Optional:         true,
@@ -76,7 +72,6 @@ func ResourceUser() *schema.Resource {
 					return json
 				},
 			},
-
 			"posix_profile": {
 				Type:     schema.TypeList,
 				MaxItems: 1,
@@ -99,23 +94,19 @@ func ResourceUser() *schema.Resource {
 					},
 				},
 			},
-
 			"role": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-
 			"server_id": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validServerID,
 			},
-
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
-
 			"user_name": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -123,7 +114,6 @@ func ResourceUser() *schema.Resource {
 				ValidateFunc: validUserName,
 			},
 		},
-
 		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
@@ -346,6 +336,10 @@ func userDelete(conn *transfer.Transfer, serverID, userName string) error {
 }
 
 func expandHomeDirectoryMappings(in []interface{}) []*transfer.HomeDirectoryMapEntry {
+	if len(in) == 0 {
+		return nil
+	}
+
 	mappings := make([]*transfer.HomeDirectoryMapEntry, 0)
 
 	for _, tConfig := range in {

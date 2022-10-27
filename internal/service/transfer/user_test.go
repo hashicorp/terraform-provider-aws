@@ -197,6 +197,10 @@ func testAccUser_homeDirectoryMappings(t *testing.T) {
 	var conf transfer.DescribedUser
 	rName := sdkacctest.RandString(10)
 	resourceName := "aws_transfer_user.test"
+	entry1 := "/your-personal-report.pdf"
+	target1 := "/bucket3/customized-reports/tftestuser.pdf"
+	entry2 := "/your-personal-report2.pdf"
+	target2 := "/bucket3/customized-reports2/tftestuser.pdf"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
@@ -205,23 +209,39 @@ func testAccUser_homeDirectoryMappings(t *testing.T) {
 		CheckDestroy:             testAccCheckUserDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserConfig_homeDirectoryMappings(rName),
+				Config: testAccUserConfig_homeDirectoryMappings(rName, entry1, target1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "home_directory_mappings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "home_directory_mappings.0.entry", entry1),
+					resource.TestCheckResourceAttr(resourceName, "home_directory_mappings.0.target", target1),
+					resource.TestCheckResourceAttr(resourceName, "home_directory_type", "LOGICAL"),
 				),
 			},
 			{
-				Config: testAccUserConfig_homeDirectoryMappingsUpdate(rName),
+				Config: testAccUserConfig_homeDirectoryMappingsUpdate(rName, entry1, target1, entry2, target2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "home_directory_mappings.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "home_directory_mappings.0.entry", entry1),
+					resource.TestCheckResourceAttr(resourceName, "home_directory_mappings.0.target", target1),
+					resource.TestCheckResourceAttr(resourceName, "home_directory_mappings.1.entry", entry2),
+					resource.TestCheckResourceAttr(resourceName, "home_directory_mappings.1.target", target2),
+					resource.TestCheckResourceAttr(resourceName, "home_directory_type", "LOGICAL"),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+			{
+				Config: testAccUserConfig_homeDirectoryMappingsRemove(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckUserExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "home_directory_mappings.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "home_directory_type", "PATH"),
+				),
 			},
 		},
 	})
@@ -670,7 +690,7 @@ resource "aws_transfer_user" "test" {
 `, rName))
 }
 
-func testAccUserConfig_homeDirectoryMappings(rName string) string {
+func testAccUserConfig_homeDirectoryMappings(rName, entry, target string) string {
 	return acctest.ConfigCompose(
 		testAccUserConfig_base,
 		fmt.Sprintf(`
@@ -721,14 +741,14 @@ resource "aws_transfer_user" "test" {
   user_name           = "tftestuser"
 
   home_directory_mappings {
-    entry  = "/your-personal-report.pdf"
-    target = "/bucket3/customized-reports/tftestuser.pdf"
+    entry  = "%[2]s"
+    target = "%[3]s"
   }
 }
-`, rName))
+`, rName, entry, target))
 }
 
-func testAccUserConfig_homeDirectoryMappingsUpdate(rName string) string {
+func testAccUserConfig_homeDirectoryMappingsUpdate(rName, entry1, target1, entry2, target2 string) string {
 	return acctest.ConfigCompose(
 		testAccUserConfig_base,
 		fmt.Sprintf(`
@@ -779,14 +799,66 @@ resource "aws_transfer_user" "test" {
   user_name           = "tftestuser"
 
   home_directory_mappings {
-    entry  = "/your-personal-report.pdf"
-    target = "/bucket3/customized-reports/tftestuser.pdf"
+    entry  = "%[2]s"
+    target = "%[3]s"
   }
 
   home_directory_mappings {
-    entry  = "/your-personal-report2.pdf"
-    target = "/bucket3/customized-reports2/tftestuser.pdf"
+    entry  = "%[4]s"
+    target = "%[5]s"
   }
+}
+`, rName, entry1, target1, entry2, target2))
+}
+
+func testAccUserConfig_homeDirectoryMappingsRemove(rName string) string {
+	return acctest.ConfigCompose(
+		testAccUserConfig_base,
+		fmt.Sprintf(`
+resource "aws_iam_role" "test" {
+  name = "tf-test-transfer-user-iam-role-%[1]s"
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "transfer.${data.aws_partition.current.dns_suffix}"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy" "test" {
+  name = "tf-test-transfer-user-iam-policy-%[1]s"
+  role = aws_iam_role.test.id
+
+  policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowFullAccesstoS3",
+      "Effect": "Allow",
+      "Action": [
+        "s3:*"
+      ],
+      "Resource": "*"
+    }
+  ]
+}
+POLICY
+}
+
+resource "aws_transfer_user" "test" {
+  role                = aws_iam_role.test.arn
+  server_id           = aws_transfer_server.test.id
+  user_name           = "tftestuser"
 }
 `, rName))
 }
