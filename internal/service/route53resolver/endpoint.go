@@ -160,20 +160,11 @@ func resourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("name", ep.Name)
 	d.Set("security_group_ids", aws.StringValueSlice(ep.SecurityGroupIds))
 
-	input := &route53resolver.ListResolverEndpointIpAddressesInput{
-		ResolverEndpointId: aws.String(d.Id()),
+	ipAddresses, err := findResolverEndpointIPAddressesByID(ctx, conn, d.Id())
+
+	if err != nil {
+		return diag.Errorf("listing Route53 Resolver Endpoint (%s) IP addresses: %s", d.Id(), err)
 	}
-	var ipAddresses []*route53resolver.IpAddressResponse
-
-	err = conn.ListResolverEndpointIpAddressesPagesWithContext(ctx, input, func(page *route53resolver.ListResolverEndpointIpAddressesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		ipAddresses = append(ipAddresses, page.IpAddresses...)
-
-		return !lastPage
-	})
 
 	if err := d.Set("ip_address", schema.NewSet(endpointHashIPAddress, flattenEndpointIPAddresses(ipAddresses))); err != nil {
 		return diag.Errorf("setting ip_address: %s", err)
@@ -313,6 +304,29 @@ func FindResolverEndpointByID(ctx context.Context, conn *route53resolver.Route53
 	}
 
 	return output.ResolverEndpoint, nil
+}
+
+func findResolverEndpointIPAddressesByID(ctx context.Context, conn *route53resolver.Route53Resolver, id string) ([]*route53resolver.IpAddressResponse, error) {
+	input := &route53resolver.ListResolverEndpointIpAddressesInput{
+		ResolverEndpointId: aws.String(id),
+	}
+	var output []*route53resolver.IpAddressResponse
+
+	err := conn.ListResolverEndpointIpAddressesPagesWithContext(ctx, input, func(page *route53resolver.ListResolverEndpointIpAddressesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		output = append(output, page.IpAddresses...)
+
+		return !lastPage
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
 }
 
 func statusEndpoint(ctx context.Context, conn *route53resolver.Route53Resolver, id string) resource.StateRefreshFunc {

@@ -103,7 +103,7 @@ func dataSourceRuleRead(ctx context.Context, d *schema.ResourceData, meta interf
 		if n := len(rules); n == 0 {
 			return diag.Errorf("no Route53 Resolver Rules matched")
 		} else if n > 1 {
-			return diag.Errorf("%d Route53 Resolver Rules matched; use additional constraints to reduce matches to a rule", n)
+			return diag.Errorf("%d Route53 Resolver Rules matched; use additional constraints to reduce matches to a single Rule", n)
 		}
 
 		rule = rules[0]
