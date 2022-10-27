@@ -30,6 +30,7 @@ func ResourceCertificateAuthority() *schema.Resource {
 		Read:   resourceCertificateAuthorityRead,
 		Update: resourceCertificateAuthorityUpdate,
 		Delete: resourceCertificateAuthorityDelete,
+
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				d.Set(
@@ -40,9 +41,11 @@ func ResourceCertificateAuthority() *schema.Resource {
 				return []*schema.ResourceData{d}, nil
 			},
 		},
+
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(1 * time.Minute),
 		},
+
 		MigrateState:  resourceCertificateAuthorityMigrateState,
 		SchemaVersion: 1,
 
@@ -191,12 +194,6 @@ func ResourceCertificateAuthority() *schema.Resource {
 				Optional: true,
 				Default:  true,
 			},
-			"usage_mode": {
-				Type:         schema.TypeString,
-				Computed:     true,
-				Optional:     true,
-				ValidateFunc: validation.StringInSlice(acmpca.CertificateAuthorityUsageMode_Values(), false),
-			},
 			"not_after": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -204,6 +201,15 @@ func ResourceCertificateAuthority() *schema.Resource {
 			"not_before": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"permanent_deletion_time_in_days": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Default:  certificateAuthorityPermanentDeletionTimeInDaysDefault,
+				ValidateFunc: validation.IntBetween(
+					certificateAuthorityPermanentDeletionTimeInDaysMin,
+					certificateAuthorityPermanentDeletionTimeInDaysMax,
+				),
 			},
 			// https://docs.aws.amazon.com/privateca/latest/APIReference/API_RevocationConfiguration.html
 			"revocation_configuration": {
@@ -299,15 +305,6 @@ func ResourceCertificateAuthority() *schema.Resource {
 				Computed:   true,
 				Deprecated: "The reported value of the \"status\" attribute is often inaccurate. Use the resource's \"enabled\" attribute to explicitly set status.",
 			},
-			"permanent_deletion_time_in_days": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Default:  certificateAuthorityPermanentDeletionTimeInDaysDefault,
-				ValidateFunc: validation.IntBetween(
-					certificateAuthorityPermanentDeletionTimeInDaysMin,
-					certificateAuthorityPermanentDeletionTimeInDaysMax,
-				),
-			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
 			"type": {
@@ -319,6 +316,12 @@ func ResourceCertificateAuthority() *schema.Resource {
 					acmpca.CertificateAuthorityTypeRoot,
 					acmpca.CertificateAuthorityTypeSubordinate,
 				}, false),
+			},
+			"usage_mode": {
+				Type:         schema.TypeString,
+				Computed:     true,
+				Optional:     true,
+				ValidateFunc: validation.StringInSlice(acmpca.CertificateAuthorityUsageMode_Values(), false),
 			},
 		},
 
