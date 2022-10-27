@@ -1728,7 +1728,7 @@ resource "aws_batch_compute_environment" "test" {
   }
 
   service_role = aws_iam_role.batch_service.arn
-  type         = "UNMANAGED"
+  type         = "MANAGED"
   depends_on   = [aws_iam_role_policy_attachment.batch_service]
 }
 `, rName))
