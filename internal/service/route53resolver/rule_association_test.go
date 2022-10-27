@@ -1,6 +1,7 @@
 package route53resolver_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -104,7 +105,7 @@ func testAccCheckRuleAssociationDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := tfroute53resolver.FindResolverRuleAssociationByID(conn, rs.Primary.ID)
+		_, err := tfroute53resolver.FindResolverRuleAssociationByID(context.Background(), conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -133,7 +134,7 @@ func testAccCheckRuleAssociationExists(n string, v *route53resolver.ResolverRule
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ResolverConn
 
-		output, err := tfroute53resolver.FindResolverRuleAssociationByID(conn, rs.Primary.ID)
+		output, err := tfroute53resolver.FindResolverRuleAssociationByID(context.Background(), conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
