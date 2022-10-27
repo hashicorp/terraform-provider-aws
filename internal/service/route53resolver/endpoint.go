@@ -366,7 +366,7 @@ func waitEndpointCreated(ctx context.Context, conn *route53resolver.Route53Resol
 	return nil, err
 }
 
-func waitEndpointUpdated(ctx context.Context, conn *route53resolver.Route53Resolver, id string, timeout time.Duration) (*route53resolver.ResolverEndpoint, error) {
+func waitEndpointUpdated(ctx context.Context, conn *route53resolver.Route53Resolver, id string, timeout time.Duration) (*route53resolver.ResolverEndpoint, error) { //nolint:unparam
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{route53resolver.ResolverEndpointStatusUpdating},
 		Target:     []string{route53resolver.ResolverEndpointStatusOperational},
