@@ -88,7 +88,6 @@ func resourceTableItemCreate(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	rangeKey := d.Get("range_key").(string)
 	id := buildTableItemID(tableName, hashKey, rangeKey, attributes)
 
 	d.SetId(id)
