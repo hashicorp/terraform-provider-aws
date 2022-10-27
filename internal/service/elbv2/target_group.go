@@ -273,7 +273,7 @@ func ResourceTargetGroup() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"on_deregistration": {
 							Type:     schema.TypeString,
-							Optional: true,
+							Required: true,
 							ValidateFunc: validation.StringInSlice([]string{
 								"rebalance",
 								"no_rebalance",
@@ -281,7 +281,7 @@ func ResourceTargetGroup() *schema.Resource {
 						},
 						"on_unhealthy": {
 							Type:     schema.TypeString,
-							Optional: true,
+							Required: true,
 							ValidateFunc: validation.StringInSlice([]string{
 								"rebalance",
 								"no_rebalance",

@@ -1067,6 +1067,12 @@ func TestAccELBV2TargetGroup_Geneve_targetFailover(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"connection_termination",
+					"lambda_multi_value_headers_enabled",
+					"proxy_protocol_v2",
+					"slow_start",
+				},
 			},
 			{
 				Config: testAccTargetGroupConfig_protocolGeneveTargetFailover(rName, "no_rebalance"),
@@ -1078,11 +1084,17 @@ func TestAccELBV2TargetGroup_Geneve_targetFailover(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "target_failover.0.on_unhealthy", "no_rebalance"),
 				),
 			},
-		},
-		{
-			ResourceName:      resourceName,
-			ImportState:       true,
-			ImportStateVerify: true,
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"connection_termination",
+					"lambda_multi_value_headers_enabled",
+					"proxy_protocol_v2",
+					"slow_start",
+				},
+			},
 		},
 	})
 }
