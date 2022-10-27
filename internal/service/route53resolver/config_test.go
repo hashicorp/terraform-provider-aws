@@ -68,7 +68,7 @@ func TestAccRoute53ResolverConfig_Disappears_vpc(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConfigConfig_basic(rName, "ENABLE"),
-				Check: resource.ComposeAggregateTestCheckFunc(
+				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigExists(resourceName, &v),
 					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceVPC(), vpcResourceName),
 				),

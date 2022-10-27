@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	tfroute53resolver "github.com/hashicorp/terraform-provider-aws/internal/service/route53resolver"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -30,7 +31,7 @@ func TestAccRoute53ResolverRuleAssociation_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRuleAssociationConfig_basic(rName, domainName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRuleAssociationExists(resourceName, &assn),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttrPair(resourceName, "resolver_rule_id", ruleResourceName, "id"),
@@ -41,6 +42,55 @@ func TestAccRoute53ResolverRuleAssociation_basic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccRoute53ResolverRuleAssociation_disappears(t *testing.T) {
+	var assn route53resolver.ResolverRuleAssociation
+	resourceName := "aws_route53_resolver_rule_association.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	domainName := acctest.RandomDomainName()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, route53resolver.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRuleAssociationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRuleAssociationConfig_basic(rName, domainName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRuleAssociationExists(resourceName, &assn),
+					acctest.CheckResourceDisappears(acctest.Provider, tfroute53resolver.ResourceRuleAssociation(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccRoute53ResolverRuleAssociation_Disappears_vpc(t *testing.T) {
+	var assn route53resolver.ResolverRuleAssociation
+	resourceName := "aws_route53_resolver_rule_association.test"
+	vpcResourceName := "aws_vpc.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	domainName := acctest.RandomDomainName()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, route53resolver.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRuleAssociationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRuleAssociationConfig_basic(rName, domainName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRuleAssociationExists(resourceName, &assn),
+					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceVPC(), vpcResourceName),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
