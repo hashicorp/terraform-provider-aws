@@ -7,6 +7,7 @@ NOTES:
 FEATURES:
 
 * **New Data Source:** `aws_dx_router_configuration` ([#27341](https://github.com/hashicorp/terraform-provider-aws/issues/27341))
+* **New Resource:** `aws_inspector2_enabler` ([#27505](https://github.com/hashicorp/terraform-provider-aws/issues/27505))
 * **New Resource:** `aws_lightsail_lb_certificate` ([#27462](https://github.com/hashicorp/terraform-provider-aws/issues/27462))
 * **New Resource:** `aws_lightsail_lb_certificate_attachment` ([#27462](https://github.com/hashicorp/terraform-provider-aws/issues/27462))
 * **New Resource:** `aws_sesv2_dedicated_ip_assignment` ([#27361](https://github.com/hashicorp/terraform-provider-aws/issues/27361))
