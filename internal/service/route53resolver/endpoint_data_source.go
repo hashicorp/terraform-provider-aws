@@ -14,6 +14,14 @@ func DataSourceEndpoint() *schema.Resource {
 		Read: dataSourceEndpointRead,
 
 		Schema: map[string]*schema.Schema{
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"direction": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"filter": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -32,27 +40,19 @@ func DataSourceEndpoint() *schema.Resource {
 					},
 				},
 			},
-
-			"direction": {
-				Type:     schema.TypeString,
+			"ip_addresses": {
+				Type:     schema.TypeSet,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 				Computed: true,
 			},
-
 			"name": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
 			"resolver_endpoint_id": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-
 			"status": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -60,12 +60,6 @@ func DataSourceEndpoint() *schema.Resource {
 			"vpc_id": {
 				Type:     schema.TypeString,
 				Computed: true,
-			},
-			"ip_addresses": {
-				Type:     schema.TypeSet,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Computed: true,
-				Set:      schema.HashString,
 			},
 		},
 	}
@@ -88,7 +82,7 @@ func dataSourceEndpointRead(d *schema.ResourceData, meta interface{}) error {
 		resp, err := conn.ListResolverEndpoints(req)
 
 		if err != nil {
-			return fmt.Errorf("Error Reading Route53 Resolver Endpoints: %s", req)
+			return fmt.Errorf("Error Reading Route53 Resolver Endpoints: %s", err)
 		}
 
 		if len(resp.ResolverEndpoints) == 0 && filtersOk {
