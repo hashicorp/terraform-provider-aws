@@ -146,7 +146,7 @@ func resourceIPAMPoolCIDRDelete(d *schema.ResourceData, meta interface{}) error 
 		IpamPoolId: aws.String(poolID),
 	})
 
-	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidIpamPoolIdNotFound) {
+	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidIPAMPoolIdNotFound) {
 		return nil
 	}
 
@@ -181,7 +181,7 @@ func IPAMPoolCIDRParseResourceID(id string) (string, string, error) {
 	return parts[0], parts[1], nil
 }
 
-func expandIpamCidrAuthorizationContext(tfMap map[string]interface{}) *ec2.IpamCidrAuthorizationContext {
+func expandIpamCidrAuthorizationContext(tfMap map[string]interface{}) *ec2.IpamCidrAuthorizationContext { // nosemgrep:ci.caps1-in-func-name,ci.caps2-in-func-name,ci.caps5-in-func-name
 	if tfMap == nil {
 		return nil
 	}
