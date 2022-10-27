@@ -34,6 +34,7 @@ BUG FIXES:
 * resource/aws_ecs_service: Correctly handle unconfigured `task_definition`, making `EXTERNAL` deployments possible ([#27390](https://github.com/hashicorp/terraform-provider-aws/issues/27390))
 * resource/aws_lb_target_group: Fix import issues on `aws_lb_target_group` when specifying `ip_address_type` of `ipv4` ([#27464](https://github.com/hashicorp/terraform-provider-aws/issues/27464))
 * resource/aws_rds_proxy_endpoint: Respect configured provider `default_tags` value on resource Update ([#27367](https://github.com/hashicorp/terraform-provider-aws/issues/27367))
+* resource/aws_vpc_ipam_pool_cidr: Fix crash when IPAM Pool CIDR not found ([#27512](https://github.com/hashicorp/terraform-provider-aws/issues/27512))
 
 ## 4.36.1 (October 21, 2022)
 
