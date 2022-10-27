@@ -74,7 +74,7 @@ func resourceTableItemCreate(d *schema.ResourceData, meta interface{}) error {
 		Item: attributes,
 		// Explode if item exists. We didn't create it.
 		ConditionExpression: aws.String(fmt.Sprintf("attribute_not_exists(%s)", hashKey)),
-		TableName: aws.String(tableName),
+		TableName:           aws.String(tableName),
 	})
 	if err != nil {
 		return err
