@@ -1,9 +1,0 @@
-on:
-  project_card:
-    types: [moved]
-jobs:
-  fast_track_job:
-    if: github.project_card.column_id == 12143016
-    runs-on: ubuntu-latest
-    steps:
-      
