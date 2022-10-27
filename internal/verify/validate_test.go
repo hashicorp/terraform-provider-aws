@@ -335,60 +335,78 @@ func TestIsIPv4CIDRBlockOrIPv6CIDRBlock(t *testing.T) {
 
 func TestValidIAMPolicyJSONString(t *testing.T) {
 	type testCases struct {
-		Value    string
-		ErrCount int
+		Value     string
+		WantError string
 	}
-
-	invalidCases := []testCases{
+	tests := []testCases{
 		{
-			Value:    `{0:"1"}`,
-			ErrCount: 1,
+			Value: `{}`,
+			// Valid
 		},
 		{
-			Value:    `{'abc':1}`,
-			ErrCount: 1,
+			Value: `{"abc":["1","2"]}`,
+			// Valid
 		},
 		{
-			Value:    `{"def":}`,
-			ErrCount: 1,
+			Value:     `{0:"1"}`,
+			WantError: `"json" contains an invalid JSON policy: invalid character '0' looking for beginning of object key string, at byte offset 2`,
 		},
 		{
-			Value:    `{"xyz":[}}`,
-			ErrCount: 1,
+			Value:     `{'abc':1}`,
+			WantError: `"json" contains an invalid JSON policy: invalid character '\'' looking for beginning of object key string, at byte offset 2`,
 		},
 		{
-			Value:    ``,
-			ErrCount: 1,
+			Value:     `{"def":}`,
+			WantError: `"json" contains an invalid JSON policy: invalid character '}' looking for beginning of value, at byte offset 8`,
 		},
 		{
-			Value:    `    {"xyz": "foo"}`,
-			ErrCount: 1,
+			Value:     `{"xyz":[}}`,
+			WantError: `"json" contains an invalid JSON policy: invalid character '}' looking for beginning of value, at byte offset 9`,
+		},
+		{
+			Value:     ``,
+			WantError: `"json" is an empty string, which is not a valid JSON value`,
+		},
+		{
+			Value:     `    {"xyz": "foo"}`,
+			WantError: `"json" contains an invalid JSON policy: leading space characters are not allowed`,
+		},
+		{
+			Value:     `"blub"`,
+			WantError: `"json" contains an invalid JSON policy: contains a JSON-encoded string, not a JSON-encoded object`,
+		},
+		{
+			Value:     `"../some-filename.json"`,
+			WantError: `"json" contains an invalid JSON policy: contains a JSON-encoded string, not a JSON-encoded object (have you passed a JSON-encoded filename instead of the content of that file?)`,
+		},
+		{
+			Value:     `"{\"Version\":\"...\"}"`,
+			WantError: `"json" contains an invalid JSON policy: contains a JSON-encoded string, not a JSON-encoded object (have you double-encoded your JSON data?)`,
+		},
+		{
+			Value:     `[{}]`,
+			WantError: `"json" contains an invalid JSON policy: contains a JSON array, not a JSON object`,
 		},
 	}
+	for _, test := range tests {
+		t.Run(test.Value, func(t *testing.T) {
+			_, errs := ValidIAMPolicyJSON(test.Value, "json")
 
-	for _, tc := range invalidCases {
-		_, errors := ValidIAMPolicyJSON(tc.Value, "json")
-		if len(errors) != tc.ErrCount {
-			t.Fatalf("Expected %q to trigger a validation error.", tc.Value)
-		}
-	}
+			if test.WantError != "" {
+				if got, want := len(errs), 1; got != want {
+					t.Fatalf("wrong number of errors %d; want %d", got, want)
+				}
+				err := errs[0]
+				if got, want := err.Error(), test.WantError; got != want {
+					t.Fatalf("wrong error message\ngot:  %s\nwant: %s", got, want)
+				}
+				return
+			}
 
-	validCases := []testCases{
-		{
-			Value:    `{}`,
-			ErrCount: 0,
-		},
-		{
-			Value:    `{"abc":["1","2"]}`,
-			ErrCount: 0,
-		},
-	}
-
-	for _, tc := range validCases {
-		_, errors := ValidIAMPolicyJSON(tc.Value, "json")
-		if len(errors) != tc.ErrCount {
-			t.Fatalf("Expected %q not to trigger a validation error.", tc.Value)
-		}
+			for _, err := range errs {
+				t.Errorf("unexpected error: %s", err.Error())
+			}
+		})
 	}
 }
 

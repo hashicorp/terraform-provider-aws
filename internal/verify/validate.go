@@ -1,6 +1,7 @@
 package verify
 
 import (
+	"encoding/json"
 	"fmt"
 	"net"
 	"regexp"
@@ -100,15 +101,43 @@ func ValidIAMPolicyJSON(v interface{}, k string) (ws []string, errors []error) {
 	// IAM Policy documents need to be valid JSON, and pass legacy parsing
 	value := v.(string)
 	if len(value) < 1 {
-		errors = append(errors, fmt.Errorf("%q contains an invalid JSON policy", k))
+		errors = append(errors, fmt.Errorf("%q is an empty string, which is not a valid JSON value", k))
 		return
 	}
-	if value[:1] != "{" {
-		errors = append(errors, fmt.Errorf("%q contains an invalid JSON policy", k))
+	if first := value[:1]; first != "{" {
+		switch value[:1] {
+		case " ", "\t", "\r", "\n":
+			errors = append(errors, fmt.Errorf("%q contains an invalid JSON policy: leading space characters are not allowed", k))
+		case `"`:
+			// There are some common mistakes that lead to strings appearing
+			// here instead of objects, so we'll try some heuristics to
+			// check for those so we might give more actionable feedback in
+			// these situations.
+			var hint string
+			var content string
+			var innerContent any
+			if err := json.Unmarshal([]byte(value), &content); err == nil {
+				if strings.HasSuffix(content, ".json") {
+					hint = " (have you passed a JSON-encoded filename instead of the content of that file?)"
+				} else if err := json.Unmarshal([]byte(content), &innerContent); err == nil {
+					hint = " (have you double-encoded your JSON data?)"
+				}
+			}
+			errors = append(errors, fmt.Errorf("%q contains an invalid JSON policy: contains a JSON-encoded string, not a JSON-encoded object%s", k, hint))
+		case `[`:
+			errors = append(errors, fmt.Errorf("%q contains an invalid JSON policy: contains a JSON array, not a JSON object", k))
+		default:
+			// Generic error for if we didn't find something more specific to say.
+			errors = append(errors, fmt.Errorf("%q contains an invalid JSON policy: not a JSON object", k))
+		}
 		return
 	}
 	if _, err := structure.NormalizeJsonString(v); err != nil {
-		errors = append(errors, fmt.Errorf("%q contains an invalid JSON: %s", k, err))
+		errStr := err.Error()
+		if err, ok := err.(*json.SyntaxError); ok {
+			errStr = fmt.Sprintf("%s, at byte offset %d", errStr, err.Offset)
+		}
+		errors = append(errors, fmt.Errorf("%q contains an invalid JSON policy: %s", k, errStr))
 	}
 	return
 }
