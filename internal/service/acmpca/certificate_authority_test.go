@@ -42,7 +42,6 @@ func TestAccACMPCACertificateAuthority_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "certificate_chain", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "certificate_signing_request"),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "usage_mode", "GENERAL_PURPOSE"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "not_after"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "not_before"),
 					resource.TestCheckResourceAttr(resourceName, "permanent_deletion_time_in_days", "30"),
@@ -53,6 +52,7 @@ func TestAccACMPCACertificateAuthority_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "status", "PENDING_CERTIFICATE"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "type", "SUBORDINATE"),
+					resource.TestCheckResourceAttr(resourceName, "usage_mode", "GENERAL_PURPOSE"),
 				),
 			},
 			{
@@ -155,7 +155,6 @@ func TestAccACMPCACertificateAuthority_usageMode(t *testing.T) {
 				Config: testAccCertificateAuthorityConfig_usageMode(commonName, acmpca.CertificateAuthorityTypeRoot, "SHORT_LIVED_CERTIFICATE"),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckACMPCACertificateAuthorityExists(resourceName, &certificateAuthority),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "acm-pca", regexp.MustCompile(`certificate-authority/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "usage_mode", "SHORT_LIVED_CERTIFICATE"),
 				),
 			},
@@ -224,7 +223,6 @@ func TestAccACMPCACertificateAuthority_RevocationConfiguration_empty(t *testing.
 					resource.TestCheckResourceAttr(resourceName, "certificate_chain", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "certificate_signing_request"),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "usage_mode", "GENERAL_PURPOSE"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "not_after"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "not_before"),
 					resource.TestCheckResourceAttr(resourceName, "permanent_deletion_time_in_days", "30"),
@@ -235,6 +233,7 @@ func TestAccACMPCACertificateAuthority_RevocationConfiguration_empty(t *testing.
 					resource.TestCheckResourceAttr(resourceName, "status", "PENDING_CERTIFICATE"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "type", "SUBORDINATE"),
+					resource.TestCheckResourceAttr(resourceName, "usage_mode", "GENERAL_PURPOSE"),
 				),
 			},
 			{
