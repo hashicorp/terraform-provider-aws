@@ -152,7 +152,7 @@ func waitEnabled(ctx context.Context, conn *inspector2.Client, id string, timeou
 	stateConf := &resource.StateChangeConf{
 		Pending:                   append(enum.Slice(types.StatusEnabling, types.StatusDisabled), StatusDisabledEnabled, StatusInProgress),
 		Target:                    enum.Slice(types.StatusEnabled),
-		Refresh:                   statusEnable(ctx, conn, id, timeout),
+		Refresh:                   statusEnable(ctx, conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -167,7 +167,7 @@ func waitDisabled(ctx context.Context, conn *inspector2.Client, id string, timeo
 	stateConf := &resource.StateChangeConf{
 		Pending: append(enum.Slice(types.StatusDisabling, types.StatusEnabled), StatusDisabledEnabled, StatusInProgress),
 		Target:  []string{string(types.StatusDisabled)},
-		Refresh: statusEnable(ctx, conn, id, timeout),
+		Refresh: statusEnable(ctx, conn, id),
 		Timeout: timeout,
 	}
 
@@ -176,7 +176,7 @@ func waitDisabled(ctx context.Context, conn *inspector2.Client, id string, timeo
 	return err
 }
 
-func statusEnable(ctx context.Context, conn *inspector2.Client, id string, timeout time.Duration) resource.StateRefreshFunc {
+func statusEnable(ctx context.Context, conn *inspector2.Client, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		st, err := FindAccountStatuses(ctx, conn, id)
 
