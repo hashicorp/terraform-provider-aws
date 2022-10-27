@@ -109,14 +109,14 @@ func resourceEnablerRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return nil
 	}
 
-	var enabledAccounts []*string
+	var enabledAccounts []string
 	for _, a := range s {
 		if a.Status == string(types.StatusEnabled) {
-			enabledAccounts = append(enabledAccounts, &a.AccountID)
+			enabledAccounts = append(enabledAccounts, a.AccountID)
 		}
 	}
 
-	if err := d.Set("account_ids", flex.FlattenStringSet(enabledAccounts)); err != nil {
+	if err := d.Set("account_ids", flex.FlattenStringValueSet(enabledAccounts)); err != nil {
 		return create.DiagError(names.Inspector2, create.ErrActionReading, ResNameEnabler, d.Id(), err)
 	}
 
@@ -166,7 +166,7 @@ func waitEnabled(ctx context.Context, conn *inspector2.Client, id string, timeou
 func waitDisabled(ctx context.Context, conn *inspector2.Client, id string, timeout time.Duration) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: append(enum.Slice(types.StatusDisabling, types.StatusEnabled), StatusDisabledEnabled, StatusInProgress),
-		Target:  []string{string(types.StatusDisabled)},
+		Target:  enum.Slice(types.StatusDisabled),
 		Refresh: statusEnable(ctx, conn, id),
 		Timeout: timeout,
 	}
