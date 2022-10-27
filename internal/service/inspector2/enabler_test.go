@@ -49,8 +49,9 @@ func testAccEnabler_basic(t *testing.T) {
 			{
 				Config: testAccEnablerConfig_basic([]string{"ECR"}),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEnablerExists(tfinspector2.EnablerID(nil, []string{"ECR"})),
-					resource.TestCheckResourceAttr(resourceName, "account_ids.#", "0"),
+					testAccCheckEnablerExists([]string{"ECR"}),
+					resource.TestCheckResourceAttr(resourceName, "account_ids.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "account_ids.0", "data.aws_caller_identity.current", "account_id"),
 					resource.TestCheckResourceAttr(resourceName, "resource_types.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "resource_types.0", "ECR"),
 				),
@@ -74,9 +75,9 @@ func testAccEnabler_accountID(t *testing.T) {
 		CheckDestroy:             testAccCheckEnablerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEnablerConfig_accountID([]string{"EC2", "ECR"}),
+				Config: testAccEnablerConfig_basic([]string{"EC2", "ECR"}),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEnablerExists(tfinspector2.EnablerID(nil, []string{"EC2", "ECR"})),
+					testAccCheckEnablerExists([]string{"EC2", "ECR"}),
 					resource.TestCheckResourceAttr(resourceName, "account_ids.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "account_ids.0", "data.aws_caller_identity.current", "account_id"),
 					resource.TestCheckResourceAttr(resourceName, "resource_types.#", "2"),
@@ -105,7 +106,7 @@ func testAccEnabler_disappears(t *testing.T) {
 			{
 				Config: testAccEnablerConfig_basic([]string{"ECR"}),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEnablerExists(tfinspector2.EnablerID(nil, []string{"ECR"})),
+					testAccCheckEnablerExists([]string{"ECR"}),
 					acctest.CheckResourceDisappears(acctest.Provider, tfinspector2.ResourceEnabler(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -145,10 +146,11 @@ func testAccCheckEnablerDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckEnablerExists(id string) resource.TestCheckFunc {
+func testAccCheckEnablerExists(t []string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).Inspector2Conn
 
+		id := tfinspector2.EnablerID([]string{acctest.Provider.Meta().(*conns.AWSClient).AccountID}, t)
 		st, err := tfinspector2.FindAccountStatuses(context.Background(), conn, id)
 		if err != nil {
 			return create.Error(names.Inspector2, create.ErrActionCheckingExistence, tfinspector2.ResNameEnabler, id, err)
@@ -164,14 +166,6 @@ func testAccCheckEnablerExists(id string) resource.TestCheckFunc {
 }
 
 func testAccEnablerConfig_basic(types []string) string {
-	return fmt.Sprintf(`
-resource "aws_inspector2_enabler" "test" {
-  resource_types = [%[1]q]
-}
-`, strings.Join(types, `", "`))
-}
-
-func testAccEnablerConfig_accountID(types []string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 

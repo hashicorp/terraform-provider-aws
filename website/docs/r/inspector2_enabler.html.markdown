@@ -23,15 +23,27 @@ resource "aws_inspector2_enabler" "example" {
 }
 ```
 
+### For the Calling Account
+
+```terraform
+data "aws_caller_identity" "current" {}
+
+resource "aws_inspector2_enabler" "test" {
+  account_ids    = [data.aws_caller_identity.current.account_id]
+  resource_types = ["ECR", "EC2"]
+}
+```
+
 ## Argument Reference
 
 The following arguments are required:
 
+* `account_ids` - (Required) Set of account IDs.
 * `resource_types` - (Required) Type of resources to scan. Valid values are `EC2` and `ECR`. If you only use one type, Terraform will ignore the status of the other type.
 
-The following arguments are optional:
+## Attributes Reference
 
-* `account_ids` - (Optional) Set of account IDs. The default is to enable scans on the account where the resource is used.
+There are no attributes for this resource.
 
 ## Timeouts
 

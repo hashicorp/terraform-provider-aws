@@ -41,7 +41,8 @@ func ResourceEnabler() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"account_ids": {
 				Type:     schema.TypeSet,
-				Optional: true,
+				MinItems: 1,
+				Required: true,
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
 					ValidateFunc: verify.ValidAccountID,
@@ -66,26 +67,16 @@ const (
 
 func resourceEnablerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).Inspector2Conn
-	fmt.Printf("create\n")
 
 	in := &inspector2.EnableInput{
+		AccountIds:    flex.ExpandStringValueSet(d.Get("account_ids").(*schema.Set)),
 		ResourceTypes: expandResourceScanTypes(flex.ExpandStringValueSet(d.Get("resource_types").(*schema.Set))),
 		ClientToken:   aws.String(resource.UniqueId()),
 	}
 
-	if v, ok := d.GetOk("account_ids"); ok && v.(*schema.Set).Len() > 0 {
-		in.AccountIds = flex.ExpandStringValueSet(d.Get("account_ids").(*schema.Set))
-	}
-
-	fmt.Printf("create in: %+v\n", in)
-
 	id := EnablerID(in.AccountIds, flex.ExpandStringValueSet(d.Get("resource_types").(*schema.Set)))
 
-	fmt.Printf("enabler id: %+v\n", id)
-
 	out, err := conn.Enable(ctx, in)
-	fmt.Printf("Enable: %+v, err: %s\n", out, err)
-
 	if err != nil {
 		return create.DiagError(names.Inspector2, create.ErrActionCreating, ResNameEnabler, id, err)
 	}
@@ -96,8 +87,6 @@ func resourceEnablerCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 	d.SetId(id)
 
-	fmt.Printf("enable called, now waiting enable\n")
-
 	if err := waitEnabled(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return create.DiagError(names.Inspector2, create.ErrActionWaitingForCreation, ResNameEnabler, d.Id(), err)
 	}
@@ -107,7 +96,6 @@ func resourceEnablerCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceEnablerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).Inspector2Conn
-	fmt.Printf("reading\n")
 
 	s, err := FindAccountStatuses(ctx, conn, d.Id())
 	if err != nil {
@@ -128,13 +116,6 @@ func resourceEnablerRead(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 	}
 
-	// special case: if no acct id set, aws will return current account - this should not be a diff
-	if v, ok := d.GetOk("account_ids"); !ok || v.(*schema.Set).Len() == 0 {
-		if len(enabledAccounts) == 1 && aws.ToString(enabledAccounts[0]) == meta.(*conns.AWSClient).AccountID {
-			return nil
-		}
-	}
-
 	if err := d.Set("account_ids", flex.FlattenStringSet(enabledAccounts)); err != nil {
 		return create.DiagError(names.Inspector2, create.ErrActionReading, ResNameEnabler, d.Id(), err)
 	}
@@ -144,24 +125,16 @@ func resourceEnablerRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceEnablerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).Inspector2Conn
-	fmt.Printf("delete %d\n", 1)
 
 	in := &inspector2.DisableInput{
+		AccountIds:    flex.ExpandStringValueSet(d.Get("account_ids").(*schema.Set)),
 		ResourceTypes: expandResourceScanTypes(flex.ExpandStringValueSet(d.Get("resource_types").(*schema.Set))),
 	}
-
-	if v, ok := d.GetOk("account_ids"); ok && v.(*schema.Set).Len() > 0 {
-		in.AccountIds = flex.ExpandStringValueSet(d.Get("account_ids").(*schema.Set))
-	}
-
-	fmt.Printf("delete %d\n", 2)
 
 	_, err := conn.Disable(ctx, in)
 	if err != nil {
 		return create.DiagError(names.Inspector2, create.ErrActionDeleting, ResNameEnabler, d.Id(), err)
 	}
-
-	fmt.Printf("delete %d\n", 3)
 
 	if err := waitDisabled(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return create.DiagError(names.Inspector2, create.ErrActionWaitingForDeletion, ResNameEnabler, d.Id(), err)
@@ -176,7 +149,6 @@ const (
 )
 
 func waitEnabled(ctx context.Context, conn *inspector2.Client, id string, timeout time.Duration) error {
-	fmt.Printf("waitEnabled\n")
 	stateConf := &resource.StateChangeConf{
 		Pending:                   []string{string(types.StatusEnabling), StatusDisabledEnabled, StatusInProgress, string(types.StatusDisabled)},
 		Target:                    []string{string(types.StatusEnabled)},
@@ -192,8 +164,6 @@ func waitEnabled(ctx context.Context, conn *inspector2.Client, id string, timeou
 }
 
 func waitDisabled(ctx context.Context, conn *inspector2.Client, id string, timeout time.Duration) error {
-	fmt.Printf("delete %d\n", 4)
-
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{string(types.StatusDisabling), StatusDisabledEnabled, StatusInProgress, string(types.StatusEnabled)},
 		Target:  []string{string(types.StatusDisabled)},
@@ -208,7 +178,6 @@ func waitDisabled(ctx context.Context, conn *inspector2.Client, id string, timeo
 
 func statusEnable(ctx context.Context, conn *inspector2.Client, id string, timeout time.Duration) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		fmt.Printf("statusEnable\n")
 		st, err := FindAccountStatuses(ctx, conn, id)
 
 		if errs.Contains(err, string(types.ErrorCodeAlreadyEnabled)) {
@@ -232,8 +201,6 @@ func statusEnable(ctx context.Context, conn *inspector2.Client, id string, timeo
 		if err != nil {
 			return nil, "", err
 		}
-
-		fmt.Printf("st: %+v\n", st)
 
 		hasEnabled := false
 		hasDisabled := false
@@ -390,21 +357,14 @@ func expandResourceScanTypes(s []string) []types.ResourceScanType {
 }
 
 func EnablerID(accountIDs []string, types []string) string {
-	if len(accountIDs) == 0 {
-		return strings.Join(types, ":")
-	}
 	return fmt.Sprintf("%s-%s", strings.Join(accountIDs, ":"), strings.Join(types, ":"))
 }
 
 func parseEnablerID(id string) ([]string, []string, error) {
 	parts := strings.Split(id, "-")
 
-	if len(parts) < 1 || len(parts) > 2 {
+	if len(parts) != 2 {
 		return nil, nil, fmt.Errorf("unexpected ID format (%s), expected <account-ids (':' separated)>-<types (':' separated)>", id)
-	}
-
-	if len(parts) == 1 {
-		return nil, strings.Split(parts[0], ":"), nil
 	}
 
 	return strings.Split(parts[0], ":"), strings.Split(parts[1], ":"), nil
