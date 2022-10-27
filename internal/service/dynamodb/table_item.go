@@ -62,6 +62,7 @@ func resourceTableItemCreate(d *schema.ResourceData, meta interface{}) error {
 
 	tableName := d.Get("table_name").(string)
 	hashKey := d.Get("hash_key").(string)
+	rangeKey := d.Get("range_key").(string)
 	item := d.Get("item").(string)
 	attributes, err := ExpandTableItemAttributes(item)
 	if err != nil {
@@ -75,6 +76,9 @@ func resourceTableItemCreate(d *schema.ResourceData, meta interface{}) error {
 		// Explode if item exists. We didn't create it.
 		Expected: map[string]*dynamodb.ExpectedAttributeValue{
 			hashKey: {
+				Exists: aws.Bool(false),
+			},
+			rangeKey: {
 				Exists: aws.Bool(false),
 			},
 		},
