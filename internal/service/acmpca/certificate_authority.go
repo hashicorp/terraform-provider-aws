@@ -326,7 +326,7 @@ func resourceCertificateAuthorityCreate(d *schema.ResourceData, meta interface{}
 		RevocationConfiguration:           expandRevocationConfiguration(d.Get("revocation_configuration").([]interface{})),
 	}
 
-	if v, ok := d.Get("usage_mode").(string); ok && v != "" {
+	if v, ok := d.Get("usage_mode").(string); ok {
 		input.UsageMode = aws.String(v)
 	}
 
@@ -394,23 +394,19 @@ func resourceCertificateAuthorityRead(d *schema.ResourceData, meta interface{}) 
 	}
 
 	d.Set("arn", certificateAuthority.Arn)
-
 	if err := d.Set("certificate_authority_configuration", flattenCertificateAuthorityConfiguration(certificateAuthority.CertificateAuthorityConfiguration)); err != nil {
-		return fmt.Errorf("setting tags: %s", err)
+		return fmt.Errorf("setting certificate_authority_configuration: %w", err)
 	}
-
 	d.Set("enabled", (aws.StringValue(certificateAuthority.Status) != acmpca.CertificateAuthorityStatusDisabled))
-	d.Set("usage_mode", certificateAuthority.UsageMode)
 	d.Set("not_after", aws.TimeValue(certificateAuthority.NotAfter).Format(time.RFC3339))
 	d.Set("not_before", aws.TimeValue(certificateAuthority.NotBefore).Format(time.RFC3339))
-
 	if err := d.Set("revocation_configuration", flattenRevocationConfiguration(certificateAuthority.RevocationConfiguration)); err != nil {
-		return fmt.Errorf("setting tags: %s", err)
+		return fmt.Errorf("setting revocation_configuration: %w", err)
 	}
-
 	d.Set("serial", certificateAuthority.Serial)
 	d.Set("status", certificateAuthority.Status)
 	d.Set("type", certificateAuthority.Type)
+	d.Set("usage_mode", certificateAuthority.UsageMode)
 
 	getCertificateAuthorityCertificateInput := &acmpca.GetCertificateAuthorityCertificateInput{
 		CertificateAuthorityArn: aws.String(d.Id()),
