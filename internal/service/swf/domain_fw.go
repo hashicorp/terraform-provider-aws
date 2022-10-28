@@ -2,7 +2,12 @@ package swf
 
 import (
 	"context"
+	"fmt"
+	"time"
 
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/swf"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -10,8 +15,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/experimental/intf"
+	"github.com/hashicorp/terraform-provider-aws/internal/fwvalidators"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func init() {
@@ -76,7 +84,9 @@ func (r *resourceDomain) GetSchema(context.Context) (tfsdk.Schema, diag.Diagnost
 				PlanModifiers: []tfsdk.AttributePlanModifier{
 					resource.RequiresReplace(),
 				},
-				// TODO Validate,
+				Validators: []tfsdk.AttributeValidator{
+					fwvalidators.Int64StringBetween(0, 90),
+				},
 			},
 		},
 	}
@@ -103,7 +113,38 @@ func (r *resourceDomain) Create(ctx context.Context, request resource.CreateRequ
 		return
 	}
 
-	data.ID = types.String{Value: "TODO"}
+	conn := r.meta.SWFConn
+	// defaultTagsConfig := r.meta.DefaultTagsConfig
+	// tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+
+	var name, namePrefix string
+
+	if !data.Name.IsNull() {
+		name = data.Name.Value
+	}
+	if !data.NamePrefix.IsNull() {
+		namePrefix = data.NamePrefix.Value
+	}
+	name = create.Name(name, namePrefix)
+	input := &swf.RegisterDomainInput{
+		Name: aws.String(name),
+		// Tags: TODO
+		WorkflowExecutionRetentionPeriodInDays: aws.String(data.WorkflowExecutionRetentionPeriodInDays.Value),
+	}
+
+	if !data.Description.IsNull() {
+		input.Description = aws.String(data.Description.Value)
+	}
+
+	_, err := conn.RegisterDomainWithContext(ctx, input)
+
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("creating SWF Domain (%s)", name), err.Error())
+
+		return
+	}
+
+	data.ID = types.String{Value: name}
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -150,9 +191,34 @@ func (r *resourceDomain) Delete(ctx context.Context, request resource.DeleteRequ
 		return
 	}
 
-	tflog.Debug(ctx, "deleting TODO", map[string]interface{}{
+	conn := r.meta.SWFConn
+
+	tflog.Debug(ctx, "deleting SWF Domain", map[string]interface{}{
 		"id": data.ID.Value,
 	})
+	_, err := conn.DeprecateDomainWithContext(ctx, &swf.DeprecateDomainInput{
+		Name: aws.String(data.ID.Value),
+	})
+
+	if tfawserr.ErrCodeEquals(err, swf.ErrCodeDomainDeprecatedFault, swf.ErrCodeUnknownResourceFault) {
+		return
+	}
+
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("deleting SWF Domain (%s)", data.ID.Value), err.Error())
+
+		return
+	}
+
+	_, err = tfresource.RetryUntilNotFoundContext(ctx, 1*time.Minute, func() (interface{}, error) {
+		return FindDomainByName(ctx, conn, data.ID.Value)
+	})
+
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("waiting for SWF Domain (%s) delete", data.ID.Value), err.Error())
+
+		return
+	}
 }
 
 // ImportState is called when the provider must import the state of a resource instance.
