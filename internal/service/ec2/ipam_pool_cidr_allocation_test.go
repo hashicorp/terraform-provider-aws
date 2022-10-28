@@ -185,7 +185,7 @@ func testAccCheckIPAMPoolAllocationDestroy(s *terraform.State) error {
 		_, _, err := tfec2.FindIPAMPoolCIDRAllocation(conn, id)
 
 		if err != nil {
-			if tfawserr.ErrCodeEquals(err, tfec2.IPAMPoolAllocationNotFound) || tfawserr.ErrCodeEquals(err, tfec2.InvalidIPAMPoolIDNotFound) {
+			if tfawserr.ErrCodeEquals(err, tfec2.IPAMPoolAllocationNotFound) || tfawserr.ErrCodeEquals(err, tfec2.ErrCodeInvalidIPAMPoolIdNotFound) {
 				return nil
 			}
 			return err
