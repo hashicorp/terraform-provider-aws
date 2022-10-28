@@ -2,6 +2,9 @@ package tags
 
 import (
 	"testing"
+
+	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
 func TestKeyValueTagsDefaultConfigGetTags(t *testing.T) {
@@ -2269,6 +2272,11 @@ func TestNew(t *testing.T) {
 			want:   map[string]string{},
 		},
 		{
+			name:   "empty_typesMap",
+			source: types.Map{ElemType: types.StringType, Elems: map[string]attr.Value{}},
+			want:   map[string]string{},
+		},
+		{
 			name: "non_empty_KeyValueTags",
 			source: KeyValueTags{
 				"key1": &TagData{
@@ -2352,6 +2360,17 @@ func TestNew(t *testing.T) {
 			want: map[string]string{
 				"key1": "",
 				"key2": "",
+			},
+		},
+		{
+			name: "non_empty_typesMap",
+			source: types.Map{ElemType: types.StringType, Elems: map[string]attr.Value{
+				"key1": types.String{Value: ""},
+				"key2": types.String{Value: "value2"},
+			}},
+			want: map[string]string{
+				"key1": "",
+				"key2": "value2",
 			},
 		},
 	}
