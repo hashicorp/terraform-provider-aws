@@ -185,7 +185,7 @@ func testAccCheckDiskDestroy(s *terraform.State) error {
 }
 
 func testAccDiskConfigBase() string {
-	return fmt.Sprintf(`
+	return `
 data "aws_availability_zones" "available" {
   state = "available"
 
@@ -194,7 +194,7 @@ data "aws_availability_zones" "available" {
     values = ["opt-in-not-required"]
   }
 }
-`)
+`
 }
 
 func testAccDiskConfig_basic(rName string) string {
