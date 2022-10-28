@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/experimental/intf"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/fwvalidators"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -48,6 +49,9 @@ func (r *resourceDomain) GetSchema(context.Context) (tfsdk.Schema, diag.Diagnost
 			"arn": {
 				Type:     types.StringType,
 				Computed: true,
+				PlanModifiers: []tfsdk.AttributePlanModifier{
+					resource.UseStateForUnknown(),
+				},
 			},
 			"description": {
 				Type:     types.StringType,
@@ -67,6 +71,7 @@ func (r *resourceDomain) GetSchema(context.Context) (tfsdk.Schema, diag.Diagnost
 				Computed: true,
 				PlanModifiers: []tfsdk.AttributePlanModifier{
 					resource.RequiresReplace(),
+					resource.UseStateForUnknown(),
 				},
 			},
 			"name_prefix": {
@@ -74,6 +79,7 @@ func (r *resourceDomain) GetSchema(context.Context) (tfsdk.Schema, diag.Diagnost
 				Optional: true,
 				PlanModifiers: []tfsdk.AttributePlanModifier{
 					resource.RequiresReplace(),
+					resource.UseStateForUnknown(),
 				},
 			},
 			"tags":     tftags.TagsAttribute(),
@@ -114,8 +120,9 @@ func (r *resourceDomain) Create(ctx context.Context, request resource.CreateRequ
 	}
 
 	conn := r.meta.SWFConn
-	// defaultTagsConfig := r.meta.DefaultTagsConfig
-	// tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	defaultTagsConfig := r.meta.DefaultTagsConfig
+	ignoreTagsConfig := r.meta.IgnoreTagsConfig
+	tags := defaultTagsConfig.MergeTags(tftags.New(data.Tags))
 
 	var name, namePrefix string
 
@@ -127,8 +134,8 @@ func (r *resourceDomain) Create(ctx context.Context, request resource.CreateRequ
 	}
 	name = create.Name(name, namePrefix)
 	input := &swf.RegisterDomainInput{
-		Name: aws.String(name),
-		// Tags: TODO
+		Name:                                   aws.String(name),
+		Tags:                                   Tags(tags.IgnoreAWS()),
 		WorkflowExecutionRetentionPeriodInDays: aws.String(data.WorkflowExecutionRetentionPeriodInDays.Value),
 	}
 
@@ -146,6 +153,24 @@ func (r *resourceDomain) Create(ctx context.Context, request resource.CreateRequ
 
 	data.ID = types.String{Value: name}
 
+	output, err := FindDomainByName(ctx, conn, data.ID.Value)
+
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("reading SWF Domain (%s)", data.ID.Value), err.Error())
+
+		return
+	}
+
+	// Set values for unknowns.
+	data.ARN = types.String{Value: aws.StringValue(output.DomainInfo.Arn)}
+	if data.Name.IsNull() {
+		data.Name = types.String{Value: aws.StringValue(output.DomainInfo.Name)}
+	}
+	if data.NamePrefix.IsNull() {
+		data.NamePrefix = types.String{Value: aws.StringValue(create.NamePrefixFromName(aws.StringValue(output.DomainInfo.Name)))}
+	}
+	data.TagsAll = flex.FlattenFrameworkStringValueMap(ctx, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map())
+
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
@@ -160,21 +185,77 @@ func (r *resourceDomain) Read(ctx context.Context, request resource.ReadRequest,
 		return
 	}
 
+	conn := r.meta.SWFConn
+	defaultTagsConfig := r.meta.DefaultTagsConfig
+	ignoreTagsConfig := r.meta.IgnoreTagsConfig
+
+	output, err := FindDomainByName(ctx, conn, data.ID.Value)
+
+	if tfresource.NotFound(err) {
+		tflog.Warn(ctx, "SWF Domain not found, removing from state", map[string]interface{}{
+			"id": data.ID.Value,
+		})
+		response.State.RemoveResource(ctx)
+
+		return
+	}
+
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("reading SWF Domain (%s)", data.ID.Value), err.Error())
+
+		return
+	}
+
+	arn := aws.StringValue(output.DomainInfo.Arn)
+	data.ARN = types.String{Value: arn}
+	data.Description = types.String{Value: aws.StringValue(output.DomainInfo.Description)}
+	data.Name = types.String{Value: aws.StringValue(output.DomainInfo.Name)}
+	data.NamePrefix = types.String{Value: aws.StringValue(create.NamePrefixFromName(aws.StringValue(output.DomainInfo.Name)))}
+	data.WorkflowExecutionRetentionPeriodInDays = types.String{Value: aws.StringValue(output.Configuration.WorkflowExecutionRetentionPeriodInDays)}
+
+	tags, err := ListTagsWithContext(ctx, conn, arn)
+
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("listing tags for SWF Domain (%s)", arn), err.Error())
+
+		return
+	}
+
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	data.Tags = flex.FlattenFrameworkStringValueMap(ctx, tags.RemoveDefaultConfig(defaultTagsConfig).Map())
+	data.TagsAll = flex.FlattenFrameworkStringValueMap(ctx, tags.Map())
+
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
 // Update is called to update the state of the resource.
 // Config, planned state, and prior state values should be read from the UpdateRequest and new state values set on the UpdateResponse.
 func (r *resourceDomain) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
-	var data resourceDomainData
+	var old, new resourceDomainData
 
-	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
+	response.Diagnostics.Append(request.State.Get(ctx, &old)...)
 
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
+	response.Diagnostics.Append(request.Plan.Get(ctx, &new)...)
+
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	conn := r.meta.SWFConn
+
+	if !new.TagsAll.Equal(old.TagsAll) {
+		if err := UpdateTagsWithContext(ctx, conn, new.ARN.Value, old.TagsAll, new.TagsAll); err != nil {
+			response.Diagnostics.AddError(fmt.Sprintf("updating SWF Domain (%s) tags", new.ID.Value), err.Error())
+
+			return
+		}
+	}
+
+	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
 }
 
 // Delete is called when the provider must delete the resource.
