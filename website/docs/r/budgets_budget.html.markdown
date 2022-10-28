@@ -55,20 +55,18 @@ Create a budget with planned budget limits.
 ```terraform
 resource "aws_budgets_budget" "cost" {
   # ...
-  
+
   planned_limit {
     start_time = "2017-07-01_00:00"
     amount     = "100"
     unit       = "USD"
   }
-  
+
   planned_limit {
     start_time = "2017-08-01_00:00"
     amount     = "200"
     unit       = "USD"
   }
-  
-  # ...
 }
 ```
 
