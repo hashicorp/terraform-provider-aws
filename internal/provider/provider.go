@@ -1712,6 +1712,8 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_lightsail_container_service":                    lightsail.ResourceContainerService(),
 			"aws_lightsail_container_service_deployment_version": lightsail.ResourceContainerServiceDeploymentVersion(),
 			"aws_lightsail_database":                             lightsail.ResourceDatabase(),
+			"aws_lightsail_disk":                                 lightsail.ResourceDisk(),
+			"aws_lightsail_disk_attachment":                      lightsail.ResourceDiskAttachment(),
 			"aws_lightsail_domain":                               lightsail.ResourceDomain(),
 			"aws_lightsail_domain_entry":                         lightsail.ResourceDomainEntry(),
 			"aws_lightsail_instance":                             lightsail.ResourceInstance(),
