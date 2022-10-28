@@ -46,6 +46,9 @@ func TestAccSageMaker_serial(t *testing.T) {
 			"securityGroup":                                          testAccDomain_securityGroup,
 			"sharingSettings":                                        testAccDomain_sharingSettings,
 			"defaultUserSettingsUpdated":                             testAccDomain_defaultUserSettingsUpdated,
+			"canvas":                                                 testAccDomain_canvasAppSettings,
+			"domainSettings":                                         testAccDomain_domainSettings,
+			"rSessionAppSettings":                                    testAccDomain_rSessionAppSettings,
 		},
 		"FlowDefinition": {
 			"basic":                          testAccFlowDefinition_basic,
