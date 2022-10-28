@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"strconv"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/lightsail"
@@ -17,10 +16,10 @@ import (
 )
 
 func TestAccLightsailLoadBalancerStickinessPolicy_basic(t *testing.T) {
-	var enabled bool
 	resourceName := "aws_lightsail_lb_stickiness_policy.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	cookieDuration := "150"
+	enabled := "true"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -33,11 +32,11 @@ func TestAccLightsailLoadBalancerStickinessPolicy_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckLoadBalancerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLoadBalancerStickinessPolicyConfig_basic(rName, cookieDuration),
+				Config: testAccLoadBalancerStickinessPolicyConfig_basic(rName, enabled, cookieDuration),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLoadBalancerStickinessPolicyExists(resourceName, enabled),
+					testAccCheckLoadBalancerStickinessPolicyExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cookie_duration", cookieDuration),
-					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "enabled", enabled),
 					resource.TestCheckResourceAttr(resourceName, "lb_name", rName),
 				),
 			},
@@ -46,11 +45,11 @@ func TestAccLightsailLoadBalancerStickinessPolicy_basic(t *testing.T) {
 }
 
 func TestAccLightsailLoadBalancerStickinessPolicy_CookieDuration(t *testing.T) {
-	var enabled bool
 	resourceName := "aws_lightsail_lb_stickiness_policy.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	cookieDuration1 := "200"
 	cookieDuration2 := "500"
+	enabled := "true"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -63,9 +62,9 @@ func TestAccLightsailLoadBalancerStickinessPolicy_CookieDuration(t *testing.T) {
 		CheckDestroy:             testAccCheckLoadBalancerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLoadBalancerStickinessPolicyConfig_basic(rName, cookieDuration1),
+				Config: testAccLoadBalancerStickinessPolicyConfig_basic(rName, enabled, cookieDuration1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLoadBalancerStickinessPolicyExists(resourceName, enabled),
+					testAccCheckLoadBalancerStickinessPolicyExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cookie_duration", cookieDuration1),
 				),
 			},
@@ -75,9 +74,9 @@ func TestAccLightsailLoadBalancerStickinessPolicy_CookieDuration(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccLoadBalancerStickinessPolicyConfig_basic(rName, cookieDuration2),
+				Config: testAccLoadBalancerStickinessPolicyConfig_basic(rName, enabled, cookieDuration2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLoadBalancerStickinessPolicyExists(resourceName, enabled),
+					testAccCheckLoadBalancerStickinessPolicyExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cookie_duration", cookieDuration2),
 				),
 			},
@@ -85,11 +84,12 @@ func TestAccLightsailLoadBalancerStickinessPolicy_CookieDuration(t *testing.T) {
 	})
 }
 
-func TestAccLightsailLoadBalancerStickinessPolicy_disappears(t *testing.T) {
-	var enabled bool
+func TestAccLightsailLoadBalancerStickinessPolicy_Enabled(t *testing.T) {
 	resourceName := "aws_lightsail_lb_stickiness_policy.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	cookieDuration := "200"
+	enabledTrue := "true"
+	enabledFalse := "false"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -102,9 +102,48 @@ func TestAccLightsailLoadBalancerStickinessPolicy_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckLoadBalancerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLoadBalancerStickinessPolicyConfig_basic(rName, cookieDuration),
+				Config: testAccLoadBalancerStickinessPolicyConfig_basic(rName, enabledTrue, cookieDuration),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLoadBalancerStickinessPolicyExists(resourceName, enabled),
+					testAccCheckLoadBalancerStickinessPolicyExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "enabled", enabledTrue),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccLoadBalancerStickinessPolicyConfig_basic(rName, enabledFalse, cookieDuration),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLoadBalancerStickinessPolicyExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "enabled", enabledFalse),
+				),
+			},
+		},
+	})
+}
+
+func TestAccLightsailLoadBalancerStickinessPolicy_disappears(t *testing.T) {
+	resourceName := "aws_lightsail_lb_stickiness_policy.test"
+	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
+	cookieDuration := "200"
+	enabled := "true"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(lightsail.EndpointsID, t)
+			testAccPreCheck(t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, lightsail.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLoadBalancerDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLoadBalancerStickinessPolicyConfig_basic(rName, enabled, cookieDuration),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLoadBalancerStickinessPolicyExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tflightsail.ResourceLoadBalancerStickinessPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -113,7 +152,7 @@ func TestAccLightsailLoadBalancerStickinessPolicy_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckLoadBalancerStickinessPolicyExists(n string, enabled bool) resource.TestCheckFunc {
+func testAccCheckLoadBalancerStickinessPolicyExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -136,18 +175,11 @@ func testAccCheckLoadBalancerStickinessPolicyExists(n string, enabled bool) reso
 			return fmt.Errorf("Load Balancer Stickiness Policy %q does not exist", rs.Primary.ID)
 		}
 
-		boolValue, err := strconv.ParseBool(*out["SessionStickinessEnabled"])
-		if err != nil {
-			return fmt.Errorf("Load Balancer Stickiness Policy %q does not exist. Error parsing enabled bool", rs.Primary.ID)
-		}
-
-		enabled = boolValue
-
 		return nil
 	}
 }
 
-func testAccLoadBalancerStickinessPolicyConfig_basic(rName string, cookieDuration string) string {
+func testAccLoadBalancerStickinessPolicyConfig_basic(rName string, enabled string, cookieDuration string) string {
 	return fmt.Sprintf(`
 resource "aws_lightsail_lb" "test" {
   name              = %[1]q
@@ -155,8 +187,9 @@ resource "aws_lightsail_lb" "test" {
   instance_port     = "80"
 }
 resource "aws_lightsail_lb_stickiness_policy" "test" {
+  enabled = %[2]s
+  cookie_duration = %[3]s
   lb_name         = aws_lightsail_lb.test.name
-  cookie_duration = %[2]s
 }
-`, rName, cookieDuration)
+`, rName, enabled, cookieDuration)
 }

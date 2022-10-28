@@ -36,7 +36,7 @@ func ResourceLoadBalancerStickinessPolicy() *schema.Resource {
 			},
 			"enabled": {
 				Type:     schema.TypeBool,
-				Computed: true,
+				Required: true,
 			},
 			"lb_name": {
 				Type:     schema.TypeString,
@@ -62,7 +62,7 @@ func resourceLoadBalancerStickinessPolicyCreate(ctx context.Context, d *schema.R
 
 		if v == "enabled" {
 			in.AttributeName = aws.String(lightsail.LoadBalancerAttributeNameSessionStickinessEnabled)
-			in.AttributeValue = aws.String("true")
+			in.AttributeValue = aws.String(fmt.Sprint(d.Get("enabled").(bool)))
 		}
 
 		if v == "cookie_duration" {
@@ -127,6 +127,31 @@ func resourceLoadBalancerStickinessPolicyRead(ctx context.Context, d *schema.Res
 
 func resourceLoadBalancerStickinessPolicyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).LightsailConn
+
+	if d.HasChange("enabled") {
+		in := lightsail.UpdateLoadBalancerAttributeInput{
+			LoadBalancerName: aws.String(d.Get("lb_name").(string)),
+			AttributeName:    aws.String(lightsail.LoadBalancerAttributeNameSessionStickinessEnabled),
+			AttributeValue:   aws.String(fmt.Sprint(d.Get("enabled").(bool))),
+		}
+
+		out, err := conn.UpdateLoadBalancerAttributeWithContext(ctx, &in)
+
+		if err != nil {
+			return create.DiagError(names.Lightsail, lightsail.OperationTypeUpdateLoadBalancerAttribute, ResLoadBalancerStickinessPolicy, d.Get("lb_name").(string), err)
+		}
+
+		if len(out.Operations) == 0 {
+			return create.DiagError(names.Lightsail, lightsail.OperationTypeUpdateLoadBalancerAttribute, ResLoadBalancerStickinessPolicy, d.Get("lb_name").(string), errors.New("No operations found for Update Load Balancer Attribute request"))
+		}
+
+		op := out.Operations[0]
+		err = waitOperation(conn, op.Id)
+
+		if err != nil {
+			return create.DiagError(names.Lightsail, lightsail.OperationTypeUpdateLoadBalancerAttribute, ResLoadBalancerStickinessPolicy, d.Get("lb_name").(string), errors.New("Error waiting for Update Load Balancer Attribute request operation"))
+		}
+	}
 
 	if d.HasChange("cookie_duration") {
 		in := lightsail.UpdateLoadBalancerAttributeInput{

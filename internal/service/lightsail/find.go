@@ -319,10 +319,8 @@ func FindLoadBalancerStickinessPolicyById(ctx context.Context, conn *lightsail.L
 		return nil, err
 	}
 
-	if val, ok := out.LoadBalancer.ConfigurationOptions["SessionStickinessEnabled"]; ok {
-		if aws.StringValue(val) == "false" {
-			return nil, tfresource.NewEmptyResultError(in)
-		}
+	if out == nil || out.LoadBalancer.ConfigurationOptions == nil {
+		return nil, tfresource.NewEmptyResultError(in)
 	}
 
 	return out.LoadBalancer.ConfigurationOptions, nil
