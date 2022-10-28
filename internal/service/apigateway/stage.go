@@ -133,7 +133,7 @@ func resourceStageCreate(d *schema.ResourceData, meta interface{}) error {
 
 	respApiId := d.Get("rest_api_id").(string)
 	stageName := d.Get("stage_name").(string)
-	input := apigateway.CreateStageInput{
+	input := &apigateway.CreateStageInput{
 		RestApiId:    aws.String(respApiId),
 		StageName:    aws.String(stageName),
 		DeploymentId: aws.String(d.Get("deployment_id").(string)),
@@ -151,27 +151,29 @@ func resourceStageCreate(d *schema.ResourceData, meta interface{}) error {
 	if v, ok := d.GetOk("description"); ok {
 		input.Description = aws.String(v.(string))
 	}
-	if v, ok := d.GetOk("xray_tracing_enabled"); ok {
-		input.TracingEnabled = aws.Bool(v.(bool))
-	}
 	if v, ok := d.GetOk("documentation_version"); ok {
 		input.DocumentationVersion = aws.String(v.(string))
 	}
 	if vars, ok := d.GetOk("variables"); ok {
 		input.Variables = flex.ExpandStringMap(vars.(map[string]interface{}))
 	}
+	if v, ok := d.GetOk("xray_tracing_enabled"); ok {
+		input.TracingEnabled = aws.Bool(v.(bool))
+	}
+
 	if len(tags) > 0 {
 		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
-	_, err := conn.CreateStage(&input)
+	output, err := conn.CreateStage(input)
+
 	if err != nil {
-		return fmt.Errorf("Error creating API Gateway Stage: %s", err)
+		return fmt.Errorf("error creating API Gateway Stage (%s): %w", stageName, err)
 	}
 
 	d.SetId(fmt.Sprintf("ags-%s-%s", respApiId, stageName))
 
-	if waitForCache {
+	if waitForCache && aws.StringValue(output.CacheClusterStatus) != apigateway.CacheClusterStatusNotAvailable {
 		_, err := waitStageCacheAvailable(conn, respApiId, stageName)
 		if err != nil {
 			return fmt.Errorf("error waiting for API Gateway Stage (%s) to be available: %w", d.Id(), err)
@@ -367,18 +369,20 @@ func resourceStageUpdate(d *schema.ResourceData, meta interface{}) error {
 			}
 		}
 
-		input := apigateway.UpdateStageInput{
+		input := &apigateway.UpdateStageInput{
 			RestApiId:       aws.String(respApiId),
 			StageName:       aws.String(stageName),
 			PatchOperations: operations,
 		}
+
 		log.Printf("[DEBUG] Updating API Gateway Stage: %s", input)
-		_, err := conn.UpdateStage(&input)
+		output, err := conn.UpdateStage(input)
+
 		if err != nil {
-			return fmt.Errorf("Updating API Gateway Stage failed: %w", err)
+			return fmt.Errorf("error updating API Gateway Stage (%s): %w", d.Id(), err)
 		}
 
-		if waitForCache {
+		if waitForCache && aws.StringValue(output.CacheClusterStatus) != apigateway.CacheClusterStatusNotAvailable {
 			_, err := waitStageCacheUpdated(conn, respApiId, stageName)
 			if err != nil {
 				return fmt.Errorf("error waiting for API Gateway Stage (%s) to be updated: %w", d.Id(), err)
