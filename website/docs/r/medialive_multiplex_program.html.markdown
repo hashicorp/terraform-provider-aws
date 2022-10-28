@@ -78,9 +78,9 @@ The following arguments are optional:
 
 ### Video Settings
 
-`constant_bitrate` - (Optional) Constant bitrate value.
-`statemux_settings` - (Optional, **Deprecated**) Statemux settings. See [Statmux Settings](#statemux-settings) for more details. Settings from this attribute will apply to `statmux_settings`. Conflicts with `statmux_settings`.
-`statmux_settings` - (Optional) Statmux settings. See [Statmux Settings](#statmux-settings) for more details Conflicts with `statemux_settings`.
+* `constant_bitrate` - (Optional) Constant bitrate value.
+* `statemux_settings` - (Optional, **Deprecated**) Statemux settings. See [Statmux Settings](#statemux-settings) for more details. Settings from this attribute will apply to `statmux_settings`. Conflicts with `statmux_settings`.
+* `statmux_settings` - (Optional) Statmux settings. See [Statmux Settings](#statmux-settings) for more details Conflicts with `statemux_settings`.
 
 ### Statmux Settings
 
