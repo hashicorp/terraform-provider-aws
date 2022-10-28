@@ -1,6 +1,7 @@
 package budgets_test
 
 import (
+	"context"
 	"fmt"
 	"strings"
 	"testing"
@@ -207,12 +208,12 @@ func TestAccBudgetsBudget_autoAdjustDataHistorical(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBudgetConfig_autoAdjustDataHistorical(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccBudgetExists(resourceName, &budget),
 					resource.TestCheckResourceAttr(resourceName, "budget_type", "COST"),
 					resource.TestCheckResourceAttr(resourceName, "auto_adjust_data.0.auto_adjust_type", "HISTORICAL"),
 					resource.TestCheckResourceAttr(resourceName, "auto_adjust_data.0.historical_options.0.budget_adjustment_period", "2"),
-					resource.TestCheckResourceAttr(resourceName, "auto_adjust_data.0.historical_options.0.lookback_available_periods", "2"),
+					resource.TestCheckResourceAttr(resourceName, "auto_adjust_data.0.historical_options.0.lookback_available_periods", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "auto_adjust_data.0.last_auto_adjust_time"),
 					resource.TestCheckResourceAttr(resourceName, "cost_filter.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cost_filters.%", "0"),
@@ -229,12 +230,12 @@ func TestAccBudgetsBudget_autoAdjustDataHistorical(t *testing.T) {
 			},
 			{
 				Config: testAccBudgetConfig_autoAdjustDataHistoricalUpdated(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccBudgetExists(resourceName, &budget),
 					resource.TestCheckResourceAttr(resourceName, "budget_type", "COST"),
 					resource.TestCheckResourceAttr(resourceName, "auto_adjust_data.0.auto_adjust_type", "HISTORICAL"),
 					resource.TestCheckResourceAttr(resourceName, "auto_adjust_data.0.historical_options.0.budget_adjustment_period", "5"),
-					resource.TestCheckResourceAttr(resourceName, "auto_adjust_data.0.historical_options.0.lookback_available_periods", "5"),
+					resource.TestCheckResourceAttr(resourceName, "auto_adjust_data.0.historical_options.0.lookback_available_periods", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "auto_adjust_data.0.last_auto_adjust_time"),
 					resource.TestCheckResourceAttr(resourceName, "cost_filter.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cost_filters.%", "0"),
@@ -449,7 +450,7 @@ func testAccBudgetExists(resourceName string, v *budgets.Budget) resource.TestCh
 			return err
 		}
 
-		output, err := tfbudgets.FindBudgetByAccountIDAndBudgetName(conn, accountID, budgetName)
+		output, err := tfbudgets.FindBudgetByTwoPartKey(context.Background(), conn, accountID, budgetName)
 
 		if err != nil {
 			return err
@@ -475,7 +476,7 @@ func testAccBudgetDestroy(s *terraform.State) error {
 			return err
 		}
 
-		_, err = tfbudgets.FindBudgetByAccountIDAndBudgetName(conn, accountID, budgetName)
+		_, err = tfbudgets.FindBudgetByTwoPartKey(context.Background(), conn, accountID, budgetName)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -485,7 +486,7 @@ func testAccBudgetDestroy(s *terraform.State) error {
 			return err
 		}
 
-		return fmt.Errorf("Budget Action %s still exists", rs.Primary.ID)
+		return fmt.Errorf("Budget %s still exists", rs.Primary.ID)
 	}
 
 	return nil

@@ -1,6 +1,7 @@
 package budgets
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strings"
@@ -10,6 +11,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/budgets"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -22,10 +25,10 @@ import (
 
 func ResourceBudget() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceBudgetCreate,
-		Read:   resourceBudgetRead,
-		Update: resourceBudgetUpdate,
-		Delete: resourceBudgetDelete,
+		CreateWithoutTimeout: resourceBudgetCreate,
+		ReadWithoutTimeout:   resourceBudgetRead,
+		UpdateWithoutTimeout: resourceBudgetUpdate,
+		DeleteWithoutTimeout: resourceBudgetDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -247,13 +250,13 @@ func ResourceBudget() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Default:      "2087-06-15_00:00",
-				ValidateFunc: ValidTimePeriodTimestamp,
+				ValidateFunc: validTimePeriodTimestamp,
 			},
 			"time_period_start": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ValidateFunc: ValidTimePeriodTimestamp,
+				ValidateFunc: validTimePeriodTimestamp,
 			},
 			"time_unit": {
 				Type:         schema.TypeString,
@@ -264,12 +267,13 @@ func ResourceBudget() *schema.Resource {
 	}
 }
 
-func resourceBudgetCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceBudgetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).BudgetsConn
 
 	budget, err := expandBudgetUnmarshal(d)
+
 	if err != nil {
-		return fmt.Errorf("failed unmarshalling budget: %v", err)
+		return diag.Errorf("expandBudgetUnmarshal: %s", err)
 	}
 
 	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
@@ -280,39 +284,39 @@ func resourceBudgetCreate(d *schema.ResourceData, meta interface{}) error {
 		accountID = meta.(*conns.AWSClient).AccountID
 	}
 
-	_, err = conn.CreateBudget(&budgets.CreateBudgetInput{
+	_, err = conn.CreateBudgetWithContext(ctx, &budgets.CreateBudgetInput{
 		AccountId: aws.String(accountID),
 		Budget:    budget,
 	})
 
 	if err != nil {
-		return fmt.Errorf("error creating Budget (%s): %w", name, err)
+		return diag.Errorf("creating Budget (%s): %s", name, err)
 	}
 
-	d.SetId(fmt.Sprintf("%s:%s", accountID, aws.StringValue(budget.BudgetName)))
+	d.SetId(BudgetCreateResourceID(accountID, aws.StringValue(budget.BudgetName)))
 
 	notificationsRaw := d.Get("notification").(*schema.Set).List()
 	notifications, subscribers := expandBudgetNotificationsUnmarshal(notificationsRaw)
 
-	err = resourceBudgetNotificationsCreate(notifications, subscribers, *budget.BudgetName, accountID, meta)
+	err = createBudgetNotifications(ctx, conn, notifications, subscribers, *budget.BudgetName, accountID)
 
 	if err != nil {
-		return fmt.Errorf("error creating Budget (%s) Notifications: %s", d.Id(), err)
+		return diag.Errorf("creating Budget (%s) notifications: %s", d.Id(), err)
 	}
 
-	return resourceBudgetRead(d, meta)
+	return resourceBudgetRead(ctx, d, meta)
 }
 
-func resourceBudgetRead(d *schema.ResourceData, meta interface{}) error {
+func resourceBudgetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).BudgetsConn
 
 	accountID, budgetName, err := BudgetParseResourceID(d.Id())
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
-	budget, err := FindBudgetByAccountIDAndBudgetName(conn, accountID, budgetName)
+	budget, err := FindBudgetByTwoPartKey(ctx, conn, accountID, budgetName)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Budget (%s) not found, removing from state", d.Id())
@@ -321,7 +325,7 @@ func resourceBudgetRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading Budget (%s): %w", d.Id(), err)
+		return diag.Errorf("reading Budget (%s): %s", d.Id(), err)
 	}
 
 	d.Set("account_id", accountID)
@@ -336,18 +340,16 @@ func resourceBudgetRead(d *schema.ResourceData, meta interface{}) error {
 
 	// `cost_filters` should be removed in future releases
 	if err := d.Set("cost_filter", convertCostFiltersToMap(budget.CostFilters)); err != nil {
-		return fmt.Errorf("error setting cost_filter: %w", err)
+		return diag.Errorf("setting cost_filter: %s", err)
 	}
 	if err := d.Set("cost_filters", convertCostFiltersToStringMap(budget.CostFilters)); err != nil {
-		return fmt.Errorf("error setting cost_filters: %w", err)
+		return diag.Errorf("setting cost_filters: %s", err)
 	}
-
 	if err := d.Set("cost_types", flattenCostTypes(budget.CostTypes)); err != nil {
-		return fmt.Errorf("error setting cost_types: %w", err)
+		return diag.Errorf("setting cost_types: %s", err)
 	}
-
 	if err := d.Set("auto_adjust_data", flattenAutoAdjustData(budget.AutoAdjustData)); err != nil {
-		return fmt.Errorf("error setting auto_adjust_data: %w", err)
+		return diag.Errorf("setting auto_adjust_data: %s", err)
 	}
 
 	if budget.BudgetLimit != nil {
@@ -365,14 +367,14 @@ func resourceBudgetRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("time_unit", budget.TimeUnit)
 
-	notifications, err := FindNotificationsByAccountIDAndBudgetName(conn, accountID, budgetName)
+	notifications, err := findNotifications(ctx, conn, accountID, budgetName)
 
 	if tfresource.NotFound(err) {
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading Budget (%s) notifications: %w", d.Id(), err)
+		return diag.Errorf("reading Budget (%s) notifications: %s", d.Id(), err)
 	}
 
 	var tfList []interface{}
@@ -392,7 +394,7 @@ func resourceBudgetRead(d *schema.ResourceData, meta interface{}) error {
 			tfMap["threshold_type"] = aws.StringValue(notification.ThresholdType)
 		}
 
-		subscribers, err := FindSubscribersByAccountIDBudgetNameAndNotification(conn, accountID, budgetName, notification)
+		subscribers, err := findSubscribers(ctx, conn, accountID, budgetName, notification)
 
 		if tfresource.NotFound(err) {
 			tfList = append(tfList, tfMap)
@@ -400,7 +402,7 @@ func resourceBudgetRead(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if err != nil {
-			return fmt.Errorf("error reading Budget (%s) subscribers: %w", d.Id(), err)
+			return diag.Errorf("reading Budget (%s) subscribers: %s", d.Id(), err)
 		}
 
 		var emailSubscribers []string
@@ -421,54 +423,56 @@ func resourceBudgetRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err := d.Set("notification", tfList); err != nil {
-		return fmt.Errorf("error setting notification: %w", err)
+		return diag.Errorf("setting notification: %s", err)
 	}
 
 	return nil
 }
 
-func resourceBudgetUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceBudgetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).BudgetsConn
 
 	accountID, _, err := BudgetParseResourceID(d.Id())
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	budget, err := expandBudgetUnmarshal(d)
+
 	if err != nil {
-		return fmt.Errorf("could not create budget: %v", err)
+		return diag.Errorf("expandBudgetUnmarshal: %s", err)
 	}
 
-	_, err = conn.UpdateBudget(&budgets.UpdateBudgetInput{
+	_, err = conn.UpdateBudgetWithContext(ctx, &budgets.UpdateBudgetInput{
 		AccountId: aws.String(accountID),
 		NewBudget: budget,
 	})
-	if err != nil {
-		return fmt.Errorf("update budget failed: %v", err)
-	}
-
-	err = resourceBudgetNotificationsUpdate(d, meta)
 
 	if err != nil {
-		return fmt.Errorf("update budget notification failed: %v", err)
+		return diag.Errorf("updating Budget (%s): %s", d.Id(), err)
 	}
 
-	return resourceBudgetRead(d, meta)
+	err = updateBudgetNotifications(ctx, conn, d)
+
+	if err != nil {
+		return diag.Errorf("updating Budget (%s) notifications: %s", d.Id(), err)
+	}
+
+	return resourceBudgetRead(ctx, d, meta)
 }
 
-func resourceBudgetDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceBudgetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).BudgetsConn
 
 	accountID, budgetName, err := BudgetParseResourceID(d.Id())
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	log.Printf("[DEBUG] Deleting Budget: %s", d.Id())
-	_, err = conn.DeleteBudget(&budgets.DeleteBudgetInput{
+	_, err = conn.DeleteBudgetWithContext(ctx, &budgets.DeleteBudgetInput{
 		AccountId:  aws.String(accountID),
 		BudgetName: aws.String(budgetName),
 	})
@@ -478,23 +482,151 @@ func resourceBudgetDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting Budget (%s): %w", d.Id(), err)
+		return diag.Errorf("deleting Budget (%s): %s", d.Id(), err)
 	}
 
 	return nil
 }
 
-func resourceBudgetNotificationsCreate(notifications []*budgets.Notification, subscribers [][]*budgets.Subscriber, budgetName string, accountID string, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).BudgetsConn
+const budgetResourceIDSeparator = ":"
 
+func BudgetCreateResourceID(accountID, budgetName string) string {
+	parts := []string{accountID, budgetName}
+	id := strings.Join(parts, budgetResourceIDSeparator)
+
+	return id
+}
+
+func BudgetParseResourceID(id string) (string, string, error) {
+	parts := strings.Split(id, budgetResourceIDSeparator)
+
+	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
+		return parts[0], parts[1], nil
+	}
+
+	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected AccountID%[2]sBudgetName", id, budgetActionResourceIDSeparator)
+}
+
+func FindBudgetByTwoPartKey(ctx context.Context, conn *budgets.Budgets, accountID, budgetName string) (*budgets.Budget, error) {
+	input := &budgets.DescribeBudgetInput{
+		AccountId:  aws.String(accountID),
+		BudgetName: aws.String(budgetName),
+	}
+
+	output, err := conn.DescribeBudgetWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, budgets.ErrCodeNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.Budget == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.Budget, nil
+}
+
+func findNotifications(ctx context.Context, conn *budgets.Budgets, accountID, budgetName string) ([]*budgets.Notification, error) {
+	input := &budgets.DescribeNotificationsForBudgetInput{
+		AccountId:  aws.String(accountID),
+		BudgetName: aws.String(budgetName),
+	}
+	var output []*budgets.Notification
+
+	err := conn.DescribeNotificationsForBudgetPagesWithContext(ctx, input, func(page *budgets.DescribeNotificationsForBudgetOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, notification := range page.Notifications {
+			if notification == nil {
+				continue
+			}
+
+			output = append(output, notification)
+		}
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, budgets.ErrCodeNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(output) == 0 {
+		return nil, &resource.NotFoundError{LastRequest: input}
+	}
+
+	return output, nil
+}
+
+func findSubscribers(ctx context.Context, conn *budgets.Budgets, accountID, budgetName string, notification *budgets.Notification) ([]*budgets.Subscriber, error) {
+	input := &budgets.DescribeSubscribersForNotificationInput{
+		AccountId:    aws.String(accountID),
+		BudgetName:   aws.String(budgetName),
+		Notification: notification,
+	}
+	var output []*budgets.Subscriber
+
+	err := conn.DescribeSubscribersForNotificationPagesWithContext(ctx, input, func(page *budgets.DescribeSubscribersForNotificationOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, subscriber := range page.Subscribers {
+			if subscriber == nil {
+				continue
+			}
+
+			output = append(output, subscriber)
+		}
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, budgets.ErrCodeNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(output) == 0 {
+		return nil, &resource.NotFoundError{LastRequest: input}
+	}
+
+	return output, nil
+}
+
+func createBudgetNotifications(ctx context.Context, conn *budgets.Budgets, notifications []*budgets.Notification, subscribers [][]*budgets.Subscriber, budgetName string, accountID string) error {
 	for i, notification := range notifications {
 		subscribers := subscribers[i]
+
 		if len(subscribers) == 0 {
-			return fmt.Errorf("Notification must have at least one subscriber!")
+			return fmt.Errorf("Budget notification must have at least one subscriber")
 		}
-		_, err := conn.CreateNotification(&budgets.CreateNotificationInput{
-			BudgetName:   aws.String(budgetName),
+
+		_, err := conn.CreateNotificationWithContext(ctx, &budgets.CreateNotificationInput{
 			AccountId:    aws.String(accountID),
+			BudgetName:   aws.String(budgetName),
 			Notification: notification,
 			Subscribers:  subscribers,
 		})
@@ -507,9 +639,7 @@ func resourceBudgetNotificationsCreate(notifications []*budgets.Notification, su
 	return nil
 }
 
-func resourceBudgetNotificationsUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).BudgetsConn
-
+func updateBudgetNotifications(ctx context.Context, conn *budgets.Budgets, d *schema.ResourceData) error {
 	accountID, budgetName, err := BudgetParseResourceID(d.Id())
 
 	if err != nil {
@@ -531,17 +661,17 @@ func resourceBudgetNotificationsUpdate(d *schema.ResourceData, meta interface{})
 				Notification: notification,
 			}
 
-			_, err := conn.DeleteNotification(input)
+			_, err := conn.DeleteNotificationWithContext(ctx, input)
 
 			if err != nil {
-				return fmt.Errorf("error deleting Budget (%s) Notification: %s", d.Id(), err)
+				return fmt.Errorf("deleting Budget (%s) notification: %s", d.Id(), err)
 			}
 		}
 
-		err = resourceBudgetNotificationsCreate(addNotifications, addSubscribers, budgetName, accountID, meta)
+		err = createBudgetNotifications(ctx, conn, addNotifications, addSubscribers, budgetName, accountID)
 
 		if err != nil {
-			return fmt.Errorf("error creating Budget (%s) Notifications: %s", d.Id(), err)
+			return fmt.Errorf("creating Budget (%s) notifications: %s", d.Id(), err)
 		}
 	}
 
@@ -650,13 +780,13 @@ func expandBudgetUnmarshal(d *schema.ResourceData) (*budgets.Budget, error) {
 		}
 	}
 
-	budgetTimePeriodStart, err := TimePeriodTimestampFromString(d.Get("time_period_start").(string))
+	budgetTimePeriodStart, err := timePeriodTimestampFromString(d.Get("time_period_start").(string))
 
 	if err != nil {
 		return nil, err
 	}
 
-	budgetTimePeriodEnd, err := TimePeriodTimestampFromString(d.Get("time_period_end").(string))
+	budgetTimePeriodEnd, err := timePeriodTimestampFromString(d.Get("time_period_end").(string))
 
 	if err != nil {
 		return nil, err
@@ -823,4 +953,40 @@ func suppressEquivalentBudgetLimitAmount(k, old, new string, d *schema.ResourceD
 	}
 
 	return d1.Equal(d2)
+}
+
+const (
+	timePeriodLayout = "2006-01-02_15:04"
+)
+
+func timePeriodTimestampFromString(s string) (*time.Time, error) {
+	if s == "" {
+		return nil, nil
+	}
+
+	ts, err := time.Parse(timePeriodLayout, s)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return aws.Time(ts), nil
+}
+
+func TimePeriodTimestampToString(ts *time.Time) string {
+	if ts == nil {
+		return ""
+	}
+
+	return aws.TimeValue(ts).Format(timePeriodLayout)
+}
+
+func validTimePeriodTimestamp(v interface{}, k string) (ws []string, errors []error) {
+	_, err := time.Parse(timePeriodLayout, v.(string))
+
+	if err != nil {
+		errors = append(errors, fmt.Errorf("%q cannot be parsed as %q: %w", k, timePeriodLayout, err))
+	}
+
+	return
 }
