@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strconv"
 	"strings"
 	"time"
 
@@ -186,11 +187,13 @@ func ResourceBudget() *schema.Resource {
 				Optional:         true,
 				Computed:         true,
 				DiffSuppressFunc: suppressEquivalentBudgetLimitAmount,
+				ConflictsWith:    []string{"planned_limit"},
 			},
 			"limit_unit": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ConflictsWith: []string{"planned_limit"},
 			},
 			"name": {
 				Type:          schema.TypeString,
@@ -245,6 +248,29 @@ func ResourceBudget() *schema.Resource {
 						},
 					},
 				},
+			},
+			"planned_limit": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"amount": {
+							Type:             schema.TypeString,
+							Required:         true,
+							DiffSuppressFunc: suppressEquivalentBudgetLimitAmount,
+						},
+						"start_time": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validTimePeriodTimestamp,
+						},
+						"unit": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+					},
+				},
+				ConflictsWith: []string{"limit_amount", "limit_unit"},
 			},
 			"time_period_end": {
 				Type:         schema.TypeString,
@@ -359,6 +385,10 @@ func resourceBudgetRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 	d.Set("name", budget.BudgetName)
 	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(budget.BudgetName)))
+
+	if err := d.Set("planned_limit", convertPlannedBudgetLimitsToSet(budget.PlannedBudgetLimits)); err != nil {
+		return diag.Errorf("setting planned_limit: %s", err)
+	}
 
 	if budget.TimePeriod != nil {
 		d.Set("time_period_end", TimePeriodTimestampToString(budget.TimePeriod.End))
@@ -759,6 +789,36 @@ func convertCostFiltersToStringMap(costFilters map[string][]*string) map[string]
 	return convertedCostFilters
 }
 
+func convertPlannedBudgetLimitsToSet(plannedBudgetLimits map[string]*budgets.Spend) []interface{} {
+	if plannedBudgetLimits == nil {
+		return nil
+	}
+
+	convertedPlannedBudgetLimits := make([]interface{}, len(plannedBudgetLimits))
+	i := 0
+
+	for k, v := range plannedBudgetLimits {
+		if v == nil {
+			return nil
+		}
+
+		startTime, err := TimePeriodSecondsToString(k)
+		if err != nil {
+			return nil
+		}
+
+		convertedPlannedBudgetLimit := make(map[string]string)
+		convertedPlannedBudgetLimit["amount"] = aws.StringValue(v.Amount)
+		convertedPlannedBudgetLimit["start_time"] = startTime
+		convertedPlannedBudgetLimit["unit"] = aws.StringValue(v.Unit)
+
+		convertedPlannedBudgetLimits[i] = convertedPlannedBudgetLimit
+		i++
+	}
+
+	return convertedPlannedBudgetLimits
+}
+
 func expandBudgetUnmarshal(d *schema.ResourceData) (*budgets.Budget, error) {
 	budgetName := d.Get("name").(string)
 	budgetType := d.Get("budget_type").(string)
@@ -806,13 +866,24 @@ func expandBudgetUnmarshal(d *schema.ResourceData) (*budgets.Budget, error) {
 	if v, ok := d.GetOk("auto_adjust_data"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		budget.AutoAdjustData = expandAutoAdjustData(v.([]interface{})[0].(map[string]interface{}))
 	} else {
-		spendAmountValue, spendLimitOk := d.GetOk("limit_amount")
-		spendUnitValue, spendUnitOk := d.GetOk("limit_unit")
+		if plannedBudgetLimitsRaw, ok := d.GetOk("planned_limit"); ok {
+			plannedBudgetLimitsRaw := plannedBudgetLimitsRaw.(*schema.Set).List()
 
-		if spendUnitOk && spendLimitOk {
-			budget.BudgetLimit = &budgets.Spend{
-				Amount: aws.String(spendAmountValue.(string)),
-				Unit:   aws.String(spendUnitValue.(string)),
+			plannedBudgetLimits, err := expandPlannedBudgetLimitsUnmarshal(plannedBudgetLimitsRaw)
+			if err != nil {
+				return nil, err
+			}
+
+			budget.PlannedBudgetLimits = plannedBudgetLimits
+		} else {
+			spendAmountValue, spendLimitOk := d.GetOk("limit_amount")
+			spendUnitValue, spendUnitOk := d.GetOk("limit_unit")
+
+			if spendUnitOk && spendLimitOk {
+				budget.BudgetLimit = &budgets.Spend{
+					Amount: aws.String(spendAmountValue.(string)),
+					Unit:   aws.String(spendUnitValue.(string)),
+				}
 			}
 		}
 	}
@@ -902,6 +973,29 @@ func expandCostTypes(tfMap map[string]interface{}) *budgets.CostTypes {
 	return apiObject
 }
 
+func expandPlannedBudgetLimitsUnmarshal(plannedBudgetLimitsRaw []interface{}) (map[string]*budgets.Spend, error) {
+	plannedBudgetLimits := make(map[string]*budgets.Spend, len(plannedBudgetLimitsRaw))
+
+	for _, plannedBudgetLimit := range plannedBudgetLimitsRaw {
+		plannedBudgetLimit := plannedBudgetLimit.(map[string]interface{})
+
+		key, err := TimePeriodSecondsFromString(plannedBudgetLimit["start_time"].(string))
+		if err != nil {
+			return nil, err
+		}
+
+		amount := plannedBudgetLimit["amount"].(string)
+		unit := plannedBudgetLimit["unit"].(string)
+
+		plannedBudgetLimits[key] = &budgets.Spend{
+			Amount: aws.String(amount),
+			Unit:   aws.String(unit),
+		}
+	}
+
+	return plannedBudgetLimits, nil
+}
+
 func expandBudgetNotificationsUnmarshal(notificationsRaw []interface{}) ([]*budgets.Notification, [][]*budgets.Subscriber) {
 	notifications := make([]*budgets.Notification, len(notificationsRaw))
 	subscribersForNotifications := make([][]*budgets.Subscriber, len(notificationsRaw))
@@ -953,6 +1047,31 @@ func suppressEquivalentBudgetLimitAmount(k, old, new string, d *schema.ResourceD
 	}
 
 	return d1.Equal(d2)
+}
+
+func TimePeriodSecondsFromString(s string) (string, error) {
+	if s == "" {
+		return "", nil
+	}
+
+	ts, err := time.Parse(timePeriodLayout, s)
+
+	if err != nil {
+		return "", err
+	}
+
+	return strconv.FormatInt(aws.Time(ts).Unix(), 10), nil
+}
+
+func TimePeriodSecondsToString(s string) (string, error) {
+	startTime, err := strconv.ParseInt(s, 10, 64)
+	if err != nil {
+		return "", err
+	}
+
+	startTime = startTime * 1000
+
+	return aws.SecondsTimeValue(&startTime).UTC().Format(timePeriodLayout), nil
 }
 
 const (
