@@ -1,6 +1,7 @@
 package budgets_test
 
 import (
+	"context"
 	"fmt"
 	"strings"
 	"testing"
@@ -449,7 +450,7 @@ func testAccBudgetExists(resourceName string, v *budgets.Budget) resource.TestCh
 			return err
 		}
 
-		output, err := tfbudgets.FindBudgetByAccountIDAndBudgetName(conn, accountID, budgetName)
+		output, err := tfbudgets.FindBudgetByTwoPartKey(context.Background(), conn, accountID, budgetName)
 
 		if err != nil {
 			return err
@@ -475,7 +476,7 @@ func testAccBudgetDestroy(s *terraform.State) error {
 			return err
 		}
 
-		_, err = tfbudgets.FindBudgetByAccountIDAndBudgetName(conn, accountID, budgetName)
+		_, err = tfbudgets.FindBudgetByTwoPartKey(context.Background(), conn, accountID, budgetName)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -485,7 +486,7 @@ func testAccBudgetDestroy(s *terraform.State) error {
 			return err
 		}
 
-		return fmt.Errorf("Budget Action %s still exists", rs.Primary.ID)
+		return fmt.Errorf("Budget %s still exists", rs.Primary.ID)
 	}
 
 	return nil
