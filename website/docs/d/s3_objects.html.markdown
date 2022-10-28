@@ -24,7 +24,7 @@ data "aws_s3_objects" "my_objects" {
 data "aws_s3_object" "object_info" {
   count  = length(data.aws_s3_objects.my_objects.keys)
   key    = element(data.aws_s3_objects.my_objects.keys, count.index)
-  bucket = data.aws_s3_objects.my_objects.bucket
+  bucket = data.aws_s3_objects.my_objects.id
 }
 ```
 

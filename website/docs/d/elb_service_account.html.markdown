@@ -54,7 +54,7 @@ resource "aws_elb" "bar" {
   availability_zones = ["us-west-2a"]
 
   access_logs {
-    bucket   = aws_s3_bucket.elb_logs.bucket
+    bucket   = aws_s3_bucket.elb_logs.id
     interval = 5
   }
 

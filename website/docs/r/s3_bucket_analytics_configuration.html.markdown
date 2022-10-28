@@ -16,7 +16,7 @@ Provides a S3 bucket [analytics configuration](https://docs.aws.amazon.com/Amazo
 
 ```terraform
 resource "aws_s3_bucket_analytics_configuration" "example-entire-bucket" {
-  bucket = aws_s3_bucket.example.bucket
+  bucket = aws_s3_bucket.example.id
   name   = "EntireBucket"
 
   storage_class_analysis {
@@ -43,7 +43,7 @@ resource "aws_s3_bucket" "analytics" {
 
 ```terraform
 resource "aws_s3_bucket_analytics_configuration" "example-filtered" {
-  bucket = aws_s3_bucket.example.bucket
+  bucket = aws_s3_bucket.example.id
   name   = "ImportantBlueDocuments"
 
   filter {

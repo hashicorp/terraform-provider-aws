@@ -23,7 +23,7 @@ resource "aws_s3_bucket" "example" {
 }
 
 resource "aws_s3_object" "example" {
-  bucket = aws_s3_bucket.example.bucket
+  bucket = aws_s3_bucket.example.id
   key    = "example-flink-application"
   source = "flink-app.jar"
 }
@@ -221,7 +221,7 @@ resource "aws_s3_bucket" "example" {
 }
 
 resource "aws_s3_object" "example" {
-  bucket = aws_s3_bucket.example.bucket
+  bucket = aws_s3_bucket.example.id
   key    = "example-flink-application"
   source = "flink-app.jar"
 }
