@@ -3,6 +3,9 @@ package lightsail
 const (
 	ResCertificate                       = "Certificate"
 	ResDatabase                          = "Database"
+	ResDisk                              = "Disk"
+	ResDiskAttachment                    = "Disk Attachment"
+	ResInstance                          = "Instance"
 	ResTags                              = "Tags"
 	ResDomainEntry                       = "Domain Entry"
 	ResLoadBalancer                      = "Load Balancer"
