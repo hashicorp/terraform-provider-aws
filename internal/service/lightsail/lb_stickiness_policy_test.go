@@ -187,7 +187,7 @@ resource "aws_lightsail_lb" "test" {
   instance_port     = "80"
 }
 resource "aws_lightsail_lb_stickiness_policy" "test" {
-  enabled = %[2]s
+  enabled         = %[2]s
   cookie_duration = %[3]s
   lb_name         = aws_lightsail_lb.test.name
 }
