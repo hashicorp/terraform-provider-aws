@@ -775,9 +775,9 @@ resource "aws_budgets_budget" "test" {
 func testAccBudgetConfig_plannedLimits(rName, config string) string {
 	return fmt.Sprintf(`
 resource "aws_budgets_budget" "test" {
-  name         = %[1]q
-  budget_type  = "COST"
-  time_unit    = "MONTHLY"
+  name        = %[1]q
+  budget_type = "COST"
+  time_unit   = "MONTHLY"
   %[2]s
 }
 `, rName, config)
@@ -786,9 +786,9 @@ resource "aws_budgets_budget" "test" {
 func testAccBudgetConfig_plannedLimitsUpdated(rName, config string) string {
 	return fmt.Sprintf(`
 resource "aws_budgets_budget" "test" {
-  name         = %[1]q
-  budget_type  = "COST"
-  time_unit    = "MONTHLY"
+  name        = %[1]q
+  budget_type = "COST"
+  time_unit   = "MONTHLY"
   %[2]s
 }
 `, rName, config)
