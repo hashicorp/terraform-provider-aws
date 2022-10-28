@@ -3,12 +3,12 @@ subcategory: "Lightsail"
 layout: "aws"
 page_title: "AWS: aws_lightsail_lb_stickiness_policy"
 description: |-
-  Enables and configures Session Stickiness for a Lightsail Load Balancer
+  Configures Session Stickiness for a Lightsail Load Balancer
 ---
 
 # Resource: aws_lightsail_lb_stickiness_policy
 
-Enables and configures Session Stickiness for a Lightsail Load Balancer.
+Configures Session Stickiness for a Lightsail Load Balancer.
 
 ## Example Usage
 
@@ -25,6 +25,7 @@ resource "aws_lightsail_lb" "test" {
 resource "aws_lightsail_lb_stickiness_policy" "test" {
   lb_name         = aws_lightsail_lb.test.name
   cookie_duration = 900
+  enabled         = true
 }
 ```
 
@@ -34,6 +35,7 @@ The following arguments are supported:
 
 * `lb_name` - (Required) The name of the load balancer to which you want to enable session stickiness.
 * `cookie_duration` - (Required) The cookie duration in seconds. This determines the length of the session stickiness.
+* `enabled` - (Required) - The Session Stickiness state of the load balancer. `true` to activate session stickiness or `false` to deactivate session stickiness.
 
 ## Attributes Reference
 
