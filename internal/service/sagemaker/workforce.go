@@ -146,6 +146,35 @@ func ResourceWorkforce() *schema.Resource {
 					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9]([a-zA-Z0-9\-])*$`), "Valid characters are a-z, A-Z, 0-9, and - (hyphen)."),
 				),
 			},
+			"workforce_vpc_config": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"security_group_ids": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							MaxItems: 5,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+						"subnets": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							MaxItems: 16,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+						"vpc_endpoint_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"vpc_id": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -170,6 +199,10 @@ func resourceWorkforceCreate(d *schema.ResourceData, meta interface{}) error {
 		input.SourceIpConfig = expandWorkforceSourceIPConfig(v.([]interface{}))
 	}
 
+	if v, ok := d.GetOk("workforce_vpc_config"); ok {
+		input.WorkforceVpcConfig = expandWorkforceVpcConfig(v.([]interface{}))
+	}
+
 	log.Printf("[DEBUG] Creating SageMaker Workforce: %s", input)
 	_, err := conn.CreateWorkforce(input)
 
@@ -178,6 +211,10 @@ func resourceWorkforceCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.SetId(name)
+
+	if _, err := WaitWorkforceActive(conn, name); err != nil {
+		return fmt.Errorf("waiting for SageMaker Workfoce (%s) to be created: %w", d.Id(), err)
+	}
 
 	return resourceWorkforceRead(d, meta)
 }
@@ -215,6 +252,10 @@ func resourceWorkforceRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("setting source_ip_config: %w", err)
 	}
 
+	if err := d.Set("workforce_vpc_config", flattenWorkforceVpcConfig(workforce.WorkforceVpcConfig)); err != nil {
+		return fmt.Errorf("setting workforce_vpc_config: %w", err)
+	}
+
 	return nil
 }
 
@@ -233,11 +274,19 @@ func resourceWorkforceUpdate(d *schema.ResourceData, meta interface{}) error {
 		input.OidcConfig = expandWorkforceOIDCConfig(d.Get("oidc_config").([]interface{}))
 	}
 
+	if d.HasChange("workforce_vpc_config") {
+		input.WorkforceVpcConfig = expandWorkforceVpcConfig(d.Get("workforce_vpc_config").([]interface{}))
+	}
+
 	log.Printf("[DEBUG] Updating SageMaker Workforce: %s", input)
 	_, err := conn.UpdateWorkforce(input)
 
 	if err != nil {
 		return fmt.Errorf("updating SageMaker Workforce (%s): %w", d.Id(), err)
+	}
+
+	if _, err := WaitWorkforceActive(conn, d.Id()); err != nil {
+		return fmt.Errorf("waiting for SageMaker Workfoce (%s) to be updated: %w", d.Id(), err)
 	}
 
 	return resourceWorkforceRead(d, meta)
@@ -257,6 +306,10 @@ func resourceWorkforceDelete(d *schema.ResourceData, meta interface{}) error {
 
 	if err != nil {
 		return fmt.Errorf("deleting SageMaker Workforce (%s): %w", d.Id(), err)
+	}
+
+	if _, err := WaitWorkforceDeleted(conn, d.Id()); err != nil {
+		return fmt.Errorf("waiting for SageMaker Workfoce (%s) to be deleted: %w", d.Id(), err)
 	}
 
 	return nil
@@ -351,6 +404,37 @@ func flattenWorkforceOIDCConfig(config *sagemaker.OidcConfigForResponse, clientS
 		"logout_endpoint":        aws.StringValue(config.LogoutEndpoint),
 		"token_endpoint":         aws.StringValue(config.TokenEndpoint),
 		"user_info_endpoint":     aws.StringValue(config.UserInfoEndpoint),
+	}
+
+	return []map[string]interface{}{m}
+}
+
+func expandWorkforceVpcConfig(l []interface{}) *sagemaker.WorkforceVpcConfigRequest {
+	if len(l) == 0 || l[0] == nil {
+		return &sagemaker.WorkforceVpcConfigRequest{}
+	}
+
+	m := l[0].(map[string]interface{})
+
+	config := &sagemaker.WorkforceVpcConfigRequest{
+		SecurityGroupIds: flex.ExpandStringSet(m["security_group_ids"].(*schema.Set)),
+		Subnets:          flex.ExpandStringSet(m["subnets"].(*schema.Set)),
+		VpcId:            aws.String(m["vpc_id"].(string)),
+	}
+
+	return config
+}
+
+func flattenWorkforceVpcConfig(config *sagemaker.WorkforceVpcConfigResponse) []map[string]interface{} {
+	if config == nil {
+		return []map[string]interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"security_group_ids": flex.FlattenStringSet(config.SecurityGroupIds),
+		"subnets":            flex.FlattenStringSet(config.Subnets),
+		"vpc_endpoint_id":    aws.StringValue(config.VpcEndpointId),
+		"vpc_id":             aws.StringValue(config.VpcId),
 	}
 
 	return []map[string]interface{}{m}

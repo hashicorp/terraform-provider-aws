@@ -39,6 +39,7 @@ func testAccWorkforce_cognitoConfig(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "source_ip_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "source_ip_config.0.cidrs.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "subdomain"),
+					resource.TestCheckResourceAttr(resourceName, "workforce_vpc_config.#", "0"),
 				),
 			},
 			{
@@ -114,6 +115,7 @@ func testAccWorkforce_oidcConfig(t *testing.T) {
 		},
 	})
 }
+
 func testAccWorkforce_sourceIPConfig(t *testing.T) {
 	var workforce sagemaker.Workforce
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -155,6 +157,42 @@ func testAccWorkforce_sourceIPConfig(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "source_ip_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "source_ip_config.0.cidrs.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "source_ip_config.0.cidrs.*", "2.2.2.2/32"),
+				),
+			},
+		},
+	})
+}
+
+func testAccWorkforce_vpc(t *testing.T) {
+	var workforce sagemaker.Workforce
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_workforce.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWorkforceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWorkforceConfig_vpc(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWorkforceExists(resourceName, &workforce),
+					resource.TestCheckResourceAttr(resourceName, "workforce_vpc_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "workforce_vpc_config.0.security_group_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "workforce_vpc_config.0.subnets.#", "1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccWorkforceConfig_vpcRemove(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWorkforceExists(resourceName, &workforce),
+					resource.TestCheckResourceAttr(resourceName, "workforce_vpc_config.#", "0"),
 				),
 			},
 		},
@@ -316,4 +354,94 @@ resource "aws_sagemaker_workforce" "test" {
   }
 }
 `, rName, endpoint)
+}
+
+func testAccWorkforceConfig_vpc(rName string) string {
+	return acctest.ConfigCompose(testAccWorkforceBaseConfig(rName), acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block           = "10.1.0.0/16"
+  enable_dns_hostnames = true
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "test" {
+  cidr_block        = "10.1.1.0/24"
+  availability_zone = data.aws_availability_zones.available.names[0]
+  vpc_id            = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_security_group" "test" {
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_sagemaker_workforce" "test" {
+  workforce_name = %[1]q
+
+  cognito_config {
+    client_id = aws_cognito_user_pool_client.test.id
+    user_pool = aws_cognito_user_pool_domain.test.user_pool_id
+  }
+
+  workforce_vpc_config {
+    security_group_ids = aws_security_group.test.*.id
+    subnets            = [aws_subnet.test.id]
+    vpc_id             = aws_vpc.test.id
+  }
+}
+`, rName))
+}
+
+func testAccWorkforceConfig_vpcRemove(rName string) string {
+	return acctest.ConfigCompose(testAccWorkforceBaseConfig(rName), acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block           = "10.1.0.0/16"
+  enable_dns_hostnames = true
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "test" {
+  cidr_block        = "10.1.1.0/24"
+  availability_zone = data.aws_availability_zones.available.names[0]
+  vpc_id            = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_security_group" "test" {
+  count = 1
+
+  name   = "%[1]s-${count.index}"
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_sagemaker_workforce" "test" {
+  workforce_name = %[1]q
+
+  cognito_config {
+    client_id = aws_cognito_user_pool_client.test.id
+    user_pool = aws_cognito_user_pool_domain.test.user_pool_id
+  }
+}
+`, rName))
 }

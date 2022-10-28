@@ -70,6 +70,7 @@ func TestAccSageMaker_serial(t *testing.T) {
 			"CognitoConfig":  testAccWorkforce_cognitoConfig,
 			"OidcConfig":     testAccWorkforce_oidcConfig,
 			"SourceIpConfig": testAccWorkforce_sourceIPConfig,
+			"VPC":            testAccWorkforce_vpc,
 		},
 		"Workteam": {
 			"disappears":         testAccWorkteam_disappears,
