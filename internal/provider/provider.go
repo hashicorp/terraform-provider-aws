@@ -440,6 +440,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_appconfig_environments":           appconfig.DataSourceEnvironments(),
 
 			"aws_appmesh_mesh":            appmesh.DataSourceMesh(),
+			"aws_appmesh_virtual_node": appmesh.DataSourceVirtualNode(),
 			"aws_appmesh_virtual_service": appmesh.DataSourceVirtualService(),
 
 			"aws_autoscaling_group":    autoscaling.DataSourceGroup(),
