@@ -1,4 +1,10 @@
 ## 4.38.0 (Unreleased)
+
+ENHANCEMENTS:
+
+* resource/aws_budgets_budget: Add `auto_adjust_data` configuration block ([#27474](https://github.com/hashicorp/terraform-provider-aws/issues/27474))
+* resource/aws_budgets_budget: Add `planned_limit` configuration block ([#25766](https://github.com/hashicorp/terraform-provider-aws/issues/25766))
+
 ## 4.37.0 (October 27, 2022)
 
 NOTES:
