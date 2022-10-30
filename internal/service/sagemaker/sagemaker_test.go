@@ -78,6 +78,9 @@ func TestAccSageMaker_serial(t *testing.T) {
 			"OidcConfig":         testAccWorkteam_oidcConfig,
 			"Tags":               testAccWorkteam_tags,
 		},
+		"Servicecatalog": {
+			"basic": testAccServicecatalogPortfolioStatus_basic,
+		},
 	}
 
 	for group, m := range testCases {
