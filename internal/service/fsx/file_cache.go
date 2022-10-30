@@ -50,7 +50,7 @@ func ResourceFileCache() *schema.Resource {
 				Default:  false,
 			},
 			"data_repository_association": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Optional: true,
 				ForceNew: true,
 				MaxItems: 8,
@@ -68,7 +68,7 @@ func ResourceFileCache() *schema.Resource {
 							),
 						},
 						"data_repository_subdirectories": {
-							Type:     schema.TypeList,
+							Type:     schema.TypeSet,
 							Optional: true,
 							MaxItems: 500,
 							Elem: &schema.Schema{
@@ -102,12 +102,12 @@ func ResourceFileCache() *schema.Resource {
 							Computed: true,
 						},
 						"nfs": {
-							Type:     schema.TypeList,
+							Type:     schema.TypeSet,
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"dns_ips": {
-										Type:     schema.TypeList,
+										Type:     schema.TypeSet,
 										Optional: true,
 										MaxItems: 10,
 										Elem: &schema.Schema{
@@ -176,7 +176,7 @@ func ResourceFileCache() *schema.Resource {
 				ValidateFunc: verify.ValidARN,
 			},
 			"lustre_configuration": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -189,7 +189,7 @@ func ResourceFileCache() *schema.Resource {
 							),
 						},
 						"log_configuration": {
-							Type:     schema.TypeList,
+							Type:     schema.TypeSet,
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
@@ -205,7 +205,7 @@ func ResourceFileCache() *schema.Resource {
 							},
 						},
 						"metadata_configuration": {
-							Type:     schema.TypeList,
+							Type:     schema.TypeSet,
 							Required: true,
 							ForceNew: true,
 							MaxItems: 8,
@@ -257,7 +257,7 @@ func ResourceFileCache() *schema.Resource {
 				Computed: true,
 			},
 			"security_group_ids": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Optional: true,
 				ForceNew: true,
 				MaxItems: 50,
@@ -308,17 +308,17 @@ func resourceFileCacheCreate(ctx context.Context, d *schema.ResourceData, meta i
 	if v, ok := d.GetOk("copy_tags_to_data_repository_associations"); ok {
 		input.CopyTagsToDataRepositoryAssociations = aws.Bool(v.(bool))
 	}
-	if v, ok := d.GetOk("data_repository_association"); ok && len(v.([]interface{})) > 0 {
-		input.DataRepositoryAssociations = expandDataRepositoryAssociations(v.([]interface{}))
+	if v, ok := d.GetOk("data_repository_association"); ok && len(v.(*schema.Set).List()) > 0 {
+		input.DataRepositoryAssociations = expandDataRepositoryAssociations(v.(*schema.Set).List())
 	}
 	if v, ok := d.GetOk("kms_key_id"); ok {
 		input.KmsKeyId = aws.String(v.(string))
 	}
-	if v, ok := d.GetOk("lustre_configuration"); ok && len(v.([]interface{})) > 0 {
-		input.LustreConfiguration = expandCreateFileCacheLustreConfiguration(v.([]interface{}))
+	if v, ok := d.GetOk("lustre_configuration"); ok && len(v.(*schema.Set).List()) > 0 {
+		input.LustreConfiguration = expandCreateFileCacheLustreConfiguration(v.(*schema.Set).List())
 	}
 	if v, ok := d.GetOk("security_group_ids"); ok {
-		input.SecurityGroupIds = flex.ExpandStringList(v.([]interface{}))
+		input.SecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
 	}
 	if len(tags) > 0 {
 		input.Tags = Tags(tags.IgnoreAWS())
@@ -556,13 +556,13 @@ func expandDataRepositoryAssociations(l []interface{}) []*fsx.FileCacheDataRepos
 			req.DataRepositoryPath = aws.String(v)
 		}
 		if v, ok := tfMap["data_repository_subdirectories"]; ok {
-			req.DataRepositorySubdirectories = flex.ExpandStringList(v.([]interface{}))
+			req.DataRepositorySubdirectories = flex.ExpandStringSet(v.(*schema.Set))
 		}
 		if v, ok := tfMap["file_cache_path"].(string); ok {
 			req.FileCachePath = aws.String(v)
 		}
-		if v, ok := tfMap["nfs"]; ok && len(v.([]interface{})) > 0 {
-			req.NFS = expandFileCacheNFSConfiguration(v.([]interface{}))
+		if v, ok := tfMap["nfs"]; ok && len(v.(*schema.Set).List()) > 0 {
+			req.NFS = expandFileCacheNFSConfiguration(v.(*schema.Set).List())
 		}
 		dataRepositoryAssociations = append(dataRepositoryAssociations, req)
 	}
@@ -578,7 +578,7 @@ func expandFileCacheNFSConfiguration(l []interface{}) *fsx.FileCacheNFSConfigura
 
 	req := &fsx.FileCacheNFSConfiguration{}
 	if v, ok := data["dns_ips"]; ok {
-		req.DnsIps = flex.ExpandStringList(v.([]interface{}))
+		req.DnsIps = flex.ExpandStringSet(v.(*schema.Set))
 	}
 	if v, ok := data["version"].(string); ok {
 		req.Version = aws.String(v)
@@ -612,8 +612,8 @@ func expandCreateFileCacheLustreConfiguration(l []interface{}) *fsx.CreateFileCa
 	if v, ok := data["deployment_type"].(string); ok {
 		req.DeploymentType = aws.String(v)
 	}
-	if v, ok := data["metadata_configuration"]; ok && len(v.([]interface{})) > 0 {
-		req.MetadataConfiguration = expandFileCacheLustreMetadataConfiguration(v.([]interface{}))
+	if v, ok := data["metadata_configuration"]; ok && len(v.(*schema.Set).List()) > 0 {
+		req.MetadataConfiguration = expandFileCacheLustreMetadataConfiguration(v.(*schema.Set).List())
 	}
 	if v, ok := data["per_unit_storage_throughput"].(int); ok {
 		req.PerUnitStorageThroughput = aws.Int64(int64(v))
