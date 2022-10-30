@@ -197,6 +197,11 @@ func ResourceCluster() *schema.Resource {
 											},
 										},
 									},
+									"storage_mode": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validation.StringInSlice(kafka.StorageMode_Values(), true),
+									},
 								},
 							},
 						},
@@ -1025,6 +1030,10 @@ func expandStorageInfo(tfMap map[string]interface{}) *kafka.StorageInfo {
 		apiObject.EbsStorageInfo = expandEBSStorageInfo(v[0].(map[string]interface{}))
 	}
 
+	if v, ok := tfMap["storage_mode"].(string); ok && v != "" {
+		apiObject.StorageMode = aws.String(v)
+	}
+
 	return apiObject
 }
 
@@ -1416,6 +1425,10 @@ func flattenStorageInfo(apiObject *kafka.StorageInfo) []interface{} {
 
 	if v := apiObject.EbsStorageInfo; v != nil {
 		tfMap["ebs_storage_info"] = flattenEBSStorageInfo(v)
+	}
+
+	if v := apiObject.StorageMode; v != nil {
+		tfMap["storage_mode"] = aws.StringValue(v)
 	}
 
 	return []interface{}{tfMap}
