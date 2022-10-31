@@ -218,6 +218,10 @@ func ResourcePatchBaseline() *schema.Resource {
 	}
 }
 
+const (
+	resNamePatchBaseline = "Patch Baseline"
+)
+
 func resourcePatchBaselineCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SSMConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
