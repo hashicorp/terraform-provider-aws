@@ -27,9 +27,10 @@ func sweepDomains(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 	conn := client.(*conns.AWSClient).SimpleDBConn
+	input := &simpledb.ListDomainsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.ListDomainsPages(&simpledb.ListDomainsInput{}, func(page *simpledb.ListDomainsOutput, lastPage bool) bool {
+	err = conn.ListDomainsPages(input, func(page *simpledb.ListDomainsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
