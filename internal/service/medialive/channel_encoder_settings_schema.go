@@ -16,9 +16,9 @@ func channelEncoderSettingsSchema() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"audio_descriptions": {
+				"audio_description": {
 					Type:     schema.TypeSet,
-					Required: true,
+					Optional: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							"audio_selector_name": {
@@ -491,7 +491,7 @@ func channelEncoderSettingsSchema() *schema.Schema {
 						},
 					},
 				},
-				"output_groups": {
+				"output_group": {
 					Type:     schema.TypeSet,
 					Required: true,
 					Elem: &schema.Resource{
@@ -1152,9 +1152,7 @@ func channelEncoderSettingsSchema() *schema.Schema {
 								Required: true,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"output_settings": func() *schema.Schema {
-											return outputSettingsSchema()
-										}(),
+										"output_settings": outputSettingsSchema(),
 										"audio_description_names": {
 											Type:     schema.TypeSet,
 											Optional: true,
@@ -1206,9 +1204,9 @@ func channelEncoderSettingsSchema() *schema.Schema {
 						},
 					},
 				},
-				"video_descriptions": {
+				"video_description": {
 					Type:     schema.TypeSet,
-					Required: true,
+					Optional: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							"name": {
@@ -1553,19 +1551,20 @@ func outputSettingsSchema() *schema.Schema {
 						Schema: map[string]*schema.Schema{
 							"container_settings": {
 								Type:     schema.TypeList,
-								Required: true,
+								Optional: true,
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
 										"m2ts_settings": m2tsSettingsSchema(),
 										// This is in the API and Go SDK docs, but has no exported fields.
-										// "raw_settings": {
-										// 	Type:     schema.TypeList,
-										// 	MaxItems: 1,
-										// 	Elem: &schema.Resource{
-										// 		Schema: map[string]*schema.Schema{},
-										// 	},
-										// },
+										"raw_settings": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{},
+											},
+										},
 									},
 								},
 							},
@@ -2273,17 +2272,17 @@ func expandChannelEncoderSettings(tfList []interface{}) *types.EncoderSettings {
 	m := tfList[0].(map[string]interface{})
 
 	var settings types.EncoderSettings
-	if v, ok := m["audio_descriptions"].([]interface{}); ok && len(v) > 0 {
-		settings.AudioDescriptions = expandChannelEncoderSettingsAudioDescriptions(v)
+	if v, ok := m["audio_description"].(*schema.Set); ok && v.Len() > 0 {
+		settings.AudioDescriptions = expandChannelEncoderSettingsAudioDescriptions(v.List())
 	}
-	if v, ok := m["output_groups"].([]interface{}); ok && len(v) > 0 {
-		settings.OutputGroups = expandChannelEncoderSettingsOutputGroups(v)
+	if v, ok := m["output_group"].(*schema.Set); ok && v.Len() > 0 {
+		settings.OutputGroups = expandChannelEncoderSettingsOutputGroups(v.List())
 	}
 	if v, ok := m["timecode_config"].([]interface{}); ok && len(v) > 0 {
 		settings.TimecodeConfig = expandChannelEncoderSettingsTimecodeConfig(v)
 	}
-	if v, ok := m["video_descriptions"].([]interface{}); ok && len(v) > 0 {
-		settings.VideoDescriptions = expandChannelEncoderSettingsVideoDescriptions(v)
+	if v, ok := m["video_description"].(*schema.Set); ok && v.Len() > 0 {
+		settings.VideoDescriptions = expandChannelEncoderSettingsVideoDescriptions(v.List())
 	}
 	if v, ok := m["avail_blanking"].([]interface{}); ok && len(v) > 0 {
 		settings.AvailBlanking = nil // TODO expandChannelEncoderSettingsAvailBlanking(v)
@@ -2380,7 +2379,7 @@ func expandChannelEncoderSettingsOutputGroups(tfList []interface{}) []types.Outp
 
 		var o types.OutputGroup
 		if v, ok := m["output_group_settings"].([]interface{}); ok && len(v) > 0 {
-			o.OutputGroupSettings = nil // TODO expandChannelEncoderSettingsOutputGroupsOutputGroupSettings(v)
+			o.OutputGroupSettings = expandChannelEncoderSettingsOutputGroupsOutputGroupSettings(v)
 		}
 		if v, ok := m["output"].([]interface{}); ok && len(v) > 0 {
 			o.Outputs = expandChannelEncoderSettingsOutputGroupsOutputs(v)
@@ -2395,6 +2394,47 @@ func expandChannelEncoderSettingsOutputGroups(tfList []interface{}) []types.Outp
 	return outputGroups
 }
 
+func expandChannelEncoderSettingsOutputGroupsOutputGroupSettings(tfList []interface{}) *types.OutputGroupSettings {
+	if tfList == nil {
+		return nil
+	}
+
+	m := tfList[0].(map[string]interface{})
+
+	var o types.OutputGroupSettings
+
+	if v, ok := m["archive_group_settings"].([]interface{}); ok && len(v) > 0 {
+		o.ArchiveGroupSettings = expandArchiveGroupSettings(v)
+	}
+
+	// TODO implement rest of output group settings
+
+	return &o
+}
+
+func expandArchiveGroupSettings(tfList []interface{}) *types.ArchiveGroupSettings {
+	if tfList == nil {
+		return nil
+	}
+
+	m := tfList[0].(map[string]interface{})
+
+	var o types.ArchiveGroupSettings
+
+	if v, ok := m["destination"].([]interface{}); ok && len(v) > 0 {
+		o.Destination = func() *types.OutputLocationRef {
+			de := v[0].(map[string]interface{})
+
+			var inner types.OutputLocationRef
+			if v, ok := de["destination_ref_id"].(string); ok && v != "" {
+				inner.DestinationRefId = aws.String(v)
+			}
+			return &inner
+		}()
+	}
+
+	return &o
+}
 func expandChannelEncoderSettingsOutputGroupsOutputs(tfList []interface{}) []types.Output {
 	if tfList == nil {
 		return nil
@@ -2411,22 +2451,22 @@ func expandChannelEncoderSettingsOutputGroupsOutputs(tfList []interface{}) []typ
 		if v, ok := m["output_settings"].([]interface{}); ok && len(v) > 0 {
 			o.OutputSettings = expandOutputsOutputSettings(v)
 		}
-		if v, ok := m["audio_description_names"].([]interface{}); ok && len(v) > 0 {
-			o.AudioDescriptionNames = flex.ExpandStringValueList(v)
+		if v, ok := m["audio_description_names"].(*schema.Set); ok && v.Len() > 0 {
+			o.AudioDescriptionNames = flex.ExpandStringValueSet(v)
 		}
-		if v, ok := m["caption_description_names"].([]interface{}); ok && len(v) > 0 {
-			o.CaptionDescriptionNames = flex.ExpandStringValueList(v)
+		if v, ok := m["caption_description_names"].(*schema.Set); ok && v.Len() > 0 {
+			o.CaptionDescriptionNames = flex.ExpandStringValueSet(v)
 		}
 		if v, ok := m["output_name"].(string); ok && v != "" {
 			o.OutputName = aws.String(v)
 		}
 		if v, ok := m["video_description_name"].(string); ok && v != "" {
-			o.OutputName = aws.String(v)
+			o.VideoDescriptionName = aws.String(v)
 		}
 		outputs = append(outputs, o)
 	}
 
-	return nil
+	return outputs
 }
 
 func expandOutputsOutputSettings(tfList []interface{}) *types.OutputSettings {
@@ -2476,6 +2516,9 @@ func expandOutputsOutputSettingsArchiveSettingsContainerSettings(tfList []interf
 		settings.M2tsSettings = expandM2tsSettings(v)
 	}
 
+	if v, ok := m["raw_settings"].([]interface{}); ok && len(v) > 0 {
+		settings.RawSettings = &types.RawSettings{}
+	}
 	return &settings
 }
 
@@ -2515,7 +2558,7 @@ func expandM2tsSettings(tfList []interface{}) *types.M2tsSettings {
 		s.Bitrate = int32(v)
 	}
 	if v, ok := m["buffer_model"].(string); ok && v != "" {
-		s.AudioBufferModel = types.M2tsAudioBufferModel(v)
+		s.BufferModel = types.M2tsBufferModel(v)
 	}
 	if v, ok := m["cc_descriptor"].(string); ok && v != "" {
 		s.CcDescriptor = types.M2tsCcDescriptor(v)
@@ -2588,6 +2631,54 @@ func expandM2tsSettings(tfList []interface{}) *types.M2tsSettings {
 	}
 	if v, ok := m["pat_interval"].(int); ok {
 		s.PatInterval = int32(v)
+	}
+	if v, ok := m["pcr_control"].(string); ok && v != "" {
+		s.PcrControl = types.M2tsPcrControl(v)
+	}
+	if v, ok := m["pcr_period"].(int); ok {
+		s.PcrPeriod = int32(v)
+	}
+	if v, ok := m["pcr_pid"].(string); ok && v != "" {
+		s.PcrPid = aws.String(v)
+	}
+	if v, ok := m["pmt_interval"].(int); ok {
+		s.PmtInterval = int32(v)
+	}
+	if v, ok := m["pmt_pid"].(string); ok && v != "" {
+		s.PmtPid = aws.String(v)
+	}
+	if v, ok := m["rate_mode"].(string); ok && v != "" {
+		s.RateMode = types.M2tsRateMode(v)
+	}
+	if v, ok := m["scte27_pids"].(string); ok && v != "" {
+		s.Scte27Pids = aws.String(v)
+	}
+	if v, ok := m["scte35_control"].(string); ok && v != "" {
+		s.Scte35Control = types.M2tsScte35Control(v)
+	}
+	if v, ok := m["scte35_pid"].(string); ok && v != "" {
+		s.Scte35Pid = aws.String(v)
+	}
+	if v, ok := m["segmentation_markers"].(string); ok && v != "" {
+		s.SegmentationMarkers = types.M2tsSegmentationMarkers(v)
+	}
+	if v, ok := m["segmentation_style"].(string); ok && v != "" {
+		s.SegmentationStyle = types.M2tsSegmentationStyle(v)
+	}
+	if v, ok := m["segmentation_time"].(float32); ok {
+		s.SegmentationTime = float64(v)
+	}
+	if v, ok := m["time_metadata_behavior"].(string); ok && v != "" {
+		s.TimedMetadataBehavior = types.M2tsTimedMetadataBehavior(v)
+	}
+	if v, ok := m["time_metadata_pid"].(string); ok && v != "" {
+		s.TimedMetadataPid = aws.String(v)
+	}
+	if v, ok := m["transport_stream_id"].(int); ok {
+		s.TransportStreamId = int32(v)
+	}
+	if v, ok := m["video_pid"].(string); ok && v != "" {
+		s.TimedMetadataPid = aws.String(v)
 	}
 
 	return &s
@@ -2701,10 +2792,10 @@ func flattenChannelEncoderSettings(apiObject *types.EncoderSettings) []interface
 	}
 
 	m := map[string]interface{}{
-		"audio_descriptions": flattenAudioDescriptions(apiObject.AudioDescriptions),
-		"output_groups":      nil, // TODO
-		"timecode_config":    nil, // TODO
-		"video_descriptions": nil, // TODO
+		"audio_description": flattenAudioDescriptions(apiObject.AudioDescriptions),
+		"output_group":      nil, // TODO
+		"timecode_config":   nil, // TODO
+		"video_description": nil, // TODO
 		// TODO avail_blanking
 		// TODO avail_configuration
 		// TODO blackout_slate
@@ -2727,12 +2818,12 @@ func flattenAudioDescriptions(od []types.AudioDescription) []interface{} {
 
 	for _, v := range od {
 		m := map[string]interface{}{
-			"audio_selector_name":      aws.ToString(v.AudioSelectorName),
-			"name":                     aws.ToString(v.Name),
-			"audio_normalization":      flattenAudioNormalization(v.AudioNormalizationSettings),
-			"audio_type":               v.AudioType,
-			"audio_type_control":       v.AudioTypeControl,
-			"audio_watermark_settings": flattenAudioWatermarkSettings(v.AudioWatermarkingSettings),
+			"audio_selector_name":          aws.ToString(v.AudioSelectorName),
+			"name":                         aws.ToString(v.Name),
+			"audio_normalization_settings": flattenAudioNormalization(v.AudioNormalizationSettings),
+			"audio_type":                   v.AudioType,
+			"audio_type_control":           v.AudioTypeControl,
+			"audio_watermark_settings":     flattenAudioWatermarkSettings(v.AudioWatermarkingSettings),
 		}
 
 		ml = append(ml, m)

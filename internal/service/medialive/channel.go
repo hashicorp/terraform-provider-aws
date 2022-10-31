@@ -47,7 +47,7 @@ func ResourceChannel() *schema.Resource {
 			},
 			"cdi_input_specification": {
 				Type:     schema.TypeList,
-				Required: true,
+				Optional: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -64,7 +64,7 @@ func ResourceChannel() *schema.Resource {
 				Required:         true,
 				ValidateDiagFunc: enum.Validate[types.ChannelClass](),
 			},
-			"destinations": {
+			"destination": {
 				Type:     schema.TypeSet,
 				Required: true,
 				MinItems: 1,
@@ -110,19 +110,19 @@ func ResourceChannel() *schema.Resource {
 								Schema: map[string]*schema.Schema{
 									"password_param": {
 										Type:     schema.TypeString,
-										Required: true,
+										Optional: true,
 									},
 									"stream_name": {
 										Type:     schema.TypeString,
-										Required: true,
+										Optional: true,
 									},
 									"url": {
 										Type:     schema.TypeString,
-										Required: true,
+										Optional: true,
 									},
 									"username": {
 										Type:     schema.TypeString,
-										Required: true,
+										Optional: true,
 									},
 								},
 							},
@@ -130,9 +130,7 @@ func ResourceChannel() *schema.Resource {
 					},
 				},
 			},
-			"encoder_settings": func() *schema.Schema {
-				return channelEncoderSettingsSchema()
-			}(),
+			"encoder_settings": channelEncoderSettingsSchema(),
 			"input_attachment": {
 				Type:     schema.TypeSet,
 				Required: true,
@@ -226,13 +224,13 @@ func ResourceChannel() *schema.Resource {
 						},
 						"input_attachment_name": {
 							Type:     schema.TypeString,
-							Optional: true,
+							Required: true,
 						},
 						"input_id": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"input_settings": {
+						"input_setting": {
 							Type:     schema.TypeList,
 							Optional: true,
 							MaxItems: 1,
@@ -624,6 +622,7 @@ func ResourceChannel() *schema.Resource {
 			"maintenance": {
 				Type:     schema.TypeList,
 				Optional: true,
+				Computed: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -698,17 +697,26 @@ func resourceChannelCreate(ctx context.Context, d *schema.ResourceData, meta int
 	if v, ok := d.GetOk("cdi_input_specification"); ok && len(v.([]interface{})) > 0 {
 		in.CdiInputSpecification = expandChannelCdiInputSpecification(v.([]interface{}))
 	}
-	if v, ok := d.GetOk("destinations"); ok && len(v.([]interface{})) > 0 {
-		in.Destinations = expandChannelDestinations(v.([]interface{}))
+	if v, ok := d.GetOk("channel_class"); ok && v.(string) != "" {
+		in.ChannelClass = types.ChannelClass(v.(string))
+	}
+	if v, ok := d.GetOk("destination"); ok && v.(*schema.Set).Len() > 0 {
+		in.Destinations = expandChannelDestinations(v.(*schema.Set).List())
 	}
 	if v, ok := d.GetOk("encoder_settings"); ok && len(v.([]interface{})) > 0 {
 		in.EncoderSettings = expandChannelEncoderSettings(v.([]interface{}))
+	}
+	if v, ok := d.GetOk("input_attachment"); ok && v.(*schema.Set).Len() > 0 {
+		in.InputAttachments = expandChannelInputAttachments(v.(*schema.Set).List())
 	}
 	if v, ok := d.GetOk("input_specification"); ok && len(v.([]interface{})) > 0 {
 		in.InputSpecification = expandChannelInputSpecification(v.([]interface{}))
 	}
 	if v, ok := d.GetOk("maintenance"); ok && len(v.([]interface{})) > 0 {
 		in.Maintenance = expandChannelMaintenanceCreate(v.([]interface{}))
+	}
+	if v, ok := d.GetOk("role_arn"); ok && v.(string) != "" {
+		in.RoleArn = aws.String(v.(string))
 	}
 	if v, ok := d.GetOk("vpc"); ok && len(v.([]interface{})) > 0 {
 		in.Vpc = expandChannelVPC(v.([]interface{}))
@@ -756,11 +764,13 @@ func resourceChannelRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 	d.Set("arn", out.Arn)
 	d.Set("name", out.Name)
+	d.Set("channel_class", out.ChannelClass)
+	d.Set("log_level", out.LogLevel)
 
 	if err := d.Set("cdi_input_specification", flattenChannelCdiInputSpecification(out.CdiInputSpecification)); err != nil {
 		return create.DiagError(names.MediaLive, create.ErrActionSetting, ResNameChannel, d.Id(), err)
 	}
-	if err := d.Set("destinations", flattenChannelDestinations(out.Destinations)); err != nil {
+	if err := d.Set("destination", flattenChannelDestinations(out.Destinations)); err != nil {
 		return create.DiagError(names.MediaLive, create.ErrActionSetting, ResNameChannel, d.Id(), err)
 	}
 	if err := d.Set("encoder_settings", flattenChannelEncoderSettings(out.EncoderSettings)); err != nil {
@@ -808,7 +818,7 @@ func resourceChannelUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	if d.HasChanges(
 		"name",
 		"cdi_input_specification",
-		"destinations",
+		"destination",
 		"encoder_settings",
 		"input_specification",
 		"maintenance",
@@ -819,7 +829,7 @@ func resourceChannelUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		if v, ok := d.GetOk("cdi_input_specification"); ok {
 			in.CdiInputSpecification = expandChannelCdiInputSpecification(v.([]interface{}))
 		}
-		if v, ok := d.GetOk("destinations"); ok {
+		if v, ok := d.GetOk("destination"); ok {
 			in.Destinations = expandChannelDestinations(v.([]interface{}))
 		}
 		if v, ok := d.GetOk("encoder_settings"); ok {
@@ -966,6 +976,65 @@ func FindChannelByID(ctx context.Context, conn *medialive.Client, id string) (*m
 	return out, nil
 }
 
+func expandChannelInputAttachments(tfList []interface{}) []types.InputAttachment {
+	var attachments []types.InputAttachment
+	for _, v := range tfList {
+		m, ok := v.(map[string]interface{})
+		if !ok {
+			continue
+		}
+
+		var a types.InputAttachment
+		if v, ok := m["input_attachment_name"].(string); ok {
+			a.InputAttachmentName = aws.String(v)
+		}
+		if v, ok := m["input_id"].(string); ok {
+			a.InputId = aws.String(v)
+		}
+		if v, ok := m["input_setting"].([]interface{}); ok && len(v) > 0 {
+			a.InputSettings = expandInputAttachmentInputSettings(v)
+		}
+
+		attachments = append(attachments, a)
+	}
+
+	return attachments
+}
+
+func expandInputAttachmentInputSettings(tfList []interface{}) *types.InputSettings {
+	if tfList == nil {
+		return nil
+	}
+
+	m := tfList[0].(map[string]interface{})
+
+	var is types.InputSettings
+	if v, ok := m["audio_selector"].([]interface{}); ok && len(v) > 0 {
+		is.AudioSelectors = expandInputAttachmentInputSettingsAudioSelectors(v)
+	}
+	return &is
+}
+
+func expandInputAttachmentInputSettingsAudioSelectors(tfList []interface{}) []types.AudioSelector {
+	var as []types.AudioSelector
+	for _, v := range tfList {
+		m, ok := v.(map[string]interface{})
+		if !ok {
+			continue
+		}
+
+		var a types.AudioSelector
+		if v, ok := m["name"].(string); ok && v != "" {
+			a.Name = aws.String(v)
+		}
+		// TODO selectorSettings
+
+		as = append(as, a)
+	}
+
+	return as
+}
+
 func expandChannelCdiInputSpecification(tfList []interface{}) *types.CdiInputSpecification {
 	if tfList == nil {
 		return nil
@@ -1008,14 +1077,14 @@ func expandChannelDestinations(tfList []interface{}) []types.OutputDestination {
 		if v, ok := m["id"].(string); ok {
 			d.Id = aws.String(v)
 		}
-		if v, ok := m["media_package_settings"].([]interface{}); ok {
+		if v, ok := m["media_package_settings"].([]interface{}); ok && len(v) > 0 {
 			d.MediaPackageSettings = expandChannelDestinationsMediaPackageSettings(v)
 		}
-		if v, ok := m["multiplex_settings"].([]interface{}); ok {
+		if v, ok := m["multiplex_settings"].([]interface{}); ok && len(v) > 0 {
 			d.MultiplexSettings = expandChannelDestinationsMultiplexSettings(v)
 		}
-		if v, ok := m["settings"].([]interface{}); ok {
-			d.Settings = expandChannelDestinationsSettings(v)
+		if v, ok := m["settings"].(*schema.Set); ok && v.Len() > 0 {
+			d.Settings = expandChannelDestinationsSettings(v.List())
 		}
 
 		destinations = append(destinations, d)
