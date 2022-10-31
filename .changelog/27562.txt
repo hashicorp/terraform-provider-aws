@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_transfer_user: Fix bug preventing removal of all `home_directory_mappings` due to empty list validation error.
+```

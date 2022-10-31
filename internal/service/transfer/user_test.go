@@ -856,9 +856,9 @@ POLICY
 }
 
 resource "aws_transfer_user" "test" {
-  role                = aws_iam_role.test.arn
-  server_id           = aws_transfer_server.test.id
-  user_name           = "tftestuser"
+  role      = aws_iam_role.test.arn
+  server_id = aws_transfer_server.test.id
+  user_name = "tftestuser"
 }
 `, rName))
 }
