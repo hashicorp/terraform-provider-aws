@@ -31,6 +31,7 @@ func ResourceAMICopy() *schema.Resource {
 			Delete: schema.DefaultTimeout(amiDeleteTimeout),
 		},
 
+		// Keep in sync with aws_ami's schema.
 		Schema: map[string]*schema.Schema{
 			"architecture": {
 				Type:     schema.TypeString,
@@ -166,6 +167,10 @@ func ResourceAMICopy() *schema.Resource {
 				Computed: true,
 			},
 			"image_type": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"imds_support": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
