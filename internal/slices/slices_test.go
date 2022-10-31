@@ -1,6 +1,7 @@
 package slices
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -78,6 +79,40 @@ func TestRemoveAll(t *testing.T) {
 		name, test := name, test
 		t.Run(name, func(t *testing.T) {
 			got := RemoveAll(test.input, "one")
+
+			if diff := cmp.Diff(got, test.expected); diff != "" {
+				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+			}
+		})
+	}
+}
+
+func TestApplyToAll(t *testing.T) {
+	t.Parallel()
+
+	type testCase struct {
+		input    []string
+		expected []string
+	}
+	tests := map[string]testCase{
+		"three elements": {
+			input:    []string{"one", "two", "3"},
+			expected: []string{"ONE", "TWO", "3"},
+		},
+		"one element": {
+			input:    []string{"abcdEFGH"},
+			expected: []string{"ABCDEFGH"},
+		},
+		"zero elements": {
+			input:    []string{},
+			expected: []string{},
+		},
+	}
+
+	for name, test := range tests {
+		name, test := name, test
+		t.Run(name, func(t *testing.T) {
+			got := ApplyToAll(test.input, strings.ToUpper)
 
 			if diff := cmp.Diff(got, test.expected); diff != "" {
 				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
