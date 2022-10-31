@@ -32,6 +32,8 @@ const (
 	FlowDefinitionDeletedTimeout      = 2 * time.Minute
 	ProjectCreatedTimeout             = 15 * time.Minute
 	ProjectDeletedTimeout             = 15 * time.Minute
+	WorkforceActiveTimeout            = 10 * time.Minute
+	WorkforceDeletedTimeout           = 10 * time.Minute
 )
 
 // WaitNotebookInstanceInService waits for a NotebookInstance to return InService
@@ -500,6 +502,48 @@ func WaitProjectUpdated(conn *sagemaker.SageMaker, name string) (*sagemaker.Desc
 
 	if output, ok := outputRaw.(*sagemaker.DescribeProjectOutput); ok {
 		if status, reason := aws.StringValue(output.ProjectStatus), aws.StringValue(output.ServiceCatalogProvisionedProductDetails.ProvisionedProductStatusMessage); status == sagemaker.ProjectStatusUpdateFailed && reason != "" {
+			tfresource.SetLastError(err, errors.New(reason))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func WaitWorkforceActive(conn *sagemaker.SageMaker, name string) (*sagemaker.Workforce, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{sagemaker.WorkforceStatusInitializing, sagemaker.WorkforceStatusUpdating},
+		Target:  []string{sagemaker.WorkforceStatusActive},
+		Refresh: StatusWorkforce(conn, name),
+		Timeout: WorkforceActiveTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*sagemaker.Workforce); ok {
+		if status, reason := aws.StringValue(output.Status), aws.StringValue(output.FailureReason); status == sagemaker.WorkforceStatusFailed && reason != "" {
+			tfresource.SetLastError(err, errors.New(reason))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func WaitWorkforceDeleted(conn *sagemaker.SageMaker, name string) (*sagemaker.Workforce, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{sagemaker.WorkforceStatusDeleting},
+		Target:  []string{},
+		Refresh: StatusWorkforce(conn, name),
+		Timeout: WorkforceDeletedTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*sagemaker.Workforce); ok {
+		if status, reason := aws.StringValue(output.Status), aws.StringValue(output.FailureReason); status == sagemaker.WorkforceStatusFailed && reason != "" {
 			tfresource.SetLastError(err, errors.New(reason))
 		}
 
