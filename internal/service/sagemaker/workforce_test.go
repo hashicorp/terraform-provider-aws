@@ -271,7 +271,7 @@ func testAccCheckWorkforceExists(n string, workforce *sagemaker.Workforce) resou
 	}
 }
 
-func testAccWorkforceBaseConfig(rName string) string {
+func testAccWorkforceConfig_base(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cognito_user_pool" "test" {
   name = %[1]q
@@ -291,7 +291,7 @@ resource "aws_cognito_user_pool_domain" "test" {
 }
 
 func testAccWorkforceConfig_cognito(rName string) string {
-	return testAccWorkforceBaseConfig(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccWorkforceConfig_base(rName), fmt.Sprintf(`
 resource "aws_sagemaker_workforce" "test" {
   workforce_name = %[1]q
 
@@ -300,11 +300,11 @@ resource "aws_sagemaker_workforce" "test" {
     user_pool = aws_cognito_user_pool_domain.test.user_pool_id
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccWorkforceConfig_sourceIP1(rName, cidr1 string) string {
-	return testAccWorkforceBaseConfig(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccWorkforceConfig_base(rName), fmt.Sprintf(`
 resource "aws_sagemaker_workforce" "test" {
   workforce_name = %[1]q
 
@@ -317,11 +317,11 @@ resource "aws_sagemaker_workforce" "test" {
     cidrs = [%[2]q]
   }
 }
-`, rName, cidr1)
+`, rName, cidr1))
 }
 
 func testAccWorkforceConfig_sourceIP2(rName, cidr1, cidr2 string) string {
-	return testAccWorkforceBaseConfig(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccWorkforceConfig_base(rName), fmt.Sprintf(`
 resource "aws_sagemaker_workforce" "test" {
   workforce_name = %[1]q
 
@@ -334,11 +334,11 @@ resource "aws_sagemaker_workforce" "test" {
     cidrs = [%[2]q, %[3]q]
   }
 }
-`, rName, cidr1, cidr2)
+`, rName, cidr1, cidr2))
 }
 
 func testAccWorkforceConfig_oidc(rName, endpoint string) string {
-	return testAccWorkforceBaseConfig(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccWorkforceConfig_base(rName), fmt.Sprintf(`
 resource "aws_sagemaker_workforce" "test" {
   workforce_name = %[1]q
 
@@ -353,30 +353,24 @@ resource "aws_sagemaker_workforce" "test" {
     user_info_endpoint     = %[2]q
   }
 }
-`, rName, endpoint)
+`, rName, endpoint))
+}
+
+func testAccWorkforceConfig_vpcBase(rName string) string {
+	return acctest.ConfigCompose(testAccWorkforceConfig_base(rName), acctest.ConfigVPCWithSubnets(rName, 1), fmt.Sprintf(`
+resource "aws_security_group" "test" {
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName))
 }
 
 func testAccWorkforceConfig_vpc(rName string) string {
-	return acctest.ConfigCompose(testAccWorkforceBaseConfig(rName), acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block           = "10.1.0.0/16"
-  enable_dns_hostnames = true
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test" {
-  cidr_block        = "10.1.1.0/24"
-  availability_zone = data.aws_availability_zones.available.names[0]
-  vpc_id            = aws_vpc.test.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
+	return acctest.ConfigCompose(testAccWorkforceConfig_vpcBase(rName), fmt.Sprintf(`
 resource "aws_security_group" "test" {
   name   = %[1]q
   vpc_id = aws_vpc.test.id
@@ -395,8 +389,8 @@ resource "aws_sagemaker_workforce" "test" {
   }
 
   workforce_vpc_config {
-    security_group_ids = aws_security_group.test.*.id
-    subnets            = [aws_subnet.test.id]
+    security_group_ids = aws_security_group.test.id
+    subnets            = aws_subnet.test[*].id
     vpc_id             = aws_vpc.test.id
   }
 }
@@ -404,37 +398,7 @@ resource "aws_sagemaker_workforce" "test" {
 }
 
 func testAccWorkforceConfig_vpcRemove(rName string) string {
-	return acctest.ConfigCompose(testAccWorkforceBaseConfig(rName), acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block           = "10.1.0.0/16"
-  enable_dns_hostnames = true
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test" {
-  cidr_block        = "10.1.1.0/24"
-  availability_zone = data.aws_availability_zones.available.names[0]
-  vpc_id            = aws_vpc.test.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_security_group" "test" {
-  count = 1
-
-  name   = "%[1]s-${count.index}"
-  vpc_id = aws_vpc.test.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
+	return acctest.ConfigCompose(testAccWorkforceConfig_vpcBase(rName), fmt.Sprintf(`
 resource "aws_sagemaker_workforce" "test" {
   workforce_name = %[1]q
 
