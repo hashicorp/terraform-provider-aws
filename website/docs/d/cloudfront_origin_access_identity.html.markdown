@@ -36,7 +36,7 @@ In addition to all arguments above, the following attributes are exported:
 * `etag` - Current version of the origin access identity's information.
    For example: `E2QWRUHAPOMQZL`.
 * `iam_arn` - Pre-generated ARN for use in S3 bucket policies (see below).
-   Example: `arn:aws:iam::cloudfront:user/CloudFront Origin Access Identity 
+   Example: `arn:aws:iam::cloudfront:user/CloudFront Origin Access Identity
    E2QWRUHAPOMQZL`.
 * `s3_canonical_user_id` - The Amazon S3 canonical user ID for the origin
    access identity, which you use when giving the origin access identity read
