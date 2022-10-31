@@ -38,7 +38,11 @@ func sweepDomains(region string) error {
 		}
 
 		for _, v := range page.DomainInfos {
-			sweepResources = append(sweepResources, sweep.NewSweepFrameworkResource(newResourceDomain, aws.StringValue(v.Name), client))
+			r := ResourceDomain()
+			d := r.Data(nil)
+			d.SetId(aws.StringValue(v.Name))
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 
 		return !lastPage
