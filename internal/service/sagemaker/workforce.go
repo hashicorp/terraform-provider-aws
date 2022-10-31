@@ -200,7 +200,7 @@ func resourceWorkforceCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("workforce_vpc_config"); ok {
-		input.WorkforceVpcConfig = expandWorkforceVpcConfig(v.([]interface{}))
+		input.WorkforceVpcConfig = expandWorkforceVPCConfig(v.([]interface{}))
 	}
 
 	log.Printf("[DEBUG] Creating SageMaker Workforce: %s", input)
@@ -252,7 +252,7 @@ func resourceWorkforceRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("setting source_ip_config: %w", err)
 	}
 
-	if err := d.Set("workforce_vpc_config", flattenWorkforceVpcConfig(workforce.WorkforceVpcConfig)); err != nil {
+	if err := d.Set("workforce_vpc_config", flattenWorkforceVPCConfig(workforce.WorkforceVpcConfig)); err != nil {
 		return fmt.Errorf("setting workforce_vpc_config: %w", err)
 	}
 
@@ -275,7 +275,7 @@ func resourceWorkforceUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("workforce_vpc_config") {
-		input.WorkforceVpcConfig = expandWorkforceVpcConfig(d.Get("workforce_vpc_config").([]interface{}))
+		input.WorkforceVpcConfig = expandWorkforceVPCConfig(d.Get("workforce_vpc_config").([]interface{}))
 	}
 
 	log.Printf("[DEBUG] Updating SageMaker Workforce: %s", input)
@@ -409,7 +409,7 @@ func flattenWorkforceOIDCConfig(config *sagemaker.OidcConfigForResponse, clientS
 	return []map[string]interface{}{m}
 }
 
-func expandWorkforceVpcConfig(l []interface{}) *sagemaker.WorkforceVpcConfigRequest {
+func expandWorkforceVPCConfig(l []interface{}) *sagemaker.WorkforceVpcConfigRequest {
 	if len(l) == 0 || l[0] == nil {
 		return &sagemaker.WorkforceVpcConfigRequest{}
 	}
@@ -425,7 +425,7 @@ func expandWorkforceVpcConfig(l []interface{}) *sagemaker.WorkforceVpcConfigRequ
 	return config
 }
 
-func flattenWorkforceVpcConfig(config *sagemaker.WorkforceVpcConfigResponse) []map[string]interface{} {
+func flattenWorkforceVPCConfig(config *sagemaker.WorkforceVpcConfigResponse) []map[string]interface{} {
 	if config == nil {
 		return []map[string]interface{}{}
 	}
