@@ -357,7 +357,28 @@ resource "aws_sagemaker_workforce" "test" {
 }
 
 func testAccWorkforceConfig_vpcBase(rName string) string {
-	return acctest.ConfigCompose(testAccWorkforceConfig_base(rName), acctest.ConfigVPCWithSubnets(rName, 1), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccWorkforceConfig_base(rName), acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  enable_dns_support   = true
+  enable_dns_hostnames = true
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "test" {
+  vpc_id            = aws_vpc.test.id
+  availability_zone = data.aws_availability_zones.available.names[0]
+  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, 0)
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
 resource "aws_security_group" "test" {
   name   = %[1]q
   vpc_id = aws_vpc.test.id
@@ -371,15 +392,6 @@ resource "aws_security_group" "test" {
 
 func testAccWorkforceConfig_vpc(rName string) string {
 	return acctest.ConfigCompose(testAccWorkforceConfig_vpcBase(rName), fmt.Sprintf(`
-resource "aws_security_group" "test" {
-  name   = %[1]q
-  vpc_id = aws_vpc.test.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
 resource "aws_sagemaker_workforce" "test" {
   workforce_name = %[1]q
 
@@ -389,8 +401,8 @@ resource "aws_sagemaker_workforce" "test" {
   }
 
   workforce_vpc_config {
-    security_group_ids = aws_security_group.test.id
-    subnets            = aws_subnet.test[*].id
+    security_group_ids = [aws_security_group.test.id]
+    subnets            = [aws_subnet.test.id]
     vpc_id             = aws_vpc.test.id
   }
 }
