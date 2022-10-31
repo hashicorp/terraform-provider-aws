@@ -682,11 +682,9 @@ func resourceTableRead(d *schema.ResourceData, meta interface{}) error {
 
 	if table.StreamSpecification != nil {
 		d.Set("stream_view_type", table.StreamSpecification.StreamViewType)
-		//fmt.Printf("set stream_view_type (from aws): %s\n", aws.StringValue(table.StreamSpecification.StreamViewType))
 		d.Set("stream_enabled", table.StreamSpecification.StreamEnabled)
 	} else {
 		d.Set("stream_enabled", false)
-		//fmt.Printf("set stream_view_type (not from aws): %s\n", d.Get("stream_view_type").(string))
 		d.Set("stream_view_type", d.Get("stream_view_type").(string))
 	}
 
@@ -828,20 +826,9 @@ func resourceTableUpdate(d *schema.ResourceData, meta interface{}) error {
 		input.ProvisionedThroughput = expandProvisionedThroughputUpdate(d.Id(), capacityMap, billingMode, oldBillingMode)
 	}
 
-	if d.HasChanges("stream_enabled", "stream_view_type") {
-		//fmt.Printf("changes one or other:\n")
-		if d.HasChange("stream_enabled") {
-			//fmt.Printf("  hasChanges stream_enabled: %t\n", d.Get("stream_enabled").(bool))
-		}
-
-		if d.HasChange("stream_view_type") {
-			//fmt.Printf("  hasChanges stream_view_type: %s\n", d.Get("stream_view_type").(string))
-		}
-	}
-
 	// make change when
-	//   stream_enabled has change OR
-	//   stream_view_type has change and stream_enabled is true
+	//   stream_enabled has change (below) OR
+	//   stream_view_type has change and stream_enabled is true (special case)
 	if !d.HasChange("stream_enabled") && d.HasChange("stream_view_type") {
 		if v, ok := d.Get("stream_enabled").(bool); ok && v {
 			// in order to change stream view type:
