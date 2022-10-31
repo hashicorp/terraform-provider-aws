@@ -203,7 +203,6 @@ func resourceWorkforceCreate(d *schema.ResourceData, meta interface{}) error {
 		input.WorkforceVpcConfig = expandWorkforceVPCConfig(v.([]interface{}))
 	}
 
-	log.Printf("[DEBUG] Creating SageMaker Workforce: %s", input)
 	_, err := conn.CreateWorkforce(input)
 
 	if err != nil {
@@ -213,7 +212,7 @@ func resourceWorkforceCreate(d *schema.ResourceData, meta interface{}) error {
 	d.SetId(name)
 
 	if _, err := WaitWorkforceActive(conn, name); err != nil {
-		return fmt.Errorf("waiting for SageMaker Workfoce (%s) to be created: %w", d.Id(), err)
+		return fmt.Errorf("waiting for SageMaker Workforce (%s) create: %w", d.Id(), err)
 	}
 
 	return resourceWorkforceRead(d, meta)
@@ -278,7 +277,6 @@ func resourceWorkforceUpdate(d *schema.ResourceData, meta interface{}) error {
 		input.WorkforceVpcConfig = expandWorkforceVPCConfig(d.Get("workforce_vpc_config").([]interface{}))
 	}
 
-	log.Printf("[DEBUG] Updating SageMaker Workforce: %s", input)
 	_, err := conn.UpdateWorkforce(input)
 
 	if err != nil {
@@ -286,7 +284,7 @@ func resourceWorkforceUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if _, err := WaitWorkforceActive(conn, d.Id()); err != nil {
-		return fmt.Errorf("waiting for SageMaker Workfoce (%s) to be updated: %w", d.Id(), err)
+		return fmt.Errorf("waiting for SageMaker Workforce (%s) update: %w", d.Id(), err)
 	}
 
 	return resourceWorkforceRead(d, meta)
@@ -309,7 +307,7 @@ func resourceWorkforceDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if _, err := WaitWorkforceDeleted(conn, d.Id()); err != nil {
-		return fmt.Errorf("waiting for SageMaker Workfoce (%s) to be deleted: %w", d.Id(), err)
+		return fmt.Errorf("waiting for SageMaker Workforce (%s) delete: %w", d.Id(), err)
 	}
 
 	return nil
