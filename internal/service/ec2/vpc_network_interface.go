@@ -891,9 +891,7 @@ func resourceNetworkInterfaceUpdate(d *schema.ResourceData, meta interface{}) er
 		// Unassign old IPV6 addresses
 		if len(o.([]interface{})) > 0 {
 			unassignIPs := make([]interface{}, len(o.([]interface{})))
-			for i, ip := range o.([]interface{}) {
-				unassignIPs[i] = ip
-			}
+			copy(unassignIPs, o.([]interface{}))
 
 			input := &ec2.UnassignIpv6AddressesInput{
 				NetworkInterfaceId: aws.String(d.Id()),
