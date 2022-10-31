@@ -60,6 +60,19 @@ func testAccSSMDefaultPatchBaseline_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "id", baselineResourceName, "operating_system"),
 				),
 			},
+			// Import by OS
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			// Import by Baseline ID
+			{
+				ResourceName:      resourceName,
+				ImportStateIdFunc: testAccDefaultPatchBaselineImportStateIdFunc(resourceName),
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -113,6 +126,19 @@ func testAccSSMDefaultPatchBaseline_otherOperatingSystem(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "id", baselineResourceName, "operating_system"),
 				),
 			},
+			// Import by OS
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			// Import by Baseline ID
+			{
+				ResourceName:      resourceName,
+				ImportStateIdFunc: testAccDefaultPatchBaselineImportStateIdFunc(resourceName),
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -138,6 +164,19 @@ func testAccSSMDefaultPatchBaseline_systemDefault(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "baseline_id", baselineDataSourceName, "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "id", baselineDataSourceName, "operating_system"),
 				),
+			},
+			// Import by OS
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			// Import by Baseline ID
+			{
+				ResourceName:      resourceName,
+				ImportStateIdFunc: testAccDefaultPatchBaselineImportStateIdFunc(resourceName),
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -204,6 +243,17 @@ func testAccCheckDefaultPatchBaselineExists(name string, defaultpatchbaseline *s
 		*defaultpatchbaseline = *resp
 
 		return nil
+	}
+}
+
+func testAccDefaultPatchBaselineImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+	return func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return "", fmt.Errorf("Not found: %s", resourceName)
+		}
+
+		return rs.Primary.Attributes["baseline_id"], nil
 	}
 }
 

@@ -9,16 +9,20 @@ import (
 	"sync"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
 	"github.com/aws/aws-sdk-go-v2/service/ssm/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
+	"golang.org/x/exp/slices"
 )
 
 type lazyClient[T any] struct {
@@ -46,6 +50,10 @@ func (l *lazyClient[T]) Client() T {
 
 var SSMClientV2 lazyClient[*ssm.Client]
 
+const (
+	patchBaselineIDRegexPattern = `pb-[0-9a-f]{17}`
+)
+
 func ResourceDefaultPatchBaseline() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDefaultPatchBaselineRegister,
@@ -54,7 +62,27 @@ func ResourceDefaultPatchBaseline() *schema.Resource {
 		DeleteWithoutTimeout: resourceDefaultPatchBaselineDelete,
 
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+				id := d.Id()
+
+				if isPatchBaselineID(id) || isPatchBaselineARN(id) {
+					SSMClientV2.Init(meta.(*conns.AWSClient).Config, func(c aws.Config) *ssm.Client {
+						return ssm.NewFromConfig(c)
+					})
+					conn := SSMClientV2.Client()
+
+					patchbaseline, err := findPatchBaselineByID(ctx, conn, id)
+					if err != nil {
+						return nil, fmt.Errorf("reading SSM Patch Baseline (%s): %w", id, err)
+					}
+
+					d.SetId(string(patchbaseline.OperatingSystem))
+				} else if vals := enum.Values[types.OperatingSystem](); !slices.Contains(vals, id) {
+					return nil, fmt.Errorf("ID (%s) must be either a Patch Baseline ID, Patch Baseline ARN, or one of %v", id, vals)
+				}
+
+				return []*schema.ResourceData{d}, nil
+			},
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -66,11 +94,36 @@ func ResourceDefaultPatchBaseline() *schema.Resource {
 	}
 }
 
+func isPatchBaselineID(s string) bool {
+	re := regexp.MustCompile(`^` + patchBaselineIDRegexPattern + `$`)
+
+	return re.MatchString(s)
+}
+
+func isPatchBaselineARN(s string) bool {
+	parsedARN, err := arn.Parse(s)
+	if err != nil {
+		return false
+	}
+
+	return patchBaselineIDFromARNResource(parsedARN.Resource) != ""
+}
+
+func patchBaselineIDFromARNResource(s string) string {
+	re := regexp.MustCompile(`^patchbaseline/(` + patchBaselineIDRegexPattern + ")$")
+	matches := re.FindStringSubmatch(s)
+	if matches == nil || len(matches) != 2 {
+		return ""
+	}
+
+	return matches[1]
+}
+
 const (
 	ResNameDefaultPatchBaseline = "Default Patch Baseline"
 )
 
-func resourceDefaultPatchBaselineRegister(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDefaultPatchBaselineRegister(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	SSMClientV2.Init(meta.(*conns.AWSClient).Config, func(c aws.Config) *ssm.Client {
 		return ssm.NewFromConfig(c)
 	})
@@ -98,7 +151,7 @@ func resourceDefaultPatchBaselineRegister(ctx context.Context, d *schema.Resourc
 	return resourceDefaultPatchBaselineRead(ctx, d, meta)
 }
 
-func resourceDefaultPatchBaselineRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDefaultPatchBaselineRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	SSMClientV2.Init(meta.(*conns.AWSClient).Config, func(c aws.Config) *ssm.Client {
 		return ssm.NewFromConfig(c)
 	})
@@ -133,7 +186,7 @@ func ownerIsAWSFilter() types.PatchOrchestratorFilter { // nosemgrep:ci.aws-in-f
 	}
 }
 
-func resourceDefaultPatchBaselineDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) (diags diag.Diagnostics) {
+func resourceDefaultPatchBaselineDelete(ctx context.Context, d *schema.ResourceData, meta any) (diags diag.Diagnostics) {
 	SSMClientV2.Init(meta.(*conns.AWSClient).Config, func(c aws.Config) *ssm.Client {
 		return ssm.NewFromConfig(c)
 	})
