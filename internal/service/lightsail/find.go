@@ -303,3 +303,25 @@ func FindLoadBalancerCertificateAttachmentById(ctx context.Context, conn *lights
 
 	return entry, nil
 }
+
+func FindLoadBalancerStickinessPolicyById(ctx context.Context, conn *lightsail.Lightsail, id string) (map[string]*string, error) {
+	in := &lightsail.GetLoadBalancerInput{LoadBalancerName: aws.String(id)}
+	out, err := conn.GetLoadBalancerWithContext(ctx, in)
+
+	if tfawserr.ErrCodeEquals(err, lightsail.ErrCodeNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: in,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if out == nil || out.LoadBalancer.ConfigurationOptions == nil {
+		return nil, tfresource.NewEmptyResultError(in)
+	}
+
+	return out.LoadBalancer.ConfigurationOptions, nil
+}

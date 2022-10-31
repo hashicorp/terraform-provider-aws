@@ -9,4 +9,5 @@ const (
 	ResLoadBalancerAttachment            = "Load Balancer Attachment"
 	ResLoadBalancerCertificate           = "Load Balancer Certificate"
 	ResLoadBalancerCertificateAttachment = "Load Balancer Certificate Attachment"
+	ResLoadBalancerStickinessPolicy      = "Load Balancer StickinessPolicy"
 )
