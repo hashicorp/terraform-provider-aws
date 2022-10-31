@@ -111,6 +111,67 @@ func FindContainerServiceDeploymentByVersion(ctx context.Context, conn *lightsai
 	return result, nil
 }
 
+func FindDiskById(ctx context.Context, conn *lightsail.Lightsail, id string) (*lightsail.Disk, error) {
+	in := &lightsail.GetDiskInput{
+		DiskName: aws.String(id),
+	}
+
+	out, err := conn.GetDiskWithContext(ctx, in)
+
+	if tfawserr.ErrCodeEquals(err, lightsail.ErrCodeNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: in,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if out == nil || out.Disk == nil {
+		return nil, tfresource.NewEmptyResultError(in)
+	}
+
+	return out.Disk, nil
+}
+
+func FindDiskAttachmentById(ctx context.Context, conn *lightsail.Lightsail, id string) (*lightsail.Disk, error) {
+	id_parts := strings.SplitN(id, ",", -1)
+
+	if len(id_parts) != 2 {
+		return nil, errors.New("invalid Disk Attachment id")
+	}
+
+	dName := id_parts[0]
+	iName := id_parts[1]
+
+	in := &lightsail.GetDiskInput{
+		DiskName: aws.String(dName),
+	}
+
+	out, err := conn.GetDiskWithContext(ctx, in)
+
+	if tfawserr.ErrCodeEquals(err, lightsail.ErrCodeNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: in,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	disk := out.Disk
+
+	if disk == nil || !aws.BoolValue(disk.IsAttached) || aws.StringValue(disk.Name) != dName || aws.StringValue(disk.AttachedTo) != iName {
+		return nil, tfresource.NewEmptyResultError(in)
+	}
+
+	return out.Disk, nil
+}
+
 func FindDomainEntryById(ctx context.Context, conn *lightsail.Lightsail, id string) (*lightsail.DomainEntry, error) {
 	id_parts := strings.SplitN(id, "_", -1)
 	domainName := id_parts[1]
