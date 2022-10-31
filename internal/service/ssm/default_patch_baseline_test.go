@@ -26,6 +26,7 @@ func TestAccSSMDefaultPatchBaseline_serial(t *testing.T) {
 		"basic":                testAccSSMDefaultPatchBaseline_basic,
 		"disappears":           testAccSSMDefaultPatchBaseline_disappears,
 		"otherOperatingSystem": testAccSSMDefaultPatchBaseline_otherOperatingSystem,
+		"systemDefault":        testAccSSMDefaultPatchBaseline_systemDefault,
 	}
 
 	for name, tc := range testCases {
@@ -116,6 +117,32 @@ func testAccSSMDefaultPatchBaseline_otherOperatingSystem(t *testing.T) {
 	})
 }
 
+func testAccSSMDefaultPatchBaseline_systemDefault(t *testing.T) {
+	var defaultpatchbaseline ssm.GetDefaultPatchBaselineOutput
+	resourceName := "aws_ssm_default_patch_baseline.test"
+	baselineDataSourceName := "data.aws_ssm_patch_baseline.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(names.SSMEndpointID, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDefaultPatchBaselineDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDefaultPatchBaselineConfig_systemDefault(),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDefaultPatchBaselineExists(resourceName, &defaultpatchbaseline),
+					resource.TestCheckResourceAttrPair(resourceName, "baseline_id", baselineDataSourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "id", baselineDataSourceName, "operating_system"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckDefaultPatchBaselineDestroy(s *terraform.State) error {
 	tfssm.SSMClientV2.Init(acctest.Provider.Meta().(*conns.AWSClient).Config, func(c aws.Config) *ssm.Client {
 		return ssm.NewFromConfig(c)
@@ -198,4 +225,18 @@ resource "aws_ssm_patch_baseline" "test" {
   approved_patches_compliance_level = "CRITICAL"
 }
 `, rName, os)
+}
+
+func testAccDefaultPatchBaselineConfig_systemDefault() string {
+	return `
+resource "aws_ssm_default_patch_baseline" "test" {
+  baseline_id = data.aws_ssm_patch_baseline.test.id
+}
+
+data "aws_ssm_patch_baseline" "test" {
+  owner            = "AWS"
+  name_prefix      = "AWS-"
+  operating_system = "CENTOS"
+}
+`
 }
