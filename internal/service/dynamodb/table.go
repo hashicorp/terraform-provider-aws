@@ -834,7 +834,9 @@ func resourceTableUpdate(d *schema.ResourceData, meta interface{}) error {
 			// in order to change stream view type:
 			//   1) stream have already been enabled, and
 			//   2) it must be disabled and then reenabled (otherwise, ValidationException: Table already has an enabled stream)
-			cycleStreamEnabled(conn, d.Id(), d.Get("stream_view_type").(string), d.Timeout(schema.TimeoutUpdate))
+			if err := cycleStreamEnabled(conn, d.Id(), d.Get("stream_view_type").(string), d.Timeout(schema.TimeoutUpdate)); err != nil {
+				return create.Error(names.DynamoDB, create.ErrActionUpdating, ResNameTable, d.Id(), err)
+			}
 		}
 	}
 
