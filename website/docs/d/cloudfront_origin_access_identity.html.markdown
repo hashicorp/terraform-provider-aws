@@ -22,7 +22,7 @@ data "aws_cloudfront_origin_access_identity" "example" {
 
 ## Argument Reference
 
-- `id` (Required) - The identifier for the distribution. For example: `EDFDVBD632BHDS5`.
+* `id` (Required) -  The identifier for the distribution. For example: `EDFDVBD632BHDS5`.
 
 ## Attributes Reference
 
