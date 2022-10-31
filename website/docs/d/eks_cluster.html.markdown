@@ -37,7 +37,7 @@ output "identity-oidc-issuer" {
 
 ## Attributes Reference
 
-* `id` - Name of the cluster
+* `id` - ID of the cluster
 * `arn` - ARN of the cluster.
 * `certificate_authority` - Nested attribute containing `certificate-authority-data` for your cluster.
     * `data` - The base64 encoded certificate data required to communicate with your cluster. Add this to the `certificate-authority-data` section of the `kubeconfig` file for your cluster.

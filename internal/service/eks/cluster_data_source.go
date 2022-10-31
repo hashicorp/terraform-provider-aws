@@ -44,6 +44,10 @@ func DataSourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"identity": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -179,7 +183,14 @@ func dataSourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error reading EKS Cluster (%s): %w", name, err)
 	}
 
-	d.SetId(name)
+	var identifier string
+	if v, ok := d.GetOk("id"); ok {
+		identifier = v.(string)
+	} else {
+		identifier = d.Get("name").(string)
+	}
+
+	d.SetId(identifier)
 	d.Set("arn", cluster.Arn)
 
 	if err := d.Set("certificate_authority", flattenCertificate(cluster.CertificateAuthority)); err != nil {

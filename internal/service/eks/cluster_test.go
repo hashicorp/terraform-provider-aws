@@ -21,6 +21,8 @@ import (
 const (
 	clusterVersionUpgradeInitial = "1.21"
 	clusterVersionUpgradeUpdated = "1.22"
+
+	uuidRegex = "[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
 )
 
 func TestAccEKSCluster_basic(t *testing.T) {
@@ -623,6 +625,8 @@ func TestAccEKSCluster_Outpost_create(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "outpost_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "outpost_config.0.control_plane_instance_type", controlPlaneInstanceType),
 					resource.TestCheckResourceAttr(resourceName, "outpost_config.0.outpost_arns.#", "1"),
+					// https://github.com/hashicorp/terraform-provider-aws/issues/27560
+					resource.TestMatchResourceAttr(resourceName, "id", regexp.MustCompile(uuidRegex)),
 				),
 			},
 			{
