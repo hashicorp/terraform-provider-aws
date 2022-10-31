@@ -843,7 +843,7 @@ func resourceTableUpdate(d *schema.ResourceData, meta interface{}) error {
 	//   stream_enabled has change OR
 	//   stream_view_type has change and stream_enabled is true
 	if !d.HasChange("stream_enabled") && d.HasChange("stream_view_type") {
-		if v, ok := d.GetOk("stream_enabled"); ok && v.(bool) {
+		if v, ok := d.Get("stream_enabled").(bool); ok && v {
 			// in order to change stream view type:
 			//   1) stream have already been enabled, and
 			//   2) it must be disabled and then reenabled (otherwise, ValidationException: Table already has an enabled stream)

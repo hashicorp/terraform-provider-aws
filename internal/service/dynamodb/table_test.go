@@ -797,7 +797,7 @@ func TestAccDynamoDBTable_streamSpecification(t *testing.T) {
 	})
 }
 
-func TestAccDynamoDBTable_streamDiffs(t *testing.T) {
+func TestAccDynamoDBTable_streamSpecificationDiffs(t *testing.T) {
 	var conf dynamodb.DescribeTableOutput
 	resourceName := "aws_dynamodb_table.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
