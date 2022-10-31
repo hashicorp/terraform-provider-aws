@@ -79,7 +79,7 @@ func TestBetweenValidator(t *testing.T) {
 				AttributeConfig:         test.val,
 			}
 			response := tfsdk.ValidateAttributeResponse{}
-			fwvalidators.Int64StringBetween(test.min, test.max).Validate(context.TODO(), request, &response)
+			fwvalidators.Int64StringBetween(test.min, test.max).Validate(context.Background(), request, &response)
 
 			if !response.Diagnostics.HasError() && test.expectError {
 				t.Fatal("expected error, got no error")
