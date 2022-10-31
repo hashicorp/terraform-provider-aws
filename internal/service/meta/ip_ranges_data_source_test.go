@@ -6,6 +6,7 @@ import (
 	"regexp"
 	"sort"
 	"strconv"
+	"strings"
 	"testing"
 	"time"
 
@@ -74,6 +75,26 @@ func TestAccMetaIPRangesDataSource_url(t *testing.T) {
 	})
 }
 
+func TestAccMetaIPRangesDataSource_uppercase(t *testing.T) {
+	dataSourceName := "data.aws_ip_ranges.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIPRangesDataSourceConfig_uppercase,
+				Check: resource.ComposeTestCheckFunc(
+					testAccIPRangesCheckAttributes(dataSourceName),
+					testAccIPRangesCheckCIDRBlocksAttribute(dataSourceName, "cidr_blocks"),
+					testAccIPRangesCheckCIDRBlocksAttribute(dataSourceName, "ipv6_cidr_blocks"),
+				),
+			},
+		},
+	})
+}
+
 func testAccIPRangesCheckAttributes(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		r := s.RootModule().Resources[n]
@@ -114,7 +135,7 @@ func testAccIPRangesCheckAttributes(n string) resource.TestCheckFunc {
 			}
 
 			if serviceMember.MatchString(k) {
-				if v != "ec2" {
+				if v := strings.ToLower(v); v != "ec2" && v != "amazon" {
 					return fmt.Errorf("unexpected service %s", v)
 				}
 
@@ -195,5 +216,13 @@ data "aws_ip_ranges" "test" {
   regions  = ["eu-west-1", "eu-central-1"]
   services = ["ec2"]
   url      = "https://ip-ranges.amazonaws.com/ip-ranges.json"
+}
+`
+
+// lintignore:AWSAT003
+const testAccIPRangesDataSourceConfig_uppercase = `
+data "aws_ip_ranges" "test" {
+  regions  = ["eu-west-1", "eu-central-1"]
+  services = ["AMAZON"]
 }
 `

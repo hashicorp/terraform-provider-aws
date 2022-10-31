@@ -1,16 +1,7 @@
 package slices
 
-// Reverse reverses a slice in place.
+// Reverse returns a reversed copy of the slice.
 func Reverse[S ~[]E, E any](s S) S {
-	for i, j := 0, len(s)-1; i < j; i, j = i+1, j-1 {
-		s[i], s[j] = s[j], s[i]
-	}
-
-	return s
-}
-
-// Reversed returns a reversed copy of the slice.
-func Reversed[S ~[]E, E any](s S) S {
 	v := S([]E{})
 	n := len(s)
 
