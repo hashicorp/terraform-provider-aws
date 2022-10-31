@@ -310,6 +310,49 @@ func (r *resourceDomain) ImportState(ctx context.Context, request resource.Impor
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), request, response)
 }
 
+// ModifyPlan is called when the provider has an opportunity to modify
+// the plan: once during the plan phase when Terraform is determining
+// the diff that should be shown to the user for approval, and once
+// during the apply phase with any unknown values from configuration
+// filled in with their final values.
+//
+// The planned new state is represented by
+// ModifyPlanResponse.Plan. It must meet the following
+// constraints:
+// 1. Any non-Computed attribute set in config must preserve the exact
+// config value or return the corresponding attribute value from the
+// prior state (ModifyPlanRequest.State).
+// 2. Any attribute with a known value must not have its value changed
+// in subsequent calls to ModifyPlan or Create/Read/Update.
+// 3. Any attribute with an unknown value may either remain unknown
+// or take on any value of the expected type.
+//
+// Any errors will prevent further resource-level plan modifications.
+func (r *resourceDomain) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
+	defaultTagsConfig := r.meta.DefaultTagsConfig
+	ignoreTagsConfig := r.meta.IgnoreTagsConfig
+
+	var planTags types.Map
+
+	response.Diagnostics.Append(request.Plan.GetAttribute(ctx, path.Root("tags"), &planTags)...)
+
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	resourceTags := tftags.New(planTags)
+
+	if defaultTagsConfig.TagsEqual(resourceTags) {
+		response.Diagnostics.AddError(
+			`"tags" are identical to those in the "default_tags" configuration block of the provider`,
+			"please de-duplicate and try again")
+	}
+
+	allTags := defaultTagsConfig.MergeTags(resourceTags).IgnoreConfig(ignoreTagsConfig)
+
+	response.Diagnostics.Append(response.Plan.SetAttribute(ctx, path.Root("tags_all"), flex.FlattenFrameworkStringValueMap(ctx, allTags.Map()))...)
+}
+
 type resourceDomainData struct {
 	ARN                                    types.String `tfsdk:"arn"`
 	Description                            types.String `tfsdk:"description"`
