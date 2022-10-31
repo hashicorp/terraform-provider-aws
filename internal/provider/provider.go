@@ -91,6 +91,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/emrcontainers"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/emrserverless"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/events"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/evidently"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/firehose"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/fis"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/fms"
@@ -170,6 +171,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/servicediscovery"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/servicequotas"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/ses"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/sesv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/sfn"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/shield"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/signer"
@@ -432,6 +434,11 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_apigatewayv2_apis":   apigatewayv2.DataSourceAPIs(),
 			"aws_apigatewayv2_export": apigatewayv2.DataSourceExport(),
 
+			"aws_appconfig_configuration_profile":  appconfig.DataSourceConfigurationProfile(),
+			"aws_appconfig_configuration_profiles": appconfig.DataSourceConfigurationProfiles(),
+			"aws_appconfig_environment":            appconfig.DataSourceEnvironment(),
+			"aws_appconfig_environments":           appconfig.DataSourceEnvironments(),
+
 			"aws_appmesh_mesh":            appmesh.DataSourceMesh(),
 			"aws_appmesh_virtual_service": appmesh.DataSourceVirtualService(),
 
@@ -514,10 +521,11 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_docdb_engine_version":        docdb.DataSourceEngineVersion(),
 			"aws_docdb_orderable_db_instance": docdb.DataSourceOrderableDBInstance(),
 
-			"aws_dx_connection": directconnect.DataSourceConnection(),
-			"aws_dx_gateway":    directconnect.DataSourceGateway(),
-			"aws_dx_location":   directconnect.DataSourceLocation(),
-			"aws_dx_locations":  directconnect.DataSourceLocations(),
+			"aws_dx_connection":           directconnect.DataSourceConnection(),
+			"aws_dx_gateway":              directconnect.DataSourceGateway(),
+			"aws_dx_location":             directconnect.DataSourceLocation(),
+			"aws_dx_locations":            directconnect.DataSourceLocations(),
+			"aws_dx_router_configuration": directconnect.DataSourceRouterConfiguration(),
 
 			"aws_directory_service_directory": ds.DataSourceDirectory(),
 
@@ -592,6 +600,8 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_vpc_endpoint_service":                       ec2.DataSourceVPCEndpointService(),
 			"aws_vpc_endpoint":                               ec2.DataSourceVPCEndpoint(),
 			"aws_vpc_ipam_pool":                              ec2.DataSourceIPAMPool(),
+			"aws_vpc_ipam_pools":                             ec2.DataSourceIPAMPools(),
+			"aws_vpc_ipam_pool_cidrs":                        ec2.DataSourceIPAMPoolCIDRs(),
 			"aws_vpc_ipam_preview_next_cidr":                 ec2.DataSourceIPAMPreviewNextCIDR(),
 			"aws_vpc_peering_connection":                     ec2.DataSourceVPCPeeringConnection(),
 			"aws_vpc_peering_connections":                    ec2.DataSourceVPCPeeringConnections(),
@@ -625,6 +635,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 
 			"aws_elasticache_cluster":           elasticache.DataSourceCluster(),
 			"aws_elasticache_replication_group": elasticache.DataSourceReplicationGroup(),
+			"aws_elasticache_subnet_group":      elasticache.DataSourceSubnetGroup(),
 			"aws_elasticache_user":              elasticache.DataSourceUser(),
 
 			"aws_elastic_beanstalk_application":    elasticbeanstalk.DataSourceApplication(),
@@ -653,8 +664,6 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_kinesis_firehose_delivery_stream": firehose.DataSourceDeliveryStream(),
 
 			"aws_fsx_openzfs_snapshot": fsx.DataSourceOpenzfsSnapshot(),
-
-			"aws_globalaccelerator_accelerator": globalaccelerator.DataSourceAccelerator(),
 
 			"aws_glue_connection":                       glue.DataSourceConnection(),
 			"aws_glue_data_catalog_encryption_settings": glue.DataSourceDataCatalogEncryptionSettings(),
@@ -751,15 +760,6 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_location_tracker_association":  location.DataSourceTrackerAssociation(),
 			"aws_location_tracker_associations": location.DataSourceTrackerAssociations(),
 
-			// "aws_arn":                     meta.DataSourceARN(), // Now implemented using Terraform Plugin Framework.
-			"aws_billing_service_account": meta.DataSourceBillingServiceAccount(),
-			"aws_default_tags":            meta.DataSourceDefaultTags(),
-			"aws_ip_ranges":               meta.DataSourceIPRanges(),
-			"aws_partition":               meta.DataSourcePartition(),
-			"aws_region":                  meta.DataSourceRegion(),
-			"aws_regions":                 meta.DataSourceRegions(),
-			"aws_service":                 meta.DataSourceService(),
-
 			"aws_memorydb_acl":             memorydb.DataSourceACL(),
 			"aws_memorydb_cluster":         memorydb.DataSourceCluster(),
 			"aws_memorydb_parameter_group": memorydb.DataSourceParameterGroup(),
@@ -817,16 +817,19 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_ses_domain_identity":         ses.DataSourceDomainIdentity(),
 			"aws_ses_email_identity":          ses.DataSourceEmailIdentity(),
 
-			"aws_db_cluster_snapshot":       rds.DataSourceClusterSnapshot(),
-			"aws_db_event_categories":       rds.DataSourceEventCategories(),
-			"aws_db_instance":               rds.DataSourceInstance(),
-			"aws_db_proxy":                  rds.DataSourceProxy(),
-			"aws_db_snapshot":               rds.DataSourceSnapshot(),
-			"aws_db_subnet_group":           rds.DataSourceSubnetGroup(),
-			"aws_rds_certificate":           rds.DataSourceCertificate(),
-			"aws_rds_cluster":               rds.DataSourceCluster(),
-			"aws_rds_engine_version":        rds.DataSourceEngineVersion(),
-			"aws_rds_orderable_db_instance": rds.DataSourceOrderableInstance(),
+			"aws_sesv2_dedicated_ip_pool": sesv2.DataSourceDedicatedIPPool(),
+
+			"aws_db_cluster_snapshot":            rds.DataSourceClusterSnapshot(),
+			"aws_db_event_categories":            rds.DataSourceEventCategories(),
+			"aws_db_instance":                    rds.DataSourceInstance(),
+			"aws_db_proxy":                       rds.DataSourceProxy(),
+			"aws_db_snapshot":                    rds.DataSourceSnapshot(),
+			"aws_db_subnet_group":                rds.DataSourceSubnetGroup(),
+			"aws_rds_certificate":                rds.DataSourceCertificate(),
+			"aws_rds_cluster":                    rds.DataSourceCluster(),
+			"aws_rds_engine_version":             rds.DataSourceEngineVersion(),
+			"aws_rds_orderable_db_instance":      rds.DataSourceOrderableInstance(),
+			"aws_rds_reserved_instance_offering": rds.DataSourceReservedOffering(),
 
 			"aws_redshift_cluster":             redshift.DataSourceCluster(),
 			"aws_redshift_cluster_credentials": redshift.DataSourceClusterCredentials(),
@@ -898,8 +901,6 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_ssoadmin_permission_set": ssoadmin.DataSourcePermissionSet(),
 
 			"aws_storagegateway_local_disk": storagegateway.DataSourceLocalDisk(),
-
-			"aws_caller_identity": sts.DataSourceCallerIdentity(),
 
 			"aws_transfer_server": transfer.DataSourceServer(),
 
@@ -1165,8 +1166,9 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_codedeploy_deployment_config": deploy.ResourceDeploymentConfig(),
 			"aws_codedeploy_deployment_group":  deploy.ResourceDeploymentGroup(),
 
-			"aws_codepipeline":         codepipeline.ResourceCodePipeline(),
-			"aws_codepipeline_webhook": codepipeline.ResourceWebhook(),
+			"aws_codepipeline":                    codepipeline.ResourcePipeline(),
+			"aws_codepipeline_custom_action_type": codepipeline.ResourceCustomActionType(),
+			"aws_codepipeline_webhook":            codepipeline.ResourceWebhook(),
 
 			"aws_codestarconnections_connection": codestarconnections.ResourceConnection(),
 			"aws_codestarconnections_host":       codestarconnections.ResourceHost(),
@@ -1188,7 +1190,8 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_cognito_user_pool_domain":           cognitoidp.ResourceUserPoolDomain(),
 			"aws_cognito_user_pool_ui_customization": cognitoidp.ResourceUserPoolUICustomization(),
 
-			"aws_comprehend_entity_recognizer": comprehend.ResourceEntityRecognizer(),
+			"aws_comprehend_document_classifier": comprehend.ResourceDocumentClassifier(),
+			"aws_comprehend_entity_recognizer":   comprehend.ResourceEntityRecognizer(),
 
 			"aws_config_aggregate_authorization":       configservice.ResourceAggregateAuthorization(),
 			"aws_config_config_rule":                   configservice.ResourceConfigRule(),
@@ -1510,6 +1513,8 @@ func New(_ context.Context) (*schema.Provider, error) {
 
 			"aws_emrserverless_application": emrserverless.ResourceApplication(),
 
+			"aws_evidently_project": evidently.ResourceProject(),
+
 			"aws_kinesis_firehose_delivery_stream": firehose.ResourceDeliveryStream(),
 
 			"aws_fis_experiment_template": fis.ResourceExperimentTemplate(),
@@ -1620,6 +1625,8 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_inspector_assessment_template": inspector.ResourceAssessmentTemplate(),
 			"aws_inspector_resource_group":      inspector.ResourceResourceGroup(),
 
+			"aws_inspector2_delegated_admin_account":    inspector2.ResourceDelegatedAdminAccount(),
+			"aws_inspector2_enabler":                    inspector2.ResourceEnabler(),
 			"aws_inspector2_organization_configuration": inspector2.ResourceOrganizationConfiguration(),
 
 			"aws_iot_authorizer":                 iot.ResourceAuthorizer(),
@@ -1701,13 +1708,20 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_licensemanager_association":           licensemanager.ResourceAssociation(),
 			"aws_licensemanager_license_configuration": licensemanager.ResourceLicenseConfiguration(),
 
+			"aws_lightsail_certificate":                          lightsail.ResourceCertificate(),
 			"aws_lightsail_container_service":                    lightsail.ResourceContainerService(),
 			"aws_lightsail_container_service_deployment_version": lightsail.ResourceContainerServiceDeploymentVersion(),
 			"aws_lightsail_database":                             lightsail.ResourceDatabase(),
 			"aws_lightsail_domain":                               lightsail.ResourceDomain(),
+			"aws_lightsail_domain_entry":                         lightsail.ResourceDomainEntry(),
 			"aws_lightsail_instance":                             lightsail.ResourceInstance(),
 			"aws_lightsail_instance_public_ports":                lightsail.ResourceInstancePublicPorts(),
 			"aws_lightsail_key_pair":                             lightsail.ResourceKeyPair(),
+			"aws_lightsail_lb":                                   lightsail.ResourceLoadBalancer(),
+			"aws_lightsail_lb_attachment":                        lightsail.ResourceLoadBalancerAttachment(),
+			"aws_lightsail_lb_certificate":                       lightsail.ResourceLoadBalancerCertificate(),
+			"aws_lightsail_lb_certificate_attachment":            lightsail.ResourceLoadBalancerCertificateAttachment(),
+			"aws_lightsail_lb_stickiness_policy":                 lightsail.ResourceLoadBalancerStickinessPolicy(),
 			"aws_lightsail_static_ip":                            lightsail.ResourceStaticIP(),
 			"aws_lightsail_static_ip_attachment":                 lightsail.ResourceStaticIPAttachment(),
 
@@ -1858,6 +1872,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_rds_cluster_parameter_group":               rds.ResourceClusterParameterGroup(),
 			"aws_rds_cluster_role_association":              rds.ResourceClusterRoleAssociation(),
 			"aws_rds_global_cluster":                        rds.ResourceGlobalCluster(),
+			"aws_rds_reserved_instance":                     rds.ResourceReservedInstance(),
 
 			"aws_redshift_authentication_profile":        redshift.ResourceAuthenticationProfile(),
 			"aws_redshift_cluster":                       redshift.ResourceCluster(),
@@ -1911,6 +1926,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_route53recoveryreadiness_recovery_group":  route53recoveryreadiness.ResourceRecoveryGroup(),
 			"aws_route53recoveryreadiness_resource_set":    route53recoveryreadiness.ResourceResourceSet(),
 
+			"aws_route53_resolver_config":                          route53resolver.ResourceConfig(),
 			"aws_route53_resolver_dnssec_config":                   route53resolver.ResourceDNSSECConfig(),
 			"aws_route53_resolver_endpoint":                        route53resolver.ResourceEndpoint(),
 			"aws_route53_resolver_firewall_config":                 route53resolver.ResourceFirewallConfig(),
@@ -1957,6 +1973,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_s3control_multi_region_access_point_policy":  s3control.ResourceMultiRegionAccessPointPolicy(),
 			"aws_s3control_object_lambda_access_point":        s3control.ResourceObjectLambdaAccessPoint(),
 			"aws_s3control_object_lambda_access_point_policy": s3control.ResourceObjectLambdaAccessPointPolicy(),
+			"aws_s3control_storage_lens_configuration":        s3control.ResourceStorageLensConfiguration(),
 
 			"aws_s3outposts_endpoint": s3outposts.ResourceEndpoint(),
 
@@ -1979,6 +1996,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_sagemaker_notebook_instance":                         sagemaker.ResourceNotebookInstance(),
 			"aws_sagemaker_notebook_instance_lifecycle_configuration": sagemaker.ResourceNotebookInstanceLifeCycleConfiguration(),
 			"aws_sagemaker_project":                                   sagemaker.ResourceProject(),
+			"aws_sagemaker_servicecatalog_portfolio_status":           sagemaker.ResourceServicecatalogPortfolioStatus(),
 			"aws_sagemaker_studio_lifecycle_config":                   sagemaker.ResourceStudioLifecycleConfig(),
 			"aws_sagemaker_user_profile":                              sagemaker.ResourceUserProfile(),
 			"aws_sagemaker_workforce":                                 sagemaker.ResourceWorkforce(),
@@ -2044,6 +2062,11 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_ses_receipt_rule_set":             ses.ResourceReceiptRuleSet(),
 			"aws_ses_template":                     ses.ResourceTemplate(),
 
+			"aws_sesv2_configuration_set":       sesv2.ResourceConfigurationSet(),
+			"aws_sesv2_dedicated_ip_assignment": sesv2.ResourceDedicatedIPAssignment(),
+			"aws_sesv2_dedicated_ip_pool":       sesv2.ResourceDedicatedIPPool(),
+			"aws_sesv2_email_identity":          sesv2.ResourceEmailIdentity(),
+
 			"aws_sfn_activity":      sfn.ResourceActivity(),
 			"aws_sfn_state_machine": sfn.ResourceStateMachine(),
 
@@ -2054,8 +2077,6 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_signer_signing_job":                signer.ResourceSigningJob(),
 			"aws_signer_signing_profile":            signer.ResourceSigningProfile(),
 			"aws_signer_signing_profile_permission": signer.ResourceSigningProfilePermission(),
-
-			"aws_simpledb_domain": simpledb.ResourceDomain(),
 
 			"aws_sns_platform_application": sns.ResourcePlatformApplication(),
 			"aws_sns_sms_preferences":      sns.ResourceSMSPreferences(),
@@ -2112,6 +2133,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_transfer_access":   transfer.ResourceAccess(),
 			"aws_transfer_server":   transfer.ResourceServer(),
 			"aws_transfer_ssh_key":  transfer.ResourceSSHKey(),
+			"aws_transfer_tag":      transfer.ResourceTag(),
 			"aws_transfer_user":     transfer.ResourceUser(),
 			"aws_transfer_workflow": transfer.ResourceWorkflow(),
 
@@ -2169,9 +2191,13 @@ func New(_ context.Context) (*schema.Provider, error) {
 	providerData := &conns.AWSClient{
 		// TODO: This should be generated.
 
-		// ServiceData is used before configuration to determine the provider's exported resources and data sources.
-		ServiceMap: map[string]intf.ServiceData{
-			"meta": meta.ServiceData,
+		// ServicePackageData is used before configuration to determine the provider's exported resources and data sources.
+		ServicePackages: []intf.ServicePackageData{
+			globalaccelerator.ServicePackageData,
+			//medialive.ServicePackageData,
+			meta.ServicePackageData,
+			simpledb.ServicePackageData,
+			sts.ServicePackageData,
 		},
 	}
 
@@ -2280,7 +2306,7 @@ func configure(ctx context.Context, provider *schema.Provider, d *schema.Resourc
 	}
 
 	// Configure each service.
-	for _, v := range providerData.ServiceMap {
+	for _, v := range providerData.ServicePackages {
 		if err := v.Configure(ctx, providerData); err != nil {
 			diags = append(diags, diag.FromErr(err)...)
 		}

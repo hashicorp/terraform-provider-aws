@@ -234,7 +234,6 @@ func resourceMultiplexUpdate(ctx context.Context, d *schema.ResourceData, meta i
 				}
 			}
 		}
-
 	}
 
 	if d.HasChange("tags_all") {

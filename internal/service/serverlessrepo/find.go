@@ -39,5 +39,4 @@ func findApplication(conn *serverlessrepo.ServerlessApplicationRepository, appli
 	}
 
 	return resp, nil
-
 }

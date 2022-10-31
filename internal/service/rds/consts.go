@@ -213,3 +213,13 @@ func TimeoutAction_Values() []string {
 const (
 	propagationTimeout = 2 * time.Minute
 )
+
+const (
+	ResNameTags = "Tags"
+)
+
+const (
+	ReservedInstanceStateActive         = "active"
+	ReservedInstanceStateRetired        = "retired"
+	ReservedInstanceStatePaymentPending = "payment-pending"
+)

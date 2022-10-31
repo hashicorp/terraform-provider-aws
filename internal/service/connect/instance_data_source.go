@@ -107,7 +107,6 @@ func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta in
 		}
 
 		matchedInstance = output.Instance
-
 	} else if v, ok := d.GetOk("instance_alias"); ok {
 		instanceAlias := v.(string)
 

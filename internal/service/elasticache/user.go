@@ -160,7 +160,7 @@ func resourceUserRead(d *schema.ResourceData, meta interface{}) error {
 
 	// tags not supported in all partitions
 	if err != nil {
-		log.Printf("[WARN] failed listing tags for Elasticache User (%s): %s", aws.StringValue(resp.ARN), err)
+		log.Printf("[WARN] failed listing tags for ElastiCache User (%s): %s", aws.StringValue(resp.ARN), err)
 	}
 
 	if tags != nil {
@@ -213,7 +213,6 @@ func resourceUserUpdate(d *schema.ResourceData, meta interface{}) error {
 				return fmt.Errorf("error waiting for ElastiCache User (%s) to be modified: %w", d.Id(), err)
 			}
 		}
-
 	}
 
 	if d.HasChange("tags_all") {

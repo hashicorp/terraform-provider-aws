@@ -1506,6 +1506,26 @@ func FindNetworkInterfacesByAttachmentInstanceOwnerIDAndDescriptionWithContext(c
 	return FindNetworkInterfacesWithContext(ctx, conn, input)
 }
 
+func FindNetworkInterfaceByAttachmentID(ctx context.Context, conn *ec2.EC2, id string) (*ec2.NetworkInterface, error) {
+	input := &ec2.DescribeNetworkInterfacesInput{
+		Filters: BuildAttributeFilterList(map[string]string{
+			"attachment.attachment-id": id,
+		}),
+	}
+
+	networkInterface, err := FindNetworkInterfaceWithContext(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if networkInterface == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return networkInterface, nil
+}
+
 func FindNetworkInterfaceAttachmentByID(ctx context.Context, conn *ec2.EC2, id string) (*ec2.NetworkInterfaceAttachment, error) {
 	input := &ec2.DescribeNetworkInterfacesInput{
 		Filters: BuildAttributeFilterList(map[string]string{
@@ -2428,6 +2448,8 @@ func FindVPCAttribute(conn *ec2.EC2, vpcID string, attribute string) (bool, erro
 		v = output.EnableDnsHostnames
 	case ec2.VpcAttributeNameEnableDnsSupport:
 		v = output.EnableDnsSupport
+	case ec2.VpcAttributeNameEnableNetworkAddressUsageMetrics:
+		v = output.EnableNetworkAddressUsageMetrics
 	default:
 		return false, fmt.Errorf("unsupported VPC attribute: %s", attribute)
 	}
@@ -4935,6 +4957,110 @@ func FindInternetGatewayAttachment(conn *ec2.EC2, internetGatewayID, vpcID strin
 	}
 
 	return attachment, nil
+}
+
+func FindIPAMPoolCIDR(conn *ec2.EC2, input *ec2.GetIpamPoolCidrsInput) (*ec2.IpamPoolCidr, error) {
+	output, err := FindIPAMPoolCIDRs(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(output) == 0 || output[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return output[0], nil
+}
+
+func FindIPAMPoolCIDRs(conn *ec2.EC2, input *ec2.GetIpamPoolCidrsInput) ([]*ec2.IpamPoolCidr, error) {
+	var output []*ec2.IpamPoolCidr
+
+	err := conn.GetIpamPoolCidrsPages(input, func(page *ec2.GetIpamPoolCidrsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.IpamPoolCidrs {
+			if v != nil {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidIPAMPoolIdNotFound) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
+func FindIPAMPoolCIDRByTwoPartKey(conn *ec2.EC2, cidrBlock, poolID string) (*ec2.IpamPoolCidr, error) {
+	input := &ec2.GetIpamPoolCidrsInput{
+		Filters: BuildAttributeFilterList(map[string]string{
+			"cidr": cidrBlock,
+		}),
+		IpamPoolId: aws.String(poolID),
+	}
+
+	output, err := FindIPAMPoolCIDR(conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if state := aws.StringValue(output.State); state == ec2.IpamPoolCidrStateDeprovisioned {
+		return nil, &resource.NotFoundError{
+			Message:     state,
+			LastRequest: input,
+		}
+	}
+
+	// Eventual consistency check.
+	if aws.StringValue(output.Cidr) != cidrBlock {
+		return nil, &resource.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func FindIPAMPools(conn *ec2.EC2, input *ec2.DescribeIpamPoolsInput) ([]*ec2.IpamPool, error) {
+	var output []*ec2.IpamPool
+
+	err := conn.DescribeIpamPoolsPages(input, func(page *ec2.DescribeIpamPoolsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.IpamPools {
+			if v != nil {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
 }
 
 func FindKeyPair(conn *ec2.EC2, input *ec2.DescribeKeyPairsInput) (*ec2.KeyPairInfo, error) {

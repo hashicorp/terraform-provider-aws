@@ -101,7 +101,6 @@ func resourceWorkspaceAPIKeyDelete(d *schema.ResourceData, meta interface{}) err
 	}
 
 	return nil
-
 }
 
 const workspaceAPIKeyIDSeparator = "/"

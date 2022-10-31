@@ -1801,7 +1801,6 @@ func testAccCheckSpotFleetRequest_PlacementAttributes(
 
 		return nil
 	}
-
 }
 
 func testAccPreCheckSpotFleetRequest(t *testing.T) {

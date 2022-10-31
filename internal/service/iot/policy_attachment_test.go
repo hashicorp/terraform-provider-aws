@@ -58,7 +58,6 @@ func TestAccIoTPolicyAttachment_basic(t *testing.T) {
 			},
 		},
 	})
-
 }
 
 func testAccCheckPolicyAttchmentDestroy(s *terraform.State) error {

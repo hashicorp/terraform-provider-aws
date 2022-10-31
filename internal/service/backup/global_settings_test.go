@@ -60,7 +60,6 @@ func TestAccBackupGlobalSettings_basic(t *testing.T) {
 
 func testAccCheckGlobalSettingsExists(settings *backup.DescribeGlobalSettingsOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupConn
 		resp, err := conn.DescribeGlobalSettings(&backup.DescribeGlobalSettingsInput{})
 		if err != nil {

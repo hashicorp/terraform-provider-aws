@@ -45,7 +45,6 @@ The following arguments are supported:
 several valid keys, for a full reference, check out
 [describe-snapshots in the AWS CLI reference][1].
 
-
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:

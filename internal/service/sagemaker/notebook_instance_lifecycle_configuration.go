@@ -161,7 +161,6 @@ func resourceNotebookInstanceLifeCycleConfigurationDelete(d *schema.ResourceData
 
 	_, err := conn.DeleteNotebookInstanceLifecycleConfig(deleteOpts)
 	if err != nil {
-
 		if tfawserr.ErrCodeEquals(err, "ValidationException") {
 			return nil
 		}

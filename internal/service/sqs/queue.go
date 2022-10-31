@@ -133,6 +133,7 @@ var (
 		"sqs_managed_sse_enabled": {
 			Type:          schema.TypeBool,
 			Optional:      true,
+			Computed:      true,
 			ConflictsWith: []string{"kms_master_key_id"},
 		},
 		"tags":     tftags.TagsSchema(),
@@ -166,7 +167,7 @@ var (
 		"redrive_policy":                    sqs.QueueAttributeNameRedrivePolicy,
 		"sqs_managed_sse_enabled":           sqs.QueueAttributeNameSqsManagedSseEnabled,
 		"visibility_timeout_seconds":        sqs.QueueAttributeNameVisibilityTimeout,
-	}, queueSchema).WithIAMPolicyAttribute("policy")
+	}, queueSchema).WithIAMPolicyAttribute("policy").WithMissingSetToNil("*").WithAlwaysSendConfiguredBooleanValueOnCreate("sqs_managed_sse_enabled")
 )
 
 func ResourceQueue() *schema.Resource {
