@@ -127,7 +127,7 @@ func testAccIPRangesCheckAttributes(n string) resource.TestCheckFunc {
 		for k, v := range a {
 			if regionMember.MatchString(k) {
 				// lintignore:AWSAT003
-				if !(v == "eu-west-1" || v == "eu-central-1") {
+				if v := strings.ToLower(v); !(v == "eu-west-1" || v == "eu-central-1") {
 					return fmt.Errorf("unexpected region %s", v)
 				}
 
@@ -135,7 +135,7 @@ func testAccIPRangesCheckAttributes(n string) resource.TestCheckFunc {
 			}
 
 			if serviceMember.MatchString(k) {
-				if v := strings.ToLower(v); v != "ec2" && v != "amazon" {
+				if v := strings.ToLower(v); !(v == "ec2" || v == "amazon") {
 					return fmt.Errorf("unexpected service %s", v)
 				}
 
@@ -222,7 +222,7 @@ data "aws_ip_ranges" "test" {
 // lintignore:AWSAT003
 const testAccIPRangesDataSourceConfig_uppercase = `
 data "aws_ip_ranges" "test" {
-  regions  = ["eu-west-1", "eu-central-1"]
+  regions  = ["EU-WEST-1", "EU-CENTRAL-1"]
   services = ["AMAZON"]
 }
 `
