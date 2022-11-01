@@ -114,11 +114,11 @@ const (
 	CarrierGatewayDeletedTimeout = 5 * time.Minute
 )
 
-func WaitCarrierGatewayAvailable(conn *ec2.EC2, carrierGatewayID string) (*ec2.CarrierGateway, error) {
+func WaitCarrierGatewayCreated(conn *ec2.EC2, id string) (*ec2.CarrierGateway, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{ec2.CarrierGatewayStatePending},
 		Target:  []string{ec2.CarrierGatewayStateAvailable},
-		Refresh: StatusCarrierGatewayState(conn, carrierGatewayID),
+		Refresh: StatusCarrierGatewayState(conn, id),
 		Timeout: CarrierGatewayAvailableTimeout,
 	}
 
@@ -131,11 +131,11 @@ func WaitCarrierGatewayAvailable(conn *ec2.EC2, carrierGatewayID string) (*ec2.C
 	return nil, err
 }
 
-func WaitCarrierGatewayDeleted(conn *ec2.EC2, carrierGatewayID string) (*ec2.CarrierGateway, error) {
+func WaitCarrierGatewayDeleted(conn *ec2.EC2, id string) (*ec2.CarrierGateway, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{ec2.CarrierGatewayStateDeleting},
 		Target:  []string{},
-		Refresh: StatusCarrierGatewayState(conn, carrierGatewayID),
+		Refresh: StatusCarrierGatewayState(conn, id),
 		Timeout: CarrierGatewayDeletedTimeout,
 	}
 
