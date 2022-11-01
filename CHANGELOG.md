@@ -20,6 +20,7 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * data-source/aws_ip_ranges: Fix regression causing filtering on `regions` and `services` to become case-sensitive ([#27558](https://github.com/hashicorp/terraform-provider-aws/issues/27558))
+* resource/aws_dynamodb_table: Fix bug causing spurious diffs with and preventing proper updating of `stream_enabled` and `stream_view_type` ([#27566](https://github.com/hashicorp/terraform-provider-aws/issues/27566))
 * resource/aws_instance: Use EC2 API idempotency to ensure that only a single Instance is created ([#27561](https://github.com/hashicorp/terraform-provider-aws/issues/27561))
 
 ## 4.37.0 (October 27, 2022)
