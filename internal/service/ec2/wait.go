@@ -2816,6 +2816,72 @@ func WaitIPAMUpdated(conn *ec2.EC2, id string, timeout time.Duration) (*ec2.Ipam
 	return nil, err
 }
 
+func WaitIPAMPoolCreated(conn *ec2.EC2, id string, timeout time.Duration) (*ec2.IpamPool, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.IpamPoolStateCreateInProgress},
+		Target:  []string{ec2.IpamPoolStateCreateComplete},
+		Refresh: StatusIPAMPoolState(conn, id),
+		Timeout: timeout,
+		Delay:   5 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.IpamPool); ok {
+		if state := aws.StringValue(output.State); state == ec2.IpamPoolStateCreateFailed {
+			tfresource.SetLastError(err, errors.New(aws.StringValue(output.StateMessage)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func WaitIPAMPoolDeleted(conn *ec2.EC2, id string, timeout time.Duration) (*ec2.IpamPool, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.IpamPoolStateDeleteInProgress},
+		Target:  []string{},
+		Refresh: StatusIPAMPoolState(conn, id),
+		Timeout: timeout,
+		Delay:   5 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.IpamPool); ok {
+		if state := aws.StringValue(output.State); state == ec2.IpamPoolStateDeleteFailed {
+			tfresource.SetLastError(err, errors.New(aws.StringValue(output.StateMessage)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func WaitIPAMPoolUpdated(conn *ec2.EC2, id string, timeout time.Duration) (*ec2.IpamPool, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.IpamPoolStateModifyInProgress},
+		Target:  []string{ec2.IpamPoolStateModifyComplete},
+		Refresh: StatusIPAMPoolState(conn, id),
+		Timeout: timeout,
+		Delay:   5 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.IpamPool); ok {
+		if state := aws.StringValue(output.State); state == ec2.IpamPoolStateModifyFailed {
+			tfresource.SetLastError(err, errors.New(aws.StringValue(output.StateMessage)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
 func WaitIPAMPoolCIDRCreated(conn *ec2.EC2, cidrBlock, poolID string, timeout time.Duration) (*ec2.IpamPoolCidr, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{ec2.IpamPoolCidrStatePendingProvision},
