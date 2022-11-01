@@ -9,7 +9,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -21,28 +20,21 @@ import (
 
 func ResourceIPAMPool() *schema.Resource {
 	return &schema.Resource{
-		Create:        ResourceIPAMPoolCreate,
-		Read:          ResourceIPAMPoolRead,
-		Update:        ResourceIPAMPoolUpdate,
-		Delete:        ResourceIPAMPoolDelete,
-		CustomizeDiff: customdiff.Sequence(verify.SetTagsDiff),
+		Create: ResourceIPAMPoolCreate,
+		Read:   ResourceIPAMPoolRead,
+		Update: ResourceIPAMPoolUpdate,
+		Delete: ResourceIPAMPoolDelete,
+
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
+
 		Schema: map[string]*schema.Schema{
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"address_family": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice(ec2.AddressFamily_Values(), false),
-			},
-			"publicly_advertisable": {
-				Type:     schema.TypeBool,
-				Optional: true,
 			},
 			"allocation_default_netmask_length": {
 				Type:         schema.TypeInt,
@@ -60,6 +52,10 @@ func ResourceIPAMPool() *schema.Resource {
 				ValidateFunc: validation.IntBetween(0, 128),
 			},
 			"allocation_resource_tags": tftags.TagsSchema(),
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"auto_import": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -98,6 +94,10 @@ func ResourceIPAMPool() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
+			"publicly_advertisable": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
 			"source_ipam_pool_id": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -110,6 +110,8 @@ func ResourceIPAMPool() *schema.Resource {
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
 		},
+
+		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
