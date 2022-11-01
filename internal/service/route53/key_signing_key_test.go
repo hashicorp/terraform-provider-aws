@@ -32,13 +32,13 @@ func TestAccRoute53KeySigningKey_basic(t *testing.T) {
 	domainName := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckKeySigningKey(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, route53.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckKeySigningKeyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckKeySigningKey(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckKeySigningKeyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccKeySigningKeyConfig_Name(rName, domainName),
+				Config: testAccKeySigningKeyConfig_name(rName, domainName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccKeySigningKeyExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "digest_algorithm_mnemonic", "SHA-256"),
@@ -73,13 +73,13 @@ func TestAccRoute53KeySigningKey_disappears(t *testing.T) {
 	domainName := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckKeySigningKey(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, route53.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckKeySigningKeyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckKeySigningKey(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckKeySigningKeyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccKeySigningKeyConfig_Name(rName, domainName),
+				Config: testAccKeySigningKeyConfig_name(rName, domainName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccKeySigningKeyExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfroute53.ResourceKeySigningKey(), resourceName),
@@ -97,13 +97,13 @@ func TestAccRoute53KeySigningKey_status(t *testing.T) {
 	domainName := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckKeySigningKey(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, route53.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckKeySigningKeyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckKeySigningKey(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckKeySigningKeyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccKeySigningKeyConfig_Status(rName, domainName, tfroute53.KeySigningKeyStatusInactive),
+				Config: testAccKeySigningKeyConfig_status(rName, domainName, tfroute53.KeySigningKeyStatusInactive),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccKeySigningKeyExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "status", tfroute53.KeySigningKeyStatusInactive),
@@ -115,14 +115,14 @@ func TestAccRoute53KeySigningKey_status(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccKeySigningKeyConfig_Status(rName, domainName, tfroute53.KeySigningKeyStatusActive),
+				Config: testAccKeySigningKeyConfig_status(rName, domainName, tfroute53.KeySigningKeyStatusActive),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccKeySigningKeyExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "status", tfroute53.KeySigningKeyStatusActive),
 				),
 			},
 			{
-				Config: testAccKeySigningKeyConfig_Status(rName, domainName, tfroute53.KeySigningKeyStatusInactive),
+				Config: testAccKeySigningKeyConfig_status(rName, domainName, tfroute53.KeySigningKeyStatusInactive),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccKeySigningKeyExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "status", tfroute53.KeySigningKeyStatusInactive),
@@ -151,7 +151,7 @@ func testAccCheckKeySigningKeyDestroy(s *terraform.State) error {
 		}
 
 		if err != nil {
-			return fmt.Errorf("error reading Route 53 Key Signing Key (%s): %w", rs.Primary.ID, err)
+			return fmt.Errorf("reading Route 53 Key Signing Key (%s): %w", rs.Primary.ID, err)
 		}
 
 		if keySigningKey != nil {
@@ -179,7 +179,7 @@ func testAccKeySigningKeyExists(resourceName string) resource.TestCheckFunc {
 		keySigningKey, err := tfroute53.FindKeySigningKeyByResourceID(conn, rs.Primary.ID)
 
 		if err != nil {
-			return fmt.Errorf("error reading Route 53 Key Signing Key (%s): %w", rs.Primary.ID, err)
+			return fmt.Errorf("reading Route 53 Key Signing Key (%s): %w", rs.Primary.ID, err)
 		}
 
 		if keySigningKey == nil {
@@ -232,7 +232,7 @@ resource "aws_route53_zone" "test" {
 `, rName, domainName))
 }
 
-func testAccKeySigningKeyConfig_Name(rName, domainName string) string {
+func testAccKeySigningKeyConfig_name(rName, domainName string) string {
 	return acctest.ConfigCompose(
 		testAccKeySigningKeyConfig_Base(rName, domainName),
 		fmt.Sprintf(`
@@ -244,7 +244,7 @@ resource "aws_route53_key_signing_key" "test" {
 `, rName))
 }
 
-func testAccKeySigningKeyConfig_Status(rName, domainName, status string) string {
+func testAccKeySigningKeyConfig_status(rName, domainName, status string) string {
 	return acctest.ConfigCompose(
 		testAccKeySigningKeyConfig_Base(rName, domainName),
 		fmt.Sprintf(`
@@ -288,13 +288,19 @@ func testAccPreCheckKeySigningKey(t *testing.T) {
 	// Since we are outside the scope of the Terraform configuration we must
 	// call Configure() to properly initialize the provider configuration.
 	testAccProviderRoute53KeySigningKeyConfigure.Do(func() {
-		testAccProviderRoute53KeySigningKey = provider.Provider()
+		ctx := context.Background()
+		var err error
+		testAccProviderRoute53KeySigningKey, err = provider.New(ctx)
 
-		config := map[string]interface{}{
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		testAccRecordConfig_config := map[string]interface{}{
 			"region": region,
 		}
 
-		diags := testAccProviderRoute53KeySigningKey.Configure(context.Background(), terraform.NewResourceConfigRaw(config))
+		diags := testAccProviderRoute53KeySigningKey.Configure(ctx, terraform.NewResourceConfigRaw(testAccRecordConfig_config))
 
 		if diags != nil && diags.HasError() {
 			for _, d := range diags {

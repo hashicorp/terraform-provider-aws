@@ -273,9 +273,9 @@ func resourceBucketLifecycleConfigurationCreate(ctx context.Context, d *schema.R
 		input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
 	}
 
-	_, err = verify.RetryOnAWSCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
+	_, err = tfresource.RetryWhenAWSErrCodeEquals(2*time.Minute, func() (interface{}, error) {
 		return conn.PutBucketLifecycleConfigurationWithContext(ctx, input)
-	})
+	}, s3.ErrCodeNoSuchBucket)
 
 	if err != nil {
 		return diag.Errorf("error creating S3 Lifecycle Configuration for bucket (%s): %s", bucket, err)
@@ -378,9 +378,9 @@ func resourceBucketLifecycleConfigurationUpdate(ctx context.Context, d *schema.R
 		input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
 	}
 
-	_, err = verify.RetryOnAWSCode(ErrCodeNoSuchLifecycleConfiguration, func() (interface{}, error) {
+	_, err = tfresource.RetryWhenAWSErrCodeEquals(2*time.Minute, func() (interface{}, error) {
 		return conn.PutBucketLifecycleConfigurationWithContext(ctx, input)
-	})
+	}, ErrCodeNoSuchLifecycleConfiguration)
 
 	if err != nil {
 		return diag.Errorf("error updating S3 Bucket Lifecycle Configuration (%s): %s", d.Id(), err)

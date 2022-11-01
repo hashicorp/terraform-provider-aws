@@ -23,7 +23,7 @@ func statusWorkspaceStatus(conn *managedgrafana.ManagedGrafana, id string) resou
 	}
 }
 
-func statusWorkspaceSamlConfiguration(conn *managedgrafana.ManagedGrafana, id string) resource.StateRefreshFunc {
+func statusWorkspaceSAMLConfiguration(conn *managedgrafana.ManagedGrafana, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindSamlConfigurationByID(conn, id)
 

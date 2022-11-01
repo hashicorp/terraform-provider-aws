@@ -26,12 +26,12 @@ func TestAccDataSyncLocationFSxLustreFileSystem_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService(fsx.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, datasync.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckLocationFSxLustreDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, datasync.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLocationFSxLustreDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLocationFSxLustreConfig(),
+				Config: testAccLocationFSxLustreFileSystemConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocationFSxLustreExists(resourceName, &locationFsxLustre1),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "datasync", regexp.MustCompile(`location/loc-.+`)),
@@ -46,7 +46,7 @@ func TestAccDataSyncLocationFSxLustreFileSystem_basic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateIdFunc: testAccWSDataSyncLocationFsxLustreImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccLocationFSxLustreImportStateID(resourceName),
 			},
 		},
 	})
@@ -62,12 +62,12 @@ func TestAccDataSyncLocationFSxLustreFileSystem_disappears(t *testing.T) {
 			acctest.PreCheckPartitionHasService(fsx.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, datasync.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckLocationFSxLustreDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, datasync.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLocationFSxLustreDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLocationFSxLustreConfig(),
+				Config: testAccLocationFSxLustreFileSystemConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocationFSxLustreExists(resourceName, &locationFsxLustre1),
 					acctest.CheckResourceDisappears(acctest.Provider, tfdatasync.ResourceLocationFSxLustreFileSystem(), resourceName),
@@ -89,12 +89,12 @@ func TestAccDataSyncLocationFSxLustreFileSystem_subdirectory(t *testing.T) {
 			acctest.PreCheckPartitionHasService(fsx.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, datasync.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckLocationFSxLustreDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, datasync.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLocationFSxLustreDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLocationFSxLustreSubdirectoryConfig("/subdirectory1/"),
+				Config: testAccLocationFSxLustreFileSystemConfig_subdirectory("/subdirectory1/"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocationFSxLustreExists(resourceName, &locationFsxLustre1),
 					resource.TestCheckResourceAttr(resourceName, "subdirectory", "/subdirectory1/"),
@@ -104,7 +104,7 @@ func TestAccDataSyncLocationFSxLustreFileSystem_subdirectory(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateIdFunc: testAccWSDataSyncLocationFsxLustreImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccLocationFSxLustreImportStateID(resourceName),
 			},
 		},
 	})
@@ -120,12 +120,12 @@ func TestAccDataSyncLocationFSxLustreFileSystem_tags(t *testing.T) {
 			acctest.PreCheckPartitionHasService(fsx.EndpointsID, t)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, datasync.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckLocationFSxLustreDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, datasync.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLocationFSxLustreDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLocationFSxLustreTags1Config("key1", "value1"),
+				Config: testAccLocationFSxLustreFileSystemConfig_tags1("key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocationFSxLustreExists(resourceName, &locationFsxLustre1),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -136,10 +136,10 @@ func TestAccDataSyncLocationFSxLustreFileSystem_tags(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateIdFunc: testAccWSDataSyncLocationFsxLustreImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccLocationFSxLustreImportStateID(resourceName),
 			},
 			{
-				Config: testAccLocationFSxLustreTags2Config("key1", "value1updated", "key2", "value2"),
+				Config: testAccLocationFSxLustreFileSystemConfig_tags2("key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocationFSxLustreExists(resourceName, &locationFsxLustre1),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -148,7 +148,7 @@ func TestAccDataSyncLocationFSxLustreFileSystem_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccLocationFSxLustreTags1Config("key1", "value1"),
+				Config: testAccLocationFSxLustreFileSystemConfig_tags1("key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocationFSxLustreExists(resourceName, &locationFsxLustre1),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -167,7 +167,7 @@ func testAccCheckLocationFSxLustreDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := tfdatasync.FindFsxLustreLocationByARN(conn, rs.Primary.ID)
+		_, err := tfdatasync.FindFSxLustreLocationByARN(conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -191,7 +191,7 @@ func testAccCheckLocationFSxLustreExists(resourceName string, locationFsxLustre 
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncConn
-		output, err := tfdatasync.FindFsxLustreLocationByARN(conn, rs.Primary.ID)
+		output, err := tfdatasync.FindFSxLustreLocationByARN(conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -207,7 +207,7 @@ func testAccCheckLocationFSxLustreExists(resourceName string, locationFsxLustre 
 	}
 }
 
-func testAccWSDataSyncLocationFsxLustreImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+func testAccLocationFSxLustreImportStateID(resourceName string) resource.ImportStateIdFunc {
 	return func(s *terraform.State) (string, error) {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -218,7 +218,7 @@ func testAccWSDataSyncLocationFsxLustreImportStateIdFunc(resourceName string) re
 	}
 }
 
-func testAccLocationFSxLustreConfig() string {
+func testAccLocationFSxLustreFileSystemConfig_basic() string {
 	return acctest.ConfigCompose(testAccFSxLustreFileSystemBaseConfig(), `
 resource "aws_datasync_location_fsx_lustre_file_system" "test" {
   fsx_filesystem_arn  = aws_fsx_lustre_file_system.test.arn
@@ -227,7 +227,7 @@ resource "aws_datasync_location_fsx_lustre_file_system" "test" {
 `)
 }
 
-func testAccLocationFSxLustreSubdirectoryConfig(subdirectory string) string {
+func testAccLocationFSxLustreFileSystemConfig_subdirectory(subdirectory string) string {
 	return acctest.ConfigCompose(testAccFSxLustreFileSystemBaseConfig(), fmt.Sprintf(`
 resource "aws_datasync_location_fsx_lustre_file_system" "test" {
   fsx_filesystem_arn  = aws_fsx_lustre_file_system.test.arn
@@ -237,7 +237,7 @@ resource "aws_datasync_location_fsx_lustre_file_system" "test" {
 `, subdirectory))
 }
 
-func testAccLocationFSxLustreTags1Config(key1, value1 string) string {
+func testAccLocationFSxLustreFileSystemConfig_tags1(key1, value1 string) string {
 	return acctest.ConfigCompose(testAccFSxLustreFileSystemBaseConfig(), fmt.Sprintf(`
 resource "aws_datasync_location_fsx_lustre_file_system" "test" {
   fsx_filesystem_arn  = aws_fsx_lustre_file_system.test.arn
@@ -250,7 +250,7 @@ resource "aws_datasync_location_fsx_lustre_file_system" "test" {
 `, key1, value1))
 }
 
-func testAccLocationFSxLustreTags2Config(key1, value1, key2, value2 string) string {
+func testAccLocationFSxLustreFileSystemConfig_tags2(key1, value1, key2, value2 string) string {
 	return acctest.ConfigCompose(testAccFSxLustreFileSystemBaseConfig(), fmt.Sprintf(`
 resource "aws_datasync_location_fsx_lustre_file_system" "test" {
   fsx_filesystem_arn  = aws_fsx_lustre_file_system.test.arn

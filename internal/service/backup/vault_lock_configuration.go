@@ -88,7 +88,7 @@ func resourceVaultLockConfigurationCreate(d *schema.ResourceData, meta interface
 func resourceVaultLockConfigurationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).BackupConn
 
-	output, err := FindBackupVaultByName(conn, d.Id())
+	output, err := FindVaultByName(conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Backup Vault Lock Configuration (%s) not found, removing from state", d.Id())

@@ -173,7 +173,7 @@ func resourceNetworkProfileRead(d *schema.ResourceData, meta interface{}) error 
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	project, err := FindNetworkProfileByArn(conn, d.Id())
+	project, err := FindNetworkProfileByARN(conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] DeviceFarm Network Profile (%s) not found, removing from state", d.Id())
@@ -199,7 +199,7 @@ func resourceNetworkProfileRead(d *schema.ResourceData, meta interface{}) error 
 	d.Set("uplink_loss_percent", project.UplinkLossPercent)
 	d.Set("type", project.Type)
 
-	projectArn, err := decodeDevicefarmProjectArn(arn, "networkprofile", meta)
+	projectArn, err := decodeProjectARN(arn, "networkprofile", meta)
 	if err != nil {
 		return fmt.Errorf("error decoding project_arn (%s): %w", arn, err)
 	}

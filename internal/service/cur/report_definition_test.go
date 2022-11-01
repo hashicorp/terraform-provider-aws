@@ -21,10 +21,10 @@ func testAccReportDefinition_basic(t *testing.T) {
 	bucketName := fmt.Sprintf("tf-test-bucket-%d", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckCur(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, cur.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckReportDefinitionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cur.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckReportDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReportDefinitionConfig_basic(reportName, bucketName, ""),
@@ -80,10 +80,10 @@ func testAccReportDefinition_textOrCSV(t *testing.T) {
 	reportVersioning := "CREATE_NEW_REPORT"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckCur(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, cur.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckReportDefinitionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cur.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckReportDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReportDefinitionConfig_additional(reportName, bucketName, bucketPrefix, format, compression, additionalArtifacts, refreshClosedReports, reportVersioning),
@@ -124,10 +124,10 @@ func testAccReportDefinition_parquet(t *testing.T) {
 	reportVersioning := "CREATE_NEW_REPORT"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckCur(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, cur.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckReportDefinitionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cur.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckReportDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReportDefinitionConfig_additional(reportName, bucketName, bucketPrefix, format, compression, additionalArtifacts, refreshClosedReports, reportVersioning),
@@ -167,10 +167,10 @@ func testAccReportDefinition_athena(t *testing.T) {
 	reportVersioning := "OVERWRITE_REPORT"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckCur(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, cur.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckReportDefinitionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cur.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckReportDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReportDefinitionConfig_additional(reportName, bucketName, bucketPrefix, format, compression, additionalArtifacts, refreshClosedReports, reportVersioning),
@@ -211,10 +211,10 @@ func testAccReportDefinition_refresh(t *testing.T) {
 	reportVersioning := "CREATE_NEW_REPORT"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckCur(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, cur.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckReportDefinitionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cur.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckReportDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReportDefinitionConfig_additional(reportName, bucketName, bucketPrefix, format, compression, additionalArtifacts, refreshClosedReports, reportVersioning),
@@ -255,10 +255,10 @@ func testAccReportDefinition_overwrite(t *testing.T) {
 	reportVersioning := "OVERWRITE_REPORT"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckCur(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, cur.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckReportDefinitionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cur.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckReportDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReportDefinitionConfig_additional(reportName, bucketName, bucketPrefix, format, compression, additionalArtifacts, refreshClosedReports, reportVersioning),
@@ -292,10 +292,10 @@ func testAccReportDefinition_disappears(t *testing.T) {
 	bucketName := fmt.Sprintf("tf-test-bucket-%d", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckCur(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, cur.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckReportDefinitionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cur.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckReportDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReportDefinitionConfig_basic(reportName, bucketName, ""),
@@ -329,7 +329,6 @@ func testAccCheckReportDefinitionDestroy(s *terraform.State) error {
 		return fmt.Errorf("Report Definition still exists: %q", rs.Primary.ID)
 	}
 	return nil
-
 }
 
 func testAccCheckReportDefinitionExists(resourceName string) resource.TestCheckFunc {
@@ -356,7 +355,7 @@ func testAccCheckReportDefinitionExists(resourceName string) resource.TestCheckF
 
 func testAccReportDefinitionConfig_basic(reportName, bucketName, prefix string) string {
 	return acctest.ConfigCompose(
-		testAccCurRegionProviderConfig(),
+		testAccRegionProviderConfig(),
 		fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket        = %[2]q
@@ -430,7 +429,7 @@ func testAccReportDefinitionConfig_additional(reportName string, bucketName stri
 	}
 
 	return acctest.ConfigCompose(
-		testAccCurRegionProviderConfig(),
+		testAccRegionProviderConfig(),
 		fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket        = "%[2]s"

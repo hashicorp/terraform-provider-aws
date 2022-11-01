@@ -13,7 +13,7 @@ import (
 
 func DataSourceBroker() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourcemqBrokerRead,
+		Read: dataSourceBrokerRead,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -244,7 +244,7 @@ func DataSourceBroker() *schema.Resource {
 	}
 }
 
-func dataSourcemqBrokerRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceBrokerRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).MQConn
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 

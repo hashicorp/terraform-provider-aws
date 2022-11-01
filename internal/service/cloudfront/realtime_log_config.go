@@ -188,7 +188,7 @@ func resourceRealtimeLogConfigDelete(d *schema.ResourceData, meta interface{}) e
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting Cloudfront Real-time Log Config (%s): %w", d.Id(), err)
+		return fmt.Errorf("error deleting CloudFront Real-time Log Config (%s): %w", d.Id(), err)
 	}
 
 	return nil

@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"regexp"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/keyspaces"
@@ -26,6 +27,11 @@ func ResourceKeyspace() *schema.Resource {
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
+		},
+
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(1 * time.Minute),
+			Delete: schema.DefaultTimeout(1 * time.Minute),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -57,8 +63,8 @@ func resourceKeyspaceCreate(ctx context.Context, d *schema.ResourceData, meta in
 	conn := meta.(*conns.AWSClient).KeyspacesConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
-	name := d.Get("name").(string)
 
+	name := d.Get("name").(string)
 	input := &keyspaces.CreateKeyspaceInput{
 		KeyspaceName: aws.String(name),
 	}
@@ -72,14 +78,18 @@ func resourceKeyspaceCreate(ctx context.Context, d *schema.ResourceData, meta in
 	_, err := conn.CreateKeyspaceWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("error creating Keyspaces Keyspace (%s): %s", name, err)
-	}
-
-	if err := waitKeyspaceExists(ctx, conn, name); err != nil {
-		return diag.Errorf("error waiting for Keyspaces Keyspace (%s) to exist: %s", name, err)
+		return diag.Errorf("creating Keyspaces Keyspace (%s): %s", name, err)
 	}
 
 	d.SetId(name)
+
+	_, err = tfresource.RetryWhenNotFoundContext(ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
+		return FindKeyspaceByName(ctx, conn, d.Id())
+	})
+
+	if err != nil {
+		return diag.Errorf("waiting for Keyspaces Keyspace (%s) create: %s", d.Id(), err)
+	}
 
 	return resourceKeyspaceRead(ctx, d, meta)
 }
@@ -98,7 +108,7 @@ func resourceKeyspaceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if err != nil {
-		return diag.Errorf("error reading Keyspaces Keyspace (%s): %s", d.Id(), err)
+		return diag.Errorf("reading Keyspaces Keyspace (%s): %s", d.Id(), err)
 	}
 
 	d.Set("arn", keyspace.ResourceArn)
@@ -107,18 +117,18 @@ func resourceKeyspaceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	tags, err := ListTags(conn, d.Get("arn").(string))
 
 	if err != nil {
-		return diag.Errorf("error listing tags for Keyspaces Keyspace (%s): %s", d.Id(), err)
+		return diag.Errorf("listing tags for Keyspaces Keyspace (%s): %s", d.Id(), err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.Errorf("error setting tags for Keyspaces Keyspace (%s): %s", d.Id(), err)
+		return diag.Errorf("setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return diag.Errorf("error setting tags_all for Keyspaces Keyspace (%s): %s", d.Id(), err)
+		return diag.Errorf("setting tags_all: %s", err)
 	}
 
 	return nil
@@ -131,7 +141,7 @@ func resourceKeyspaceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return diag.Errorf("error updating Keyspaces Keyspace (%s) tags: %s", d.Id(), err)
+			return diag.Errorf("updating Keyspaces Keyspace (%s) tags: %s", d.Id(), err)
 		}
 	}
 
@@ -142,20 +152,28 @@ func resourceKeyspaceDelete(ctx context.Context, d *schema.ResourceData, meta in
 	conn := meta.(*conns.AWSClient).KeyspacesConn
 
 	log.Printf("[DEBUG] Deleting Keyspaces Keyspace: (%s)", d.Id())
-	_, err := conn.DeleteKeyspaceWithContext(ctx, &keyspaces.DeleteKeyspaceInput{
-		KeyspaceName: aws.String(d.Id()),
-	})
+	_, err := tfresource.RetryWhenAWSErrMessageContains(d.Timeout(schema.TimeoutDelete),
+		func() (interface{}, error) {
+			return conn.DeleteKeyspaceWithContext(ctx, &keyspaces.DeleteKeyspaceInput{
+				KeyspaceName: aws.String(d.Id()),
+			})
+		},
+		keyspaces.ErrCodeConflictException, "a table under it is currently being created or deleted")
 
 	if tfawserr.ErrCodeEquals(err, keyspaces.ErrCodeResourceNotFoundException) {
 		return nil
 	}
 
 	if err != nil {
-		return diag.Errorf("error deleting Keyspaces Keyspace (%s): %s", d.Id(), err)
+		return diag.Errorf("deleting Keyspaces Keyspace (%s): %s", d.Id(), err)
 	}
 
-	if err := waitKeyspaceDisappears(ctx, conn, d.Id()); err != nil {
-		return diag.Errorf("error waiting for Keyspaces Keyspace (%s) to disappear: %s", d.Id(), err)
+	_, err = tfresource.RetryUntilNotFoundContext(ctx, d.Timeout(schema.TimeoutDelete), func() (interface{}, error) {
+		return FindKeyspaceByName(ctx, conn, d.Id())
+	})
+
+	if err != nil {
+		return diag.Errorf("waiting for Keyspaces Keyspace (%s) delete: %s", d.Id(), err)
 	}
 
 	return nil

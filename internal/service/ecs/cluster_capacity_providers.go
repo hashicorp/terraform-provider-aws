@@ -164,7 +164,7 @@ func resourceClusterCapacityProvidersDelete(ctx context.Context, d *schema.Resou
 }
 
 func retryClusterCapacityProvidersPut(ctx context.Context, conn *ecs.ECS, input *ecs.PutClusterCapacityProvidersInput) error {
-	err := resource.RetryContext(ctx, ecsClusterTimeoutUpdate, func() *resource.RetryError {
+	err := resource.RetryContext(ctx, clusterUpdateTimeout, func() *resource.RetryError {
 		_, err := conn.PutClusterCapacityProvidersWithContext(ctx, input)
 		if err != nil {
 			if tfawserr.ErrMessageContains(err, ecs.ErrCodeClientException, "Cluster was not ACTIVE") {

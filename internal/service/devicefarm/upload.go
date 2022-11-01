@@ -95,7 +95,7 @@ func resourceUploadCreate(d *schema.ResourceData, meta interface{}) error {
 func resourceUploadRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DeviceFarmConn
 
-	upload, err := FindUploadByArn(conn, d.Id())
+	upload, err := FindUploadByARN(conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] DeviceFarm Upload (%s) not found, removing from state", d.Id())
@@ -116,7 +116,7 @@ func resourceUploadRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("metadata", upload.Metadata)
 	d.Set("arn", arn)
 
-	projectArn, err := decodeDevicefarmProjectArn(arn, "upload", meta)
+	projectArn, err := decodeProjectARN(arn, "upload", meta)
 	if err != nil {
 		return fmt.Errorf("error decoding project_arn (%s): %w", arn, err)
 	}

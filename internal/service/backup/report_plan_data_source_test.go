@@ -18,16 +18,16 @@ func TestAccBackupReportPlanDataSource_basic(t *testing.T) {
 	rName2 := fmt.Sprintf("tf_acc_test_%s", sdkacctest.RandString(7))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccReportPlanPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, backup.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccReportPlanPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, backup.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccReportPlanDataSourceNonExistentConfig,
+				Config:      testAccReportPlanDataSourceConfig_nonExistent,
 				ExpectError: regexp.MustCompile(`error reading Backup Report Plan`),
 			},
 			{
-				Config: testAccReportPlanDataSourceConfig(rName, rName2),
+				Config: testAccReportPlanDataSourceConfig_basic(rName, rName2),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(datasourceName, "creation_time", resourceName, "creation_time"),
@@ -48,13 +48,13 @@ func TestAccBackupReportPlanDataSource_basic(t *testing.T) {
 	})
 }
 
-const testAccReportPlanDataSourceNonExistentConfig = `
+const testAccReportPlanDataSourceConfig_nonExistent = `
 data "aws_backup_report_plan" "test" {
   name = "tf_acc_test_does_not_exist"
 }
 `
 
-func testAccReportPlanDataSourceConfig(rName, rName2 string) string {
+func testAccReportPlanDataSourceConfig_basic(rName, rName2 string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q

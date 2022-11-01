@@ -1,0 +1,67 @@
+name: ProviderLint Checks
+
+on:
+  push:
+    branches:
+      - main
+      - 'release/**'
+  pull_request:
+    paths:
+      - .ci/scripts/providerlint.sh
+      - .github/workflows/providerlint.yml
+      - .go-version
+      - GNUmakefile
+      - go.sum
+      - internal/**
+      - names/**
+
+jobs:
+  providerlinta:
+    name: 1 of 2
+    runs-on: [custom, linux, small]
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-go@v3
+        with:
+          go-version-file: .go-version
+      - name: go env
+        run: echo "GOCACHE=$(go env GOCACHE)" >> $GITHUB_ENV
+      - uses: actions/cache@v3
+        continue-on-error: true
+        timeout-minutes: 2
+        with:
+          path: ${{ env.GOCACHE }}
+          key: ${{ runner.os }}-GOCACHE-${{ hashFiles('go.sum') }}-${{ hashFiles('internal/**') }}
+      - uses: actions/cache@v3
+        continue-on-error: true
+        timeout-minutes: 2
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
+      - run: cd .ci/providerlint && go install .
+      - run: .ci/scripts/providerlint.sh ec2
+  providerlintb:
+    name: 2 of 2
+    needs: [providerlinta]
+    runs-on: [custom, linux, medium]
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-go@v3
+        with:
+          go-version-file: .go-version
+      - name: go env
+        run: echo "GOCACHE=$(go env GOCACHE)" >> $GITHUB_ENV
+      - uses: actions/cache@v3
+        continue-on-error: true
+        timeout-minutes: 2
+        with:
+          path: ${{ env.GOCACHE }}
+          key: ${{ runner.os }}-GOCACHE-${{ hashFiles('go.sum') }}-${{ hashFiles('internal/**') }}
+      - uses: actions/cache@v3
+        continue-on-error: true
+        timeout-minutes: 2
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
+      - run: cd .ci/providerlint && go install .
+      - run: make providerlint

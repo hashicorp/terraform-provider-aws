@@ -23,10 +23,10 @@ func TestAccAPIGatewayV2Route_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRouteDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRouteDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRouteConfig_basicWebSocket(rName),
@@ -61,10 +61,10 @@ func TestAccAPIGatewayV2Route_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRouteDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRouteDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRouteConfig_basicWebSocket(rName),
@@ -86,10 +86,10 @@ func TestAccAPIGatewayV2Route_authorizer(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRouteDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRouteDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRouteConfig_authorizer(rName),
@@ -143,10 +143,10 @@ func TestAccAPIGatewayV2Route_jwtAuthorization(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRouteDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRouteDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRouteConfig_jwtAuthorization(rName),
@@ -201,10 +201,10 @@ func TestAccAPIGatewayV2Route_model(t *testing.T) {
 	rName := strings.ReplaceAll(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), "-", "")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRouteDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRouteDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRouteConfig_model(rName),
@@ -240,10 +240,10 @@ func TestAccAPIGatewayV2Route_requestParameters(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRouteDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRouteDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRouteConfig_requestParameters(rName),
@@ -322,10 +322,10 @@ func TestAccAPIGatewayV2Route_simpleAttributes(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRouteDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRouteDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRouteConfig_simpleAttributes(rName),
@@ -393,10 +393,10 @@ func TestAccAPIGatewayV2Route_target(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRouteDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRouteDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRouteConfig_target(rName),
@@ -431,13 +431,13 @@ func TestAccAPIGatewayV2Route_updateRouteKey(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRouteDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRouteDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRouteConfig_routeKey(rName, "GET /path"),
+				Config: testAccRouteConfig_key(rName, "GET /path"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteExists(resourceName, &apiId, &v),
 					resource.TestCheckResourceAttr(resourceName, "api_key_required", "false"),
@@ -453,7 +453,7 @@ func TestAccAPIGatewayV2Route_updateRouteKey(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccRouteConfig_routeKey(rName, "POST /new/path"),
+				Config: testAccRouteConfig_key(rName, "POST /new/path"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteExists(resourceName, &apiId, &v),
 					resource.TestCheckResourceAttr(resourceName, "api_key_required", "false"),
@@ -721,7 +721,7 @@ resource "aws_apigatewayv2_route" "test" {
 `)
 }
 
-func testAccRouteConfig_routeKey(rName, routeKey string) string {
+func testAccRouteConfig_key(rName, routeKey string) string {
 	return acctest.ConfigCompose(
 		testAccRouteConfig_apiHTTP(rName),
 		fmt.Sprintf(`

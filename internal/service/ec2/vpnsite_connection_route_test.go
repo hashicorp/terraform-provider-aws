@@ -14,19 +14,19 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccVPNSiteConnectionRoute_basic(t *testing.T) {
+func TestAccSiteVPNConnectionRoute_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
 	resourceName := "aws_vpn_connection_route.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccVPNConnectionRouteDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccVPNConnectionRouteDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPNConnectionRouteConfig(rName, rBgpAsn),
+				Config: testAccSiteVPNConnectionRouteConfig_basic(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccVPNConnectionRouteExists(resourceName),
 				),
@@ -35,19 +35,19 @@ func TestAccVPNSiteConnectionRoute_basic(t *testing.T) {
 	})
 }
 
-func TestAccVPNSiteConnectionRoute_disappears(t *testing.T) {
+func TestAccSiteVPNConnectionRoute_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
 	resourceName := "aws_vpn_connection_route.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccVPNConnectionRouteDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccVPNConnectionRouteDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPNConnectionRouteConfig(rName, rBgpAsn),
+				Config: testAccSiteVPNConnectionRouteConfig_basic(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccVPNConnectionRouteExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceVPNConnectionRoute(), resourceName),
@@ -109,15 +109,11 @@ func testAccVPNConnectionRouteExists(n string) resource.TestCheckFunc {
 
 		_, err = tfec2.FindVPNConnectionRouteByVPNConnectionIDAndCIDR(conn, vpnConnectionID, cidrBlock)
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 
-func testAccVPNConnectionRouteConfig(rName string, rBgpAsn int) string {
+func testAccSiteVPNConnectionRouteConfig_basic(rName string, rBgpAsn int) string {
 	return fmt.Sprintf(`
 resource "aws_vpn_gateway" "test" {
   tags = {

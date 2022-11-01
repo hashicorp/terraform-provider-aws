@@ -15,17 +15,17 @@ func TestAccEKSNodeGroupsDataSource_basic(t *testing.T) {
 	dataSourceResourceName := "data.aws_eks_node_groups.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, eks.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckClusterDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, eks.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNodeGroupNamesConfig(rName),
+				Config: testAccNodeGroupsDataSourceConfig_namesBasic(rName),
 				Check:  resource.ComposeTestCheckFunc(),
 			},
 			{
-				Config: testAccNodeGroupNamesDataSourceConfig(rName),
+				Config: testAccNodeGroupsDataSourceConfig_names(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceResourceName, "cluster_name", rName),
 					resource.TestCheckResourceAttr(dataSourceResourceName, "names.#", "2"),
@@ -35,8 +35,8 @@ func TestAccEKSNodeGroupsDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccNodeGroupNamesDataSourceConfig(rName string) string {
-	return acctest.ConfigCompose(testAccNodeGroupNamesConfig(rName), `
+func testAccNodeGroupsDataSourceConfig_names(rName string) string {
+	return acctest.ConfigCompose(testAccNodeGroupsDataSourceConfig_namesBasic(rName), `
 data "aws_eks_node_groups" "test" {
   cluster_name = aws_eks_cluster.test.name
 
@@ -45,7 +45,7 @@ data "aws_eks_node_groups" "test" {
 `)
 }
 
-func testAccNodeGroupNamesConfig(rName string) string {
+func testAccNodeGroupsDataSourceConfig_namesBasic(rName string) string {
 	return acctest.ConfigCompose(testAccNodeGroupBaseConfig(rName), fmt.Sprintf(`
 resource "aws_eks_node_group" "test_a" {
   cluster_name    = aws_eks_cluster.test.name

@@ -22,13 +22,13 @@ func TestAccLogsDestination_basic(t *testing.T) {
 	rstring := sdkacctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDestinationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDestinationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDestinationConfig(rstring),
+				Config: testAccDestinationConfig_basic(rstring),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDestinationExists(resourceName, &destination),
 					resource.TestCheckResourceAttrPair(resourceName, "target_arn", streamResourceName, "arn"),
@@ -52,13 +52,13 @@ func TestAccLogsDestination_disappears(t *testing.T) {
 	rstring := sdkacctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDestinationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDestinationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDestinationConfig(rstring),
+				Config: testAccDestinationConfig_basic(rstring),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDestinationExists(resourceName, &destination),
 					acctest.CheckResourceDisappears(acctest.Provider, tflogs.ResourceDestination(), resourceName),
@@ -79,7 +79,7 @@ func testAccCheckDestinationDestroy(s *terraform.State) error {
 		_, exists, err := tflogs.LookupDestination(conn, rs.Primary.ID, nil)
 
 		if err != nil {
-			return fmt.Errorf("error reading CloudWatch Log Destination (%s): %w", rs.Primary.ID, err)
+			return fmt.Errorf("reading CloudWatch Log Destination (%s): %w", rs.Primary.ID, err)
 		}
 
 		if exists {
@@ -88,7 +88,6 @@ func testAccCheckDestinationDestroy(s *terraform.State) error {
 	}
 
 	return nil
-
 }
 
 func testAccCheckDestinationExists(n string, d *cloudwatchlogs.Destination) resource.TestCheckFunc {
@@ -113,7 +112,7 @@ func testAccCheckDestinationExists(n string, d *cloudwatchlogs.Destination) reso
 	}
 }
 
-func testAccDestinationConfig(rstring string) string {
+func testAccDestinationConfig_basic(rstring string) string {
 	return fmt.Sprintf(`
 resource "aws_kinesis_stream" "test" {
   name        = "RootAccess_%[1]s"

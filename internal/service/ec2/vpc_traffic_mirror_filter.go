@@ -65,7 +65,7 @@ func resourceTrafficMirrorFilterCreate(d *schema.ResourceData, meta interface{})
 	}
 
 	if len(tags) > 0 {
-		input.TagSpecifications = ec2TagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeTrafficMirrorFilter)
+		input.TagSpecifications = tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeTrafficMirrorFilter)
 	}
 
 	out, err := conn.CreateTrafficMirrorFilter(input)
@@ -85,7 +85,6 @@ func resourceTrafficMirrorFilterCreate(d *schema.ResourceData, meta interface{})
 		if err != nil {
 			return fmt.Errorf("error modifying EC2 Traffic Mirror Filter (%s) network services: %w", d.Id(), err)
 		}
-
 	}
 
 	return resourceTrafficMirrorFilterRead(d, meta)

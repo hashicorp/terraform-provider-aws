@@ -16,12 +16,12 @@ func TestAccMemoryDBSubnetGroupDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_memorydb_subnet_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, memorydb.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, memorydb.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSubnetGroupDataSourceConfig(rName),
+				Config: testAccSubnetGroupDataSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "description", resourceName, "description"),
@@ -38,9 +38,9 @@ func TestAccMemoryDBSubnetGroupDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccSubnetGroupDataSourceConfig(rName string) string {
+func testAccSubnetGroupDataSourceConfig_basic(rName string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigVpcWithSubnets(rName, 2),
+		acctest.ConfigVPCWithSubnets(rName, 2),
 		fmt.Sprintf(`
 resource "aws_memorydb_subnet_group" "test" {
   name       = %[1]q

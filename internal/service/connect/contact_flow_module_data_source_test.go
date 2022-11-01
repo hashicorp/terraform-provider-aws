@@ -10,18 +10,18 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccConnectContactFlowModuleDataSource_contactFlowModuleID(t *testing.T) {
+func testAccContactFlowModuleDataSource_contactFlowModuleID(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	resourceName := "aws_connect_contact_flow_module.test"
 	datasourceName := "data.aws_connect_contact_flow_module.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, connect.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccContactFlowModuleDataSourceConfig_ContactFlowModuleID(rName, resourceName),
+				Config: testAccContactFlowModuleDataSourceConfig_id(rName, resourceName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "id", resourceName, "id"),
 					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
@@ -39,19 +39,19 @@ func TestAccConnectContactFlowModuleDataSource_contactFlowModuleID(t *testing.T)
 	})
 }
 
-func TestAccConnectContactFlowModuleDataSource_name(t *testing.T) {
+func testAccContactFlowModuleDataSource_name(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	resourceName := "aws_connect_contact_flow_module.test"
 	datasourceName := "data.aws_connect_contact_flow_module.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, connect.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccContactFlowModuleDataSourceConfig_Name(rName, rName2),
+				Config: testAccContactFlowModuleDataSourceConfig_name(rName, rName2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "id", resourceName, "id"),
 					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
@@ -93,7 +93,7 @@ resource "aws_connect_contact_flow_module" "test" {
     `, rName, rName2)
 }
 
-func testAccContactFlowModuleDataSourceConfig_ContactFlowModuleID(rName, rName2 string) string {
+func testAccContactFlowModuleDataSourceConfig_id(rName, rName2 string) string {
 	return acctest.ConfigCompose(
 		testAccContactFlowModuleBaseDataSourceConfig(rName, rName2),
 		`
@@ -104,7 +104,7 @@ data "aws_connect_contact_flow_module" "test" {
 `)
 }
 
-func testAccContactFlowModuleDataSourceConfig_Name(rName, rName2 string) string {
+func testAccContactFlowModuleDataSourceConfig_name(rName, rName2 string) string {
 	return acctest.ConfigCompose(
 		testAccContactFlowModuleBaseDataSourceConfig(rName, rName2),
 		`

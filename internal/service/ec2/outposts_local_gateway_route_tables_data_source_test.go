@@ -12,12 +12,12 @@ func TestAccEC2OutpostsLocalGatewayRouteTablesDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_ec2_local_gateway_route_tables.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLocalGatewayRouteTablesDataSourceConfig(),
+				Config: testAccOutpostsLocalGatewayRouteTablesDataSourceConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "ids.#", "0"),
 				),
@@ -30,12 +30,12 @@ func TestAccEC2OutpostsLocalGatewayRouteTablesDataSource_filter(t *testing.T) {
 	dataSourceName := "data.aws_ec2_local_gateway_route_tables.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLocalGatewayRouteTablesFilterDataSourceConfig(),
+				Config: testAccOutpostsLocalGatewayRouteTablesDataSourceConfig_filter(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "ids.#", "1"),
 				),
@@ -44,13 +44,13 @@ func TestAccEC2OutpostsLocalGatewayRouteTablesDataSource_filter(t *testing.T) {
 	})
 }
 
-func testAccLocalGatewayRouteTablesDataSourceConfig() string {
+func testAccOutpostsLocalGatewayRouteTablesDataSourceConfig_basic() string {
 	return `
 data "aws_ec2_local_gateway_route_tables" "test" {}
 `
 }
 
-func testAccLocalGatewayRouteTablesFilterDataSourceConfig() string {
+func testAccOutpostsLocalGatewayRouteTablesDataSourceConfig_filter() string {
 	return `
 data "aws_ec2_local_gateway_route_tables" "all" {}
 

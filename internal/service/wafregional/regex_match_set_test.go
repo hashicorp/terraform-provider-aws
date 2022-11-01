@@ -50,13 +50,13 @@ func testAccRegexMatchSet_basic(t *testing.T) {
 	}
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(wafregional.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, wafregional.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRegexMatchSetDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(wafregional.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, wafregional.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRegexMatchSetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRegexMatchSetConfig(matchSetName, patternSetName),
+				Config: testAccRegexMatchSetConfig_basic(matchSetName, patternSetName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRegexMatchSetExists(resourceName, &matchSet),
 					testAccCheckRegexPatternSetExists("aws_wafregional_regex_pattern_set.test", &patternSet),
@@ -90,13 +90,13 @@ func testAccRegexMatchSet_changePatterns(t *testing.T) {
 	patternSetName := fmt.Sprintf("tfacc-%s", sdkacctest.RandString(5))
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(wafregional.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, wafregional.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRegexMatchSetDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(wafregional.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, wafregional.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRegexMatchSetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRegexMatchSetConfig(matchSetName, patternSetName),
+				Config: testAccRegexMatchSetConfig_basic(matchSetName, patternSetName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRegexMatchSetExists(resourceName, &before),
 					testAccCheckRegexPatternSetExists("aws_wafregional_regex_pattern_set.test", &patternSet),
@@ -142,10 +142,10 @@ func testAccRegexMatchSet_noPatterns(t *testing.T) {
 	matchSetName := fmt.Sprintf("tfacc-%s", sdkacctest.RandString(5))
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(wafregional.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, wafregional.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRegexMatchSetDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(wafregional.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, wafregional.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRegexMatchSetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRegexMatchSetConfig_noPatterns(matchSetName),
@@ -171,13 +171,13 @@ func testAccRegexMatchSet_disappears(t *testing.T) {
 	patternSetName := fmt.Sprintf("tfacc-%s", sdkacctest.RandString(5))
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(wafregional.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, wafregional.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRegexMatchSetDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(wafregional.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, wafregional.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRegexMatchSetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRegexMatchSetConfig(matchSetName, patternSetName),
+				Config: testAccRegexMatchSetConfig_basic(matchSetName, patternSetName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRegexMatchSetExists(resourceName, &matchSet),
 					acctest.CheckResourceDisappears(acctest.Provider, tfwafregional.ResourceRegexMatchSet(), resourceName),
@@ -245,7 +245,7 @@ func testAccCheckRegexMatchSetDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccRegexMatchSetConfig(matchSetName, patternSetName string) string {
+func testAccRegexMatchSetConfig_basic(matchSetName, patternSetName string) string {
 	return fmt.Sprintf(`
 resource "aws_wafregional_regex_match_set" "test" {
   name = "%s"

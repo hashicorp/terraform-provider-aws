@@ -14,13 +14,10 @@ import (
 
 const (
 	// Associated is the member status naming for regions that do not support Organizations
-	SecurityHubMemberStatusAssociated = "Associated"
-	SecurityHubMemberStatusCreated    = "Created"
-	SecurityHubMemberStatusInvited    = "Invited"
-	SecurityHubMemberStatusEnabled    = "Enabled"
-	SecurityHubMemberStatusRemoved    = "Removed"
-	SecurityHubMemberStatusResigned   = "Resigned"
-	SecurityHubMemberStatusDeleted    = "Deleted"
+	memberStatusAssociated = "Associated"
+	memberStatusInvited    = "Invited"
+	memberStatusEnabled    = "Enabled"
+	memberStatusResigned   = "Resigned"
 )
 
 func ResourceMember() *schema.Resource {
@@ -134,7 +131,7 @@ func resourceMemberRead(d *schema.ResourceData, meta interface{}) error {
 	status := aws.StringValue(member.MemberStatus)
 	d.Set("member_status", status)
 
-	invited := status == SecurityHubMemberStatusInvited || status == SecurityHubMemberStatusEnabled || status == SecurityHubMemberStatusAssociated || status == SecurityHubMemberStatusResigned
+	invited := status == memberStatusInvited || status == memberStatusEnabled || status == memberStatusAssociated || status == memberStatusResigned
 	d.Set("invite", invited)
 
 	return nil

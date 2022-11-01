@@ -12,7 +12,6 @@ Provides an EventBridge event archive resource.
 
 ~> **Note:** EventBridge was formerly known as CloudWatch Events. The functionality is identical.
 
-
 ## Example Usage
 
 ```terraform
@@ -66,6 +65,6 @@ In addition to all arguments above, the following attributes are exported:
 
 Event Archive can be imported using their name, for example
 
-```bash
-terraform import aws_cloudwatch_event_archive.imported_event_archive order-archive
+```console
+$ terraform import aws_cloudwatch_event_archive.imported_event_archive order-archive
 ```

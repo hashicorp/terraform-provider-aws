@@ -11,14 +11,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccConnectInstanceDataSource_basic(t *testing.T) {
+func testAccInstanceDataSource_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("datasource-test-terraform")
 	dataSourceName := "data.aws_connect_instance.test"
 	resourceName := "aws_connect_instance.test"
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, connect.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccInstanceDataSourceConfig_nonExistentID,
@@ -29,7 +29,7 @@ func TestAccConnectInstanceDataSource_basic(t *testing.T) {
 				ExpectError: regexp.MustCompile(`error finding Connect Instance Summary by instance_alias`),
 			},
 			{
-				Config: testAccInstanceBasicDataSourceConfig(rName),
+				Config: testAccInstanceDataSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "created_time", dataSourceName, "created_time"),
@@ -46,7 +46,7 @@ func TestAccConnectInstanceDataSource_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccInstanceAliasDataSourceConfig(rName),
+				Config: testAccInstanceDataSourceConfig_alias(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "created_time", dataSourceName, "created_time"),
@@ -78,7 +78,7 @@ data "aws_connect_instance" "test" {
 }
 `
 
-func testAccInstanceBasicDataSourceConfig(rName string) string {
+func testAccInstanceDataSourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_connect_instance" "test" {
   instance_alias           = %[1]q
@@ -93,7 +93,7 @@ data "aws_connect_instance" "test" {
 `, rName)
 }
 
-func testAccInstanceAliasDataSourceConfig(rName string) string {
+func testAccInstanceDataSourceConfig_alias(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_connect_instance" "test" {
   instance_alias           = %[1]q

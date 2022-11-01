@@ -23,17 +23,18 @@ func TestAccVPCDataSource_basic(t *testing.T) {
 	ds4ResourceName := "data.aws_vpc.by_filter"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCDataSourceConfig(rName, cidr),
+				Config: testAccVPCDataSourceConfig_basic(rName, cidr),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(ds1ResourceName, "arn", vpcResourceName, "arn"),
 					resource.TestCheckResourceAttr(ds1ResourceName, "cidr_block", cidr),
 					resource.TestCheckResourceAttr(ds1ResourceName, "enable_dns_hostnames", "false"),
 					resource.TestCheckResourceAttr(ds1ResourceName, "enable_dns_support", "true"),
+					resource.TestCheckResourceAttr(ds1ResourceName, "enable_network_address_usage_metrics", "false"),
 					resource.TestCheckResourceAttrPair(ds1ResourceName, "id", vpcResourceName, "id"),
 					resource.TestCheckResourceAttrPair(ds1ResourceName, "ipv6_association_id", vpcResourceName, "ipv6_association_id"),
 					resource.TestCheckResourceAttrPair(ds1ResourceName, "ipv6_cidr_block", vpcResourceName, "ipv6_cidr_block"),
@@ -66,13 +67,13 @@ func TestAccVPCDataSource_CIDRBlockAssociations_multiple(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckVpcDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVPCDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCCIDRBlockAssociationsMultipleDataSourceConfig(rName),
+				Config: testAccVPCDataSourceConfig_cidrBlockAssociationsMultiple(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "cidr_block_associations.#", "2"),
 				),
@@ -81,7 +82,7 @@ func TestAccVPCDataSource_CIDRBlockAssociations_multiple(t *testing.T) {
 	})
 }
 
-func testAccVPCDataSourceConfig(rName, cidr string) string {
+func testAccVPCDataSourceConfig_basic(rName, cidr string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = %[2]q
@@ -116,7 +117,7 @@ data "aws_vpc" "by_filter" {
 `, rName, cidr)
 }
 
-func testAccVPCCIDRBlockAssociationsMultipleDataSourceConfig(rName string) string {
+func testAccVPCDataSourceConfig_cidrBlockAssociationsMultiple(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"

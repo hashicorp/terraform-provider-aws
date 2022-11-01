@@ -7,9 +7,9 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/route53"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -69,10 +69,11 @@ func TestNormalizeAliasName(t *testing.T) {
 	}{
 		{"www.example.com", "www.example.com"},
 		{"www.example.com.", "www.example.com"},
-		{"dualstack.name-123456789.region.elb.amazonaws.com", "name-123456789.region.elb.amazonaws.com"},
-		{"dualstack.test-987654321.region.elb.amazonaws.com", "test-987654321.region.elb.amazonaws.com"},
+		{"dualstack.name-123456789.region.elb.amazonaws.com", "dualstack.name-123456789.region.elb.amazonaws.com"},
 		{"dualstacktest.test", "dualstacktest.test"},
+		{"ipv6.name-123456789.region.elb.amazonaws.com", "ipv6.name-123456789.region.elb.amazonaws.com"},
 		{"NAME-123456789.region.elb.amazonaws.com", "name-123456789.region.elb.amazonaws.com"},
+		{"name-123456789.region.elb.amazonaws.com", "name-123456789.region.elb.amazonaws.com"},
 	}
 
 	for _, tc := range cases {
@@ -125,13 +126,13 @@ func TestAccRoute53Record_basic(t *testing.T) {
 	resourceName := "aws_route53_record.default"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, route53.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRecordDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRecordDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoute53RecordConfig,
+				Config: testAccRecordConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecordExists(resourceName, &record1),
 				),
@@ -151,13 +152,13 @@ func TestAccRoute53Record_underscored(t *testing.T) {
 	resourceName := "aws_route53_record.underscore"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, route53.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRecordDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRecordDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoute53RecordConfigUnderscoreInName,
+				Config: testAccRecordConfig_underscoreInName,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecordExists(resourceName, &record1),
 				),
@@ -172,19 +173,19 @@ func TestAccRoute53Record_underscored(t *testing.T) {
 	})
 }
 
-func TestAccRoute53Record_disappears(t *testing.T) {
+func TestAccRoute53Record_Disappears_basic(t *testing.T) {
 	var record1 route53.ResourceRecordSet
 	var zone1 route53.GetHostedZoneOutput
 	resourceName := "aws_route53_record.default"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, route53.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRecordDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRecordDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoute53RecordConfig,
+				Config: testAccRecordConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckZoneExists("aws_route53_zone.main", &zone1),
 					testAccCheckRecordExists(resourceName, &record1),
@@ -201,13 +202,13 @@ func TestAccRoute53Record_Disappears_multipleRecords(t *testing.T) {
 	var zone1 route53.GetHostedZoneOutput
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, route53.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRecordDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRecordDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoute53RecordConfigMultiple,
+				Config: testAccRecordConfig_multiple,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckZoneExists("aws_route53_zone.test", &zone1),
 					testAccCheckRecordExists("aws_route53_record.test.0", &record1),
@@ -223,18 +224,18 @@ func TestAccRoute53Record_Disappears_multipleRecords(t *testing.T) {
 	})
 }
 
-func TestAccRoute53Record_Basic_fqdn(t *testing.T) {
+func TestAccRoute53Record_fqdn(t *testing.T) {
 	var record1, record2 route53.ResourceRecordSet
 	resourceName := "aws_route53_record.default"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, route53.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRecordDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRecordDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoute53RecordConfig_fqdn,
+				Config: testAccRecordConfig_fqdn,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecordExists(resourceName, &record1),
 				),
@@ -253,7 +254,7 @@ func TestAccRoute53Record_Basic_fqdn(t *testing.T) {
 			// non-empty plan would appear, and the record will fail to exist in
 			// testAccCheckRecordExists
 			{
-				Config: testAccRoute53RecordConfig_fqdn_no_op,
+				Config: testAccRecordConfig_fqdnNoOp,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecordExists(resourceName, &record2),
 				),
@@ -262,20 +263,20 @@ func TestAccRoute53Record_Basic_fqdn(t *testing.T) {
 	})
 }
 
-// TestAccRoute53Record_Basic_trailingPeriodAndZoneID ensures an aws_route53_record
+// TestAccRoute53Record_trailingPeriodAndZoneID ensures an aws_route53_record
 // created with a name configured with a trailing period and explicit zone_id gets imported correctly
-func TestAccRoute53Record_Basic_trailingPeriodAndZoneID(t *testing.T) {
+func TestAccRoute53Record_trailingPeriodAndZoneID(t *testing.T) {
 	var record1 route53.ResourceRecordSet
 	resourceName := "aws_route53_record.default"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, route53.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRecordDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRecordDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoute53RecordConfig_nameWithTrailingPeriod,
+				Config: testAccRecordConfig_nameTrailingPeriod,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecordExists(resourceName, &record1),
 				),
@@ -290,18 +291,18 @@ func TestAccRoute53Record_Basic_trailingPeriodAndZoneID(t *testing.T) {
 	})
 }
 
-func TestAccRoute53Record_txtSupport(t *testing.T) {
+func TestAccRoute53Record_Support_txt(t *testing.T) {
 	var record1 route53.ResourceRecordSet
 	resourceName := "aws_route53_record.default"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, route53.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRecordDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRecordDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoute53RecordConfigTXT,
+				Config: testAccRecordConfig_txt,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecordExists(resourceName, &record1),
 				),
@@ -316,18 +317,18 @@ func TestAccRoute53Record_txtSupport(t *testing.T) {
 	})
 }
 
-func TestAccRoute53Record_spfSupport(t *testing.T) {
+func TestAccRoute53Record_Support_spf(t *testing.T) {
 	var record1 route53.ResourceRecordSet
 	resourceName := "aws_route53_record.default"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, route53.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRecordDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRecordDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoute53RecordConfigSPF,
+				Config: testAccRecordConfig_spf,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecordExists(resourceName, &record1),
 					resource.TestCheckTypeSetElemAttr(resourceName, "records.*", "include:domain.test"),
@@ -343,18 +344,18 @@ func TestAccRoute53Record_spfSupport(t *testing.T) {
 	})
 }
 
-func TestAccRoute53Record_caaSupport(t *testing.T) {
+func TestAccRoute53Record_Support_caa(t *testing.T) {
 	var record1 route53.ResourceRecordSet
 	resourceName := "aws_route53_record.default"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, route53.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRecordDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRecordDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoute53RecordConfigCAA,
+				Config: testAccRecordConfig_caa,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecordExists(resourceName, &record1),
 					resource.TestCheckTypeSetElemAttr(resourceName, "records.*", "0 issue \"domainca.test;\""),
@@ -370,18 +371,18 @@ func TestAccRoute53Record_caaSupport(t *testing.T) {
 	})
 }
 
-func TestAccRoute53Record_dsSupport(t *testing.T) {
+func TestAccRoute53Record_Support_ds(t *testing.T) {
 	var record1 route53.ResourceRecordSet
 	resourceName := "aws_route53_record.default"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, route53.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRecordDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRecordDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoute53RecordConfigDS,
+				Config: testAccRecordConfig_ds,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecordExists(resourceName, &record1),
 				),
@@ -400,13 +401,13 @@ func TestAccRoute53Record_generatesSuffix(t *testing.T) {
 	resourceName := "aws_route53_record.default"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, route53.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRecordDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRecordDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoute53RecordConfigSuffix,
+				Config: testAccRecordConfig_suffix,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecordExists(resourceName, &record1),
 				),
@@ -426,13 +427,13 @@ func TestAccRoute53Record_wildcard(t *testing.T) {
 	resourceName := "aws_route53_record.wildcard"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, route53.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRecordDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRecordDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoute53WildCardRecordConfig,
+				Config: testAccRecordConfig_wildcard,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecordExists(resourceName, &record1),
 				),
@@ -446,7 +447,7 @@ func TestAccRoute53Record_wildcard(t *testing.T) {
 
 			// Cause a change, which will trigger a refresh
 			{
-				Config: testAccRoute53WildCardRecordConfigUpdate,
+				Config: testAccRecordConfig_wildcardUpdate,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecordExists(resourceName, &record2),
 				),
@@ -460,13 +461,13 @@ func TestAccRoute53Record_failover(t *testing.T) {
 	resourceName := "aws_route53_record.www-primary"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, route53.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRecordDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRecordDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoute53FailoverCNAMERecord,
+				Config: testAccRecordConfig_failoverCNAME,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecordExists(resourceName, &record1),
 					testAccCheckRecordExists("aws_route53_record.www-secondary", &record2),
@@ -487,13 +488,13 @@ func TestAccRoute53Record_Weighted_basic(t *testing.T) {
 	resourceName := "aws_route53_record.www-live"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, route53.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRecordDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRecordDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoute53WeightedCNAMERecord,
+				Config: testAccRecordConfig_weightedCNAME,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecordExists("aws_route53_record.www-dev", &record1),
 					testAccCheckRecordExists(resourceName, &record2),
@@ -515,13 +516,13 @@ func TestAccRoute53Record_WeightedToSimple_basic(t *testing.T) {
 	resourceName := "aws_route53_record.www-server1"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, route53.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRecordDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRecordDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testaccRoute53RecordConfigWithWeightedRoutingPolicy,
+				Config: testAccRecordConfig_weightedRoutingPolicy,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecordExists(resourceName, &record1),
 				),
@@ -533,7 +534,7 @@ func TestAccRoute53Record_WeightedToSimple_basic(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"allow_overwrite", "weight"},
 			},
 			{
-				Config: testaccRoute53RecordConfigWithSimpleRoutingPolicy,
+				Config: testAccRecordConfig_simpleRoutingPolicy,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecordExists(resourceName, &record1),
 				),
@@ -547,15 +548,15 @@ func TestAccRoute53Record_Alias_elb(t *testing.T) {
 	resourceName := "aws_route53_record.alias"
 
 	rs := sdkacctest.RandString(10)
-	config := fmt.Sprintf(testAccRoute53RecordConfigAliasElb, rs)
+	testAccRecordConfig_config := fmt.Sprintf(testAccRecordConfig_aliasELB, rs)
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, route53.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRecordDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRecordDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: config,
+				Config: testAccRecordConfig_config,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecordExists(resourceName, &record1),
 				),
@@ -576,10 +577,10 @@ func TestAccRoute53Record_Alias_s3(t *testing.T) {
 	resourceName := "aws_route53_record.alias"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, route53.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRecordDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRecordDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRecordConfig_aliasS3(rName),
@@ -603,10 +604,10 @@ func TestAccRoute53Record_Alias_vpcEndpoint(t *testing.T) {
 	resourceName := "aws_route53_record.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, route53.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRecordDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRecordDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccRecordConfig_aliasCustomVPCEndpointSwappedAliasAttributes(rName),
@@ -633,15 +634,15 @@ func TestAccRoute53Record_Alias_uppercase(t *testing.T) {
 	resourceName := "aws_route53_record.alias"
 
 	rs := sdkacctest.RandString(10)
-	config := fmt.Sprintf(testAccRoute53RecordConfigAliasElbUppercase, rs)
+	testAccRecordConfig_config := fmt.Sprintf(testAccRecordConfig_aliasELBUppercase, rs)
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, route53.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRecordDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRecordDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: config,
+				Config: testAccRecordConfig_config,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecordExists(resourceName, &record1),
 				),
@@ -661,13 +662,13 @@ func TestAccRoute53Record_Weighted_alias(t *testing.T) {
 	resourceName := "aws_route53_record.elb_weighted_alias_live"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, route53.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRecordDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRecordDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoute53WeightedElbAliasRecord,
+				Config: testAccRecordConfig_weightedELBAlias,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecordExists(resourceName, &record1),
 					testAccCheckRecordExists("aws_route53_record.elb_weighted_alias_dev", &record2),
@@ -681,7 +682,7 @@ func TestAccRoute53Record_Weighted_alias(t *testing.T) {
 			},
 
 			{
-				Config: testAccRoute53WeightedR53AliasRecord,
+				Config: testAccRecordConfig_weightedAlias,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecordExists("aws_route53_record.green_origin", &record3),
 					testAccCheckRecordExists("aws_route53_record.r53_weighted_alias_live", &record4),
@@ -698,13 +699,13 @@ func TestAccRoute53Record_Geolocation_basic(t *testing.T) {
 	resourceName := "aws_route53_record.default"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, route53.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRecordDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRecordDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoute53GeolocationCNAMERecord,
+				Config: testAccRecordConfig_geolocationCNAME,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecordExists("aws_route53_record.default", &record1),
 					testAccCheckRecordExists("aws_route53_record.california", &record2),
@@ -727,10 +728,10 @@ func TestAccRoute53Record_HealthCheckID_setIdentifierChange(t *testing.T) {
 	resourceName := "aws_route53_record.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, route53.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRecordDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRecordDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRecordConfig_healthCheckIdSetIdentifier("test1"),
@@ -759,10 +760,10 @@ func TestAccRoute53Record_HealthCheckID_typeChange(t *testing.T) {
 	resourceName := "aws_route53_record.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, route53.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRecordDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRecordDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRecordConfig_healthCheckIdTypeCNAME(),
@@ -791,10 +792,10 @@ func TestAccRoute53Record_Latency_basic(t *testing.T) {
 	resourceName := "aws_route53_record.first_region"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, route53.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRecordDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRecordDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRecordConfig_latencyCNAME(endpoints.UsEast1RegionID, endpoints.EuWest1RegionID, endpoints.ApNortheast1RegionID),
@@ -819,13 +820,13 @@ func TestAccRoute53Record_typeChange(t *testing.T) {
 	resourceName := "aws_route53_record.sample"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, route53.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRecordDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRecordDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoute53RecordTypeChangePre,
+				Config: testAccRecordConfig_typeChangePre,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecordExists(resourceName, &record1),
 				),
@@ -839,7 +840,7 @@ func TestAccRoute53Record_typeChange(t *testing.T) {
 
 			// Cause a change, which will trigger a refresh
 			{
-				Config: testAccRoute53RecordTypeChangePost,
+				Config: testAccRecordConfig_typeChangePost,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecordExists(resourceName, &record2),
 				),
@@ -853,13 +854,13 @@ func TestAccRoute53Record_nameChange(t *testing.T) {
 	resourceName := "aws_route53_record.sample"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, route53.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRecordDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRecordDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoute53RecordNameChangePre,
+				Config: testAccRecordConfig_nameChangePre,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecordExists(resourceName, &record1),
 				),
@@ -873,7 +874,7 @@ func TestAccRoute53Record_nameChange(t *testing.T) {
 
 			// Cause a change, which will trigger a refresh
 			{
-				Config: testAccRoute53RecordNameChangePost,
+				Config: testAccRecordConfig_nameChangePost,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecordExists(resourceName, &record2),
 					testAccCheckRecordDoesNotExist("aws_route53_zone.main", "sample", "CNAME"),
@@ -883,18 +884,18 @@ func TestAccRoute53Record_nameChange(t *testing.T) {
 	})
 }
 
-func TestAccRoute53Record_setIdentifierChange(t *testing.T) {
+func TestAccRoute53Record_setIdentifierChangeBasicToWeighted(t *testing.T) {
 	var record1, record2 route53.ResourceRecordSet
 	resourceName := "aws_route53_record.basic_to_weighted"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, route53.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRecordDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRecordDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoute53RecordSetIdentifierChangePre,
+				Config: testAccRecordConfig_setIdentifierChangeBasicToWeightedPre,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecordExists(resourceName, &record1),
 				),
@@ -908,7 +909,7 @@ func TestAccRoute53Record_setIdentifierChange(t *testing.T) {
 
 			// Cause a change, which will trigger a refresh
 			{
-				Config: testAccRoute53RecordSetIdentifierChangePost,
+				Config: testAccRecordConfig_setIdentifierChangeBasicToWeightedPost,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecordExists(resourceName, &record2),
 				),
@@ -917,18 +918,275 @@ func TestAccRoute53Record_setIdentifierChange(t *testing.T) {
 	})
 }
 
-func TestAccRoute53Record_aliasChange(t *testing.T) {
+func TestAccRoute53Record_SetIdentifierRename_geolocationContinent(t *testing.T) {
 	var record1, record2 route53.ResourceRecordSet
-	resourceName := "aws_route53_record.elb_alias_change"
+	resourceName := "aws_route53_record.set_identifier_rename_geolocation"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, route53.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRecordDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRecordDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoute53RecordAliasChangePre,
+				Config: testAccRecordConfig_setIdentifierRenameGeolocationContinent("AN", "before"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRecordExists(resourceName, &record1),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"allow_overwrite"},
+			},
+			{
+				Config: testAccRecordConfig_setIdentifierRenameGeolocationContinent("AN", "after"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRecordExists(resourceName, &record2),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRoute53Record_SetIdentifierRename_geolocationCountryDefault(t *testing.T) {
+	var record1, record2 route53.ResourceRecordSet
+	resourceName := "aws_route53_record.set_identifier_rename_geolocation"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRecordDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRecordConfig_setIdentifierRenameGeolocationCountry("*", "before"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRecordExists(resourceName, &record1),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"allow_overwrite"},
+			},
+			{
+				Config: testAccRecordConfig_setIdentifierRenameGeolocationCountry("*", "after"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRecordExists(resourceName, &record2),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRoute53Record_SetIdentifierRename_geolocationCountrySpecified(t *testing.T) {
+	var record1, record2 route53.ResourceRecordSet
+	resourceName := "aws_route53_record.set_identifier_rename_geolocation"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRecordDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRecordConfig_setIdentifierRenameGeolocationCountry("US", "before"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRecordExists(resourceName, &record1),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"allow_overwrite"},
+			},
+			{
+				Config: testAccRecordConfig_setIdentifierRenameGeolocationCountry("US", "after"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRecordExists(resourceName, &record2),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRoute53Record_SetIdentifierRename_geolocationCountrySubdivision(t *testing.T) {
+	var record1, record2 route53.ResourceRecordSet
+	resourceName := "aws_route53_record.set_identifier_rename_geolocation"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRecordDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRecordConfig_setIdentifierRenameGeolocationCountrySubdivision("US", "CA", "before"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRecordExists(resourceName, &record1),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"allow_overwrite"},
+			},
+			{
+				Config: testAccRecordConfig_setIdentifierRenameGeolocationCountrySubdivision("US", "CA", "after"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRecordExists(resourceName, &record2),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRoute53Record_SetIdentifierRename_failover(t *testing.T) {
+	var record1, record2 route53.ResourceRecordSet
+	resourceName := "aws_route53_record.set_identifier_rename_failover"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRecordDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRecordConfig_setIdentifierRenameFailover("before"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRecordExists(resourceName, &record1),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"allow_overwrite"},
+			},
+			{
+				Config: testAccRecordConfig_setIdentifierRenameFailover("after"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRecordExists(resourceName, &record2),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRoute53Record_SetIdentifierRename_latency(t *testing.T) {
+	var record1, record2 route53.ResourceRecordSet
+	resourceName := "aws_route53_record.set_identifier_rename_latency"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRecordDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRecordConfig_setIdentifierRenameLatency(endpoints.UsEast1RegionID, "before"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRecordExists(resourceName, &record1),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"allow_overwrite"},
+			},
+			{
+				Config: testAccRecordConfig_setIdentifierRenameLatency(endpoints.UsEast1RegionID, "after"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRecordExists(resourceName, &record2),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRoute53Record_SetIdentifierRename_multiValueAnswer(t *testing.T) {
+	var record1, record2 route53.ResourceRecordSet
+	resourceName := "aws_route53_record.set_identifier_rename_multivalue_answer"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRecordDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRecordConfig_setIdentifierRenameMultiValueAnswer("before"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRecordExists(resourceName, &record1),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"allow_overwrite"},
+			},
+			{
+				Config: testAccRecordConfig_setIdentifierRenameMultiValueAnswer("after"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRecordExists(resourceName, &record2),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRoute53Record_SetIdentifierRename_weighted(t *testing.T) {
+	var record1, record2 route53.ResourceRecordSet
+	resourceName := "aws_route53_record.set_identifier_rename_weighted"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRecordDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRecordConfig_setIdentifierRenameWeighted("before"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRecordExists(resourceName, &record1),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"allow_overwrite"},
+			},
+			{
+				Config: testAccRecordConfig_setIdentifierRenameWeighted("after"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRecordExists(resourceName, &record2),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRoute53Record_Alias_change(t *testing.T) {
+	var record1, record2 route53.ResourceRecordSet
+	resourceName := "aws_route53_record.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRecordDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRecordConfig_aliasChangePre(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecordExists(resourceName, &record1),
 				),
@@ -942,9 +1200,45 @@ func TestAccRoute53Record_aliasChange(t *testing.T) {
 
 			// Cause a change, which will trigger a refresh
 			{
-				Config: testAccRoute53RecordAliasChangePost,
+				Config: testAccRecordConfig_aliasChangePost(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecordExists(resourceName, &record2),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRoute53Record_Alias_changeDualstack(t *testing.T) {
+	var record1, record2 route53.ResourceRecordSet
+	resourceName := "aws_route53_record.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRecordDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRecordConfig_aliasChangeDualstackPre(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRecordExists(resourceName, &record1),
+					testAccCheckRecordAliasNameDualstack(&record1, true),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"allow_overwrite", "weight"},
+			},
+			// Cause a change, which will trigger a refresh
+			{
+				Config: testAccRecordConfig_aliasChangeDualstackPost(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRecordExists(resourceName, &record2),
+					testAccCheckRecordAliasNameDualstack(&record2, false),
 				),
 			},
 		},
@@ -956,13 +1250,13 @@ func TestAccRoute53Record_empty(t *testing.T) {
 	resourceName := "aws_route53_record.empty"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, route53.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRecordDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRecordDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoute53RecordConfigEmptyName,
+				Config: testAccRecordConfig_emptyName,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecordExists(resourceName, &record1),
 				),
@@ -977,13 +1271,13 @@ func TestAccRoute53Record_longTXTrecord(t *testing.T) {
 	resourceName := "aws_route53_record.long_txt"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, route53.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRecordDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRecordDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoute53RecordConfigLongTxtRecord,
+				Config: testAccRecordConfig_longTxt,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecordExists(resourceName, &record1),
 				),
@@ -1003,13 +1297,13 @@ func TestAccRoute53Record_MultiValueAnswer_basic(t *testing.T) {
 	resourceName := "aws_route53_record.www-server1"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, route53.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRecordDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRecordDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoute53MultiValueAnswerARecord,
+				Config: testAccRecordConfig_multiValueAnswerA,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecordExists("aws_route53_record.www-server1", &record1),
 					testAccCheckRecordExists("aws_route53_record.www-server2", &record2),
@@ -1025,12 +1319,12 @@ func TestAccRoute53Record_MultiValueAnswer_basic(t *testing.T) {
 	})
 }
 
-func TestAccRoute53Record_doNotAllowOverwrite(t *testing.T) {
+func TestAccRoute53Record_Allow_doNotOverwrite(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        testAccRecordOverwriteExpectErrorCheck(t),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRecordDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               testAccRecordOverwriteExpectErrorCheck(t),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRecordDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRecordConfig_allowOverwrite(false),
@@ -1039,15 +1333,15 @@ func TestAccRoute53Record_doNotAllowOverwrite(t *testing.T) {
 	})
 }
 
-func TestAccRoute53Record_allowOverwrite(t *testing.T) {
+func TestAccRoute53Record_Allow_overwrite(t *testing.T) {
 	var record1 route53.ResourceRecordSet
 	resourceName := "aws_route53_record.overwriting"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, route53.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckRecordDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRecordDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRecordConfig_allowOverwrite(true),
@@ -1111,18 +1405,19 @@ func testAccCheckRecordDestroy(s *terraform.State) error {
 		}
 
 		resp, err := conn.ListResourceRecordSets(lopts)
+
+		if tfawserr.ErrCodeEquals(err, route53.ErrCodeNoSuchHostedZone) {
+			continue
+		}
+
 		if err != nil {
-			if awsErr, ok := err.(awserr.Error); ok {
-				// if NoSuchHostedZone, then all the things are destroyed
-				if awsErr.Code() == "NoSuchHostedZone" {
-					return nil
-				}
-			}
 			return err
 		}
+
 		if len(resp.ResourceRecordSets) == 0 {
 			return nil
 		}
+
 		rec := resp.ResourceRecordSets[0]
 		if tfroute53.FQDN(*rec.Name) == tfroute53.FQDN(name) && *rec.Type == rType {
 			return fmt.Errorf("Record still exists: %#v", rec)
@@ -1150,7 +1445,7 @@ func testAccCheckRecordDisappears(zone *route53.GetHostedZoneOutput, resourceRec
 
 		respRaw, err := tfroute53.DeleteRecordSet(conn, input)
 		if err != nil {
-			return fmt.Errorf("error deleting resource record set: %s", err)
+			return fmt.Errorf("deleting resource record set: %s", err)
 		}
 
 		changeInfo := respRaw.(*route53.ChangeResourceRecordSetsOutput).ChangeInfo
@@ -1159,7 +1454,7 @@ func testAccCheckRecordDisappears(zone *route53.GetHostedZoneOutput, resourceRec
 		}
 
 		if err := tfroute53.WaitForRecordSetToSync(conn, tfroute53.CleanChangeID(*changeInfo.Id)); err != nil {
-			return fmt.Errorf("error waiting for resource record set deletion: %s", err)
+			return fmt.Errorf("waiting for resource record set deletion: %s", err)
 		}
 
 		return nil
@@ -1249,6 +1544,22 @@ func testAccCheckRecordDoesNotExist(zoneResourceName string, recordName string, 
 	}
 }
 
+func testAccCheckRecordAliasNameDualstack(record *route53.ResourceRecordSet, expectPrefix bool) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		alias := record.AliasTarget
+		if alias == nil {
+			return fmt.Errorf("record has no alias target: %#v", record)
+		}
+		hasPrefix := strings.HasPrefix(*alias.DNSName, "dualstack.")
+		if expectPrefix && !hasPrefix {
+			return fmt.Errorf("alias name did not have expected prefix: %#v", alias)
+		} else if !expectPrefix && hasPrefix {
+			return fmt.Errorf("alias name had unexpected prefix: %#v", alias)
+		}
+		return nil
+	}
+}
+
 func testAccRecordConfig_allowOverwrite(allowOverwrite bool) string {
 	return fmt.Sprintf(`
 resource "aws_route53_zone" "main" {
@@ -1276,7 +1587,7 @@ resource "aws_route53_record" "overwriting" {
 `, allowOverwrite)
 }
 
-const testAccRoute53RecordConfig = `
+const testAccRecordConfig_basic = `
 resource "aws_route53_zone" "main" {
   name = "domain.test"
 }
@@ -1290,7 +1601,7 @@ resource "aws_route53_record" "default" {
 }
 `
 
-const testAccRoute53RecordConfig_nameWithTrailingPeriod = `
+const testAccRecordConfig_nameTrailingPeriod = `
 resource "aws_route53_zone" "main" {
   name = "domain.test"
 }
@@ -1304,7 +1615,7 @@ resource "aws_route53_record" "default" {
 }
 `
 
-const testAccRoute53RecordConfigMultiple = `
+const testAccRecordConfig_multiple = `
 resource "aws_route53_zone" "test" {
   name = "domain.test"
 }
@@ -1320,7 +1631,7 @@ resource "aws_route53_record" "test" {
 }
 `
 
-const testAccRoute53RecordConfig_fqdn = `
+const testAccRecordConfig_fqdn = `
 resource "aws_route53_zone" "main" {
   name = "domain.test"
 }
@@ -1338,7 +1649,7 @@ resource "aws_route53_record" "default" {
 }
 `
 
-const testAccRoute53RecordConfig_fqdn_no_op = `
+const testAccRecordConfig_fqdnNoOp = `
 resource "aws_route53_zone" "main" {
   name = "domain.test"
 }
@@ -1356,7 +1667,7 @@ resource "aws_route53_record" "default" {
 }
 `
 
-const testAccRoute53RecordConfigSuffix = `
+const testAccRecordConfig_suffix = `
 resource "aws_route53_zone" "main" {
   name = "domain.test"
 }
@@ -1370,7 +1681,7 @@ resource "aws_route53_record" "default" {
 }
 `
 
-const testAccRoute53WildCardRecordConfig = `
+const testAccRecordConfig_wildcard = `
 resource "aws_route53_zone" "main" {
   name = "domain.test"
 }
@@ -1392,7 +1703,7 @@ resource "aws_route53_record" "wildcard" {
 }
 `
 
-const testAccRoute53WildCardRecordConfigUpdate = `
+const testAccRecordConfig_wildcardUpdate = `
 resource "aws_route53_zone" "main" {
   name = "domain.test"
 }
@@ -1414,7 +1725,7 @@ resource "aws_route53_record" "wildcard" {
 }
 `
 
-const testAccRoute53RecordConfigTXT = `
+const testAccRecordConfig_txt = `
 resource "aws_route53_zone" "main" {
   name = "domain.test"
 }
@@ -1428,7 +1739,7 @@ resource "aws_route53_record" "default" {
 }
 `
 
-const testAccRoute53RecordConfigSPF = `
+const testAccRecordConfig_spf = `
 resource "aws_route53_zone" "main" {
   name = "domain.test"
 }
@@ -1442,7 +1753,7 @@ resource "aws_route53_record" "default" {
 }
 `
 
-const testAccRoute53RecordConfigCAA = `
+const testAccRecordConfig_caa = `
 resource "aws_route53_zone" "main" {
   name = "domain.test"
 }
@@ -1457,7 +1768,7 @@ resource "aws_route53_record" "default" {
 }
 `
 
-const testAccRoute53RecordConfigDS = `
+const testAccRecordConfig_ds = `
 resource "aws_route53_zone" "main" {
   name = "domain.test"
 }
@@ -1471,7 +1782,7 @@ resource "aws_route53_record" "default" {
 }
 `
 
-const testAccRoute53FailoverCNAMERecord = `
+const testAccRecordConfig_failoverCNAME = `
 resource "aws_route53_zone" "main" {
   name = "domain.test"
 }
@@ -1519,7 +1830,7 @@ resource "aws_route53_record" "www-secondary" {
 }
 `
 
-const testAccRoute53WeightedCNAMERecord = `
+const testAccRecordConfig_weightedCNAME = `
 resource "aws_route53_zone" "main" {
   name = "domain.test"
 }
@@ -1567,7 +1878,7 @@ resource "aws_route53_record" "www-off" {
 }
 `
 
-const testAccRoute53GeolocationCNAMERecord = `
+const testAccRecordConfig_geolocationCNAME = `
 resource "aws_route53_zone" "main" {
   name = "domain.test"
 }
@@ -1680,7 +1991,7 @@ resource "aws_route53_record" "third_region" {
 `, firstRegion, secondRegion, thirdRegion)
 }
 
-const testAccRoute53RecordConfigAliasElb = `
+const testAccRecordConfig_aliasELB = `
 data "aws_availability_zones" "available" {
   state = "available"
 
@@ -1719,7 +2030,7 @@ resource "aws_elb" "main" {
 }
 `
 
-const testAccRoute53RecordConfigAliasElbUppercase = `
+const testAccRecordConfig_aliasELBUppercase = `
 data "aws_availability_zones" "available" {
   state = "available"
 
@@ -1981,7 +2292,7 @@ resource "aws_route53_record" "test" {
 `
 }
 
-const testAccRoute53WeightedElbAliasRecord = `
+const testAccRecordConfig_weightedELBAlias = `
 data "aws_availability_zones" "available" {
   state = "available"
 
@@ -2056,7 +2367,7 @@ resource "aws_route53_record" "elb_weighted_alias_dev" {
 }
 `
 
-const testAccRoute53WeightedR53AliasRecord = `
+const testAccRecordConfig_weightedAlias = `
 resource "aws_route53_zone" "main" {
   name = "domain.test"
 }
@@ -2114,7 +2425,7 @@ resource "aws_route53_record" "r53_weighted_alias_dev" {
 }
 `
 
-const testAccRoute53RecordTypeChangePre = `
+const testAccRecordConfig_typeChangePre = `
 resource "aws_route53_zone" "main" {
   name = "domain.test"
 }
@@ -2128,7 +2439,7 @@ resource "aws_route53_record" "sample" {
 }
 `
 
-const testAccRoute53RecordTypeChangePost = `
+const testAccRecordConfig_typeChangePost = `
 resource "aws_route53_zone" "main" {
   name = "domain.test"
 }
@@ -2142,7 +2453,7 @@ resource "aws_route53_record" "sample" {
 }
 `
 
-const testAccRoute53RecordNameChangePre = `
+const testAccRecordConfig_nameChangePre = `
 resource "aws_route53_zone" "main" {
   name = "domain.test"
 }
@@ -2156,7 +2467,7 @@ resource "aws_route53_record" "sample" {
 }
 `
 
-const testAccRoute53RecordNameChangePost = `
+const testAccRecordConfig_nameChangePost = `
 resource "aws_route53_zone" "main" {
   name = "domain.test"
 }
@@ -2170,7 +2481,7 @@ resource "aws_route53_record" "sample" {
 }
 `
 
-const testAccRoute53RecordSetIdentifierChangePre = `
+const testAccRecordConfig_setIdentifierChangeBasicToWeightedPre = `
 resource "aws_route53_zone" "main" {
   name = "domain.test"
 }
@@ -2184,7 +2495,7 @@ resource "aws_route53_record" "basic_to_weighted" {
 }
 `
 
-const testAccRoute53RecordSetIdentifierChangePost = `
+const testAccRecordConfig_setIdentifierChangeBasicToWeightedPost = `
 resource "aws_route53_zone" "main" {
   name = "domain.test"
 }
@@ -2203,7 +2514,173 @@ resource "aws_route53_record" "basic_to_weighted" {
 }
 `
 
-const testAccRoute53RecordAliasChangePre = `
+func testAccRecordConfig_setIdentifierRenameFailover(set_identifier string) string {
+	return fmt.Sprintf(`
+resource "aws_route53_zone" "main" {
+  name = "domain.test"
+}
+
+resource "aws_route53_health_check" "foo" {
+  fqdn              = "dev.domain.test"
+  port              = 80
+  type              = "HTTP"
+  resource_path     = "/"
+  failure_threshold = "2"
+  request_interval  = "30"
+
+  tags = {
+    Name = "tf-test-health-check"
+  }
+}
+
+resource "aws_route53_record" "set_identifier_rename_failover" {
+  zone_id = aws_route53_zone.main.zone_id
+  name    = "www"
+  type    = "CNAME"
+  ttl     = "5"
+
+  failover_routing_policy {
+    type = "PRIMARY"
+  }
+
+  health_check_id = aws_route53_health_check.foo.id
+  set_identifier  = %[1]q
+  records         = ["primary.domain.test"]
+}
+`, set_identifier)
+}
+
+func testAccRecordConfig_setIdentifierRenameGeolocationContinent(continent, set_identifier string) string {
+	return fmt.Sprintf(`
+resource "aws_route53_zone" "main" {
+  name = "domain.test"
+}
+
+resource "aws_route53_record" "set_identifier_rename_geolocation" {
+  zone_id = aws_route53_zone.main.zone_id
+  name    = "www"
+  type    = "CNAME"
+  ttl     = "5"
+
+  geolocation_routing_policy {
+    continent = %[1]q
+  }
+
+  set_identifier = %[2]q
+  records        = ["primary.domain.test"]
+}
+`, continent, set_identifier)
+}
+
+func testAccRecordConfig_setIdentifierRenameGeolocationCountry(country, set_identifier string) string {
+	return fmt.Sprintf(`
+resource "aws_route53_zone" "main" {
+  name = "domain.test"
+}
+
+resource "aws_route53_record" "set_identifier_rename_geolocation" {
+  zone_id = aws_route53_zone.main.zone_id
+  name    = "www"
+  type    = "CNAME"
+  ttl     = "5"
+
+  geolocation_routing_policy {
+    country = %[1]q
+  }
+
+  set_identifier = %[2]q
+  records        = ["primary.domain.test"]
+}
+`, country, set_identifier)
+}
+
+func testAccRecordConfig_setIdentifierRenameGeolocationCountrySubdivision(country, subdivision, set_identifier string) string {
+	return fmt.Sprintf(`
+resource "aws_route53_zone" "main" {
+  name = "domain.test"
+}
+
+resource "aws_route53_record" "set_identifier_rename_geolocation" {
+  zone_id = aws_route53_zone.main.zone_id
+  name    = "www"
+  type    = "CNAME"
+  ttl     = "5"
+
+  geolocation_routing_policy {
+    country     = %[1]q
+    subdivision = %[2]q
+  }
+
+  set_identifier = %[3]q
+  records        = ["primary.domain.test"]
+}
+`, country, subdivision, set_identifier)
+}
+
+func testAccRecordConfig_setIdentifierRenameLatency(region, set_identifier string) string {
+	return fmt.Sprintf(`
+resource "aws_route53_zone" "main" {
+  name = "domain.test"
+}
+
+resource "aws_route53_record" "set_identifier_rename_latency" {
+  zone_id = aws_route53_zone.main.zone_id
+  name    = "www"
+  type    = "CNAME"
+  ttl     = "5"
+
+  latency_routing_policy {
+    region = %[1]q
+  }
+
+  set_identifier = %[2]q
+  records        = ["dev.domain.test"]
+}
+
+`, region, set_identifier)
+}
+
+func testAccRecordConfig_setIdentifierRenameMultiValueAnswer(set_identifier string) string {
+	return fmt.Sprintf(`
+resource "aws_route53_zone" "main" {
+  name = "domain.test"
+}
+
+resource "aws_route53_record" "set_identifier_rename_multivalue_answer" {
+  zone_id                          = aws_route53_zone.main.zone_id
+  name                             = "www"
+  type                             = "A"
+  ttl                              = "5"
+  multivalue_answer_routing_policy = true
+  set_identifier                   = %[1]q
+  records                          = ["127.0.0.1"]
+}
+`, set_identifier)
+}
+
+func testAccRecordConfig_setIdentifierRenameWeighted(set_identifier string) string {
+	return fmt.Sprintf(`
+resource "aws_route53_zone" "main" {
+  name = "domain.test"
+}
+
+resource "aws_route53_record" "set_identifier_rename_weighted" {
+  zone_id        = aws_route53_zone.main.zone_id
+  name           = "sample"
+  type           = "A"
+  ttl            = "30"
+  records        = ["127.0.0.1", "8.8.8.8"]
+  set_identifier = %[1]q
+
+  weighted_routing_policy {
+    weight = 100
+  }
+}
+`, set_identifier)
+}
+
+func testAccRecordConfig_aliasChangePre(rName string) string {
+	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
 
@@ -2217,8 +2694,8 @@ resource "aws_route53_zone" "main" {
   name = "domain.test"
 }
 
-resource "aws_elb" "alias_change" {
-  name               = "foobar-tf-elb-alias-change"
+resource "aws_elb" "test" {
+  name               = %[1]q
   availability_zones = slice(data.aws_availability_zones.available.names, 0, 1)
 
   listener {
@@ -2229,25 +2706,27 @@ resource "aws_elb" "alias_change" {
   }
 }
 
-resource "aws_route53_record" "elb_alias_change" {
+resource "aws_route53_record" "test" {
   zone_id = aws_route53_zone.main.zone_id
   name    = "alias-change"
   type    = "A"
 
   alias {
-    zone_id                = aws_elb.alias_change.zone_id
-    name                   = aws_elb.alias_change.dns_name
+    zone_id                = aws_elb.test.zone_id
+    name                   = aws_elb.test.dns_name
     evaluate_target_health = true
   }
 }
-`
+`, rName)
+}
 
-const testAccRoute53RecordAliasChangePost = `
+func testAccRecordConfig_aliasChangePost() string {
+	return `
 resource "aws_route53_zone" "main" {
   name = "domain.test"
 }
 
-resource "aws_route53_record" "elb_alias_change" {
+resource "aws_route53_record" "test" {
   zone_id = aws_route53_zone.main.zone_id
   name    = "alias-change"
   type    = "CNAME"
@@ -2255,8 +2734,9 @@ resource "aws_route53_record" "elb_alias_change" {
   records = ["www.terraform.io"]
 }
 `
+}
 
-const testAccRoute53RecordConfigEmptyName = `
+const testAccRecordConfig_emptyName = `
 resource "aws_route53_zone" "main" {
   name = "domain.test"
 }
@@ -2270,7 +2750,89 @@ resource "aws_route53_record" "empty" {
 }
 `
 
-const testAccRoute53RecordConfigLongTxtRecord = `
+func testAccRecordConfig_aliasChangeDualstackPre(rName string) string {
+	return fmt.Sprintf(`
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
+resource "aws_route53_zone" "test" {
+  name = "domain.test"
+}
+
+resource "aws_elb" "test" {
+  name               = %[1]q
+  availability_zones = slice(data.aws_availability_zones.available.names, 0, 1)
+
+  listener {
+    instance_port     = 80
+    instance_protocol = "http"
+    lb_port           = 80
+    lb_protocol       = "http"
+  }
+}
+
+resource "aws_route53_record" "test" {
+  zone_id = aws_route53_zone.test.zone_id
+  name    = "alias-change-ds"
+  type    = "A"
+
+  alias {
+    zone_id                = aws_elb.test.zone_id
+    name                   = "dualstack.${aws_elb.test.dns_name}"
+    evaluate_target_health = true
+  }
+}
+ `, rName)
+}
+
+func testAccRecordConfig_aliasChangeDualstackPost(rName string) string {
+	return fmt.Sprintf(`
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
+resource "aws_route53_zone" "test" {
+  name = "domain.test"
+}
+
+resource "aws_elb" "test" {
+  name               = %[1]q
+  availability_zones = slice(data.aws_availability_zones.available.names, 0, 1)
+
+  listener {
+    instance_port     = 80
+    instance_protocol = "http"
+    lb_port           = 80
+    lb_protocol       = "http"
+  }
+}
+
+resource "aws_route53_record" "test" {
+  zone_id = aws_route53_zone.test.zone_id
+  name    = "alias-change-ds"
+  type    = "A"
+
+  alias {
+    zone_id                = aws_elb.test.zone_id
+    name                   = aws_elb.test.dns_name
+    evaluate_target_health = true
+  }
+}
+ `, rName)
+}
+
+const testAccRecordConfig_longTxt = `
 resource "aws_route53_zone" "main" {
   name = "domain.test"
 }
@@ -2286,7 +2848,7 @@ resource "aws_route53_record" "long_txt" {
 }
 `
 
-const testAccRoute53RecordConfigUnderscoreInName = `
+const testAccRecordConfig_underscoreInName = `
 resource "aws_route53_zone" "main" {
   name = "domain.test"
 }
@@ -2300,7 +2862,7 @@ resource "aws_route53_record" "underscore" {
 }
 `
 
-const testAccRoute53MultiValueAnswerARecord = `
+const testAccRecordConfig_multiValueAnswerA = `
 resource "aws_route53_zone" "main" {
   name = "domain.test"
 }
@@ -2326,7 +2888,7 @@ resource "aws_route53_record" "www-server2" {
 }
 `
 
-const testaccRoute53RecordConfigWithWeightedRoutingPolicy = `
+const testAccRecordConfig_weightedRoutingPolicy = `
 resource "aws_route53_zone" "main" {
   name = "domain.test"
 }
@@ -2346,7 +2908,7 @@ resource "aws_route53_record" "www-server1" {
 }
 `
 
-const testaccRoute53RecordConfigWithSimpleRoutingPolicy = `
+const testAccRecordConfig_simpleRoutingPolicy = `
 resource "aws_route53_zone" "main" {
   name = "domain.test"
 }

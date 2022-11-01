@@ -96,7 +96,7 @@ func resourceJobQueueCreate(d *schema.ResourceData, meta interface{}) error {
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{batch.JQStatusCreating, batch.JQStatusUpdating},
 		Target:     []string{batch.JQStatusValid},
-		Refresh:    batchJobQueueRefreshStatusFunc(conn, name),
+		Refresh:    jobQueueRefreshStatusFunc(conn, name),
 		Timeout:    10 * time.Minute,
 		Delay:      10 * time.Second,
 		MinTimeout: 3 * time.Second,
@@ -198,7 +198,7 @@ func resourceJobQueueUpdate(d *schema.ResourceData, meta interface{}) error {
 		stateConf := &resource.StateChangeConf{
 			Pending:    []string{batch.JQStatusUpdating},
 			Target:     []string{batch.JQStatusValid},
-			Refresh:    batchJobQueueRefreshStatusFunc(conn, name),
+			Refresh:    jobQueueRefreshStatusFunc(conn, name),
 			Timeout:    10 * time.Minute,
 			Delay:      10 * time.Second,
 			MinTimeout: 3 * time.Second,
@@ -261,7 +261,7 @@ func DeleteJobQueue(jobQueue string, conn *batch.Batch) error {
 	stateChangeConf := &resource.StateChangeConf{
 		Pending:    []string{batch.JQStateDisabled, batch.JQStatusDeleting},
 		Target:     []string{batch.JQStatusDeleted},
-		Refresh:    batchJobQueueRefreshStatusFunc(conn, jobQueue),
+		Refresh:    jobQueueRefreshStatusFunc(conn, jobQueue),
 		Timeout:    10 * time.Minute,
 		Delay:      10 * time.Second,
 		MinTimeout: 3 * time.Second,
@@ -283,7 +283,7 @@ func DisableJobQueue(jobQueue string, conn *batch.Batch) error {
 	stateChangeConf := &resource.StateChangeConf{
 		Pending:    []string{batch.JQStatusUpdating},
 		Target:     []string{batch.JQStatusValid},
-		Refresh:    batchJobQueueRefreshStatusFunc(conn, jobQueue),
+		Refresh:    jobQueueRefreshStatusFunc(conn, jobQueue),
 		Timeout:    10 * time.Minute,
 		Delay:      10 * time.Second,
 		MinTimeout: 3 * time.Second,
@@ -314,7 +314,7 @@ func GetJobQueue(conn *batch.Batch, sn string) (*batch.JobQueueDetail, error) {
 	return nil, nil
 }
 
-func batchJobQueueRefreshStatusFunc(conn *batch.Batch, sn string) resource.StateRefreshFunc {
+func jobQueueRefreshStatusFunc(conn *batch.Batch, sn string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		ce, err := GetJobQueue(conn, sn)
 		if err != nil {

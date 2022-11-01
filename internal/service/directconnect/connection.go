@@ -70,6 +70,10 @@ func ResourceConnection() *schema.Resource {
 			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
+			"vlan_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -141,6 +145,7 @@ func resourceConnectionRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("name", connection.ConnectionName)
 	d.Set("owner_account_id", connection.OwnerAccount)
 	d.Set("provider_name", connection.ProviderName)
+	d.Set("vlan_id", connection.Vlan)
 
 	tags, err := ListTags(conn, arn)
 
@@ -180,10 +185,10 @@ func resourceConnectionUpdate(d *schema.ResourceData, meta interface{}) error {
 func resourceConnectionDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DirectConnectConn
 
-	return deleteDirectConnectConnection(conn, d.Id(), waitConnectionDeleted)
+	return deleteConnection(conn, d.Id(), waitConnectionDeleted)
 }
 
-func deleteDirectConnectConnection(conn *directconnect.DirectConnect, connectionID string, waiter func(*directconnect.DirectConnect, string) (*directconnect.Connection, error)) error {
+func deleteConnection(conn *directconnect.DirectConnect, connectionID string, waiter func(*directconnect.DirectConnect, string) (*directconnect.Connection, error)) error {
 	log.Printf("[DEBUG] Deleting Direct Connect Connection: %s", connectionID)
 	_, err := conn.DeleteConnection(&directconnect.DeleteConnectionInput{
 		ConnectionId: aws.String(connectionID),

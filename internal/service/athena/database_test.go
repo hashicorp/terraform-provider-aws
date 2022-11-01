@@ -21,13 +21,13 @@ func TestAccAthenaDatabase_basic(t *testing.T) {
 	resourceName := "aws_athena_database.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, athena.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDatabaseDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, athena.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDatabaseDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDatabaseConfig(rName, dbName, false),
+				Config: testAccDatabaseConfig_basic(rName, dbName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDatabaseExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", dbName),
@@ -53,13 +53,13 @@ func TestAccAthenaDatabase_properties(t *testing.T) {
 	resourceName := "aws_athena_database.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, athena.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDatabaseDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, athena.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDatabaseDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDatabasePropertiesConfig(rName, dbName, false),
+				Config: testAccDatabaseConfig_properties(rName, dbName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDatabaseExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", dbName),
@@ -83,13 +83,13 @@ func TestAccAthenaDatabase_acl(t *testing.T) {
 	resourceName := "aws_athena_database.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, athena.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDatabaseDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, athena.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDatabaseDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDatabaseAclConfig(rName, dbName, false),
+				Config: testAccDatabaseConfig_acl(rName, dbName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDatabaseExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", dbName),
@@ -113,13 +113,13 @@ func TestAccAthenaDatabase_encryption(t *testing.T) {
 	resourceName := "aws_athena_database.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, athena.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDatabaseDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, athena.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDatabaseDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDatabaseWithKMSConfig(rName, dbName, false),
+				Config: testAccDatabaseConfig_kms(rName, dbName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDatabaseExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", "1"),
@@ -143,13 +143,13 @@ func TestAccAthenaDatabase_nameStartsWithUnderscore(t *testing.T) {
 	resourceName := "aws_athena_database.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, athena.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDatabaseDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, athena.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDatabaseDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDatabaseConfig(rName, dbName, false),
+				Config: testAccDatabaseConfig_basic(rName, dbName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDatabaseExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", dbName),
@@ -170,13 +170,13 @@ func TestAccAthenaDatabase_nameCantHaveUppercase(t *testing.T) {
 	dbName := "A" + sdkacctest.RandString(8)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, athena.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDatabaseDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, athena.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDatabaseDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccDatabaseConfig(rName, dbName, false),
+				Config:      testAccDatabaseConfig_basic(rName, dbName, false),
 				ExpectError: regexp.MustCompile(`must be lowercase letters, numbers, or underscore \('_'\)`),
 			},
 		},
@@ -188,13 +188,13 @@ func TestAccAthenaDatabase_destroyFailsIfTablesExist(t *testing.T) {
 	dbName := sdkacctest.RandString(8)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, athena.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDatabaseDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, athena.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDatabaseDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDatabaseConfig(rName, dbName, false),
+				Config: testAccDatabaseConfig_basic(rName, dbName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDatabaseExists("aws_athena_database.test"),
 					testAccDatabaseCreateTables(dbName),
@@ -211,13 +211,13 @@ func TestAccAthenaDatabase_forceDestroyAlwaysSucceeds(t *testing.T) {
 	dbName := sdkacctest.RandString(8)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, athena.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDatabaseDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, athena.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDatabaseDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDatabaseConfig(rName, dbName, true),
+				Config: testAccDatabaseConfig_basic(rName, dbName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDatabaseExists("aws_athena_database.test"),
 					testAccDatabaseCreateTables(dbName),
@@ -233,13 +233,13 @@ func TestAccAthenaDatabase_description(t *testing.T) {
 	resourceName := "aws_athena_database.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, athena.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDatabaseDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, athena.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDatabaseDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDatabaseCommentConfig(rName, dbName, false),
+				Config: testAccDatabaseConfig_comment(rName, dbName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDatabaseExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", dbName),
@@ -262,13 +262,13 @@ func TestAccAthenaDatabase_unescaped_description(t *testing.T) {
 	resourceName := "aws_athena_database.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, athena.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDatabaseDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, athena.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDatabaseDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDatabaseUnescapedCommentConfig(rName, dbName, false),
+				Config: testAccDatabaseConfig_unescapedComment(rName, dbName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDatabaseExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", dbName),
@@ -291,13 +291,13 @@ func TestAccAthenaDatabase_disppears(t *testing.T) {
 
 	resourceName := "aws_athena_database.test"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, athena.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDatabaseDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, athena.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDatabaseDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDatabaseConfig(rName, dbName, false),
+				Config: testAccDatabaseConfig_basic(rName, dbName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDatabaseExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfathena.ResourceDatabase(), resourceName),
@@ -335,7 +335,6 @@ func testAccCheckDatabaseDestroy(s *terraform.State) error {
 		if database != nil {
 			return fmt.Errorf("Athena database (%s) still exists", rs.Primary.ID)
 		}
-
 	}
 	return nil
 }
@@ -457,7 +456,7 @@ func testAccDatabaseFindBucketName(s *terraform.State, dbName string) (bucket st
 	return bucket, err
 }
 
-func testAccDatabaseConfig(rName string, dbName string, forceDestroy bool) string {
+func testAccDatabaseConfig_basic(rName string, dbName string, forceDestroy bool) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
@@ -472,7 +471,7 @@ resource "aws_athena_database" "test" {
 `, rName, dbName, forceDestroy)
 }
 
-func testAccDatabasePropertiesConfig(rName string, dbName string, forceDestroy bool) string {
+func testAccDatabaseConfig_properties(rName string, dbName string, forceDestroy bool) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
@@ -491,7 +490,7 @@ resource "aws_athena_database" "test" {
 `, rName, dbName, forceDestroy)
 }
 
-func testAccDatabaseAclConfig(rName string, dbName string, forceDestroy bool) string {
+func testAccDatabaseConfig_acl(rName string, dbName string, forceDestroy bool) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
@@ -510,7 +509,7 @@ resource "aws_athena_database" "test" {
 `, rName, dbName, forceDestroy)
 }
 
-func testAccDatabaseWithKMSConfig(rName string, dbName string, forceDestroy bool) string {
+func testAccDatabaseConfig_kms(rName string, dbName string, forceDestroy bool) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   deletion_window_in_days = 10
@@ -549,7 +548,7 @@ resource "aws_athena_database" "test" {
 `, rName, dbName, forceDestroy)
 }
 
-func testAccDatabaseCommentConfig(rName string, dbName string, forceDestroy bool) string {
+func testAccDatabaseConfig_comment(rName string, dbName string, forceDestroy bool) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
@@ -565,7 +564,7 @@ resource "aws_athena_database" "test" {
 `, rName, dbName, forceDestroy)
 }
 
-func testAccDatabaseUnescapedCommentConfig(rName string, dbName string, forceDestroy bool) string {
+func testAccDatabaseConfig_unescapedComment(rName string, dbName string, forceDestroy bool) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q

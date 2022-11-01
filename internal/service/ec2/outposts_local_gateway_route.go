@@ -17,7 +17,7 @@ import (
 )
 
 const (
-	ec2LocalGatewayRouteEventualConsistencyTimeout = 1 * time.Minute
+	localGatewayRouteEventualConsistencyTimeout = 1 * time.Minute
 )
 
 func ResourceLocalGatewayRoute() *schema.Resource {
@@ -82,7 +82,7 @@ func resourceLocalGatewayRouteRead(d *schema.ResourceData, meta interface{}) err
 	}
 
 	var localGatewayRoute *ec2.LocalGatewayRoute
-	err = resource.Retry(ec2LocalGatewayRouteEventualConsistencyTimeout, func() *resource.RetryError {
+	err = resource.Retry(localGatewayRouteEventualConsistencyTimeout, func() *resource.RetryError {
 		var err error
 		localGatewayRoute, err = GetLocalGatewayRoute(conn, localGatewayRouteTableID, destination)
 

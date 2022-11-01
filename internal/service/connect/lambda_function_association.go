@@ -69,7 +69,7 @@ func resourceLambdaFunctionAssociationRead(ctx context.Context, d *schema.Resour
 		return diag.FromErr(err)
 	}
 
-	lfaArn, err := FindLambdaFunctionAssociationByArnWithContext(ctx, conn, instanceID, functionArn)
+	lfaArn, err := FindLambdaFunctionAssociationByARNWithContext(ctx, conn, instanceID, functionArn)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Connect Lambda Function Association (%s) not found, removing from state", d.Id())

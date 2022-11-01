@@ -9,6 +9,8 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws/arn"
+	"github.com/hashicorp/go-cty/cty"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -350,6 +352,18 @@ var ValidStringDateOrPositiveInt = validation.Any(
 	validation.StringMatch(regexp.MustCompile(`^\d+$`), "must be a positive integer value"),
 )
 
+func ValidDuration(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	duration, err := time.ParseDuration(value)
+	if err != nil {
+		errors = append(errors, fmt.Errorf("%q cannot be parsed as a duration: %s", k, err))
+	}
+	if duration < 0 {
+		errors = append(errors, fmt.Errorf("%q must be greater than zero", k))
+	}
+	return
+}
+
 // FloatGreaterThan returns a SchemaValidateFunc which tests if the provided value
 // is of type float and is greater than threshold.
 func FloatGreaterThan(threshold float64) schema.SchemaValidateFunc {
@@ -366,5 +380,31 @@ func FloatGreaterThan(threshold float64) schema.SchemaValidateFunc {
 		}
 
 		return
+	}
+}
+
+// https://github.com/hashicorp/terraform-plugin-sdk/issues/780.
+func ValidAllDiag(validators ...schema.SchemaValidateDiagFunc) schema.SchemaValidateDiagFunc {
+	return func(i any, path cty.Path) diag.Diagnostics {
+		var results diag.Diagnostics
+		for _, validator := range validators {
+			results = append(results, validator(i, path)...)
+		}
+		return results
+	}
+}
+
+// https://github.com/hashicorp/terraform-plugin-sdk/issues/780.
+func ValidAnyDiag(validators ...schema.SchemaValidateDiagFunc) schema.SchemaValidateDiagFunc {
+	return func(i any, path cty.Path) diag.Diagnostics {
+		var results diag.Diagnostics
+		for _, validator := range validators {
+			diags := validator(i, path)
+			if len(diags) == 0 {
+				return diag.Diagnostics{}
+			}
+			results = append(results, diags...)
+		}
+		return results
 	}
 }

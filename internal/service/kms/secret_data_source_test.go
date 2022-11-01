@@ -12,19 +12,19 @@ import (
 
 func TestAccKMSSecretDataSource_removed(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, kms.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, kms.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccSecretDataSourceConfig,
+				Config:      testAccSecretDataSourceConfig_basic,
 				ExpectError: regexp.MustCompile(tfkms.SecretRemovedMessage),
 			},
 		},
 	})
 }
 
-const testAccSecretDataSourceConfig = `
+const testAccSecretDataSourceConfig_basic = `
 data "aws_kms_secret" "testing" {
   secret {
     name    = "secret_name"

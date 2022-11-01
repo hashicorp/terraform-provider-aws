@@ -145,7 +145,7 @@ func resourceAMILaunchPermissionDelete(ctx context.Context, d *schema.ResourceDa
 	log.Printf("[INFO] Deleting AMI Launch Permission: %s", d.Id())
 	_, err = conn.ModifyImageAttributeWithContext(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidAMIIDNotFound, ErrCodeInvalidAMIIDUnavailable) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidAMIIDNotFound, errCodeInvalidAMIIDUnavailable) {
 		return nil
 	}
 

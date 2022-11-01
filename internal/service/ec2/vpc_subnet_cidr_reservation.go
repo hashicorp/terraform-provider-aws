@@ -124,7 +124,7 @@ func resourceSubnetCIDRReservationDelete(d *schema.ResourceData, meta interface{
 		SubnetCidrReservationId: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidSubnetCIDRReservationIDNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidSubnetCIDRReservationIDNotFound) {
 		return nil
 	}
 

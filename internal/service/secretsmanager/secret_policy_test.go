@@ -23,13 +23,13 @@ func TestAccSecretsManagerSecretPolicy_basic(t *testing.T) {
 	resourceName := "aws_secretsmanager_secret_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, secretsmanager.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckSecretPolicyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, secretsmanager.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSecretPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSecretPolicyBasicConfig(rName),
+				Config: testAccSecretPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecretPolicyExists(resourceName, &policy),
 					resource.TestMatchResourceAttr(resourceName, "policy",
@@ -43,7 +43,7 @@ func TestAccSecretsManagerSecretPolicy_basic(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"block_public_policy"},
 			},
 			{
-				Config: testAccSecretPolicyUpdatedConfig(rName),
+				Config: testAccSecretPolicyConfig_updated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecretPolicyExists(resourceName, &policy),
 					resource.TestMatchResourceAttr(resourceName, "policy",
@@ -60,13 +60,13 @@ func TestAccSecretsManagerSecretPolicy_blockPublicPolicy(t *testing.T) {
 	resourceName := "aws_secretsmanager_secret_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, secretsmanager.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckSecretPolicyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, secretsmanager.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSecretPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSecretPolicyBlockConfig(rName, true),
+				Config: testAccSecretPolicyConfig_block(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecretPolicyExists(resourceName, &policy),
 					resource.TestCheckResourceAttr(resourceName, "block_public_policy", "true"),
@@ -79,14 +79,14 @@ func TestAccSecretsManagerSecretPolicy_blockPublicPolicy(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"block_public_policy"},
 			},
 			{
-				Config: testAccSecretPolicyBlockConfig(rName, false),
+				Config: testAccSecretPolicyConfig_block(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecretPolicyExists(resourceName, &policy),
 					resource.TestCheckResourceAttr(resourceName, "block_public_policy", "false"),
 				),
 			},
 			{
-				Config: testAccSecretPolicyBlockConfig(rName, true),
+				Config: testAccSecretPolicyConfig_block(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecretPolicyExists(resourceName, &policy),
 					resource.TestCheckResourceAttr(resourceName, "block_public_policy", "true"),
@@ -102,13 +102,13 @@ func TestAccSecretsManagerSecretPolicy_disappears(t *testing.T) {
 	resourceName := "aws_secretsmanager_secret_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, secretsmanager.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckSecretPolicyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, secretsmanager.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSecretPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSecretPolicyBasicConfig(rName),
+				Config: testAccSecretPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecretPolicyExists(resourceName, &policy),
 					acctest.CheckResourceDisappears(acctest.Provider, tfsecretsmanager.ResourceSecretPolicy(), resourceName),
@@ -182,7 +182,6 @@ func testAccCheckSecretPolicyDestroy(s *terraform.State) error {
 	}
 
 	return nil
-
 }
 
 func testAccCheckSecretPolicyExists(resourceName string, policy *secretsmanager.GetResourcePolicyOutput) resource.TestCheckFunc {
@@ -213,7 +212,7 @@ func testAccCheckSecretPolicyExists(resourceName string, policy *secretsmanager.
 	}
 }
 
-func testAccSecretPolicyBasicConfig(rName string) string {
+func testAccSecretPolicyConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
   name               = %[1]q
@@ -261,7 +260,7 @@ POLICY
 `, rName)
 }
 
-func testAccSecretPolicyUpdatedConfig(rName string) string {
+func testAccSecretPolicyConfig_updated(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_secretsmanager_secret" "test" {
   name = %[1]q
@@ -290,7 +289,7 @@ POLICY
 `, rName)
 }
 
-func testAccSecretPolicyBlockConfig(rName string, block bool) string {
+func testAccSecretPolicyConfig_block(rName string, block bool) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
   name               = %[1]q

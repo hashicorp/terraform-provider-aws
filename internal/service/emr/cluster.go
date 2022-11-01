@@ -171,6 +171,11 @@ func ResourceCluster() *schema.Resource {
 										Required: true,
 										ForceNew: true,
 									},
+									"throughput": {
+										Type:     schema.TypeInt,
+										Optional: true,
+										ForceNew: true,
+									},
 									"type": {
 										Type:         schema.TypeString,
 										Required:     true,
@@ -391,6 +396,11 @@ func ResourceCluster() *schema.Resource {
 									"size": {
 										Type:     schema.TypeInt,
 										Required: true,
+										ForceNew: true,
+									},
+									"throughput": {
+										Type:     schema.TypeInt,
+										Optional: true,
 										ForceNew: true,
 									},
 									"type": {
@@ -764,7 +774,7 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 			instanceGroup.Market = aws.String(emr.MarketTypeSpot)
 		}
 
-		expandEbsConfig(m, instanceGroup)
+		expandEBSConfig(m, instanceGroup)
 
 		instanceConfig.InstanceGroups = append(instanceConfig.InstanceGroups, instanceGroup)
 	}
@@ -795,7 +805,7 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 			instanceGroup.Market = aws.String(emr.MarketTypeSpot)
 		}
 
-		expandEbsConfig(m, instanceGroup)
+		expandEBSConfig(m, instanceGroup)
 
 		instanceConfig.InstanceGroups = append(instanceConfig.InstanceGroups, instanceGroup)
 	}
@@ -932,7 +942,7 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 		if err != nil {
 			return fmt.Errorf("configurations_json contains an invalid JSON: %v", err)
 		}
-		params.Configurations, err = expandConfigurationJson(info)
+		params.Configurations, err = expandConfigurationJSON(info)
 		if err != nil {
 			return fmt.Errorf("Error reading EMR configurations_json: %w", err)
 		}
@@ -946,8 +956,6 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 	if v, ok := d.GetOk("auto_termination_policy"); ok && len(v.([]interface{})) > 0 {
 		params.AutoTerminationPolicy = expandAutoTerminationPolicy(v.([]interface{}))
 	}
-
-	log.Printf("[DEBUG] EMR Cluster create options: %s", params)
 
 	var resp *emr.RunJobFlowOutput
 	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
@@ -1023,7 +1031,6 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	instanceGroups, err := fetchAllInstanceGroups(conn, d.Id())
 
 	if err == nil { // find instance group
-
 		coreGroup := coreInstanceGroup(instanceGroups)
 		masterGroup := findMasterGroup(instanceGroups)
 
@@ -1045,7 +1052,6 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	instanceFleets, err := FetchAllInstanceFleets(conn, d.Id())
 
 	if err == nil { // find instance fleets
-
 		coreFleet := findInstanceFleet(instanceFleets, emr.InstanceFleetTypeCore)
 		masterFleet := findInstanceFleet(instanceFleets, emr.InstanceFleetTypeMaster)
 
@@ -1095,7 +1101,7 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if _, ok := d.GetOk("configurations_json"); ok {
-		configOut, err := flattenConfigurationJson(cluster.Configurations)
+		configOut, err := flattenConfigurationJSON(cluster.Configurations)
 		if err != nil {
 			return fmt.Errorf("Error reading EMR cluster configurations: %w", err)
 		}
@@ -1104,7 +1110,7 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if err := d.Set("ec2_attributes", flattenEc2Attributes(cluster.Ec2InstanceAttributes)); err != nil {
+	if err := d.Set("ec2_attributes", flattenEC2InstanceAttributes(cluster.Ec2InstanceAttributes)); err != nil {
 		return fmt.Errorf("error setting EMR Ec2 Attributes: %w", err)
 	}
 
@@ -1367,7 +1373,6 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 					break
 				}
 			}
-
 		}
 	}
 
@@ -1438,7 +1443,7 @@ func flattenApplications(apps []*emr.Application) []interface{} {
 	return appOut
 }
 
-func flattenEc2Attributes(ia *emr.Ec2InstanceAttributes) []map[string]interface{} {
+func flattenEC2InstanceAttributes(ia *emr.Ec2InstanceAttributes) []map[string]interface{} {
 	attrs := map[string]interface{}{}
 	result := make([]map[string]interface{}, 0)
 
@@ -1666,6 +1671,9 @@ func flattenEBSConfig(ebsBlockDevices []*emr.EbsBlockDevice) *schema.Set {
 		if ebs.VolumeSpecification.SizeInGB != nil {
 			ebsAttrs["size"] = int(aws.Int64Value(ebs.VolumeSpecification.SizeInGB))
 		}
+		if ebs.VolumeSpecification.Throughput != nil {
+			ebsAttrs["throughput"] = aws.Int64Value(ebs.VolumeSpecification.Throughput)
+		}
 		if ebs.VolumeSpecification.VolumeType != nil {
 			ebsAttrs["type"] = aws.StringValue(ebs.VolumeSpecification.VolumeType)
 		}
@@ -1800,7 +1808,7 @@ func expandStepConfigs(l []interface{}) []*emr.StepConfig {
 	return stepConfigs
 }
 
-func expandEbsConfig(configAttributes map[string]interface{}, config *emr.InstanceGroupConfig) {
+func expandEBSConfig(configAttributes map[string]interface{}, config *emr.InstanceGroupConfig) {
 	if rawEbsConfigs, ok := configAttributes["ebs_config"]; ok {
 		ebsConfig := &emr.EbsConfiguration{}
 
@@ -1814,6 +1822,9 @@ func expandEbsConfig(configAttributes map[string]interface{}, config *emr.Instan
 					VolumeType: aws.String(rawEbsConfig["type"].(string)),
 				},
 			}
+			if v, ok := rawEbsConfig["throughput"].(int); ok && v != 0 {
+				ebsBlockDeviceConfig.VolumeSpecification.Throughput = aws.Int64(int64(v))
+			}
 			if v, ok := rawEbsConfig["iops"].(int); ok && v != 0 {
 				ebsBlockDeviceConfig.VolumeSpecification.Iops = aws.Int64(int64(v))
 			}
@@ -1825,7 +1836,7 @@ func expandEbsConfig(configAttributes map[string]interface{}, config *emr.Instan
 	}
 }
 
-func expandConfigurationJson(input string) ([]*emr.Configuration, error) {
+func expandConfigurationJSON(input string) ([]*emr.Configuration, error) {
 	configsOut := []*emr.Configuration{}
 	err := json.Unmarshal([]byte(input), &configsOut)
 	if err != nil {
@@ -1836,7 +1847,7 @@ func expandConfigurationJson(input string) ([]*emr.Configuration, error) {
 	return configsOut, nil
 }
 
-func flattenConfigurationJson(config []*emr.Configuration) (string, error) {
+func flattenConfigurationJSON(config []*emr.Configuration) (string, error) {
 	out, err := jsonutil.BuildJSON(config)
 	if err != nil {
 		return "", err
@@ -1847,15 +1858,15 @@ func flattenConfigurationJson(config []*emr.Configuration) (string, error) {
 func expandConfigures(input string) []*emr.Configuration {
 	configsOut := []*emr.Configuration{}
 	if strings.HasPrefix(input, "http") {
-		if err := readHttpJson(input, &configsOut); err != nil {
+		if err := readHTTPJSON(input, &configsOut); err != nil {
 			log.Printf("[ERR] Error reading HTTP JSON: %s", err)
 		}
 	} else if strings.HasSuffix(input, ".json") {
-		if err := readLocalJson(input, &configsOut); err != nil {
+		if err := readLocalJSON(input, &configsOut); err != nil {
 			log.Printf("[ERR] Error reading local JSON: %s", err)
 		}
 	} else {
-		if err := readBodyJson(input, &configsOut); err != nil {
+		if err := readBodyJSON(input, &configsOut); err != nil {
 			log.Printf("[ERR] Error reading body JSON: %s", err)
 		}
 	}
@@ -1864,7 +1875,7 @@ func expandConfigures(input string) []*emr.Configuration {
 	return configsOut
 }
 
-func readHttpJson(url string, target interface{}) error {
+func readHTTPJSON(url string, target interface{}) error {
 	r, err := http.Get(url)
 	if err != nil {
 		return err
@@ -1874,7 +1885,7 @@ func readHttpJson(url string, target interface{}) error {
 	return json.NewDecoder(r.Body).Decode(target)
 }
 
-func readLocalJson(localFile string, target interface{}) error {
+func readLocalJSON(localFile string, target interface{}) error {
 	file, e := os.ReadFile(localFile)
 	if e != nil {
 		log.Printf("[ERROR] %s", e)
@@ -1884,7 +1895,7 @@ func readLocalJson(localFile string, target interface{}) error {
 	return json.Unmarshal(file, target)
 }
 
-func readBodyJson(body string, target interface{}) error {
+func readBodyJSON(body string, target interface{}) error {
 	log.Printf("[DEBUG] Raw Body %s\n", body)
 	err := json.Unmarshal([]byte(body), target)
 	if err != nil {
@@ -1909,6 +1920,9 @@ func resourceClusterEBSHashConfig(v interface{}) int {
 	buf.WriteString(fmt.Sprintf("%d-", m["size"].(int)))
 	buf.WriteString(fmt.Sprintf("%s-", m["type"].(string)))
 	buf.WriteString(fmt.Sprintf("%d-", m["volumes_per_instance"].(int)))
+	if v, ok := m["throughput"].(int); ok && v != 0 {
+		buf.WriteString(fmt.Sprintf("%d-", v))
+	}
 	if v, ok := m["iops"].(int); ok && v != 0 {
 		buf.WriteString(fmt.Sprintf("%d-", v))
 	}
@@ -1947,7 +1961,6 @@ func fetchAllInstanceGroups(conn *emr.EMR, clusterID string) ([]*emr.InstanceGro
 }
 
 func readInstanceFleetConfig(data map[string]interface{}, InstanceFleetType string) *emr.InstanceFleetConfig {
-
 	config := &emr.InstanceFleetConfig{
 		InstanceFleetType:      &InstanceFleetType,
 		Name:                   aws.String(data["name"].(string)),
@@ -2080,7 +2093,7 @@ func flattenSpotSpecification(spotSpecification *emr.SpotProvisioningSpecificati
 	return []interface{}{m}
 }
 
-func expandEbsConfiguration(ebsConfigurations []interface{}) *emr.EbsConfiguration {
+func expandEBSConfiguration(ebsConfigurations []interface{}) *emr.EbsConfiguration {
 	ebsConfig := &emr.EbsConfiguration{}
 	ebsConfigs := make([]*emr.EbsBlockDeviceConfig, 0)
 	for _, ebsConfiguration := range ebsConfigurations {
@@ -2091,6 +2104,9 @@ func expandEbsConfiguration(ebsConfigurations []interface{}) *emr.EbsConfigurati
 				SizeInGB:   aws.Int64(int64(cfg["size"].(int))),
 				VolumeType: aws.String(cfg["type"].(string)),
 			},
+		}
+		if v, ok := cfg["throughput"].(int); ok && v != 0 {
+			ebsBlockDeviceConfig.VolumeSpecification.Throughput = aws.Int64(int64(v))
 		}
 		if v, ok := cfg["iops"].(int); ok && v != 0 {
 			ebsBlockDeviceConfig.VolumeSpecification.Iops = aws.Int64(int64(v))
@@ -2130,7 +2146,7 @@ func expandInstanceTypeConfigs(instanceTypeConfigs []interface{}) []*emr.Instanc
 		}
 
 		if v, ok := configAttributes["ebs_config"].(*schema.Set); ok && v.Len() == 1 {
-			config.EbsConfiguration = expandEbsConfiguration(v.List())
+			config.EbsConfiguration = expandEBSConfiguration(v.List())
 		}
 
 		configsOut = append(configsOut, config)
@@ -2161,7 +2177,6 @@ func expandLaunchSpecification(launchSpecification map[string]interface{}) *emr.
 			spotProvisioning.BlockDurationMinutes = aws.Int64(int64(v.(int)))
 		}
 		if v, ok := configAttributes["allocation_strategy"]; ok {
-
 			spotProvisioning.AllocationStrategy = aws.String(v.(string))
 		}
 

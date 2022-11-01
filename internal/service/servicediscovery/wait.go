@@ -1,6 +1,7 @@
 package servicediscovery
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -16,15 +17,15 @@ const (
 )
 
 // WaitOperationSuccess waits for an Operation to return Success
-func WaitOperationSuccess(conn *servicediscovery.ServiceDiscovery, operationID string) (*servicediscovery.Operation, error) {
+func WaitOperationSuccess(ctx context.Context, conn *servicediscovery.ServiceDiscovery, operationID string) (*servicediscovery.Operation, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{servicediscovery.OperationStatusSubmitted, servicediscovery.OperationStatusPending},
 		Target:  []string{servicediscovery.OperationStatusSuccess},
-		Refresh: StatusOperation(conn, operationID),
+		Refresh: StatusOperation(ctx, conn, operationID),
 		Timeout: OperationSuccessTimeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*servicediscovery.Operation); ok {
 		// Error messages can also be contained in the response with FAIL status

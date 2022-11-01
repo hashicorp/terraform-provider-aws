@@ -16,12 +16,12 @@ func TestAccMemoryDBClusterDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_memorydb_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, memorydb.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, memorydb.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterDataSourceConfig(rName),
+				Config: testAccClusterDataSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "acl_name", resourceName, "acl_name"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
@@ -64,9 +64,9 @@ func TestAccMemoryDBClusterDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccClusterDataSourceConfig(rName string) string {
+func testAccClusterDataSourceConfig_basic(rName string) string {
 	return acctest.ConfigCompose(
-		testAccClusterConfigBaseNetwork(rName),
+		testAccClusterConfig_baseNetwork(rName),
 		testAccClusterConfigBaseUserAndACL(rName),
 		fmt.Sprintf(`
 resource "aws_security_group" "test" {

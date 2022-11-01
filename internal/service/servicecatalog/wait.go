@@ -1,6 +1,7 @@
 package servicecatalog
 
 import (
+	"errors"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -47,7 +48,6 @@ const (
 	ProvisioningArtifactReadTimeout            = 10 * time.Minute
 	ProvisioningArtifactReadyTimeout           = 3 * time.Minute
 	ProvisioningArtifactUpdateTimeout          = 3 * time.Minute
-	RecordReadyTimeout                         = 30 * time.Minute
 	ServiceActionDeleteTimeout                 = 3 * time.Minute
 	ServiceActionReadTimeout                   = 10 * time.Minute
 	ServiceActionReadyTimeout                  = 3 * time.Minute
@@ -439,11 +439,7 @@ func WaitProvisioningArtifactDeleted(conn *servicecatalog.ServiceCatalog, id, pr
 		return nil
 	}
 
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }
 
 func WaitPrincipalPortfolioAssociationReady(conn *servicecatalog.ServiceCatalog, acceptLanguage, principalARN, portfolioID string, timeout time.Duration) (*servicecatalog.Principal, error) {
@@ -514,6 +510,14 @@ func WaitProvisionedProductReady(conn *servicecatalog.ServiceCatalog, acceptLang
 	outputRaw, err := stateConf.WaitForState()
 
 	if output, ok := outputRaw.(*servicecatalog.DescribeProvisionedProductOutput); ok {
+		if detail := output.ProvisionedProductDetail; detail != nil {
+			status := aws.StringValue(detail.Status)
+			// Note: "TAINTED" is described as a stable state per API docs, though can result from a failed update
+			// such that the stack rolls back to a previous version
+			if status == servicecatalog.ProvisionedProductStatusError || status == servicecatalog.ProvisionedProductStatusTainted {
+				tfresource.SetLastError(err, errors.New(aws.StringValue(detail.StatusMessage)))
+			}
+		}
 		return output, err
 	}
 
@@ -531,26 +535,6 @@ func WaitProvisionedProductTerminated(conn *servicecatalog.ServiceCatalog, accep
 	_, err := stateConf.WaitForState()
 
 	return err
-}
-
-func WaitRecordReady(conn *servicecatalog.ServiceCatalog, acceptLanguage, id string, timeout time.Duration) (*servicecatalog.DescribeRecordOutput, error) {
-	stateConf := &resource.StateChangeConf{
-		Pending:                   []string{StatusNotFound, StatusUnavailable, servicecatalog.ProvisionedProductStatusUnderChange, servicecatalog.ProvisionedProductStatusPlanInProgress},
-		Target:                    []string{servicecatalog.RecordStatusSucceeded, servicecatalog.StatusAvailable},
-		Refresh:                   StatusRecord(conn, acceptLanguage, id),
-		Timeout:                   timeout,
-		ContinuousTargetOccurence: ContinuousTargetOccurrence,
-		NotFoundChecks:            NotFoundChecks,
-		MinTimeout:                MinTimeout,
-	}
-
-	outputRaw, err := stateConf.WaitForState()
-
-	if output, ok := outputRaw.(*servicecatalog.DescribeRecordOutput); ok {
-		return output, err
-	}
-
-	return nil, err
 }
 
 func WaitPortfolioConstraintsReady(conn *servicecatalog.ServiceCatalog, acceptLanguage, portfolioID, productID string, timeout time.Duration) ([]*servicecatalog.ConstraintDetail, error) {

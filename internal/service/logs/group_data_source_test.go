@@ -15,12 +15,12 @@ func TestAccLogsGroupDataSource_basic(t *testing.T) {
 	resourceName := "data.aws_cloudwatch_log_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckGroupDataSourceConfig(rName),
+				Config: testAccGroupDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "name", "aws_cloudwatch_log_group.test", "name"),
 					resource.TestCheckResourceAttrPair(resourceName, "arn", "aws_cloudwatch_log_group.test", "arn"),
@@ -37,12 +37,12 @@ func TestAccLogsGroupDataSource_tags(t *testing.T) {
 	resourceName := "data.aws_cloudwatch_log_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckGroupTagsDataSourceConfig(rName),
+				Config: testAccGroupDataSourceConfig_tags(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "name", "aws_cloudwatch_log_group.test", "name"),
 					resource.TestCheckResourceAttrPair(resourceName, "arn", "aws_cloudwatch_log_group.test", "arn"),
@@ -59,12 +59,12 @@ func TestAccLogsGroupDataSource_kms(t *testing.T) {
 	resourceName := "data.aws_cloudwatch_log_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckGroupKMSDataSourceConfig(rName),
+				Config: testAccGroupDataSourceConfig_kms(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "name", "aws_cloudwatch_log_group.test", "name"),
 					resource.TestCheckResourceAttrPair(resourceName, "arn", "aws_cloudwatch_log_group.test", "arn"),
@@ -82,12 +82,12 @@ func TestAccLogsGroupDataSource_retention(t *testing.T) {
 	resourceName := "data.aws_cloudwatch_log_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckGroupRetentionDataSourceConfig(rName),
+				Config: testAccGroupDataSourceConfig_retention(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "name", "aws_cloudwatch_log_group.test", "name"),
 					resource.TestCheckResourceAttrPair(resourceName, "arn", "aws_cloudwatch_log_group.test", "arn"),
@@ -100,7 +100,7 @@ func TestAccLogsGroupDataSource_retention(t *testing.T) {
 	})
 }
 
-func testAccCheckGroupDataSourceConfig(rName string) string {
+func testAccGroupDataSourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource aws_cloudwatch_log_group "test" {
   name = "%s"
@@ -112,7 +112,7 @@ data aws_cloudwatch_log_group "test" {
 `, rName)
 }
 
-func testAccCheckGroupTagsDataSourceConfig(rName string) string {
+func testAccGroupDataSourceConfig_tags(rName string) string {
 	return fmt.Sprintf(`
 resource aws_cloudwatch_log_group "test" {
   name = "%s"
@@ -130,7 +130,7 @@ data aws_cloudwatch_log_group "test" {
 `, rName)
 }
 
-func testAccCheckGroupKMSDataSourceConfig(rName string) string {
+func testAccGroupDataSourceConfig_kms(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "foo" {
   description             = "Terraform acc test %s"
@@ -166,7 +166,7 @@ data aws_cloudwatch_log_group "test" {
 `, rName, rName)
 }
 
-func testAccCheckGroupRetentionDataSourceConfig(rName string) string {
+func testAccGroupDataSourceConfig_retention(rName string) string {
 	return fmt.Sprintf(`
 resource aws_cloudwatch_log_group "test" {
   name              = "%s"

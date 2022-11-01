@@ -20,13 +20,13 @@ func TestAccCodeBuildResourcePolicy_basic(t *testing.T) {
 	resourceName := "aws_codebuild_resource_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, codebuild.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckResourcePolicyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, codebuild.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckResourcePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccResourcePolicyBasicConfig(rName),
+				Config: testAccResourcePolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourcePolicyExists(resourceName, &reportGroup),
 					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", "aws_codebuild_report_group.test", "arn"),
@@ -48,13 +48,13 @@ func TestAccCodeBuildResourcePolicy_disappears(t *testing.T) {
 	resourceName := "aws_codebuild_resource_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, codebuild.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckResourcePolicyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, codebuild.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckResourcePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccResourcePolicyBasicConfig(rName),
+				Config: testAccResourcePolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourcePolicyExists(resourceName, &reportGroup),
 					acctest.CheckResourceDisappears(acctest.Provider, tfcodebuild.ResourceResourcePolicy(), resourceName),
@@ -72,13 +72,13 @@ func TestAccCodeBuildResourcePolicy_disappears_resource(t *testing.T) {
 	resourceName := "aws_codebuild_resource_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, codebuild.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckResourcePolicyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, codebuild.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckResourcePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccResourcePolicyBasicConfig(rName),
+				Config: testAccResourcePolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourcePolicyExists(resourceName, &reportGroup),
 					acctest.CheckResourceDisappears(acctest.Provider, tfcodebuild.ResourceReportGroup(), resourceName),
@@ -110,7 +110,6 @@ func testAccCheckResourcePolicyDestroy(s *terraform.State) error {
 		if resp != nil {
 			return fmt.Errorf("Found Resource Policy %s", rs.Primary.ID)
 		}
-
 	}
 	return nil
 }
@@ -139,7 +138,7 @@ func testAccCheckResourcePolicyExists(name string, policy *codebuild.GetResource
 	}
 }
 
-func testAccResourcePolicyBasicConfig(rName string) string {
+func testAccResourcePolicyConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_codebuild_report_group" "test" {
   name = %[1]q

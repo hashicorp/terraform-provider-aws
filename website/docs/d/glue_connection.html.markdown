@@ -20,16 +20,16 @@ data "aws_glue_connection" "example" {
 
 ## Argument Reference
 
-* `id` - (Required) A concatenation of the catalog ID and connection name. For example, if your account ID is
+* `id` - (Required) Concatenation of the catalog ID and connection name. For example, if your account ID is
 `123456789123` and the connection name is `conn` then the ID is `123456789123:conn`.
 
 ## Attributes Reference
 
-* `arn` - The ARN of the Glue Connection.
-* `catalog_id` - The catalog ID of the Glue Connection.
-* `connection_type` - The type of Glue Connection.
+* `arn` - ARN of the Glue Connection.
+* `catalog_id` - Catalog ID of the Glue Connection.
+* `connection_type` - Type of Glue Connection.
 * `description` – Description of the connection.
 * `match_criteria` – A list of criteria that can be used in selecting this connection.
-* `name` - The name of the Glue Connection.
+* `name` - Name of the Glue Connection.
 * `physical_connection_requirements` - A map of physical connection requirements, such as VPC and SecurityGroup.
-* `tags` - The tags assigned to the resource
+* `tags` - Tags assigned to the resource

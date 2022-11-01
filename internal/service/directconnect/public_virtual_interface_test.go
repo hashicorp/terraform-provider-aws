@@ -35,13 +35,13 @@ func TestAccDirectConnectPublicVirtualInterface_basic(t *testing.T) {
 	vlan := sdkacctest.RandIntRange(2049, 4094)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, directconnect.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckPublicVirtualInterfaceDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, directconnect.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPublicVirtualInterfaceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDxPublicVirtualInterfaceConfig_basic(connectionId, rName, amazonAddress, customerAddress, bgpAsn, vlan),
+				Config: testAccPublicVirtualInterfaceConfig_basic(connectionId, rName, amazonAddress, customerAddress, bgpAsn, vlan),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPublicVirtualInterfaceExists(resourceName, &vif),
 					resource.TestCheckResourceAttr(resourceName, "address_family", "ipv4"),
@@ -87,13 +87,13 @@ func TestAccDirectConnectPublicVirtualInterface_tags(t *testing.T) {
 	vlan := sdkacctest.RandIntRange(2049, 4094)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, directconnect.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckPublicVirtualInterfaceDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, directconnect.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPublicVirtualInterfaceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDxPublicVirtualInterfaceConfig_tags(connectionId, rName, amazonAddress, customerAddress, bgpAsn, vlan),
+				Config: testAccPublicVirtualInterfaceConfig_tags(connectionId, rName, amazonAddress, customerAddress, bgpAsn, vlan),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPublicVirtualInterfaceExists(resourceName, &vif),
 					resource.TestCheckResourceAttr(resourceName, "address_family", "ipv4"),
@@ -117,7 +117,7 @@ func TestAccDirectConnectPublicVirtualInterface_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccDxPublicVirtualInterfaceConfig_tagsUpdated(connectionId, rName, amazonAddress, customerAddress, bgpAsn, vlan),
+				Config: testAccPublicVirtualInterfaceConfig_tagsUpdated(connectionId, rName, amazonAddress, customerAddress, bgpAsn, vlan),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPublicVirtualInterfaceExists(resourceName, &vif),
 					resource.TestCheckResourceAttr(resourceName, "address_family", "ipv4"),
@@ -151,14 +151,14 @@ func TestAccDirectConnectPublicVirtualInterface_tags(t *testing.T) {
 }
 
 func testAccCheckPublicVirtualInterfaceDestroy(s *terraform.State) error {
-	return testAccCheckDxVirtualInterfaceDestroy(s, "aws_dx_public_virtual_interface")
+	return testAccCheckVirtualInterfaceDestroy(s, "aws_dx_public_virtual_interface")
 }
 
 func testAccCheckPublicVirtualInterfaceExists(name string, vif *directconnect.VirtualInterface) resource.TestCheckFunc {
-	return testAccCheckDxVirtualInterfaceExists(name, vif)
+	return testAccCheckVirtualInterfaceExists(name, vif)
 }
 
-func testAccDxPublicVirtualInterfaceConfig_basic(cid, rName, amzAddr, custAddr string, bgpAsn, vlan int) string {
+func testAccPublicVirtualInterfaceConfig_basic(cid, rName, amzAddr, custAddr string, bgpAsn, vlan int) string {
 	return fmt.Sprintf(`
 resource "aws_dx_public_virtual_interface" "test" {
   address_family   = "ipv4"
@@ -177,7 +177,7 @@ resource "aws_dx_public_virtual_interface" "test" {
 `, cid, rName, amzAddr, custAddr, bgpAsn, vlan)
 }
 
-func testAccDxPublicVirtualInterfaceConfig_tags(cid, rName, amzAddr, custAddr string, bgpAsn, vlan int) string {
+func testAccPublicVirtualInterfaceConfig_tags(cid, rName, amzAddr, custAddr string, bgpAsn, vlan int) string {
 	return fmt.Sprintf(`
 resource "aws_dx_public_virtual_interface" "test" {
   address_family   = "ipv4"
@@ -202,7 +202,7 @@ resource "aws_dx_public_virtual_interface" "test" {
 `, cid, rName, amzAddr, custAddr, bgpAsn, vlan)
 }
 
-func testAccDxPublicVirtualInterfaceConfig_tagsUpdated(cid, rName, amzAddr, custAddr string, bgpAsn, vlan int) string {
+func testAccPublicVirtualInterfaceConfig_tagsUpdated(cid, rName, amzAddr, custAddr string, bgpAsn, vlan int) string {
 	return fmt.Sprintf(`
 resource "aws_dx_public_virtual_interface" "test" {
   address_family   = "ipv4"

@@ -15,12 +15,12 @@ func TestAccCognitoIDPUserPoolClientsDataSource_basic(t *testing.T) {
 	datasourceName := "data.aws_cognito_user_pool_clients.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckIdentityProvider(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserPoolClientsDataSource_basic(rName),
+				Config: testAccUserPoolClientsDataSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(datasourceName, "client_ids.#", "3"),
 					resource.TestCheckResourceAttr(datasourceName, "client_names.#", "3"),
@@ -30,7 +30,7 @@ func TestAccCognitoIDPUserPoolClientsDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccUserPoolClientsDataSource_basic(rName string) string {
+func testAccUserPoolClientsDataSourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cognito_user_pool" "test" {
   name = %[1]q

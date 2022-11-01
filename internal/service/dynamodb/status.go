@@ -2,7 +2,6 @@ package dynamodb
 
 import (
 	"context"
-	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
@@ -13,7 +12,7 @@ import (
 
 func statusKinesisStreamingDestination(ctx context.Context, conn *dynamodb.DynamoDB, streamArn, tableName string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		result, err := FindDynamoDBKinesisDataStreamDestination(ctx, conn, streamArn, tableName)
+		result, err := FindKinesisDataStreamDestination(ctx, conn, streamArn, tableName)
 
 		if err != nil {
 			return nil, "", err
@@ -29,7 +28,7 @@ func statusKinesisStreamingDestination(ctx context.Context, conn *dynamodb.Dynam
 
 func statusTable(conn *dynamodb.DynamoDB, tableName string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		table, err := FindDynamoDBTableByName(conn, tableName)
+		table, err := findTableByName(conn, tableName)
 
 		if tfawserr.ErrCodeEquals(err, dynamodb.ErrCodeResourceNotFoundException) {
 			return nil, "", nil
@@ -53,12 +52,10 @@ func statusReplicaUpdate(conn *dynamodb.DynamoDB, tableName, region string) reso
 			TableName: aws.String(tableName),
 		})
 		if err != nil {
-			return 42, "", err
+			return nil, "", err
 		}
-		log.Printf("[DEBUG] DynamoDB replicas: %s", result.Table.Replicas)
 
 		var targetReplica *dynamodb.ReplicaDescription
-
 		for _, replica := range result.Table.Replicas {
 			if aws.StringValue(replica.RegionName) == region {
 				targetReplica = replica
@@ -80,12 +77,10 @@ func statusReplicaDelete(conn *dynamodb.DynamoDB, tableName, region string) reso
 			TableName: aws.String(tableName),
 		})
 		if err != nil {
-			return 42, "", err
+			return nil, "", err
 		}
 
-		log.Printf("[DEBUG] all replicas for waiting: %s", result.Table.Replicas)
 		var targetReplica *dynamodb.ReplicaDescription
-
 		for _, replica := range result.Table.Replicas {
 			if aws.StringValue(replica.RegionName) == region {
 				targetReplica = replica
@@ -103,7 +98,7 @@ func statusReplicaDelete(conn *dynamodb.DynamoDB, tableName, region string) reso
 
 func statusGSI(conn *dynamodb.DynamoDB, tableName, indexName string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		gsi, err := FindDynamoDBGSIByTableNameIndexName(conn, tableName, indexName)
+		gsi, err := findGSIByTableNameIndexName(conn, tableName, indexName)
 
 		if tfawserr.ErrCodeEquals(err, dynamodb.ErrCodeResourceNotFoundException) {
 			return nil, "", nil
@@ -123,7 +118,7 @@ func statusGSI(conn *dynamodb.DynamoDB, tableName, indexName string) resource.St
 
 func statusPITR(conn *dynamodb.DynamoDB, tableName string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		pitr, err := FindDynamoDBPITRDescriptionByTableName(conn, tableName)
+		pitr, err := findPITRDescriptionByTableName(conn, tableName)
 
 		if tfawserr.ErrCodeEquals(err, dynamodb.ErrCodeResourceNotFoundException) {
 			return nil, "", nil
@@ -143,7 +138,7 @@ func statusPITR(conn *dynamodb.DynamoDB, tableName string) resource.StateRefresh
 
 func statusTTL(conn *dynamodb.DynamoDB, tableName string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		ttl, err := FindDynamoDBTTLRDescriptionByTableName(conn, tableName)
+		ttl, err := findTTLRDescriptionByTableName(conn, tableName)
 
 		if tfawserr.ErrCodeEquals(err, dynamodb.ErrCodeResourceNotFoundException) {
 			return nil, "", nil
@@ -163,7 +158,7 @@ func statusTTL(conn *dynamodb.DynamoDB, tableName string) resource.StateRefreshF
 
 func statusTableSES(conn *dynamodb.DynamoDB, tableName string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		table, err := FindDynamoDBTableByName(conn, tableName)
+		table, err := findTableByName(conn, tableName)
 
 		if tfawserr.ErrCodeEquals(err, dynamodb.ErrCodeResourceNotFoundException) {
 			return nil, "", nil

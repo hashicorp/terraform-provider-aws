@@ -1,6 +1,6 @@
 package transfer
 
-import ( // nosemgrep: aws-sdk-go-multiple-service-imports
+import ( // nosemgrep:ci.aws-sdk-go-multiple-service-imports
 	"context"
 	"fmt"
 	"log"
@@ -844,10 +844,6 @@ func expandWorkflowDetail(tfList []interface{}) []*transfer.WorkflowDetail {
 
 		if v, ok := tfMap["workflow_id"].(string); ok && v != "" {
 			apiObject.WorkflowId = aws.String(v)
-		}
-
-		if apiObject == nil {
-			continue
 		}
 
 		apiObjects = append(apiObjects, apiObject)

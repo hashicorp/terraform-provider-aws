@@ -21,10 +21,10 @@ const (
 )
 
 func ResourceDefaultNetworkACL() *schema.Resource {
-	networkACLRuleSetSchema := &schema.Schema{
+	networkACLRuleSetNestedBlock := &schema.Schema{
 		Type:     schema.TypeSet,
 		Optional: true,
-		Elem:     networkACLRuleResource,
+		Elem:     networkACLRuleNestedBlock,
 		Set:      networkACLRuleHash,
 	}
 
@@ -60,8 +60,8 @@ func ResourceDefaultNetworkACL() *schema.Resource {
 			// We want explicit management of Rules here, so we do not allow them to be
 			// computed. Instead, an empty config will enforce just that; removal of the
 			// rules
-			"egress":  networkACLRuleSetSchema,
-			"ingress": networkACLRuleSetSchema,
+			"egress":  networkACLRuleSetNestedBlock,
+			"ingress": networkACLRuleSetNestedBlock,
 			"owner_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -106,7 +106,7 @@ func resourceDefaultNetworkACLCreate(d *schema.ResourceData, meta interface{}) e
 	d.SetId(naclID)
 
 	// Revoke all default and pre-existing rules on the default network ACL.
-	if err := deleteNetworkAclEntries(conn, d.Id(), nacl.Entries); err != nil {
+	if err := deleteNetworkACLEntries(conn, d.Id(), nacl.Entries); err != nil {
 		return err
 	}
 

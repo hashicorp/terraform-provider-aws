@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
@@ -104,14 +105,14 @@ func resourceLocationNFSCreate(d *schema.ResourceData, meta interface{}) error {
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &datasync.CreateLocationNfsInput{
-		OnPremConfig:   expandDataSyncOnPremConfig(d.Get("on_prem_config").([]interface{})),
+		OnPremConfig:   expandOnPremConfig(d.Get("on_prem_config").([]interface{})),
 		ServerHostname: aws.String(d.Get("server_hostname").(string)),
 		Subdirectory:   aws.String(d.Get("subdirectory").(string)),
 		Tags:           Tags(tags.IgnoreAWS()),
 	}
 
 	if v, ok := d.GetOk("mount_options"); ok {
-		input.MountOptions = expandDataSyncNfsMountOptions(v.([]interface{}))
+		input.MountOptions = expandNFSMountOptions(v.([]interface{}))
 	}
 
 	log.Printf("[DEBUG] Creating DataSync Location NFS: %s", input)
@@ -155,11 +156,11 @@ func resourceLocationNFSRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("arn", output.LocationArn)
 
-	if err := d.Set("on_prem_config", flattenDataSyncOnPremConfig(output.OnPremConfig)); err != nil {
+	if err := d.Set("on_prem_config", flattenOnPremConfig(output.OnPremConfig)); err != nil {
 		return fmt.Errorf("error setting on_prem_config: %w", err)
 	}
 
-	if err := d.Set("mount_options", flattenDataSyncNfsMountOptions(output.MountOptions)); err != nil {
+	if err := d.Set("mount_options", flattenNFSMountOptions(output.MountOptions)); err != nil {
 		return fmt.Errorf("error setting mount_options: %w", err)
 	}
 
@@ -192,12 +193,12 @@ func resourceLocationNFSUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChangesExcept("tags_all", "tags") {
 		input := &datasync.UpdateLocationNfsInput{
 			LocationArn:  aws.String(d.Id()),
-			OnPremConfig: expandDataSyncOnPremConfig(d.Get("on_prem_config").([]interface{})),
+			OnPremConfig: expandOnPremConfig(d.Get("on_prem_config").([]interface{})),
 			Subdirectory: aws.String(d.Get("subdirectory").(string)),
 		}
 
 		if v, ok := d.GetOk("mount_options"); ok {
-			input.MountOptions = expandDataSyncNfsMountOptions(v.([]interface{}))
+			input.MountOptions = expandNFSMountOptions(v.([]interface{}))
 		}
 
 		_, err := conn.UpdateLocationNfs(input)
@@ -238,7 +239,7 @@ func resourceLocationNFSDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func expandDataSyncNfsMountOptions(l []interface{}) *datasync.NfsMountOptions {
+func expandNFSMountOptions(l []interface{}) *datasync.NfsMountOptions {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -252,7 +253,7 @@ func expandDataSyncNfsMountOptions(l []interface{}) *datasync.NfsMountOptions {
 	return nfsMountOptions
 }
 
-func flattenDataSyncNfsMountOptions(mountOptions *datasync.NfsMountOptions) []interface{} {
+func flattenNFSMountOptions(mountOptions *datasync.NfsMountOptions) []interface{} {
 	if mountOptions == nil {
 		return []interface{}{}
 	}
@@ -262,4 +263,30 @@ func flattenDataSyncNfsMountOptions(mountOptions *datasync.NfsMountOptions) []in
 	}
 
 	return []interface{}{m}
+}
+
+func flattenOnPremConfig(onPremConfig *datasync.OnPremConfig) []interface{} {
+	if onPremConfig == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"agent_arns": flex.FlattenStringSet(onPremConfig.AgentArns),
+	}
+
+	return []interface{}{m}
+}
+
+func expandOnPremConfig(l []interface{}) *datasync.OnPremConfig {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	onPremConfig := &datasync.OnPremConfig{
+		AgentArns: flex.ExpandStringSet(m["agent_arns"].(*schema.Set)),
+	}
+
+	return onPremConfig
 }

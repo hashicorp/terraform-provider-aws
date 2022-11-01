@@ -23,13 +23,13 @@ func TestAccSignerSigningProfile_basic(t *testing.T) {
 	var conf signer.GetSigningProfileOutput
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckSingerSigningProfile(t, "AWSLambda-SHA384-ECDSA") },
-		ErrorCheck:        acctest.ErrorCheck(t, signer.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckSigningProfileDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSingerSigningProfile(t, "AWSLambda-SHA384-ECDSA") },
+		ErrorCheck:               acctest.ErrorCheck(t, signer.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSigningProfileDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSigningProfileProvidedNameConfig(profileName),
+				Config: testAccSigningProfileConfig_providedName(profileName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSigningProfileExists(resourceName, &conf),
 					resource.TestMatchResourceAttr(resourceName, "name",
@@ -54,13 +54,13 @@ func TestAccSignerSigningProfile_generateNameWithNamePrefix(t *testing.T) {
 	var conf signer.GetSigningProfileOutput
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckSingerSigningProfile(t, "AWSLambda-SHA384-ECDSA") },
-		ErrorCheck:        acctest.ErrorCheck(t, signer.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckSigningProfileDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSingerSigningProfile(t, "AWSLambda-SHA384-ECDSA") },
+		ErrorCheck:               acctest.ErrorCheck(t, signer.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSigningProfileDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSigningProfileConfig(namePrefix),
+				Config: testAccSigningProfileConfig_basic(namePrefix),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSigningProfileExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "platform_id", "AWSLambda-SHA384-ECDSA"),
@@ -76,13 +76,13 @@ func TestAccSignerSigningProfile_generateName(t *testing.T) {
 	var conf signer.GetSigningProfileOutput
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckSingerSigningProfile(t, "AWSLambda-SHA384-ECDSA") },
-		ErrorCheck:        acctest.ErrorCheck(t, signer.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckSigningProfileDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSingerSigningProfile(t, "AWSLambda-SHA384-ECDSA") },
+		ErrorCheck:               acctest.ErrorCheck(t, signer.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSigningProfileDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSigningProfileGenerateNameConfig(),
+				Config: testAccSigningProfileConfig_generateName(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSigningProfileExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "platform_id", "AWSLambda-SHA384-ECDSA"),
@@ -99,13 +99,13 @@ func TestAccSignerSigningProfile_tags(t *testing.T) {
 	var conf signer.GetSigningProfileOutput
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckSingerSigningProfile(t, "AWSLambda-SHA384-ECDSA") },
-		ErrorCheck:        acctest.ErrorCheck(t, signer.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckSigningProfileDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSingerSigningProfile(t, "AWSLambda-SHA384-ECDSA") },
+		ErrorCheck:               acctest.ErrorCheck(t, signer.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSigningProfileDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSigningProfileTagsConfig(namePrefix),
+				Config: testAccSigningProfileConfig_tags(namePrefix),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSigningProfileExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "tags.tag1", "value1"),
@@ -113,7 +113,7 @@ func TestAccSignerSigningProfile_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccSigningProfileUpdateTags(),
+				Config: testAccSigningProfileConfig_updateTags(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSigningProfileExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "tags.tag1", "prod"),
@@ -130,13 +130,13 @@ func TestAccSignerSigningProfile_signatureValidityPeriod(t *testing.T) {
 	var conf signer.GetSigningProfileOutput
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckSingerSigningProfile(t, "AWSLambda-SHA384-ECDSA") },
-		ErrorCheck:        acctest.ErrorCheck(t, signer.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckSigningProfileDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSingerSigningProfile(t, "AWSLambda-SHA384-ECDSA") },
+		ErrorCheck:               acctest.ErrorCheck(t, signer.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSigningProfileDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSigningProfileSVPConfig(namePrefix),
+				Config: testAccSigningProfileConfig_svp(namePrefix),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSigningProfileExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "signature_validity_period.0.type", "DAYS"),
@@ -144,7 +144,7 @@ func TestAccSignerSigningProfile_signatureValidityPeriod(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccSigningProfileUpdateSVP(),
+				Config: testAccSigningProfileConfig_updateSVP(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSigningProfileExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "signature_validity_period.0.type", "MONTHS"),
@@ -187,18 +187,18 @@ func testAccPreCheckSingerSigningProfile(t *testing.T, platformID string) {
 	t.Skipf("skipping acceptance testing: Signing Platform (%s) not found", platformID)
 }
 
-func testAccSigningProfileConfig(namePrefix string) string {
+func testAccSigningProfileConfig_basic(namePrefix string) string {
 	return testAccSigningProfileBaseConfig(namePrefix)
 }
 
-func testAccSigningProfileGenerateNameConfig() string {
+func testAccSigningProfileConfig_generateName() string {
 	return `
 resource "aws_signer_signing_profile" "test_sp" {
   platform_id = "AWSLambda-SHA384-ECDSA"
 }`
 }
 
-func testAccSigningProfileProvidedNameConfig(profileName string) string {
+func testAccSigningProfileConfig_providedName(profileName string) string {
 	return fmt.Sprintf(`
 resource "aws_signer_signing_profile" "test_sp" {
   platform_id = "AWSLambda-SHA384-ECDSA"
@@ -206,7 +206,7 @@ resource "aws_signer_signing_profile" "test_sp" {
 }`, profileName)
 }
 
-func testAccSigningProfileTagsConfig(namePrefix string) string {
+func testAccSigningProfileConfig_tags(namePrefix string) string {
 	return fmt.Sprintf(`
 resource "aws_signer_signing_profile" "test_sp" {
   platform_id = "AWSLambda-SHA384-ECDSA"
@@ -218,7 +218,7 @@ resource "aws_signer_signing_profile" "test_sp" {
 }`, namePrefix)
 }
 
-func testAccSigningProfileSVPConfig(namePrefix string) string {
+func testAccSigningProfileConfig_svp(namePrefix string) string {
 	return fmt.Sprintf(`
 resource "aws_signer_signing_profile" "test_sp" {
   platform_id = "AWSLambda-SHA384-ECDSA"
@@ -232,7 +232,7 @@ resource "aws_signer_signing_profile" "test_sp" {
 `, namePrefix)
 }
 
-func testAccSigningProfileUpdateSVP() string {
+func testAccSigningProfileConfig_updateSVP() string {
 	return `
 resource "aws_signer_signing_profile" "test_sp" {
   platform_id = "AWSLambda-SHA384-ECDSA"
@@ -245,7 +245,7 @@ resource "aws_signer_signing_profile" "test_sp" {
 `
 }
 
-func testAccSigningProfileUpdateTags() string {
+func testAccSigningProfileConfig_updateTags() string {
 	return `
 resource "aws_signer_signing_profile" "test_sp" {
   platform_id = "AWSLambda-SHA384-ECDSA"
@@ -310,7 +310,6 @@ func testAccCheckSigningProfileDestroy(s *terraform.State) error {
 		if *out.Status != signer.SigningProfileStatusCanceled && err == nil {
 			return fmt.Errorf("Signing Profile not cancelled%s", *out.ProfileName)
 		}
-
 	}
 
 	return nil

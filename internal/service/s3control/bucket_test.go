@@ -22,13 +22,13 @@ func TestAccS3ControlBucket_basic(t *testing.T) {
 	resourceName := "aws_s3control_bucket.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, s3control.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckBucketDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, s3control.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBucketDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketConfig_Bucket(rName),
+				Config: testAccBucketConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketExists(resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "s3-outposts", regexp.MustCompile(fmt.Sprintf("outpost/[^/]+/bucket/%s", rName))),
@@ -53,13 +53,13 @@ func TestAccS3ControlBucket_disappears(t *testing.T) {
 	resourceName := "aws_s3control_bucket.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, s3control.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckBucketDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, s3control.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBucketDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketConfig_Bucket(rName),
+				Config: testAccBucketConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfs3control.ResourceBucket(), resourceName),
@@ -77,13 +77,13 @@ func TestAccS3ControlBucket_tags(t *testing.T) {
 	resourceName := "aws_s3control_bucket.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, s3control.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckBucketDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, s3control.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBucketDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketConfig_Tags1(rName, "key1", "value1"),
+				Config: testAccBucketConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -96,7 +96,7 @@ func TestAccS3ControlBucket_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccBucketConfig_Tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccBucketConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -105,7 +105,7 @@ func TestAccS3ControlBucket_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccBucketConfig_Tags1(rName, "key2", "value2"),
+				Config: testAccBucketConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -177,15 +177,11 @@ func testAccCheckBucketExists(resourceName string) resource.TestCheckFunc {
 
 		_, err = conn.GetBucket(input)
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 
-func testAccBucketConfig_Bucket(rName string) string {
+func testAccBucketConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 data "aws_outposts_outposts" "test" {}
 
@@ -200,7 +196,7 @@ resource "aws_s3control_bucket" "test" {
 `, rName)
 }
 
-func testAccBucketConfig_Tags1(rName, tagKey1, tagValue1 string) string {
+func testAccBucketConfig_tags1(rName, tagKey1, tagValue1 string) string { //nolint:unused // This function is used in a skipped acceptance test
 	return fmt.Sprintf(`
 data "aws_outposts_outposts" "test" {}
 
@@ -219,7 +215,7 @@ resource "aws_s3control_bucket" "test" {
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccBucketConfig_Tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccBucketConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string { //nolint:unused // This function is used in a skipped acceptance test
 	return fmt.Sprintf(`
 data "aws_outposts_outposts" "test" {}
 

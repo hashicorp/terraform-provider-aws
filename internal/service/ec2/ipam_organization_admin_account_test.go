@@ -8,7 +8,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/organizations"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -16,7 +15,6 @@ import (
 )
 
 func TestAccIPAMOrganizationAdminAccount_basic(t *testing.T) {
-	var providers []*schema.Provider
 	var organization organizations.DelegatedAdministrator
 	resourceName := "aws_vpc_ipam_organization_admin_account.test"
 	dataSourceIdentity := "data.aws_caller_identity.delegated"
@@ -26,16 +24,16 @@ func TestAccIPAMOrganizationAdminAccount_basic(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckAlternateAccount(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, organizations.EndpointsID),
-		ProviderFactories: acctest.FactoriesAlternate(&providers),
-		CheckDestroy:      testAccCheckVPCIpamOrganizationAdminAccountDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, organizations.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
+		CheckDestroy:             testAccCheckIPAMOrganizationAdminAccountDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCIpamOrganizationAdminAccountConfig(),
+				Config: testAccIPAMOrganizationAdminAccountConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVPCIpamOrganizationAdminAccountExists(resourceName, &organization),
+					testAccCheckIPAMOrganizationAdminAccountExists(resourceName, &organization),
 					resource.TestCheckResourceAttrPair(resourceName, "id", dataSourceIdentity, "account_id"),
-					resource.TestCheckResourceAttr(resourceName, "service_principal", tfec2.Ipam_service_principal),
+					resource.TestCheckResourceAttr(resourceName, "service_principal", tfec2.IPAMServicePrincipal),
 					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "organizations", regexp.MustCompile("account/.+")),
 				),
 			},
@@ -48,7 +46,7 @@ func TestAccIPAMOrganizationAdminAccount_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckVPCIpamOrganizationAdminAccountDestroy(s *terraform.State) error {
+func testAccCheckIPAMOrganizationAdminAccountDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).OrganizationsConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -58,7 +56,7 @@ func testAccCheckVPCIpamOrganizationAdminAccountDestroy(s *terraform.State) erro
 		id := rs.Primary.ID
 
 		input := &organizations.ListDelegatedAdministratorsInput{
-			ServicePrincipal: aws.String(tfec2.Ipam_service_principal),
+			ServicePrincipal: aws.String(tfec2.IPAMServicePrincipal),
 		}
 
 		output, err := conn.ListDelegatedAdministrators(input)
@@ -75,7 +73,7 @@ func testAccCheckVPCIpamOrganizationAdminAccountDestroy(s *terraform.State) erro
 	return nil
 }
 
-func testAccCheckVPCIpamOrganizationAdminAccountExists(n string, org *organizations.DelegatedAdministrator) resource.TestCheckFunc {
+func testAccCheckIPAMOrganizationAdminAccountExists(n string, org *organizations.DelegatedAdministrator) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -90,7 +88,7 @@ func testAccCheckVPCIpamOrganizationAdminAccountExists(n string, org *organizati
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).OrganizationsConn
 		input := &organizations.ListDelegatedAdministratorsInput{
-			ServicePrincipal: aws.String(tfec2.Ipam_service_principal),
+			ServicePrincipal: aws.String(tfec2.IPAMServicePrincipal),
 		}
 
 		output, err := conn.ListDelegatedAdministrators(input)
@@ -101,7 +99,6 @@ func testAccCheckVPCIpamOrganizationAdminAccountExists(n string, org *organizati
 
 		if output == nil || len(output.DelegatedAdministrators) == 0 || output.DelegatedAdministrators[0] == nil {
 			return fmt.Errorf("organization DelegatedAdministrator %q does not exist", rs.Primary.ID)
-
 		}
 
 		output_account := output.DelegatedAdministrators[0]
@@ -114,7 +111,7 @@ func testAccCheckVPCIpamOrganizationAdminAccountExists(n string, org *organizati
 	}
 }
 
-func testAccVPCIpamOrganizationAdminAccountConfig() string {
+func testAccIPAMOrganizationAdminAccountConfig_basic() string {
 	return acctest.ConfigCompose(acctest.ConfigAlternateAccountProvider() + `
 data "aws_caller_identity" "delegated" {
   provider = "awsalternate"

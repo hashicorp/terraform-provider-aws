@@ -71,14 +71,16 @@ func ResourceDefaultVPC() *schema.Resource {
 				Computed: true,
 			},
 			"enable_classiclink": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
+				Type:       schema.TypeBool,
+				Optional:   true,
+				Computed:   true,
+				Deprecated: `With the retirement of EC2-Classic the enable_classiclink attribute has been deprecated and will be removed in a future version.`,
 			},
 			"enable_classiclink_dns_support": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
+				Type:       schema.TypeBool,
+				Optional:   true,
+				Computed:   true,
+				Deprecated: `With the retirement of EC2-Classic the enable_classiclink_dns_support attribute has been deprecated and will be removed in a future version.`,
 			},
 			"enable_dns_hostnames": {
 				Type:     schema.TypeBool,
@@ -86,6 +88,11 @@ func ResourceDefaultVPC() *schema.Resource {
 				Default:  true,
 			},
 			"enable_dns_support": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  true,
+			},
+			"enable_network_address_usage_metrics": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  true,
@@ -180,7 +187,7 @@ func resourceDefaultVPCCreate(d *schema.ResourceData, meta interface{}) error {
 			vpcInfo.enableClassicLink = v
 		}
 
-		if v, err := FindVPCClassicLinkDnsSupported(conn, d.Id()); err != nil {
+		if v, err := FindVPCClassicLinkDNSSupported(conn, d.Id()); err != nil {
 			if tfresource.NotFound(err) {
 				vpcInfo.enableClassicLinkDNSSupport = false
 			} else {
@@ -200,6 +207,11 @@ func resourceDefaultVPCCreate(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("error reading EC2 VPC (%s) Attribute (%s): %w", d.Id(), ec2.VpcAttributeNameEnableDnsSupport, err)
 		} else {
 			vpcInfo.enableDnsSupport = v
+		}
+		if v, err := FindVPCAttribute(conn, d.Id(), ec2.VpcAttributeNameEnableNetworkAddressUsageMetrics); err != nil {
+			return fmt.Errorf("error reading EC2 VPC (%s) Attribute (%s): %w", d.Id(), ec2.VpcAttributeNameEnableNetworkAddressUsageMetrics, err)
+		} else {
+			vpcInfo.enableNetworkAddressUsageMetrics = v
 		}
 	} else if tfresource.NotFound(err) {
 		input := &ec2.CreateDefaultVpcInput{}
@@ -227,6 +239,7 @@ func resourceDefaultVPCCreate(d *schema.ResourceData, meta interface{}) error {
 		vpcInfo.enableClassicLinkDNSSupport = false
 		vpcInfo.enableDnsHostnames = true
 		vpcInfo.enableDnsSupport = true
+		vpcInfo.enableNetworkAddressUsageMetrics = false
 	} else {
 		return fmt.Errorf("error reading EC2 Default VPC (%s): %w", d.Id(), err)
 	}

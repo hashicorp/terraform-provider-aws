@@ -19,7 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-const rdsDbClusterSnapshotCreateTimeout = 2 * time.Minute
+const clusterSnapshotCreateTimeout = 2 * time.Minute
 
 func ResourceClusterSnapshot() *schema.Resource {
 	return &schema.Resource{
@@ -126,7 +126,7 @@ func resourceClusterSnapshotCreate(d *schema.ResourceData, meta interface{}) err
 		Tags:                        Tags(tags.IgnoreAWS()),
 	}
 
-	err := resource.Retry(rdsDbClusterSnapshotCreateTimeout, func() *resource.RetryError {
+	err := resource.Retry(clusterSnapshotCreateTimeout, func() *resource.RetryError {
 		_, err := conn.CreateDBClusterSnapshot(params)
 		if err != nil {
 			if tfawserr.ErrCodeEquals(err, rds.ErrCodeInvalidDBClusterStateFault) {

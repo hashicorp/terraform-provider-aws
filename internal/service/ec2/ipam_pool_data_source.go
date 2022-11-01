@@ -3,6 +3,7 @@ package ec2
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -12,9 +13,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func DataSourceVPCIpamPool() *schema.Resource {
+func DataSourceIPAMPool() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceVPCIpamPoolRead,
+		Read: dataSourceIPAMPoolRead,
+
+		Timeouts: &schema.ResourceTimeout{
+			Read: schema.DefaultTimeout(20 * time.Minute),
+		},
 
 		Schema: map[string]*schema.Schema{
 			"filter": DataSourceFiltersSchema(),
@@ -93,7 +98,7 @@ func DataSourceVPCIpamPool() *schema.Resource {
 	}
 }
 
-func dataSourceVPCIpamPoolRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceIPAMPoolRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -101,7 +106,6 @@ func dataSourceVPCIpamPoolRead(d *schema.ResourceData, meta interface{}) error {
 
 	if v, ok := d.GetOk("ipam_pool_id"); ok {
 		input.IpamPoolIds = aws.StringSlice([]string{v.(string)})
-
 	}
 
 	filters, filtersOk := d.GetOk("filter")
@@ -132,7 +136,7 @@ func dataSourceVPCIpamPoolRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("allocation_default_netmask_length", pool.AllocationDefaultNetmaskLength)
 	d.Set("allocation_max_netmask_length", pool.AllocationMaxNetmaskLength)
 	d.Set("allocation_min_netmask_length", pool.AllocationMinNetmaskLength)
-	d.Set("allocation_resource_tags", KeyValueTags(ec2TagsFromIpamAllocationTags(pool.AllocationResourceTags)).Map())
+	d.Set("allocation_resource_tags", KeyValueTags(tagsFromIPAMAllocationTags(pool.AllocationResourceTags)).Map())
 	d.Set("arn", pool.IpamPoolArn)
 	d.Set("auto_import", pool.AutoImport)
 	d.Set("aws_service", pool.AwsService)

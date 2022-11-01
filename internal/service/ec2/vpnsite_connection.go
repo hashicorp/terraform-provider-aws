@@ -1,6 +1,7 @@
 package ec2
 
 import (
+	"context"
 	"encoding/xml"
 	"fmt"
 	"log"
@@ -14,6 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -74,6 +76,12 @@ func ResourceVPNConnection() *schema.Resource {
 				ValidateFunc: validation.IsCIDRNetwork(0, 128),
 				RequiredWith: []string{"transit_gateway_id"},
 			},
+			"outside_ip_address_type": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.StringInSlice(outsideIPAddressType_Values(), false),
+			},
 			"remote_ipv4_network_cidr": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -124,6 +132,10 @@ func ResourceVPNConnection() *schema.Resource {
 				Optional:     true,
 				ExactlyOneOf: []string{"transit_gateway_id", "vpn_gateway_id"},
 			},
+			"transport_transit_gateway_attachment_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			"tunnel_inside_ip_version": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -150,9 +162,9 @@ func ResourceVPNConnection() *schema.Resource {
 			"tunnel1_dpd_timeout_action": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validation.StringInSlice(VpnTunnelOptionsDPDTimeoutAction_Values(), false),
+				ValidateFunc: validation.StringInSlice(vpnTunnelOptionsDPDTimeoutAction_Values(), false),
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if old == defaultVpnTunnelOptionsDPDTimeoutAction && new == "" {
+					if old == defaultVPNTunnelOptionsDPDTimeoutAction && new == "" {
 						return true
 					}
 					return false
@@ -163,7 +175,7 @@ func ResourceVPNConnection() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.IntAtLeast(30),
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if old == strconv.Itoa(defaultVpnTunnelOptionsDPDTimeoutSeconds) && new == "0" {
+					if old == strconv.Itoa(defaultVPNTunnelOptionsDPDTimeoutSeconds) && new == "0" {
 						return true
 					}
 					return false
@@ -174,7 +186,7 @@ func ResourceVPNConnection() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
-					ValidateFunc: validation.StringInSlice(VpnTunnelOptionsIKEVersion_Values(), false),
+					ValidateFunc: validation.StringInSlice(vpnTunnelOptionsIKEVersion_Values(), false),
 				},
 			},
 			"tunnel1_inside_cidr": {
@@ -182,15 +194,48 @@ func ResourceVPNConnection() *schema.Resource {
 				Optional:     true,
 				Computed:     true,
 				ForceNew:     true,
-				ValidateFunc: validateVpnConnectionTunnelInsideCIDR(),
+				ValidateFunc: validVPNConnectionTunnelInsideCIDR(),
 			},
 			"tunnel1_inside_ipv6_cidr": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
 				ForceNew:     true,
-				ValidateFunc: validateVpnConnectionTunnelInsideIpv6CIDR(),
+				ValidateFunc: validVPNConnectionTunnelInsideIPv6CIDR(),
 				RequiredWith: []string{"transit_gateway_id"},
+			},
+			"tunnel1_log_options": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"cloudwatch_log_options": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Computed: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"log_enabled": {
+										Type:     schema.TypeBool,
+										Optional: true,
+									},
+									"log_group_arn": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"log_output_format": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validation.StringInSlice(vpnTunnelCloudWatchLogOutputFormat_Values(), false),
+									},
+								},
+							},
+						},
+					},
+				},
 			},
 			"tunnel1_phase1_dh_group_numbers": {
 				Type:     schema.TypeSet,
@@ -202,7 +247,7 @@ func ResourceVPNConnection() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
-					ValidateFunc: validation.StringInSlice(VpnTunnelOptionsPhase1EncryptionAlgorithm_Values(), false),
+					ValidateFunc: validation.StringInSlice(vpnTunnelOptionsPhase1EncryptionAlgorithm_Values(), false),
 				},
 			},
 			"tunnel1_phase1_integrity_algorithms": {
@@ -210,7 +255,7 @@ func ResourceVPNConnection() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
-					ValidateFunc: validation.StringInSlice(VpnTunnelOptionsPhase1IntegrityAlgorithm_Values(), false),
+					ValidateFunc: validation.StringInSlice(vpnTunnelOptionsPhase1IntegrityAlgorithm_Values(), false),
 				},
 			},
 			"tunnel1_phase1_lifetime_seconds": {
@@ -218,7 +263,7 @@ func ResourceVPNConnection() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.IntBetween(900, 28800),
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if old == strconv.Itoa(defaultVpnTunnelOptionsPhase1LifetimeSeconds) && new == "0" {
+					if old == strconv.Itoa(defaultVPNTunnelOptionsPhase1LifetimeSeconds) && new == "0" {
 						return true
 					}
 					return false
@@ -234,7 +279,7 @@ func ResourceVPNConnection() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
-					ValidateFunc: validation.StringInSlice(VpnTunnelOptionsPhase2EncryptionAlgorithm_Values(), false),
+					ValidateFunc: validation.StringInSlice(vpnTunnelOptionsPhase2EncryptionAlgorithm_Values(), false),
 				},
 			},
 			"tunnel1_phase2_integrity_algorithms": {
@@ -242,7 +287,7 @@ func ResourceVPNConnection() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
-					ValidateFunc: validation.StringInSlice(VpnTunnelOptionsPhase2IntegrityAlgorithm_Values(), false),
+					ValidateFunc: validation.StringInSlice(vpnTunnelOptionsPhase2IntegrityAlgorithm_Values(), false),
 				},
 			},
 			"tunnel1_phase2_lifetime_seconds": {
@@ -250,7 +295,7 @@ func ResourceVPNConnection() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.IntBetween(900, 3600),
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if old == strconv.Itoa(defaultVpnTunnelOptionsPhase2LifetimeSeconds) && new == "0" {
+					if old == strconv.Itoa(defaultVPNTunnelOptionsPhase2LifetimeSeconds) && new == "0" {
 						return true
 					}
 					return false
@@ -261,14 +306,14 @@ func ResourceVPNConnection() *schema.Resource {
 				Optional:     true,
 				Sensitive:    true,
 				Computed:     true,
-				ValidateFunc: validateVpnConnectionTunnelPreSharedKey(),
+				ValidateFunc: validVPNConnectionTunnelPreSharedKey(),
 			},
 			"tunnel1_rekey_fuzz_percentage": {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				ValidateFunc: validation.IntBetween(0, 100),
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if old == strconv.Itoa(defaultVpnTunnelOptionsRekeyFuzzPercentage) && new == "0" {
+					if old == strconv.Itoa(defaultVPNTunnelOptionsRekeyFuzzPercentage) && new == "0" {
 						return true
 					}
 					return false
@@ -279,7 +324,7 @@ func ResourceVPNConnection() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.IntBetween(60, 1800),
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if old == strconv.Itoa(defaultVpnTunnelOptionsRekeyMarginTimeSeconds) && new == "0" {
+					if old == strconv.Itoa(defaultVPNTunnelOptionsRekeyMarginTimeSeconds) && new == "0" {
 						return true
 					}
 					return false
@@ -290,7 +335,7 @@ func ResourceVPNConnection() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.IntBetween(64, 2048),
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if old == strconv.Itoa(defaultVpnTunnelOptionsReplayWindowSize) && new == "0" {
+					if old == strconv.Itoa(defaultVPNTunnelOptionsReplayWindowSize) && new == "0" {
 						return true
 					}
 					return false
@@ -299,9 +344,9 @@ func ResourceVPNConnection() *schema.Resource {
 			"tunnel1_startup_action": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validation.StringInSlice(VpnTunnelOptionsStartupAction_Values(), false),
+				ValidateFunc: validation.StringInSlice(vpnTunnelOptionsStartupAction_Values(), false),
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if old == defaultVpnTunnelOptionsStartupAction && new == "" {
+					if old == defaultVPNTunnelOptionsStartupAction && new == "" {
 						return true
 					}
 					return false
@@ -330,9 +375,9 @@ func ResourceVPNConnection() *schema.Resource {
 			"tunnel2_dpd_timeout_action": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validation.StringInSlice(VpnTunnelOptionsDPDTimeoutAction_Values(), false),
+				ValidateFunc: validation.StringInSlice(vpnTunnelOptionsDPDTimeoutAction_Values(), false),
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if old == defaultVpnTunnelOptionsDPDTimeoutAction && new == "" {
+					if old == defaultVPNTunnelOptionsDPDTimeoutAction && new == "" {
 						return true
 					}
 					return false
@@ -343,7 +388,7 @@ func ResourceVPNConnection() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.IntAtLeast(30),
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if old == strconv.Itoa(defaultVpnTunnelOptionsDPDTimeoutSeconds) && new == "0" {
+					if old == strconv.Itoa(defaultVPNTunnelOptionsDPDTimeoutSeconds) && new == "0" {
 						return true
 					}
 					return false
@@ -354,7 +399,7 @@ func ResourceVPNConnection() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
-					ValidateFunc: validation.StringInSlice(VpnTunnelOptionsIKEVersion_Values(), false),
+					ValidateFunc: validation.StringInSlice(vpnTunnelOptionsIKEVersion_Values(), false),
 				},
 			},
 			"tunnel2_inside_cidr": {
@@ -362,15 +407,48 @@ func ResourceVPNConnection() *schema.Resource {
 				Optional:     true,
 				Computed:     true,
 				ForceNew:     true,
-				ValidateFunc: validateVpnConnectionTunnelInsideCIDR(),
+				ValidateFunc: validVPNConnectionTunnelInsideCIDR(),
 			},
 			"tunnel2_inside_ipv6_cidr": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
 				ForceNew:     true,
-				ValidateFunc: validateVpnConnectionTunnelInsideIpv6CIDR(),
+				ValidateFunc: validVPNConnectionTunnelInsideIPv6CIDR(),
 				RequiredWith: []string{"transit_gateway_id"},
+			},
+			"tunnel2_log_options": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"cloudwatch_log_options": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Computed: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"log_enabled": {
+										Type:     schema.TypeBool,
+										Optional: true,
+									},
+									"log_group_arn": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"log_output_format": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validation.StringInSlice(vpnTunnelCloudWatchLogOutputFormat_Values(), false),
+									},
+								},
+							},
+						},
+					},
+				},
 			},
 			"tunnel2_phase1_dh_group_numbers": {
 				Type:     schema.TypeSet,
@@ -382,7 +460,7 @@ func ResourceVPNConnection() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
-					ValidateFunc: validation.StringInSlice(VpnTunnelOptionsPhase1EncryptionAlgorithm_Values(), false),
+					ValidateFunc: validation.StringInSlice(vpnTunnelOptionsPhase1EncryptionAlgorithm_Values(), false),
 				},
 			},
 			"tunnel2_phase1_integrity_algorithms": {
@@ -390,7 +468,7 @@ func ResourceVPNConnection() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
-					ValidateFunc: validation.StringInSlice(VpnTunnelOptionsPhase1IntegrityAlgorithm_Values(), false),
+					ValidateFunc: validation.StringInSlice(vpnTunnelOptionsPhase1IntegrityAlgorithm_Values(), false),
 				},
 			},
 			"tunnel2_phase1_lifetime_seconds": {
@@ -398,7 +476,7 @@ func ResourceVPNConnection() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.IntBetween(900, 28800),
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if old == strconv.Itoa(defaultVpnTunnelOptionsPhase1LifetimeSeconds) && new == "0" {
+					if old == strconv.Itoa(defaultVPNTunnelOptionsPhase1LifetimeSeconds) && new == "0" {
 						return true
 					}
 					return false
@@ -414,7 +492,7 @@ func ResourceVPNConnection() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
-					ValidateFunc: validation.StringInSlice(VpnTunnelOptionsPhase2EncryptionAlgorithm_Values(), false),
+					ValidateFunc: validation.StringInSlice(vpnTunnelOptionsPhase2EncryptionAlgorithm_Values(), false),
 				},
 			},
 			"tunnel2_phase2_integrity_algorithms": {
@@ -422,7 +500,7 @@ func ResourceVPNConnection() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
-					ValidateFunc: validation.StringInSlice(VpnTunnelOptionsPhase2IntegrityAlgorithm_Values(), false),
+					ValidateFunc: validation.StringInSlice(vpnTunnelOptionsPhase2IntegrityAlgorithm_Values(), false),
 				},
 			},
 			"tunnel2_phase2_lifetime_seconds": {
@@ -430,7 +508,7 @@ func ResourceVPNConnection() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.IntBetween(900, 3600),
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if old == strconv.Itoa(defaultVpnTunnelOptionsPhase2LifetimeSeconds) && new == "0" {
+					if old == strconv.Itoa(defaultVPNTunnelOptionsPhase2LifetimeSeconds) && new == "0" {
 						return true
 					}
 					return false
@@ -441,14 +519,14 @@ func ResourceVPNConnection() *schema.Resource {
 				Optional:     true,
 				Sensitive:    true,
 				Computed:     true,
-				ValidateFunc: validateVpnConnectionTunnelPreSharedKey(),
+				ValidateFunc: validVPNConnectionTunnelPreSharedKey(),
 			},
 			"tunnel2_rekey_fuzz_percentage": {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				ValidateFunc: validation.IntBetween(0, 100),
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if old == strconv.Itoa(defaultVpnTunnelOptionsRekeyFuzzPercentage) && new == "0" {
+					if old == strconv.Itoa(defaultVPNTunnelOptionsRekeyFuzzPercentage) && new == "0" {
 						return true
 					}
 					return false
@@ -459,7 +537,7 @@ func ResourceVPNConnection() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.IntBetween(60, 1800),
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if old == strconv.Itoa(defaultVpnTunnelOptionsRekeyMarginTimeSeconds) && new == "0" {
+					if old == strconv.Itoa(defaultVPNTunnelOptionsRekeyMarginTimeSeconds) && new == "0" {
 						return true
 					}
 					return false
@@ -470,7 +548,7 @@ func ResourceVPNConnection() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.IntBetween(64, 2048),
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if old == strconv.Itoa(defaultVpnTunnelOptionsReplayWindowSize) && new == "0" {
+					if old == strconv.Itoa(defaultVPNTunnelOptionsReplayWindowSize) && new == "0" {
 						return true
 					}
 					return false
@@ -479,9 +557,9 @@ func ResourceVPNConnection() *schema.Resource {
 			"tunnel2_startup_action": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validation.StringInSlice(VpnTunnelOptionsStartupAction_Values(), false),
+				ValidateFunc: validation.StringInSlice(vpnTunnelOptionsStartupAction_Values(), false),
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if old == defaultVpnTunnelOptionsStartupAction && new == "" {
+					if old == defaultVPNTunnelOptionsStartupAction && new == "" {
 						return true
 					}
 					return false
@@ -495,7 +573,7 @@ func ResourceVPNConnection() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice(VpnConnectionType_Values(), false),
+				ValidateFunc: validation.StringInSlice(vpnConnectionType_Values(), false),
 			},
 			"vgw_telemetry": {
 				Type:     schema.TypeSet,
@@ -536,47 +614,50 @@ func ResourceVPNConnection() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: verify.SetTagsDiff,
+		CustomizeDiff: customdiff.Sequence(
+			customizeDiffValidateOutsideIPAddressType,
+			verify.SetTagsDiff,
+		),
 	}
 }
 
 // https://docs.aws.amazon.com/vpn/latest/s2svpn/VPNTunnels.html.
 var (
-	defaultVpnTunnelOptionsDPDTimeoutAction           = VpnTunnelOptionsDPDTimeoutActionClear
-	defaultVpnTunnelOptionsDPDTimeoutSeconds          = 30
-	defaultVpnTunnelOptionsIKEVersions                = []string{VpnTunnelOptionsIKEVersion1, VpnTunnelOptionsIKEVersion2}
-	defaultVpnTunnelOptionsPhase1DHGroupNumbers       = []int{2, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24}
-	defaultVpnTunnelOptionsPhase1EncryptionAlgorithms = []string{
-		VpnTunnelOptionsPhase1EncryptionAlgorithmAES128,
-		VpnTunnelOptionsPhase1EncryptionAlgorithmAES256,
-		VpnTunnelOptionsPhase1EncryptionAlgorithmAES128_GCM_16,
-		VpnTunnelOptionsPhase1EncryptionAlgorithmAES256_GCM_16,
+	defaultVPNTunnelOptionsDPDTimeoutAction           = vpnTunnelOptionsDPDTimeoutActionClear
+	defaultVPNTunnelOptionsDPDTimeoutSeconds          = 30
+	defaultVPNTunnelOptionsIKEVersions                = []string{vpnTunnelOptionsIKEVersion1, vpnTunnelOptionsIKEVersion2}
+	defaultVPNTunnelOptionsPhase1DHGroupNumbers       = []int{2, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24}
+	defaultVPNTunnelOptionsPhase1EncryptionAlgorithms = []string{
+		vpnTunnelOptionsPhase1EncryptionAlgorithmAES128,
+		vpnTunnelOptionsPhase1EncryptionAlgorithmAES256,
+		vpnTunnelOptionsPhase1EncryptionAlgorithmAES128_GCM_16,
+		vpnTunnelOptionsPhase1EncryptionAlgorithmAES256_GCM_16,
 	}
-	defaultVpnTunnelOptionsPhase1IntegrityAlgorithms = []string{
-		VpnTunnelOptionsPhase1IntegrityAlgorithmSHA1,
-		VpnTunnelOptionsPhase1IntegrityAlgorithmSHA2_256,
-		VpnTunnelOptionsPhase1IntegrityAlgorithmSHA2_384,
-		VpnTunnelOptionsPhase1IntegrityAlgorithmSHA2_512,
+	defaultVPNTunnelOptionsPhase1IntegrityAlgorithms = []string{
+		vpnTunnelOptionsPhase1IntegrityAlgorithmSHA1,
+		vpnTunnelOptionsPhase1IntegrityAlgorithmSHA2_256,
+		vpnTunnelOptionsPhase1IntegrityAlgorithmSHA2_384,
+		vpnTunnelOptionsPhase1IntegrityAlgorithmSHA2_512,
 	}
-	defaultVpnTunnelOptionsPhase1LifetimeSeconds      = 28800
-	defaultVpnTunnelOptionsPhase2DHGroupNumbers       = []int{2, 5, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24}
-	defaultVpnTunnelOptionsPhase2EncryptionAlgorithms = []string{
-		VpnTunnelOptionsPhase2EncryptionAlgorithmAES128,
-		VpnTunnelOptionsPhase2EncryptionAlgorithmAES256,
-		VpnTunnelOptionsPhase2EncryptionAlgorithmAES128_GCM_16,
-		VpnTunnelOptionsPhase2EncryptionAlgorithmAES256_GCM_16,
+	defaultVPNTunnelOptionsPhase1LifetimeSeconds      = 28800
+	defaultVPNTunnelOptionsPhase2DHGroupNumbers       = []int{2, 5, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24}
+	defaultVPNTunnelOptionsPhase2EncryptionAlgorithms = []string{
+		vpnTunnelOptionsPhase2EncryptionAlgorithmAES128,
+		vpnTunnelOptionsPhase2EncryptionAlgorithmAES256,
+		vpnTunnelOptionsPhase2EncryptionAlgorithmAES128_GCM_16,
+		vpnTunnelOptionsPhase2EncryptionAlgorithmAES256_GCM_16,
 	}
-	defaultVpnTunnelOptionsPhase2IntegrityAlgorithms = []string{
-		VpnTunnelOptionsPhase2IntegrityAlgorithmSHA1,
-		VpnTunnelOptionsPhase2IntegrityAlgorithmSHA2_256,
-		VpnTunnelOptionsPhase2IntegrityAlgorithmSHA2_384,
-		VpnTunnelOptionsPhase2IntegrityAlgorithmSHA2_512,
+	defaultVPNTunnelOptionsPhase2IntegrityAlgorithms = []string{
+		vpnTunnelOptionsPhase2IntegrityAlgorithmSHA1,
+		vpnTunnelOptionsPhase2IntegrityAlgorithmSHA2_256,
+		vpnTunnelOptionsPhase2IntegrityAlgorithmSHA2_384,
+		vpnTunnelOptionsPhase2IntegrityAlgorithmSHA2_512,
 	}
-	defaultVpnTunnelOptionsPhase2LifetimeSeconds  = 3600
-	defaultVpnTunnelOptionsRekeyFuzzPercentage    = 100
-	defaultVpnTunnelOptionsRekeyMarginTimeSeconds = 540
-	defaultVpnTunnelOptionsReplayWindowSize       = 1024
-	defaultVpnTunnelOptionsStartupAction          = VpnTunnelOptionsStartupActionAdd
+	defaultVPNTunnelOptionsPhase2LifetimeSeconds  = 3600
+	defaultVPNTunnelOptionsRekeyFuzzPercentage    = 100
+	defaultVPNTunnelOptionsRekeyMarginTimeSeconds = 540
+	defaultVPNTunnelOptionsReplayWindowSize       = 1024
+	defaultVPNTunnelOptionsStartupAction          = vpnTunnelOptionsStartupActionAdd
 )
 
 func resourceVPNConnectionCreate(d *schema.ResourceData, meta interface{}) error {
@@ -586,8 +667,8 @@ func resourceVPNConnectionCreate(d *schema.ResourceData, meta interface{}) error
 
 	input := &ec2.CreateVpnConnectionInput{
 		CustomerGatewayId: aws.String(d.Get("customer_gateway_id").(string)),
-		Options:           expandVpnConnectionOptionsSpecification(d),
-		TagSpecifications: ec2TagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeVpnConnection),
+		Options:           expandVPNConnectionOptionsSpecification(d),
+		TagSpecifications: tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeVpnConnection),
 		Type:              aws.String(d.Get("type").(string)),
 	}
 
@@ -669,11 +750,11 @@ func resourceVPNConnectionRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("transit_gateway_id", nil)
 	}
 
-	if err := d.Set("routes", flattenVpnStaticRoutes(vpnConnection.Routes)); err != nil {
+	if err := d.Set("routes", flattenVPNStaticRoutes(vpnConnection.Routes)); err != nil {
 		return fmt.Errorf("error setting routes: %w", err)
 	}
 
-	if err := d.Set("vgw_telemetry", flattenVgwTelemetries(vpnConnection.VgwTelemetry)); err != nil {
+	if err := d.Set("vgw_telemetry", flattenVGWTelemetries(vpnConnection.VgwTelemetry)); err != nil {
 		return fmt.Errorf("error setting vgw_telemetry: %w", err)
 	}
 
@@ -692,23 +773,29 @@ func resourceVPNConnectionRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("enable_acceleration", v.EnableAcceleration)
 		d.Set("local_ipv4_network_cidr", v.LocalIpv4NetworkCidr)
 		d.Set("local_ipv6_network_cidr", v.LocalIpv6NetworkCidr)
+		d.Set("outside_ip_address_type", v.OutsideIpAddressType)
 		d.Set("remote_ipv4_network_cidr", v.RemoteIpv4NetworkCidr)
 		d.Set("remote_ipv6_network_cidr", v.RemoteIpv6NetworkCidr)
 		d.Set("static_routes_only", v.StaticRoutesOnly)
+		d.Set("transport_transit_gateway_attachment_id", v.TransportTransitGatewayAttachmentId)
 		d.Set("tunnel_inside_ip_version", v.TunnelInsideIpVersion)
 
 		for i, prefix := range []string{"tunnel1_", "tunnel2_"} {
 			if len(v.TunnelOptions) > i {
-				flattenTunnelOption(d, prefix, v.TunnelOptions[i])
+				if err := flattenTunnelOption(d, prefix, v.TunnelOptions[i]); err != nil {
+					return err
+				}
 			}
 		}
 	} else {
 		d.Set("enable_acceleration", nil)
 		d.Set("local_ipv4_network_cidr", nil)
 		d.Set("local_ipv6_network_cidr", nil)
+		d.Set("outside_ip_address_type", nil)
 		d.Set("remote_ipv4_network_cidr", nil)
 		d.Set("remote_ipv6_network_cidr", nil)
 		d.Set("static_routes_only", nil)
+		d.Set("transport_transit_gateway_attachment_id", nil)
 		d.Set("tunnel_inside_ip_version", nil)
 	}
 
@@ -821,7 +908,7 @@ func resourceVPNConnectionUpdate(d *schema.ResourceData, meta interface{}) error
 	}
 
 	for i, prefix := range []string{"tunnel1_", "tunnel2_"} {
-		if options, address := expandModifyVpnTunnelOptionsSpecification(d, prefix), d.Get(prefix+"address").(string); options != nil && address != "" {
+		if options, address := expandModifyVPNTunnelOptionsSpecification(d, prefix), d.Get(prefix+"address").(string); options != nil && address != "" {
 			input := &ec2.ModifyVpnTunnelOptionsInput{
 				TunnelOptions:             options,
 				VpnConnectionId:           aws.String(d.Id()),
@@ -860,7 +947,7 @@ func resourceVPNConnectionDelete(d *schema.ResourceData, meta interface{}) error
 		VpnConnectionId: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidVpnConnectionIDNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidVPNConnectionIDNotFound) {
 		return nil
 	}
 
@@ -875,11 +962,15 @@ func resourceVPNConnectionDelete(d *schema.ResourceData, meta interface{}) error
 	return nil
 }
 
-func expandVpnConnectionOptionsSpecification(d *schema.ResourceData) *ec2.VpnConnectionOptionsSpecification {
+func expandVPNConnectionOptionsSpecification(d *schema.ResourceData) *ec2.VpnConnectionOptionsSpecification {
 	apiObject := &ec2.VpnConnectionOptionsSpecification{}
 
 	if v, ok := d.GetOk("enable_acceleration"); ok {
 		apiObject.EnableAcceleration = aws.Bool(v.(bool))
+	}
+
+	if v, ok := d.GetOk("outside_ip_address_type"); ok {
+		apiObject.OutsideIpAddressType = aws.String(v.(string))
 	}
 
 	if v := d.Get("tunnel_inside_ip_version").(string); v == ec2.TunnelInsideIpVersionIpv6 {
@@ -908,15 +999,19 @@ func expandVpnConnectionOptionsSpecification(d *schema.ResourceData) *ec2.VpnCon
 		apiObject.StaticRoutesOnly = aws.Bool(v.(bool))
 	}
 
+	if v, ok := d.GetOk("transport_transit_gateway_attachment_id"); ok {
+		apiObject.TransportTransitGatewayAttachmentId = aws.String(v.(string))
+	}
+
 	apiObject.TunnelOptions = []*ec2.VpnTunnelOptionsSpecification{
-		expandVpnTunnelOptionsSpecification(d, "tunnel1_"),
-		expandVpnTunnelOptionsSpecification(d, "tunnel2_"),
+		expandVPNTunnelOptionsSpecification(d, "tunnel1_"),
+		expandVPNTunnelOptionsSpecification(d, "tunnel2_"),
 	}
 
 	return apiObject
 }
 
-func expandVpnTunnelOptionsSpecification(d *schema.ResourceData, prefix string) *ec2.VpnTunnelOptionsSpecification {
+func expandVPNTunnelOptionsSpecification(d *schema.ResourceData, prefix string) *ec2.VpnTunnelOptionsSpecification {
 	apiObject := &ec2.VpnTunnelOptionsSpecification{}
 
 	if v, ok := d.GetOk(prefix + "dpd_timeout_action"); ok {
@@ -931,6 +1026,10 @@ func expandVpnTunnelOptionsSpecification(d *schema.ResourceData, prefix string) 
 		for _, v := range v.(*schema.Set).List() {
 			apiObject.IKEVersions = append(apiObject.IKEVersions, &ec2.IKEVersionsRequestListValue{Value: aws.String(v.(string))})
 		}
+	}
+
+	if v, ok := d.GetOk(prefix + "log_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		apiObject.LogOptions = expandVPNTunnelLogOptionsSpecification(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk(prefix + "phase1_dh_group_numbers"); ok {
@@ -1008,7 +1107,46 @@ func expandVpnTunnelOptionsSpecification(d *schema.ResourceData, prefix string) 
 	return apiObject
 }
 
-func expandModifyVpnTunnelOptionsSpecification(d *schema.ResourceData, prefix string) *ec2.ModifyVpnTunnelOptionsSpecification {
+func expandVPNTunnelLogOptionsSpecification(tfMap map[string]interface{}) *ec2.VpnTunnelLogOptionsSpecification {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &ec2.VpnTunnelLogOptionsSpecification{}
+
+	if v, ok := tfMap["cloudwatch_log_options"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		apiObject.CloudWatchLogOptions = expandCloudWatchLogOptionsSpecification(v[0].(map[string]interface{}))
+	}
+
+	return apiObject
+}
+
+func expandCloudWatchLogOptionsSpecification(tfMap map[string]interface{}) *ec2.CloudWatchLogOptionsSpecification {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &ec2.CloudWatchLogOptionsSpecification{}
+
+	if v, ok := tfMap["log_enabled"].(bool); ok {
+		apiObject.LogEnabled = aws.Bool(v)
+	}
+
+	// No ARN or format if not enabled.
+	if aws.BoolValue(apiObject.LogEnabled) {
+		if v, ok := tfMap["log_group_arn"].(string); ok && v != "" {
+			apiObject.LogGroupArn = aws.String(v)
+		}
+
+		if v, ok := tfMap["log_output_format"].(string); ok && v != "" {
+			apiObject.LogOutputFormat = aws.String(v)
+		}
+	}
+
+	return apiObject
+}
+
+func expandModifyVPNTunnelOptionsSpecification(d *schema.ResourceData, prefix string) *ec2.ModifyVpnTunnelOptionsSpecification {
 	apiObject := &ec2.ModifyVpnTunnelOptionsSpecification{}
 	hasChange := false
 
@@ -1016,7 +1154,7 @@ func expandModifyVpnTunnelOptionsSpecification(d *schema.ResourceData, prefix st
 		if v, ok := d.GetOk(key); ok {
 			apiObject.DPDTimeoutAction = aws.String(v.(string))
 		} else {
-			apiObject.DPDTimeoutAction = aws.String(defaultVpnTunnelOptionsDPDTimeoutAction)
+			apiObject.DPDTimeoutAction = aws.String(defaultVPNTunnelOptionsDPDTimeoutAction)
 		}
 
 		hasChange = true
@@ -1026,7 +1164,7 @@ func expandModifyVpnTunnelOptionsSpecification(d *schema.ResourceData, prefix st
 		if v, ok := d.GetOk(key); ok {
 			apiObject.DPDTimeoutSeconds = aws.Int64(int64(v.(int)))
 		} else {
-			apiObject.DPDTimeoutSeconds = aws.Int64(int64(defaultVpnTunnelOptionsDPDTimeoutSeconds))
+			apiObject.DPDTimeoutSeconds = aws.Int64(int64(defaultVPNTunnelOptionsDPDTimeoutSeconds))
 		}
 
 		hasChange = true
@@ -1038,9 +1176,17 @@ func expandModifyVpnTunnelOptionsSpecification(d *schema.ResourceData, prefix st
 				apiObject.IKEVersions = append(apiObject.IKEVersions, &ec2.IKEVersionsRequestListValue{Value: aws.String(v.(string))})
 			}
 		} else {
-			for _, v := range defaultVpnTunnelOptionsIKEVersions {
+			for _, v := range defaultVPNTunnelOptionsIKEVersions {
 				apiObject.IKEVersions = append(apiObject.IKEVersions, &ec2.IKEVersionsRequestListValue{Value: aws.String(v)})
 			}
+		}
+
+		hasChange = true
+	}
+
+	if key := prefix + "log_options"; d.HasChange(key) {
+		if v, ok := d.GetOk(key); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			apiObject.LogOptions = expandVPNTunnelLogOptionsSpecification(v.([]interface{})[0].(map[string]interface{}))
 		}
 
 		hasChange = true
@@ -1052,7 +1198,7 @@ func expandModifyVpnTunnelOptionsSpecification(d *schema.ResourceData, prefix st
 				apiObject.Phase1DHGroupNumbers = append(apiObject.Phase1DHGroupNumbers, &ec2.Phase1DHGroupNumbersRequestListValue{Value: aws.Int64(int64(v.(int)))})
 			}
 		} else {
-			for _, v := range defaultVpnTunnelOptionsPhase1DHGroupNumbers {
+			for _, v := range defaultVPNTunnelOptionsPhase1DHGroupNumbers {
 				apiObject.Phase1DHGroupNumbers = append(apiObject.Phase1DHGroupNumbers, &ec2.Phase1DHGroupNumbersRequestListValue{Value: aws.Int64(int64(v))})
 			}
 		}
@@ -1066,7 +1212,7 @@ func expandModifyVpnTunnelOptionsSpecification(d *schema.ResourceData, prefix st
 				apiObject.Phase1EncryptionAlgorithms = append(apiObject.Phase1EncryptionAlgorithms, &ec2.Phase1EncryptionAlgorithmsRequestListValue{Value: aws.String(v.(string))})
 			}
 		} else {
-			for _, v := range defaultVpnTunnelOptionsPhase1EncryptionAlgorithms {
+			for _, v := range defaultVPNTunnelOptionsPhase1EncryptionAlgorithms {
 				apiObject.Phase1EncryptionAlgorithms = append(apiObject.Phase1EncryptionAlgorithms, &ec2.Phase1EncryptionAlgorithmsRequestListValue{Value: aws.String(v)})
 			}
 		}
@@ -1080,7 +1226,7 @@ func expandModifyVpnTunnelOptionsSpecification(d *schema.ResourceData, prefix st
 				apiObject.Phase1IntegrityAlgorithms = append(apiObject.Phase1IntegrityAlgorithms, &ec2.Phase1IntegrityAlgorithmsRequestListValue{Value: aws.String(v.(string))})
 			}
 		} else {
-			for _, v := range defaultVpnTunnelOptionsPhase1IntegrityAlgorithms {
+			for _, v := range defaultVPNTunnelOptionsPhase1IntegrityAlgorithms {
 				apiObject.Phase1IntegrityAlgorithms = append(apiObject.Phase1IntegrityAlgorithms, &ec2.Phase1IntegrityAlgorithmsRequestListValue{Value: aws.String(v)})
 			}
 		}
@@ -1092,7 +1238,7 @@ func expandModifyVpnTunnelOptionsSpecification(d *schema.ResourceData, prefix st
 		if v, ok := d.GetOk(key); ok {
 			apiObject.Phase1LifetimeSeconds = aws.Int64(int64(v.(int)))
 		} else {
-			apiObject.Phase1LifetimeSeconds = aws.Int64(int64(defaultVpnTunnelOptionsPhase1LifetimeSeconds))
+			apiObject.Phase1LifetimeSeconds = aws.Int64(int64(defaultVPNTunnelOptionsPhase1LifetimeSeconds))
 		}
 
 		hasChange = true
@@ -1104,7 +1250,7 @@ func expandModifyVpnTunnelOptionsSpecification(d *schema.ResourceData, prefix st
 				apiObject.Phase2DHGroupNumbers = append(apiObject.Phase2DHGroupNumbers, &ec2.Phase2DHGroupNumbersRequestListValue{Value: aws.Int64(int64(v.(int)))})
 			}
 		} else {
-			for _, v := range defaultVpnTunnelOptionsPhase2DHGroupNumbers {
+			for _, v := range defaultVPNTunnelOptionsPhase2DHGroupNumbers {
 				apiObject.Phase2DHGroupNumbers = append(apiObject.Phase2DHGroupNumbers, &ec2.Phase2DHGroupNumbersRequestListValue{Value: aws.Int64(int64(v))})
 			}
 		}
@@ -1118,7 +1264,7 @@ func expandModifyVpnTunnelOptionsSpecification(d *schema.ResourceData, prefix st
 				apiObject.Phase2EncryptionAlgorithms = append(apiObject.Phase2EncryptionAlgorithms, &ec2.Phase2EncryptionAlgorithmsRequestListValue{Value: aws.String(v.(string))})
 			}
 		} else {
-			for _, v := range defaultVpnTunnelOptionsPhase2EncryptionAlgorithms {
+			for _, v := range defaultVPNTunnelOptionsPhase2EncryptionAlgorithms {
 				apiObject.Phase2EncryptionAlgorithms = append(apiObject.Phase2EncryptionAlgorithms, &ec2.Phase2EncryptionAlgorithmsRequestListValue{Value: aws.String(v)})
 			}
 		}
@@ -1132,7 +1278,7 @@ func expandModifyVpnTunnelOptionsSpecification(d *schema.ResourceData, prefix st
 				apiObject.Phase2IntegrityAlgorithms = append(apiObject.Phase2IntegrityAlgorithms, &ec2.Phase2IntegrityAlgorithmsRequestListValue{Value: aws.String(v.(string))})
 			}
 		} else {
-			for _, v := range defaultVpnTunnelOptionsPhase2IntegrityAlgorithms {
+			for _, v := range defaultVPNTunnelOptionsPhase2IntegrityAlgorithms {
 				apiObject.Phase2IntegrityAlgorithms = append(apiObject.Phase2IntegrityAlgorithms, &ec2.Phase2IntegrityAlgorithmsRequestListValue{Value: aws.String(v)})
 			}
 		}
@@ -1144,7 +1290,7 @@ func expandModifyVpnTunnelOptionsSpecification(d *schema.ResourceData, prefix st
 		if v, ok := d.GetOk(key); ok {
 			apiObject.Phase2LifetimeSeconds = aws.Int64(int64(v.(int)))
 		} else {
-			apiObject.Phase2LifetimeSeconds = aws.Int64(int64(defaultVpnTunnelOptionsPhase2LifetimeSeconds))
+			apiObject.Phase2LifetimeSeconds = aws.Int64(int64(defaultVPNTunnelOptionsPhase2LifetimeSeconds))
 		}
 
 		hasChange = true
@@ -1160,7 +1306,7 @@ func expandModifyVpnTunnelOptionsSpecification(d *schema.ResourceData, prefix st
 		if v, ok := d.GetOk(key); ok {
 			apiObject.RekeyFuzzPercentage = aws.Int64(int64(v.(int)))
 		} else {
-			apiObject.RekeyFuzzPercentage = aws.Int64(int64(defaultVpnTunnelOptionsRekeyFuzzPercentage))
+			apiObject.RekeyFuzzPercentage = aws.Int64(int64(defaultVPNTunnelOptionsRekeyFuzzPercentage))
 		}
 
 		hasChange = true
@@ -1170,7 +1316,7 @@ func expandModifyVpnTunnelOptionsSpecification(d *schema.ResourceData, prefix st
 		if v, ok := d.GetOk(key); ok {
 			apiObject.RekeyMarginTimeSeconds = aws.Int64(int64(v.(int)))
 		} else {
-			apiObject.RekeyMarginTimeSeconds = aws.Int64(int64(defaultVpnTunnelOptionsRekeyMarginTimeSeconds))
+			apiObject.RekeyMarginTimeSeconds = aws.Int64(int64(defaultVPNTunnelOptionsRekeyMarginTimeSeconds))
 		}
 
 		hasChange = true
@@ -1180,7 +1326,7 @@ func expandModifyVpnTunnelOptionsSpecification(d *schema.ResourceData, prefix st
 		if v, ok := d.GetOk(key); ok {
 			apiObject.ReplayWindowSize = aws.Int64(int64(v.(int)))
 		} else {
-			apiObject.ReplayWindowSize = aws.Int64(int64(defaultVpnTunnelOptionsReplayWindowSize))
+			apiObject.ReplayWindowSize = aws.Int64(int64(defaultVPNTunnelOptionsReplayWindowSize))
 		}
 
 		hasChange = true
@@ -1190,7 +1336,7 @@ func expandModifyVpnTunnelOptionsSpecification(d *schema.ResourceData, prefix st
 		if v, ok := d.GetOk(key); ok {
 			apiObject.StartupAction = aws.String(v.(string))
 		} else {
-			apiObject.StartupAction = aws.String(defaultVpnTunnelOptionsStartupAction)
+			apiObject.StartupAction = aws.String(defaultVPNTunnelOptionsStartupAction)
 		}
 
 		hasChange = true
@@ -1203,9 +1349,9 @@ func expandModifyVpnTunnelOptionsSpecification(d *schema.ResourceData, prefix st
 	return apiObject
 }
 
-func flattenTunnelOption(d *schema.ResourceData, prefix string, apiObject *ec2.TunnelOption) {
+func flattenTunnelOption(d *schema.ResourceData, prefix string, apiObject *ec2.TunnelOption) error {
 	if apiObject == nil {
-		return
+		return nil
 	}
 
 	var s []*string
@@ -1219,6 +1365,14 @@ func flattenTunnelOption(d *schema.ResourceData, prefix string, apiObject *ec2.T
 	}
 	d.Set(prefix+"ike_versions", aws.StringValueSlice(s))
 	s = nil
+
+	if apiObject.LogOptions != nil {
+		if err := d.Set(prefix+"log_options", []interface{}{flattenVPNTunnelLogOptions(apiObject.LogOptions)}); err != nil {
+			return fmt.Errorf("setting %s: %w", prefix+"log_options", err)
+		}
+	} else {
+		d.Set(prefix+"log_options", nil)
+	}
 
 	for _, v := range apiObject.Phase1DHGroupNumbers {
 		i = append(i, v.Value)
@@ -1264,9 +1418,11 @@ func flattenTunnelOption(d *schema.ResourceData, prefix string, apiObject *ec2.T
 	d.Set(prefix+"startup_action", apiObject.StartupAction)
 	d.Set(prefix+"inside_cidr", apiObject.TunnelInsideCidr)
 	d.Set(prefix+"inside_ipv6_cidr", apiObject.TunnelInsideIpv6Cidr)
+
+	return nil
 }
 
-func flattenVpnStaticRoute(apiObject *ec2.VpnStaticRoute) map[string]interface{} {
+func flattenVPNStaticRoute(apiObject *ec2.VpnStaticRoute) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -1288,7 +1444,7 @@ func flattenVpnStaticRoute(apiObject *ec2.VpnStaticRoute) map[string]interface{}
 	return tfMap
 }
 
-func flattenVpnStaticRoutes(apiObjects []*ec2.VpnStaticRoute) []interface{} {
+func flattenVPNStaticRoutes(apiObjects []*ec2.VpnStaticRoute) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -1300,13 +1456,53 @@ func flattenVpnStaticRoutes(apiObjects []*ec2.VpnStaticRoute) []interface{} {
 			continue
 		}
 
-		tfList = append(tfList, flattenVpnStaticRoute(apiObject))
+		tfList = append(tfList, flattenVPNStaticRoute(apiObject))
 	}
 
 	return tfList
 }
 
-func flattenVgwTelemetry(apiObject *ec2.VgwTelemetry) map[string]interface{} {
+func flattenVPNTunnelLogOptions(apiObject *ec2.VpnTunnelLogOptions) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.CloudWatchLogOptions; v != nil {
+		tfMap["cloudwatch_log_options"] = []interface{}{flattenCloudWatchLogOptions(v)}
+	}
+
+	return tfMap
+}
+
+func flattenCloudWatchLogOptions(apiObject *ec2.CloudWatchLogOptions) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.LogEnabled; v != nil {
+		enabled := aws.BoolValue(v)
+		tfMap["log_enabled"] = enabled
+
+		// No ARN or format if not enabled.
+		if enabled {
+			if v := apiObject.LogGroupArn; v != nil {
+				tfMap["log_group_arn"] = aws.StringValue(v)
+			}
+
+			if v := apiObject.LogOutputFormat; v != nil {
+				tfMap["log_output_format"] = aws.StringValue(v)
+			}
+		}
+	}
+
+	return tfMap
+}
+
+func flattenVGWTelemetry(apiObject *ec2.VgwTelemetry) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -1340,7 +1536,7 @@ func flattenVgwTelemetry(apiObject *ec2.VgwTelemetry) map[string]interface{} {
 	return tfMap
 }
 
-func flattenVgwTelemetries(apiObjects []*ec2.VgwTelemetry) []interface{} {
+func flattenVGWTelemetries(apiObjects []*ec2.VgwTelemetry) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -1352,7 +1548,7 @@ func flattenVgwTelemetries(apiObjects []*ec2.VgwTelemetry) []interface{} {
 			continue
 		}
 
-		tfList = append(tfList, flattenVgwTelemetry(apiObject))
+		tfList = append(tfList, flattenVGWTelemetry(apiObject))
 	}
 
 	return tfList
@@ -1458,7 +1654,7 @@ func CustomerGatewayConfigurationToTunnelInfo(xmlConfig string, tunnel1PreShared
 	return tunnelInfo, nil
 }
 
-func validateVpnConnectionTunnelPreSharedKey() schema.SchemaValidateFunc {
+func validVPNConnectionTunnelPreSharedKey() schema.SchemaValidateFunc {
 	return validation.All(
 		validation.StringLenBetween(8, 64),
 		validation.StringDoesNotMatch(regexp.MustCompile(`^0`), "cannot start with zero character"),
@@ -1468,7 +1664,7 @@ func validateVpnConnectionTunnelPreSharedKey() schema.SchemaValidateFunc {
 
 // https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_VpnTunnelOptionsSpecification.html
 // https://docs.aws.amazon.com/vpn/latest/s2svpn/VPNTunnels.html
-func validateVpnConnectionTunnelInsideCIDR() schema.SchemaValidateFunc {
+func validVPNConnectionTunnelInsideCIDR() schema.SchemaValidateFunc {
 	disallowedCidrs := []string{
 		"169.254.0.0/30",
 		"169.254.1.0/30",
@@ -1486,9 +1682,21 @@ func validateVpnConnectionTunnelInsideCIDR() schema.SchemaValidateFunc {
 	)
 }
 
-func validateVpnConnectionTunnelInsideIpv6CIDR() schema.SchemaValidateFunc {
+func validVPNConnectionTunnelInsideIPv6CIDR() schema.SchemaValidateFunc {
 	return validation.All(
 		validation.IsCIDRNetwork(126, 126),
 		validation.StringMatch(regexp.MustCompile(`^fd00:`), "must be within fd00::/8"),
 	)
+}
+
+// customizeDiffValidateOutsideIPAddressType validates that if provided `outside_ip_address_type` is `PrivateIpv4` then `transport_transit_gateway_attachment_id` must be provided
+func customizeDiffValidateOutsideIPAddressType(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
+	if v, ok := diff.GetOk("outside_ip_address_type"); !ok || v.(string) == OutsideIPAddressTypePublicIPv4 {
+		return nil
+	}
+
+	if v, ok := diff.GetOk("transport_transit_gateway_attachment_id"); !ok || v.(string) != "" {
+		return nil
+	}
+	return fmt.Errorf("`transport_transit_gateway_attachment_id` must be provided if `outside_ip_address_type` is `PrivateIpv4`")
 }

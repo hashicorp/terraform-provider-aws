@@ -27,12 +27,12 @@ func TestAccEventsSourceDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_cloudwatch_event_source.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, eventbridge.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, eventbridge.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPartnerEventSourceDataSourceConfig(busName),
+				Config: testAccSourceDataSourceConfig_partner(busName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "name", busName),
 					resource.TestCheckResourceAttr(dataSourceName, "created_by", createdBy),
@@ -43,7 +43,7 @@ func TestAccEventsSourceDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccPartnerEventSourceDataSourceConfig(namePrefix string) string {
+func testAccSourceDataSourceConfig_partner(namePrefix string) string {
 	return fmt.Sprintf(`
 data "aws_cloudwatch_event_source" "test" {
   name_prefix = "%s"

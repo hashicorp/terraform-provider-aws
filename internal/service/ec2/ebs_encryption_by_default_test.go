@@ -16,15 +16,15 @@ func TestAccEC2EBSEncryptionByDefault_basic(t *testing.T) {
 	resourceName := "aws_ebs_encryption_by_default.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckEncryptionByDefaultDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEncryptionByDefaultDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEBSEncryptionByDefaultConfig(false),
+				Config: testAccEBSEncryptionByDefaultConfig_basic(false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEbsEncryptionByDefault(resourceName, false),
+					testAccCheckEBSEncryptionByDefault(resourceName, false),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
 				),
 			},
@@ -34,9 +34,9 @@ func TestAccEC2EBSEncryptionByDefault_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccEBSEncryptionByDefaultConfig(true),
+				Config: testAccEBSEncryptionByDefaultConfig_basic(true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEbsEncryptionByDefault(resourceName, true),
+					testAccCheckEBSEncryptionByDefault(resourceName, true),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
 				),
 			},
@@ -59,7 +59,7 @@ func testAccCheckEncryptionByDefaultDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckEbsEncryptionByDefault(n string, enabled bool) resource.TestCheckFunc {
+func testAccCheckEBSEncryptionByDefault(n string, enabled bool) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -85,7 +85,7 @@ func testAccCheckEbsEncryptionByDefault(n string, enabled bool) resource.TestChe
 	}
 }
 
-func testAccEBSEncryptionByDefaultConfig(enabled bool) string {
+func testAccEBSEncryptionByDefaultConfig_basic(enabled bool) string {
 	return fmt.Sprintf(`
 resource "aws_ebs_encryption_by_default" "test" {
   enabled = %[1]t

@@ -282,7 +282,7 @@ func provisionPermissionSet(conn *ssoadmin.SSOAdmin, arn, instanceArn string) er
 	}
 
 	var output *ssoadmin.ProvisionPermissionSetOutput
-	err := resource.Retry(awsSSOAdminPermissionSetProvisionTimeout, func() *resource.RetryError {
+	err := resource.Retry(permissionSetProvisionTimeout, func() *resource.RetryError {
 		var err error
 		output, err = conn.ProvisionPermissionSet(input)
 

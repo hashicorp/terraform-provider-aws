@@ -20,13 +20,13 @@ func TestAccKafkaConnectConnector_basic(t *testing.T) {
 	resourceName := "aws_mskconnect_connector.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(kafkaconnect.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, kafkaconnect.EndpointsID),
-		CheckDestroy:      testAccCheckConnectorDestroy,
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(kafkaconnect.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, kafkaconnect.EndpointsID),
+		CheckDestroy:             testAccCheckConnectorDestroy,
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConnectorConfig(rName),
+				Config: testAccConnectorConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckConnectorExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
@@ -81,13 +81,13 @@ func TestAccKafkaConnectConnector_disappears(t *testing.T) {
 	resourceName := "aws_mskconnect_connector.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(kafkaconnect.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, kafkaconnect.EndpointsID),
-		CheckDestroy:      testAccCheckConnectorDestroy,
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(kafkaconnect.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, kafkaconnect.EndpointsID),
+		CheckDestroy:             testAccCheckConnectorDestroy,
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConnectorConfig(rName),
+				Config: testAccConnectorConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckConnectorExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfkafkaconnect.ResourceConnector(), resourceName),
@@ -103,13 +103,13 @@ func TestAccKafkaConnectConnector_update(t *testing.T) {
 	resourceName := "aws_mskconnect_connector.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(kafkaconnect.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, kafkaconnect.EndpointsID),
-		CheckDestroy:      testAccCheckConnectorDestroy,
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(kafkaconnect.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, kafkaconnect.EndpointsID),
+		CheckDestroy:             testAccCheckConnectorDestroy,
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConnectorAllAttributesConfig(rName),
+				Config: testAccConnectorConfig_allAttributes(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckConnectorExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
@@ -169,7 +169,7 @@ func TestAccKafkaConnectConnector_update(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccConnectorAllAttributesCapacityUpdatedConfig(rName),
+				Config: testAccConnectorConfig_allAttributesCapacityUpdated(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckConnectorExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
@@ -235,13 +235,9 @@ func testAccCheckConnectorExists(n string) resource.TestCheckFunc {
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaConnectConn
 
-		_, err := tfkafkaconnect.FindConnectorByARN(context.TODO(), conn, rs.Primary.ID)
+		_, err := tfkafkaconnect.FindConnectorByARN(context.Background(), conn, rs.Primary.ID)
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 
@@ -253,7 +249,7 @@ func testAccCheckConnectorDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := tfkafkaconnect.FindConnectorByARN(context.TODO(), conn, rs.Primary.ID)
+		_, err := tfkafkaconnect.FindConnectorByARN(context.Background(), conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -404,9 +400,9 @@ resource "aws_msk_cluster" "test" {
 `, rName))
 }
 
-func testAccConnectorConfig(rName string) string {
+func testAccConnectorConfig_basic(rName string) string {
 	return acctest.ConfigCompose(
-		testAccCustomPluginConfig(rName),
+		testAccCustomPluginConfig_basic(rName),
 		testAccConnectorBaseConfig(rName),
 		fmt.Sprintf(`
 resource "aws_mskconnect_connector" "test" {
@@ -460,10 +456,10 @@ resource "aws_mskconnect_connector" "test" {
 `, rName))
 }
 
-func testAccConnectorAllAttributesConfig(rName string) string {
+func testAccConnectorConfig_allAttributes(rName string) string {
 	return acctest.ConfigCompose(
-		testAccCustomPluginConfig(rName),
-		testAccWorkerConfigurationConfig(rName),
+		testAccCustomPluginConfig_basic(rName),
+		testAccWorkerConfigurationConfig_basic(rName),
 		testAccConnectorBaseConfig(rName),
 		fmt.Sprintf(`
 resource "aws_cloudwatch_log_group" "test" {
@@ -552,10 +548,10 @@ resource "aws_mskconnect_connector" "test" {
 `, rName))
 }
 
-func testAccConnectorAllAttributesCapacityUpdatedConfig(rName string) string {
+func testAccConnectorConfig_allAttributesCapacityUpdated(rName string) string {
 	return acctest.ConfigCompose(
-		testAccCustomPluginConfig(rName),
-		testAccWorkerConfigurationConfig(rName),
+		testAccCustomPluginConfig_basic(rName),
+		testAccWorkerConfigurationConfig_basic(rName),
 		testAccConnectorBaseConfig(rName),
 		fmt.Sprintf(`
 resource "aws_cloudwatch_log_group" "test" {

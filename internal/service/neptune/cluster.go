@@ -25,7 +25,7 @@ const (
 	// A constant for the supported CloudwatchLogsExports types
 	// is not currently available in the AWS sdk-for-go
 	// https://docs.aws.amazon.com/sdk-for-go/api/service/neptune/#pkg-constants
-	CloudwatchLogsExportsAudit = "audit"
+	cloudWatchLogsExportsAudit = "audit"
 
 	DefaultPort = 8182
 )
@@ -46,6 +46,14 @@ func ResourceCluster() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+
+			// allow_major_version_upgrade is used to indicate whether upgrades between different major versions
+			// are allowed.
+			"allow_major_version_upgrade": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Computed: true,
+			},
 
 			// apply_immediately is used to determine when the update modifications
 			// take place.
@@ -122,7 +130,7 @@ func ResourceCluster() *schema.Resource {
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 					ValidateFunc: validation.StringInSlice([]string{
-						CloudwatchLogsExportsAudit,
+						cloudWatchLogsExportsAudit,
 					}, false),
 				},
 				Set: schema.HashString,
@@ -410,7 +418,7 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 	if err != nil {
-		return fmt.Errorf("error creating Neptune Cluster: %w", err)
+		return fmt.Errorf("creating Neptune Cluster: %w", err)
 	}
 
 	d.SetId(d.Get("cluster_identifier").(string))
@@ -420,7 +428,7 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 
 	_, err = WaitDBClusterAvailable(conn, d.Id(), d.Timeout(schema.TimeoutCreate))
 	if err != nil {
-		return fmt.Errorf("error waiting for Neptune Cluster (%q) to be Available: %w", d.Id(), err)
+		return fmt.Errorf("waiting for Neptune Cluster (%q) to be Available: %w", d.Id(), err)
 	}
 
 	if v, ok := d.GetOk("iam_roles"); ok {
@@ -437,7 +445,6 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	return resourceClusterRead(d, meta)
-
 }
 
 func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
@@ -538,18 +545,18 @@ func flattenClusterResource(d *schema.ResourceData, meta interface{}, dbc *neptu
 	tags, err := ListTags(conn, d.Get("arn").(string))
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for Neptune Cluster (%s): %w", d.Get("arn").(string), err)
+		return fmt.Errorf("listing tags for Neptune Cluster (%s): %w", d.Get("arn").(string), err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return fmt.Errorf("setting tags: %w", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return fmt.Errorf("setting tags_all: %w", err)
 	}
 
 	return nil
@@ -560,8 +567,9 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 	requestUpdate := false
 
 	req := &neptune.ModifyDBClusterInput{
-		ApplyImmediately:    aws.Bool(d.Get("apply_immediately").(bool)),
-		DBClusterIdentifier: aws.String(d.Id()),
+		AllowMajorVersionUpgrade: aws.Bool(d.Get("allow_major_version_upgrade").(bool)),
+		ApplyImmediately:         aws.Bool(d.Get("apply_immediately").(bool)),
+		DBClusterIdentifier:      aws.String(d.Id()),
 	}
 
 	if d.HasChange("copy_tags_to_snapshot") {
@@ -657,7 +665,7 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		_, err = WaitDBClusterAvailable(conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
 		if err != nil {
-			return fmt.Errorf("error waiting for Neptune Cluster (%q) to be Available: %w", d.Id(), err)
+			return fmt.Errorf("waiting for Neptune Cluster (%q) to be Available: %w", d.Id(), err)
 		}
 	}
 
@@ -694,9 +702,8 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating Neptune Cluster (%s) tags: %w", d.Get("arn").(string), err)
+			return fmt.Errorf("updating Neptune Cluster (%s) tags: %w", d.Get("arn").(string), err)
 		}
-
 	}
 
 	return resourceClusterRead(d, meta)
@@ -748,7 +755,7 @@ func resourceClusterDelete(d *schema.ResourceData, meta interface{}) error {
 		if tfawserr.ErrCodeEquals(err, neptune.ErrCodeDBClusterNotFoundFault) {
 			return nil
 		}
-		return fmt.Errorf("error waiting for Neptune Cluster (%q) to be Deleted: %w", d.Id(), err)
+		return fmt.Errorf("waiting for Neptune Cluster (%q) to be Deleted: %w", d.Id(), err)
 	}
 
 	return nil

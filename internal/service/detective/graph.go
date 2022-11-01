@@ -87,7 +87,7 @@ func resourceGraphRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	resp, err := FindDetectiveGraphByArn(conn, ctx, d.Id())
+	resp, err := FindGraphByARN(conn, ctx, d.Id())
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, detective.ErrCodeResourceNotFoundException) || resp == nil {
 		d.SetId("")

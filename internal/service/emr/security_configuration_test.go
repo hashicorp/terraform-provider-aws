@@ -17,13 +17,13 @@ func TestAccEMRSecurityConfiguration_basic(t *testing.T) {
 	resourceName := "aws_emr_security_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, emr.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckSecurityConfigurationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, emr.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSecurityConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEmrSecurityConfigurationConfig,
+				Config: testAccSecurityConfigurationConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityConfigurationExists(resourceName),
 					acctest.CheckResourceAttrRFC3339(resourceName, "creation_date"),
@@ -99,7 +99,7 @@ func testAccCheckSecurityConfigurationExists(n string) resource.TestCheckFunc {
 	}
 }
 
-const testAccEmrSecurityConfigurationConfig = `
+const testAccSecurityConfigurationConfig_basic = `
 data "aws_partition" "current" {}
 
 data "aws_region" "current" {}

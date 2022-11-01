@@ -130,7 +130,7 @@ func resourceProxyCreate(d *schema.ResourceData, meta interface{}) error {
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	input := rds.CreateDBProxyInput{
-		Auth:         expandDbProxyAuth(d.Get("auth").(*schema.Set).List()),
+		Auth:         expandProxyAuth(d.Get("auth").(*schema.Set).List()),
 		DBProxyName:  aws.String(d.Get("name").(string)),
 		EngineFamily: aws.String(d.Get("engine_family").(string)),
 		RoleArn:      aws.String(d.Get("role_arn").(string)),
@@ -188,7 +188,7 @@ func resourceProxyRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.Set("arn", dbProxy.DBProxyArn)
-	d.Set("auth", flattenDbProxyAuths(dbProxy.Auth))
+	d.Set("auth", flattenProxyAuths(dbProxy.Auth))
 	d.Set("name", dbProxy.DBProxyName)
 	d.Set("debug_logging", dbProxy.DebugLogging)
 	d.Set("engine_family", dbProxy.EngineFamily)
@@ -225,7 +225,7 @@ func resourceProxyUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChangesExcept("tags", "tags_all") {
 		oName, nName := d.GetChange("name")
 		input := &rds.ModifyDBProxyInput{
-			Auth:           expandDbProxyAuth(d.Get("auth").(*schema.Set).List()),
+			Auth:           expandProxyAuth(d.Get("auth").(*schema.Set).List()),
 			DBProxyName:    aws.String(oName.(string)),
 			DebugLogging:   aws.Bool(d.Get("debug_logging").(bool)),
 			NewDBProxyName: aws.String(nName.(string)),
@@ -291,7 +291,7 @@ func resourceProxyDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func expandDbProxyAuth(l []interface{}) []*rds.UserAuthConfig {
+func expandProxyAuth(l []interface{}) []*rds.UserAuthConfig {
 	if len(l) == 0 {
 		return nil
 	}
@@ -333,7 +333,7 @@ func expandDbProxyAuth(l []interface{}) []*rds.UserAuthConfig {
 	return userAuthConfigs
 }
 
-func flattenDbProxyAuth(userAuthConfig *rds.UserAuthConfigInfo) map[string]interface{} {
+func flattenProxyAuth(userAuthConfig *rds.UserAuthConfigInfo) map[string]interface{} {
 	m := make(map[string]interface{})
 
 	m["auth_scheme"] = aws.StringValue(userAuthConfig.AuthScheme)
@@ -345,10 +345,10 @@ func flattenDbProxyAuth(userAuthConfig *rds.UserAuthConfigInfo) map[string]inter
 	return m
 }
 
-func flattenDbProxyAuths(userAuthConfigs []*rds.UserAuthConfigInfo) []interface{} {
+func flattenProxyAuths(userAuthConfigs []*rds.UserAuthConfigInfo) []interface{} {
 	s := []interface{}{}
 	for _, v := range userAuthConfigs {
-		s = append(s, flattenDbProxyAuth(v))
+		s = append(s, flattenProxyAuth(v))
 	}
 	return s
 }

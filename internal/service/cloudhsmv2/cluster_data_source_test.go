@@ -15,12 +15,12 @@ func testAccDataSourceCluster_basic(t *testing.T) {
 	dataSourceName := "data.aws_cloudhsm_v2_cluster.default"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, cloudhsmv2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudhsmv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckCloudHsmV2ClusterDataSourceConfig,
+				Config: testAccClusterDataSourceConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "cluster_state", "UNINITIALIZED"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "cluster_id", resourceName, "cluster_id"),
@@ -34,7 +34,7 @@ func testAccDataSourceCluster_basic(t *testing.T) {
 	})
 }
 
-var testAccCheckCloudHsmV2ClusterDataSourceConfig = acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
+var testAccClusterDataSourceConfig_basic = acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 variable "subnets" {
   default = ["10.0.1.0/24", "10.0.2.0/24"]
   type    = list(string)

@@ -57,7 +57,7 @@ func dataSourceDelegationSetRead(d *schema.ResourceData, meta interface{}) error
 	d.Set("caller_reference", resp.DelegationSet.CallerReference)
 
 	if err := d.Set("name_servers", aws.StringValueSlice(resp.DelegationSet.NameServers)); err != nil {
-		return fmt.Errorf("error setting name_servers: %w", err)
+		return fmt.Errorf("setting name_servers: %w", err)
 	}
 
 	arn := arn.ARN{

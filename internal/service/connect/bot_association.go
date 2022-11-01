@@ -98,7 +98,7 @@ func resourceBotAssociationCreate(ctx context.Context, d *schema.ResourceData, m
 	*/
 
 	_, err := tfresource.RetryWhen(
-		connectBotAssociationCreateTimeout,
+		botAssociationCreateTimeout,
 		func() (interface{}, error) {
 			return conn.AssociateBotWithContext(ctx, input)
 		},

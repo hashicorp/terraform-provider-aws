@@ -21,13 +21,13 @@ func TestAccSageMakerProject_basic(t *testing.T) {
 	resourceName := "aws_sagemaker_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckProjectDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProjectDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProjectBasicConfig(rName),
+				Config: testAccProjectConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectExists(resourceName, &mpg),
 					resource.TestCheckResourceAttr(resourceName, "project_name", rName),
@@ -44,7 +44,7 @@ func TestAccSageMakerProject_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccProjectBaseConfig(rName),
+				Config: testAccProjectConfig_base(rName),
 			},
 		},
 	})
@@ -57,13 +57,13 @@ func TestAccSageMakerProject_description(t *testing.T) {
 	resourceName := "aws_sagemaker_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckProjectDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProjectDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProjectDescription(rName, rName),
+				Config: testAccProjectConfig_description(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectExists(resourceName, &mpg),
 					resource.TestCheckResourceAttr(resourceName, "project_name", rName),
@@ -76,7 +76,7 @@ func TestAccSageMakerProject_description(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccProjectDescription(rName, rNameUpdated),
+				Config: testAccProjectConfig_description(rName, rNameUpdated),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectExists(resourceName, &mpg),
 					resource.TestCheckResourceAttr(resourceName, "project_name", rName),
@@ -84,7 +84,7 @@ func TestAccSageMakerProject_description(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccProjectBaseConfig(rName),
+				Config: testAccProjectConfig_base(rName),
 			},
 		},
 	})
@@ -96,13 +96,13 @@ func TestAccSageMakerProject_tags(t *testing.T) {
 	resourceName := "aws_sagemaker_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckProjectDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProjectDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProjectTagsConfig1(rName, "key1", "value1"),
+				Config: testAccProjectConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectExists(resourceName, &mpg),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -115,7 +115,7 @@ func TestAccSageMakerProject_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccProjectTagsConfig2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccProjectConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectExists(resourceName, &mpg),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -124,7 +124,7 @@ func TestAccSageMakerProject_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccProjectTagsConfig1(rName, "key2", "value2"),
+				Config: testAccProjectConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectExists(resourceName, &mpg),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -132,7 +132,7 @@ func TestAccSageMakerProject_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccProjectBaseConfig(rName),
+				Config: testAccProjectConfig_base(rName),
 			},
 		},
 	})
@@ -144,13 +144,13 @@ func TestAccSageMakerProject_disappears(t *testing.T) {
 	resourceName := "aws_sagemaker_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckProjectDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProjectDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProjectBasicConfig(rName),
+				Config: testAccProjectConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectExists(resourceName, &mpg),
 					acctest.CheckResourceDisappears(acctest.Provider, tfsagemaker.ResourceProject(), resourceName),
@@ -177,7 +177,7 @@ func testAccCheckProjectDestroy(s *terraform.State) error {
 		}
 
 		if err != nil {
-			return fmt.Errorf("error reading SageMaker Project (%s): %w", rs.Primary.ID, err)
+			return fmt.Errorf("reading SageMaker Project (%s): %w", rs.Primary.ID, err)
 		}
 
 		if aws.StringValue(Project.ProjectName) == rs.Primary.ID {
@@ -211,7 +211,7 @@ func testAccCheckProjectExists(n string, mpg *sagemaker.DescribeProjectOutput) r
 	}
 }
 
-func testAccProjectBaseConfig(rName string) string {
+func testAccProjectConfig_base(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
@@ -355,8 +355,8 @@ resource "aws_servicecatalog_principal_portfolio_association" "test" {
 `, rName)
 }
 
-func testAccProjectBasicConfig(rName string) string {
-	return acctest.ConfigCompose(testAccProjectBaseConfig(rName), fmt.Sprintf(`
+func testAccProjectConfig_basic(rName string) string {
+	return acctest.ConfigCompose(testAccProjectConfig_base(rName), fmt.Sprintf(`
 resource "aws_sagemaker_project" "test" {
   project_name = %[1]q
 
@@ -367,8 +367,8 @@ resource "aws_sagemaker_project" "test" {
 `, rName))
 }
 
-func testAccProjectDescription(rName, desc string) string {
-	return acctest.ConfigCompose(testAccProjectBaseConfig(rName), fmt.Sprintf(`
+func testAccProjectConfig_description(rName, desc string) string {
+	return acctest.ConfigCompose(testAccProjectConfig_base(rName), fmt.Sprintf(`
 resource "aws_sagemaker_project" "test" {
   project_name        = %[1]q
   project_description = %[2]q
@@ -380,8 +380,8 @@ resource "aws_sagemaker_project" "test" {
 `, rName, desc))
 }
 
-func testAccProjectTagsConfig1(rName, tagKey1, tagValue1 string) string {
-	return acctest.ConfigCompose(testAccProjectBaseConfig(rName), fmt.Sprintf(`
+func testAccProjectConfig_tags1(rName, tagKey1, tagValue1 string) string {
+	return acctest.ConfigCompose(testAccProjectConfig_base(rName), fmt.Sprintf(`
 resource "aws_sagemaker_project" "test" {
   project_name = %[1]q
 
@@ -396,8 +396,8 @@ resource "aws_sagemaker_project" "test" {
 `, rName, tagKey1, tagValue1))
 }
 
-func testAccProjectTagsConfig2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return acctest.ConfigCompose(testAccProjectBaseConfig(rName), fmt.Sprintf(`
+func testAccProjectConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return acctest.ConfigCompose(testAccProjectConfig_base(rName), fmt.Sprintf(`
 resource "aws_sagemaker_project" "test" {
   project_name = %[1]q
 

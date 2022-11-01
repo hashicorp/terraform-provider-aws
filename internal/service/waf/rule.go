@@ -20,7 +20,7 @@ import (
 )
 
 const (
-	WafRuleDeleteTimeout = 5 * time.Minute
+	RuleDeleteTimeout = 5 * time.Minute
 )
 
 func ResourceRule() *schema.Resource {
@@ -228,7 +228,7 @@ func resourceRuleDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	wr := NewRetryer(conn)
-	err := resource.Retry(WafRuleDeleteTimeout, func() *resource.RetryError {
+	err := resource.Retry(RuleDeleteTimeout, func() *resource.RetryError {
 		_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
 			req := &waf.DeleteRuleInput{
 				ChangeToken: token,

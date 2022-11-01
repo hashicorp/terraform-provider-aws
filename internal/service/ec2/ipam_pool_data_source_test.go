@@ -13,12 +13,12 @@ func TestAccIPAMPoolDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_vpc_ipam_pool.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccIPAMPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCIpamPoolOptions,
+				Config: testAccIPAMPoolDataSourceConfig_optionsBasic,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "address_family", resourceName, "address_family"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "allocation_default_netmask_length", resourceName, "allocation_default_netmask_length"),
@@ -43,7 +43,7 @@ func TestAccIPAMPoolDataSource_basic(t *testing.T) {
 	})
 }
 
-var testAccVPCIpamPoolOptions = acctest.ConfigCompose(testAccVPCIpamPoolBase, `
+var testAccIPAMPoolDataSourceConfig_optionsBasic = acctest.ConfigCompose(testAccIPAMPoolConfig_base, `
 resource "aws_vpc_ipam_pool" "test" {
   address_family                    = "ipv4"
   ipam_scope_id                     = aws_vpc_ipam.test.private_default_scope_id

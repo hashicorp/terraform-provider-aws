@@ -1,13 +1,11 @@
 package ec2_test
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
@@ -16,15 +14,17 @@ func TestAccEC2InstanceTypeOfferingsDataSource_filter(t *testing.T) {
 	dataSourceName := "data.aws_ec2_instance_type_offerings.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckInstanceTypeOfferings(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      nil,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckInstanceTypeOfferings(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceTypeOfferingsFilterDataSourceConfig(),
+				Config: testAccInstanceTypeOfferingsDataSourceConfig_filter(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEc2InstanceTypeOfferingsInstanceTypes(dataSourceName),
+					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "instance_types.#", "0"),
+					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "locations.#", "0"),
+					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "location_types.#", "0"),
 				),
 			},
 		},
@@ -35,58 +35,21 @@ func TestAccEC2InstanceTypeOfferingsDataSource_locationType(t *testing.T) {
 	dataSourceName := "data.aws_ec2_instance_type_offerings.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckInstanceTypeOfferings(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      nil,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckInstanceTypeOfferings(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceTypeOfferingsLocationTypeDataSourceConfig(),
+				Config: testAccInstanceTypeOfferingsDataSourceConfig_location(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEc2InstanceTypeOfferingsInstanceTypes(dataSourceName),
-					testAccCheckEc2InstanceTypeOfferingsLocations(dataSourceName),
+					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "instance_types.#", "0"),
+					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "locations.#", "0"),
+					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "location_types.#", "0"),
 				),
 			},
 		},
 	})
-}
-
-func testAccCheckEc2InstanceTypeOfferingsInstanceTypes(dataSourceName string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[dataSourceName]
-		if !ok {
-			return fmt.Errorf("Not found: %s", dataSourceName)
-		}
-
-		if v := rs.Primary.Attributes["instance_types.#"]; v == "0" {
-			return fmt.Errorf("expected at least one instance_types result, got none")
-		}
-
-		if v := rs.Primary.Attributes["locations.#"]; v == "0" {
-			return fmt.Errorf("expected at least one locations result, got none")
-		}
-
-		if v := rs.Primary.Attributes["location_types.#"]; v == "0" {
-			return fmt.Errorf("expected at least one location_types result, got none")
-		}
-
-		return nil
-	}
-}
-
-func testAccCheckEc2InstanceTypeOfferingsLocations(dataSourceName string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[dataSourceName]
-		if !ok {
-			return fmt.Errorf("Not found: %s", dataSourceName)
-		}
-
-		if v := rs.Primary.Attributes["locations.#"]; v == "0" {
-			return fmt.Errorf("expected at least one locations result, got none")
-		}
-
-		return nil
-	}
 }
 
 func testAccPreCheckInstanceTypeOfferings(t *testing.T) {
@@ -107,7 +70,7 @@ func testAccPreCheckInstanceTypeOfferings(t *testing.T) {
 	}
 }
 
-func testAccInstanceTypeOfferingsFilterDataSourceConfig() string {
+func testAccInstanceTypeOfferingsDataSourceConfig_filter() string {
 	return `
 data "aws_ec2_instance_type_offerings" "test" {
   filter {
@@ -118,7 +81,7 @@ data "aws_ec2_instance_type_offerings" "test" {
 `
 }
 
-func testAccInstanceTypeOfferingsLocationTypeDataSourceConfig() string {
+func testAccInstanceTypeOfferingsDataSourceConfig_location() string {
 	return acctest.ConfigAvailableAZsNoOptIn() + `
 data "aws_ec2_instance_type_offerings" "test" {
   filter {

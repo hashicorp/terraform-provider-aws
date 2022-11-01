@@ -88,9 +88,9 @@ func dataSourceDistributionRead(d *schema.ResourceData, meta interface{}) error 
 		d.Set("status", distribution.Status)
 		region := meta.(*conns.AWSClient).Region
 		if v, ok := endpoints.PartitionForRegion(endpoints.DefaultPartitions(), region); ok && v.ID() == endpoints.AwsCnPartitionID {
-			d.Set("hosted_zone_id", cloudFrontCNRoute53ZoneID)
+			d.Set("hosted_zone_id", cnRoute53ZoneID)
 		} else {
-			d.Set("hosted_zone_id", cloudFrontRoute53ZoneID)
+			d.Set("hosted_zone_id", route53ZoneID)
 		}
 		if distributionConfig := distribution.DistributionConfig; distributionConfig != nil {
 			d.Set("enabled", distributionConfig.Enabled)

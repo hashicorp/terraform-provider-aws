@@ -2,6 +2,7 @@ package ec2
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
@@ -15,6 +16,10 @@ import (
 func DataSourceClientVPNEndpoint() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourceClientVPNEndpointRead,
+
+		Timeouts: &schema.ResourceTimeout{
+			Read: schema.DefaultTimeout(20 * time.Minute),
+		},
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -199,7 +204,7 @@ func dataSourceClientVPNEndpointRead(d *schema.ResourceData, meta interface{}) e
 		Resource:  fmt.Sprintf("client-vpn-endpoint/%s", d.Id()),
 	}.String()
 	d.Set("arn", arn)
-	if err := d.Set("authentication_options", flattenClientVpnAuthentications(ep.AuthenticationOptions)); err != nil {
+	if err := d.Set("authentication_options", flattenClientVPNAuthentications(ep.AuthenticationOptions)); err != nil {
 		return fmt.Errorf("error setting authentication_options: %w", err)
 	}
 	d.Set("client_cidr_block", ep.ClientCidrBlock)

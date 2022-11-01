@@ -659,13 +659,13 @@ func ExpandReplicationRuleSourceSelectionCriteria(l []interface{}) *s3.SourceSel
 	}
 
 	if v, ok := tfMap["sse_kms_encrypted_objects"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		result.SseKmsEncryptedObjects = ExpandSourceSelectionCriteriaSseKmsEncryptedObjects(v)
+		result.SseKmsEncryptedObjects = ExpandSourceSelectionCriteriaSSEKMSEncryptedObjects(v)
 	}
 
 	return result
 }
 
-func ExpandSourceSelectionCriteriaSseKmsEncryptedObjects(l []interface{}) *s3.SseKmsEncryptedObjects {
+func ExpandSourceSelectionCriteriaSSEKMSEncryptedObjects(l []interface{}) *s3.SseKmsEncryptedObjects {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -1107,7 +1107,6 @@ func FlattenReplicationRuleDestinationReplicationTime(rt *s3.ReplicationTime) []
 	}
 
 	return []interface{}{m}
-
 }
 
 func FlattenReplicationRuleDestinationReplicationTimeValue(rtv *s3.ReplicationTimeValue) []interface{} {
@@ -1210,7 +1209,6 @@ func FlattenReplicationRuleFilterAndOperator(op *s3.ReplicationRuleAndOperator) 
 	}
 
 	return []interface{}{m}
-
 }
 
 func FlattenReplicationRuleFilterTag(tag *s3.Tag) []interface{} {
@@ -1229,7 +1227,6 @@ func FlattenReplicationRuleFilterTag(tag *s3.Tag) []interface{} {
 	}
 
 	return []interface{}{m}
-
 }
 
 func FlattenReplicationRuleSourceSelectionCriteria(ssc *s3.SourceSelectionCriteria) []interface{} {
@@ -1244,13 +1241,13 @@ func FlattenReplicationRuleSourceSelectionCriteria(ssc *s3.SourceSelectionCriter
 	}
 
 	if ssc.SseKmsEncryptedObjects != nil {
-		m["sse_kms_encrypted_objects"] = FlattenSourceSelectionCriteriaSseKmsEncryptedObjects(ssc.SseKmsEncryptedObjects)
+		m["sse_kms_encrypted_objects"] = FlattenSourceSelectionCriteriaSSEKMSEncryptedObjects(ssc.SseKmsEncryptedObjects)
 	}
 
 	return []interface{}{m}
 }
 
-func FlattenSourceSelectionCriteriaSseKmsEncryptedObjects(objects *s3.SseKmsEncryptedObjects) []interface{} {
+func FlattenSourceSelectionCriteriaSSEKMSEncryptedObjects(objects *s3.SseKmsEncryptedObjects) []interface{} {
 	if objects == nil {
 		return []interface{}{}
 	}

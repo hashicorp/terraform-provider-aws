@@ -10,12 +10,12 @@ import (
 
 func TestAccSTSCallerIdentityDataSource_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, sts.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sts.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAWSCallerIdentityConfig_basic,
+				Config: testAccCallerIdentityConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckCallerIdentityAccountID("data.aws_caller_identity.current"),
 				),
@@ -24,6 +24,6 @@ func TestAccSTSCallerIdentityDataSource_basic(t *testing.T) {
 	})
 }
 
-const testAccCheckAWSCallerIdentityConfig_basic = `
+const testAccCallerIdentityConfig_basic = `
 data "aws_caller_identity" "current" {}
 `

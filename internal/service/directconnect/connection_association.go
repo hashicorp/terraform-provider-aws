@@ -77,10 +77,10 @@ func resourceConnectionAssociationRead(d *schema.ResourceData, meta interface{})
 func resourceConnectionAssociationDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).DirectConnectConn
 
-	return deleteDirectConnectConnectionLAGAssociation(conn, d.Id(), d.Get("lag_id").(string))
+	return deleteConnectionLAGAssociation(conn, d.Id(), d.Get("lag_id").(string))
 }
 
-func deleteDirectConnectConnectionLAGAssociation(conn *directconnect.DirectConnect, connectionID, lagID string) error {
+func deleteConnectionLAGAssociation(conn *directconnect.DirectConnect, connectionID, lagID string) error {
 	input := &directconnect.DisassociateConnectionFromLagInput{
 		ConnectionId: aws.String(connectionID),
 		LagId:        aws.String(lagID),

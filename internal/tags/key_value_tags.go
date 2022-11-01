@@ -1,6 +1,7 @@
 package tags
 
 import (
+	"context"
 	"fmt"
 	"net/url"
 	"reflect"
@@ -8,14 +9,16 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
 const (
-	AwsTagKeyPrefix                             = `aws:`
+	awsTagKeyPrefix                             = `aws:` // nosemgrep:ci.aws-in-const-name,ci.aws-in-var-name
 	ElasticbeanstalkTagKeyPrefix                = `elasticbeanstalk:`
 	NameTagKey                                  = `Name`
-	RdsTagKeyPrefix                             = `rds:`
+	RDSTagKeyPrefix                             = `rds:`
 	ServerlessApplicationRepositoryTagKeyPrefix = `serverlessrepo:`
 )
 
@@ -37,11 +40,11 @@ type IgnoreConfig struct {
 type KeyValueTags map[string]*TagData
 
 // IgnoreAWS returns non-AWS tag keys.
-func (tags KeyValueTags) IgnoreAWS() KeyValueTags {
+func (tags KeyValueTags) IgnoreAWS() KeyValueTags { // nosemgrep:ci.aws-in-func-name
 	result := make(KeyValueTags)
 
 	for k, v := range tags {
-		if !strings.HasPrefix(k, AwsTagKeyPrefix) {
+		if !strings.HasPrefix(k, awsTagKeyPrefix) {
 			result[k] = v
 		}
 	}
@@ -105,7 +108,7 @@ func (tags KeyValueTags) IgnoreElasticbeanstalk() KeyValueTags {
 	result := make(KeyValueTags)
 
 	for k, v := range tags {
-		if strings.HasPrefix(k, AwsTagKeyPrefix) {
+		if strings.HasPrefix(k, awsTagKeyPrefix) {
 			continue
 		}
 
@@ -148,15 +151,15 @@ func (tags KeyValueTags) IgnorePrefixes(ignoreTagPrefixes KeyValueTags) KeyValue
 }
 
 // IgnoreRDS returns non-AWS and non-RDS tag keys.
-func (tags KeyValueTags) IgnoreRds() KeyValueTags {
+func (tags KeyValueTags) IgnoreRDS() KeyValueTags {
 	result := make(KeyValueTags)
 
 	for k, v := range tags {
-		if strings.HasPrefix(k, AwsTagKeyPrefix) {
+		if strings.HasPrefix(k, awsTagKeyPrefix) {
 			continue
 		}
 
-		if strings.HasPrefix(k, RdsTagKeyPrefix) {
+		if strings.HasPrefix(k, RDSTagKeyPrefix) {
 			continue
 		}
 
@@ -171,7 +174,7 @@ func (tags KeyValueTags) IgnoreServerlessApplicationRepository() KeyValueTags {
 	result := make(KeyValueTags)
 
 	for k, v := range tags {
-		if strings.HasPrefix(k, AwsTagKeyPrefix) {
+		if strings.HasPrefix(k, awsTagKeyPrefix) {
 			continue
 		}
 
@@ -507,8 +510,8 @@ func (tags KeyValueTags) String() string {
 	return builder.String()
 }
 
-// UrlEncode returns the KeyValueTags encoded as URL Query parameters.
-func (tags KeyValueTags) UrlEncode() string {
+// URLEncode returns the KeyValueTags encoded as URL Query parameters.
+func (tags KeyValueTags) URLEncode() string {
 	values := url.Values{}
 
 	for k, v := range tags {
@@ -522,8 +525,8 @@ func (tags KeyValueTags) UrlEncode() string {
 	return values.Encode()
 }
 
-// UrlQueryString returns the KeyValueTags formatted as URL Query parameters without encoding.
-func (tags KeyValueTags) UrlQueryString() string {
+// URLQueryString returns the KeyValueTags formatted as URL Query parameters without encoding.
+func (tags KeyValueTags) URLQueryString() string {
 	keys := make([]string, 0, len(tags))
 	for k, v := range tags {
 		if v == nil || v.Value == nil {
@@ -548,8 +551,8 @@ func (tags KeyValueTags) UrlQueryString() string {
 
 // New creates KeyValueTags from common types or returns an empty KeyValueTags.
 //
-// Supports various Terraform Plugin SDK types including map[string]string,
-// map[string]*string, map[string]interface{}, and []interface{}.
+// Supports various Terraform Plugin SDK and Terraform Plugin Framework types including
+// map[string]string, map[string]*string, map[string]interface{}, []interface{}, and types.Map.
 // When passed []interface{}, all elements are treated as keys and assigned nil values.
 // When passed KeyValueTags or its underlying type implementation, returns itself.
 func New(i interface{}) KeyValueTags {
@@ -562,8 +565,8 @@ func New(i interface{}) KeyValueTags {
 		kvtm := make(KeyValueTags, len(value))
 
 		for k, v := range value {
-			str := v // Prevent referencing issues
-			kvtm[k] = &TagData{Value: &str}
+			v := v // Prevent referencing issues
+			kvtm[k] = &TagData{Value: &v}
 		}
 
 		return kvtm
@@ -571,14 +574,14 @@ func New(i interface{}) KeyValueTags {
 		kvtm := make(KeyValueTags, len(value))
 
 		for k, v := range value {
-			strPtr := v
+			v := v
 
-			if strPtr == nil {
+			if v == nil {
 				kvtm[k] = nil
 				continue
 			}
 
-			kvtm[k] = &TagData{Value: strPtr}
+			kvtm[k] = &TagData{Value: v}
 		}
 
 		return kvtm
@@ -588,10 +591,10 @@ func New(i interface{}) KeyValueTags {
 		for k, v := range value {
 			kvtm[k] = &TagData{}
 
-			str, ok := v.(string)
+			v, ok := v.(string)
 
 			if ok {
-				kvtm[k].Value = &str
+				kvtm[k].Value = &v
 			}
 		}
 
@@ -612,6 +615,8 @@ func New(i interface{}) KeyValueTags {
 		}
 
 		return kvtm
+	case types.Map:
+		return New(flex.ExpandFrameworkStringValueMap(context.TODO(), value))
 	default:
 		return make(KeyValueTags)
 	}

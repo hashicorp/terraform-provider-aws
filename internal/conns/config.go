@@ -6,7 +6,17 @@ import (
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/feature/ec2/imds"
+	"github.com/aws/aws-sdk-go-v2/service/comprehend"
+	"github.com/aws/aws-sdk-go-v2/service/computeoptimizer"
+	"github.com/aws/aws-sdk-go-v2/service/fis"
+	"github.com/aws/aws-sdk-go-v2/service/identitystore"
+	"github.com/aws/aws-sdk-go-v2/service/inspector2"
+	"github.com/aws/aws-sdk-go-v2/service/kendra"
+	"github.com/aws/aws-sdk-go-v2/service/medialive"
+	"github.com/aws/aws-sdk-go-v2/service/rolesanywhere"
 	"github.com/aws/aws-sdk-go-v2/service/route53domains"
+	"github.com/aws/aws-sdk-go-v2/service/sesv2"
+	"github.com/aws/aws-sdk-go-v2/service/transcribe"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/aws/request"
@@ -23,6 +33,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/globalaccelerator"
 	"github.com/aws/aws-sdk-go/service/kafka"
 	"github.com/aws/aws-sdk-go/service/kinesis"
+	"github.com/aws/aws-sdk-go/service/lightsail"
 	"github.com/aws/aws-sdk-go/service/organizations"
 	"github.com/aws/aws-sdk-go/service/route53"
 	"github.com/aws/aws-sdk-go/service/route53recoverycontrolconfig"
@@ -76,11 +87,12 @@ type Config struct {
 	UseFIPSEndpoint                bool
 }
 
-// Client configures and returns a fully initialized AWSClient
-func (c *Config) Client(ctx context.Context) (interface{}, diag.Diagnostics) {
+// ConfigureProvider configures the provided provider Meta (instance data).
+func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWSClient, diag.Diagnostics) {
 	awsbaseConfig := awsbase.Config{
 		AccessKey:                     c.AccessKey,
 		APNInfo:                       StdUserAgentProducts(c.TerraformVersion),
+		AssumeRoleWithWebIdentity:     c.AssumeRoleWithWebIdentity,
 		CallerDocumentationURL:        "https://registry.terraform.io/providers/hashicorp/aws",
 		CallerName:                    "Terraform AWS Provider",
 		EC2MetadataServiceEnableState: c.EC2MetadataServiceEnableState,
@@ -176,9 +188,10 @@ func (c *Config) Client(ctx context.Context) (interface{}, diag.Diagnostics) {
 		DNSSuffix = p.DNSSuffix()
 	}
 
-	client := c.clientConns(sess)
+	c.clientConns(client, sess)
 
 	client.AccountID = accountID
+	client.Config = &cfg
 	client.DefaultTagsConfig = c.DefaultTagsConfig
 	client.DNSSuffix = DNSSuffix
 	client.IgnoreTagsConfig = c.IgnoreTagsConfig
@@ -188,12 +201,72 @@ func (c *Config) Client(ctx context.Context) (interface{}, diag.Diagnostics) {
 	client.Session = sess
 	client.TerraformVersion = c.TerraformVersion
 
+	client.ComprehendConn = comprehend.NewFromConfig(cfg, func(o *comprehend.Options) {
+		if endpoint := c.Endpoints[names.Comprehend]; endpoint != "" {
+			o.EndpointResolver = comprehend.EndpointResolverFromURL(endpoint)
+		}
+	})
+
+	client.ComputeOptimizerConn = computeoptimizer.NewFromConfig(cfg, func(o *computeoptimizer.Options) {
+		if endpoint := c.Endpoints[names.ComputeOptimizer]; endpoint != "" {
+			o.EndpointResolver = computeoptimizer.EndpointResolverFromURL(endpoint)
+		}
+	})
+
+	client.FISConn = fis.NewFromConfig(cfg, func(o *fis.Options) {
+		if endpoint := c.Endpoints[names.FIS]; endpoint != "" {
+			o.EndpointResolver = fis.EndpointResolverFromURL(endpoint)
+		}
+	})
+
+	client.IdentityStoreConn = identitystore.NewFromConfig(cfg, func(o *identitystore.Options) {
+		if endpoint := c.Endpoints[names.IdentityStore]; endpoint != "" {
+			o.EndpointResolver = identitystore.EndpointResolverFromURL(endpoint)
+		}
+	})
+
+	client.Inspector2Conn = inspector2.NewFromConfig(cfg, func(o *inspector2.Options) {
+		if endpoint := c.Endpoints[names.Inspector2]; endpoint != "" {
+			o.EndpointResolver = inspector2.EndpointResolverFromURL(endpoint)
+		}
+	})
+
+	client.KendraConn = kendra.NewFromConfig(cfg, func(o *kendra.Options) {
+		if endpoint := c.Endpoints[names.Kendra]; endpoint != "" {
+			o.EndpointResolver = kendra.EndpointResolverFromURL(endpoint)
+		}
+	})
+
+	client.MediaLiveConn = medialive.NewFromConfig(cfg, func(o *medialive.Options) {
+		if endpoint := c.Endpoints[names.MediaLive]; endpoint != "" {
+			o.EndpointResolver = medialive.EndpointResolverFromURL(endpoint)
+		}
+	})
+
+	client.RolesAnywhereConn = rolesanywhere.NewFromConfig(cfg, func(o *rolesanywhere.Options) {
+		if endpoint := c.Endpoints[names.RolesAnywhere]; endpoint != "" {
+			o.EndpointResolver = rolesanywhere.EndpointResolverFromURL(endpoint)
+		}
+	})
+
 	client.Route53DomainsConn = route53domains.NewFromConfig(cfg, func(o *route53domains.Options) {
 		if endpoint := c.Endpoints[names.Route53Domains]; endpoint != "" {
 			o.EndpointResolver = route53domains.EndpointResolverFromURL(endpoint)
 		} else if partition == endpoints.AwsPartitionID {
 			// Route 53 Domains is only available in AWS Commercial us-east-1 Region.
 			o.Region = endpoints.UsEast1RegionID
+		}
+	})
+
+	client.SESV2Conn = sesv2.NewFromConfig(cfg, func(o *sesv2.Options) {
+		if endpoint := c.Endpoints[names.SESV2]; endpoint != "" {
+			o.EndpointResolver = sesv2.EndpointResolverFromURL(endpoint)
+		}
+	})
+
+	client.TranscribeConn = transcribe.NewFromConfig(cfg, func(o *transcribe.Options) {
+		if endpoint := c.Endpoints[names.Transcribe]; endpoint != "" {
+			o.EndpointResolver = transcribe.EndpointResolverFromURL(endpoint)
 		}
 	})
 
@@ -438,6 +511,20 @@ func (c *Config) Client(ctx context.Context) (interface{}, diag.Diagnostics) {
 		}
 		if r.Operation.Name == "CreateStream" || r.Operation.Name == "DeleteStream" {
 			if tfawserr.ErrMessageContains(r.Error, kinesis.ErrCodeLimitExceededException, "Rate exceeded for stream") {
+				r.Retryable = aws.Bool(true)
+			}
+		}
+	})
+
+	client.LightsailConn.Handlers.Retry.PushBack(func(r *request.Request) {
+		switch r.Operation.Name {
+		case "CreateContainerService", "UpdateContainerService", "CreateContainerServiceDeployment":
+			if tfawserr.ErrMessageContains(r.Error, lightsail.ErrCodeInvalidInputException, "Please try again in a few minutes") {
+				r.Retryable = aws.Bool(true)
+			}
+		case "DeleteContainerService":
+			if tfawserr.ErrMessageContains(r.Error, lightsail.ErrCodeInvalidInputException, "Please try again in a few minutes") ||
+				tfawserr.ErrMessageContains(r.Error, lightsail.ErrCodeInvalidInputException, "Please wait for it to complete before trying again") {
 				r.Retryable = aws.Bool(true)
 			}
 		}

@@ -1,12 +1,14 @@
 package elasticache
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elasticache"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 // FindReplicationGroupByID retrieves an ElastiCache Replication Group by id.
@@ -126,13 +128,13 @@ func FindCacheClustersByID(conn *elasticache.ElastiCache, idList []string) ([]*e
 	return results, err
 }
 
-// FindGlobalReplicationGroupByID() retrieves an ElastiCache Global Replication Group by id.
-func FindGlobalReplicationGroupByID(conn *elasticache.ElastiCache, id string) (*elasticache.GlobalReplicationGroup, error) {
+// FindGlobalReplicationGroupByID retrieves an ElastiCache Global Replication Group by id.
+func FindGlobalReplicationGroupByID(ctx context.Context, conn *elasticache.ElastiCache, id string) (*elasticache.GlobalReplicationGroup, error) {
 	input := &elasticache.DescribeGlobalReplicationGroupsInput{
 		GlobalReplicationGroupId: aws.String(id),
 		ShowMemberInfo:           aws.Bool(true),
 	}
-	output, err := conn.DescribeGlobalReplicationGroups(input)
+	output, err := conn.DescribeGlobalReplicationGroupsWithContext(ctx, input)
 	if tfawserr.ErrCodeEquals(err, elasticache.ErrCodeGlobalReplicationGroupNotFoundFault) {
 		return nil, &resource.NotFoundError{
 			LastError:   err,
@@ -155,7 +157,7 @@ func FindGlobalReplicationGroupByID(conn *elasticache.ElastiCache, id string) (*
 
 // FindGlobalReplicationGroupMemberByID retrieves a member Replication Group by id from a Global Replication Group.
 func FindGlobalReplicationGroupMemberByID(conn *elasticache.ElastiCache, globalReplicationGroupID string, id string) (*elasticache.GlobalReplicationGroupMember, error) {
-	globalReplicationGroup, err := FindGlobalReplicationGroupByID(conn, globalReplicationGroupID)
+	globalReplicationGroup, err := FindGlobalReplicationGroupByID(context.TODO(), conn, globalReplicationGroupID)
 	if err != nil {
 		return nil, &resource.NotFoundError{
 			Message:   "unable to retrieve enclosing Global Replication Group",
@@ -213,16 +215,67 @@ func FindUserGroupByID(conn *elasticache.ElastiCache, groupID string) (*elastica
 		return nil, err
 	}
 
-	switch len(out.UserGroups) {
+	switch count := len(out.UserGroups); count {
 	case 0:
-		return nil, &resource.NotFoundError{
-			Message: "empty result",
-		}
+		return nil, tfresource.NewEmptyResultError(input)
 	case 1:
 		return out.UserGroups[0], nil
 	default:
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+}
+
+func FindParameterGroupByName(conn *elasticache.ElastiCache, name string) (*elasticache.CacheParameterGroup, error) {
+	input := elasticache.DescribeCacheParameterGroupsInput{
+		CacheParameterGroupName: aws.String(name),
+	}
+	out, err := conn.DescribeCacheParameterGroups(&input)
+
+	if tfawserr.ErrCodeEquals(err, elasticache.ErrCodeCacheParameterGroupNotFoundFault) {
 		return nil, &resource.NotFoundError{
-			Message: "too many results",
+			LastError:   err,
+			LastRequest: input,
 		}
 	}
+	if err != nil {
+		return nil, err
+	}
+
+	switch count := len(out.CacheParameterGroups); count {
+	case 0:
+		return nil, tfresource.NewEmptyResultError(input)
+	case 1:
+		return out.CacheParameterGroups[0], nil
+	default:
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+}
+
+func FindCacheSubnetGroupByName(conn *elasticache.ElastiCache, name string) (*elasticache.CacheSubnetGroup, error) {
+	input := elasticache.DescribeCacheSubnetGroupsInput{
+		CacheSubnetGroupName: aws.String(name),
+	}
+
+	output, err := conn.DescribeCacheSubnetGroups(&input)
+
+	if tfawserr.ErrCodeEquals(err, elasticache.ErrCodeCacheSubnetGroupNotFoundFault) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || len(output.CacheSubnetGroups) == 0 || output.CacheSubnetGroups[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output.CacheSubnetGroups); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return output.CacheSubnetGroups[0], nil
 }

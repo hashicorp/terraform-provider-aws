@@ -30,15 +30,17 @@ const (
 	AppDeletedTimeout                 = 10 * time.Minute
 	FlowDefinitionActiveTimeout       = 2 * time.Minute
 	FlowDefinitionDeletedTimeout      = 2 * time.Minute
-	ProjectCreatedTimeout             = 2 * time.Minute
-	ProjectDeletedTimeout             = 5 * time.Minute
+	ProjectCreatedTimeout             = 15 * time.Minute
+	ProjectDeletedTimeout             = 15 * time.Minute
+	WorkforceActiveTimeout            = 10 * time.Minute
+	WorkforceDeletedTimeout           = 10 * time.Minute
 )
 
 // WaitNotebookInstanceInService waits for a NotebookInstance to return InService
 func WaitNotebookInstanceInService(conn *sagemaker.SageMaker, notebookName string) (*sagemaker.DescribeNotebookInstanceOutput, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
-			SageMakerNotebookInstanceStatusNotFound,
+			notebookInstanceStatusNotFound,
 			sagemaker.NotebookInstanceStatusUpdating,
 			sagemaker.NotebookInstanceStatusPending,
 			sagemaker.NotebookInstanceStatusStopped,
@@ -51,6 +53,10 @@ func WaitNotebookInstanceInService(conn *sagemaker.SageMaker, notebookName strin
 	outputRaw, err := stateConf.WaitForState()
 
 	if output, ok := outputRaw.(*sagemaker.DescribeNotebookInstanceOutput); ok {
+		if status := aws.StringValue(output.NotebookInstanceStatus); status == sagemaker.NotebookInstanceStatusFailed {
+			tfresource.SetLastError(err, errors.New(aws.StringValue(output.FailureReason)))
+		}
+
 		return output, err
 	}
 
@@ -72,6 +78,10 @@ func WaitNotebookInstanceStopped(conn *sagemaker.SageMaker, notebookName string)
 	outputRaw, err := stateConf.WaitForState()
 
 	if output, ok := outputRaw.(*sagemaker.DescribeNotebookInstanceOutput); ok {
+		if status := aws.StringValue(output.NotebookInstanceStatus); status == sagemaker.NotebookInstanceStatusFailed {
+			tfresource.SetLastError(err, errors.New(aws.StringValue(output.FailureReason)))
+		}
+
 		return output, err
 	}
 
@@ -92,6 +102,10 @@ func WaitNotebookInstanceDeleted(conn *sagemaker.SageMaker, notebookName string)
 	outputRaw, err := stateConf.WaitForState()
 
 	if output, ok := outputRaw.(*sagemaker.DescribeNotebookInstanceOutput); ok {
+		if status := aws.StringValue(output.NotebookInstanceStatus); status == sagemaker.NotebookInstanceStatusFailed {
+			tfresource.SetLastError(err, errors.New(aws.StringValue(output.FailureReason)))
+		}
+
 		return output, err
 	}
 
@@ -220,7 +234,7 @@ func WaitImageVersionDeleted(conn *sagemaker.SageMaker, name string) (*sagemaker
 func WaitDomainInService(conn *sagemaker.SageMaker, domainID string) (*sagemaker.DescribeDomainOutput, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
-			SageMakerDomainStatusNotFound,
+			domainStatusNotFound,
 			sagemaker.DomainStatusPending,
 			sagemaker.DomainStatusUpdating,
 		},
@@ -306,7 +320,7 @@ func WaitFeatureGroupDeleted(conn *sagemaker.SageMaker, name string) (*sagemaker
 func WaitUserProfileInService(conn *sagemaker.SageMaker, domainID, userProfileName string) (*sagemaker.DescribeUserProfileOutput, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
-			SageMakerUserProfileStatusNotFound,
+			userProfileStatusNotFound,
 			sagemaker.UserProfileStatusPending,
 			sagemaker.UserProfileStatusUpdating,
 		},
@@ -348,7 +362,7 @@ func WaitUserProfileDeleted(conn *sagemaker.SageMaker, domainID, userProfileName
 func WaitAppInService(conn *sagemaker.SageMaker, domainID, userProfileName, appType, appName string) (*sagemaker.DescribeAppOutput, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
-			SageMakerAppStatusNotFound,
+			appStatusNotFound,
 			sagemaker.AppStatusPending,
 		},
 		Target:  []string{sagemaker.AppStatusInService},
@@ -488,6 +502,48 @@ func WaitProjectUpdated(conn *sagemaker.SageMaker, name string) (*sagemaker.Desc
 
 	if output, ok := outputRaw.(*sagemaker.DescribeProjectOutput); ok {
 		if status, reason := aws.StringValue(output.ProjectStatus), aws.StringValue(output.ServiceCatalogProvisionedProductDetails.ProvisionedProductStatusMessage); status == sagemaker.ProjectStatusUpdateFailed && reason != "" {
+			tfresource.SetLastError(err, errors.New(reason))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func WaitWorkforceActive(conn *sagemaker.SageMaker, name string) (*sagemaker.Workforce, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{sagemaker.WorkforceStatusInitializing, sagemaker.WorkforceStatusUpdating},
+		Target:  []string{sagemaker.WorkforceStatusActive},
+		Refresh: StatusWorkforce(conn, name),
+		Timeout: WorkforceActiveTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*sagemaker.Workforce); ok {
+		if status, reason := aws.StringValue(output.Status), aws.StringValue(output.FailureReason); status == sagemaker.WorkforceStatusFailed && reason != "" {
+			tfresource.SetLastError(err, errors.New(reason))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func WaitWorkforceDeleted(conn *sagemaker.SageMaker, name string) (*sagemaker.Workforce, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{sagemaker.WorkforceStatusDeleting},
+		Target:  []string{},
+		Refresh: StatusWorkforce(conn, name),
+		Timeout: WorkforceDeletedTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*sagemaker.Workforce); ok {
+		if status, reason := aws.StringValue(output.Status), aws.StringValue(output.FailureReason); status == sagemaker.WorkforceStatusFailed && reason != "" {
 			tfresource.SetLastError(err, errors.New(reason))
 		}
 

@@ -9,7 +9,6 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -17,7 +16,6 @@ import (
 )
 
 func testAccDomainNameAPIAssociation_basic(t *testing.T) {
-	var providers []*schema.Provider
 	var association appsync.ApiAssociation
 	appsyncCertDomain := getCertDomain(t)
 
@@ -25,15 +23,15 @@ func testAccDomainNameAPIAssociation_basic(t *testing.T) {
 	resourceName := "aws_appsync_domain_name_api_association.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, appsync.EndpointsID),
-		ProviderFactories: acctest.FactoriesAlternate(&providers),
-		CheckDestroy:      testAccCheckDomainNameApiAssociationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, appsync.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
+		CheckDestroy:             testAccCheckDomainNameAPIAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainNameAPIAssociationConfig_basic(appsyncCertDomain, rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainNameApiAssociationExists(resourceName, &association),
+					testAccCheckDomainNameAPIAssociationExists(resourceName, &association),
 					resource.TestCheckResourceAttrPair(resourceName, "domain_name", "aws_appsync_domain_name.test", "domain_name"),
 					resource.TestCheckResourceAttrPair(resourceName, "api_id", "aws_appsync_graphql_api.test", "id"),
 				),
@@ -46,7 +44,7 @@ func testAccDomainNameAPIAssociation_basic(t *testing.T) {
 			{
 				Config: testAccDomainNameAPIAssociationConfig_updated(appsyncCertDomain, rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainNameApiAssociationExists(resourceName, &association),
+					testAccCheckDomainNameAPIAssociationExists(resourceName, &association),
 					resource.TestCheckResourceAttrPair(resourceName, "domain_name", "aws_appsync_domain_name.test", "domain_name"),
 					resource.TestCheckResourceAttrPair(resourceName, "api_id", "aws_appsync_graphql_api.test2", "id"),
 				),
@@ -57,23 +55,22 @@ func testAccDomainNameAPIAssociation_basic(t *testing.T) {
 
 func testAccDomainNameAPIAssociation_disappears(t *testing.T) {
 	var association appsync.ApiAssociation
-	var providers []*schema.Provider
 	appsyncCertDomain := getCertDomain(t)
 
 	rName := sdkacctest.RandString(8)
 	resourceName := "aws_appsync_domain_name_api_association.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
-		ErrorCheck:        acctest.ErrorCheck(t, appsync.EndpointsID),
-		ProviderFactories: acctest.FactoriesAlternate(&providers),
-		CheckDestroy:      testAccCheckDomainNameApiAssociationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, appsync.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
+		CheckDestroy:             testAccCheckDomainNameAPIAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainNameAPIAssociationConfig_basic(appsyncCertDomain, rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainNameApiAssociationExists(resourceName, &association),
-					acctest.CheckResourceDisappears(acctest.Provider, tfappsync.ResourceDomainNameApiAssociation(), resourceName),
+					testAccCheckDomainNameAPIAssociationExists(resourceName, &association),
+					acctest.CheckResourceDisappears(acctest.Provider, tfappsync.ResourceDomainNameAPIAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -81,14 +78,14 @@ func testAccDomainNameAPIAssociation_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckDomainNameApiAssociationDestroy(s *terraform.State) error {
+func testAccCheckDomainNameAPIAssociationDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncConn
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_appsync_domain_name" {
 			continue
 		}
 
-		association, err := tfappsync.FindDomainNameApiAssociationByID(conn, rs.Primary.ID)
+		association, err := tfappsync.FindDomainNameAPIAssociationByID(conn, rs.Primary.ID)
 		if err == nil {
 			if tfawserr.ErrCodeEquals(err, appsync.ErrCodeNotFoundException) {
 				return nil
@@ -101,21 +98,19 @@ func testAccCheckDomainNameApiAssociationDestroy(s *terraform.State) error {
 		}
 
 		return nil
-
 	}
 	return nil
 }
 
-func testAccCheckDomainNameApiAssociationExists(resourceName string, DomainNameApiAssociation *appsync.ApiAssociation) resource.TestCheckFunc {
+func testAccCheckDomainNameAPIAssociationExists(resourceName string, DomainNameAPIAssociation *appsync.ApiAssociation) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
 			return fmt.Errorf("Appsync Domain Name Not found in state: %s", resourceName)
 		}
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncConn
 
-		association, err := tfappsync.FindDomainNameApiAssociationByID(conn, rs.Primary.ID)
+		association, err := tfappsync.FindDomainNameAPIAssociationByID(conn, rs.Primary.ID)
 		if err != nil {
 			return err
 		}
@@ -124,7 +119,7 @@ func testAccCheckDomainNameApiAssociationExists(resourceName string, DomainNameA
 			return fmt.Errorf("Appsync Domain Name %q not found", rs.Primary.ID)
 		}
 
-		*DomainNameApiAssociation = *association
+		*DomainNameAPIAssociation = *association
 
 		return nil
 	}

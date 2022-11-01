@@ -16,13 +16,13 @@ func TestAccImageBuilderDistributionConfigurationsDataSource_filter(t *testing.T
 	resourceName := "aws_imagebuilder_distribution_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, imagebuilder.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDistributionConfigurationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, imagebuilder.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDistributionConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfigDistributionConfigurations_filter(rName),
+				Config: testAccDistributionConfigurationsDataSourceConfig_filter(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "arns.#", "1"),
 					resource.TestCheckResourceAttr(dataSourceName, "names.#", "1"),
@@ -34,7 +34,7 @@ func TestAccImageBuilderDistributionConfigurationsDataSource_filter(t *testing.T
 	})
 }
 
-func testAccConfigDistributionConfigurations_filter(rName string) string {
+func testAccDistributionConfigurationsDataSourceConfig_filter(rName string) string {
 	return fmt.Sprintf(`
 data "aws_region" "current" {}
 

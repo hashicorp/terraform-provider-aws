@@ -24,13 +24,13 @@ func TestAccDirectConnectBGPPeer_basic(t *testing.T) {
 	bgpAsn := sdkacctest.RandIntRange(64512, 65534)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, directconnect.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckBGPPeerDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, directconnect.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBGPPeerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDxBgpPeerConfig(vifId, bgpAsn),
+				Config: testAccBGPPeerConfig_basic(vifId, bgpAsn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBGPPeerExists("aws_dx_bgp_peer.foo"),
 					resource.TestCheckResourceAttr("aws_dx_bgp_peer.foo", "address_family", "ipv6"),
@@ -77,7 +77,7 @@ func testAccCheckBGPPeerExists(name string) resource.TestCheckFunc {
 	}
 }
 
-func testAccDxBgpPeerConfig(vifId string, bgpAsn int) string {
+func testAccBGPPeerConfig_basic(vifId string, bgpAsn int) string {
 	return fmt.Sprintf(`
 resource "aws_dx_bgp_peer" "foo" {
   virtual_interface_id = "%s"

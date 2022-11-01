@@ -2,10 +2,12 @@
 package batch
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/batch"
+	"github.com/aws/aws-sdk-go/service/batch/batchiface"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -15,8 +17,11 @@ import (
 // This function will optimise the handling over ListTags, if possible.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func GetTag(conn *batch.Batch, identifier string, key string) (*string, error) {
-	listTags, err := ListTags(conn, identifier)
+func GetTag(conn batchiface.BatchAPI, identifier string, key string) (*string, error) {
+	return GetTagWithContext(context.Background(), conn, identifier, key)
+}
+func GetTagWithContext(ctx context.Context, conn batchiface.BatchAPI, identifier string, key string) (*string, error) {
+	listTags, err := ListTagsWithContext(ctx, conn, identifier)
 
 	if err != nil {
 		return nil, err
@@ -32,12 +37,16 @@ func GetTag(conn *batch.Batch, identifier string, key string) (*string, error) {
 // ListTags lists batch service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(conn *batch.Batch, identifier string) (tftags.KeyValueTags, error) {
+func ListTags(conn batchiface.BatchAPI, identifier string) (tftags.KeyValueTags, error) {
+	return ListTagsWithContext(context.Background(), conn, identifier)
+}
+
+func ListTagsWithContext(ctx context.Context, conn batchiface.BatchAPI, identifier string) (tftags.KeyValueTags, error) {
 	input := &batch.ListTagsForResourceInput{
 		ResourceArn: aws.String(identifier),
 	}
 
-	output, err := conn.ListTagsForResource(input)
+	output, err := conn.ListTagsForResourceWithContext(ctx, input)
 
 	if err != nil {
 		return tftags.New(nil), err
@@ -61,7 +70,10 @@ func KeyValueTags(tags map[string]*string) tftags.KeyValueTags {
 // UpdateTags updates batch service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(conn *batch.Batch, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+func UpdateTags(conn batchiface.BatchAPI, identifier string, oldTags interface{}, newTags interface{}) error {
+	return UpdateTagsWithContext(context.Background(), conn, identifier, oldTags, newTags)
+}
+func UpdateTagsWithContext(ctx context.Context, conn batchiface.BatchAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
 	oldTags := tftags.New(oldTagsMap)
 	newTags := tftags.New(newTagsMap)
 
@@ -71,10 +83,10 @@ func UpdateTags(conn *batch.Batch, identifier string, oldTagsMap interface{}, ne
 			TagKeys:     aws.StringSlice(removedTags.IgnoreAWS().Keys()),
 		}
 
-		_, err := conn.UntagResource(input)
+		_, err := conn.UntagResourceWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
+			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -84,10 +96,10 @@ func UpdateTags(conn *batch.Batch, identifier string, oldTagsMap interface{}, ne
 			Tags:        Tags(updatedTags.IgnoreAWS()),
 		}
 
-		_, err := conn.TagResource(input)
+		_, err := conn.TagResourceWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
+			return fmt.Errorf("tagging resource (%s): %w", identifier, err)
 		}
 	}
 

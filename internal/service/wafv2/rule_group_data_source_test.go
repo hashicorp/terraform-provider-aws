@@ -17,16 +17,16 @@ func TestAccWAFV2RuleGroupDataSource_basic(t *testing.T) {
 	datasourceName := "data.aws_wafv2_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckScopeRegional(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, wafv2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckScopeRegional(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, wafv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccRuleGroupDataSource_NonExistent(name),
+				Config:      testAccRuleGroupDataSourceConfig_nonExistent(name),
 				ExpectError: regexp.MustCompile(`WAFv2 RuleGroup not found`),
 			},
 			{
-				Config: testAccRuleGroupDataSource_Name(name),
+				Config: testAccRuleGroupDataSourceConfig_name(name),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
 					acctest.MatchResourceAttrRegionalARN(datasourceName, "arn", "wafv2", regexp.MustCompile(fmt.Sprintf("regional/rulegroup/%v/.+$", name))),
@@ -40,7 +40,7 @@ func TestAccWAFV2RuleGroupDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccRuleGroupDataSource_Name(name string) string {
+func testAccRuleGroupDataSourceConfig_name(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_rule_group" "test" {
   name     = "%s"
@@ -61,7 +61,7 @@ data "aws_wafv2_rule_group" "test" {
 `, name)
 }
 
-func testAccRuleGroupDataSource_NonExistent(name string) string {
+func testAccRuleGroupDataSourceConfig_nonExistent(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_rule_group" "test" {
   name     = "%s"

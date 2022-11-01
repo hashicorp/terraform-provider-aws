@@ -13,7 +13,7 @@ import (
 
 func DataSourceBrokerInstanceTypeOfferings() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourcemqBrokerInstanceTypeOfferingsRead,
+		Read: dataSourceBrokerInstanceTypeOfferingsRead,
 
 		Schema: map[string]*schema.Schema{
 			"engine_type": {
@@ -76,7 +76,7 @@ func DataSourceBrokerInstanceTypeOfferings() *schema.Resource {
 	}
 }
 
-func dataSourcemqBrokerInstanceTypeOfferingsRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceBrokerInstanceTypeOfferingsRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).MQConn
 
 	input := &mq.DescribeBrokerInstanceOptionsInput{}

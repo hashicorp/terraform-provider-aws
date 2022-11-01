@@ -23,13 +23,13 @@ func TestAccNeptuneClusterEndpoint_basic(t *testing.T) {
 	resourceName := "aws_neptune_cluster_endpoint.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, neptune.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckClusterEndpointDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, neptune.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterEndpointConfig(rName),
+				Config: testAccClusterEndpointConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterEndpointExists(resourceName, &dbCluster),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "rds", regexp.MustCompile(`cluster-endpoint:.+`)),
@@ -60,13 +60,13 @@ func TestAccNeptuneClusterEndpoint_tags(t *testing.T) {
 	resourceName := "aws_neptune_cluster_endpoint.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, neptune.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckClusterEndpointDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, neptune.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterEndpointTags1Config(rName, "key1", "value1"),
+				Config: testAccClusterEndpointConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterEndpointExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -79,7 +79,7 @@ func TestAccNeptuneClusterEndpoint_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccClusterEndpointTags2Config(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccClusterEndpointConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterEndpointExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -88,7 +88,7 @@ func TestAccNeptuneClusterEndpoint_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccClusterEndpointTags1Config(rName, "key2", "value2"),
+				Config: testAccClusterEndpointConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterEndpointExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -105,13 +105,13 @@ func TestAccNeptuneClusterEndpoint_disappears(t *testing.T) {
 	resourceName := "aws_neptune_cluster_endpoint.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, neptune.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckClusterEndpointDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, neptune.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterEndpointConfig(rName),
+				Config: testAccClusterEndpointConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterEndpointExists(resourceName, &dbCluster),
 					acctest.CheckResourceDisappears(acctest.Provider, tfneptune.ResourceClusterEndpoint(), resourceName),
@@ -128,13 +128,13 @@ func TestAccNeptuneClusterEndpoint_Disappears_cluster(t *testing.T) {
 	resourceName := "aws_neptune_cluster_endpoint.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, neptune.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckClusterEndpointDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, neptune.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterEndpointConfig(rName),
+				Config: testAccClusterEndpointConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterEndpointExists(resourceName, &dbCluster),
 					acctest.CheckResourceDisappears(acctest.Provider, tfneptune.ResourceCluster(), "aws_neptune_cluster.test"),
@@ -215,7 +215,7 @@ resource "aws_neptune_cluster" "test" {
 `, rName))
 }
 
-func testAccClusterEndpointConfig(rName string) string {
+func testAccClusterEndpointConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccClusterEndpointBaseConfig(rName), fmt.Sprintf(`
 resource "aws_neptune_cluster_endpoint" "test" {
   cluster_identifier          = aws_neptune_cluster.test.cluster_identifier
@@ -225,7 +225,7 @@ resource "aws_neptune_cluster_endpoint" "test" {
 `, rName))
 }
 
-func testAccClusterEndpointTags1Config(rName, tagKey1, tagValue1 string) string {
+func testAccClusterEndpointConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(testAccClusterEndpointBaseConfig(rName), fmt.Sprintf(`
 resource "aws_neptune_cluster_endpoint" "test" {
   cluster_identifier          = aws_neptune_cluster.test.cluster_identifier
@@ -239,7 +239,7 @@ resource "aws_neptune_cluster_endpoint" "test" {
 `, rName, tagKey1, tagValue1))
 }
 
-func testAccClusterEndpointTags2Config(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccClusterEndpointConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return acctest.ConfigCompose(testAccClusterEndpointBaseConfig(rName), fmt.Sprintf(`
 resource "aws_neptune_cluster_endpoint" "test" {
   cluster_identifier          = aws_neptune_cluster.test.cluster_identifier

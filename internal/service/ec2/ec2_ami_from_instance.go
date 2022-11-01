@@ -25,11 +25,12 @@ func ResourceAMIFromInstance() *schema.Resource {
 		Delete: resourceAMIDelete,
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(AWSAMIRetryTimeout),
-			Update: schema.DefaultTimeout(AWSAMIRetryTimeout),
-			Delete: schema.DefaultTimeout(AMIDeleteRetryTimeout),
+			Create: schema.DefaultTimeout(amiRetryTimeout),
+			Update: schema.DefaultTimeout(amiRetryTimeout),
+			Delete: schema.DefaultTimeout(amiDeleteTimeout),
 		},
 
+		// Keep in sync with aws_ami's schema.
 		Schema: map[string]*schema.Schema{
 			"architecture": {
 				Type:     schema.TypeString,
@@ -157,6 +158,10 @@ func ResourceAMIFromInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"imds_support": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"kernel_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -218,6 +223,10 @@ func ResourceAMIFromInstance() *schema.Resource {
 			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
+			"tpm_support": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"usage_operation": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -244,20 +253,20 @@ func resourceAMIFromInstanceCreate(d *schema.ResourceData, meta interface{}) err
 		InstanceId:        aws.String(instanceID),
 		Name:              aws.String(name),
 		NoReboot:          aws.Bool(d.Get("snapshot_without_reboot").(bool)),
-		TagSpecifications: ec2TagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeImage),
+		TagSpecifications: tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeImage),
 	}
 
 	output, err := conn.CreateImage(input)
 
 	if err != nil {
-		return fmt.Errorf("error creating EC2 AMI (%s) from EC2 Instance (%s): %w", name, instanceID, err)
+		return fmt.Errorf("creating EC2 AMI (%s) from EC2 Instance (%s): %w", name, instanceID, err)
 	}
 
 	d.SetId(aws.StringValue(output.ImageId))
 	d.Set("manage_ebs_snapshots", true)
 
 	if _, err := WaitImageAvailable(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return fmt.Errorf("error waiting for EC2 AMI (%s) create: %w", d.Id(), err)
+		return fmt.Errorf("waiting for EC2 AMI (%s) create: %w", d.Id(), err)
 	}
 
 	if v, ok := d.GetOk("deprecation_time"); ok {

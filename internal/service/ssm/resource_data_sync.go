@@ -134,7 +134,6 @@ func resourceResourceDataSyncDelete(d *schema.ResourceData, meta interface{}) er
 	if tfawserr.ErrCodeEquals(err, ssm.ErrCodeResourceDataSyncNotFoundException) {
 		return nil
 	}
-
 	if err != nil {
 		return fmt.Errorf("error deleting SSM Resource Data Sync (%s): %w", d.Id(), err)
 	}
@@ -163,11 +162,9 @@ func FindResourceDataSyncItem(conn *ssm.SSM, name string) (*ssm.ResourceDataSync
 	if err != nil {
 		return nil, err
 	}
-
 	if result == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, &resource.NotFoundError{}
 	}
-
 	return result, nil
 }
 

@@ -2,6 +2,7 @@ package ec2
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -14,6 +15,10 @@ import (
 func DataSourceVPCPeeringConnection() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourceVPCPeeringConnectionRead,
+
+		Timeouts: &schema.ResourceTimeout{
+			Read: schema.DefaultTimeout(20 * time.Minute),
+		},
 
 		Schema: map[string]*schema.Schema{
 			"accepter": {
@@ -186,13 +191,13 @@ func dataSourceVPCPeeringConnectionRead(d *schema.ResourceData, meta interface{}
 	}
 
 	if vpcPeeringConnection.AccepterVpcInfo.PeeringOptions != nil {
-		if err := d.Set("accepter", flattenVpcPeeringConnectionOptionsDescription(vpcPeeringConnection.AccepterVpcInfo.PeeringOptions)); err != nil {
+		if err := d.Set("accepter", flattenVPCPeeringConnectionOptionsDescription(vpcPeeringConnection.AccepterVpcInfo.PeeringOptions)); err != nil {
 			return fmt.Errorf("error setting accepter: %w", err)
 		}
 	}
 
 	if vpcPeeringConnection.RequesterVpcInfo.PeeringOptions != nil {
-		if err := d.Set("requester", flattenVpcPeeringConnectionOptionsDescription(vpcPeeringConnection.RequesterVpcInfo.PeeringOptions)); err != nil {
+		if err := d.Set("requester", flattenVPCPeeringConnectionOptionsDescription(vpcPeeringConnection.RequesterVpcInfo.PeeringOptions)); err != nil {
 			return fmt.Errorf("error setting requester: %w", err)
 		}
 	}

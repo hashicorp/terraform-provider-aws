@@ -90,6 +90,12 @@ func ResourceImageRecipe() *schema.Resource {
 										ForceNew:     true,
 										ValidateFunc: validation.StringLenBetween(1, 1024),
 									},
+									"throughput": {
+										Type:         schema.TypeInt,
+										Optional:     true,
+										ForceNew:     true,
+										ValidateFunc: validation.IntBetween(125, 1000),
+									},
 									"volume_size": {
 										Type:         schema.TypeInt,
 										Optional:     true,
@@ -132,6 +138,7 @@ func ResourceImageRecipe() *schema.Resource {
 						"component_arn": {
 							Type:         schema.TypeString,
 							Required:     true,
+							ForceNew:     true,
 							ValidateFunc: verify.ValidARN,
 						},
 						"parameter": {
@@ -142,11 +149,13 @@ func ResourceImageRecipe() *schema.Resource {
 									"name": {
 										Type:         schema.TypeString,
 										Required:     true,
+										ForceNew:     true,
 										ValidateFunc: validation.StringLenBetween(1, 256),
 									},
 									"value": {
 										Type:     schema.TypeString,
 										Required: true,
+										ForceNew: true,
 									},
 								},
 							},
@@ -161,6 +170,7 @@ func ResourceImageRecipe() *schema.Resource {
 			"description": {
 				Type:         schema.TypeString,
 				Optional:     true,
+				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 1024),
 			},
 			"name": {
@@ -194,6 +204,7 @@ func ResourceImageRecipe() *schema.Resource {
 						"uninstall_after_build": {
 							Type:     schema.TypeBool,
 							Required: true,
+							ForceNew: true,
 						},
 					},
 				},
@@ -515,6 +526,10 @@ func expandEBSInstanceBlockDeviceSpecification(tfMap map[string]interface{}) *im
 		apiObject.SnapshotId = aws.String(v)
 	}
 
+	if v, ok := tfMap["throughput"].(int); ok && v != 0 {
+		apiObject.Throughput = aws.Int64(int64(v))
+	}
+
 	if v, ok := tfMap["volume_size"].(int); ok && v != 0 {
 		apiObject.VolumeSize = aws.Int64(int64(v))
 	}
@@ -691,6 +706,10 @@ func flattenEBSInstanceBlockDeviceSpecification(apiObject *imagebuilder.EbsInsta
 
 	if v := apiObject.SnapshotId; v != nil {
 		tfMap["snapshot_id"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.Throughput; v != nil {
+		tfMap["throughput"] = aws.Int64Value(v)
 	}
 
 	if v := apiObject.VolumeSize; v != nil {

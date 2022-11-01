@@ -1,19 +1,19 @@
 package route53
 
 const (
-	Route53TrafficPolicyDocEndpointValue      = "value"
-	Route53TrafficPolicyDocEndpointCloudfront = "cloudfront"
-	Route53TrafficPolicyDocEndpointElastic    = "elastic-load-balancer"
-	Route53TrafficPolicyDocEndpointS3         = "s3-website"
+	trafficPolicyDocEndpointValue      = "value"
+	trafficPolicyDocEndpointCloudFront = "cloudfront"
+	trafficPolicyDocEndpointElastic    = "elastic-load-balancer"
+	trafficPolicyDocEndpointS3         = "s3-website"
 )
 
 // TrafficPolicyDocEndpointType_values returns all elements of the endpoints types
 func TrafficPolicyDocEndpointType_values() []string {
 	return []string{
-		Route53TrafficPolicyDocEndpointValue,
-		Route53TrafficPolicyDocEndpointCloudfront,
-		Route53TrafficPolicyDocEndpointElastic,
-		Route53TrafficPolicyDocEndpointS3,
+		trafficPolicyDocEndpointValue,
+		trafficPolicyDocEndpointCloudFront,
+		trafficPolicyDocEndpointElastic,
+		trafficPolicyDocEndpointS3,
 	}
 }
 
@@ -37,7 +37,7 @@ type TrafficPolicyRule struct {
 	Primary               *TrafficPolicyFailoverRule           `json:",omitempty"`
 	Secondary             *TrafficPolicyFailoverRule           `json:",omitempty"`
 	Locations             []*TrafficPolicyGeolocationRule      `json:",omitempty"`
-	GeoProximityLocations []*TrafficPolicyGeoproximityRule     `json:",omitempty"`
+	GeoProximityLocations []*TrafficPolicyGeoproximityRule     `json:"GeoproximityLocations,omitempty"`
 	Regions               []*TrafficPolicyLatencyRule          `json:",omitempty"`
 	Items                 []*TrafficPolicyMultiValueAnswerRule `json:",omitempty"`
 }

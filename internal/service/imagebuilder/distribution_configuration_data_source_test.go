@@ -16,13 +16,13 @@ func TestAccImageBuilderDistributionConfigurationDataSource_arn(t *testing.T) {
 	resourceName := "aws_imagebuilder_distribution_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, imagebuilder.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckDistributionConfigurationDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, imagebuilder.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDistributionConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDistributionConfigurationARNDataSourceConfig(rName),
+				Config: testAccDistributionConfigurationDataSourceConfig_arn(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "date_created", resourceName, "date_created"),
@@ -35,6 +35,16 @@ func TestAccImageBuilderDistributionConfigurationDataSource_arn(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "distribution.0.container_distribution_configuration.0.target_repository.#", resourceName, "distribution.0.container_distribution_configuration.0.target_repository.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "distribution.0.container_distribution_configuration.0.target_repository.0.repository_name", resourceName, "distribution.0.container_distribution_configuration.0.target_repository.0.repository_name"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "distribution.0.container_distribution_configuration.0.target_repository.0.service", resourceName, "distribution.0.container_distribution_configuration.0.target_repository.0.service"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "distribution.0.fast_launch_configuration.#", resourceName, "distribution.0.fast_launch_configuration.#"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "distribution.0.fast_launch_configuration.0.account_id", resourceName, "distribution.0.fast_launch_configuration.0.account_id"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "distribution.0.fast_launch_configuration.0.enabled", resourceName, "distribution.0.fast_launch_configuration.0.enabled"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "distribution.0.fast_launch_configuration.0.launch_template.#", resourceName, "distribution.0.fast_launch_configuration.0.launch_template.#"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "distribution.0.fast_launch_configuration.0.launch_template.0.launch_template_id", resourceName, "distribution.0.fast_launch_configuration.0.launch_template.0.launch_template_id"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "distribution.0.fast_launch_configuration.0.launch_template.0.launch_template_name", resourceName, "distribution.0.fast_launch_configuration.0.launch_template.0.launch_template_name"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "distribution.0.fast_launch_configuration.0.launch_template.0.launch_template_version", resourceName, "distribution.0.fast_launch_configuration.0.launch_template.0.launch_template_version"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "distribution.0.fast_launch_configuration.0.max_parallel_launches", resourceName, "distribution.0.fast_launch_configuration.0.max_parallel_launches"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "distribution.0.fast_launch_configuration.0.snapshot_configuration.#", resourceName, "distribution.0.fast_launch_configuration.0.snapshot_configuration.#"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "distribution.0.fast_launch_configuration.0.snapshot_configuration.0.target_resource_count", resourceName, "distribution.0.fast_launch_configuration.0.snapshot_configuration.0.target_resource_count"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "distribution.0.launch_template_configuration.#", resourceName, "distribution.0.launch_template_configuration.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "distribution.0.launch_template_configuration.0.default", resourceName, "distribution.0.launch_template_configuration.0.default"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "distribution.0.launch_template_configuration.0.launch_template_id", resourceName, "distribution.0.launch_template_configuration.0.launch_template_id"),
@@ -47,7 +57,7 @@ func TestAccImageBuilderDistributionConfigurationDataSource_arn(t *testing.T) {
 	})
 }
 
-func testAccDistributionConfigurationARNDataSourceConfig(rName string) string {
+func testAccDistributionConfigurationDataSourceConfig_arn(rName string) string {
 	return fmt.Sprintf(`
 data "aws_region" "current" {}
 
@@ -77,6 +87,22 @@ resource "aws_imagebuilder_distribution_configuration" "test" {
       account_id         = data.aws_caller_identity.current.account_id
       default            = false
       launch_template_id = aws_launch_template.test.id
+    }
+
+    fast_launch_configuration {
+      account_id = data.aws_caller_identity.current.account_id
+      enabled    = true
+
+      launch_template {
+        launch_template_id      = aws_launch_template.test.id
+        launch_template_version = "1"
+      }
+
+      max_parallel_launches = 1
+
+      snapshot_configuration {
+        target_resource_count = 1
+      }
     }
 
     region = data.aws_region.current.name

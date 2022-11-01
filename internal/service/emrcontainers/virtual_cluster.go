@@ -242,13 +242,13 @@ func expandContainerInfo(tfMap map[string]interface{}) *emrcontainers.ContainerI
 	apiObject := &emrcontainers.ContainerInfo{}
 
 	if v, ok := tfMap["eks_info"].([]interface{}); ok && len(v) > 0 {
-		apiObject.EksInfo = expandEksInfo(v[0].(map[string]interface{}))
+		apiObject.EksInfo = expandEKSInfo(v[0].(map[string]interface{}))
 	}
 
 	return apiObject
 }
 
-func expandEksInfo(tfMap map[string]interface{}) *emrcontainers.EksInfo {
+func expandEKSInfo(tfMap map[string]interface{}) *emrcontainers.EksInfo {
 	if tfMap == nil {
 		return nil
 	}
@@ -292,13 +292,13 @@ func flattenContainerInfo(apiObject *emrcontainers.ContainerInfo) map[string]int
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.EksInfo; v != nil {
-		tfMap["eks_info"] = []interface{}{flattenEksInfo(v)}
+		tfMap["eks_info"] = []interface{}{flattenEKSInfo(v)}
 	}
 
 	return tfMap
 }
 
-func flattenEksInfo(apiObject *emrcontainers.EksInfo) map[string]interface{} {
+func flattenEKSInfo(apiObject *emrcontainers.EksInfo) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}

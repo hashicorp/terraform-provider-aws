@@ -288,14 +288,14 @@ func resourceFilterDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-const guardDutyFilterIDSeparator = ":"
+const filterIDSeparator = ":"
 
 func filterCreateID(detectorID, filterName string) string {
-	return detectorID + guardDutyFilterIDSeparator + filterName
+	return detectorID + filterIDSeparator + filterName
 }
 
 func FilterParseID(importedId string) (string, string, error) {
-	parts := strings.Split(importedId, guardDutyFilterIDSeparator)
+	parts := strings.Split(importedId, filterIDSeparator)
 	if len(parts) != 2 {
 		return "", "", fmt.Errorf("GuardDuty filter ID must be of the form <Detector ID>:<Filter name>. Got %q.", importedId)
 	}

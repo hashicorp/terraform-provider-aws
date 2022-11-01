@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -587,6 +588,11 @@ func ResourceDistribution() *schema.Resource {
 								},
 							},
 						},
+						"origin_access_control_id": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.NoZeroValues,
+						},
 						"origin_id": {
 							Type:         schema.TypeString,
 							Required:     true,
@@ -882,13 +888,13 @@ func resourceDistributionRead(d *schema.ResourceData, meta interface{}) error {
 
 	resp, err := conn.GetDistribution(params)
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchDistribution) {
-		names.LogNotFoundRemoveState(names.CloudFront, names.ErrActionReading, ResDistribution, d.Id())
+		create.LogNotFoundRemoveState(names.CloudFront, create.ErrActionReading, ResNameDistribution, d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return names.Error(names.CloudFront, names.ErrActionReading, ResDistribution, d.Id(), err)
+		return create.Error(names.CloudFront, create.ErrActionReading, ResNameDistribution, d.Id(), err)
 	}
 
 	// Update attributes from DistributionConfig
@@ -898,10 +904,10 @@ func resourceDistributionRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// Update other attributes outside of DistributionConfig
-	if err := d.Set("trusted_key_groups", flattenCloudfrontActiveTrustedKeyGroups(resp.Distribution.ActiveTrustedKeyGroups)); err != nil {
+	if err := d.Set("trusted_key_groups", flattenActiveTrustedKeyGroups(resp.Distribution.ActiveTrustedKeyGroups)); err != nil {
 		return fmt.Errorf("error setting trusted_key_groups: %w", err)
 	}
-	if err := d.Set("trusted_signers", flattenCloudfrontActiveTrustedSigners(resp.Distribution.ActiveTrustedSigners)); err != nil {
+	if err := d.Set("trusted_signers", flattenActiveTrustedSigners(resp.Distribution.ActiveTrustedSigners)); err != nil {
 		return fmt.Errorf("error setting trusted_signers: %w", err)
 	}
 	d.Set("status", resp.Distribution.Status)
@@ -914,9 +920,9 @@ func resourceDistributionRead(d *schema.ResourceData, meta interface{}) error {
 	// override hosted_zone_id from flattenDistributionConfig
 	region := meta.(*conns.AWSClient).Region
 	if v, ok := endpoints.PartitionForRegion(endpoints.DefaultPartitions(), region); ok && v.ID() == endpoints.AwsCnPartitionID {
-		d.Set("hosted_zone_id", cloudFrontCNRoute53ZoneID)
+		d.Set("hosted_zone_id", cnRoute53ZoneID)
 	} else {
-		d.Set("hosted_zone_id", cloudFrontRoute53ZoneID)
+		d.Set("hosted_zone_id", route53ZoneID)
 	}
 
 	tags, err := ListTags(conn, d.Get("arn").(string))

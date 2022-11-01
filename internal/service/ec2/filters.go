@@ -1,12 +1,15 @@
 package ec2
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
 // BuildTagFilterList takes a []*ec2.Tag and produces a []*ec2.Filter that
@@ -26,9 +29,9 @@ import (
 // In Terraform configuration this would then look like this, to constrain
 // results by name:
 //
-// tags {
-//   Name = "my-awesome-subnet"
-// }
+//	tags {
+//	  Name = "my-awesome-subnet"
+//	}
 func BuildTagFilterList(tags []*ec2.Tag) []*ec2.Filter {
 	filters := make([]*ec2.Filter, len(tags))
 
@@ -42,7 +45,7 @@ func BuildTagFilterList(tags []*ec2.Tag) []*ec2.Filter {
 	return filters
 }
 
-// ec2AttributeFiltersFromMultimap returns an array of EC2 Filter objects to be used when listing resources.
+// attributeFiltersFromMultimap returns an array of EC2 Filter objects to be used when listing resources.
 //
 // The keys of the specified map are the resource attributes names used in the filter - see the documentation
 // for the relevant "Describe" action for a list of the valid names. The resource must match all the filters
@@ -50,7 +53,7 @@ func BuildTagFilterList(tags []*ec2.Tag) []*ec2.Filter {
 // The values of the specified map are lists of resource attribute values used in the filter. The resource can
 // match any of the filter values to be included in the result.
 // See https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Using_Filtering.html#Filtering_Resources_CLI for more details.
-func ec2AttributeFiltersFromMultimap(m map[string][]string) []*ec2.Filter {
+func attributeFiltersFromMultimap(m map[string][]string) []*ec2.Filter {
 	if len(m) == 0 {
 		return nil
 	}
@@ -60,25 +63,6 @@ func ec2AttributeFiltersFromMultimap(m map[string][]string) []*ec2.Filter {
 		filters = append(filters, &ec2.Filter{
 			Name:   aws.String(k),
 			Values: aws.StringSlice(v),
-		})
-	}
-
-	return filters
-}
-
-// ec2TagFiltersFromMap returns an array of EC2 Filter objects to be used when listing resources.
-//
-// The filters represent exact matches for all the resource tags in the given key/value map.
-func ec2TagFiltersFromMap(m map[string]interface{}) []*ec2.Filter {
-	if len(m) == 0 {
-		return nil
-	}
-
-	filters := []*ec2.Filter{}
-	for _, tag := range Tags(tftags.New(m).IgnoreAWS()) {
-		filters = append(filters, &ec2.Filter{
-			Name:   aws.String(fmt.Sprintf("tag:%s", aws.StringValue(tag.Key))),
-			Values: []*string{tag.Value},
 		})
 	}
 
@@ -96,10 +80,10 @@ func ec2TagFiltersFromMap(m map[string]interface{}) []*ec2.Filter {
 // attributes or tags. In Terraform configuration, the custom filter blocks
 // then look like this:
 //
-// filter {
-//   name   = "availabilityZone"
-//   values = ["us-west-2a", "us-west-2b"]
-// }
+//	filter {
+//	  name   = "availabilityZone"
+//	  values = ["us-west-2a", "us-west-2b"]
+//	}
 func CustomFiltersSchema() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeSet,
@@ -120,6 +104,29 @@ func CustomFiltersSchema() *schema.Schema {
 			},
 		},
 	}
+}
+
+// CustomFiltersBlock is the Plugin Framework variant of CustomFiltersSchema.
+func CustomFiltersBlock() tfsdk.Block {
+	return tfsdk.Block{
+		Attributes: map[string]tfsdk.Attribute{
+			"name": {
+				Type:     types.StringType,
+				Required: true,
+			},
+			"values": {
+				Type:     types.SetType{ElemType: types.StringType},
+				Required: true,
+			},
+		},
+		NestingMode: tfsdk.BlockNestingModeSet,
+	}
+}
+
+// customFilterData represents a single configured filter.
+type customFilterData struct {
+	Name   types.String `tfsdk:"name"`
+	Values types.Set    `tfsdk:"values"`
 }
 
 // BuildCustomFilterList takes the set value extracted from a schema
@@ -151,6 +158,35 @@ func BuildCustomFilterList(filterSet *schema.Set) []*ec2.Filter {
 		filters[filterIdx] = &ec2.Filter{
 			Name:   &name,
 			Values: values,
+		}
+	}
+
+	return filters
+}
+
+func BuildCustomFilters(ctx context.Context, filterSet types.Set) []*ec2.Filter {
+	if filterSet.IsNull() || filterSet.IsUnknown() {
+		return nil
+	}
+
+	var filters []*ec2.Filter
+
+	for _, v := range filterSet.Elems {
+		var data customFilterData
+
+		if tfsdk.ValueAs(ctx, v, &data).HasError() {
+			continue
+		}
+
+		if data.Name.IsNull() || data.Name.IsUnknown() {
+			continue
+		}
+
+		if v := flex.ExpandFrameworkStringSet(ctx, data.Values); v != nil {
+			filters = append(filters, &ec2.Filter{
+				Name:   aws.String(data.Name.Value),
+				Values: v,
+			})
 		}
 	}
 

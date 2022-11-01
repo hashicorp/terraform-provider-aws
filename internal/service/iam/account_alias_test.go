@@ -41,13 +41,13 @@ func testAccAccountAlias_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, iam.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckAccountAliasDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAccountAliasDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAccountAliasConfig(rName),
+				Config: testAccAccountAliasConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAccountAliasExists(resourceName),
 				),
@@ -87,7 +87,6 @@ func testAccCheckAccountAliasDestroy(s *terraform.State) error {
 	}
 
 	return nil
-
 }
 
 func testAccCheckAccountAliasExists(n string) resource.TestCheckFunc {
@@ -118,7 +117,7 @@ func testAccCheckAccountAliasExists(n string) resource.TestCheckFunc {
 	}
 }
 
-func testAccAccountAliasConfig(rName string) string {
+func testAccAccountAliasConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_account_alias" "test" {
   account_alias = %[1]q

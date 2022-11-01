@@ -11,7 +11,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfmemorydb "github.com/hashicorp/terraform-provider-aws/internal/service/memorydb"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -22,13 +21,13 @@ func TestAccMemoryDBACL_basic(t *testing.T) {
 	resourceName := "aws_memorydb_acl.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, memorydb.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckACLDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, memorydb.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckACLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccACLConfig(rName, []string{user1}, []string{user1}),
+				Config: testAccACLConfig_basic(rName, []string{user1}, []string{user1}),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckACLExists(resourceName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "memorydb", "acl/"+rName),
@@ -54,13 +53,13 @@ func TestAccMemoryDBACL_disappears(t *testing.T) {
 	resourceName := "aws_memorydb_acl.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, memorydb.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckACLDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, memorydb.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckACLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccACLConfig(rName, nil, nil),
+				Config: testAccACLConfig_basic(rName, nil, nil),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckACLExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfmemorydb.ResourceACL(), resourceName),
@@ -75,16 +74,16 @@ func TestAccMemoryDBACL_nameGenerated(t *testing.T) {
 	resourceName := "aws_memorydb_acl.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, memorydb.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckACLDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, memorydb.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckACLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccACLConfig_withNoName(),
+				Config: testAccACLConfig_noName(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckACLExists(resourceName),
-					create.TestCheckResourceAttrNameGenerated(resourceName, "name"),
+					acctest.CheckResourceAttrNameGenerated(resourceName, "name"),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
 				),
 			},
@@ -96,16 +95,16 @@ func TestAccMemoryDBACL_namePrefix(t *testing.T) {
 	resourceName := "aws_memorydb_acl.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, memorydb.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckACLDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, memorydb.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckACLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccACLConfig_withNamePrefix("tftest-"),
+				Config: testAccACLConfig_namePrefix("tftest-"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckACLExists(resourceName),
-					create.TestCheckResourceAttrNameFromPrefix(resourceName, "name", "tftest-"),
+					acctest.CheckResourceAttrNameFromPrefix(resourceName, "name", "tftest-"),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", "tftest-"),
 				),
 			},
@@ -118,13 +117,13 @@ func TestAccMemoryDBACL_update_tags(t *testing.T) {
 	resourceName := "aws_memorydb_acl.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, memorydb.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckACLDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, memorydb.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckACLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccACLConfig_withTags0(rName),
+				Config: testAccACLConfig_tags0(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckACLExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -137,7 +136,7 @@ func TestAccMemoryDBACL_update_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccACLConfig_withTags2(rName, "Key1", "value1", "Key2", "value2"),
+				Config: testAccACLConfig_tags2(rName, "Key1", "value1", "Key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckACLExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -154,7 +153,7 @@ func TestAccMemoryDBACL_update_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccACLConfig_withTags1(rName, "Key1", "value1"),
+				Config: testAccACLConfig_tags1(rName, "Key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckACLExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -169,7 +168,7 @@ func TestAccMemoryDBACL_update_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccACLConfig_withTags0(rName),
+				Config: testAccACLConfig_tags0(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckACLExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -193,14 +192,14 @@ func TestAccMemoryDBACL_update_userNames(t *testing.T) {
 	resourceName := "aws_memorydb_acl.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, memorydb.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckACLDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, memorydb.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckACLDestroy,
 		Steps: []resource.TestStep{
 			{
 				// Empty ACL.
-				Config: testAccACLConfig(rName, []string{}, []string{}),
+				Config: testAccACLConfig_basic(rName, []string{}, []string{}),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckACLExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "user_names.#", "0"),
@@ -213,7 +212,7 @@ func TestAccMemoryDBACL_update_userNames(t *testing.T) {
 			},
 			{
 				// Adding users.
-				Config: testAccACLConfig(rName, []string{user1, user2}, []string{user1, user2}),
+				Config: testAccACLConfig_basic(rName, []string{user1, user2}, []string{user1, user2}),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckACLExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "user_names.#", "2"),
@@ -228,7 +227,7 @@ func TestAccMemoryDBACL_update_userNames(t *testing.T) {
 			},
 			{
 				// Removing and adding a user.
-				Config: testAccACLConfig(rName, []string{user1, user2, user3}, []string{user1, user3}),
+				Config: testAccACLConfig_basic(rName, []string{user1, user2, user3}, []string{user1, user3}),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckACLExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "user_names.#", "2"),
@@ -243,7 +242,7 @@ func TestAccMemoryDBACL_update_userNames(t *testing.T) {
 			},
 			{
 				// Removing a user.
-				Config: testAccACLConfig(rName, []string{user1, user2, user3}, []string{user1}),
+				Config: testAccACLConfig_basic(rName, []string{user1, user2, user3}, []string{user1}),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckACLExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "user_names.#", "1"),
@@ -256,7 +255,7 @@ func TestAccMemoryDBACL_update_userNames(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccACLConfig(rName, []string{user1, user2}, []string{user1, user2}),
+				Config: testAccACLConfig_basic(rName, []string{user1, user2}, []string{user1, user2}),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckACLExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "user_names.#", "2"),
@@ -271,7 +270,7 @@ func TestAccMemoryDBACL_update_userNames(t *testing.T) {
 			},
 			{
 				// Deleting a user before disassociating it.
-				Config: testAccACLConfig(rName, []string{user1}, []string{user1}),
+				Config: testAccACLConfig_basic(rName, []string{user1}, []string{user1}),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckACLExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "user_names.#", "1"),
@@ -326,11 +325,7 @@ func testAccCheckACLExists(n string) resource.TestCheckFunc {
 
 		_, err := tfmemorydb.FindACLByName(context.Background(), conn, rs.Primary.Attributes["name"])
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 
@@ -361,7 +356,7 @@ resource "aws_memorydb_user" "test" {
 `, userNames)
 }
 
-func testAccACLConfig(rName string, userNames []string, usersInACL []string) string {
+func testAccACLConfig_basic(rName string, userNames []string, usersInACL []string) string {
 	var userNamesInACL string
 	for i, userName := range usersInACL {
 		if i > 0 {
@@ -387,13 +382,13 @@ resource "aws_memorydb_acl" "test" {
 	)
 }
 
-func testAccACLConfig_withNoName() string {
+func testAccACLConfig_noName() string {
 	return `
 resource "aws_memorydb_acl" "test" {}
 `
 }
 
-func testAccACLConfig_withNamePrefix(namePrefix string) string {
+func testAccACLConfig_namePrefix(namePrefix string) string {
 	return fmt.Sprintf(`
 resource "aws_memorydb_acl" "test" {
   name_prefix = %[1]q
@@ -401,7 +396,7 @@ resource "aws_memorydb_acl" "test" {
 `, namePrefix)
 }
 
-func testAccACLConfig_withTags0(rName string) string {
+func testAccACLConfig_tags0(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_memorydb_acl" "test" {
   name = %[1]q
@@ -409,7 +404,7 @@ resource "aws_memorydb_acl" "test" {
 `, rName)
 }
 
-func testAccACLConfig_withTags1(rName, tagKey1, tagValue1 string) string {
+func testAccACLConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_memorydb_acl" "test" {
   name = %[1]q
@@ -421,7 +416,7 @@ resource "aws_memorydb_acl" "test" {
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccACLConfig_withTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccACLConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_memorydb_acl" "test" {
   name = %[1]q

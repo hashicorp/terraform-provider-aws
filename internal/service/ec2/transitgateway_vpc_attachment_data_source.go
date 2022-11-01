@@ -1,20 +1,24 @@
 package ec2
 
 import (
-	"errors"
 	"fmt"
-	"log"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func DataSourceTransitGatewayVPCAttachment() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourceTransitGatewayVPCAttachmentRead,
+
+		Timeouts: &schema.ResourceTimeout{
+			Read: schema.DefaultTimeout(20 * time.Minute),
+		},
 
 		Schema: map[string]*schema.Schema{
 			"appliance_mode_support": {
@@ -25,7 +29,7 @@ func DataSourceTransitGatewayVPCAttachment() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"filter": DataSourceFiltersSchema(),
+			"filter": CustomFiltersSchema(),
 			"id": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -63,56 +67,37 @@ func dataSourceTransitGatewayVPCAttachmentRead(d *schema.ResourceData, meta inte
 
 	input := &ec2.DescribeTransitGatewayVpcAttachmentsInput{}
 
-	if v, ok := d.GetOk("filter"); ok {
-		input.Filters = BuildFiltersDataSource(v.(*schema.Set))
+	input.Filters = append(input.Filters, BuildCustomFilterList(
+		d.Get("filter").(*schema.Set),
+	)...)
+
+	if len(input.Filters) == 0 {
+		// Don't send an empty filters list; the EC2 API won't accept it.
+		input.Filters = nil
 	}
 
 	if v, ok := d.GetOk("id"); ok {
-		input.TransitGatewayAttachmentIds = []*string{aws.String(v.(string))}
+		input.TransitGatewayAttachmentIds = aws.StringSlice([]string{v.(string)})
 	}
 
-	log.Printf("[DEBUG] Reading EC2 Transit Gateways: %s", input)
-	output, err := conn.DescribeTransitGatewayVpcAttachments(input)
+	transitGatewayVPCAttachment, err := FindTransitGatewayVPCAttachment(conn, input)
 
 	if err != nil {
-		return fmt.Errorf("error reading EC2 Transit Gateway Route Table: %w", err)
+		return tfresource.SingularDataSourceFindError("EC2 Transit Gateway VPC Attachment", err)
 	}
 
-	if output == nil || len(output.TransitGatewayVpcAttachments) == 0 {
-		return errors.New("error reading EC2 Transit Gateway Route Table: no results found")
+	d.SetId(aws.StringValue(transitGatewayVPCAttachment.TransitGatewayAttachmentId))
+	d.Set("appliance_mode_support", transitGatewayVPCAttachment.Options.ApplianceModeSupport)
+	d.Set("dns_support", transitGatewayVPCAttachment.Options.DnsSupport)
+	d.Set("ipv6_support", transitGatewayVPCAttachment.Options.Ipv6Support)
+	d.Set("subnet_ids", aws.StringValueSlice(transitGatewayVPCAttachment.SubnetIds))
+	d.Set("transit_gateway_id", transitGatewayVPCAttachment.TransitGatewayId)
+	d.Set("vpc_id", transitGatewayVPCAttachment.VpcId)
+	d.Set("vpc_owner_id", transitGatewayVPCAttachment.VpcOwnerId)
+
+	if err := d.Set("tags", KeyValueTags(transitGatewayVPCAttachment.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return fmt.Errorf("setting tags: %w", err)
 	}
-
-	if len(output.TransitGatewayVpcAttachments) > 1 {
-		return errors.New("error reading EC2 Transit Gateway Route Table: multiple results found, try adjusting search criteria")
-	}
-
-	transitGatewayVpcAttachment := output.TransitGatewayVpcAttachments[0]
-
-	if transitGatewayVpcAttachment == nil {
-		return errors.New("error reading EC2 Transit Gateway Route Table: empty result")
-	}
-
-	if transitGatewayVpcAttachment.Options == nil {
-		return fmt.Errorf("error reading EC2 Transit Gateway VPC Attachment (%s): missing options", d.Id())
-	}
-
-	d.Set("appliance_mode_support", transitGatewayVpcAttachment.Options.ApplianceModeSupport)
-	d.Set("dns_support", transitGatewayVpcAttachment.Options.DnsSupport)
-	d.Set("ipv6_support", transitGatewayVpcAttachment.Options.Ipv6Support)
-
-	if err := d.Set("subnet_ids", aws.StringValueSlice(transitGatewayVpcAttachment.SubnetIds)); err != nil {
-		return fmt.Errorf("error setting subnet_ids: %w", err)
-	}
-
-	if err := d.Set("tags", KeyValueTags(transitGatewayVpcAttachment.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
-	}
-
-	d.Set("transit_gateway_id", transitGatewayVpcAttachment.TransitGatewayId)
-	d.Set("vpc_id", transitGatewayVpcAttachment.VpcId)
-	d.Set("vpc_owner_id", transitGatewayVpcAttachment.VpcOwnerId)
-
-	d.SetId(aws.StringValue(transitGatewayVpcAttachment.TransitGatewayAttachmentId))
 
 	return nil
 }

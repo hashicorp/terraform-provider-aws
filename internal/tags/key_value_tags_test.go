@@ -2,6 +2,9 @@ package tags
 
 import (
 	"testing"
+
+	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
 func TestKeyValueTagsDefaultConfigGetTags(t *testing.T) {
@@ -291,7 +294,7 @@ func TestKeyValueTagsDefaultConfigTagsEqual(t *testing.T) {
 	}
 }
 
-func TestKeyValueTagsIgnoreAWS(t *testing.T) {
+func TestKeyValueTagsIgnoreAWS(t *testing.T) { // nosemgrep:ci.aws-in-func-name
 	testCases := []struct {
 		name string
 		tags KeyValueTags
@@ -689,7 +692,7 @@ func TestKeyValueTagsIgnorePrefixes(t *testing.T) {
 	}
 }
 
-func TestKeyValueTagsIgnoreRds(t *testing.T) {
+func TestKeyValueTagsIgnoreRDS(t *testing.T) {
 	testCases := []struct {
 		name string
 		tags KeyValueTags
@@ -738,7 +741,7 @@ func TestKeyValueTagsIgnoreRds(t *testing.T) {
 
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
-			got := testCase.tags.IgnoreRds()
+			got := testCase.tags.IgnoreRDS()
 
 			testKeyValueTagsVerifyMap(t, got.Map(), testCase.want)
 		})
@@ -2120,7 +2123,7 @@ func TestKeyValueTagsRemoveDefaultConfig(t *testing.T) {
 	}
 }
 
-func TestKeyValueTagsUrlEncode(t *testing.T) {
+func TestKeyValueTagsURLEncode(t *testing.T) {
 	testCases := []struct {
 		name string
 		tags KeyValueTags
@@ -2167,7 +2170,7 @@ func TestKeyValueTagsUrlEncode(t *testing.T) {
 
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
-			got := testCase.tags.UrlEncode()
+			got := testCase.tags.URLEncode()
 
 			if got != testCase.want {
 				t.Errorf("unexpected URL encoded value: %q", got)
@@ -2176,7 +2179,7 @@ func TestKeyValueTagsUrlEncode(t *testing.T) {
 	}
 }
 
-func TestKeyValueTagsUrlQueryString(t *testing.T) {
+func TestKeyValueTagsURLQueryString(t *testing.T) {
 	testCases := []struct {
 		name string
 		tags KeyValueTags
@@ -2223,7 +2226,7 @@ func TestKeyValueTagsUrlQueryString(t *testing.T) {
 
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
-			got := testCase.tags.UrlQueryString()
+			got := testCase.tags.URLQueryString()
 
 			if got != testCase.want {
 				t.Errorf("unexpected query string value: %q", got)
@@ -2266,6 +2269,11 @@ func TestNew(t *testing.T) {
 		{
 			name:   "empty_slice_interface",
 			source: []interface{}{},
+			want:   map[string]string{},
+		},
+		{
+			name:   "empty_typesMap",
+			source: types.Map{ElemType: types.StringType, Elems: map[string]attr.Value{}},
 			want:   map[string]string{},
 		},
 		{
@@ -2352,6 +2360,17 @@ func TestNew(t *testing.T) {
 			want: map[string]string{
 				"key1": "",
 				"key2": "",
+			},
+		},
+		{
+			name: "non_empty_typesMap",
+			source: types.Map{ElemType: types.StringType, Elems: map[string]attr.Value{
+				"key1": types.String{Value: ""},
+				"key2": types.String{Value: "value2"},
+			}},
+			want: map[string]string{
+				"key1": "",
+				"key2": "value2",
 			},
 		},
 	}

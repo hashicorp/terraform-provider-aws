@@ -16,13 +16,13 @@ func TestAccEKSClusterDataSource_basic(t *testing.T) {
 	resourceName := "aws_eks_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, eks.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckClusterDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, eks.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterDataSourceConfig_Basic(rName),
+				Config: testAccClusterDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceResourceName, "arn"),
 					resource.TestCheckResourceAttr(dataSourceResourceName, "certificate_authority.#", "1"),
@@ -38,6 +38,7 @@ func TestAccEKSClusterDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "kubernetes_network_config.#", dataSourceResourceName, "kubernetes_network_config.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "kubernetes_network_config.0.ip_family", dataSourceResourceName, "kubernetes_network_config.0.ip_family"),
 					resource.TestCheckResourceAttrPair(resourceName, "kubernetes_network_config.0.service_ipv4_cidr", dataSourceResourceName, "kubernetes_network_config.0.service_ipv4_cidr"),
+					resource.TestCheckResourceAttrPair(resourceName, "kubernetes_network_config.0.service_ipv6_cidr", dataSourceResourceName, "kubernetes_network_config.0.service_ipv6_cidr"),
 					resource.TestMatchResourceAttr(dataSourceResourceName, "platform_version", regexp.MustCompile(`^eks\.\d+$`)),
 					resource.TestCheckResourceAttrPair(resourceName, "role_arn", dataSourceResourceName, "role_arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "status", dataSourceResourceName, "status"),
@@ -57,8 +58,8 @@ func TestAccEKSClusterDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccClusterDataSourceConfig_Basic(rName string) string {
-	return acctest.ConfigCompose(testAccClusterConfig_Logging(rName, []string{"api", "audit"}), `
+func testAccClusterDataSourceConfig_basic(rName string) string {
+	return acctest.ConfigCompose(testAccClusterConfig_logging(rName, []string{"api", "audit"}), `
 data "aws_eks_cluster" "test" {
   name = aws_eks_cluster.test.name
 }

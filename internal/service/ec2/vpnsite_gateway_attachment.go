@@ -94,7 +94,7 @@ func resourceVPNGatewayAttachmentDelete(d *schema.ResourceData, meta interface{}
 		VpnGatewayId: aws.String(vpnGatewayID),
 	})
 
-	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidVpnGatewayAttachmentNotFound, ErrCodeInvalidVpnGatewayIDNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidVPNGatewayAttachmentNotFound, errCodeInvalidVPNGatewayIDNotFound) {
 		return nil
 	}
 

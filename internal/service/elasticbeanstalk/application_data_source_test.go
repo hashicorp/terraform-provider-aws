@@ -20,13 +20,13 @@ func TestAccElasticBeanstalkApplicationDataSource_basic(t *testing.T) {
 	resourceName := "aws_elastic_beanstalk_application.tftest"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, elasticbeanstalk.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckEKSClusterDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elasticbeanstalk.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEKSClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccApplicationDataSourceConfig_Basic(rName),
+				Config: testAccApplicationDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(dataSourceResourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "name", dataSourceResourceName, "name"),
@@ -41,14 +41,14 @@ func TestAccElasticBeanstalkApplicationDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccApplicationDataSourceConfig_Basic(rName string) string {
+func testAccApplicationDataSourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 %s
 
 data "aws_elastic_beanstalk_application" "test" {
   name = aws_elastic_beanstalk_application.tftest.name
 }
-`, testAccBeanstalkAppConfigWithMaxAge(rName))
+`, testAccApplicationConfig_maxAge(rName))
 }
 
 func testAccCheckEKSClusterDestroy(s *terraform.State) error {

@@ -155,7 +155,7 @@ func resourceMetricFilterRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("name", mf.FilterName)
 	d.Set("pattern", mf.FilterPattern)
 	if err := d.Set("metric_transformation", flattenMetricTransformations(mf.MetricTransformations)); err != nil {
-		return fmt.Errorf("error setting metric_transformation: %w", err)
+		return fmt.Errorf("setting metric_transformation: %w", err)
 	}
 
 	return nil
@@ -163,7 +163,6 @@ func resourceMetricFilterRead(d *schema.ResourceData, meta interface{}) error {
 
 func LookupMetricFilter(conn *cloudwatchlogs.CloudWatchLogs,
 	name, logGroupName string, nextToken *string) (*cloudwatchlogs.MetricFilter, error) {
-
 	input := cloudwatchlogs.DescribeMetricFiltersInput{
 		FilterNamePrefix: aws.String(name),
 		LogGroupName:     aws.String(logGroupName),

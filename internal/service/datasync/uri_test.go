@@ -109,17 +109,17 @@ func TestSubdirectoryFromLocationURI(t *testing.T) {
 			ExpectedSubdirectory: "/my-folder-1/my-folder-2",
 		},
 		{
-			TestName:             "Hdfs URI top level",
+			TestName:             "HDFS URI top level",
 			InputURI:             "hdfs://192.168.1.1:80/",
 			ExpectedSubdirectory: "/",
 		},
 		{
-			TestName:             "Hdfs URI one level",
+			TestName:             "HDFS URI one level",
 			InputURI:             "hdfs://192.168.1.1:80/my-folder-1/",
 			ExpectedSubdirectory: "/my-folder-1/",
 		},
 		{
-			TestName:             "Hdfs URI two levels",
+			TestName:             "HDFS URI two levels",
 			InputURI:             "hdfs://192.168.1.1:80/my-folder-1/my-folder-2",
 			ExpectedSubdirectory: "/my-folder-1/my-folder-2",
 		},

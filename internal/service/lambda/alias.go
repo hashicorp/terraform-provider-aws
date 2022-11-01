@@ -131,7 +131,7 @@ func resourceAliasRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("arn", aliasConfiguration.AliasArn)
 	d.SetId(aws.StringValue(aliasConfiguration.AliasArn))
 
-	invokeArn := functionInvokeArn(*aliasConfiguration.AliasArn, meta)
+	invokeArn := functionInvokeARN(*aliasConfiguration.AliasArn, meta)
 	d.Set("invoke_arn", invokeArn)
 
 	if err := d.Set("routing_config", flattenAliasRoutingConfiguration(aliasConfiguration.RoutingConfig)); err != nil {

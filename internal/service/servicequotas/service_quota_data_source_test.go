@@ -19,11 +19,11 @@ func TestAccServiceQuotasServiceQuotaDataSource_quotaCode(t *testing.T) {
 			acctest.PreCheckPartitionHasService(servicequotas.EndpointsID, t)
 			preCheckServiceQuotaSet(setQuotaServiceCode, setQuotaQuotaCode, t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, servicequotas.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		ErrorCheck:               acctest.ErrorCheck(t, servicequotas.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceQuotaQuotaCodeDataSourceConfig(setQuotaServiceCode, setQuotaQuotaCode),
+				Config: testAccServiceQuotaDataSourceConfig_code(setQuotaServiceCode, setQuotaQuotaCode),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "adjustable", "true"),
 					acctest.CheckResourceAttrRegionalARN(dataSourceName, "arn", "servicequotas", fmt.Sprintf("%s/%s", setQuotaServiceCode, setQuotaQuotaCode)),
@@ -49,11 +49,11 @@ func TestAccServiceQuotasServiceQuotaDataSource_quotaCode_Unset(t *testing.T) {
 			acctest.PreCheckPartitionHasService(servicequotas.EndpointsID, t)
 			preCheckServiceQuotaUnset(unsetQuotaServiceCode, unsetQuotaQuotaCode, t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, servicequotas.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		ErrorCheck:               acctest.ErrorCheck(t, servicequotas.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceQuotaQuotaCodeDataSourceConfig(unsetQuotaServiceCode, unsetQuotaQuotaCode),
+				Config: testAccServiceQuotaDataSourceConfig_code(unsetQuotaServiceCode, unsetQuotaQuotaCode),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					acctest.CheckResourceAttrRegionalARNNoAccount(dataSourceName, "arn", "servicequotas", fmt.Sprintf("%s/%s", unsetQuotaServiceCode, unsetQuotaQuotaCode)),
 					resource.TestCheckResourceAttr(dataSourceName, "adjustable", "true"),
@@ -78,12 +78,12 @@ func TestAccServiceQuotasServiceQuotaDataSource_PermissionError_quotaCode(t *tes
 			testAccPreCheck(t)
 			acctest.PreCheckAssumeRoleARN(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, servicequotas.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      nil,
+		ErrorCheck:               acctest.ErrorCheck(t, servicequotas.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccServiceQuotaDataSourceConfig_PermissionError_QuotaCode("elasticloadbalancing", "L-53DA6B97"),
+				Config:      testAccServiceQuotaDataSourceConfig_permissionErrorCode("elasticloadbalancing", "L-53DA6B97"),
 				ExpectError: regexp.MustCompile(`DEPENDENCY_ACCESS_DENIED_ERROR`),
 			},
 		},
@@ -99,11 +99,11 @@ func TestAccServiceQuotasServiceQuotaDataSource_quotaName(t *testing.T) {
 			acctest.PreCheckPartitionHasService(servicequotas.EndpointsID, t)
 			preCheckServiceQuotaSet(setQuotaServiceCode, setQuotaQuotaCode, t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, servicequotas.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		ErrorCheck:               acctest.ErrorCheck(t, servicequotas.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceQuotaQuotaNameDataSourceConfig("vpc", setQuotaQuotaName),
+				Config: testAccServiceQuotaDataSourceConfig_name("vpc", setQuotaQuotaName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "adjustable", "true"),
 					acctest.CheckResourceAttrRegionalARN(dataSourceName, "arn", "servicequotas", fmt.Sprintf("%s/%s", setQuotaServiceCode, setQuotaQuotaCode)),
@@ -129,11 +129,11 @@ func TestAccServiceQuotasServiceQuotaDataSource_quotaName_Unset(t *testing.T) {
 			acctest.PreCheckPartitionHasService(servicequotas.EndpointsID, t)
 			preCheckServiceQuotaUnset(unsetQuotaServiceCode, unsetQuotaQuotaCode, t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, servicequotas.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		ErrorCheck:               acctest.ErrorCheck(t, servicequotas.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceQuotaQuotaNameDataSourceConfig(unsetQuotaServiceCode, unsetQuotaQuotaName),
+				Config: testAccServiceQuotaDataSourceConfig_name(unsetQuotaServiceCode, unsetQuotaQuotaName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					acctest.CheckResourceAttrRegionalARNNoAccount(dataSourceName, "arn", "servicequotas", fmt.Sprintf("%s/%s", unsetQuotaServiceCode, unsetQuotaQuotaCode)),
 					resource.TestCheckResourceAttr(dataSourceName, "adjustable", "true"),
@@ -158,19 +158,19 @@ func TestAccServiceQuotasServiceQuotaDataSource_PermissionError_quotaName(t *tes
 			testAccPreCheck(t)
 			acctest.PreCheckAssumeRoleARN(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, servicequotas.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      nil,
+		ErrorCheck:               acctest.ErrorCheck(t, servicequotas.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccServiceQuotaDataSourceConfig_PermissionError_QuotaName("elasticloadbalancing", "Application Load Balancers per Region"),
+				Config:      testAccServiceQuotaDataSourceConfig_permissionErrorName("elasticloadbalancing", "Application Load Balancers per Region"),
 				ExpectError: regexp.MustCompile(`DEPENDENCY_ACCESS_DENIED_ERROR`),
 			},
 		},
 	})
 }
 
-func testAccServiceQuotaQuotaCodeDataSourceConfig(serviceCode, quotaCode string) string {
+func testAccServiceQuotaDataSourceConfig_code(serviceCode, quotaCode string) string {
 	return fmt.Sprintf(`
 data "aws_servicequotas_service_quota" "test" {
   quota_code   = %[1]q
@@ -179,7 +179,7 @@ data "aws_servicequotas_service_quota" "test" {
 `, quotaCode, serviceCode)
 }
 
-func testAccServiceQuotaDataSourceConfig_PermissionError_QuotaCode(serviceCode, quotaCode string) string {
+func testAccServiceQuotaDataSourceConfig_permissionErrorCode(serviceCode, quotaCode string) string {
 	policy := `{
   "Version": "2012-10-17",
   "Statement": [
@@ -210,7 +210,7 @@ data "aws_servicequotas_service_quota" "test" {
 `, serviceCode, quotaCode))
 }
 
-func testAccServiceQuotaQuotaNameDataSourceConfig(serviceCode, quotaName string) string {
+func testAccServiceQuotaDataSourceConfig_name(serviceCode, quotaName string) string {
 	return fmt.Sprintf(`
 data "aws_servicequotas_service_quota" "test" {
   quota_name   = %[1]q
@@ -219,7 +219,7 @@ data "aws_servicequotas_service_quota" "test" {
 `, quotaName, serviceCode)
 }
 
-func testAccServiceQuotaDataSourceConfig_PermissionError_QuotaName(serviceCode, quotaName string) string {
+func testAccServiceQuotaDataSourceConfig_permissionErrorName(serviceCode, quotaName string) string {
 	policy := `{
   "Version": "2012-10-17",
   "Statement": [

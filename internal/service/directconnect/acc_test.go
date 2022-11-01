@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-func testAccCheckDxVirtualInterfaceExists(name string, vif *directconnect.VirtualInterface) resource.TestCheckFunc {
+func testAccCheckVirtualInterfaceExists(name string, vif *directconnect.VirtualInterface) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectConn
 
@@ -43,7 +43,7 @@ func testAccCheckDxVirtualInterfaceExists(name string, vif *directconnect.Virtua
 	}
 }
 
-func testAccCheckDxVirtualInterfaceDestroy(s *terraform.State, t string) error {
+func testAccCheckVirtualInterfaceDestroy(s *terraform.State, t string) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectConn
 
 	for _, rs := range s.RootModule().Resources {

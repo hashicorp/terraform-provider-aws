@@ -16,13 +16,13 @@ func TestAccImageBuilderContainerRecipesDataSource_filter(t *testing.T) {
 	resourceName := "aws_imagebuilder_container_recipe.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, imagebuilder.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckContainerRecipeDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, imagebuilder.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckContainerRecipeDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccContainerRecipesFilterDataSourceConfig(rName),
+				Config: testAccContainerRecipesDataSourceConfig_filter(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "names.#", "1"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "names.0", resourceName, "name"),
@@ -32,7 +32,7 @@ func TestAccImageBuilderContainerRecipesDataSource_filter(t *testing.T) {
 	})
 }
 
-func testAccContainerRecipesFilterDataSourceConfig(rName string) string {
+func testAccContainerRecipesDataSourceConfig_filter(rName string) string {
 	return fmt.Sprintf(`
 data "aws_region" "current" {}
 

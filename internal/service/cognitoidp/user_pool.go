@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -488,6 +489,23 @@ func ResourceUserPool() *schema.Resource {
 			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
+			"user_attribute_update_settings": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"attributes_require_verification_before_update": {
+							Type:     schema.TypeSet,
+							Required: true,
+							Elem: &schema.Schema{
+								Type:         schema.TypeString,
+								ValidateFunc: validation.StringInSlice(cognitoidentityprovider.VerifiedAttributeType_Values(), false),
+							},
+						},
+					},
+				},
+			},
 			"username_attributes": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -600,10 +618,7 @@ func resourceUserPoolCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("account_recovery_setting"); ok {
-		configs := v.([]interface{})
-		config, ok := configs[0].(map[string]interface{})
-
-		if ok && config != nil {
+		if config, ok := v.([]interface{})[0].(map[string]interface{}); ok {
 			params.AccountRecoverySetting = expandUserPoolAccountRecoverySettingConfig(config)
 		}
 	}
@@ -686,6 +701,15 @@ func resourceUserPoolCreate(d *schema.ResourceData, meta interface{}) error {
 		params.UsernameAttributes = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
+	if v, ok := d.GetOk("user_attribute_update_settings"); ok {
+		configs := v.([]interface{})
+		config, ok := configs[0].(map[string]interface{})
+
+		if ok && config != nil {
+			params.UserAttributeUpdateSettings = expandUserPoolUserAttributeUpdateSettings(config)
+		}
+	}
+
 	if v, ok := d.GetOk("username_configuration"); ok {
 		configs := v.([]interface{})
 		config, ok := configs[0].(map[string]interface{})
@@ -725,7 +749,6 @@ func resourceUserPoolCreate(d *schema.ResourceData, meta interface{}) error {
 	if len(tags) > 0 {
 		params.UserPoolTags = Tags(tags.IgnoreAWS())
 	}
-	log.Printf("[DEBUG] Creating Cognito User Pool: %s", params)
 
 	// IAM roles & policies can take some time to propagate and be attached
 	// to the User Pool
@@ -815,13 +838,13 @@ func resourceUserPoolRead(d *schema.ResourceData, meta interface{}) error {
 	resp, err := conn.DescribeUserPool(params)
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, cognitoidentityprovider.ErrCodeResourceNotFoundException) {
-		names.LogNotFoundRemoveState(names.CognitoIDP, names.ErrActionReading, ResUserPool, d.Id())
+		create.LogNotFoundRemoveState(names.CognitoIDP, create.ErrActionReading, ResNameUserPool, d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return names.Error(names.CognitoIDP, names.ErrActionReading, ResUserPool, d.Id(), err)
+		return create.Error(names.CognitoIDP, create.ErrActionReading, ResNameUserPool, d.Id(), err)
 	}
 
 	userPool := resp.UserPool
@@ -888,6 +911,10 @@ func resourceUserPoolRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("failed setting sms_configuration: %w", err)
 	}
 
+	if err := d.Set("user_attribute_update_settings", flattenUserPoolUserAttributeUpdateSettings(userPool.UserAttributeUpdateSettings)); err != nil {
+		return fmt.Errorf("failed setting user_attribute_update_settings: %w", err)
+	}
+
 	if userPool.UsernameAttributes != nil {
 		d.Set("username_attributes", flex.FlattenStringSet(userPool.UsernameAttributes))
 	}
@@ -925,13 +952,13 @@ func resourceUserPoolRead(d *schema.ResourceData, meta interface{}) error {
 	output, err := conn.GetUserPoolMfaConfig(input)
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, cognitoidentityprovider.ErrCodeResourceNotFoundException) {
-		names.LogNotFoundRemoveState(names.CognitoIDP, names.ErrActionReading, ResUserPool, d.Id())
+		create.LogNotFoundRemoveState(names.CognitoIDP, create.ErrActionReading, ResNameUserPool, d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return names.Error(names.CognitoIDP, names.ErrActionReading, ResUserPool, d.Id(), err)
+		return create.Error(names.CognitoIDP, create.ErrActionReading, ResNameUserPool, d.Id(), err)
 	}
 
 	d.Set("mfa_configuration", output.MfaConfiguration)
@@ -1021,6 +1048,7 @@ func resourceUserPoolUpdate(d *schema.ResourceData, meta interface{}) error {
 		"sms_verification_message",
 		"tags",
 		"tags_all",
+		"user_attribute_update_settings",
 		"user_pool_add_ons",
 		"verification_message_template",
 		"account_recovery_setting",
@@ -1043,10 +1071,7 @@ func resourceUserPoolUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if v, ok := d.GetOk("account_recovery_setting"); ok {
-			configs := v.([]interface{})
-			config, ok := configs[0].(map[string]interface{})
-
-			if ok && config != nil {
+			if config, ok := v.([]interface{})[0].(map[string]interface{}); ok {
 				params.AccountRecoverySetting = expandUserPoolAccountRecoverySettingConfig(config)
 			}
 		}
@@ -1104,6 +1129,22 @@ func resourceUserPoolUpdate(d *schema.ResourceData, meta interface{}) error {
 			params.SmsConfiguration = expandSMSConfiguration(v.([]interface{}))
 		}
 
+		if v, ok := d.GetOk("user_attribute_update_settings"); ok {
+			configs := v.([]interface{})
+			config, ok := configs[0].(map[string]interface{})
+
+			if ok && config != nil {
+				params.UserAttributeUpdateSettings = expandUserPoolUserAttributeUpdateSettings(config)
+			}
+		}
+		if d.HasChange("user_attribute_update_settings") && params.UserAttributeUpdateSettings == nil {
+			// An empty array must be sent to disable this setting if previously enabled. A nil
+			// UserAttibutesUpdateSetting param will result in no modifications.
+			params.UserAttributeUpdateSettings = &cognitoidentityprovider.UserAttributeUpdateSettingsType{
+				AttributesRequireVerificationBeforeUpdate: []*string{},
+			}
+		}
+
 		if v, ok := d.GetOk("user_pool_add_ons"); ok {
 			configs := v.([]interface{})
 			config, ok := configs[0].(map[string]interface{})
@@ -1144,8 +1185,6 @@ func resourceUserPoolUpdate(d *schema.ResourceData, meta interface{}) error {
 		if len(tags) > 0 {
 			params.UserPoolTags = Tags(tags.IgnoreAWS())
 		}
-
-		log.Printf("[DEBUG] Updating Cognito User Pool: %s", params)
 
 		// IAM roles & policies can take some time to propagate and be attached
 		// to the User Pool.
@@ -1287,6 +1326,10 @@ func flattenSoftwareTokenMFAConfiguration(apiObject *cognitoidentityprovider.Sof
 }
 
 func expandUserPoolAccountRecoverySettingConfig(config map[string]interface{}) *cognitoidentityprovider.AccountRecoverySettingType {
+	if len(config) == 0 {
+		return nil
+	}
+
 	configs := &cognitoidentityprovider.AccountRecoverySettingType{}
 
 	mechs := make([]*cognitoidentityprovider.RecoveryOptionType, 0)
@@ -1316,7 +1359,7 @@ func expandUserPoolAccountRecoverySettingConfig(config map[string]interface{}) *
 }
 
 func flattenUserPoolAccountRecoverySettingConfig(config *cognitoidentityprovider.AccountRecoverySettingType) []interface{} {
-	if config == nil {
+	if config == nil || len(config.RecoveryMechanisms) == 0 {
 		return nil
 	}
 
@@ -2225,4 +2268,28 @@ func expandUserPoolEmailConfig(emailConfig []interface{}) *cognitoidentityprovid
 	}
 
 	return emailConfigurationType
+}
+
+func expandUserPoolUserAttributeUpdateSettings(config map[string]interface{}) *cognitoidentityprovider.UserAttributeUpdateSettingsType {
+	userAttributeUpdateSettings := &cognitoidentityprovider.UserAttributeUpdateSettingsType{}
+	if v, ok := config["attributes_require_verification_before_update"]; ok {
+		userAttributeUpdateSettings.AttributesRequireVerificationBeforeUpdate = flex.ExpandStringSet(v.(*schema.Set))
+	}
+
+	return userAttributeUpdateSettings
+}
+
+func flattenUserPoolUserAttributeUpdateSettings(u *cognitoidentityprovider.UserAttributeUpdateSettingsType) []map[string]interface{} {
+	if u == nil {
+		return nil
+	}
+	// If this setting is enabled then disabled, the API returns a nested empty slice instead of nil
+	if u != nil && len(u.AttributesRequireVerificationBeforeUpdate) == 0 {
+		return nil
+	}
+
+	m := map[string]interface{}{}
+	m["attributes_require_verification_before_update"] = flex.FlattenStringSet(u.AttributesRequireVerificationBeforeUpdate)
+
+	return []map[string]interface{}{m}
 }

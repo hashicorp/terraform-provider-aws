@@ -13,7 +13,6 @@ import (
 )
 
 func ResourceSSHKey() *schema.Resource {
-
 	return &schema.Resource{
 		Create: resourceSSHKeyCreate,
 		Read:   resourceSSHKeyRead,

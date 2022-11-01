@@ -14,12 +14,12 @@ func TestAccVPCNATGatewaysDataSource_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNATGatewaysDataSourceConfig(rName),
+				Config: testAccVPCNATGatewaysDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.aws_nat_gateways.by_vpc_id", "ids.#", "2"),
 					resource.TestCheckResourceAttr("data.aws_nat_gateways.by_tags", "ids.#", "1"),
@@ -31,7 +31,7 @@ func TestAccVPCNATGatewaysDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccNATGatewaysDataSourceConfig(rName string) string {
+func testAccVPCNATGatewaysDataSourceConfig_basic(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_vpc" "test1" {
   cidr_block = "172.5.0.0/16"

@@ -164,15 +164,15 @@ func resourceTrafficMirrorFilterRuleRead(d *schema.ResourceData, meta interface{
 	}
 
 	err := conn.DescribeTrafficMirrorFiltersPages(input, func(page *ec2.DescribeTrafficMirrorFiltersOutput, lastPage bool) bool {
-		rule = findEc2TrafficMirrorFilterRule(ruleId, page.TrafficMirrorFilters)
-		return nil == rule
+		rule = findTrafficMirrorFilterRule(ruleId, page.TrafficMirrorFilters)
+		return rule == nil
 	})
 
 	if err != nil {
 		return fmt.Errorf("Error while describing filters: %v", err)
 	}
 
-	if nil == rule {
+	if rule == nil {
 		log.Printf("[WARN] EC2 Traffic Mirror Filter Rule (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -209,7 +209,7 @@ func resourceTrafficMirrorFilterRuleRead(d *schema.ResourceData, meta interface{
 	return nil
 }
 
-func findEc2TrafficMirrorFilterRule(ruleId string, filters []*ec2.TrafficMirrorFilter) (rule *ec2.TrafficMirrorFilterRule) {
+func findTrafficMirrorFilterRule(ruleId string, filters []*ec2.TrafficMirrorFilter) (rule *ec2.TrafficMirrorFilterRule) {
 	log.Printf("[DEBUG] searching %s in %d filters", ruleId, len(filters))
 	for _, v := range filters {
 		log.Printf("[DEBUG]: searching filter %s, ingress rule count = %d, egress rule count = %d",
@@ -273,7 +273,7 @@ func resourceTrafficMirrorFilterRuleUpdate(d *schema.ResourceData, meta interfac
 	if d.HasChange("destination_port_range") {
 		v := d.Get("destination_port_range")
 		n := v.([]interface{})
-		if 0 == len(n) {
+		if len(n) == 0 {
 			removeFields = append(removeFields, aws.String(ec2.TrafficMirrorFilterRuleFieldDestinationPortRange))
 		} else {
 			//Modify request that adds port range seems to fail if protocol is not set in the request
@@ -285,7 +285,7 @@ func resourceTrafficMirrorFilterRuleUpdate(d *schema.ResourceData, meta interfac
 	if d.HasChange("source_port_range") {
 		v := d.Get("source_port_range")
 		n := v.([]interface{})
-		if 0 == len(n) {
+		if len(n) == 0 {
 			removeFields = append(removeFields, aws.String(ec2.TrafficMirrorFilterRuleFieldSourcePortRange))
 		} else {
 			//Modify request that adds port range seems to fail if protocol is not set in the request
@@ -352,7 +352,7 @@ func buildTrafficMirrorPortRangeRequest(p []interface{}) (out *ec2.TrafficMirror
 }
 
 func buildTrafficMirrorFilterRulePortRangeSchema(portRange *ec2.TrafficMirrorPortRange) interface{} {
-	if nil == portRange {
+	if portRange == nil {
 		return nil
 	}
 

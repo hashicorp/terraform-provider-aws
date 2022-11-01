@@ -91,7 +91,7 @@ func sweepResourceDataSyncs(region string) error {
 	}
 
 	conn := client.(*conns.AWSClient).SSMConn
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
 	input := &ssm.ListResourceDataSyncInput{}

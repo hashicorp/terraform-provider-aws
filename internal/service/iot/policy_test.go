@@ -21,13 +21,13 @@ func TestAccIoTPolicy_basic(t *testing.T) {
 	resourceName := "aws_iot_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, iot.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckPolicyDestroy_basic,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iot.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPolicyDestroy_basic,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPolicyInitialStateConfig(rName),
+				Config: testAccPolicyConfig_initialState(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -51,13 +51,13 @@ func TestAccIoTPolicy_disappears(t *testing.T) {
 	resourceName := "aws_iot_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, iot.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckPolicyDestroy_basic,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iot.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPolicyDestroy_basic,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPolicyInitialStateConfig(rName),
+				Config: testAccPolicyConfig_initialState(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(resourceName, &v),
 					acctest.CheckResourceDisappears(acctest.Provider, tfiot.ResourcePolicy(), resourceName),
@@ -127,7 +127,7 @@ func testAccCheckPolicyExists(n string, v *iot.GetPolicyOutput) resource.TestChe
 	}
 }
 
-func testAccPolicyInitialStateConfig(rName string) string {
+func testAccPolicyConfig_initialState(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iot_policy" "test" {
   name = "%s"

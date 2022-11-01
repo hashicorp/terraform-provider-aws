@@ -137,6 +137,7 @@ provider "aws" {
   <li><code>connect</code></li>
   <li><code>connectcontactlens</code></li>
   <li><code>connectparticipant</code></li>
+  <li><code>controltower</code></li>
   <li><code>cur</code> (or <code>costandusagereportservice</code>)</li>
   <li><code>customerprofiles</code></li>
   <li><code>databrew</code> (or <code>gluedatabrew</code>)</li>
@@ -166,7 +167,7 @@ provider "aws" {
   <li><code>efs</code></li>
   <li><code>eks</code></li>
   <li><code>elasticache</code></li>
-  <li><code>elasticbeanstalk</code></li>
+  <li><code>elasticbeanstalk</code> (or <code>beanstalk</code>)</li>
   <li><code>elasticinference</code></li>
   <li><code>elasticsearch</code> (or <code>es</code> or <code>elasticsearchservice</code>)</li>
   <li><code>elastictranscoder</code></li>
@@ -174,6 +175,7 @@ provider "aws" {
   <li><code>elbv2</code> (or <code>elasticloadbalancingv2</code>)</li>
   <li><code>emr</code></li>
   <li><code>emrcontainers</code></li>
+  <li><code>emrserverless</code></li>
   <li><code>events</code> (or <code>eventbridge</code> or <code>cloudwatchevents</code>)</li>
   <li><code>evidently</code> (or <code>cloudwatchevidently</code>)</li>
   <li><code>finspace</code></li>
@@ -201,7 +203,7 @@ provider "aws" {
   <li><code>identitystore</code></li>
   <li><code>imagebuilder</code></li>
   <li><code>inspector</code></li>
-  <li><code>inspector2</code></li>
+  <li><code>inspector2</code> (or <code>inspectorv2</code>)</li>
   <li><code>iot</code></li>
   <li><code>iot1clickdevices</code> (or <code>iot1clickdevicesservice</code>)</li>
   <li><code>iot1clickprojects</code></li>
@@ -218,7 +220,7 @@ provider "aws" {
   <li><code>iottwinmaker</code></li>
   <li><code>iotwireless</code></li>
   <li><code>ivs</code></li>
-  <li><code>kafka</code></li>
+  <li><code>kafka</code> (or <code>msk</code>)</li>
   <li><code>kafkaconnect</code></li>
   <li><code>kendra</code></li>
   <li><code>keyspaces</code></li>
@@ -232,14 +234,14 @@ provider "aws" {
   <li><code>kms</code></li>
   <li><code>lakeformation</code></li>
   <li><code>lambda</code></li>
-  <li><code>lexmodels</code> (or <code>lexmodelbuilding</code> or <code>lexmodelbuildingservice</code>)</li>
+  <li><code>lexmodels</code> (or <code>lexmodelbuilding</code> or <code>lexmodelbuildingservice</code> or <code>lex</code>)</li>
   <li><code>lexmodelsv2</code> (or <code>lexv2models</code>)</li>
   <li><code>lexruntime</code> (or <code>lexruntimeservice</code>)</li>
   <li><code>lexruntimev2</code> (or <code>lexv2runtime</code>)</li>
   <li><code>licensemanager</code></li>
   <li><code>lightsail</code></li>
   <li><code>location</code> (or <code>locationservice</code>)</li>
-  <li><code>logs</code> (or <code>cloudwatchlogs</code>)</li>
+  <li><code>logs</code> (or <code>cloudwatchlog</code> or <code>cloudwatchlogs</code>)</li>
   <li><code>lookoutequipment</code></li>
   <li><code>lookoutmetrics</code></li>
   <li><code>lookoutvision</code> (or <code>lookoutforvision</code>)</li>
@@ -298,11 +300,13 @@ provider "aws" {
   <li><code>rdsdata</code> (or <code>rdsdataservice</code>)</li>
   <li><code>redshift</code></li>
   <li><code>redshiftdata</code> (or <code>redshiftdataapiservice</code>)</li>
+  <li><code>redshiftserverless</code></li>
   <li><code>rekognition</code></li>
   <li><code>resiliencehub</code></li>
   <li><code>resourcegroups</code></li>
   <li><code>resourcegroupstaggingapi</code> (or <code>resourcegroupstagging</code>)</li>
   <li><code>robomaker</code></li>
+  <li><code>rolesanywhere</code></li>
   <li><code>route53</code></li>
   <li><code>route53domains</code></li>
   <li><code>route53recoverycluster</code></li>

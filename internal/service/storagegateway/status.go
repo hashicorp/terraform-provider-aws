@@ -9,8 +9,8 @@ import (
 )
 
 const (
-	storageGatewayGatewayStatusConnected = "GatewayConnected"
-	storediSCSIVolumeStatusNotFound      = "NotFound"
+	gatewayStatusConnected          = "GatewayConnected"
+	storediSCSIVolumeStatusNotFound = "NotFound"
 )
 
 func statusGateway(conn *storagegateway.StorageGateway, gatewayARN string) resource.StateRefreshFunc {
@@ -29,7 +29,7 @@ func statusGateway(conn *storagegateway.StorageGateway, gatewayARN string) resou
 			return output, "", err
 		}
 
-		return output, storageGatewayGatewayStatusConnected, nil
+		return output, gatewayStatusConnected, nil
 	}
 }
 

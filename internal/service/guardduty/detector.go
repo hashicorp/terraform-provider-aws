@@ -59,6 +59,61 @@ func ResourceDetector() *schema.Resource {
 								},
 							},
 						},
+						"kubernetes": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Computed: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"audit_logs": {
+										Type:     schema.TypeList,
+										Required: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"enable": {
+													Type:     schema.TypeBool,
+													Required: true,
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+						"malware_protection": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Computed: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"scan_ec2_instance_with_findings": {
+										Type:     schema.TypeList,
+										Required: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"ebs_volumes": {
+													Type:     schema.TypeList,
+													Required: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"enable": {
+																Type:     schema.TypeBool,
+																Required: true,
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
 					},
 				},
 			},
@@ -109,7 +164,7 @@ func resourceDetectorCreate(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] Creating GuardDuty Detector: %s", input)
 	output, err := conn.CreateDetector(&input)
 	if err != nil {
-		return fmt.Errorf("Creating GuardDuty Detector failed: %s", err.Error())
+		return fmt.Errorf("Creating GuardDuty Detector failed: %w", err)
 	}
 	d.SetId(aws.StringValue(output.DetectorId))
 
@@ -133,7 +188,7 @@ func resourceDetectorRead(d *schema.ResourceData, meta interface{}) error {
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("Reading GuardDuty Detector '%s' failed: %s", d.Id(), err.Error())
+		return fmt.Errorf("Reading GuardDuty Detector '%s' failed: %w", d.Id(), err)
 	}
 
 	arn := arn.ARN{
@@ -189,7 +244,7 @@ func resourceDetectorUpdate(d *schema.ResourceData, meta interface{}) error {
 		log.Printf("[DEBUG] Update GuardDuty Detector: %s", input)
 		_, err := conn.UpdateDetector(&input)
 		if err != nil {
-			return fmt.Errorf("Updating GuardDuty Detector '%s' failed: %s", d.Id(), err.Error())
+			return fmt.Errorf("Updating GuardDuty Detector '%s' failed: %w", d.Id(), err)
 		}
 	}
 
@@ -197,7 +252,7 @@ func resourceDetectorUpdate(d *schema.ResourceData, meta interface{}) error {
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating GuardDuty Detector (%s) tags: %s", d.Get("arn").(string), err)
+			return fmt.Errorf("error updating GuardDuty Detector (%s) tags: %w", d.Get("arn").(string), err)
 		}
 	}
 
@@ -246,7 +301,12 @@ func expandDataSourceConfigurations(tfMap map[string]interface{}) *guardduty.Dat
 	if v, ok := tfMap["s3_logs"].([]interface{}); ok && len(v) > 0 {
 		apiObject.S3Logs = expandS3LogsConfiguration(v[0].(map[string]interface{}))
 	}
-
+	if v, ok := tfMap["kubernetes"].([]interface{}); ok && len(v) > 0 {
+		apiObject.Kubernetes = expandKubernetesConfiguration(v[0].(map[string]interface{}))
+	}
+	if v, ok := tfMap["malware_protection"].([]interface{}); ok && len(v) > 0 {
+		apiObject.MalwareProtection = expandMalwareProtectionConfiguration(v[0].(map[string]interface{}))
+	}
 	return apiObject
 }
 
@@ -264,6 +324,95 @@ func expandS3LogsConfiguration(tfMap map[string]interface{}) *guardduty.S3LogsCo
 	return apiObject
 }
 
+func expandKubernetesConfiguration(tfMap map[string]interface{}) *guardduty.KubernetesConfiguration {
+	if tfMap == nil {
+		return nil
+	}
+
+	l, ok := tfMap["audit_logs"].([]interface{})
+	if !ok || len(l) == 0 {
+		return nil
+	}
+
+	m, ok := l[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	return &guardduty.KubernetesConfiguration{
+		AuditLogs: expandKubernetesAuditLogsConfiguration(m),
+	}
+}
+
+func expandKubernetesAuditLogsConfiguration(tfMap map[string]interface{}) *guardduty.KubernetesAuditLogsConfiguration {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &guardduty.KubernetesAuditLogsConfiguration{}
+
+	if v, ok := tfMap["enable"].(bool); ok {
+		apiObject.Enable = aws.Bool(v)
+	}
+
+	return apiObject
+}
+
+func expandMalwareProtectionConfiguration(tfMap map[string]interface{}) *guardduty.MalwareProtectionConfiguration {
+	if tfMap == nil {
+		return nil
+	}
+
+	l, ok := tfMap["scan_ec2_instance_with_findings"].([]interface{})
+	if !ok || len(l) == 0 {
+		return nil
+	}
+
+	m, ok := l[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	return &guardduty.MalwareProtectionConfiguration{
+		ScanEc2InstanceWithFindings: expandMalwareProtectionScanEC2InstanceWithFindingsConfiguration(m),
+	}
+}
+
+func expandMalwareProtectionScanEC2InstanceWithFindingsConfiguration(tfMap map[string]interface{}) *guardduty.ScanEc2InstanceWithFindings {
+	if tfMap == nil {
+		return nil
+	}
+
+	l, ok := tfMap["ebs_volumes"].([]interface{})
+	if !ok || len(l) == 0 {
+		return nil
+	}
+
+	m, ok := l[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	apiObject := &guardduty.ScanEc2InstanceWithFindings{
+		EbsVolumes: expandMalwareProtectionEBSVolumesConfiguration(m),
+	}
+	return apiObject
+}
+
+func expandMalwareProtectionEBSVolumesConfiguration(tfMap map[string]interface{}) *bool {
+	if tfMap == nil {
+		return nil
+	}
+
+	var apiObject *bool
+
+	if v, ok := tfMap["enable"].(bool); ok {
+		apiObject = aws.Bool(v)
+	}
+
+	return apiObject
+}
+
 func flattenDataSourceConfigurationsResult(apiObject *guardduty.DataSourceConfigurationsResult) map[string]interface{} {
 	if apiObject == nil {
 		return nil
@@ -275,10 +424,88 @@ func flattenDataSourceConfigurationsResult(apiObject *guardduty.DataSourceConfig
 		tfMap["s3_logs"] = []interface{}{flattenS3LogsConfigurationResult(v)}
 	}
 
+	if v := apiObject.Kubernetes; v != nil {
+		tfMap["kubernetes"] = []interface{}{flattenKubernetesConfiguration(v)}
+	}
+
+	if v := apiObject.MalwareProtection; v != nil {
+		tfMap["malware_protection"] = []interface{}{flattenMalwareProtectionConfiguration(v)}
+	}
+
 	return tfMap
 }
 
 func flattenS3LogsConfigurationResult(apiObject *guardduty.S3LogsConfigurationResult) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.Status; v != nil {
+		tfMap["enable"] = aws.StringValue(v) == guardduty.DataSourceStatusEnabled
+	}
+
+	return tfMap
+}
+
+func flattenKubernetesConfiguration(apiObject *guardduty.KubernetesConfigurationResult) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.AuditLogs; v != nil {
+		tfMap["audit_logs"] = []interface{}{flattenKubernetesAuditLogsConfiguration(v)}
+	}
+
+	return tfMap
+}
+
+func flattenKubernetesAuditLogsConfiguration(apiObject *guardduty.KubernetesAuditLogsConfigurationResult) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.Status; v != nil {
+		tfMap["enable"] = aws.StringValue(v) == guardduty.DataSourceStatusEnabled
+	}
+
+	return tfMap
+}
+
+func flattenMalwareProtectionConfiguration(apiObject *guardduty.MalwareProtectionConfigurationResult) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.ScanEc2InstanceWithFindings; v != nil {
+		tfMap["scan_ec2_instance_with_findings"] = []interface{}{flattenMalwareProtectionScanEC2InstanceWithFindingsConfigurationResult(v)}
+	}
+
+	return tfMap
+}
+
+func flattenMalwareProtectionScanEC2InstanceWithFindingsConfigurationResult(apiObject *guardduty.ScanEc2InstanceWithFindingsResult) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.EbsVolumes; v != nil {
+		tfMap["ebs_volumes"] = []interface{}{flattenMalwareProtectionEBSVolumesConfigurationResult(v)}
+	}
+
+	return tfMap
+}
+
+func flattenMalwareProtectionEBSVolumesConfigurationResult(apiObject *guardduty.EbsVolumesResult) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}

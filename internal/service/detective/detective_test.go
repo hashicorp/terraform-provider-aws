@@ -8,17 +8,17 @@ import (
 func TestAccDetective_serial(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
 		"Graph": {
-			"basic":      testAccDetectiveGraph_basic,
-			"disappears": testAccDetectiveGraph_disappears,
-			"tags":       testAccDetectiveGraph_tags,
+			"basic":      testAccGraph_basic,
+			"disappears": testAccGraph_disappears,
+			"tags":       testAccGraph_tags,
 		},
 		"InvitationAccepter": {
-			"basic": testAccDetectiveInvitationAccepter_basic,
+			"basic": testAccInvitationAccepter_basic,
 		},
 		"Member": {
-			"basic":     testAccDetectiveMember_basic,
-			"disappear": testAccDetectiveMember_disappears,
-			"message":   testAccDetectiveMember_message,
+			"basic":     testAccMember_basic,
+			"disappear": testAccMember_disappears,
+			"message":   testAccMember_message,
 		},
 	}
 

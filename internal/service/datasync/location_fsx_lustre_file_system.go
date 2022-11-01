@@ -118,7 +118,7 @@ func resourceLocationFSxLustreFileSystemRead(d *schema.ResourceData, meta interf
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	output, err := FindFsxLustreLocationByARN(conn, d.Id())
+	output, err := FindFSxLustreLocationByARN(conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] DataSync Location Fsx Lustre (%s) not found, removing from state", d.Id())

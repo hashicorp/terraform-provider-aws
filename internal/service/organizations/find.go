@@ -62,3 +62,41 @@ func FindOrganization(conn *organizations.Organizations) (*organizations.Organiz
 
 	return output.Organization, nil
 }
+
+func FindPolicyAttachmentByTwoPartKey(conn *organizations.Organizations, targetID, policyID string) (*organizations.PolicyTargetSummary, error) {
+	input := &organizations.ListTargetsForPolicyInput{
+		PolicyId: aws.String(policyID),
+	}
+	var output *organizations.PolicyTargetSummary
+
+	err := conn.ListTargetsForPolicyPages(input, func(page *organizations.ListTargetsForPolicyOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.Targets {
+			if aws.StringValue(v.TargetId) == targetID {
+				output = v
+				return true
+			}
+		}
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, organizations.ErrCodeTargetNotFoundException, organizations.ErrCodePolicyNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, &resource.NotFoundError{}
+	}
+
+	return output, nil
+}

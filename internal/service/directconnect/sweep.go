@@ -115,9 +115,9 @@ func sweepGatewayAssociationProposals(region string) error {
 	conn := client.(*conns.AWSClient).DirectConnectConn
 	input := &directconnect.DescribeDirectConnectGatewayAssociationProposalsInput{}
 	var sweeperErrs *multierror.Error
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = describeDirectConnectGatewayAssociationProposalsPages(conn, input, func(page *directconnect.DescribeDirectConnectGatewayAssociationProposalsOutput, lastPage bool) bool {
+	err = describeGatewayAssociationProposalsPages(conn, input, func(page *directconnect.DescribeDirectConnectGatewayAssociationProposalsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -171,9 +171,9 @@ func sweepGatewayAssociations(region string) error {
 	conn := client.(*conns.AWSClient).DirectConnectConn
 	input := &directconnect.DescribeDirectConnectGatewaysInput{}
 	var sweeperErrs *multierror.Error
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = describeDirectConnectGatewaysPages(conn, input, func(page *directconnect.DescribeDirectConnectGatewaysOutput, lastPage bool) bool {
+	err = describeGatewaysPages(conn, input, func(page *directconnect.DescribeDirectConnectGatewaysOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -185,7 +185,7 @@ func sweepGatewayAssociations(region string) error {
 				DirectConnectGatewayId: aws.String(directConnectGatewayID),
 			}
 
-			err := describeDirectConnectGatewayAssociationsPages(conn, input, func(page *directconnect.DescribeDirectConnectGatewayAssociationsOutput, lastPage bool) bool {
+			err := describeGatewayAssociationsPages(conn, input, func(page *directconnect.DescribeDirectConnectGatewayAssociationsOutput, lastPage bool) bool {
 				if page == nil {
 					return !lastPage
 				}
@@ -254,7 +254,7 @@ func sweepGatewayAssociations(region string) error {
 				AssociatedGatewayId: aws.String(transitGatewayID),
 			}
 
-			err := describeDirectConnectGatewayAssociationsPages(conn, input, func(page *directconnect.DescribeDirectConnectGatewayAssociationsOutput, lastPage bool) bool {
+			err := describeGatewayAssociationsPages(conn, input, func(page *directconnect.DescribeDirectConnectGatewayAssociationsOutput, lastPage bool) bool {
 				if page == nil {
 					return !lastPage
 				}
@@ -307,9 +307,9 @@ func sweepGateways(region string) error {
 	conn := client.(*conns.AWSClient).DirectConnectConn
 	input := &directconnect.DescribeDirectConnectGatewaysInput{}
 	var sweeperErrs *multierror.Error
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = describeDirectConnectGatewaysPages(conn, input, func(page *directconnect.DescribeDirectConnectGatewaysOutput, lastPage bool) bool {
+	err = describeGatewaysPages(conn, input, func(page *directconnect.DescribeDirectConnectGatewaysOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -328,7 +328,7 @@ func sweepGateways(region string) error {
 
 			var associations bool
 
-			err := describeDirectConnectGatewayAssociationsPages(conn, input, func(page *directconnect.DescribeDirectConnectGatewayAssociationsOutput, lastPage bool) bool {
+			err := describeGatewayAssociationsPages(conn, input, func(page *directconnect.DescribeDirectConnectGatewayAssociationsOutput, lastPage bool) bool {
 				if page == nil {
 					return !lastPage
 				}
