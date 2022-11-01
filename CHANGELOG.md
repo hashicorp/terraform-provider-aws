@@ -2,10 +2,12 @@
 
 FEATURES:
 
+* **New Resource:** `aws_fsx_file_cache` ([#27384](https://github.com/hashicorp/terraform-provider-aws/issues/27384))
 * **New Resource:** `aws_lightsail_disk` ([#27537](https://github.com/hashicorp/terraform-provider-aws/issues/27537))
 * **New Resource:** `aws_lightsail_disk_attachment` ([#27537](https://github.com/hashicorp/terraform-provider-aws/issues/27537))
 * **New Resource:** `aws_lightsail_lb_stickiness_policy` ([#27514](https://github.com/hashicorp/terraform-provider-aws/issues/27514))
 * **New Resource:** `aws_sagemaker_servicecatalog_portfolio_status` ([#27548](https://github.com/hashicorp/terraform-provider-aws/issues/27548))
+* **New Resource:** `aws_sesv2_email_identity_feedback_attributes` ([#27433](https://github.com/hashicorp/terraform-provider-aws/issues/27433))
 
 ENHANCEMENTS:
 
@@ -16,10 +18,12 @@ ENHANCEMENTS:
 * resource/aws_sagemaker_domain: Add `domain_settings`, `app_security_group_management`, `default_user_settings.r_session_app_settings`, and `default_user_settings.canvas_app_settings` arguments. ([#27542](https://github.com/hashicorp/terraform-provider-aws/issues/27542))
 * resource/aws_sagemaker_user_profile: Add `user_settings.r_session_app_settings` and `user_settings.canvas_app_settings` arguments. ([#27542](https://github.com/hashicorp/terraform-provider-aws/issues/27542))
 * resource/aws_sagemaker_workforce: Add `workforce_vpc_config` argument ([#27538](https://github.com/hashicorp/terraform-provider-aws/issues/27538))
+* resource/aws_sfn_state_machine: Add `name_prefix` argument ([#27574](https://github.com/hashicorp/terraform-provider-aws/issues/27574))
 
 BUG FIXES:
 
 * data-source/aws_ip_ranges: Fix regression causing filtering on `regions` and `services` to become case-sensitive ([#27558](https://github.com/hashicorp/terraform-provider-aws/issues/27558))
+* resource/aws_batch_compute_environment: Update `compute_resources.security_group_ids` to be optional ([#26172](https://github.com/hashicorp/terraform-provider-aws/issues/26172))
 * resource/aws_dynamodb_table: Fix bug causing spurious diffs with and preventing proper updating of `stream_enabled` and `stream_view_type` ([#27566](https://github.com/hashicorp/terraform-provider-aws/issues/27566))
 * resource/aws_instance: Use EC2 API idempotency to ensure that only a single Instance is created ([#27561](https://github.com/hashicorp/terraform-provider-aws/issues/27561))
 
