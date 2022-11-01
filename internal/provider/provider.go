@@ -1525,6 +1525,7 @@ func New(_ context.Context) (*schema.Provider, error) {
 			"aws_fsx_backup":                        fsx.ResourceBackup(),
 			"aws_fsx_lustre_file_system":            fsx.ResourceLustreFileSystem(),
 			"aws_fsx_data_repository_association":   fsx.ResourceDataRepositoryAssociation(),
+			"aws_fsx_file_cache":                    fsx.ResourceFileCache(),
 			"aws_fsx_ontap_file_system":             fsx.ResourceOntapFileSystem(),
 			"aws_fsx_ontap_storage_virtual_machine": fsx.ResourceOntapStorageVirtualMachine(),
 			"aws_fsx_ontap_volume":                  fsx.ResourceOntapVolume(),
