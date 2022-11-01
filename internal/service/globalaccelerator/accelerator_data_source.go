@@ -222,18 +222,9 @@ func flattenIPSetFramework(ctx context.Context, apiObject *globalaccelerator.IpS
 		return types.Object{AttrTypes: attrTypes, Null: true}
 	}
 
-	attrs := map[string]attr.Value{}
-
-	if v := apiObject.IpAddresses; v != nil {
-		attrs["ip_addresses"] = flex.FlattenFrameworkStringList(ctx, v)
-	} else {
-		attrs["ip_addresses"] = types.List{Null: true}
-	}
-
-	if v := apiObject.IpFamily; v != nil {
-		attrs["ip_family"] = types.String{Value: aws.StringValue(v)}
-	} else {
-		attrs["ip_family"] = types.String{Null: true}
+	attrs := map[string]attr.Value{
+		"ip_addresses": flex.FlattenFrameworkStringList(ctx, apiObject.IpAddresses),
+		"ip_family":    types.String{Value: aws.StringValue(apiObject.IpFamily)},
 	}
 
 	return types.Object{AttrTypes: attrTypes, Attrs: attrs}
@@ -244,11 +235,6 @@ func flattenIPSetsFramework(ctx context.Context, apiObjects []*globalaccelerator
 		"ip_addresses": types.ListType{ElemType: types.StringType},
 		"ip_family":    types.StringType,
 	}}
-
-	if len(apiObjects) == 0 {
-		return types.List{ElemType: elemType, Null: true}
-	}
-
 	var elems []attr.Value
 
 	for _, apiObject := range apiObjects {
@@ -273,27 +259,13 @@ func flattenAcceleratorAttributesFramework(_ context.Context, apiObject *globala
 	}
 
 	if apiObject == nil {
-		return types.List{ElemType: elemType, Null: true}
+		return types.List{ElemType: elemType, Elems: []attr.Value{}}
 	}
 
-	attrs := map[string]attr.Value{}
-
-	if v := apiObject.FlowLogsEnabled; v != nil {
-		attrs["flow_logs_enabled"] = types.Bool{Value: aws.BoolValue(v)}
-	} else {
-		attrs["flow_logs_enabled"] = types.Bool{Null: true}
-	}
-
-	if v := apiObject.FlowLogsS3Bucket; v != nil {
-		attrs["flow_logs_s3_bucket"] = types.String{Value: aws.StringValue(v)}
-	} else {
-		attrs["flow_logs_s3_bucket"] = types.String{Value: ""}
-	}
-
-	if v := apiObject.FlowLogsS3Prefix; v != nil {
-		attrs["flow_logs_s3_prefix"] = types.String{Value: aws.StringValue(v)}
-	} else {
-		attrs["flow_logs_s3_prefix"] = types.String{Value: ""}
+	attrs := map[string]attr.Value{
+		"flow_logs_enabled":   types.Bool{Value: aws.BoolValue(apiObject.FlowLogsEnabled)},
+		"flow_logs_s3_bucket": types.String{Value: aws.StringValue(apiObject.FlowLogsS3Bucket)},
+		"flow_logs_s3_prefix": types.String{Value: aws.StringValue(apiObject.FlowLogsS3Prefix)},
 	}
 
 	return types.List{ElemType: elemType, Elems: []attr.Value{types.Object{AttrTypes: attrTypes, Attrs: attrs}}}

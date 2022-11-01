@@ -128,6 +128,7 @@ import (
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/ssm"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/ssoadmin"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
+	_ "github.com/hashicorp/terraform-provider-aws/internal/service/swf"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/synthetics"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/timestreamwrite"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/transcribe"
