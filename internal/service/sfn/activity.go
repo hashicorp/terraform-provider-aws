@@ -135,14 +135,6 @@ func resourceActivityDelete(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("deleting Step Functions Activity (%s): %w", d.Id(), err)
 	}
 
-	_, err = tfresource.RetryUntilNotFound(1*time.Minute, func() (interface{}, error) {
-		return FindActivityByARN(conn, d.Id())
-	})
-
-	if err != nil {
-		return fmt.Errorf("waiting for Step Functions Activity (%s) delete: %w", d.Id(), err)
-	}
-
 	return nil
 }
 

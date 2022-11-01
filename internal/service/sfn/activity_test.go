@@ -3,6 +3,7 @@ package sfn_test
 import (
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/aws/aws-sdk-go/service/sfn"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
@@ -113,17 +114,22 @@ func testAccCheckActivityDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := tfsfn.FindActivityByARN(conn, rs.Primary.ID)
+		// Retrying as Read after Delete is not always consistent.
+		err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+			_, err := tfsfn.FindActivityByARN(conn, rs.Primary.ID)
 
-		if tfresource.NotFound(err) {
-			continue
-		}
+			if tfresource.NotFound(err) {
+				return nil
+			}
 
-		if err != nil {
-			return err
-		}
+			if err != nil {
+				return resource.NonRetryableError(err)
+			}
 
-		return fmt.Errorf("Step Function Activity still exists: %s", rs.Primary.ID)
+			return resource.RetryableError(fmt.Errorf("Step Function Activity still exists: %s", rs.Primary.ID))
+		})
+
+		return err
 	}
 
 	return nil
