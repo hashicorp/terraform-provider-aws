@@ -134,7 +134,7 @@ func ResourceChannel() *schema.Resource {
 				return channelEncoderSettingsSchema()
 			}(),
 			"input_attachment": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Required: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -232,14 +232,15 @@ func ResourceChannel() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"input_setting": {
+						"input_settings": {
 							Type:     schema.TypeList,
 							Optional: true,
+							Computed: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"audio_selector": {
-										Type:     schema.TypeSet,
+										Type:     schema.TypeList,
 										Optional: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
@@ -329,7 +330,7 @@ func ResourceChannel() *schema.Resource {
 										},
 									},
 									"caption_selector": {
-										Type:     schema.TypeSet,
+										Type:     schema.TypeList,
 										Optional: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
@@ -713,8 +714,8 @@ func resourceChannelCreate(ctx context.Context, d *schema.ResourceData, meta int
 	if v, ok := d.GetOk("encoder_settings"); ok && len(v.([]interface{})) > 0 {
 		in.EncoderSettings = expandChannelEncoderSettings(v.([]interface{}))
 	}
-	if v, ok := d.GetOk("input_attachment"); ok && v.(*schema.Set).Len() > 0 {
-		in.InputAttachments = expandChannelInputAttachments(v.(*schema.Set).List())
+	if v, ok := d.GetOk("input_attachment"); ok && len(v.([]interface{})) > 0 {
+		in.InputAttachments = expandChannelInputAttachments(v.([]interface{}))
 	}
 	if v, ok := d.GetOk("input_specification"); ok && len(v.([]interface{})) > 0 {
 		in.InputSpecification = expandChannelInputSpecification(v.([]interface{}))
@@ -773,8 +774,12 @@ func resourceChannelRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("name", out.Name)
 	d.Set("channel_class", out.ChannelClass)
 	d.Set("log_level", out.LogLevel)
+	d.Set("role_arn", out.RoleArn)
 
 	if err := d.Set("cdi_input_specification", flattenChannelCdiInputSpecification(out.CdiInputSpecification)); err != nil {
+		return create.DiagError(names.MediaLive, create.ErrActionSetting, ResNameChannel, d.Id(), err)
+	}
+	if err := d.Set("input_attachment", flattenChannelInputAttachments(out.InputAttachments)); err != nil {
 		return create.DiagError(names.MediaLive, create.ErrActionSetting, ResNameChannel, d.Id(), err)
 	}
 	if err := d.Set("destination", flattenChannelDestinations(out.Destinations)); err != nil {
@@ -984,6 +989,8 @@ func FindChannelByID(ctx context.Context, conn *medialive.Client, id string) (*m
 		return nil, tfresource.NewEmptyResultError(in)
 	}
 
+	// Channel can still be found with a state of DELETED.
+	// Set result as not found when the state is deleted.
 	if out.State == types.ChannelStateDeleted {
 		return nil, &resource.NotFoundError{
 			LastResponse: string(types.ChannelStateDeleted),
@@ -1009,7 +1016,7 @@ func expandChannelInputAttachments(tfList []interface{}) []types.InputAttachment
 		if v, ok := m["input_id"].(string); ok {
 			a.InputId = aws.String(v)
 		}
-		if v, ok := m["input_setting"].([]interface{}); ok && len(v) > 0 {
+		if v, ok := m["input_settings"].([]interface{}); ok && len(v) > 0 {
 			a.InputSettings = expandInputAttachmentInputSettings(v)
 		}
 
@@ -1051,6 +1058,55 @@ func expandInputAttachmentInputSettingsAudioSelectors(tfList []interface{}) []ty
 	}
 
 	return as
+}
+
+func flattenChannelInputAttachments(tfList []types.InputAttachment) []interface{} {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	out := make([]interface{}, 0)
+
+	for _, item := range tfList {
+		m := map[string]interface{}{
+			"input_id":              aws.ToString(item.InputId),
+			"input_attachment_name": aws.ToString(item.InputAttachmentName),
+			"input_settings":        flattenInputAttachmentsInputSettings(item.InputSettings),
+		}
+
+		out = append(out, m)
+	}
+	return out
+}
+
+func flattenInputAttachmentsInputSettings(in *types.InputSettings) []interface{} {
+	if in == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"audio_selector": flattenInputAttachmentsInputSettingsAudioSelectors(in.AudioSelectors),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenInputAttachmentsInputSettingsAudioSelectors(tfList []types.AudioSelector) []interface{} {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	out := make([]interface{}, 0)
+
+	for _, v := range tfList {
+		m := map[string]interface{}{
+			"name": aws.ToString(v.Name),
+		}
+
+		out = append(out, m)
+	}
+
+	return out
 }
 
 func expandChannelCdiInputSpecification(tfList []interface{}) *types.CdiInputSpecification {

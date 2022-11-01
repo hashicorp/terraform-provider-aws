@@ -1158,6 +1158,7 @@ func channelEncoderSettingsSchema() *schema.Schema {
 										"caption_description_names": {
 											Type:     schema.TypeSet,
 											Optional: true,
+											Computed: true,
 											Elem: &schema.Schema{
 												Type: schema.TypeString,
 											},

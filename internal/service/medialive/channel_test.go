@@ -252,12 +252,6 @@ resource "aws_medialive_channel" "test" {
   input_attachment {
     input_attachment_name = "example-input1"
     input_id              = aws_medialive_input.test.id
-
-    input_setting {
-      audio_selector {
-        name = %[1]q
-      }
-    }
   }
 
   destination {
