@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"strconv"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/swf"
@@ -174,14 +173,6 @@ func resourceDomainDelete(ctx context.Context, d *schema.ResourceData, meta inte
 
 	if err != nil {
 		return diag.Errorf("deleting SWF Domain (%s): %s", d.Id(), err)
-	}
-
-	_, err = tfresource.RetryUntilNotFoundContext(ctx, 1*time.Minute, func() (interface{}, error) {
-		return FindDomainByName(ctx, conn, d.Id())
-	})
-
-	if err != nil {
-		return diag.Errorf("waiting for SWF Domain (%s) delete: %s", d.Id(), err)
 	}
 
 	return nil
