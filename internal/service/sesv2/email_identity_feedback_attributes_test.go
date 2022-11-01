@@ -60,6 +60,28 @@ func TestAccSESV2EmailIdentityFeedbackAttributes_disappears(t *testing.T) {
 	})
 }
 
+func TestAccSESV2EmailIdentityFeedbackAttributes_disappears_emailIdentity(t *testing.T) {
+	rName := acctest.RandomEmailAddress(acctest.RandomDomainName())
+	emailIdentityName := "aws_sesv2_email_identity.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2EndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEmailIdentityDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEmailIdentityFeedbackAttributesConfig_emailForwardingEnabled(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEmailIdentityExists(emailIdentityName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfsesv2.ResourceEmailIdentity(), emailIdentityName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func TestAccSESV2EmailIdentityFeedbackAttributes_emailForwardingEnabled(t *testing.T) {
 	rName := acctest.RandomEmailAddress(acctest.RandomDomainName())
 	resourceName := "aws_sesv2_email_identity_feedback_attributes.test"
