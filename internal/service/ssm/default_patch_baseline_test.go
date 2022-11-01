@@ -26,6 +26,7 @@ func TestAccSSMDefaultPatchBaseline_serial(t *testing.T) {
 		"basic":                testAccSSMDefaultPatchBaseline_basic,
 		"disappears":           testAccSSMDefaultPatchBaseline_disappears,
 		"otherOperatingSystem": testAccSSMDefaultPatchBaseline_otherOperatingSystem,
+		"patchBaselineARN":     testAccSSMDefaultPatchBaseline_patchBaselineARN,
 		"systemDefault":        testAccSSMDefaultPatchBaseline_systemDefault,
 	}
 
@@ -98,6 +99,46 @@ func testAccSSMDefaultPatchBaseline_disappears(t *testing.T) {
 					acctest.CheckResourceDisappears(acctest.Provider, tfssm.ResourceDefaultPatchBaseline(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func testAccSSMDefaultPatchBaseline_patchBaselineARN(t *testing.T) {
+	var defaultpatchbaseline ssm.GetDefaultPatchBaselineOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_ssm_default_patch_baseline.test"
+	baselineResourceName := "aws_ssm_patch_baseline.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(names.SSMEndpointID, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDefaultPatchBaselineDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDefaultPatchBaselineConfig_patchBaselineARN(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDefaultPatchBaselineExists(resourceName, &defaultpatchbaseline),
+					resource.TestCheckResourceAttrPair(resourceName, "baseline_id", baselineResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "id", baselineResourceName, "operating_system"),
+				),
+			},
+			// Import by OS
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			// Import by Baseline ID
+			{
+				ResourceName:      resourceName,
+				ImportStateIdFunc: testAccDefaultPatchBaselineImportStateIdFunc(resourceName),
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -275,6 +316,21 @@ resource "aws_ssm_patch_baseline" "test" {
   approved_patches_compliance_level = "CRITICAL"
 }
 `, rName, os)
+}
+
+func testAccDefaultPatchBaselineConfig_patchBaselineARN(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_ssm_default_patch_baseline" "test" {
+  baseline_id = aws_ssm_patch_baseline.test.arn
+}
+
+resource "aws_ssm_patch_baseline" "test" {
+  name = %[1]q
+
+  approved_patches                  = ["KB123456"]
+  approved_patches_compliance_level = "CRITICAL"
+}
+`, rName)
 }
 
 func testAccDefaultPatchBaselineConfig_systemDefault() string {

@@ -87,11 +87,64 @@ func ResourceDefaultPatchBaseline() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"baseline_id": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:             schema.TypeString,
+				Required:         true,
+				DiffSuppressFunc: diffSuppressPatchBaselineID,
+				ValidateFunc: validation.Any(
+					validatePatchBaselineID,
+					validatePatchBaselineARN,
+				),
 			},
 		},
 	}
+}
+
+func diffSuppressPatchBaselineID(_, oldValue, newValue string, _ *schema.ResourceData) bool {
+	if oldValue == newValue {
+		return true
+	}
+
+	oldId := oldValue
+	if arn.IsARN(oldValue) {
+		oldId = patchBaselineIDFromARN(oldValue)
+	}
+
+	newId := newValue
+	if arn.IsARN(newValue) {
+		newId = patchBaselineIDFromARN(newValue)
+	}
+
+	if oldId == newId {
+		return true
+	}
+
+	return false
+}
+
+var validatePatchBaselineID = validation.StringMatch(regexp.MustCompile(`^`+patchBaselineIDRegexPattern+`$`), `must match "pb-" followed by 17 hexadecimal characters`)
+
+func validatePatchBaselineARN(v any, k string) (ws []string, errors []error) {
+	value, ok := v.(string)
+	if !ok {
+		errors = append(errors, fmt.Errorf("expected type of %s to be string", k))
+		return
+	}
+
+	if value == "" {
+		return
+	}
+
+	if _, err := arn.Parse(value); err != nil {
+		errors = append(errors, fmt.Errorf("%q (%s) is not a valid ARN: %s", k, value, err))
+		return
+	}
+
+	if !isPatchBaselineARN(value) {
+		errors = append(errors, fmt.Errorf("%q (%s) is not a valid SSM Patch Baseline ARN", k, value))
+		return
+	}
+
+	return
 }
 
 func isPatchBaselineID(s string) bool {
@@ -107,6 +160,15 @@ func isPatchBaselineARN(s string) bool {
 	}
 
 	return patchBaselineIDFromARNResource(parsedARN.Resource) != ""
+}
+
+func patchBaselineIDFromARN(s string) string {
+	arn, err := arn.Parse(s)
+	if err != nil {
+		return ""
+	}
+
+	return patchBaselineIDFromARNResource(arn.Resource)
 }
 
 func patchBaselineIDFromARNResource(s string) string {
