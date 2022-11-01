@@ -151,7 +151,7 @@ func TestAccSESV2DedicatedIPPool_tags(t *testing.T) {
 }
 
 func testAccCheckDedicatedIPPoolDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SESV2Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SESV2Client
 	ctx := context.Background()
 
 	for _, rs := range s.RootModule().Resources {
@@ -184,7 +184,7 @@ func testAccCheckDedicatedIPPoolExists(name string) resource.TestCheckFunc {
 			return create.Error(names.SESV2, create.ErrActionCheckingExistence, tfsesv2.ResNameDedicatedIPPool, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SESV2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SESV2Client
 		ctx := context.Background()
 
 		_, err := tfsesv2.FindDedicatedIPPoolByID(ctx, conn, rs.Primary.ID)
@@ -197,7 +197,7 @@ func testAccCheckDedicatedIPPoolExists(name string) resource.TestCheckFunc {
 }
 
 func testAccPreCheckDedicatedIPPool(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SESV2Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SESV2Client
 	ctx := context.Background()
 
 	_, err := conn.ListDedicatedIpPools(ctx, &sesv2.ListDedicatedIpPoolsInput{})

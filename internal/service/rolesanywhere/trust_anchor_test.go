@@ -187,7 +187,7 @@ func TestAccRolesAnywhereTrustAnchor_enabled(t *testing.T) {
 }
 
 func testAccCheckTrustAnchorDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).RolesAnywhereConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).RolesAnywhereClient
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_rolesanywhere_trust_anchor" {
@@ -222,7 +222,7 @@ func testAccCheckTrustAnchorExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("No RolesAnywhere Trust Anchor ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RolesAnywhereConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RolesAnywhereClient
 
 		_, err := tfrolesanywhere.FindTrustAnchorByID(context.Background(), conn, rs.Primary.ID)
 
@@ -364,7 +364,7 @@ resource "aws_rolesanywhere_trust_anchor" "test" {
 func testAccPreCheck(t *testing.T) {
 	acctest.PreCheckPartitionHasService(names.RolesAnywhereEndpointID, t)
 
-	conn := acctest.Provider.Meta().(*conns.AWSClient).RolesAnywhereConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).RolesAnywhereClient
 
 	input := &rolesanywhere.ListTrustAnchorsInput{}
 

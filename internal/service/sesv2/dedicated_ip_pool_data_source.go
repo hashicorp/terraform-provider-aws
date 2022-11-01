@@ -64,7 +64,7 @@ const (
 )
 
 func dataSourceDedicatedIPPoolRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SESV2Conn
+	conn := meta.(*conns.AWSClient).SESV2Client
 
 	out, err := FindDedicatedIPPoolByID(ctx, conn, d.Get("pool_name").(string))
 	if err != nil {

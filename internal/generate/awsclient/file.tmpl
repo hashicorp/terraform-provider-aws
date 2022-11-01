@@ -28,6 +28,6 @@ type AWSClient struct {
 	TerraformVersion          string
 
 	{{ range .Services }}
-	{{ .ProviderNameUpper }}Conn *{{ .GoPackage }}.{{ .ClientTypeName }}
+	{{ .ProviderNameUpper }}{{ if eq .SDKVersion "1" }}Conn{{ else }}Client{{end}} *{{ .GoPackage }}.{{ .ClientTypeName }}
 	{{- end }}
 }

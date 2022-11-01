@@ -201,55 +201,55 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 	client.Session = sess
 	client.TerraformVersion = c.TerraformVersion
 
-	client.ComprehendConn = comprehend.NewFromConfig(cfg, func(o *comprehend.Options) {
+	client.ComprehendClient = comprehend.NewFromConfig(cfg, func(o *comprehend.Options) {
 		if endpoint := c.Endpoints[names.Comprehend]; endpoint != "" {
 			o.EndpointResolver = comprehend.EndpointResolverFromURL(endpoint)
 		}
 	})
 
-	client.ComputeOptimizerConn = computeoptimizer.NewFromConfig(cfg, func(o *computeoptimizer.Options) {
+	client.ComputeOptimizerClient = computeoptimizer.NewFromConfig(cfg, func(o *computeoptimizer.Options) {
 		if endpoint := c.Endpoints[names.ComputeOptimizer]; endpoint != "" {
 			o.EndpointResolver = computeoptimizer.EndpointResolverFromURL(endpoint)
 		}
 	})
 
-	client.FISConn = fis.NewFromConfig(cfg, func(o *fis.Options) {
+	client.FISClient = fis.NewFromConfig(cfg, func(o *fis.Options) {
 		if endpoint := c.Endpoints[names.FIS]; endpoint != "" {
 			o.EndpointResolver = fis.EndpointResolverFromURL(endpoint)
 		}
 	})
 
-	client.IdentityStoreConn = identitystore.NewFromConfig(cfg, func(o *identitystore.Options) {
+	client.IdentityStoreClient = identitystore.NewFromConfig(cfg, func(o *identitystore.Options) {
 		if endpoint := c.Endpoints[names.IdentityStore]; endpoint != "" {
 			o.EndpointResolver = identitystore.EndpointResolverFromURL(endpoint)
 		}
 	})
 
-	client.Inspector2Conn = inspector2.NewFromConfig(cfg, func(o *inspector2.Options) {
+	client.Inspector2Client = inspector2.NewFromConfig(cfg, func(o *inspector2.Options) {
 		if endpoint := c.Endpoints[names.Inspector2]; endpoint != "" {
 			o.EndpointResolver = inspector2.EndpointResolverFromURL(endpoint)
 		}
 	})
 
-	client.KendraConn = kendra.NewFromConfig(cfg, func(o *kendra.Options) {
+	client.KendraClient = kendra.NewFromConfig(cfg, func(o *kendra.Options) {
 		if endpoint := c.Endpoints[names.Kendra]; endpoint != "" {
 			o.EndpointResolver = kendra.EndpointResolverFromURL(endpoint)
 		}
 	})
 
-	client.MediaLiveConn = medialive.NewFromConfig(cfg, func(o *medialive.Options) {
+	client.MediaLiveClient = medialive.NewFromConfig(cfg, func(o *medialive.Options) {
 		if endpoint := c.Endpoints[names.MediaLive]; endpoint != "" {
 			o.EndpointResolver = medialive.EndpointResolverFromURL(endpoint)
 		}
 	})
 
-	client.RolesAnywhereConn = rolesanywhere.NewFromConfig(cfg, func(o *rolesanywhere.Options) {
+	client.RolesAnywhereClient = rolesanywhere.NewFromConfig(cfg, func(o *rolesanywhere.Options) {
 		if endpoint := c.Endpoints[names.RolesAnywhere]; endpoint != "" {
 			o.EndpointResolver = rolesanywhere.EndpointResolverFromURL(endpoint)
 		}
 	})
 
-	client.Route53DomainsConn = route53domains.NewFromConfig(cfg, func(o *route53domains.Options) {
+	client.Route53DomainsClient = route53domains.NewFromConfig(cfg, func(o *route53domains.Options) {
 		if endpoint := c.Endpoints[names.Route53Domains]; endpoint != "" {
 			o.EndpointResolver = route53domains.EndpointResolverFromURL(endpoint)
 		} else if partition == endpoints.AwsPartitionID {
@@ -258,13 +258,13 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 		}
 	})
 
-	client.SESV2Conn = sesv2.NewFromConfig(cfg, func(o *sesv2.Options) {
+	client.SESV2Client = sesv2.NewFromConfig(cfg, func(o *sesv2.Options) {
 		if endpoint := c.Endpoints[names.SESV2]; endpoint != "" {
 			o.EndpointResolver = sesv2.EndpointResolverFromURL(endpoint)
 		}
 	})
 
-	client.TranscribeConn = transcribe.NewFromConfig(cfg, func(o *transcribe.Options) {
+	client.TranscribeClient = transcribe.NewFromConfig(cfg, func(o *transcribe.Options) {
 		if endpoint := c.Endpoints[names.Transcribe]; endpoint != "" {
 			o.EndpointResolver = transcribe.EndpointResolverFromURL(endpoint)
 		}

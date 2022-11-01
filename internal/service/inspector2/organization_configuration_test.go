@@ -113,7 +113,7 @@ func testAccOrganizationConfiguration_ec2ECR(t *testing.T) {
 }
 
 func testAccCheckOrganizationConfigurationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).Inspector2Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).Inspector2Client
 	ctx := context.Background()
 
 	enabledDelAdAcct := false
@@ -208,7 +208,7 @@ func testAccCheckOrganizationConfigurationExists(name string) resource.TestCheck
 			return create.Error(names.Inspector2, create.ErrActionCheckingExistence, tfinspector2.ResNameOrganizationConfiguration, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Inspector2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Inspector2Client
 		ctx := context.Background()
 		_, err := conn.DescribeOrganizationConfiguration(ctx, &inspector2.DescribeOrganizationConfigurationInput{})
 

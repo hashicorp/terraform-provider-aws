@@ -388,9 +388,9 @@ type AWSClient struct {
 	CognitoIDPConn                   *cognitoidentityprovider.CognitoIdentityProvider
 	CognitoIdentityConn              *cognitoidentity.CognitoIdentity
 	CognitoSyncConn                  *cognitosync.CognitoSync
-	ComprehendConn                   *comprehend.Client
+	ComprehendClient                 *comprehend.Client
 	ComprehendMedicalConn            *comprehendmedical.ComprehendMedical
-	ComputeOptimizerConn             *computeoptimizer.Client
+	ComputeOptimizerClient           *computeoptimizer.Client
 	ConfigServiceConn                *configservice.ConfigService
 	ConnectConn                      *connect.Connect
 	ConnectContactLensConn           *connectcontactlens.ConnectContactLens
@@ -435,7 +435,7 @@ type AWSClient struct {
 	ElasticsearchConn                *elasticsearchservice.ElasticsearchService
 	EventsConn                       *eventbridge.EventBridge
 	EvidentlyConn                    *cloudwatchevidently.CloudWatchEvidently
-	FISConn                          *fis.Client
+	FISClient                        *fis.Client
 	FMSConn                          *fms.FMS
 	FSxConn                          *fsx.FSx
 	FinSpaceConn                     *finspace.Finspace
@@ -458,10 +458,10 @@ type AWSClient struct {
 	HoneycodeConn                    *honeycode.Honeycode
 	IAMConn                          *iam.IAM
 	IVSConn                          *ivs.IVS
-	IdentityStoreConn                *identitystore.Client
+	IdentityStoreClient              *identitystore.Client
 	ImageBuilderConn                 *imagebuilder.Imagebuilder
 	InspectorConn                    *inspector.Inspector
-	Inspector2Conn                   *inspector2.Client
+	Inspector2Client                 *inspector2.Client
 	IoTConn                          *iot.IoT
 	IoT1ClickDevicesConn             *iot1clickdevicesservice.IoT1ClickDevicesService
 	IoT1ClickProjectsConn            *iot1clickprojects.IoT1ClickProjects
@@ -480,7 +480,7 @@ type AWSClient struct {
 	KMSConn                          *kms.KMS
 	KafkaConn                        *kafka.Kafka
 	KafkaConnectConn                 *kafkaconnect.KafkaConnect
-	KendraConn                       *kendra.Client
+	KendraClient                     *kendra.Client
 	KeyspacesConn                    *keyspaces.Keyspaces
 	KinesisConn                      *kinesis.Kinesis
 	KinesisAnalyticsConn             *kinesisanalytics.KinesisAnalytics
@@ -515,7 +515,7 @@ type AWSClient struct {
 	MarketplaceMeteringConn          *marketplacemetering.MarketplaceMetering
 	MediaConnectConn                 *mediaconnect.MediaConnect
 	MediaConvertConn                 *mediaconvert.MediaConvert
-	MediaLiveConn                    *medialive.Client
+	MediaLiveClient                  *medialive.Client
 	MediaPackageConn                 *mediapackage.MediaPackage
 	MediaPackageVODConn              *mediapackagevod.MediaPackageVod
 	MediaStoreConn                   *mediastore.MediaStore
@@ -564,9 +564,9 @@ type AWSClient struct {
 	ResourceGroupsConn               *resourcegroups.ResourceGroups
 	ResourceGroupsTaggingAPIConn     *resourcegroupstaggingapi.ResourceGroupsTaggingAPI
 	RoboMakerConn                    *robomaker.RoboMaker
-	RolesAnywhereConn                *rolesanywhere.Client
+	RolesAnywhereClient              *rolesanywhere.Client
 	Route53Conn                      *route53.Route53
-	Route53DomainsConn               *route53domains.Client
+	Route53DomainsClient             *route53domains.Client
 	Route53RecoveryClusterConn       *route53recoverycluster.Route53RecoveryCluster
 	Route53RecoveryControlConfigConn *route53recoverycontrolconfig.Route53RecoveryControlConfig
 	Route53RecoveryReadinessConn     *route53recoveryreadiness.Route53RecoveryReadiness
@@ -575,7 +575,7 @@ type AWSClient struct {
 	S3ControlConn                    *s3control.S3Control
 	S3OutpostsConn                   *s3outposts.S3Outposts
 	SESConn                          *ses.SES
-	SESV2Conn                        *sesv2.Client
+	SESV2Client                      *sesv2.Client
 	SFNConn                          *sfn.SFN
 	SMSConn                          *sms.SMS
 	SNSConn                          *sns.SNS
@@ -613,7 +613,7 @@ type AWSClient struct {
 	TextractConn                     *textract.Textract
 	TimestreamQueryConn              *timestreamquery.TimestreamQuery
 	TimestreamWriteConn              *timestreamwrite.TimestreamWrite
-	TranscribeConn                   *transcribe.Client
+	TranscribeClient                 *transcribe.Client
 	TranscribeStreamingConn          *transcribestreamingservice.TranscribeStreamingService
 	TransferConn                     *transfer.Transfer
 	TranslateConn                    *translate.Translate

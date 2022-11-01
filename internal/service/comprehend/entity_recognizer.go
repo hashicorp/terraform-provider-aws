@@ -299,7 +299,7 @@ func ResourceEntityRecognizer() *schema.Resource {
 
 func resourceEntityRecognizerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	awsClient := meta.(*conns.AWSClient)
-	conn := awsClient.ComprehendConn
+	conn := awsClient.ComprehendClient
 
 	var versionName *string
 	raw := d.GetRawConfig().GetAttr("version_name")
@@ -318,7 +318,7 @@ func resourceEntityRecognizerCreate(ctx context.Context, d *schema.ResourceData,
 }
 
 func resourceEntityRecognizerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ComprehendConn
+	conn := meta.(*conns.AWSClient).ComprehendClient
 
 	out, err := FindEntityRecognizerByID(ctx, conn, d.Id())
 
@@ -377,7 +377,7 @@ func resourceEntityRecognizerRead(ctx context.Context, d *schema.ResourceData, m
 
 func resourceEntityRecognizerUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	awsClient := meta.(*conns.AWSClient)
-	conn := awsClient.ComprehendConn
+	conn := awsClient.ComprehendClient
 
 	var diags diag.Diagnostics
 
@@ -407,7 +407,7 @@ func resourceEntityRecognizerUpdate(ctx context.Context, d *schema.ResourceData,
 }
 
 func resourceEntityRecognizerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ComprehendConn
+	conn := meta.(*conns.AWSClient).ComprehendClient
 
 	log.Printf("[INFO] Stopping Comprehend Entity Recognizer (%s)", d.Id())
 
