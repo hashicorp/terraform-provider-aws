@@ -28,6 +28,7 @@ func TestAccSSMDefaultPatchBaseline_serial(t *testing.T) {
 		"otherOperatingSystem": testAccSSMDefaultPatchBaseline_otherOperatingSystem,
 		"patchBaselineARN":     testAccSSMDefaultPatchBaseline_patchBaselineARN,
 		"systemDefault":        testAccSSMDefaultPatchBaseline_systemDefault,
+		"update":               testAccSSMDefaultPatchBaseline_update,
 	}
 
 	for name, tc := range testCases {
@@ -223,6 +224,55 @@ func testAccSSMDefaultPatchBaseline_systemDefault(t *testing.T) {
 	})
 }
 
+func testAccSSMDefaultPatchBaseline_update(t *testing.T) {
+	var v1, v2 ssm.GetDefaultPatchBaselineOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_ssm_default_patch_baseline.test"
+	baselineResourceName := "aws_ssm_patch_baseline.test"
+	baselineUpdatedResourceName := "aws_ssm_patch_baseline.updated"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckPartitionHasService(names.SSMEndpointID, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDefaultPatchBaselineDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDefaultPatchBaselineConfig_operatingSystem(rName, types.OperatingSystemWindows),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDefaultPatchBaselineExists(resourceName, &v1),
+					resource.TestCheckResourceAttrPair(resourceName, "baseline_id", baselineResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "id", baselineResourceName, "operating_system"),
+				),
+			},
+			{
+				Config: testAccDefaultPatchBaselineConfig_updated(rName, types.OperatingSystemWindows),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDefaultPatchBaselineExists(resourceName, &v2),
+					resource.TestCheckResourceAttrPair(resourceName, "baseline_id", baselineUpdatedResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "id", baselineUpdatedResourceName, "operating_system"),
+				),
+			},
+			// Import by OS
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			// Import by Baseline ID
+			{
+				ResourceName:      resourceName,
+				ImportStateIdFunc: testAccDefaultPatchBaselineImportStateIdFunc(resourceName),
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckDefaultPatchBaselineDestroy(s *terraform.State) error {
 	tfssm.SSMClientV2.Init(acctest.Provider.Meta().(*conns.AWSClient).Config, func(c aws.Config) *ssm.Client {
 		return ssm.NewFromConfig(c)
@@ -345,4 +395,28 @@ data "aws_ssm_patch_baseline" "test" {
   operating_system = "CENTOS"
 }
 `
+}
+
+func testAccDefaultPatchBaselineConfig_updated(rName string, os types.OperatingSystem) string {
+	return fmt.Sprintf(`
+resource "aws_ssm_default_patch_baseline" "test" {
+  baseline_id = aws_ssm_patch_baseline.updated.id
+}
+
+resource "aws_ssm_patch_baseline" "test" {
+  name             = %[1]q
+  operating_system = %[2]q
+
+  approved_patches                  = ["KB123456"]
+  approved_patches_compliance_level = "CRITICAL"
+}
+
+resource "aws_ssm_patch_baseline" "updated" {
+  name             = "%[1]s-updated"
+  operating_system = %[2]q
+
+  approved_patches                  = ["KB123456"]
+  approved_patches_compliance_level = "CRITICAL"
+}
+`, rName, os)
 }
