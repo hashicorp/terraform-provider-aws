@@ -11,7 +11,7 @@ import (
 
 func statusDirectoryStage(conn *directoryservice.DirectoryService, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := findDirectoryByID(conn, id)
+		output, err := FindDirectoryByID(conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -25,9 +25,9 @@ func statusDirectoryStage(conn *directoryservice.DirectoryService, id string) re
 	}
 }
 
-func statusDirectoryShare(conn *directoryservice.DirectoryService, id string) resource.StateRefreshFunc {
+func statusDirectoryShareStatus(conn *directoryservice.DirectoryService, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := findDirectoryByID(conn, id)
+		output, err := FindDirectoryByID(conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -41,9 +41,57 @@ func statusDirectoryShare(conn *directoryservice.DirectoryService, id string) re
 	}
 }
 
-func statusSharedDirectory(ctx context.Context, conn *directoryservice.DirectoryService, ownerId, sharedId string) resource.StateRefreshFunc {
+func statusDomainController(conn *directoryservice.DirectoryService, directoryID, domainControllerID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := findSharedDirectoryByIDs(ctx, conn, ownerId, sharedId)
+		output, err := FindDomainController(conn, directoryID, domainControllerID)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.Status), nil
+	}
+}
+
+func statusRadius(_ context.Context, conn *directoryservice.DirectoryService, directoryID string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindDirectoryByID(conn, directoryID)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.RadiusStatus), nil
+	}
+}
+
+func statusRegion(ctx context.Context, conn *directoryservice.DirectoryService, directoryID, regionName string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindRegion(ctx, conn, directoryID, regionName)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.Status), nil
+	}
+}
+
+func statusSharedDirectory(ctx context.Context, conn *directoryservice.DirectoryService, ownerDirectoryID, sharedDirectoryID string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindSharedDirectory(ctx, conn, ownerDirectoryID, sharedDirectoryID)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

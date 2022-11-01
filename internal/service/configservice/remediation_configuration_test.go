@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfconfigservice "github.com/hashicorp/terraform-provider-aws/internal/service/configservice"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -274,11 +275,11 @@ func testAccCheckRemediationConfigurationExists(n string, obj *configservice.Rem
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return names.Error(names.ConfigService, names.ErrActionCheckingExistence, tfconfigservice.ResNameRemediationConfiguration, n, errors.New("not found in state"))
+			return create.Error(names.ConfigService, create.ErrActionCheckingExistence, tfconfigservice.ResNameRemediationConfiguration, n, errors.New("not found in state"))
 		}
 
 		if rs.Primary.ID == "" {
-			return names.Error(names.ConfigService, names.ErrActionCheckingExistence, tfconfigservice.ResNameRemediationConfiguration, n, errors.New("ID not set"))
+			return create.Error(names.ConfigService, create.ErrActionCheckingExistence, tfconfigservice.ResNameRemediationConfiguration, n, errors.New("ID not set"))
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ConfigServiceConn
@@ -286,10 +287,10 @@ func testAccCheckRemediationConfigurationExists(n string, obj *configservice.Rem
 			ConfigRuleNames: []*string{aws.String(rs.Primary.Attributes["config_rule_name"])},
 		})
 		if err != nil {
-			return names.Error(names.ConfigService, names.ErrActionCheckingExistence, tfconfigservice.ResNameRemediationConfiguration, n, err)
+			return create.Error(names.ConfigService, create.ErrActionCheckingExistence, tfconfigservice.ResNameRemediationConfiguration, n, err)
 		}
 		if len(out.RemediationConfigurations) < 1 {
-			return names.Error(names.ConfigService, names.ErrActionCheckingExistence, tfconfigservice.ResNameRemediationConfiguration, n, errors.New("not found"))
+			return create.Error(names.ConfigService, create.ErrActionCheckingExistence, tfconfigservice.ResNameRemediationConfiguration, n, errors.New("not found"))
 		}
 
 		rc := out.RemediationConfigurations[0]
@@ -314,7 +315,7 @@ func testAccCheckRemediationConfigurationDestroy(s *terraform.State) error {
 		if err == nil {
 			if len(resp.RemediationConfigurations) != 0 &&
 				aws.StringValue(resp.RemediationConfigurations[0].ConfigRuleName) == rs.Primary.Attributes["name"] {
-				return names.Error(names.ConfigService, names.ErrActionCheckingDestroyed, tfconfigservice.ResNameRemediationConfiguration, rs.Primary.Attributes["name"], errors.New("still exists"))
+				return create.Error(names.ConfigService, create.ErrActionCheckingDestroyed, tfconfigservice.ResNameRemediationConfiguration, rs.Primary.Attributes["name"], errors.New("still exists"))
 			}
 		}
 	}
@@ -325,7 +326,7 @@ func testAccCheckRemediationConfigurationDestroy(s *terraform.State) error {
 func testAccCheckRemediationConfigurationNotRecreated(before, after *configservice.RemediationConfiguration) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if aws.StringValue(before.Arn) != aws.StringValue(after.Arn) {
-			return names.Error(names.ConfigService, names.ErrActionCheckingNotRecreated, tfconfigservice.ResNameRemediationConfiguration, aws.StringValue(before.Arn), fmt.Errorf("ARNs changed, new: %s", aws.StringValue(after.Arn)))
+			return create.Error(names.ConfigService, create.ErrActionCheckingNotRecreated, tfconfigservice.ResNameRemediationConfiguration, aws.StringValue(before.Arn), fmt.Errorf("ARNs changed, new: %s", aws.StringValue(after.Arn)))
 		}
 		return nil
 	}
@@ -334,7 +335,7 @@ func testAccCheckRemediationConfigurationNotRecreated(before, after *configservi
 func testAccCheckRemediationConfigurationRecreated(before, after *configservice.RemediationConfiguration) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if aws.StringValue(before.Arn) == aws.StringValue(after.Arn) {
-			return names.Error(names.ConfigService, names.ErrActionCheckingRecreated, tfconfigservice.ResNameRemediationConfiguration, aws.StringValue(before.Arn), fmt.Errorf("wasn't recreated, new: %s", aws.StringValue(after.Arn)))
+			return create.Error(names.ConfigService, create.ErrActionCheckingRecreated, tfconfigservice.ResNameRemediationConfiguration, aws.StringValue(before.Arn), fmt.Errorf("wasn't recreated, new: %s", aws.StringValue(after.Arn)))
 		}
 		return nil
 	}

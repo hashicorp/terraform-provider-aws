@@ -79,6 +79,7 @@ func ResourceContactFlow() *schema.Resource {
 			"type": {
 				Type:         schema.TypeString,
 				Optional:     true,
+				ForceNew:     true,
 				Default:      connect.ContactFlowTypeContactFlow,
 				ValidateFunc: validation.StringInSlice(connect.ContactFlowType_Values(), false),
 			},

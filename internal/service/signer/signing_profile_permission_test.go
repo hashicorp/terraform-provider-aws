@@ -11,7 +11,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 )
 
 func TestAccSignerSigningProfilePermission_basic(t *testing.T) {
@@ -35,7 +34,7 @@ func TestAccSignerSigningProfilePermission_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSigningProfileExists(profileResourceName, &conf),
 					testAccCheckSigningProfilePermissionExists(resourceName, profileName, &sppconf),
-					create.TestCheckResourceAttrNameGenerated(resourceName, "statement_id"),
+					acctest.CheckResourceAttrNameGenerated(resourceName, "statement_id"),
 				),
 			},
 			{
@@ -143,7 +142,7 @@ func TestAccSignerSigningProfilePermission_statementPrefix(t *testing.T) {
 				Config: testAccSigningProfilePermissionConfig_statementPrefix(statementNamePrefix, profileName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSigningProfilePermissionExists(resourceName, profileName, &sppconf),
-					create.TestCheckResourceAttrNameFromPrefix(resourceName, "statement_id", statementNamePrefix),
+					acctest.CheckResourceAttrNameFromPrefix(resourceName, "statement_id", statementNamePrefix),
 				),
 			},
 			{

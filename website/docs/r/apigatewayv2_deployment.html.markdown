@@ -13,7 +13,7 @@ More information can be found in the [Amazon API Gateway Developer Guide](https:
 
 -> **Note:** Creating a deployment for an API requires at least one `aws_apigatewayv2_route` resource associated with that API. To avoid race conditions when all resources are being created together, you need to add implicit resource references via the `triggers` argument or explicit resource references using the [resource `depends_on` meta-argument](https://www.terraform.io/docs/configuration/meta-arguments/depends_on.html).
 
--> Enable the [resource `lifecycle` configuration block `create_before_destroy` argument](https://www.terraform.io/docs/configuration/resources.html#create_before_destroy) in this resource configuration to properly order redeployments in Terraform.
+-> Enable the [resource `lifecycle` configuration block `create_before_destroy` argument](https://www.terraform.io/language/meta-arguments/lifecycle#create_before_destroy) in this resource configuration to properly order redeployments in Terraform.
 
 ## Example Usage
 
@@ -21,7 +21,7 @@ More information can be found in the [Amazon API Gateway Developer Guide](https:
 
 ```terraform
 resource "aws_apigatewayv2_deployment" "example" {
-  api_id      = aws_apigatewayv2_route.example.api_id
+  api_id      = aws_apigatewayv2_api.example.id
   description = "Example deployment"
 
   lifecycle {
@@ -56,15 +56,15 @@ resource "aws_apigatewayv2_deployment" "example" {
 
 The following arguments are supported:
 
-* `api_id` - (Required) The API identifier.
-* `description` - (Optional) The description for the deployment resource. Must be less than or equal to 1024 characters in length.
-* `triggers` - (Optional) A map of arbitrary keys and values that, when changed, will trigger a redeployment. To force a redeployment without changing these keys/values, use the [`terraform taint` command](https://www.terraform.io/docs/commands/taint.html).
+* `api_id` - (Required) API identifier.
+* `description` - (Optional) Description for the deployment resource. Must be less than or equal to 1024 characters in length.
+* `triggers` - (Optional) Map of arbitrary keys and values that, when changed, will trigger a redeployment. To force a redeployment without changing these keys/values, use the [`terraform taint` command](https://www.terraform.io/docs/commands/taint.html).
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - The deployment identifier.
+* `id` - Deployment identifier.
 * `auto_deployed` - Whether the deployment was automatically released.
 
 ## Import

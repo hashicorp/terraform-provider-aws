@@ -225,7 +225,6 @@ func resourceAppDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if _, err := conn.DeleteApp(input); err != nil {
-
 		if tfawserr.ErrMessageContains(err, "ValidationException", "has already been deleted") ||
 			tfawserr.ErrMessageContains(err, "ValidationException", "previously failed and was automatically deleted") {
 			return nil

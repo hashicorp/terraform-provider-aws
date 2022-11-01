@@ -11,6 +11,7 @@ func TestAccGuardDuty_serial(t *testing.T) {
 			"basic":                             testAccDetector_basic,
 			"datasources_s3logs":                testAccDetector_datasources_s3logs,
 			"datasources_kubernetes_audit_logs": testAccDetector_datasources_kubernetes_audit_logs,
+			"datasources_malware_protection":    testAccDetector_datasources_malware_protection,
 			"datasources_all":                   testAccDetector_datasources_all,
 			"tags":                              testAccDetector_tags,
 			"datasource_basic":                  testAccDetectorDataSource_basic,
@@ -33,9 +34,10 @@ func TestAccGuardDuty_serial(t *testing.T) {
 			"basic": testAccOrganizationAdminAccount_basic,
 		},
 		"OrganizationConfiguration": {
-			"basic":      testAccOrganizationConfiguration_basic,
-			"s3Logs":     testAccOrganizationConfiguration_s3logs,
-			"kubernetes": testAccOrganizationConfiguration_kubernetes,
+			"basic":             testAccOrganizationConfiguration_basic,
+			"s3Logs":            testAccOrganizationConfiguration_s3logs,
+			"kubernetes":        testAccOrganizationConfiguration_kubernetes,
+			"malwareProtection": testAccOrganizationConfiguration_malwareprotection,
 		},
 		"ThreatIntelSet": {
 			"basic": testAccThreatintelset_basic,

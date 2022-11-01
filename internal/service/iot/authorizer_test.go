@@ -224,7 +224,7 @@ resource "aws_lambda_function" "test" {
   function_name    = %[1]q
   role             = aws_iam_role.test.arn
   handler          = "exports.example"
-  runtime          = "nodejs12.x"
+  runtime          = "nodejs16.x"
 }
 `, rName)
 }
@@ -237,7 +237,7 @@ resource "aws_iot_authorizer" "test" {
   token_key_name          = "Token-Header-1"
 
   token_signing_public_keys = {
-    Key1 = "${file("test-fixtures/iot-authorizer-signing-key.pem")}"
+    Key1 = file("test-fixtures/iot-authorizer-signing-key.pem")
   }
 }
 `, rName))
@@ -254,8 +254,8 @@ resource "aws_iot_authorizer" "test" {
   enable_caching_for_http = true
 
   token_signing_public_keys = {
-    Key1 = "${file("test-fixtures/iot-authorizer-signing-key.pem")}"
-    Key2 = "${file("test-fixtures/iot-authorizer-signing-key.pem")}"
+    Key1 = file("test-fixtures/iot-authorizer-signing-key.pem")
+    Key2 = file("test-fixtures/iot-authorizer-signing-key.pem")
   }
 }
 `, rName))

@@ -46,7 +46,7 @@ func testAccPreCheck(t *testing.T) {
 
 	input := &route53domains.ListDomainsInput{}
 
-	_, err := conn.ListDomains(context.TODO(), input)
+	_, err := conn.ListDomains(context.Background(), input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)

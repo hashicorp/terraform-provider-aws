@@ -35,6 +35,7 @@ func TestAccSESConfigurationSet_basic(t *testing.T) {
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "ses", fmt.Sprintf("configuration-set/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "delivery_options.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tracking_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "sending_enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "reputation_metrics_enabled", "false"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_fresh_start"),
@@ -303,6 +304,37 @@ func TestAccSESConfigurationSet_Update_emptyDeliveryOptions(t *testing.T) {
 	})
 }
 
+/*
+// TestAccSESConfigurationSet_trackingOptions requires a verified domain
+// which poses a problem for testing.
+func TestAccSESConfigurationSet_trackingOptions(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_ses_configuration_set.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ses.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckConfigurationSetDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccConfigurationSetConfig_trackingOptions(rName, "wn011su7.test"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckConfigurationSetExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tracking_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tracking_options.0.custom_redirect_domain", rName),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+*/
+
 func TestAccSESConfigurationSet_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ses_configuration_set.test"
@@ -353,7 +385,6 @@ func testAccCheckConfigurationSetExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("The configuration set was not created")
 		}
 		return nil
-
 	}
 }
 
@@ -416,6 +447,21 @@ resource "aws_ses_configuration_set" "test" {
 }
 `, rName, tlsPolicy)
 }
+
+/*
+// this cannot currently be tested without a verified domain
+func testAccConfigurationSetConfig_trackingOptions(rName, customRedirect string) string {
+	return fmt.Sprintf(`
+resource "aws_ses_configuration_set" "test" {
+  name = %[1]q
+
+  tracking_options {
+    custom_redirect_domain = %[2]q
+  }
+}
+`, rName, customRedirect)
+}
+*/
 
 func testAccConfigurationSetConfig_emptyDeliveryOptions(rName string) string {
 	return fmt.Sprintf(`

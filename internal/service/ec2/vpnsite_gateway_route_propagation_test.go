@@ -75,13 +75,7 @@ func testAccCheckVPNGatewayRoutePropagationExists(n string) resource.TestCheckFu
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
-		err = tfec2.FindVPNGatewayRoutePropagationExists(conn, routeTableID, gatewayID)
-
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return tfec2.FindVPNGatewayRoutePropagationExists(conn, routeTableID, gatewayID)
 	}
 }
 

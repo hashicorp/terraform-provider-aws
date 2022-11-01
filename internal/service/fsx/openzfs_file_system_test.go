@@ -69,6 +69,7 @@ func TestAccFSxOpenzfsFileSystem_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.nfs_exports.0.client_configurations.0.options.0", "rw"),
 					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.nfs_exports.0.client_configurations.0.options.1", "crossmnt"),
 					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.read_only", "false"),
+					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.record_size_kib", "128"),
 					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.user_and_group_quotas.#", "0"),
 				),
 			},
@@ -168,6 +169,7 @@ func TestAccFSxOpenzfsFileSystem_rootVolume(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.nfs_exports.0.client_configurations.0.options.0", "sync"),
 					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.nfs_exports.0.client_configurations.0.options.1", "rw"),
 					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.read_only", "false"),
+					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.record_size_kib", "128"),
 					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.user_and_group_quotas.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "root_volume_configuration.0.user_and_group_quotas.*", map[string]string{
 						"id":                         "10",
@@ -183,7 +185,7 @@ func TestAccFSxOpenzfsFileSystem_rootVolume(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"security_group_ids"},
 			},
 			{
-				Config: testAccOpenZFSFileSystemConfig_rootVolume2(rName, "ZSTD", "true", 256),
+				Config: testAccOpenZFSFileSystemConfig_rootVolume2(rName, "ZSTD", "true", 256, 8),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOpenzfsFileSystemExists(resourceName, &filesystem2),
 					testAccCheckOpenzfsFileSystemNotRecreated(&filesystem1, &filesystem2),
@@ -196,6 +198,7 @@ func TestAccFSxOpenzfsFileSystem_rootVolume(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.nfs_exports.0.client_configurations.0.options.0", "async"),
 					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.nfs_exports.0.client_configurations.0.options.1", "rw"),
 					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.read_only", "true"),
+					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.record_size_kib", "8"),
 					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.user_and_group_quotas.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "root_volume_configuration.0.user_and_group_quotas.*", map[string]string{
 						"id":                         "10",
@@ -205,7 +208,7 @@ func TestAccFSxOpenzfsFileSystem_rootVolume(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccOpenZFSFileSystemConfig_rootVolume3Client(rName, "NONE", "false", 128, 1024),
+				Config: testAccOpenZFSFileSystemConfig_rootVolume3Client(rName, "NONE", "false", 128, 1024, 512),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOpenzfsFileSystemExists(resourceName, &filesystem3),
 					testAccCheckOpenzfsFileSystemNotRecreated(&filesystem1, &filesystem3),
@@ -224,6 +227,7 @@ func TestAccFSxOpenzfsFileSystem_rootVolume(t *testing.T) {
 						"options.1": "rw",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.read_only", "false"),
+					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.record_size_kib", "512"),
 					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.user_and_group_quotas.#", "4"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "root_volume_configuration.0.user_and_group_quotas.*", map[string]string{
 						"id":                         "10",
@@ -255,6 +259,7 @@ func TestAccFSxOpenzfsFileSystem_rootVolume(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.data_compression_type", "NONE"),
 					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.nfs_exports.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.read_only", "false"),
+					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.record_size_kib", "128"),
 					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.user_and_group_quotas.#", "4"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "root_volume_configuration.0.user_and_group_quotas.*", map[string]string{
 						"id":                         "10",
@@ -1096,13 +1101,14 @@ resource "aws_fsx_openzfs_file_system" "test" {
 `, rName, dataCompression, readOnly, quotaSize))
 }
 
-func testAccOpenZFSFileSystemConfig_rootVolume2(rName, dataCompression, readOnly string, quotaSize int) string {
+func testAccOpenZFSFileSystemConfig_rootVolume2(rName, dataCompression, readOnly string, quotaSize, recordSizeKiB int) string {
 	return acctest.ConfigCompose(testAccOpenzfsFileSystemBaseConfig(rName), fmt.Sprintf(`
 resource "aws_fsx_openzfs_file_system" "test" {
   storage_capacity    = 64
   subnet_ids          = [aws_subnet.test1.id]
   deployment_type     = "SINGLE_AZ_1"
   throughput_capacity = 64
+
   root_volume_configuration {
     copy_tags_to_snapshots = true
     data_compression_type  = %[2]q
@@ -1112,7 +1118,10 @@ resource "aws_fsx_openzfs_file_system" "test" {
         options = ["async", "rw"]
       }
     }
-    read_only = %[3]s
+
+    read_only       = %[3]s
+    record_size_kib = %[5]d
+
     user_and_group_quotas {
       id                         = 10
       storage_capacity_quota_gib = %[4]d
@@ -1124,16 +1133,17 @@ resource "aws_fsx_openzfs_file_system" "test" {
     Name = %[1]q
   }
 }
-`, rName, dataCompression, readOnly, quotaSize))
+`, rName, dataCompression, readOnly, quotaSize, recordSizeKiB))
 }
 
-func testAccOpenZFSFileSystemConfig_rootVolume3Client(rName, dataCompression, readOnly string, userQuota, groupQuota int) string {
+func testAccOpenZFSFileSystemConfig_rootVolume3Client(rName, dataCompression, readOnly string, userQuota, groupQuota, recordSizeKiB int) string {
 	return acctest.ConfigCompose(testAccOpenzfsFileSystemBaseConfig(rName), fmt.Sprintf(`
 resource "aws_fsx_openzfs_file_system" "test" {
   storage_capacity    = 64
   subnet_ids          = [aws_subnet.test1.id]
   deployment_type     = "SINGLE_AZ_1"
   throughput_capacity = 64
+
   root_volume_configuration {
     copy_tags_to_snapshots = true
     data_compression_type  = %[2]q
@@ -1147,7 +1157,10 @@ resource "aws_fsx_openzfs_file_system" "test" {
         options = ["sync", "rw"]
       }
     }
-    read_only = %[3]s
+
+    read_only       = %[3]s
+    record_size_kib = %[6]d
+
     user_and_group_quotas {
       id                         = 10
       storage_capacity_quota_gib = %[4]d
@@ -1174,7 +1187,7 @@ resource "aws_fsx_openzfs_file_system" "test" {
     Name = %[1]q
   }
 }
-`, rName, dataCompression, readOnly, userQuota, groupQuota))
+`, rName, dataCompression, readOnly, userQuota, groupQuota, recordSizeKiB))
 }
 
 func testAccOpenZFSFileSystemConfig_rootVolume4(rName, dataCompression, readOnly string, userQuota, groupQuota int) string {

@@ -107,7 +107,6 @@ data "aws_iam_policy_document" "inline_policy" {
 
 This example creates an IAM role with what appears to be empty IAM `inline_policy` argument instead of using `inline_policy` as a configuration block. The result is that if someone were to add an inline policy out-of-band, on the next apply, Terraform will remove that policy.
 
-
 ```terraform
 resource "aws_iam_role" "example" {
   name               = "yak_role"
@@ -190,7 +189,7 @@ The following arguments are optional:
 * `name_prefix` - (Optional, Forces new resource) Creates a unique friendly name beginning with the specified prefix. Conflicts with `name`.
 * `path` - (Optional) Path to the role. See [IAM Identifiers](https://docs.aws.amazon.com/IAM/latest/UserGuide/Using_Identifiers.html) for more information.
 * `permissions_boundary` - (Optional) ARN of the policy that is used to set the permissions boundary for the role.
-* `tags` - Key-value mapping of tags for the IAM role. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - Key-value mapping of tags for the IAM role. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### inline_policy
 
@@ -209,7 +208,7 @@ In addition to all arguments above, the following attributes are exported:
 * `create_date` - Creation date of the IAM role.
 * `id` - Name of the role.
 * `name` - Name of the role.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `unique_id` - Stable and unique string identifying the role.
 
 ## Import

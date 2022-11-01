@@ -3,6 +3,7 @@ package ec2
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -15,6 +16,10 @@ import (
 func DataSourceIPAMPool() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourceIPAMPoolRead,
+
+		Timeouts: &schema.ResourceTimeout{
+			Read: schema.DefaultTimeout(20 * time.Minute),
+		},
 
 		Schema: map[string]*schema.Schema{
 			"filter": DataSourceFiltersSchema(),
@@ -101,7 +106,6 @@ func dataSourceIPAMPoolRead(d *schema.ResourceData, meta interface{}) error {
 
 	if v, ok := d.GetOk("ipam_pool_id"); ok {
 		input.IpamPoolIds = aws.StringSlice([]string{v.(string)})
-
 	}
 
 	filters, filtersOk := d.GetOk("filter")

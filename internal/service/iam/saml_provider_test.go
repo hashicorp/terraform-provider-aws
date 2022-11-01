@@ -131,7 +131,7 @@ func testAccCheckSAMLProviderDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := tfiam.FindSAMLProviderByARN(context.TODO(), conn, rs.Primary.ID)
+		_, err := tfiam.FindSAMLProviderByARN(context.Background(), conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -160,11 +160,7 @@ func testAccCheckSAMLProviderExists(n string) resource.TestCheckFunc {
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
 
-		_, err := tfiam.FindSAMLProviderByARN(context.TODO(), conn, rs.Primary.ID)
-
-		if err != nil {
-			return err
-		}
+		_, err := tfiam.FindSAMLProviderByARN(context.Background(), conn, rs.Primary.ID)
 
 		return err
 	}

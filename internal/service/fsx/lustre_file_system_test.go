@@ -1190,7 +1190,7 @@ func testAccLustreFileSystemConfig_automaticBackupRetentionDays(retention int) s
 	return acctest.ConfigCompose(testAccLustreFileSystemBaseConfig(), fmt.Sprintf(`
 resource "aws_fsx_lustre_file_system" "test" {
   storage_capacity                = 1200
-  subnet_ids                      = ["${aws_subnet.test1.id}"]
+  subnet_ids                      = [aws_subnet.test1.id]
   deployment_type                 = "PERSISTENT_1"
   per_unit_storage_throughput     = 50
   automatic_backup_retention_days = %[1]d

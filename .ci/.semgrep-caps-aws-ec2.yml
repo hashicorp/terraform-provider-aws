@@ -45,7 +45,7 @@ rules:
   - id: caps0-in-func-name
     languages:
       - go
-    message: Use correct caps in func name (i.e., HTTPS or https, not Https) (see list at https://github.com/hashicorp/terraform-provider-aws/tree/main/names/caps.md)
+    message: Use correct caps in func name (i.e., HTTPS or https, not Https) (see list at https://github.com/hashicorp/terraform-provider-aws/blob/main/names/caps.md)
     paths:
       include:
         - internal
@@ -54,12 +54,12 @@ rules:
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
-            - pattern-regex: "(Cloudformation|ElasticSearch|Autoscaling|Elasticache|ApiGateway|Cloudfront|Cloudwatch|Workspaces|Appconfig|Guardduty|Sagemaker|Workgroup|DynamoDb|Dynamodb|Gamelift|Opsworks|Precheck|Rabbitmq|Worklink|Appmesh|Appsync)"
+            - pattern-regex: "(Cloudformation|ElasticSearch|Autoscaling|Elasticache|ApiGateway|Cloudfront|Cloudwatch|Workspaces|Appconfig|Guardduty|Sagemaker|DynamoDb|Dynamodb|Gamelift|Opsworks|Precheck|Rabbitmq|Worklink|Appmesh|Appsync|Graphql)"
     severity: WARNING
   - id: caps0-in-const-name
     languages:
       - go
-    message: Use correct caps in const name (i.e., HTTPS or https, not Https) (see list at https://github.com/hashicorp/terraform-provider-aws/tree/main/names/caps.md)
+    message: Use correct caps in const name (i.e., HTTPS or https, not Https) (see list at https://github.com/hashicorp/terraform-provider-aws/blob/main/names/caps.md)
     paths:
       include:
         - internal
@@ -68,12 +68,12 @@ rules:
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
-            - pattern-regex: "(Cloudformation|ElasticSearch|Autoscaling|Elasticache|ApiGateway|Cloudfront|Cloudwatch|Workspaces|Appconfig|Guardduty|Sagemaker|Workgroup|DynamoDb|Dynamodb|Gamelift|Opsworks|Precheck|Rabbitmq|Worklink|Appmesh|Appsync)"
+            - pattern-regex: "(Cloudformation|ElasticSearch|Autoscaling|Elasticache|ApiGateway|Cloudfront|Cloudwatch|Workspaces|Appconfig|Guardduty|Sagemaker|DynamoDb|Dynamodb|Gamelift|Opsworks|Precheck|Rabbitmq|Worklink|Appmesh|Appsync|Graphql)"
     severity: WARNING
   - id: caps0-in-var-name
     languages:
       - go
-    message: Use correct caps in var name (i.e., HTTPS or https, not Https) (see list at https://github.com/hashicorp/terraform-provider-aws/tree/main/names/caps.md)
+    message: Use correct caps in var name (i.e., HTTPS or https, not Https) (see list at https://github.com/hashicorp/terraform-provider-aws/blob/main/names/caps.md)
     paths:
       include:
         - internal
@@ -82,12 +82,12 @@ rules:
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
-          - pattern-regex: "(Cloudformation|ElasticSearch|Autoscaling|Elasticache|ApiGateway|Cloudfront|Cloudwatch|Workspaces|Appconfig|Guardduty|Sagemaker|Workgroup|DynamoDb|Dynamodb|Gamelift|Opsworks|Precheck|Rabbitmq|Worklink|Appmesh|Appsync)"
+            - pattern-regex: "(Cloudformation|ElasticSearch|Autoscaling|Elasticache|ApiGateway|Cloudfront|Cloudwatch|Workspaces|Appconfig|Guardduty|Sagemaker|DynamoDb|Dynamodb|Gamelift|Opsworks|Precheck|Rabbitmq|Worklink|Appmesh|Appsync|Graphql)"
     severity: WARNING
   - id: caps1-in-func-name
     languages:
       - go
-    message: Use correct caps in func name (i.e., HTTPS or https, not Https) (see list at https://github.com/hashicorp/terraform-provider-aws/tree/main/names/caps.md)
+    message: Use correct caps in func name (i.e., HTTPS or https, not Https) (see list at https://github.com/hashicorp/terraform-provider-aws/blob/main/names/caps.md)
     paths:
       include:
         - internal
@@ -96,12 +96,12 @@ rules:
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
-            - pattern-regex: "(Graphql|Haproxy|AcmPca|Acmpca|Dnssec|Byoip|Cname|DocDb|Docdb|Fqdns|Https|Ipset|Iscsi|Mysql|Oauth|Posix|Wafv2|Cidr|Coip|Dhcp|Dkim)"
+            - pattern-regex: "(Haproxy|AcmPca|Acmpca|Dnssec|Byoip|Cname|DocDb|Docdb|Fqdns|Https|Ipset|Iscsi|Mysql|Oauth|Posix|Wafv2|Cidr|Coip|Dhcp|Dkim|Ecmp)"
     severity: WARNING
   - id: caps1-in-const-name
     languages:
       - go
-    message: Use correct caps in const name (i.e., HTTPS or https, not Https) (see list at https://github.com/hashicorp/terraform-provider-aws/tree/main/names/caps.md)
+    message: Use correct caps in const name (i.e., HTTPS or https, not Https) (see list at https://github.com/hashicorp/terraform-provider-aws/blob/main/names/caps.md)
     paths:
       include:
         - internal
@@ -110,12 +110,12 @@ rules:
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
-            - pattern-regex: "(Graphql|Haproxy|AcmPca|Acmpca|Dnssec|Byoip|Cname|DocDb|Docdb|Fqdns|Https|Ipset|Iscsi|Mysql|Oauth|Posix|Wafv2|Cidr|Coip|Dhcp|Dkim)"
+            - pattern-regex: "(Haproxy|AcmPca|Acmpca|Dnssec|Byoip|Cname|DocDb|Docdb|Fqdns|Https|Ipset|Iscsi|Mysql|Oauth|Posix|Wafv2|Cidr|Coip|Dhcp|Dkim|Ecmp)"
     severity: WARNING
   - id: caps1-in-var-name
     languages:
       - go
-    message: Use correct caps in var name (i.e., HTTPS or https, not Https) (see list at https://github.com/hashicorp/terraform-provider-aws/tree/main/names/caps.md)
+    message: Use correct caps in var name (i.e., HTTPS or https, not Https) (see list at https://github.com/hashicorp/terraform-provider-aws/blob/main/names/caps.md)
     paths:
       include:
         - internal
@@ -124,12 +124,12 @@ rules:
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
-          - pattern-regex: "(Graphql|Haproxy|AcmPca|Acmpca|Dnssec|Byoip|Cname|DocDb|Docdb|Fqdns|Https|Ipset|Iscsi|Mysql|Oauth|Posix|Wafv2|Cidr|Coip|Dhcp|Dkim)"
+            - pattern-regex: "(Haproxy|AcmPca|Acmpca|Dnssec|Byoip|Cname|DocDb|Docdb|Fqdns|Https|Ipset|Iscsi|Mysql|Oauth|Posix|Wafv2|Cidr|Coip|Dhcp|Dkim|Ecmp)"
     severity: WARNING
   - id: caps2-in-func-name
     languages:
       - go
-    message: Use correct caps in func name (i.e., HTTPS or https, not Https) (see list at https://github.com/hashicorp/terraform-provider-aws/tree/main/names/caps.md)
+    message: Use correct caps in func name (i.e., HTTPS or https, not Https) (see list at https://github.com/hashicorp/terraform-provider-aws/blob/main/names/caps.md)
     paths:
       include:
         - internal
@@ -138,12 +138,12 @@ rules:
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
-            - pattern-regex: "(Ecmp|Fifo|Grpc|Http|Ipam|Jdbc|Json|Mwaa|Oidc|Pitr|Qldb|Sasl|Smtp|Voip|Xray|Yaml|Acl|Acm|Ami|Api|Arn)"
+            - pattern-regex: "(Fifo|Grpc|Http|Ipam|Jdbc|Json|Mwaa|Oidc|Pitr|Qldb|Sasl|Smtp|Voip|Xray|Yaml|Acl|Acm|Ami|Api|Arn|Asg)"
     severity: WARNING
   - id: caps2-in-const-name
     languages:
       - go
-    message: Use correct caps in const name (i.e., HTTPS or https, not Https) (see list at https://github.com/hashicorp/terraform-provider-aws/tree/main/names/caps.md)
+    message: Use correct caps in const name (i.e., HTTPS or https, not Https) (see list at https://github.com/hashicorp/terraform-provider-aws/blob/main/names/caps.md)
     paths:
       include:
         - internal
@@ -152,12 +152,12 @@ rules:
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
-            - pattern-regex: "(Ecmp|Fifo|Grpc|Http|Ipam|Jdbc|Json|Mwaa|Oidc|Pitr|Qldb|Sasl|Smtp|Voip|Xray|Yaml|Acl|Acm|Ami|Api|Arn)"
+            - pattern-regex: "(Fifo|Grpc|Http|Ipam|Jdbc|Json|Mwaa|Oidc|Pitr|Qldb|Sasl|Smtp|Voip|Xray|Yaml|Acl|Acm|Ami|Api|Arn|Asg)"
     severity: WARNING
   - id: caps2-in-var-name
     languages:
       - go
-    message: Use correct caps in var name (i.e., HTTPS or https, not Https) (see list at https://github.com/hashicorp/terraform-provider-aws/tree/main/names/caps.md)
+    message: Use correct caps in var name (i.e., HTTPS or https, not Https) (see list at https://github.com/hashicorp/terraform-provider-aws/blob/main/names/caps.md)
     paths:
       include:
         - internal
@@ -166,12 +166,12 @@ rules:
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
-          - pattern-regex: "(Ecmp|Fifo|Grpc|Http|Ipam|Jdbc|Json|Mwaa|Oidc|Pitr|Qldb|Sasl|Smtp|Voip|Xray|Yaml|Acl|Acm|Ami|Api|Arn)"
+            - pattern-regex: "(Fifo|Grpc|Http|Ipam|Jdbc|Json|Mwaa|Oidc|Pitr|Qldb|Sasl|Smtp|Voip|Xray|Yaml|Acl|Acm|Ami|Api|Arn|Asg)"
     severity: WARNING
   - id: caps3-in-func-name
     languages:
       - go
-    message: Use correct caps in func name (i.e., HTTPS or https, not Https) (see list at https://github.com/hashicorp/terraform-provider-aws/tree/main/names/caps.md)
+    message: Use correct caps in func name (i.e., HTTPS or https, not Https) (see list at https://github.com/hashicorp/terraform-provider-aws/blob/main/names/caps.md)
     paths:
       include:
         - internal
@@ -180,12 +180,12 @@ rules:
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
-            - pattern-regex: "(Asg|Asn|Bgp|Cmk|Cpu|Css|Csv|Dax|Dlm|Dms|Dns|Ebs|Ec2|Ecr|Ecs|Efs|Eip|Eks|Elb|Emr|FSX)"
+            - pattern-regex: "(Asn|Bgp|Cmk|Cpu|Css|Csv|Dax|Dlm|Dms|Dns|Ebs|Ec2|Ecr|Ecs|Efs|Eip|Eks|Elb|Emr|FSX|Fms)"
     severity: WARNING
   - id: caps3-in-const-name
     languages:
       - go
-    message: Use correct caps in const name (i.e., HTTPS or https, not Https) (see list at https://github.com/hashicorp/terraform-provider-aws/tree/main/names/caps.md)
+    message: Use correct caps in const name (i.e., HTTPS or https, not Https) (see list at https://github.com/hashicorp/terraform-provider-aws/blob/main/names/caps.md)
     paths:
       include:
         - internal
@@ -194,12 +194,12 @@ rules:
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
-            - pattern-regex: "(Asg|Asn|Bgp|Cmk|Cpu|Css|Csv|Dax|Dlm|Dms|Dns|Ebs|Ec2|Ecr|Ecs|Efs|Eip|Eks|Elb|Emr|FSX)"
+            - pattern-regex: "(Asn|Bgp|Cmk|Cpu|Css|Csv|Dax|Dlm|Dms|Dns|Ebs|Ec2|Ecr|Ecs|Efs|Eip|Eks|Elb|Emr|FSX|Fms)"
     severity: WARNING
   - id: caps3-in-var-name
     languages:
       - go
-    message: Use correct caps in var name (i.e., HTTPS or https, not Https) (see list at https://github.com/hashicorp/terraform-provider-aws/tree/main/names/caps.md)
+    message: Use correct caps in var name (i.e., HTTPS or https, not Https) (see list at https://github.com/hashicorp/terraform-provider-aws/blob/main/names/caps.md)
     paths:
       include:
         - internal
@@ -208,12 +208,12 @@ rules:
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
-          - pattern-regex: "(Asg|Asn|Bgp|Cmk|Cpu|Css|Csv|Dax|Dlm|Dms|Dns|Ebs|Ec2|Ecr|Ecs|Efs|Eip|Eks|Elb|Emr|FSX)"
+            - pattern-regex: "(Asn|Bgp|Cmk|Cpu|Css|Csv|Dax|Dlm|Dms|Dns|Ebs|Ec2|Ecr|Ecs|Efs|Eip|Eks|Elb|Emr|FSX|Fms)"
     severity: WARNING
   - id: caps4-in-func-name
     languages:
       - go
-    message: Use correct caps in func name (i.e., HTTPS or https, not Https) (see list at https://github.com/hashicorp/terraform-provider-aws/tree/main/names/caps.md)
+    message: Use correct caps in func name (i.e., HTTPS or https, not Https) (see list at https://github.com/hashicorp/terraform-provider-aws/blob/main/names/caps.md)
     paths:
       include:
         - internal
@@ -222,12 +222,12 @@ rules:
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
-            - pattern-regex: "(Fms|Fsx|Gcm|Gp2|Gp3|Hsm|Hvm|Iam|Iot|Kms|Mfa|Msk|Nfs|Php|Rds|Rfc|Sfn|Smb|Sms|Sns|Sql)"
+            - pattern-regex: "(Fsx|Gcm|Gp2|Gp3|Hsm|Hvm|Iam|Iot|Kms|Mfa|Msk|Nfs|Php|Rds|Rfc|Sfn|Smb|Sms|Sns|Sql|Sqs)"
     severity: WARNING
   - id: caps4-in-const-name
     languages:
       - go
-    message: Use correct caps in const name (i.e., HTTPS or https, not Https) (see list at https://github.com/hashicorp/terraform-provider-aws/tree/main/names/caps.md)
+    message: Use correct caps in const name (i.e., HTTPS or https, not Https) (see list at https://github.com/hashicorp/terraform-provider-aws/blob/main/names/caps.md)
     paths:
       include:
         - internal
@@ -236,12 +236,12 @@ rules:
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
-            - pattern-regex: "(Fms|Fsx|Gcm|Gp2|Gp3|Hsm|Hvm|Iam|Iot|Kms|Mfa|Msk|Nfs|Php|Rds|Rfc|Sfn|Smb|Sms|Sns|Sql)"
+            - pattern-regex: "(Fsx|Gcm|Gp2|Gp3|Hsm|Hvm|Iam|Iot|Kms|Mfa|Msk|Nfs|Php|Rds|Rfc|Sfn|Smb|Sms|Sns|Sql|Sqs)"
     severity: WARNING
   - id: caps4-in-var-name
     languages:
       - go
-    message: Use correct caps in var name (i.e., HTTPS or https, not Https) (see list at https://github.com/hashicorp/terraform-provider-aws/tree/main/names/caps.md)
+    message: Use correct caps in var name (i.e., HTTPS or https, not Https) (see list at https://github.com/hashicorp/terraform-provider-aws/blob/main/names/caps.md)
     paths:
       include:
         - internal
@@ -250,12 +250,12 @@ rules:
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
-          - pattern-regex: "(Fms|Fsx|Gcm|Gp2|Gp3|Hsm|Hvm|Iam|Iot|Kms|Mfa|Msk|Nfs|Php|Rds|Rfc|Sfn|Smb|Sms|Sns|Sql)"
+            - pattern-regex: "(Fsx|Gcm|Gp2|Gp3|Hsm|Hvm|Iam|Iot|Kms|Mfa|Msk|Nfs|Php|Rds|Rfc|Sfn|Smb|Sms|Sns|Sql|Sqs)"
     severity: WARNING
   - id: caps5-in-func-name
     languages:
       - go
-    message: Use correct caps in func name (i.e., HTTPS or https, not Https) (see list at https://github.com/hashicorp/terraform-provider-aws/tree/main/names/caps.md)
+    message: Use correct caps in func name (i.e., HTTPS or https, not Https) (see list at https://github.com/hashicorp/terraform-provider-aws/blob/main/names/caps.md)
     paths:
       include:
         - internal
@@ -264,12 +264,12 @@ rules:
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
-            - pattern-regex: "(Sqs|Ssh|Ssl|Ssm|Sso|Sts|Swf|Tcp|Tls|Ttl|Uri|Url|Vgw|Vpc|Vpn|Waf|Xss|Db|Ip)"
+            - pattern-regex: "(Ssh|Ssl|Ssm|Sso|Sts|Swf|Tcp|Tls|Ttl|Uri|Url|Vgw|Vpc|Vpn|Waf|Xss|Db|Ip)"
     severity: WARNING
   - id: caps5-in-const-name
     languages:
       - go
-    message: Use correct caps in const name (i.e., HTTPS or https, not Https) (see list at https://github.com/hashicorp/terraform-provider-aws/tree/main/names/caps.md)
+    message: Use correct caps in const name (i.e., HTTPS or https, not Https) (see list at https://github.com/hashicorp/terraform-provider-aws/blob/main/names/caps.md)
     paths:
       include:
         - internal
@@ -278,12 +278,12 @@ rules:
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
-            - pattern-regex: "(Sqs|Ssh|Ssl|Ssm|Sso|Sts|Swf|Tcp|Tls|Ttl|Uri|Url|Vgw|Vpc|Vpn|Waf|Xss|Db|Ip)"
+            - pattern-regex: "(Ssh|Ssl|Ssm|Sso|Sts|Swf|Tcp|Tls|Ttl|Uri|Url|Vgw|Vpc|Vpn|Waf|Xss|Db|Ip)"
     severity: WARNING
   - id: caps5-in-var-name
     languages:
       - go
-    message: Use correct caps in var name (i.e., HTTPS or https, not Https) (see list at https://github.com/hashicorp/terraform-provider-aws/tree/main/names/caps.md)
+    message: Use correct caps in var name (i.e., HTTPS or https, not Https) (see list at https://github.com/hashicorp/terraform-provider-aws/blob/main/names/caps.md)
     paths:
       include:
         - internal
@@ -292,7 +292,7 @@ rules:
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
-          - pattern-regex: "(Sqs|Ssh|Ssl|Ssm|Sso|Sts|Swf|Tcp|Tls|Ttl|Uri|Url|Vgw|Vpc|Vpn|Waf|Xss|Db|Ip)"
+            - pattern-regex: "(Ssh|Ssl|Ssm|Sso|Sts|Swf|Tcp|Tls|Ttl|Uri|Url|Vgw|Vpc|Vpn|Waf|Xss|Db|Ip)"
     severity: WARNING
   - id: ec2-in-func-name
     languages:

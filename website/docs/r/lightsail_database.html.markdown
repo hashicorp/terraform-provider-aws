@@ -98,7 +98,6 @@ resource "aws_lightsail_database" "test" {
 }
 ```
 
-
 ## Argument Reference
 
 The following arguments are supported:
@@ -119,7 +118,6 @@ The following arguments are supported:
 * `final_snapshot_name` - (Required unless `skip_final_snapshot = true`) The name of the database snapshot created if skip final snapshot is false, which is the default value for that parameter.
 * `tags` - (Optional) A map of tags to assign to the resource. To create a key-only tag, use an empty string as the value.
 
-
 ## Blueprint Ids
 
 A list of all available Lightsail Blueprints for Relational Databases the [aws lightsail get-relational-database-blueprints](https://docs.aws.amazon.com/cli/latest/reference/lightsail/get-relational-database-blueprints.html) aws cli command.
@@ -136,7 +134,6 @@ A Blueprint ID starts with a prefix of the engine type.
 ### Suffix
 
 A Blueprint ID has a sufix of the engine version.
-
 
 ## Bundles
 
@@ -185,7 +182,7 @@ In addition to all arguments above, the following attributes are exported:
 * `master_endpoint_address` - The master endpoint fqdn for the database.
 * `secondary_availability_zone` - Describes the secondary Availability Zone of a high availability database. The secondary database is used for failover support of a high availability database.
 * `support_code` - The support code for the database. Include this code in your email to support when you have questions about a database in Lightsail. This code enables our support team to look up your Lightsail information more easily.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 

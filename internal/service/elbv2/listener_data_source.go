@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"sort"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elbv2"
@@ -17,6 +18,10 @@ import (
 func DataSourceListener() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourceListenerRead,
+
+		Timeouts: &schema.ResourceTimeout{
+			Read: schema.DefaultTimeout(20 * time.Minute),
+		},
 
 		Schema: map[string]*schema.Schema{
 			"alpn_policy": {
@@ -341,7 +346,7 @@ func dataSourceListenerRead(d *schema.ResourceData, meta interface{}) error {
 
 	tags, err := ListTags(conn, d.Id())
 
-	if verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
+	if verify.ErrorISOUnsupported(conn.PartitionID, err) {
 		log.Printf("[WARN] Unable to list tags for ELBv2 Listener %s: %s", d.Id(), err)
 		return nil
 	}

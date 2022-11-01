@@ -181,13 +181,9 @@ func testAccCheckProvisioningTemplateExists(n string) resource.TestCheckFunc {
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn
 
-		_, err := tfiot.FindProvisioningTemplateByName(context.TODO(), conn, rs.Primary.ID)
+		_, err := tfiot.FindProvisioningTemplateByName(context.Background(), conn, rs.Primary.ID)
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 
@@ -199,7 +195,7 @@ func testAccCheckProvisioningTemplateDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := tfiot.FindProvisioningTemplateByName(context.TODO(), conn, rs.Primary.ID)
+		_, err := tfiot.FindProvisioningTemplateByName(context.Background(), conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue

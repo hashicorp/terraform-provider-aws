@@ -139,7 +139,7 @@ func TestAccAccountAlternateContact_accountID(t *testing.T) {
 }
 
 func testAccAlternateContactDestroy(s *terraform.State) error {
-	ctx := context.TODO()
+	ctx := context.Background()
 	conn := acctest.Provider.Meta().(*conns.AWSClient).AccountConn
 
 	for _, rs := range s.RootModule().Resources {
@@ -167,7 +167,6 @@ func testAccAlternateContactDestroy(s *terraform.State) error {
 	}
 
 	return nil
-
 }
 
 func testAccCheckAlternateContactExists(n string) resource.TestCheckFunc {
@@ -187,16 +186,12 @@ func testAccCheckAlternateContactExists(n string) resource.TestCheckFunc {
 			return err
 		}
 
-		ctx := context.TODO()
+		ctx := context.Background()
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AccountConn
 
 		_, err = tfaccount.FindAlternateContactByAccountIDAndContactType(ctx, conn, accountID, contactType)
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 
@@ -232,7 +227,7 @@ resource "aws_account_alternate_contact" "test" {
 }
 
 func testAccPreCheck(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 	conn := acctest.Provider.Meta().(*conns.AWSClient).AccountConn
 
 	_, err := tfaccount.FindAlternateContactByAccountIDAndContactType(ctx, conn, "", account.AlternateContactTypeOperations)

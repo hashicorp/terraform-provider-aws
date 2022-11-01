@@ -9,9 +9,9 @@ on:
       - .github/workflows/acctest-terraform-lint.yml
       - .go-version
       - .ci/.tflint.hcl
-      - 'internal/service/**/*_test.go'
       - .ci/scripts/validate-terraform.sh
-      - tools/go.mod
+      - .ci/tools/go.mod
+      - 'internal/service/**/*_test.go'
 
 jobs:
   terrafmt:
@@ -35,8 +35,15 @@ jobs:
             | sort -u \
             | xargs -I {} terrafmt diff --check --fmtcompat {}
 
-  validate-terraform:
-    runs-on: ubuntu-latest
+  tflint:
+    name: Validate Acceptance Tests
+    runs-on: [custom, linux, medium]
+    strategy:
+      matrix:
+        path: ['[a-f]', '[g-z]']
+    env:
+      TEST_FILES_PARTITION: '\./internal/service/${{ matrix.path }}.*/.*_test\.go'
+
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v3
@@ -48,19 +55,20 @@ jobs:
         with:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
-
-      - run: cd .ci/tools && go install github.com/katbyte/terrafmt
-
-      - run: cd .ci/tools && go install github.com/terraform-linters/tflint
-
       - uses: actions/cache@v3
         name: Cache plugin dir
+        continue-on-error: true
+        timeout-minutes: 2
         with:
           path: ~/.tflint.d/plugins
           key: ${{ runner.os }}-tflint-${{ hashFiles('.ci/.tflint.hcl') }}
 
-      - run: tflint -c .ci/.tflint.hcl --init
+      - run: cd .ci/tools && go install github.com/katbyte/terrafmt
+      - run: cd .ci/tools && go install github.com/terraform-linters/tflint
 
+      - run: tflint --config .ci/.tflint.hcl --init
+
+      - run: echo -n "File count $( find ./internal -type f -regextype egrep -regex ${{ env.TEST_FILES_PARTITION }} | wc -l | xargs )"
       - run: |
-          find ./internal/service -type f -name '*_test.go' \
+          find ./internal -type f -regextype egrep -regex ${{ env.TEST_FILES_PARTITION }} \
             | .ci/scripts/validate-terraform.sh

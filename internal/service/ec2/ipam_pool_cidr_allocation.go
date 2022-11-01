@@ -169,7 +169,7 @@ func resourceIPAMPoolCIDRAllocationDelete(d *schema.ResourceData, meta interface
 
 	output, err := conn.ReleaseIpamPoolAllocation(input)
 	if err != nil || !aws.BoolValue(output.Success) {
-		if tfawserr.ErrCodeEquals(err, InvalidIPAMPoolIDNotFound) {
+		if tfawserr.ErrCodeEquals(err, ErrCodeInvalidIPAMPoolIdNotFound) {
 			return nil
 		}
 		return fmt.Errorf("error releasing IPAM Pool Allocation (%s): %w", d.Id(), err)
@@ -179,7 +179,6 @@ func resourceIPAMPoolCIDRAllocationDelete(d *schema.ResourceData, meta interface
 }
 
 func FindIPAMPoolCIDRAllocation(conn *ec2.EC2, id string) (*ec2.IpamPoolAllocation, string, error) {
-
 	allocation_id, pool_id, err := DecodeIPAMPoolCIDRAllocationID(id)
 	if err != nil {
 		return nil, "", fmt.Errorf("error decoding ID (%s): %w", allocation_id, err)

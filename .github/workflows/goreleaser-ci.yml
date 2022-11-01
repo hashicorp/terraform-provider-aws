@@ -9,7 +9,7 @@ on:
   pull_request:
     paths:
       - .github/workflows/goreleaser-ci.yml
-      - .ci/.goreleaser.yml
+      - .goreleaser.yml
       - .go-version
       - go.sum
       - main.go
@@ -31,7 +31,8 @@ jobs:
           filters: |
             goreleaser:
               - '.github/workflows/goreleaser-ci.yml'
-              - '.ci/.goreleaser.yml'
+              - '.goreleaser.yml'
+
   check:
     needs: changes
     if: ${{ needs.changes.outputs.goreleaser == 'true' }}
@@ -41,32 +42,33 @@ jobs:
       - uses: actions/setup-go@v3
         with:
           go-version-file: go.mod
-      - uses: actions/cache@v2
+      - uses: actions/cache@v3
         continue-on-error: true
         timeout-minutes: 2
         with:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
       - name: goreleaser check
-        uses: goreleaser/goreleaser-action@v2
+        uses: goreleaser/goreleaser-action@v3
         with:
           args: check
+
   build-32-bit:
     # Run a single compiler check for 32-bit architecture (FreeBSD/ARM)
     # Ref: https://github.com/hashicorp/terraform-provider-aws/issues/8988
-    runs-on: ubuntu-latest
+    runs-on: [custom, linux, small]
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v3
         with:
           go-version-file: go.mod
-      - uses: actions/cache@v2
+      - uses: actions/cache@v3
         continue-on-error: true
         timeout-minutes: 2
         with:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
       - name: goreleaser build
-        uses: goreleaser/goreleaser-action@v2
+        uses: goreleaser/goreleaser-action@v3
         with:
           args: build --config .github/goreleaser-cross-compiler-test.yml --id 32-bit-arch --snapshot

@@ -684,6 +684,29 @@ func TestAccEC2InstanceDataSource_disableAPIStopTermination(t *testing.T) {
 	})
 }
 
+func TestAccEC2InstanceDataSource_timeout(t *testing.T) {
+	resourceName := "aws_instance.test"
+	datasourceName := "data.aws_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceDataSourceConfig_timeout(rName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair(datasourceName, "ami", resourceName, "ami"),
+					resource.TestCheckResourceAttrPair(datasourceName, "tags.%", resourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(datasourceName, "instance_type", resourceName, "instance_type"),
+					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
+				),
+			},
+		},
+	})
+}
+
 // Lookup based on InstanceID
 func testAccInstanceDataSourceConfig_basic(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), fmt.Sprintf(`
@@ -1379,4 +1402,30 @@ data "aws_instance" "test" {
   instance_id = aws_instance.test.id
 }
 `, rName, disableApiStopTermination))
+}
+
+func testAccInstanceDataSourceConfig_timeout(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
+		fmt.Sprintf(`
+resource "aws_instance" "test" {
+  ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type = "t2.small"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+data "aws_instance" "test" {
+  filter {
+    name   = "instance-id"
+    values = [aws_instance.test.id]
+  }
+
+  timeouts {
+    read = "60m"
+  }
+}
+`, rName))
 }

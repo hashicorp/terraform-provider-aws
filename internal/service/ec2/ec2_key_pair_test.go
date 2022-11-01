@@ -11,7 +11,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -123,7 +122,7 @@ func TestAccEC2KeyPair_nameGenerated(t *testing.T) {
 				Config: testAccKeyPairConfig_nameGenerated(publicKey),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckKeyPairExists(resourceName, &keyPair),
-					create.TestCheckResourceAttrNameGenerated(resourceName, "key_name"),
+					acctest.CheckResourceAttrNameGenerated(resourceName, "key_name"),
 					resource.TestCheckResourceAttr(resourceName, "key_name_prefix", "terraform-"),
 				),
 			},
@@ -156,7 +155,7 @@ func TestAccEC2KeyPair_namePrefix(t *testing.T) {
 				Config: testAccKeyPairConfig_namePrefix("tf-acc-test-prefix-", publicKey),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckKeyPairExists(resourceName, &keyPair),
-					create.TestCheckResourceAttrNameFromPrefix(resourceName, "key_name", "tf-acc-test-prefix-"),
+					acctest.CheckResourceAttrNameFromPrefix(resourceName, "key_name", "tf-acc-test-prefix-"),
 					resource.TestCheckResourceAttr(resourceName, "key_name_prefix", "tf-acc-test-prefix-"),
 				),
 			},

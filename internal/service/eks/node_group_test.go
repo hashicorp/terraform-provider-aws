@@ -12,14 +12,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfeks "github.com/hashicorp/terraform-provider-aws/internal/service/eks"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func init() {
 	acctest.RegisterServiceErrorCheckFunc(eks.EndpointsID, testAccErrorCheckSkip)
-
 }
 
 func TestAccEKSNodeGroup_basic(t *testing.T) {
@@ -89,7 +87,7 @@ func TestAccEKSNodeGroup_Name_generated(t *testing.T) {
 				Config: testAccNodeGroupConfig_nameGenerated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNodeGroupExists(resourceName, &nodeGroup),
-					create.TestCheckResourceAttrNameGenerated(resourceName, "node_group_name"),
+					acctest.CheckResourceAttrNameGenerated(resourceName, "node_group_name"),
 					resource.TestCheckResourceAttr(resourceName, "node_group_name_prefix", "terraform-"),
 				),
 			},
@@ -117,7 +115,7 @@ func TestAccEKSNodeGroup_namePrefix(t *testing.T) {
 				Config: testAccNodeGroupConfig_namePrefix(rName, "tf-acc-test-prefix-"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNodeGroupExists(resourceName, &nodeGroup),
-					create.TestCheckResourceAttrNameFromPrefix(resourceName, "node_group_name", "tf-acc-test-prefix-"),
+					acctest.CheckResourceAttrNameFromPrefix(resourceName, "node_group_name", "tf-acc-test-prefix-"),
 					resource.TestCheckResourceAttr(resourceName, "node_group_name_prefix", "tf-acc-test-prefix-"),
 				),
 			},
@@ -253,10 +251,10 @@ func TestAccEKSNodeGroup_forceUpdateVersion(t *testing.T) {
 		CheckDestroy:             testAccCheckNodeGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNodeGroupConfig_forceUpdateVersion(rName, "1.19"),
+				Config: testAccNodeGroupConfig_forceUpdateVersion(rName, clusterVersionUpgradeInitial),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNodeGroupExists(resourceName, &nodeGroup1),
-					resource.TestCheckResourceAttr(resourceName, "version", "1.19"),
+					resource.TestCheckResourceAttr(resourceName, "version", clusterVersionUpgradeInitial),
 				),
 			},
 			{
@@ -266,10 +264,10 @@ func TestAccEKSNodeGroup_forceUpdateVersion(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"force_update_version"},
 			},
 			{
-				Config: testAccNodeGroupConfig_forceUpdateVersion(rName, "1.20"),
+				Config: testAccNodeGroupConfig_forceUpdateVersion(rName, clusterVersionUpgradeUpdated),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNodeGroupExists(resourceName, &nodeGroup1),
-					resource.TestCheckResourceAttr(resourceName, "version", "1.20"),
+					resource.TestCheckResourceAttr(resourceName, "version", clusterVersionUpgradeUpdated),
 				),
 			},
 		},
@@ -932,10 +930,10 @@ func TestAccEKSNodeGroup_version(t *testing.T) {
 		CheckDestroy:             testAccCheckNodeGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNodeGroupConfig_version(rName, "1.19"),
+				Config: testAccNodeGroupConfig_version(rName, clusterVersionUpgradeInitial),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNodeGroupExists(resourceName, &nodeGroup1),
-					resource.TestCheckResourceAttr(resourceName, "version", "1.19"),
+					resource.TestCheckResourceAttr(resourceName, "version", clusterVersionUpgradeInitial),
 				),
 			},
 			{
@@ -944,11 +942,11 @@ func TestAccEKSNodeGroup_version(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccNodeGroupConfig_version(rName, "1.20"),
+				Config: testAccNodeGroupConfig_version(rName, clusterVersionUpgradeUpdated),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNodeGroupExists(resourceName, &nodeGroup2),
 					testAccCheckNodeGroupNotRecreated(&nodeGroup1, &nodeGroup2),
-					resource.TestCheckResourceAttr(resourceName, "version", "1.20"),
+					resource.TestCheckResourceAttr(resourceName, "version", clusterVersionUpgradeUpdated),
 				),
 			},
 		},

@@ -159,7 +159,7 @@ func TestAccVPCManagedPrefixListDataSource_matchesTooMany(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccVPCManagedPrefixListDataSourceConfig_matchesTooMany,
-				ExpectError: regexp.MustCompile(`more than 1 prefix list matched the given criteria`),
+				ExpectError: regexp.MustCompile(`multiple EC2 Managed Prefix Lists matched`),
 			},
 		},
 	})

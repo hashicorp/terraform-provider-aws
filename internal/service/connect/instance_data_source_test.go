@@ -11,11 +11,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccConnectInstanceDataSource_basic(t *testing.T) {
+func testAccInstanceDataSource_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("datasource-test-terraform")
 	dataSourceName := "data.aws_connect_instance.test"
 	resourceName := "aws_connect_instance.test"
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,

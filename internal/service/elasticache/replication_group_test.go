@@ -427,7 +427,7 @@ func TestAccElastiCacheReplicationGroup_updateNodeSize(t *testing.T) {
 	})
 }
 
-//This is a test to prove that we panic we get in https://github.com/hashicorp/terraform/issues/9097
+// This is a test to prove that we panic we get in https://github.com/hashicorp/terraform/issues/9097
 func TestAccElastiCacheReplicationGroup_updateParameterGroup(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -2088,7 +2088,7 @@ func TestAccElastiCacheReplicationGroup_GlobalReplicationGroupID_full(t *testing
 }
 
 // Test for out-of-band deletion
-// Naming to allow grouping all TestAccAWSElasticacheReplicationGroup_GlobalReplicationGroupId_* tests
+// Naming to allow grouping all TestAccAWSElastiCacheReplicationGroup_GlobalReplicationGroupID_* tests
 func TestAccElastiCacheReplicationGroup_GlobalReplicationGroupID_disappears(t *testing.T) { // nosemgrep:ci.acceptance-test-naming-parent-disappears
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -2541,7 +2541,6 @@ func testAccCheckReplicationGroupUserGroup(resourceName, userGroupID string) res
 			return fmt.Errorf("ElastiCache Replication Group (%s) was not assigned usergroup (%s), usergroup was (%s) instead", resourceName, userGroupID, *rg.UserGroupIds[0])
 		}
 		return nil
-
 	}
 }
 
@@ -2766,7 +2765,6 @@ resource "aws_elasticache_replication_group" "test" {
   user_group_ids                = [aws_elasticache_user_group.test[%[3]d].id]
 }
 `, rName, userGroup, flag)
-
 }
 
 func testAccReplicationGroupConfig_inVPC(rName string) string {
@@ -3734,7 +3732,7 @@ resource "aws_iam_role" "r" {
             "s3:PutObjectAcl",
           ]
           Effect   = "Allow"
-          Resource = ["${aws_s3_bucket.b.arn}", "${aws_s3_bucket.b.arn}/*"]
+          Resource = [aws_s3_bucket.b.arn, "${aws_s3_bucket.b.arn}/*"]
         },
       ]
     })

@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -132,23 +133,23 @@ func resourceIdentityProviderRead(d *schema.ResourceData, meta interface{}) erro
 	})
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, cognitoidentityprovider.ErrCodeResourceNotFoundException) {
-		names.LogNotFoundRemoveState(names.CognitoIDP, names.ErrActionReading, ResIdentityProvider, d.Id())
+		create.LogNotFoundRemoveState(names.CognitoIDP, create.ErrActionReading, ResNameIdentityProvider, d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return names.Error(names.CognitoIDP, names.ErrActionReading, ResIdentityProvider, d.Id(), err)
+		return create.Error(names.CognitoIDP, create.ErrActionReading, ResNameIdentityProvider, d.Id(), err)
 	}
 
 	if !d.IsNewResource() && (ret == nil || ret.IdentityProvider == nil) {
-		names.LogNotFoundRemoveState(names.CognitoIDP, names.ErrActionReading, ResIdentityProvider, d.Id())
+		create.LogNotFoundRemoveState(names.CognitoIDP, create.ErrActionReading, ResNameIdentityProvider, d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if d.IsNewResource() && (ret == nil || ret.IdentityProvider == nil) {
-		return names.Error(names.CognitoIDP, names.ErrActionReading, ResIdentityProvider, d.Id(), errors.New("not found after creation"))
+		return create.Error(names.CognitoIDP, create.ErrActionReading, ResNameIdentityProvider, d.Id(), errors.New("not found after creation"))
 	}
 
 	ip := ret.IdentityProvider

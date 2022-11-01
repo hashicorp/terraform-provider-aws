@@ -17,6 +17,10 @@ func DataSourceKeyPair() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourceKeyPairRead,
 
+		Timeouts: &schema.ResourceTimeout{
+			Read: schema.DefaultTimeout(20 * time.Minute),
+		},
+
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,

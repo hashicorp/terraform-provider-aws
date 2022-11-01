@@ -23,6 +23,10 @@ func DataSourceAMI() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourceAMIRead,
 
+		Timeouts: &schema.ResourceTimeout{
+			Read: schema.DefaultTimeout(20 * time.Minute),
+		},
+
 		Schema: map[string]*schema.Schema{
 			"architecture": {
 				Type:     schema.TypeString,
@@ -101,6 +105,10 @@ func DataSourceAMI() *schema.Resource {
 				Computed: true,
 			},
 			"image_type": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"imds_support": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -298,6 +306,7 @@ func amiDescriptionAttributes(d *schema.ResourceData, image *ec2.Image, meta int
 	d.Set("image_location", image.ImageLocation)
 	d.Set("image_owner_alias", image.ImageOwnerAlias)
 	d.Set("image_type", image.ImageType)
+	d.Set("imds_support", image.ImdsSupport)
 	d.Set("kernel_id", image.KernelId)
 	d.Set("name", image.Name)
 	d.Set("owner_id", image.OwnerId)

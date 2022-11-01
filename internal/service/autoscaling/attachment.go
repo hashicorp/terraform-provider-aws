@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func ResourceAttachment() *schema.Resource {
@@ -18,31 +19,29 @@ func ResourceAttachment() *schema.Resource {
 		Delete: resourceAttachmentDelete,
 
 		Schema: map[string]*schema.Schema{
+			"alb_target_group_arn": {
+				Type:         schema.TypeString,
+				ForceNew:     true,
+				Optional:     true,
+				Deprecated:   "Use lb_target_group_arn instead",
+				ExactlyOneOf: []string{"alb_target_group_arn", "elb", "lb_target_group_arn"},
+			},
 			"autoscaling_group_name": {
 				Type:     schema.TypeString,
 				ForceNew: true,
 				Required: true,
 			},
-
 			"elb": {
-				Type:     schema.TypeString,
-				ForceNew: true,
-				Optional: true,
+				Type:         schema.TypeString,
+				ForceNew:     true,
+				Optional:     true,
+				ExactlyOneOf: []string{"alb_target_group_arn", "elb", "lb_target_group_arn"},
 			},
-
-			"alb_target_group_arn": {
-				Type:          schema.TypeString,
-				ForceNew:      true,
-				Optional:      true,
-				Deprecated:    "Use lb_target_group_arn instead",
-				ConflictsWith: []string{"lb_target_group_arn"},
-			},
-
 			"lb_target_group_arn": {
-				Type:          schema.TypeString,
-				ForceNew:      true,
-				Optional:      true,
-				ConflictsWith: []string{"alb_target_group_arn"},
+				Type:         schema.TypeString,
+				ForceNew:     true,
+				Optional:     true,
+				ExactlyOneOf: []string{"alb_target_group_arn", "elb", "lb_target_group_arn"},
 			},
 		},
 	}
@@ -53,41 +52,43 @@ func resourceAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
 	asgName := d.Get("autoscaling_group_name").(string)
 
 	if v, ok := d.GetOk("elb"); ok {
-		attachOpts := &autoscaling.AttachLoadBalancersInput{
+		lbName := v.(string)
+		input := &autoscaling.AttachLoadBalancersInput{
 			AutoScalingGroupName: aws.String(asgName),
-			LoadBalancerNames:    []*string{aws.String(v.(string))},
+			LoadBalancerNames:    aws.StringSlice([]string{lbName}),
 		}
 
-		log.Printf("[INFO] registering asg %s with ELBs %s", asgName, v.(string))
+		_, err := tfresource.RetryWhenAWSErrMessageContains(d.Timeout(schema.TimeoutCreate),
+			func() (interface{}, error) {
+				return conn.AttachLoadBalancers(input)
+			},
+			// ValidationError: Trying to update too many Load Balancers/Target Groups at once. The limit is 10
+			ErrCodeValidationError, "update too many")
 
-		if _, err := conn.AttachLoadBalancers(attachOpts); err != nil {
-			return fmt.Errorf("Failure attaching AutoScaling Group %s with Elastic Load Balancer: %s: %s", asgName, v.(string), err)
+		if err != nil {
+			return fmt.Errorf("attaching Auto Scaling Group (%s) load balancer (%s): %w", asgName, lbName, err)
 		}
-	}
+	} else {
+		var targetGroupARN string
+		if v, ok := d.GetOk("alb_target_group_arn"); ok {
+			targetGroupARN = v.(string)
+		} else if v, ok := d.GetOk("lb_target_group_arn"); ok {
+			targetGroupARN = v.(string)
+		}
 
-	if v, ok := d.GetOk("alb_target_group_arn"); ok {
-		attachOpts := &autoscaling.AttachLoadBalancerTargetGroupsInput{
+		input := &autoscaling.AttachLoadBalancerTargetGroupsInput{
 			AutoScalingGroupName: aws.String(asgName),
-			TargetGroupARNs:      []*string{aws.String(v.(string))},
+			TargetGroupARNs:      aws.StringSlice([]string{targetGroupARN}),
 		}
 
-		log.Printf("[INFO] registering asg %s with ALB Target Group %s", asgName, v.(string))
+		_, err := tfresource.RetryWhenAWSErrMessageContains(d.Timeout(schema.TimeoutCreate),
+			func() (interface{}, error) {
+				return conn.AttachLoadBalancerTargetGroups(input)
+			},
+			ErrCodeValidationError, "update too many")
 
-		if _, err := conn.AttachLoadBalancerTargetGroups(attachOpts); err != nil {
-			return fmt.Errorf("failure attaching AutoScaling Group %s with ALB Target Group: %s: %w", asgName, v.(string), err)
-		}
-	}
-
-	if v, ok := d.GetOk("lb_target_group_arn"); ok {
-		attachOpts := &autoscaling.AttachLoadBalancerTargetGroupsInput{
-			AutoScalingGroupName: aws.String(asgName),
-			TargetGroupARNs:      []*string{aws.String(v.(string))},
-		}
-
-		log.Printf("[INFO] registering asg %s with LB Target Group %s", asgName, v.(string))
-
-		if _, err := conn.AttachLoadBalancerTargetGroups(attachOpts); err != nil {
-			return fmt.Errorf("failure attaching AutoScaling Group %s with LB Target Group: %s: %w", asgName, v.(string), err)
+		if err != nil {
+			return fmt.Errorf("attaching Auto Scaling Group (%s) target group (%s): %w", asgName, targetGroupARN, err)
 		}
 	}
 
@@ -101,64 +102,29 @@ func resourceAttachmentRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AutoScalingConn
 	asgName := d.Get("autoscaling_group_name").(string)
 
-	// Retrieve the ASG properties to get list of associated ELBs
-	asg, err := getGroup(asgName, conn)
+	var err error
 
-	if err != nil {
-		return err
+	if v, ok := d.GetOk("elb"); ok {
+		lbName := v.(string)
+		err = FindAttachmentByLoadBalancerName(conn, asgName, lbName)
+	} else {
+		var targetGroupARN string
+		if v, ok := d.GetOk("alb_target_group_arn"); ok {
+			targetGroupARN = v.(string)
+		} else if v, ok := d.GetOk("lb_target_group_arn"); ok {
+			targetGroupARN = v.(string)
+		}
+		err = FindAttachmentByTargetGroupARN(conn, asgName, targetGroupARN)
 	}
-	if asg == nil && !d.IsNewResource() {
-		log.Printf("[WARN] Autoscaling Group (%s) not found, removing from state", d.Id())
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] Auto Scaling Group Attachment %s not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
-	if v, ok := d.GetOk("elb"); ok {
-		found := false
-		for _, i := range asg.LoadBalancerNames {
-			if v.(string) == aws.StringValue(i) {
-				d.Set("elb", v.(string))
-				found = true
-				break
-			}
-		}
-
-		if !found {
-			log.Printf("[WARN] Association for %s was not found in ASG association", v.(string))
-			d.SetId("")
-		}
-	}
-
-	if v, ok := d.GetOk("alb_target_group_arn"); ok {
-		found := false
-		for _, i := range asg.TargetGroupARNs {
-			if v.(string) == aws.StringValue(i) {
-				d.Set("alb_target_group_arn", v.(string))
-				found = true
-				break
-			}
-		}
-
-		if !found {
-			log.Printf("[WARN] Association for %s was not found in ASG association", v.(string))
-			d.SetId("")
-		}
-	}
-
-	if v, ok := d.GetOk("lb_target_group_arn"); ok {
-		found := false
-		for _, i := range asg.TargetGroupARNs {
-			if v.(string) == aws.StringValue(i) {
-				d.Set("lb_target_group_arn", v.(string))
-				found = true
-				break
-			}
-		}
-
-		if !found {
-			log.Printf("[WARN] Association for %s was not found in ASG association", v.(string))
-			d.SetId("")
-		}
+	if err != nil {
+		return fmt.Errorf("reading Auto Scaling Group Attachment (%s): %w", d.Id(), err)
 	}
 
 	return nil
@@ -169,40 +135,80 @@ func resourceAttachmentDelete(d *schema.ResourceData, meta interface{}) error {
 	asgName := d.Get("autoscaling_group_name").(string)
 
 	if v, ok := d.GetOk("elb"); ok {
-		detachOpts := &autoscaling.DetachLoadBalancersInput{
+		lbName := v.(string)
+		input := &autoscaling.DetachLoadBalancersInput{
 			AutoScalingGroupName: aws.String(asgName),
-			LoadBalancerNames:    []*string{aws.String(v.(string))},
+			LoadBalancerNames:    aws.StringSlice([]string{lbName}),
 		}
 
-		log.Printf("[INFO] Deleting ELB %s association from: %s", v.(string), asgName)
-		if _, err := conn.DetachLoadBalancers(detachOpts); err != nil {
-			return fmt.Errorf("failure detaching AutoScaling Group %s with Elastic Load Balancer: %s: %w", asgName, v.(string), err)
-		}
-	}
+		_, err := tfresource.RetryWhenAWSErrMessageContains(d.Timeout(schema.TimeoutCreate),
+			func() (interface{}, error) {
+				return conn.DetachLoadBalancers(input)
+			},
+			ErrCodeValidationError, "update too many")
 
-	if v, ok := d.GetOk("alb_target_group_arn"); ok {
-		detachOpts := &autoscaling.DetachLoadBalancerTargetGroupsInput{
+		if err != nil {
+			return fmt.Errorf("detaching Auto Scaling Group (%s) load balancer (%s): %w", asgName, lbName, err)
+		}
+	} else {
+		var targetGroupARN string
+		if v, ok := d.GetOk("alb_target_group_arn"); ok {
+			targetGroupARN = v.(string)
+		} else if v, ok := d.GetOk("lb_target_group_arn"); ok {
+			targetGroupARN = v.(string)
+		}
+
+		input := &autoscaling.DetachLoadBalancerTargetGroupsInput{
 			AutoScalingGroupName: aws.String(asgName),
-			TargetGroupARNs:      []*string{aws.String(v.(string))},
+			TargetGroupARNs:      aws.StringSlice([]string{targetGroupARN}),
 		}
 
-		log.Printf("[INFO] Deleting ALB Target Group %s association from: %s", v.(string), asgName)
-		if _, err := conn.DetachLoadBalancerTargetGroups(detachOpts); err != nil {
-			return fmt.Errorf("failure detaching AutoScaling Group %s with ALB Target Group: %s: %w", asgName, v.(string), err)
-		}
-	}
+		_, err := tfresource.RetryWhenAWSErrMessageContains(d.Timeout(schema.TimeoutCreate),
+			func() (interface{}, error) {
+				return conn.DetachLoadBalancerTargetGroups(input)
+			},
+			ErrCodeValidationError, "update too many")
 
-	if v, ok := d.GetOk("lb_target_group_arn"); ok {
-		detachOpts := &autoscaling.DetachLoadBalancerTargetGroupsInput{
-			AutoScalingGroupName: aws.String(asgName),
-			TargetGroupARNs:      []*string{aws.String(v.(string))},
-		}
-
-		log.Printf("[INFO] Deleting LB Target Group %s association from: %s", v.(string), asgName)
-		if _, err := conn.DetachLoadBalancerTargetGroups(detachOpts); err != nil {
-			return fmt.Errorf("failure detaching AutoScaling Group %s with LB Target Group: %s: %w", asgName, v.(string), err)
+		if err != nil {
+			return fmt.Errorf("detaching Auto Scaling Group (%s) target group (%s): %w", asgName, targetGroupARN, err)
 		}
 	}
 
 	return nil
+}
+
+func FindAttachmentByLoadBalancerName(conn *autoscaling.AutoScaling, asgName, loadBalancerName string) error {
+	asg, err := FindGroupByName(conn, asgName)
+
+	if err != nil {
+		return err
+	}
+
+	for _, v := range asg.LoadBalancerNames {
+		if aws.StringValue(v) == loadBalancerName {
+			return nil
+		}
+	}
+
+	return &resource.NotFoundError{
+		LastError: fmt.Errorf("Auto Scaling Group (%s) load balancer (%s) attachment not found", asgName, loadBalancerName),
+	}
+}
+
+func FindAttachmentByTargetGroupARN(conn *autoscaling.AutoScaling, asgName, targetGroupARN string) error {
+	asg, err := FindGroupByName(conn, asgName)
+
+	if err != nil {
+		return err
+	}
+
+	for _, v := range asg.TargetGroupARNs {
+		if aws.StringValue(v) == targetGroupARN {
+			return nil
+		}
+	}
+
+	return &resource.NotFoundError{
+		LastError: fmt.Errorf("Auto Scaling Group (%s) target group (%s) attachment not found", asgName, targetGroupARN),
+	}
 }

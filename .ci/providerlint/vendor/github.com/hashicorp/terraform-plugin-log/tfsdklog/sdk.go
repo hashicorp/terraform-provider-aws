@@ -229,9 +229,9 @@ func Error(ctx context.Context, msg string, additionalFields ...map[string]inter
 //
 //   configuration = `['foo', 'baz']`
 //
-//   log1 = `{ msg = "...", fields = { 'foo', '...', 'bar', '...' }`   -> omitted
-//   log2 = `{ msg = "...", fields = { 'bar', '...' }`                 -> printed
-//   log3 = `{ msg = "...", fields = { 'baz`', '...', 'boo', '...' }`  -> omitted
+//   log1 = `{ msg = "...", fields = { 'foo': '...', 'bar': '...' }`  -> omitted
+//   log2 = `{ msg = "...", fields = { 'bar': '...' }`                -> printed
+//   log3 = `{ msg = "...", fields = { 'baz': '...', 'boo': '...' }`  -> omitted
 //
 func OmitLogWithFieldKeys(ctx context.Context, keys ...string) context.Context {
 	lOpts := logging.GetSDKRootTFLoggerOpts(ctx)
@@ -297,9 +297,9 @@ func OmitLogWithMessageStrings(ctx context.Context, matchingStrings ...string) c
 //
 //   configuration = `['foo', 'baz']`
 //
-//   log1 = `{ msg = "...", fields = { 'foo', '***', 'bar', '...' }`   -> masked value
-//   log2 = `{ msg = "...", fields = { 'bar', '...' }`                 -> as-is value
-//   log3 = `{ msg = "...", fields = { 'baz`', '***', 'boo', '...' }`  -> masked value
+//   log1 = `{ msg = "...", fields = { 'foo': '***', 'bar': '...' }`  -> masked value
+//   log2 = `{ msg = "...", fields = { 'bar': '...' }`                -> as-is value
+//   log3 = `{ msg = "...", fields = { 'baz': '***', 'boo': '...' }`  -> masked value
 //
 func MaskFieldValuesWithFieldKeys(ctx context.Context, keys ...string) context.Context {
 	lOpts := logging.GetSDKRootTFLoggerOpts(ctx)
@@ -309,9 +309,59 @@ func MaskFieldValuesWithFieldKeys(ctx context.Context, keys ...string) context.C
 	return logging.SetSDKRootTFLoggerOpts(ctx, lOpts)
 }
 
+// MaskAllFieldValuesRegexes returns a new context.Context that has a modified logger
+// that masks (replaces) with asterisks (`***`) all field value substrings,
+// matching one of the given *regexp.Regexp.
+//
+// Note that the replacement will happen, only for field values that are of type string.
+//
+// Each call to this function is additive:
+// the regexp to mask by are added to the existing configuration.
+//
+// Example:
+//
+//   configuration = `[regexp.MustCompile("(foo|bar)")]`
+//
+//   log1 = `{ msg = "...", fields = { 'k1': '***', 'k2': '***', 'k3': 'baz' }`  -> masked value
+//   log2 = `{ msg = "...", fields = { 'k1': 'boo', 'k2': 'far', 'k3': 'baz' }`  -> as-is value
+//   log2 = `{ msg = "...", fields = { 'k1': '*** *** baz' }`                    -> masked value
+//
+func MaskAllFieldValuesRegexes(ctx context.Context, expressions ...*regexp.Regexp) context.Context {
+	lOpts := logging.GetSDKRootTFLoggerOpts(ctx)
+
+	lOpts = logging.WithMaskAllFieldValuesRegexes(expressions...)(lOpts)
+
+	return logging.SetSDKRootTFLoggerOpts(ctx, lOpts)
+}
+
+// MaskAllFieldValuesStrings returns a new context.Context that has a modified logger
+// that masks (replaces) with asterisks (`***`) all field value substrings,
+// equal to one of the given strings.
+//
+// Note that the replacement will happen, only for field values that are of type string.
+//
+// Each call to this function is additive:
+// the regexp to mask by are added to the existing configuration.
+//
+// Example:
+//
+//   configuration = `[regexp.MustCompile("(foo|bar)")]`
+//
+//   log1 = `{ msg = "...", fields = { 'k1': '***', 'k2': '***', 'k3': 'baz' }`  -> masked value
+//   log2 = `{ msg = "...", fields = { 'k1': 'boo', 'k2': 'far', 'k3': 'baz' }`  -> as-is value
+//   log2 = `{ msg = "...", fields = { 'k1': '*** *** baz' }`                    -> masked value
+//
+func MaskAllFieldValuesStrings(ctx context.Context, matchingStrings ...string) context.Context {
+	lOpts := logging.GetSDKRootTFLoggerOpts(ctx)
+
+	lOpts = logging.WithMaskAllFieldValuesStrings(matchingStrings...)(lOpts)
+
+	return logging.SetSDKRootTFLoggerOpts(ctx, lOpts)
+}
+
 // MaskMessageRegexes returns a new context.Context that has a modified logger
-// that masks (replaces) with asterisks (`***`) all message substrings matching one
-// of the given strings.
+// that masks (replaces) with asterisks (`***`) all message substrings,
+// matching one of the given *regexp.Regexp.
 //
 // Each call to this function is additive:
 // the regexp to mask by are added to the existing configuration.
@@ -333,8 +383,8 @@ func MaskMessageRegexes(ctx context.Context, expressions ...*regexp.Regexp) cont
 }
 
 // MaskMessageStrings returns a new context.Context that has a modified logger
-// that masks (replace) with asterisks (`***`) all message substrings equal to one
-// of the given strings.
+// that masks (replace) with asterisks (`***`) all message substrings,
+// equal to one of the given strings.
 //
 // Each call to this function is additive:
 // the string to mask by are added to the existing configuration.
@@ -343,9 +393,9 @@ func MaskMessageRegexes(ctx context.Context, expressions ...*regexp.Regexp) cont
 //
 //   configuration = `['foo', 'bar']`
 //
-//   log1 = `{ msg = "banana apple ***", fields = {...}`     -> masked portion
-//   log2 = `{ msg = "pineapple mango", fields = {...}`      -> as-is
-//   log3 = `{ msg = "pineapple mango ***", fields = {...}`  -> masked portion
+//   log1 = `{ msg = "banana apple ***", fields = { 'k1': 'foo, bar, baz' }`  -> masked portion
+//   log2 = `{ msg = "pineapple mango", fields = {...}`                       -> as-is
+//   log3 = `{ msg = "pineapple mango ***", fields = {...}`                   -> masked portion
 //
 func MaskMessageStrings(ctx context.Context, matchingStrings ...string) context.Context {
 	lOpts := logging.GetSDKRootTFLoggerOpts(ctx)
@@ -353,4 +403,16 @@ func MaskMessageStrings(ctx context.Context, matchingStrings ...string) context.
 	lOpts = logging.WithMaskMessageStrings(matchingStrings...)(lOpts)
 
 	return logging.SetSDKRootTFLoggerOpts(ctx, lOpts)
+}
+
+// MaskLogRegexes is a shortcut to invoke MaskMessageRegexes and MaskAllFieldValuesRegexes using the same input.
+// Refer to those functions for details.
+func MaskLogRegexes(ctx context.Context, expressions ...*regexp.Regexp) context.Context {
+	return MaskMessageRegexes(MaskAllFieldValuesRegexes(ctx, expressions...), expressions...)
+}
+
+// MaskLogStrings is a shortcut to invoke MaskMessageStrings and MaskAllFieldValuesStrings using the same input.
+// Refer to those functions for details.
+func MaskLogStrings(ctx context.Context, matchingStrings ...string) context.Context {
+	return MaskMessageStrings(MaskAllFieldValuesStrings(ctx, matchingStrings...), matchingStrings...)
 }

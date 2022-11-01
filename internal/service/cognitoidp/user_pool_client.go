@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -355,13 +356,13 @@ func resourceUserPoolClientRead(d *schema.ResourceData, meta interface{}) error 
 	userPoolClient, err := FindCognitoUserPoolClient(conn, d.Get("user_pool_id").(string), d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		names.LogNotFoundRemoveState(names.CognitoIDP, names.ErrActionReading, ResUserPoolClient, d.Id())
+		create.LogNotFoundRemoveState(names.CognitoIDP, create.ErrActionReading, ResNameUserPoolClient, d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return names.Error(names.CognitoIDP, names.ErrActionReading, ResUserPoolClient, d.Id(), err)
+		return create.Error(names.CognitoIDP, create.ErrActionReading, ResNameUserPoolClient, d.Id(), err)
 	}
 
 	d.Set("user_pool_id", userPoolClient.UserPoolId)

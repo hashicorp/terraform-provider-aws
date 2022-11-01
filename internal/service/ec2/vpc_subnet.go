@@ -1,6 +1,7 @@
 package ec2
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"time"
@@ -361,8 +362,8 @@ func resourceSubnetDelete(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[INFO] Deleting EC2 Subnet: %s", d.Id())
 
-	if err := deleteLingeringLambdaENIs(conn, "subnet-id", d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return fmt.Errorf("error deleting Lambda ENIs using EC2 Subnet (%s): %w", d.Id(), err)
+	if err := deleteLingeringENIs(context.TODO(), conn, "subnet-id", d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return fmt.Errorf("deleting ENIs for EC2 Subnet (%s): %w", d.Id(), err)
 	}
 
 	_, err := tfresource.RetryWhenAWSErrCodeEquals(d.Timeout(schema.TimeoutDelete), func() (interface{}, error) {
@@ -376,7 +377,7 @@ func resourceSubnetDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting EC2 Subnet (%s): %w", d.Id(), err)
+		return fmt.Errorf("deleting EC2 Subnet (%s): %w", d.Id(), err)
 	}
 
 	return nil

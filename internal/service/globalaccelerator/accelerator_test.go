@@ -1,7 +1,10 @@
 package globalaccelerator_test
 
 import (
+	"context"
 	"fmt"
+	"net"
+	"os"
 	"regexp"
 	"testing"
 
@@ -39,6 +42,7 @@ func TestAccGlobalAcceleratorAccelerator_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "hosted_zone_id", "Z2BJ6XQ5FK7U4H"),
 					resource.TestCheckResourceAttr(resourceName, "ip_address_type", "IPV4"),
+					resource.TestCheckResourceAttr(resourceName, "ip_addresses.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "ip_sets.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "ip_sets.0.ip_addresses.#", "2"),
 					resource.TestMatchResourceAttr(resourceName, "ip_sets.0.ip_addresses.0", ipRegex),
@@ -51,6 +55,87 @@ func TestAccGlobalAcceleratorAccelerator_basic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccGlobalAcceleratorAccelerator_ipAddressType_dualStack(t *testing.T) {
+	resourceName := "aws_globalaccelerator_accelerator.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, globalaccelerator.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAcceleratorDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAcceleratorConfig_ipAddressTypeDualStack(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAcceleratorExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "ip_address_type", "DUAL_STACK"),
+					resource.TestCheckResourceAttr(resourceName, "ip_sets.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "ip_sets.0.ip_addresses.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "ip_sets.0.ip_family", "IPv4"),
+					resource.TestCheckResourceAttr(resourceName, "ip_sets.1.ip_addresses.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "ip_sets.1.ip_family", "IPv6"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccGlobalAcceleratorAccelerator_byoip(t *testing.T) {
+	resourceName := "aws_globalaccelerator_accelerator.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	requestedAddr := os.Getenv("GLOBALACCELERATOR_BYOIP_IPV4_ADDRESS")
+	matches := 0
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t); testAccCheckBYOIPExists(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, globalaccelerator.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAcceleratorDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAcceleratorConfig_byoip(rName, requestedAddr),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAcceleratorExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "ip_sets.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ip_sets.0.ip_addresses.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "ip_sets.0.ip_family", "IPv4"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					// requested address may be index 0 or index 1 in ip_sets.0.ip_addresses. Test framework
+					// does not have a mechanism to test against a list directly. We collect the number of
+					// matches individually and then validate that there is only one match.
+					resource.TestCheckResourceAttrWith(resourceName, "ip_sets.0.ip_addresses.0", func(value string) error {
+						if requestedAddr == value {
+							matches += 1
+						}
+						return nil
+					}),
+					resource.TestCheckResourceAttrWith(resourceName, "ip_sets.0.ip_addresses.1", func(value string) error {
+						if requestedAddr == value {
+							matches += 1
+						}
+						return nil
+					}),
+					func(_ *terraform.State) error {
+						if matches == 1 {
+							return nil
+						}
+						return fmt.Errorf("Requested address %s should be present exactly once in %s", requestedAddr, resourceName)
+					},
+				),
 			},
 		},
 	})
@@ -247,26 +332,69 @@ func testAccPreCheck(t *testing.T) {
 	}
 }
 
-func testAccCheckAcceleratorExists(name string) resource.TestCheckFunc {
+func testAccCheckBYOIPExists(t *testing.T) {
+	requestedAddr := os.Getenv("GLOBALACCELERATOR_BYOIP_IPV4_ADDRESS")
+
+	if requestedAddr == "" {
+		t.Skip("Environment variable GLOBALACCELERATOR_BYOIP_IPV4_ADDRESS not set")
+	}
+
+	parsedAddr := net.ParseIP(requestedAddr)
+
+	conn := acctest.Provider.Meta().(*conns.AWSClient).GlobalAcceleratorConn
+
+	input := &globalaccelerator.ListByoipCidrsInput{}
+	cidrs := make([]*globalaccelerator.ByoipCidr, 0)
+
+	err := conn.ListByoipCidrsPages(input,
+		func(page *globalaccelerator.ListByoipCidrsOutput, lastPage bool) bool {
+			cidrs = append(cidrs, page.ByoipCidrs...)
+			return !lastPage
+		})
+
+	if acctest.PreCheckSkipError(err) {
+		t.Skipf("skipping acceptance testing: %s", err)
+	}
+
+	if len(cidrs) == 0 {
+		t.Skip("skipping acceptance testing: no BYOIP Global Accelerator CIDR found")
+	}
+
+	matches := false
+
+	for _, cidr := range cidrs {
+		_, network, _ := net.ParseCIDR(*cidr.Cidr)
+		if network.Contains(parsedAddr) {
+			matches = true
+			break
+		}
+	}
+
+	if !matches {
+		t.Skipf("skipping acceptance testing: requested address %s not available via BYOIP", requestedAddr)
+	}
+
+	if err != nil {
+		t.Fatalf("unexpected PreCheck error: %s", err)
+	}
+}
+
+func testAccCheckAcceleratorExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).GlobalAcceleratorConn
 
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", name)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ID is set")
+			return fmt.Errorf("No Global Accelerator Accelerator ID is set")
 		}
 
-		_, err := tfglobalaccelerator.FindAcceleratorByARN(conn, rs.Primary.ID)
+		_, err := tfglobalaccelerator.FindAcceleratorByARN(context.Background(), conn, rs.Primary.ID)
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 
@@ -278,7 +406,7 @@ func testAccCheckAcceleratorDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := tfglobalaccelerator.FindAcceleratorByARN(conn, rs.Primary.ID)
+		_, err := tfglobalaccelerator.FindAcceleratorByARN(context.Background(), conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -297,6 +425,24 @@ func testAccAcceleratorConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_globalaccelerator_accelerator" "test" {
   name = %[1]q
+}
+`, rName)
+}
+
+func testAccAcceleratorConfig_byoip(rName string, ipAddress string) string {
+	return fmt.Sprintf(`
+resource "aws_globalaccelerator_accelerator" "test" {
+  name         = %[1]q
+  ip_addresses = [%[2]q]
+}
+`, rName, ipAddress)
+}
+
+func testAccAcceleratorConfig_ipAddressTypeDualStack(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_globalaccelerator_accelerator" "test" {
+  name            = %[1]q
+  ip_address_type = "DUAL_STACK"
 }
 `, rName)
 }

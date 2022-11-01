@@ -229,7 +229,7 @@ func testAccCheckLedgerDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := tfqldb.FindLedgerByName(context.TODO(), conn, rs.Primary.ID)
+		_, err := tfqldb.FindLedgerByName(context.Background(), conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -258,7 +258,7 @@ func testAccCheckLedgerExists(n string, v *qldb.DescribeLedgerOutput) resource.T
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).QLDBConn
 
-		output, err := tfqldb.FindLedgerByName(context.TODO(), conn, rs.Primary.ID)
+		output, err := tfqldb.FindLedgerByName(context.Background(), conn, rs.Primary.ID)
 
 		if err != nil {
 			return err

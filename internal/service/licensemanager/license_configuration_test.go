@@ -195,7 +195,7 @@ func testAccCheckLicenseConfigurationExists(n string, v *licensemanager.GetLicen
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).LicenseManagerConn
 
-		output, err := tflicensemanager.FindLicenseConfigurationByARN(context.TODO(), conn, rs.Primary.ID)
+		output, err := tflicensemanager.FindLicenseConfigurationByARN(context.Background(), conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -215,7 +215,7 @@ func testAccCheckLicenseConfigurationDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := tflicensemanager.FindLicenseConfigurationByARN(context.TODO(), conn, rs.Primary.ID)
+		_, err := tflicensemanager.FindLicenseConfigurationByARN(context.Background(), conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -229,7 +229,6 @@ func testAccCheckLicenseConfigurationDestroy(s *terraform.State) error {
 	}
 
 	return nil
-
 }
 
 func testAccLicenseConfigurationConfig_basic(rName string) string {

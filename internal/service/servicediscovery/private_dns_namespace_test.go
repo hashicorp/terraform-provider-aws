@@ -102,8 +102,8 @@ func TestAccServiceDiscoveryPrivateDNSNamespace_description(t *testing.T) {
 }
 
 // This acceptance test ensures we properly send back error messaging. References:
-//  * https://github.com/hashicorp/terraform-provider-aws/issues/2830
-//  * https://github.com/hashicorp/terraform-provider-aws/issues/5532
+//   - https://github.com/hashicorp/terraform-provider-aws/issues/2830
+//   - https://github.com/hashicorp/terraform-provider-aws/issues/5532
 func TestAccServiceDiscoveryPrivateDNSNamespace_Error_overlap(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -182,7 +182,7 @@ func testAccCheckPrivateDNSNamespaceDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := tfservicediscovery.FindNamespaceByID(context.TODO(), conn, rs.Primary.ID)
+		_, err := tfservicediscovery.FindNamespaceByID(context.Background(), conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -211,7 +211,7 @@ func testAccCheckPrivateDNSNamespaceExists(n string) resource.TestCheckFunc {
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceDiscoveryConn
 
-		_, err := tfservicediscovery.FindNamespaceByID(context.TODO(), conn, rs.Primary.ID)
+		_, err := tfservicediscovery.FindNamespaceByID(context.Background(), conn, rs.Primary.ID)
 
 		return err
 	}

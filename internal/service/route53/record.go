@@ -721,7 +721,6 @@ func findRecord(d *schema.ResourceData, meta interface{}) (*route53.ResourceReco
 	// unneeded records.
 	err = conn.ListResourceRecordSetsPages(lopts, func(resp *route53.ListResourceRecordSetsOutput, lastPage bool) bool {
 		for _, recordSet := range resp.ResourceRecordSets {
-
 			responseName := strings.ToLower(CleanRecordName(*recordSet.Name))
 			responseType := strings.ToUpper(aws.StringValue(recordSet.Type))
 
@@ -996,8 +995,7 @@ func nilString(s string) *string {
 }
 
 func NormalizeAliasName(alias interface{}) string {
-	input := strings.ToLower(alias.(string))
-	output := strings.TrimPrefix(input, "dualstack.")
+	output := strings.ToLower(alias.(string))
 	return strings.TrimSuffix(output, ".")
 }
 

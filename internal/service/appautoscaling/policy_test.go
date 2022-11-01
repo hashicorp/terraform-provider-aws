@@ -96,6 +96,7 @@ func TestAccAppAutoScalingPolicy_basic(t *testing.T) {
 				Config: testAccPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(resourceName, &policy),
+					resource.TestCheckResourceAttr(resourceName, "alarm_arns.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "policy_type", "StepScaling"),
 					resource.TestCheckResourceAttrPair(resourceName, "resource_id", appAutoscalingTargetResourceName, "resource_id"),
@@ -136,7 +137,7 @@ func TestAccAppAutoScalingPolicy_disappears(t *testing.T) {
 				Config: testAccPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(resourceName, &policy),
-					testAccCheckPolicyDisappears(&policy),
+					acctest.CheckResourceDisappears(acctest.Provider, tfappautoscaling.ResourcePolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -483,23 +484,6 @@ func testAccCheckPolicyDestroy(s *terraform.State) error {
 	}
 
 	return nil
-}
-
-func testAccCheckPolicyDisappears(policy *applicationautoscaling.ScalingPolicy) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppAutoScalingConn
-
-		input := &applicationautoscaling.DeleteScalingPolicyInput{
-			PolicyName:        policy.PolicyName,
-			ResourceId:        policy.ResourceId,
-			ScalableDimension: policy.ScalableDimension,
-			ServiceNamespace:  policy.ServiceNamespace,
-		}
-
-		_, err := conn.DeleteScalingPolicy(input)
-
-		return err
-	}
 }
 
 func testAccPolicyConfig_basic(rName string) string {
@@ -1087,7 +1071,7 @@ resource "aws_appautoscaling_policy" "test" {
 }
 
 resource "aws_cloudwatch_metric_alarm" "test" {
-  alarm_actions       = ["${aws_appautoscaling_policy.test.arn}"]
+  alarm_actions       = [aws_appautoscaling_policy.test.arn]
   alarm_name          = %[1]q
   comparison_operator = "LessThanOrEqualToThreshold"
   evaluation_periods  = "5"
@@ -1098,7 +1082,7 @@ resource "aws_cloudwatch_metric_alarm" "test" {
   threshold           = "0"
 
   dimensions = {
-    ClusterName = "${aws_ecs_cluster.test.name}"
+    ClusterName = aws_ecs_cluster.test.name
   }
 }
 `, rName)
@@ -1136,7 +1120,7 @@ resource "aws_appautoscaling_policy" "test" {
 }
 
 resource "aws_cloudwatch_metric_alarm" "test" {
-  alarm_actions       = ["${aws_appautoscaling_policy.test.arn}"]
+  alarm_actions       = [aws_appautoscaling_policy.test.arn]
   alarm_name          = %[1]q
   comparison_operator = "LessThanOrEqualToThreshold"
   evaluation_periods  = "5"
@@ -1147,7 +1131,7 @@ resource "aws_cloudwatch_metric_alarm" "test" {
   threshold           = "0"
 
   dimensions = {
-    ClusterName = "${aws_ecs_cluster.test.name}"
+    ClusterName = aws_ecs_cluster.test.name
   }
 }
 `, rName)

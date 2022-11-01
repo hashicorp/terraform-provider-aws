@@ -16,9 +16,9 @@ Provides a CE Anomaly Subscription.
 
 ```terraform
 resource "aws_ce_anomaly_monitor" "test" {
-  name      = "AWSServiceMonitor"
-  type      = "DIMENSIONAL"
-  dimension = "SERVICE"
+  name              = "AWSServiceMonitor"
+  monitor_type      = "DIMENSIONAL"
+  monitor_dimension = "SERVICE"
 }
 
 resource "aws_ce_anomaly_subscription" "test" {
@@ -110,9 +110,9 @@ resource "aws_sns_topic_policy" "default" {
 }
 
 resource "aws_ce_anomaly_monitor" "anomaly_monitor" {
-  name      = "AWSServiceMonitor"
-  type      = "DIMENSIONAL"
-  dimension = "SERVICE"
+  name              = "AWSServiceMonitor"
+  monitor_type      = "DIMENSIONAL"
+  monitor_dimension = "SERVICE"
 }
 
 resource "aws_ce_anomaly_subscription" "realtime_subscription" {
@@ -147,7 +147,7 @@ The following arguments are required:
     * `address` - (Required) The address of the subscriber. If type is `SNS`, this will be the arn of the sns topic. If type is `EMAIL`, this will be the destination email address.
 * `threshold` - (Required) The dollar value that triggers a notification if the threshold is exceeded.
 * `account_id` - (Optional) The unique identifier for the AWS account in which the anomaly subscription ought to be created.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attributes Reference
 
@@ -155,7 +155,7 @@ In addition to all arguments above, the following attributes are exported:
 
 * `arn` - ARN of the anomaly subscription.
 * `id` - Unique ID of the anomaly subscription. Same as `arn`.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 

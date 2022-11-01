@@ -11,7 +11,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfbatch "github.com/hashicorp/terraform-provider-aws/internal/service/batch"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -87,7 +86,7 @@ func TestAccBatchComputeEnvironment_nameGenerated(t *testing.T) {
 				Config: testAccComputeEnvironmentConfig_nameGenerated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckComputeEnvironmentExists(resourceName, &ce),
-					create.TestCheckResourceAttrNameGenerated(resourceName, "compute_environment_name"),
+					acctest.CheckResourceAttrNameGenerated(resourceName, "compute_environment_name"),
 					resource.TestCheckResourceAttr(resourceName, "compute_environment_name_prefix", "terraform-"),
 				),
 			},
@@ -115,7 +114,7 @@ func TestAccBatchComputeEnvironment_namePrefix(t *testing.T) {
 				Config: testAccComputeEnvironmentConfig_namePrefix(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckComputeEnvironmentExists(resourceName, &ce),
-					create.TestCheckResourceAttrNameFromPrefix(resourceName, "compute_environment_name", rName),
+					acctest.CheckResourceAttrNameFromPrefix(resourceName, "compute_environment_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "compute_environment_name_prefix", rName),
 				),
 			},

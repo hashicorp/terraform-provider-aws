@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tflightsail "github.com/hashicorp/terraform-provider-aws/internal/service/lightsail"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -728,11 +729,11 @@ func testAccCheckDatabaseDestroy(s *terraform.State) error {
 
 		if err == nil {
 			if respDatabase.RelationalDatabase != nil {
-				return names.Error(names.Lightsail, names.ErrActionCheckingDestroyed, tflightsail.ResDatabase, rs.Primary.ID, errors.New("still exists"))
+				return create.Error(names.Lightsail, create.ErrActionCheckingDestroyed, tflightsail.ResNameDatabase, rs.Primary.ID, errors.New("still exists"))
 			}
 		}
 
-		return names.Error(names.Lightsail, names.ErrActionCheckingDestroyed, tflightsail.ResDatabase, rs.Primary.ID, errors.New("still exists"))
+		return create.Error(names.Lightsail, create.ErrActionCheckingDestroyed, tflightsail.ResNameDatabase, rs.Primary.ID, errors.New("still exists"))
 	}
 
 	return nil
@@ -771,11 +772,11 @@ func testAccCheckDatabaseSnapshotDestroy(s *terraform.State) error {
 
 		if err == nil {
 			if respDatabase.RelationalDatabase != nil {
-				return names.Error(names.Lightsail, names.ErrActionCheckingDestroyed, tflightsail.ResDatabase, rs.Primary.ID, errors.New("still exists"))
+				return create.Error(names.Lightsail, create.ErrActionCheckingDestroyed, tflightsail.ResNameDatabase, rs.Primary.ID, errors.New("still exists"))
 			}
 		}
 
-		return names.Error(names.Lightsail, names.ErrActionCheckingDestroyed, tflightsail.ResDatabase, rs.Primary.ID, errors.New("still exists"))
+		return create.Error(names.Lightsail, create.ErrActionCheckingDestroyed, tflightsail.ResNameDatabase, rs.Primary.ID, errors.New("still exists"))
 	}
 
 	return nil

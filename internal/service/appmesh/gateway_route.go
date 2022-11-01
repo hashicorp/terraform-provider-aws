@@ -779,7 +779,7 @@ func expandHTTPGatewayRouteRewrite(vHttpRouteRewrite []interface{}) *appmesh.Htt
 	mRouteRewrite := vHttpRouteRewrite[0].(map[string]interface{})
 	routeRewrite := &appmesh.HttpGatewayRouteRewrite{}
 
-	if vRouteHostnameRewrite, ok := mRouteRewrite["hostname"].([]interface{}); ok {
+	if vRouteHostnameRewrite, ok := mRouteRewrite["hostname"].([]interface{}); ok && len(vRouteHostnameRewrite) > 0 && vRouteHostnameRewrite[0] != nil {
 		mRouteHostnameRewrite := vRouteHostnameRewrite[0].(map[string]interface{})
 		routeHostnameRewrite := &appmesh.GatewayRouteHostnameRewrite{}
 		if vDefaultTargetHostname, ok := mRouteHostnameRewrite["default_target_hostname"].(string); ok && vDefaultTargetHostname != "" {
@@ -788,7 +788,7 @@ func expandHTTPGatewayRouteRewrite(vHttpRouteRewrite []interface{}) *appmesh.Htt
 		routeRewrite.Hostname = routeHostnameRewrite
 	}
 
-	if vRoutePrefixRewrite, ok := mRouteRewrite["prefix"].([]interface{}); ok {
+	if vRoutePrefixRewrite, ok := mRouteRewrite["prefix"].([]interface{}); ok && len(vRoutePrefixRewrite) > 0 && vRoutePrefixRewrite[0] != nil {
 		mRoutePrefixRewrite := vRoutePrefixRewrite[0].(map[string]interface{})
 		routePrefixRewrite := &appmesh.HttpGatewayRoutePrefixRewrite{}
 		if vDefaultPrefix, ok := mRoutePrefixRewrite["default_prefix"].(string); ok && vDefaultPrefix != "" {
@@ -934,7 +934,6 @@ func flattenHTTPGatewayRouteMatch(routeMatch *appmesh.HttpGatewayRouteMatch) []i
 	}
 
 	if hostnameMatch := routeMatch.Hostname; hostnameMatch != nil {
-
 		mHostnameMatch := map[string]interface{}{}
 		if hostnameMatch.Exact != nil {
 			mHostnameMatch["exact"] = aws.StringValue(hostnameMatch.Exact)
@@ -944,7 +943,6 @@ func flattenHTTPGatewayRouteMatch(routeMatch *appmesh.HttpGatewayRouteMatch) []i
 		}
 
 		mRouteMatch["hostname"] = []interface{}{mHostnameMatch}
-
 	}
 	return []interface{}{mRouteMatch}
 }

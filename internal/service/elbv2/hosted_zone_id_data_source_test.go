@@ -47,7 +47,7 @@ const testAccHostedZoneIDDataSourceConfig_basic = `
 data "aws_lb_hosted_zone_id" "main" {}
 `
 
-//lintignore:AWSAT003
+// lintignore:AWSAT003
 const testAccHostedZoneIDDataSourceConfig_explicitRegion = `
 data "aws_lb_hosted_zone_id" "regional" {
   region = "eu-west-1"
@@ -60,7 +60,7 @@ data "aws_lb_hosted_zone_id" "network" {
 }
 `
 
-//lintignore:AWSAT003
+// lintignore:AWSAT003
 const testAccHostedZoneIDDataSourceConfig_explicitNetworkRegion = `
 data "aws_lb_hosted_zone_id" "network-regional" {
   region             = "eu-west-1"

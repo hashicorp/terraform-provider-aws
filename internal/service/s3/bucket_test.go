@@ -356,6 +356,65 @@ func TestAccS3Bucket_disappears(t *testing.T) {
 	})
 }
 
+func TestAccS3Bucket_Duplicate_basic(t *testing.T) {
+	bucketName := sdkacctest.RandomWithPrefix("tf-test-bucket")
+	region := acctest.Region()
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckRegionNot(t, endpoints.UsEast1RegionID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBucketDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccBucketConfig_duplicate(region, bucketName),
+				ExpectError: regexp.MustCompile(s3.ErrCodeBucketAlreadyOwnedByYou),
+			},
+		},
+	})
+}
+
+func TestAccS3Bucket_Duplicate_UsEast1(t *testing.T) {
+	bucketName := sdkacctest.RandomWithPrefix("tf-test-bucket")
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckPartition(t, endpoints.AwsPartitionID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBucketDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccBucketConfig_duplicate(endpoints.UsEast1RegionID, bucketName),
+				ExpectError: regexp.MustCompile(tfs3.ErrMessageBucketAlreadyExists),
+			},
+		},
+	})
+}
+
+func TestAccS3Bucket_Duplicate_UsEast1AltAccount(t *testing.T) {
+	bucketName := sdkacctest.RandomWithPrefix("tf-test-bucket")
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckPartition(t, endpoints.AwsPartitionID)
+			acctest.PreCheckAlternateAccount(t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
+		CheckDestroy:             testAccCheckBucketDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccBucketConfig_duplicateAltAccount(endpoints.UsEast1RegionID, bucketName),
+				ExpectError: regexp.MustCompile(s3.ErrCodeBucketAlreadyExists),
+			},
+		},
+	})
+}
+
 func TestAccS3Bucket_Tags_basic(t *testing.T) {
 	rInt := sdkacctest.RandInt()
 	resourceName := "aws_s3_bucket.bucket1"
@@ -1076,7 +1135,7 @@ func TestAccS3Bucket_Replication_basic(t *testing.T) {
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
-		ProviderFactories: acctest.FactoriesAlternate(&providers),
+		ProviderFactories: acctest.FactoriesAlternate(t, &providers),
 		CheckDestroy:      acctest.CheckWithProviders(testAccCheckBucketDestroyWithProvider, &providers),
 		Steps: []resource.TestStep{
 			{
@@ -1127,7 +1186,7 @@ func TestAccS3Bucket_Replication_multipleDestinationsEmptyFilter(t *testing.T) {
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
-		ProviderFactories: acctest.FactoriesAlternate(&providers),
+		ProviderFactories: acctest.FactoriesAlternate(t, &providers),
 		CheckDestroy:      acctest.CheckWithProviders(testAccCheckBucketDestroyWithProvider, &providers),
 		Steps: []resource.TestStep{
 			{
@@ -1194,7 +1253,7 @@ func TestAccS3Bucket_Replication_multipleDestinationsNonEmptyFilter(t *testing.T
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
-		ProviderFactories: acctest.FactoriesAlternate(&providers),
+		ProviderFactories: acctest.FactoriesAlternate(t, &providers),
 		CheckDestroy:      acctest.CheckWithProviders(testAccCheckBucketDestroyWithProvider, &providers),
 		Steps: []resource.TestStep{
 			{
@@ -1265,7 +1324,7 @@ func TestAccS3Bucket_Replication_twoDestination(t *testing.T) {
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
-		ProviderFactories: acctest.FactoriesAlternate(&providers),
+		ProviderFactories: acctest.FactoriesAlternate(t, &providers),
 		CheckDestroy:      acctest.CheckWithProviders(testAccCheckBucketDestroyWithProvider, &providers),
 		Steps: []resource.TestStep{
 			{
@@ -1323,7 +1382,7 @@ func TestAccS3Bucket_Replication_ruleDestinationAccessControlTranslation(t *test
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
-		ProviderFactories: acctest.FactoriesAlternate(&providers),
+		ProviderFactories: acctest.FactoriesAlternate(t, &providers),
 		CheckDestroy:      acctest.CheckWithProviders(testAccCheckBucketDestroyWithProvider, &providers),
 		Steps: []resource.TestStep{
 			{
@@ -1371,7 +1430,7 @@ func TestAccS3Bucket_Replication_ruleDestinationAddAccessControlTranslation(t *t
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
-		ProviderFactories: acctest.FactoriesAlternate(&providers),
+		ProviderFactories: acctest.FactoriesAlternate(t, &providers),
 		CheckDestroy:      acctest.CheckWithProviders(testAccCheckBucketDestroyWithProvider, &providers),
 		Steps: []resource.TestStep{
 			{
@@ -1419,7 +1478,7 @@ func TestAccS3Bucket_Replication_withoutStorageClass(t *testing.T) {
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
-		ProviderFactories: acctest.FactoriesAlternate(&providers),
+		ProviderFactories: acctest.FactoriesAlternate(t, &providers),
 		CheckDestroy:      acctest.CheckWithProviders(testAccCheckBucketDestroyWithProvider, &providers),
 		Steps: []resource.TestStep{
 			{
@@ -1452,7 +1511,7 @@ func TestAccS3Bucket_Replication_expectVersioningValidationError(t *testing.T) {
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
-		ProviderFactories: acctest.FactoriesAlternate(&providers),
+		ProviderFactories: acctest.FactoriesAlternate(t, &providers),
 		CheckDestroy:      acctest.CheckWithProviders(testAccCheckBucketDestroyWithProvider, &providers),
 		Steps: []resource.TestStep{
 			{
@@ -1479,7 +1538,7 @@ func TestAccS3Bucket_Replication_withoutPrefix(t *testing.T) {
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
-		ProviderFactories: acctest.FactoriesAlternate(&providers),
+		ProviderFactories: acctest.FactoriesAlternate(t, &providers),
 		CheckDestroy:      acctest.CheckWithProviders(testAccCheckBucketDestroyWithProvider, &providers),
 		Steps: []resource.TestStep{
 			{
@@ -1516,7 +1575,7 @@ func TestAccS3Bucket_Replication_schemaV2(t *testing.T) {
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
-		ProviderFactories: acctest.FactoriesAlternate(&providers),
+		ProviderFactories: acctest.FactoriesAlternate(t, &providers),
 		CheckDestroy:      acctest.CheckWithProviders(testAccCheckBucketDestroyWithProvider, &providers),
 		Steps: []resource.TestStep{
 			{
@@ -1631,7 +1690,7 @@ func TestAccS3Bucket_Replication_RTC_valid(t *testing.T) {
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
-		ProviderFactories: acctest.FactoriesAlternate(&providers),
+		ProviderFactories: acctest.FactoriesAlternate(t, &providers),
 		CheckDestroy:      acctest.CheckWithProviders(testAccCheckBucketDestroyWithProvider, &providers),
 		Steps: []resource.TestStep{
 			{
@@ -2699,7 +2758,6 @@ func testAccCheckBucketExistsWithProvider(n string, providerF func() *schema.Pro
 			return err
 		}
 		return nil
-
 	}
 }
 
@@ -4633,3 +4691,39 @@ resource "aws_s3_bucket" "test" {
   bucket_prefix = "tf-test-"
 }
 `
+
+func testAccBucketConfig_duplicate(region, bucketName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigRegionalProvider(region),
+		fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+
+  depends_on = [aws_s3_bucket.duplicate]
+}
+
+resource "aws_s3_bucket" "duplicate" {
+  bucket = %[1]q
+}
+  `, bucketName),
+	)
+}
+
+func testAccBucketConfig_duplicateAltAccount(region, bucketName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigRegionalProvider(region),
+		acctest.ConfigAlternateAccountProvider(),
+		fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+
+  depends_on = [aws_s3_bucket.duplicate]
+}
+
+resource "aws_s3_bucket" "duplicate" {
+  provider = "awsalternate"
+  bucket   = %[1]q
+}
+  `, bucketName),
+	)
+}

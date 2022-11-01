@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -228,13 +229,13 @@ func resourceUserRead(d *schema.ResourceData, meta interface{}) error {
 
 	user, err := conn.AdminGetUser(params)
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, cognitoidentityprovider.ErrCodeUserNotFoundException) {
-		names.LogNotFoundRemoveState(names.CognitoIDP, names.ErrActionReading, ResUser, d.Get("username").(string))
+		create.LogNotFoundRemoveState(names.CognitoIDP, create.ErrActionReading, ResNameUser, d.Get("username").(string))
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return names.Error(names.CognitoIDP, names.ErrActionReading, ResUser, d.Get("username").(string), err)
+		return create.Error(names.CognitoIDP, create.ErrActionReading, ResNameUser, d.Get("username").(string), err)
 	}
 
 	if err := d.Set("attributes", flattenUserAttributes(user.UserAttributes)); err != nil {

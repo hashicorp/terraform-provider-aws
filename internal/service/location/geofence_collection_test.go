@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tflocation "github.com/hashicorp/terraform-provider-aws/internal/service/location"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -194,7 +195,7 @@ func testAccCheckGeofenceCollectionDestroy(s *terraform.State) error {
 			return err
 		}
 
-		return names.Error(names.Location, names.ErrActionCheckingDestroyed, tflocation.ResNameGeofenceCollection, rs.Primary.ID, errors.New("not destroyed"))
+		return create.Error(names.Location, create.ErrActionCheckingDestroyed, tflocation.ResNameGeofenceCollection, rs.Primary.ID, errors.New("not destroyed"))
 	}
 
 	return nil
@@ -204,11 +205,11 @@ func testAccCheckGeofenceCollectionExists(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
-			return names.Error(names.Location, names.ErrActionCheckingExistence, tflocation.ResNameGeofenceCollection, name, errors.New("not found"))
+			return create.Error(names.Location, create.ErrActionCheckingExistence, tflocation.ResNameGeofenceCollection, name, errors.New("not found"))
 		}
 
 		if rs.Primary.ID == "" {
-			return names.Error(names.Location, names.ErrActionCheckingExistence, tflocation.ResNameGeofenceCollection, name, errors.New("not set"))
+			return create.Error(names.Location, create.ErrActionCheckingExistence, tflocation.ResNameGeofenceCollection, name, errors.New("not set"))
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).LocationConn
@@ -217,7 +218,7 @@ func testAccCheckGeofenceCollectionExists(name string) resource.TestCheckFunc {
 		})
 
 		if err != nil {
-			return names.Error(names.Location, names.ErrActionCheckingExistence, tflocation.ResNameGeofenceCollection, rs.Primary.ID, err)
+			return create.Error(names.Location, create.ErrActionCheckingExistence, tflocation.ResNameGeofenceCollection, rs.Primary.ID, err)
 		}
 
 		return nil

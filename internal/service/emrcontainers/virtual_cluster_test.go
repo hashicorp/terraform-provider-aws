@@ -166,7 +166,7 @@ func testAccCheckVirtualClusterExists(n string, v *emrcontainers.VirtualCluster)
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRContainersConn
 
-		output, err := tfemrcontainers.FindVirtualClusterByID(context.TODO(), conn, rs.Primary.ID)
+		output, err := tfemrcontainers.FindVirtualClusterByID(context.Background(), conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -186,7 +186,7 @@ func testAccCheckVirtualClusterDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := tfemrcontainers.FindVirtualClusterByID(context.TODO(), conn, rs.Primary.ID)
+		_, err := tfemrcontainers.FindVirtualClusterByID(context.Background(), conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue

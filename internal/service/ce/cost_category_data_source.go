@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -317,18 +318,18 @@ func dataSourceCostCategoryRead(ctx context.Context, d *schema.ResourceData, met
 	costCategory, err := FindCostCategoryByARN(ctx, conn, d.Get("cost_category_arn").(string))
 
 	if err != nil {
-		return names.DiagError(names.CE, names.ErrActionReading, ResCostCategory, d.Id(), err)
+		return create.DiagError(names.CE, create.ErrActionReading, ResNameCostCategory, d.Id(), err)
 	}
 
 	d.Set("effective_end", costCategory.EffectiveEnd)
 	d.Set("effective_start", costCategory.EffectiveStart)
 	d.Set("name", costCategory.Name)
 	if err = d.Set("rule", flattenCostCategoryRules(costCategory.Rules)); err != nil {
-		return names.DiagError(names.CE, "setting rule", ResCostCategory, d.Id(), err)
+		return create.DiagError(names.CE, "setting rule", ResNameCostCategory, d.Id(), err)
 	}
 	d.Set("rule_version", costCategory.RuleVersion)
 	if err = d.Set("split_charge_rule", flattenCostCategorySplitChargeRules(costCategory.SplitChargeRules)); err != nil {
-		return names.DiagError(names.CE, "setting split_charge_rule", ResCostCategory, d.Id(), err)
+		return create.DiagError(names.CE, "setting split_charge_rule", ResNameCostCategory, d.Id(), err)
 	}
 
 	d.SetId(aws.StringValue(costCategory.CostCategoryArn))
@@ -336,11 +337,11 @@ func dataSourceCostCategoryRead(ctx context.Context, d *schema.ResourceData, met
 	tags, err := ListTagsWithContext(ctx, conn, d.Id())
 
 	if err != nil {
-		return names.DiagError(names.CE, "listing tags", ResCostCategory, d.Id(), err)
+		return create.DiagError(names.CE, "listing tags", ResNameCostCategory, d.Id(), err)
 	}
 
 	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return names.DiagError(names.CE, "setting tags", ResCostCategory, d.Id(), err)
+		return create.DiagError(names.CE, "setting tags", ResNameCostCategory, d.Id(), err)
 	}
 
 	return nil

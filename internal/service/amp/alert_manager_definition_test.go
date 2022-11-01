@@ -86,13 +86,9 @@ func testAccCheckAlertManagerDefinitionExists(n string) resource.TestCheckFunc {
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AMPConn
 
-		_, err := tfamp.FindAlertManagerDefinitionByID(context.TODO(), conn, rs.Primary.ID)
+		_, err := tfamp.FindAlertManagerDefinitionByID(context.Background(), conn, rs.Primary.ID)
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 
@@ -104,7 +100,7 @@ func testAccCheckAlertManagerDefinitionDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := tfamp.FindAlertManagerDefinitionByID(context.TODO(), conn, rs.Primary.ID)
+		_, err := tfamp.FindAlertManagerDefinitionByID(context.Background(), conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -142,8 +138,8 @@ alertmanager_config: |
 
 func testAccAlertManagerDefinitionConfig_basic(definition string) string {
 	return fmt.Sprintf(`
-resource "aws_prometheus_workspace" "test" {
-}
+resource "aws_prometheus_workspace" "test" {}
+
 resource "aws_prometheus_alert_manager_definition" "test" {
   workspace_id = aws_prometheus_workspace.test.id
   definition   = %[1]q

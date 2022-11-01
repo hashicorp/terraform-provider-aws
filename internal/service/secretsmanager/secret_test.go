@@ -11,7 +11,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfsecretsmanager "github.com/hashicorp/terraform-provider-aws/internal/service/secretsmanager"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -68,7 +67,7 @@ func TestAccSecretsManagerSecret_withNamePrefix(t *testing.T) {
 				Config: testAccSecretConfig_namePrefix("tf-acc-test-prefix-"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecretExists(resourceName, &secret),
-					create.TestCheckResourceAttrNameFromPrefix(resourceName, "name", "tf-acc-test-prefix-"),
+					acctest.CheckResourceAttrNameFromPrefix(resourceName, "name", "tf-acc-test-prefix-"),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", "tf-acc-test-prefix-"),
 				),
 			},
@@ -470,7 +469,6 @@ func testAccCheckSecretDestroy(s *terraform.State) error {
 	}
 
 	return nil
-
 }
 
 func testAccCheckSecretExists(n string, v *secretsmanager.DescribeSecretOutput) resource.TestCheckFunc {
@@ -675,7 +673,7 @@ resource "aws_lambda_function" "test1" {
   function_name = "%[1]s-1"
   handler       = "exports.example"
   role          = aws_iam_role.iam_for_lambda.arn
-  runtime       = "nodejs12.x"
+  runtime       = "nodejs16.x"
 }
 
 resource "aws_lambda_permission" "test1" {
@@ -691,7 +689,7 @@ resource "aws_lambda_function" "test2" {
   function_name = "%[1]s-2"
   handler       = "exports.example"
   role          = aws_iam_role.iam_for_lambda.arn
-  runtime       = "nodejs12.x"
+  runtime       = "nodejs16.x"
 }
 
 resource "aws_lambda_permission" "test2" {
@@ -711,7 +709,7 @@ resource "aws_lambda_function" "test" {
   function_name = "%[1]s"
   handler       = "exports.example"
   role          = aws_iam_role.iam_for_lambda.arn
-  runtime       = "nodejs12.x"
+  runtime       = "nodejs16.x"
 }
 
 resource "aws_lambda_permission" "test" {

@@ -67,7 +67,6 @@ func resourceVoiceConnectorTerminationCredentialsCreate(ctx context.Context, d *
 
 	if _, err := conn.PutVoiceConnectorTerminationCredentialsWithContext(ctx, input); err != nil {
 		return diag.Errorf("error creating Chime Voice Connector (%s) termination credentials: %s", vcId, err)
-
 	}
 
 	d.SetId(vcId)

@@ -518,7 +518,7 @@ func resourceTaskDefinitionCreate(d *schema.ResourceData, meta interface{}) erro
 	out, err := conn.RegisterTaskDefinition(&input)
 
 	// Some partitions (i.e., ISO) may not support tag-on-create
-	if input.Tags != nil && verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
+	if input.Tags != nil && verify.ErrorISOUnsupported(conn.PartitionID, err) {
 		log.Printf("[WARN] ECS tagging failed creating Task Definition (%s) with tags: %s. Trying create without tags.", d.Get("family").(string), err)
 		input.Tags = nil
 
@@ -542,7 +542,7 @@ func resourceTaskDefinitionCreate(d *schema.ResourceData, meta interface{}) erro
 		err := UpdateTags(conn, aws.StringValue(taskDefinition.TaskDefinitionArn), nil, tags)
 
 		// If default tags only, log and continue. Otherwise, error.
-		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
+		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.ErrorISOUnsupported(conn.PartitionID, err) {
 			log.Printf("[WARN] ECS tagging failed adding tags after create for Task Definition (%s): %s", d.Id(), err)
 			return resourceTaskDefinitionRead(d, meta)
 		}
@@ -570,7 +570,7 @@ func resourceTaskDefinitionRead(d *schema.ResourceData, meta interface{}) error 
 	out, err := conn.DescribeTaskDefinition(&input)
 
 	// Some partitions (i.e., ISO) may not support tagging, giving error
-	if verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
+	if verify.ErrorISOUnsupported(conn.PartitionID, err) {
 		log.Printf("[WARN] ECS tagging failed describing Task Definition (%s) with tags: %s; retrying without tags", d.Id(), err)
 
 		input.Include = nil
@@ -732,7 +732,7 @@ func resourceTaskDefinitionUpdate(d *schema.ResourceData, meta interface{}) erro
 		err := UpdateTags(conn, d.Get("arn").(string), o, n)
 
 		// Some partitions (i.e., ISO) may not support tagging, giving error
-		if verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
+		if verify.ErrorISOUnsupported(conn.PartitionID, err) {
 			log.Printf("[WARN] ECS tagging failed updating tags for Task Definition (%s): %s", d.Id(), err)
 			return nil
 		}
@@ -1206,6 +1206,12 @@ func expandContainerDefinitions(rawDefinitions string) ([]*ecs.ContainerDefiniti
 	err := json.Unmarshal([]byte(rawDefinitions), &definitions)
 	if err != nil {
 		return nil, fmt.Errorf("Error decoding JSON: %s", err)
+	}
+
+	for i, c := range definitions {
+		if c == nil {
+			return nil, fmt.Errorf("invalid container definition supplied at index (%d)", i)
+		}
 	}
 
 	return definitions, nil

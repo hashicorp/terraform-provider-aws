@@ -70,6 +70,7 @@ const (
 	Connect                      = "connect"
 	ConnectContactLens           = "connectcontactlens"
 	ConnectParticipant           = "connectparticipant"
+	ControlTower                 = "controltower"
 	CustomerProfiles             = "customerprofiles"
 	DAX                          = "dax"
 	DLM                          = "dlm"

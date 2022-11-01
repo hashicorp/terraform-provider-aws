@@ -233,7 +233,7 @@ resource "aws_servicecatalog_constraint" "test" {
   product_id   = aws_servicecatalog_product_portfolio_association.test.product_id
   type         = "NOTIFICATION"
 
-  parameters = jsonencode({ "NotificationArns" : ["${aws_sns_topic.test.arn}"] })
+  parameters = jsonencode({ "NotificationArns" : [aws_sns_topic.test.arn] })
 
   depends_on = [aws_sns_topic.test]
 }

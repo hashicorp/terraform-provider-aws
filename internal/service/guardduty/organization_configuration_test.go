@@ -133,6 +133,52 @@ func testAccOrganizationConfiguration_kubernetes(t *testing.T) {
 	})
 }
 
+func testAccOrganizationConfiguration_malwareprotection(t *testing.T) {
+	detectorResourceName := "aws_guardduty_detector.test"
+	resourceName := "aws_guardduty_organization_configuration.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckOrganizationsAccount(t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, guardduty.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDetectorDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccOrganizationConfigurationConfig_malwareprotection(true),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "auto_enable", "true"),
+					resource.TestCheckResourceAttr(resourceName, "datasources.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "datasources.0.malware_protection.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "datasources.0.malware_protection.0.scan_ec2_instance_with_findings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "datasources.0.malware_protection.0.scan_ec2_instance_with_findings.0.ebs_volumes.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "datasources.0.malware_protection.0.scan_ec2_instance_with_findings.0.ebs_volumes.0.auto_enable", "true"),
+					resource.TestCheckResourceAttrPair(resourceName, "detector_id", detectorResourceName, "id"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccOrganizationConfigurationConfig_malwareprotection(false),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "auto_enable", "true"),
+					resource.TestCheckResourceAttr(resourceName, "datasources.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "datasources.0.malware_protection.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "datasources.0.malware_protection.0.scan_ec2_instance_with_findings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "datasources.0.malware_protection.0.scan_ec2_instance_with_findings.0.ebs_volumes.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "datasources.0.malware_protection.0.scan_ec2_instance_with_findings.0.ebs_volumes.0.auto_enable", "false"),
+					resource.TestCheckResourceAttrPair(resourceName, "detector_id", detectorResourceName, "id"),
+				),
+			},
+		},
+	})
+}
+
 func testAccOrganizationConfigurationConfig_autoEnable(autoEnable bool) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
@@ -224,6 +270,44 @@ resource "aws_guardduty_organization_configuration" "test" {
     kubernetes {
       audit_logs {
         enable = %[1]t
+      }
+    }
+  }
+}
+`, autoEnable)
+}
+
+func testAccOrganizationConfigurationConfig_malwareprotection(autoEnable bool) string {
+	return fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+
+data "aws_partition" "current" {}
+
+resource "aws_organizations_organization" "test" {
+  aws_service_access_principals = ["guardduty.${data.aws_partition.current.dns_suffix}", "malware-protection.guardduty.${data.aws_partition.current.dns_suffix}"]
+  feature_set                   = "ALL"
+}
+
+resource "aws_guardduty_detector" "test" {}
+
+resource "aws_guardduty_organization_admin_account" "test" {
+  depends_on = [aws_organizations_organization.test]
+
+  admin_account_id = data.aws_caller_identity.current.account_id
+}
+
+resource "aws_guardduty_organization_configuration" "test" {
+  depends_on = [aws_guardduty_organization_admin_account.test]
+
+  auto_enable = true
+  detector_id = aws_guardduty_detector.test.id
+
+  datasources {
+    malware_protection {
+      scan_ec2_instance_with_findings {
+        ebs_volumes {
+          auto_enable = %[1]t
+        }
       }
     }
   }

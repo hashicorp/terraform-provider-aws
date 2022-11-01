@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	awspolicy "github.com/hashicorp/awspolicyequivalence"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -181,6 +182,7 @@ func resourceVPCEndpointCreate(d *schema.ResourceData, meta interface{}) error {
 
 	serviceName := d.Get("service_name").(string)
 	input := &ec2.CreateVpcEndpointInput{
+		ClientToken:       aws.String(resource.UniqueId()),
 		PrivateDnsEnabled: aws.Bool(d.Get("private_dns_enabled").(bool)),
 		ServiceName:       aws.String(serviceName),
 		TagSpecifications: tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeVpcEndpoint),
@@ -218,7 +220,6 @@ func resourceVPCEndpointCreate(d *schema.ResourceData, meta interface{}) error {
 		input.SubnetIds = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
-	log.Printf("[DEBUG] Creating EC2 VPC Endpoint: %s", input)
 	output, err := conn.CreateVpcEndpoint(input)
 
 	if err != nil {
@@ -255,7 +256,7 @@ func resourceVPCEndpointRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading VPC Endpoint (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading VPC Endpoint (%s): %w", d.Id(), err)
 	}
 
 	arn := arn.ARN{
@@ -385,7 +386,6 @@ func resourceVPCEndpointUpdate(d *schema.ResourceData, meta interface{}) error {
 			}
 		}
 
-		log.Printf("[DEBUG] Updating EC2 VPC Endpoint: %s", input)
 		_, err := conn.ModifyVpcEndpoint(input)
 
 		if err != nil {
@@ -401,7 +401,7 @@ func resourceVPCEndpointUpdate(d *schema.ResourceData, meta interface{}) error {
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("updating tags: %w", err)
+			return fmt.Errorf("updating EC2 VPC Endpoint (%s) tags: %w", d.Id(), err)
 		}
 	}
 
@@ -447,7 +447,6 @@ func vpcEndpointAccept(conn *ec2.EC2, vpceID, serviceName string, timeout time.D
 		VpcEndpointIds: aws.StringSlice([]string{vpceID}),
 	}
 
-	log.Printf("[DEBUG] Accepting EC2 VPC Endpoint connection: %s", input)
 	_, err = conn.AcceptVpcEndpointConnections(input)
 
 	if err != nil {

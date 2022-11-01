@@ -28,6 +28,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func ResourceInstance() *schema.Resource {
@@ -316,6 +317,12 @@ func ResourceInstance() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
+			"host_resource_group_arn": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ConflictsWith: []string{"placement_group"},
+			},
 			"iam_instance_profile": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -436,7 +443,7 @@ func ResourceInstance() *schema.Resource {
 						"instance_metadata_tags": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							Default:      ec2.InstanceMetadataTagsStateDisabled,
+							Computed:     true,
 							ValidateFunc: validation.StringInSlice(ec2.InstanceMetadataTagsState_Values(), false),
 						},
 					},
@@ -488,10 +495,11 @@ func ResourceInstance() *schema.Resource {
 				Computed: true,
 			},
 			"placement_group": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"host_resource_group_arn"},
 			},
 			"placement_partition_number": {
 				Type:     schema.TypeInt,
@@ -808,9 +816,9 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 	input := &ec2.RunInstancesInput{
 		BlockDeviceMappings:               instanceOpts.BlockDeviceMappings,
 		CapacityReservationSpecification:  instanceOpts.CapacityReservationSpecification,
+		ClientToken:                       aws.String(resource.UniqueId()),
 		CpuOptions:                        instanceOpts.CpuOptions,
 		CreditSpecification:               instanceOpts.CreditSpecification,
-		DisableApiStop:                    instanceOpts.DisableAPIStop,
 		DisableApiTermination:             instanceOpts.DisableAPITermination,
 		EbsOptimized:                      instanceOpts.EBSOptimized,
 		EnclaveOptions:                    instanceOpts.EnclaveOptions,
@@ -837,6 +845,10 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 		SubnetId:                          instanceOpts.SubnetID,
 		TagSpecifications:                 tagSpecifications,
 		UserData:                          instanceOpts.UserData64,
+	}
+
+	if instanceOpts.DisableAPIStop != nil {
+		input.DisableApiStop = instanceOpts.DisableAPIStop
 	}
 
 	log.Printf("[DEBUG] Creating EC2 Instance: %s", input)
@@ -959,6 +971,10 @@ func resourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 
 		if v := v.HostId; v != nil {
 			d.Set("host_id", v)
+		}
+
+		if v := v.HostResourceGroupArn; v != nil {
+			d.Set("host_resource_group_arn", instance.Placement.HostResourceGroupArn)
 		}
 
 		if v := v.PartitionNumber; v != nil {
@@ -1106,7 +1122,6 @@ func resourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 				ipv6Addresses = append(ipv6Addresses, aws.StringValue(address.Ipv6Address))
 			}
 		}
-
 	} else {
 		d.Set("associate_public_ip_address", instance.PublicIpAddress != nil)
 		d.Set("ipv6_address_count", 0)
@@ -1187,10 +1202,12 @@ func resourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 			Attribute:  aws.String(ec2.InstanceAttributeNameDisableApiStop),
 			InstanceId: aws.String(d.Id()),
 		})
-		if err != nil {
+		if err != nil && !verify.ErrorISOUnsupported(meta.(*conns.AWSClient).Partition, err) {
 			return fmt.Errorf("reading EC2 Instance (%s) attribute: %w ", d.Id(), err)
 		}
-		d.Set("disable_api_stop", attr.DisableApiStop.Value)
+		if !verify.ErrorISOUnsupported(meta.(*conns.AWSClient).Partition, err) {
+			d.Set("disable_api_stop", attr.DisableApiStop.Value)
+		}
 	}
 	{
 		if isSnowballEdgeInstance(d.Id()) {
@@ -1386,7 +1403,6 @@ func resourceInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 	// SourceDestCheck can only be modified on an instance without manually specified network interfaces.
 	// SourceDestCheck, in that case, is configured at the network interface level
 	if _, ok := d.GetOk("network_interface"); !ok {
-
 		// If we have a new resource and source_dest_check is still true, don't modify
 		sourceDestCheck := d.Get("source_dest_check").(bool)
 
@@ -1394,9 +1410,6 @@ func resourceInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 		// HasChange() thinks there is a diff between what is set on the instance and what is set in state. We need to ensure that
 		// if a diff has occurred, it's not because it's a new instance.
 		if d.HasChange("source_dest_check") && !d.IsNewResource() || d.IsNewResource() && !sourceDestCheck {
-			// SourceDestCheck can only be set on VPC instances
-			// AWS will return an error of InvalidParameterCombination if we attempt
-			// to modify the source_dest_check of an instance in EC2 Classic
 			log.Printf("[INFO] Modifying `source_dest_check` on Instance %s", d.Id())
 			_, err := conn.ModifyInstanceAttribute(&ec2.ModifyInstanceAttributeInput{
 				InstanceId: aws.String(d.Id()),
@@ -1405,12 +1418,7 @@ func resourceInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 				},
 			})
 			if err != nil {
-				// Tolerate InvalidParameterCombination error in Classic, otherwise
-				// return the error
-				if !tfawserr.ErrCodeEquals(err, "InvalidParameterCombination") {
-					return err
-				}
-				log.Printf("[WARN] Attempted to modify SourceDestCheck on non VPC instance: %s", err)
+				return create.Error(names.EC2, create.ErrActionUpdating, "Instance", d.Id(), err)
 			}
 		}
 	}
@@ -1668,9 +1676,13 @@ func resourceInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 					input.InstanceMetadataTags = aws.String(tfMap["instance_metadata_tags"].(string))
 				}
 
-				log.Printf("[DEBUG] Modifying EC2 Instance metadata options: %s", input)
 				_, err := conn.ModifyInstanceMetadataOptions(input)
+				if tfawserr.ErrMessageContains(err, errCodeUnsupportedOperation, "InstanceMetadataTags") {
+					log.Printf("[WARN] updating EC2 Instance (%s) metadata options: %s. Retrying without instance metadata tags.", d.Id(), err)
+					input.InstanceMetadataTags = nil
 
+					_, err = conn.ModifyInstanceMetadataOptions(input)
+				}
 				if err != nil {
 					return fmt.Errorf("updating EC2 Instance (%s) metadata options: %w", d.Id(), err)
 				}
@@ -1814,8 +1826,10 @@ func resourceInstanceDelete(d *schema.ResourceData, meta interface{}) error {
 		log.Printf("[WARN] attempting to terminate EC2 Instance (%s) despite error disabling API termination: %s", d.Id(), err)
 	}
 
-	if err := disableInstanceAPIStop(conn, d.Id(), d.Get("disable_api_stop").(bool)); err != nil {
-		log.Printf("[WARN] attempting to terminate EC2 Instance (%s) despite error disabling API stop: %s", d.Id(), err)
+	if v, ok := d.GetOk("disable_api_stop"); ok {
+		if err := disableInstanceAPIStop(conn, d.Id(), v.(bool)); err != nil {
+			log.Printf("[WARN] attempting to terminate EC2 Instance (%s) despite error disabling API stop: %s", d.Id(), err)
+		}
 	}
 
 	if err := terminateInstance(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
@@ -2386,13 +2400,13 @@ func readVolumeTags(conn *ec2.EC2, instanceId string) ([]*ec2.Tag, error) {
 	return tagsFromTagDescriptions(resp.Tags), nil
 }
 
-// Determine whether we're referring to security groups with
-// IDs or names. We use a heuristic to figure this out. By default,
-// we use IDs if we're in a VPC, and names otherwise (EC2-Classic).
-// However, the default VPC accepts either, so store them both here and let the
-// config determine which one to use in Plan and Apply.
+// Determine whether we're referring to security groups with IDs or names. We
+// use a heuristic to figure this out. The default VPC can have security groups
+// with IDs or names, so store them both here and let the config determine
+// which one to use in Plan and Apply.
 func readSecurityGroups(d *schema.ResourceData, instance *ec2.Instance, conn *ec2.EC2) error {
-	// An instance with a subnet is in a VPC; an instance without a subnet is in EC2-Classic.
+	// An instance with a subnet is in a VPC, and possibly the default VPC.
+	// An instance without a subnet is in the default VPC.
 	hasSubnet := aws.StringValue(instance.SubnetId) != ""
 	useID, useName := hasSubnet, !hasSubnet
 
@@ -2499,7 +2513,7 @@ func getInstancePasswordData(instanceID string, conn *ec2.EC2) (string, error) {
 	return passwordData, nil
 }
 
-type awsInstanceOpts struct {
+type instanceOpts struct {
 	BlockDeviceMappings               []*ec2.BlockDeviceMapping
 	CapacityReservationSpecification  *ec2.CapacityReservationSpecification
 	CpuOptions                        *ec2.CpuOptionsRequest
@@ -2531,15 +2545,18 @@ type awsInstanceOpts struct {
 	UserData64                        *string
 }
 
-func buildInstanceOpts(d *schema.ResourceData, meta interface{}) (*awsInstanceOpts, error) {
+func buildInstanceOpts(d *schema.ResourceData, meta interface{}) (*instanceOpts, error) {
 	conn := meta.(*conns.AWSClient).EC2Conn
 
-	opts := &awsInstanceOpts{
-		DisableAPIStop:        aws.Bool(d.Get("disable_api_stop").(bool)),
+	opts := &instanceOpts{
 		DisableAPITermination: aws.Bool(d.Get("disable_api_termination").(bool)),
 		EBSOptimized:          aws.Bool(d.Get("ebs_optimized").(bool)),
 		EnclaveOptions:        expandEnclaveOptions(d.Get("enclave_options").([]interface{})),
 		MetadataOptions:       expandInstanceMetadataOptions(d.Get("metadata_options").([]interface{})),
+	}
+
+	if v, ok := d.GetOk("disable_api_stop"); ok {
+		opts.DisableAPIStop = aws.Bool(v.(bool))
 	}
 
 	if v, ok := d.GetOk("ami"); ok {
@@ -2635,16 +2652,20 @@ func buildInstanceOpts(d *schema.ResourceData, meta interface{}) (*awsInstanceOp
 		AvailabilityZone: aws.String(d.Get("availability_zone").(string)),
 	}
 
-	if v := d.Get("placement_group").(string); instanceInterruptionBehavior == "" || instanceInterruptionBehavior == ec2.InstanceInterruptionBehaviorTerminate {
-		opts.Placement.GroupName = aws.String(v)
-		opts.SpotPlacement.GroupName = aws.String(v)
+	if v, ok := d.GetOk("placement_group"); ok && (instanceInterruptionBehavior == "" || instanceInterruptionBehavior == ec2.InstanceInterruptionBehaviorTerminate) {
+		opts.Placement.GroupName = aws.String(v.(string))
+		opts.SpotPlacement.GroupName = aws.String(v.(string))
 	}
 
-	if v := d.Get("tenancy").(string); v != "" {
-		opts.Placement.Tenancy = aws.String(v)
+	if v, ok := d.GetOk("tenancy"); ok {
+		opts.Placement.Tenancy = aws.String(v.(string))
 	}
-	if v := d.Get("host_id").(string); v != "" {
-		opts.Placement.HostId = aws.String(v)
+	if v, ok := d.GetOk("host_id"); ok {
+		opts.Placement.HostId = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("host_resource_group_arn"); ok {
+		opts.Placement.HostResourceGroupArn = aws.String(v.(string))
 	}
 
 	if v := d.Get("cpu_core_count").(int); v > 0 {
@@ -2918,7 +2939,7 @@ func expandEnclaveOptions(l []interface{}) *ec2.EnclaveOptionsRequest {
 	return opts
 }
 
-//Expands an array of secondary Private IPs into a ec2 Private IP Address Spec
+// Expands an array of secondary Private IPs into a ec2 Private IP Address Spec
 func expandSecondaryPrivateIPAddresses(ips []interface{}) []*ec2.PrivateIpAddressSpecification {
 	specs := make([]*ec2.PrivateIpAddressSpecification, 0, len(ips))
 	for _, v := range ips {

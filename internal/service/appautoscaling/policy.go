@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -33,16 +34,23 @@ func ResourcePolicy() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"alarm_arns": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 				// https://github.com/boto/botocore/blob/9f322b1/botocore/data/autoscaling/2011-01-01/service-2.json#L1862-L1873
 				ValidateFunc: validation.StringLenBetween(0, 255),
-			},
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
 			},
 			"policy_type": {
 				Type:     schema.TypeString,
@@ -147,15 +155,9 @@ func ResourcePolicy() *schema.Resource {
 										Required: true,
 									},
 									"statistic": {
-										Type:     schema.TypeString,
-										Required: true,
-										ValidateFunc: validation.StringInSlice([]string{
-											applicationautoscaling.MetricStatisticAverage,
-											applicationautoscaling.MetricStatisticMinimum,
-											applicationautoscaling.MetricStatisticMaximum,
-											applicationautoscaling.MetricStatisticSampleCount,
-											applicationautoscaling.MetricStatisticSum,
-										}, false),
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.StringInSlice(applicationautoscaling.MetricStatistic_Values(), false),
 									},
 									"unit": {
 										Type:     schema.TypeString,
@@ -163,6 +165,11 @@ func ResourcePolicy() *schema.Resource {
 									},
 								},
 							},
+						},
+						"disable_scale_in": {
+							Type:     schema.TypeBool,
+							Default:  false,
+							Optional: true,
 						},
 						"predefined_metric_specification": {
 							Type:          schema.TypeList,
@@ -182,11 +189,6 @@ func ResourcePolicy() *schema.Resource {
 									},
 								},
 							},
-						},
-						"disable_scale_in": {
-							Type:     schema.TypeBool,
-							Default:  false,
-							Optional: true,
 						},
 						"scale_in_cooldown": {
 							Type:     schema.TypeInt,
@@ -241,7 +243,7 @@ func resourcePolicyCreate(d *schema.ResourceData, meta interface{}) error {
 		resp, err = conn.PutScalingPolicy(&params)
 	}
 	if err != nil {
-		return names.Error(names.AppAutoScaling, names.ErrActionCreating, ResNamePolicy, d.Get("name").(string), err)
+		return create.Error(names.AppAutoScaling, create.ErrActionCreating, ResNamePolicy, d.Get("name").(string), err)
 	}
 
 	d.Set("arn", resp.PolicyARN)
@@ -272,7 +274,7 @@ func resourcePolicyRead(d *schema.ResourceData, meta interface{}) error {
 		p, err = getPolicy(d, meta)
 	}
 	if err != nil {
-		return names.Error(names.AppAutoScaling, names.ErrActionReading, ResNamePolicy, d.Id(), err)
+		return create.Error(names.AppAutoScaling, create.ErrActionReading, ResNamePolicy, d.Id(), err)
 	}
 
 	if p == nil && !d.IsNewResource() {
@@ -283,6 +285,11 @@ func resourcePolicyRead(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[DEBUG] Read ApplicationAutoScaling policy: %s, SP: %s, Obj: %s", d.Get("name"), d.Get("name"), p)
 
+	var alarmARNs = make([]string, 0, len(p.Alarms))
+	for _, alarm := range p.Alarms {
+		alarmARNs = append(alarmARNs, aws.StringValue(alarm.AlarmARN))
+	}
+	d.Set("alarm_arns", alarmARNs)
 	d.Set("arn", p.PolicyARN)
 	d.Set("name", p.PolicyName)
 	d.Set("policy_type", p.PolicyType)
@@ -291,10 +298,10 @@ func resourcePolicyRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("service_namespace", p.ServiceNamespace)
 
 	if err := d.Set("step_scaling_policy_configuration", flattenStepScalingPolicyConfiguration(p.StepScalingPolicyConfiguration)); err != nil {
-		return names.ErrorSetting(names.AppAutoScaling, ResNamePolicy, d.Id(), "step_scaling_policy_configuration", err)
+		return create.SettingError(names.AppAutoScaling, ResNamePolicy, d.Id(), "step_scaling_policy_configuration", err)
 	}
 	if err := d.Set("target_tracking_scaling_policy_configuration", flattenTargetTrackingScalingPolicyConfiguration(p.TargetTrackingScalingPolicyConfiguration)); err != nil {
-		return names.ErrorSetting(names.AppAutoScaling, ResNamePolicy, d.Id(), "target_tracking_scaling_policy_configuration", err)
+		return create.SettingError(names.AppAutoScaling, ResNamePolicy, d.Id(), "target_tracking_scaling_policy_configuration", err)
 	}
 
 	return nil
@@ -326,7 +333,7 @@ func resourcePolicyUpdate(d *schema.ResourceData, meta interface{}) error {
 		_, err = conn.PutScalingPolicy(&params)
 	}
 	if err != nil {
-		return names.Error(names.AppAutoScaling, names.ErrActionUpdating, ResNamePolicy, d.Id(), err)
+		return create.Error(names.AppAutoScaling, create.ErrActionUpdating, ResNamePolicy, d.Id(), err)
 	}
 
 	return resourcePolicyRead(d, meta)
@@ -336,7 +343,7 @@ func resourcePolicyDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).AppAutoScalingConn
 	p, err := getPolicy(d, meta)
 	if err != nil {
-		return names.Error(names.AppAutoScaling, names.ErrActionDeleting, ResNamePolicy, d.Id(), err)
+		return create.Error(names.AppAutoScaling, create.ErrActionDeleting, ResNamePolicy, d.Id(), err)
 	}
 	if p == nil {
 		return nil
@@ -371,7 +378,7 @@ func resourcePolicyDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return names.Error(names.AppAutoScaling, names.ErrActionDeleting, ResNamePolicy, d.Id(), err)
+		return create.Error(names.AppAutoScaling, create.ErrActionDeleting, ResNamePolicy, d.Id(), err)
 	}
 
 	return nil
@@ -380,7 +387,7 @@ func resourcePolicyDelete(d *schema.ResourceData, meta interface{}) error {
 func resourcePolicyImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	idParts, err := ValidPolicyImportInput(d.Id())
 	if err != nil {
-		return nil, names.Error(names.AppAutoScaling, names.ErrActionImporting, ResNamePolicy, d.Id(), err)
+		return nil, create.Error(names.AppAutoScaling, create.ErrActionImporting, ResNamePolicy, d.Id(), err)
 	}
 
 	serviceNamespace := idParts[0]
@@ -397,7 +404,6 @@ func resourcePolicyImport(d *schema.ResourceData, meta interface{}) ([]*schema.R
 }
 
 func ValidPolicyImportInput(id string) ([]string, error) {
-
 	idParts := strings.Split(id, "/")
 	if len(idParts) < 4 {
 		return nil, fmt.Errorf("unexpected format (%q), expected <service-namespace>/<resource-id>/<scalable-dimension>/<policy-name>", id)
@@ -422,7 +428,6 @@ func ValidPolicyImportInput(id string) ([]string, error) {
 		resourceId = strings.Join(idParts[1:len(idParts)-2], "/")
 		scalableDimension = idParts[len(idParts)-2]
 		policyName = idParts[len(idParts)-1]
-
 	}
 
 	if serviceNamespace == "" || resourceId == "" || scalableDimension == "" || policyName == "" {

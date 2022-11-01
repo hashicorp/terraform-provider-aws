@@ -314,6 +314,7 @@ func TestAccELBV2Listener_LoadBalancerARN_gatewayLoadBalancer(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "load_balancer_arn", lbResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "protocol", ""),
 					resource.TestCheckResourceAttr(resourceName, "port", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
 			},
 		},
@@ -1237,6 +1238,10 @@ resource "aws_lb_listener" "test" {
   default_action {
     target_group_arn = aws_lb_target_group.test.id
     type             = "forward"
+  }
+
+  tags = {
+    Name = %[1]q
   }
 }
 `, rName))

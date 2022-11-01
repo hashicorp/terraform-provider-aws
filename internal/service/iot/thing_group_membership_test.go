@@ -163,13 +163,7 @@ func testAccCheckThingGroupMembershipExists(n string) resource.TestCheckFunc {
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn
 
-		err = tfiot.FindThingGroupMembership(conn, thingGroupName, thingName)
-
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return tfiot.FindThingGroupMembership(conn, thingGroupName, thingName)
 	}
 }
 

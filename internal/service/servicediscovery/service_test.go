@@ -248,7 +248,7 @@ func testAccCheckServiceDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := tfservicediscovery.FindServiceByID(context.TODO(), conn, rs.Primary.ID)
+		_, err := tfservicediscovery.FindServiceByID(context.Background(), conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -277,7 +277,7 @@ func testAccCheckServiceExists(n string) resource.TestCheckFunc {
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceDiscoveryConn
 
-		_, err := tfservicediscovery.FindServiceByID(context.TODO(), conn, rs.Primary.ID)
+		_, err := tfservicediscovery.FindServiceByID(context.Background(), conn, rs.Primary.ID)
 
 		return err
 	}

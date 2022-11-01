@@ -476,7 +476,7 @@ func testAccCheckResourceDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := tfcloudcontrol.FindResourceByID(context.TODO(), conn, rs.Primary.ID, rs.Primary.Attributes["type_name"], "", "")
+		_, err := tfcloudcontrol.FindResourceByID(context.Background(), conn, rs.Primary.ID, rs.Primary.Attributes["type_name"], "", "")
 
 		if tfresource.NotFound(err) {
 			continue

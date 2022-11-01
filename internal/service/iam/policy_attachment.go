@@ -293,7 +293,6 @@ func updateGroups(conn *iam.IAM, d *schema.ResourceData) error {
 		return aErr
 	}
 	return nil
-
 }
 func detachPolicyFromUsers(conn *iam.IAM, users []*string, arn string) error {
 	for _, u := range users {

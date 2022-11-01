@@ -16,7 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func testAccQuerySuggestionsBlockList_basic(t *testing.T) {
+func TestAccKendraQuerySuggestionsBlockList_basic(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -24,7 +24,7 @@ func testAccQuerySuggestionsBlockList_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_kendra_query_suggestions_block_list.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(names.KendraEndpointID, t)
@@ -57,7 +57,7 @@ func testAccQuerySuggestionsBlockList_basic(t *testing.T) {
 	})
 }
 
-func testAccQuerySuggestionsBlockList_Description(t *testing.T) {
+func TestAccKendraQuerySuggestionsBlockList_Description(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -65,7 +65,7 @@ func testAccQuerySuggestionsBlockList_Description(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_kendra_query_suggestions_block_list.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(names.KendraEndpointID, t)
@@ -105,7 +105,7 @@ func testAccQuerySuggestionsBlockList_Description(t *testing.T) {
 	})
 }
 
-func testAccQuerySuggestionsBlockList_Name(t *testing.T) {
+func TestAccKendraQuerySuggestionsBlockList_Name(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -114,7 +114,7 @@ func testAccQuerySuggestionsBlockList_Name(t *testing.T) {
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_kendra_query_suggestions_block_list.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(names.KendraEndpointID, t)
@@ -147,7 +147,7 @@ func testAccQuerySuggestionsBlockList_Name(t *testing.T) {
 	})
 }
 
-func testAccQuerySuggestionsBlockList_RoleARN(t *testing.T) {
+func TestAccKendraQuerySuggestionsBlockList_RoleARN(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -155,7 +155,7 @@ func testAccQuerySuggestionsBlockList_RoleARN(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_kendra_query_suggestions_block_list.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(names.KendraEndpointID, t)
@@ -188,7 +188,7 @@ func testAccQuerySuggestionsBlockList_RoleARN(t *testing.T) {
 	})
 }
 
-func testAccQuerySuggestionsBlockList_SourceS3Path(t *testing.T) {
+func TestAccKendraQuerySuggestionsBlockList_SourceS3Path(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -196,7 +196,7 @@ func testAccQuerySuggestionsBlockList_SourceS3Path(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_kendra_query_suggestions_block_list.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(names.KendraEndpointID, t)
@@ -231,7 +231,7 @@ func testAccQuerySuggestionsBlockList_SourceS3Path(t *testing.T) {
 	})
 }
 
-func testAccQuerySuggestionsBlockList_disappears(t *testing.T) {
+func TestAccKendraQuerySuggestionsBlockList_disappears(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -239,7 +239,7 @@ func testAccQuerySuggestionsBlockList_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_kendra_query_suggestions_block_list.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(names.KendraEndpointID, t)
@@ -261,7 +261,7 @@ func testAccQuerySuggestionsBlockList_disappears(t *testing.T) {
 	})
 }
 
-func testAccQuerySuggestionsBlockList_tags(t *testing.T) {
+func TestAccKendraQuerySuggestionsBlockList_tags(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -269,7 +269,7 @@ func testAccQuerySuggestionsBlockList_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_kendra_query_suggestions_block_list.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(names.KendraEndpointID, t)
@@ -326,7 +326,7 @@ func testAccCheckQuerySuggestionsBlockListDestroy(s *terraform.State) error {
 			return err
 		}
 
-		_, err = tfkendra.FindQuerySuggestionsBlockListByID(context.TODO(), conn, id, indexId)
+		_, err = tfkendra.FindQuerySuggestionsBlockListByID(context.Background(), conn, id, indexId)
 
 		if tfresource.NotFound(err) {
 			continue
@@ -360,7 +360,7 @@ func testAccCheckQuerySuggestionsBlockListExists(name string) resource.TestCheck
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).KendraConn
 
-		_, err = tfkendra.FindQuerySuggestionsBlockListByID(context.TODO(), conn, id, indexId)
+		_, err = tfkendra.FindQuerySuggestionsBlockListByID(context.Background(), conn, id, indexId)
 
 		if err != nil {
 			return fmt.Errorf("Error describing Kendra QuerySuggestionsBlockList: %s", err.Error())

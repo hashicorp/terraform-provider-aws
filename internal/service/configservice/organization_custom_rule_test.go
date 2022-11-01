@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfconfigservice "github.com/hashicorp/terraform-provider-aws/internal/service/configservice"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -445,7 +446,7 @@ func testAccCheckOrganizationCustomRuleExists(resourceName string, ocr *configse
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
-			return names.Error(names.ConfigService, names.ErrActionCheckingExistence, tfconfigservice.ResNameOrganizationCustomRule, resourceName, errors.New("not found"))
+			return create.Error(names.ConfigService, create.ErrActionCheckingExistence, tfconfigservice.ResNameOrganizationCustomRule, resourceName, errors.New("not found"))
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ConfigServiceConn
@@ -453,11 +454,11 @@ func testAccCheckOrganizationCustomRuleExists(resourceName string, ocr *configse
 		rule, err := tfconfigservice.DescribeOrganizationConfigRule(conn, rs.Primary.ID)
 
 		if err != nil {
-			return names.Error(names.ConfigService, names.ErrActionCheckingExistence, tfconfigservice.ResNameOrganizationCustomRule, resourceName, err)
+			return create.Error(names.ConfigService, create.ErrActionCheckingExistence, tfconfigservice.ResNameOrganizationCustomRule, resourceName, err)
 		}
 
 		if rule == nil {
-			return names.Error(names.ConfigService, names.ErrActionCheckingExistence, tfconfigservice.ResNameOrganizationCustomRule, resourceName, errors.New("empty response"))
+			return create.Error(names.ConfigService, create.ErrActionCheckingExistence, tfconfigservice.ResNameOrganizationCustomRule, resourceName, errors.New("empty response"))
 		}
 
 		*ocr = *rule
@@ -481,11 +482,11 @@ func testAccCheckOrganizationCustomRuleDestroy(s *terraform.State) error {
 		}
 
 		if err != nil {
-			return names.Error(names.ConfigService, names.ErrActionCheckingDestroyed, tfconfigservice.ResNameOrganizationCustomRule, rs.Primary.ID, err)
+			return create.Error(names.ConfigService, create.ErrActionCheckingDestroyed, tfconfigservice.ResNameOrganizationCustomRule, rs.Primary.ID, err)
 		}
 
 		if rule != nil {
-			return names.Error(names.ConfigService, names.ErrActionCheckingDestroyed, tfconfigservice.ResNameOrganizationCustomRule, rs.Primary.ID, errors.New("still exists"))
+			return create.Error(names.ConfigService, create.ErrActionCheckingDestroyed, tfconfigservice.ResNameOrganizationCustomRule, rs.Primary.ID, errors.New("still exists"))
 		}
 	}
 
@@ -559,7 +560,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   role          = aws_iam_role.lambda.arn
   handler       = "exports.example"
-  runtime       = "nodejs12.x"
+  runtime       = "nodejs16.x"
 }
 
 resource "aws_lambda_permission" "test" {
@@ -624,7 +625,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   role          = aws_iam_role.lambda.arn
   handler       = "exports.example"
-  runtime       = "nodejs12.x"
+  runtime       = "nodejs16.x"
 }
 
 resource "aws_organizations_organization" "test" {
@@ -703,7 +704,7 @@ resource "aws_lambda_function" "test2" {
   function_name = "%[1]s2"
   role          = aws_iam_role.lambda.arn
   handler       = "exports.example"
-  runtime       = "nodejs12.x"
+  runtime       = "nodejs16.x"
 }
 
 resource "aws_lambda_permission" "test2" {

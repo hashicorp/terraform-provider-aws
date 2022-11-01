@@ -158,7 +158,6 @@ func testAccCheckASGNDestroy(s *terraform.State) error {
 		if len(resp.NotificationConfigurations) != 0 {
 			return fmt.Errorf("Error finding notification descriptions")
 		}
-
 	}
 	return nil
 }

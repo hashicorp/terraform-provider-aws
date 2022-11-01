@@ -156,6 +156,12 @@ func ResourceOpenzfsFileSystem() *schema.Resource {
 							Optional: true,
 							Computed: true,
 						},
+						"record_size_kib": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							Default:      128,
+							ValidateFunc: validation.IntInSlice([]int{4, 8, 16, 32, 64, 128, 256, 512, 1024}),
+						},
 						"user_and_group_quotas": {
 							Type:     schema.TypeSet,
 							Optional: true,
@@ -543,7 +549,6 @@ func resourceOpenzfsFileSystemUpdate(d *schema.ResourceData, meta interface{}) e
 				return fmt.Errorf("error waiting for FSx OpenZFS Root Volume (%s) update: %w", d.Get("root_volume_id").(string), err)
 			}
 		}
-
 	}
 
 	return resourceOpenzfsFileSystemRead(d, meta)
@@ -613,6 +618,10 @@ func expandOpenzfsRootVolumeConfiguration(cfg []interface{}) *fsx.OpenZFSCreateR
 		out.ReadOnly = aws.Bool(v)
 	}
 
+	if v, ok := conf["record_size_kib"].(int); ok {
+		out.RecordSizeKiB = aws.Int64(int64(v))
+	}
+
 	if v, ok := conf["user_and_group_quotas"]; ok {
 		out.UserAndGroupQuotas = expandOpenzfsUserAndGroupQuotas(v.(*schema.Set).List())
 	}
@@ -641,6 +650,10 @@ func expandOpenzfsUpdateRootVolumeConfiguration(cfg []interface{}) *fsx.UpdateOp
 		out.ReadOnly = aws.Bool(v)
 	}
 
+	if v, ok := conf["record_size_kib"].(int); ok {
+		out.RecordSizeKiB = aws.Int64(int64(v))
+	}
+
 	if v, ok := conf["user_and_group_quotas"]; ok {
 		out.UserAndGroupQuotas = expandOpenzfsUserAndGroupQuotas(v.(*schema.Set).List())
 	}
@@ -663,7 +676,6 @@ func expandOpenzfsUserAndGroupQuotas(cfg []interface{}) []*fsx.OpenZFSUserOrGrou
 	}
 
 	return quotas
-
 }
 
 func expandOpenzfsUserAndGroupQuota(conf map[string]interface{}) *fsx.OpenZFSUserOrGroupQuota {
@@ -686,7 +698,6 @@ func expandOpenzfsUserAndGroupQuota(conf map[string]interface{}) *fsx.OpenZFSUse
 	}
 
 	return &out
-
 }
 
 func expandOpenzfsNFSExports(cfg []interface{}) []*fsx.OpenZFSNfsExport {
@@ -700,7 +711,6 @@ func expandOpenzfsNFSExports(cfg []interface{}) []*fsx.OpenZFSNfsExport {
 	}
 
 	return exports
-
 }
 
 func expandOpenzfsNFSExport(cfg map[string]interface{}) *fsx.OpenZFSNfsExport {
@@ -724,7 +734,6 @@ func expandOpenzfsClinetConfigurations(cfg []interface{}) []*fsx.OpenZFSClientCo
 	}
 
 	return configurations
-
 }
 
 func expandOpenzfsClientConfiguration(conf map[string]interface{}) *fsx.OpenZFSClientConfiguration {
@@ -774,6 +783,9 @@ func flattenOpenzfsRootVolumeConfiguration(rs *fsx.Volume) []interface{} {
 	}
 	if rs.OpenZFSConfiguration.ReadOnly != nil {
 		m["read_only"] = aws.BoolValue(rs.OpenZFSConfiguration.ReadOnly)
+	}
+	if rs.OpenZFSConfiguration.RecordSizeKiB != nil {
+		m["record_size_kib"] = aws.Int64Value(rs.OpenZFSConfiguration.RecordSizeKiB)
 	}
 	if rs.OpenZFSConfiguration.UserAndGroupQuotas != nil {
 		m["user_and_group_quotas"] = flattenOpenzfsFileUserAndGroupQuotas(rs.OpenZFSConfiguration.UserAndGroupQuotas)

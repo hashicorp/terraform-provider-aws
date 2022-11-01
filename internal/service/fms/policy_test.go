@@ -256,11 +256,7 @@ func testAccCheckPolicyExists(n string) resource.TestCheckFunc {
 
 		_, err := tffms.FindPolicyByID(conn, rs.Primary.ID)
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 
@@ -324,7 +320,7 @@ resource "aws_iam_role" "test" {
       Action = "sts:AssumeRole"
       Condition = {
         StringEquals = {
-          "sts:ExternalId" = "${data.aws_caller_identity.current.account_id}"
+          "sts:ExternalId" = data.aws_caller_identity.current.account_id
         }
       }
       Effect = "Allow"

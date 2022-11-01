@@ -20,7 +20,6 @@ import (
 
 func init() {
 	acctest.RegisterServiceErrorCheckFunc(docdb.EndpointsID, testAccErrorCheckSkip)
-
 }
 
 func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
@@ -322,7 +321,7 @@ func TestAccDocDBCluster_GlobalClusterIdentifier_PrimarySecondaryClusters(t *tes
 			testAccPreCheckGlobalCluster(t)
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, docdb.EndpointsID),
-		ProviderFactories: acctest.FactoriesAlternate(&providers),
+		ProviderFactories: acctest.FactoriesAlternate(t, &providers),
 		CheckDestroy:      testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -368,8 +367,8 @@ func TestAccDocDBCluster_takeFinalSnapshot(t *testing.T) {
 	})
 }
 
-/// This is a regression test to make sure that we always cover the scenario as hightlighted in
-/// https://github.com/hashicorp/terraform/issues/11568
+// This is a regression test to make sure that we always cover the scenario as hightlighted in
+// https://github.com/hashicorp/terraform/issues/11568
 func TestAccDocDBCluster_missingUserNameCausesError(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },

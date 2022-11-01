@@ -30,7 +30,7 @@ The following arguments are supported:
 * `kms_key_id` - (Optional) The ARN of the Amazon Web Services Key Management Service key used to encrypt your data.
 * `log_exports` - (Optional) The types of logs the namespace can export. Available export types are `userlog`, `connectionlog`, and `useractivitylog`.
 * `namespace_name` - (Required) The name of the namespace.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attributes Reference
 
@@ -39,11 +39,11 @@ In addition to all arguments above, the following attributes are exported:
 * `arn` - Amazon Resource Name (ARN) of the Redshift Serverless Namespace.
 * `id` - The Redshift Namespace Name.
 * `namespace_id` - The Redshift Namespace ID.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
-Redshift Servreless Namespaces can be imported using the `namespace_name`, e.g.,
+Redshift Serverless Namespaces can be imported using the `namespace_name`, e.g.,
 
 ```
 $ terraform import aws_redshiftserverless_namespace.example example

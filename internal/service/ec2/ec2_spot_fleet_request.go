@@ -777,6 +777,12 @@ func ResourceSpotFleetRequest() *schema.Resource {
 				Type:     schema.TypeInt,
 				Required: true,
 			},
+			"target_capacity_unit_type": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice(ec2.TargetCapacityUnitType_Values(), false),
+			},
 			"target_group_arns": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -830,14 +836,14 @@ func resourceSpotFleetRequestCreate(d *schema.ResourceData, meta interface{}) er
 
 	// http://docs.aws.amazon.com/sdk-for-go/api/service/ec2.html#type-SpotFleetRequestConfigData
 	spotFleetConfig := &ec2.SpotFleetRequestConfigData{
-		IamFleetRole:                     aws.String(d.Get("iam_fleet_role").(string)),
-		TargetCapacity:                   aws.Int64(int64(d.Get("target_capacity").(int))),
 		ClientToken:                      aws.String(resource.UniqueId()),
-		TerminateInstancesWithExpiration: aws.Bool(d.Get("terminate_instances_with_expiration").(bool)),
-		ReplaceUnhealthyInstances:        aws.Bool(d.Get("replace_unhealthy_instances").(bool)),
+		IamFleetRole:                     aws.String(d.Get("iam_fleet_role").(string)),
 		InstanceInterruptionBehavior:     aws.String(d.Get("instance_interruption_behaviour").(string)),
-		Type:                             aws.String(d.Get("fleet_type").(string)),
+		ReplaceUnhealthyInstances:        aws.Bool(d.Get("replace_unhealthy_instances").(bool)),
 		TagSpecifications:                tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeSpotFleetRequest),
+		TargetCapacity:                   aws.Int64(int64(d.Get("target_capacity").(int))),
+		TerminateInstancesWithExpiration: aws.Bool(d.Get("terminate_instances_with_expiration").(bool)),
+		Type:                             aws.String(d.Get("fleet_type").(string)),
 	}
 
 	if launchSpecificationOk {
@@ -934,6 +940,10 @@ func resourceSpotFleetRequestCreate(d *schema.ResourceData, meta interface{}) er
 		}
 	}
 
+	if v, ok := d.GetOk("target_capacity_unit_type"); ok {
+		spotFleetConfig.SetTargetCapacityUnitType(v.(string))
+	}
+
 	// http://docs.aws.amazon.com/sdk-for-go/api/service/ec2.html#type-RequestSpotFleetInput
 	input := &ec2.RequestSpotFleetInput{
 		SpotFleetRequestConfig: spotFleetConfig,
@@ -1016,6 +1026,10 @@ func resourceSpotFleetRequestRead(d *schema.ResourceData, meta interface{}) erro
 
 	if config.TargetCapacity != nil {
 		d.Set("target_capacity", config.TargetCapacity)
+	}
+
+	if config.TargetCapacityUnitType != nil {
+		d.Set("target_capacity_unit_type", config.TargetCapacityUnitType)
 	}
 
 	if config.TerminateInstancesWithExpiration != nil {
@@ -1286,7 +1300,6 @@ func buildSpotFleetLaunchSpecification(d map[string]interface{}, meta interface{
 
 	associatePublicIpAddress, hasPublicIpAddress := d["associate_public_ip_address"]
 	if hasPublicIpAddress && associatePublicIpAddress.(bool) && hasSubnetId {
-
 		// If we have a non-default VPC / Subnet specified, we can flag
 		// AssociatePublicIpAddress to get a Public IP assigned. By default these are not provided.
 		// You cannot specify both SubnetId and the NetworkInterface.0.* parameters though, otherwise

@@ -206,6 +206,13 @@ func ResourceLoadBalancer() *schema.Resource {
 				DiffSuppressFunc: suppressIfLBType("network"),
 			},
 
+			"preserve_host_header": {
+				Type:             schema.TypeBool,
+				Optional:         true,
+				Default:          false,
+				DiffSuppressFunc: suppressIfLBTypeNot(elbv2.LoadBalancerTypeEnumApplication),
+			},
+
 			"enable_cross_zone_load_balancing": {
 				Type:             schema.TypeBool,
 				Optional:         true,
@@ -361,7 +368,7 @@ func resourceLoadBalancerCreate(d *schema.ResourceData, meta interface{}) error 
 	resp, err := conn.CreateLoadBalancer(elbOpts)
 
 	// Some partitions may not support tag-on-create
-	if elbOpts.Tags != nil && verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
+	if elbOpts.Tags != nil && verify.ErrorISOUnsupported(conn.PartitionID, err) {
 		log.Printf("[WARN] ELBv2 Load Balancer (%s) create failed (%s) with tags. Trying create without tags.", name, err)
 		elbOpts.Tags = nil
 		resp, err = conn.CreateLoadBalancer(elbOpts)
@@ -389,7 +396,7 @@ func resourceLoadBalancerCreate(d *schema.ResourceData, meta interface{}) error 
 		err := UpdateTags(conn, d.Id(), nil, tags)
 
 		// if default tags only, log and continue (i.e., should error if explicitly setting tags and they can't be)
-		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
+		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.ErrorISOUnsupported(conn.PartitionID, err) {
 			log.Printf("[WARN] error adding tags after create for ELBv2 Load Balancer (%s): %s", d.Id(), err)
 			return resourceLoadBalancerUpdate(d, meta)
 		}
@@ -502,6 +509,13 @@ func resourceLoadBalancerUpdate(d *schema.ResourceData, meta interface{}) error 
 			})
 		}
 
+		if d.HasChange("preserve_host_header") || d.IsNewResource() {
+			attributes = append(attributes, &elbv2.LoadBalancerAttribute{
+				Key:   aws.String("routing.http.preserve_host_header.enabled"),
+				Value: aws.String(strconv.FormatBool(d.Get("preserve_host_header").(bool))),
+			})
+		}
+
 		if d.HasChange("desync_mitigation_mode") || d.IsNewResource() {
 			attributes = append(attributes, &elbv2.LoadBalancerAttribute{
 				Key:   aws.String("routing.http.desync_mitigation_mode"),
@@ -567,7 +581,6 @@ func resourceLoadBalancerUpdate(d *schema.ResourceData, meta interface{}) error 
 		if err != nil {
 			return fmt.Errorf("failure Setting LB Security Groups: %w", err)
 		}
-
 	}
 
 	// subnets are assigned at Create; the 'change' here is an empty map for old
@@ -589,7 +602,6 @@ func resourceLoadBalancerUpdate(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	if d.HasChange("ip_address_type") {
-
 		params := &elbv2.SetIpAddressTypeInput{
 			LoadBalancerArn: aws.String(d.Id()),
 			IpAddressType:   aws.String(d.Get("ip_address_type").(string)),
@@ -624,7 +636,7 @@ func resourceLoadBalancerUpdate(d *schema.ResourceData, meta interface{}) error 
 		}
 
 		// ISO partitions may not support tagging, giving error
-		if verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
+		if verify.ErrorISOUnsupported(conn.PartitionID, err) {
 			log.Printf("[WARN] Unable to update tags for ELBv2 Load Balancer %s: %s", d.Id(), err)
 
 			_, err := waitLoadBalancerActive(conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
@@ -767,11 +779,7 @@ func waitForNLBNetworkInterfacesToDetach(conn *ec2.EC2, lbArn string) error {
 		},
 	)
 
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }
 
 func getLBNameFromARN(arn string) (string, error) {
@@ -885,6 +893,10 @@ func flattenResource(d *schema.ResourceData, meta interface{}, lb *elbv2.LoadBal
 			dropInvalidHeaderFieldsEnabled := aws.StringValue(attr.Value) == "true"
 			log.Printf("[DEBUG] Setting LB Invalid Header Fields Enabled: %t", dropInvalidHeaderFieldsEnabled)
 			d.Set("drop_invalid_header_fields", dropInvalidHeaderFieldsEnabled)
+		case "routing.http.preserve_host_header.enabled":
+			preserveHostHeaderEnabled := aws.StringValue(attr.Value) == "true"
+			log.Printf("[DEBUG] Setting LB Preserve Host Header Enabled: %t", preserveHostHeaderEnabled)
+			d.Set("preserve_host_header", preserveHostHeaderEnabled)
 		case "deletion_protection.enabled":
 			protectionEnabled := aws.StringValue(attr.Value) == "true"
 			log.Printf("[DEBUG] Setting LB Deletion Protection Enabled: %t", protectionEnabled)
@@ -914,7 +926,7 @@ func flattenResource(d *schema.ResourceData, meta interface{}, lb *elbv2.LoadBal
 
 	tags, err := ListTags(conn, d.Id())
 
-	if verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
+	if verify.ErrorISOUnsupported(conn.PartitionID, err) {
 		log.Printf("[WARN] Unable to list tags for ELBv2 Load Balancer %s: %s", d.Id(), err)
 		return nil
 	}

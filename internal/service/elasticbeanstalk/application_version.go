@@ -166,7 +166,6 @@ func resourceApplicationVersionUpdate(d *schema.ResourceData, meta interface{}) 
 	}
 
 	return resourceApplicationVersionRead(d, meta)
-
 }
 
 func resourceApplicationVersionDelete(d *schema.ResourceData, meta interface{}) error {
@@ -197,7 +196,7 @@ func resourceApplicationVersionDelete(d *schema.ResourceData, meta interface{}) 
 	}
 
 	if err != nil {
-		return err
+		return fmt.Errorf("deleting Elastic Beanstalk Application version (%s): %w", d.Id(), err)
 	}
 
 	return nil

@@ -73,7 +73,6 @@ func TestAccELBAttachment_drift(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Failure deregistering instances from ELB: %s", err)
 		}
-
 	}
 
 	resource.ParallelTest(t, resource.TestCase{

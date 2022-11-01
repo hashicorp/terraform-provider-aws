@@ -83,10 +83,13 @@ func ResourceSecurityGroupRule() *schema.Resource {
 				AtLeastOneOf:  []string{"cidr_blocks", "ipv6_cidr_blocks", "prefix_list_ids", "self", "source_security_group_id"},
 			},
 			"prefix_list_ids": {
-				Type:         schema.TypeList,
-				Optional:     true,
-				ForceNew:     true,
-				Elem:         &schema.Schema{Type: schema.TypeString},
+				Type:     schema.TypeList,
+				Optional: true,
+				ForceNew: true,
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: validation.NoZeroValues,
+				},
 				AtLeastOneOf: []string{"cidr_blocks", "ipv6_cidr_blocks", "prefix_list_ids", "self", "source_security_group_id"},
 			},
 			"protocol": {
@@ -152,7 +155,7 @@ func resourceSecurityGroupRuleCreate(d *schema.ResourceData, meta interface{}) e
 		return fmt.Errorf("reading Security Group (%s): %w", securityGroupID, err)
 	}
 
-	ipPermission := expandIpPermission(d, sg)
+	ipPermission := expandIPPermission(d, sg)
 	ruleType := d.Get("type").(string)
 	isVPC := aws.StringValue(sg.VpcId) != ""
 	id := SecurityGroupRuleCreateID(securityGroupID, ruleType, ipPermission)
@@ -242,7 +245,7 @@ func resourceSecurityGroupRuleRead(d *schema.ResourceData, meta interface{}) err
 		return fmt.Errorf("reading Security Group (%s): %w", securityGroupID, err)
 	}
 
-	ipPermission := expandIpPermission(d, sg)
+	ipPermission := expandIPPermission(d, sg)
 	isVPC := aws.StringValue(sg.VpcId) != ""
 
 	var rules []*ec2.IpPermission
@@ -294,7 +297,7 @@ func resourceSecurityGroupRuleUpdate(d *schema.ResourceData, meta interface{}) e
 			return fmt.Errorf("reading Security Group (%s): %w", securityGroupID, err)
 		}
 
-		ipPermission := expandIpPermission(d, sg)
+		ipPermission := expandIPPermission(d, sg)
 		ruleType := d.Get("type").(string)
 		isVPC := aws.StringValue(sg.VpcId) != ""
 
@@ -342,7 +345,7 @@ func resourceSecurityGroupRuleDelete(d *schema.ResourceData, meta interface{}) e
 		return fmt.Errorf("reading Security Group (%s): %w", securityGroupID, err)
 	}
 
-	ipPermission := expandIpPermission(d, sg)
+	ipPermission := expandIPPermission(d, sg)
 	ruleType := d.Get("type").(string)
 	isVPC := aws.StringValue(sg.VpcId) != ""
 
@@ -685,7 +688,7 @@ func SecurityGroupRuleCreateID(securityGroupID, ruleType string, ip *ec2.IpPermi
 	return fmt.Sprintf("sgrule-%d", create.StringHashcode(buf.String()))
 }
 
-func expandIpPermission(d *schema.ResourceData, sg *ec2.SecurityGroup) *ec2.IpPermission { // nosemgrep:ci.caps5-in-func-name
+func expandIPPermission(d *schema.ResourceData, sg *ec2.SecurityGroup) *ec2.IpPermission { // nosemgrep:ci.caps5-in-func-name
 	apiObject := &ec2.IpPermission{
 		IpProtocol: aws.String(ProtocolForValue(d.Get("protocol").(string))),
 	}

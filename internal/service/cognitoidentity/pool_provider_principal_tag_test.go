@@ -95,6 +95,28 @@ func TestAccCognitoIdentityPoolProviderPrincipalTags_disappears(t *testing.T) {
 	})
 }
 
+func TestAccCognitoIdentityPoolProviderPrincipalTags_oidc(t *testing.T) {
+	resourceName := "aws_cognito_identity_pool_provider_principal_tag.test"
+	name := sdkacctest.RandString(10)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cognitoidentity.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPoolProviderPrincipalTagsDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPoolProviderPrincipalTagsConfig_oidc(name),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckPoolProviderPrincipalTagsExists(resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, "identity_pool_id"),
+					resource.TestCheckResourceAttr(resourceName, "principal_tags.test", "value"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckPoolProviderPrincipalTagsExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -196,4 +218,34 @@ resource "aws_cognito_identity_pool_provider_principal_tag" "test" {
   }
 }
 `)
+}
+
+func testAccPoolProviderPrincipalTagsConfig_oidc(name string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_openid_connect_provider" "idp" {
+  url = "https://accounts.example.com"
+  client_id_list = [
+    "sts.amazonaws.com"
+  ]
+  thumbprint_list = ["990f4193972f2becf12ddeda5237f9c952f20d9e"]
+}
+
+resource "aws_cognito_identity_pool" "pool" {
+  identity_pool_name               = "%s"
+  allow_unauthenticated_identities = false
+  allow_classic_flow               = false
+
+  openid_connect_provider_arns = [
+    aws_iam_openid_connect_provider.idp.arn
+  ]
+}
+
+resource "aws_cognito_identity_pool_provider_principal_tag" "test" {
+  identity_pool_id       = aws_cognito_identity_pool.pool.id
+  identity_provider_name = aws_iam_openid_connect_provider.idp.arn
+  use_defaults           = false
+  principal_tags = {
+    test = "value"
+  }
+}`, name)
 }

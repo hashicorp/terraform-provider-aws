@@ -1,6 +1,7 @@
 package acm_test
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"strconv"
@@ -233,13 +234,9 @@ func testAccCheckCertificateValidationExists(n string) resource.TestCheckFunc {
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ACMConn
 
-		_, err := tfacm.FindCertificateValidationByARN(conn, rs.Primary.Attributes["certificate_arn"])
+		_, err := tfacm.FindCertificateValidationByARN(context.Background(), conn, rs.Primary.Attributes["certificate_arn"])
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 

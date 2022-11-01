@@ -9,8 +9,7 @@ on:
     paths:
       - .github/workflows/golangci-lint.yml
       - .go-version
-      - .ci/.golangci.yml
-      - .ci/.golangci2.yml
+      - .ci/.golangci*.yml
       - internal/**
       - go.sum
       - main.go
@@ -19,7 +18,7 @@ on:
 
 jobs:
   golangci-linta:
-    name: 1 of 4
+    name: 1 of 2
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -30,11 +29,11 @@ jobs:
         uses: golangci/golangci-lint-action@v3
         with:
           version: latest
-          args: -c .ci/.golangci.yml
+          args: --config .ci/.golangci.yml
   golangci-lintb:
-    name: 2 of 4
+    name: 2 of 2
     needs: [golangci-linta]
-    runs-on: ubuntu-latest
+    runs-on: [custom, linux, medium]
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v3
@@ -44,32 +43,4 @@ jobs:
         uses: golangci/golangci-lint-action@v3
         with:
           version: latest
-          args: -c .ci/.golangci2.yml
-  golangci-lintc:
-    name: 3 of 4
-    needs: [golangci-linta]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-go@v3
-        with:
-          go-version-file: .go-version
-      - name: golangci-lint
-        uses: golangci/golangci-lint-action@v3
-        with:
-          version: latest
-          args: -c .ci/.golangci3.yml
-  golangci-lintd:
-    name: 4 of 4
-    needs: [golangci-linta]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-go@v3
-        with:
-          go-version-file: .go-version
-      - name: golangci-lint
-        uses: golangci/golangci-lint-action@v3
-        with:
-          version: latest
-          args: -c .ci/.golangci4.yml
+          args: --config .ci/.golangci2.yml

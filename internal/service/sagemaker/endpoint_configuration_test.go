@@ -423,11 +423,7 @@ func testAccCheckEndpointConfigurationExists(n string) resource.TestCheckFunc {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn
 		_, err := tfsagemaker.FindEndpointConfigByName(conn, rs.Primary.ID)
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 

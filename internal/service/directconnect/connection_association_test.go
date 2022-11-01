@@ -113,13 +113,7 @@ func testAccCheckConnectionAssociationExists(name string) resource.TestCheckFunc
 			return fmt.Errorf("No ID is set")
 		}
 
-		err := tfdirectconnect.FindConnectionAssociationExists(conn, rs.Primary.ID, rs.Primary.Attributes["lag_id"])
-
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return tfdirectconnect.FindConnectionAssociationExists(conn, rs.Primary.ID, rs.Primary.Attributes["lag_id"])
 	}
 }
 

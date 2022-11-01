@@ -35,7 +35,7 @@ type CoreNetworkAttachmentPolicyAction struct {
 	AssociationMethod string `json:"association-method,omitempty"`
 	Segment           string `json:"segment,omitempty"`
 	TagValueOfKey     string `json:"tag-value-of-key,omitempty"`
-	RequireAcceptance bool   `json:"require-acceptance"`
+	RequireAcceptance bool   `json:"require-acceptance,omitempty"`
 }
 
 type CoreNetworkAttachmentPolicyCondition struct {
@@ -68,7 +68,7 @@ type CoreNetworkEdgeLocation struct {
 	InsideCidrBlocks interface{} `json:"inside-cidr-blocks,omitempty"`
 }
 
-func (c *CoreNetworkPolicySegmentAction) MarshalJSON() ([]byte, error) {
+func (c CoreNetworkPolicySegmentAction) MarshalJSON() ([]byte, error) {
 	type Alias CoreNetworkPolicySegmentAction
 
 	var share interface{}

@@ -432,7 +432,7 @@ resource "aws_iam_policy" "test" {
     "Statement" : [{
       "Effect" : "Allow",
       "Resource" : [
-        "${aws_s3_bucket.test.arn}",
+        aws_s3_bucket.test.arn,
         "${aws_s3_bucket.test.arn}/*"
       ],
       "Action" : [
