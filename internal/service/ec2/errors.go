@@ -42,6 +42,7 @@ const (
 	errCodeInvalidInstanceID                              = "InvalidInstanceID"
 	errCodeInvalidInstanceIDNotFound                      = "InvalidInstanceID.NotFound"
 	errCodeInvalidInternetGatewayIDNotFound               = "InvalidInternetGatewayID.NotFound"
+	errCodeInvalidIPAMIdNotFound                          = "InvalidIpamId.NotFound"
 	ErrCodeInvalidIPAMPoolIdNotFound                      = "InvalidIpamPoolId.NotFound"
 	errCodeInvalidKeyPairNotFound                         = "InvalidKeyPair.NotFound"
 	errCodeInvalidLaunchTemplateIdMalformed               = "InvalidLaunchTemplateId.Malformed"

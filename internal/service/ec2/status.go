@@ -1285,6 +1285,22 @@ func StatusSnapshotStorageTier(conn *ec2.EC2, id string) resource.StateRefreshFu
 	}
 }
 
+func StatusIPAMState(conn *ec2.EC2, id string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindIPAMByID(conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.State), nil
+	}
+}
+
 func StatusIPAMPoolCIDRState(conn *ec2.EC2, cidrBlock, poolID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindIPAMPoolCIDRByTwoPartKey(conn, cidrBlock, poolID)
