@@ -314,6 +314,7 @@ func init() {
 		F:    sweepVPCEndpoints,
 		Dependencies: []string{
 			"aws_route_table",
+			"aws_sagemaker_workforce",
 		},
 	})
 

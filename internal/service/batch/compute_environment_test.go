@@ -1052,7 +1052,6 @@ func TestAccBatchComputeEnvironment_launchTemplate(t *testing.T) {
 	resourceName := "aws_batch_compute_environment.test"
 	instanceProfileResourceName := "aws_iam_instance_profile.ecs_instance"
 	launchTemplateResourceName := "aws_launch_template.test"
-	securityGroupResourceName := "aws_security_group.test"
 	serviceRoleResourceName := "aws_iam_role.batch_service"
 	spotFleetRoleResourceName := "aws_iam_role.ec2_spot_fleet"
 	subnetResourceName := "aws_subnet.test"
@@ -1065,7 +1064,7 @@ func TestAccBatchComputeEnvironment_launchTemplate(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccComputeEnvironmentConfig_launchTemplate(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckComputeEnvironmentExists(resourceName, &ce),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "batch", fmt.Sprintf("compute-environment/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "compute_environment_name", rName),
@@ -1085,8 +1084,7 @@ func TestAccBatchComputeEnvironment_launchTemplate(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.launch_template.0.version", ""),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.max_vcpus", "16"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.min_vcpus", "0"),
-					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.security_group_ids.#", "1"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "compute_resources.0.security_group_ids.*", securityGroupResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.security_group_ids.#", "0"),
 					resource.TestCheckResourceAttrPair(resourceName, "compute_resources.0.spot_iam_fleet_role", spotFleetRoleResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.subnets.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "compute_resources.0.subnets.*", subnetResourceName, "id"),
@@ -1469,7 +1467,7 @@ func testAccPreCheck(t *testing.T) {
 	}
 }
 
-func testAccComputeEnvironmentBaseConfig(rName string) string {
+func testAccComputeEnvironmentConfig_base(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -1574,7 +1572,7 @@ resource "aws_subnet" "test" {
 
 func testAccComputeEnvironmentConfig_basic(rName string) string {
 	return acctest.ConfigCompose(
-		testAccComputeEnvironmentBaseConfig(rName),
+		testAccComputeEnvironmentConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_batch_compute_environment" "test" {
   compute_environment_name = %[1]q
@@ -1588,7 +1586,7 @@ resource "aws_batch_compute_environment" "test" {
 
 func testAccComputeEnvironmentConfig_nameGenerated(rName string) string {
 	return acctest.ConfigCompose(
-		testAccComputeEnvironmentBaseConfig(rName),
+		testAccComputeEnvironmentConfig_base(rName),
 		`
 resource "aws_batch_compute_environment" "test" {
   service_role = aws_iam_role.batch_service.arn
@@ -1600,7 +1598,7 @@ resource "aws_batch_compute_environment" "test" {
 
 func testAccComputeEnvironmentConfig_namePrefix(rName string) string {
 	return acctest.ConfigCompose(
-		testAccComputeEnvironmentBaseConfig(rName),
+		testAccComputeEnvironmentConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_batch_compute_environment" "test" {
   compute_environment_name_prefix = %[1]q
@@ -1736,7 +1734,7 @@ resource "aws_batch_compute_environment" "test" {
 
 func testAccComputeEnvironmentConfig_ec2(rName string) string {
 	return acctest.ConfigCompose(
-		testAccComputeEnvironmentBaseConfig(rName),
+		testAccComputeEnvironmentConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_batch_compute_environment" "test" {
   compute_environment_name = %[1]q
@@ -1765,7 +1763,7 @@ resource "aws_batch_compute_environment" "test" {
 
 func testAccComputeEnvironmentConfig_ec2DesiredVCPUsEC2KeyPairImageIDAndResourcesTags(rName, publicKey string) string {
 	return acctest.ConfigCompose(
-		testAccComputeEnvironmentBaseConfig(rName),
+		testAccComputeEnvironmentConfig_base(rName),
 		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
 		fmt.Sprintf(`
 resource "aws_batch_compute_environment" "test" {
@@ -1809,7 +1807,7 @@ resource "aws_key_pair" "test" {
 
 func testAccComputeEnvironmentConfig_fargate(rName string) string {
 	return acctest.ConfigCompose(
-		testAccComputeEnvironmentBaseConfig(rName),
+		testAccComputeEnvironmentConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_batch_compute_environment" "test" {
   compute_environment_name = %[1]q
@@ -1834,7 +1832,7 @@ resource "aws_batch_compute_environment" "test" {
 
 func testAccComputeEnvironmentConfig_fargateDefaultServiceRole(rName string) string {
 	return acctest.ConfigCompose(
-		testAccComputeEnvironmentBaseConfig(rName),
+		testAccComputeEnvironmentConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_batch_compute_environment" "test" {
   compute_environment_name = %[1]q
@@ -1857,7 +1855,7 @@ resource "aws_batch_compute_environment" "test" {
 
 func testAccComputeEnvironmentConfig_fargateUpdatedServiceRole(rName string) string {
 	return acctest.ConfigCompose(
-		testAccComputeEnvironmentBaseConfig(rName),
+		testAccComputeEnvironmentConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_batch_compute_environment" "test" {
   compute_environment_name = %[1]q
@@ -1904,7 +1902,7 @@ resource "aws_iam_role_policy_attachment" "batch_service_2" {
 
 func testAccComputeEnvironmentConfig_fargateSpot(rName string) string {
 	return acctest.ConfigCompose(
-		testAccComputeEnvironmentBaseConfig(rName),
+		testAccComputeEnvironmentConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_batch_compute_environment" "test" {
   compute_environment_name = %[1]q
@@ -1929,7 +1927,7 @@ resource "aws_batch_compute_environment" "test" {
 
 func testAccComputeEnvironmentConfig_spot(rName string) string {
 	return acctest.ConfigCompose(
-		testAccComputeEnvironmentBaseConfig(rName),
+		testAccComputeEnvironmentConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_batch_compute_environment" "test" {
   compute_environment_name = %[1]q
@@ -1960,7 +1958,7 @@ resource "aws_batch_compute_environment" "test" {
 
 func testAccComputeEnvironmentConfig_spotAllocationStrategyAndBidPercentage(rName string) string {
 	return acctest.ConfigCompose(
-		testAccComputeEnvironmentBaseConfig(rName),
+		testAccComputeEnvironmentConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_batch_compute_environment" "test" {
   compute_environment_name = %[1]q
@@ -1993,7 +1991,7 @@ resource "aws_batch_compute_environment" "test" {
 
 func testAccComputeEnvironmentConfig_state(rName string, state string) string {
 	return acctest.ConfigCompose(
-		testAccComputeEnvironmentBaseConfig(rName),
+		testAccComputeEnvironmentConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_batch_compute_environment" "test" {
   compute_environment_name = %[1]q
@@ -2008,7 +2006,7 @@ resource "aws_batch_compute_environment" "test" {
 
 func testAccComputeEnvironmentConfig_resourcesMaxVCPUsMinVCPUs(rName string, maxVcpus int, minVcpus int) string {
 	return acctest.ConfigCompose(
-		testAccComputeEnvironmentBaseConfig(rName),
+		testAccComputeEnvironmentConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_batch_compute_environment" "test" {
   compute_environment_name = %[1]q
@@ -2036,7 +2034,7 @@ resource "aws_batch_compute_environment" "test" {
 
 func testAccComputeEnvironmentConfig_fargateUpdatedSecurityGroupsAndSubnets(rName string) string {
 	return acctest.ConfigCompose(
-		testAccComputeEnvironmentBaseConfig(rName),
+		testAccComputeEnvironmentConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_batch_compute_environment" "test" {
   compute_environment_name = %[1]q
@@ -2089,7 +2087,7 @@ resource "aws_subnet" "test_2" {
 
 func testAccComputeEnvironmentConfig_ec2NoResources(rName string) string {
 	return acctest.ConfigCompose(
-		testAccComputeEnvironmentBaseConfig(rName),
+		testAccComputeEnvironmentConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_batch_compute_environment" "test" {
   compute_environment_name = %[1]q
@@ -2103,7 +2101,7 @@ resource "aws_batch_compute_environment" "test" {
 
 func testAccComputeEnvironmentConfig_unmanagedResources(rName string) string {
 	return acctest.ConfigCompose(
-		testAccComputeEnvironmentBaseConfig(rName),
+		testAccComputeEnvironmentConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_batch_compute_environment" "test" {
   compute_environment_name = %[1]q
@@ -2133,7 +2131,7 @@ resource "aws_batch_compute_environment" "test" {
 
 func testAccComputeEnvironmentConfig_spotNoIAMFleetRole(rName string) string {
 	return acctest.ConfigCompose(
-		testAccComputeEnvironmentBaseConfig(rName),
+		testAccComputeEnvironmentConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_batch_compute_environment" "test" {
   compute_environment_name = %[1]q
@@ -2163,10 +2161,14 @@ resource "aws_batch_compute_environment" "test" {
 
 func testAccComputeEnvironmentConfig_launchTemplate(rName string) string {
 	return acctest.ConfigCompose(
-		testAccComputeEnvironmentBaseConfig(rName),
+		testAccComputeEnvironmentConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_launch_template" "test" {
   name = %[1]q
+
+  vpc_security_group_ids = [
+    aws_security_group.test.id
+  ]
 }
 
 resource "aws_batch_compute_environment" "test" {
@@ -2182,11 +2184,8 @@ resource "aws_batch_compute_environment" "test" {
       launch_template_name = aws_launch_template.test.name
     }
 
-    max_vcpus = 16
-    min_vcpus = 0
-    security_group_ids = [
-      aws_security_group.test.id
-    ]
+    max_vcpus           = 16
+    min_vcpus           = 0
     spot_iam_fleet_role = aws_iam_role.ec2_spot_fleet.arn
     subnets = [
       aws_subnet.test.id
@@ -2203,7 +2202,7 @@ resource "aws_batch_compute_environment" "test" {
 
 func testAccComputeEnvironmentConfig_updateLaunchTemplateInExisting(rName string, version string) string {
 	return acctest.ConfigCompose(
-		testAccComputeEnvironmentBaseConfig(rName),
+		testAccComputeEnvironmentConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_launch_template" "test" {
   name = %[1]q
@@ -2244,7 +2243,7 @@ resource "aws_batch_compute_environment" "test" {
 
 func testAccComputeEnvironmentConfig_tags1(rName string, tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(
-		testAccComputeEnvironmentBaseConfig(rName),
+		testAccComputeEnvironmentConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_batch_compute_environment" "test" {
   depends_on = [aws_iam_role_policy_attachment.batch_service]
@@ -2262,7 +2261,7 @@ resource "aws_batch_compute_environment" "test" {
 
 func testAccComputeEnvironmentConfig_tags2(rName string, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return acctest.ConfigCompose(
-		testAccComputeEnvironmentBaseConfig(rName),
+		testAccComputeEnvironmentConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_batch_compute_environment" "test" {
   depends_on = [aws_iam_role_policy_attachment.batch_service]
@@ -2281,7 +2280,7 @@ resource "aws_batch_compute_environment" "test" {
 
 func testAccComputeEnvironmentConfig_ec2Configuration(rName string) string {
 	return acctest.ConfigCompose(
-		testAccComputeEnvironmentBaseConfig(rName),
+		testAccComputeEnvironmentConfig_base(rName),
 		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
 		fmt.Sprintf(`
 resource "aws_batch_compute_environment" "test" {

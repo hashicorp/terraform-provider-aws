@@ -119,7 +119,7 @@ func (d *dataSourceService) Read(ctx context.Context, request datasource.ReadReq
 
 	if !data.DNSName.IsNull() {
 		v := data.DNSName.Value
-		serviceParts := slices.Reversed(strings.Split(v, "."))
+		serviceParts := slices.Reverse(strings.Split(v, "."))
 		n := len(serviceParts)
 
 		if n < 4 {
@@ -143,14 +143,14 @@ func (d *dataSourceService) Read(ctx context.Context, request datasource.ReadReq
 		return
 	}
 
-	if data.ReverseDNSPrefix.IsNull() || data.ReverseDNSPrefix.IsUnknown() {
+	if data.ReverseDNSPrefix.IsNull() {
 		dnsParts := strings.Split(d.meta.DNSSuffix, ".")
-		data.ReverseDNSPrefix = types.String{Value: strings.Join(slices.Reversed(dnsParts), ".")}
+		data.ReverseDNSPrefix = types.String{Value: strings.Join(slices.Reverse(dnsParts), ".")}
 	}
 
 	reverseDNSName := fmt.Sprintf("%s.%s.%s", data.ReverseDNSPrefix.Value, data.Region.Value, data.ServiceID.Value)
 	data.ReverseDNSName = types.String{Value: reverseDNSName}
-	data.DNSName = types.String{Value: strings.ToLower(strings.Join(slices.Reversed(strings.Split(reverseDNSName, ".")), "."))}
+	data.DNSName = types.String{Value: strings.ToLower(strings.Join(slices.Reverse(strings.Split(reverseDNSName, ".")), "."))}
 
 	data.Supported = types.Bool{Value: true}
 	if partition, ok := endpoints.PartitionForRegion(endpoints.DefaultPartitions(), data.Region.Value); ok {
