@@ -98,7 +98,7 @@ func resourceIPAMPoolCIDRCreate(d *schema.ResourceData, meta interface{}) error 
 	d.SetId(IPAMPoolCIDRCreateResourceID(cidrBlock, poolID))
 
 	if _, err := WaitIPAMPoolCIDRCreated(conn, cidrBlock, poolID, d.Timeout(schema.TimeoutDelete)); err != nil {
-		return fmt.Errorf("error waiting for IPAM Pool CIDR (%s) create: %w", d.Id(), err)
+		return fmt.Errorf("waiting for IPAM Pool CIDR (%s) create: %w", d.Id(), err)
 	}
 
 	return resourceIPAMPoolCIDRRead(d, meta)
@@ -156,7 +156,7 @@ func resourceIPAMPoolCIDRDelete(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	if _, err := WaitIPAMPoolCIDRDeleted(conn, cidrBlock, poolID, d.Timeout(schema.TimeoutDelete)); err != nil {
-		return fmt.Errorf("error waiting for IPAM Pool CIDR (%s) delete: %w", d.Id(), err)
+		return fmt.Errorf("waiting for IPAM Pool CIDR (%s) delete: %w", d.Id(), err)
 	}
 
 	return nil
