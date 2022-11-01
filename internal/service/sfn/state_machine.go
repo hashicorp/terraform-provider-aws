@@ -166,7 +166,7 @@ func resourceStateMachineRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	if err != nil {
-		return diag.Errorf("error reading Step Functions State Machine (%s): %s", d.Id(), err)
+		return diag.Errorf("reading Step Functions State Machine (%s): %s", d.Id(), err)
 	}
 
 	d.Set("arn", output.StateMachineArn)
@@ -178,7 +178,7 @@ func resourceStateMachineRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("definition", output.Definition)
 	if output.LoggingConfiguration != nil {
 		if err := d.Set("logging_configuration", []interface{}{flattenLoggingConfiguration(output.LoggingConfiguration)}); err != nil {
-			return diag.Errorf("error setting logging_configuration: %s", err)
+			return diag.Errorf("setting logging_configuration: %s", err)
 		}
 	} else {
 		d.Set("logging_configuration", nil)
@@ -188,7 +188,7 @@ func resourceStateMachineRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("status", output.Status)
 	if output.TracingConfiguration != nil {
 		if err := d.Set("tracing_configuration", []interface{}{flattenTracingConfiguration(output.TracingConfiguration)}); err != nil {
-			return diag.Errorf("error setting tracing_configuration: %s", err)
+			return diag.Errorf("setting tracing_configuration: %s", err)
 		}
 	} else {
 		d.Set("tracing_configuration", nil)
