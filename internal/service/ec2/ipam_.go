@@ -18,18 +18,25 @@ import (
 
 func ResourceIPAM() *schema.Resource {
 	return &schema.Resource{
-		Create:        resourceIPAMCreate,
-		Read:          resourceIPAMRead,
-		Update:        resourceIPAMUpdate,
-		Delete:        resourceIPAMDelete,
+		Create: resourceIPAMCreate,
+		Read:   resourceIPAMRead,
+		Update: resourceIPAMUpdate,
+		Delete: resourceIPAMDelete,
+
 		CustomizeDiff: customdiff.Sequence(verify.SetTagsDiff),
+
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
+
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"cascade": {
+				Type:     schema.TypeBool,
+				Optional: true,
 			},
 			"description": {
 				Type:     schema.TypeString,
@@ -59,10 +66,6 @@ func ResourceIPAM() *schema.Resource {
 			"scope_count": {
 				Type:     schema.TypeInt,
 				Computed: true,
-			},
-			"cascade": {
-				Type:     schema.TypeBool,
-				Optional: true,
 			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
