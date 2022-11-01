@@ -6,6 +6,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfsesv2 "github.com/hashicorp/terraform-provider-aws/internal/service/sesv2"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -31,6 +32,29 @@ func TestAccSESV2EmailIdentityFeedbackAttributes_basic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccSESV2EmailIdentityFeedbackAttributes_disappears(t *testing.T) {
+	rName := acctest.RandomEmailAddress(acctest.RandomDomainName())
+	resourceName := "aws_sesv2_email_identity_feedback_attributes.test"
+	emailIdentityName := "aws_sesv2_email_identity.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2EndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEmailIdentityDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEmailIdentityFeedbackAttributesConfig_emailForwardingEnabled(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEmailIdentityExists(emailIdentityName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfsesv2.ResourceEmailIdentityFeedbackAttributes(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
