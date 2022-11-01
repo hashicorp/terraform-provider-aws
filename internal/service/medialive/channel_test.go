@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/medialive"
@@ -42,22 +41,13 @@ func TestAccMediaLiveChannel_basic(t *testing.T) {
 				Config: testAccChannelConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckChannelExists(resourceName, &channel),
-					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "false"),
-					resource.TestCheckResourceAttrSet(resourceName, "maintenance_window_start_time.0.day_of_week"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "user.*", map[string]string{
-						"console_access": "false",
-						"groups.#":       "0",
-						"username":       "Test",
-						"password":       "TestTest1234",
-					}),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "medialive", regexp.MustCompile(`channel:+.`)),
+					resource.TestCheckResourceAttr(resourceName, "channel_class", "STANDARD"),
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately", "user"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -158,28 +148,173 @@ func testAccChannelsPreCheck(t *testing.T) {
 	}
 }
 
-func testAccChannelConfig_basic(rName string) string {
+func testAccChannelBaseConfig(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_security_group" "test" {
+resource "aws_iam_role" "test" {
   name = %[1]q
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Sid    = ""
+        Principal = {
+          Service = "medialive.amazonaws.com"
+        }
+      },
+    ]
+  })
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_iam_role_policy" "test" {
+  name = %[1]q
+  role = aws_iam_role.test.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = [
+          "ec2:*",
+          "s3:*",
+          "mediastore:*",
+          "mediaconnect:*",
+          "cloudwatch:*",
+        ]
+        Effect   = "Allow"
+        Resource = "*"
+      },
+    ]
+  })
+}
+`, rName)
+}
+
+func testAccChannelConfig_basic(rName string) string {
+	return acctest.ConfigCompose(
+		testAccChannelBaseConfig(rName),
+		fmt.Sprintf(`
+resource "aws_s3_bucket" "test1" {
+  bucket = "%[1]s-1"
+}
+
+resource "aws_s3_bucket_acl" "test1" {
+  bucket = aws_s3_bucket.test1.id
+  acl    = "private"
+}
+
+resource "aws_s3_bucket" "test2" {
+  bucket = "%[1]s-2"
+}
+
+resource "aws_s3_bucket_acl" "test2" {
+  bucket = aws_s3_bucket.test2.id
+  acl    = "private"
+}
+
+resource "aws_medialive_input_security_group" "test" {
+  whitelist_rules {
+    cidr = "10.0.0.8/32"
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_medialive_input" "test" {
+  name                  = %[1]q
+  input_security_groups = [aws_medialive_input_security_group.test.id]
+  type                  = "UDP_PUSH"
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_medialive_channel" "test" {
-  channel_name            = %[1]q
-  engine_type             = "ActiveMediaLive"
-  host_instance_type      = "medialive.t2.micro"
-  security_groups         = [aws_security_group.test.id]
-  authentication_strategy = "simple"
-  storage_type            = "efs"
+  name          = %[1]q
+  channel_class = "STANDARD"
+  role_arn      = aws_iam_role.test.arn
 
-  logs {
-    general = true
+  input_specification {
+    codec            = "AVC"
+    input_resolution = "HD"
+    maximum_bitrate  = "MAX_20_MBPS"
   }
 
-  user {
-    username = "Test"
-    password = "TestTest1234"
+  input_attachment {
+    input_attachment_name = "example-input1"
+    input_id              = aws_medialive_input.test.id
+
+    input_setting {
+      audio_selector {
+        name = %[1]q
+      }
+    }
+  }
+
+  destination {
+    id = %[1]q
+
+    settings {
+      url = "s3://${aws_s3_bucket.test1.id}/test1"
+    }
+
+    settings {
+      url = "s3://${aws_s3_bucket.test2.id}/test2"
+    }
+  }
+
+  encoder_settings {
+    timecode_config {
+      source = "EMBEDDED"
+    }
+
+    audio_description {
+      audio_selector_name = %[1]q
+      name                = %[1]q
+    }
+
+    video_description {
+      name = "test-video-name"
+    }
+
+    output_group {
+      output_group_settings {
+        archive_group_settings {
+          destination {
+            destination_ref_id = %[1]q
+          }
+        }
+      }
+
+      output {
+        output_name             = "test-output-name"
+        video_description_name  = "test-video-name"
+        audio_description_names = [%[1]q]
+        output_settings {
+          archive_output_settings {
+            name_modifier = "_1"
+            extension     = "m2ts"
+            container_settings {
+              m2ts_settings {
+                audio_buffer_model = "ATSC"
+                buffer_model       = "MULTIPLEX"
+                rate_mode          = "CBR"
+              }
+            }
+          }
+        }
+      }
+    }
   }
 }
-`, rName)
+`, rName))
 }

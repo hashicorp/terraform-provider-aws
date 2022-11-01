@@ -935,7 +935,7 @@ func waitChannelUpdated(ctx context.Context, conn *medialive.Client, id string, 
 func waitChannelDeleted(ctx context.Context, conn *medialive.Client, id string, timeout time.Duration) (*medialive.DescribeChannelOutput, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: enum.Slice(types.ChannelStateDeleting),
-		Target:  enum.Slice(types.ChannelStateDeleted),
+		Target:  []string{},
 		Refresh: statusChannel(ctx, conn, id),
 		Timeout: timeout,
 	}
@@ -982,6 +982,13 @@ func FindChannelByID(ctx context.Context, conn *medialive.Client, id string) (*m
 
 	if out == nil {
 		return nil, tfresource.NewEmptyResultError(in)
+	}
+
+	if out.State == types.ChannelStateDeleted {
+		return nil, &resource.NotFoundError{
+			LastResponse: string(types.ChannelStateDeleted),
+			LastRequest:  in,
+		}
 	}
 
 	return out, nil

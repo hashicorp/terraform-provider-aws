@@ -2996,7 +2996,6 @@ func flattenOutputGroupSettingsArchiveGroupSettings(as *types.ArchiveGroupSettin
 	}
 
 	return []interface{}{m}
-
 }
 
 func flattenDestination(des *types.OutputLocationRef) []interface{} {
