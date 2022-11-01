@@ -311,7 +311,7 @@ func testAccCheckExists(n string, v *sfn.DescribeStateMachineOutput) resource.Te
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Step Function State Machine ID is set")
+			return fmt.Errorf("No Step Functions State Machine ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SFNConn
@@ -346,13 +346,13 @@ func testAccCheckStateMachineDestroy(s *terraform.State) error {
 			return err
 		}
 
-		return fmt.Errorf("Step Function State Machine %s still exists", rs.Primary.ID)
+		return fmt.Errorf("Step Functions State Machine %s still exists", rs.Primary.ID)
 	}
 
 	return nil
 }
 
-func testAccStateMachineBaseConfig(rName string) string {
+func testAccStateMachineConfig_base(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role_policy" "for_lambda" {
   name = "%[1]s-lambda"
@@ -453,7 +453,7 @@ EOF
 }
 
 func testAccStateMachineConfig_basic(rName string, rMaxAttempts int) string {
-	return acctest.ConfigCompose(testAccStateMachineBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccStateMachineConfig_base(rName), fmt.Sprintf(`
 resource "aws_sfn_state_machine" "test" {
   name     = %[1]q
   role_arn = aws_iam_role.for_sfn.arn
@@ -486,7 +486,7 @@ EOF
 }
 
 func testAccStateMachineConfig_tags1(rName, tag1Key, tag1Value string) string {
-	return acctest.ConfigCompose(testAccStateMachineBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccStateMachineConfig_base(rName), fmt.Sprintf(`
 resource "aws_sfn_state_machine" "test" {
   name     = %[1]q
   role_arn = aws_iam_role.for_sfn.arn
@@ -523,7 +523,7 @@ EOF
 }
 
 func testAccStateMachineConfig_tags2(rName, tag1Key, tag1Value, tag2Key, tag2Value string) string {
-	return acctest.ConfigCompose(testAccStateMachineBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccStateMachineConfig_base(rName), fmt.Sprintf(`
 resource "aws_sfn_state_machine" "test" {
   name     = %[1]q
   role_arn = aws_iam_role.for_sfn.arn
@@ -561,7 +561,7 @@ EOF
 }
 
 func testAccStateMachineConfig_typed(rName, rType string, rMaxAttempts int) string {
-	return acctest.ConfigCompose(testAccStateMachineBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccStateMachineConfig_base(rName), fmt.Sprintf(`
 resource "aws_sfn_state_machine" "test" {
   name     = %[1]q
   role_arn = aws_iam_role.for_sfn.arn
@@ -593,7 +593,7 @@ EOF
 }
 
 func testAccStateMachineConfig_expressLogConfiguration(rName string, rLevel string) string {
-	return acctest.ConfigCompose(testAccStateMachineBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccStateMachineConfig_base(rName), fmt.Sprintf(`
 resource "aws_cloudwatch_log_group" "test" {
   name = %[1]q
 }
@@ -637,7 +637,7 @@ EOF
 }
 
 func testAccStateMachineConfig_tracingEnable(rName string) string {
-	return acctest.ConfigCompose(testAccStateMachineBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccStateMachineConfig_base(rName), fmt.Sprintf(`
 resource "aws_sfn_state_machine" "test" {
   name     = %[1]q
   role_arn = aws_iam_role.for_sfn.arn
@@ -674,7 +674,7 @@ EOF
 }
 
 func testAccStateMachineConfig_tracingDisable(rName string) string {
-	return acctest.ConfigCompose(testAccStateMachineBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccStateMachineConfig_base(rName), fmt.Sprintf(`
 resource "aws_sfn_state_machine" "test" {
   name     = %[1]q
   role_arn = aws_iam_role.for_sfn.arn

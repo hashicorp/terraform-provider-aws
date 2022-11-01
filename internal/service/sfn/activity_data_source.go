@@ -64,13 +64,13 @@ func dataSourceActivityRead(ctx context.Context, d *schema.ResourceData, meta in
 		})
 
 		if err != nil {
-			return diag.Errorf("listing Step Function Activities: %s", err)
+			return diag.Errorf("listing Step Functions Activities: %s", err)
 		}
 
 		if n := len(activities); n == 0 {
-			return diag.Errorf("no Step Function Activities matched")
+			return diag.Errorf("no Step Functions Activities matched")
 		} else if n > 1 {
-			return diag.Errorf("%d Step Function Activities matched; use additional constraints to reduce matches to a single Activity", n)
+			return diag.Errorf("%d Step Functions Activities matched; use additional constraints to reduce matches to a single Activity", n)
 		}
 
 		activity := activities[0]

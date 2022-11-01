@@ -96,7 +96,7 @@ func testAccCheckActivityExists(n string) resource.TestCheckFunc {
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Step Function Activity ID set")
+			return fmt.Errorf("No Step Functions Activity ID set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SFNConn
@@ -127,7 +127,7 @@ func testAccCheckActivityDestroy(s *terraform.State) error {
 				return resource.NonRetryableError(err)
 			}
 
-			return resource.RetryableError(fmt.Errorf("Step Function Activity still exists: %s", rs.Primary.ID))
+			return resource.RetryableError(fmt.Errorf("Step Functions Activity still exists: %s", rs.Primary.ID))
 		})
 
 		return err

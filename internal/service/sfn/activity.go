@@ -62,7 +62,7 @@ func resourceActivityCreate(ctx context.Context, d *schema.ResourceData, meta in
 	output, err := conn.CreateActivityWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating Step Function Activity (%s): %s", name, err)
+		return diag.Errorf("creating Step Functions Activity (%s): %s", name, err)
 	}
 
 	d.SetId(aws.StringValue(output.ActivityArn))
@@ -117,7 +117,7 @@ func resourceActivityUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTagsWithContext(ctx, conn, d.Id(), o, n); err != nil {
-			return diag.Errorf("updating Step Function Activity (%s) tags: %s", d.Id(), err)
+			return diag.Errorf("updating Step Functions Activity (%s) tags: %s", d.Id(), err)
 		}
 	}
 
