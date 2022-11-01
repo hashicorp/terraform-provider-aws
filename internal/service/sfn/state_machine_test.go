@@ -1,6 +1,7 @@
 package sfn_test
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"testing"
@@ -316,7 +317,7 @@ func testAccCheckExists(n string, v *sfn.DescribeStateMachineOutput) resource.Te
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SFNConn
 
-		output, err := tfsfn.FindStateMachineByARN(conn, rs.Primary.ID)
+		output, err := tfsfn.FindStateMachineByARN(context.Background(), conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -336,7 +337,7 @@ func testAccCheckStateMachineDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := tfsfn.FindStateMachineByARN(conn, rs.Primary.ID)
+		_, err := tfsfn.FindStateMachineByARN(context.Background(), conn, rs.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			continue

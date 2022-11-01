@@ -1,6 +1,7 @@
 package sfn
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"time"
@@ -8,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sfn"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -19,10 +21,10 @@ import (
 
 func ResourceStateMachine() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceStateMachineCreate,
-		Read:   resourceStateMachineRead,
-		Update: resourceStateMachineUpdate,
-		Delete: resourceStateMachineDelete,
+		CreateWithoutTimeout: resourceStateMachineCreate,
+		ReadWithoutTimeout:   resourceStateMachineRead,
+		UpdateWithoutTimeout: resourceStateMachineUpdate,
+		DeleteWithoutTimeout: resourceStateMachineDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -111,7 +113,7 @@ func ResourceStateMachine() *schema.Resource {
 	}
 }
 
-func resourceStateMachineCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceStateMachineCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).SFNConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
@@ -137,25 +139,25 @@ func resourceStateMachineCreate(d *schema.ResourceData, meta interface{}) error 
 	// Note: the instance may be in a deleting mode, hence the retry
 	// when creating the step function. This can happen when we are
 	// updating the resource (since there is no update API call).
-	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(stateMachineCreatedTimeout, func() (interface{}, error) {
-		return conn.CreateStateMachine(input)
+	outputRaw, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, stateMachineCreatedTimeout, func() (interface{}, error) {
+		return conn.CreateStateMachineWithContext(ctx, input)
 	}, sfn.ErrCodeStateMachineDeleting, "AccessDeniedException")
 
 	if err != nil {
-		return fmt.Errorf("creating Step Functions State Machine (%s): %w", name, err)
+		return diag.Errorf("creating Step Functions State Machine (%s): %s", name, err)
 	}
 
 	d.SetId(aws.StringValue(outputRaw.(*sfn.CreateStateMachineOutput).StateMachineArn))
 
-	return resourceStateMachineRead(d, meta)
+	return resourceStateMachineRead(ctx, d, meta)
 }
 
-func resourceStateMachineRead(d *schema.ResourceData, meta interface{}) error {
+func resourceStateMachineRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).SFNConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	output, err := FindStateMachineByARN(conn, d.Id())
+	output, err := FindStateMachineByARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Step Functions State Machine (%s) not found, removing from state", d.Id())
@@ -164,7 +166,7 @@ func resourceStateMachineRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading Step Functions State Machine (%s): %w", d.Id(), err)
+		return diag.Errorf("error reading Step Functions State Machine (%s): %s", d.Id(), err)
 	}
 
 	d.Set("arn", output.StateMachineArn)
@@ -176,7 +178,7 @@ func resourceStateMachineRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("definition", output.Definition)
 	if output.LoggingConfiguration != nil {
 		if err := d.Set("logging_configuration", []interface{}{flattenLoggingConfiguration(output.LoggingConfiguration)}); err != nil {
-			return fmt.Errorf("error setting logging_configuration: %w", err)
+			return diag.Errorf("error setting logging_configuration: %s", err)
 		}
 	} else {
 		d.Set("logging_configuration", nil)
@@ -186,38 +188,38 @@ func resourceStateMachineRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("status", output.Status)
 	if output.TracingConfiguration != nil {
 		if err := d.Set("tracing_configuration", []interface{}{flattenTracingConfiguration(output.TracingConfiguration)}); err != nil {
-			return fmt.Errorf("error setting tracing_configuration: %w", err)
+			return diag.Errorf("error setting tracing_configuration: %s", err)
 		}
 	} else {
 		d.Set("tracing_configuration", nil)
 	}
 	d.Set("type", output.Type)
 
-	tags, err := ListTags(conn, d.Id())
+	tags, err := ListTagsWithContext(ctx, conn, d.Id())
 
 	if tfawserr.ErrCodeEquals(err, "UnknownOperationException") {
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("listing tags for Step Functions State Machine (%s): %w", d.Id(), err)
+		return diag.Errorf("listing tags for Step Functions State Machine (%s): %s", d.Id(), err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("setting tags: %w", err)
+		return diag.Errorf("setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("setting tags_all: %w", err)
+		return diag.Errorf("setting tags_all: %s", err)
 	}
 
 	return nil
 }
 
-func resourceStateMachineUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceStateMachineUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).SFNConn
 
 	if d.HasChangesExcept("tags", "tags_all") {
@@ -240,15 +242,15 @@ func resourceStateMachineUpdate(d *schema.ResourceData, meta interface{}) error 
 			}
 		}
 
-		_, err := conn.UpdateStateMachine(input)
+		_, err := conn.UpdateStateMachineWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("updating Step Functions State Machine (%s): %w", d.Id(), err)
+			return diag.Errorf("updating Step Functions State Machine (%s): %s", d.Id(), err)
 		}
 
 		// Handle eventual consistency after update.
-		err = resource.Retry(stateMachineUpdatedTimeout, func() *resource.RetryError {
-			output, err := FindStateMachineByARN(conn, d.Id())
+		err = resource.RetryContext(ctx, stateMachineUpdatedTimeout, func() *resource.RetryError {
+			output, err := FindStateMachineByARN(ctx, conn, d.Id())
 
 			if err != nil {
 				return resource.NonRetryableError(err)
@@ -266,46 +268,46 @@ func resourceStateMachineUpdate(d *schema.ResourceData, meta interface{}) error 
 		})
 
 		if err != nil {
-			return fmt.Errorf("waiting for Step Functions State Machine (%s) update: %w", d.Id(), err)
+			return diag.Errorf("waiting for Step Functions State Machine (%s) update: %s", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("updating Step Functions State Machine (%s) tags: %w", d.Id(), err)
+		if err := UpdateTagsWithContext(ctx, conn, d.Id(), o, n); err != nil {
+			return diag.Errorf("updating Step Functions State Machine (%s) tags: %s", d.Id(), err)
 		}
 	}
 
-	return resourceStateMachineRead(d, meta)
+	return resourceStateMachineRead(ctx, d, meta)
 }
 
-func resourceStateMachineDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceStateMachineDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).SFNConn
 
 	log.Printf("[DEBUG] Deleting Step Functions State Machine: %s", d.Id())
-	_, err := conn.DeleteStateMachine(&sfn.DeleteStateMachineInput{
+	_, err := conn.DeleteStateMachineWithContext(ctx, &sfn.DeleteStateMachineInput{
 		StateMachineArn: aws.String(d.Id()),
 	})
 
 	if err != nil {
-		return fmt.Errorf("deleting Step Functions State Machine (%s): %w", d.Id(), err)
+		return diag.Errorf("deleting Step Functions State Machine (%s): %s", d.Id(), err)
 	}
 
-	if _, err := waitStateMachineDeleted(conn, d.Id()); err != nil {
-		return fmt.Errorf("waiting for Step Functions State Machine (%s) delete: %w", d.Id(), err)
+	if _, err := waitStateMachineDeleted(ctx, conn, d.Id()); err != nil {
+		return diag.Errorf("waiting for Step Functions State Machine (%s) delete: %s", d.Id(), err)
 	}
 
 	return nil
 }
 
-func FindStateMachineByARN(conn *sfn.SFN, arn string) (*sfn.DescribeStateMachineOutput, error) {
+func FindStateMachineByARN(ctx context.Context, conn *sfn.SFN, arn string) (*sfn.DescribeStateMachineOutput, error) {
 	input := &sfn.DescribeStateMachineInput{
 		StateMachineArn: aws.String(arn),
 	}
 
-	output, err := conn.DescribeStateMachine(input)
+	output, err := conn.DescribeStateMachineWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, sfn.ErrCodeStateMachineDoesNotExist) {
 		return nil, &resource.NotFoundError{
@@ -325,9 +327,9 @@ func FindStateMachineByARN(conn *sfn.SFN, arn string) (*sfn.DescribeStateMachine
 	return output, nil
 }
 
-func statusStateMachine(conn *sfn.SFN, stateMachineArn string) resource.StateRefreshFunc {
+func statusStateMachine(ctx context.Context, conn *sfn.SFN, stateMachineArn string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindStateMachineByARN(conn, stateMachineArn)
+		output, err := FindStateMachineByARN(ctx, conn, stateMachineArn)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -347,15 +349,15 @@ const (
 	stateMachineUpdatedTimeout = 1 * time.Minute
 )
 
-func waitStateMachineDeleted(conn *sfn.SFN, stateMachineArn string) (*sfn.DescribeStateMachineOutput, error) {
+func waitStateMachineDeleted(ctx context.Context, conn *sfn.SFN, stateMachineArn string) (*sfn.DescribeStateMachineOutput, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{sfn.StateMachineStatusActive, sfn.StateMachineStatusDeleting},
 		Target:  []string{},
-		Refresh: statusStateMachine(conn, stateMachineArn),
+		Refresh: statusStateMachine(ctx, conn, stateMachineArn),
 		Timeout: stateMachineDeletedTimeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*sfn.DescribeStateMachineOutput); ok {
 		return output, err
