@@ -2015,7 +2015,7 @@ resource "aws_launch_template" "test" {
   name = %[1]q
 
   vpc_security_group_ids = [
-	aws_security_group.test.id
+    aws_security_group.test.id
   ]
 }
 
