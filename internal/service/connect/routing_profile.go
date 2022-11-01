@@ -76,7 +76,7 @@ func ResourceRoutingProfile() *schema.Resource {
 				Type:     schema.TypeSet,
 				Optional: true,
 				MinItems: 1,
-				MaxItems: 10,
+				MaxItems: 50,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"channel": {
