@@ -53,7 +53,7 @@ func main() {
 	td := TemplateData{}
 
 	for i, l := range data {
-		if i < 1 { // no header
+		if i < 1 { // skip header
 			continue
 		}
 
@@ -65,20 +65,22 @@ func main() {
 			continue
 		}
 
-		s := ServiceDatum{
-			ProviderNameUpper: l[names.ColProviderNameUpper],
-			SDKVersion:        l[names.ColSDKVersion],
+		if l[names.ColClientSDKV1] != "" {
+			td.Services = append(td.Services, ServiceDatum{
+				ProviderNameUpper: l[names.ColProviderNameUpper],
+				SDKVersion:        "1",
+				GoPackage:         l[names.ColGoV1Package],
+				ClientTypeName:    l[names.ColGoV1ClientTypeName],
+			})
 		}
-
-		if l[names.ColSDKVersion] == "1" {
-			s.GoPackage = l[names.ColGoV1Package]
-			s.ClientTypeName = l[names.ColGoV1ClientTypeName]
-		} else {
-			s.GoPackage = l[names.ColGoV2Package]
-			s.ClientTypeName = "Client"
+		if l[names.ColClientSDKV2] != "" {
+			td.Services = append(td.Services, ServiceDatum{
+				ProviderNameUpper: l[names.ColProviderNameUpper],
+				SDKVersion:        "2",
+				GoPackage:         l[names.ColGoV2Package],
+				ClientTypeName:    "Client",
+			})
 		}
-
-		td.Services = append(td.Services, s)
 	}
 
 	sort.SliceStable(td.Services, func(i, j int) bool {

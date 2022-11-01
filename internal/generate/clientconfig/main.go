@@ -64,18 +64,20 @@ func main() {
 			continue
 		}
 
-		s := ServiceDatum{
-			ProviderNameUpper: l[names.ColProviderNameUpper],
-			SDKVersion:        l[names.ColSDKVersion],
+		if l[names.ColClientSDKV1] != "" {
+			td.Services = append(td.Services, ServiceDatum{
+				ProviderNameUpper: l[names.ColProviderNameUpper],
+				SDKVersion:        "1",
+				GoPackage:         l[names.ColGoV1Package],
+			})
 		}
-
-		if l[names.ColSDKVersion] == "1" {
-			s.GoPackage = l[names.ColGoV1Package]
-		} else {
-			s.GoPackage = l[names.ColGoV2Package]
+		if l[names.ColClientSDKV2] != "" {
+			td.Services = append(td.Services, ServiceDatum{
+				ProviderNameUpper: l[names.ColProviderNameUpper],
+				SDKVersion:        "2",
+				GoPackage:         l[names.ColGoV2Package],
+			})
 		}
-
-		td.Services = append(td.Services, s)
 	}
 
 	sort.SliceStable(td.Services, func(i, j int) bool {
