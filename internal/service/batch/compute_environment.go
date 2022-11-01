@@ -273,7 +273,7 @@ func resourceComputeEnvironmentCreate(d *schema.ResourceData, meta interface{}) 
 	}
 
 	if v, ok := d.GetOk("eks_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.EksConfiguration = expandEksConfiguration(v.([]interface{})[0].(map[string]interface{}))
+		input.EksConfiguration = expandEKSConfiguration(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("state"); ok {
@@ -338,7 +338,7 @@ func resourceComputeEnvironmentRead(d *schema.ResourceData, meta interface{}) er
 	}
 
 	if computeEnvironment.EksConfiguration != nil {
-		if err := d.Set("eks_configuration", []interface{}{flattenEksConfiguration(computeEnvironment.EksConfiguration)}); err != nil {
+		if err := d.Set("eks_configuration", []interface{}{flattenEKSConfiguration(computeEnvironment.EksConfiguration)}); err != nil {
 			return fmt.Errorf("error setting eks_configuration: %w", err)
 		}
 	} else {
@@ -573,7 +573,7 @@ func expandComputeResource(tfMap map[string]interface{}) *batch.ComputeResource 
 	return apiObject
 }
 
-func expandEksConfiguration(tfMap map[string]interface{}) *batch.EksConfiguration {
+func expandEKSConfiguration(tfMap map[string]interface{}) *batch.EksConfiguration {
 	if tfMap == nil {
 		return nil
 	}
@@ -731,7 +731,7 @@ func flattenComputeResource(apiObject *batch.ComputeResource) map[string]interfa
 	return tfMap
 }
 
-func flattenEksConfiguration(apiObject *batch.EksConfiguration) map[string]interface{} {
+func flattenEKSConfiguration(apiObject *batch.EksConfiguration) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
