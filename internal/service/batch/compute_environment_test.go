@@ -1611,46 +1611,7 @@ resource "aws_batch_compute_environment" "test" {
 }
 
 func testAccComputeEnvironmentConfig_eksConfiguration(rName string) string {
-	return acctest.ConfigCompose(
-		fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-  
-  filter {
-	name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-  
-data "aws_partition" "current" {}
-
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-
-  assign_generated_ipv6_cidr_block = true
-
-  tags = {
-	Name                          = %[1]q
-	"kubernetes.io/cluster/%[1]s" = "shared"
-  }
-}
-
-resource "aws_subnet" "test" {
-  count = 2
-
-  availability_zone = data.aws_availability_zones.available.names[count.index]
-  cidr_block        = "10.0.${count.index}.0/24"
-  vpc_id            = aws_vpc.test.id
-
-  ipv6_cidr_block                 = cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, count.index)
-  assign_ipv6_address_on_creation = true
-
-  tags = {
-	Name                          = %[1]q
-	"kubernetes.io/cluster/%[1]s" = "shared"
-  }
-}
-
+	return acctest.ConfigCompose(acctest.ConfigEKSClusterBase(rName), fmt.Sprintf(`
 resource "aws_eks_cluster" "test" {
   name     = %[1]q
   role_arn = aws_iam_role.batch_service.arn
@@ -1660,51 +1621,29 @@ resource "aws_eks_cluster" "test" {
   }
   
   depends_on = [
-	  aws_iam_role_policy_attachment.test-AmazonEKSClusterPolicy
-	]
-}
-
-resource "aws_eks_node_group" "example" {
-  cluster_name    = aws_eks_cluster.test.name
-  node_group_name = "example"
-  node_role_arn   = aws_iam_role.batch_service.arn
-  subnet_ids      = aws_subnet.test[*].id
-  
-  scaling_config {
-    desired_size = 1
-    max_size     = 2
-    min_size     = 1
-  }
-  
-  update_config {
-    max_unavailable = 1
-  }
-  
-  depends_on = [
-    aws_iam_role_policy_attachment.batch_service,
-    aws_iam_role_policy_attachment.test-AmazonEKSClusterPolicy,
+    aws_iam_role_policy_attachment.test-AmazonEKSClusterPolicy
   ]
 }
 
 resource "aws_iam_role" "batch_service" {
-	name = "%[1]s_batch_service"
+  name = "%[1]s_batch_service"
   
-	assume_role_policy = <<EOF
-  {
-	"Version": "2012-10-17",
-	"Statement": [{
-	  "Action": "sts:AssumeRole",
-	  "Effect": "Allow",
-	  "Principal": {
-		"Service": [
-		  "batch.${data.aws_partition.current.dns_suffix}",
-		  "eks.${data.aws_partition.current.dns_suffix}",
-		  "ec2.${data.aws_partition.current.dns_suffix}"
-		]
-	  }
-	}]
-  }
-  EOF
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Action": "sts:AssumeRole",
+    "Effect": "Allow",
+    "Principal": {
+      "Service": [
+        "batch.${data.aws_partition.current.dns_suffix}",
+        "eks.${data.aws_partition.current.dns_suffix}",
+        "ec2.${data.aws_partition.current.dns_suffix}"
+      ]
+    }
+  }]
+}
+EOF
 }
 
 resource "aws_iam_role_policy_attachment" "batch_service" {
@@ -1718,11 +1657,11 @@ resource "aws_iam_role_policy_attachment" "test-AmazonEKSClusterPolicy" {
 }
 
 resource "aws_batch_compute_environment" "test" {
-  compute_environment_name_prefix = %[1]q
+  compute_environment = %[1]q
 
   eks_configuration {
     eks_cluster_arn      = aws_eks_cluster.test.arn
-	kubernetes_namespace = "aws-batch"
+    kubernetes_namespace = "aws-batch"
   }
 
   service_role = aws_iam_role.batch_service.arn
