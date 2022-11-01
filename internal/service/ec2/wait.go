@@ -2925,3 +2925,57 @@ func WaitIPAMPoolCIDRDeleted(conn *ec2.EC2, cidrBlock, poolID string, timeout ti
 
 	return nil, err
 }
+
+func WaitIPAMScopeCreated(conn *ec2.EC2, id string, timeout time.Duration) (*ec2.IpamScope, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.IpamScopeStateCreateInProgress},
+		Target:  []string{ec2.IpamScopeStateCreateComplete},
+		Refresh: StatusIPAMScopeState(conn, id),
+		Timeout: timeout,
+		Delay:   5 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.IpamScope); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func WaitIPAMScopeDeleted(conn *ec2.EC2, id string, timeout time.Duration) (*ec2.IpamScope, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.IpamScopeStateCreateComplete, ec2.IpamScopeStateModifyComplete, ec2.IpamScopeStateDeleteInProgress},
+		Target:  []string{},
+		Refresh: StatusIPAMScopeState(conn, id),
+		Timeout: timeout,
+		Delay:   5 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.IpamScope); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func WaitIPAMScopeUpdated(conn *ec2.EC2, id string, timeout time.Duration) (*ec2.IpamScope, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.IpamScopeStateModifyInProgress},
+		Target:  []string{ec2.IpamScopeStateModifyComplete},
+		Refresh: StatusIPAMScopeState(conn, id),
+		Timeout: timeout,
+		Delay:   5 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.IpamScope); ok {
+		return output, err
+	}
+
+	return nil, err
+}

@@ -1332,3 +1332,19 @@ func StatusIPAMPoolCIDRState(conn *ec2.EC2, cidrBlock, poolID string) resource.S
 		return output, aws.StringValue(output.State), nil
 	}
 }
+
+func StatusIPAMScopeState(conn *ec2.EC2, id string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindIPAMScopeByID(conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.State), nil
+	}
+}
