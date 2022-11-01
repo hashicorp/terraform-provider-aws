@@ -35,6 +35,7 @@ func TestAccSFNStateMachine_createUpdate(t *testing.T) {
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "states", fmt.Sprintf("stateMachine:%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "status", sfn.StateMachineStatusActive),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "name_prefix", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "creation_date"),
 					resource.TestCheckResourceAttrSet(resourceName, "definition"),
 					resource.TestMatchResourceAttr(resourceName, "definition", regexp.MustCompile(`.*\"MaxAttempts\": 5.*`)),
@@ -153,6 +154,62 @@ func TestAccSFNStateMachine_standardUpdate(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "role_arn"),
 					resource.TestCheckResourceAttr(resourceName, "type", "STANDARD"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccSFNStateMachine_nameGenerated(t *testing.T) {
+	var sm sfn.DescribeStateMachineOutput
+	resourceName := "aws_sfn_state_machine.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sfn.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckStateMachineDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccStateMachineConfig_nameGenerated(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckExists(resourceName, &sm),
+					acctest.CheckResourceAttrNameGenerated(resourceName, "name"),
+					resource.TestCheckResourceAttr(resourceName, "name_prefix", resource.UniqueIdPrefix),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccSFNStateMachine_namePrefix(t *testing.T) {
+	var sm sfn.DescribeStateMachineOutput
+	resourceName := "aws_sfn_state_machine.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sfn.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckStateMachineDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccStateMachineConfig_namePrefix(rName, "tf-acc-test-prefix-"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckExists(resourceName, &sm),
+					acctest.CheckResourceAttrNameFromPrefix(resourceName, "name", "tf-acc-test-prefix-"),
+					resource.TestCheckResourceAttr(resourceName, "name_prefix", "tf-acc-test-prefix-"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -484,6 +541,71 @@ resource "aws_sfn_state_machine" "test" {
 EOF
 }
 `, rName, rMaxAttempts))
+}
+
+func testAccStateMachineConfig_nameGenerated(rName string) string {
+	return acctest.ConfigCompose(testAccStateMachineConfig_base(rName), `
+resource "aws_sfn_state_machine" "test" {
+  role_arn = aws_iam_role.for_sfn.arn
+
+  definition = <<EOF
+{
+  "Comment": "A Hello World example of the Amazon States Language using an AWS Lambda Function",
+  "StartAt": "HelloWorld",
+  "States": {
+    "HelloWorld": {
+      "Type": "Task",
+      "Resource": "${aws_lambda_function.test.arn}",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "IntervalSeconds": 5,
+          "MaxAttempts": 5,
+          "BackoffRate": 8
+        }
+      ],
+      "End": true
+    }
+  }
+}
+EOF
+}
+`)
+}
+
+func testAccStateMachineConfig_namePrefix(rName, namePrefix string) string {
+	return acctest.ConfigCompose(testAccStateMachineConfig_base(rName), fmt.Sprintf(`
+resource "aws_sfn_state_machine" "test" {
+  name_prefix = %[1]q
+  role_arn    = aws_iam_role.for_sfn.arn
+
+  definition = <<EOF
+{
+  "Comment": "A Hello World example of the Amazon States Language using an AWS Lambda Function",
+  "StartAt": "HelloWorld",
+  "States": {
+    "HelloWorld": {
+      "Type": "Task",
+      "Resource": "${aws_lambda_function.test.arn}",
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "IntervalSeconds": 5,
+          "MaxAttempts": 5,
+          "BackoffRate": 8
+        }
+      ],
+      "End": true
+    }
+  }
+}
+EOF
+}
+`, namePrefix))
 }
 
 func testAccStateMachineConfig_tags1(rName, tag1Key, tag1Value string) string {

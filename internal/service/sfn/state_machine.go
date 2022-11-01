@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"regexp"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -14,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -69,10 +71,26 @@ func ResourceStateMachine() *schema.Resource {
 				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 			},
 			"name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validStateMachineName,
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"name_prefix"},
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(1, 80),
+					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9-_]+$`), "the name should only contain 0-9, A-Z, a-z, - and _"),
+				),
+			},
+			"name_prefix": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"name"},
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(1, 80-resource.UniqueIDSuffixLength),
+					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9-_]+$`), "the name should only contain 0-9, A-Z, a-z, - and _"),
+				),
 			},
 			"role_arn": {
 				Type:         schema.TypeString,
@@ -118,7 +136,7 @@ func resourceStateMachineCreate(ctx context.Context, d *schema.ResourceData, met
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
-	name := d.Get("name").(string)
+	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
 	input := &sfn.CreateStateMachineInput{
 		Definition: aws.String(d.Get("definition").(string)),
 		Name:       aws.String(name),
@@ -184,6 +202,7 @@ func resourceStateMachineRead(ctx context.Context, d *schema.ResourceData, meta 
 		d.Set("logging_configuration", nil)
 	}
 	d.Set("name", output.Name)
+	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(output.Name)))
 	d.Set("role_arn", output.RoleArn)
 	d.Set("status", output.Status)
 	if output.TracingConfiguration != nil {
