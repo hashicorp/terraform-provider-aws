@@ -20,25 +20,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// This resource affects regional defaults, so it needs to be serialized
-func TestAccSSMDefaultPatchBaseline_serial(t *testing.T) {
-	testCases := map[string]func(t *testing.T){
-		"basic":                testAccSSMDefaultPatchBaseline_basic,
-		"disappears":           testAccSSMDefaultPatchBaseline_disappears,
-		"otherOperatingSystem": testAccSSMDefaultPatchBaseline_otherOperatingSystem,
-		"patchBaselineARN":     testAccSSMDefaultPatchBaseline_patchBaselineARN,
-		"systemDefault":        testAccSSMDefaultPatchBaseline_systemDefault,
-		"update":               testAccSSMDefaultPatchBaseline_update,
-	}
-
-	for name, tc := range testCases {
-		tc := tc
-		t.Run(name, func(t *testing.T) {
-			tc(t)
-		})
-	}
-}
-
 func testAccSSMDefaultPatchBaseline_basic(t *testing.T) {
 	var defaultpatchbaseline ssm.GetDefaultPatchBaselineOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

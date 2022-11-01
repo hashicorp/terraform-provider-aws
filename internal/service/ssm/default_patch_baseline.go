@@ -249,19 +249,23 @@ func ownerIsAWSFilter() types.PatchOrchestratorFilter { // nosemgrep:ci.aws-in-f
 }
 
 func resourceDefaultPatchBaselineDelete(ctx context.Context, d *schema.ResourceData, meta any) (diags diag.Diagnostics) {
-	SSMClientV2.Init(meta.(*conns.AWSClient).Config, func(c aws.Config) *ssm.Client {
+	return defaultPatchBaselineRestoreOSDefault(ctx, meta.(*conns.AWSClient), d.Id())
+}
+
+func defaultPatchBaselineRestoreOSDefault(ctx context.Context, meta *conns.AWSClient, os string) (diags diag.Diagnostics) {
+	SSMClientV2.Init(meta.Config, func(c aws.Config) *ssm.Client {
 		return ssm.NewFromConfig(c)
 	})
 	conn := SSMClientV2.Client()
 
-	baselineID, err := FindDefaultDefaultPatchBaselineIDForOS(ctx, conn, types.OperatingSystem(d.Id()))
+	baselineID, err := FindDefaultDefaultPatchBaselineIDForOS(ctx, conn, types.OperatingSystem(os))
 	if errors.Is(err, tfresource.ErrEmptyResult) {
-		diags = errs.AppendWarningf(diags, "no AWS-owned default Patch Baseline found for operating system %q", d.Id())
+		diags = errs.AppendWarningf(diags, "no AWS-owned default Patch Baseline found for operating system %q", os)
 		return
 	}
 	var tmr *tfresource.TooManyResultsError
 	if errors.As(err, &tmr) {
-		diags = errs.AppendWarningf(diags, "found %d AWS-owned default Patch Baselines found for operating system %q", tmr.Count, d.Id())
+		diags = errs.AppendWarningf(diags, "found %d AWS-owned default Patch Baselines found for operating system %q", tmr.Count, os)
 	}
 
 	in := &ssm.RegisterDefaultPatchBaselineInput{
@@ -269,7 +273,7 @@ func resourceDefaultPatchBaselineDelete(ctx context.Context, d *schema.ResourceD
 	}
 	_, err = conn.RegisterDefaultPatchBaseline(ctx, in)
 	if err != nil {
-		diags = errs.AppendErrorf(diags, "restoring SSM Default Patch Baseline for operating system %q to %q: %s", d.Id(), baselineID, err)
+		diags = errs.AppendErrorf(diags, "restoring SSM Default Patch Baseline for operating system %q to %q: %s", os, baselineID, err)
 	}
 
 	return
