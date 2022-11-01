@@ -44,6 +44,28 @@ func TestAccSFNActivity_basic(t *testing.T) {
 	})
 }
 
+func TestAccSFNActivity_disappears(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_sfn_activity.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sfn.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckActivityDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccActivityConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckActivityExists(resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfsfn.ResourceActivity(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func TestAccSFNActivity_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sfn_activity.test"
