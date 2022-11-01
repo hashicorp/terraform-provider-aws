@@ -28,15 +28,15 @@ func ResourceEmailIdentityFeedbackAttributes() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"email_identity": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
 			"email_forwarding_enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
+			},
+			"email_identity": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
 			},
 		},
 	}
