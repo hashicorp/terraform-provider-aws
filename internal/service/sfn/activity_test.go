@@ -1,6 +1,7 @@
 package sfn_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 	"time"
@@ -100,7 +101,7 @@ func testAccCheckActivityExists(n string) resource.TestCheckFunc {
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SFNConn
 
-		_, err := tfsfn.FindActivityByARN(conn, rs.Primary.ID)
+		_, err := tfsfn.FindActivityByARN(context.Background(), conn, rs.Primary.ID)
 
 		return err
 	}
@@ -116,7 +117,7 @@ func testAccCheckActivityDestroy(s *terraform.State) error {
 
 		// Retrying as Read after Delete is not always consistent.
 		err := resource.Retry(1*time.Minute, func() *resource.RetryError {
-			_, err := tfsfn.FindActivityByARN(conn, rs.Primary.ID)
+			_, err := tfsfn.FindActivityByARN(context.Background(), conn, rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
 				return nil

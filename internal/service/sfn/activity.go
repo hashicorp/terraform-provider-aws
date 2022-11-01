@@ -1,13 +1,14 @@
 package sfn
 
 import (
-	"fmt"
+	"context"
 	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sfn"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -19,10 +20,10 @@ import (
 
 func ResourceActivity() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceActivityCreate,
-		Read:   resourceActivityRead,
-		Update: resourceActivityUpdate,
-		Delete: resourceActivityDelete,
+		CreateWithoutTimeout: resourceActivityCreate,
+		ReadWithoutTimeout:   resourceActivityRead,
+		UpdateWithoutTimeout: resourceActivityUpdate,
+		DeleteWithoutTimeout: resourceActivityDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -47,7 +48,7 @@ func ResourceActivity() *schema.Resource {
 	}
 }
 
-func resourceActivityCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceActivityCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).SFNConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
@@ -58,23 +59,23 @@ func resourceActivityCreate(d *schema.ResourceData, meta interface{}) error {
 		Tags: Tags(tags.IgnoreAWS()),
 	}
 
-	output, err := conn.CreateActivity(input)
+	output, err := conn.CreateActivityWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("creating Step Function Activity (%s): %w", name, err)
+		return diag.Errorf("creating Step Function Activity (%s): %s", name, err)
 	}
 
 	d.SetId(aws.StringValue(output.ActivityArn))
 
-	return resourceActivityRead(d, meta)
+	return resourceActivityRead(ctx, d, meta)
 }
 
-func resourceActivityRead(d *schema.ResourceData, meta interface{}) error {
+func resourceActivityRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).SFNConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	output, err := FindActivityByARN(conn, d.Id())
+	output, err := FindActivityByARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Step Functions Activity (%s) not found, removing from state", d.Id())
@@ -83,67 +84,67 @@ func resourceActivityRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("reading Step Functions Activity (%s): %w", d.Id(), err)
+		return diag.Errorf("reading Step Functions Activity (%s): %s", d.Id(), err)
 	}
 
 	d.Set("creation_date", output.CreationDate.Format(time.RFC3339))
 	d.Set("name", output.Name)
 
-	tags, err := ListTags(conn, d.Id())
+	tags, err := ListTagsWithContext(ctx, conn, d.Id())
 
 	if err != nil {
-		return fmt.Errorf("listing tags for Step Functions Activity (%s): %w", d.Id(), err)
+		return diag.Errorf("listing tags for Step Functions Activity (%s): %s", d.Id(), err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("setting tags: %w", err)
+		return diag.Errorf("setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("setting tags_all: %w", err)
+		return diag.Errorf("setting tags_all: %s", err)
 	}
 
 	return nil
 }
 
-func resourceActivityUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceActivityUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).SFNConn
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("updating Step Function Activity (%s) tags: %w", d.Id(), err)
+		if err := UpdateTagsWithContext(ctx, conn, d.Id(), o, n); err != nil {
+			return diag.Errorf("updating Step Function Activity (%s) tags: %s", d.Id(), err)
 		}
 	}
 
-	return resourceActivityRead(d, meta)
+	return resourceActivityRead(ctx, d, meta)
 }
 
-func resourceActivityDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceActivityDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).SFNConn
 
 	log.Printf("[DEBUG] Deleting Step Functions Activity: %s", d.Id())
-	_, err := conn.DeleteActivity(&sfn.DeleteActivityInput{
+	_, err := conn.DeleteActivityWithContext(ctx, &sfn.DeleteActivityInput{
 		ActivityArn: aws.String(d.Id()),
 	})
 
 	if err != nil {
-		return fmt.Errorf("deleting Step Functions Activity (%s): %w", d.Id(), err)
+		return diag.Errorf("deleting Step Functions Activity (%s): %s", d.Id(), err)
 	}
 
 	return nil
 }
 
-func FindActivityByARN(conn *sfn.SFN, arn string) (*sfn.DescribeActivityOutput, error) {
+func FindActivityByARN(ctx context.Context, conn *sfn.SFN, arn string) (*sfn.DescribeActivityOutput, error) {
 	input := &sfn.DescribeActivityInput{
 		ActivityArn: aws.String(arn),
 	}
 
-	output, err := conn.DescribeActivity(input)
+	output, err := conn.DescribeActivityWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, sfn.ErrCodeActivityDoesNotExist) {
 		return nil, &resource.NotFoundError{
