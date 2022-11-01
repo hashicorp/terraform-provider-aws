@@ -177,7 +177,7 @@ func resourceIPAMPoolCIDRAllocationDelete(d *schema.ResourceData, meta interface
 		IpamPoolId:           aws.String(poolID),
 	})
 
-	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidIPAMPoolIdNotFound) || tfawserr.ErrMessageContains(err, errCodeInvalidParameterCombination, "No allocation found") {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidIPAMPoolIdNotFound) || tfawserr.ErrMessageContains(err, errCodeInvalidParameterCombination, "No allocation found") {
 		return nil
 	}
 

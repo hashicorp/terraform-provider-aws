@@ -146,7 +146,7 @@ func resourceIPAMPoolCIDRDelete(d *schema.ResourceData, meta interface{}) error 
 		IpamPoolId: aws.String(poolID),
 	})
 
-	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidIPAMPoolIdNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidIPAMPoolIdNotFound) {
 		return nil
 	}
 

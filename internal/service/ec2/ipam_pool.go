@@ -307,7 +307,7 @@ func ResourceIPAMPoolDelete(d *schema.ResourceData, meta interface{}) error {
 		IpamPoolId: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidIPAMPoolIdNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidIPAMPoolIdNotFound) {
 		return nil
 	}
 

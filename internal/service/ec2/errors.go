@@ -44,7 +44,7 @@ const (
 	errCodeInvalidInternetGatewayIDNotFound               = "InvalidInternetGatewayID.NotFound"
 	errCodeInvalidIPAMIdNotFound                          = "InvalidIpamId.NotFound"
 	errCodeInvalidIPAMPoolAllocationIdNotFound            = "InvalidIpamPoolAllocationId.NotFound"
-	ErrCodeInvalidIPAMPoolIdNotFound                      = "InvalidIpamPoolId.NotFound"
+	errCodeInvalidIPAMPoolIdNotFound                      = "InvalidIpamPoolId.NotFound"
 	errCodeInvalidIPAMScopeIdNotFound                     = "InvalidIpamScopeId.NotFound"
 	errCodeInvalidKeyPairNotFound                         = "InvalidKeyPair.NotFound"
 	errCodeInvalidLaunchTemplateIdMalformed               = "InvalidLaunchTemplateId.Malformed"
