@@ -3,6 +3,7 @@ package directconnect
 import (
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/directconnect"
@@ -16,6 +17,10 @@ func ResourceConnectionConfirmation() *schema.Resource {
 		Create: resourceConnectionConfirmationCreate,
 		Read:   resourceConnectionConfirmationRead,
 		Delete: resourceConnectionConfirmationDelete,
+
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(30 * time.Minute),
+		},
 
 		Schema: map[string]*schema.Schema{
 			"connection_id": {
