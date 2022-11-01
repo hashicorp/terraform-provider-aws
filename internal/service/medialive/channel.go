@@ -35,9 +35,9 @@ func ResourceChannel() *schema.Resource {
 		},
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(30 * time.Minute),
-			Update: schema.DefaultTimeout(30 * time.Minute),
-			Delete: schema.DefaultTimeout(30 * time.Minute),
+			Create: schema.DefaultTimeout(15 * time.Minute),
+			Update: schema.DefaultTimeout(15 * time.Minute),
+			Delete: schema.DefaultTimeout(15 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -130,7 +130,9 @@ func ResourceChannel() *schema.Resource {
 					},
 				},
 			},
-			"encoder_settings": channelEncoderSettingsSchema(),
+			"encoder_settings": func() *schema.Schema {
+				return channelEncoderSettingsSchema()
+			}(),
 			"input_attachment": {
 				Type:     schema.TypeSet,
 				Required: true,
@@ -654,9 +656,9 @@ func ResourceChannel() *schema.Resource {
 				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"subnet_ids": {
+						"availability_zones": {
 							Type:     schema.TypeList,
-							Required: true,
+							Computed: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 						"public_address_allocation_ids": {
@@ -669,6 +671,11 @@ func ResourceChannel() *schema.Resource {
 							Optional: true,
 							Computed: true,
 							MaxItems: 5,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+						"subnet_ids": {
+							Type:     schema.TypeList,
+							Required: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 					},
@@ -697,7 +704,7 @@ func resourceChannelCreate(ctx context.Context, d *schema.ResourceData, meta int
 	if v, ok := d.GetOk("cdi_input_specification"); ok && len(v.([]interface{})) > 0 {
 		in.CdiInputSpecification = expandChannelCdiInputSpecification(v.([]interface{}))
 	}
-	if v, ok := d.GetOk("channel_class"); ok && v.(string) != "" {
+	if v, ok := d.GetOk("channel_class"); ok {
 		in.ChannelClass = types.ChannelClass(v.(string))
 	}
 	if v, ok := d.GetOk("destination"); ok && v.(*schema.Set).Len() > 0 {
@@ -715,7 +722,7 @@ func resourceChannelCreate(ctx context.Context, d *schema.ResourceData, meta int
 	if v, ok := d.GetOk("maintenance"); ok && len(v.([]interface{})) > 0 {
 		in.Maintenance = expandChannelMaintenanceCreate(v.([]interface{}))
 	}
-	if v, ok := d.GetOk("role_arn"); ok && v.(string) != "" {
+	if v, ok := d.GetOk("role_arn"); ok {
 		in.RoleArn = aws.String(v.(string))
 	}
 	if v, ok := d.GetOk("vpc"); ok && len(v.([]interface{})) > 0 {
@@ -809,52 +816,56 @@ func resourceChannelRead(ctx context.Context, d *schema.ResourceData, meta inter
 func resourceChannelUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).MediaLiveConn
 
-	update := false
+	if d.HasChangesExcept("tags", "tags_all") {
+		in := &medialive.UpdateChannelInput{
+			ChannelId: aws.String(d.Id()),
+		}
 
-	in := &medialive.UpdateChannelInput{
-		ChannelId: aws.String(d.Id()),
+		if d.HasChange("name") {
+			in.Name = aws.String(d.Get("name").(string))
+		}
+
+		if d.HasChange("cdi_input_specification") {
+			in.CdiInputSpecification = expandChannelCdiInputSpecification(d.Get("cdi_input_specification").([]interface{}))
+		}
+
+		if d.HasChange("destination") {
+			in.Destinations = expandChannelDestinations(d.Get("destination").(*schema.Set).List())
+		}
+
+		if d.HasChange("encoder_settings") {
+			in.EncoderSettings = expandChannelEncoderSettings(d.Get("encoder_settings").([]interface{}))
+		}
+
+		if d.HasChange("input_specification") {
+			in.InputSpecification = expandChannelInputSpecification(d.Get("input_specification").([]interface{}))
+		}
+
+		if d.HasChange("maintenance") {
+			in.Maintenance = expandChannelMaintenanceUpdate(d.Get("maintenance").([]interface{}))
+		}
+
+		if d.HasChange("role_arn") {
+			in.RoleArn = aws.String(d.Get("role_arn").(string))
+		}
+
+		log.Printf("[DEBUG] Updating MediaLive Channel (%s): %#v", d.Id(), in)
+		out, err := conn.UpdateChannel(ctx, in)
+		if err != nil {
+			return create.DiagError(names.MediaLive, create.ErrActionUpdating, ResNameChannel, d.Id(), err)
+		}
+
+		if _, err := waitChannelUpdated(ctx, conn, aws.ToString(out.Channel.Id), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return create.DiagError(names.MediaLive, create.ErrActionWaitingForUpdate, ResNameChannel, d.Id(), err)
+		}
 	}
 
-	if d.HasChanges(
-		"name",
-		"cdi_input_specification",
-		"destination",
-		"encoder_settings",
-		"input_specification",
-		"maintenance",
-	) {
-		update = true
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
 
-		in.Name = aws.String(d.Get("name").(string))
-		if v, ok := d.GetOk("cdi_input_specification"); ok {
-			in.CdiInputSpecification = expandChannelCdiInputSpecification(v.([]interface{}))
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
+			return create.DiagError(names.MediaLive, create.ErrActionUpdating, ResNameChannel, d.Id(), err)
 		}
-		if v, ok := d.GetOk("destination"); ok {
-			in.Destinations = expandChannelDestinations(v.([]interface{}))
-		}
-		if v, ok := d.GetOk("encoder_settings"); ok {
-			in.EncoderSettings = expandChannelEncoderSettings(v.([]interface{}))
-		}
-		if v, ok := d.GetOk("input_specification"); ok {
-			in.InputSpecification = expandChannelInputSpecification(v.([]interface{}))
-		}
-		if v, ok := d.GetOk("maintenance"); ok {
-			in.Maintenance = expandChannelMaintenanceUpdate(v.([]interface{}))
-		}
-	}
-
-	if !update {
-		return nil
-	}
-
-	log.Printf("[DEBUG] Updating MediaLive Channel (%s): %#v", d.Id(), in)
-	out, err := conn.UpdateChannel(ctx, in)
-	if err != nil {
-		return create.DiagError(names.MediaLive, create.ErrActionUpdating, ResNameChannel, d.Id(), err)
-	}
-
-	if _, err := waitChannelUpdated(ctx, conn, aws.ToString(out.Channel.Id), d.Timeout(schema.TimeoutUpdate)); err != nil {
-		return create.DiagError(names.MediaLive, create.ErrActionWaitingForUpdate, ResNameChannel, d.Id(), err)
 	}
 
 	return resourceChannelRead(ctx, d, meta)
@@ -1316,7 +1327,6 @@ func flattenChannelMaintenance(apiObject *types.MaintenanceStatus) []interface{}
 	m := map[string]interface{}{
 		"maintenance_day":        string(apiObject.MaintenanceDay),
 		"maintenance_start_time": aws.ToString(apiObject.MaintenanceStartTime),
-		// "maintenance_scheduled_date": "",
 	}
 
 	return []interface{}{m}

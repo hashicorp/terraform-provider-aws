@@ -492,7 +492,7 @@ func channelEncoderSettingsSchema() *schema.Schema {
 					},
 				},
 				"output_group": {
-					Type:     schema.TypeSet,
+					Type:     schema.TypeList,
 					Required: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
@@ -514,21 +514,18 @@ func channelEncoderSettingsSchema() *schema.Schema {
 													"archive_cdn_settings": {
 														Type:     schema.TypeList,
 														Optional: true,
-														Computed: true,
 														MaxItems: 1,
 														Elem: &schema.Resource{
 															Schema: map[string]*schema.Schema{
 																"archive_s3_settings": {
 																	Type:     schema.TypeList,
 																	Optional: true,
-																	Computed: true,
 																	MaxItems: 1,
 																	Elem: &schema.Resource{
 																		Schema: map[string]*schema.Schema{
 																			"canned_acl": {
 																				Type:             schema.TypeString,
 																				Optional:         true,
-																				Computed:         true,
 																				ValidateDiagFunc: enum.Validate[types.S3CannedAcl](),
 																			},
 																		},
@@ -540,7 +537,6 @@ func channelEncoderSettingsSchema() *schema.Schema {
 													"rollover_interval": {
 														Type:     schema.TypeInt,
 														Optional: true,
-														Computed: true,
 													},
 												},
 											},
@@ -548,7 +544,6 @@ func channelEncoderSettingsSchema() *schema.Schema {
 										"frame_capture_group_settings": {
 											Type:     schema.TypeList,
 											Optional: true,
-											Computed: true,
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
@@ -572,7 +567,6 @@ func channelEncoderSettingsSchema() *schema.Schema {
 																			"canned_acl": {
 																				Type:             schema.TypeString,
 																				Optional:         true,
-																				Computed:         true,
 																				ValidateDiagFunc: enum.Validate[types.S3CannedAcl](),
 																			},
 																		},
@@ -587,7 +581,6 @@ func channelEncoderSettingsSchema() *schema.Schema {
 										"hls_group_settings": {
 											Type:     schema.TypeList,
 											Optional: true,
-											Computed: true,
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
@@ -597,6 +590,7 @@ func channelEncoderSettingsSchema() *schema.Schema {
 													"ad_markers": {
 														Type:     schema.TypeList,
 														Optional: true,
+														Computed: true,
 														Elem: &schema.Schema{
 															Type:             schema.TypeString,
 															ValidateDiagFunc: enum.Validate[types.HlsAdMarkers](),
@@ -778,13 +772,13 @@ func channelEncoderSettingsSchema() *schema.Schema {
 																"hls_s3_settings": {
 																	Type:     schema.TypeList,
 																	Optional: true,
+																	Computed: true,
 																	MaxItems: 1,
 																	Elem: &schema.Resource{
 																		Schema: map[string]*schema.Schema{
 																			"canned_acl": {
 																				Type:             schema.TypeString,
 																				Optional:         true,
-																				Computed:         true,
 																				ValidateDiagFunc: enum.Validate[types.S3CannedAcl](),
 																			},
 																		},
@@ -793,6 +787,7 @@ func channelEncoderSettingsSchema() *schema.Schema {
 																"hls_webdav_settings": {
 																	Type:     schema.TypeList,
 																	Optional: true,
+																	Computed: true,
 																	MaxItems: 1,
 																	Elem: &schema.Resource{
 																		Schema: map[string]*schema.Schema{
@@ -1181,7 +1176,6 @@ func channelEncoderSettingsSchema() *schema.Schema {
 							"name": {
 								Type:     schema.TypeString,
 								Optional: true,
-								Computed: true,
 							},
 						},
 					},
@@ -1200,6 +1194,7 @@ func channelEncoderSettingsSchema() *schema.Schema {
 							"sync_threshold": {
 								Type:     schema.TypeInt,
 								Optional: true,
+								Computed: true,
 							},
 						},
 					},
@@ -1207,6 +1202,7 @@ func channelEncoderSettingsSchema() *schema.Schema {
 				"video_description": {
 					Type:     schema.TypeSet,
 					Optional: true,
+					Computed: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							"name": {
@@ -1555,7 +1551,9 @@ func outputSettingsSchema() *schema.Schema {
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"m2ts_settings": m2tsSettingsSchema(),
+										"m2ts_settings": func() *schema.Schema {
+											return m2tsSettingsSchema()
+										}(),
 										// This is in the API and Go SDK docs, but has no exported fields.
 										"raw_settings": {
 											Type:     schema.TypeList,
@@ -1571,12 +1569,10 @@ func outputSettingsSchema() *schema.Schema {
 							"extension": {
 								Type:     schema.TypeString,
 								Optional: true,
-								Computed: true,
 							},
 							"name_modifier": {
 								Type:     schema.TypeString,
 								Optional: true,
-								Computed: true,
 							},
 						},
 					},
@@ -1697,7 +1693,9 @@ func outputSettingsSchema() *schema.Schema {
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"m2ts_settings": m2tsSettingsSchema(),
+										"m2ts_settings": func() *schema.Schema {
+											return m2tsSettingsSchema()
+										}(),
 									}},
 							},
 							"destination": destinationSchema(),
@@ -1962,7 +1960,6 @@ func m2tsSettingsSchema() *schema.Schema {
 				"arib": {
 					Type:             schema.TypeString,
 					Optional:         true,
-					Computed:         true,
 					ValidateDiagFunc: enum.Validate[types.M2tsArib](),
 				},
 				"arib_captions_pid": {
@@ -1973,19 +1970,16 @@ func m2tsSettingsSchema() *schema.Schema {
 				"arib_captions_pid_control": {
 					Type:             schema.TypeString,
 					Optional:         true,
-					Computed:         true,
 					ValidateDiagFunc: enum.Validate[types.M2tsAribCaptionsPidControl](),
 				},
 				"audio_buffer_model": {
 					Type:             schema.TypeString,
 					Optional:         true,
-					Computed:         true,
 					ValidateDiagFunc: enum.Validate[types.M2tsAudioBufferModel](),
 				},
 				"audio_frames_per_pes": {
 					Type:     schema.TypeInt,
 					Optional: true,
-					Computed: true,
 				},
 				"audio_pids": {
 					Type:     schema.TypeString,
@@ -1995,24 +1989,20 @@ func m2tsSettingsSchema() *schema.Schema {
 				"audio_stream_type": {
 					Type:             schema.TypeString,
 					Optional:         true,
-					Computed:         true,
 					ValidateDiagFunc: enum.Validate[types.M2tsAudioStreamType](),
 				},
 				"bitrate": {
 					Type:     schema.TypeInt,
 					Optional: true,
-					Computed: true,
 				},
 				"buffer_model": {
 					Type:             schema.TypeString,
 					Optional:         true,
-					Computed:         true,
 					ValidateDiagFunc: enum.Validate[types.M2tsBufferModel](),
 				},
 				"cc_descriptor": {
 					Type:             schema.TypeString,
 					Optional:         true,
-					Computed:         true,
 					ValidateDiagFunc: enum.Validate[types.M2tsCcDescriptor](),
 				},
 				"dvb_nit_settings": {
@@ -2032,7 +2022,6 @@ func m2tsSettingsSchema() *schema.Schema {
 							"rep_interval": {
 								Type:     schema.TypeInt,
 								Optional: true,
-								Computed: true,
 							},
 						},
 					},
@@ -2046,24 +2035,20 @@ func m2tsSettingsSchema() *schema.Schema {
 							"output_sdt": {
 								Type:             schema.TypeString,
 								Optional:         true,
-								Computed:         true,
 								ValidateDiagFunc: enum.Validate[types.DvbSdtOutputSdt](),
 							},
 							"rep_interval": {
 								Type:     schema.TypeInt,
 								Optional: true,
-								Computed: true,
 							},
 							"service_name": {
 								Type:         schema.TypeString,
 								Optional:     true,
-								Computed:     true,
 								ValidateFunc: validation.StringLenBetween(1, 256),
 							},
 							"service_provider_name": {
 								Type:         schema.TypeString,
 								Optional:     true,
-								Computed:     true,
 								ValidateFunc: validation.StringLenBetween(1, 256),
 							},
 						},
@@ -2083,7 +2068,6 @@ func m2tsSettingsSchema() *schema.Schema {
 							"rep_interval": {
 								Type:     schema.TypeInt,
 								Optional: true,
-								Computed: true,
 							},
 						},
 					},
@@ -2096,35 +2080,29 @@ func m2tsSettingsSchema() *schema.Schema {
 				"ebif": {
 					Type:             schema.TypeString,
 					Optional:         true,
-					Computed:         true,
 					ValidateDiagFunc: enum.Validate[types.M2tsEbifControl](),
 				},
 				"ebp_audio_interval": {
 					Type:             schema.TypeString,
 					Optional:         true,
-					Computed:         true,
 					ValidateDiagFunc: enum.Validate[types.M2tsAudioInterval](),
 				},
 				"ebp_lookahead_ms": {
 					Type:     schema.TypeInt,
 					Optional: true,
-					Computed: true,
 				},
 				"ebp_placement": {
 					Type:             schema.TypeString,
 					Optional:         true,
-					Computed:         true,
 					ValidateDiagFunc: enum.Validate[types.M2tsEbpPlacement](),
 				},
 				"ecm_pid": {
 					Type:     schema.TypeString,
 					Optional: true,
-					Computed: true,
 				},
 				"es_rate_in_pes": {
 					Type:             schema.TypeString,
 					Optional:         true,
-					Computed:         true,
 					ValidateDiagFunc: enum.Validate[types.M2tsEsRateInPes](),
 				},
 				"etv_platform_pid": {
@@ -2140,12 +2118,10 @@ func m2tsSettingsSchema() *schema.Schema {
 				"fragment_time": {
 					Type:     schema.TypeFloat,
 					Optional: true,
-					Computed: true,
 				},
 				"klv": {
 					Type:             schema.TypeString,
 					Optional:         true,
-					Computed:         true,
 					ValidateDiagFunc: enum.Validate[types.M2tsKlv](),
 				},
 				"klv_data_pids": {
@@ -2156,39 +2132,32 @@ func m2tsSettingsSchema() *schema.Schema {
 				"nielsen_id3_behavior": {
 					Type:             schema.TypeString,
 					Optional:         true,
-					Computed:         true,
 					ValidateDiagFunc: enum.Validate[types.M2tsNielsenId3Behavior](),
 				},
 				"null_packet_bitrate": {
 					Type:     schema.TypeFloat,
 					Optional: true,
-					Computed: true,
 				},
 				"pat_interval": {
 					Type:     schema.TypeInt,
 					Optional: true,
-					Computed: true,
 				},
 				"pcr_control": {
 					Type:             schema.TypeString,
 					Optional:         true,
-					Computed:         true,
 					ValidateDiagFunc: enum.Validate[types.M2tsPcrControl](),
 				},
 				"pcr_period": {
 					Type:     schema.TypeInt,
 					Optional: true,
-					Computed: true,
 				},
 				"pcr_pid": {
 					Type:     schema.TypeString,
 					Optional: true,
-					Computed: true,
 				},
 				"pmt_interval": {
 					Type:     schema.TypeInt,
 					Optional: true,
-					Computed: true,
 				},
 				"pmt_pid": {
 					Type:     schema.TypeString,
@@ -2198,12 +2167,10 @@ func m2tsSettingsSchema() *schema.Schema {
 				"program_num": {
 					Type:     schema.TypeInt,
 					Optional: true,
-					Computed: true,
 				},
 				"rate_mode": {
 					Type:             schema.TypeString,
 					Optional:         true,
-					Computed:         true,
 					ValidateDiagFunc: enum.Validate[types.M2tsRateMode](),
 				},
 				"scte27_pids": {
@@ -2214,7 +2181,6 @@ func m2tsSettingsSchema() *schema.Schema {
 				"scte35_control": {
 					Type:             schema.TypeString,
 					Optional:         true,
-					Computed:         true,
 					ValidateDiagFunc: enum.Validate[types.M2tsScte35Control](),
 				},
 				"scte35_pid": {
@@ -2225,24 +2191,20 @@ func m2tsSettingsSchema() *schema.Schema {
 				"segmentation_markers": {
 					Type:             schema.TypeString,
 					Optional:         true,
-					Computed:         true,
 					ValidateDiagFunc: enum.Validate[types.M2tsSegmentationMarkers](),
 				},
 				"segmentation_style": {
 					Type:             schema.TypeString,
 					Optional:         true,
-					Computed:         true,
 					ValidateDiagFunc: enum.Validate[types.M2tsSegmentationStyle](),
 				},
 				"segmentation_time": {
 					Type:     schema.TypeFloat,
 					Optional: true,
-					Computed: true,
 				},
 				"timed_metadata_behavior": {
 					Type:             schema.TypeString,
 					Optional:         true,
-					Computed:         true,
 					ValidateDiagFunc: enum.Validate[types.M2tsTimedMetadataBehavior](),
 				},
 				"timed_metadata_pid": {
@@ -2253,7 +2215,6 @@ func m2tsSettingsSchema() *schema.Schema {
 				"transport_stream_id": {
 					Type:     schema.TypeInt,
 					Optional: true,
-					Computed: true,
 				},
 				"video_pid": {
 					Type:     schema.TypeString,
@@ -2275,8 +2236,8 @@ func expandChannelEncoderSettings(tfList []interface{}) *types.EncoderSettings {
 	if v, ok := m["audio_description"].(*schema.Set); ok && v.Len() > 0 {
 		settings.AudioDescriptions = expandChannelEncoderSettingsAudioDescriptions(v.List())
 	}
-	if v, ok := m["output_group"].(*schema.Set); ok && v.Len() > 0 {
-		settings.OutputGroups = expandChannelEncoderSettingsOutputGroups(v.List())
+	if v, ok := m["output_group"].([]interface{}); ok && len(v) > 0 {
+		settings.OutputGroups = expandChannelEncoderSettingsOutputGroups(v)
 	}
 	if v, ok := m["timecode_config"].([]interface{}); ok && len(v) > 0 {
 		settings.TimecodeConfig = expandChannelEncoderSettingsTimecodeConfig(v)
@@ -2668,10 +2629,10 @@ func expandM2tsSettings(tfList []interface{}) *types.M2tsSettings {
 	if v, ok := m["segmentation_time"].(float32); ok {
 		s.SegmentationTime = float64(v)
 	}
-	if v, ok := m["time_metadata_behavior"].(string); ok && v != "" {
+	if v, ok := m["timed_metadata_behavior"].(string); ok && v != "" {
 		s.TimedMetadataBehavior = types.M2tsTimedMetadataBehavior(v)
 	}
-	if v, ok := m["time_metadata_pid"].(string); ok && v != "" {
+	if v, ok := m["timed_metadata_pid"].(string); ok && v != "" {
 		s.TimedMetadataPid = aws.String(v)
 	}
 	if v, ok := m["transport_stream_id"].(int); ok {
@@ -2793,9 +2754,9 @@ func flattenChannelEncoderSettings(apiObject *types.EncoderSettings) []interface
 
 	m := map[string]interface{}{
 		"audio_description": flattenAudioDescriptions(apiObject.AudioDescriptions),
-		"output_group":      nil, // TODO
-		"timecode_config":   nil, // TODO
-		"video_description": nil, // TODO
+		"output_group":      flattenOutputGroups(apiObject.OutputGroups),
+		"timecode_config":   flattenTimecodeConfig(apiObject.TimecodeConfig),
+		"video_description": flattenVideoDescriptions(apiObject.VideoDescriptions), // TODO
 		// TODO avail_blanking
 		// TODO avail_configuration
 		// TODO blackout_slate
@@ -2830,6 +2791,307 @@ func flattenAudioDescriptions(od []types.AudioDescription) []interface{} {
 	}
 
 	return ml
+}
+
+func flattenOutputGroups(op []types.OutputGroup) []interface{} {
+	if len(op) == 0 {
+		return nil
+	}
+
+	ol := make([]interface{}, 0)
+
+	for _, v := range op {
+		m := map[string]interface{}{
+			"output_group_settings": flattenOutputGroupSettings(v.OutputGroupSettings),
+			"output":                flattenOutputs(v.Outputs),
+			"name":                  aws.ToString(v.Name),
+		}
+
+		ol = append(ol, m)
+	}
+
+	return ol
+}
+
+func flattenOutputGroupSettings(os *types.OutputGroupSettings) []interface{} {
+	if os == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"archive_group_settings": flattenOutputGroupSettingsArchiveGroupSettings(os.ArchiveGroupSettings),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenOutputs(os []types.Output) []interface{} {
+	if len(os) == 0 {
+		return nil
+	}
+
+	outputs := make([]interface{}, 0)
+
+	for _, item := range os {
+		m := map[string]interface{}{
+			"audio_description_names":   flex.FlattenStringValueSet(item.AudioDescriptionNames),
+			"caption_description_names": flex.FlattenStringValueSet(item.CaptionDescriptionNames),
+			"output_name":               aws.ToString(item.OutputName),
+			"output_settings":           flattenOutputsOutputSettings(item.OutputSettings),
+			"video_description_name":    aws.ToString(item.VideoDescriptionName),
+		}
+
+		outputs = append(outputs, m)
+	}
+
+	return outputs
+}
+
+func flattenOutputsOutputSettings(in *types.OutputSettings) []interface{} {
+	if in == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"archive_output_settings": flattenOutputsOutputSettingsArchiveOutputSettings(in.ArchiveOutputSettings),
+	}
+	return []interface{}{m}
+}
+
+func flattenOutputsOutputSettingsArchiveOutputSettings(in *types.ArchiveOutputSettings) []interface{} {
+	if in == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"container_settings": flattenOutputsOutputSettingsArchiveOutputSettingsContainerSettings(in.ContainerSettings),
+		"extension":          aws.ToString(in.Extension),
+		"name_modifier":      aws.ToString(in.NameModifier),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenOutputsOutputSettingsArchiveOutputSettingsContainerSettings(in *types.ArchiveContainerSettings) []interface{} {
+	if in == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"m2ts_settings": flattenM2tsSettings(in.M2tsSettings),
+		"raw_settings":  []interface{}{}, // attribute has no exported fields
+	}
+
+	return []interface{}{m}
+}
+
+func flattenM2tsSettings(in *types.M2tsSettings) []interface{} {
+	if in == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"absent_input_audio_behavior": string(in.AbsentInputAudioBehavior),
+		"arib":                        string(in.Arib),
+		"arib_captions_pid":           aws.ToString(in.AribCaptionsPid),
+		"arib_captions_pid_control":   string(in.AribCaptionsPidControl),
+		"audio_buffer_model":          string(in.AudioBufferModel),
+		"audio_frames_per_pes":        int(in.AudioFramesPerPes),
+		"audio_pids":                  aws.ToString(in.AudioPids),
+		"audio_stream_type":           string(in.AudioStreamType),
+		"bitrate":                     int(in.Bitrate),
+		"buffer_model":                string(in.BufferModel),
+		"cc_descriptor":               string(in.CcDescriptor),
+		"dvb_nit_settings":            flattenDvbNitSettings(in.DvbNitSettings),
+		"dvb_sdt_settings":            flattenDvbSdtSettings(in.DvbSdtSettings),
+		"dvb_sub_pids":                aws.ToString(in.DvbSubPids),
+		"dvb_tdt_settings":            flattenDvbTdtSettings(in.DvbTdtSettings),
+		"dvb_teletext_pid":            aws.ToString(in.DvbTeletextPid),
+		"ebif":                        string(in.Ebif),
+		"ebp_audio_interval":          string(in.EbpAudioInterval),
+		"ebp_lookahead_ms":            int(in.EbpLookaheadMs),
+		"ebp_placement":               string(in.EbpPlacement),
+		"ecm_pid":                     aws.ToString(in.EcmPid),
+		"es_rate_in_pes":              string(in.EsRateInPes),
+		"etv_platform_pid":            aws.ToString(in.EtvPlatformPid),
+		"etv_signal_pid":              aws.ToString(in.EtvSignalPid),
+		"fragment_time":               float32(in.FragmentTime),
+		"klv":                         string(in.Klv),
+		"klv_data_pids":               aws.ToString(in.KlvDataPids),
+		"nielsen_id3_behavior":        string(in.NielsenId3Behavior),
+		"null_packet_bitrate":         float32(in.NullPacketBitrate),
+		"pat_interval":                int(in.PatInterval),
+		"pcr_control":                 string(in.PcrControl),
+		"pcr_period":                  int(in.PcrPeriod),
+		"pcr_pid":                     aws.ToString(in.PcrPid),
+		"pmt_interval":                int(in.PmtInterval),
+		"pmt_pid":                     aws.ToString(in.PmtPid),
+		"program_num":                 int(in.ProgramNum),
+		"rate_mode":                   string(in.RateMode),
+		"scte27_pids":                 aws.ToString(in.Scte27Pids),
+		"scte35_control":              string(in.Scte35Control),
+		"scte35_pid":                  aws.ToString(in.Scte35Pid),
+		"segmentation_markers":        string(in.SegmentationMarkers),
+		"segmentation_style":          string(in.SegmentationStyle),
+		"segmentation_time":           float32(in.SegmentationTime),
+		"timed_metadata_behavior":     string(in.TimedMetadataBehavior),
+		"timed_metadata_pid":          aws.ToString(in.TimedMetadataPid),
+		"transport_stream_id":         int(in.TransportStreamId),
+		"video_pid":                   aws.ToString(in.VideoPid),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenDvbNitSettings(in *types.DvbNitSettings) []interface{} {
+	if in == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"network_id":   int(in.NetworkId),
+		"network_name": aws.ToString(in.NetworkName),
+		"rep_interval": int(in.RepInterval),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenDvbSdtSettings(in *types.DvbSdtSettings) []interface{} {
+	if in == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"output_sdt":            string(in.OutputSdt),
+		"rep_interval":          int(in.RepInterval),
+		"service_name":          aws.ToString(in.ServiceName),
+		"service_provider_name": aws.ToString(in.ServiceProviderName),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenDvbTdtSettings(in *types.DvbTdtSettings) []interface{} {
+	if in == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"rep_interval": int(in.RepInterval),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenOutputGroupSettingsArchiveGroupSettings(as *types.ArchiveGroupSettings) []interface{} {
+	if as == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"destination":          flattenDestination(as.Destination),
+		"archive_cdn_settings": flattenOutputGroupSettingsArchiveCDNSettings(as.ArchiveCdnSettings),
+		"rollover_interval":    int(as.RolloverInterval),
+	}
+
+	return []interface{}{m}
+
+}
+
+func flattenDestination(des *types.OutputLocationRef) []interface{} {
+	if des == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"destination_ref_id": aws.ToString(des.DestinationRefId),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenOutputGroupSettingsArchiveCDNSettings(as *types.ArchiveCdnSettings) []interface{} {
+	if as == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"archive_s3_settings": func(in *types.ArchiveS3Settings) []interface{} {
+			if in == nil {
+				return nil
+			}
+
+			inner := map[string]interface{}{
+				"canned_acl": string(in.CannedAcl),
+			}
+
+			return []interface{}{inner}
+		}(as.ArchiveS3Settings),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenTimecodeConfig(in *types.TimecodeConfig) []interface{} {
+	if in == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"source":         string(in.Source),
+		"sync_threshold": int(in.SyncThreshold),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenVideoDescriptions(tfList []types.VideoDescription) []interface{} {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	out := make([]interface{}, 0)
+
+	for _, item := range tfList {
+		m := map[string]interface{}{
+			"name":             aws.ToString(item.Name),
+			"codec_settings":   flattenVideoDescriptionsCodecSettings(item.CodecSettings),
+			"height":           int(item.Height),
+			"respond_to_afd":   string(item.RespondToAfd),
+			"scaling_behavior": string(item.ScalingBehavior),
+			"sharpness":        int(item.Sharpness),
+			"width":            int(item.Width),
+		}
+
+		out = append(out, m)
+	}
+	return out
+}
+
+func flattenVideoDescriptionsCodecSettings(in *types.VideoCodecSettings) []interface{} {
+	if in == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"frame_capture_settings": flattenCodecSettingsFrameCaptureSettings(in.FrameCaptureSettings),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenCodecSettingsFrameCaptureSettings(in *types.FrameCaptureSettings) []interface{} {
+	if in == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"capture_interval":       int(in.CaptureInterval),
+		"capture_interval_units": string(in.CaptureIntervalUnits),
+	}
+
+	return []interface{}{m}
 }
 
 func flattenAudioNormalization(ns *types.AudioNormalizationSettings) []interface{} {

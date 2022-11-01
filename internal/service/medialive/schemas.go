@@ -22,7 +22,6 @@ func connectionRetryIntervalSchema() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeInt,
 		Optional: true,
-		Computed: true,
 	}
 }
 
@@ -30,7 +29,6 @@ func filecacheDurationSchema() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeInt,
 		Optional: true,
-		Computed: true,
 	}
 }
 
@@ -38,7 +36,6 @@ func numRetriesSchema() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeInt,
 		Optional: true,
-		Computed: true,
 	}
 }
 
@@ -46,6 +43,5 @@ func restartDelaySchema() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeInt,
 		Optional: true,
-		Computed: true,
 	}
 }
