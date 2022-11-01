@@ -10,10 +10,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccSFNActivityDataSource_StepFunctions_basic(t *testing.T) {
+func TestAccSFNActivityDataSource_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sfn_activity.test"
-	dataName := "data.aws_sfn_activity.test"
+	dataSource1Name := "data.aws_sfn_activity.by_name"
+	dataSource2Name := "data.aws_sfn_activity.by_arn"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
@@ -21,45 +22,33 @@ func TestAccSFNActivityDataSource_StepFunctions_basic(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccActivityDataSourceConfig_checkARN(rName),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(resourceName, "id", dataName, "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "creation_date", dataName, "creation_date"),
-					resource.TestCheckResourceAttrPair(resourceName, "name", dataName, "name"),
-				),
-			},
-			{
-				Config: testAccActivityDataSourceConfig_checkName(rName),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(resourceName, "id", dataName, "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "creation_date", dataName, "creation_date"),
-					resource.TestCheckResourceAttrPair(resourceName, "name", dataName, "name"),
+				Config: testAccActivityDataSourceConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(resourceName, "id", dataSource1Name, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "creation_date", dataSource1Name, "creation_date"),
+					resource.TestCheckResourceAttrPair(resourceName, "name", dataSource1Name, "name"),
+
+					resource.TestCheckResourceAttrPair(resourceName, "id", dataSource2Name, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "creation_date", dataSource2Name, "creation_date"),
+					resource.TestCheckResourceAttrPair(resourceName, "name", dataSource2Name, "name"),
 				),
 			},
 		},
 	})
 }
 
-func testAccActivityDataSourceConfig_checkARN(rName string) string {
+func testAccActivityDataSourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource aws_sfn_activity "test" {
-  name = "%s"
+  name = %[1]q
 }
 
-data aws_sfn_activity "test" {
-  arn = aws_sfn_activity.test.id
-}
-`, rName)
-}
-
-func testAccActivityDataSourceConfig_checkName(rName string) string {
-	return fmt.Sprintf(`
-resource aws_sfn_activity "test" {
-  name = "%s"
-}
-
-data aws_sfn_activity "test" {
+data aws_sfn_activity "by_name" {
   name = aws_sfn_activity.test.name
+}
+
+data aws_sfn_activity "by_arn" {
+  arn = aws_sfn_activity.test.id
 }
 `, rName)
 }
