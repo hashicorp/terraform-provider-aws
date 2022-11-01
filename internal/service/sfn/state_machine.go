@@ -268,7 +268,7 @@ func resourceStateMachineUpdate(ctx context.Context, d *schema.ResourceData, met
 		}
 
 		// Handle eventual consistency after update.
-		err = resource.RetryContext(ctx, stateMachineUpdatedTimeout, func() *resource.RetryError {
+		err = resource.RetryContext(ctx, stateMachineUpdatedTimeout, func() *resource.RetryError { // nosemgrep:ci.helper-schema-resource-Retry-without-TimeoutError-check
 			output, err := FindStateMachineByARN(ctx, conn, d.Id())
 
 			if err != nil {
