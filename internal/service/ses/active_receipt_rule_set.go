@@ -22,7 +22,9 @@ func ResourceActiveReceiptRuleSet() *schema.Resource {
 		UpdateWithoutTimeout: resourceActiveReceiptRuleSetUpdate,
 		ReadWithoutTimeout:   resourceActiveReceiptRuleSetRead,
 		DeleteWithoutTimeout: resourceActiveReceiptRuleSetDelete,
-
+		Importer: &schema.ResourceImporter{
+			StateContext: resourceActiveReceiptRuleSetImport,
+		},
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
@@ -107,4 +109,36 @@ func resourceActiveReceiptRuleSetDelete(ctx context.Context, d *schema.ResourceD
 	}
 
 	return diags
+}
+
+func resourceActiveReceiptRuleSetImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	conn := meta.(*conns.AWSClient).SESConn()
+
+	describeOpts := &ses.DescribeActiveReceiptRuleSetInput{}
+
+	response, err := conn.DescribeActiveReceiptRuleSetWithContext(ctx, describeOpts)
+	if err != nil {
+		return nil, err
+	}
+
+	if response.Metadata == nil {
+		return nil, fmt.Errorf("no active Receipt Rule Set found")
+	}
+
+	if *response.Metadata.Name != d.Id() {
+		return nil, fmt.Errorf("SES Receipt Rule Set (%s) belonging to SES Active Receipt Rule Set not found", d.Id())
+	}
+
+	d.Set("rule_set_name", response.Metadata.Name)
+
+	arnValue := arn.ARN{
+		Partition: meta.(*conns.AWSClient).Partition,
+		Service:   "ses",
+		Region:    meta.(*conns.AWSClient).Region,
+		AccountID: meta.(*conns.AWSClient).AccountID,
+		Resource:  fmt.Sprintf("receipt-rule-set/%s", d.Id()),
+	}.String()
+	d.Set("arn", arnValue)
+
+	return []*schema.ResourceData{d}, nil
 }
