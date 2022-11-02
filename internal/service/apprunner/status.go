@@ -21,8 +21,9 @@ const (
 	ObservabilityConfigurationStatusActive   = "ACTIVE"
 	ObservabilityConfigurationStatusInactive = "INACTIVE"
 
-	VPCIngressConnectionStatusActive  = "AVAILABLE"
-	VPCIngressConnectionStatusDeleted = "DELETED"
+	VPCIngressConnectionStatusActive          = "AVAILABLE"
+	VPCIngressConnectionStatusPendingDeletion = "PENDING_DELETION"
+	VPCIngressConnectionStatusDeleted         = "DELETED"
 )
 
 func StatusAutoScalingConfiguration(ctx context.Context, conn *apprunner.AppRunner, arn string) resource.StateRefreshFunc {

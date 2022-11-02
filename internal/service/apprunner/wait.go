@@ -134,7 +134,7 @@ func WaitVPCIngressConnectionActive(ctx context.Context, conn *apprunner.AppRunn
 
 func WaitVPCIngressConnectionDeleted(ctx context.Context, conn *apprunner.AppRunner, vpcIngressConnectionArn string) error {
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{VPCIngressConnectionStatusActive},
+		Pending: []string{VPCIngressConnectionStatusActive, VPCIngressConnectionStatusPendingDeletion},
 		Target:  []string{VPCIngressConnectionStatusDeleted},
 		Refresh: StatusVPCIngressConnection(ctx, conn, vpcIngressConnectionArn),
 		Timeout: VPCIngressConnectionDeleteTimeout,
