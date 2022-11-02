@@ -161,6 +161,7 @@ func ResourceService() *schema.Resource {
 						"ingress_configuration": {
 							Type:     schema.TypeList,
 							Optional: true,
+							Computed: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
@@ -174,6 +175,7 @@ func ResourceService() *schema.Resource {
 						"egress_configuration": {
 							Type:     schema.TypeList,
 							Optional: true,
+							Computed: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
