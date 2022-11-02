@@ -24,8 +24,8 @@ const (
 	ObservabilityConfigurationCreateTimeout = 2 * time.Minute
 	ObservabilityConfigurationDeleteTimeout = 2 * time.Minute
 
-	VpcIngressConnectionCreateTimeout = 2 * time.Minute
-	VpcIngressConnectionDeleteTimeout = 2 * time.Minute
+	VPCIngressConnectionCreateTimeout = 2 * time.Minute
+	VPCIngressConnectionDeleteTimeout = 2 * time.Minute
 )
 
 func WaitAutoScalingConfigurationActive(ctx context.Context, conn *apprunner.AppRunner, arn string) error {
@@ -119,12 +119,12 @@ func WaitObservabilityConfigurationInactive(ctx context.Context, conn *apprunner
 	return err
 }
 
-func WaitVpcIngressConnectionActive(ctx context.Context, conn *apprunner.AppRunner, vpcIngressConnectionArn string) error {
+func WaitVPCIngressConnectionActive(ctx context.Context, conn *apprunner.AppRunner, vpcIngressConnectionArn string) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{},
-		Target:  []string{VpcIngressConnectionStatusActive},
-		Refresh: StatusVpcIngressConnection(ctx, conn, vpcIngressConnectionArn),
-		Timeout: VpcIngressConnectionCreateTimeout,
+		Target:  []string{VPCIngressConnectionStatusActive},
+		Refresh: StatusVPCIngressConnection(ctx, conn, vpcIngressConnectionArn),
+		Timeout: VPCIngressConnectionCreateTimeout,
 	}
 
 	_, err := stateConf.WaitForState()
@@ -132,12 +132,12 @@ func WaitVpcIngressConnectionActive(ctx context.Context, conn *apprunner.AppRunn
 	return err
 }
 
-func WaitVpcIngressConnectionDeleted(ctx context.Context, conn *apprunner.AppRunner, vpcIngressConnectionArn string) error {
+func WaitVPCIngressConnectionDeleted(ctx context.Context, conn *apprunner.AppRunner, vpcIngressConnectionArn string) error {
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{VpcIngressConnectionStatusActive},
-		Target:  []string{VpcIngressConnectionStatusDeleted},
-		Refresh: StatusVpcIngressConnection(ctx, conn, vpcIngressConnectionArn),
-		Timeout: VpcIngressConnectionDeleteTimeout,
+		Pending: []string{VPCIngressConnectionStatusActive},
+		Target:  []string{VPCIngressConnectionStatusDeleted},
+		Refresh: StatusVPCIngressConnection(ctx, conn, vpcIngressConnectionArn),
+		Timeout: VPCIngressConnectionDeleteTimeout,
 	}
 
 	_, err := stateConf.WaitForState()

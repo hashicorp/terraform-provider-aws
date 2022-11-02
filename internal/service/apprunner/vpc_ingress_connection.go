@@ -15,12 +15,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func ResourceVpcIngressConnection() *schema.Resource {
+func ResourceVPCIngressConnection() *schema.Resource {
 	return &schema.Resource{
-		CreateWithoutTimeout: resourceVpcIngressConnectionCreate,
-		ReadWithoutTimeout:   resourceVpcIngressConnectionRead,
-		UpdateWithoutTimeout: resourceVpcIngressConnectionUpdate,
-		DeleteWithoutTimeout: resourceVpcIngressConnectionDelete,
+		CreateWithoutTimeout: resourceVPCIngressConnectionCreate,
+		ReadWithoutTimeout:   resourceVPCIngressConnectionRead,
+		UpdateWithoutTimeout: resourceVPCIngressConnectionUpdate,
+		DeleteWithoutTimeout: resourceVPCIngressConnectionDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -73,7 +73,7 @@ func ResourceVpcIngressConnection() *schema.Resource {
 	}
 }
 
-func resourceVpcIngressConnectionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVPCIngressConnectionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).AppRunnerConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
@@ -86,7 +86,7 @@ func resourceVpcIngressConnectionCreate(ctx context.Context, d *schema.ResourceD
 	}
 
 	if v, ok := d.GetOk("configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.IngressVpcConfiguration = expandIngressVpcConfiguration(v.([]interface{}))
+		input.IngressVpcConfiguration = expandIngressVPCConfiguration(v.([]interface{}))
 	}
 
 	if len(tags) > 0 {
@@ -105,14 +105,14 @@ func resourceVpcIngressConnectionCreate(ctx context.Context, d *schema.ResourceD
 
 	d.SetId(aws.StringValue(output.VpcIngressConnection.VpcIngressConnectionArn))
 
-	if err := WaitVpcIngressConnectionActive(ctx, conn, d.Id()); err != nil {
+	if err := WaitVPCIngressConnectionActive(ctx, conn, d.Id()); err != nil {
 		return diag.FromErr(fmt.Errorf("error waiting for App Runner VPC Ingress Configuration (%s) creation: %w", d.Id(), err))
 	}
 
-	return resourceVpcIngressConnectionRead(ctx, d, meta)
+	return resourceVPCIngressConnectionRead(ctx, d, meta)
 }
 
-func resourceVpcIngressConnectionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVPCIngressConnectionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).AppRunnerConn
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -137,7 +137,7 @@ func resourceVpcIngressConnectionRead(ctx context.Context, d *schema.ResourceDat
 		return diag.FromErr(fmt.Errorf("error reading App Runner VPC Ingress Configuration (%s): empty output", d.Id()))
 	}
 
-	if aws.StringValue(output.VpcIngressConnection.Status) == VpcIngressConnectionStatusDeleted {
+	if aws.StringValue(output.VpcIngressConnection.Status) == VPCIngressConnectionStatusDeleted {
 		if d.IsNewResource() {
 			return diag.FromErr(fmt.Errorf("error reading App Runner VPC Ingress Configuration (%s): %s after creation", d.Id(), aws.StringValue(output.VpcIngressConnection.Status)))
 		}
@@ -152,7 +152,7 @@ func resourceVpcIngressConnectionRead(ctx context.Context, d *schema.ResourceDat
 	d.Set("arn", arn)
 	d.Set("name", config.VpcIngressConnectionName)
 	d.Set("status", config.Status)
-	d.Set("domain_name", config.SetDomainName())
+	d.Set("domain_name", config.DomainName)
 
 	if err := d.Set("configuration", flattenIngressVpcConfiguration(config.IngressVpcConfiguration)); err != nil {
 		return diag.Errorf("error setting configuration: %s", err)
@@ -178,7 +178,7 @@ func resourceVpcIngressConnectionRead(ctx context.Context, d *schema.ResourceDat
 	return nil
 }
 
-func resourceVpcIngressConnectionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVPCIngressConnectionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).AppRunnerConn
 
 	if d.HasChange("tags_all") {
@@ -189,10 +189,10 @@ func resourceVpcIngressConnectionUpdate(ctx context.Context, d *schema.ResourceD
 		}
 	}
 
-	return resourceVpcIngressConnectionRead(ctx, d, meta)
+	return resourceVPCIngressConnectionRead(ctx, d, meta)
 }
 
-func resourceVpcIngressConnectionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceVPCIngressConnectionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).AppRunnerConn
 
 	input := &apprunner.DeleteVpcIngressConnectionInput{
@@ -209,7 +209,7 @@ func resourceVpcIngressConnectionDelete(ctx context.Context, d *schema.ResourceD
 		return diag.FromErr(fmt.Errorf("error deleting App Runner VPC Ingress Configuration (%s): %w", d.Id(), err))
 	}
 
-	if err := WaitVpcIngressConnectionDeleted(ctx, conn, d.Id()); err != nil {
+	if err := WaitVPCIngressConnectionDeleted(ctx, conn, d.Id()); err != nil {
 		if tfawserr.ErrCodeEquals(err, apprunner.ErrCodeResourceNotFoundException) {
 			return nil
 		}
@@ -219,7 +219,7 @@ func resourceVpcIngressConnectionDelete(ctx context.Context, d *schema.ResourceD
 	return nil
 }
 
-func expandIngressVpcConfiguration(l []interface{}) *apprunner.IngressVpcConfiguration {
+func expandIngressVPCConfiguration(l []interface{}) *apprunner.IngressVpcConfiguration {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}

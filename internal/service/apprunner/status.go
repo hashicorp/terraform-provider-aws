@@ -21,8 +21,8 @@ const (
 	ObservabilityConfigurationStatusActive   = "ACTIVE"
 	ObservabilityConfigurationStatusInactive = "INACTIVE"
 
-	VpcIngressConnectionStatusActive  = "AVAILABLE"
-	VpcIngressConnectionStatusDeleted = "DELETED"
+	VPCIngressConnectionStatusActive  = "AVAILABLE"
+	VPCIngressConnectionStatusDeleted = "DELETED"
 )
 
 func StatusAutoScalingConfiguration(ctx context.Context, conn *apprunner.AppRunner, arn string) resource.StateRefreshFunc {
@@ -65,7 +65,7 @@ func StatusObservabilityConfiguration(ctx context.Context, conn *apprunner.AppRu
 	}
 }
 
-func StatusVpcIngressConnection(ctx context.Context, conn *apprunner.AppRunner, arn string) resource.StateRefreshFunc {
+func StatusVPCIngressConnection(ctx context.Context, conn *apprunner.AppRunner, arn string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &apprunner.DescribeVpcIngressConnectionInput{
 			VpcIngressConnectionArn: aws.String(arn),
