@@ -245,7 +245,8 @@ func flattenIngressVPCConfiguration(ingressVpcConfiguration *apprunner.IngressVp
 	}
 
 	m := map[string]interface{}{
-		"vpc_id": aws.StringValue(ingressVpcConfiguration.VpcId),
+		"vpc_id":          aws.StringValue(ingressVpcConfiguration.VpcId),
+		"vpc_endpoint_id": aws.StringValue(ingressVpcConfiguration.VpcEndpointId),
 	}
 
 	return []interface{}{m}
