@@ -2,6 +2,7 @@
 
 FEATURES:
 
+* **New Data Source:** `aws_connect_instance_storage_config` ([#27308](https://github.com/hashicorp/terraform-provider-aws/issues/27308))
 * **New Resource:** `aws_fsx_file_cache` ([#27384](https://github.com/hashicorp/terraform-provider-aws/issues/27384))
 * **New Resource:** `aws_lightsail_disk` ([#27537](https://github.com/hashicorp/terraform-provider-aws/issues/27537))
 * **New Resource:** `aws_lightsail_disk_attachment` ([#27537](https://github.com/hashicorp/terraform-provider-aws/issues/27537))
