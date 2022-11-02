@@ -14,46 +14,50 @@ Manages an App Runner VPC Ingress Connection.
 
 ```terraform
 resource "aws_apprunner_vpc_ingress_connection" "example" {
-  observability_configuration_name = "example"
+  name        = "example"
+  service_arn = aws_apprunner_service.example.arn
 
-  trace_configuration {
-    vendor = "AWSXRAY"
+  ingress_vpc_configuration {
+    vpc_id          = aws_default_vpc.default.id
+    vpc_endpoint_id = aws_vpc_endpoint.apprunner.id
   }
 
   tags = {
-    Name = "example-apprunner-observability-configuration"
+    foo = "bar"
   }
 }
+
 ```
 
 ## Argument Reference
 
 The following arguments supported:
 
-* `observability_configuration_name` - (Required, Forces new resource) Name of the observability configuration.
-* `trace_configuration` - (Optional) Configuration of the tracing feature within this observability configuration. If you don't specify it, App Runner doesn't enable tracing. See [Trace Configuration](#trace-configuration) below for more details.
+* `name` - (Required) A name for the VPC Ingress Connection resource. It must be unique across all the active VPC Ingress Connections in your AWS account in the AWS Region.
+* `service_arn` - (Required) The Amazon Resource Name (ARN) for this App Runner service that is used to create the VPC Ingress Connection resource.
+* `ingress_vpc_configuration` - (Required) Specifications for the customer’s Amazon VPC and the related AWS PrivateLink VPC endpoint that are used to create the VPC Ingress Connection resource. See [Ingress VPC Configuration](#ingress-vpc-configuration) below for more details.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-### Trace Configuration
+### Ingress VPC Configuration
 
-The `trace_configuration` block supports the following argument:
+The `ingress_vpc_configuration` block supports the following argument:
 
-* `vendor` - (Required) Implementation provider chosen for tracing App Runner services. Valid values: `AWSXRAY`.
+* `vpc_id` - (Required) The ID of the VPC endpoint that your App Runner service connects to.
+* `vpc_id` - (Required) The ID of the VPC that is used for the VPC endpoint.
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-* `arn` - ARN of this observability configuration.
-* `observability_configuration_revision` - The revision of this observability configuration.
-* `latest` - Whether the observability configuration has the highest `observability_configuration_revision` among all configurations that share the same `observability_configuration_name`.
-* `status` - Current state of the observability configuration. An INACTIVE configuration revision has been deleted and can't be used. It is permanently removed some time after deletion.
+* `arn` - The Amazon Resource Name (ARN) of the VPC Ingress Connection.
+* `domain_name` - The domain name associated with the VPC Ingress Connection resource.
+* `status` - The current status of the VPC Ingress Connection.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
-App Runner Observability Configuration can be imported by using the `arn`, e.g.,
+App Runner VPC Ingress Connection can be imported by using the `arn`, e.g.,
 
 ```
-$ terraform import aws_apprunner_observability_configuration.example "arn:aws:apprunner:us-east-1:1234567890:observabilityconfiguration/example/1/d75bc7ea55b71e724fe5c23452fe22a1
+$ terraform import aws_apprunner_vpc_ingress_connection.example "arn:aws:apprunner:us-west-2:837424938642:vpcingressconnection/example/b379f86381d74825832c2e82080342fa"
 ```
