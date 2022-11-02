@@ -686,8 +686,8 @@ github.com/quasilyte/regex/syntax v0.0.0-20200407221936-30656e2c4a95 h1:L8QM9bvf
 github.com/quasilyte/regex/syntax v0.0.0-20200407221936-30656e2c4a95/go.mod h1:rlzQ04UMyJXu/aOvhd8qT+hvDrFpiwqp8MRXDY9szc0=
 github.com/quasilyte/stdinfo v0.0.0-20220114132959-f7386bf02567 h1:M8mH9eK4OUR4lu7Gd+PU1fV2/qnDNfzT635KRSObncs=
 github.com/quasilyte/stdinfo v0.0.0-20220114132959-f7386bf02567/go.mod h1:DWNGW8A4Y+GyBgPuaQJuWiy0XYftx4Xm/y5Jqk9I6VQ=
-github.com/rhysd/actionlint v1.6.21 h1:OSCP03XnvWSRAhUmA5onpgyGG+3NVoQTCu4UX0Rc2dY=
-github.com/rhysd/actionlint v1.6.21/go.mod h1:gIKOdxtV40mBOcD0ZR8EBa8NqjEXToAZioroS3oedMg=
+github.com/rhysd/actionlint v1.6.22 h1:cAEf2PGNwJXhdcTVF2xS/0ORqWS+ueUHwjQYsqFsGSk=
+github.com/rhysd/actionlint v1.6.22/go.mod h1:gIKOdxtV40mBOcD0ZR8EBa8NqjEXToAZioroS3oedMg=
 github.com/rivo/uniseg v0.2.0/go.mod h1:J6wj4VEh+S6ZtnVlnTBMWIodfgj8LQOQFoIToxlJtxc=
 github.com/rivo/uniseg v0.3.4 h1:3Z3Eu6FGHZWSfNKJTOUiPatWwfc7DzJRU04jFUqJODw=
 github.com/rivo/uniseg v0.3.4/go.mod h1:FN3SvrM+Zdj16jyLfmOkMNblXMcoc8DfTHruCPUcx88=
