@@ -1780,17 +1780,8 @@ func ConfigLatestAmazonLinux2HVMEBSARM64AMI() string {
 }
 
 func ConfigLambdaBase(policyName, roleName, sgName string) string {
-	return fmt.Sprintf(`
+	return ConfigCompose(ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 data "aws_partition" "current" {}
-
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
 
 resource "aws_iam_role_policy" "iam_policy_for_lambda" {
   name = "%s"
@@ -1912,7 +1903,7 @@ resource "aws_security_group" "sg_for_lambda" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 }
-`, policyName, roleName, sgName)
+`, policyName, roleName, sgName))
 }
 
 func ConfigEKSClusterBase(rName string) string {
