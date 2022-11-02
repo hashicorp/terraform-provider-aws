@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -156,6 +157,38 @@ func TestAccVPCTrafficMirrorSession_disappears(t *testing.T) {
 	})
 }
 
+func TestAccVPCTrafficMirrorSession_updateTrafficMirrorTarget(t *testing.T) {
+	var v1, v2 ec2.TrafficMirrorSession
+	resourceName := "aws_ec2_traffic_mirror_session.test"
+	session := sdkacctest.RandIntRange(1, 32766)
+	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(10))
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			testAccPreCheckTrafficMirrorSession(t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTrafficMirrorSessionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTrafficMirrorSessionConfig_trafficMirrorTarget(rName, 0, session),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTrafficMirrorSessionExists(resourceName, &v1),
+				),
+			},
+			{
+				Config: testAccTrafficMirrorSessionConfig_trafficMirrorTarget(rName, 1, session),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTrafficMirrorSessionExists(resourceName, &v2),
+					testAccCheckTrafficMirrorSessionNotRecreated(t, &v1, &v2),
+				),
+			},
+		},
+	})
+}
+
 func testAccPreCheckTrafficMirrorSession(t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
 
@@ -167,6 +200,16 @@ func testAccPreCheckTrafficMirrorSession(t *testing.T) {
 
 	if err != nil {
 		t.Fatal("Unexpected PreCheck error: ", err)
+	}
+}
+
+func testAccCheckTrafficMirrorSessionNotRecreated(t *testing.T, before, after *ec2.TrafficMirrorSession) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if before, after := aws.StringValue(before.TrafficMirrorSessionId), aws.StringValue(after.TrafficMirrorSessionId); before != after {
+			t.Fatalf("Expected TrafficMirrorSessionIDs not to change, but both got before: %s and after: %s", before, after)
+		}
+
+		return nil
 	}
 }
 
@@ -215,7 +258,6 @@ func testAccCheckTrafficMirrorSessionExists(n string, v *ec2.TrafficMirrorSessio
 
 		*v = *output
 
-		return nil
 		return nil
 	}
 }
@@ -303,4 +345,48 @@ resource "aws_ec2_traffic_mirror_session" "test" {
   virtual_network_id       = %[4]d
 }
 `, description, session, pLen, vni))
+}
+
+func testAccTrafficMirrorSessionConfig_trafficMirrorTarget(rName string, idx, session int) string {
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 1), acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), fmt.Sprintf(`
+resource "aws_instance" "target" {
+  count = 2
+
+  ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type = "t2.micro"
+  subnet_id     = aws_subnet.test[0].id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_instance" "test" {
+  ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type = "m5.large" # m5.large required because only Nitro instances support mirroring
+  subnet_id     = aws_subnet.test[0].id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_ec2_traffic_mirror_target" "test" {
+  count = 2
+
+  network_interface_id = aws_instance.target[count.index].primary_network_interface_id
+}
+
+resource "aws_ec2_traffic_mirror_filter" "test" {
+  description = %[1]q
+}
+
+resource "aws_ec2_traffic_mirror_session" "test" {
+  description              = %[1]q
+  traffic_mirror_filter_id = aws_ec2_traffic_mirror_filter.test.id
+  traffic_mirror_target_id = aws_ec2_traffic_mirror_target.test[%[2]d].id
+  network_interface_id     = aws_instance.test.primary_network_interface_id
+  session_number           = %[3]d
+}
+`, rName, idx, session))
 }
