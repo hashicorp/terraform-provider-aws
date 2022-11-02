@@ -45,35 +45,6 @@ func TestAccAppRunnerVPCIngressConnection_basic(t *testing.T) {
 	})
 }
 
-func TestAccAppRunnerVPCIngressConnection_ingressVpcConfiguration(t *testing.T) {
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_apprunner_vpc_ingress_connection.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, apprunner.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVPCIngressConnectionDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccVPCIngressConnectionConfig_traceConfiguration(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVPCIngressConnectionExists(resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "apprunner", regexp.MustCompile(fmt.Sprintf(`vpcingressconnection/%s/1/.+`, rName))),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "status", tfapprunner.VPCIngressConnectionStatusActive),
-					resource.TestCheckResourceAttr(resourceName, "ingress_vpc_configuration.#", "1"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
 func TestAccAppRunnerVPCIngressConnection_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_apprunner_vpc_ingress_connection.test"
@@ -201,18 +172,69 @@ func testAccCheckVPCIngressConnectionExists(n string) resource.TestCheckFunc {
 	}
 }
 
-func testAccVPCIngressConnectionConfig_basic(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_apprunner_vpc_ingress_connection" "test" {
-  name = %[1]q
+func testAccVPCIngressConnectionConfig_base(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 1), fmt.Sprintf(`
+data "aws_region" "current" {}
+
+resource "aws_apprunner_service" "test" {
+  service_name = %[1]q
+  
+  source_configuration {
+    image_repository {
+      image_configuration {
+        port = "8000"
+      }
+      image_identifier      = "public.ecr.aws/aws-containers/hello-app-runner:latest"
+      image_repository_type = "ECR_PUBLIC"
+    }
+    auto_deployments_enabled = false
+  }
+  
+  network_configuration {
+    ingress_configuration {
+      is_publicly_accessible = false
+    }
+  }
 }
-`, rName)
+
+resource "aws_vpc_endpoint" "apprunner" {
+  vpc_id            = aws_vpc.test.id
+  service_name      = "com.amazonaws.${data.aws_region.current.name}.apprunner.requests"
+  vpc_endpoint_type = "Interface"
+  
+  subnet_ids = aws_subnet.test.*.id
+  
+  security_group_ids = [
+    aws_vpc.test.default_security_group_id,
+  ]
+}
+`, rName))
+}
+
+func testAccVPCIngressConnectionConfig_basic(rName string) string {
+	return acctest.ConfigCompose(testAccVPCIngressConnectionConfig_base(rName), fmt.Sprintf(`
+resource "aws_apprunner_vpc_ingress_connection" "test" {
+  name        = %[1]q
+  service_arn = aws_apprunner_service.test.arn
+	
+  ingress_vpc_configuration {
+    vpc_id          = aws_vpc.test.id
+    vpc_endpoint_id = aws_vpc_endpoint.apprunner.id
+  }
+}
+`, rName))
 }
 
 func testAccVPCIngressConnectionConfig_tags1(rName string, tagKey1 string, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_apprunner_vpc_ingress_connection" "test" {
   name = %[1]q
+  service_arn = aws_apprunner_service.test.arn
+	
+  ingress_vpc_configuration {
+    vpc_id          = aws_vpc.test.id
+    vpc_endpoint_id = aws_vpc_endpoint.apprunner.id
+  }
 
   tags = {
     %[2]q = %[3]q
@@ -225,7 +247,13 @@ func testAccVPCIngressConnectionConfig_tags2(rName string, tagKey1 string, tagVa
 	return fmt.Sprintf(`
 resource "aws_apprunner_vpc_ingress_connection" "test" {
   name = %[1]q
-
+  service_arn = aws_apprunner_service.test.arn
+	
+  ingress_vpc_configuration {
+    vpc_id          = aws_vpc.test.id
+    vpc_endpoint_id = aws_vpc_endpoint.apprunner.id
+  }
+  
   tags = {
     %[2]q = %[3]q
     %[4]q = %[5]q
