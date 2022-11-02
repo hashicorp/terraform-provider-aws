@@ -208,11 +208,13 @@ func ResourceComputeEnvironment() *schema.Resource {
 						"eks_cluster_arn": {
 							Type:         schema.TypeString,
 							Required:     true,
+							ForceNew:     true,
 							ValidateFunc: verify.ValidARN,
 						},
 						"kubernetes_namespace": {
 							Type:     schema.TypeString,
 							Required: true,
+							ForceNew: true,
 						},
 					},
 				},
