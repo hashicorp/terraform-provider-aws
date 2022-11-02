@@ -51,8 +51,8 @@ func testAccAPIMapping_createCertificate(t *testing.T, rName string, certificate
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
-			{ // nosemgrep:ci.test-config-funcs-correct-form
-				Config: "# Dummy config.",
+			{
+				Config: "# Empty config",
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAPIMappingCreateCertificate(rName, certificateArn),
 				),

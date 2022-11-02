@@ -363,7 +363,7 @@ func testAccSSMPatchBaseline_deleteDefault(t *testing.T) {
 						t.Fatalf("registering Default Patch Baseline (%s): %s", aws.StringValue(ssmPatch.BaselineId), err)
 					}
 				},
-				Config: " ", // Deletes the patch baseline
+				Config: "# Empty config", // Deletes the patch baseline
 			},
 		},
 	})

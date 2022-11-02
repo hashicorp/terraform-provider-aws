@@ -27,6 +27,7 @@
             {{- end }}
             {{- if eq .ServiceAlias "SSM" }}
             - pattern-not-regex: ^testAccSSMDefaultPatchBaseline_.+
+            - pattern-not-regex: ^testAccSSMPatchBaseline_.+
             {{- end }}
             - pattern-not-regex: ^TestAcc.*
     severity: WARNING
