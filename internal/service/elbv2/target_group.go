@@ -701,7 +701,6 @@ func resourceTargetGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if v, ok := d.Get("protocol").(string); ok && v != elbv2.ProtocolEnumGeneve {
-
 			if d.HasChange("stickiness") {
 				stickinessBlocks := d.Get("stickiness").([]interface{})
 				if len(stickinessBlocks) == 1 {
@@ -914,6 +913,7 @@ func flattenTargetGroupResource(d *schema.ResourceData, meta interface{}, target
 	d.Set("arn_suffix", TargetGroupSuffixFromARN(targetGroup.TargetGroupArn))
 	d.Set("name", targetGroup.TargetGroupName)
 	d.Set("target_type", targetGroup.TargetType)
+	d.Set("ip_address_type", targetGroup.IpAddressType)
 
 	if err := d.Set("health_check", flattenLbTargetGroupHealthCheck(targetGroup)); err != nil {
 		return fmt.Errorf("setting health_check: %w", err)

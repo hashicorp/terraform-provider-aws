@@ -135,7 +135,6 @@ func resourceCustomKeyStoreUpdate(ctx context.Context, d *schema.ResourceData, m
 		return nil
 	}
 
-	log.Printf("[DEBUG] Updating KMS CustomKeyStore (%s): %#v", d.Id(), in)
 	_, err := conn.UpdateCustomKeyStoreWithContext(ctx, in)
 	if err != nil {
 		return create.DiagError(names.KMS, create.ErrActionUpdating, ResNameCustomKeyStore, d.Id(), err)

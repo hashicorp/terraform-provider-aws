@@ -2732,7 +2732,6 @@ func flattenBucketReplicationConfiguration(r *s3.ReplicationConfiguration) []int
 func flattenBucketReplicationConfigurationReplicationRuleDestination(d *s3.Destination) []interface{} {
 	if d == nil {
 		return []interface{}{}
-
 	}
 
 	m := make(map[string]interface{})

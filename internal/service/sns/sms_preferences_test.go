@@ -38,16 +38,16 @@ func testAccSMSPreferences_defaultSMSType(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, sns.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSMSPrefsDestroy,
+		CheckDestroy:             testAccCheckSMSPreferencesDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSMSPreferencesConfig_defType,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckNoResourceAttr(resourceName, "monthly_spend_limit"),
-					resource.TestCheckNoResourceAttr(resourceName, "delivery_status_iam_role_arn"),
-					resource.TestCheckNoResourceAttr(resourceName, "delivery_status_success_sampling_rate"),
 					resource.TestCheckNoResourceAttr(resourceName, "default_sender_id"),
 					resource.TestCheckResourceAttr(resourceName, "default_sms_type", "Transactional"),
+					resource.TestCheckNoResourceAttr(resourceName, "delivery_status_iam_role_arn"),
+					resource.TestCheckNoResourceAttr(resourceName, "delivery_status_success_sampling_rate"),
+					resource.TestCheckNoResourceAttr(resourceName, "monthly_spend_limit"),
 					resource.TestCheckNoResourceAttr(resourceName, "usage_report_s3_bucket"),
 				),
 			},
@@ -62,13 +62,13 @@ func testAccSMSPreferences_almostAll(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, sns.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSMSPrefsDestroy,
+		CheckDestroy:             testAccCheckSMSPreferencesDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSMSPreferencesConfig_almostAll,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "monthly_spend_limit", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_sms_type", "Transactional"),
+					resource.TestCheckResourceAttr(resourceName, "monthly_spend_limit", "1"),
 					resource.TestCheckResourceAttr(resourceName, "usage_report_s3_bucket", "some-bucket"),
 				),
 			},
@@ -85,7 +85,7 @@ func testAccSMSPreferences_deliveryRole(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, sns.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSMSPrefsDestroy,
+		CheckDestroy:             testAccCheckSMSPreferencesDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSMSPreferencesConfig_deliveryRole(rName),
@@ -98,17 +98,20 @@ func testAccSMSPreferences_deliveryRole(t *testing.T) {
 	})
 }
 
-func testAccCheckSMSPrefsDestroy(s *terraform.State) error {
+func testAccCheckSMSPreferencesDestroy(s *terraform.State) error {
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_sns_sms_preferences" {
 			continue
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SNSConn
+
 		attrs, err := conn.GetSMSAttributes(&sns.GetSMSAttributesInput{})
+
 		if err != nil {
-			return fmt.Errorf("error getting SMS attributes: %s", err)
+			return err
 		}
+
 		if attrs == nil || len(attrs.Attributes) == 0 {
 			return nil
 		}

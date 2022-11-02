@@ -66,7 +66,6 @@ EOF
 }
 ```
 
-
 ## Argument Reference
 
 The following arguments are supported:

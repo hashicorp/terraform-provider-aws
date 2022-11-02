@@ -120,7 +120,6 @@ func resourceQuerySuggestionsBlockListCreate(ctx context.Context, d *schema.Reso
 		propagationTimeout,
 		func() (interface{}, error) {
 			return conn.CreateQuerySuggestionsBlockList(ctx, in)
-
 		},
 		func(err error) (bool, error) {
 			var validationException *types.ValidationException
@@ -251,7 +250,6 @@ func resourceQuerySuggestionsBlockListUpdate(ctx context.Context, d *schema.Reso
 			propagationTimeout,
 			func() (interface{}, error) {
 				return conn.UpdateQuerySuggestionsBlockList(ctx, input)
-
 			},
 			func(err error) (bool, error) {
 				var validationException *types.ValidationException

@@ -875,7 +875,6 @@ func resourceEndpointCreate(d *schema.ResourceData, meta interface{}) error {
 		expandTopLevelConnectionInfo(d, input)
 	}
 
-	log.Printf("[DEBUG] Creating DMS Endpoint: %s", input)
 	_, err := tfresource.RetryWhenAWSErrCodeEquals(d.Timeout(schema.TimeoutCreate),
 		func() (interface{}, error) {
 			return conn.CreateEndpoint(input)
@@ -1217,7 +1216,6 @@ func resourceEndpointUpdate(d *schema.ResourceData, meta interface{}) error {
 			}
 		}
 
-		log.Printf("[DEBUG] Modifying DMS Endpoint: %s", input)
 		_, err := conn.ModifyEndpoint(input)
 
 		if err != nil {

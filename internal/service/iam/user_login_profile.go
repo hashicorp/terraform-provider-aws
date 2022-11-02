@@ -142,7 +142,6 @@ func resourceUserLoginProfileCreate(d *schema.ResourceData, meta interface{}) er
 		PasswordResetRequired: aws.Bool(d.Get("password_reset_required").(bool)),
 	}
 
-	log.Println("[DEBUG] Create IAM User Login Profile request:", request)
 	createResp, err := conn.CreateLoginProfile(request)
 	if err != nil {
 		return fmt.Errorf("Error creating IAM User Login Profile for %q: %w", username, err)

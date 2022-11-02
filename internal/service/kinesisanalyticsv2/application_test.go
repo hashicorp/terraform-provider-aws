@@ -5751,8 +5751,8 @@ resource "aws_kinesisanalyticsv2_application" "test" {
     }
 
     vpc_configuration {
-      security_group_ids = aws_security_group.test.*.id
-      subnet_ids         = aws_subnet.test.*.id
+      security_group_ids = aws_security_group.test[*].id
+      subnet_ids         = aws_subnet.test[*].id
     }
   }
 }

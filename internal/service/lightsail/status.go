@@ -12,6 +12,38 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+func statusContainerService(ctx context.Context, conn *lightsail.Lightsail, serviceName string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		containerService, err := FindContainerServiceByName(ctx, conn, serviceName)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return containerService, aws.StringValue(containerService.State), nil
+	}
+}
+
+func statusContainerServiceDeploymentVersion(ctx context.Context, conn *lightsail.Lightsail, serviceName string, version int) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		deployment, err := FindContainerServiceDeploymentByVersion(ctx, conn, serviceName, version)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return deployment, aws.StringValue(deployment.State), nil
+	}
+}
+
 // statusOperation is a method to check the status of a Lightsail Operation
 func statusOperation(conn *lightsail.Lightsail, oid *string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
@@ -87,34 +119,27 @@ func statusDatabaseBackupRetention(conn *lightsail.Lightsail, db *string) resour
 	}
 }
 
-func statusContainerService(ctx context.Context, conn *lightsail.Lightsail, serviceName string) resource.StateRefreshFunc {
+func statusInstance(conn *lightsail.Lightsail, iName *string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		containerService, err := FindContainerServiceByName(ctx, conn, serviceName)
-
-		if tfresource.NotFound(err) {
-			return nil, "", nil
+		in := &lightsail.GetInstanceStateInput{
+			InstanceName: iName,
 		}
+
+		iNameValue := aws.StringValue(iName)
+
+		log.Printf("[DEBUG] Checking if Lightsail Instance (%s) is in a ready state.", iNameValue)
+
+		out, err := conn.GetInstanceState(in)
 
 		if err != nil {
-			return nil, "", err
+			return out, "FAILED", err
 		}
 
-		return containerService, aws.StringValue(containerService.State), nil
-	}
-}
-
-func statusContainerServiceDeploymentVersion(ctx context.Context, conn *lightsail.Lightsail, serviceName string, version int) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		deployment, err := FindContainerServiceDeploymentByVersion(ctx, conn, serviceName, version)
-
-		if tfresource.NotFound(err) {
-			return nil, "", nil
+		if out.State == nil {
+			return nil, "Failed", fmt.Errorf("Error retrieving Instance info for (%s)", iNameValue)
 		}
 
-		if err != nil {
-			return nil, "", err
-		}
-
-		return deployment, aws.StringValue(deployment.State), nil
+		log.Printf("[DEBUG] Lightsail Instance (%s) State is currently (%s)", iNameValue, *out.State.Name)
+		return out, *out.State.Name, nil
 	}
 }

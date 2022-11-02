@@ -11,7 +11,6 @@ description: |-
 Manages a FSx ONTAP Volume.
 See the [FSx ONTAP User Guide](https://docs.aws.amazon.com/fsx/latest/ONTAPGuide/managing-volumes.html) for more information.
 
-
 ## Example Usage
 
 ### Basic Usage

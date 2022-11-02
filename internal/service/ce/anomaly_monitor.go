@@ -96,7 +96,6 @@ func resourceAnomalyMonitorCreate(ctx context.Context, d *schema.ResourceData, m
 			}
 
 			input.AnomalyMonitor.MonitorSpecification = &expression
-
 		} else {
 			return diag.Errorf("If Monitor Type is %s, dimension attrribute is required", costexplorer.MonitorTypeCustom)
 		}

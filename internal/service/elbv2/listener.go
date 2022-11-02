@@ -929,7 +929,6 @@ func expandLbListenerActionForwardConfigTargetGroups(l []interface{}) []*elbv2.T
 		tfMap, ok := tfMapRaw.(map[string]interface{})
 		if !ok {
 			continue
-
 		}
 
 		group := &elbv2.TargetGroupTuple{

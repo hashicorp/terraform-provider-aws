@@ -2,6 +2,7 @@ SWEEP               ?= us-west-2,us-east-1,us-east-2
 TEST                ?= ./...
 SWEEP_DIR           ?= ./internal/sweep
 PKG_NAME            ?= internal
+SVC_DIR             ?= ./internal/service
 TEST_COUNT          ?= 1
 ACCTEST_TIMEOUT     ?= 180m
 ACCTEST_PARALLELISM ?= 20
@@ -97,6 +98,18 @@ testacc: fmtcheck
 		exit 1; \
 	fi
 	TF_ACC=1 $(GO_VER) test ./$(PKG_NAME)/... -v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) $(RUNARGS) $(TESTARGS) -timeout $(ACCTEST_TIMEOUT)
+
+testacc-lint:
+	@echo "Checking acceptance tests with terrafmt"
+	find $(SVC_DIR) -type f -name '*_test.go' \
+    | sort -u \
+    | xargs -I {} terrafmt diff --check --fmtcompat {}
+
+testacc-lint-fix:
+	@echo "Fixing acceptance tests with terrafmt"
+	find $(SVC_DIR) -type f -name '*_test.go' \
+	| sort -u \
+	| xargs -I {} terrafmt fmt  --fmtcompat {}
 
 fmt:
 	@echo "==> Fixing source code with gofmt..."

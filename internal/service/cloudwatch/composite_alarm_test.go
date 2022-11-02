@@ -457,7 +457,7 @@ func testAccCompositeAlarmConfig_actionsEnabled(enabled bool, suffix string) str
 resource "aws_cloudwatch_composite_alarm" "test" {
   actions_enabled = %t
   alarm_name      = "tf-test-composite-%s"
-  alarm_rule      = join(" OR ", formatlist("ALARM(%%s)", aws_cloudwatch_metric_alarm.test.*.alarm_name))
+  alarm_rule      = join(" OR ", formatlist("ALARM(%%s)", aws_cloudwatch_metric_alarm.test[*].alarm_name))
 }
 `, enabled, suffix))
 }
@@ -468,7 +468,7 @@ func testAccCompositeAlarmConfig_basic(suffix string) string {
 		fmt.Sprintf(`
 resource "aws_cloudwatch_composite_alarm" "test" {
   alarm_name = "tf-test-composite-%[1]s"
-  alarm_rule = join(" OR ", formatlist("ALARM(%%s)", aws_cloudwatch_metric_alarm.test.*.alarm_name))
+  alarm_rule = join(" OR ", formatlist("ALARM(%%s)", aws_cloudwatch_metric_alarm.test[*].alarm_name))
 }
 `, suffix))
 }
@@ -480,7 +480,7 @@ func testAccCompositeAlarmConfig_description(description, suffix string) string 
 resource "aws_cloudwatch_composite_alarm" "test" {
   alarm_description = %q
   alarm_name        = "tf-test-composite-%s"
-  alarm_rule        = join(" OR ", formatlist("ALARM(%%s)", aws_cloudwatch_metric_alarm.test.*.alarm_name))
+  alarm_rule        = join(" OR ", formatlist("ALARM(%%s)", aws_cloudwatch_metric_alarm.test[*].alarm_name))
 }
 `, description, suffix))
 }
@@ -495,7 +495,7 @@ resource "aws_sns_topic" "test" {
 }
 
 resource "aws_cloudwatch_composite_alarm" "test" {
-  alarm_actions = aws_sns_topic.test.*.arn
+  alarm_actions = aws_sns_topic.test[*].arn
   alarm_name    = "tf-test-composite-%[1]s"
   alarm_rule    = "ALARM(${aws_cloudwatch_metric_alarm.test[0].alarm_name})"
 }
@@ -542,7 +542,7 @@ resource "aws_sns_topic" "test" {
 resource "aws_cloudwatch_composite_alarm" "test" {
   alarm_name                = "tf-test-composite-%[1]s"
   alarm_rule                = "ALARM(${aws_cloudwatch_metric_alarm.test[0].alarm_name})"
-  insufficient_data_actions = aws_sns_topic.test.*.arn
+  insufficient_data_actions = aws_sns_topic.test[*].arn
 }
 `, suffix))
 }
@@ -576,7 +576,7 @@ resource "aws_sns_topic" "test" {
 resource "aws_cloudwatch_composite_alarm" "test" {
   alarm_name = "tf-test-composite-%[1]s"
   alarm_rule = "ALARM(${aws_cloudwatch_metric_alarm.test[0].alarm_name})"
-  ok_actions = aws_sns_topic.test.*.arn
+  ok_actions = aws_sns_topic.test[*].arn
 }
 `, suffix))
 }

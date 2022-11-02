@@ -1397,7 +1397,6 @@ func FlattenLoadBalancerInfo(loadBalancerInfo *codedeploy.LoadBalancerInfo) []in
 // FlattenBlueGreenDeploymentConfig converts a codedeploy.BlueGreenDeploymentConfiguration object
 // into a []map[string]interface{} list containing a single item
 func FlattenBlueGreenDeploymentConfig(config *codedeploy.BlueGreenDeploymentConfiguration) []map[string]interface{} {
-
 	if config == nil {
 		return nil
 	}

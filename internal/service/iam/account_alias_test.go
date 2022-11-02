@@ -87,7 +87,6 @@ func testAccCheckAccountAliasDestroy(s *terraform.State) error {
 	}
 
 	return nil
-
 }
 
 func testAccCheckAccountAliasExists(n string) resource.TestCheckFunc {

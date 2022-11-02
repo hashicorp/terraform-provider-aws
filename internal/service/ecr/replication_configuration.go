@@ -180,7 +180,6 @@ func expandReplicationConfigurationReplicationConfigurationRules(data []interfac
 		}
 
 		rules = append(rules, config)
-
 	}
 	return rules
 }

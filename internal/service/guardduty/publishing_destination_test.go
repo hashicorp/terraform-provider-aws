@@ -207,7 +207,6 @@ func testAccCheckPublishingDestinationExists(name string) resource.TestCheckFunc
 }
 
 func testAccCheckPublishingDestinationDestroy(s *terraform.State) error {
-
 	conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyConn
 
 	for _, rs := range s.RootModule().Resources {

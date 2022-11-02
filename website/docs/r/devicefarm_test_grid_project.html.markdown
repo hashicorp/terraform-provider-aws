@@ -14,15 +14,14 @@ Provides a resource to manage AWS Device Farm Test Grid Projects.
 
 ## Example Usage
 
-
 ```terraform
 resource "aws_devicefarm_test_grid_project" "example" {
   name = "example"
 
   vpc_config {
     vpc_id             = aws_vpc.example.id
-    subnet_ids         = aws_subnet.example.*.id
-    security_group_ids = aws_security_group.example.*.id
+    subnet_ids         = aws_subnet.example[*].id
+    security_group_ids = aws_security_group.example[*].id
   }
 }
 ```
@@ -46,7 +45,6 @@ In addition to all arguments above, the following attributes are exported:
 
 * `arn` - The Amazon Resource Name of this Test Grid Project.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
-
 
 ## Import
 
